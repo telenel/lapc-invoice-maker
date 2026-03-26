@@ -4,6 +4,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { UserManagement } from "./user-management";
 import { CategoryManager } from "./category-manager";
+import { DbHealth } from "./db-health";
 
 export function SettingsPanel() {
   const [activeTab, setActiveTab] = useState("users");
@@ -16,6 +17,7 @@ export function SettingsPanel() {
         <TabsList>
           <TabsTrigger value="users">Users &amp; Access Codes</TabsTrigger>
           <TabsTrigger value="categories">Invoice Categories</TabsTrigger>
+          <TabsTrigger value="database">Database</TabsTrigger>
           <TabsTrigger value="general">General Settings</TabsTrigger>
         </TabsList>
       </Tabs>
@@ -24,6 +26,11 @@ export function SettingsPanel() {
       {activeTab === "categories" && (
         <div className="border rounded-lg p-6">
           <CategoryManager />
+        </div>
+      )}
+      {activeTab === "database" && (
+        <div className="border rounded-lg p-6">
+          <DbHealth />
         </div>
       )}
       {activeTab === "general" && (
