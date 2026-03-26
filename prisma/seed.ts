@@ -77,6 +77,22 @@ async function main() {
     });
   }
 
+  // Seed default global quick picks
+  const defaultQuickPicks = [
+    { id: "default-shipping-fee", department: "__ALL__", description: "Shipping Fee", defaultPrice: 0 },
+    { id: "default-service-fee", department: "__ALL__", description: "Service Fee", defaultPrice: 0 },
+    { id: "default-ca-state-tax", department: "__ALL__", description: "CA State Tax (9.5%)", defaultPrice: 0 },
+  ];
+
+  for (const qp of defaultQuickPicks) {
+    await prisma.quickPickItem.upsert({
+      where: { id: qp.id },
+      update: {},
+      create: qp,
+    });
+  }
+  console.log("Seeded default quick picks");
+
   console.log("Seed complete");
 }
 

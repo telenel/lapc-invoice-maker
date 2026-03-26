@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     const department = searchParams.get("department");
 
     const quickPicks = await prisma.quickPickItem.findMany({
-      where: department ? { department } : undefined,
+      where: department ? { OR: [{ department }, { department: "__ALL__" }] } : undefined,
       orderBy: { usageCount: "desc" },
     });
 

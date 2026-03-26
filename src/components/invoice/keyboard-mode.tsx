@@ -88,6 +88,7 @@ export function KeyboardMode({
   const [staffLoading, setStaffLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [quickPicksOpen, setQuickPicksOpen] = useState(false);
+  const [marginPercent, setMarginPercent] = useState("");
   const [isMac, setIsMac] = useState(false);
 
   // Inline editing for staff summary fields
@@ -155,6 +156,25 @@ export function KeyboardMode({
       return () => el.removeEventListener("keydown", handleKeyDown);
     }
   }, [handleGenerate]);
+
+  // ---- Margin handler ----
+  function handleApplyMargin() {
+    const pct = parseFloat(marginPercent);
+    if (isNaN(pct) || pct <= 0) {
+      toast.error("Enter a valid margin percentage");
+      return;
+    }
+    const multiplier = 1 + pct / 100;
+    form.items.forEach((item, index) => {
+      if (item.unitPrice > 0 && !item.description.includes("Tax")) {
+        const newPrice = Math.round(item.unitPrice * multiplier * 100) / 100;
+        const newExt = Math.round(newPrice * item.quantity * 100) / 100;
+        updateItem(index, { unitPrice: newPrice, extendedPrice: newExt });
+      }
+    });
+    toast.success(`${pct}% margin applied to all items`);
+    setMarginPercent("");
+  }
 
   // ---- Quick pick handler ----
   function handleQuickPick(description: string, unitPrice: number) {
@@ -572,8 +592,26 @@ export function KeyboardMode({
           <QuickPickPanel
             department={form.department}
             onSelect={handleQuickPick}
+            currentSubtotal={total}
           />
         )}
+
+        <div className="flex items-center gap-2 mt-2 mb-3">
+          <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Margin %</span>
+          <Input
+            type="number"
+            min={0}
+            step={0.1}
+            value={marginPercent}
+            onChange={(e) => setMarginPercent(e.target.value)}
+            placeholder="e.g. 15"
+            className="w-24 h-8 text-sm"
+            tabIndex={-1}
+          />
+          <Button type="button" variant="outline" size="xs" tabIndex={-1} onClick={handleApplyMargin}>
+            Apply
+          </Button>
+        </div>
 
         <LineItems
           items={form.items}

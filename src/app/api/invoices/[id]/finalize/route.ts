@@ -169,7 +169,10 @@ export async function POST(
     if (descriptions.length > 0) {
       await prisma.quickPickItem.updateMany({
         where: {
-          department: invoice.department,
+          OR: [
+            { department: invoice.department },
+            { department: "__ALL__" },
+          ],
           description: { in: descriptions },
         },
         data: { usageCount: { increment: 1 } },
