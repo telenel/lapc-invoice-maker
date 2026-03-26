@@ -75,7 +75,6 @@ export function KeyboardMode({
   removeItem,
   total,
   handleStaffSelect,
-  handleStaffEdit,
   staffAccountNumbers,
   saveDraft,
   saveAndFinalize,

@@ -45,7 +45,7 @@ export async function POST(
           staffId: quote.staffId,
           accountCode: quote.accountCode,
           accountNumber: quote.accountNumber,
-          approvalChain: quote.approvalChain,
+          approvalChain: quote.approvalChain ?? [],
           notes: quote.notes,
           totalAmount: quote.totalAmount,
           createdBy,
