@@ -77,3 +77,30 @@ export const adminUserUpdateSchema = z.object({
   email: z.string().email().optional().or(z.literal("")),
   role: z.enum(["user", "admin"]).optional(),
 });
+
+export const quoteItemSchema = z.object({
+  description: z.string().min(1, "Description is required"),
+  quantity: z.number().positive("Quantity must be positive"),
+  unitPrice: z.number().min(0, "Price must be non-negative"),
+  sortOrder: z.number().int().default(0),
+});
+
+export const quoteCreateSchema = z.object({
+  date: z.string().min(1, "Date is required"),
+  staffId: z.string().min(1, "Staff member is required"),
+  department: z.string().min(1, "Department is required"),
+  category: z.string().min(1, "Category is required"),
+  accountCode: z.string().default(""),
+  accountNumber: z.string().default(""),
+  approvalChain: z.array(z.string()).default([]),
+  notes: z.string().default(""),
+  items: z.array(quoteItemSchema).min(1, "At least one item is required"),
+  expirationDate: z.string().min(1, "Expiration date is required"),
+  recipientName: z.string().min(1, "Recipient name is required"),
+  recipientEmail: z.string().email().optional().or(z.literal("")),
+  recipientOrg: z.string().default(""),
+});
+
+export const quoteUpdateSchema = quoteCreateSchema.partial().extend({
+  items: z.array(quoteItemSchema).min(1).optional(),
+});
