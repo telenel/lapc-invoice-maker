@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,6 +36,15 @@ export function InvoiceFiltersBar({
   onChange,
   onClear,
 }: InvoiceFiltersProps) {
+  const [categories, setCategories] = useState<{ name: string; label: string }[]>([]);
+
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((res) => res.json())
+      .then((data) => setCategories(data))
+      .catch(() => {});
+  }, []);
+
   function set(key: keyof InvoiceFilters, value: string) {
     onChange({ ...filters, [key]: value });
   }
@@ -83,10 +93,11 @@ export function InvoiceFiltersBar({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All</SelectItem>
-              <SelectItem value="COPY_TECH">CopyTech</SelectItem>
-              <SelectItem value="CATERING">Catering</SelectItem>
-              <SelectItem value="SUPPLIES">Supplies</SelectItem>
-              <SelectItem value="DEPARTMENT_PURCHASE">Department Purchase</SelectItem>
+              {categories.map((cat) => (
+                <SelectItem key={cat.name} value={cat.name}>
+                  {cat.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

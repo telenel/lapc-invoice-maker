@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +31,8 @@ const links = [
 export function Nav() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
+  const { data: session } = useSession();
+  const role = (session?.user as { role?: string } | undefined)?.role;
 
   return (
     <nav className="border-b bg-background">
@@ -55,6 +57,19 @@ export function Nav() {
               {link.label}
             </Link>
           ))}
+          {role === "admin" && (
+            <Link
+              href="/admin/users"
+              className={cn(
+                "px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                pathname === "/admin/users"
+                  ? "bg-accent text-accent-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+              )}
+            >
+              Admin
+            </Link>
+          )}
         </div>
         <div className="ml-auto flex items-center gap-2">
           <HelpModal />

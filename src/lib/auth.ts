@@ -12,10 +12,29 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.username || !credentials?.password) return null;
+        if (!credentials?.username) return null;
+
+        const input = credentials.username.trim();
+
+        // 6-digit access code login
+        if (/^\d{6}$/.test(input)) {
+          const user = await prisma.user.findUnique({
+            where: { accessCode: input, active: true },
+          });
+          if (!user) return null;
+          return {
+            id: user.id,
+            name: user.name,
+            username: user.username,
+            role: user.role,
+          };
+        }
+
+        // Traditional username/password login
+        if (!credentials.password) return null;
 
         const user = await prisma.user.findUnique({
-          where: { username: credentials.username, active: true },
+          where: { username: input, active: true },
         });
 
         if (!user) return null;
@@ -27,7 +46,12 @@ export const authOptions: NextAuthOptions = {
 
         if (!isValid) return null;
 
-        return { id: user.id, name: user.name, username: user.username };
+        return {
+          id: user.id,
+          name: user.name,
+          username: user.username,
+          role: user.role,
+        };
       },
     }),
   ],
@@ -38,6 +62,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.username = (user as unknown as { username: string }).username;
+        token.role = (user as unknown as { role: string }).role;
       }
       return token;
     },
@@ -46,6 +71,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as { id: string }).id = token.id as string;
         (session.user as { username: string }).username =
           token.username as string;
+        (session.user as { role: string }).role = token.role as string;
       }
       return session;
     },
