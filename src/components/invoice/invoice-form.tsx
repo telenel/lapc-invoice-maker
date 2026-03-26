@@ -43,6 +43,13 @@ export interface InvoiceFormData {
   };
 }
 
+export interface StaffAccountNumber {
+  id: string;
+  accountCode: string;
+  description: string;
+  lastUsedAt: string;
+}
+
 interface StaffMember {
   id: string;
   name: string;
@@ -53,6 +60,7 @@ interface StaffMember {
   email: string;
   phone: string;
   approvalChain: string[];
+  accountNumbers?: StaffAccountNumber[];
 }
 
 // ---------------------------------------------------------------------------
@@ -159,12 +167,19 @@ export function useInvoiceForm(
 
   // ---------- Staff autofill ----------
 
+  const [staffAccountNumbers, setStaffAccountNumbers] = useState<
+    StaffAccountNumber[]
+  >([]);
+
   const handleStaffSelect = useCallback((staff: StaffMember) => {
+    // Most recently used account number (first in the list, already sorted by lastUsedAt desc)
+    const latestAccount = staff.accountNumbers?.[0];
+    setStaffAccountNumbers(staff.accountNumbers ?? []);
     setForm((prev) => ({
       ...prev,
       staffId: staff.id,
       department: staff.department,
-      accountCode: staff.accountCode,
+      accountCode: latestAccount?.accountCode ?? staff.accountCode,
       contactName: staff.name,
       contactExtension: staff.extension,
       contactEmail: staff.email,
@@ -305,6 +320,7 @@ export function useInvoiceForm(
     removeItem,
     total,
     handleStaffSelect,
+    staffAccountNumbers,
     saveDraft,
     saveAndFinalize,
     saving,

@@ -11,6 +11,9 @@ export async function GET() {
   const staff = await prisma.staff.findMany({
     where: { active: true },
     orderBy: { name: "asc" },
+    include: {
+      accountNumbers: { orderBy: { lastUsedAt: "desc" } },
+    },
   });
 
   return NextResponse.json(staff);
