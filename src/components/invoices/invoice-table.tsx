@@ -29,6 +29,7 @@ interface Invoice {
   invoiceNumber: string;
   date: string;
   department: string;
+  category: string;
   totalAmount: string | number;
   status: "DRAFT" | "FINAL";
   staff: { id: string; name: string; title: string; department: string };
@@ -45,6 +46,7 @@ interface InvoicesResponse {
 const EMPTY_FILTERS: InvoiceFilters = {
   search: "",
   status: "",
+  category: "",
   department: "",
   dateFrom: "",
   dateTo: "",
@@ -93,6 +95,8 @@ export function InvoiceTable() {
     if (filters.search) params.set("search", filters.search);
     if (filters.status && filters.status !== "all")
       params.set("status", filters.status);
+    if (filters.category && filters.category !== "all")
+      params.set("category", filters.category);
     if (filters.department && filters.department !== "all")
       params.set("department", filters.department);
     if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
@@ -161,14 +165,37 @@ export function InvoiceTable() {
     });
   }
 
+  function handleExportCsv() {
+    const params = new URLSearchParams();
+    if (filters.search) params.set("search", filters.search);
+    if (filters.status && filters.status !== "all")
+      params.set("status", filters.status);
+    if (filters.category && filters.category !== "all")
+      params.set("category", filters.category);
+    if (filters.department && filters.department !== "all")
+      params.set("department", filters.department);
+    if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
+    if (filters.dateTo) params.set("dateTo", filters.dateTo);
+    if (filters.amountMin) params.set("amountMin", filters.amountMin);
+    if (filters.amountMax) params.set("amountMax", filters.amountMax);
+    window.open(`/api/invoices/export?${params.toString()}`, "_blank");
+  }
+
   return (
     <div className="space-y-4">
-      <InvoiceFiltersBar
-        filters={filters}
-        departments={departments}
-        onChange={handleFiltersChange}
-        onClear={handleClear}
-      />
+      <div className="flex items-end justify-between gap-4">
+        <div className="flex-1">
+          <InvoiceFiltersBar
+            filters={filters}
+            departments={departments}
+            onChange={handleFiltersChange}
+            onClear={handleClear}
+          />
+        </div>
+        <Button variant="outline" size="sm" onClick={handleExportCsv}>
+          Export CSV
+        </Button>
+      </div>
 
       {loading ? (
         <p className="text-muted-foreground text-sm">Loading…</p>
@@ -193,6 +220,7 @@ export function InvoiceTable() {
                 </TableHead>
                 <TableHead>Staff</TableHead>
                 <TableHead>Department</TableHead>
+                <TableHead>Category</TableHead>
                 <TableHead
                   className="cursor-pointer select-none text-right"
                   onClick={() => handleSort("totalAmount")}
@@ -216,6 +244,13 @@ export function InvoiceTable() {
                   <TableCell>{invoice.staff.name}</TableCell>
                   <TableCell>
                     <Badge variant="secondary">{invoice.department}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">
+                      {invoice.category
+                        ? invoice.category.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())
+                        : "—"}
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     {formatAmount(invoice.totalAmount)}

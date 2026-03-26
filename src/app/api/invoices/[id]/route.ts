@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { invoiceUpdateSchema } from "@/lib/validators";
+import { unlink } from "fs/promises";
+import path from "path";
 
 export async function GET(
   _request: NextRequest,
@@ -100,4 +102,43 @@ export async function PUT(
   });
 
   return NextResponse.json(invoice);
+}
+
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const session = await getServerSession(authOptions);
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id } = params;
+
+  const invoice = await prisma.invoice.findUnique({ where: { id } });
+  if (!invoice) {
+    return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
+  }
+
+  // Delete PDF file from disk if FINAL and has pdfPath
+  if (invoice.status === "FINAL" && invoice.pdfPath) {
+    try {
+      await unlink(invoice.pdfPath);
+    } catch {
+      // File may not exist on disk — ignore
+    }
+  }
+
+  // Delete prismcore file if present
+  if (invoice.prismcorePath) {
+    try {
+      const prismcoreFullPath = path.resolve(process.cwd(), "public", invoice.prismcorePath);
+      await unlink(prismcoreFullPath);
+    } catch {
+      // File may not exist on disk — ignore
+    }
+  }
+
+  // Delete the invoice (Prisma cascade will handle items)
+  await prisma.invoice.delete({ where: { id } });
+
+  return NextResponse.json({ success: true });
 }

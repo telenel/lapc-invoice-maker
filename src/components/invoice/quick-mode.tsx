@@ -11,6 +11,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { StaffSelect } from "./staff-select";
 import { LineItems } from "./line-items";
 import { QuickPickPanel } from "./quick-pick-panel";
@@ -18,7 +25,8 @@ import { PrismcoreUpload } from "./prismcore-upload";
 import { AccountSelect } from "./account-select";
 import { StaffForm } from "@/components/staff/staff-form";
 import { FieldHint, useHintsDismissed } from "./field-hint";
-import type { InvoiceFormData, InvoiceItem, StaffAccountNumber } from "./invoice-form";
+import type { InvoiceFormData, InvoiceItem, StaffAccountNumber, GenerationStep } from "./invoice-form";
+import { PdfProgress } from "./pdf-progress";
 
 interface StaffMember {
   id: string;
@@ -48,6 +56,7 @@ interface QuickModeProps {
   saveDraft: () => Promise<void>;
   saveAndFinalize: () => Promise<void>;
   saving: boolean;
+  generationStep: GenerationStep;
 }
 
 export function QuickMode({
@@ -63,6 +72,7 @@ export function QuickMode({
   saveDraft,
   saveAndFinalize,
   saving,
+  generationStep,
 }: QuickModeProps) {
   const { dismissed: hintsDismissed, dismiss: dismissHints } = useHintsDismissed();
 
@@ -223,6 +233,24 @@ export function QuickMode({
           </div>
 
           <div className="space-y-1">
+            <Label>Category</Label>
+            <Select
+              value={form.category}
+              onValueChange={(value) => updateField("category", value ?? "")}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="COPY_TECH">CopyTech</SelectItem>
+                <SelectItem value="CATERING">Catering</SelectItem>
+                <SelectItem value="SUPPLIES">Supplies</SelectItem>
+                <SelectItem value="DEPARTMENT_PURCHASE">Department Purchase</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1">
             <Label>Semester / Year / Dept</Label>
             <Input
               value={form.semesterYearDept}
@@ -308,6 +336,9 @@ export function QuickMode({
           </div>
         </CardContent>
       </Card>
+
+      {/* eslint-disable-next-line react/jsx-no-undef */}
+      <PdfProgress step={generationStep} />
     </div>
   );
 }

@@ -23,6 +23,7 @@ export const invoiceCreateSchema = z.object({
   date: z.string().min(1, "Date is required"),
   staffId: z.string().min(1, "Staff member is required"),
   department: z.string().min(1, "Department is required"),
+  category: z.enum(["COPY_TECH", "CATERING", "SUPPLIES", "DEPARTMENT_PURCHASE"]),
   accountCode: z.string().default(""),
   accountNumber: z.string().default(""),
   approvalChain: z.array(z.string()).default([]),

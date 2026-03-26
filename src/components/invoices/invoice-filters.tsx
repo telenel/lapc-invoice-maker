@@ -14,6 +14,7 @@ import {
 export interface InvoiceFilters {
   search: string;
   status: string;
+  category: string;
   department: string;
   dateFrom: string;
   dateTo: string;
@@ -66,6 +67,26 @@ export function InvoiceFiltersBar({
               <SelectItem value="all">All</SelectItem>
               <SelectItem value="DRAFT">Draft</SelectItem>
               <SelectItem value="FINAL">Final</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Category */}
+        <div className="grid gap-1.5">
+          <Label>Category</Label>
+          <Select
+            value={filters.category}
+            onValueChange={(value) => set("category", value ?? "")}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="All categories" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="COPY_TECH">CopyTech</SelectItem>
+              <SelectItem value="CATERING">Catering</SelectItem>
+              <SelectItem value="SUPPLIES">Supplies</SelectItem>
+              <SelectItem value="DEPARTMENT_PURCHASE">Department Purchase</SelectItem>
             </SelectContent>
           </Select>
         </div>
