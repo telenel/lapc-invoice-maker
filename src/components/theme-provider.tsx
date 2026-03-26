@@ -4,9 +4,10 @@ export function ThemeProviderWrapper({ children }: { children: React.ReactNode }
   return (
     <ThemeProvider
       attribute="class"
-      defaultTheme="system"
+      defaultTheme="light"
+      themes={["light", "dark", "theme-mocha"]}
       enableSystem
-      themes={["light", "dark", "theme-latte", "theme-frappe", "theme-macchiato", "theme-mocha"]}
+      disableTransitionOnChange
     >
       {children}
     </ThemeProvider>

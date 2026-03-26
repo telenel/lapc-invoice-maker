@@ -77,12 +77,15 @@ export function RecentInvoices() {
                   key={invoice.id}
                   className="cursor-pointer hover:bg-accent/50"
                   onClick={() => router.push(`/invoices/${invoice.id}`)}
+                  role="link"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === "Enter") router.push(`/invoices/${invoice.id}`); }}
                 >
                   <TableCell className="font-medium">
                     {invoice.invoiceNumber}
                   </TableCell>
                   <TableCell>
-                    {new Date(invoice.date).toLocaleDateString()}
+                    {new Date(invoice.date).toLocaleDateString("en-US")}
                   </TableCell>
                   <TableCell>{invoice.staff.name}</TableCell>
                   <TableCell>

@@ -211,12 +211,18 @@ export function InvoiceTable() {
                 <TableHead
                   className="cursor-pointer select-none"
                   onClick={() => handleSort("invoiceNumber")}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSort("invoiceNumber"); } }}
                 >
                   Invoice #{sortIndicator("invoiceNumber")}
                 </TableHead>
                 <TableHead
                   className="cursor-pointer select-none"
                   onClick={() => handleSort("date")}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSort("date"); } }}
                 >
                   Date{sortIndicator("date")}
                 </TableHead>
@@ -226,6 +232,9 @@ export function InvoiceTable() {
                 <TableHead
                   className="cursor-pointer select-none text-right"
                   onClick={() => handleSort("totalAmount")}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSort("totalAmount"); } }}
                 >
                   Amount{sortIndicator("totalAmount")}
                 </TableHead>
@@ -238,13 +247,16 @@ export function InvoiceTable() {
                   key={invoice.id}
                   className="cursor-pointer"
                   onClick={() => router.push(`/invoices/${invoice.id}`)}
+                  role="link"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === "Enter") router.push(`/invoices/${invoice.id}`); }}
                 >
                   <TableCell className="font-bold">
                     <span className="flex items-center gap-1">
                       {invoice.invoiceNumber}
                       {invoice.isRecurring && (
                         <span title="Recurring invoice">
-                          <RefreshCwIcon className="size-3 text-muted-foreground shrink-0" />
+                          <RefreshCwIcon className="size-3 text-muted-foreground shrink-0" aria-hidden="true" />
                         </span>
                       )}
                     </span>
@@ -261,7 +273,7 @@ export function InvoiceTable() {
                         : "—"}
                     </Badge>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right tabular-nums">
                     {formatAmount(invoice.totalAmount)}
                   </TableCell>
                   <TableCell>

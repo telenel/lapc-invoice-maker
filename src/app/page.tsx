@@ -9,12 +9,12 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-6">
       <WelcomeBanner />
       <div className="flex items-baseline justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-balance">Dashboard</h1>
         <Link
           href="/invoices/new"
-          className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground transition-all hover:bg-primary/90"
+          className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-4 w-4" aria-hidden="true" />
           New Invoice
         </Link>
       </div>

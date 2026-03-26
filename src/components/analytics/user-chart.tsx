@@ -29,7 +29,7 @@ export function UserChart({ data }: UserChartProps) {
   const chartData = [...data]
     .sort((a, b) => b.total - a.total)
     .map((d) => ({
-      user: d.user.length > 20 ? d.user.slice(0, 18) + "\u2026" : d.user,
+      user: d.user.length > 20 ? d.user.slice(0, 18) + "…" : d.user,
       count: d.count,
       total: d.total,
     }));

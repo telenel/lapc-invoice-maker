@@ -195,7 +195,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">{invoice.invoiceNumber}</h1>
+          <h1 className="text-2xl font-bold text-balance">{invoice.invoiceNumber}</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Created {formatDate(invoice.createdAt)} by {invoice.creator.name}
           </p>
@@ -413,13 +413,13 @@ export function InvoiceDetailView({ id }: { id: string }) {
               {invoice.items.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell>{item.description}</TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className="text-center tabular-nums">
                     {Number(item.quantity)}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right tabular-nums">
                     {formatAmount(item.unitPrice)}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right tabular-nums">
                     {formatAmount(item.extendedPrice)}
                   </TableCell>
                 </TableRow>
@@ -429,7 +429,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
                 <TableCell colSpan={3} className="text-right font-bold">
                   Total
                 </TableCell>
-                <TableCell className="text-right font-bold">
+                <TableCell className="text-right font-bold tabular-nums">
                   {formatAmount(invoice.totalAmount)}
                 </TableCell>
               </TableRow>

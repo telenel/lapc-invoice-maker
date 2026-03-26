@@ -36,7 +36,7 @@ export function FieldHint({
       <button
         type="button"
         onClick={onDismiss}
-        className="shrink-0 underline underline-offset-2 hover:text-foreground"
+        className="shrink-0 underline underline-offset-2 hover:text-foreground focus-visible:outline focus-visible:ring-2 focus-visible:ring-ring"
         aria-label="Hide hints"
       >
         hide hints

@@ -1,13 +1,24 @@
 "use client";
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { UserManagement } from "./user-management";
 import { CategoryManager } from "./category-manager";
 import { DbHealth } from "./db-health";
 
+const VALID_TABS = ["users", "categories", "database", "general"];
+
 export function SettingsPanel() {
-  const [activeTab, setActiveTab] = useState("users");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const paramTab = searchParams.get("tab");
+  const activeTab = paramTab && VALID_TABS.includes(paramTab) ? paramTab : "users";
+
+  function setActiveTab(tab: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", tab);
+    router.replace(`?${params.toString()}`);
+  }
 
   return (
     <div className="space-y-6">

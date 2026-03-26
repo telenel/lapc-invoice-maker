@@ -177,7 +177,8 @@ export function LineItems({
               value={item.description}
               onChange={(e) => onUpdate(index, { description: e.target.value })}
               onKeyDown={(e) => handleDescriptionKeyDown(e, index)}
-              placeholder="Description"
+              placeholder="Description…"
+              name={`lineItem${index}Description`}
               className="focus-visible:ring-2 focus-visible:ring-ring"
               aria-label={`Line item ${index + 1} description`}
             />
@@ -196,7 +197,9 @@ export function LineItems({
                 onUpdate(index, { quantity: Number(e.target.value) })
               }
               onKeyDown={(e) => handleQtyKeyDown(e, index)}
-              placeholder="Qty"
+              placeholder="Qty…"
+              name={`lineItem${index}Qty`}
+              inputMode="numeric"
               className="focus-visible:ring-2 focus-visible:ring-ring"
               aria-label={`Line item ${index + 1} quantity`}
             />
@@ -213,7 +216,9 @@ export function LineItems({
                 onUpdate(index, { unitPrice: Number(e.target.value) })
               }
               onKeyDown={(e) => handleUnitPriceKeyDown(e, index)}
-              placeholder="0.00"
+              placeholder="0.00…"
+              name={`lineItem${index}UnitPrice`}
+              inputMode="decimal"
               className="focus-visible:ring-2 focus-visible:ring-ring"
               aria-label={`Line item ${index + 1} unit price`}
             />
@@ -225,7 +230,7 @@ export function LineItems({
               readOnly
               tabIndex={-1}
               value={`$${Number(item.extendedPrice).toFixed(2)}`}
-              className="bg-muted"
+              className="bg-muted tabular-nums"
               aria-label={`Line item ${index + 1} extended price`}
             />
           </div>
@@ -241,7 +246,7 @@ export function LineItems({
                 className="text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label={`Save line item ${index + 1} for future use`}
               >
-                <Bookmark className="h-4 w-4" />
+                <Bookmark className="h-4 w-4" aria-hidden="true" />
               </Button>
             )}
             <Button
@@ -261,7 +266,7 @@ export function LineItems({
 
       {/* Total */}
       <div className="flex justify-end pt-2 border-t">
-        <span className="text-sm font-semibold">
+        <span className="text-sm font-semibold tabular-nums">
           Total: ${Number(total).toFixed(2)}
         </span>
       </div>

@@ -63,7 +63,7 @@ export function HelpModal() {
         <div className="space-y-4 py-2">
           {sections.map((section) => (
             <div key={section.title}>
-              <p className="text-sm font-semibold mb-0.5">{section.title}</p>
+              <h3 className="text-sm font-semibold mb-0.5">{section.title}</h3>
               <p className="text-sm text-muted-foreground">{section.body}</p>
             </div>
           ))}

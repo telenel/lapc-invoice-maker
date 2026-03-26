@@ -59,24 +59,26 @@ export function LoginForm() {
               className="h-11"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Username or 6-digit code"
+              placeholder="Username or 6-digit code…"
+              autoComplete="username"
+              spellCheck={false}
             />
           </div>
           {!isAccessCode && (
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" name="password" type="password" required className="h-11" />
+              <Input id="password" name="password" type="password" required className="h-11" autoComplete="current-password" />
             </div>
           )}
           {error && (
-            <>
+            <div aria-live="polite">
               <div className="border-t border-border/50" />
               <p className="text-sm text-red-500">{error}</p>
-            </>
+            </div>
           )}
           <Button type="submit" className="w-full h-11 font-semibold uppercase tracking-wide" disabled={loading}>
             {loading
-              ? "Signing in..."
+              ? "Signing in…"
               : isAccessCode
               ? "Log in with access code"
               : "Sign in"}

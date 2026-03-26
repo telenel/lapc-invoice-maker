@@ -101,7 +101,8 @@ export function AccountSelect({
       <Input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Enter account number"
+        placeholder="Enter account number…"
+        name="accountNumber"
         className="focus-visible:ring-2 focus-visible:ring-ring"
       />
 
@@ -125,7 +126,8 @@ export function AccountSelect({
                       setShowDesc(false);
                     }
                   }}
-                  placeholder="e.g., ASB Fund, Grant #1234"
+                  placeholder="e.g., ASB Fund, Grant #1234…"
+                  name="accountDescription"
                   className="text-sm focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </div>

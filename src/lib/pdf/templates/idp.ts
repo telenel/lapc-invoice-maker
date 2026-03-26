@@ -21,208 +21,217 @@ export interface IDPData {
 }
 
 export function renderIDP(data: IDPData): string {
-  // Pad items to at least 6 rows for both requesting dept and bookstore sections
   const rows: IDPItem[] = [...data.items];
-  while (rows.length < 6) {
+  while (rows.length < 4) {
     rows.push({ description: "", quantity: "", unitPrice: "", extendedPrice: "" });
   }
 
-  function itemRow(item: IDPItem): string {
-    return `
-      <tr style="height:28px;">
-        <td style="border-left:1px solid #000; border-right:1px solid #000; border-bottom:1px solid #ccc; padding:2px 6px; font-size:11pt;">${item.description}</td>
-        <td style="border-right:1px solid #000; border-bottom:1px solid #ccc; padding:2px 6px; font-size:11pt; text-align:center;">${item.quantity}</td>
-        <td style="border-right:1px solid #000; border-bottom:1px solid #ccc; padding:2px 6px; font-size:11pt; text-align:right;">${item.unitPrice}</td>
-        <td style="border-right:1px solid #000; border-bottom:1px solid #ccc; padding:2px 6px; font-size:11pt; text-align:right;">${item.extendedPrice}</td>
-      </tr>`;
-  }
+  const deptItemRows = rows
+    .map(
+      (item) => `
+        <tr>
+          <td class="c">${item.description}</td>
+          <td class="c" style="text-align:center;">${item.quantity}</td>
+          <td class="c" style="text-align:right;">${item.unitPrice}</td>
+          <td class="c" style="text-align:right;">${item.extendedPrice}</td>
+        </tr>`
+    )
+    .join("\n");
 
-  function blankRow(): string {
-    return `
-      <tr style="height:28px;">
-        <td style="border-left:1px solid #000; border-right:1px solid #000; border-bottom:1px solid #ccc; padding:2px 6px; font-size:11pt;">&nbsp;</td>
-        <td style="border-right:1px solid #000; border-bottom:1px solid #ccc; padding:2px 6px; font-size:11pt;">&nbsp;</td>
-        <td style="border-right:1px solid #000; border-bottom:1px solid #ccc; padding:2px 6px; font-size:11pt;">&nbsp;</td>
-        <td style="border-right:1px solid #000; border-bottom:1px solid #ccc; padding:2px 6px; font-size:11pt;">&nbsp;</td>
-      </tr>`;
-  }
-
-  const requestingItemRows = rows.map((item) => itemRow(item)).join("\n");
-  const bookstoreBlankRows = Array.from({ length: rows.length }, () => blankRow()).join("\n");
+  const blankRows = rows
+    .map(
+      () => `
+        <tr>
+          <td class="c">&nbsp;</td>
+          <td class="c">&nbsp;</td>
+          <td class="c" style="text-align:right;">$&nbsp;-</td>
+          <td class="c" style="text-align:right;">&nbsp;</td>
+        </tr>`
+    )
+    .join("\n");
 
   return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <style>
-  @page {
-    size: 11in 8.5in;
-    margin: 0.5in;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  @page { size: 11in 8.5in; margin: 0.35in 0.4in; }
+  * { margin:0; padding:0; box-sizing:border-box; }
   body {
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 11pt;
+    font-size: 9pt;
     color: #000;
-    line-height: 1.3;
-    width: 10in;
-    height: 7.5in;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
+    line-height: 1.15;
+  }
+  table { border-collapse:collapse; }
+  /* generic bordered cell */
+  .c {
+    border: 1px solid #000;
+    padding: 2px 4px;
+    vertical-align: middle;
+  }
+  /* label cell (below value) */
+  .lb {
+    border: 1px solid #000;
+    padding: 1px 4px;
+    font-weight: bold;
+    font-size: 7.5pt;
+    vertical-align: top;
+  }
+  /* value cell (above label) */
+  .v {
+    border: 1px solid #000;
+    padding: 2px 4px;
+    font-size: 9pt;
+    vertical-align: bottom;
+    height: 20px;
+  }
+  /* sidebar */
+  .sb {
+    background: #CCFFCC;
+    border: 1px solid #000;
+    text-align: center;
+    vertical-align: middle;
+    width: 22px;
+  }
+  .sb div {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-weight: bold;
+    font-size: 7pt;
+    text-transform: uppercase;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+  }
+  /* dark header */
+  .hd {
+    background: #000;
+    color: #fff;
+    border: 1px solid #000;
+    padding: 3px 4px;
+    font-weight: bold;
+    font-size: 8pt;
   }
 </style>
 </head>
 <body>
 
-<table style="width:10in; height:7.5in; border-collapse:collapse; table-layout:fixed;">
-  <!-- ── Title Row ── -->
+<!-- Outer page table: fills the full printable area -->
+<table style="width:100%; height:100%;">
+  <colgroup>
+    <col style="width:22px;">
+    <col>
+  </colgroup>
+
+  <!-- ═══ TITLE ═══ -->
   <tr>
-    <td colspan="2" style="border:none; padding:0 0 4px 0; vertical-align:top;">
-      <div style="text-align:center; font-size:14pt; font-weight:bold; padding:4px 0 2px 0;">Los Angeles Pierce College</div>
-      <div style="text-align:center; font-size:12pt; font-weight:bold; padding:2px 0 4px 0;">INTER-DEPARTMENT BOOKSTORE PURCHASE REQUEST FORM</div>
-      <div style="border-top:1px solid #000; margin:0;"></div>
+    <td colspan="2" style="border:1px solid #000; text-align:center; padding:4px 0; height:36px;">
+      <div style="font-weight:bold; font-size:11pt; line-height:1.3;">Name of College</div>
+      <div style="font-weight:bold; font-size:9pt;">INTER- DEPARTMENT BOOKSTORE PURCHASE REQUEST FORM</div>
     </td>
   </tr>
 
-  <!-- ══════════════════════════════════════════════ -->
-  <!-- SECTION 1: Requesting Department Use (28%)    -->
-  <!-- ══════════════════════════════════════════════ -->
-  <tr style="height:28%;">
-    <!-- Sidebar -->
-    <td style="width:32px; background:#CCFFCC; border:1px solid #000; text-align:center; vertical-align:middle;">
-      <div style="writing-mode:vertical-rl; transform:rotate(180deg); font-weight:bold; font-size:10pt; text-transform:uppercase; white-space:nowrap; letter-spacing:0.5px;">Requesting Department Use</div>
-    </td>
-    <!-- Content -->
-    <td style="border:1px solid #000; vertical-align:top; padding:0;">
-      <div style="padding:8px;">
-        <!-- Row 1: Date / Department / Document # -->
-        <table style="width:100%; border-collapse:collapse; margin-bottom:8px;">
-          <tr>
-            <td style="width:20%; padding:0; vertical-align:baseline;">
-              <span style="font-weight:bold; font-size:10pt; white-space:nowrap;">Date:&nbsp;</span>
-              <span style="font-size:11pt; border-bottom:1px solid #000; display:inline-block; min-width:80px; min-height:18px; padding:0 2px;">${data.date}</span>
-            </td>
-            <td style="width:55%; padding:0 8px; vertical-align:baseline;">
-              <span style="font-weight:bold; font-size:10pt; white-space:nowrap;">Department or Unit Requesting Services:&nbsp;</span>
-              <span style="font-size:11pt; border-bottom:1px solid #000; display:inline-block; min-width:120px; min-height:18px; padding:0 2px;">${data.department}</span>
-            </td>
-            <td style="width:25%; padding:0; vertical-align:baseline;">
-              <span style="font-weight:bold; font-size:10pt; white-space:nowrap;">Document #:&nbsp;</span>
-              <span style="font-size:11pt; border-bottom:1px solid #000; display:inline-block; min-width:80px; min-height:18px; padding:0 2px;">${data.documentNumber}</span>
-            </td>
-          </tr>
-        </table>
-
-        <!-- Row 2: Requesting Department / SAP Account / Estimated Cost -->
-        <table style="width:100%; border-collapse:collapse; margin-bottom:8px;">
-          <tr>
-            <td style="width:40%; padding:0; vertical-align:baseline;">
-              <span style="font-weight:bold; font-size:10pt; white-space:nowrap;">Requesting Department:&nbsp;</span>
-              <span style="font-size:11pt; border-bottom:1px solid #000; display:inline-block; min-width:100px; min-height:18px; padding:0 2px;">${data.requestingDept}</span>
-            </td>
-            <td style="width:35%; padding:0 8px; vertical-align:baseline;">
-              <span style="font-weight:bold; font-size:10pt; white-space:nowrap;">SAP Account:&nbsp;</span>
-              <span style="font-size:11pt; border-bottom:1px solid #000; display:inline-block; min-width:100px; min-height:18px; padding:0 2px;">${data.sapAccount}</span>
-            </td>
-            <td style="width:25%; padding:0; vertical-align:baseline;">
-              <span style="font-weight:bold; font-size:10pt; white-space:nowrap;">Estimated Cost:&nbsp;</span>
-              <span style="font-size:11pt; border-bottom:1px solid #000; display:inline-block; min-width:80px; min-height:18px; padding:0 2px;">${data.estimatedCost}</span>
-            </td>
-          </tr>
-        </table>
-
-        <!-- Row 3: Approver / Contact / Phone -->
-        <table style="width:100%; border-collapse:collapse; margin-bottom:8px;">
-          <tr>
-            <td style="width:40%; padding:0; vertical-align:baseline;">
-              <span style="font-weight:bold; font-size:10pt; white-space:nowrap;">Name of Department Approver:&nbsp;</span>
-              <span style="font-size:11pt; border-bottom:1px solid #000; display:inline-block; min-width:80px; min-height:18px; padding:0 2px;">${data.approverName}</span>
-            </td>
-            <td style="width:35%; padding:0 8px; vertical-align:baseline;">
-              <span style="font-weight:bold; font-size:10pt; white-space:nowrap;">Department Contact:&nbsp;</span>
-              <span style="font-size:11pt; border-bottom:1px solid #000; display:inline-block; min-width:80px; min-height:18px; padding:0 2px;">${data.contactName}</span>
-            </td>
-            <td style="width:25%; padding:0; vertical-align:baseline;">
-              <span style="font-weight:bold; font-size:10pt; white-space:nowrap;">Contact Phone:&nbsp;</span>
-              <span style="font-size:11pt; border-bottom:1px solid #000; display:inline-block; min-width:80px; min-height:18px; padding:0 2px;">${data.contactPhone}</span>
-            </td>
-          </tr>
-        </table>
-
-        <!-- Row 4: Comments -->
-        <table style="width:100%; border-collapse:collapse; margin-bottom:8px;">
-          <tr>
-            <td style="padding:0; vertical-align:baseline;">
-              <span style="font-weight:bold; font-size:10pt; white-space:nowrap;">Comments:&nbsp;</span>
-              <span style="font-size:11pt; border-bottom:1px solid #000; display:inline-block; width:calc(100% - 90px); min-height:18px; padding:0 2px;">${data.comments ?? ""}</span>
-            </td>
-          </tr>
-        </table>
-      </div>
-
-      <!-- Row 5: Signature -->
-      <div style="padding:4px 8px 8px 8px; border-top:1px solid #ccc; display:flex; align-items:flex-end;">
-        <span style="font-weight:bold; font-size:10pt; white-space:nowrap; margin-right:4px;">Signature of Department Approver:</span>
-        <span style="flex:1; border-bottom:1px solid #000; height:18px; margin-right:16px;"></span>
-        <span style="font-weight:bold; font-size:10pt; white-space:nowrap; margin-right:4px;">Date:</span>
-        <span style="width:120px; border-bottom:1px solid #000; height:18px;"></span>
-      </div>
-    </td>
-  </tr>
-
-  <!-- ══════════════════════════════════════════════ -->
-  <!-- SECTION 2: Department Use (40%)               -->
-  <!-- ══════════════════════════════════════════════ -->
-  <tr style="height:40%;">
-    <!-- Sidebar -->
-    <td style="width:32px; background:#CCFFCC; border:1px solid #000; text-align:center; vertical-align:middle;">
-      <div style="writing-mode:vertical-rl; transform:rotate(180deg); font-weight:bold; font-size:10pt; text-transform:uppercase; white-space:nowrap; letter-spacing:0.5px;">Department Use</div>
-    </td>
-    <!-- Content -->
-    <td style="border:1px solid #000; vertical-align:top; padding:0;">
-      <table style="width:100%; height:100%; border-collapse:collapse;">
-        <thead>
-          <tr>
-            <th style="width:55%; background:#f0f0f0; border-bottom:1px solid #000; padding:4px 6px; font-size:10pt; font-weight:bold; text-align:center;">Description of Product, Goods or Services Requested</th>
-            <th style="width:10%; background:#f0f0f0; border-bottom:1px solid #000; border-left:1px solid #000; padding:4px 6px; font-size:10pt; font-weight:bold; text-align:center;">Qty.</th>
-            <th style="width:17%; background:#f0f0f0; border-bottom:1px solid #000; border-left:1px solid #000; padding:4px 6px; font-size:10pt; font-weight:bold; text-align:center;">Rate/Unit Price</th>
-            <th style="width:18%; background:#f0f0f0; border-bottom:1px solid #000; border-left:1px solid #000; padding:4px 6px; font-size:10pt; font-weight:bold; text-align:center;">Extended Price</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${requestingItemRows}
-          <tr>
-            <td colspan="3" style="border-top:1px solid #000; padding:4px 6px; font-size:11pt; font-weight:bold; text-align:right;">Estimated Cost:</td>
-            <td style="border-top:1px solid #000; border-left:1px solid #000; padding:4px 6px; font-size:11pt; font-weight:bold; text-align:right;">${data.totalAmount}</td>
-          </tr>
-        </tbody>
+  <!-- ═══ SECTION 1: REQUESTING DEPARTMENT USE ═══ -->
+  <tr>
+    <td class="sb"><div>Requesting Department Use</div></td>
+    <td style="border:1px solid #000; padding:0; vertical-align:top;">
+      <table style="width:100%; table-layout:fixed;">
+        <!-- Field Group 1: Value row -->
+        <tr>
+          <td class="v" style="width:18%;">${data.date}</td>
+          <td class="v" style="width:50%;">${data.department}</td>
+          <td class="v" style="width:32%;">${data.documentNumber}</td>
+        </tr>
+        <!-- Field Group 1: Label row -->
+        <tr>
+          <td class="lb">Date</td>
+          <td class="lb">Department or Unit Requesting Services</td>
+          <td class="lb">Document #</td>
+        </tr>
+        <!-- Field Group 2: Value row -->
+        <tr>
+          <td class="v">${data.requestingDept}</td>
+          <td class="v">${data.sapAccount}</td>
+          <td class="v">${data.estimatedCost}</td>
+        </tr>
+        <!-- Field Group 2: Label row -->
+        <tr>
+          <td class="lb">Requesting Department</td>
+          <td class="lb">SAP Account</td>
+          <td class="lb">Estimated Cost</td>
+        </tr>
+        <!-- Field Group 3: Value row -->
+        <tr>
+          <td class="v">${data.approverName}</td>
+          <td class="v">${data.contactName}</td>
+          <td class="v">${data.contactPhone}</td>
+        </tr>
+        <!-- Field Group 3: Label row -->
+        <tr>
+          <td class="lb">Name of Department Approver</td>
+          <td class="lb">Department Contact</td>
+          <td class="lb">Contact Phone</td>
+        </tr>
+        <!-- Comments -->
+        <tr>
+          <td colspan="3" style="border:1px solid #000; padding:2px 4px; height:18px; vertical-align:top;">
+            <span style="font-weight:bold; font-size:7.5pt;">Comments:</span>
+            <span style="font-size:9pt;">${data.comments ?? ""}</span>
+          </td>
+        </tr>
+        <!-- Signature row -->
+        <tr>
+          <td colspan="2" style="border:1px solid #000; padding:4px; height:32px; vertical-align:bottom;">
+            <div style="border-bottom:1px solid #000; height:16px; margin-bottom:2px;"></div>
+            <span style="font-weight:bold; font-size:7.5pt;">Signature of Department Approver</span>
+          </td>
+          <td style="border:1px solid #000; padding:4px; vertical-align:bottom;">
+            <div style="border-bottom:1px solid #000; height:16px; margin-bottom:2px;"></div>
+            <span style="font-weight:bold; font-size:7.5pt;">Date</span>
+          </td>
+        </tr>
       </table>
     </td>
   </tr>
 
-  <!-- ══════════════════════════════════════════════ -->
-  <!-- SECTION 3: Bookstore Use (28%)                -->
-  <!-- ══════════════════════════════════════════════ -->
-  <tr style="height:28%;">
-    <!-- Sidebar -->
-    <td style="width:32px; background:#CCFFCC; border:1px solid #000; text-align:center; vertical-align:middle;">
-      <div style="writing-mode:vertical-rl; transform:rotate(180deg); font-weight:bold; font-size:10pt; text-transform:uppercase; white-space:nowrap; letter-spacing:0.5px;">Bookstore Use</div>
-    </td>
-    <!-- Content -->
-    <td style="border:1px solid #000; vertical-align:top; padding:0;">
-      <table style="width:100%; height:100%; border-collapse:collapse;">
-        <tbody>
-          ${bookstoreBlankRows}
-          <tr>
-            <td colspan="2" style="width:65%; border-top:1px solid #000; padding:4px 6px; font-size:11pt; font-weight:bold; text-align:left;">Description of Product, Goods or Services Provided:</td>
-            <td style="width:17%; border-top:1px solid #000; border-left:1px solid #000; padding:4px 6px; font-size:11pt; font-weight:bold; text-align:right;">Actual Cost:</td>
-            <td style="width:18%; border-top:1px solid #000; border-left:1px solid #000; padding:4px 6px; font-size:11pt; font-weight:bold; text-align:right;">${data.totalAmount}</td>
-          </tr>
-        </tbody>
+  <!-- ═══ SECTION 2: DEPARTMENT USE ═══ -->
+  <tr>
+    <td class="sb" rowspan="1"><div>Department Use</div></td>
+    <td style="border:1px solid #000; padding:0; vertical-align:top;">
+      <table style="width:100%; table-layout:fixed;">
+        <tr>
+          <td class="hd" style="width:55%;">Description of Product, Goods or Services Requested:</td>
+          <td class="hd" style="width:8%; text-align:center;">Qty.</td>
+          <td class="hd" style="width:17%; text-align:center;">Rate/Unit Price</td>
+          <td class="hd" style="width:20%; text-align:center;">Extended Price</td>
+        </tr>
+        ${deptItemRows}
+        <tr>
+          <td class="c" style="border-left:none; border-bottom:none;">&nbsp;</td>
+          <td class="c" style="border-bottom:none;">&nbsp;</td>
+          <td class="c" style="text-align:right; font-weight:bold;">Estimated Cost:</td>
+          <td class="c" style="text-align:right; font-weight:bold; background:#f0f0f0;">${data.totalAmount}</td>
+        </tr>
       </table>
     </td>
   </tr>
+
+  <!-- ═══ SECTION 3: BOOKSTORE USE ═══ -->
+  <tr>
+    <td class="sb" rowspan="1"><div>Bookstore Use</div></td>
+    <td style="border:1px solid #000; padding:0; vertical-align:top;">
+      <table style="width:100%; table-layout:fixed;">
+        ${blankRows}
+        <tr>
+          <td class="c" style="width:55%; font-weight:bold; font-size:8pt; vertical-align:bottom;">Description of Product, Goods or Services Provided:</td>
+          <td class="c" style="width:8%;">&nbsp;</td>
+          <td class="c" style="width:17%; text-align:right; font-weight:bold;">Actual Cost:</td>
+          <td class="c" style="width:20%; text-align:right; font-weight:bold; background:#f0f0f0;">${data.totalAmount}</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
 </table>
 
 </body>
