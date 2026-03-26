@@ -8,20 +8,25 @@ export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { searchParams } = new URL(request.url);
-  const department = searchParams.get("department");
+  try {
+    const { searchParams } = new URL(request.url);
+    const department = searchParams.get("department");
 
-  const items = await prisma.savedLineItem.findMany({
-    where: department ? { department } : undefined,
-    orderBy: { usageCount: "desc" },
-  });
+    const items = await prisma.savedLineItem.findMany({
+      where: department ? { department } : undefined,
+      orderBy: { usageCount: "desc" },
+    });
 
-  return NextResponse.json(
-    items.map((item) => ({
-      ...item,
-      unitPrice: Number(item.unitPrice),
-    }))
-  );
+    return NextResponse.json(
+      items.map((item) => ({
+        ...item,
+        unitPrice: Number(item.unitPrice),
+      }))
+    );
+  } catch (err) {
+    console.error("GET /api/saved-items failed:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -37,11 +42,16 @@ export async function POST(request: NextRequest) {
 
   const { department, description, unitPrice } = parsed.data;
 
-  const item = await prisma.savedLineItem.upsert({
-    where: { department_description: { department, description } },
-    update: { unitPrice },
-    create: { department, description, unitPrice },
-  });
+  try {
+    const item = await prisma.savedLineItem.upsert({
+      where: { department_description: { department, description } },
+      update: { unitPrice },
+      create: { department, description, unitPrice },
+    });
 
-  return NextResponse.json({ ...item, unitPrice: Number(item.unitPrice) }, { status: 201 });
+    return NextResponse.json({ ...item, unitPrice: Number(item.unitPrice) }, { status: 201 });
+  } catch (err) {
+    console.error("POST /api/saved-items failed:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

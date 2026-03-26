@@ -8,15 +8,20 @@ export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { searchParams } = new URL(request.url);
-  const department = searchParams.get("department");
+  try {
+    const { searchParams } = new URL(request.url);
+    const department = searchParams.get("department");
 
-  const quickPicks = await prisma.quickPickItem.findMany({
-    where: department ? { department } : undefined,
-    orderBy: { usageCount: "desc" },
-  });
+    const quickPicks = await prisma.quickPickItem.findMany({
+      where: department ? { department } : undefined,
+      orderBy: { usageCount: "desc" },
+    });
 
-  return NextResponse.json(quickPicks);
+    return NextResponse.json(quickPicks);
+  } catch (err) {
+    console.error("GET /api/quick-picks failed:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -30,6 +35,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const quickPick = await prisma.quickPickItem.create({ data: parsed.data });
-  return NextResponse.json(quickPick, { status: 201 });
+  try {
+    const quickPick = await prisma.quickPickItem.create({ data: parsed.data });
+    return NextResponse.json(quickPick, { status: 201 });
+  } catch (err) {
+    console.error("POST /api/quick-picks failed:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

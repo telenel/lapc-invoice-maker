@@ -11,23 +11,28 @@ export async function GET(
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const staff = await prisma.staff.findUnique({
-    where: { id: params.id },
-    include: {
-      accountNumbers: {
-        orderBy: { lastUsedAt: "desc" },
-      },
-      signerHistories: {
-        include: {
-          signer: { select: { id: true, name: true, title: true } },
+  try {
+    const staff = await prisma.staff.findUnique({
+      where: { id: params.id },
+      include: {
+        accountNumbers: {
+          orderBy: { lastUsedAt: "desc" },
         },
-        orderBy: { lastUsedAt: "desc" },
+        signerHistories: {
+          include: {
+            signer: { select: { id: true, name: true, title: true } },
+          },
+          orderBy: { lastUsedAt: "desc" },
+        },
       },
-    },
-  });
-  if (!staff) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    });
+    if (!staff) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  return NextResponse.json(staff);
+    return NextResponse.json(staff);
+  } catch (err) {
+    console.error("GET /api/staff/[id] failed:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function PUT(
@@ -44,12 +49,17 @@ export async function PUT(
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const staff = await prisma.staff.update({
-    where: { id: params.id },
-    data: parsed.data,
-  });
+  try {
+    const staff = await prisma.staff.update({
+      where: { id: params.id },
+      data: parsed.data,
+    });
 
-  return NextResponse.json(staff);
+    return NextResponse.json(staff);
+  } catch (err) {
+    console.error("PUT /api/staff/[id] failed:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function PATCH(
@@ -66,12 +76,17 @@ export async function PATCH(
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const staff = await prisma.staff.update({
-    where: { id: params.id },
-    data: parsed.data,
-  });
+  try {
+    const staff = await prisma.staff.update({
+      where: { id: params.id },
+      data: parsed.data,
+    });
 
-  return NextResponse.json(staff);
+    return NextResponse.json(staff);
+  } catch (err) {
+    console.error("PATCH /api/staff/[id] failed:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function DELETE(
@@ -81,10 +96,15 @@ export async function DELETE(
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  await prisma.staff.update({
-    where: { id: params.id },
-    data: { active: false },
-  });
+  try {
+    await prisma.staff.update({
+      where: { id: params.id },
+      data: { active: false },
+    });
 
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("DELETE /api/staff/[id] failed:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

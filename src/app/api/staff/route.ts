@@ -8,15 +8,20 @@ export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const staff = await prisma.staff.findMany({
-    where: { active: true },
-    orderBy: { name: "asc" },
-    include: {
-      accountNumbers: { orderBy: { lastUsedAt: "desc" } },
-    },
-  });
+  try {
+    const staff = await prisma.staff.findMany({
+      where: { active: true },
+      orderBy: { name: "asc" },
+      include: {
+        accountNumbers: { orderBy: { lastUsedAt: "desc" } },
+      },
+    });
 
-  return NextResponse.json(staff);
+    return NextResponse.json(staff);
+  } catch (err) {
+    console.error("GET /api/staff failed:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -30,6 +35,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const staff = await prisma.staff.create({ data: parsed.data });
-  return NextResponse.json(staff, { status: 201 });
+  try {
+    const staff = await prisma.staff.create({ data: parsed.data });
+    return NextResponse.json(staff, { status: 201 });
+  } catch (err) {
+    console.error("POST /api/staff failed:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
