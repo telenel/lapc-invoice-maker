@@ -43,8 +43,8 @@ export async function POST(
       return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
     }
 
-    // Block finalization if invoice number is still the placeholder
-    if (!invoice.invoiceNumber || invoice.invoiceNumber === "NEEDPOSCHARGE") {
+    // Block finalization if invoice number is missing
+    if (!invoice.invoiceNumber) {
       return NextResponse.json(
         { error: "Enter the AG invoice number before finalizing" },
         { status: 400 }

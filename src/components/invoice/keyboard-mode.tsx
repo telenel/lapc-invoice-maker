@@ -534,7 +534,7 @@ export function KeyboardMode({
         {/* Invoice Number */}
         <div className={cn(
           "space-y-1",
-          isPendingCharge && form.invoiceNumber === "NEEDPOSCHARGE" &&
+          isPendingCharge && !form.invoiceNumber &&
             "rounded-lg border-l-4 border-l-primary bg-primary/5 p-2 -ml-2"
         )}>
           <label className="text-sm font-medium">
