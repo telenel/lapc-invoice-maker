@@ -229,7 +229,8 @@ export function WizardMode({
                 <Input
                   value={form.department}
                   onChange={(e) => updateField("department", e.target.value)}
-                  placeholder="Department"
+                  placeholder="Department…"
+                  name="department"
                 />
               </div>
               <div className="space-y-1">
@@ -252,7 +253,8 @@ export function WizardMode({
               <Input
                 value={form.accountCode}
                 onChange={(e) => updateField("accountCode", e.target.value)}
-                placeholder="Account code"
+                placeholder="Account code…"
+                name="accountCode"
               />
               <FieldHint
                 text="Classification code for this transaction."
@@ -269,7 +271,8 @@ export function WizardMode({
                   onChange={(e) =>
                     updateField("contactExtension", e.target.value)
                   }
-                  placeholder="Extension"
+                  placeholder="Extension…"
+                  name="extension"
                 />
               </div>
               <div className="space-y-1">
@@ -277,7 +280,11 @@ export function WizardMode({
                 <Input
                   value={form.contactEmail}
                   onChange={(e) => updateField("contactEmail", e.target.value)}
-                  placeholder="Email"
+                  placeholder="Email…"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  spellCheck={false}
                 />
               </div>
             </div>
@@ -288,7 +295,8 @@ export function WizardMode({
                 <Input
                   value={form.invoiceNumber}
                   onChange={(e) => updateField("invoiceNumber", e.target.value)}
-                  placeholder="INV-0001"
+                  placeholder="INV-0001…"
+                  name="invoiceNumber"
                 />
                 <FieldHint
                   text="Must be unique (e.g., AG-000111222)."
@@ -302,6 +310,7 @@ export function WizardMode({
                   type="date"
                   value={form.date}
                   onChange={(e) => updateField("date", e.target.value)}
+                  name="date"
                 />
                 <FieldHint
                   text="Invoice date."
@@ -318,7 +327,7 @@ export function WizardMode({
                 onValueChange={(value) => updateField("category", value ?? "")}
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder="Select category…" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((cat) => (
@@ -340,7 +349,8 @@ export function WizardMode({
               <Input
                 value={form.semesterYearDept}
                 onChange={(e) => updateField("semesterYearDept", e.target.value)}
-                placeholder="e.g. Fall 2025 – Math"
+                placeholder="e.g. Fall 2025 – Math…"
+                name="semesterYearDept"
               />
               <FieldHint
                 text="e.g., Fall 2026 Student Services."
@@ -367,6 +377,7 @@ export function WizardMode({
               <QuickPickPanel
                 department={form.department}
                 onSelect={handleQuickPick}
+                currentSubtotal={total}
               />
               <FieldHint
                 text="Add items manually or click Quick Picks below. Click the bookmark icon to save an item for reuse."
@@ -388,6 +399,7 @@ export function WizardMode({
                 value={form.notes}
                 onChange={(e) => updateField("notes", e.target.value)}
                 placeholder="Additional notes or comments…"
+                name="notes"
                 rows={3}
               />
             </div>
@@ -442,14 +454,14 @@ export function WizardMode({
                     <span className="text-muted-foreground">
                       {item.description || "(no description)"} \u00d7 {item.quantity}
                     </span>
-                    <span className="font-medium">
+                    <span className="font-medium tabular-nums">
                       ${Number(item.extendedPrice).toFixed(2)}
                     </span>
                   </div>
                 ))}
                 <div className="flex justify-between pt-2 border-t font-semibold">
                   <span>Total</span>
-                  <span>${Number(total).toFixed(2)}</span>
+                  <span className="tabular-nums">${Number(total).toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -470,7 +482,7 @@ export function WizardMode({
             <div className="space-y-3 border rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <RefreshCwIcon className="size-4 text-muted-foreground" />
+                  <RefreshCwIcon className="size-4 text-muted-foreground" aria-hidden="true" />
                   <p className="text-sm font-semibold">Recurring Invoice</p>
                 </div>
                 <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -479,6 +491,7 @@ export function WizardMode({
                     className="size-4 rounded"
                     checked={form.isRecurring}
                     onChange={(e) => updateField("isRecurring", e.target.checked)}
+                    name="isRecurring"
                   />
                   <span className="text-sm">Make this invoice recurring</span>
                 </label>
@@ -492,7 +505,7 @@ export function WizardMode({
                       onValueChange={(v) => updateField("recurringInterval", v ?? "")}
                     >
                       <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select interval" />
+                        <SelectValue placeholder="Select interval…" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="monthly">Monthly</SelectItem>
@@ -507,7 +520,10 @@ export function WizardMode({
                       type="email"
                       value={form.recurringEmail}
                       onChange={(e) => updateField("recurringEmail", e.target.value)}
-                      placeholder="recipient@example.com"
+                      placeholder="recipient@example.com…"
+                      name="recurringEmail"
+                      autoComplete="email"
+                      spellCheck={false}
                     />
                   </div>
                 </div>
