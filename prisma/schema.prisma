@@ -60,7 +60,7 @@ model StaffAccountNumber {
 
 model Invoice {
   id             String          @id @default(uuid())
-  invoiceNumber  String          @unique @map("invoice_number")
+  invoiceNumber  String?         @unique @map("invoice_number")
   status         InvoiceStatus   @default(DRAFT)
   category       String          @default("SUPPLIES")
   date           DateTime        @db.Date
@@ -78,12 +78,24 @@ model Invoice {
   recurringInterval String?         @map("recurring_interval")
   nextRecurringDate DateTime?       @map("next_recurring_date") @db.Date
   recurringEmail    String?         @map("recurring_email")
+  type              DocumentType    @default(INVOICE)
+  quoteStatus       QuoteStatus?    @map("quote_status")
+  expirationDate    DateTime?       @map("expiration_date") @db.Date
+  recipientName     String?         @map("recipient_name")
+  recipientEmail    String?         @map("recipient_email")
+  recipientOrg      String?         @map("recipient_org")
+  quoteNumber       String?         @unique @map("quote_number")
+  convertedFromQuoteId String?      @unique @map("converted_from_quote_id")
+  convertedAt       DateTime?       @map("converted_at")
   createdAt         DateTime        @default(now()) @map("created_at")
   updatedAt      DateTime        @updatedAt @map("updated_at")
 
   creator  User          @relation(fields: [createdBy], references: [id])
   staff    Staff         @relation(fields: [staffId], references: [id])
   items    InvoiceItem[]
+
+  convertedFromQuote   Invoice?  @relation("QuoteToInvoice", fields: [convertedFromQuoteId], references: [id])
+  convertedToInvoice   Invoice?  @relation("QuoteToInvoice")
 
   @@map("invoices")
 }
@@ -96,6 +108,7 @@ model InvoiceItem {
   unitPrice     Decimal  @map("unit_price") @db.Decimal(10, 2)
   extendedPrice Decimal  @map("extended_price") @db.Decimal(10, 2)
   sortOrder     Int      @default(0) @map("sort_order")
+  sku           String?
   createdAt     DateTime @default(now()) @map("created_at")
   updatedAt     DateTime @updatedAt @map("updated_at")
 
@@ -117,6 +130,19 @@ model QuickPickItem {
 enum InvoiceStatus {
   DRAFT
   FINAL
+}
+
+enum DocumentType {
+  INVOICE
+  QUOTE
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  DECLINED
+  EXPIRED
 }
 
 model Category {
