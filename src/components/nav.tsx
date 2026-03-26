@@ -4,16 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { signOut, useSession } from "next-auth/react";
-import { Palette } from "lucide-react";
+import { CheckIcon, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { HelpModal } from "@/components/help-modal";
@@ -89,13 +88,15 @@ export function Nav() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Theme</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuRadioGroup value={theme ?? "system"} onValueChange={setTheme}>
-                {themes.map((t) => (
-                  <DropdownMenuRadioItem key={t.value} value={t.value}>
-                    {t.label}
-                  </DropdownMenuRadioItem>
-                ))}
-              </DropdownMenuRadioGroup>
+              {themes.map((t) => (
+                <DropdownMenuItem
+                  key={t.value}
+                  onClick={() => setTheme(t.value)}
+                >
+                  {theme === t.value && <CheckIcon className="size-4" />}
+                  {t.label}
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
           <div className="w-px h-5 bg-border/60" />
