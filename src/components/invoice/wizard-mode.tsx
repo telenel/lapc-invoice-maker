@@ -340,7 +340,7 @@ export function WizardMode({
               <Input
                 value={form.semesterYearDept}
                 onChange={(e) => updateField("semesterYearDept", e.target.value)}
-                placeholder="e.g. Fall 2025 \u2013 Math"
+                placeholder="e.g. Fall 2025 – Math"
               />
               <FieldHint
                 text="e.g., Fall 2026 Student Services."
@@ -387,7 +387,7 @@ export function WizardMode({
               <Textarea
                 value={form.notes}
                 onChange={(e) => updateField("notes", e.target.value)}
-                placeholder="Additional notes or comments\u2026"
+                placeholder="Additional notes or comments…"
                 rows={3}
               />
             </div>
@@ -443,13 +443,13 @@ export function WizardMode({
                       {item.description || "(no description)"} \u00d7 {item.quantity}
                     </span>
                     <span className="font-medium">
-                      ${item.extendedPrice.toFixed(2)}
+                      ${Number(item.extendedPrice).toFixed(2)}
                     </span>
                   </div>
                 ))}
                 <div className="flex justify-between pt-2 border-t font-semibold">
                   <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>${Number(total).toFixed(2)}</span>
                 </div>
               </div>
             </div>

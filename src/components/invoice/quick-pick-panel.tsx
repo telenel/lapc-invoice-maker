@@ -82,7 +82,7 @@ export function QuickPickPanel({ department, onSelect }: QuickPickPanelProps) {
                 onClick={() => onSelect(pick.description, pick.price)}
                 className="flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-ring"
               >
-                {pick.description} — ${pick.price.toFixed(2)}
+                {pick.description} — ${Number(pick.price).toFixed(2)}
                 <Badge variant="secondary" className="ml-1 text-xs">
                   {pick.usageCount}
                 </Badge>
@@ -105,7 +105,7 @@ export function QuickPickPanel({ department, onSelect }: QuickPickPanelProps) {
                 onClick={() => onSelect(item.description, item.unitPrice)}
                 className="flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-ring"
               >
-                {item.description} — ${item.unitPrice.toFixed(2)}
+                {item.description} — ${Number(item.unitPrice).toFixed(2)}
                 <Badge variant="outline" className="ml-1 text-xs">
                   {item.usageCount}
                 </Badge>
