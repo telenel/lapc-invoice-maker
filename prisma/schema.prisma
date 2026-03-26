@@ -1,0 +1,94 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String    @id @default(uuid())
+  username     String    @unique
+  passwordHash String    @map("password_hash")
+  name         String
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  invoices     Invoice[]
+
+  @@map("users")
+}
+
+model Staff {
+  id            String    @id @default(uuid())
+  name          String
+  title         String
+  department    String
+  accountCode   String    @map("account_code")
+  extension     String    @default("")
+  email         String    @default("")
+  phone         String    @default("")
+  approvalChain Json      @default("[]") @map("approval_chain")
+  active        Boolean   @default(true)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  invoices      Invoice[]
+
+  @@map("staff")
+}
+
+model Invoice {
+  id             String        @id @default(uuid())
+  invoiceNumber  String        @unique @map("invoice_number")
+  status         InvoiceStatus @default(DRAFT)
+  date           DateTime      @db.Date
+  createdBy      String        @map("created_by")
+  staffId        String        @map("staff_id")
+  department     String
+  accountCode    String        @map("account_code")
+  approvalChain  Json          @default("[]") @map("approval_chain")
+  totalAmount    Decimal       @default(0) @map("total_amount") @db.Decimal(10, 2)
+  notes          String?
+  pdfPath        String?       @map("pdf_path")
+  prismcorePath  String?       @map("prismcore_path")
+  createdAt      DateTime      @default(now()) @map("created_at")
+  updatedAt      DateTime      @updatedAt @map("updated_at")
+
+  creator  User          @relation(fields: [createdBy], references: [id])
+  staff    Staff         @relation(fields: [staffId], references: [id])
+  items    InvoiceItem[]
+
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id            String   @id @default(uuid())
+  invoiceId     String   @map("invoice_id")
+  description   String
+  quantity      Decimal  @db.Decimal(10, 2)
+  unitPrice     Decimal  @map("unit_price") @db.Decimal(10, 2)
+  extendedPrice Decimal  @map("extended_price") @db.Decimal(10, 2)
+  sortOrder     Int      @default(0) @map("sort_order")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("invoice_items")
+}
+
+model QuickPickItem {
+  id           String  @id @default(uuid())
+  department   String
+  description  String
+  defaultPrice Decimal @map("default_price") @db.Decimal(10, 2)
+  usageCount   Int     @default(0) @map("usage_count")
+
+  @@map("quick_pick_items")
+}
+
+enum InvoiceStatus {
+  DRAFT
+  FINAL
+}
