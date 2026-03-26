@@ -42,6 +42,7 @@ interface Invoice {
   createdAt: string;
   department: string;
   accountCode: string;
+  accountNumber: string;
   totalAmount: string | number;
   notes: string | null;
   prismcorePath: string | null;
@@ -204,8 +205,12 @@ export function InvoiceDetailView({ id }: { id: string }) {
               <Badge variant="secondary">{invoice.department}</Badge>
             </div>
             <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Account Number</span>
+              <span>{invoice.accountNumber || "—"}</span>
+            </div>
+            <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Account Code</span>
-              <span>{invoice.accountCode}</span>
+              <span>{invoice.accountCode || "—"}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Total Amount</span>
