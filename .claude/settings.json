@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$CLAUDE_FILE_PATH\" | grep -qE '\\.(ts|tsx|js|jsx)$'; then cd ~/lapc-invoice-maker && npx next lint --file \"$CLAUDE_FILE_PATH\" --quiet 2>/dev/null; fi"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$CLAUDE_FILE_PATH\" | grep -qE '(\\.env|\\.lock)$'; then echo 'BLOCKED: Do not edit .env or lock files directly' >&2; exit 1; fi"
+          }
+        ]
+      }
+    ]
+  }
+}

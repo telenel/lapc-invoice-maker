@@ -130,15 +130,14 @@ export function StaffSelect({
                 {staff.map((s) => (
                   <CommandItem
                     key={s.id}
-                    value={`${s.name} ${s.title} ${s.department}`}
+                    value={`${s.name} ${s.name.includes(",") ? s.name.split(",").map(p => p.trim()).reverse().join(" ") : ""} ${s.title} ${s.department}`}
                     onSelect={() => handleSelect(s)}
                     data-checked={s.id === selectedId ? "true" : undefined}
                   >
                     <div className="flex flex-col gap-0.5">
                       <span className="font-semibold">{s.name}</span>
                       <span className="text-xs text-muted-foreground">
-                        {s.title}
-                        {s.department && s.department.trim() ? `, ${s.department.trim()}` : ""}
+                        {[s.title, s.department?.trim()].filter(Boolean).join(", ")}
                         {s.extension ? ` ext. ${s.extension}` : ""}
                       </span>
                     </div>

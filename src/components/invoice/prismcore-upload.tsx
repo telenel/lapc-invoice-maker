@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -35,7 +36,7 @@ export function PrismcoreUpload({ value, onChange }: PrismcoreUploadProps) {
       setFilename(data.filename);
       onChange(data.path);
     } catch {
-      // Reset on failure
+      toast.error("Failed to upload PrismCore PDF. Please try again.");
       if (inputRef.current) inputRef.current.value = "";
     } finally {
       setUploading(false);

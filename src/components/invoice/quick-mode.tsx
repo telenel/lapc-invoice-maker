@@ -286,7 +286,7 @@ export function QuickMode({
             <Input
               value={form.semesterYearDept}
               onChange={(e) => updateField("semesterYearDept", e.target.value)}
-              placeholder="e.g. Fall 2025 \u2013 Math"
+              placeholder="e.g. Fall 2025 – Math"
             />
             <FieldHint
               text="e.g., Fall 2026 Student Services."
@@ -374,7 +374,7 @@ export function QuickMode({
             <Textarea
               value={form.notes}
               onChange={(e) => updateField("notes", e.target.value)}
-              placeholder="Additional notes or comments\u2026"
+              placeholder="Additional notes or comments…"
               rows={3}
             />
           </div>

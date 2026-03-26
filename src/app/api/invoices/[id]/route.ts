@@ -141,8 +141,11 @@ export async function DELETE(
     // Delete prismcore file if present
     if (invoice.prismcorePath) {
       try {
+        const uploadsDir = path.resolve(process.cwd(), "public", "uploads");
         const prismcoreFullPath = path.resolve(process.cwd(), "public", invoice.prismcorePath);
-        await unlink(prismcoreFullPath);
+        if (prismcoreFullPath.startsWith(uploadsDir + path.sep)) {
+          await unlink(prismcoreFullPath);
+        }
       } catch {
         // File may not exist on disk — ignore
       }
