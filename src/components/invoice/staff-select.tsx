@@ -100,9 +100,27 @@ export function StaffSelect({
           }
         }}
       >
-        <Command>
+        <Command
+          onKeyDown={(e) => {
+            if (e.key === "Tab") {
+              e.preventDefault();
+              const el = e.currentTarget.querySelector<HTMLElement>(
+                '[aria-selected="true"], [data-selected="true"]'
+              );
+              if (el) {
+                const value = el.getAttribute("data-value") ?? el.textContent ?? "";
+                const match = staff.find(
+                  (s) =>
+                    `${s.name} ${s.title} ${s.department}` === value ||
+                    el.querySelector(".font-semibold")?.textContent === s.name
+                );
+                if (match) handleSelect(match);
+              }
+            }
+          }}
+        >
           <CommandInput placeholder="Search staff…" />
-          <CommandList>
+          <CommandList className="max-h-60">
             {loading ? (
               <CommandEmpty>Loading…</CommandEmpty>
             ) : staff.length === 0 ? (
