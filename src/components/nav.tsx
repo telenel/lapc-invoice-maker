@@ -14,6 +14,7 @@ const links = [
   { href: "/invoices/new", label: "New Invoice" },
   { href: "/staff", label: "Staff Directory" },
   { href: "/quick-picks", label: "Quick Picks" },
+  { href: "/analytics", label: "Analytics" },
 ];
 
 export function Nav() {
