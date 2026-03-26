@@ -124,21 +124,6 @@ export function KeyboardMode({
     setIsMac(/Mac|iPhone|iPad|iPod/.test(navigator.userAgent));
   }, []);
 
-  // ---- Keyboard shortcut: Ctrl/Cmd+Enter → Generate PDF ----
-  useEffect(() => {
-    function handleKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-        e.preventDefault();
-        handleGenerate();
-      }
-    }
-    const el = containerRef.current;
-    if (el) {
-      el.addEventListener("keydown", handleKeyDown);
-      return () => el.removeEventListener("keydown", handleKeyDown);
-    }
-  });
-
   // ---- Validation + generate ----
   const handleGenerate = useCallback(() => {
     if (!form.staffId) {
@@ -155,6 +140,21 @@ export function KeyboardMode({
     }
     saveAndFinalize();
   }, [form.staffId, form.invoiceNumber, form.category, saveAndFinalize]);
+
+  // ---- Keyboard shortcut: Ctrl/Cmd+Enter → Generate PDF ----
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        handleGenerate();
+      }
+    }
+    const el = containerRef.current;
+    if (el) {
+      el.addEventListener("keydown", handleKeyDown);
+      return () => el.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [handleGenerate]);
 
   // ---- Quick pick handler ----
   function handleQuickPick(description: string, unitPrice: number) {
@@ -626,7 +626,7 @@ export function KeyboardMode({
         />
 
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="outline" onClick={saveDraft} disabled={saving}>
+          <Button variant="outline" tabIndex={-1} onClick={saveDraft} disabled={saving}>
             Save Draft
           </Button>
           <Button onClick={handleGenerate} disabled={saving}>
