@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { items, date, ...invoiceData } = parsed.data;
+  const { items, date, status, ...invoiceData } = parsed.data;
   const createdBy = (session.user as { id: string }).id;
 
   const calculatedItems = items.map((item) => {
@@ -109,6 +109,7 @@ export async function POST(request: NextRequest) {
     const invoice = await prisma.invoice.create({
       data: {
         ...invoiceData,
+        ...(status ? { status } : {}),
         date: new Date(date),
         createdBy,
         totalAmount,
