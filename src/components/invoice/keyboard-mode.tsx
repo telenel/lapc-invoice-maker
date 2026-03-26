@@ -59,6 +59,7 @@ interface KeyboardModeProps {
   staffAccountNumbers: StaffAccountNumber[];
   saveDraft: () => Promise<void>;
   saveAndFinalize: () => Promise<void>;
+  savePendingCharge: () => Promise<void>;
   saving: boolean;
   generationStep: GenerationStep;
 }
@@ -78,6 +79,7 @@ export function KeyboardMode({
   staffAccountNumbers,
   saveDraft,
   saveAndFinalize,
+  savePendingCharge,
   saving,
   generationStep,
 }: KeyboardModeProps) {
@@ -665,6 +667,9 @@ export function KeyboardMode({
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="outline" tabIndex={-1} onClick={saveDraft} disabled={saving}>
             Save Draft
+          </Button>
+          <Button variant="secondary" tabIndex={-1} onClick={savePendingCharge} disabled={saving}>
+            Charge at Register
           </Button>
           <Button onClick={handleGenerate} disabled={saving}>
             Generate PDF {isMac ? "\u2318\u21B5" : "Ctrl\u21B5"}
