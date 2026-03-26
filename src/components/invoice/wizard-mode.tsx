@@ -209,7 +209,7 @@ export function WizardMode({
                 )}
               </div>
               <FieldHint
-                text="Select a staff member to auto-fill department, contact info, and account numbers."
+                text="Selecting a staff member auto-fills department, contact info, and recent account numbers."
                 dismissed={hintsDismissed}
                 onDismiss={dismissHints}
               />
@@ -232,7 +232,7 @@ export function WizardMode({
                   accountNumbers={staffAccountNumbers}
                 />
                 <FieldHint
-                  text="Saved account numbers appear as chips. New ones can be saved for next time."
+                  text="Saved per person. Click a chip to reuse, or type a new one and save it."
                   dismissed={hintsDismissed}
                   onDismiss={dismissHints}
                 />
@@ -245,6 +245,11 @@ export function WizardMode({
                 value={form.accountCode}
                 onChange={(e) => updateField("accountCode", e.target.value)}
                 placeholder="Account code"
+              />
+              <FieldHint
+                text="Classification code for this transaction."
+                dismissed={hintsDismissed}
+                onDismiss={dismissHints}
               />
             </div>
 
@@ -277,6 +282,11 @@ export function WizardMode({
                   onChange={(e) => updateField("invoiceNumber", e.target.value)}
                   placeholder="INV-0001"
                 />
+                <FieldHint
+                  text="Must be unique (e.g., AG-000111222)."
+                  dismissed={hintsDismissed}
+                  onDismiss={dismissHints}
+                />
               </div>
               <div className="space-y-1">
                 <Label>Date</Label>
@@ -284,6 +294,11 @@ export function WizardMode({
                   type="date"
                   value={form.date}
                   onChange={(e) => updateField("date", e.target.value)}
+                />
+                <FieldHint
+                  text="Invoice date."
+                  dismissed={hintsDismissed}
+                  onDismiss={dismissHints}
                 />
               </div>
             </div>
@@ -304,6 +319,11 @@ export function WizardMode({
                   <SelectItem value="DEPARTMENT_PURCHASE">Department Purchase</SelectItem>
                 </SelectContent>
               </Select>
+              <FieldHint
+                text="Required — drives analytics and reporting."
+                dismissed={hintsDismissed}
+                onDismiss={dismissHints}
+              />
             </div>
 
             <div className="space-y-1">
@@ -312,6 +332,11 @@ export function WizardMode({
                 value={form.semesterYearDept}
                 onChange={(e) => updateField("semesterYearDept", e.target.value)}
                 placeholder="e.g. Fall 2025 \u2013 Math"
+              />
+              <FieldHint
+                text="e.g., Fall 2026 Student Services."
+                dismissed={hintsDismissed}
+                onDismiss={dismissHints}
               />
             </div>
           </CardContent>
@@ -334,13 +359,11 @@ export function WizardMode({
                 department={form.department}
                 onSelect={handleQuickPick}
               />
-              {form.department && (
-                <FieldHint
-                  text="Click an item to add it to your invoice."
-                  dismissed={hintsDismissed}
-                  onDismiss={dismissHints}
-                />
-              )}
+              <FieldHint
+                text="Add items manually or click Quick Picks below. Click the bookmark icon to save an item for reuse."
+                dismissed={hintsDismissed}
+                onDismiss={dismissHints}
+              />
             </div>
             <LineItems
               items={form.items}
@@ -348,6 +371,7 @@ export function WizardMode({
               onAdd={addItem}
               onRemove={removeItem}
               total={total}
+              department={form.department}
             />
             <div className="space-y-1">
               <Label>Comments / Notes</Label>
@@ -421,13 +445,25 @@ export function WizardMode({
               </div>
             </div>
 
-            <PrismcoreUpload
-              value={form.prismcorePath}
-              onChange={(path) => updateField("prismcorePath", path)}
-            />
+            <div className="space-y-1">
+              <PrismcoreUpload
+                value={form.prismcorePath}
+                onChange={(path) => updateField("prismcorePath", path)}
+              />
+              <FieldHint
+                text="Attach a PrismCore POS receipt to merge into the final PDF."
+                dismissed={hintsDismissed}
+                onDismiss={dismissHints}
+              />
+            </div>
 
             <div className="space-y-3">
               <p className="text-sm font-semibold">Signatures</p>
+              <FieldHint
+                text="Select approvers — they'll be remembered for this staff member next time."
+                dismissed={hintsDismissed}
+                onDismiss={dismissHints}
+              />
               <div className="space-y-2">
                 {(["line1", "line2", "line3"] as const).map((line, idx) => (
                   <div key={line} className="space-y-1">

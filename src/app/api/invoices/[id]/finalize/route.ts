@@ -173,6 +173,15 @@ export async function POST(
       },
       data: { usageCount: { increment: 1 } },
     });
+
+    // Increment usage count on matching saved line items
+    await prisma.savedLineItem.updateMany({
+      where: {
+        department: invoice.department,
+        description: { in: descriptions },
+      },
+      data: { usageCount: { increment: 1 } },
+    });
   }
 
   return NextResponse.json({ success: true, pdfPath });
