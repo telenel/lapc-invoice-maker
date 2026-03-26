@@ -167,9 +167,12 @@ async function main() {
   }
   console.log("  ...");
 
-  // Delete all existing staff
-  const deleted = await prisma.staff.deleteMany({});
-  console.log(`Deleted ${deleted.count} existing staff records`);
+  // Soft-delete all existing staff (can't hard delete due to invoice foreign keys)
+  const deactivated = await prisma.staff.updateMany({
+    where: { active: true },
+    data: { active: false },
+  });
+  console.log(`Deactivated ${deactivated.count} existing staff records`);
 
   // Insert all new staff
   let created = 0;
