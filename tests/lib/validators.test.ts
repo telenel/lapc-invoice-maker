@@ -34,6 +34,7 @@ describe("invoiceCreateSchema", () => {
       staffId: "some-uuid",
       department: "Student Services",
       accountCode: "1234",
+      category: "SUPPLIES",
       approvalChain: [],
       notes: "",
       items: [
