@@ -88,7 +88,7 @@ export function renderCoverSheet(data: CoverSheetData): string {
   }
   .body-text .highlight {
     font-weight: bold;
-    font-size: 16px;
+    font-size: 22px;
   }
 
   /* Invoice fields */
@@ -149,7 +149,7 @@ export function renderCoverSheet(data: CoverSheetData): string {
     width: 100%;
   }
   .sig-name {
-    font-size: 11px;
+    font-size: 15px;
     margin-top: 4px;
     color: #333;
   }

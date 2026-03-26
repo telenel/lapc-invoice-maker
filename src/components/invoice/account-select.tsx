@@ -101,7 +101,7 @@ export function AccountSelect({
       <Input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Enter account code"
+        placeholder="Enter account number"
         className="focus-visible:ring-2 focus-visible:ring-ring"
       />
 

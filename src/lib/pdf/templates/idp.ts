@@ -390,7 +390,7 @@ export function renderIDP(data: IDPData): string {
     <table class="items-table">
       <thead>
         <tr>
-          <th style="width:55%;">Description</th>
+          <th style="width:55%;">Description of Product, Goods or Services Provided</th>
           <th style="width:10%;">Qty.</th>
           <th style="width:17%;">Rate/Unit Price</th>
           <th style="width:18%;">Extended Price</th>
