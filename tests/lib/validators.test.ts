@@ -6,6 +6,11 @@ import {
   invoiceUpdateSchema,
   quickPickSchema,
   savedLineItemSchema,
+  categoryCreateSchema,
+  categoryUpdateSchema,
+  staffAccountNumberSchema,
+  adminUserCreateSchema,
+  adminUserUpdateSchema,
 } from "@/lib/validators";
 
 // ---------------------------------------------------------------------------
@@ -411,6 +416,139 @@ describe("savedLineItemSchema", () => {
       description: "Textbook",
       unitPrice: -10,
     });
+    expect(result.success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// categoryCreateSchema
+// ---------------------------------------------------------------------------
+describe("categoryCreateSchema", () => {
+  it("accepts valid category", () => {
+    const result = categoryCreateSchema.safeParse({ name: "SUPPLIES", label: "Supplies" });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects empty name", () => {
+    const result = categoryCreateSchema.safeParse({ name: "", label: "Supplies" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects empty label", () => {
+    const result = categoryCreateSchema.safeParse({ name: "SUPPLIES", label: "" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects missing name", () => {
+    const result = categoryCreateSchema.safeParse({ label: "Supplies" });
+    expect(result.success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// categoryUpdateSchema
+// ---------------------------------------------------------------------------
+describe("categoryUpdateSchema", () => {
+  it("accepts partial update with just name", () => {
+    const result = categoryUpdateSchema.safeParse({ name: "NEW_NAME" });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts empty object", () => {
+    const result = categoryUpdateSchema.safeParse({});
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts sortOrder as integer", () => {
+    const result = categoryUpdateSchema.safeParse({ sortOrder: 5 });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects sortOrder as float", () => {
+    const result = categoryUpdateSchema.safeParse({ sortOrder: 1.5 });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts active boolean", () => {
+    const result = categoryUpdateSchema.safeParse({ active: false });
+    expect(result.success).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// staffAccountNumberSchema
+// ---------------------------------------------------------------------------
+describe("staffAccountNumberSchema", () => {
+  it("accepts valid account number", () => {
+    const result = staffAccountNumberSchema.safeParse({ accountCode: "ACC-001" });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts with description", () => {
+    const result = staffAccountNumberSchema.safeParse({ accountCode: "ACC-001", description: "Main account" });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects empty accountCode", () => {
+    const result = staffAccountNumberSchema.safeParse({ accountCode: "" });
+    expect(result.success).toBe(false);
+  });
+
+  it("defaults description to empty string", () => {
+    const result = staffAccountNumberSchema.safeParse({ accountCode: "ACC-001" });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.description).toBe("");
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// adminUserCreateSchema
+// ---------------------------------------------------------------------------
+describe("adminUserCreateSchema", () => {
+  it("accepts valid user with name only", () => {
+    const result = adminUserCreateSchema.safeParse({ name: "John Doe" });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts with valid email", () => {
+    const result = adminUserCreateSchema.safeParse({ name: "John", email: "john@example.com" });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts empty string email", () => {
+    const result = adminUserCreateSchema.safeParse({ name: "John", email: "" });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects invalid email", () => {
+    const result = adminUserCreateSchema.safeParse({ name: "John", email: "not-email" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects empty name", () => {
+    const result = adminUserCreateSchema.safeParse({ name: "" });
+    expect(result.success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// adminUserUpdateSchema
+// ---------------------------------------------------------------------------
+describe("adminUserUpdateSchema", () => {
+  it("accepts empty object", () => {
+    const result = adminUserUpdateSchema.safeParse({});
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts valid role", () => {
+    const result = adminUserUpdateSchema.safeParse({ role: "admin" });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects invalid role", () => {
+    const result = adminUserUpdateSchema.safeParse({ role: "superadmin" });
     expect(result.success).toBe(false);
   });
 });

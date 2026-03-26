@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { staffAccountNumberSchema } from "@/lib/validators";
 
 // GET /api/staff/:id/account-numbers — list account numbers for a staff member, most recent first
 export async function GET(
@@ -35,17 +36,15 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();
-  const { accountCode, description } = body as {
-    accountCode: string;
-    description?: string;
-  };
-
-  if (!accountCode?.trim()) {
+  const parsed = staffAccountNumberSchema.safeParse(body);
+  if (!parsed.success) {
     return NextResponse.json(
-      { error: "Account code is required" },
+      { error: parsed.error.flatten() },
       { status: 400 }
     );
   }
+
+  const { accountCode, description } = parsed.data;
 
   try {
     // Upsert: create if new, update lastUsedAt + description if exists

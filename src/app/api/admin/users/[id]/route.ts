@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { adminUserUpdateSchema } from "@/lib/validators";
 
 export async function PUT(
   request: NextRequest,
@@ -15,7 +16,11 @@ export async function PUT(
 
   try {
     const body = await request.json();
-    const { name, email, role: newRole } = body;
+    const parsed = adminUserUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    }
+    const { name, email, role: newRole } = parsed.data;
 
     const user = await prisma.user.update({
       where: { id: params.id },

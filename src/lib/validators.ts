@@ -49,3 +49,31 @@ export const savedLineItemSchema = z.object({
   description: z.string().min(1, "Description is required"),
   unitPrice: z.number().min(0, "Price must be non-negative"),
 });
+
+export const categoryCreateSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  label: z.string().min(1, "Label is required"),
+});
+
+export const categoryUpdateSchema = z.object({
+  name: z.string().min(1).optional(),
+  label: z.string().min(1).optional(),
+  sortOrder: z.number().int().optional(),
+  active: z.boolean().optional(),
+});
+
+export const staffAccountNumberSchema = z.object({
+  accountCode: z.string().min(1, "Account code is required"),
+  description: z.string().optional().default(""),
+});
+
+export const adminUserCreateSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  email: z.string().email().optional().or(z.literal("")),
+});
+
+export const adminUserUpdateSchema = z.object({
+  name: z.string().min(1).optional(),
+  email: z.string().email().optional().or(z.literal("")),
+  role: z.enum(["user", "admin"]).optional(),
+});
