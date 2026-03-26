@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface StatsData {
   invoicesThisMonth: number;
@@ -60,28 +61,33 @@ export function StatsCards() {
     {
       title: "Invoices This Month",
       value: loading ? "—" : String(stats?.invoicesThisMonth ?? 0),
+      borderClass: "border-l-4 border-l-primary",
     },
     {
       title: "Total This Month",
       value: loading
         ? "—"
         : `$${Number(stats?.totalThisMonth ?? 0).toFixed(2)}`,
+      borderClass: "border-l-4 border-l-emerald-500",
     },
     {
       title: "Pending Drafts",
       value: loading ? "—" : String(stats?.pendingDrafts ?? 0),
+      borderClass: "border-l-4 border-l-amber-500",
     },
   ];
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       {cards.map((card) => (
-        <Card key={card.title}>
-          <CardHeader>
-            <CardTitle>{card.title}</CardTitle>
+        <Card key={card.title} className={cn(card.borderClass)}>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              {card.title}
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{card.value}</p>
+            <p className="text-3xl font-bold tracking-tight">{card.value}</p>
           </CardContent>
         </Card>
       ))}

@@ -38,11 +38,12 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader>
-        <CardTitle className="text-2xl text-center">
-          LAPC InvoiceMaker
+    <Card className="w-full max-w-sm shadow-lg border-border/40">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-3xl font-bold tracking-tight text-center">
+          InvoiceMaker
         </CardTitle>
+        <p className="text-sm text-muted-foreground text-center">Los Angeles Pierce College</p>
       </CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-4">
@@ -55,6 +56,7 @@ export function LoginForm() {
               name="username"
               required
               autoFocus
+              className="h-11"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Username or 6-digit code"
@@ -63,11 +65,16 @@ export function LoginForm() {
           {!isAccessCode && (
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" name="password" type="password" required />
+              <Input id="password" name="password" type="password" required className="h-11" />
             </div>
           )}
-          {error && <p className="text-sm text-red-500">{error}</p>}
-          <Button type="submit" className="w-full" disabled={loading}>
+          {error && (
+            <>
+              <div className="border-t border-border/50" />
+              <p className="text-sm text-red-500">{error}</p>
+            </>
+          )}
+          <Button type="submit" className="w-full h-11 font-semibold uppercase tracking-wide" disabled={loading}>
             {loading
               ? "Signing in..."
               : isAccessCode

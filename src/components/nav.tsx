@@ -24,9 +24,7 @@ import { themes } from "@/lib/themes";
 const links = [
   { href: "/", label: "Dashboard" },
   { href: "/invoices", label: "Invoices" },
-  { href: "/invoices/new", label: "New Invoice" },
-  { href: "/staff", label: "Staff Directory" },
-  { href: "/quick-picks", label: "Quick Picks" },
+  { href: "/staff", label: "Staff" },
   { href: "/analytics", label: "Analytics" },
 ];
 
@@ -40,38 +38,44 @@ export function Nav() {
   const role = (session?.user as { role?: string } | undefined)?.role;
 
   return (
-    <nav className="border-b bg-background">
-      <div className="mx-auto flex h-14 max-w-7xl items-center px-4 gap-6">
-        <Link href="/" className="flex items-center gap-2 font-bold text-lg">
+    <nav className="sticky top-0 z-50 border-b border-border/60 bg-background/95 backdrop-blur-sm shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+      <div className="mx-auto flex h-16 max-w-7xl items-center px-4 gap-6">
+        <Link href="/" className="flex items-center gap-2 shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/lapc-logo.png" alt="LAPC" style={{ height: "28px" }} />
-          InvoiceMaker
+          <img src="/lapc-logo.png" alt="LAPC" style={{ height: "32px" }} />
+          <span className="font-semibold tracking-tight text-lg">InvoiceMaker</span>
         </Link>
-        <div className="flex gap-1">
-          {links.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={cn(
-                "px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                pathname === link.href
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-              )}
-            >
-              {link.label}
-            </Link>
-          ))}
+        <div className="flex gap-0.5">
+          {links.map((link) => {
+            const isActive =
+              link.href === "/"
+                ? pathname === "/"
+                : pathname === link.href || pathname.startsWith(link.href + "/");
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "relative px-3 py-2 text-sm font-medium tracking-wide uppercase transition-colors",
+                  isActive
+                    ? "text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
           {role === "admin" && (
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
                   <button
                     className={cn(
-                      "inline-flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                      "relative inline-flex items-center gap-1 px-3 py-2 text-sm font-medium tracking-wide uppercase transition-colors",
                       pathname.startsWith("/admin")
-                        ? "bg-accent text-accent-foreground"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                        ? "text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary"
+                        : "text-muted-foreground hover:text-foreground"
                     )}
                   >
                     Admin
@@ -108,6 +112,7 @@ export function Nav() {
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
+          <div className="w-px h-5 bg-border/60" />
           <Button variant="ghost" size="sm" onClick={() => signOut()}>
             Sign out
           </Button>
