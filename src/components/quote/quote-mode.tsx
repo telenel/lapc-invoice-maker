@@ -55,7 +55,6 @@ interface QuoteModeProps {
   removeItem: (index: number) => void;
   total: number;
   handleStaffSelect: (staff: StaffMember) => void;
-  handleStaffEdit: (updated: StaffMember) => void;
   staffAccountNumbers: StaffAccountNumber[];
   saveQuote: () => Promise<void>;
   saving: boolean;
@@ -73,7 +72,6 @@ export function QuoteMode({
   removeItem,
   total,
   handleStaffSelect,
-  handleStaffEdit,
   staffAccountNumbers,
   saveQuote,
   saving,

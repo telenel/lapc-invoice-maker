@@ -88,7 +88,7 @@ export async function POST(
       coverSheet: {
         date: dateStr,
         semesterYearDept: semesterYearDept ?? invoice.department,
-        invoiceNumber: invoice.invoiceNumber,
+        invoiceNumber: invoice.invoiceNumber ?? "",
         chargeAccountNumber: invoice.accountNumber || invoice.accountCode,
         accountCode: invoice.accountCode,
         totalAmount: totalStr,
@@ -97,7 +97,7 @@ export async function POST(
       idp: {
         date: dateStr,
         department: invoice.department,
-        documentNumber: invoice.invoiceNumber,
+        documentNumber: invoice.invoiceNumber ?? "",
         requestingDept: invoice.department,
         sapAccount: invoice.accountNumber || invoice.accountCode,
         estimatedCost: totalStr,
