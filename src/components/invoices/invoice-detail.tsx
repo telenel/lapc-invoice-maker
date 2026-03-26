@@ -47,7 +47,7 @@ interface InvoiceItem {
 interface Invoice {
   id: string;
   invoiceNumber: string;
-  status: "DRAFT" | "FINAL";
+  status: "DRAFT" | "FINAL" | "PENDING_CHARGE";
   category: string;
   date: string;
   createdAt: string;
@@ -170,7 +170,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
 
   function handleDeleteClick() {
     if (!invoice) return;
-    if (invoice.status === "DRAFT") {
+    if (invoice.status === "DRAFT" || invoice.status === "PENDING_CHARGE") {
       if (window.confirm("Are you sure you want to delete this draft invoice?")) {
         handleDelete();
       }
@@ -189,21 +189,34 @@ export function InvoiceDetailView({ id }: { id: string }) {
 
   const isDraft = invoice.status === "DRAFT";
   const isFinal = invoice.status === "FINAL";
+  const isPendingCharge = invoice.status === "PENDING_CHARGE";
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-balance">{invoice.invoiceNumber}</h1>
+          <h1 className="text-2xl font-bold text-balance">
+            {invoice.invoiceNumber === "NEEDPOSCHARGE"
+              ? "Pending POS Charge"
+              : invoice.invoiceNumber}
+          </h1>
           <p className="text-sm text-muted-foreground mt-1">
             Created {formatDate(invoice.createdAt)} by {invoice.creator.name}
           </p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap justify-end">
-          <Badge variant={isFinal ? "default" : "outline"}>
-            {isFinal ? "Final" : "Draft"}
+          <Badge
+            variant={
+              isFinal ? "default" : isPendingCharge ? "secondary" : "outline"
+            }
+          >
+            {isFinal
+              ? "Final"
+              : isPendingCharge
+                ? "Pending Charge"
+                : "Draft"}
           </Badge>
           {invoice.isRecurring && (
             <Badge variant="secondary">
@@ -211,12 +224,12 @@ export function InvoiceDetailView({ id }: { id: string }) {
             </Badge>
           )}
 
-          {isDraft && (
+          {(isDraft || isPendingCharge) && (
             <Link
               href={`/invoices/${id}/edit`}
               className={buttonVariants({ variant: "outline", size: "sm" })}
             >
-              Edit
+              {isPendingCharge ? "Complete POS Charge" : "Edit"}
             </Link>
           )}
 
@@ -239,7 +252,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
             </Button>
           )}
 
-          {isDraft ? (
+          {(isDraft || isPendingCharge) ? (
             <Button
               variant="destructive"
               size="sm"
