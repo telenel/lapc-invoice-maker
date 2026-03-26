@@ -6,8 +6,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useInvoiceForm, InvoiceFormData } from "@/components/invoice/invoice-form";
 import { WizardMode } from "@/components/invoice/wizard-mode";
 import { QuickMode } from "@/components/invoice/quick-mode";
+import { KeyboardMode } from "@/components/invoice/keyboard-mode";
 
-type Mode = "wizard" | "quick";
+type Mode = "keyboard" | "wizard" | "quick";
 
 const STORAGE_KEY = "lapc-invoice-mode";
 
@@ -80,7 +81,7 @@ export default function EditInvoicePage() {
   const params = useParams<{ id: string }>();
   const invoiceId = params.id;
 
-  const [mode, setMode] = useState<Mode>("wizard");
+  const [mode, setMode] = useState<Mode>("keyboard");
   const [initialData, setInitialData] = useState<InvoiceFormData | null>(null);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -88,7 +89,7 @@ export default function EditInvoicePage() {
   // Hydrate mode preference from localStorage after mount
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === "wizard" || stored === "quick") {
+    if (stored === "keyboard" || stored === "wizard" || stored === "quick") {
       setMode(stored);
     }
   }, []);
@@ -132,7 +133,7 @@ export default function EditInvoicePage() {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-5xl">
-        <p className="text-muted-foreground">Loading invoice...</p>
+        <p className="text-muted-foreground">Loading invoice…</p>
       </div>
     );
   }
@@ -148,25 +149,29 @@ export default function EditInvoicePage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold">Edit Invoice</h1>
+      <div className="flex items-center justify-between mb-1">
+        <h1 className="text-2xl font-semibold text-balance">Edit Invoice</h1>
         <Tabs
           value={mode}
           onValueChange={(value) => handleModeChange(value as Mode)}
         >
           <TabsList>
+            <TabsTrigger value="keyboard">Keyboard</TabsTrigger>
             <TabsTrigger value="wizard">Wizard</TabsTrigger>
             <TabsTrigger value="quick">Quick</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
+      <p className="text-xs text-muted-foreground mb-6 text-right">
+        {mode === "keyboard" && "Tab through fields to create invoices fast."}
+        {mode === "wizard" && "Step-by-step guided flow."}
+        {mode === "quick" && "Everything visible at once."}
+      </p>
 
       {/* Mode content */}
-      {mode === "wizard" ? (
-        <WizardMode {...invoiceForm} />
-      ) : (
-        <QuickMode {...invoiceForm} />
-      )}
+      {mode === "keyboard" && <KeyboardMode {...invoiceForm} />}
+      {mode === "wizard" && <WizardMode {...invoiceForm} />}
+      {mode === "quick" && <QuickMode {...invoiceForm} />}
     </div>
   );
 }
