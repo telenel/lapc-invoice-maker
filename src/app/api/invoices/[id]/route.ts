@@ -16,7 +16,7 @@ export async function GET(
   const invoice = await prisma.invoice.findUnique({
     where: { id },
     include: {
-      staff: { select: { id: true, name: true, title: true, department: true } },
+      staff: { select: { id: true, name: true, title: true, department: true, extension: true, email: true } },
       creator: { select: { id: true, name: true, username: true } },
       items: { orderBy: { sortOrder: "asc" } },
     },
@@ -93,7 +93,7 @@ export async function PUT(
   const invoice = await prisma.invoice.findUnique({
     where: { id },
     include: {
-      staff: { select: { id: true, name: true, title: true, department: true } },
+      staff: { select: { id: true, name: true, title: true, department: true, extension: true, email: true } },
       creator: { select: { id: true, name: true, username: true } },
       items: { orderBy: { sortOrder: "asc" } },
     },
