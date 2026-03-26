@@ -123,6 +123,45 @@ describe("renderCoverSheet", () => {
     const html = renderCoverSheet(baseCoverData);
     expect(html).toContain("Spring 2026 – English");
   });
+
+  // --- Edge cases ---
+
+  it("handles special characters in invoice number (slash)", () => {
+    const html = renderCoverSheet({ ...baseCoverData, invoiceNumber: "AG-001/23" });
+    expect(html).toContain("AG-001/23");
+  });
+
+  it("handles very long semesterYearDept text without truncation", () => {
+    const longText = "Spring 2026 – ".repeat(10).trim();
+    const html = renderCoverSheet({ ...baseCoverData, semesterYearDept: longText });
+    expect(html).toContain(longText);
+  });
+
+  it("handles empty string field values without 'undefined' in field-value spans", () => {
+    // Provide logoDataUri explicitly so the img src is not "undefined"
+    const html = renderCoverSheet({
+      ...baseCoverData,
+      logoDataUri: "data:image/png;base64,abc",
+      chargeAccountNumber: "",
+      accountCode: "",
+      totalAmount: "",
+    });
+    // The field-value spans for these three fields should be empty, not "undefined"
+    expect(html).not.toMatch(/class="field-value">undefined/);
+  });
+
+  it("contains proper @page CSS for letter size", () => {
+    const html = renderCoverSheet(baseCoverData);
+    expect(html).toContain("size: letter");
+  });
+
+  it("signature with title shows name and title separated by comma", () => {
+    const html = renderCoverSheet({
+      ...baseCoverData,
+      signatures: [{ name: "Dr. Alice Kim", title: "Vice President" }],
+    });
+    expect(html).toContain("Dr. Alice Kim, Vice President");
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -225,5 +264,55 @@ describe("renderIDP", () => {
   it("contains landscape page size (11in 8.5in)", () => {
     const html = renderIDP(baseIDPData);
     expect(html).toContain("11in 8.5in");
+  });
+
+  // --- Edge cases ---
+
+  it("handles 10+ items without truncation", () => {
+    const manyItems = Array.from({ length: 12 }, (_, i) => ({
+      description: `Item ${i + 1}`,
+      quantity: "1",
+      unitPrice: "$5.00",
+      extendedPrice: "$5.00",
+    }));
+    const html = renderIDP({ ...baseIDPData, items: manyItems });
+    // All 12 descriptions should appear in the output
+    for (let i = 1; i <= 12; i++) {
+      expect(html).toContain(`Item ${i}`);
+    }
+  });
+
+  it("handles special characters in item descriptions", () => {
+    const html = renderIDP({
+      ...baseIDPData,
+      items: [
+        { description: "Book & Pen (x2) <special>", quantity: "1", unitPrice: "$10.00", extendedPrice: "$10.00" },
+      ],
+    });
+    expect(html).toContain("Book & Pen (x2) <special>");
+  });
+
+  it("handles empty string values without 'undefined' in output", () => {
+    const html = renderIDP({
+      ...baseIDPData,
+      sapAccount: "",
+      estimatedCost: "",
+      approverName: "",
+      contactName: "",
+      contactPhone: "",
+    });
+    expect(html).not.toContain("undefined");
+  });
+
+  it("contains @page for landscape orientation (11in 8.5in)", () => {
+    const html = renderIDP(baseIDPData);
+    expect(html).toMatch(/@page\s*\{[^}]*11in 8\.5in/);
+  });
+
+  it("contains all three section labels", () => {
+    const html = renderIDP(baseIDPData);
+    expect(html).toContain("Requesting Department Use");
+    expect(html).toContain("Department Use");
+    expect(html).toContain("Bookstore Use");
   });
 });
