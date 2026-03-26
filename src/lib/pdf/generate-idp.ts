@@ -34,12 +34,15 @@ export async function generateIDPPage(data: IDPOverlayData): Promise<Buffer> {
   doc.registerFontkit(fontkit);
   const page = doc.getPage(0);
 
-  // Embed a Unicode-capable font for text with accented chars (e.g., "Brahma Café")
-  const fontPath = path.join(process.cwd(), "public", "fonts", "NotoSans-Regular.ttf");
-  const fontBytes = await readFile(fontPath);
-  const font = await doc.embedFont(fontBytes);
-  // Keep Helvetica Bold for totals (pure ASCII, needs bold weight)
-  const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+  // Embed Arial (full Unicode Latin coverage) for all text
+  const fontRegPath = path.join(process.cwd(), "public", "fonts", "Arial-Regular.ttf");
+  const fontBoldPath = path.join(process.cwd(), "public", "fonts", "Arial-Bold.ttf");
+  const [fontRegBytes, fontBoldBytes] = await Promise.all([
+    readFile(fontRegPath),
+    readFile(fontBoldPath),
+  ]);
+  const font = await doc.embedFont(fontRegBytes);
+  const fontBold = await doc.embedFont(fontBoldBytes);
   const black = rgb(0, 0, 0);
   const white = rgb(1, 1, 1);
 
