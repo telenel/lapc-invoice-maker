@@ -89,7 +89,7 @@ export function RecentInvoices() {
                     <Badge variant="secondary">{invoice.department}</Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    ${invoice.totalAmount.toFixed(2)}
+                    ${Number(invoice.totalAmount).toFixed(2)}
                   </TableCell>
                   <TableCell>
                     <Badge
