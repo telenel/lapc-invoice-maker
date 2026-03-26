@@ -130,6 +130,7 @@ model QuickPickItem {
 enum InvoiceStatus {
   DRAFT
   FINAL
+  PENDING_CHARGE
 }
 
 enum DocumentType {
