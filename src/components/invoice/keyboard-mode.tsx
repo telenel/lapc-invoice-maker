@@ -544,7 +544,7 @@ export function KeyboardMode({
             ref={invoiceNumberRef}
             value={form.invoiceNumber}
             onChange={(e) => updateField("invoiceNumber", e.target.value)}
-            placeholder="INV-0001..."
+            placeholder="AG-XXXXXX (leave blank if not yet charged)"
             name="invoiceNumber"
           />
         </div>
