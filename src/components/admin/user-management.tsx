@@ -277,10 +277,6 @@ export function UserManagement() {
               <Select
                 value={editRole || null}
                 onValueChange={(v) => setEditRole(v ?? "user")}
-                items={[
-                  { value: "user", label: "User" },
-                  { value: "admin", label: "Admin" },
-                ]}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue />
