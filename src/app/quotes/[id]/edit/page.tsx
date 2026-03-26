@@ -1,0 +1,123 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { useQuoteForm, QuoteFormData } from "@/components/quote/quote-form";
+import { QuoteMode } from "@/components/quote/quote-mode";
+
+interface ApiQuoteItem {
+  description: string;
+  quantity: number;
+  unitPrice: string | number;
+  extendedPrice: string | number;
+  sortOrder: number;
+}
+
+interface ApiQuote {
+  id: string;
+  date: string;
+  staffId: string;
+  department: string;
+  category: string;
+  accountCode: string;
+  accountNumber: string;
+  approvalChain: string[];
+  notes: string | null;
+  expirationDate: string | null;
+  recipientName: string | null;
+  recipientEmail: string | null;
+  recipientOrg: string | null;
+  quoteStatus: string;
+  items: ApiQuoteItem[];
+}
+
+function mapApiToFormData(quote: ApiQuote): QuoteFormData {
+  return {
+    date: quote.date ? quote.date.split("T")[0] : "",
+    staffId: quote.staffId ?? "",
+    department: quote.department ?? "",
+    category: quote.category ?? "",
+    accountCode: quote.accountCode ?? "",
+    accountNumber: quote.accountNumber ?? "",
+    approvalChain: quote.approvalChain ?? [],
+    contactName: "",
+    contactExtension: "",
+    contactEmail: "",
+    contactPhone: "",
+    notes: quote.notes ?? "",
+    expirationDate: quote.expirationDate ? quote.expirationDate.split("T")[0] : "",
+    recipientName: quote.recipientName ?? "",
+    recipientEmail: quote.recipientEmail ?? "",
+    recipientOrg: quote.recipientOrg ?? "",
+    items: quote.items.map((item) => ({
+      description: item.description,
+      quantity: Number(item.quantity),
+      unitPrice: Number(item.unitPrice),
+      extendedPrice: Number(item.extendedPrice),
+      sortOrder: item.sortOrder,
+    })),
+  };
+}
+
+export default function EditQuotePage() {
+  const params = useParams<{ id: string }>();
+  const quoteId = params.id;
+
+  const [initialData, setInitialData] = useState<QuoteFormData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!quoteId) return;
+
+    setLoading(true);
+    setFetchError(null);
+
+    fetch(`/api/quotes/${quoteId}`)
+      .then((res) => {
+        if (!res.ok) {
+          return res.json().then((data) => {
+            throw new Error(data?.error ?? "Failed to load quote");
+          });
+        }
+        return res.json();
+      })
+      .then((quote: ApiQuote) => {
+        if (quote.quoteStatus === "ACCEPTED" || quote.quoteStatus === "DECLINED" || quote.quoteStatus === "EXPIRED") {
+          throw new Error("This quote cannot be edited");
+        }
+        setInitialData(mapApiToFormData(quote));
+      })
+      .catch((err: unknown) => {
+        setFetchError(err instanceof Error ? err.message : "Failed to load quote");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [quoteId]);
+
+  const quoteForm = useQuoteForm(initialData ?? undefined, quoteId);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
+        <p className="text-muted-foreground">Loading quote…</p>
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
+        <p className="text-destructive">{fetchError}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <h1 className="text-2xl font-semibold mb-6">Edit Quote</h1>
+      <QuoteMode {...quoteForm} />
+    </div>
+  );
+}
