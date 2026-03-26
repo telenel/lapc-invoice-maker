@@ -62,6 +62,7 @@ model Invoice {
   staffId        String        @map("staff_id")
   department     String
   accountCode    String        @map("account_code")
+  accountNumber  String        @default("") @map("account_number")
   approvalChain  Json          @default("[]") @map("approval_chain")
   totalAmount    Decimal       @default(0) @map("total_amount") @db.Decimal(10, 2)
   notes          String?

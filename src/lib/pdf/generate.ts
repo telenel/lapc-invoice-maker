@@ -13,7 +13,11 @@ export interface GenerateInvoicePDFData {
 async function htmlToPdf(html: string): Promise<Buffer> {
   const browser = await puppeteer.launch({
     headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--allow-file-access-from-files",
+    ],
   });
 
   try {

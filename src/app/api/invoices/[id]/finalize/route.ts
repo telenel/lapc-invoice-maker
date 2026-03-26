@@ -81,7 +81,7 @@ export async function POST(
       date: dateStr,
       semesterYearDept: semesterYearDept ?? invoice.department,
       invoiceNumber: invoice.invoiceNumber,
-      chargeAccountNumber: invoice.accountCode,
+      chargeAccountNumber: invoice.accountNumber || invoice.accountCode,
       accountCode: invoice.accountCode,
       totalAmount: totalStr,
       signatures: resolvedSignatures,
@@ -91,7 +91,7 @@ export async function POST(
       department: invoice.department,
       documentNumber: invoice.invoiceNumber,
       requestingDept: invoice.department,
-      sapAccount: invoice.accountCode,
+      sapAccount: invoice.accountNumber || invoice.accountCode,
       estimatedCost: totalStr,
       approverName:
         resolvedSignatures.length > 0 ? resolvedSignatures[0].name : "",
