@@ -82,7 +82,9 @@ export function renderIDP(data: IDPData): string {
 <style>
   @page { size: 11in 8.5in; margin: 0.3in 0.35in; }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body {
+  html, body {
+    height: 100%;
+    width: 100%;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 9pt;
     color: #000;
@@ -173,7 +175,7 @@ export function renderIDP(data: IDPData): string {
   <!-- ═══ TITLE ═══ -->
   <tr>
     <td colspan="2" style="border:1px solid #000; text-align:center; padding:6px 0; height:38px;">
-      <div style="font-weight:bold; font-size:11pt; line-height:1.3;">Name of College</div>
+      <div style="font-weight:bold; font-size:11pt; line-height:1.3;">Los Angeles Pierce College</div>
       <div style="font-weight:bold; font-size:9pt;">INTER- DEPARTMENT BOOKSTORE PURCHASE REQUEST FORM</div>
     </td>
   </tr>
