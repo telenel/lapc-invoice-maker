@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { adminUserCreateSchema } from "@/lib/validators";
 
 function generateAccessCode(): string {
   return String(Math.floor(100000 + Math.random() * 900000));
@@ -44,11 +45,11 @@ export async function POST(request: NextRequest) {
   if (role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const body = await request.json();
-  const { name, email } = body;
-
-  if (!name) {
-    return NextResponse.json({ error: "Name is required" }, { status: 400 });
+  const parsed = adminUserCreateSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
+  const { name, email } = parsed.data;
 
   try {
     // Generate a unique 6-digit code
