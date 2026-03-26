@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { PencilIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -75,7 +76,15 @@ export function QuickMode({
   saving,
   generationStep,
 }: QuickModeProps) {
+  const [categories, setCategories] = useState<{ name: string; label: string }[]>([]);
   const { dismissed: hintsDismissed, dismiss: dismissHints } = useHintsDismissed();
+
+  useEffect(() => {
+    fetch("/api/categories")
+      .then((res) => res.json())
+      .then((data) => setCategories(data))
+      .catch(() => {});
+  }, []);
 
   const currentStaff: StaffMember | undefined = form.staffId
     ? {
@@ -258,10 +267,11 @@ export function QuickMode({
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="COPY_TECH">CopyTech</SelectItem>
-                <SelectItem value="CATERING">Catering</SelectItem>
-                <SelectItem value="SUPPLIES">Supplies</SelectItem>
-                <SelectItem value="DEPARTMENT_PURCHASE">Department Purchase</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.name} value={cat.name}>
+                    {cat.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <FieldHint

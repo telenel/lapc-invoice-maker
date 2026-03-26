@@ -11,11 +11,12 @@ async function main() {
 
   await prisma.user.upsert({
     where: { username: "admin" },
-    update: {},
+    update: { role: "admin" },
     create: {
       username: "admin",
       passwordHash,
       name: "Administrator",
+      role: "admin",
     },
   });
 
@@ -58,6 +59,21 @@ async function main() {
         email: "",
         phone: "",
       },
+    });
+  }
+
+  // Seed categories
+  const categories = [
+    { name: "COPY_TECH", label: "CopyTech" },
+    { name: "CATERING", label: "Catering" },
+    { name: "SUPPLIES", label: "Supplies" },
+    { name: "DEPARTMENT_PURCHASE", label: "Department Purchase" },
+  ];
+  for (const cat of categories) {
+    await prisma.category.upsert({
+      where: { name: cat.name },
+      update: {},
+      create: cat,
     });
   }
 
