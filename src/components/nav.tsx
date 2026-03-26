@@ -14,9 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
-  DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HelpModal } from "@/components/help-modal";
 import { themes } from "@/lib/themes";
@@ -67,29 +65,17 @@ export function Nav() {
             );
           })}
           {role === "admin" && (
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <button
-                    className={cn(
-                      "relative inline-flex items-center gap-1 px-3 py-2 text-sm font-medium tracking-wide uppercase transition-colors",
-                      pathname.startsWith("/admin")
-                        ? "text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    Admin
-                    <ChevronDown className="h-3 w-3" />
-                  </button>
-                }
-              />
-              <DropdownMenuContent align="start">
-                <DropdownMenuLabel>Admin</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem render={<Link href="/admin/users">Users</Link>} />
-                <DropdownMenuItem render={<Link href="/admin/settings">Settings</Link>} />
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Link
+              href="/admin/settings"
+              className={cn(
+                "relative px-3 py-2 text-sm font-medium tracking-wide uppercase transition-colors",
+                pathname.startsWith("/admin")
+                  ? "text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Admin
+            </Link>
           )}
         </div>
         <div className="ml-auto flex items-center gap-2">

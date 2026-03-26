@@ -69,11 +69,6 @@ export function InvoiceFiltersBar({
           <Select
             value={filters.status || null}
             onValueChange={(value) => set("status", value ?? "")}
-            items={[
-              { value: "all", label: "All" },
-              { value: "DRAFT", label: "Draft" },
-              { value: "FINAL", label: "Final" },
-            ]}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="All statuses" />
@@ -92,10 +87,6 @@ export function InvoiceFiltersBar({
           <Select
             value={filters.category || null}
             onValueChange={(value) => set("category", value ?? "")}
-            items={[
-              { value: "all", label: "All" },
-              ...categories.map((cat) => ({ value: cat.name, label: cat.label })),
-            ]}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="All categories" />
@@ -117,10 +108,6 @@ export function InvoiceFiltersBar({
           <Select
             value={filters.department || null}
             onValueChange={(value) => set("department", value ?? "")}
-            items={[
-              { value: "all", label: "All" },
-              ...departments.map((dept) => ({ value: dept, label: dept })),
-            ]}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="All departments" />

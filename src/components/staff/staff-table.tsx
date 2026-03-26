@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { PlusIcon, PencilIcon } from "lucide-react";
+import { PlusIcon, PencilIcon, UserMinus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -82,14 +82,14 @@ export function StaffTable() {
           No staff members yet. Add one to get started.
         </p>
       ) : (
-        <Table>
+        <Table className="table-fixed w-full">
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead>Title</TableHead>
               <TableHead>Department</TableHead>
-              <TableHead>Account Code</TableHead>
-              <TableHead>Extension</TableHead>
+              <TableHead className="hidden md:table-cell">Account Code</TableHead>
+              <TableHead className="hidden md:table-cell">Extension</TableHead>
               <TableHead>Email</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -100,10 +100,10 @@ export function StaffTable() {
                 <TableCell className="font-bold">{member.name}</TableCell>
                 <TableCell>{member.title}</TableCell>
                 <TableCell>
-                  <Badge variant="secondary">{member.department}</Badge>
+                  <Badge variant="secondary">{member.department.replace(/^[,\s]+/, '').trim()}</Badge>
                 </TableCell>
-                <TableCell>{member.accountCode}</TableCell>
-                <TableCell>{member.extension}</TableCell>
+                <TableCell className="hidden md:table-cell">{member.accountCode}</TableCell>
+                <TableCell className="hidden md:table-cell">{member.extension}</TableCell>
                 <TableCell>{member.email}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
@@ -111,7 +111,7 @@ export function StaffTable() {
                       staff={member}
                       onSave={fetchStaff}
                       trigger={
-                        <Button variant="ghost" size="icon-sm">
+                        <Button variant="ghost" size="icon-sm" title="Edit">
                           <PencilIcon />
                           <span className="sr-only">Edit</span>
                         </Button>
@@ -120,11 +120,11 @@ export function StaffTable() {
                     <Button
                       variant="ghost"
                       size="icon-sm"
+                      title="Deactivate"
                       onClick={() => handleDeactivate(member.id, member.name)}
                     >
-                      <span className="text-destructive text-xs font-medium">
-                        Deactivate
-                      </span>
+                      <UserMinus className="text-destructive" />
+                      <span className="sr-only">Deactivate</span>
                     </Button>
                   </div>
                 </TableCell>
