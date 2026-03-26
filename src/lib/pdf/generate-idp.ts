@@ -138,16 +138,20 @@ export async function generateIDPPage(data: IDPOverlayData): Promise<Buffer> {
   const ITEM_HEADER_H = 16;
   const ITEM_TOTAL_H = 18;
 
+  // Department Use: at least 4 rows, or as many as needed for data
+  const deptItemRows = Math.max(4, data.items.length);
+  const bkItemRows = 4; // Bookstore Use always 4 blank rows
+
   const sec1H = FIELD_PAIR_H * 3 + COMMENT_H + SIG_H;
-  const sec1And2Fixed = TITLE_H + sec1H + ITEM_HEADER_H + ITEM_TOTAL_H * 2; // 2 totals (est + actual)
+  const fixedH = TITLE_H + sec1H + ITEM_HEADER_H + ITEM_TOTAL_H * 2;
 
-  // Remaining space split between Dept Use items (4) and Bookstore Use items (4)
-  const remainH = CONTENT_H - sec1And2Fixed;
-  const totalItemRows = 8; // 4 dept + 4 bookstore
-  const ITEM_ROW_H = Math.floor(remainH / totalItemRows);
+  // Remaining space split across all item rows
+  const remainH = CONTENT_H - fixedH;
+  const totalItemRows = deptItemRows + bkItemRows;
+  const ITEM_ROW_H = Math.max(17, Math.floor(remainH / totalItemRows));
 
-  const sec2H = ITEM_HEADER_H + ITEM_ROW_H * 4 + ITEM_TOTAL_H;
-  const sec3H = ITEM_ROW_H * 4 + ITEM_TOTAL_H;
+  const sec2H = ITEM_HEADER_H + ITEM_ROW_H * deptItemRows + ITEM_TOTAL_H;
+  const sec3H = ITEM_ROW_H * bkItemRows + ITEM_TOTAL_H;
 
   // ─── Draw from top ───
   let curY = PAGE_H - MARGIN;
@@ -250,7 +254,7 @@ export async function generateIDPPage(data: IDPOverlayData): Promise<Buffer> {
   txtR(page, bold, eX + eW - 4, y + 4, "Extended Price", { size: 7, color: WHITE });
 
   // Draw the outer box for all item rows + total (continuous border)
-  const itemsBlockH = ITEM_ROW_H * 4 + ITEM_TOTAL_H;
+  const itemsBlockH = ITEM_ROW_H * deptItemRows + ITEM_TOTAL_H;
   rect(page, dX, y - itemsBlockH, INNER_W, itemsBlockH);
 
   // Vertical column lines spanning the full items block
@@ -258,8 +262,8 @@ export async function generateIDPPage(data: IDPOverlayData): Promise<Buffer> {
   line(page, pX, y, pX, y - itemsBlockH);
   line(page, eX, y, eX, y - itemsBlockH);
 
-  // 4 item rows (horizontal lines between them)
-  for (let i = 0; i < 4; i++) {
+  // Item rows (horizontal lines between them)
+  for (let i = 0; i < deptItemRows; i++) {
     const rowTop = y - i * ITEM_ROW_H;
     if (i > 0) {
       line(page, dX, rowTop, dX + INNER_W, rowTop);
@@ -278,7 +282,7 @@ export async function generateIDPPage(data: IDPOverlayData): Promise<Buffer> {
   }
 
   // Estimated Cost total row
-  const estY = y - ITEM_ROW_H * 4;
+  const estY = y - ITEM_ROW_H * deptItemRows;
   line(page, dX, estY, dX + INNER_W, estY); // horizontal separator
   rect(page, eX, estY - ITEM_TOTAL_H, eW, ITEM_TOTAL_H, { fill: LIGHT_FILL, noStroke: true });
   txtR(page, bold, pX + pW - 4, estY - ITEM_TOTAL_H + 5, "Estimated Cost:", { size: 7.5 });
