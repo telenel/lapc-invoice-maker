@@ -1,3 +1,5 @@
+import path from "path";
+
 export interface CoverSheetData {
   date: string;
   semesterYearDept: string;
@@ -9,16 +11,20 @@ export interface CoverSheetData {
 }
 
 export function renderCoverSheet(data: CoverSheetData): string {
-  const signatureLines = (data.signatures ?? [])
+  const logoPath = path.join(process.cwd(), "public", "lapc-logo.png");
+  const logoUrl = `file://${logoPath}`;
+
+  // Pad to 3 signature lines
+  const sigs = [...(data.signatures ?? [])];
+  while (sigs.length < 3) sigs.push({ name: "" });
+
+  const signatureLines = sigs
     .slice(0, 3)
     .map(
       (sig) => `
-      <div style="display:flex; align-items:flex-end; margin-bottom:24px;">
-        <div style="flex:1; border-bottom:1px solid #000; height:28px; margin-right:16px;"></div>
-        <div style="width:200px; text-align:center;">
-          <div style="font-size:11px;">${sig.name}</div>
-          ${sig.title ? `<div style="font-size:10px; color:#555;">${sig.title}</div>` : ""}
-        </div>
+      <div class="sig-block">
+        <div class="sig-line"></div>
+        <div class="sig-name">${sig.name}${sig.title ? `, ${sig.title}` : ""}</div>
       </div>`
     )
     .join("\n");
@@ -30,114 +36,186 @@ export function renderCoverSheet(data: CoverSheetData): string {
 <style>
   @page {
     size: letter;
-    margin: 0.75in;
+    margin: 0.75in 1in;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    font-family: "Times New Roman", Times, serif;
+    font-family: Arial, Helvetica, sans-serif;
     font-size: 12px;
     color: #000;
-    line-height: 1.4;
+    line-height: 1.5;
   }
-  .header {
-    text-align: right;
-    font-size: 14px;
+
+  /* Header */
+  .logo-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 3px solid #c00;
+  }
+  .logo-row img {
+    height: 50px;
+  }
+  .logo-row .store-label {
+    font-size: 18px;
     font-weight: bold;
-    margin-bottom: 24px;
+    color: #333;
+  }
+
+  /* Memo fields */
+  .memo-section {
+    margin: 20px 0;
+  }
+  .memo-row {
+    display: flex;
+    margin-bottom: 6px;
+    font-size: 13px;
+  }
+  .memo-label {
+    font-weight: bold;
+    width: 100px;
+    flex-shrink: 0;
+    font-size: 14px;
+  }
+  .memo-value {
+    flex: 1;
+    font-size: 13px;
+  }
+
+  /* Body text */
+  .body-text {
+    margin: 24px 0;
+    font-size: 13px;
+    line-height: 1.8;
+  }
+  .body-text .highlight {
+    font-weight: bold;
+    font-size: 14px;
+  }
+
+  /* Invoice fields */
+  .invoice-fields {
+    margin: 20px 0;
   }
   .field-row {
     display: flex;
-    margin-bottom: 8px;
-    font-size: 12px;
+    margin-bottom: 10px;
+    align-items: baseline;
   }
   .field-label {
     font-weight: bold;
-    width: 160px;
+    font-size: 13px;
+    width: 280px;
     flex-shrink: 0;
   }
   .field-value {
     flex: 1;
     border-bottom: 1px solid #000;
-    padding-left: 4px;
-    min-height: 18px;
+    padding: 2px 8px;
+    font-size: 14px;
+    min-height: 20px;
   }
-  .body-text {
-    margin: 24px 0;
-    font-size: 12px;
-    line-height: 1.6;
-  }
+
+  /* Divider */
   .divider {
     border: none;
     border-top: 2px solid #000;
-    margin: 24px 0;
+    margin: 30px 0 20px 0;
   }
+
+  /* Certification */
   .certification {
-    font-size: 11px;
-    margin-bottom: 16px;
-    line-height: 1.5;
+    font-size: 12px;
+    font-weight: bold;
+    margin-bottom: 12px;
+    line-height: 1.6;
   }
   .approved {
     font-weight: bold;
-    font-size: 13px;
+    font-size: 15px;
     text-align: center;
-    margin: 20px 0;
+    margin: 24px 0;
+    text-decoration: underline;
   }
+
+  /* Signatures */
   .signatures {
-    margin-top: 32px;
+    margin-top: 20px;
+  }
+  .sig-block {
+    margin-bottom: 32px;
+  }
+  .sig-line {
+    border-bottom: 1px solid #000;
+    height: 30px;
+    width: 100%;
+  }
+  .sig-name {
+    font-size: 11px;
+    margin-top: 4px;
+    color: #333;
   }
 </style>
 </head>
 <body>
 
-<div class="header">College Store</div>
+<div class="logo-row">
+  <img src="${logoUrl}" alt="Los Angeles Pierce College" />
+  <div class="store-label">College Store</div>
+</div>
 
-<div class="field-row">
-  <span class="field-label">TO:</span>
-  <span class="field-value">ACCOUNTS PAYABLE</span>
-</div>
-<div class="field-row">
-  <span class="field-label">FROM:</span>
-  <span class="field-value">PIERCE COLLEGE</span>
-</div>
-<div class="field-row">
-  <span class="field-label">DATE:</span>
-  <span class="field-value">${data.date}</span>
-</div>
-<div class="field-row">
-  <span class="field-label">SUBJECT:</span>
-  <span class="field-value">REQUEST TO PAY BOOKSTORE</span>
+<div class="memo-section">
+  <div class="memo-row">
+    <span class="memo-label">TO:</span>
+    <span class="memo-value">ACCOUNTS PAYABLE</span>
+  </div>
+  <div class="memo-row">
+    <span class="memo-label">FROM:</span>
+    <span class="memo-value">PIERCE COLLEGE</span>
+  </div>
+  <div class="memo-row">
+    <span class="memo-label">DATE:</span>
+    <span class="memo-value">${data.date}</span>
+  </div>
+  <div class="memo-row">
+    <span class="memo-label">SUBJECT:</span>
+    <span class="memo-value">REQUEST TO PAY BOOKSTORE</span>
+  </div>
 </div>
 
 <div class="body-text">
-  Please pay the Pierce College Store for Supplies, Food Catering, and/or Books for:
-  <strong>${data.semesterYearDept}</strong>
+  Please pay the Pierce College Store for Supplies, Food Catering, and/or Books for:<br/>
+  <span class="highlight">${data.semesterYearDept}</span>
 </div>
 
-<div class="field-row">
-  <span class="field-label">INVOICE NUMBER:</span>
-  <span class="field-value">${data.invoiceNumber}</span>
-</div>
-<div class="field-row">
-  <span class="field-label">CHARGE ACCOUNT NUMBER:</span>
-  <span class="field-value">${data.chargeAccountNumber}</span>
-</div>
-<div class="field-row">
-  <span class="field-label">ACCOUNT CODE:</span>
-  <span class="field-value">${data.accountCode}</span>
-</div>
-<div class="field-row">
-  <span class="field-label">TOTAL PAYMENT AUTHORIZED:</span>
-  <span class="field-value">${data.totalAmount}</span>
+<div class="invoice-fields">
+  <div class="field-row">
+    <span class="field-label">INVOICE NUMBER:</span>
+    <span class="field-value">${data.invoiceNumber}</span>
+  </div>
+  <div class="field-row">
+    <span class="field-label">CHARGE ACCOUNT NUMBER:</span>
+    <span class="field-value">${data.chargeAccountNumber}</span>
+  </div>
+  <div class="field-row">
+    <span class="field-label">ACCOUNT CODE:</span>
+    <span class="field-value">${data.accountCode}</span>
+  </div>
+  <div class="field-row">
+    <span class="field-label">TOTAL PAYMENT AUTHORIZED:</span>
+    <span class="field-value">${data.totalAmount}</span>
+  </div>
 </div>
 
 <hr class="divider" />
 
 <div class="certification">
-  I certify that the above items have been received and/or services have been rendered,
-  and that the charges are correct and proper for payment from the funds indicated.
+  I certify that this expenditure is budgeted and approved for payment, please sign below:
 </div>
 
-<div class="approved">APPROVED FOR PAYMENT</div>
+<div class="approved">APPROVED FOR PAYMENT:</div>
 
 <div class="signatures">
   ${signatureLines}

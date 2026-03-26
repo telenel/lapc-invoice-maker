@@ -15,25 +15,43 @@ export interface IDPData {
   approverName: string;
   contactName: string;
   contactPhone: string;
+  comments?: string;
   items: IDPItem[];
   totalAmount: string;
 }
 
 export function renderIDP(data: IDPData): string {
-  // Pad items to at least 4 rows
+  // Pad items to at least 4 rows for both requesting dept and bookstore sections
   const rows: IDPItem[] = [...data.items];
   while (rows.length < 4) {
     rows.push({ description: "", quantity: "", unitPrice: "", extendedPrice: "" });
   }
 
-  const itemRows = rows
-    .map(
-      (item) => `
+  function itemRow(item: IDPItem): string {
+    return `
       <tr>
-        <td style="border:1px solid #000; padding:4px 6px; height:24px;">${item.description}</td>
-        <td style="border:1px solid #000; padding:4px 6px; text-align:center;">${item.quantity}</td>
-        <td style="border:1px solid #000; padding:4px 6px; text-align:right;">${item.unitPrice}</td>
-        <td style="border:1px solid #000; padding:4px 6px; text-align:right;">${item.extendedPrice}</td>
+        <td class="item-cell item-desc">${item.description}</td>
+        <td class="item-cell item-qty">${item.quantity}</td>
+        <td class="item-cell item-price">${item.unitPrice}</td>
+        <td class="item-cell item-ext">${item.extendedPrice}</td>
+      </tr>
+      <tr class="sep-row">
+        <td class="sep-cell" colspan="4"></td>
+      </tr>`;
+  }
+
+  const requestingItemRows = rows.map((item) => itemRow(item)).join("\n");
+  const bookstoreItemRows = rows
+    .map(
+      () => `
+      <tr>
+        <td class="item-cell item-desc"></td>
+        <td class="item-cell item-qty"></td>
+        <td class="item-cell item-price"></td>
+        <td class="item-cell item-ext"></td>
+      </tr>
+      <tr class="sep-row">
+        <td class="sep-cell" colspan="4"></td>
       </tr>`
     )
     .join("\n");
@@ -50,173 +68,344 @@ export function renderIDP(data: IDPData): string {
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 11px;
+    font-size: 10pt;
     color: #000;
-    line-height: 1.3;
+    line-height: 1.2;
+    width: 7.5in;
   }
-  .title {
+
+  /* ── Title rows ── */
+  .title-college {
     text-align: center;
-    margin-bottom: 4px;
-  }
-  .title h1 {
-    font-size: 14px;
+    font-size: 12pt;
     font-weight: bold;
-    margin-bottom: 2px;
+    padding: 4px 0;
   }
-  .title h2 {
-    font-size: 12px;
+  .title-form {
+    text-align: center;
+    font-size: 10pt;
     font-weight: bold;
+    padding: 2px 0 4px 0;
+  }
+  .separator {
+    border-top: 1px solid #000;
+    margin: 2px 0 4px 0;
+  }
+
+  /* ── Section wrapper: sidebar + content ── */
+  .section {
+    display: flex;
+    flex-direction: row;
+    border: 1px solid #000;
+    margin-top: -1px; /* collapse borders between sections */
+  }
+  .section:first-of-type {
+    margin-top: 0;
+  }
+
+  /* ── Green sidebar with rotated text ── */
+  .sidebar {
+    width: 28px;
+    min-width: 28px;
+    background: #CCFFCC;
+    border-right: 1px solid #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .sidebar-text {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-weight: bold;
+    font-size: 9pt;
+    white-space: nowrap;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
   }
-  .section-header {
-    background: #e0e0e0;
-    font-weight: bold;
-    font-size: 11px;
-    padding: 4px 8px;
-    border: 1px solid #000;
-    margin-top: 12px;
+
+  /* ── Content area ── */
+  .content {
+    flex: 1;
+    padding: 0;
   }
-  .info-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 6px 16px;
-    padding: 8px;
-    border: 1px solid #000;
-    border-top: none;
+
+  /* ── Requesting department fields ── */
+  .fields {
+    padding: 6px 8px 4px 8px;
   }
-  .info-field {
+  .field-row {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .field-group {
     display: flex;
     align-items: baseline;
-    font-size: 11px;
+    flex: 1;
+    margin-right: 12px;
   }
-  .info-label {
+  .field-group:last-child {
+    margin-right: 0;
+  }
+  .field-label {
     font-weight: bold;
+    font-size: 9pt;
     white-space: nowrap;
-    margin-right: 6px;
+    margin-right: 4px;
   }
-  .info-value {
+  .field-value {
     flex: 1;
     border-bottom: 1px solid #000;
-    min-height: 16px;
-    padding-left: 4px;
+    min-height: 14px;
+    padding: 0 2px;
+    font-size: 10pt;
   }
-  .sig-area {
-    padding: 12px 8px;
-    border: 1px solid #000;
-    border-top: none;
+  .field-value-fixed {
+    width: 140px;
+    flex: none;
   }
-  .sig-line {
+
+  /* ── Comments row ── */
+  .comments-row {
+    display: flex;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+  .comments-value {
+    flex: 1;
+    border-bottom: 1px solid #000;
+    min-height: 14px;
+    padding: 0 2px;
+    font-size: 10pt;
+  }
+
+  /* ── Signature row ── */
+  .sig-row {
     display: flex;
     align-items: flex-end;
-    margin-top: 8px;
+    padding: 8px 8px 6px 8px;
+    border-top: 1px solid #ccc;
   }
-  .sig-line-label {
+  .sig-label {
     font-weight: bold;
-    font-size: 10px;
-    margin-right: 8px;
+    font-size: 9pt;
     white-space: nowrap;
+    margin-right: 4px;
   }
-  .sig-line-field {
+  .sig-line {
     flex: 1;
     border-bottom: 1px solid #000;
-    height: 20px;
+    height: 18px;
+    margin-right: 16px;
   }
+  .sig-date-label {
+    font-weight: bold;
+    font-size: 9pt;
+    margin-right: 4px;
+  }
+  .sig-date-line {
+    width: 120px;
+    border-bottom: 1px solid #000;
+    height: 18px;
+  }
+
+  /* ── Items table ── */
   .items-table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 0;
   }
   .items-table th {
-    border: 1px solid #000;
     background: #f0f0f0;
-    padding: 4px 6px;
-    font-size: 10px;
-    text-align: center;
+    border: 1px solid #000;
+    padding: 3px 6px;
+    font-size: 9pt;
     font-weight: bold;
+    text-align: center;
   }
+  .item-cell {
+    border-left: 1px solid #000;
+    border-right: 1px solid #000;
+    padding: 3px 6px;
+    font-size: 10pt;
+    height: 20px;
+  }
+  .item-desc {
+    width: 50%;
+  }
+  .item-qty {
+    width: 12%;
+    text-align: center;
+  }
+  .item-price {
+    width: 19%;
+    text-align: right;
+  }
+  .item-ext {
+    width: 19%;
+    text-align: right;
+  }
+  .sep-row {
+    height: 1px;
+  }
+  .sep-cell {
+    border-left: 1px solid #000;
+    border-right: 1px solid #000;
+    border-bottom: 1px solid #ccc;
+    height: 1px;
+    padding: 0;
+  }
+
+  /* ── Total row ── */
   .total-row td {
     border: 1px solid #000;
-    padding: 4px 6px;
+    padding: 3px 6px;
     font-weight: bold;
+    font-size: 10pt;
   }
 </style>
 </head>
 <body>
 
-<div class="title">
-  <h1>Los Angeles Pierce College</h1>
-  <h2>Inter-Department Bookstore Purchase Request Form</h2>
+<!-- Row 1: College Name -->
+<div class="title-college">Los Angeles Pierce College</div>
+
+<!-- Row 2: Form Title -->
+<div class="title-form">INTER-DEPARTMENT BOOKSTORE PURCHASE REQUEST FORM</div>
+
+<!-- Row 3: Separator -->
+<div class="separator"></div>
+
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 1: Requesting Department Use           -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section">
+  <div class="sidebar">
+    <span class="sidebar-text">Requesting Department Use</span>
+  </div>
+  <div class="content">
+    <div class="fields">
+      <!-- Row: Date / Department / Document # -->
+      <div class="field-row">
+        <div class="field-group">
+          <span class="field-label">Date:</span>
+          <span class="field-value">${data.date}</span>
+        </div>
+        <div class="field-group" style="flex:2;">
+          <span class="field-label">Department or Unit Requesting Services:</span>
+          <span class="field-value">${data.department}</span>
+        </div>
+        <div class="field-group" style="flex:0.8;">
+          <span class="field-label">Document #:</span>
+          <span class="field-value">${data.documentNumber}</span>
+        </div>
+      </div>
+
+      <!-- Row: Requesting Dept / SAP Account / Estimated Cost -->
+      <div class="field-row">
+        <div class="field-group">
+          <span class="field-label">Requesting Department:</span>
+          <span class="field-value">${data.requestingDept}</span>
+        </div>
+        <div class="field-group">
+          <span class="field-label">SAP Account:</span>
+          <span class="field-value">${data.sapAccount}</span>
+        </div>
+        <div class="field-group" style="flex:0.8;">
+          <span class="field-label">Estimated Cost:</span>
+          <span class="field-value">${data.estimatedCost}</span>
+        </div>
+      </div>
+
+      <!-- Row: Approver / Contact / Phone -->
+      <div class="field-row">
+        <div class="field-group">
+          <span class="field-label">Name of Department Approver:</span>
+          <span class="field-value">${data.approverName}</span>
+        </div>
+        <div class="field-group">
+          <span class="field-label">Department Contact:</span>
+          <span class="field-value">${data.contactName}</span>
+        </div>
+        <div class="field-group" style="flex:0.8;">
+          <span class="field-label">Contact Phone:</span>
+          <span class="field-value">${data.contactPhone}</span>
+        </div>
+      </div>
+
+      <!-- Row: Comments -->
+      <div class="comments-row">
+        <span class="field-label">Comments:</span>
+        <span class="comments-value">${data.comments ?? ""}</span>
+      </div>
+    </div>
+
+    <!-- Signature row -->
+    <div class="sig-row">
+      <span class="sig-label">Signature of Department Approver:</span>
+      <span class="sig-line"></span>
+      <span class="sig-date-label">Date:</span>
+      <span class="sig-date-line"></span>
+    </div>
+  </div>
 </div>
 
-<div class="section-header">REQUESTING DEPARTMENT USE</div>
-<div class="info-grid">
-  <div class="info-field">
-    <span class="info-label">Date:</span>
-    <span class="info-value">${data.date}</span>
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 2: Department Use (Items)              -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section">
+  <div class="sidebar">
+    <span class="sidebar-text">Department Use</span>
   </div>
-  <div class="info-field">
-    <span class="info-label">Department:</span>
-    <span class="info-value">${data.department}</span>
-  </div>
-  <div class="info-field">
-    <span class="info-label">Document #:</span>
-    <span class="info-value">${data.documentNumber}</span>
-  </div>
-  <div class="info-field">
-    <span class="info-label">Requesting Dept:</span>
-    <span class="info-value">${data.requestingDept}</span>
-  </div>
-  <div class="info-field">
-    <span class="info-label">SAP Account:</span>
-    <span class="info-value">${data.sapAccount}</span>
-  </div>
-  <div class="info-field">
-    <span class="info-label">Estimated Cost:</span>
-    <span class="info-value">${data.estimatedCost}</span>
-  </div>
-  <div class="info-field">
-    <span class="info-label">Approver:</span>
-    <span class="info-value">${data.approverName}</span>
-  </div>
-  <div class="info-field">
-    <span class="info-label">Contact:</span>
-    <span class="info-value">${data.contactName}</span>
-  </div>
-  <div class="info-field">
-    <span class="info-label">Phone:</span>
-    <span class="info-value">${data.contactPhone}</span>
+  <div class="content">
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th style="width:50%;">Description of Product, Goods or Services Requested</th>
+          <th style="width:12%;">Qty.</th>
+          <th style="width:19%;">Rate/Unit Price</th>
+          <th style="width:19%;">Extended Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${requestingItemRows}
+        <tr class="total-row">
+          <td colspan="3" style="text-align:right;">Estimated Cost:</td>
+          <td style="text-align:right;">${data.totalAmount}</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </div>
 
-<div class="sig-area">
-  <div class="sig-line">
-    <span class="sig-line-label">Department Approver Signature:</span>
-    <span class="sig-line-field"></span>
+<!-- ═══════════════════════════════════════════════ -->
+<!-- SECTION 3: Bookstore Use                       -->
+<!-- ═══════════════════════════════════════════════ -->
+<div class="section">
+  <div class="sidebar">
+    <span class="sidebar-text">Bookstore Use</span>
   </div>
-  <div class="sig-line">
-    <span class="sig-line-label">Date:</span>
-    <span class="sig-line-field"></span>
+  <div class="content">
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th style="width:50%;">Description</th>
+          <th style="width:12%;">Qty.</th>
+          <th style="width:19%;">Rate/Unit Price</th>
+          <th style="width:19%;">Extended Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${bookstoreItemRows}
+        <tr class="total-row">
+          <td colspan="3" style="text-align:right;">Actual Cost:</td>
+          <td style="text-align:right;"></td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </div>
-
-<div class="section-header">BOOKSTORE USE</div>
-<table class="items-table">
-  <thead>
-    <tr>
-      <th style="width:50%;">Description</th>
-      <th style="width:12%;">Qty</th>
-      <th style="width:19%;">Rate/Unit Price</th>
-      <th style="width:19%;">Extended Price</th>
-    </tr>
-  </thead>
-  <tbody>
-    ${itemRows}
-    <tr class="total-row">
-      <td colspan="3" style="text-align:right; border:1px solid #000;">TOTAL:</td>
-      <td style="text-align:right; border:1px solid #000;">${data.totalAmount}</td>
-    </tr>
-  </tbody>
-</table>
 
 </body>
 </html>`;
