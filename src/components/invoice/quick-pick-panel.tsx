@@ -57,7 +57,7 @@ export function QuickPickPanel({ department, onSelect }: QuickPickPanelProps) {
             variant="outline"
             size="sm"
             onClick={() => onSelect(pick.description, pick.price)}
-            className="flex items-center gap-1"
+            className="flex items-center gap-1 focus-visible:ring-2 focus-visible:ring-ring"
           >
             {pick.description} — ${pick.price.toFixed(2)}
             <Badge variant="secondary" className="ml-1 text-xs">

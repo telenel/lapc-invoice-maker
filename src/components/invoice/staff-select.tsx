@@ -63,24 +63,43 @@ export function StaffSelect({
     setOpen(false);
   }
 
+  function handleTriggerKeyDown(e: React.KeyboardEvent<HTMLButtonElement>) {
+    // Enter and Space are already handled by Radix PopoverTrigger.
+    // Escape closes if open.
+    if (e.key === "Escape" && open) {
+      e.preventDefault();
+      setOpen(false);
+    }
+  }
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         className={cn(
           "flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs",
-          "focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
           "disabled:cursor-not-allowed disabled:opacity-50",
           "data-[placeholder]:text-muted-foreground",
           className
         )}
         aria-expanded={open}
+        aria-haspopup="listbox"
+        onKeyDown={handleTriggerKeyDown}
       >
         <span className={cn(!selected && "text-muted-foreground")}>
           {selected ? selected.name : placeholder}
         </span>
         <ChevronsUpDownIcon className="ml-2 size-4 shrink-0 opacity-50" />
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--available-width,320px)] p-0" align="start">
+      <PopoverContent
+        className="w-[var(--available-width,320px)] p-0"
+        align="start"
+        onKeyDown={(e) => {
+          if (e.key === "Escape") {
+            setOpen(false);
+          }
+        }}
+      >
         <Command>
           <CommandInput placeholder="Search staff…" />
           <CommandList>

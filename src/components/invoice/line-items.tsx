@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useEffect, useCallback } from "react";
 import { InvoiceItem } from "./invoice-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,6 +12,10 @@ interface LineItemsProps {
   onAdd: () => void;
   onRemove: (index: number) => void;
   total: number;
+  /** Ref forwarded from parent so it can auto-focus the first description field */
+  firstDescriptionRef?: React.RefObject<HTMLInputElement | null>;
+  /** Called when a quick-pick fills a row so we can focus its qty field */
+  focusQtyForRow?: (index: number) => void;
 }
 
 export function LineItems({
@@ -19,7 +24,85 @@ export function LineItems({
   onAdd,
   onRemove,
   total,
+  firstDescriptionRef,
+  focusQtyForRow,
 }: LineItemsProps) {
+  // Refs for every description and qty field so we can programmatically focus
+  const descRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const qtyRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const addButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  // Track pending new-row focus requests
+  const pendingFocusRow = useRef<number | null>(null);
+
+  // Expose focusQtyForRow if caller wants it
+  useEffect(() => {
+    if (focusQtyForRow) {
+      // nothing — caller calls via the callback prop
+    }
+  }, [focusQtyForRow]);
+
+  // When items array grows (new row added), focus its description field
+  useEffect(() => {
+    if (pendingFocusRow.current !== null) {
+      const idx = pendingFocusRow.current;
+      pendingFocusRow.current = null;
+      // Give React one tick to render the new row
+      requestAnimationFrame(() => {
+        descRefs.current[idx]?.focus();
+      });
+    }
+  }, [items.length]);
+
+  function handleAddItem() {
+    pendingFocusRow.current = items.length; // next index will be current length
+    onAdd();
+  }
+
+  // Tab out of last unit-price field → auto-add a new row and focus its description
+  function handleUnitPriceKeyDown(
+    e: React.KeyboardEvent<HTMLInputElement>,
+    index: number
+  ) {
+    if (e.key === "Tab" && !e.shiftKey && index === items.length - 1) {
+      e.preventDefault();
+      pendingFocusRow.current = items.length;
+      onAdd();
+    }
+  }
+
+  // Enter on description → focus qty of the same row
+  function handleDescriptionKeyDown(
+    e: React.KeyboardEvent<HTMLInputElement>,
+    index: number
+  ) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      qtyRefs.current[index]?.focus();
+    }
+  }
+
+  // Enter on qty → focus unit price of same row
+  function handleQtyKeyDown(
+    e: React.KeyboardEvent<HTMLInputElement>,
+    index: number
+  ) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      // Unit price input is the sibling — we navigate via normal focus
+      const qtyEl = qtyRefs.current[index];
+      if (qtyEl) {
+        // Move focus to the next focusable sibling (unit price input)
+        const row = qtyEl.closest(".line-item-row");
+        if (row) {
+          const inputs = Array.from(row.querySelectorAll("input:not([readonly])"));
+          const qtyIdx = inputs.indexOf(qtyEl);
+          (inputs[qtyIdx + 1] as HTMLInputElement | undefined)?.focus();
+        }
+      }
+    }
+  }
+
   return (
     <div className="space-y-2">
       {/* Header row + Add button */}
@@ -39,33 +122,60 @@ export function LineItems({
           </div>
           <div className="col-span-1" />
         </div>
-        <Button type="button" variant="outline" size="sm" onClick={onAdd}>
+        <Button
+          ref={addButtonRef}
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleAddItem}
+          aria-label="Add line item"
+          className="focus-visible:ring-2 focus-visible:ring-ring"
+        >
           +
         </Button>
       </div>
 
       {/* Line item rows */}
       {items.map((item, index) => (
-        <div key={index} className="grid grid-cols-12 gap-2 items-center">
+        <div
+          key={index}
+          className="grid grid-cols-12 gap-2 items-center line-item-row"
+        >
           {/* Description — col-span-5 */}
           <div className="col-span-5">
             <Input
+              ref={(el) => {
+                descRefs.current[index] = el;
+                // Also wire up firstDescriptionRef for the first row
+                if (index === 0 && firstDescriptionRef) {
+                  (firstDescriptionRef as React.MutableRefObject<HTMLInputElement | null>).current = el;
+                }
+              }}
               value={item.description}
               onChange={(e) => onUpdate(index, { description: e.target.value })}
+              onKeyDown={(e) => handleDescriptionKeyDown(e, index)}
               placeholder="Description"
+              className="focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={`Line item ${index + 1} description`}
             />
           </div>
 
           {/* Qty — col-span-2 */}
           <div className="col-span-2">
             <Input
+              ref={(el) => {
+                qtyRefs.current[index] = el;
+              }}
               type="number"
               min={1}
               value={item.quantity}
               onChange={(e) =>
                 onUpdate(index, { quantity: Number(e.target.value) })
               }
+              onKeyDown={(e) => handleQtyKeyDown(e, index)}
               placeholder="Qty"
+              className="focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={`Line item ${index + 1} quantity`}
             />
           </div>
 
@@ -79,7 +189,10 @@ export function LineItems({
               onChange={(e) =>
                 onUpdate(index, { unitPrice: Number(e.target.value) })
               }
+              onKeyDown={(e) => handleUnitPriceKeyDown(e, index)}
               placeholder="0.00"
+              className="focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={`Line item ${index + 1} unit price`}
             />
           </div>
 
@@ -87,8 +200,10 @@ export function LineItems({
           <div className="col-span-2">
             <Input
               readOnly
+              tabIndex={-1}
               value={`$${item.extendedPrice.toFixed(2)}`}
               className="bg-muted"
+              aria-label={`Line item ${index + 1} extended price`}
             />
           </div>
 
@@ -100,7 +215,8 @@ export function LineItems({
               size="sm"
               onClick={() => onRemove(index)}
               disabled={items.length === 1}
-              className="text-destructive hover:text-destructive"
+              className="text-destructive hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={`Remove line item ${index + 1}`}
             >
               ×
             </Button>
@@ -115,5 +231,22 @@ export function LineItems({
         </span>
       </div>
     </div>
+  );
+}
+
+/**
+ * Expose a stable callback that parent can call to focus the qty field
+ * of a given line-item row index.
+ */
+export function useLineItemFocusQty(
+  qtyRefs: React.MutableRefObject<(HTMLInputElement | null)[]>
+) {
+  return useCallback(
+    (index: number) => {
+      requestAnimationFrame(() => {
+        qtyRefs.current[index]?.focus();
+      });
+    },
+    [qtyRefs]
   );
 }
