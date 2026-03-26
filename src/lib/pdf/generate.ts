@@ -3,11 +3,14 @@ import { PDFDocument } from "pdf-lib";
 import { mkdir, writeFile, readFile } from "fs/promises";
 import path from "path";
 import { renderCoverSheet, type CoverSheetData } from "./templates/cover-sheet";
-import { renderIDP, type IDPData } from "./templates/idp";
+import { generateIDPPage, type IDPOverlayData } from "./generate-idp";
+
+// Re-export for backwards compat
+export type IDPData = IDPOverlayData;
 
 export interface GenerateInvoicePDFData {
   coverSheet: Omit<CoverSheetData, "logoDataUri">;
-  idp: IDPData;
+  idp: IDPOverlayData;
 }
 
 async function htmlToPdf(
@@ -59,12 +62,11 @@ export async function generateInvoicePDF(
   const logoDataUri = "data:image/png;base64," + logoBase64;
 
   const coverSheetHtml = renderCoverSheet({ ...data.coverSheet, logoDataUri });
-  const idpHtml = renderIDP(data.idp);
 
-  // Generate both pages as separate PDFs
+  // Generate cover sheet via Puppeteer, IDP via template overlay
   const [coverSheetPdf, idpPdf] = await Promise.all([
     htmlToPdf(coverSheetHtml),
-    htmlToPdf(idpHtml, { landscape: true }),
+    generateIDPPage(data.idp),
   ]);
 
   // Merge into one PDF using pdf-lib
