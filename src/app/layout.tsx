@@ -4,6 +4,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Nav } from "@/components/nav";
 import { AuthSessionProvider } from "@/components/session-provider";
+import { ThemeProviderWrapper } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = localFont({
@@ -28,12 +29,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn(geistSans.variable, geistMono.variable)}>
+    <html lang="en" className={cn(geistSans.variable, geistMono.variable)} suppressHydrationWarning>
       <body className="antialiased">
         <AuthSessionProvider>
-          <Nav />
-          <main className="mx-auto max-w-7xl px-4 py-6">{children}</main>
-          <Toaster />
+          <ThemeProviderWrapper>
+            <Nav />
+            <main className="mx-auto max-w-7xl px-4 py-6">{children}</main>
+            <Toaster />
+          </ThemeProviderWrapper>
         </AuthSessionProvider>
       </body>
     </html>

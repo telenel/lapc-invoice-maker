@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTheme } from "next-themes";
 import { signOut } from "next-auth/react";
+import { Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -16,12 +18,15 @@ const links = [
 
 export function Nav() {
   const pathname = usePathname();
+  const { resolvedTheme, setTheme } = useTheme();
 
   return (
     <nav className="border-b bg-background">
       <div className="mx-auto flex h-14 max-w-7xl items-center px-4 gap-6">
-        <Link href="/" className="font-bold text-lg">
-          LAPC InvoiceMaker
+        <Link href="/" className="flex items-center gap-2 font-bold text-lg">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/lapc-logo.png" alt="LAPC" style={{ height: "28px" }} />
+          InvoiceMaker
         </Link>
         <div className="flex gap-1">
           {links.map((link) => (
@@ -39,7 +44,15 @@ export function Nav() {
             </Link>
           ))}
         </div>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+            aria-label="Toggle theme"
+          >
+            {resolvedTheme === "dark" ? <Sun /> : <Moon />}
+          </Button>
           <Button variant="ghost" size="sm" onClick={() => signOut()}>
             Sign out
           </Button>

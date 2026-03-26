@@ -22,6 +22,7 @@ export interface InvoiceFormData {
   date: string;
   staffId: string;
   department: string;
+  category: string;
   accountCode: string;
   accountNumber: string;
   approvalChain: string[];
@@ -88,6 +89,7 @@ function defaultForm(): InvoiceFormData {
     date: todayISO(),
     staffId: "",
     department: "",
+    category: "",
     accountCode: "",
     accountNumber: "",
     approvalChain: [],
@@ -102,6 +104,12 @@ function defaultForm(): InvoiceFormData {
     signatures: { line1: "", line2: "", line3: "" },
   };
 }
+
+// ---------------------------------------------------------------------------
+// Generation step type
+// ---------------------------------------------------------------------------
+
+export type GenerationStep = null | "saving" | "generating" | "done";
 
 // ---------------------------------------------------------------------------
 // Hook
@@ -119,6 +127,7 @@ export function useInvoiceForm(
   }));
 
   const [saving, setSaving] = useState(false);
+  const [generationStep, setGenerationStep] = useState<GenerationStep>(null);
 
   // ---------- Field update helpers ----------
 
@@ -287,6 +296,7 @@ export function useInvoiceForm(
       date: form.date,
       staffId: form.staffId,
       department: form.department,
+      category: form.category,
       accountCode: form.accountCode,
       accountNumber: form.accountNumber,
       approvalChain: form.approvalChain,
@@ -369,8 +379,11 @@ export function useInvoiceForm(
 
   const saveAndFinalize = useCallback(async () => {
     setSaving(true);
+    setGenerationStep("saving");
     try {
       const id = await postDraft();
+
+      setGenerationStep("generating");
 
       const finalizePayload = {
         prismcorePath: form.prismcorePath,
@@ -392,12 +405,18 @@ export function useInvoiceForm(
         throw new Error(msg);
       }
 
+      setGenerationStep("done");
       toast.success("Invoice finalized");
+
+      // Brief delay so the user sees the "Done!" state
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
       router.push(`/invoices/${id}`);
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to finalize invoice"
       );
+      setGenerationStep(null);
     } finally {
       setSaving(false);
     }
@@ -417,5 +436,6 @@ export function useInvoiceForm(
     saveDraft,
     saveAndFinalize,
     saving,
+    generationStep,
   };
 }

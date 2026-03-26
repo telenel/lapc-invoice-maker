@@ -62,7 +62,7 @@ export function renderIDP(data: IDPData): string {
 <meta charset="UTF-8">
 <style>
   @page {
-    size: letter;
+    size: 11in 8.5in;
     margin: 0.5in;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -71,7 +71,7 @@ export function renderIDP(data: IDPData): string {
     font-size: 10pt;
     color: #000;
     line-height: 1.2;
-    width: 7.5in;
+    width: 10in;
   }
 
   /* ── Title rows ── */
@@ -227,23 +227,23 @@ export function renderIDP(data: IDPData): string {
   .item-cell {
     border-left: 1px solid #000;
     border-right: 1px solid #000;
-    padding: 3px 6px;
+    padding: 3px 10px;
     font-size: 10pt;
     height: 20px;
   }
   .item-desc {
-    width: 50%;
+    width: 55%;
   }
   .item-qty {
-    width: 12%;
+    width: 10%;
     text-align: center;
   }
   .item-price {
-    width: 19%;
+    width: 17%;
     text-align: right;
   }
   .item-ext {
-    width: 19%;
+    width: 18%;
     text-align: right;
   }
   .sep-row {
@@ -362,10 +362,10 @@ export function renderIDP(data: IDPData): string {
     <table class="items-table">
       <thead>
         <tr>
-          <th style="width:50%;">Description of Product, Goods or Services Requested</th>
-          <th style="width:12%;">Qty.</th>
-          <th style="width:19%;">Rate/Unit Price</th>
-          <th style="width:19%;">Extended Price</th>
+          <th style="width:55%;">Description of Product, Goods or Services Requested</th>
+          <th style="width:10%;">Qty.</th>
+          <th style="width:17%;">Rate/Unit Price</th>
+          <th style="width:18%;">Extended Price</th>
         </tr>
       </thead>
       <tbody>
@@ -390,10 +390,10 @@ export function renderIDP(data: IDPData): string {
     <table class="items-table">
       <thead>
         <tr>
-          <th style="width:50%;">Description</th>
-          <th style="width:12%;">Qty.</th>
-          <th style="width:19%;">Rate/Unit Price</th>
-          <th style="width:19%;">Extended Price</th>
+          <th style="width:55%;">Description</th>
+          <th style="width:10%;">Qty.</th>
+          <th style="width:17%;">Rate/Unit Price</th>
+          <th style="width:18%;">Extended Price</th>
         </tr>
       </thead>
       <tbody>

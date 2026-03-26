@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -11,6 +12,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import {
   Table,
@@ -38,6 +48,7 @@ interface Invoice {
   id: string;
   invoiceNumber: string;
   status: "DRAFT" | "FINAL";
+  category: string;
   date: string;
   createdAt: string;
   department: string;
@@ -87,9 +98,12 @@ function formatDate(dateStr: string): string {
 // ---------------------------------------------------------------------------
 
 export function InvoiceDetailView({ id }: { id: string }) {
+  const router = useRouter();
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     async function fetchInvoice() {
@@ -128,6 +142,37 @@ export function InvoiceDetailView({ id }: { id: string }) {
       toast.error("Failed to regenerate PDF");
     } finally {
       setRegenerating(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!invoice) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/invoices/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.error ?? "Failed to delete invoice");
+      } else {
+        toast.success("Invoice deleted");
+        router.push("/invoices");
+      }
+    } catch {
+      toast.error("Failed to delete invoice");
+    } finally {
+      setDeleting(false);
+      setDeleteDialogOpen(false);
+    }
+  }
+
+  function handleDeleteClick() {
+    if (!invoice) return;
+    if (invoice.status === "DRAFT") {
+      if (window.confirm("Are you sure you want to delete this draft invoice?")) {
+        handleDelete();
+      }
+    } else {
+      setDeleteDialogOpen(true);
     }
   }
 
@@ -185,6 +230,50 @@ export function InvoiceDetailView({ id }: { id: string }) {
               {regenerating ? "Regenerating…" : "Regenerate PDF"}
             </Button>
           )}
+
+          {isDraft ? (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDeleteClick}
+              disabled={deleting}
+            >
+              {deleting ? "Deleting…" : "Delete"}
+            </Button>
+          ) : (
+            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+              <DialogTrigger
+                render={
+                  <Button variant="destructive" size="sm" disabled={deleting}>
+                    {deleting ? "Deleting…" : "Delete"}
+                  </Button>
+                }
+              />
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Delete Invoice</DialogTitle>
+                  <DialogDescription>
+                    This will permanently delete the invoice and its generated PDF. This action cannot be undone.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setDeleteDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={handleDelete}
+                    disabled={deleting}
+                  >
+                    {deleting ? "Deleting…" : "Delete Invoice"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </div>
 
@@ -203,6 +292,14 @@ export function InvoiceDetailView({ id }: { id: string }) {
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Department</span>
               <Badge variant="secondary">{invoice.department}</Badge>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Category</span>
+              <Badge variant="outline">
+                {invoice.category
+                  ? invoice.category.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())
+                  : "—"}
+              </Badge>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Account Number</span>

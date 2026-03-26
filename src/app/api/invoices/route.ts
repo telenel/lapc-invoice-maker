@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
   const department = searchParams.get("department") ?? undefined;
   const dateFrom = searchParams.get("dateFrom") ?? undefined;
   const dateTo = searchParams.get("dateTo") ?? undefined;
+  const category = searchParams.get("category") ?? undefined;
   const amountMin = searchParams.get("amountMin") ?? undefined;
   const amountMax = searchParams.get("amountMax") ?? undefined;
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
@@ -38,6 +39,9 @@ export async function GET(request: NextRequest) {
   if (department) {
     where.department = { contains: department, mode: "insensitive" };
   }
+  if (category) {
+    where.category = category as Prisma.InvoiceWhereInput["category"];
+  }
   if (dateFrom || dateTo) {
     where.date = {};
     if (dateFrom) where.date.gte = new Date(dateFrom);
@@ -53,6 +57,7 @@ export async function GET(request: NextRequest) {
       { invoiceNumber: { contains: search, mode: "insensitive" } },
       { department: { contains: search, mode: "insensitive" } },
       { staff: { name: { contains: search, mode: "insensitive" } } },
+      { items: { some: { description: { contains: search, mode: "insensitive" } } } },
     ];
   }
 

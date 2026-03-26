@@ -21,20 +21,22 @@ model User {
 }
 
 model Staff {
-  id             String              @id @default(uuid())
-  name           String
-  title          String
-  department     String
-  accountCode    String              @map("account_code")
-  extension      String              @default("")
-  email          String              @default("")
-  phone          String              @default("")
-  approvalChain  Json                @default("[]") @map("approval_chain")
-  active         Boolean             @default(true)
-  createdAt      DateTime            @default(now()) @map("created_at")
-  updatedAt      DateTime            @updatedAt @map("updated_at")
-  invoices       Invoice[]
-  accountNumbers StaffAccountNumber[]
+  id              String              @id @default(uuid())
+  name            String
+  title           String
+  department      String
+  accountCode     String              @map("account_code")
+  extension       String              @default("")
+  email           String              @default("")
+  phone           String              @default("")
+  approvalChain   Json                @default("[]") @map("approval_chain")
+  active          Boolean             @default(true)
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+  invoices        Invoice[]
+  accountNumbers  StaffAccountNumber[]
+  signerHistories StaffSignerHistory[] @relation("signerFor")
+  signedFor       StaffSignerHistory[] @relation("signsFor")
 
   @@map("staff")
 }
@@ -54,22 +56,23 @@ model StaffAccountNumber {
 }
 
 model Invoice {
-  id             String        @id @default(uuid())
-  invoiceNumber  String        @unique @map("invoice_number")
-  status         InvoiceStatus @default(DRAFT)
-  date           DateTime      @db.Date
-  createdBy      String        @map("created_by")
-  staffId        String        @map("staff_id")
+  id             String          @id @default(uuid())
+  invoiceNumber  String          @unique @map("invoice_number")
+  status         InvoiceStatus   @default(DRAFT)
+  category       InvoiceCategory @default(SUPPLIES)
+  date           DateTime        @db.Date
+  createdBy      String          @map("created_by")
+  staffId        String          @map("staff_id")
   department     String
-  accountCode    String        @map("account_code")
-  accountNumber  String        @default("") @map("account_number")
-  approvalChain  Json          @default("[]") @map("approval_chain")
-  totalAmount    Decimal       @default(0) @map("total_amount") @db.Decimal(10, 2)
+  accountCode    String          @map("account_code")
+  accountNumber  String          @default("") @map("account_number")
+  approvalChain  Json            @default("[]") @map("approval_chain")
+  totalAmount    Decimal         @default(0) @map("total_amount") @db.Decimal(10, 2)
   notes          String?
-  pdfPath        String?       @map("pdf_path")
-  prismcorePath  String?       @map("prismcore_path")
-  createdAt      DateTime      @default(now()) @map("created_at")
-  updatedAt      DateTime      @updatedAt @map("updated_at")
+  pdfPath        String?         @map("pdf_path")
+  prismcorePath  String?         @map("prismcore_path")
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
 
   creator  User          @relation(fields: [createdBy], references: [id])
   staff    Staff         @relation(fields: [staffId], references: [id])
@@ -107,4 +110,37 @@ model QuickPickItem {
 enum InvoiceStatus {
   DRAFT
   FINAL
+}
+
+enum InvoiceCategory {
+  COPY_TECH
+  CATERING
+  SUPPLIES
+  DEPARTMENT_PURCHASE
+}
+
+model StaffSignerHistory {
+  id            String   @id @default(uuid())
+  staffId       String   @map("staff_id")
+  signerStaffId String   @map("signer_staff_id")
+  position      Int      @default(0)
+  lastUsedAt    DateTime @default(now()) @map("last_used_at")
+
+  staff  Staff @relation("signerFor", fields: [staffId], references: [id], onDelete: Cascade)
+  signer Staff @relation("signsFor", fields: [signerStaffId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, signerStaffId, position])
+  @@map("staff_signer_history")
+}
+
+model SavedLineItem {
+  id          String   @id @default(uuid())
+  description String
+  unitPrice   Decimal  @map("unit_price") @db.Decimal(10, 2)
+  department  String
+  usageCount  Int      @default(0) @map("usage_count")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@unique([department, description])
+  @@map("saved_line_items")
 }

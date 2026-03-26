@@ -1,5 +1,3 @@
-import path from "path";
-
 export interface CoverSheetData {
   date: string;
   semesterYearDept: string;
@@ -8,12 +6,10 @@ export interface CoverSheetData {
   accountCode: string;
   totalAmount: string;
   signatures: { name: string; title?: string }[];
+  logoDataUri?: string;
 }
 
 export function renderCoverSheet(data: CoverSheetData): string {
-  const logoPath = path.join(process.cwd(), "public", "lapc-logo.png");
-  const logoUrl = `file://${logoPath}`;
-
   // Pad to 3 signature lines
   const sigs = [...(data.signatures ?? [])];
   while (sigs.length < 3) sigs.push({ name: "" });
@@ -41,7 +37,7 @@ export function renderCoverSheet(data: CoverSheetData): string {
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 12px;
+    font-size: 14px;
     color: #000;
     line-height: 1.5;
   }
@@ -56,7 +52,7 @@ export function renderCoverSheet(data: CoverSheetData): string {
     border-bottom: 3px solid #c00;
   }
   .logo-row img {
-    height: 50px;
+    height: 60px;
   }
   .logo-row .store-label {
     font-size: 18px;
@@ -71,28 +67,28 @@ export function renderCoverSheet(data: CoverSheetData): string {
   .memo-row {
     display: flex;
     margin-bottom: 6px;
-    font-size: 13px;
+    font-size: 15px;
   }
   .memo-label {
     font-weight: bold;
     width: 100px;
     flex-shrink: 0;
-    font-size: 14px;
+    font-size: 16px;
   }
   .memo-value {
     flex: 1;
-    font-size: 13px;
+    font-size: 15px;
   }
 
   /* Body text */
   .body-text {
     margin: 24px 0;
-    font-size: 13px;
+    font-size: 15px;
     line-height: 1.8;
   }
   .body-text .highlight {
     font-weight: bold;
-    font-size: 14px;
+    font-size: 16px;
   }
 
   /* Invoice fields */
@@ -106,7 +102,7 @@ export function renderCoverSheet(data: CoverSheetData): string {
   }
   .field-label {
     font-weight: bold;
-    font-size: 13px;
+    font-size: 15px;
     width: 280px;
     flex-shrink: 0;
   }
@@ -114,7 +110,7 @@ export function renderCoverSheet(data: CoverSheetData): string {
     flex: 1;
     border-bottom: 1px solid #000;
     padding: 2px 8px;
-    font-size: 14px;
+    font-size: 16px;
     min-height: 20px;
   }
 
@@ -127,14 +123,14 @@ export function renderCoverSheet(data: CoverSheetData): string {
 
   /* Certification */
   .certification {
-    font-size: 12px;
+    font-size: 14px;
     font-weight: bold;
     margin-bottom: 12px;
     line-height: 1.6;
   }
   .approved {
     font-weight: bold;
-    font-size: 15px;
+    font-size: 17px;
     text-align: center;
     margin: 24px 0;
     text-decoration: underline;
@@ -162,7 +158,7 @@ export function renderCoverSheet(data: CoverSheetData): string {
 <body>
 
 <div class="logo-row">
-  <img src="${logoUrl}" alt="Los Angeles Pierce College" />
+  <img src="${data.logoDataUri}" alt="Los Angeles Pierce College" />
   <div class="store-label">College Store</div>
 </div>
 
@@ -186,7 +182,7 @@ export function renderCoverSheet(data: CoverSheetData): string {
 </div>
 
 <div class="body-text">
-  Please pay the Pierce College Store for Supplies, Food Catering, and/or Books for:<br/>
+  This memorandum authorizes payment to the Pierce College Store for goods and/or services provided to the following department:<br/>
   <span class="highlight">${data.semesterYearDept}</span>
 </div>
 

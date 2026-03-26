@@ -13,6 +13,13 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { StaffSelect } from "./staff-select";
 import { LineItems } from "./line-items";
 import { QuickPickPanel } from "./quick-pick-panel";
@@ -20,7 +27,8 @@ import { PrismcoreUpload } from "./prismcore-upload";
 import { AccountSelect } from "./account-select";
 import { StaffForm } from "@/components/staff/staff-form";
 import { FieldHint, useHintsDismissed } from "./field-hint";
-import type { InvoiceFormData, InvoiceItem, StaffAccountNumber } from "./invoice-form";
+import type { InvoiceFormData, InvoiceItem, StaffAccountNumber, GenerationStep } from "./invoice-form";
+import { PdfProgress } from "./pdf-progress";
 
 interface StaffMember {
   id: string;
@@ -50,6 +58,7 @@ interface WizardModeProps {
   saveDraft: () => Promise<void>;
   saveAndFinalize: () => Promise<void>;
   saving: boolean;
+  generationStep: GenerationStep;
 }
 
 const STEPS = ["Staff & Info", "Line Items", "Review"] as const;
@@ -110,6 +119,7 @@ export function WizardMode({
   saveDraft,
   saveAndFinalize,
   saving,
+  generationStep,
 }: WizardModeProps) {
   const [step, setStep] = useState(1);
   const { dismissed: hintsDismissed, dismiss: dismissHints } = useHintsDismissed();
@@ -156,7 +166,9 @@ export function WizardMode({
   }
 
   const canProceedStep1 =
-    form.staffId.trim() !== "" && form.invoiceNumber.trim() !== "";
+    form.staffId.trim() !== "" &&
+    form.invoiceNumber.trim() !== "" &&
+    form.category !== "";
 
   return (
     <div className="max-w-3xl mx-auto">
@@ -276,6 +288,24 @@ export function WizardMode({
             </div>
 
             <div className="space-y-1">
+              <Label>Category</Label>
+              <Select
+                value={form.category}
+                onValueChange={(value) => updateField("category", value ?? "")}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="COPY_TECH">CopyTech</SelectItem>
+                  <SelectItem value="CATERING">Catering</SelectItem>
+                  <SelectItem value="SUPPLIES">Supplies</SelectItem>
+                  <SelectItem value="DEPARTMENT_PURCHASE">Department Purchase</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1">
               <Label>Semester / Year / Dept</Label>
               <Input
                 value={form.semesterYearDept}
@@ -352,6 +382,12 @@ export function WizardMode({
               <div className="font-medium">{form.contactName || "\u2014"}</div>
               <div className="text-muted-foreground">Department</div>
               <div className="font-medium">{form.department || "\u2014"}</div>
+              <div className="text-muted-foreground">Category</div>
+              <div className="font-medium">
+                {form.category
+                  ? form.category.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+                  : "\u2014"}
+              </div>
               <div className="text-muted-foreground">Account Number</div>
               <div className="font-medium">{form.accountNumber || "\u2014"}</div>
               <div className="text-muted-foreground">Account Code</div>
@@ -425,6 +461,8 @@ export function WizardMode({
           </CardFooter>
         </Card>
       )}
+
+      <PdfProgress step={generationStep} />
     </div>
   );
 }
