@@ -84,5 +84,30 @@ export async function GET(request: NextRequest) {
     count: data.count,
   }));
 
-  return NextResponse.json({ byCategory, byMonth, byDepartment, trend });
+  // byUser groupBy
+  const userGroups = await prisma.invoice.groupBy({
+    by: ["createdBy"],
+    _count: true,
+    _sum: { totalAmount: true },
+    where: dateFilter,
+  });
+
+  const userIds = userGroups.map((g) => g.createdBy);
+  const users = await prisma.user.findMany({
+    where: { id: { in: userIds } },
+    select: { id: true, name: true },
+  });
+
+  const byUser = userGroups
+    .map((g) => {
+      const user = users.find((u) => u.id === g.createdBy);
+      return {
+        user: user?.name ?? "Unknown",
+        count: g._count,
+        total: Number(g._sum?.totalAmount ?? 0),
+      };
+    })
+    .sort((a, b) => b.total - a.total);
+
+  return NextResponse.json({ byCategory, byMonth, byDepartment, trend, byUser });
 }

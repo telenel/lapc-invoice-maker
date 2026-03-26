@@ -14,7 +14,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
+  DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { HelpModal } from "@/components/help-modal";
 import { themes } from "@/lib/themes";
@@ -58,17 +60,29 @@ export function Nav() {
             </Link>
           ))}
           {role === "admin" && (
-            <Link
-              href="/admin/users"
-              className={cn(
-                "px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                pathname === "/admin/users"
-                  ? "bg-accent text-accent-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-              )}
-            >
-              Admin
-            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <button
+                    className={cn(
+                      "inline-flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                      pathname.startsWith("/admin")
+                        ? "bg-accent text-accent-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    )}
+                  >
+                    Admin
+                    <ChevronDown className="h-3 w-3" />
+                  </button>
+                }
+              />
+              <DropdownMenuContent align="start">
+                <DropdownMenuLabel>Admin</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem render={<Link href="/admin/users">Users</Link>} />
+                <DropdownMenuItem render={<Link href="/admin/settings">Settings</Link>} />
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
         </div>
         <div className="ml-auto flex items-center gap-2">
