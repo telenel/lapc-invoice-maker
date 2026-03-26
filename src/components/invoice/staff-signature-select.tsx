@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ChevronsUpDownIcon } from "lucide-react";
 import {
   Command,
@@ -44,6 +44,8 @@ export function StaffSignatureSelect({
   const [open, setOpen] = useState(false);
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const commandRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -54,6 +56,16 @@ export function StaffSignatureSelect({
       .finally(() => setLoading(false));
   }, []);
 
+  useEffect(() => {
+    const list = commandRef.current?.querySelector('[data-slot="command-list"]');
+    if (!list || !open) return;
+    list.scrollTop = 0;
+    const reset = () => { list.scrollTop = 0; };
+    list.addEventListener("scroll", reset);
+    const timer = setTimeout(() => list.removeEventListener("scroll", reset), 100);
+    return () => { clearTimeout(timer); list.removeEventListener("scroll", reset); };
+  }, [search, open]);
+
   function handleSelect(staffMember: StaffMember) {
     onSelect(staffMember);
     setOpen(false);
@@ -62,7 +74,7 @@ export function StaffSignatureSelect({
   const hasValue = !!displayValue;
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={(v) => { setOpen(v); if (v) setSearch(""); }}>
       <PopoverTrigger
         className={cn(
           "flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs",
@@ -73,10 +85,10 @@ export function StaffSignatureSelect({
         aria-expanded={open}
         aria-haspopup="listbox"
       >
-        <span className={cn(!hasValue && "text-muted-foreground")}>
+        <span className={cn("min-w-0", !hasValue && "text-muted-foreground")}>
           {hasValue ? displayValue : placeholder}
         </span>
-        <ChevronsUpDownIcon className="ml-2 size-4 shrink-0 opacity-50" />
+        <ChevronsUpDownIcon className="ml-2 size-4 shrink-0 opacity-50" aria-hidden="true" />
       </PopoverTrigger>
       <PopoverContent
         className="w-full max-w-sm p-0"
@@ -87,6 +99,7 @@ export function StaffSignatureSelect({
           }
         }}
       >
+        <div ref={commandRef}>
         <Command
           onKeyDown={(e) => {
             if (e.key === "Tab") {
@@ -106,7 +119,11 @@ export function StaffSignatureSelect({
             }
           }}
         >
-          <CommandInput placeholder="Search staff…" />
+          <CommandInput
+            placeholder="Search staff…"
+            value={search}
+            onValueChange={setSearch}
+          />
           <CommandList>
             {loading ? (
               <CommandEmpty>Loading…</CommandEmpty>
@@ -133,6 +150,7 @@ export function StaffSignatureSelect({
             )}
           </CommandList>
         </Command>
+        </div>
       </PopoverContent>
     </Popover>
   );

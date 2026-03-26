@@ -54,7 +54,7 @@ export function PrismcoreUpload({ value, onChange }: PrismcoreUploadProps) {
       <Label htmlFor="prismcore-upload">PrismCore Invoice (optional)</Label>
 
       {uploading ? (
-        <p className="text-sm text-muted-foreground">Uploading...</p>
+        <p className="text-sm text-muted-foreground" aria-live="polite">Uploading…</p>
       ) : value ? (
         <div className="flex items-center gap-2">
           <span className="text-sm truncate max-w-xs">{filename ?? value}</span>
@@ -75,6 +75,7 @@ export function PrismcoreUpload({ value, onChange }: PrismcoreUploadProps) {
           accept=".pdf"
           onChange={handleFileChange}
           className="cursor-pointer"
+          name="prismcoreUpload"
         />
       )}
     </div>

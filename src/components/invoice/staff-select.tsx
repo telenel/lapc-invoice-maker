@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ChevronsUpDownIcon } from "lucide-react";
 import {
   Command,
@@ -46,6 +46,8 @@ export function StaffSelect({
   const [open, setOpen] = useState(false);
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const commandRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -55,6 +57,19 @@ export function StaffSelect({
       .catch(() => setStaff([]))
       .finally(() => setLoading(false));
   }, []);
+
+  // Reset scroll to top when search changes or popover opens.
+  // cmdk uses rAF to scroll the selected item into view — we temporarily
+  // intercept scroll events so the list always starts at the top.
+  useEffect(() => {
+    const list = commandRef.current?.querySelector('[data-slot="command-list"]');
+    if (!list || !open) return;
+    list.scrollTop = 0;
+    const reset = () => { list.scrollTop = 0; };
+    list.addEventListener("scroll", reset);
+    const timer = setTimeout(() => list.removeEventListener("scroll", reset), 100);
+    return () => { clearTimeout(timer); list.removeEventListener("scroll", reset); };
+  }, [search, open]);
 
   const selected = staff.find((s) => s.id === selectedId);
 
@@ -73,7 +88,7 @@ export function StaffSelect({
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={(v) => { setOpen(v); if (v) setSearch(""); }}>
       <PopoverTrigger
         className={cn(
           "flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs",
@@ -86,10 +101,10 @@ export function StaffSelect({
         aria-haspopup="listbox"
         onKeyDown={handleTriggerKeyDown}
       >
-        <span className={cn(!selected && "text-muted-foreground")}>
+        <span className={cn("min-w-0", !selected && "text-muted-foreground")}>
           {selected ? selected.name : placeholder}
         </span>
-        <ChevronsUpDownIcon className="ml-2 size-4 shrink-0 opacity-50" />
+        <ChevronsUpDownIcon className="ml-2 size-4 shrink-0 opacity-50" aria-hidden="true" />
       </PopoverTrigger>
       <PopoverContent
         className="w-full max-w-sm p-0"
@@ -100,6 +115,7 @@ export function StaffSelect({
           }
         }}
       >
+        <div ref={commandRef}>
         <Command
           onKeyDown={(e) => {
             if (e.key === "Tab") {
@@ -119,7 +135,11 @@ export function StaffSelect({
             }
           }}
         >
-          <CommandInput placeholder="Search staff…" />
+          <CommandInput
+            placeholder="Search staff…"
+            value={search}
+            onValueChange={setSearch}
+          />
           <CommandList className="max-h-60">
             {loading ? (
               <CommandEmpty>Loading…</CommandEmpty>
@@ -147,6 +167,7 @@ export function StaffSelect({
             )}
           </CommandList>
         </Command>
+        </div>
       </PopoverContent>
     </Popover>
   );

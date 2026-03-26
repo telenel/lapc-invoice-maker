@@ -87,9 +87,9 @@ export function QuickPickForm({ item, onSave, trigger }: QuickPickFormProps) {
 
   return (
     <>
-      <span onClick={handleOpen} style={{ display: "contents" }}>
+      <button type="button" onClick={handleOpen} style={{ display: "contents" }}>
         {trigger}
-      </span>
+      </button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
@@ -104,7 +104,7 @@ export function QuickPickForm({ item, onSave, trigger }: QuickPickFormProps) {
                 id="qp-department"
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
-                placeholder="e.g. IT"
+                placeholder="e.g. IT…"
                 required
               />
             </div>
@@ -114,7 +114,7 @@ export function QuickPickForm({ item, onSave, trigger }: QuickPickFormProps) {
                 id="qp-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="e.g. Printer paper (ream)"
+                placeholder="e.g. Printer paper (ream)…"
                 required
               />
             </div>

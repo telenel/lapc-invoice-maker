@@ -142,7 +142,7 @@ export function CategoryManager() {
   }
 
   if (loading) {
-    return <p className="text-sm text-muted-foreground py-4">Loading categories...</p>;
+    return <p className="text-sm text-muted-foreground py-4">Loading categories…</p>;
   }
 
   return (
@@ -173,16 +173,18 @@ export function CategoryManager() {
             </DialogHeader>
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>Name (internal key)</Label>
+                <Label htmlFor="cat-create-name">Name (internal key)</Label>
                 <Input
+                  id="cat-create-name"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   placeholder="e.g. SUPPLIES"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Label (displayed to users)</Label>
+                <Label htmlFor="cat-create-label">Label (displayed to users)</Label>
                 <Input
+                  id="cat-create-label"
                   value={newLabel}
                   onChange={(e) => setNewLabel(e.target.value)}
                   placeholder="e.g. Supplies"
@@ -208,7 +210,7 @@ export function CategoryManager() {
                 onClick={handleCreate}
                 disabled={!newName.trim() || !newLabel.trim() || createSaving}
               >
-                {createSaving ? "Saving..." : "Add Category"}
+                {createSaving ? "Saving…" : "Add Category"}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -230,7 +232,7 @@ export function CategoryManager() {
             <TableRow key={category.id} className={!category.active ? "opacity-50" : ""}>
               <TableCell className="font-mono text-sm">{category.name}</TableCell>
               <TableCell>{category.label}</TableCell>
-              <TableCell>{category.sortOrder}</TableCell>
+              <TableCell className="tabular-nums">{category.sortOrder}</TableCell>
               <TableCell>
                 <Badge variant={category.active ? "default" : "outline"}>
                   {category.active ? "Active" : "Inactive"}
@@ -278,15 +280,17 @@ export function CategoryManager() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Name (internal key)</Label>
+              <Label htmlFor="cat-edit-name">Name (internal key)</Label>
               <Input
+                id="cat-edit-name"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <Label>Label (displayed to users)</Label>
+              <Label htmlFor="cat-edit-label">Label (displayed to users)</Label>
               <Input
+                id="cat-edit-label"
                 value={editLabel}
                 onChange={(e) => setEditLabel(e.target.value)}
               />
@@ -303,7 +307,7 @@ export function CategoryManager() {
               onClick={handleEdit}
               disabled={!editName.trim() || !editLabel.trim() || editSaving}
             >
-              {editSaving ? "Saving..." : "Save"}
+              {editSaving ? "Saving…" : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>

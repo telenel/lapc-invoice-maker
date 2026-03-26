@@ -124,9 +124,9 @@ export function StaffForm({ staff, onSave, trigger }: StaffFormProps) {
 
   return (
     <>
-      <span onClick={handleOpen} style={{ display: "contents" }}>
+      <button type="button" onClick={handleOpen} style={{ display: "contents" }}>
         {trigger}
-      </span>
+      </button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
@@ -142,7 +142,7 @@ export function StaffForm({ staff, onSave, trigger }: StaffFormProps) {
                   id="staff-name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Jane Doe"
+                  placeholder="e.g. Jane Doe…"
                   required
                 />
               </div>
@@ -152,7 +152,7 @@ export function StaffForm({ staff, onSave, trigger }: StaffFormProps) {
                   id="staff-title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="e.g. Program Manager"
+                  placeholder="e.g. Program Manager…"
                   required
                 />
               </div>
@@ -162,7 +162,7 @@ export function StaffForm({ staff, onSave, trigger }: StaffFormProps) {
                   id="staff-department"
                   value={department}
                   onChange={(e) => setDepartment(e.target.value)}
-                  placeholder="e.g. Workforce Development"
+                  placeholder="e.g. Workforce Development…"
                   required
                 />
               </div>
@@ -172,7 +172,7 @@ export function StaffForm({ staff, onSave, trigger }: StaffFormProps) {
                   id="staff-account-code"
                   value={accountCode}
                   onChange={(e) => setAccountCode(e.target.value)}
-                  placeholder="e.g. 1234-56"
+                  placeholder="e.g. 1234-56…"
                 />
               </div>
               <div className="grid gap-1.5">
@@ -181,7 +181,7 @@ export function StaffForm({ staff, onSave, trigger }: StaffFormProps) {
                   id="staff-extension"
                   value={extension}
                   onChange={(e) => setExtension(e.target.value)}
-                  placeholder="e.g. 4201"
+                  placeholder="e.g. 4201…"
                 />
               </div>
               <div className="grid gap-1.5">
@@ -191,7 +191,8 @@ export function StaffForm({ staff, onSave, trigger }: StaffFormProps) {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="e.g. jane@lapc.edu"
+                  placeholder="e.g. jane@lapc.edu…"
+                  spellCheck={false}
                 />
               </div>
               <div className="grid gap-1.5 col-span-2">
@@ -200,7 +201,7 @@ export function StaffForm({ staff, onSave, trigger }: StaffFormProps) {
                   id="staff-phone"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  placeholder="e.g. (213) 555-0100"
+                  placeholder="e.g. (213) 555-0100…"
                 />
               </div>
             </div>

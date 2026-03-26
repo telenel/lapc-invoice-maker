@@ -9,10 +9,11 @@ interface PdfProgressProps {
 function Spinner() {
   return (
     <svg
-      className="animate-spin size-5 text-primary"
+      className="animate-spin motion-reduce:animate-none size-5 text-primary"
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"
+      aria-hidden="true"
     >
       <circle
         className="opacity-25"
@@ -40,6 +41,7 @@ function Checkmark() {
       viewBox="0 0 24 24"
       stroke="currentColor"
       strokeWidth="3"
+      aria-hidden="true"
     >
       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
     </svg>
@@ -47,8 +49,8 @@ function Checkmark() {
 }
 
 const STEPS: { key: GenerationStep; label: string }[] = [
-  { key: "saving", label: "Creating invoice..." },
-  { key: "generating", label: "Generating PDF..." },
+  { key: "saving", label: "Creating invoice…" },
+  { key: "generating", label: "Generating PDF…" },
   { key: "done", label: "Done!" },
 ];
 
@@ -70,7 +72,7 @@ export function PdfProgress({ step }: PdfProgressProps) {
         <h3 className="text-lg font-semibold text-center">
           Generating Invoice
         </h3>
-        <div className="space-y-3">
+        <div className="space-y-3" aria-live="polite">
           {STEPS.map((s, idx) => {
             const isActive = idx === currentIdx;
             const isDone = idx < currentIdx || (idx === currentIdx && step === "done");

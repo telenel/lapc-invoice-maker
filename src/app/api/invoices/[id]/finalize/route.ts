@@ -43,14 +43,9 @@ export async function POST(
       return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
     }
 
-    if (invoice.status === "FINAL") {
-      return NextResponse.json(
-        { error: "Invoice is already finalized" },
-        { status: 400 }
-      );
-    }
+    // Allow re-finalization to regenerate PDFs
 
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
     const {
       prismcorePath,
       signatures,

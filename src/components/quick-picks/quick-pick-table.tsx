@@ -94,7 +94,7 @@ export function QuickPickTable() {
                 <TableCell>
                   <Badge variant="secondary">{item.department}</Badge>
                 </TableCell>
-                <TableCell>
+                <TableCell className="tabular-nums">
                   $
                   {Number(item.defaultPrice).toLocaleString("en-US", {
                     minimumFractionDigits: 2,
@@ -108,7 +108,7 @@ export function QuickPickTable() {
                       item={item}
                       onSave={fetchItems}
                       trigger={
-                        <Button variant="ghost" size="icon-sm">
+                        <Button variant="ghost" size="icon-sm" aria-label="Edit quick pick">
                           <PencilIcon />
                           <span className="sr-only">Edit</span>
                         </Button>
@@ -117,6 +117,7 @@ export function QuickPickTable() {
                     <Button
                       variant="ghost"
                       size="icon-sm"
+                      aria-label="Delete quick pick"
                       onClick={() => handleDelete(item.id)}
                     >
                       <TrashIcon className="text-destructive" />

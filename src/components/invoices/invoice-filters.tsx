@@ -57,6 +57,7 @@ export function InvoiceFiltersBar({
           <Label htmlFor="invoice-search">Search</Label>
           <Input
             id="invoice-search"
+            name="search"
             placeholder="Invoice #, staff, department…"
             value={filters.search}
             onChange={(e) => set("search", e.target.value)}
@@ -130,6 +131,7 @@ export function InvoiceFiltersBar({
           <Label htmlFor="invoice-date-from">From</Label>
           <Input
             id="invoice-date-from"
+            name="dateFrom"
             type="date"
             value={filters.dateFrom}
             onChange={(e) => set("dateFrom", e.target.value)}
@@ -141,6 +143,7 @@ export function InvoiceFiltersBar({
           <Label htmlFor="invoice-date-to">To</Label>
           <Input
             id="invoice-date-to"
+            name="dateTo"
             type="date"
             value={filters.dateTo}
             onChange={(e) => set("dateTo", e.target.value)}
@@ -152,6 +155,7 @@ export function InvoiceFiltersBar({
           <Label htmlFor="invoice-amount-min">Min Amount</Label>
           <Input
             id="invoice-amount-min"
+            name="amountMin"
             type="number"
             step="0.01"
             min="0"
@@ -166,6 +170,7 @@ export function InvoiceFiltersBar({
           <Label htmlFor="invoice-amount-max">Max Amount</Label>
           <Input
             id="invoice-amount-max"
+            name="amountMax"
             type="number"
             step="0.01"
             min="0"

@@ -64,7 +64,7 @@ export function DbHealth() {
           onClick={fetchHealth}
           disabled={loading}
         >
-          <RefreshCw className={loading ? "animate-spin" : ""} />
+          <RefreshCw className={loading ? "animate-spin" : ""} aria-hidden="true" />
           Refresh
         </Button>
       </div>
@@ -93,7 +93,7 @@ export function DbHealth() {
           )}
           {data?.timestamp && (
             <p className="text-xs text-muted-foreground mt-0.5">
-              Last checked: {new Date(data.timestamp).toLocaleString()}
+              Last checked: {new Date(data.timestamp).toLocaleString("en-US")}
             </p>
           )}
         </div>
@@ -114,7 +114,7 @@ export function DbHealth() {
               className="rounded-lg border p-3 text-center"
             >
               <p className="text-2xl font-bold tabular-nums">
-                {count.toLocaleString()}
+                {count.toLocaleString("en-US")}
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 {TABLE_LABELS[key] || key}

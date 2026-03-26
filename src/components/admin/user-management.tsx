@@ -113,6 +113,7 @@ export function UserManagement() {
   }
 
   async function handleDeactivate(id: string) {
+    if (!confirm("Are you sure you want to deactivate this user?")) return;
     const res = await fetch(`/api/admin/users/${id}`, { method: "DELETE" });
     if (res.ok) {
       setUsers((prev) =>
@@ -122,7 +123,7 @@ export function UserManagement() {
   }
 
   if (loading) {
-    return <p className="text-center py-8 text-muted-foreground">Loading users...</p>;
+    return <p className="text-center py-8 text-muted-foreground">Loading users…</p>;
   }
 
   return (
@@ -158,19 +159,21 @@ export function UserManagement() {
             ) : (
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label>Name</Label>
+                  <Label htmlFor="user-create-name">Name</Label>
                   <Input
+                    id="user-create-name"
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
-                    placeholder="Full name"
+                    placeholder="Full name…"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Email</Label>
+                  <Label htmlFor="user-create-email">Email</Label>
                   <Input
+                    id="user-create-email"
                     value={newEmail}
                     onChange={(e) => setNewEmail(e.target.value)}
-                    placeholder="Email (optional)"
+                    placeholder="Email (optional)…"
                     type="email"
                   />
                 </div>
@@ -258,22 +261,24 @@ export function UserManagement() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Name</Label>
+              <Label htmlFor="user-edit-name">Name</Label>
               <Input
+                id="user-edit-name"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <Label>Email</Label>
+              <Label htmlFor="user-edit-email">Email</Label>
               <Input
+                id="user-edit-email"
                 value={editEmail}
                 onChange={(e) => setEditEmail(e.target.value)}
                 type="email"
               />
             </div>
             <div className="space-y-2">
-              <Label>Role</Label>
+              <Label htmlFor="user-edit-role">Role</Label>
               <Select
                 value={editRole || null}
                 onValueChange={(v) => setEditRole(v ?? "user")}

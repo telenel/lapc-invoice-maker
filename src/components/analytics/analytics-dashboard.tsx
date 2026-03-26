@@ -59,7 +59,7 @@ export function AnalyticsDashboard() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <h1 className="text-3xl font-bold">Analytics</h1>
+        <h1 className="text-3xl font-bold text-balance">Analytics</h1>
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex flex-col gap-1">
             <label className="text-xs text-muted-foreground font-medium" htmlFor="dateFrom">
@@ -67,6 +67,7 @@ export function AnalyticsDashboard() {
             </label>
             <input
               id="dateFrom"
+              name="dateFrom"
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
@@ -79,6 +80,7 @@ export function AnalyticsDashboard() {
             </label>
             <input
               id="dateTo"
+              name="dateTo"
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
@@ -99,10 +101,10 @@ export function AnalyticsDashboard() {
           {[1, 2, 3, 4, 5].map((i) => (
             <Card key={i}>
               <CardHeader>
-                <div className="h-5 w-40 animate-pulse rounded bg-muted" />
+                <div className="h-5 w-40 motion-safe:animate-pulse rounded bg-muted" />
               </CardHeader>
               <CardContent>
-                <div className="h-[300px] animate-pulse rounded bg-muted" />
+                <div className="h-[300px] motion-safe:animate-pulse rounded bg-muted" />
               </CardContent>
             </Card>
           ))}

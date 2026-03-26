@@ -111,7 +111,7 @@ export function StaffTable() {
                       staff={member}
                       onSave={fetchStaff}
                       trigger={
-                        <Button variant="ghost" size="icon-sm" title="Edit">
+                        <Button variant="ghost" size="icon-sm" title="Edit" aria-label="Edit staff member">
                           <PencilIcon />
                           <span className="sr-only">Edit</span>
                         </Button>
@@ -121,6 +121,7 @@ export function StaffTable() {
                       variant="ghost"
                       size="icon-sm"
                       title="Deactivate"
+                      aria-label="Deactivate staff member"
                       onClick={() => handleDeactivate(member.id, member.name)}
                     >
                       <UserMinus className="text-destructive" />
