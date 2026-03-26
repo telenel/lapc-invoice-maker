@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Plus, FileText } from "lucide-react";
 import { StatsCards } from "@/components/dashboard/stats-cards";
+import { PendingCharges } from "@/components/dashboard/pending-charges";
 import { RecentInvoices } from "@/components/dashboard/recent-invoices";
 import { WelcomeBanner } from "@/components/dashboard/welcome-banner";
 
@@ -28,6 +29,7 @@ export default function DashboardPage() {
         </div>
       </div>
       <StatsCards />
+      <PendingCharges />
       <RecentInvoices />
     </div>
   );
