@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { StaffSelect } from "./staff-select";
+import { StaffSignatureSelect } from "./staff-signature-select";
 import { LineItems } from "./line-items";
 import { QuickPickPanel } from "./quick-pick-panel";
 import { PrismcoreUpload } from "./prismcore-upload";
@@ -266,14 +267,21 @@ export function QuickMode({
               {(["line1", "line2", "line3"] as const).map((line, idx) => (
                 <div key={line} className="space-y-1">
                   <Label>Signature {idx + 1}</Label>
-                  <Input
-                    value={form.signatures[line]}
-                    onChange={(e) =>
+                  <StaffSignatureSelect
+                    selectedId={form.signatureStaffIds[line]}
+                    displayValue={form.signatures[line]}
+                    onSelect={(staff) => {
+                      const title = staff.title ? `, ${staff.title}` : "";
+                      const display = `${staff.name}${title}`;
                       updateField("signatures", {
                         ...form.signatures,
-                        [line]: e.target.value,
-                      })
-                    }
+                        [line]: display,
+                      });
+                      updateField("signatureStaffIds", {
+                        ...form.signatureStaffIds,
+                        [line]: staff.id,
+                      });
+                    }}
                     placeholder={`Signature line ${idx + 1}`}
                   />
                 </div>

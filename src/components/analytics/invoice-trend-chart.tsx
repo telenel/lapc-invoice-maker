@@ -37,7 +37,7 @@ export function InvoiceTrendChart({ data }: InvoiceTrendChartProps) {
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
         <XAxis dataKey="month" tick={{ fontSize: 12 }} />
         <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-        <Tooltip formatter={(value: number) => [value, "Invoices"]} />
+        <Tooltip formatter={(value) => [value, "Invoices"]} />
         <Line
           type="monotone"
           dataKey="count"

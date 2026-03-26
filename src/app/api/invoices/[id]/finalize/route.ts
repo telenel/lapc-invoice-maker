@@ -53,23 +53,35 @@ export async function POST(
   const {
     prismcorePath,
     signatures,
+    signatureStaffIds,
     semesterYearDept,
     contactName,
     contactExtension,
   } = body as {
     prismcorePath?: string;
     signatures?: { line1?: string; line2?: string; line3?: string };
+    signatureStaffIds?: { line1?: string; line2?: string; line3?: string };
     semesterYearDept?: string;
     contactName?: string;
     contactExtension?: string;
   };
 
-  // Convert signatures object { line1, line2, line3 } to array of { name }
-  const resolvedSignatures: { name: string }[] = [];
+  // Convert signatures object { line1, line2, line3 } to array of { name, title }
+  // Signature strings may be "Name, Title" — split on first comma to extract both parts.
+  function parseSig(raw: string): { name: string; title?: string } {
+    const commaIdx = raw.indexOf(",");
+    if (commaIdx === -1) return { name: raw.trim() };
+    return {
+      name: raw.slice(0, commaIdx).trim(),
+      title: raw.slice(commaIdx + 1).trim() || undefined,
+    };
+  }
+
+  const resolvedSignatures: { name: string; title?: string }[] = [];
   if (signatures) {
-    if (signatures.line1) resolvedSignatures.push({ name: signatures.line1 });
-    if (signatures.line2) resolvedSignatures.push({ name: signatures.line2 });
-    if (signatures.line3) resolvedSignatures.push({ name: signatures.line3 });
+    if (signatures.line1) resolvedSignatures.push(parseSig(signatures.line1));
+    if (signatures.line2) resolvedSignatures.push(parseSig(signatures.line2));
+    if (signatures.line3) resolvedSignatures.push(parseSig(signatures.line3));
   }
 
   const dateStr = formatDate(new Date(invoice.date));
@@ -121,6 +133,35 @@ export async function POST(
       prismcorePath: prismcorePath ?? null,
     },
   });
+
+  // Upsert StaffSignerHistory records for each signature position
+  if (signatureStaffIds && invoice.staffId) {
+    const signerLines = [
+      { line: signatureStaffIds.line1, position: 0 },
+      { line: signatureStaffIds.line2, position: 1 },
+      { line: signatureStaffIds.line3, position: 2 },
+    ];
+    for (const { line, position } of signerLines) {
+      if (line) {
+        await prisma.staffSignerHistory.upsert({
+          where: {
+            staffId_signerStaffId_position: {
+              staffId: invoice.staffId,
+              signerStaffId: line,
+              position,
+            },
+          },
+          update: { lastUsedAt: new Date() },
+          create: {
+            staffId: invoice.staffId,
+            signerStaffId: line,
+            position,
+            lastUsedAt: new Date(),
+          },
+        });
+      }
+    }
+  }
 
   // Increment usage count on matching quick-pick items
   const descriptions = invoice.items.map((item) => item.description);

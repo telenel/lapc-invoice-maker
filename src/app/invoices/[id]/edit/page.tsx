@@ -59,6 +59,7 @@ function mapApiToFormData(invoice: ApiInvoice): InvoiceFormData {
     notes: invoice.notes ?? "",
     prismcorePath: invoice.prismcorePath ?? null,
     signatures: invoice.signatures ?? { line1: "", line2: "", line3: "" },
+    signatureStaffIds: { line1: "", line2: "", line3: "" },
     items: invoice.items.map((item) => ({
       description: item.description,
       quantity: Number(item.quantity),

@@ -43,6 +43,11 @@ export interface InvoiceFormData {
     line2: string;
     line3: string;
   };
+  signatureStaffIds: {
+    line1: string;
+    line2: string;
+    line3: string;
+  };
 }
 
 export interface StaffAccountNumber {
@@ -50,6 +55,15 @@ export interface StaffAccountNumber {
   accountCode: string;
   description: string;
   lastUsedAt: string;
+}
+
+interface SignerHistory {
+  position: number;
+  signer: {
+    id: string;
+    name: string;
+    title: string;
+  };
 }
 
 interface StaffMember {
@@ -63,6 +77,7 @@ interface StaffMember {
   phone: string;
   approvalChain: string[];
   accountNumbers?: StaffAccountNumber[];
+  signerHistories?: SignerHistory[];
 }
 
 // ---------------------------------------------------------------------------
@@ -102,6 +117,7 @@ function defaultForm(): InvoiceFormData {
     items: [emptyItem(0)],
     prismcorePath: null,
     signatures: { line1: "", line2: "", line3: "" },
+    signatureStaffIds: { line1: "", line2: "", line3: "" },
   };
 }
 
@@ -200,6 +216,27 @@ export function useInvoiceForm(
       phone: staff.phone,
       department: staff.department,
     };
+
+    // Auto-populate signatures from signer history (sorted by position)
+    const histories = staff.signerHistories ?? [];
+    const byPosition: Record<number, SignerHistory> = {};
+    for (const h of histories) {
+      // Keep only the first entry per position (already sorted by lastUsedAt desc)
+      if (!(h.position in byPosition)) byPosition[h.position] = h;
+    }
+
+    const lines = ["line1", "line2", "line3"] as const;
+    const sigDisplays: Record<string, string> = { line1: "", line2: "", line3: "" };
+    const sigIds: Record<string, string> = { line1: "", line2: "", line3: "" };
+    lines.forEach((line, idx) => {
+      const h = byPosition[idx];
+      if (h) {
+        const title = h.signer.title ? `, ${h.signer.title}` : "";
+        sigDisplays[line] = `${h.signer.name}${title}`;
+        sigIds[line] = h.signer.id;
+      }
+    });
+
     setForm((prev) => ({
       ...prev,
       staffId: staff.id,
@@ -211,6 +248,16 @@ export function useInvoiceForm(
       contactEmail: staff.email,
       contactPhone: staff.phone,
       approvalChain: staff.approvalChain,
+      signatures: {
+        line1: sigDisplays.line1,
+        line2: sigDisplays.line2,
+        line3: sigDisplays.line3,
+      },
+      signatureStaffIds: {
+        line1: sigIds.line1,
+        line2: sigIds.line2,
+        line3: sigIds.line3,
+      },
     }));
   }, []);
 
@@ -388,6 +435,7 @@ export function useInvoiceForm(
       const finalizePayload = {
         prismcorePath: form.prismcorePath,
         signatures: form.signatures,
+        signatureStaffIds: form.signatureStaffIds,
         semesterYearDept: form.semesterYearDept,
         contactName: form.contactName,
         contactExtension: form.contactExtension,
