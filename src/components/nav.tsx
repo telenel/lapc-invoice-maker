@@ -4,10 +4,20 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { signOut } from "next-auth/react";
-import { Sun, Moon } from "lucide-react";
+import { Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { HelpModal } from "@/components/help-modal";
+import { themes } from "@/lib/themes";
 
 const links = [
   { href: "/", label: "Dashboard" },
@@ -20,7 +30,7 @@ const links = [
 
 export function Nav() {
   const pathname = usePathname();
-  const { resolvedTheme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
 
   return (
     <nav className="border-b bg-background">
@@ -48,14 +58,24 @@ export function Nav() {
         </div>
         <div className="ml-auto flex items-center gap-2">
           <HelpModal />
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-            aria-label="Toggle theme"
-          >
-            {resolvedTheme === "dark" ? <Sun /> : <Moon />}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger render={
+              <Button variant="ghost" size="icon-sm" aria-label="Select theme">
+                <Palette />
+              </Button>
+            } />
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Theme</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuRadioGroup value={theme ?? "system"} onValueChange={setTheme}>
+                {themes.map((t) => (
+                  <DropdownMenuRadioItem key={t.value} value={t.value}>
+                    {t.label}
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="ghost" size="sm" onClick={() => signOut()}>
             Sign out
           </Button>
