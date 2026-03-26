@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
     const orderByField = allowedSortFields.includes(sortBy) ? sortBy : "createdAt";
 
     const where: Prisma.InvoiceWhereInput = {};
+    where.type = "INVOICE";
 
     if (status) {
       where.status = status;

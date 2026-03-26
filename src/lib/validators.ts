@@ -19,7 +19,7 @@ export const invoiceItemSchema = z.object({
 });
 
 export const invoiceCreateSchema = z.object({
-  invoiceNumber: z.string().min(1, "Invoice number is required"),
+  invoiceNumber: z.string().default(""),
   date: z.string().min(1, "Date is required"),
   staffId: z.string().min(1, "Staff member is required"),
   department: z.string().min(1, "Department is required"),
