@@ -64,10 +64,10 @@ export async function PUT(
 
   if (items) {
     const calculatedItems = items.map((item) => {
-      const extendedPrice = item.quantity * item.unitPrice;
+      const extendedPrice = Number(item.quantity) * Number(item.unitPrice);
       return { ...item, extendedPrice };
     });
-    const totalAmount = calculatedItems.reduce((sum, item) => sum + item.extendedPrice, 0);
+    const totalAmount = calculatedItems.reduce((sum, item) => sum + Number(item.extendedPrice), 0);
     updateData.totalAmount = totalAmount;
 
     await prisma.$transaction([
