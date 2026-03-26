@@ -105,6 +105,21 @@ export async function generateIDPPage(data: IDPOverlayData): Promise<Buffer> {
   }
 
   // ═══════════════════════════════════════════════════════════════
+  // TITLE: Replace "Name of College" with "Los Angeles Pierce College"
+  // ═══════════════════════════════════════════════════════════════
+  // Clear the entire title area (covers "Name of College" template text)
+  clearArea(50, 578, 700, 20);
+  const titleStr = "Los Angeles Pierce College";
+  const titleWidth = fontBold.widthOfTextAtSize(titleStr, 11);
+  page.drawText(titleStr, {
+    x: (792 - titleWidth) / 2,
+    y: 585,
+    size: 11,
+    font: fontBold,
+    color: black,
+  });
+
+  // ═══════════════════════════════════════════════════════════════
   // SECTION 1: REQUESTING DEPARTMENT USE
   // Each row pair: value cell (top) then label cell (bottom).
   // We write into the value cells, a few px above the label.
