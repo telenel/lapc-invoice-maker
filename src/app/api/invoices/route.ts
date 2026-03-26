@@ -94,28 +94,38 @@ export async function POST(request: NextRequest) {
 
   const totalAmount = calculatedItems.reduce((sum, item) => sum + item.extendedPrice, 0);
 
-  const invoice = await prisma.invoice.create({
-    data: {
-      ...invoiceData,
-      date: new Date(date),
-      createdBy,
-      totalAmount,
-      items: {
-        create: calculatedItems.map((item) => ({
-          description: item.description,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          extendedPrice: item.extendedPrice,
-          sortOrder: item.sortOrder,
-        })),
+  try {
+    const invoice = await prisma.invoice.create({
+      data: {
+        ...invoiceData,
+        date: new Date(date),
+        createdBy,
+        totalAmount,
+        items: {
+          create: calculatedItems.map((item) => ({
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            extendedPrice: item.extendedPrice,
+            sortOrder: item.sortOrder,
+          })),
+        },
       },
-    },
-    include: {
-      staff: { select: { id: true, name: true, title: true, department: true } },
-      creator: { select: { id: true, name: true, username: true } },
-      items: { orderBy: { sortOrder: "asc" } },
-    },
-  });
+      include: {
+        staff: { select: { id: true, name: true, title: true, department: true } },
+        creator: { select: { id: true, name: true, username: true } },
+        items: { orderBy: { sortOrder: "asc" } },
+      },
+    });
 
-  return NextResponse.json(invoice, { status: 201 });
+    return NextResponse.json(invoice, { status: 201 });
+  } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      return NextResponse.json(
+        { error: "An invoice with this number already exists" },
+        { status: 409 }
+      );
+    }
+    throw err;
+  }
 }
