@@ -95,8 +95,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { items, date, status, ...invoiceData } = parsed.data;
+  const { items, date, status, invoiceNumber, ...invoiceData } = parsed.data;
   const createdBy = (session.user as { id: string }).id;
+  // Convert empty/null invoice number to null (avoids unique constraint on empty strings)
+  const normalizedInvoiceNumber = invoiceNumber || null;
 
   const calculatedItems = items.map((item) => {
     const extendedPrice = Number(item.quantity) * Number(item.unitPrice);
@@ -109,6 +111,7 @@ export async function POST(request: NextRequest) {
     const invoice = await prisma.invoice.create({
       data: {
         ...invoiceData,
+        invoiceNumber: normalizedInvoiceNumber,
         ...(status ? { status } : {}),
         date: new Date(date),
         createdBy,

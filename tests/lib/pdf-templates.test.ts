@@ -193,7 +193,7 @@ describe("renderIDP", () => {
 
   it("contains college name title", () => {
     const html = renderIDP(baseIDPData);
-    expect(html).toContain("Name of College");
+    expect(html).toContain("Los Angeles Pierce College");
   });
 
   it("contains form title", () => {

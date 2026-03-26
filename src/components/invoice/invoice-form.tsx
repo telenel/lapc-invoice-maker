@@ -486,7 +486,7 @@ export function useInvoiceForm(
     try {
       const payload = {
         ...buildPayload(),
-        invoiceNumber: "NEEDPOSCHARGE",
+        invoiceNumber: null,
         status: "PENDING_CHARGE",
       };
 
