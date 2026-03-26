@@ -38,7 +38,9 @@ export function InlineCombobox({
   const [open, setOpen] = React.useState(false);
   const [highlightIndex, setHighlightIndex] = React.useState(0);
 
+  const instanceId = React.useId();
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
   const listRef = React.useRef<HTMLUListElement>(null);
 
   const filtered = React.useMemo(() => {
@@ -85,10 +87,8 @@ export function InlineCombobox({
     if (!open) return;
     function handleClick(e: MouseEvent) {
       if (
-        inputRef.current &&
-        !inputRef.current.contains(e.target as Node) &&
-        listRef.current &&
-        !listRef.current.contains(e.target as Node)
+        containerRef.current &&
+        !containerRef.current.contains(e.target as Node)
       ) {
         setOpen(false);
         setQuery("");
@@ -155,11 +155,6 @@ export function InlineCombobox({
     }
   }
 
-  function handleBlur() {
-    // Delay close to allow click on suggestion items to register
-    // (mousedown preventDefault on items keeps focus, so this is a safety net)
-  }
-
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setQuery(e.target.value);
     if (!open) setOpen(true);
@@ -168,7 +163,7 @@ export function InlineCombobox({
   const inputValue = open ? query : value && displayValue ? displayValue : "";
 
   return (
-    <div className={cn("relative", className)}>
+    <div ref={containerRef} className={cn("relative", className)}>
       <input
         ref={inputRef}
         role="combobox"
@@ -176,7 +171,7 @@ export function InlineCombobox({
         aria-autocomplete="list"
         aria-activedescendant={
           open && suggestions[highlightIndex]
-            ? `combobox-option-${highlightIndex}`
+            ? `${instanceId}-option-${highlightIndex}`
             : undefined
         }
         type="text"
@@ -185,7 +180,6 @@ export function InlineCombobox({
         disabled={loading}
         onChange={handleChange}
         onFocus={handleFocus}
-        onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         className={cn(
           "h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 md:text-sm"
@@ -205,7 +199,7 @@ export function InlineCombobox({
           {suggestions.map((item, index) => (
             <li
               key={item.id}
-              id={`combobox-option-${index}`}
+              id={`${instanceId}-option-${index}`}
               role="option"
               aria-selected={index === highlightIndex}
               onMouseDown={(e) => e.preventDefault()}
