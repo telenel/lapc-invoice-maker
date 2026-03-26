@@ -32,6 +32,7 @@ export const invoiceCreateSchema = z.object({
   isRecurring: z.boolean().default(false),
   recurringInterval: z.string().optional(),
   recurringEmail: z.string().email().optional().or(z.literal("")),
+  status: z.enum(["DRAFT", "PENDING_CHARGE"]).optional(),
 });
 
 export const invoiceUpdateSchema = invoiceCreateSchema.partial().extend({
