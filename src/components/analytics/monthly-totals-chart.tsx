@@ -42,7 +42,7 @@ export function MonthlyTotalsChart({ data }: MonthlyTotalsChartProps) {
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
         <XAxis dataKey="month" tick={{ fontSize: 12 }} />
         <YAxis tickFormatter={formatCurrency} tick={{ fontSize: 11 }} width={70} />
-        <Tooltip formatter={(value: number) => [formatCurrency(value), "Total"]} />
+        <Tooltip formatter={(value) => [formatCurrency(Number(value)), "Total"]} />
         <Bar dataKey="total" fill="#3b82f6" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>

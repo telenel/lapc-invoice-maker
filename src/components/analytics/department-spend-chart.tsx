@@ -45,7 +45,7 @@ export function DepartmentSpendChart({ data }: DepartmentSpendChartProps) {
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" horizontal={false} />
         <XAxis type="number" tickFormatter={formatCurrency} tick={{ fontSize: 11 }} />
         <YAxis type="category" dataKey="department" tick={{ fontSize: 11 }} width={120} />
-        <Tooltip formatter={(value: number) => [formatCurrency(value), "Total"]} />
+        <Tooltip formatter={(value) => [formatCurrency(Number(value)), "Total"]} />
         <Bar dataKey="total" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
       </BarChart>
     </ResponsiveContainer>

@@ -60,7 +60,7 @@ export function CategoryChart({ data }: CategoryChartProps) {
             />
           ))}
         </Pie>
-        <Tooltip formatter={(value: number) => [value, "Invoices"]} />
+        <Tooltip formatter={(value) => [value, "Invoices"]} />
         <Legend />
       </PieChart>
     </ResponsiveContainer>

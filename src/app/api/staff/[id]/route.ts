@@ -11,7 +11,20 @@ export async function GET(
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const staff = await prisma.staff.findUnique({ where: { id: params.id } });
+  const staff = await prisma.staff.findUnique({
+    where: { id: params.id },
+    include: {
+      accountNumbers: {
+        orderBy: { lastUsedAt: "desc" },
+      },
+      signerHistories: {
+        include: {
+          signer: { select: { id: true, name: true, title: true } },
+        },
+        orderBy: { lastUsedAt: "desc" },
+      },
+    },
+  });
   if (!staff) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   return NextResponse.json(staff);
