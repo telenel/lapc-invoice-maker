@@ -40,3 +40,9 @@ export const quickPickSchema = z.object({
   description: z.string().min(1, "Description is required"),
   defaultPrice: z.number().min(0, "Price must be non-negative"),
 });
+
+export const savedLineItemSchema = z.object({
+  department: z.string().min(1, "Department is required"),
+  description: z.string().min(1, "Description is required"),
+  unitPrice: z.number().min(0, "Price must be non-negative"),
+});

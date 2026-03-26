@@ -5,6 +5,8 @@ import { InvoiceItem } from "./invoice-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Bookmark } from "lucide-react";
+import { toast } from "sonner";
 
 interface LineItemsProps {
   items: InvoiceItem[];
@@ -12,6 +14,7 @@ interface LineItemsProps {
   onAdd: () => void;
   onRemove: (index: number) => void;
   total: number;
+  department: string;
   /** Ref forwarded from parent so it can auto-focus the first description field */
   firstDescriptionRef?: React.RefObject<HTMLInputElement | null>;
   /** Called when a quick-pick fills a row so we can focus its qty field */
@@ -24,6 +27,7 @@ export function LineItems({
   onAdd,
   onRemove,
   total,
+  department,
   firstDescriptionRef,
   focusQtyForRow,
 }: LineItemsProps) {
@@ -103,12 +107,31 @@ export function LineItems({
     }
   }
 
+  async function handleSaveItem(index: number) {
+    const item = items[index];
+    try {
+      const res = await fetch("/api/saved-items", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: item.description,
+          unitPrice: item.unitPrice,
+          department,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to save item");
+      toast.success("Item saved for future use");
+    } catch {
+      toast.error("Failed to save item");
+    }
+  }
+
   return (
     <div className="space-y-2">
       {/* Header row + Add button */}
       <div className="flex items-center justify-between">
         <div className="grid grid-cols-12 gap-2 flex-1 mr-2">
-          <div className="col-span-5">
+          <div className="col-span-4">
             <Label className="text-xs text-muted-foreground">Description</Label>
           </div>
           <div className="col-span-2">
@@ -120,7 +143,7 @@ export function LineItems({
           <div className="col-span-2">
             <Label className="text-xs text-muted-foreground">Extended</Label>
           </div>
-          <div className="col-span-1" />
+          <div className="col-span-2" />
         </div>
         <Button
           ref={addButtonRef}
@@ -141,8 +164,8 @@ export function LineItems({
           key={index}
           className="grid grid-cols-12 gap-2 items-center line-item-row"
         >
-          {/* Description — col-span-5 */}
-          <div className="col-span-5">
+          {/* Description — col-span-4 */}
+          <div className="col-span-4">
             <Input
               ref={(el) => {
                 descRefs.current[index] = el;
@@ -207,8 +230,20 @@ export function LineItems({
             />
           </div>
 
-          {/* Remove — col-span-1 */}
-          <div className="col-span-1 flex justify-center">
+          {/* Save + Remove — col-span-2 */}
+          <div className="col-span-2 flex justify-center gap-1">
+            {item.description.trim() !== "" && item.unitPrice > 0 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => handleSaveItem(index)}
+                className="text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label={`Save line item ${index + 1} for future use`}
+              >
+                <Bookmark className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               type="button"
               variant="ghost"
