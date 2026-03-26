@@ -36,6 +36,9 @@ interface ApiInvoice {
   semesterYearDept: string | null;
   notes: string | null;
   prismcorePath: string | null;
+  isRecurring: boolean;
+  recurringInterval: string | null;
+  recurringEmail: string | null;
   signatures: { line1: string; line2: string; line3: string } | null;
   items: ApiInvoiceItem[];
 }
@@ -57,6 +60,9 @@ function mapApiToFormData(invoice: ApiInvoice): InvoiceFormData {
     contactPhone: invoice.contactPhone ?? "",
     semesterYearDept: invoice.semesterYearDept ?? "",
     notes: invoice.notes ?? "",
+    isRecurring: invoice.isRecurring ?? false,
+    recurringInterval: invoice.recurringInterval ?? "",
+    recurringEmail: invoice.recurringEmail ?? "",
     prismcorePath: invoice.prismcorePath ?? null,
     signatures: invoice.signatures ?? { line1: "", line2: "", line3: "" },
     signatureStaffIds: { line1: "", line2: "", line3: "" },

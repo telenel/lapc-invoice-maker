@@ -34,6 +34,10 @@ export interface InvoiceFormData {
   // Additional fields
   semesterYearDept: string;
   notes: string;
+  // Recurring invoice fields
+  isRecurring: boolean;
+  recurringInterval: string;
+  recurringEmail: string;
   // Line items
   items: InvoiceItem[];
   // Finalization
@@ -114,6 +118,9 @@ function defaultForm(): InvoiceFormData {
     contactPhone: "",
     semesterYearDept: "",
     notes: "",
+    isRecurring: false,
+    recurringInterval: "",
+    recurringEmail: "",
     items: [emptyItem(0)],
     prismcorePath: null,
     signatures: { line1: "", line2: "", line3: "" },
@@ -348,6 +355,9 @@ export function useInvoiceForm(
       accountNumber: form.accountNumber,
       approvalChain: form.approvalChain,
       notes: form.notes,
+      isRecurring: form.isRecurring,
+      recurringInterval: form.recurringInterval || undefined,
+      recurringEmail: form.recurringEmail || undefined,
       items: form.items.map((item, i) => ({
         description: item.description,
         quantity: item.quantity,
