@@ -274,7 +274,14 @@ export function UserManagement() {
             </div>
             <div className="space-y-2">
               <Label>Role</Label>
-              <Select value={editRole} onValueChange={(v) => setEditRole(v ?? "user")}>
+              <Select
+                value={editRole || null}
+                onValueChange={(v) => setEditRole(v ?? "user")}
+                items={[
+                  { value: "user", label: "User" },
+                  { value: "admin", label: "Admin" },
+                ]}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
