@@ -7,6 +7,7 @@ import { signOut } from "next-auth/react";
 import { Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { HelpModal } from "@/components/help-modal";
 
 const links = [
   { href: "/", label: "Dashboard" },
@@ -46,6 +47,7 @@ export function Nav() {
           ))}
         </div>
         <div className="ml-auto flex items-center gap-2">
+          <HelpModal />
           <Button
             variant="ghost"
             size="icon-sm"
