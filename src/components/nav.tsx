@@ -33,7 +33,10 @@ const links = [
 export function Nav() {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+
+  if (status !== "authenticated") return null;
+
   const role = (session?.user as { role?: string } | undefined)?.role;
 
   return (

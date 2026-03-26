@@ -260,8 +260,9 @@ export function QuickMode({
           <div className="space-y-1">
             <Label>Category</Label>
             <Select
-              value={form.category}
+              value={form.category || null}
               onValueChange={(value) => updateField("category", value ?? "")}
+              items={categories.map((cat) => ({ value: cat.name, label: cat.label }))}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select category" />
@@ -401,8 +402,13 @@ export function QuickMode({
                 <div className="space-y-1">
                   <Label>Interval</Label>
                   <Select
-                    value={form.recurringInterval}
+                    value={form.recurringInterval || null}
                     onValueChange={(v) => updateField("recurringInterval", (v ?? "") as string)}
+                    items={[
+                      { value: "monthly", label: "Monthly" },
+                      { value: "quarterly", label: "Quarterly" },
+                      { value: "yearly", label: "Yearly" },
+                    ]}
                   >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select interval" />

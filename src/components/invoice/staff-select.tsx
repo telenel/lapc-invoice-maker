@@ -92,7 +92,7 @@ export function StaffSelect({
         <ChevronsUpDownIcon className="ml-2 size-4 shrink-0 opacity-50" />
       </PopoverTrigger>
       <PopoverContent
-        className="w-[var(--available-width,320px)] p-0"
+        className="w-full max-w-sm p-0"
         align="start"
         onKeyDown={(e) => {
           if (e.key === "Escape") {
@@ -137,7 +137,8 @@ export function StaffSelect({
                     <div className="flex flex-col gap-0.5">
                       <span className="font-semibold">{s.name}</span>
                       <span className="text-xs text-muted-foreground">
-                        {s.title}, {s.department}
+                        {s.title}
+                        {s.department && s.department.trim() ? `, ${s.department.trim()}` : ""}
                         {s.extension ? ` ext. ${s.extension}` : ""}
                       </span>
                     </div>

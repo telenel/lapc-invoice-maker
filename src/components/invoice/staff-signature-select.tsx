@@ -79,7 +79,7 @@ export function StaffSignatureSelect({
         <ChevronsUpDownIcon className="ml-2 size-4 shrink-0 opacity-50" />
       </PopoverTrigger>
       <PopoverContent
-        className="w-[var(--available-width,320px)] p-0"
+        className="w-full max-w-sm p-0"
         align="start"
         onKeyDown={(e) => {
           if (e.key === "Escape") {
@@ -87,7 +87,25 @@ export function StaffSignatureSelect({
           }
         }}
       >
-        <Command>
+        <Command
+          onKeyDown={(e) => {
+            if (e.key === "Tab") {
+              e.preventDefault();
+              const el = e.currentTarget.querySelector<HTMLElement>(
+                '[aria-selected="true"], [data-selected="true"]'
+              );
+              if (el) {
+                const value = el.getAttribute("data-value") ?? el.textContent ?? "";
+                const match = staff.find(
+                  (s) =>
+                    `${s.name} ${s.title} ${s.department}` === value ||
+                    el.querySelector(".font-semibold")?.textContent === s.name
+                );
+                if (match) handleSelect(match);
+              }
+            }
+          }}
+        >
           <CommandInput placeholder="Search staff…" />
           <CommandList>
             {loading ? (
@@ -107,7 +125,7 @@ export function StaffSignatureSelect({
                       <span className="font-semibold">{s.name}</span>
                       <span className="text-xs text-muted-foreground">
                         {s.title}
-                        {s.department ? `, ${s.department}` : ""}
+                        {s.department && s.department.trim() ? `, ${s.department.trim()}` : ""}
                       </span>
                     </div>
                   </CommandItem>

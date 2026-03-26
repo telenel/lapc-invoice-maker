@@ -96,7 +96,7 @@ function parseCSV(csvPath: string): StaffEntry[] {
     if (!isStaffLine) {
       // This is a department header line
       const parts = trimmed.split(",");
-      const dept = parts[0].replace(/^["]+|["]+$/g, "").trim();
+      const dept = parts[0].replace(/^["]+|["]+$/g, "").replace(/^[,\s]+/, '').trim();
       // Skip continuation lines (e.g., "VP: (747) 226-5739"), header rows, and empty
       if (dept && dept !== "Department" && !dept.startsWith("VP:") && !dept.match(/^\(\d{3}\)/)) {
         currentDepartment = dept;
@@ -142,7 +142,7 @@ function parseCSV(csvPath: string): StaffEntry[] {
     staff.push({
       name: name.trim(),
       title,
-      department: currentDepartment,
+      department: currentDepartment.replace(/^[,\s]+/, '').trim(),
       phone,
       extension,
       email,
