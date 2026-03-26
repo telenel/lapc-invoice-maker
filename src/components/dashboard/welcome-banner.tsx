@@ -32,13 +32,22 @@ export function WelcomeBanner() {
             <p className="font-semibold text-sm">Welcome to LAPC InvoiceMaker</p>
             <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
               <li>
-                Start by clicking <strong>New Invoice</strong>. Select a staff member and their info will auto-fill.
+                Select a staff member and their department, contact info, and account numbers auto-fill.
               </li>
               <li>
                 Account numbers are saved per person — the most recent one loads automatically.
               </li>
               <li>
-                Use <strong>Quick Picks</strong> to add common items with one click.
+                Signature approvers are remembered per staff member.
+              </li>
+              <li>
+                Use <strong>Quick Picks</strong> or save your own line items for one-click reuse.
+              </li>
+              <li>
+                Categorize each invoice (CopyTech, Catering, Supplies, Dept Purchase) for analytics tracking.
+              </li>
+              <li>
+                Export your invoices to CSV anytime from the <strong>Invoices</strong> page.
               </li>
             </ul>
           </div>
