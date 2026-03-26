@@ -1,4 +1,5 @@
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
 import { readFile } from "fs/promises";
 import path from "path";
 
@@ -30,9 +31,14 @@ export async function generateIDPPage(data: IDPOverlayData): Promise<Buffer> {
   const templatePath = path.join(process.cwd(), "public", "idp-template.pdf");
   const templateBytes = await readFile(templatePath);
   const doc = await PDFDocument.load(templateBytes);
+  doc.registerFontkit(fontkit);
   const page = doc.getPage(0);
 
-  const font = await doc.embedFont(StandardFonts.Helvetica);
+  // Embed a Unicode-capable font for text with accented chars (e.g., "Brahma Café")
+  const fontPath = path.join(process.cwd(), "public", "fonts", "NotoSans-Regular.ttf");
+  const fontBytes = await readFile(fontPath);
+  const font = await doc.embedFont(fontBytes);
+  // Keep Helvetica Bold for totals (pure ASCII, needs bold weight)
   const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
   const black = rgb(0, 0, 0);
   const white = rgb(1, 1, 1);
