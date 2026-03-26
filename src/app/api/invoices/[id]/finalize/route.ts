@@ -58,17 +58,19 @@ export async function POST(
     contactExtension,
   } = body as {
     prismcorePath?: string;
-    signatures?: { name: string; title?: string }[];
+    signatures?: { line1?: string; line2?: string; line3?: string };
     semesterYearDept?: string;
     contactName?: string;
     contactExtension?: string;
   };
 
-  // Build approval chain names for signatures
-  const approvalChain = (invoice.approvalChain as string[]) ?? [];
-  const resolvedSignatures =
-    signatures ??
-    approvalChain.map((name) => ({ name }));
+  // Convert signatures object { line1, line2, line3 } to array of { name }
+  const resolvedSignatures: { name: string }[] = [];
+  if (signatures) {
+    if (signatures.line1) resolvedSignatures.push({ name: signatures.line1 });
+    if (signatures.line2) resolvedSignatures.push({ name: signatures.line2 });
+    if (signatures.line3) resolvedSignatures.push({ name: signatures.line3 });
+  }
 
   const dateStr = formatDate(new Date(invoice.date));
   const totalStr = formatCurrency(invoice.totalAmount);
