@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -173,10 +173,24 @@ export function useInvoiceForm(
     StaffAccountNumber[]
   >([]);
 
+  // Track the original staff field values so we can detect user edits
+  const originalStaffRef = useRef<{
+    extension: string;
+    email: string;
+    phone: string;
+    department: string;
+  } | null>(null);
+
   const handleStaffSelect = useCallback((staff: StaffMember) => {
     // Most recently used account number (first in the list, already sorted by lastUsedAt desc)
     const latestAccount = staff.accountNumbers?.[0];
     setStaffAccountNumbers(staff.accountNumbers ?? []);
+    originalStaffRef.current = {
+      extension: staff.extension,
+      email: staff.email,
+      phone: staff.phone,
+      department: staff.department,
+    };
     setForm((prev) => ({
       ...prev,
       staffId: staff.id,
@@ -190,6 +204,80 @@ export function useInvoiceForm(
       approvalChain: staff.approvalChain,
     }));
   }, []);
+
+  // Called after the inline StaffForm dialog saves, to re-sync form fields
+  const handleStaffEdit = useCallback((updated: StaffMember) => {
+    originalStaffRef.current = {
+      extension: updated.extension,
+      email: updated.email,
+      phone: updated.phone,
+      department: updated.department,
+    };
+    setForm((prev) => ({
+      ...prev,
+      department: updated.department,
+      accountCode: updated.accountCode,
+      contactName: updated.name,
+      contactExtension: updated.extension,
+      contactEmail: updated.email,
+      contactPhone: updated.phone,
+      approvalChain: updated.approvalChain,
+    }));
+  }, []);
+
+  // ---------- Auto-save staff contact fields ----------
+
+  // Debounced effect: when contactExtension/contactEmail/contactPhone/department
+  // change and differ from the originally-loaded values, PATCH the staff record.
+  useEffect(() => {
+    if (!form.staffId || !originalStaffRef.current) return;
+
+    const orig = originalStaffRef.current;
+    const changed =
+      form.contactExtension !== orig.extension ||
+      form.contactEmail !== orig.email ||
+      form.contactPhone !== orig.phone ||
+      form.department !== orig.department;
+
+    if (!changed) return;
+
+    const timer = setTimeout(async () => {
+      // Re-check that the ref is still current (staff may have changed)
+      if (!originalStaffRef.current) return;
+      try {
+        const res = await fetch(`/api/staff/${form.staffId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            extension: form.contactExtension,
+            email: form.contactEmail,
+            phone: form.contactPhone,
+            department: form.department,
+          }),
+        });
+        if (res.ok) {
+          // Update baseline so next change detection is relative to saved values
+          originalStaffRef.current = {
+            extension: form.contactExtension,
+            email: form.contactEmail,
+            phone: form.contactPhone,
+            department: form.department,
+          };
+          toast.success("Staff info saved", { duration: 1500 });
+        }
+      } catch {
+        // Silently ignore auto-save network failures
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [
+    form.staffId,
+    form.contactExtension,
+    form.contactEmail,
+    form.contactPhone,
+    form.department,
+  ]);
 
   // ---------- Save helpers ----------
 
@@ -324,6 +412,7 @@ export function useInvoiceForm(
     removeItem,
     total,
     handleStaffSelect,
+    handleStaffEdit,
     staffAccountNumbers,
     saveDraft,
     saveAndFinalize,

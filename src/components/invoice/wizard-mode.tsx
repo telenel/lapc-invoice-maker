@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { PencilIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,7 +18,20 @@ import { LineItems } from "./line-items";
 import { QuickPickPanel } from "./quick-pick-panel";
 import { PrismcoreUpload } from "./prismcore-upload";
 import { AccountSelect } from "./account-select";
+import { StaffForm } from "@/components/staff/staff-form";
 import type { InvoiceFormData, InvoiceItem, StaffAccountNumber } from "./invoice-form";
+
+interface StaffMember {
+  id: string;
+  name: string;
+  title: string;
+  department: string;
+  accountCode: string;
+  extension: string;
+  email: string;
+  phone: string;
+  approvalChain: string[];
+}
 
 interface WizardModeProps {
   form: InvoiceFormData;
@@ -29,17 +43,8 @@ interface WizardModeProps {
   addItem: () => void;
   removeItem: (index: number) => void;
   total: number;
-  handleStaffSelect: (staff: {
-    id: string;
-    name: string;
-    title: string;
-    department: string;
-    accountCode: string;
-    extension: string;
-    email: string;
-    phone: string;
-    approvalChain: string[];
-  }) => void;
+  handleStaffSelect: (staff: StaffMember) => void;
+  handleStaffEdit: (updated: StaffMember) => void;
   staffAccountNumbers: StaffAccountNumber[];
   saveDraft: () => Promise<void>;
   saveAndFinalize: () => Promise<void>;
@@ -76,7 +81,7 @@ function StepIndicator({ current }: { current: number }) {
                     : "border-border bg-background text-muted-foreground"
                 }`}
               >
-                {isDone ? "✓" : stepNum}
+                {isDone ? "\u2713" : stepNum}
               </div>
               <span
                 className={`text-xs whitespace-nowrap ${
@@ -101,6 +106,7 @@ export function WizardMode({
   removeItem,
   total,
   handleStaffSelect,
+  handleStaffEdit,
   staffAccountNumbers,
   saveDraft,
   saveAndFinalize,
@@ -108,18 +114,79 @@ export function WizardMode({
 }: WizardModeProps) {
   const [step, setStep] = useState(1);
 
-  // Quick-pick selection: find first empty slot or add new
+  // ── Auto-focus refs ──────────────────────────────────────────────────────────
+  const firstDescRef = useRef<HTMLInputElement | null>(null);
+  const notesRef = useRef<HTMLTextAreaElement | null>(null);
+  const sig1Ref = useRef<HTMLInputElement | null>(null);
+  const invoiceNumberRef = useRef<HTMLInputElement | null>(null);
+  const nextStep3ButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (step === 2) {
+      requestAnimationFrame(() => firstDescRef.current?.focus());
+    } else if (step === 3) {
+      requestAnimationFrame(() => sig1Ref.current?.focus());
+    }
+  }, [step]);
+
+  // Current staff object reconstructed for the edit dialog
+  const currentStaff: StaffMember | undefined = form.staffId
+    ? {
+        id: form.staffId,
+        name: form.contactName,
+        title: "",
+        department: form.department,
+        accountCode: form.accountCode,
+        extension: form.contactExtension,
+        email: form.contactEmail,
+        phone: form.contactPhone,
+        approvalChain: form.approvalChain,
+      }
+    : undefined;
+
+  // After the StaffForm dialog saves, re-fetch the updated staff record and sync form
+  async function handleInlineStaffSave() {
+    if (!form.staffId) return;
+    try {
+      const res = await fetch(`/api/staff/${form.staffId}`);
+      if (res.ok) {
+        const updated: StaffMember = await res.json();
+        handleStaffEdit(updated);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // Quick-pick selection: find first empty slot or add new, then focus qty
   function handleQuickPick(description: string, unitPrice: number) {
     const emptyIdx = form.items.findIndex(
       (item) => !item.description && item.unitPrice === 0
     );
     if (emptyIdx !== -1) {
       updateItem(emptyIdx, { description, unitPrice });
+      requestAnimationFrame(() => {
+        const rows = document.querySelectorAll(".line-item-row");
+        const row = rows[emptyIdx];
+        if (row) {
+          const inputs = row.querySelectorAll<HTMLInputElement>("input[type='number']");
+          inputs[0]?.focus();
+        }
+      });
     } else {
       addItem();
       // After addItem the new item is appended; we set it on next tick
       setTimeout(() => {
-        updateItem(form.items.length, { description, unitPrice });
+        const newIdx = form.items.length;
+        updateItem(newIdx, { description, unitPrice });
+        requestAnimationFrame(() => {
+          const rows = document.querySelectorAll(".line-item-row");
+          const row = rows[newIdx];
+          if (row) {
+            const inputs = row.querySelectorAll<HTMLInputElement>("input[type='number']");
+            inputs[0]?.focus();
+          }
+        });
       }, 0);
     }
   }
@@ -127,11 +194,27 @@ export function WizardMode({
   const canProceedStep1 =
     form.staffId.trim() !== "" && form.invoiceNumber.trim() !== "";
 
+  // Enter on invoice number → advance to step 2 if valid
+  function handleInvoiceNumberKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter" && canProceedStep1) {
+      e.preventDefault();
+      setStep(2);
+    }
+  }
+
+  // Ctrl+Enter on notes → focus Next button
+  function handleNotesKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && e.ctrlKey) {
+      e.preventDefault();
+      nextStep3ButtonRef.current?.focus();
+    }
+  }
+
   return (
     <div className="max-w-3xl mx-auto">
       <StepIndicator current={step} />
 
-      {/* ── Step 1: Staff & Info ── */}
+      {/* Step 1: Staff & Info */}
       {step === 1 && (
         <Card>
           <CardHeader>
@@ -140,10 +223,31 @@ export function WizardMode({
           <CardContent className="space-y-4">
             <div className="space-y-1">
               <Label>Staff Member</Label>
-              <StaffSelect
-                selectedId={form.staffId}
-                onSelect={handleStaffSelect}
-              />
+              <div className="flex items-center gap-2">
+                <div className="flex-1">
+                  <StaffSelect
+                    selectedId={form.staffId}
+                    onSelect={handleStaffSelect}
+                  />
+                </div>
+                {currentStaff && (
+                  <StaffForm
+                    staff={currentStaff}
+                    onSave={handleInlineStaffSave}
+                    trigger={
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        title="Edit staff member"
+                      >
+                        <PencilIcon className="size-4" />
+                        <span className="sr-only">Edit staff member</span>
+                      </Button>
+                    }
+                  />
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -199,8 +303,10 @@ export function WizardMode({
               <div className="space-y-1">
                 <Label>Invoice Number</Label>
                 <Input
+                  ref={invoiceNumberRef}
                   value={form.invoiceNumber}
                   onChange={(e) => updateField("invoiceNumber", e.target.value)}
+                  onKeyDown={handleInvoiceNumberKeyDown}
                   placeholder="INV-0001"
                 />
               </div>
@@ -234,7 +340,7 @@ export function WizardMode({
         </Card>
       )}
 
-      {/* ── Step 2: Line Items ── */}
+      {/* Step 2: Line Items */}
       {step === 2 && (
         <Card>
           <CardHeader>
@@ -251,13 +357,16 @@ export function WizardMode({
               onAdd={addItem}
               onRemove={removeItem}
               total={total}
+              firstDescriptionRef={firstDescRef}
             />
             <div className="space-y-1">
               <Label>Comments / Notes</Label>
               <Textarea
+                ref={notesRef}
                 value={form.notes}
                 onChange={(e) => updateField("notes", e.target.value)}
-                placeholder="Additional notes or comments…"
+                onKeyDown={handleNotesKeyDown}
+                placeholder="Additional notes or comments..."
                 rows={3}
               />
             </div>
@@ -266,12 +375,18 @@ export function WizardMode({
             <Button variant="outline" onClick={() => setStep(1)}>
               Back
             </Button>
-            <Button onClick={() => setStep(3)}>Next: Review</Button>
+            <Button
+              ref={nextStep3ButtonRef}
+              onClick={() => setStep(3)}
+              className="focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              Next: Review
+            </Button>
           </CardFooter>
         </Card>
       )}
 
-      {/* ── Step 3: Review ── */}
+      {/* Step 3: Review */}
       {step === 3 && (
         <Card>
           <CardHeader>
@@ -281,31 +396,31 @@ export function WizardMode({
             {/* Summary grid */}
             <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm border rounded-lg p-4">
               <div className="text-muted-foreground">Invoice #</div>
-              <div className="font-medium">{form.invoiceNumber || "—"}</div>
+              <div className="font-medium">{form.invoiceNumber || "\u2014"}</div>
 
               <div className="text-muted-foreground">Date</div>
-              <div className="font-medium">{form.date || "—"}</div>
+              <div className="font-medium">{form.date || "\u2014"}</div>
 
               <div className="text-muted-foreground">Staff / Contact</div>
-              <div className="font-medium">{form.contactName || "—"}</div>
+              <div className="font-medium">{form.contactName || "\u2014"}</div>
 
               <div className="text-muted-foreground">Department</div>
-              <div className="font-medium">{form.department || "—"}</div>
+              <div className="font-medium">{form.department || "\u2014"}</div>
 
               <div className="text-muted-foreground">Account Number</div>
-              <div className="font-medium">{form.accountNumber || "—"}</div>
+              <div className="font-medium">{form.accountNumber || "\u2014"}</div>
 
               <div className="text-muted-foreground">Account Code</div>
-              <div className="font-medium">{form.accountCode || "—"}</div>
+              <div className="font-medium">{form.accountCode || "\u2014"}</div>
 
               <div className="text-muted-foreground">Extension</div>
-              <div className="font-medium">{form.contactExtension || "—"}</div>
+              <div className="font-medium">{form.contactExtension || "\u2014"}</div>
 
               <div className="text-muted-foreground">Email</div>
-              <div className="font-medium">{form.contactEmail || "—"}</div>
+              <div className="font-medium">{form.contactEmail || "\u2014"}</div>
 
               <div className="text-muted-foreground">Semester / Year / Dept</div>
-              <div className="font-medium">{form.semesterYearDept || "—"}</div>
+              <div className="font-medium">{form.semesterYearDept || "\u2014"}</div>
             </div>
 
             {/* Line items list */}
@@ -315,7 +430,7 @@ export function WizardMode({
                 {form.items.map((item, idx) => (
                   <div key={idx} className="flex justify-between">
                     <span className="text-muted-foreground">
-                      {item.description || "(no description)"} × {item.quantity}
+                      {item.description || "(no description)"} x {item.quantity}
                     </span>
                     <span className="font-medium">
                       ${item.extendedPrice.toFixed(2)}
@@ -343,6 +458,7 @@ export function WizardMode({
                   <div key={line} className="space-y-1">
                     <Label>Signature {idx + 1}</Label>
                     <Input
+                      ref={idx === 0 ? sig1Ref : undefined}
                       value={form.signatures[line]}
                       onChange={(e) =>
                         updateField("signatures", {
@@ -351,6 +467,7 @@ export function WizardMode({
                         })
                       }
                       placeholder={`Signature line ${idx + 1}`}
+                      className="focus-visible:ring-2 focus-visible:ring-ring"
                     />
                   </div>
                 ))}

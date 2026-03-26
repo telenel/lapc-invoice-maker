@@ -1,5 +1,7 @@
 "use client";
 
+import { useRef } from "react";
+import { PencilIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +17,20 @@ import { LineItems } from "./line-items";
 import { QuickPickPanel } from "./quick-pick-panel";
 import { PrismcoreUpload } from "./prismcore-upload";
 import { AccountSelect } from "./account-select";
+import { StaffForm } from "@/components/staff/staff-form";
 import type { InvoiceFormData, InvoiceItem, StaffAccountNumber } from "./invoice-form";
+
+interface StaffMember {
+  id: string;
+  name: string;
+  title: string;
+  department: string;
+  accountCode: string;
+  extension: string;
+  email: string;
+  phone: string;
+  approvalChain: string[];
+}
 
 interface QuickModeProps {
   form: InvoiceFormData;
@@ -27,17 +42,8 @@ interface QuickModeProps {
   addItem: () => void;
   removeItem: (index: number) => void;
   total: number;
-  handleStaffSelect: (staff: {
-    id: string;
-    name: string;
-    title: string;
-    department: string;
-    accountCode: string;
-    extension: string;
-    email: string;
-    phone: string;
-    approvalChain: string[];
-  }) => void;
+  handleStaffSelect: (staff: StaffMember) => void;
+  handleStaffEdit: (updated: StaffMember) => void;
   staffAccountNumbers: StaffAccountNumber[];
   saveDraft: () => Promise<void>;
   saveAndFinalize: () => Promise<void>;
@@ -52,29 +58,79 @@ export function QuickMode({
   removeItem,
   total,
   handleStaffSelect,
+  handleStaffEdit,
   staffAccountNumbers,
   saveDraft,
   saveAndFinalize,
   saving,
 }: QuickModeProps) {
-  // Quick-pick selection: find first empty slot or add new
+  // Current staff object reconstructed for the edit dialog
+  const currentStaff: StaffMember | undefined = form.staffId
+    ? {
+        id: form.staffId,
+        name: form.contactName,
+        title: "",
+        department: form.department,
+        accountCode: form.accountCode,
+        extension: form.contactExtension,
+        email: form.contactEmail,
+        phone: form.contactPhone,
+        approvalChain: form.approvalChain,
+      }
+    : undefined;
+
+  // After the StaffForm dialog saves, re-fetch the updated staff record and sync form
+  async function handleInlineStaffSave() {
+    if (!form.staffId) return;
+    try {
+      const res = await fetch(`/api/staff/${form.staffId}`);
+      if (res.ok) {
+        const updated: StaffMember = await res.json();
+        handleStaffEdit(updated);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // Ref to forward to LineItems so the first description auto-focuses (no auto-focus needed in quick mode, but wire it anyway)
+  const firstDescRef = useRef<HTMLInputElement | null>(null);
+
+  // Quick-pick selection: find first empty slot or add new, then focus qty
   function handleQuickPick(description: string, unitPrice: number) {
     const emptyIdx = form.items.findIndex(
       (item) => !item.description && item.unitPrice === 0
     );
     if (emptyIdx !== -1) {
       updateItem(emptyIdx, { description, unitPrice });
+      requestAnimationFrame(() => {
+        const rows = document.querySelectorAll(".line-item-row");
+        const row = rows[emptyIdx];
+        if (row) {
+          const inputs = row.querySelectorAll<HTMLInputElement>("input[type='number']");
+          inputs[0]?.focus();
+        }
+      });
     } else {
       addItem();
       setTimeout(() => {
-        updateItem(form.items.length, { description, unitPrice });
+        const newIdx = form.items.length;
+        updateItem(newIdx, { description, unitPrice });
+        requestAnimationFrame(() => {
+          const rows = document.querySelectorAll(".line-item-row");
+          const row = rows[newIdx];
+          if (row) {
+            const inputs = row.querySelectorAll<HTMLInputElement>("input[type='number']");
+            inputs[0]?.focus();
+          }
+        });
       }, 0);
     }
   }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* ── Left card: Staff & Info ── */}
+      {/* Left card: Staff & Info */}
       <Card>
         <CardHeader>
           <CardTitle>Staff &amp; Info</CardTitle>
@@ -82,10 +138,31 @@ export function QuickMode({
         <CardContent className="space-y-4">
           <div className="space-y-1">
             <Label>Staff Member</Label>
-            <StaffSelect
-              selectedId={form.staffId}
-              onSelect={handleStaffSelect}
-            />
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <StaffSelect
+                  selectedId={form.staffId}
+                  onSelect={handleStaffSelect}
+                />
+              </div>
+              {currentStaff && (
+                <StaffForm
+                  staff={currentStaff}
+                  onSave={handleInlineStaffSave}
+                  trigger={
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      title="Edit staff member"
+                    >
+                      <PencilIcon className="size-4" />
+                      <span className="sr-only">Edit staff member</span>
+                    </Button>
+                  }
+                />
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -161,7 +238,7 @@ export function QuickMode({
             <Input
               value={form.semesterYearDept}
               onChange={(e) => updateField("semesterYearDept", e.target.value)}
-              placeholder="e.g. Fall 2025 – Math"
+              placeholder="e.g. Fall 2025 - Math"
             />
           </div>
 
@@ -195,7 +272,7 @@ export function QuickMode({
         </CardContent>
       </Card>
 
-      {/* ── Right card: Line Items ── */}
+      {/* Right card: Line Items */}
       <Card>
         <CardHeader>
           <CardTitle>Line Items</CardTitle>
@@ -211,13 +288,14 @@ export function QuickMode({
             onAdd={addItem}
             onRemove={removeItem}
             total={total}
+            firstDescriptionRef={firstDescRef}
           />
           <div className="space-y-1">
             <Label>Comments / Notes</Label>
             <Textarea
               value={form.notes}
               onChange={(e) => updateField("notes", e.target.value)}
-              placeholder="Additional notes or comments…"
+              placeholder="Additional notes or comments..."
               rows={3}
             />
           </div>

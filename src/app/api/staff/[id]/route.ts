@@ -39,6 +39,28 @@ export async function PUT(
   return NextResponse.json(staff);
 }
 
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const session = await getServerSession(authOptions);
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const body = await request.json();
+  const parsed = staffSchema.partial().safeParse(body);
+
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  const staff = await prisma.staff.update({
+    where: { id: params.id },
+    data: parsed.data,
+  });
+
+  return NextResponse.json(staff);
+}
+
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: { id: string } }

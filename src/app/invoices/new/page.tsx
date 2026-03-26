@@ -31,7 +31,7 @@ export default function NewInvoicePage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-1">
         <h1 className="text-2xl font-semibold">New Invoice</h1>
         <Tabs
           value={mode}
@@ -43,6 +43,9 @@ export default function NewInvoicePage() {
           </TabsList>
         </Tabs>
       </div>
+      <p className="text-xs text-muted-foreground mb-6 text-right">
+        Wizard walks you through step-by-step. Quick shows everything at once.
+      </p>
 
       {/* Mode content */}
       {mode === "wizard" ? (

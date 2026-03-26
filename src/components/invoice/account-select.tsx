@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ export function AccountSelect({
   const [showDesc, setShowDesc] = useState(false);
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
+  const chipRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   async function saveAccountNumber() {
     if (!value.trim() || !staffId) return;
@@ -43,24 +44,49 @@ export function AccountSelect({
     value.trim() !== "" &&
     !accountNumbers.some((a) => a.accountCode === value.trim());
 
+  // Arrow-key navigation between chips
+  function handleChipKeyDown(
+    e: React.KeyboardEvent<HTMLButtonElement>,
+    index: number
+  ) {
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+      e.preventDefault();
+      const next = chipRefs.current[index + 1];
+      if (next) next.focus();
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+      e.preventDefault();
+      const prev = chipRefs.current[index - 1];
+      if (prev) prev.focus();
+    }
+  }
+
   return (
     <div className="space-y-2">
       <Label>Account Number</Label>
 
-      {/* Dropdown of saved accounts */}
+      {/* Saved account chips */}
       {accountNumbers.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-1">
-          {accountNumbers.map((acc) => (
+        <div
+          className="flex flex-wrap gap-1 mb-1"
+          role="group"
+          aria-label="Saved account numbers"
+        >
+          {accountNumbers.map((acc, index) => (
             <button
               key={acc.id}
+              ref={(el) => {
+                chipRefs.current[index] = el;
+              }}
               type="button"
               onClick={() => onChange(acc.accountCode)}
-              className={`px-2 py-0.5 rounded text-xs border transition-colors ${
+              onKeyDown={(e) => handleChipKeyDown(e, index)}
+              className={`px-2 py-0.5 rounded text-xs border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 value === acc.accountCode
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-muted text-muted-foreground border-border hover:bg-accent"
               }`}
               title={acc.description || undefined}
+              aria-pressed={value === acc.accountCode}
             >
               {acc.accountCode}
               {acc.description && (
@@ -76,6 +102,7 @@ export function AccountSelect({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Enter account code"
+        className="focus-visible:ring-2 focus-visible:ring-ring"
       />
 
       {/* Save new account number */}
@@ -90,8 +117,16 @@ export function AccountSelect({
                 <Input
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      saveAccountNumber();
+                    } else if (e.key === "Escape") {
+                      setShowDesc(false);
+                    }
+                  }}
                   placeholder="e.g., ASB Fund, Grant #1234"
-                  className="text-sm"
+                  className="text-sm focus-visible:ring-2 focus-visible:ring-ring"
                 />
               </div>
               <Button
@@ -99,6 +134,7 @@ export function AccountSelect({
                 size="sm"
                 onClick={saveAccountNumber}
                 disabled={saving}
+                className="focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {saving ? "Saving..." : "Save"}
               </Button>
@@ -107,6 +143,7 @@ export function AccountSelect({
                 size="sm"
                 variant="ghost"
                 onClick={() => setShowDesc(false)}
+                className="focus-visible:ring-2 focus-visible:ring-ring"
               >
                 Cancel
               </Button>
@@ -116,7 +153,7 @@ export function AccountSelect({
               type="button"
               size="sm"
               variant="outline"
-              className="text-xs"
+              className="text-xs focus-visible:ring-2 focus-visible:ring-ring"
               onClick={() => setShowDesc(true)}
             >
               Save this account number
