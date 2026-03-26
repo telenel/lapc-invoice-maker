@@ -36,8 +36,8 @@ export function StatsCards() {
         const monthData = await monthRes.json();
         const draftsData = await draftsRes.json();
 
-        const totalThisMonth = (monthData.invoices as { totalAmount: number }[]).reduce(
-          (sum: number, inv: { totalAmount: number }) => sum + inv.totalAmount,
+        const totalThisMonth = (monthData.invoices as { totalAmount: string | number }[]).reduce(
+          (sum: number, inv: { totalAmount: string | number }) => sum + Number(inv.totalAmount),
           0
         );
 
@@ -65,7 +65,7 @@ export function StatsCards() {
       title: "Total This Month",
       value: loading
         ? "—"
-        : `$${(stats?.totalThisMonth ?? 0).toFixed(2)}`,
+        : `$${Number(stats?.totalThisMonth ?? 0).toFixed(2)}`,
     },
     {
       title: "Pending Drafts",
