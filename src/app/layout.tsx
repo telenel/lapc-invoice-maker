@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Nav } from "@/components/nav";
@@ -7,15 +7,14 @@ import { AuthSessionProvider } from "@/components/session-provider";
 import { ThemeProviderWrapper } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
+const dmSans = DM_Sans({
+  subsets: ["latin"],
   variable: "--font-sans",
-  weight: "100 900",
 });
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
 });
 
 export const metadata: Metadata = {
@@ -29,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn(geistSans.variable, geistMono.variable)} suppressHydrationWarning>
+    <html lang="en" className={cn(dmSans.variable, jetbrainsMono.variable)} suppressHydrationWarning>
       <body className="antialiased">
         <AuthSessionProvider>
           <ThemeProviderWrapper>

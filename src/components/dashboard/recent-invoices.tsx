@@ -52,7 +52,7 @@ export function RecentInvoices() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Invoices</CardTitle>
+        <CardTitle className="text-lg font-semibold tracking-tight">Recent Invoices</CardTitle>
       </CardHeader>
       <CardContent>
         {loading ? (
@@ -75,7 +75,7 @@ export function RecentInvoices() {
               {invoices.map((invoice) => (
                 <TableRow
                   key={invoice.id}
-                  className="cursor-pointer"
+                  className="cursor-pointer hover:bg-accent/50"
                   onClick={() => router.push(`/invoices/${invoice.id}`)}
                 >
                   <TableCell className="font-medium">
@@ -88,7 +88,7 @@ export function RecentInvoices() {
                   <TableCell>
                     <Badge variant="secondary">{invoice.department}</Badge>
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right font-mono tabular-nums">
                     ${Number(invoice.totalAmount).toFixed(2)}
                   </TableCell>
                   <TableCell>
