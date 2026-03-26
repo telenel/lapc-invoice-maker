@@ -224,7 +224,7 @@ export function LineItems({
             <Input
               readOnly
               tabIndex={-1}
-              value={`$${item.extendedPrice.toFixed(2)}`}
+              value={`$${Number(item.extendedPrice).toFixed(2)}`}
               className="bg-muted"
               aria-label={`Line item ${index + 1} extended price`}
             />
@@ -262,7 +262,7 @@ export function LineItems({
       {/* Total */}
       <div className="flex justify-end pt-2 border-t">
         <span className="text-sm font-semibold">
-          Total: ${total.toFixed(2)}
+          Total: ${Number(total).toFixed(2)}
         </span>
       </div>
     </div>

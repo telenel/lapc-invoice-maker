@@ -167,7 +167,7 @@ export function useInvoiceForm(
         const items = prev.items.map((item, i) => {
           if (i !== index) return item;
           const updated = { ...item, ...patch };
-          updated.extendedPrice = updated.quantity * updated.unitPrice;
+          updated.extendedPrice = Number(updated.quantity) * Number(updated.unitPrice);
           return updated;
         });
         return { ...prev, items };
@@ -195,7 +195,7 @@ export function useInvoiceForm(
   // ---------- Computed total ----------
 
   const total = useMemo(
-    () => form.items.reduce((sum, item) => sum + item.extendedPrice, 0),
+    () => form.items.reduce((sum, item) => sum + Number(item.extendedPrice), 0),
     [form.items]
   );
 
