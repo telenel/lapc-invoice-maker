@@ -16,7 +16,8 @@ import { StaffSelect } from "./staff-select";
 import { LineItems } from "./line-items";
 import { QuickPickPanel } from "./quick-pick-panel";
 import { PrismcoreUpload } from "./prismcore-upload";
-import type { InvoiceFormData, InvoiceItem } from "./invoice-form";
+import { AccountSelect } from "./account-select";
+import type { InvoiceFormData, InvoiceItem, StaffAccountNumber } from "./invoice-form";
 
 interface WizardModeProps {
   form: InvoiceFormData;
@@ -39,6 +40,7 @@ interface WizardModeProps {
     phone: string;
     approvalChain: string[];
   }) => void;
+  staffAccountNumbers: StaffAccountNumber[];
   saveDraft: () => Promise<void>;
   saveAndFinalize: () => Promise<void>;
   saving: boolean;
@@ -99,6 +101,7 @@ export function WizardMode({
   removeItem,
   total,
   handleStaffSelect,
+  staffAccountNumbers,
   saveDraft,
   saveAndFinalize,
   saving,
@@ -153,11 +156,11 @@ export function WizardMode({
                 />
               </div>
               <div className="space-y-1">
-                <Label>Account Code</Label>
-                <Input
+                <AccountSelect
                   value={form.accountCode}
-                  onChange={(e) => updateField("accountCode", e.target.value)}
-                  placeholder="Account Code"
+                  onChange={(v) => updateField("accountCode", v)}
+                  staffId={form.staffId}
+                  accountNumbers={staffAccountNumbers}
                 />
               </div>
             </div>

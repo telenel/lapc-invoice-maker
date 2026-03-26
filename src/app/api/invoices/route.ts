@@ -118,6 +118,23 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    // Save/update the account number for this staff member
+    if (invoiceData.accountCode && invoiceData.staffId) {
+      await prisma.staffAccountNumber.upsert({
+        where: {
+          staffId_accountCode: {
+            staffId: invoiceData.staffId,
+            accountCode: invoiceData.accountCode,
+          },
+        },
+        update: { lastUsedAt: new Date() },
+        create: {
+          staffId: invoiceData.staffId,
+          accountCode: invoiceData.accountCode,
+        },
+      }).catch(() => {}); // Non-critical, don't fail the invoice
+    }
+
     return NextResponse.json(invoice, { status: 201 });
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {

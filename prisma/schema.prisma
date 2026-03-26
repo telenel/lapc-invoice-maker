@@ -21,21 +21,36 @@ model User {
 }
 
 model Staff {
-  id            String    @id @default(uuid())
-  name          String
-  title         String
-  department    String
-  accountCode   String    @map("account_code")
-  extension     String    @default("")
-  email         String    @default("")
-  phone         String    @default("")
-  approvalChain Json      @default("[]") @map("approval_chain")
-  active        Boolean   @default(true)
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-  invoices      Invoice[]
+  id             String              @id @default(uuid())
+  name           String
+  title          String
+  department     String
+  accountCode    String              @map("account_code")
+  extension      String              @default("")
+  email          String              @default("")
+  phone          String              @default("")
+  approvalChain  Json                @default("[]") @map("approval_chain")
+  active         Boolean             @default(true)
+  createdAt      DateTime            @default(now()) @map("created_at")
+  updatedAt      DateTime            @updatedAt @map("updated_at")
+  invoices       Invoice[]
+  accountNumbers StaffAccountNumber[]
 
   @@map("staff")
+}
+
+model StaffAccountNumber {
+  id          String   @id @default(uuid())
+  staffId     String   @map("staff_id")
+  accountCode String   @map("account_code")
+  description String   @default("")
+  lastUsedAt  DateTime @default(now()) @map("last_used_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  staff Staff @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  @@unique([staffId, accountCode])
+  @@map("staff_account_numbers")
 }
 
 model Invoice {
