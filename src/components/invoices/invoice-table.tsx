@@ -32,7 +32,7 @@ interface Invoice {
   department: string;
   category: string;
   totalAmount: string | number;
-  status: "DRAFT" | "FINAL";
+  status: "DRAFT" | "FINAL" | "PENDING_CHARGE";
   isRecurring: boolean;
   staff: { id: string; name: string; title: string; department: string };
   creator: { id: string; name: string; username: string };
@@ -278,9 +278,19 @@ export function InvoiceTable() {
                   </TableCell>
                   <TableCell>
                     <Badge
-                      variant={invoice.status === "FINAL" ? "default" : "outline"}
+                      variant={
+                        invoice.status === "FINAL"
+                          ? "default"
+                          : invoice.status === "PENDING_CHARGE"
+                            ? "secondary"
+                            : "outline"
+                      }
                     >
-                      {invoice.status === "FINAL" ? "Final" : "Draft"}
+                      {invoice.status === "FINAL"
+                        ? "Final"
+                        : invoice.status === "PENDING_CHARGE"
+                          ? "Pending Charge"
+                          : "Draft"}
                     </Badge>
                   </TableCell>
                 </TableRow>
