@@ -51,6 +51,9 @@ COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 # Prisma v7 generates client to src/generated/prisma (not node_modules/.prisma)
 COPY --from=builder /app/src/generated/prisma ./src/generated/prisma
 
+# Install prisma CLI + dotenv for migrations at runtime
+RUN npm install --no-save prisma dotenv
+
 RUN mkdir -p data/pdfs public/uploads
 
 EXPOSE 3000
