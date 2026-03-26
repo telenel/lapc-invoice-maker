@@ -59,8 +59,10 @@ interface KeyboardModeProps {
   staffAccountNumbers: StaffAccountNumber[];
   saveDraft: () => Promise<void>;
   saveAndFinalize: () => Promise<void>;
+  savePendingCharge: () => Promise<void>;
   saving: boolean;
   generationStep: GenerationStep;
+  isPendingCharge?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -75,12 +77,13 @@ export function KeyboardMode({
   removeItem,
   total,
   handleStaffSelect,
-  handleStaffEdit,
   staffAccountNumbers,
   saveDraft,
   saveAndFinalize,
+  savePendingCharge,
   saving,
   generationStep,
+  isPendingCharge = false,
 }: KeyboardModeProps) {
   // ---- Local state ----
   const [staff, setStaff] = useState<StaffMember[]>([]);
@@ -102,6 +105,13 @@ export function KeyboardMode({
   const [pendingAccountCode, setPendingAccountCode] = useState("");
 
   const containerRef = useRef<HTMLDivElement>(null);
+  const invoiceNumberRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isPendingCharge && invoiceNumberRef.current) {
+      invoiceNumberRef.current.select();
+    }
+  }, [isPendingCharge]);
 
   // ---- Data fetching ----
   useEffect(() => {
@@ -346,6 +356,14 @@ export function KeyboardMode({
       className="keyboard-mode max-w-2xl mx-auto"
       tabIndex={-1}
     >
+      {isPendingCharge && (
+        <div className="rounded-lg border-l-4 border-l-amber-500 bg-amber-50 dark:bg-amber-950/20 p-4 mb-4">
+          <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
+            This invoice needs a POS charge. Enter the AG number and upload the PrismCore PDF to finalize.
+          </p>
+        </div>
+      )}
+
       {/* ============ STAFF ============ */}
       <SectionDivider label="STAFF" />
 
@@ -514,14 +532,19 @@ export function KeyboardMode({
         </div>
 
         {/* Invoice Number */}
-        <div className="space-y-1">
+        <div className={cn(
+          "space-y-1",
+          isPendingCharge && !form.invoiceNumber &&
+            "rounded-lg border-l-4 border-l-primary bg-primary/5 p-2 -ml-2"
+        )}>
           <label className="text-sm font-medium">
             Invoice Number <span className="text-destructive">*</span>
           </label>
           <Input
+            ref={invoiceNumberRef}
             value={form.invoiceNumber}
             onChange={(e) => updateField("invoiceNumber", e.target.value)}
-            placeholder="INV-0001..."
+            placeholder="AG-XXXXXX (leave blank if not yet charged)"
             name="invoiceNumber"
           />
         </div>
@@ -658,14 +681,22 @@ export function KeyboardMode({
 
       {/* ============ PRISMCORE + ACTIONS ============ */}
       <div className="pt-6 space-y-4">
-        <PrismcoreUpload
-          value={form.prismcorePath}
-          onChange={(path) => updateField("prismcorePath", path)}
-        />
+        <div className={cn(
+          isPendingCharge && !form.prismcorePath &&
+            "rounded-lg border-l-4 border-l-primary bg-primary/5 p-2 -ml-2"
+        )}>
+          <PrismcoreUpload
+            value={form.prismcorePath}
+            onChange={(path) => updateField("prismcorePath", path)}
+          />
+        </div>
 
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="outline" tabIndex={-1} onClick={saveDraft} disabled={saving}>
             Save Draft
+          </Button>
+          <Button variant="secondary" tabIndex={-1} onClick={savePendingCharge} disabled={saving}>
+            Charge at Register
           </Button>
           <Button onClick={handleGenerate} disabled={saving}>
             Generate PDF {isMac ? "\u2318\u21B5" : "Ctrl\u21B5"}

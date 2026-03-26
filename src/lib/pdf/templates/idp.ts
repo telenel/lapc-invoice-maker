@@ -26,73 +26,108 @@ export function renderIDP(data: IDPData): string {
     rows.push({ description: "", quantity: "", unitPrice: "", extendedPrice: "" });
   }
 
+  // Format extended price: show "$ -" for empty/zero, otherwise "$ 123.45"
+  function fmtPrice(val: string): string {
+    if (!val || val === "$0.00" || val === "0.00" || val === "0") return "$ &nbsp;&nbsp;&nbsp;-";
+    if (val.startsWith("$")) return val;
+    return `$ ${val}`;
+  }
+
   const deptItemRows = rows
     .map(
       (item) => `
         <tr>
-          <td class="c">${item.description}</td>
+          <td class="c" style="height:19px;">${item.description}</td>
           <td class="c" style="text-align:center;">${item.quantity}</td>
-          <td class="c" style="text-align:right;">${item.unitPrice}</td>
-          <td class="c" style="text-align:right;">${item.extendedPrice}</td>
+          <td class="c" style="text-align:right;">${item.unitPrice ? fmtPrice(item.unitPrice) : ""}</td>
+          <td class="c" style="text-align:right;">${fmtPrice(item.extendedPrice)}</td>
         </tr>`
     )
     .join("\n");
 
-  const blankRows = rows
+  // Bookstore Use: always 4 blank rows + summary
+  const bookstoreBlankRows = Array.from({ length: 4 })
     .map(
       () => `
         <tr>
+          <td class="c" style="height:19px;">&nbsp;</td>
           <td class="c">&nbsp;</td>
-          <td class="c">&nbsp;</td>
-          <td class="c" style="text-align:right;">$&nbsp;-</td>
-          <td class="c" style="text-align:right;">&nbsp;</td>
+          <td class="c" style="text-align:right;">$ &nbsp;&nbsp;&nbsp;-</td>
         </tr>`
     )
     .join("\n");
+
+  // Split date into parts for the 3-box display (MM / DD / YYYY)
+  // Input format: "March 26, 2026" or "2026-03-26" or similar
+  let datePart1 = "";
+  let datePart2 = "";
+  let datePart3 = "";
+  if (data.date) {
+    // Try to parse and format
+    const d = new Date(data.date);
+    if (!isNaN(d.getTime())) {
+      datePart1 = String(d.getUTCMonth() + 1).padStart(2, "0");
+      datePart2 = String(d.getUTCDate()).padStart(2, "0");
+      datePart3 = String(d.getUTCFullYear());
+    } else {
+      // Fallback: put the whole string in the first box
+      datePart1 = data.date;
+    }
+  }
 
   return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
 <style>
-  @page { size: 11in 8.5in; margin: 0.35in 0.4in; }
+  @page { size: 11in 8.5in; margin: 0.3in 0.35in; }
   * { margin:0; padding:0; box-sizing:border-box; }
-  body {
+  html, body {
+    height: 100%;
+    width: 100%;
     font-family: Arial, Helvetica, sans-serif;
     font-size: 9pt;
     color: #000;
     line-height: 1.15;
   }
   table { border-collapse:collapse; }
-  /* generic bordered cell */
+
+  /* Generic bordered cell */
   .c {
     border: 1px solid #000;
     padding: 2px 4px;
     vertical-align: middle;
+    font-size: 9pt;
   }
-  /* label cell (below value) */
+
+  /* Label cell — bold small text below a value cell */
   .lb {
     border: 1px solid #000;
     padding: 1px 4px;
     font-weight: bold;
     font-size: 7.5pt;
     vertical-align: top;
+    height: 16px;
   }
-  /* value cell (above label) */
+
+  /* Value cell — data above its label */
   .v {
     border: 1px solid #000;
     padding: 2px 4px;
     font-size: 9pt;
     vertical-align: bottom;
-    height: 20px;
+    height: 22px;
   }
-  /* sidebar */
+
+  /* Green sidebar cell with rotated text */
   .sb {
     background: #CCFFCC;
     border: 1px solid #000;
     text-align: center;
     vertical-align: middle;
-    width: 22px;
+    width: 24px;
+    min-width: 24px;
+    max-width: 24px;
   }
   .sb div {
     writing-mode: vertical-rl;
@@ -101,32 +136,46 @@ export function renderIDP(data: IDPData): string {
     font-size: 7pt;
     text-transform: uppercase;
     white-space: nowrap;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.5px;
   }
-  /* dark header */
+
+  /* Black header row for line items */
   .hd {
     background: #000;
     color: #fff;
     border: 1px solid #000;
     padding: 3px 4px;
     font-weight: bold;
-    font-size: 8pt;
+    font-size: 7.5pt;
+  }
+
+  /* Date sub-boxes */
+  .date-box {
+    border: 1px solid #000;
+    display: inline-block;
+    width: 32px;
+    height: 18px;
+    text-align: center;
+    vertical-align: middle;
+    font-size: 9pt;
+    line-height: 18px;
+    margin-right: -1px;
   }
 </style>
 </head>
 <body>
 
-<!-- Outer page table: fills the full printable area -->
+<!-- Outer page table -->
 <table style="width:100%; height:100%;">
   <colgroup>
-    <col style="width:22px;">
+    <col style="width:24px;">
     <col>
   </colgroup>
 
   <!-- ═══ TITLE ═══ -->
   <tr>
-    <td colspan="2" style="border:1px solid #000; text-align:center; padding:4px 0; height:36px;">
-      <div style="font-weight:bold; font-size:11pt; line-height:1.3;">Name of College</div>
+    <td colspan="2" style="border:1px solid #000; text-align:center; padding:6px 0; height:38px;">
+      <div style="font-weight:bold; font-size:11pt; line-height:1.3;">Los Angeles Pierce College</div>
       <div style="font-weight:bold; font-size:9pt;">INTER- DEPARTMENT BOOKSTORE PURCHASE REQUEST FORM</div>
     </td>
   </tr>
@@ -136,57 +185,61 @@ export function renderIDP(data: IDPData): string {
     <td class="sb"><div>Requesting Department Use</div></td>
     <td style="border:1px solid #000; padding:0; vertical-align:top;">
       <table style="width:100%; table-layout:fixed;">
-        <!-- Field Group 1: Value row -->
+
+        <!-- Row 1: Date boxes | Dept or Unit Requesting Services | Document # -->
         <tr>
-          <td class="v" style="width:18%;">${data.date}</td>
-          <td class="v" style="width:50%;">${data.department}</td>
-          <td class="v" style="width:32%;">${data.documentNumber}</td>
+          <td class="v" style="width:16%; padding:3px 4px;">
+            <span class="date-box">${datePart1}</span><span class="date-box">${datePart2}</span><span class="date-box" style="width:44px;">${datePart3}</span>
+          </td>
+          <td class="v" style="width:54%;">${data.department}</td>
+          <td class="v" style="width:30%;">${data.documentNumber}</td>
         </tr>
-        <!-- Field Group 1: Label row -->
         <tr>
-          <td class="lb">Date</td>
-          <td class="lb">Department or Unit Requesting Services</td>
-          <td class="lb">Document #</td>
+          <td class="lb" style="width:16%;">Date</td>
+          <td class="lb" style="width:54%;">Department or Unit Requesting Services</td>
+          <td class="lb" style="width:30%;">Document #</td>
         </tr>
-        <!-- Field Group 2: Value row -->
+
+        <!-- Row 2: Requesting Department | SAP Account | Estimated Cost -->
         <tr>
-          <td class="v">${data.requestingDept}</td>
-          <td class="v">${data.sapAccount}</td>
-          <td class="v">${data.estimatedCost}</td>
+          <td class="v" colspan="1">${data.requestingDept}</td>
+          <td class="v" colspan="1">${data.sapAccount}</td>
+          <td class="v" colspan="1">${data.estimatedCost}</td>
         </tr>
-        <!-- Field Group 2: Label row -->
         <tr>
           <td class="lb">Requesting Department</td>
           <td class="lb">SAP Account</td>
           <td class="lb">Estimated Cost</td>
         </tr>
-        <!-- Field Group 3: Value row -->
+
+        <!-- Row 3: Name of Dept Approver | Department Contact | Contact Phone -->
         <tr>
           <td class="v">${data.approverName}</td>
           <td class="v">${data.contactName}</td>
           <td class="v">${data.contactPhone}</td>
         </tr>
-        <!-- Field Group 3: Label row -->
         <tr>
           <td class="lb">Name of Department Approver</td>
           <td class="lb">Department Contact</td>
           <td class="lb">Contact Phone</td>
         </tr>
-        <!-- Comments -->
+
+        <!-- Comments row -->
         <tr>
-          <td colspan="3" style="border:1px solid #000; padding:2px 4px; height:18px; vertical-align:top;">
+          <td colspan="3" style="border:1px solid #000; padding:2px 4px; height:20px; vertical-align:top;">
             <span style="font-weight:bold; font-size:7.5pt;">Comments:</span>
-            <span style="font-size:9pt;">${data.comments ?? ""}</span>
+            <span style="font-size:9pt; margin-left:4px;">${data.comments ?? ""}</span>
           </td>
         </tr>
+
         <!-- Signature row -->
         <tr>
-          <td colspan="2" style="border:1px solid #000; padding:4px; height:32px; vertical-align:bottom;">
-            <div style="border-bottom:1px solid #000; height:16px; margin-bottom:2px;"></div>
+          <td colspan="2" style="border:1px solid #000; padding:4px; height:36px; vertical-align:bottom;">
+            <div style="border-bottom:1px solid #000; height:18px; margin-bottom:2px;"></div>
             <span style="font-weight:bold; font-size:7.5pt;">Signature of Department Approver</span>
           </td>
           <td style="border:1px solid #000; padding:4px; vertical-align:bottom;">
-            <div style="border-bottom:1px solid #000; height:16px; margin-bottom:2px;"></div>
+            <div style="border-bottom:1px solid #000; height:18px; margin-bottom:2px;"></div>
             <span style="font-weight:bold; font-size:7.5pt;">Date</span>
           </td>
         </tr>
@@ -196,21 +249,23 @@ export function renderIDP(data: IDPData): string {
 
   <!-- ═══ SECTION 2: DEPARTMENT USE ═══ -->
   <tr>
-    <td class="sb" rowspan="1"><div>Department Use</div></td>
+    <td class="sb"><div>Department Use</div></td>
     <td style="border:1px solid #000; padding:0; vertical-align:top;">
       <table style="width:100%; table-layout:fixed;">
+        <!-- Black header -->
         <tr>
-          <td class="hd" style="width:55%;">Description of Product, Goods or Services Requested:</td>
-          <td class="hd" style="width:8%; text-align:center;">Qty.</td>
+          <td class="hd" style="width:53%;">Description of Product, Goods or Services Requested:</td>
+          <td class="hd" style="width:9%; text-align:center;">Qty.</td>
           <td class="hd" style="width:17%; text-align:center;">Rate/Unit Price</td>
-          <td class="hd" style="width:20%; text-align:center;">Extended Price</td>
+          <td class="hd" style="width:21%; text-align:right; padding-right:8px;">Extended Price</td>
         </tr>
         ${deptItemRows}
+        <!-- Estimated Cost total row -->
         <tr>
           <td class="c" style="border-left:none; border-bottom:none;">&nbsp;</td>
           <td class="c" style="border-bottom:none;">&nbsp;</td>
-          <td class="c" style="text-align:right; font-weight:bold;">Estimated Cost:</td>
-          <td class="c" style="text-align:right; font-weight:bold; background:#f0f0f0;">${data.totalAmount}</td>
+          <td class="c" style="text-align:right; font-weight:bold; font-size:8pt;">Estimated Cost:</td>
+          <td class="c" style="text-align:right; font-weight:bold; background:#f5f5dc;">${fmtPrice(data.totalAmount)}</td>
         </tr>
       </table>
     </td>
@@ -218,15 +273,20 @@ export function renderIDP(data: IDPData): string {
 
   <!-- ═══ SECTION 3: BOOKSTORE USE ═══ -->
   <tr>
-    <td class="sb" rowspan="1"><div>Bookstore Use</div></td>
+    <td class="sb"><div>Bookstore Use</div></td>
     <td style="border:1px solid #000; padding:0; vertical-align:top;">
       <table style="width:100%; table-layout:fixed;">
-        ${blankRows}
+        <colgroup>
+          <col style="width:62%;">
+          <col style="width:17%;">
+          <col style="width:21%;">
+        </colgroup>
+        ${bookstoreBlankRows}
+        <!-- Description / Actual Cost summary row -->
         <tr>
-          <td class="c" style="width:55%; font-weight:bold; font-size:8pt; vertical-align:bottom;">Description of Product, Goods or Services Provided:</td>
-          <td class="c" style="width:8%;">&nbsp;</td>
-          <td class="c" style="width:17%; text-align:right; font-weight:bold;">Actual Cost:</td>
-          <td class="c" style="width:20%; text-align:right; font-weight:bold; background:#f0f0f0;">${data.totalAmount}</td>
+          <td class="c" style="font-weight:bold; font-size:7.5pt; vertical-align:bottom; height:19px;">Description of Product, Goods or Services Provided:</td>
+          <td class="c" style="text-align:right; font-weight:bold; font-size:8pt;">Actual Cost:</td>
+          <td class="c" style="text-align:right; font-weight:bold; background:#f5f5dc;">${fmtPrice(data.totalAmount)}</td>
         </tr>
       </table>
     </td>

@@ -14,6 +14,7 @@ import { useUIScale } from "@/components/ui-scale-provider";
 const links = [
   { href: "/", label: "Dashboard" },
   { href: "/invoices", label: "Invoices" },
+  { href: "/quotes", label: "Quotes" },
   { href: "/staff", label: "Staff" },
   { href: "/quick-picks", label: "Quick Picks" },
   { href: "/analytics", label: "Analytics" },

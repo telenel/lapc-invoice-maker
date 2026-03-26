@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { RefreshCwIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,39 +14,35 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  InvoiceFiltersBar,
-  type InvoiceFilters,
-} from "./invoice-filters";
+  QuoteFiltersBar,
+  type QuoteFilters,
+} from "./quote-filters";
 
-interface StaffMember {
-  id: string;
-  name: string;
-  department: string;
-}
+type QuoteStatus = "DRAFT" | "SENT" | "ACCEPTED" | "DECLINED" | "EXPIRED";
 
-interface Invoice {
+interface Quote {
   id: string;
-  invoiceNumber: string;
+  quoteNumber: string;
   date: string;
+  recipientName: string | null;
+  recipientOrg: string | null;
   department: string;
   category: string;
   totalAmount: string | number;
-  status: "DRAFT" | "FINAL" | "PENDING_CHARGE";
-  isRecurring: boolean;
-  staff: { id: string; name: string; title: string; department: string };
-  creator: { id: string; name: string; username: string };
+  expirationDate: string | null;
+  status: QuoteStatus;
 }
 
-interface InvoicesResponse {
-  invoices: Invoice[];
+interface QuotesResponse {
+  quotes: Quote[];
   total: number;
   page: number;
   pageSize: number;
 }
 
-const EMPTY_FILTERS: InvoiceFilters = {
+const EMPTY_FILTERS: QuoteFilters = {
   search: "",
-  status: "",
+  quoteStatus: "",
   category: "",
   department: "",
   dateFrom: "",
@@ -56,17 +51,33 @@ const EMPTY_FILTERS: InvoiceFilters = {
   amountMax: "",
 };
 
-type SortField = "invoiceNumber" | "date" | "totalAmount";
+type SortField = "quoteNumber" | "date" | "totalAmount" | "expirationDate";
 type SortDir = "asc" | "desc";
 
 const PAGE_SIZE = 20;
 
-export function InvoiceTable() {
+const STATUS_BADGE_VARIANT: Record<QuoteStatus, "default" | "secondary" | "outline" | "destructive"> = {
+  DRAFT: "outline",
+  SENT: "secondary",
+  ACCEPTED: "default",
+  DECLINED: "destructive",
+  EXPIRED: "outline",
+};
+
+const STATUS_LABEL: Record<QuoteStatus, string> = {
+  DRAFT: "Draft",
+  SENT: "Sent",
+  ACCEPTED: "Accepted",
+  DECLINED: "Declined",
+  EXPIRED: "Expired",
+};
+
+export function QuoteTable() {
   const router = useRouter();
 
-  const [filters, setFilters] = useState<InvoiceFilters>(EMPTY_FILTERS);
+  const [filters, setFilters] = useState<QuoteFilters>(EMPTY_FILTERS);
   const [departments, setDepartments] = useState<string[]>([]);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [quotes, setQuotes] = useState<Quote[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -80,7 +91,7 @@ export function InvoiceTable() {
     async function fetchDepartments() {
       const res = await fetch("/api/staff");
       if (res.ok) {
-        const data: StaffMember[] = await res.json();
+        const data: { id: string; name: string; department: string }[] = await res.json();
         const unique = Array.from(
           new Set(data.map((s) => s.department).filter(Boolean))
         ).sort();
@@ -90,13 +101,13 @@ export function InvoiceTable() {
     fetchDepartments();
   }, []);
 
-  const fetchInvoices = useCallback(async () => {
+  const fetchQuotes = useCallback(async () => {
     setLoading(true);
 
     const params = new URLSearchParams();
     if (filters.search) params.set("search", filters.search);
-    if (filters.status && filters.status !== "all")
-      params.set("status", filters.status);
+    if (filters.quoteStatus && filters.quoteStatus !== "all")
+      params.set("quoteStatus", filters.quoteStatus);
     if (filters.category && filters.category !== "all")
       params.set("category", filters.category);
     if (filters.department && filters.department !== "all")
@@ -110,23 +121,23 @@ export function InvoiceTable() {
     params.set("sortBy", sortBy);
     params.set("sortDir", sortDir);
 
-    const res = await fetch(`/api/invoices?${params.toString()}`);
+    const res = await fetch(`/api/quotes?${params.toString()}`);
     if (res.ok) {
-      const data: InvoicesResponse = await res.json();
-      setInvoices(data.invoices);
+      const data: QuotesResponse = await res.json();
+      setQuotes(data.quotes);
       setTotal(data.total);
     } else {
-      toast.error("Failed to load invoices");
+      toast.error("Failed to load quotes");
     }
     setLoading(false);
   }, [filters, page, sortBy, sortDir]);
 
   useEffect(() => {
-    fetchInvoices();
-  }, [fetchInvoices]);
+    fetchQuotes();
+  }, [fetchQuotes]);
 
   // Reset to page 1 when filters or sort changes
-  function handleFiltersChange(next: InvoiceFilters) {
+  function handleFiltersChange(next: QuoteFilters) {
     setFilters(next);
     setPage(1);
   }
@@ -148,7 +159,7 @@ export function InvoiceTable() {
 
   function sortIndicator(field: SortField) {
     if (sortBy !== field) return null;
-    return sortDir === "asc" ? " ↑" : " ↓";
+    return sortDir === "asc" ? " \u2191" : " \u2193";
   }
 
   function formatAmount(amount: string | number) {
@@ -167,42 +178,26 @@ export function InvoiceTable() {
     });
   }
 
-  function handleExportCsv() {
-    const params = new URLSearchParams();
-    if (filters.search) params.set("search", filters.search);
-    if (filters.status && filters.status !== "all")
-      params.set("status", filters.status);
-    if (filters.category && filters.category !== "all")
-      params.set("category", filters.category);
-    if (filters.department && filters.department !== "all")
-      params.set("department", filters.department);
-    if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
-    if (filters.dateTo) params.set("dateTo", filters.dateTo);
-    if (filters.amountMin) params.set("amountMin", filters.amountMin);
-    if (filters.amountMax) params.set("amountMax", filters.amountMax);
-    window.open(`/api/invoices/export?${params.toString()}`, "_blank");
+  function isExpired(dateStr: string | null): boolean {
+    if (!dateStr) return false;
+    return new Date(dateStr) < new Date();
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-end justify-between gap-4">
-        <div className="flex-1">
-          <InvoiceFiltersBar
-            filters={filters}
-            departments={departments}
-            onChange={handleFiltersChange}
-            onClear={handleClear}
-          />
-        </div>
-        <Button variant="outline" size="sm" onClick={handleExportCsv}>
-          Export CSV
-        </Button>
+      <div className="flex-1">
+        <QuoteFiltersBar
+          filters={filters}
+          departments={departments}
+          onChange={handleFiltersChange}
+          onClear={handleClear}
+        />
       </div>
 
       {loading ? (
-        <p className="text-muted-foreground text-sm">Loading…</p>
-      ) : invoices.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No invoices found.</p>
+        <p className="text-muted-foreground text-sm">Loading...</p>
+      ) : quotes.length === 0 ? (
+        <p className="text-muted-foreground text-sm">No quotes found.</p>
       ) : (
         <>
           <Table>
@@ -210,12 +205,12 @@ export function InvoiceTable() {
               <TableRow>
                 <TableHead
                   className="cursor-pointer select-none"
-                  onClick={() => handleSort("invoiceNumber")}
+                  onClick={() => handleSort("quoteNumber")}
                   role="button"
                   tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSort("invoiceNumber"); } }}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSort("quoteNumber"); } }}
                 >
-                  Invoice #{sortIndicator("invoiceNumber")}
+                  Quote #{sortIndicator("quoteNumber")}
                 </TableHead>
                 <TableHead
                   className="cursor-pointer select-none"
@@ -226,9 +221,8 @@ export function InvoiceTable() {
                 >
                   Date{sortIndicator("date")}
                 </TableHead>
-                <TableHead>Staff</TableHead>
+                <TableHead>Recipient</TableHead>
                 <TableHead>Department</TableHead>
-                <TableHead>Category</TableHead>
                 <TableHead
                   className="cursor-pointer select-none text-right"
                   onClick={() => handleSort("totalAmount")}
@@ -238,59 +232,53 @@ export function InvoiceTable() {
                 >
                   Amount{sortIndicator("totalAmount")}
                 </TableHead>
+                <TableHead
+                  className="cursor-pointer select-none"
+                  onClick={() => handleSort("expirationDate")}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSort("expirationDate"); } }}
+                >
+                  Expires{sortIndicator("expirationDate")}
+                </TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {invoices.map((invoice) => (
+              {quotes.map((quote) => (
                 <TableRow
-                  key={invoice.id}
+                  key={quote.id}
                   className="cursor-pointer"
-                  onClick={() => router.push(`/invoices/${invoice.id}`)}
+                  onClick={() => router.push(`/quotes/${quote.id}`)}
                   role="link"
                   tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === "Enter") router.push(`/invoices/${invoice.id}`); }}
+                  onKeyDown={(e) => { if (e.key === "Enter") router.push(`/quotes/${quote.id}`); }}
                 >
                   <TableCell className="font-bold">
-                    <span className="flex items-center gap-1">
-                      {invoice.invoiceNumber}
-                      {invoice.isRecurring && (
-                        <span title="Recurring invoice">
-                          <RefreshCwIcon className="size-3 text-muted-foreground shrink-0" aria-hidden="true" />
-                        </span>
-                      )}
-                    </span>
+                    {quote.quoteNumber}
                   </TableCell>
-                  <TableCell>{formatDate(invoice.date)}</TableCell>
-                  <TableCell>{invoice.staff.name}</TableCell>
+                  <TableCell>{formatDate(quote.date)}</TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{invoice.department}</Badge>
+                    {quote.recipientName || quote.recipientOrg || "\u2014"}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">
-                      {invoice.category
-                        ? invoice.category.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())
-                        : "—"}
-                    </Badge>
+                    <Badge variant="secondary">{quote.department}</Badge>
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
-                    {formatAmount(invoice.totalAmount)}
+                    {formatAmount(quote.totalAmount)}
                   </TableCell>
                   <TableCell>
-                    <Badge
-                      variant={
-                        invoice.status === "FINAL"
-                          ? "default"
-                          : invoice.status === "PENDING_CHARGE"
-                            ? "secondary"
-                            : "outline"
-                      }
-                    >
-                      {invoice.status === "FINAL"
-                        ? "Final"
-                        : invoice.status === "PENDING_CHARGE"
-                          ? "Pending Charge"
-                          : "Draft"}
+                    {quote.expirationDate ? (
+                      <span className={isExpired(quote.expirationDate) ? "text-destructive" : ""}>
+                        {formatDate(quote.expirationDate)}
+                      </span>
+                    ) : (
+                      "\u2014"
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={STATUS_BADGE_VARIANT[quote.status]}>
+                      {STATUS_LABEL[quote.status]}
                     </Badge>
                   </TableCell>
                 </TableRow>
@@ -301,7 +289,7 @@ export function InvoiceTable() {
           {/* Pagination */}
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              Page {page} of {totalPages} ({total} invoice
+              Page {page} of {totalPages} ({total} quote
               {total !== 1 ? "s" : ""})
             </p>
             <div className="flex gap-2">
