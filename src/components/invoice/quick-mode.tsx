@@ -1,6 +1,5 @@
 "use client";
 
-import { useRef } from "react";
 import { PencilIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +17,7 @@ import { QuickPickPanel } from "./quick-pick-panel";
 import { PrismcoreUpload } from "./prismcore-upload";
 import { AccountSelect } from "./account-select";
 import { StaffForm } from "@/components/staff/staff-form";
+import { FieldHint, useHintsDismissed } from "./field-hint";
 import type { InvoiceFormData, InvoiceItem, StaffAccountNumber } from "./invoice-form";
 
 interface StaffMember {
@@ -64,7 +64,8 @@ export function QuickMode({
   saveAndFinalize,
   saving,
 }: QuickModeProps) {
-  // Current staff object reconstructed for the edit dialog
+  const { dismissed: hintsDismissed, dismiss: dismissHints } = useHintsDismissed();
+
   const currentStaff: StaffMember | undefined = form.staffId
     ? {
         id: form.staffId,
@@ -79,7 +80,6 @@ export function QuickMode({
       }
     : undefined;
 
-  // After the StaffForm dialog saves, re-fetch the updated staff record and sync form
   async function handleInlineStaffSave() {
     if (!form.staffId) return;
     try {
@@ -93,37 +93,16 @@ export function QuickMode({
     }
   }
 
-  // Ref to forward to LineItems so the first description auto-focuses (no auto-focus needed in quick mode, but wire it anyway)
-  const firstDescRef = useRef<HTMLInputElement | null>(null);
-
-  // Quick-pick selection: find first empty slot or add new, then focus qty
   function handleQuickPick(description: string, unitPrice: number) {
     const emptyIdx = form.items.findIndex(
       (item) => !item.description && item.unitPrice === 0
     );
     if (emptyIdx !== -1) {
       updateItem(emptyIdx, { description, unitPrice });
-      requestAnimationFrame(() => {
-        const rows = document.querySelectorAll(".line-item-row");
-        const row = rows[emptyIdx];
-        if (row) {
-          const inputs = row.querySelectorAll<HTMLInputElement>("input[type='number']");
-          inputs[0]?.focus();
-        }
-      });
     } else {
       addItem();
       setTimeout(() => {
-        const newIdx = form.items.length;
-        updateItem(newIdx, { description, unitPrice });
-        requestAnimationFrame(() => {
-          const rows = document.querySelectorAll(".line-item-row");
-          const row = rows[newIdx];
-          if (row) {
-            const inputs = row.querySelectorAll<HTMLInputElement>("input[type='number']");
-            inputs[0]?.focus();
-          }
-        });
+        updateItem(form.items.length, { description, unitPrice });
       }, 0);
     }
   }
@@ -163,6 +142,11 @@ export function QuickMode({
                 />
               )}
             </div>
+            <FieldHint
+              text="Select a staff member to auto-fill department, contact info, and account numbers."
+              dismissed={hintsDismissed}
+              onDismiss={dismissHints}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -180,6 +164,11 @@ export function QuickMode({
                 onChange={(v) => updateField("accountNumber", v)}
                 staffId={form.staffId}
                 accountNumbers={staffAccountNumbers}
+              />
+              <FieldHint
+                text="Saved account numbers appear as chips. New ones can be saved for next time."
+                dismissed={hintsDismissed}
+                onDismiss={dismissHints}
               />
             </div>
           </div>
@@ -238,7 +227,7 @@ export function QuickMode({
             <Input
               value={form.semesterYearDept}
               onChange={(e) => updateField("semesterYearDept", e.target.value)}
-              placeholder="e.g. Fall 2025 - Math"
+              placeholder="e.g. Fall 2025 \u2013 Math"
             />
           </div>
 
@@ -278,35 +267,39 @@ export function QuickMode({
           <CardTitle>Line Items</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <QuickPickPanel
-            department={form.department}
-            onSelect={handleQuickPick}
-          />
+          <div>
+            <QuickPickPanel
+              department={form.department}
+              onSelect={handleQuickPick}
+            />
+            {form.department && (
+              <FieldHint
+                text="Click an item to add it to your invoice."
+                dismissed={hintsDismissed}
+                onDismiss={dismissHints}
+              />
+            )}
+          </div>
           <LineItems
             items={form.items}
             onUpdate={updateItem}
             onAdd={addItem}
             onRemove={removeItem}
             total={total}
-            firstDescriptionRef={firstDescRef}
           />
           <div className="space-y-1">
             <Label>Comments / Notes</Label>
             <Textarea
               value={form.notes}
               onChange={(e) => updateField("notes", e.target.value)}
-              placeholder="Additional notes or comments..."
+              placeholder="Additional notes or comments\u2026"
               rows={3}
             />
           </div>
 
           {/* Action buttons */}
           <div className="flex justify-end gap-2 pt-2">
-            <Button
-              variant="outline"
-              onClick={saveDraft}
-              disabled={saving}
-            >
+            <Button variant="outline" onClick={saveDraft} disabled={saving}>
               Save Draft
             </Button>
             <Button onClick={saveAndFinalize} disabled={saving}>

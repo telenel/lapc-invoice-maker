@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { PencilIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ import { QuickPickPanel } from "./quick-pick-panel";
 import { PrismcoreUpload } from "./prismcore-upload";
 import { AccountSelect } from "./account-select";
 import { StaffForm } from "@/components/staff/staff-form";
+import { FieldHint, useHintsDismissed } from "./field-hint";
 import type { InvoiceFormData, InvoiceItem, StaffAccountNumber } from "./invoice-form";
 
 interface StaffMember {
@@ -62,7 +63,6 @@ function StepIndicator({ current }: { current: number }) {
         const isDone = stepNum < current;
         return (
           <div key={label} className="flex items-center">
-            {/* Connecting line before (except first) */}
             {idx > 0 && (
               <div
                 className={`h-px w-10 ${
@@ -70,7 +70,6 @@ function StepIndicator({ current }: { current: number }) {
                 }`}
               />
             )}
-            {/* Circle */}
             <div className="flex flex-col items-center gap-1">
               <div
                 className={`size-8 rounded-full flex items-center justify-center text-sm font-semibold border-2 transition-colors ${
@@ -113,23 +112,8 @@ export function WizardMode({
   saving,
 }: WizardModeProps) {
   const [step, setStep] = useState(1);
+  const { dismissed: hintsDismissed, dismiss: dismissHints } = useHintsDismissed();
 
-  // ── Auto-focus refs ──────────────────────────────────────────────────────────
-  const firstDescRef = useRef<HTMLInputElement | null>(null);
-  const notesRef = useRef<HTMLTextAreaElement | null>(null);
-  const sig1Ref = useRef<HTMLInputElement | null>(null);
-  const invoiceNumberRef = useRef<HTMLInputElement | null>(null);
-  const nextStep3ButtonRef = useRef<HTMLButtonElement | null>(null);
-
-  useEffect(() => {
-    if (step === 2) {
-      requestAnimationFrame(() => firstDescRef.current?.focus());
-    } else if (step === 3) {
-      requestAnimationFrame(() => sig1Ref.current?.focus());
-    }
-  }, [step]);
-
-  // Current staff object reconstructed for the edit dialog
   const currentStaff: StaffMember | undefined = form.staffId
     ? {
         id: form.staffId,
@@ -144,7 +128,6 @@ export function WizardMode({
       }
     : undefined;
 
-  // After the StaffForm dialog saves, re-fetch the updated staff record and sync form
   async function handleInlineStaffSave() {
     if (!form.staffId) return;
     try {
@@ -158,35 +141,16 @@ export function WizardMode({
     }
   }
 
-  // Quick-pick selection: find first empty slot or add new, then focus qty
   function handleQuickPick(description: string, unitPrice: number) {
     const emptyIdx = form.items.findIndex(
       (item) => !item.description && item.unitPrice === 0
     );
     if (emptyIdx !== -1) {
       updateItem(emptyIdx, { description, unitPrice });
-      requestAnimationFrame(() => {
-        const rows = document.querySelectorAll(".line-item-row");
-        const row = rows[emptyIdx];
-        if (row) {
-          const inputs = row.querySelectorAll<HTMLInputElement>("input[type='number']");
-          inputs[0]?.focus();
-        }
-      });
     } else {
       addItem();
-      // After addItem the new item is appended; we set it on next tick
       setTimeout(() => {
-        const newIdx = form.items.length;
-        updateItem(newIdx, { description, unitPrice });
-        requestAnimationFrame(() => {
-          const rows = document.querySelectorAll(".line-item-row");
-          const row = rows[newIdx];
-          if (row) {
-            const inputs = row.querySelectorAll<HTMLInputElement>("input[type='number']");
-            inputs[0]?.focus();
-          }
-        });
+        updateItem(form.items.length, { description, unitPrice });
       }, 0);
     }
   }
@@ -194,27 +158,10 @@ export function WizardMode({
   const canProceedStep1 =
     form.staffId.trim() !== "" && form.invoiceNumber.trim() !== "";
 
-  // Enter on invoice number → advance to step 2 if valid
-  function handleInvoiceNumberKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter" && canProceedStep1) {
-      e.preventDefault();
-      setStep(2);
-    }
-  }
-
-  // Ctrl+Enter on notes → focus Next button
-  function handleNotesKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === "Enter" && e.ctrlKey) {
-      e.preventDefault();
-      nextStep3ButtonRef.current?.focus();
-    }
-  }
-
   return (
     <div className="max-w-3xl mx-auto">
       <StepIndicator current={step} />
 
-      {/* Step 1: Staff & Info */}
       {step === 1 && (
         <Card>
           <CardHeader>
@@ -248,6 +195,11 @@ export function WizardMode({
                   />
                 )}
               </div>
+              <FieldHint
+                text="Select a staff member to auto-fill department, contact info, and account numbers."
+                dismissed={hintsDismissed}
+                onDismiss={dismissHints}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -265,6 +217,11 @@ export function WizardMode({
                   onChange={(v) => updateField("accountNumber", v)}
                   staffId={form.staffId}
                   accountNumbers={staffAccountNumbers}
+                />
+                <FieldHint
+                  text="Saved account numbers appear as chips. New ones can be saved for next time."
+                  dismissed={hintsDismissed}
+                  onDismiss={dismissHints}
                 />
               </div>
             </div>
@@ -303,10 +260,8 @@ export function WizardMode({
               <div className="space-y-1">
                 <Label>Invoice Number</Label>
                 <Input
-                  ref={invoiceNumberRef}
                   value={form.invoiceNumber}
                   onChange={(e) => updateField("invoiceNumber", e.target.value)}
-                  onKeyDown={handleInvoiceNumberKeyDown}
                   placeholder="INV-0001"
                 />
               </div>
@@ -325,48 +280,50 @@ export function WizardMode({
               <Input
                 value={form.semesterYearDept}
                 onChange={(e) => updateField("semesterYearDept", e.target.value)}
-                placeholder="e.g. Fall 2025 – Math"
+                placeholder="e.g. Fall 2025 \u2013 Math"
               />
             </div>
           </CardContent>
           <CardFooter className="justify-end">
-            <Button
-              onClick={() => setStep(2)}
-              disabled={!canProceedStep1}
-            >
+            <Button onClick={() => setStep(2)} disabled={!canProceedStep1}>
               Next: Line Items
             </Button>
           </CardFooter>
         </Card>
       )}
 
-      {/* Step 2: Line Items */}
       {step === 2 && (
         <Card>
           <CardHeader>
             <CardTitle>Line Items</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <QuickPickPanel
-              department={form.department}
-              onSelect={handleQuickPick}
-            />
+            <div>
+              <QuickPickPanel
+                department={form.department}
+                onSelect={handleQuickPick}
+              />
+              {form.department && (
+                <FieldHint
+                  text="Click an item to add it to your invoice."
+                  dismissed={hintsDismissed}
+                  onDismiss={dismissHints}
+                />
+              )}
+            </div>
             <LineItems
               items={form.items}
               onUpdate={updateItem}
               onAdd={addItem}
               onRemove={removeItem}
               total={total}
-              firstDescriptionRef={firstDescRef}
             />
             <div className="space-y-1">
               <Label>Comments / Notes</Label>
               <Textarea
-                ref={notesRef}
                 value={form.notes}
                 onChange={(e) => updateField("notes", e.target.value)}
-                onKeyDown={handleNotesKeyDown}
-                placeholder="Additional notes or comments..."
+                placeholder="Additional notes or comments\u2026"
                 rows={3}
               />
             </div>
@@ -375,62 +332,45 @@ export function WizardMode({
             <Button variant="outline" onClick={() => setStep(1)}>
               Back
             </Button>
-            <Button
-              ref={nextStep3ButtonRef}
-              onClick={() => setStep(3)}
-              className="focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              Next: Review
-            </Button>
+            <Button onClick={() => setStep(3)}>Next: Review</Button>
           </CardFooter>
         </Card>
       )}
 
-      {/* Step 3: Review */}
       {step === 3 && (
         <Card>
           <CardHeader>
             <CardTitle>Review &amp; Finalize</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
-            {/* Summary grid */}
             <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm border rounded-lg p-4">
               <div className="text-muted-foreground">Invoice #</div>
               <div className="font-medium">{form.invoiceNumber || "\u2014"}</div>
-
               <div className="text-muted-foreground">Date</div>
               <div className="font-medium">{form.date || "\u2014"}</div>
-
               <div className="text-muted-foreground">Staff / Contact</div>
               <div className="font-medium">{form.contactName || "\u2014"}</div>
-
               <div className="text-muted-foreground">Department</div>
               <div className="font-medium">{form.department || "\u2014"}</div>
-
               <div className="text-muted-foreground">Account Number</div>
               <div className="font-medium">{form.accountNumber || "\u2014"}</div>
-
               <div className="text-muted-foreground">Account Code</div>
               <div className="font-medium">{form.accountCode || "\u2014"}</div>
-
               <div className="text-muted-foreground">Extension</div>
               <div className="font-medium">{form.contactExtension || "\u2014"}</div>
-
               <div className="text-muted-foreground">Email</div>
               <div className="font-medium">{form.contactEmail || "\u2014"}</div>
-
               <div className="text-muted-foreground">Semester / Year / Dept</div>
               <div className="font-medium">{form.semesterYearDept || "\u2014"}</div>
             </div>
 
-            {/* Line items list */}
             <div>
               <p className="text-sm font-semibold mb-2">Line Items</p>
               <div className="space-y-1 text-sm border rounded-lg p-4">
                 {form.items.map((item, idx) => (
                   <div key={idx} className="flex justify-between">
                     <span className="text-muted-foreground">
-                      {item.description || "(no description)"} x {item.quantity}
+                      {item.description || "(no description)"} \u00d7 {item.quantity}
                     </span>
                     <span className="font-medium">
                       ${item.extendedPrice.toFixed(2)}
@@ -444,13 +384,11 @@ export function WizardMode({
               </div>
             </div>
 
-            {/* PrismCore upload */}
             <PrismcoreUpload
               value={form.prismcorePath}
               onChange={(path) => updateField("prismcorePath", path)}
             />
 
-            {/* Signatures */}
             <div className="space-y-3">
               <p className="text-sm font-semibold">Signatures</p>
               <div className="space-y-2">
@@ -458,7 +396,6 @@ export function WizardMode({
                   <div key={line} className="space-y-1">
                     <Label>Signature {idx + 1}</Label>
                     <Input
-                      ref={idx === 0 ? sig1Ref : undefined}
                       value={form.signatures[line]}
                       onChange={(e) =>
                         updateField("signatures", {
@@ -467,7 +404,6 @@ export function WizardMode({
                         })
                       }
                       placeholder={`Signature line ${idx + 1}`}
-                      className="focus-visible:ring-2 focus-visible:ring-ring"
                     />
                   </div>
                 ))}
@@ -479,11 +415,7 @@ export function WizardMode({
               Back
             </Button>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={saveDraft}
-                disabled={saving}
-              >
+              <Button variant="outline" onClick={saveDraft} disabled={saving}>
                 Save Draft
               </Button>
               <Button onClick={saveAndFinalize} disabled={saving}>
