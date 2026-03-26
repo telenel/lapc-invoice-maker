@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { PencilIcon } from "lucide-react";
+import { PencilIcon, RefreshCwIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -377,6 +377,54 @@ export function QuickMode({
               placeholder="Additional notes or comments\u2026"
               rows={3}
             />
+          </div>
+
+          {/* Recurring Invoice */}
+          <div className="space-y-3 border rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <RefreshCwIcon className="size-4 text-muted-foreground" />
+                <p className="text-sm font-semibold">Recurring Invoice</p>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  className="size-4 rounded"
+                  checked={form.isRecurring}
+                  onChange={(e) => updateField("isRecurring", e.target.checked)}
+                />
+                <span className="text-sm">Make this invoice recurring</span>
+              </label>
+            </div>
+            {form.isRecurring && (
+              <div className="space-y-3 pt-1">
+                <div className="space-y-1">
+                  <Label>Interval</Label>
+                  <Select
+                    value={form.recurringInterval}
+                    onValueChange={(v) => updateField("recurringInterval", (v ?? "") as string)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select interval" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="monthly">Monthly</SelectItem>
+                      <SelectItem value="quarterly">Quarterly</SelectItem>
+                      <SelectItem value="yearly">Yearly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label>Email invoice to</Label>
+                  <Input
+                    type="email"
+                    value={form.recurringEmail}
+                    onChange={(e) => updateField("recurringEmail", e.target.value)}
+                    placeholder="recipient@example.com"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Action buttons */}

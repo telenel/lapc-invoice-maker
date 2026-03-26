@@ -29,6 +29,9 @@ export const invoiceCreateSchema = z.object({
   approvalChain: z.array(z.string()).default([]),
   notes: z.string().default(""),
   items: z.array(invoiceItemSchema).min(1, "At least one item is required"),
+  isRecurring: z.boolean().default(false),
+  recurringInterval: z.string().optional(),
+  recurringEmail: z.string().email().optional().or(z.literal("")),
 });
 
 export const invoiceUpdateSchema = invoiceCreateSchema.partial().extend({

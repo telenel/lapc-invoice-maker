@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { RefreshCwIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,6 +33,7 @@ interface Invoice {
   category: string;
   totalAmount: string | number;
   status: "DRAFT" | "FINAL";
+  isRecurring: boolean;
   staff: { id: string; name: string; title: string; department: string };
   creator: { id: string; name: string; username: string };
 }
@@ -238,7 +240,14 @@ export function InvoiceTable() {
                   onClick={() => router.push(`/invoices/${invoice.id}`)}
                 >
                   <TableCell className="font-bold">
-                    {invoice.invoiceNumber}
+                    <span className="flex items-center gap-1">
+                      {invoice.invoiceNumber}
+                      {invoice.isRecurring && (
+                        <span title="Recurring invoice">
+                          <RefreshCwIcon className="size-3 text-muted-foreground shrink-0" />
+                        </span>
+                      )}
+                    </span>
                   </TableCell>
                   <TableCell>{formatDate(invoice.date)}</TableCell>
                   <TableCell>{invoice.staff.name}</TableCell>

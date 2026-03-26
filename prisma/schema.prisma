@@ -71,10 +71,14 @@ model Invoice {
   accountNumber  String          @default("") @map("account_number")
   approvalChain  Json            @default("[]") @map("approval_chain")
   totalAmount    Decimal         @default(0) @map("total_amount") @db.Decimal(10, 2)
-  notes          String?
-  pdfPath        String?         @map("pdf_path")
-  prismcorePath  String?         @map("prismcore_path")
-  createdAt      DateTime        @default(now()) @map("created_at")
+  notes             String?
+  pdfPath           String?         @map("pdf_path")
+  prismcorePath     String?         @map("prismcore_path")
+  isRecurring       Boolean         @default(false) @map("is_recurring")
+  recurringInterval String?         @map("recurring_interval")
+  nextRecurringDate DateTime?       @map("next_recurring_date") @db.Date
+  recurringEmail    String?         @map("recurring_email")
+  createdAt         DateTime        @default(now()) @map("created_at")
   updatedAt      DateTime        @updatedAt @map("updated_at")
 
   creator  User          @relation(fields: [createdBy], references: [id])

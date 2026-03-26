@@ -57,6 +57,9 @@ interface Invoice {
   totalAmount: string | number;
   notes: string | null;
   prismcorePath: string | null;
+  isRecurring: boolean;
+  recurringInterval: string | null;
+  recurringEmail: string | null;
   staff: {
     id: string;
     name: string;
@@ -202,6 +205,11 @@ export function InvoiceDetailView({ id }: { id: string }) {
           <Badge variant={isFinal ? "default" : "outline"}>
             {isFinal ? "Final" : "Draft"}
           </Badge>
+          {invoice.isRecurring && (
+            <Badge variant="secondary">
+              Recurring{invoice.recurringInterval ? ` · ${invoice.recurringInterval.charAt(0).toUpperCase() + invoice.recurringInterval.slice(1)}` : ""}
+            </Badge>
+          )}
 
           {isDraft && (
             <Link
@@ -321,6 +329,24 @@ export function InvoiceDetailView({ id }: { id: string }) {
                 <span className="text-muted-foreground">—</span>
               )}
             </div>
+            {invoice.isRecurring && (
+              <>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Recurring</span>
+                  <Badge variant="secondary">
+                    {invoice.recurringInterval
+                      ? invoice.recurringInterval.charAt(0).toUpperCase() + invoice.recurringInterval.slice(1)
+                      : "Yes"}
+                  </Badge>
+                </div>
+                {invoice.recurringEmail && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Recurring Email</span>
+                    <span>{invoice.recurringEmail}</span>
+                  </div>
+                )}
+              </>
+            )}
 
             {invoice.notes && (
               <>
