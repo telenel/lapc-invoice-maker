@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
     const rows = invoices.map((inv) => {
       const itemDescriptions = inv.items.map((item) => item.description).join("; ");
       return [
-        inv.invoiceNumber,
+        inv.invoiceNumber ?? "",
         new Date(inv.date).toISOString().split("T")[0],
         inv.category,
         inv.staff.name,

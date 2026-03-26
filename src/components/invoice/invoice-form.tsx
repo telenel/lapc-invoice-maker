@@ -481,6 +481,48 @@ export function useInvoiceForm(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form, router]);
 
+  const savePendingCharge = useCallback(async () => {
+    setSaving(true);
+    try {
+      const payload = {
+        ...buildPayload(),
+        invoiceNumber: null,
+        status: "PENDING_CHARGE",
+      };
+
+      const res = await fetch("/api/invoices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        const fieldErrors = (data?.error?.fieldErrors ?? {}) as Record<
+          string,
+          string[]
+        >;
+        const firstFieldError = Object.values(fieldErrors)[0]?.[0];
+        const msg =
+          (data?.error?.formErrors as string[] | undefined)?.[0] ??
+          firstFieldError ??
+          "Failed to save invoice";
+        throw new Error(msg);
+      }
+
+      const invoice = await res.json();
+      toast.success("Saved — charge at register when ready");
+      router.push(`/invoices/${invoice.id}`);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to save invoice"
+      );
+    } finally {
+      setSaving(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form, router]);
+
   return {
     form,
     updateField,
@@ -493,6 +535,7 @@ export function useInvoiceForm(
     staffAccountNumbers,
     saveDraft,
     saveAndFinalize,
+    savePendingCharge,
     saving,
     generationStep,
   };

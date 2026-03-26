@@ -43,6 +43,14 @@ export async function POST(
       return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
     }
 
+    // Block finalization if invoice number is missing
+    if (!invoice.invoiceNumber) {
+      return NextResponse.json(
+        { error: "Enter the AG invoice number before finalizing" },
+        { status: 400 }
+      );
+    }
+
     // Allow re-finalization to regenerate PDFs
 
     const body = await request.json().catch(() => ({}));
@@ -88,7 +96,7 @@ export async function POST(
       coverSheet: {
         date: dateStr,
         semesterYearDept: semesterYearDept ?? invoice.department,
-        invoiceNumber: invoice.invoiceNumber,
+        invoiceNumber: invoice.invoiceNumber ?? "",
         chargeAccountNumber: invoice.accountNumber || invoice.accountCode,
         accountCode: invoice.accountCode,
         totalAmount: totalStr,
@@ -97,7 +105,7 @@ export async function POST(
       idp: {
         date: dateStr,
         department: invoice.department,
-        documentNumber: invoice.invoiceNumber,
+        documentNumber: invoice.invoiceNumber ?? "",
         requestingDept: invoice.department,
         sapAccount: invoice.accountNumber || invoice.accountCode,
         estimatedCost: totalStr,

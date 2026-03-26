@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { invoiceCreateSchema } from "@/lib/validators";
 import { Prisma } from "@/generated/prisma/client";
+import { quoteCreateSchema } from "@/lib/validators";
+import { generateQuoteNumber } from "@/lib/quote-number";
 
 export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -13,30 +14,33 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
 
     const search = searchParams.get("search") ?? undefined;
-    const status = searchParams.get("status") as "DRAFT" | "FINAL" | null;
-    const staffId = searchParams.get("staffId") ?? undefined;
+    const quoteStatus = searchParams.get("quoteStatus") ?? undefined;
     const department = searchParams.get("department") ?? undefined;
     const dateFrom = searchParams.get("dateFrom") ?? undefined;
     const dateTo = searchParams.get("dateTo") ?? undefined;
     const category = searchParams.get("category") ?? undefined;
-    const amountMin = searchParams.get("amountMin") ?? undefined;
-    const amountMax = searchParams.get("amountMax") ?? undefined;
     const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
     const pageSize = Math.max(1, parseInt(searchParams.get("pageSize") ?? "20", 10));
     const sortBy = searchParams.get("sortBy") ?? "createdAt";
     const sortDir = (searchParams.get("sortDir") ?? "desc") as "asc" | "desc";
 
-    const allowedSortFields = ["createdAt", "updatedAt", "date", "invoiceNumber", "totalAmount", "department", "status"];
+    const allowedSortFields = ["createdAt", "updatedAt", "date", "quoteNumber", "totalAmount", "department", "expirationDate"];
     const orderByField = allowedSortFields.includes(sortBy) ? sortBy : "createdAt";
 
-    const where: Prisma.InvoiceWhereInput = {};
-    where.type = "INVOICE";
+    const where: Prisma.InvoiceWhereInput = { type: "QUOTE" };
 
-    if (status) {
-      where.status = status;
-    }
-    if (staffId) {
-      where.staffId = staffId;
+    // Auto-expire: update any DRAFT or SENT quotes past expiration
+    await prisma.invoice.updateMany({
+      where: {
+        type: "QUOTE",
+        quoteStatus: { in: ["DRAFT", "SENT"] },
+        expirationDate: { lt: new Date() },
+      },
+      data: { quoteStatus: "EXPIRED" },
+    });
+
+    if (quoteStatus && quoteStatus !== "all") {
+      where.quoteStatus = quoteStatus as Prisma.InvoiceWhereInput["quoteStatus"];
     }
     if (department) {
       where.department = { contains: department, mode: "insensitive" };
@@ -49,21 +53,18 @@ export async function GET(request: NextRequest) {
       if (dateFrom) where.date.gte = new Date(dateFrom);
       if (dateTo) where.date.lte = new Date(dateTo);
     }
-    if (amountMin || amountMax) {
-      where.totalAmount = {};
-      if (amountMin) where.totalAmount.gte = amountMin;
-      if (amountMax) where.totalAmount.lte = amountMax;
-    }
     if (search) {
       where.OR = [
-        { invoiceNumber: { contains: search, mode: "insensitive" } },
+        { quoteNumber: { contains: search, mode: "insensitive" } },
         { department: { contains: search, mode: "insensitive" } },
+        { recipientName: { contains: search, mode: "insensitive" } },
+        { recipientOrg: { contains: search, mode: "insensitive" } },
         { staff: { name: { contains: search, mode: "insensitive" } } },
         { items: { some: { description: { contains: search, mode: "insensitive" } } } },
       ];
     }
 
-    const [invoices, total] = await prisma.$transaction([
+    const [quotes, total] = await prisma.$transaction([
       prisma.invoice.findMany({
         where,
         include: {
@@ -77,9 +78,9 @@ export async function GET(request: NextRequest) {
       prisma.invoice.count({ where }),
     ]);
 
-    return NextResponse.json({ invoices, total, page, pageSize });
+    return NextResponse.json({ quotes, total, page, pageSize });
   } catch (err) {
-    console.error("GET /api/invoices failed:", err);
+    console.error("GET /api/quotes failed:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
@@ -89,16 +90,14 @@ export async function POST(request: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();
-  const parsed = invoiceCreateSchema.safeParse(body);
+  const parsed = quoteCreateSchema.safeParse(body);
 
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { items, date, status, invoiceNumber, ...invoiceData } = parsed.data;
+  const { items, date, expirationDate, ...quoteData } = parsed.data;
   const createdBy = (session.user as { id: string }).id;
-  // Convert empty/null invoice number to null (avoids unique constraint on empty strings)
-  const normalizedInvoiceNumber = invoiceNumber || null;
 
   const calculatedItems = items.map((item) => {
     const extendedPrice = Number(item.quantity) * Number(item.unitPrice);
@@ -106,14 +105,17 @@ export async function POST(request: NextRequest) {
   });
 
   const totalAmount = calculatedItems.reduce((sum, item) => sum + Number(item.extendedPrice), 0);
+  const quoteNumber = await generateQuoteNumber();
 
   try {
-    const invoice = await prisma.invoice.create({
+    const quote = await prisma.invoice.create({
       data: {
-        ...invoiceData,
-        invoiceNumber: normalizedInvoiceNumber,
-        ...(status ? { status } : {}),
+        ...quoteData,
+        type: "QUOTE",
+        quoteStatus: "DRAFT",
+        quoteNumber,
         date: new Date(date),
+        expirationDate: new Date(expirationDate),
         createdBy,
         totalAmount,
         items: {
@@ -133,32 +135,15 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Save/update the account number for this staff member
-    if (invoiceData.accountNumber && invoiceData.staffId) {
-      await prisma.staffAccountNumber.upsert({
-        where: {
-          staffId_accountCode: {
-            staffId: invoiceData.staffId,
-            accountCode: invoiceData.accountNumber,
-          },
-        },
-        update: { lastUsedAt: new Date() },
-        create: {
-          staffId: invoiceData.staffId,
-          accountCode: invoiceData.accountNumber,
-        },
-      }).catch(() => {}); // Non-critical, don't fail the invoice
-    }
-
-    return NextResponse.json(invoice, { status: 201 });
+    return NextResponse.json(quote, { status: 201 });
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
       return NextResponse.json(
-        { error: "An invoice with this number already exists" },
+        { error: "A quote with this number already exists" },
         { status: 409 }
       );
     }
-    console.error("POST /api/invoices failed:", err);
+    console.error("POST /api/quotes failed:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

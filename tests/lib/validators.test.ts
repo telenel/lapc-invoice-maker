@@ -214,12 +214,12 @@ describe("invoiceCreateSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects empty invoice number", () => {
+  it("accepts empty invoice number (defaults for quote-converted invoices)", () => {
     const result = invoiceCreateSchema.safeParse({
       ...validInvoiceBase,
       invoiceNumber: "",
     });
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 
   it("rejects missing category", () => {

@@ -38,7 +38,7 @@ export async function GET(
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="${invoice.invoiceNumber}.pdf"`,
+        "Content-Disposition": `inline; filename="${invoice.invoiceNumber ?? "invoice"}.pdf"`,
         "Content-Length": pdfBuffer.length.toString(),
       },
     });

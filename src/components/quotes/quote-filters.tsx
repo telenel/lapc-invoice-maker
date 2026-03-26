@@ -12,9 +12,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export interface InvoiceFilters {
+export interface QuoteFilters {
   search: string;
-  status: string;
+  quoteStatus: string;
   category: string;
   department: string;
   dateFrom: string;
@@ -23,19 +23,19 @@ export interface InvoiceFilters {
   amountMax: string;
 }
 
-interface InvoiceFiltersProps {
-  filters: InvoiceFilters;
+interface QuoteFiltersProps {
+  filters: QuoteFilters;
   departments: string[];
-  onChange: (filters: InvoiceFilters) => void;
+  onChange: (filters: QuoteFilters) => void;
   onClear: () => void;
 }
 
-export function InvoiceFiltersBar({
+export function QuoteFiltersBar({
   filters,
   departments,
   onChange,
   onClear,
-}: InvoiceFiltersProps) {
+}: QuoteFiltersProps) {
   const [categories, setCategories] = useState<{ name: string; label: string }[]>([]);
 
   useEffect(() => {
@@ -45,7 +45,7 @@ export function InvoiceFiltersBar({
       .catch(() => {});
   }, []);
 
-  function set(key: keyof InvoiceFilters, value: string) {
+  function set(key: keyof QuoteFilters, value: string) {
     onChange({ ...filters, [key]: value });
   }
 
@@ -54,11 +54,11 @@ export function InvoiceFiltersBar({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {/* Search */}
         <div className="grid gap-1.5 lg:col-span-2">
-          <Label htmlFor="invoice-search">Search</Label>
+          <Label htmlFor="quote-search">Search</Label>
           <Input
-            id="invoice-search"
+            id="quote-search"
             name="search"
-            placeholder="Invoice #, staff, department…"
+            placeholder="Quote #, recipient, department..."
             value={filters.search}
             onChange={(e) => set("search", e.target.value)}
           />
@@ -68,8 +68,8 @@ export function InvoiceFiltersBar({
         <div className="grid gap-1.5">
           <Label>Status</Label>
           <Select
-            value={filters.status || null}
-            onValueChange={(value) => set("status", value ?? "")}
+            value={filters.quoteStatus || null}
+            onValueChange={(value) => set("quoteStatus", value ?? "")}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="All statuses" />
@@ -77,8 +77,10 @@ export function InvoiceFiltersBar({
             <SelectContent>
               <SelectItem value="all">All</SelectItem>
               <SelectItem value="DRAFT">Draft</SelectItem>
-              <SelectItem value="FINAL">Final</SelectItem>
-              <SelectItem value="PENDING_CHARGE">Pending Charge</SelectItem>
+              <SelectItem value="SENT">Sent</SelectItem>
+              <SelectItem value="ACCEPTED">Accepted</SelectItem>
+              <SelectItem value="DECLINED">Declined</SelectItem>
+              <SelectItem value="EXPIRED">Expired</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -129,9 +131,9 @@ export function InvoiceFiltersBar({
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {/* Date From */}
         <div className="grid gap-1.5">
-          <Label htmlFor="invoice-date-from">From</Label>
+          <Label htmlFor="quote-date-from">From</Label>
           <Input
-            id="invoice-date-from"
+            id="quote-date-from"
             name="dateFrom"
             type="date"
             value={filters.dateFrom}
@@ -141,9 +143,9 @@ export function InvoiceFiltersBar({
 
         {/* Date To */}
         <div className="grid gap-1.5">
-          <Label htmlFor="invoice-date-to">To</Label>
+          <Label htmlFor="quote-date-to">To</Label>
           <Input
-            id="invoice-date-to"
+            id="quote-date-to"
             name="dateTo"
             type="date"
             value={filters.dateTo}
@@ -153,9 +155,9 @@ export function InvoiceFiltersBar({
 
         {/* Amount Min */}
         <div className="grid gap-1.5">
-          <Label htmlFor="invoice-amount-min">Min Amount</Label>
+          <Label htmlFor="quote-amount-min">Min Amount</Label>
           <Input
-            id="invoice-amount-min"
+            id="quote-amount-min"
             name="amountMin"
             type="number"
             step="0.01"
@@ -168,9 +170,9 @@ export function InvoiceFiltersBar({
 
         {/* Amount Max */}
         <div className="grid gap-1.5">
-          <Label htmlFor="invoice-amount-max">Max Amount</Label>
+          <Label htmlFor="quote-amount-max">Max Amount</Label>
           <Input
-            id="invoice-amount-max"
+            id="quote-amount-max"
             name="amountMax"
             type="number"
             step="0.01"

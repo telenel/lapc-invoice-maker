@@ -29,6 +29,7 @@ interface ApiInvoice {
   contactPhone: string | null;
   semesterYearDept: string | null;
   notes: string | null;
+  status: string;
   prismcorePath: string | null;
   isRecurring: boolean;
   recurringInterval: string | null;
@@ -77,6 +78,7 @@ export default function EditInvoicePage() {
   const [initialData, setInitialData] = useState<InvoiceFormData | null>(null);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [isPendingCharge, setIsPendingCharge] = useState(false);
 
   // Fetch existing invoice data
   useEffect(() => {
@@ -96,6 +98,7 @@ export default function EditInvoicePage() {
       })
       .then((invoice: ApiInvoice) => {
         setInitialData(mapApiToFormData(invoice));
+        setIsPendingCharge(invoice.status === "PENDING_CHARGE");
       })
       .catch((err: unknown) => {
         setFetchError(
@@ -127,8 +130,10 @@ export default function EditInvoicePage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
-      <h1 className="text-2xl font-semibold mb-6">Edit Invoice</h1>
-      <KeyboardMode {...invoiceForm} />
+      <h1 className="text-2xl font-semibold mb-6">
+        {isPendingCharge ? "Complete POS Charge" : "Edit Invoice"}
+      </h1>
+      <KeyboardMode {...invoiceForm} isPendingCharge={isPendingCharge} />
     </div>
   );
 }
