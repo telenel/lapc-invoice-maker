@@ -18,12 +18,17 @@ export async function PUT(
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const quickPick = await prisma.quickPickItem.update({
-    where: { id: params.id },
-    data: parsed.data,
-  });
+  try {
+    const quickPick = await prisma.quickPickItem.update({
+      where: { id: params.id },
+      data: parsed.data,
+    });
 
-  return NextResponse.json(quickPick);
+    return NextResponse.json(quickPick);
+  } catch (err) {
+    console.error("PUT /api/quick-picks/[id] failed:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function DELETE(
@@ -33,7 +38,12 @@ export async function DELETE(
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  await prisma.quickPickItem.delete({ where: { id: params.id } });
+  try {
+    await prisma.quickPickItem.delete({ where: { id: params.id } });
 
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("DELETE /api/quick-picks/[id] failed:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

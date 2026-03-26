@@ -7,15 +7,20 @@ export async function GET(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { searchParams } = new URL(request.url);
-  const all = searchParams.get("all") === "true";
+  try {
+    const { searchParams } = new URL(request.url);
+    const all = searchParams.get("all") === "true";
 
-  const categories = await prisma.category.findMany({
-    where: all ? undefined : { active: true },
-    orderBy: { sortOrder: "asc" },
-  });
+    const categories = await prisma.category.findMany({
+      where: all ? undefined : { active: true },
+      orderBy: { sortOrder: "asc" },
+    });
 
-  return NextResponse.json(categories);
+    return NextResponse.json(categories);
+  } catch (err) {
+    console.error("GET /api/categories failed:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -29,9 +34,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "name and label are required" }, { status: 400 });
   }
 
-  const category = await prisma.category.create({
-    data: { name, label },
-  });
+  try {
+    const category = await prisma.category.create({
+      data: { name, label },
+    });
 
-  return NextResponse.json(category, { status: 201 });
+    return NextResponse.json(category, { status: 201 });
+  } catch (err) {
+    console.error("POST /api/categories failed:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

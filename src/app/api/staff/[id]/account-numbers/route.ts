@@ -12,12 +12,17 @@ export async function GET(
   if (!session)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const accounts = await prisma.staffAccountNumber.findMany({
-    where: { staffId: params.id },
-    orderBy: { lastUsedAt: "desc" },
-  });
+  try {
+    const accounts = await prisma.staffAccountNumber.findMany({
+      where: { staffId: params.id },
+      orderBy: { lastUsedAt: "desc" },
+    });
 
-  return NextResponse.json(accounts);
+    return NextResponse.json(accounts);
+  } catch (err) {
+    console.error("GET /api/staff/[id]/account-numbers failed:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
 
 // POST /api/staff/:id/account-numbers — add or update an account number
@@ -42,24 +47,29 @@ export async function POST(
     );
   }
 
-  // Upsert: create if new, update lastUsedAt + description if exists
-  const account = await prisma.staffAccountNumber.upsert({
-    where: {
-      staffId_accountCode: {
+  try {
+    // Upsert: create if new, update lastUsedAt + description if exists
+    const account = await prisma.staffAccountNumber.upsert({
+      where: {
+        staffId_accountCode: {
+          staffId: params.id,
+          accountCode: accountCode.trim(),
+        },
+      },
+      update: {
+        lastUsedAt: new Date(),
+        ...(description !== undefined ? { description } : {}),
+      },
+      create: {
         staffId: params.id,
         accountCode: accountCode.trim(),
+        description: description?.trim() ?? "",
       },
-    },
-    update: {
-      lastUsedAt: new Date(),
-      ...(description !== undefined ? { description } : {}),
-    },
-    create: {
-      staffId: params.id,
-      accountCode: accountCode.trim(),
-      description: description?.trim() ?? "",
-    },
-  });
+    });
 
-  return NextResponse.json(account, { status: 201 });
+    return NextResponse.json(account, { status: 201 });
+  } catch (err) {
+    console.error("POST /api/staff/[id]/account-numbers failed:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }
