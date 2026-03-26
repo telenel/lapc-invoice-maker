@@ -97,7 +97,10 @@ function defaultForm(): InvoiceFormData {
 // Hook
 // ---------------------------------------------------------------------------
 
-export function useInvoiceForm(initial?: Partial<InvoiceFormData>) {
+export function useInvoiceForm(
+  initial?: Partial<InvoiceFormData>,
+  existingId?: string
+) {
   const router = useRouter();
 
   const [form, setForm] = useState<InvoiceFormData>(() => ({
@@ -172,9 +175,8 @@ export function useInvoiceForm(initial?: Partial<InvoiceFormData>) {
 
   // ---------- Save helpers ----------
 
-  /** POST to /api/invoices, returns the created invoice id */
-  async function postDraft(): Promise<string> {
-    const payload = {
+  function buildPayload() {
+    return {
       invoiceNumber: form.invoiceNumber,
       date: form.date,
       staffId: form.staffId,
@@ -189,11 +191,14 @@ export function useInvoiceForm(initial?: Partial<InvoiceFormData>) {
         sortOrder: item.sortOrder ?? i,
       })),
     };
+  }
 
+  /** POST to /api/invoices, returns the created invoice id */
+  async function postDraft(): Promise<string> {
     const res = await fetch("/api/invoices", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(buildPayload()),
     });
 
     if (!res.ok) {
@@ -214,10 +219,37 @@ export function useInvoiceForm(initial?: Partial<InvoiceFormData>) {
     return invoice.id as string;
   }
 
+  /** PUT to /api/invoices/{existingId}, returns the invoice id */
+  async function putDraft(id: string): Promise<string> {
+    const res = await fetch(`/api/invoices/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(buildPayload()),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      const fieldErrors = (data?.error?.fieldErrors ?? {}) as Record<
+        string,
+        string[]
+      >;
+      const firstFieldError = Object.values(fieldErrors)[0]?.[0];
+      const msg =
+        (data?.error?.formErrors as string[] | undefined)?.[0] ??
+        firstFieldError ??
+        data?.error ??
+        "Failed to save invoice";
+      throw new Error(msg);
+    }
+
+    const invoice = await res.json();
+    return invoice.id as string;
+  }
+
   const saveDraft = useCallback(async () => {
     setSaving(true);
     try {
-      const id = await postDraft();
+      const id = existingId ? await putDraft(existingId) : await postDraft();
       toast.success("Draft saved");
       router.push(`/invoices/${id}`);
     } catch (err) {
@@ -226,7 +258,7 @@ export function useInvoiceForm(initial?: Partial<InvoiceFormData>) {
       setSaving(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form, router]);
+  }, [form, router, existingId]);
 
   const saveAndFinalize = useCallback(async () => {
     setSaving(true);
