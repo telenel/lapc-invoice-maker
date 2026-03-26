@@ -11,7 +11,7 @@ export async function PUT(
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await request.json();
-  const { name, label, sortOrder } = body;
+  const { name, label, sortOrder, active } = body;
 
   const category = await prisma.category.update({
     where: { id: params.id },
@@ -19,6 +19,7 @@ export async function PUT(
       ...(name !== undefined && { name }),
       ...(label !== undefined && { label }),
       ...(sortOrder !== undefined && { sortOrder }),
+      ...(active !== undefined && { active }),
     },
   });
 

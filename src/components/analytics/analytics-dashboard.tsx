@@ -6,12 +6,14 @@ import { CategoryChart } from "./category-chart";
 import { MonthlyTotalsChart } from "./monthly-totals-chart";
 import { DepartmentSpendChart } from "./department-spend-chart";
 import { InvoiceTrendChart } from "./invoice-trend-chart";
+import { UserChart } from "./user-chart";
 
 interface AnalyticsData {
   byCategory: { category: string; count: number; total: number }[];
   byMonth: { month: string; count: number; total: number }[];
   byDepartment: { department: string; count: number; total: number }[];
   trend: { month: string; count: number }[];
+  byUser: { user: string; count: number; total: number }[];
 }
 
 function getDefaultDateRange() {
@@ -94,7 +96,7 @@ export function AnalyticsDashboard() {
 
       {loading ? (
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {[1, 2, 3, 4].map((i) => (
+          {[1, 2, 3, 4, 5].map((i) => (
             <Card key={i}>
               <CardHeader>
                 <div className="h-5 w-40 animate-pulse rounded bg-muted" />
@@ -140,6 +142,15 @@ export function AnalyticsDashboard() {
             </CardHeader>
             <CardContent>
               <InvoiceTrendChart data={data.trend} />
+            </CardContent>
+          </Card>
+
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle>Invoices by User</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <UserChart data={data.byUser} />
             </CardContent>
           </Card>
         </div>
