@@ -119,18 +119,18 @@ export async function POST(request: NextRequest) {
     });
 
     // Save/update the account number for this staff member
-    if (invoiceData.accountCode && invoiceData.staffId) {
+    if (invoiceData.accountNumber && invoiceData.staffId) {
       await prisma.staffAccountNumber.upsert({
         where: {
           staffId_accountCode: {
             staffId: invoiceData.staffId,
-            accountCode: invoiceData.accountCode,
+            accountCode: invoiceData.accountNumber,
           },
         },
         update: { lastUsedAt: new Date() },
         create: {
           staffId: invoiceData.staffId,
-          accountCode: invoiceData.accountCode,
+          accountCode: invoiceData.accountNumber,
         },
       }).catch(() => {}); // Non-critical, don't fail the invoice
     }

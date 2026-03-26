@@ -24,6 +24,7 @@ export const invoiceCreateSchema = z.object({
   staffId: z.string().min(1, "Staff member is required"),
   department: z.string().min(1, "Department is required"),
   accountCode: z.string().default(""),
+  accountNumber: z.string().default(""),
   approvalChain: z.array(z.string()).default([]),
   notes: z.string().default(""),
   items: z.array(invoiceItemSchema).min(1, "At least one item is required"),

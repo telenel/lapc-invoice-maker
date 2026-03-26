@@ -157,12 +157,21 @@ export function WizardMode({
               </div>
               <div className="space-y-1">
                 <AccountSelect
-                  value={form.accountCode}
-                  onChange={(v) => updateField("accountCode", v)}
+                  value={form.accountNumber}
+                  onChange={(v) => updateField("accountNumber", v)}
                   staffId={form.staffId}
                   accountNumbers={staffAccountNumbers}
                 />
               </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label>Account Code</Label>
+              <Input
+                value={form.accountCode}
+                onChange={(e) => updateField("accountCode", e.target.value)}
+                placeholder="Account code"
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -282,6 +291,9 @@ export function WizardMode({
 
               <div className="text-muted-foreground">Department</div>
               <div className="font-medium">{form.department || "—"}</div>
+
+              <div className="text-muted-foreground">Account Number</div>
+              <div className="font-medium">{form.accountNumber || "—"}</div>
 
               <div className="text-muted-foreground">Account Code</div>
               <div className="font-medium">{form.accountCode || "—"}</div>

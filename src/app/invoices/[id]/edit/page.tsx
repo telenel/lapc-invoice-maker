@@ -26,6 +26,7 @@ interface ApiInvoice {
   staffId: string;
   department: string;
   accountCode: string;
+  accountNumber: string;
   approvalChain: string[];
   contactName: string | null;
   contactExtension: string | null;
@@ -46,6 +47,7 @@ function mapApiToFormData(invoice: ApiInvoice): InvoiceFormData {
     staffId: invoice.staffId ?? "",
     department: invoice.department ?? "",
     accountCode: invoice.accountCode ?? "",
+    accountNumber: invoice.accountNumber ?? "",
     approvalChain: invoice.approvalChain ?? [],
     contactName: invoice.contactName ?? "",
     contactExtension: invoice.contactExtension ?? "",

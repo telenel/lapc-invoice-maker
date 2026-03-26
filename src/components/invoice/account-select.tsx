@@ -45,7 +45,7 @@ export function AccountSelect({
 
   return (
     <div className="space-y-2">
-      <Label>Account Code</Label>
+      <Label>Account Number</Label>
 
       {/* Dropdown of saved accounts */}
       {accountNumbers.length > 0 && (

@@ -23,6 +23,7 @@ export interface InvoiceFormData {
   staffId: string;
   department: string;
   accountCode: string;
+  accountNumber: string;
   approvalChain: string[];
   // Contact / display fields (autofilled from staff, editable)
   contactName: string;
@@ -88,6 +89,7 @@ function defaultForm(): InvoiceFormData {
     staffId: "",
     department: "",
     accountCode: "",
+    accountNumber: "",
     approvalChain: [],
     contactName: "",
     contactExtension: "",
@@ -179,7 +181,8 @@ export function useInvoiceForm(
       ...prev,
       staffId: staff.id,
       department: staff.department,
-      accountCode: latestAccount?.accountCode ?? staff.accountCode,
+      accountNumber: latestAccount?.accountCode ?? "",
+      accountCode: staff.accountCode,
       contactName: staff.name,
       contactExtension: staff.extension,
       contactEmail: staff.email,
@@ -197,6 +200,7 @@ export function useInvoiceForm(
       staffId: form.staffId,
       department: form.department,
       accountCode: form.accountCode,
+      accountNumber: form.accountNumber,
       approvalChain: form.approvalChain,
       notes: form.notes,
       items: form.items.map((item, i) => ({

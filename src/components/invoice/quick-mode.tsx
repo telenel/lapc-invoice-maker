@@ -99,12 +99,21 @@ export function QuickMode({
             </div>
             <div className="space-y-1">
               <AccountSelect
-                value={form.accountCode}
-                onChange={(v) => updateField("accountCode", v)}
+                value={form.accountNumber}
+                onChange={(v) => updateField("accountNumber", v)}
                 staffId={form.staffId}
                 accountNumbers={staffAccountNumbers}
               />
             </div>
+          </div>
+
+          <div className="space-y-1">
+            <Label>Account Code</Label>
+            <Input
+              value={form.accountCode}
+              onChange={(e) => updateField("accountCode", e.target.value)}
+              placeholder="Account code"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
