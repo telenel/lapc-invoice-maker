@@ -45,6 +45,10 @@ interface InvoicesResponse {
   pageSize: number;
 }
 
+function getInitials(name: string): string {
+  return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+}
+
 const EMPTY_FILTERS: InvoiceFilters = {
   search: "",
   status: "",
@@ -208,83 +212,80 @@ export function InvoiceTable() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead
-                  className="cursor-pointer select-none"
-                  onClick={() => handleSort("invoiceNumber")}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSort("invoiceNumber"); } }}
-                >
-                  Invoice #{sortIndicator("invoiceNumber")}
+                <TableHead>
+                  <div className="flex gap-4">
+                    <button
+                      className="cursor-pointer select-none text-xs font-medium hover:text-foreground transition-colors"
+                      onClick={() => handleSort("invoiceNumber")}
+                    >
+                      Invoice #{sortIndicator("invoiceNumber")}
+                    </button>
+                    <button
+                      className="cursor-pointer select-none text-xs font-medium hover:text-foreground transition-colors"
+                      onClick={() => handleSort("date")}
+                    >
+                      Date{sortIndicator("date")}
+                    </button>
+                  </div>
                 </TableHead>
-                <TableHead
-                  className="cursor-pointer select-none"
-                  onClick={() => handleSort("date")}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSort("date"); } }}
-                >
-                  Date{sortIndicator("date")}
+                <TableHead className="text-right">
+                  <button
+                    className="cursor-pointer select-none text-xs font-medium hover:text-foreground transition-colors"
+                    onClick={() => handleSort("totalAmount")}
+                  >
+                    Amount{sortIndicator("totalAmount")}
+                  </button>
                 </TableHead>
-                <TableHead>Staff</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead
-                  className="cursor-pointer select-none text-right"
-                  onClick={() => handleSort("totalAmount")}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSort("totalAmount"); } }}
-                >
-                  Amount{sortIndicator("totalAmount")}
-                </TableHead>
-                <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {invoices.map((invoice) => (
                 <TableRow
                   key={invoice.id}
-                  className="cursor-pointer"
+                  className="cursor-pointer group"
                   onClick={() => router.push(`/invoices/${invoice.id}`)}
                   role="link"
                   tabIndex={0}
                   onKeyDown={(e) => { if (e.key === "Enter") router.push(`/invoices/${invoice.id}`); }}
                 >
-                  <TableCell className="font-bold">
-                    <span className="flex items-center gap-1">
-                      {invoice.invoiceNumber}
-                      {invoice.isRecurring && (
-                        <span title="Recurring invoice">
-                          <RefreshCwIcon className="size-3 text-muted-foreground shrink-0" aria-hidden="true" />
-                        </span>
-                      )}
-                    </span>
-                  </TableCell>
-                  <TableCell>{formatDate(invoice.date)}</TableCell>
-                  <TableCell>{invoice.staff.name}</TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{invoice.department}</Badge>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-muted text-[11px] font-bold text-muted-foreground shrink-0">
+                        {getInitials(invoice.staff.name)}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-semibold truncate">
+                          <span className="inline-flex items-center gap-1">
+                            {invoice.invoiceNumber} · {invoice.staff.name}
+                            {invoice.isRecurring && (
+                              <span title="Recurring invoice">
+                                <RefreshCwIcon className="size-3 text-muted-foreground shrink-0" aria-hidden="true" />
+                              </span>
+                            )}
+                          </span>
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {invoice.department} · {formatDate(invoice.date)}
+                          {invoice.category && (
+                            <> · {invoice.category.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}</>
+                          )}
+                        </p>
+                      </div>
+                    </div>
                   </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      {invoice.category
-                        ? invoice.category.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())
-                        : "—"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatAmount(invoice.totalAmount)}
-                  </TableCell>
-                  <TableCell>
+                  <TableCell className="text-right">
+                    <p className="text-[13px] font-bold tabular-nums">
+                      {formatAmount(invoice.totalAmount)}
+                    </p>
                     <Badge
                       variant={
                         invoice.status === "FINAL"
-                          ? "default"
+                          ? "success"
                           : invoice.status === "PENDING_CHARGE"
-                            ? "secondary"
-                            : "outline"
+                            ? "info"
+                            : "warning"
                       }
+                      className="mt-0.5"
                     >
                       {invoice.status === "FINAL"
                         ? "Final"
