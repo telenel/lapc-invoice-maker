@@ -1,17 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface Invoice {
   id: string;
@@ -19,11 +13,15 @@ interface Invoice {
   date: string;
   department: string;
   totalAmount: number;
-  status: "DRAFT" | "FINAL";
+  status: "DRAFT" | "FINAL" | "PENDING_CHARGE";
   staff: {
     id: string;
     name: string;
   };
+}
+
+function getInitials(name: string): string {
+  return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 }
 
 export function RecentInvoices() {
@@ -51,62 +49,61 @@ export function RecentInvoices() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold tracking-tight">Recent Invoices</CardTitle>
+      <CardHeader className="border-b border-border/50">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-bold">Recent Invoices</CardTitle>
+          <Link
+            href="/invoices"
+            className="text-[11px] font-semibold text-primary hover:text-primary/80 transition-colors"
+          >
+            View all →
+          </Link>
+        </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         {loading ? (
-          <p className="text-sm text-muted-foreground">Loading...</p>
+          <p className="text-sm text-muted-foreground p-4">Loading...</p>
         ) : invoices.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No invoices yet</p>
+          <p className="text-sm text-muted-foreground p-4">No invoices yet</p>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Invoice #</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Staff</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {invoices.map((invoice) => (
-                <TableRow
-                  key={invoice.id}
-                  className="cursor-pointer hover:bg-accent/50"
-                  onClick={() => router.push(`/invoices/${invoice.id}`)}
-                  role="link"
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === "Enter") router.push(`/invoices/${invoice.id}`); }}
-                >
-                  <TableCell className="font-medium">
-                    {invoice.invoiceNumber}
-                  </TableCell>
-                  <TableCell>
-                    {new Date(invoice.date).toLocaleDateString("en-US")}
-                  </TableCell>
-                  <TableCell>{invoice.staff.name}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{invoice.department}</Badge>
-                  </TableCell>
-                  <TableCell className="text-right font-mono tabular-nums">
-                    ${Number(invoice.totalAmount).toFixed(2)}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        invoice.status === "DRAFT" ? "outline" : "default"
-                      }
-                    >
-                      {invoice.status}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <div>
+            {invoices.map((invoice, i) => (
+              <div
+                key={invoice.id}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-muted/50",
+                  i < invoices.length - 1 && "border-b border-border/30"
+                )}
+                onClick={() => router.push(`/invoices/${invoice.id}`)}
+                role="link"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === "Enter") router.push(`/invoices/${invoice.id}`); }}
+              >
+                <div className="flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-muted text-[11px] font-bold text-muted-foreground shrink-0">
+                  {getInitials(invoice.staff.name)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-semibold truncate">
+                    {invoice.invoiceNumber} · {invoice.staff.name}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {invoice.department} · {new Date(invoice.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-[13px] font-bold tabular-nums">
+                    ${Number(invoice.totalAmount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </p>
+                  <Badge
+                    variant={invoice.status === "FINAL" ? "success" : invoice.status === "PENDING_CHARGE" ? "info" : "warning"}
+                    className="mt-0.5"
+                  >
+                    {invoice.status === "FINAL" ? "Final" : invoice.status === "PENDING_CHARGE" ? "Pending" : "Draft"}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </CardContent>
     </Card>
