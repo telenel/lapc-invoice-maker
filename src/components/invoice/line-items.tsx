@@ -1,12 +1,14 @@
 "use client";
 
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useCallback } from "react";
 import { InvoiceItem } from "./invoice-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Bookmark } from "lucide-react";
-import { toast } from "sonner";
+import { Star } from "lucide-react";
+import { InlineCombobox } from "@/components/ui/inline-combobox";
+import type { ComboboxItem } from "@/components/ui/inline-combobox";
+import { cn } from "@/lib/utils";
 
 interface LineItemsProps {
   items: InvoiceItem[];
@@ -19,6 +21,12 @@ interface LineItemsProps {
   firstDescriptionRef?: React.RefObject<HTMLInputElement | null>;
   /** Called when a quick-pick fills a row so we can focus its qty field */
   focusQtyForRow?: (index: number) => void;
+  /** Autocomplete suggestions for description field */
+  suggestions?: { description: string; unitPrice: number }[];
+  /** Descriptions in user's quick picks (for star state) */
+  userPickDescriptions?: Set<string>;
+  /** Called when user stars/unstars a line item */
+  onTogglePick?: (description: string, unitPrice: number, department: string) => void;
 }
 
 export function LineItems({
@@ -28,61 +36,36 @@ export function LineItems({
   onRemove,
   total,
   department,
-  firstDescriptionRef,
-  focusQtyForRow,
+  // firstDescriptionRef and focusQtyForRow are accepted for API compatibility
+  // but not used now that description uses InlineCombobox
+  suggestions = [],
+  userPickDescriptions = new Set<string>(),
+  onTogglePick,
 }: LineItemsProps) {
-  // Refs for every description and qty field so we can programmatically focus
-  const descRefs = useRef<(HTMLInputElement | null)[]>([]);
+  // Refs for qty fields so we can programmatically focus
   const qtyRefs = useRef<(HTMLInputElement | null)[]>([]);
   const addButtonRef = useRef<HTMLButtonElement | null>(null);
 
-  // Track pending new-row focus requests
-  const pendingFocusRow = useRef<number | null>(null);
-
-  // Expose focusQtyForRow if caller wants it
-  useEffect(() => {
-    if (focusQtyForRow) {
-      // nothing — caller calls via the callback prop
-    }
-  }, [focusQtyForRow]);
-
-  // When items array grows (new row added), focus its description field
-  useEffect(() => {
-    if (pendingFocusRow.current !== null) {
-      const idx = pendingFocusRow.current;
-      pendingFocusRow.current = null;
-      // Give React one tick to render the new row
-      requestAnimationFrame(() => {
-        descRefs.current[idx]?.focus();
-      });
-    }
-  }, [items.length]);
+  // Convert suggestions to ComboboxItem format
+  const suggestionItems: ComboboxItem[] = suggestions.map((s) => ({
+    id: s.description,
+    label: s.description,
+    sublabel: `$${Number(s.unitPrice).toFixed(2)}`,
+    searchValue: s.description,
+  }));
 
   function handleAddItem() {
-    pendingFocusRow.current = items.length; // next index will be current length
     onAdd();
   }
 
-  // Tab out of last unit-price field → auto-add a new row and focus its description
+  // Tab out of last unit-price field → auto-add a new row
   function handleUnitPriceKeyDown(
     e: React.KeyboardEvent<HTMLInputElement>,
     index: number
   ) {
     if (e.key === "Tab" && !e.shiftKey && index === items.length - 1) {
       e.preventDefault();
-      pendingFocusRow.current = items.length;
       onAdd();
-    }
-  }
-
-  // Enter on description → focus qty of the same row
-  function handleDescriptionKeyDown(
-    e: React.KeyboardEvent<HTMLInputElement>,
-    index: number
-  ) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      qtyRefs.current[index]?.focus();
     }
   }
 
@@ -104,25 +87,6 @@ export function LineItems({
           (inputs[qtyIdx + 1] as HTMLInputElement | undefined)?.focus();
         }
       }
-    }
-  }
-
-  async function handleSaveItem(index: number) {
-    const item = items[index];
-    try {
-      const res = await fetch("/api/saved-items", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          description: item.description,
-          unitPrice: item.unitPrice,
-          department,
-        }),
-      });
-      if (!res.ok) throw new Error("Failed to save item");
-      toast.success("Item saved for future use");
-    } catch {
-      toast.error("Failed to save item");
     }
   }
 
@@ -165,22 +129,33 @@ export function LineItems({
           className="grid grid-cols-12 gap-2 items-center line-item-row"
         >
           {/* Description — col-span-4 */}
-          <div className="col-span-4">
-            <Input
-              ref={(el) => {
-                descRefs.current[index] = el;
-                // Also wire up firstDescriptionRef for the first row
-                if (index === 0 && firstDescriptionRef) {
-                  (firstDescriptionRef as React.MutableRefObject<HTMLInputElement | null>).current = el;
-                }
-              }}
+          <div
+            className="col-span-4"
+            onKeyDown={(e) => {
+              // When dropdown is closed, Enter should advance to qty
+              // InlineCombobox consumes Enter when open, so this only fires when closed
+              if (e.key === "Enter") {
+                e.preventDefault();
+                requestAnimationFrame(() => qtyRefs.current[index]?.focus());
+              }
+            }}
+          >
+            <InlineCombobox
+              items={suggestionItems}
               value={item.description}
-              onChange={(e) => onUpdate(index, { description: e.target.value })}
-              onKeyDown={(e) => handleDescriptionKeyDown(e, index)}
+              displayValue={item.description}
+              allowCustom={true}
               placeholder="Description…"
-              name={`lineItem${index}Description`}
-              className="focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label={`Line item ${index + 1} description`}
+              onSelect={(selected) => {
+                const match = suggestions.find((s) => s.description === selected.id);
+                onUpdate(index, {
+                  description: selected.label,
+                  ...(match
+                    ? { unitPrice: match.unitPrice, quantity: 1, extendedPrice: match.unitPrice }
+                    : {}),
+                });
+                requestAnimationFrame(() => qtyRefs.current[index]?.focus());
+              }}
             />
           </div>
 
@@ -235,18 +210,31 @@ export function LineItems({
             />
           </div>
 
-          {/* Save + Remove — col-span-2 */}
+          {/* Star + Remove — col-span-2 */}
           <div className="col-span-2 flex justify-center gap-1">
             {item.description.trim() !== "" && item.unitPrice > 0 && (
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => handleSaveItem(index)}
-                className="text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
-                aria-label={`Save line item ${index + 1} for future use`}
+                onClick={() => onTogglePick?.(item.description, item.unitPrice, department)}
+                className={cn(
+                  "focus-visible:ring-2 focus-visible:ring-ring",
+                  userPickDescriptions.has(item.description)
+                    ? "text-amber-500 hover:text-amber-600"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                aria-label={
+                  userPickDescriptions.has(item.description)
+                    ? "Remove from quick picks"
+                    : "Save to quick picks"
+                }
               >
-                <Bookmark className="h-4 w-4" aria-hidden="true" />
+                <Star
+                  className="h-4 w-4"
+                  fill={userPickDescriptions.has(item.description) ? "currentColor" : "none"}
+                  aria-hidden="true"
+                />
               </Button>
             )}
             <Button
