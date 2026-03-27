@@ -25,7 +25,7 @@ export function WelcomeBanner() {
   if (!visible) return null;
 
   return (
-    <Card className="border-l-4 border-l-primary border-border/40 bg-background">
+    <Card className="bg-muted/30">
       <CardContent className="py-4 px-5">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1.5">
