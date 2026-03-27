@@ -68,6 +68,13 @@ const TOUR_STEPS: TourStep[] = [
     icon: "📧",
   },
   {
+    selector: null,
+    title: "Running Invoices",
+    description:
+      "For recurring charges like weekly department supplies, create a Running Invoice. It stays open so you can add line items over time, then finalize when ready.",
+    icon: "📌",
+  },
+  {
     selector: 'a[href="/analytics"]',
     title: "Analytics",
     description:
