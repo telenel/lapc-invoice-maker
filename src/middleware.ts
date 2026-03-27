@@ -3,13 +3,13 @@ import { NextResponse } from "next/server";
 
 export default withAuth(
   function middleware(req) {
-    const needsSetup = req.nextauth.token?.needsSetup;
+    const setupComplete = req.nextauth.token?.setupComplete;
     const isSetupPage = req.nextUrl.pathname === "/setup";
 
-    if (needsSetup && !isSetupPage) {
+    if (!setupComplete && !isSetupPage) {
       return NextResponse.redirect(new URL("/setup", req.url));
     }
-    if (!needsSetup && isSetupPage) {
+    if (setupComplete && isSetupPage) {
       return NextResponse.redirect(new URL("/", req.url));
     }
     return NextResponse.next();
@@ -21,6 +21,6 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    "/((?!login|api/auth|api/auth/setup|_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.ico$|.*\\.svg$).*)",
+    "/((?!login|api/auth|api/setup|_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.ico$|.*\\.svg$).*)",
   ],
 };

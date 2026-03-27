@@ -12,39 +12,15 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.username) return null;
-
-        const input = credentials.username.trim();
-
-        // 6-digit access code login
-        if (/^\d{6}$/.test(input)) {
-          const user = await prisma.user.findUnique({
-            where: { accessCode: input, active: true },
-          });
-          if (!user) return null;
-          return {
-            id: user.id,
-            name: user.name,
-            username: user.username,
-            role: user.role,
-            needsSetup: user.needsSetup,
-          };
-        }
-
-        // Traditional username/password login
-        if (!credentials.password) return null;
+        if (!credentials?.username || !credentials?.password) return null;
 
         const user = await prisma.user.findUnique({
-          where: { username: input, active: true },
+          where: { username: credentials.username.trim().toLowerCase(), active: true },
         });
 
         if (!user) return null;
 
-        const isValid = await bcrypt.compare(
-          credentials.password,
-          user.passwordHash
-        );
-
+        const isValid = await bcrypt.compare(credentials.password, user.passwordHash);
         if (!isValid) return null;
 
         return {
@@ -52,7 +28,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           username: user.username,
           role: user.role,
-          needsSetup: user.needsSetup,
+          setupComplete: user.setupComplete,
         };
       },
     }),
@@ -65,17 +41,25 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.username = (user as unknown as { username: string }).username;
         token.role = (user as unknown as { role: string }).role;
-        token.needsSetup = (user as unknown as { needsSetup: boolean }).needsSetup;
+        token.setupComplete = (user as unknown as { setupComplete: boolean }).setupComplete;
+      } else if (token.id) {
+        const dbUser = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { role: true, setupComplete: true },
+        });
+        if (dbUser) {
+          token.role = dbUser.role;
+          token.setupComplete = dbUser.setupComplete;
+        }
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         (session.user as { id: string }).id = token.id as string;
-        (session.user as { username: string }).username =
-          token.username as string;
+        (session.user as { username: string }).username = token.username as string;
         (session.user as { role: string }).role = token.role as string;
-        (session.user as { needsSetup: boolean }).needsSetup = token.needsSetup as boolean;
+        (session.user as { setupComplete: boolean }).setupComplete = token.setupComplete as boolean;
       }
       return session;
     },
