@@ -30,30 +30,21 @@ export function StatsCards() {
         const lastMonthTo = lastOfLastMonth.toISOString().split("T")[0];
 
         const [monthRes, lastMonthRes, draftsRes] = await Promise.all([
-          fetch(`/api/invoices?dateFrom=${dateFrom}&dateTo=${dateTo}&pageSize=1000`),
-          fetch(`/api/invoices?dateFrom=${lastMonthFrom}&dateTo=${lastMonthTo}&pageSize=1000`),
-          fetch(`/api/invoices?status=DRAFT&pageSize=1000`),
+          fetch(`/api/invoices?status=FINAL&createdFrom=${dateFrom}&createdTo=${dateTo}&statsOnly=true`),
+          fetch(`/api/invoices?status=FINAL&createdFrom=${lastMonthFrom}&createdTo=${lastMonthTo}&statsOnly=true`),
+          fetch(`/api/invoices?status=DRAFT&statsOnly=true`),
         ]);
 
         const monthData = await monthRes.json();
         const lastMonthData = await lastMonthRes.json();
         const draftsData = await draftsRes.json();
 
-        const totalThisMonth = (monthData.invoices as { totalAmount: string | number }[]).reduce(
-          (sum: number, inv: { totalAmount: string | number }) => sum + Number(inv.totalAmount),
-          0
-        );
-        const totalLastMonth = (lastMonthData.invoices as { totalAmount: string | number }[]).reduce(
-          (sum: number, inv: { totalAmount: string | number }) => sum + Number(inv.totalAmount),
-          0
-        );
-
         setStats({
           invoicesThisMonth: monthData.total,
-          totalThisMonth,
+          totalThisMonth: monthData.sumTotalAmount,
           pendingDrafts: draftsData.total,
           invoicesLastMonth: lastMonthData.total,
-          totalLastMonth,
+          totalLastMonth: lastMonthData.sumTotalAmount,
         });
       } catch (err) {
         console.error("Failed to fetch stats:", err);

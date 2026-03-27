@@ -2,96 +2,60 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatAmount, formatDateCompact as formatDate } from "@/lib/formatters";
+import { formatAmount, getInitials } from "@/lib/formatters";
 
-interface PendingInvoice {
+interface PendingUser {
   id: string;
-  department: string;
-  totalAmount: string | number;
-  date: string;
-  creator: { id: string; name: string; username: string };
-}
-
-interface PendingResponse {
-  invoices: PendingInvoice[];
-  total: number;
+  name: string;
+  invoiceCount: number;
+  totalAmount: number;
 }
 
 export function PendingCharges() {
-  const [invoices, setInvoices] = useState<PendingInvoice[]>([]);
-  const [total, setTotal] = useState(0);
+  const [users, setUsers] = useState<PendingUser[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchPending() {
-      try {
-        const res = await fetch(
-          "/api/invoices?status=PENDING_CHARGE&pageSize=10&sortBy=createdAt&sortDir=asc"
-        );
-        if (res.ok) {
-          const data: PendingResponse = await res.json();
-          setInvoices(data.invoices);
-          setTotal(data.total);
-        }
-      } catch {
-        // Silently fail — dashboard card is non-critical
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchPending();
+    fetch("/api/invoices?statsOnly=true&groupBy=creator&status=PENDING_CHARGE")
+      .then((r) => r.ok ? r.json() : { users: [] })
+      .then((data) => setUsers(data.users || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
-  if (loading || total === 0) return null;
+  const totalCount = users.reduce((sum, u) => sum + u.invoiceCount, 0);
+
+  if (loading || users.length === 0) return null;
 
   return (
     <Card>
       <CardHeader className="pb-2 border-b border-border/50">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-medium">
-            Pending POS Charges
-          </CardTitle>
-          <Badge variant="warning" className="tabular-nums">
-            {total}
-          </Badge>
+          <CardTitle className="text-sm font-bold">Pending POS Charges</CardTitle>
+          <Badge variant="warning" className="tabular-nums">{totalCount}</Badge>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">
-          {invoices.map((inv) => (
+        <div className="space-y-1 pt-2">
+          {users.map((user) => (
             <Link
-              key={inv.id}
-              href={`/invoices/${inv.id}/edit`}
-              className="flex items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-accent transition-colors"
+              key={user.id}
+              href={`/invoices?status=PENDING_CHARGE&search=${encodeURIComponent(user.name)}`}
+              className="flex items-center gap-3 rounded-md px-2 py-2 hover:bg-muted/50 transition-colors"
             >
-              <div className="flex items-center gap-2">
-                <span className="font-medium">{inv.creator.name}</span>
-                <span className="text-muted-foreground">{inv.department}</span>
+              <div className="flex items-center justify-center w-[28px] h-[28px] rounded-lg bg-muted text-[9px] font-bold text-muted-foreground shrink-0">
+                {getInitials(user.name)}
               </div>
-              <div className="flex items-center gap-3 text-muted-foreground">
-                <span>{formatDate(inv.date)}</span>
-                <span className="font-medium text-foreground tabular-nums">
-                  {formatAmount(inv.totalAmount)}
-                </span>
+              <span className="text-sm font-medium flex-1">{user.name}</span>
+              <div className="text-right">
+                <span className="text-sm font-bold tabular-nums">{formatAmount(user.totalAmount)}</span>
+                <p className="text-[10px] text-muted-foreground">{user.invoiceCount} pending</p>
               </div>
             </Link>
           ))}
         </div>
-        {total > 10 && (
-          <Link
-            href="/invoices?status=PENDING_CHARGE"
-            className="block text-center text-xs text-muted-foreground hover:text-foreground mt-3 pt-2 border-t border-border"
-          >
-            View all {total} pending charges
-          </Link>
-        )}
       </CardContent>
     </Card>
   );
