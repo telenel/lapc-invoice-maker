@@ -3,7 +3,10 @@ import { NextResponse } from "next/server";
 
 export default withAuth(
   function middleware(req) {
-    const setupComplete = req.nextauth.token?.setupComplete;
+    const token = req.nextauth.token;
+    if (!token) return NextResponse.next();
+
+    const setupComplete = token.setupComplete;
     const isSetupPage = req.nextUrl.pathname === "/setup";
 
     if (!setupComplete && !isSetupPage) {
