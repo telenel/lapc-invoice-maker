@@ -9,9 +9,24 @@ vi.mock("sonner", () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
-// Mock lucide-react Bookmark icon
+// Mock lucide-react Star icon
 vi.mock("lucide-react", () => ({
-  Bookmark: (props: Record<string, unknown>) => <svg data-testid="bookmark-icon" {...props} />,
+  Star: (props: Record<string, unknown>) => <svg data-testid="star-icon" {...props} />,
+}));
+
+// Mock InlineCombobox to render a simple input
+vi.mock("@/components/ui/inline-combobox", () => ({
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  InlineCombobox: ({ value, placeholder, onSelect, ...props }: Record<string, unknown>) => (
+    <input
+      data-testid="inline-combobox"
+      value={value as string}
+      placeholder={placeholder as string}
+      onChange={() => {}}
+      aria-label={props["aria-label"] as string || "combobox"}
+      {...(props.className ? { className: props.className } : {})}
+    />
+  ),
 }));
 
 const defaultProps = {
@@ -29,6 +44,9 @@ const defaultProps = {
   onRemove: vi.fn(),
   total: 10,
   department: "Test Dept",
+  suggestions: [],
+  userPickDescriptions: new Set<string>(),
+  onTogglePick: vi.fn(),
 };
 
 describe("LineItems", () => {
@@ -41,9 +59,9 @@ describe("LineItems", () => {
 
     render(<LineItems {...defaultProps} items={items} total={51} />);
 
-    // Each row has a description aria-label like "Line item N description"
-    const descInputs = screen.getAllByLabelText(/Line item \d+ description/);
-    expect(descInputs).toHaveLength(3);
+    // Each row has a quantity aria-label like "Line item N quantity"
+    const qtyInputs = screen.getAllByLabelText(/Line item \d+ quantity/);
+    expect(qtyInputs).toHaveLength(3);
   });
 
   it("shows the total amount at the bottom", () => {
