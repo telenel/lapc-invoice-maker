@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { ChevronDownIcon, ChevronRightIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { InlineCombobox } from "@/components/ui/inline-combobox";
 import type { ComboboxItem } from "@/components/ui/inline-combobox";
 import { LineItems } from "./line-items";
-import { QuickPickPanel } from "./quick-pick-panel";
+import { QuickPicksSidePanel } from "./quick-picks-side-panel";
 import { PrismcoreUpload } from "./prismcore-upload";
 import { PdfProgress } from "./pdf-progress";
 import { cn } from "@/lib/utils";
@@ -106,7 +105,9 @@ export function KeyboardMode({
   const [categories, setCategories] = useState<Category[]>([]);
   const [staffLoading, setStaffLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [quickPicksOpen, setQuickPicksOpen] = useState(false);
+  const [suggestions, setSuggestions] = useState<{ description: string; unitPrice: number }[]>([]);
+  const [userPickDescriptions, setUserPickDescriptions] = useState<Set<string>>(new Set());
+  const [userPicks, setUserPicks] = useState<{ id: string; description: string; unitPrice: number; department: string }[]>([]);
   const [marginPercent, setMarginPercent] = useState("");
   const [isMac, setIsMac] = useState(false);
 
@@ -145,6 +146,29 @@ export function KeyboardMode({
       .catch(() => {})
       .finally(() => setCategoriesLoading(false));
   }, []);
+
+  // ---- Autocomplete + user picks fetch ----
+  useEffect(() => {
+    if (!form.department) return;
+    let cancelled = false;
+
+    Promise.all([
+      fetch(`/api/quick-picks?department=${encodeURIComponent(form.department)}`).then((r) => r.ok ? r.json() : []),
+      fetch(`/api/saved-items?department=${encodeURIComponent(form.department)}`).then((r) => r.ok ? r.json() : []),
+      fetch(`/api/user-quick-picks?department=${encodeURIComponent(form.department)}`).then((r) => r.ok ? r.json() : []),
+    ]).then(([picks, saved, uPicks]) => {
+      if (cancelled) return;
+      const combined = new Map<string, { description: string; unitPrice: number }>();
+      for (const p of picks) combined.set(p.description, { description: p.description, unitPrice: Number(p.defaultPrice) });
+      for (const s of saved) combined.set(s.description, { description: s.description, unitPrice: Number(s.unitPrice) });
+      for (const u of uPicks) combined.set(u.description, { description: u.description, unitPrice: Number(u.unitPrice) });
+      setSuggestions(Array.from(combined.values()));
+      setUserPicks(uPicks);
+      setUserPickDescriptions(new Set(uPicks.map((p: { description: string }) => p.description)));
+    });
+
+    return () => { cancelled = true; };
+  }, [form.department]);
 
   // ---- Platform detection ----
   useEffect(() => {
@@ -225,6 +249,31 @@ export function KeyboardMode({
           }),
         0
       );
+    }
+  }
+
+  // ---- Star toggle handler ----
+  async function handleTogglePick(description: string, unitPrice: number, department: string) {
+    if (userPickDescriptions.has(description)) {
+      const pick = userPicks.find((p) => p.description === description && p.department === department);
+      if (pick) {
+        await fetch(`/api/user-quick-picks?id=${pick.id}`, { method: "DELETE" });
+        setUserPicks((prev) => prev.filter((p) => p.id !== pick.id));
+        setUserPickDescriptions((prev) => { const next = new Set(prev); next.delete(description); return next; });
+        toast.success("Removed from quick picks");
+      }
+    } else {
+      const res = await fetch("/api/user-quick-picks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ description, unitPrice, department }),
+      });
+      if (res.ok) {
+        const newPick = await res.json();
+        setUserPicks((prev) => [...prev, newPick]);
+        setUserPickDescriptions((prev) => new Set(prev).add(description));
+        toast.success("Added to quick picks");
+      }
     }
   }
 
@@ -592,33 +641,9 @@ export function KeyboardMode({
       </div>
 
       {/* ============ LINE ITEMS ============ */}
-      <SectionDivider label="LINE ITEMS">
-        <button
-          type="button"
-          tabIndex={-1}
-          onClick={() => setQuickPicksOpen((prev) => !prev)}
-          className={cn(
-            "flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-          )}
-        >
-          {quickPicksOpen ? (
-            <ChevronDownIcon className="size-3.5" />
-          ) : (
-            <ChevronRightIcon className="size-3.5" />
-          )}
-          Quick Picks
-        </button>
-      </SectionDivider>
+      <SectionDivider label="LINE ITEMS" />
 
       <div className="space-y-3">
-        {quickPicksOpen && (
-          <QuickPickPanel
-            department={form.department}
-            onSelect={handleQuickPick}
-            currentSubtotal={total}
-          />
-        )}
-
         <div className="flex items-center gap-2 mt-2 mb-3">
           <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Margin %</span>
           <Input
@@ -636,14 +661,26 @@ export function KeyboardMode({
           </Button>
         </div>
 
-        <LineItems
-          items={form.items}
-          onUpdate={updateItem}
-          onAdd={addItem}
-          onRemove={removeItem}
-          total={total}
-          department={form.department}
-        />
+        <div className="flex gap-4">
+          <div className="flex-1 min-w-0">
+            <LineItems
+              items={form.items}
+              onUpdate={updateItem}
+              onAdd={addItem}
+              onRemove={removeItem}
+              total={total}
+              department={form.department}
+              suggestions={suggestions}
+              userPickDescriptions={userPickDescriptions}
+              onTogglePick={handleTogglePick}
+            />
+          </div>
+          <QuickPicksSidePanel
+            department={form.department}
+            currentSubtotal={total}
+            onSelect={handleQuickPick}
+          />
+        </div>
 
         {/* Notes */}
         <div className="space-y-1">
