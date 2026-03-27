@@ -69,6 +69,22 @@ interface KeyboardModeProps {
 // Component
 // ---------------------------------------------------------------------------
 
+function SectionDivider({
+  label,
+  children,
+}: {
+  label: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-3 pt-6 pb-2">
+      <span className="section-label">{label}</span>
+      <div className="flex-1 border-t border-border" />
+      {children}
+    </div>
+  );
+}
+
 export function KeyboardMode({
   form,
   updateField,
@@ -330,22 +346,6 @@ export function KeyboardMode({
     }
   }
 
-  // ---- Section divider component ----
-  function SectionDivider({
-    label,
-    children,
-  }: {
-    label: string;
-    children?: React.ReactNode;
-  }) {
-    return (
-      <div className="flex items-center gap-3 pt-6 pb-2">
-        <span className="section-label">{label}</span>
-        <div className="flex-1 border-t border-border" />
-        {children}
-      </div>
-    );
-  }
 
   // Find the selected category label for display
   const selectedCategory = categories.find((c) => c.name === form.category);

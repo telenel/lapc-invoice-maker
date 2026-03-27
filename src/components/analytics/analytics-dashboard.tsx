@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CategoryChart } from "./category-chart";
-import { MonthlyTotalsChart } from "./monthly-totals-chart";
-import { DepartmentSpendChart } from "./department-spend-chart";
-import { InvoiceTrendChart } from "./invoice-trend-chart";
-import { UserChart } from "./user-chart";
+
+const CategoryChart = dynamic(() => import("./category-chart").then((m) => m.CategoryChart), { ssr: false });
+const MonthlyTotalsChart = dynamic(() => import("./monthly-totals-chart").then((m) => m.MonthlyTotalsChart), { ssr: false });
+const DepartmentSpendChart = dynamic(() => import("./department-spend-chart").then((m) => m.DepartmentSpendChart), { ssr: false });
+const InvoiceTrendChart = dynamic(() => import("./invoice-trend-chart").then((m) => m.InvoiceTrendChart), { ssr: false });
+const UserChart = dynamic(() => import("./user-chart").then((m) => m.UserChart), { ssr: false });
 
 interface AnalyticsData {
   byCategory: { category: string; count: number; total: number }[];

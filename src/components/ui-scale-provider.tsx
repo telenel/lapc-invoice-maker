@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
 const SCALE_KEY = "ui-scale";
+const DEFAULT_SCALE = "1.1";
 const SCALES = [
   { value: "1", label: "Compact" },
   { value: "1.1", label: "Normal" },
@@ -15,10 +16,11 @@ const ScaleContext = createContext<{
   scale: ScaleValue;
   setScale: (s: ScaleValue) => void;
   scales: typeof SCALES;
-}>({ scale: "1.1", setScale: () => {}, scales: SCALES });
+}>({ scale: DEFAULT_SCALE, setScale: () => {}, scales: SCALES });
 
 export function UIScaleProvider({ children }: { children: React.ReactNode }) {
-  const [scale, setScaleState] = useState<ScaleValue>("1.1");
+  const [scale, setScaleState] = useState<ScaleValue>(DEFAULT_SCALE);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem(SCALE_KEY) as ScaleValue | null;
@@ -26,15 +28,25 @@ export function UIScaleProvider({ children }: { children: React.ReactNode }) {
       setScaleState(saved);
       document.documentElement.style.setProperty("--ui-zoom", saved);
     } else {
-      // Apply default zoom on first load
-      document.documentElement.style.setProperty("--ui-zoom", "1.1");
+      document.documentElement.style.setProperty("--ui-zoom", DEFAULT_SCALE);
     }
+    setMounted(true);
   }, []);
 
   function setScale(s: ScaleValue) {
     setScaleState(s);
     localStorage.setItem(SCALE_KEY, s);
     document.documentElement.style.setProperty("--ui-zoom", s);
+  }
+
+  // Suppress hydration by not rendering until mounted — the CSS variable
+  // is set synchronously in the useEffect so there's no flash.
+  if (!mounted) {
+    return (
+      <ScaleContext.Provider value={{ scale: DEFAULT_SCALE, setScale, scales: SCALES }}>
+        {children}
+      </ScaleContext.Provider>
+    );
   }
 
   return (

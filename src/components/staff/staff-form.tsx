@@ -124,9 +124,9 @@ export function StaffForm({ staff, onSave, trigger }: StaffFormProps) {
 
   return (
     <>
-      <button type="button" onClick={handleOpen} style={{ display: "contents" }}>
+      <div onClick={handleOpen} role="button" tabIndex={-1} style={{ display: "contents" }}>
         {trigger}
-      </button>
+      </div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>

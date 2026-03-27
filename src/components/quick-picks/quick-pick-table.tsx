@@ -92,7 +92,9 @@ export function QuickPickTable() {
               <TableRow key={item.id}>
                 <TableCell>{item.description}</TableCell>
                 <TableCell>
-                  <Badge variant="secondary">{item.department}</Badge>
+                  <Badge variant="secondary">
+                    {item.department === "__ALL__" ? "All Departments" : item.department}
+                  </Badge>
                 </TableCell>
                 <TableCell className="tabular-nums">
                   $
