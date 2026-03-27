@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -13,415 +13,424 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { formatAmount } from "@/lib/formatters";
 
-interface InvoiceItem {
-  id?: string;
+interface SavedLineItem {
+  id: string;
   description: string;
-  quantity: number;
+  department: string;
   unitPrice: number;
-  extendedPrice: number;
-  sortOrder: number;
-}
-
-interface InvoiceStaff {
-  id: string;
-  name: string;
-  title: string;
-  department: string;
-}
-
-interface Invoice {
-  id: string;
-  invoiceNumber: string | null;
-  status: string;
-  totalAmount: string | number;
-  department: string;
-  staff: InvoiceStaff;
-  items: InvoiceItem[];
-}
-
-type StatusVariant = "success" | "warning" | "info" | "outline";
-
-function statusVariant(status: string): StatusVariant {
-  if (status === "FINAL") return "success";
-  if (status === "DRAFT") return "warning";
-  if (status === "PENDING_CHARGE") return "info";
-  return "outline";
-}
-
-function statusLabel(status: string): string {
-  if (status === "PENDING_CHARGE") return "Pending Charge";
-  return status.charAt(0) + status.slice(1).toLowerCase();
+  usageCount: number;
 }
 
 export function LineItemManager() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [fetching, setFetching] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [invoice, setInvoice] = useState<Invoice | null>(null);
-  const [items, setItems] = useState<InvoiceItem[]>([]);
-  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [items, setItems] = useState<SavedLineItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
-  const handleSearch = useCallback(async () => {
-    const q = searchQuery.trim();
-    if (!q) return;
+  // Create form
+  const [createOpen, setCreateOpen] = useState(false);
+  const [newDescription, setNewDescription] = useState("");
+  const [newDepartment, setNewDepartment] = useState("");
+  const [newPrice, setNewPrice] = useState("");
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [createSaving, setCreateSaving] = useState(false);
 
-    setFetching(true);
-    setFetchError(null);
-    setInvoice(null);
-    setItems([]);
+  // Edit form
+  const [editItem, setEditItem] = useState<SavedLineItem | null>(null);
+  const [editDescription, setEditDescription] = useState("");
+  const [editDepartment, setEditDepartment] = useState("");
+  const [editPrice, setEditPrice] = useState("");
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
 
+  // Delete confirm
+  const [deleteItem, setDeleteItem] = useState<SavedLineItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const fetchItems = useCallback(async () => {
     try {
-      // First try treating q as an invoice ID directly
-      let res = await fetch(`/api/invoices/${encodeURIComponent(q)}`);
-
-      // If that fails, search by invoice number via the list endpoint
-      if (!res.ok) {
-        const listRes = await fetch(
-          `/api/invoices?search=${encodeURIComponent(q)}&pageSize=5`
-        );
-        if (listRes.ok) {
-          const listData = await listRes.json();
-          const match = listData.invoices?.find(
-            (inv: { invoiceNumber?: string | null }) =>
-              inv.invoiceNumber?.toLowerCase() === q.toLowerCase()
-          ) ?? listData.invoices?.[0];
-
-          if (!match) {
-            setFetchError("No invoice found matching that number or ID.");
-            return;
-          }
-
-          res = await fetch(`/api/invoices/${match.id}`);
-        } else {
-          setFetchError("Failed to search invoices.");
-          return;
-        }
+      const res = await fetch("/api/saved-items");
+      if (res.ok) {
+        setItems(await res.json());
       }
+    } catch {
+      // ignore
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
+  useEffect(() => {
+    fetchItems();
+  }, [fetchItems]);
+
+  const filtered = items.filter((item) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      item.description.toLowerCase().includes(q) ||
+      item.department.toLowerCase().includes(q)
+    );
+  });
+
+  function resetCreate() {
+    setNewDescription("");
+    setNewDepartment("");
+    setNewPrice("");
+    setCreateError(null);
+  }
+
+  async function handleCreate() {
+    setCreateError(null);
+    setCreateSaving(true);
+    try {
+      const res = await fetch("/api/saved-items", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          description: newDescription.trim(),
+          department: newDepartment.trim(),
+          unitPrice: Number(newPrice),
+        }),
+      });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setFetchError(data.error ?? "Invoice not found.");
+        const data = await res.json();
+        setCreateError(typeof data.error === "string" ? data.error : "Failed to save");
         return;
       }
-
-      const data: Invoice = await res.json();
-      setInvoice(data);
-      setItems(
-        data.items.map((item, i) => ({
-          ...item,
-          quantity: Number(item.quantity),
-          unitPrice: Number(item.unitPrice),
-          extendedPrice: Number(item.extendedPrice),
-          sortOrder: item.sortOrder ?? i,
-        }))
-      );
+      toast.success("Line item saved");
+      setCreateOpen(false);
+      resetCreate();
+      fetchItems();
     } catch {
-      setFetchError("An unexpected error occurred.");
+      setCreateError("An unexpected error occurred");
     } finally {
-      setFetching(false);
+      setCreateSaving(false);
     }
-  }, [searchQuery]);
-
-  function updateItem(index: number, field: keyof InvoiceItem, value: string | number) {
-    setItems((prev) => {
-      const next = [...prev];
-      const item = { ...next[index] };
-
-      if (field === "description") {
-        item.description = value as string;
-      } else if (field === "quantity") {
-        item.quantity = Number(value);
-        item.extendedPrice = item.quantity * item.unitPrice;
-      } else if (field === "unitPrice") {
-        item.unitPrice = Number(value);
-        item.extendedPrice = item.quantity * item.unitPrice;
-      }
-
-      next[index] = item;
-      return next;
-    });
   }
 
-  function addRow() {
-    setItems((prev) => [
-      ...prev,
-      {
-        description: "",
-        quantity: 1,
-        unitPrice: 0,
-        extendedPrice: 0,
-        sortOrder: prev.length,
-      },
-    ]);
+  function openEdit(item: SavedLineItem) {
+    setEditItem(item);
+    setEditDescription(item.description);
+    setEditDepartment(item.department);
+    setEditPrice(String(item.unitPrice));
+    setEditError(null);
   }
 
-  function deleteRow(index: number) {
-    setItems((prev) => {
-      const next = prev.filter((_, i) => i !== index);
-      return next.map((item, i) => ({ ...item, sortOrder: i }));
-    });
-  }
-
-  function moveRow(index: number, direction: "up" | "down") {
-    setItems((prev) => {
-      const next = [...prev];
-      const target = direction === "up" ? index - 1 : index + 1;
-      if (target < 0 || target >= next.length) return prev;
-      [next[index], next[target]] = [next[target], next[index]];
-      return next.map((item, i) => ({ ...item, sortOrder: i }));
-    });
-  }
-
-  const currentTotal = items.reduce((sum, item) => sum + item.extendedPrice, 0);
-
-  async function handleSave() {
-    if (!invoice) return;
-
-    const invalid = items.some((item) => !item.description.trim());
-    if (invalid) {
-      toast.error("All line items must have a description.");
-      return;
-    }
-    if (items.length === 0) {
-      toast.error("Invoice must have at least one line item.");
-      return;
-    }
-
-    setSaving(true);
+  async function handleEdit() {
+    if (!editItem) return;
+    setEditError(null);
+    setEditSaving(true);
     try {
-      const res = await fetch(`/api/invoices/${invoice.id}`, {
+      const res = await fetch(`/api/saved-items/${editItem.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: items.map((item, i) => ({
-            description: item.description.trim(),
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            extendedPrice: item.extendedPrice,
-            sortOrder: i,
-          })),
+          description: editDescription.trim(),
+          department: editDepartment.trim(),
+          unitPrice: Number(editPrice),
         }),
       });
-
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        const msg =
-          typeof data.error === "string"
-            ? data.error
-            : "Failed to save line items.";
-        toast.error(msg);
+        const data = await res.json();
+        setEditError(typeof data.error === "string" ? data.error : "Failed to update");
         return;
       }
-
-      const updated: Invoice = await res.json();
-      setInvoice(updated);
-      setItems(
-        updated.items.map((item, i) => ({
-          ...item,
-          quantity: Number(item.quantity),
-          unitPrice: Number(item.unitPrice),
-          extendedPrice: Number(item.extendedPrice),
-          sortOrder: item.sortOrder ?? i,
-        }))
-      );
-      toast.success("Line items saved.");
+      toast.success("Line item updated");
+      setEditItem(null);
+      fetchItems();
     } catch {
-      toast.error("An unexpected error occurred.");
+      setEditError("An unexpected error occurred");
     } finally {
-      setSaving(false);
+      setEditSaving(false);
     }
   }
 
+  async function handleDelete() {
+    if (!deleteItem) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/saved-items/${deleteItem.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        toast.error("Failed to delete line item");
+        return;
+      }
+      toast.success("Line item deleted");
+      setItems((prev) => prev.filter((i) => i.id !== deleteItem.id));
+      setDeleteItem(null);
+    } catch {
+      toast.error("An unexpected error occurred");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  if (loading) {
+    return <p className="text-sm text-muted-foreground py-4">Loading line items…</p>;
+  }
+
   return (
-    <div className="space-y-6">
-      {/* Search bar */}
-      <div className="space-y-2">
-        <h2 className="text-lg font-semibold">Line Item Manager</h2>
-        <p className="text-sm text-muted-foreground">
-          Search by invoice number or ID to edit its line items.
-        </p>
-        <div className="flex gap-2 max-w-md">
-          <Input
-            placeholder="Invoice number or ID…"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSearch();
-            }}
-            disabled={fetching}
-          />
-          <Button onClick={handleSearch} disabled={fetching || !searchQuery.trim()}>
-            {fetching ? "Loading…" : "Fetch"}
-          </Button>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">Saved Line Items</h2>
+          <p className="text-sm text-muted-foreground">
+            Reusable line item templates available when creating invoices.
+          </p>
         </div>
-        {fetchError && (
-          <p className="text-sm text-destructive">{fetchError}</p>
-        )}
+        <Dialog
+          open={createOpen}
+          onOpenChange={(open) => {
+            if (!open) {
+              setCreateOpen(false);
+              resetCreate();
+            } else {
+              setCreateOpen(true);
+            }
+          }}
+        >
+          <DialogTrigger render={<Button size="sm">Add Line Item</Button>} />
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Line Item</DialogTitle>
+              <DialogDescription>
+                Create a reusable line item template.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="li-create-desc">Description</Label>
+                <Input
+                  id="li-create-desc"
+                  value={newDescription}
+                  onChange={(e) => setNewDescription(e.target.value)}
+                  placeholder="e.g. Standard Photocopy Service"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="li-create-dept">Department</Label>
+                <Input
+                  id="li-create-dept"
+                  value={newDepartment}
+                  onChange={(e) => setNewDepartment(e.target.value)}
+                  placeholder="e.g. Media Services"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="li-create-price">Unit Price</Label>
+                <Input
+                  id="li-create-price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={newPrice}
+                  onChange={(e) => setNewPrice(e.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
+              {createError && (
+                <p className="text-sm text-destructive">{createError}</p>
+              )}
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setCreateOpen(false);
+                  resetCreate();
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleCreate}
+                disabled={
+                  !newDescription.trim() ||
+                  !newDepartment.trim() ||
+                  !newPrice ||
+                  Number(newPrice) < 0 ||
+                  createSaving
+                }
+              >
+                {createSaving ? "Saving…" : "Add Item"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {/* Invoice header */}
-      {invoice && (
-        <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
-          <div className="flex items-start justify-between gap-4">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="font-mono font-semibold text-base">
-                  {invoice.invoiceNumber ?? invoice.id}
-                </span>
-                <Badge variant={statusVariant(invoice.status)}>
-                  {statusLabel(invoice.status)}
-                </Badge>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {invoice.staff.name} &mdash; {invoice.department}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">
-                Current Total
-              </p>
-              <p className="font-semibold tabular-nums">
-                {formatAmount(Number(invoice.totalAmount))}
-              </p>
-              {currentTotal !== Number(invoice.totalAmount) && (
-                <p className="text-xs text-amber-600 dark:text-amber-400 tabular-nums">
-                  Pending: {formatAmount(currentTotal)}
-                </p>
-              )}
-            </div>
-          </div>
+      <Input
+        placeholder="Search by description or department…"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        className="max-w-sm"
+      />
 
-          {invoice.status === "FINAL" && (
-            <p className="text-xs text-destructive font-medium">
-              This invoice is finalized — the API will reject edits.
-            </p>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[40%]">Description</TableHead>
+            <TableHead>Department</TableHead>
+            <TableHead className="text-right">Unit Price</TableHead>
+            <TableHead className="text-right">Times Used</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filtered.map((item) => (
+            <TableRow key={item.id}>
+              <TableCell className="text-sm">{item.description}</TableCell>
+              <TableCell className="text-sm text-muted-foreground">
+                {item.department}
+              </TableCell>
+              <TableCell className="text-right tabular-nums text-sm">
+                {formatAmount(item.unitPrice)}
+              </TableCell>
+              <TableCell className="text-right tabular-nums text-sm text-muted-foreground">
+                {item.usageCount}
+              </TableCell>
+              <TableCell className="text-right space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openEdit(item)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setDeleteItem(item)}
+                >
+                  Delete
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))}
+          {filtered.length === 0 && (
+            <TableRow>
+              <TableCell
+                colSpan={5}
+                className="text-center text-muted-foreground py-6"
+              >
+                {search.trim()
+                  ? "No line items match your search."
+                  : "No saved line items yet. Add one above."}
+              </TableCell>
+            </TableRow>
           )}
-        </div>
-      )}
+        </TableBody>
+      </Table>
 
-      {/* Line items table */}
-      {invoice && (
-        <div className="space-y-3">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[40%]">Description</TableHead>
-                <TableHead className="w-[10%] text-right">Qty</TableHead>
-                <TableHead className="w-[15%] text-right">Unit Price</TableHead>
-                <TableHead className="w-[15%] text-right">Extended</TableHead>
-                <TableHead className="w-[20%] text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.map((item, i) => (
-                <TableRow key={i}>
-                  <TableCell className="py-1.5">
-                    <Input
-                      value={item.description}
-                      onChange={(e) => updateItem(i, "description", e.target.value)}
-                      placeholder="Description"
-                      className="h-7 text-sm"
-                    />
-                  </TableCell>
-                  <TableCell className="py-1.5 text-right">
-                    <Input
-                      type="number"
-                      min="0"
-                      step="any"
-                      value={item.quantity}
-                      onChange={(e) => updateItem(i, "quantity", e.target.value)}
-                      className="h-7 text-sm text-right w-20 ml-auto"
-                    />
-                  </TableCell>
-                  <TableCell className="py-1.5 text-right">
-                    <Input
-                      type="number"
-                      min="0"
-                      step="any"
-                      value={item.unitPrice}
-                      onChange={(e) => updateItem(i, "unitPrice", e.target.value)}
-                      className="h-7 text-sm text-right w-28 ml-auto"
-                    />
-                  </TableCell>
-                  <TableCell className="py-1.5 text-right tabular-nums text-sm">
-                    {formatAmount(item.extendedPrice)}
-                  </TableCell>
-                  <TableCell className="py-1.5 text-right">
-                    <div className="inline-flex gap-1 justify-end">
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={() => moveRow(i, "up")}
-                        disabled={i === 0}
-                        title="Move up"
-                      >
-                        ↑
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={() => moveRow(i, "down")}
-                        disabled={i === items.length - 1}
-                        title="Move down"
-                      >
-                        ↓
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="icon-sm"
-                        onClick={() => deleteRow(i)}
-                        title="Delete row"
-                      >
-                        ×
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+      <p className="text-xs text-muted-foreground">
+        {items.length} item{items.length !== 1 ? "s" : ""} total
+      </p>
 
-              {items.length === 0 && (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-center text-muted-foreground py-6 text-sm"
-                  >
-                    No line items. Add one below.
-                  </TableCell>
-                </TableRow>
-              )}
-
-              {/* Totals row */}
-              {items.length > 0 && (
-                <TableRow className="border-t-2 font-semibold">
-                  <TableCell colSpan={3} className="text-right text-sm py-2">
-                    Total
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums text-sm py-2">
-                    {formatAmount(currentTotal)}
-                  </TableCell>
-                  <TableCell />
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-
-          {/* Footer actions */}
-          <div className="flex items-center justify-between pt-1">
-            <Button variant="outline" size="sm" onClick={addRow}>
-              + Add Row
+      {/* Edit dialog */}
+      <Dialog
+        open={!!editItem}
+        onOpenChange={(open) => {
+          if (!open) setEditItem(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Line Item</DialogTitle>
+            <DialogDescription>Update the line item details.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="li-edit-desc">Description</Label>
+              <Input
+                id="li-edit-desc"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="li-edit-dept">Department</Label>
+              <Input
+                id="li-edit-dept"
+                value={editDepartment}
+                onChange={(e) => setEditDepartment(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="li-edit-price">Unit Price</Label>
+              <Input
+                id="li-edit-price"
+                type="number"
+                min="0"
+                step="0.01"
+                value={editPrice}
+                onChange={(e) => setEditPrice(e.target.value)}
+              />
+            </div>
+            {editError && (
+              <p className="text-sm text-destructive">{editError}</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditItem(null)}>
+              Cancel
             </Button>
             <Button
-              size="sm"
-              onClick={handleSave}
-              disabled={saving || items.length === 0}
+              onClick={handleEdit}
+              disabled={
+                !editDescription.trim() ||
+                !editDepartment.trim() ||
+                !editPrice ||
+                Number(editPrice) < 0 ||
+                editSaving
+              }
             >
-              {saving ? "Saving…" : "Save Changes"}
+              {editSaving ? "Saving…" : "Save"}
             </Button>
-          </div>
-        </div>
-      )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation dialog */}
+      <Dialog
+        open={!!deleteItem}
+        onOpenChange={(open) => {
+          if (!open) setDeleteItem(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Line Item</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete &ldquo;{deleteItem?.description}&rdquo;?
+              This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteItem(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={deleting}
+            >
+              {deleting ? "Deleting…" : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
