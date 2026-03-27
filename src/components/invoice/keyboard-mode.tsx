@@ -135,9 +135,18 @@ export function KeyboardMode({
   useEffect(() => {
     fetch("/api/staff")
       .then((res) => res.json())
-      .then((data: StaffMember[]) => setStaff(data))
+      .then((data: StaffMember[]) => {
+        setStaff(data);
+        // When editing an existing invoice, re-populate signatures and account numbers
+        // from the staff record (these aren't stored on the invoice)
+        if (form.staffId) {
+          const match = data.find((s: StaffMember) => s.id === form.staffId);
+          if (match) handleStaffSelect(match);
+        }
+      })
       .catch(() => {})
       .finally(() => setStaffLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
