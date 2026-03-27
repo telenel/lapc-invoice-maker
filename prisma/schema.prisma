@@ -18,7 +18,8 @@ model User {
   active       Boolean   @default(true)
   createdAt    DateTime  @default(now()) @map("created_at")
   updatedAt    DateTime  @updatedAt @map("updated_at")
-  invoices     Invoice[]
+  invoices       Invoice[]
+  userQuickPicks UserQuickPick[]
 
   @@map("users")
 }
@@ -180,4 +181,19 @@ model SavedLineItem {
 
   @@unique([department, description])
   @@map("saved_line_items")
+}
+
+model UserQuickPick {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  description String
+  unitPrice   Decimal  @map("unit_price") @db.Decimal(10, 2)
+  department  String
+  usageCount  Int      @default(0) @map("usage_count")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, department, description])
+  @@map("user_quick_picks")
 }
