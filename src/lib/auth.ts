@@ -27,6 +27,7 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
             username: user.username,
             role: user.role,
+            needsSetup: user.needsSetup,
           };
         }
 
@@ -51,6 +52,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           username: user.username,
           role: user.role,
+          needsSetup: user.needsSetup,
         };
       },
     }),
@@ -63,6 +65,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.username = (user as unknown as { username: string }).username;
         token.role = (user as unknown as { role: string }).role;
+        token.needsSetup = (user as unknown as { needsSetup: boolean }).needsSetup;
       }
       return token;
     },
@@ -72,6 +75,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as { username: string }).username =
           token.username as string;
         (session.user as { role: string }).role = token.role as string;
+        (session.user as { needsSetup: boolean }).needsSetup = token.needsSetup as boolean;
       }
       return session;
     },
