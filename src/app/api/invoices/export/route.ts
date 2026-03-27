@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const amountMin = searchParams.get("amountMin") ?? undefined;
     const amountMax = searchParams.get("amountMax") ?? undefined;
 
-    const where: Prisma.InvoiceWhereInput = {};
+    const where: Prisma.InvoiceWhereInput = { type: "INVOICE" };
 
     if (status) {
       where.status = status;
