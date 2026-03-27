@@ -1,4 +1,4 @@
-FROM node:20-slim AS base
+FROM node:22-slim AS base
 
 # Install Chromium dependencies for Puppeteer
 RUN apt-get update && apt-get install -y \
@@ -51,9 +51,10 @@ COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 # Prisma v7 generates client to src/generated/prisma (not node_modules/.prisma)
 COPY --from=builder /app/src/generated/prisma ./src/generated/prisma
 
-# Install prisma CLI + dotenv for migrations at runtime
-# Force dotenv to top-level node_modules so prisma.config.ts can find it
-RUN npm install --no-save prisma && npm install --no-save dotenv && ls node_modules/dotenv/config.js
+# Install prisma CLI for migrations at runtime, then copy dotenv on top
+# (prisma's npm install creates nested node_modules that swallows dotenv if installed together)
+RUN npm install --no-save prisma
+COPY --from=deps /app/node_modules/dotenv ./node_modules/dotenv
 
 RUN mkdir -p data/pdfs public/uploads
 
