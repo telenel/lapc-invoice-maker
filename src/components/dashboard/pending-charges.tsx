@@ -66,13 +66,13 @@ export function PendingCharges() {
   if (loading || total === 0) return null;
 
   return (
-    <Card className="border-l-4 border-l-amber-500">
-      <CardHeader className="pb-2">
+    <Card>
+      <CardHeader className="pb-2 border-b border-border/50">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-medium">
             Pending POS Charges
           </CardTitle>
-          <Badge variant="secondary" className="tabular-nums">
+          <Badge variant="warning" className="tabular-nums">
             {total}
           </Badge>
         </div>
