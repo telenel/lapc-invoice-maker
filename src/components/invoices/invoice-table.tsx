@@ -234,6 +234,7 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
                           {invoice.category && (
                             <> · {invoice.category.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}</>
                           )}
+                          {" "}· by {invoice.creator.name}
                         </p>
                       </div>
                     </div>
