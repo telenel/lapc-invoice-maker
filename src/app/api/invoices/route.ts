@@ -18,6 +18,8 @@ export async function GET(request: NextRequest) {
     const department = searchParams.get("department") ?? undefined;
     const dateFrom = searchParams.get("dateFrom") ?? undefined;
     const dateTo = searchParams.get("dateTo") ?? undefined;
+    const createdFrom = searchParams.get("createdFrom") ?? undefined;
+    const createdTo = searchParams.get("createdTo") ?? undefined;
     const category = searchParams.get("category") ?? undefined;
     const amountMin = searchParams.get("amountMin") ?? undefined;
     const amountMax = searchParams.get("amountMax") ?? undefined;
@@ -49,6 +51,11 @@ export async function GET(request: NextRequest) {
       if (dateFrom) where.date.gte = new Date(dateFrom);
       if (dateTo) where.date.lte = new Date(dateTo);
     }
+    if (createdFrom || createdTo) {
+      where.createdAt = {};
+      if (createdFrom) where.createdAt.gte = new Date(createdFrom);
+      if (createdTo) where.createdAt.lte = new Date(createdTo + "T23:59:59.999Z");
+    }
     if (amountMin || amountMax) {
       where.totalAmount = {};
       if (amountMin) where.totalAmount.gte = amountMin;
@@ -61,6 +68,60 @@ export async function GET(request: NextRequest) {
         { staff: { name: { contains: search, mode: "insensitive" } } },
         { items: { some: { description: { contains: search, mode: "insensitive" } } } },
       ];
+    }
+
+    // Stats-only mode: return count + sum without fetching records
+    const statsOnly = searchParams.get("statsOnly") === "true";
+    const groupBy = searchParams.get("groupBy");
+
+    if (statsOnly && groupBy === "creator") {
+      // Get current month boundaries
+      const now = new Date();
+      const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+      const invoices = await prisma.invoice.findMany({
+        where: {
+          type: "INVOICE",
+          status: "FINAL",
+          createdAt: { gte: firstOfMonth },
+        },
+        select: {
+          totalAmount: true,
+          creator: { select: { id: true, name: true } },
+        },
+      });
+
+      // Aggregate by creator
+      const userMap = new Map<string, { id: string; name: string; invoiceCount: number; totalAmount: number }>();
+      for (const inv of invoices) {
+        const key = inv.creator.id;
+        const existing = userMap.get(key);
+        if (existing) {
+          existing.invoiceCount++;
+          existing.totalAmount += Number(inv.totalAmount);
+        } else {
+          userMap.set(key, {
+            id: inv.creator.id,
+            name: inv.creator.name,
+            invoiceCount: 1,
+            totalAmount: Number(inv.totalAmount),
+          });
+        }
+      }
+
+      const users = Array.from(userMap.values()).sort((a, b) => b.totalAmount - a.totalAmount);
+      return NextResponse.json({ users });
+    }
+
+    if (statsOnly) {
+      const [agg, total] = await prisma.$transaction([
+        prisma.invoice.aggregate({ where, _sum: { totalAmount: true } }),
+        prisma.invoice.count({ where }),
+      ]);
+      return NextResponse.json({
+        total,
+        sumTotalAmount: Number(agg._sum.totalAmount ?? 0),
+      });
     }
 
     const [invoices, total] = await prisma.$transaction([
