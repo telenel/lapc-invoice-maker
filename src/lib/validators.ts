@@ -32,6 +32,8 @@ export const invoiceCreateSchema = z.object({
   isRecurring: z.boolean().default(false),
   recurringInterval: z.string().optional(),
   recurringEmail: z.string().email().optional().or(z.literal("")),
+  isRunning: z.boolean().default(false),
+  runningTitle: z.string().optional(),
   status: z.enum(["DRAFT", "PENDING_CHARGE"]).optional(),
 });
 
