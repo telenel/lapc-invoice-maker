@@ -4,10 +4,12 @@ import { StatsCards } from "@/components/dashboard/stats-cards";
 import { PendingCharges } from "@/components/dashboard/pending-charges";
 import { RecentInvoices } from "@/components/dashboard/recent-invoices";
 import { WelcomeBanner } from "@/components/dashboard/welcome-banner";
+import { OnboardingWrapper } from "@/components/dashboard/onboarding-wrapper";
 
 export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
+      <OnboardingWrapper />
       <WelcomeBanner />
       <div className="flex items-baseline justify-between">
         <h1 className="text-2xl font-bold tracking-tight text-balance">Dashboard</h1>
