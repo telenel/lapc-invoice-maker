@@ -12,15 +12,13 @@ export async function GET(request: NextRequest) {
     const dateFrom = searchParams.get("dateFrom") ?? undefined;
     const dateTo = searchParams.get("dateTo") ?? undefined;
 
-    const dateFilter =
-      dateFrom || dateTo
-        ? {
-            date: {
-              ...(dateFrom ? { gte: new Date(dateFrom) } : {}),
-              ...(dateTo ? { lte: new Date(dateTo) } : {}),
-            },
-          }
-        : undefined;
+    const dateFilter: Record<string, unknown> = { type: "INVOICE" as const };
+    if (dateFrom || dateTo) {
+      dateFilter.date = {
+        ...(dateFrom ? { gte: new Date(dateFrom) } : {}),
+        ...(dateTo ? { lte: new Date(dateTo) } : {}),
+      };
+    }
 
     // byCategory groupBy
     const categoryGroups = await prisma.invoice.groupBy({
