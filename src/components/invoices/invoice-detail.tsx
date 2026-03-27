@@ -209,7 +209,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
         <div className="flex items-center gap-2 flex-wrap justify-end">
           <Badge
             variant={
-              isFinal ? "default" : isPendingCharge ? "secondary" : "outline"
+              isFinal ? "success" : isPendingCharge ? "info" : "warning"
             }
           >
             {isFinal
@@ -307,15 +307,15 @@ export function InvoiceDetailView({ id }: { id: string }) {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Date</span>
+              <span className="text-[11px] font-medium text-muted-foreground">Date</span>
               <span>{formatDate(invoice.date)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Department</span>
+              <span className="text-[11px] font-medium text-muted-foreground">Department</span>
               <Badge variant="secondary">{invoice.department}</Badge>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Category</span>
+              <span className="text-[11px] font-medium text-muted-foreground">Category</span>
               <Badge variant="outline">
                 {invoice.category
                   ? invoice.category.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())
@@ -323,19 +323,19 @@ export function InvoiceDetailView({ id }: { id: string }) {
               </Badge>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Account Number</span>
+              <span className="text-[11px] font-medium text-muted-foreground">Account Number</span>
               <span>{invoice.accountNumber || "—"}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Account Code</span>
+              <span className="text-[11px] font-medium text-muted-foreground">Account Code</span>
               <span>{invoice.accountCode || "—"}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Total Amount</span>
+              <span className="text-[11px] font-medium text-muted-foreground">Total Amount</span>
               <span className="font-bold">{formatAmount(invoice.totalAmount)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">PrismCore</span>
+              <span className="text-[11px] font-medium text-muted-foreground">PrismCore</span>
               {invoice.prismcorePath ? (
                 <Badge variant="secondary">Attached</Badge>
               ) : (
@@ -345,7 +345,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
             {invoice.isRecurring && (
               <>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Recurring</span>
+                  <span className="text-[11px] font-medium text-muted-foreground">Recurring</span>
                   <Badge variant="secondary">
                     {invoice.recurringInterval
                       ? invoice.recurringInterval.charAt(0).toUpperCase() + invoice.recurringInterval.slice(1)
@@ -354,7 +354,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
                 </div>
                 {invoice.recurringEmail && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Recurring Email</span>
+                    <span className="text-[11px] font-medium text-muted-foreground">Recurring Email</span>
                     <span>{invoice.recurringEmail}</span>
                   </div>
                 )}
@@ -365,7 +365,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
               <>
                 <Separator />
                 <div className="text-sm">
-                  <p className="text-muted-foreground mb-1">Notes</p>
+                  <p className="text-[11px] font-medium text-muted-foreground mb-1">Notes</p>
                   <p className="whitespace-pre-wrap">{invoice.notes}</p>
                 </div>
               </>
@@ -380,26 +380,26 @@ export function InvoiceDetailView({ id }: { id: string }) {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Name</span>
+              <span className="text-[11px] font-medium text-muted-foreground">Name</span>
               <span className="font-bold">{invoice.staff.name}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Title</span>
+              <span className="text-[11px] font-medium text-muted-foreground">Title</span>
               <span>{invoice.staff.title}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Department</span>
+              <span className="text-[11px] font-medium text-muted-foreground">Department</span>
               <span>{invoice.staff.department}</span>
             </div>
             {invoice.staff.extension && (
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Extension</span>
+                <span className="text-[11px] font-medium text-muted-foreground">Extension</span>
                 <span>{invoice.staff.extension}</span>
               </div>
             )}
             {invoice.staff.email && (
               <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Email</span>
+                <span className="text-[11px] font-medium text-muted-foreground">Email</span>
                 <span>{invoice.staff.email}</span>
               </div>
             )}
