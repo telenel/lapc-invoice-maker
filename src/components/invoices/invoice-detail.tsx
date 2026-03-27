@@ -62,6 +62,8 @@ interface Invoice {
   isRecurring: boolean;
   recurringInterval: string | null;
   recurringEmail: string | null;
+  isRunning: boolean;
+  runningTitle: string | null;
   staff: {
     id: string;
     name: string;
@@ -208,10 +210,15 @@ export function InvoiceDetailView({ id }: { id: string }) {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-balance">
-            {!invoice.invoiceNumber
-              ? "Pending POS Charge"
-              : invoice.invoiceNumber}
+            {invoice.isRunning && invoice.runningTitle
+              ? invoice.runningTitle
+              : !invoice.invoiceNumber
+                ? "Pending POS Charge"
+                : invoice.invoiceNumber}
           </h1>
+          {invoice.isRunning && invoice.invoiceNumber && (
+            <p className="text-sm font-medium text-muted-foreground">{invoice.invoiceNumber}</p>
+          )}
           <p className="text-sm text-muted-foreground mt-1">
             Created {formatDate(invoice.createdAt)} by {invoice.creator.name}
           </p>
@@ -229,6 +236,9 @@ export function InvoiceDetailView({ id }: { id: string }) {
                 ? "Pending Charge"
                 : "Draft"}
           </Badge>
+          {invoice.isRunning && (
+            <Badge variant="info">Running Invoice</Badge>
+          )}
           {invoice.isRecurring && (
             <Badge variant="secondary">
               Recurring{invoice.recurringInterval ? ` · ${invoice.recurringInterval.charAt(0).toUpperCase() + invoice.recurringInterval.slice(1)}` : ""}
