@@ -3,6 +3,7 @@ import { Plus, FileText } from "lucide-react";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { PendingCharges } from "@/components/dashboard/pending-charges";
 import { RecentInvoices } from "@/components/dashboard/recent-invoices";
+import { RunningInvoices } from "@/components/dashboard/running-invoices";
 import { WelcomeBanner } from "@/components/dashboard/welcome-banner";
 import { OnboardingWrapper } from "@/components/dashboard/onboarding-wrapper";
 import { TeamActivity } from "@/components/dashboard/team-activity";
@@ -33,6 +34,7 @@ export default function DashboardPage() {
       </div>
       <StatsCards />
       <PendingCharges />
+      <RunningInvoices />
       <RecentInvoices />
       <TeamActivity />
     </div>
