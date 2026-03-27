@@ -20,6 +20,10 @@ import {
 
 type QuoteStatus = "DRAFT" | "SENT" | "ACCEPTED" | "DECLINED" | "EXPIRED";
 
+function getInitials(name: string): string {
+  return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+}
+
 interface Quote {
   id: string;
   quoteNumber: string;
@@ -56,10 +60,10 @@ type SortDir = "asc" | "desc";
 
 const PAGE_SIZE = 20;
 
-const STATUS_BADGE_VARIANT: Record<QuoteStatus, "default" | "secondary" | "outline" | "destructive"> = {
-  DRAFT: "outline",
-  SENT: "secondary",
-  ACCEPTED: "default",
+const STATUS_BADGE_VARIANT: Record<QuoteStatus, "success" | "info" | "warning" | "destructive" | "outline"> = {
+  DRAFT: "warning",
+  SENT: "info",
+  ACCEPTED: "success",
   DECLINED: "destructive",
   EXPIRED: "outline",
 };
@@ -203,81 +207,73 @@ export function QuoteTable() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead
-                  className="cursor-pointer select-none"
-                  onClick={() => handleSort("quoteNumber")}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSort("quoteNumber"); } }}
-                >
-                  Quote #{sortIndicator("quoteNumber")}
+                <TableHead>
+                  <div className="flex gap-4">
+                    <button
+                      className="cursor-pointer select-none text-xs font-medium hover:text-foreground transition-colors"
+                      onClick={() => handleSort("quoteNumber")}
+                    >
+                      Quote #{sortIndicator("quoteNumber")}
+                    </button>
+                    <button
+                      className="cursor-pointer select-none text-xs font-medium hover:text-foreground transition-colors"
+                      onClick={() => handleSort("date")}
+                    >
+                      Date{sortIndicator("date")}
+                    </button>
+                    <button
+                      className="cursor-pointer select-none text-xs font-medium hover:text-foreground transition-colors"
+                      onClick={() => handleSort("expirationDate")}
+                    >
+                      Expires{sortIndicator("expirationDate")}
+                    </button>
+                  </div>
                 </TableHead>
-                <TableHead
-                  className="cursor-pointer select-none"
-                  onClick={() => handleSort("date")}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSort("date"); } }}
-                >
-                  Date{sortIndicator("date")}
+                <TableHead className="text-right">
+                  <button
+                    className="cursor-pointer select-none text-xs font-medium hover:text-foreground transition-colors"
+                    onClick={() => handleSort("totalAmount")}
+                  >
+                    Amount{sortIndicator("totalAmount")}
+                  </button>
                 </TableHead>
-                <TableHead>Recipient</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead
-                  className="cursor-pointer select-none text-right"
-                  onClick={() => handleSort("totalAmount")}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSort("totalAmount"); } }}
-                >
-                  Amount{sortIndicator("totalAmount")}
-                </TableHead>
-                <TableHead
-                  className="cursor-pointer select-none"
-                  onClick={() => handleSort("expirationDate")}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSort("expirationDate"); } }}
-                >
-                  Expires{sortIndicator("expirationDate")}
-                </TableHead>
-                <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {quotes.map((quote) => (
                 <TableRow
                   key={quote.id}
-                  className="cursor-pointer"
+                  className="cursor-pointer group"
                   onClick={() => router.push(`/quotes/${quote.id}`)}
                   role="link"
                   tabIndex={0}
                   onKeyDown={(e) => { if (e.key === "Enter") router.push(`/quotes/${quote.id}`); }}
                 >
-                  <TableCell className="font-bold">
-                    {quote.quoteNumber}
-                  </TableCell>
-                  <TableCell>{formatDate(quote.date)}</TableCell>
                   <TableCell>
-                    {quote.recipientName || quote.recipientOrg || "\u2014"}
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-muted text-[11px] font-bold text-muted-foreground shrink-0">
+                        {getInitials(quote.recipientName || quote.recipientOrg || "??")}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-semibold truncate">
+                          {quote.quoteNumber} · {quote.recipientName || quote.recipientOrg || "—"}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground">
+                          {quote.department} · {formatDate(quote.date)}
+                          {quote.expirationDate && (
+                            <span className={isExpired(quote.expirationDate) ? " text-destructive" : ""}>
+                              {" "}· Exp {formatDate(quote.expirationDate)}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
                   </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{quote.department}</Badge>
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatAmount(quote.totalAmount)}
-                  </TableCell>
-                  <TableCell>
-                    {quote.expirationDate ? (
-                      <span className={isExpired(quote.expirationDate) ? "text-destructive" : ""}>
-                        {formatDate(quote.expirationDate)}
-                      </span>
-                    ) : (
-                      "\u2014"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={STATUS_BADGE_VARIANT[quote.status]}>
+                  <TableCell className="text-right">
+                    <p className="text-[13px] font-bold tabular-nums">
+                      {formatAmount(quote.totalAmount)}
+                    </p>
+                    <Badge variant={STATUS_BADGE_VARIANT[quote.status]} className="mt-0.5">
                       {STATUS_LABEL[quote.status]}
                     </Badge>
                   </TableCell>
