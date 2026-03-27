@@ -51,12 +51,14 @@ export function Nav() {
   const role = (session?.user as { role?: string } | undefined)?.role;
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border/60 bg-background/95 backdrop-blur-sm shadow-[0_1px_3px_rgba(0,0,0,0.08)]">
+    <nav className="sticky top-0 z-50 bg-background/85 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
       <div className="mx-auto flex h-16 max-w-7xl items-center px-4 gap-6">
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/lapc-logo.png" alt="LAPC" width={32} style={{ height: "32px" }} />
-          <span className="font-semibold tracking-tight text-lg">InvoiceMaker</span>
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-red-600 to-red-800">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/lapc-logo.png" alt="LAPC" width={22} style={{ height: "22px" }} />
+          </div>
+          <span className="font-bold tracking-tight text-lg">InvoiceMaker</span>
         </Link>
         <div className="flex gap-0.5">
           {links.map((link) => {
@@ -69,10 +71,10 @@ export function Nav() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "relative px-3 py-2 text-sm font-medium tracking-wide uppercase transition-colors",
+                  "relative px-3 py-1.5 text-sm font-medium rounded-lg transition-colors",
                   isActive
-                    ? "text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 )}
               >
                 {link.label}
@@ -83,10 +85,10 @@ export function Nav() {
             <Link
               href="/admin/settings"
               className={cn(
-                "relative px-3 py-2 text-sm font-medium tracking-wide uppercase transition-colors",
+                "relative px-3 py-1.5 text-sm font-medium rounded-lg transition-colors",
                 pathname.startsWith("/admin")
-                  ? "text-foreground after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-muted text-foreground"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
               )}
             >
               Admin
@@ -160,9 +162,16 @@ export function Nav() {
           </div>
 
           <div className="w-px h-5 bg-border/60" />
-          <Button variant="ghost" size="sm" onClick={() => signOut()}>
-            Sign out
-          </Button>
+          <button
+            onClick={() => signOut()}
+            className="flex items-center justify-center w-7 h-7 rounded-full bg-muted text-xs font-bold text-muted-foreground hover:bg-muted/80 transition-colors"
+            aria-label="Sign out"
+            title="Sign out"
+          >
+            {session?.user?.name
+              ? session.user.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
+              : "??"}
+          </button>
         </div>
       </div>
     </nav>
