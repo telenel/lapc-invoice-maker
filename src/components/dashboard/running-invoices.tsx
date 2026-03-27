@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatAmount } from "@/lib/formatters";
+import { formatAmount, getInitials } from "@/lib/formatters";
 
 interface RunningInvoice {
   id: string;
@@ -12,12 +13,16 @@ interface RunningInvoice {
   department: string;
   totalAmount: string | number;
   staff: { name: string };
+  creator: { id: string; name: string };
   items: { id: string }[];
 }
 
 export function RunningInvoices() {
+  const { data: session } = useSession();
   const [invoices, setInvoices] = useState<RunningInvoice[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const currentUserId = (session?.user as { id?: string } | undefined)?.id;
 
   useEffect(() => {
     fetch("/api/invoices?status=DRAFT&isRunning=true&pageSize=50")
@@ -29,6 +34,13 @@ export function RunningInvoices() {
 
   if (loading || invoices.length === 0) return null;
 
+  // Sort: current user's running invoices first
+  const sorted = [...invoices].sort((a, b) => {
+    const aIsMine = a.creator.id === currentUserId ? 0 : 1;
+    const bIsMine = b.creator.id === currentUserId ? 0 : 1;
+    return aIsMine - bIsMine;
+  });
+
   return (
     <Card>
       <CardHeader className="border-b border-border/50">
@@ -39,26 +51,33 @@ export function RunningInvoices() {
       </CardHeader>
       <CardContent className="p-0">
         <div>
-          {invoices.map((inv, i) => (
-            <Link
-              key={inv.id}
-              href={`/invoices/${inv.id}/edit`}
-              className={`flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors ${i < invoices.length - 1 ? "border-b border-border/30" : ""}`}
-            >
-              <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-semibold truncate">
-                  {inv.runningTitle || "Untitled Running Invoice"}
-                </p>
-                <p className="text-[11px] text-muted-foreground">
-                  {inv.staff.name} · {inv.department} · {inv.items.length} item{inv.items.length !== 1 ? "s" : ""}
-                </p>
-              </div>
-              <div className="text-right shrink-0">
-                <p className="text-[13px] font-bold tabular-nums">{formatAmount(inv.totalAmount)}</p>
-                <p className="text-[10px] text-primary font-medium">Add Items →</p>
-              </div>
-            </Link>
-          ))}
+          {sorted.map((inv, i) => {
+            const isMine = inv.creator.id === currentUserId;
+            return (
+              <Link
+                key={inv.id}
+                href={`/invoices/${inv.id}/edit`}
+                className={`flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors ${i < sorted.length - 1 ? "border-b border-border/30" : ""} ${isMine ? "bg-primary/[0.03]" : ""}`}
+              >
+                <div className="flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-muted text-[11px] font-bold text-muted-foreground shrink-0">
+                  {getInitials(inv.creator.name)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-semibold truncate">
+                    {inv.runningTitle || "Untitled Running Invoice"}
+                    {isMine && <span className="text-[10px] text-primary font-medium ml-2">Yours</span>}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {inv.creator.name} · {inv.department} · {inv.items.length} item{inv.items.length !== 1 ? "s" : ""}
+                  </p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-[13px] font-bold tabular-nums">{formatAmount(inv.totalAmount)}</p>
+                  <p className="text-[10px] text-primary font-medium">Add Items →</p>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </CardContent>
     </Card>
