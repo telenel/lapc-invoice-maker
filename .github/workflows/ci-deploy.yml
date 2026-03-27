@@ -42,18 +42,14 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: montalvo.io
-          username: root
-          key: ${{ secrets.VPS_SSH_KEY }}
-          command_timeout: 8m
-          script: |
-            cd /opt/lapc-invoice-maker
-            git pull origin main || (git init && git remote add origin https://github.com/telenel/lapc-invoice-maker.git && git fetch origin main && git checkout -f origin/main)
-            docker compose down --remove-orphans 2>/dev/null || true
-            docker compose build app
-            docker compose up -d
+      - name: Trigger deploy webhook
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            https://montalvo.io/hooks/deploy-lapc \
+            -H "X-Deploy-Secret: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}")
+          echo "Webhook response: $response"
+          if [ "$response" != "200" ]; then
+            echo "Deploy webhook failed with status $response"
+            exit 1
+          fi
+          echo "Deploy triggered successfully"
