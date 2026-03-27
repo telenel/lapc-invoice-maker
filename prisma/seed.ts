@@ -2,20 +2,14 @@ import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
-import crypto from "crypto";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
-function generateAccessCode(): string {
-  return String(crypto.randomInt(100000, 999999));
-}
-
 async function main() {
   const passwordHash = await bcrypt.hash("admin", 10);
-  const accessCode = generateAccessCode();
 
-  const admin = await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { username: "admin" },
     update: { role: "admin" },
     create: {
@@ -23,12 +17,9 @@ async function main() {
       passwordHash,
       name: "Administrator",
       role: "admin",
-      accessCode,
+      setupComplete: true,
     },
   });
-  if (admin.accessCode) {
-    console.log(`Admin access code: ${admin.accessCode}`);
-  }
 
   // Seed staff from original config
   const staffData = [
