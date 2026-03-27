@@ -73,11 +73,15 @@ const STATUS_LABEL: Record<QuoteStatus, string> = {
   EXPIRED: "Expired",
 };
 
-export function QuoteTable() {
+interface QuoteTableProps {
+  departments: string[];
+  categories: { name: string; label: string }[];
+}
+
+export function QuoteTable({ departments, categories }: QuoteTableProps) {
   const router = useRouter();
 
   const [filters, setFilters] = useState<QuoteFilters>(EMPTY_FILTERS);
-  const [departments, setDepartments] = useState<string[]>([]);
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -86,21 +90,6 @@ export function QuoteTable() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-
-  // Fetch departments from /api/staff for the filter dropdown
-  useEffect(() => {
-    async function fetchDepartments() {
-      const res = await fetch("/api/staff");
-      if (res.ok) {
-        const data: { id: string; name: string; department: string }[] = await res.json();
-        const unique = Array.from(
-          new Set(data.map((s) => s.department).filter(Boolean))
-        ).sort();
-        setDepartments(unique);
-      }
-    }
-    fetchDepartments();
-  }, []);
 
   const fetchQuotes = useCallback(async () => {
     setLoading(true);
@@ -174,6 +163,7 @@ export function QuoteTable() {
         <QuoteFiltersBar
           filters={filters}
           departments={departments}
+          categories={categories}
           onChange={handleFiltersChange}
           onClear={handleClear}
         />
