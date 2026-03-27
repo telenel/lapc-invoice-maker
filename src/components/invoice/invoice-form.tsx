@@ -154,6 +154,15 @@ export function useInvoiceForm(
     ...initial,
   }));
 
+  // When initial data arrives asynchronously (e.g. edit page fetch), update form state
+  const initialApplied = useRef(false);
+  useEffect(() => {
+    if (initial && !initialApplied.current) {
+      initialApplied.current = true;
+      setForm({ ...defaultForm(), ...initial });
+    }
+  }, [initial]);
+
   const [saving, setSaving] = useState(false);
   const [generationStep, setGenerationStep] = useState<GenerationStep>(null);
 
