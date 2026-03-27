@@ -32,6 +32,10 @@ export async function POST(request: NextRequest) {
 
   const passwordHash = await bcrypt.hash(password, 10);
 
+  // First user to complete setup becomes admin
+  const userCount = await prisma.user.count({ where: { setupComplete: true } });
+  const isFirstUser = userCount === 0;
+
   await prisma.user.update({
     where: { id: userId },
     data: {
@@ -40,6 +44,7 @@ export async function POST(request: NextRequest) {
       username: email.toLowerCase(),
       passwordHash,
       setupComplete: true,
+      ...(isFirstUser && { role: "admin" }),
     },
   });
 
