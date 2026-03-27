@@ -76,7 +76,7 @@ export function LoginForm() {
               <p className="text-sm text-red-500">{error}</p>
             </div>
           )}
-          <Button type="submit" className="w-full h-11 font-semibold uppercase tracking-wide" disabled={loading}>
+          <Button type="submit" className="w-full h-11 font-semibold uppercase tracking-wide bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white" disabled={loading}>
             {loading
               ? "Signing in…"
               : isAccessCode
