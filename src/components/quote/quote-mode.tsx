@@ -64,6 +64,22 @@ interface QuoteModeProps {
 // Component
 // ---------------------------------------------------------------------------
 
+function SectionDivider({
+  label,
+  children,
+}: {
+  label: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-3 pt-6 pb-2">
+      <span className="section-label">{label}</span>
+      <div className="flex-1 border-t border-border" />
+      {children}
+    </div>
+  );
+}
+
 export function QuoteMode({
   form,
   updateField,
@@ -151,22 +167,6 @@ export function QuoteMode({
     }
   }
 
-  // ---- Section divider component ----
-  function SectionDivider({
-    label,
-    children,
-  }: {
-    label: string;
-    children?: React.ReactNode;
-  }) {
-    return (
-      <div className="flex items-center gap-3 pt-6 pb-2">
-        <span className="section-label">{label}</span>
-        <div className="flex-1 border-t border-border" />
-        {children}
-      </div>
-    );
-  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-2">

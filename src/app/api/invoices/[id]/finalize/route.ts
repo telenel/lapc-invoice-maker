@@ -138,7 +138,10 @@ export async function POST(
       },
     });
 
-    // Upsert StaffSignerHistory records for each signature position
+    // Run all post-finalize updates in parallel
+    const postUpdates: Promise<unknown>[] = [];
+
+    // Upsert StaffSignerHistory records
     if (signatureStaffIds && invoice.staffId) {
       const signerLines = [
         { line: signatureStaffIds.line1, position: 0 },
@@ -147,49 +150,53 @@ export async function POST(
       ];
       for (const { line, position } of signerLines) {
         if (line) {
-          await prisma.staffSignerHistory.upsert({
-            where: {
-              staffId_signerStaffId_position: {
+          postUpdates.push(
+            prisma.staffSignerHistory.upsert({
+              where: {
+                staffId_signerStaffId_position: {
+                  staffId: invoice.staffId,
+                  signerStaffId: line,
+                  position,
+                },
+              },
+              update: { lastUsedAt: new Date() },
+              create: {
                 staffId: invoice.staffId,
                 signerStaffId: line,
                 position,
+                lastUsedAt: new Date(),
               },
-            },
-            update: { lastUsedAt: new Date() },
-            create: {
-              staffId: invoice.staffId,
-              signerStaffId: line,
-              position,
-              lastUsedAt: new Date(),
-            },
-          });
+            })
+          );
         }
       }
     }
 
-    // Increment usage count on matching quick-pick items
+    // Increment usage counts
     const descriptions = invoice.items.map((item) => item.description);
     if (descriptions.length > 0) {
-      await prisma.quickPickItem.updateMany({
-        where: {
-          OR: [
-            { department: invoice.department },
-            { department: "__ALL__" },
-          ],
-          description: { in: descriptions },
-        },
-        data: { usageCount: { increment: 1 } },
-      });
-
-      // Increment usage count on matching saved line items
-      await prisma.savedLineItem.updateMany({
-        where: {
-          department: invoice.department,
-          description: { in: descriptions },
-        },
-        data: { usageCount: { increment: 1 } },
-      });
+      postUpdates.push(
+        prisma.quickPickItem.updateMany({
+          where: {
+            OR: [
+              { department: invoice.department },
+              { department: "__ALL__" },
+            ],
+            description: { in: descriptions },
+          },
+          data: { usageCount: { increment: 1 } },
+        }),
+        prisma.savedLineItem.updateMany({
+          where: {
+            department: invoice.department,
+            description: { in: descriptions },
+          },
+          data: { usageCount: { increment: 1 } },
+        })
+      );
     }
+
+    await Promise.all(postUpdates);
 
     return NextResponse.json({ success: true, pdfPath });
   } catch (err) {

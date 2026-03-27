@@ -87,9 +87,9 @@ export function QuickPickForm({ item, onSave, trigger }: QuickPickFormProps) {
 
   return (
     <>
-      <button type="button" onClick={handleOpen} style={{ display: "contents" }}>
+      <div onClick={handleOpen} role="button" tabIndex={-1} style={{ display: "contents" }}>
         {trigger}
-      </button>
+      </div>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
