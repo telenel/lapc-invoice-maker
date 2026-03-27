@@ -20,12 +20,6 @@ import {
 } from "./invoice-filters";
 import { formatAmount, formatDate, getInitials } from "@/lib/formatters";
 
-interface StaffMember {
-  id: string;
-  name: string;
-  department: string;
-}
-
 interface Invoice {
   id: string;
   invoiceNumber: string;
@@ -62,11 +56,15 @@ type SortDir = "asc" | "desc";
 
 const PAGE_SIZE = 20;
 
-export function InvoiceTable() {
+interface InvoiceTableProps {
+  departments: string[];
+  categories: { name: string; label: string }[];
+}
+
+export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
   const router = useRouter();
 
   const [filters, setFilters] = useState<InvoiceFilters>(EMPTY_FILTERS);
-  const [departments, setDepartments] = useState<string[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -75,21 +73,6 @@ export function InvoiceTable() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-
-  // Fetch departments from /api/staff for the filter dropdown
-  useEffect(() => {
-    async function fetchDepartments() {
-      const res = await fetch("/api/staff");
-      if (res.ok) {
-        const data: StaffMember[] = await res.json();
-        const unique = Array.from(
-          new Set(data.map((s) => s.department).filter(Boolean))
-        ).sort();
-        setDepartments(unique);
-      }
-    }
-    fetchDepartments();
-  }, []);
 
   const fetchInvoices = useCallback(async () => {
     setLoading(true);
@@ -175,6 +158,7 @@ export function InvoiceTable() {
           <InvoiceFiltersBar
             filters={filters}
             departments={departments}
+            categories={categories}
             onChange={handleFiltersChange}
             onClear={handleClear}
           />

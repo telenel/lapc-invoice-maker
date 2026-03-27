@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +25,7 @@ export interface InvoiceFilters {
 interface InvoiceFiltersProps {
   filters: InvoiceFilters;
   departments: string[];
+  categories: { name: string; label: string }[];
   onChange: (filters: InvoiceFilters) => void;
   onClear: () => void;
 }
@@ -33,17 +33,10 @@ interface InvoiceFiltersProps {
 export function InvoiceFiltersBar({
   filters,
   departments,
+  categories,
   onChange,
   onClear,
 }: InvoiceFiltersProps) {
-  const [categories, setCategories] = useState<{ name: string; label: string }[]>([]);
-
-  useEffect(() => {
-    fetch("/api/categories")
-      .then((res) => res.json())
-      .then((data) => setCategories(data))
-      .catch(() => {});
-  }, []);
 
   function set(key: keyof InvoiceFilters, value: string) {
     onChange({ ...filters, [key]: value });

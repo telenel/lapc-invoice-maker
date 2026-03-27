@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +25,7 @@ export interface QuoteFilters {
 interface QuoteFiltersProps {
   filters: QuoteFilters;
   departments: string[];
+  categories: { name: string; label: string }[];
   onChange: (filters: QuoteFilters) => void;
   onClear: () => void;
 }
@@ -33,17 +33,10 @@ interface QuoteFiltersProps {
 export function QuoteFiltersBar({
   filters,
   departments,
+  categories,
   onChange,
   onClear,
 }: QuoteFiltersProps) {
-  const [categories, setCategories] = useState<{ name: string; label: string }[]>([]);
-
-  useEffect(() => {
-    fetch("/api/categories")
-      .then((res) => res.json())
-      .then((data) => setCategories(data))
-      .catch(() => {});
-  }, []);
 
   function set(key: keyof QuoteFilters, value: string) {
     onChange({ ...filters, [key]: value });
