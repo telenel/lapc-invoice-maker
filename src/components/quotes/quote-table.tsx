@@ -17,12 +17,9 @@ import {
   QuoteFiltersBar,
   type QuoteFilters,
 } from "./quote-filters";
+import { formatAmount, formatDate, getInitials } from "@/lib/formatters";
 
 type QuoteStatus = "DRAFT" | "SENT" | "ACCEPTED" | "DECLINED" | "EXPIRED";
-
-function getInitials(name: string): string {
-  return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
-}
 
 interface Quote {
   id: string;
@@ -164,22 +161,6 @@ export function QuoteTable() {
   function sortIndicator(field: SortField) {
     if (sortBy !== field) return null;
     return sortDir === "asc" ? " \u2191" : " \u2193";
-  }
-
-  function formatAmount(amount: string | number) {
-    return `$${Number(amount).toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`;
-  }
-
-  function formatDate(dateStr: string) {
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      timeZone: "UTC",
-    });
   }
 
   function isExpired(dateStr: string | null): boolean {

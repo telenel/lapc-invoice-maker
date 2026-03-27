@@ -18,6 +18,7 @@ import {
   InvoiceFiltersBar,
   type InvoiceFilters,
 } from "./invoice-filters";
+import { formatAmount, formatDate, getInitials } from "@/lib/formatters";
 
 interface StaffMember {
   id: string;
@@ -43,10 +44,6 @@ interface InvoicesResponse {
   total: number;
   page: number;
   pageSize: number;
-}
-
-function getInitials(name: string): string {
-  return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 }
 
 const EMPTY_FILTERS: InvoiceFilters = {
@@ -153,22 +150,6 @@ export function InvoiceTable() {
   function sortIndicator(field: SortField) {
     if (sortBy !== field) return null;
     return sortDir === "asc" ? " ↑" : " ↓";
-  }
-
-  function formatAmount(amount: string | number) {
-    return `$${Number(amount).toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    })}`;
-  }
-
-  function formatDate(dateStr: string) {
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      timeZone: "UTC",
-    });
   }
 
   function handleExportCsv() {
