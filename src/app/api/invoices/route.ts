@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
 
     const search = searchParams.get("search") ?? undefined;
-    const status = searchParams.get("status") as "DRAFT" | "FINAL" | null;
+    const status = searchParams.get("status") as "DRAFT" | "FINAL" | "PENDING_CHARGE" | null;
+    const isRunning = searchParams.get("isRunning");
     const staffId = searchParams.get("staffId") ?? undefined;
     const department = searchParams.get("department") ?? undefined;
     const dateFrom = searchParams.get("dateFrom") ?? undefined;
@@ -36,6 +37,9 @@ export async function GET(request: NextRequest) {
 
     if (status) {
       where.status = status;
+    }
+    if (isRunning === "true") {
+      where.isRunning = true;
     }
     if (staffId) {
       where.staffId = staffId;
@@ -82,7 +86,7 @@ export async function GET(request: NextRequest) {
       const invoices = await prisma.invoice.findMany({
         where: {
           type: "INVOICE",
-          status: "FINAL",
+          status: status ? status : { in: ["FINAL", "PENDING_CHARGE"] },
           createdAt: { gte: firstOfMonth },
         },
         select: {
@@ -130,6 +134,7 @@ export async function GET(request: NextRequest) {
         include: {
           staff: { select: { id: true, name: true, title: true, department: true } },
           creator: { select: { id: true, name: true, username: true } },
+          _count: { select: { items: true } },
         },
         orderBy: { [orderByField]: sortDir },
         skip: (page - 1) * pageSize,
