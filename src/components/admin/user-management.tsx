@@ -52,6 +52,8 @@ export function UserManagement() {
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editRole, setEditRole] = useState("user");
+  const [resetCodeUser, setResetCodeUser] = useState<User | null>(null);
+  const [resetedCode, setResetedCode] = useState<string | null>(null);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -109,6 +111,21 @@ export function UserManagement() {
       const updated = await res.json();
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
       setEditUser(null);
+    }
+  }
+
+  async function handleResetCode(user: User) {
+    setResetCodeUser(user);
+    setResetedCode(null);
+    const res = await fetch(`/api/admin/users/${user.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ resetCode: true }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setResetedCode(updated.accessCode);
+      setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
     }
   }
 
@@ -239,6 +256,15 @@ export function UserManagement() {
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={() => handleResetCode(user)}
+                  >
+                    Reset Code
+                  </Button>
+                )}
+                {user.active && (
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => handleDeactivate(user.id)}
                   >
                     Deactivate
@@ -249,6 +275,40 @@ export function UserManagement() {
           ))}
         </TableBody>
       </Table>
+
+      {/* Reset Code dialog */}
+      <Dialog open={!!resetCodeUser} onOpenChange={(open) => { if (!open) { setResetCodeUser(null); setResetedCode(null); } }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset Access Code</DialogTitle>
+            <DialogDescription>
+              {resetedCode
+                ? `A new access code has been generated for ${resetCodeUser?.name}.`
+                : `Generating a new access code for ${resetCodeUser?.name}…`}
+            </DialogDescription>
+          </DialogHeader>
+          {resetedCode && (
+            <div className="space-y-4 py-4">
+              <p className="text-sm text-muted-foreground">
+                Share this new code with the user. They will be prompted to set their own code on next login.
+              </p>
+              <div className="text-center">
+                <span className="text-4xl font-mono font-bold tracking-widest">
+                  {resetedCode}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                This is a temporary code — the user will choose a permanent one after signing in.
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => { setResetCodeUser(null); setResetedCode(null); }}>
+              Done
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit dialog */}
       <Dialog open={!!editUser} onOpenChange={(open) => { if (!open) setEditUser(null); }}>

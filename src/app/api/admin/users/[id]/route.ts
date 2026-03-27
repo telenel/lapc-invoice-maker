@@ -16,6 +16,31 @@ export async function PUT(
 
   try {
     const body = await request.json();
+
+    // Handle reset code request separately (bypasses normal schema validation)
+    if (body.resetCode) {
+      let newCode: string;
+      do {
+        newCode = String(Math.floor(100000 + Math.random() * 900000));
+      } while (await prisma.user.findUnique({ where: { accessCode: newCode } }));
+
+      const updated = await prisma.user.update({
+        where: { id: params.id },
+        data: { accessCode: newCode, needsSetup: true },
+        select: {
+          id: true,
+          username: true,
+          name: true,
+          email: true,
+          accessCode: true,
+          role: true,
+          active: true,
+          createdAt: true,
+        },
+      });
+      return NextResponse.json(updated);
+    }
+
     const parsed = adminUserUpdateSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
