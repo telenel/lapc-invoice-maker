@@ -4,9 +4,11 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSearchParams, useRouter } from "next/navigation";
 import { UserManagement } from "./user-management";
 import { CategoryManager } from "./category-manager";
+import { InvoiceManager } from "./invoice-manager";
+import { LineItemManager } from "./line-item-manager";
 import { DbHealth } from "./db-health";
 
-const VALID_TABS = ["users", "categories", "database", "general"];
+const VALID_TABS = ["users", "categories", "invoices", "line-items", "database", "general"];
 
 export function SettingsPanel() {
   const searchParams = useSearchParams();
@@ -28,6 +30,8 @@ export function SettingsPanel() {
         <TabsList>
           <TabsTrigger value="users">Users &amp; Access Codes</TabsTrigger>
           <TabsTrigger value="categories">Invoice Categories</TabsTrigger>
+          <TabsTrigger value="invoices">Invoices</TabsTrigger>
+          <TabsTrigger value="line-items">Line Items</TabsTrigger>
           <TabsTrigger value="database">Database</TabsTrigger>
           <TabsTrigger value="general">General Settings</TabsTrigger>
         </TabsList>
@@ -37,6 +41,16 @@ export function SettingsPanel() {
       {activeTab === "categories" && (
         <div className="border rounded-lg p-6">
           <CategoryManager />
+        </div>
+      )}
+      {activeTab === "invoices" && (
+        <div className="border rounded-lg p-6">
+          <InvoiceManager />
+        </div>
+      )}
+      {activeTab === "line-items" && (
+        <div className="border rounded-lg p-6">
+          <LineItemManager />
         </div>
       )}
       {activeTab === "database" && (
