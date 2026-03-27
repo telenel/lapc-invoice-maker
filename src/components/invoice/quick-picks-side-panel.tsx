@@ -37,12 +37,12 @@ export function QuickPicksSidePanel({
   const [filter, setFilter] = useState("");
 
   useEffect(() => {
-    if (!department) return;
     let cancelled = false;
 
+    const deptParam = department ? `?department=${encodeURIComponent(department)}` : "";
     Promise.all([
-      fetch(`/api/quick-picks?department=${encodeURIComponent(department)}`).then((r) => r.ok ? r.json() : []),
-      fetch(`/api/user-quick-picks?department=${encodeURIComponent(department)}`).then((r) => r.ok ? r.json() : []),
+      fetch(`/api/quick-picks${deptParam}`).then((r) => r.ok ? r.json() : []),
+      department ? fetch(`/api/user-quick-picks${deptParam}`).then((r) => r.ok ? r.json() : []) : Promise.resolve([]),
     ]).then(([picks, uPicks]) => {
       if (cancelled) return;
       setGlobalPicks(Array.isArray(picks) ? picks : []);
