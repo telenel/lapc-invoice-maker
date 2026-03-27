@@ -37,6 +37,7 @@ interface ApiInvoice {
   recurringInterval: string | null;
   recurringEmail: string | null;
   signatures: { line1: string; line2: string; line3: string } | null;
+  staff: { id: string; name: string; title: string; department: string; extension: string; email: string } | null;
   items: ApiInvoiceItem[];
 }
 
@@ -51,9 +52,9 @@ function mapApiToFormData(invoice: ApiInvoice): InvoiceFormData {
     accountCode: invoice.accountCode ?? "",
     accountNumber: invoice.accountNumber ?? "",
     approvalChain: invoice.approvalChain ?? [],
-    contactName: invoice.contactName ?? "",
-    contactExtension: invoice.contactExtension ?? "",
-    contactEmail: invoice.contactEmail ?? "",
+    contactName: invoice.contactName || invoice.staff?.name || "",
+    contactExtension: invoice.contactExtension || invoice.staff?.extension || "",
+    contactEmail: invoice.contactEmail || invoice.staff?.email || "",
     contactPhone: invoice.contactPhone ?? "",
     semesterYearDept: invoice.semesterYearDept ?? "",
     notes: invoice.notes ?? "",
