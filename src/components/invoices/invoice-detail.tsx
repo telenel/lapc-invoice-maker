@@ -30,6 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { MailIcon } from "lucide-react";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
 
 // ---------------------------------------------------------------------------
@@ -129,6 +130,35 @@ export function InvoiceDetailView({ id }: { id: string }) {
     }
   }
 
+  function handleEmail() {
+    if (!invoice) return;
+
+    // Step 1: Download PDF
+    window.open(`/api/invoices/${id}/pdf`, "_blank");
+
+    // Step 2: Build mailto link
+    const subject = encodeURIComponent(
+      `Invoice ${invoice.invoiceNumber} Ready for Processing — ${invoice.department}`
+    );
+    const body = encodeURIComponent(
+      `Invoice ${invoice.invoiceNumber} is ready for processing. Please find the attached invoice.\n\n` +
+      `Department: ${invoice.department}\n` +
+      `Staff: ${invoice.staff.name}\n` +
+      `Account Number: ${invoice.accountNumber || "N/A"}\n` +
+      `Account Code: ${invoice.accountCode || "N/A"}\n` +
+      `Amount: ${formatAmount(invoice.totalAmount)}\n` +
+      `Date: ${formatDate(invoice.date)}\n\n` +
+      `Thank you,\n${invoice.creator.name}`
+    );
+
+    // Small delay so PDF download starts first
+    setTimeout(() => {
+      window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    }, 500);
+
+    toast.info("PDF downloaded — attach it to the email");
+  }
+
   async function handleDelete() {
     if (!invoice) return;
     setDeleting(true);
@@ -223,14 +253,24 @@ export function InvoiceDetailView({ id }: { id: string }) {
           </Button>
 
           {isFinal && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRegeneratePdf}
-              disabled={regenerating}
-            >
-              {regenerating ? "Regenerating…" : "Regenerate PDF"}
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRegeneratePdf}
+                disabled={regenerating}
+              >
+                {regenerating ? "Regenerating…" : "Regenerate PDF"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleEmail}
+              >
+                <MailIcon className="h-4 w-4 mr-1" aria-hidden="true" />
+                Email
+              </Button>
+            </>
           )}
 
           {(isDraft || isPendingCharge) ? (
