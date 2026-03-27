@@ -640,6 +640,27 @@ export function KeyboardMode({
         </div>
       </div>
 
+      {/* Running Invoice Toggle */}
+      <div className="flex items-center gap-3 pt-4">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.isRunning}
+            onChange={(e) => updateField("isRunning", e.target.checked)}
+            className="rounded border-border"
+          />
+          <span className="text-sm font-medium">Running Invoice</span>
+        </label>
+        {form.isRunning && (
+          <Input
+            value={form.runningTitle}
+            onChange={(e) => updateField("runningTitle", e.target.value)}
+            placeholder="Title (e.g. Music Dept Fall 2026 Supplies)"
+            className="flex-1"
+          />
+        )}
+      </div>
+
       {/* ============ LINE ITEMS ============ */}
       <SectionDivider label="LINE ITEMS" />
 

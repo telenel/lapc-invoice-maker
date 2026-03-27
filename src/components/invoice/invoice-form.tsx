@@ -38,6 +38,9 @@ export interface InvoiceFormData {
   isRecurring: boolean;
   recurringInterval: string;
   recurringEmail: string;
+  // Running invoice fields
+  isRunning: boolean;
+  runningTitle: string;
   // Line items
   items: InvoiceItem[];
   // Finalization
@@ -121,6 +124,8 @@ function defaultForm(): InvoiceFormData {
     isRecurring: false,
     recurringInterval: "",
     recurringEmail: "",
+    isRunning: false,
+    runningTitle: "",
     items: [emptyItem(0)],
     prismcorePath: null,
     signatures: { line1: "", line2: "", line3: "" },
@@ -358,6 +363,8 @@ export function useInvoiceForm(
       isRecurring: form.isRecurring,
       recurringInterval: form.recurringInterval || undefined,
       recurringEmail: form.recurringEmail || undefined,
+      isRunning: form.isRunning,
+      runningTitle: form.runningTitle || undefined,
       items: form.items.map((item, i) => ({
         description: item.description,
         quantity: item.quantity,
