@@ -5,8 +5,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { signOut, useSession } from "next-auth/react";
-import { CheckIcon, MoonIcon, PaletteIcon, SunIcon, ZoomInIcon } from "lucide-react";
+import { CheckIcon, LogOutIcon, MoonIcon, PaletteIcon, SunIcon, ZoomInIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { HelpModal } from "@/components/help-modal";
 import { useUIScale } from "@/components/ui-scale-provider";
@@ -32,6 +40,7 @@ export function Nav() {
   const { data: session, status } = useSession();
   const { scale, setScale, scales } = useUIScale();
   const [menuOpen, setMenuOpen] = useState<"theme" | "scale" | null>(null);
+  const [logoutOpen, setLogoutOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close any open menu on outside click
@@ -162,18 +171,35 @@ export function Nav() {
           </div>
 
           <div className="w-px h-5 bg-border/60" />
-          <button
-            onClick={() => signOut()}
-            className="flex items-center justify-center w-7 h-7 rounded-full bg-muted text-xs font-bold text-muted-foreground hover:bg-muted/80 transition-colors"
-            aria-label="Sign out"
-            title="Sign out"
-          >
+          <span className="flex items-center justify-center w-7 h-7 rounded-full bg-muted text-xs font-bold text-muted-foreground">
             {session?.user?.name
               ? session.user.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)
               : "??"}
-          </button>
+          </span>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={() => setLogoutOpen(true)}
+            aria-label="Sign out"
+            title="Sign out"
+          >
+            <LogOutIcon className="size-4" aria-hidden="true" />
+          </Button>
         </div>
       </div>
+
+      <Dialog open={logoutOpen} onOpenChange={setLogoutOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Sign out?</DialogTitle>
+            <DialogDescription>Are you sure you want to sign out?</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLogoutOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={() => signOut()}>Sign out</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </nav>
   );
 }

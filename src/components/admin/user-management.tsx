@@ -100,11 +100,14 @@ export function UserManagement() {
     }
   }
 
-  async function handleDeactivate(id: string) {
-    if (!confirm("Are you sure you want to deactivate this user?")) return;
+  async function handleDelete(id: string) {
+    if (!confirm("Are you sure you want to permanently delete this user? This cannot be undone.")) return;
     const res = await fetch(`/api/admin/users/${id}`, { method: "DELETE" });
     if (res.ok) {
-      setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, active: false } : u)));
+      setUsers((prev) => prev.filter((u) => u.id !== id));
+    } else {
+      const data = await res.json().catch(() => null);
+      alert(data?.error || "Failed to delete user");
     }
   }
 
@@ -185,9 +188,7 @@ export function UserManagement() {
                 {user.active && (
                   <Button variant="outline" size="sm" onClick={() => handleResetPassword(user)}>Reset Password</Button>
                 )}
-                {user.active && (
-                  <Button variant="outline" size="sm" onClick={() => handleDeactivate(user.id)}>Deactivate</Button>
-                )}
+                <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDelete(user.id)}>Delete</Button>
               </TableCell>
             </TableRow>
           ))}

@@ -144,6 +144,75 @@ describe("InlineCombobox", () => {
     expect(input).toHaveAttribute("placeholder", "Loading\u2026");
   });
 
+  it("calls onCommitText on Enter when no suggestions match", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    const onCommitText = vi.fn();
+    render(
+      <InlineCombobox
+        items={sampleItems}
+        value=""
+        onSelect={onSelect}
+        onCommitText={onCommitText}
+      />
+    );
+    const input = screen.getByRole("combobox");
+    await user.click(input);
+    await user.type(input, "Zara");
+
+    // No suggestions match — "No matches" shown
+    expect(screen.queryAllByRole("option")).toHaveLength(0);
+
+    await user.keyboard("{Enter}");
+    expect(onCommitText).toHaveBeenCalledWith("Zara");
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it("calls onCommitText on Tab when no suggestions match", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    const onCommitText = vi.fn();
+    render(
+      <InlineCombobox
+        items={sampleItems}
+        value=""
+        onSelect={onSelect}
+        onCommitText={onCommitText}
+      />
+    );
+    const input = screen.getByRole("combobox");
+    await user.click(input);
+    await user.type(input, "Zara");
+
+    await user.keyboard("{Tab}");
+    expect(onCommitText).toHaveBeenCalledWith("Zara");
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it("does NOT call onCommitText when a suggestion is selected via Tab", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    const onCommitText = vi.fn();
+    render(
+      <InlineCombobox
+        items={sampleItems}
+        value=""
+        onSelect={onSelect}
+        onCommitText={onCommitText}
+      />
+    );
+    const input = screen.getByRole("combobox");
+    await user.click(input);
+    await user.type(input, "bob");
+
+    // One suggestion matches
+    expect(screen.getAllByRole("option")).toHaveLength(1);
+
+    await user.keyboard("{Tab}");
+    expect(onSelect).toHaveBeenCalledWith(sampleItems[1]);
+    expect(onCommitText).not.toHaveBeenCalled();
+  });
+
   it("allowCustom shows 'Add new:' option for unmatched input", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();

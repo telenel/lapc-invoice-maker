@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -70,6 +70,13 @@ export default function SetupPage() {
         setLoading(false);
         return;
       }
+
+      // Re-authenticate with new credentials so JWT gets updated setupComplete
+      await signIn("credentials", {
+        username: email.trim().toLowerCase(),
+        password,
+        redirect: false,
+      });
 
       router.push("/");
       router.refresh();

@@ -15,6 +15,8 @@ interface InlineComboboxProps {
   items: ComboboxItem[];
   value: string;
   onSelect: (item: ComboboxItem) => void;
+  /** Called when user exits the field with typed text that wasn't selected from suggestions */
+  onCommitText?: (text: string) => void;
   placeholder?: string;
   displayValue?: string;
   className?: string;
@@ -27,6 +29,7 @@ export function InlineCombobox({
   items,
   value,
   onSelect,
+  onCommitText,
   placeholder = "",
   displayValue,
   className,
@@ -82,7 +85,7 @@ export function InlineCombobox({
     }
   }, [highlightIndex, open]);
 
-  // Close on outside click
+  // Close on outside click — commit typed text if onCommitText is provided
   React.useEffect(() => {
     if (!open) return;
     function handleClick(e: MouseEvent) {
@@ -90,13 +93,16 @@ export function InlineCombobox({
         containerRef.current &&
         !containerRef.current.contains(e.target as Node)
       ) {
+        if (query.trim() && onCommitText) {
+          onCommitText(query.trim());
+        }
         setOpen(false);
         setQuery("");
       }
     }
     document.addEventListener("mousedown", handleClick);
     return () => document.removeEventListener("mousedown", handleClick);
-  }, [open]);
+  }, [open, query, onCommitText]);
 
   function handleSelect(item: ComboboxItem) {
     onSelect(item);
@@ -129,6 +135,10 @@ export function InlineCombobox({
         e.preventDefault();
         if (suggestions[highlightIndex]) {
           handleSelect(suggestions[highlightIndex]);
+        } else if (query.trim() && onCommitText) {
+          onCommitText(query.trim());
+          setQuery("");
+          setOpen(false);
         }
         break;
       case "Escape":
@@ -136,9 +146,13 @@ export function InlineCombobox({
         setQuery("");
         break;
       case "Tab":
-        // Accept highlighted suggestion and let focus advance naturally
+        // Accept highlighted suggestion, or commit raw text if no suggestions
         if (suggestions[highlightIndex]) {
           handleSelect(suggestions[highlightIndex]);
+        } else if (query.trim() && onCommitText) {
+          onCommitText(query.trim());
+          setQuery("");
+          setOpen(false);
         }
         break;
     }
