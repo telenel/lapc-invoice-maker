@@ -19,6 +19,10 @@ interface Invoice {
     id: string;
     name: string;
   };
+  creator: {
+    id: string;
+    name: string;
+  };
 }
 
 export function RecentInvoices() {
@@ -84,7 +88,7 @@ export function RecentInvoices() {
                     {invoice.invoiceNumber} · {invoice.staff.name}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
-                    {invoice.department} · {formatDate(invoice.date)}
+                    {invoice.department} · {formatDate(invoice.date)} · by {invoice.creator?.name}
                   </p>
                 </div>
                 <div className="text-right shrink-0">
