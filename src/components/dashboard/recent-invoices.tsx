@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { formatAmount, formatDate, getInitials } from "@/lib/formatters";
 
 interface Invoice {
   id: string;
@@ -18,10 +19,6 @@ interface Invoice {
     id: string;
     name: string;
   };
-}
-
-function getInitials(name: string): string {
-  return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 }
 
 export function RecentInvoices() {
@@ -87,12 +84,12 @@ export function RecentInvoices() {
                     {invoice.invoiceNumber} · {invoice.staff.name}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
-                    {invoice.department} · {new Date(invoice.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}
+                    {invoice.department} · {formatDate(invoice.date)}
                   </p>
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-[13px] font-bold tabular-nums">
-                    ${Number(invoice.totalAmount).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {formatAmount(invoice.totalAmount)}
                   </p>
                   <Badge
                     variant={invoice.status === "FINAL" ? "success" : invoice.status === "PENDING_CHARGE" ? "info" : "warning"}

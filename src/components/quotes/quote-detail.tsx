@@ -30,6 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -85,22 +86,6 @@ type QuoteStatus = Quote["quoteStatus"];
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function formatAmount(amount: string | number): string {
-  return `$${Number(amount).toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: "UTC",
-  });
-}
 
 function expirationText(dateStr: string): string {
   const exp = new Date(dateStr);

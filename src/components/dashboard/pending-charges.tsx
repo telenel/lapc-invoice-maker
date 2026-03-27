@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { formatAmount, formatDateCompact as formatDate } from "@/lib/formatters";
 
 interface PendingInvoice {
   id: string;
@@ -21,21 +22,6 @@ interface PendingInvoice {
 interface PendingResponse {
   invoices: PendingInvoice[];
   total: number;
-}
-
-function formatAmount(amount: string | number): string {
-  return `$${Number(amount).toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    timeZone: "UTC",
-  });
 }
 
 export function PendingCharges() {
