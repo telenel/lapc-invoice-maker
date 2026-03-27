@@ -68,6 +68,13 @@ export async function PUT(
       updateData.date = new Date(date);
     }
 
+    const include = {
+      staff: { select: { id: true, name: true, title: true, department: true, extension: true, email: true } },
+      creator: { select: { id: true, name: true, username: true } },
+      items: { orderBy: { sortOrder: "asc" } },
+    } as const;
+
+    let invoice;
     if (items) {
       const calculatedItems = items.map((item) => {
         const extendedPrice = Number(item.quantity) * Number(item.unitPrice);
@@ -76,7 +83,7 @@ export async function PUT(
       const totalAmount = calculatedItems.reduce((sum, item) => sum + Number(item.extendedPrice), 0);
       updateData.totalAmount = totalAmount;
 
-      await prisma.$transaction([
+      [, invoice] = await prisma.$transaction([
         prisma.invoiceItem.deleteMany({ where: { invoiceId: id } }),
         prisma.invoice.update({
           where: { id },
@@ -92,20 +99,12 @@ export async function PUT(
               })),
             },
           },
+          include,
         }),
       ]);
     } else {
-      await prisma.invoice.update({ where: { id }, data: updateData });
+      invoice = await prisma.invoice.update({ where: { id }, data: updateData, include });
     }
-
-    const invoice = await prisma.invoice.findUnique({
-      where: { id },
-      include: {
-        staff: { select: { id: true, name: true, title: true, department: true, extension: true, email: true } },
-        creator: { select: { id: true, name: true, username: true } },
-        items: { orderBy: { sortOrder: "asc" } },
-      },
-    });
 
     return NextResponse.json(invoice);
   } catch (err) {
