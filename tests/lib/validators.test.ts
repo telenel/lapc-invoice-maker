@@ -512,19 +512,9 @@ describe("adminUserCreateSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("accepts with valid email", () => {
+  it("accepts name with extra fields (ignored)", () => {
     const result = adminUserCreateSchema.safeParse({ name: "John", email: "john@example.com" });
     expect(result.success).toBe(true);
-  });
-
-  it("accepts empty string email", () => {
-    const result = adminUserCreateSchema.safeParse({ name: "John", email: "" });
-    expect(result.success).toBe(true);
-  });
-
-  it("rejects invalid email", () => {
-    const result = adminUserCreateSchema.safeParse({ name: "John", email: "not-email" });
-    expect(result.success).toBe(false);
   });
 
   it("rejects empty name", () => {
