@@ -77,6 +77,8 @@ model Invoice {
   pdfPath           String?         @map("pdf_path")
   prismcorePath     String?         @map("prismcore_path")
   isRecurring       Boolean         @default(false) @map("is_recurring")
+  isRunning         Boolean         @default(false) @map("is_running")
+  runningTitle      String?         @map("running_title")
   recurringInterval String?         @map("recurring_interval")
   nextRecurringDate DateTime?       @map("next_recurring_date") @db.Date
   recurringEmail    String?         @map("recurring_email")
