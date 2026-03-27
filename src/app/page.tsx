@@ -35,8 +35,10 @@ export default function DashboardPage() {
       <StatsCards />
       <PendingCharges />
       <RunningInvoices />
-      <RecentInvoices />
-      <TeamActivity />
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6">
+        <RecentInvoices />
+        <TeamActivity />
+      </div>
     </div>
   );
 }

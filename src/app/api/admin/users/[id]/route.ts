@@ -91,14 +91,10 @@ export async function DELETE(
   const { id } = await params;
 
   try {
-    await prisma.user.update({
-      where: { id },
-      data: { active: false },
-    });
-
+    await prisma.user.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("DELETE /api/admin/users/[id] failed:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });
   }
 }

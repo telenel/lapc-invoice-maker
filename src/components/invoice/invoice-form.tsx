@@ -213,6 +213,42 @@ export function useInvoiceForm(
     [form.items]
   );
 
+  // ---------- Auto-update tax line items (9.5% of non-tax subtotal) ----------
+
+  const taxUpdateRef = useRef(false);
+
+  useEffect(() => {
+    // Skip if this update was triggered by us
+    if (taxUpdateRef.current) {
+      taxUpdateRef.current = false;
+      return;
+    }
+
+    const TAX_RATE = 0.095;
+    const hasTaxItem = form.items.some((item) => item.description.includes("Tax"));
+    if (!hasTaxItem) return;
+
+    const nonTaxSubtotal = form.items
+      .filter((item) => !item.description.includes("Tax"))
+      .reduce((sum, item) => sum + Number(item.extendedPrice), 0);
+
+    const correctTax = Math.round(nonTaxSubtotal * TAX_RATE * 100) / 100;
+
+    let needsUpdate = false;
+    const updatedItems = form.items.map((item) => {
+      if (!item.description.includes("Tax")) return item;
+      const currentTax = Math.round(Number(item.unitPrice) * 100) / 100;
+      if (currentTax === correctTax) return item;
+      needsUpdate = true;
+      return { ...item, unitPrice: correctTax, extendedPrice: correctTax * item.quantity };
+    });
+
+    if (needsUpdate) {
+      taxUpdateRef.current = true;
+      setForm((prev) => ({ ...prev, items: updatedItems }));
+    }
+  }, [form.items]);
+
   // ---------- Staff autofill ----------
 
   const [staffAccountNumbers, setStaffAccountNumbers] = useState<

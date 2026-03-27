@@ -93,7 +93,7 @@ model Invoice {
   createdAt         DateTime        @default(now()) @map("created_at")
   updatedAt      DateTime        @updatedAt @map("updated_at")
 
-  creator  User          @relation(fields: [createdBy], references: [id])
+  creator  User          @relation(fields: [createdBy], references: [id], onDelete: Cascade)
   staff    Staff         @relation(fields: [staffId], references: [id])
   items    InvoiceItem[]
 

@@ -27,6 +27,8 @@ interface LineItemsProps {
   userPickDescriptions?: Set<string>;
   /** Called when user stars/unstars a line item */
   onTogglePick?: (description: string, unitPrice: number, department: string) => void;
+  /** Indices of items that have had margin applied */
+  marginAppliedIndices?: Set<number>;
 }
 
 export function LineItems({
@@ -41,6 +43,7 @@ export function LineItems({
   suggestions = [],
   userPickDescriptions = new Set<string>(),
   onTogglePick,
+  marginAppliedIndices = new Set<number>(),
 }: LineItemsProps) {
   // Refs for qty fields so we can programmatically focus
   const qtyRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -91,24 +94,10 @@ export function LineItems({
   }
 
   return (
-    <div className="space-y-2">
-      {/* Header row + Add button */}
+    <div className="space-y-3">
+      {/* Add button */}
       <div className="flex items-center justify-between">
-        <div className="grid grid-cols-12 gap-2 flex-1 mr-2">
-          <div className="col-span-4">
-            <Label className="text-xs text-muted-foreground">Description</Label>
-          </div>
-          <div className="col-span-2">
-            <Label className="text-xs text-muted-foreground">Qty</Label>
-          </div>
-          <div className="col-span-2">
-            <Label className="text-xs text-muted-foreground">Unit Price</Label>
-          </div>
-          <div className="col-span-2">
-            <Label className="text-xs text-muted-foreground">Extended</Label>
-          </div>
-          <div className="col-span-2" />
-        </div>
+        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Line Items</Label>
         <Button
           ref={addButtonRef}
           type="button"
@@ -118,136 +107,135 @@ export function LineItems({
           aria-label="Add line item"
           className="focus-visible:ring-2 focus-visible:ring-ring"
         >
-          +
+          + Add Item
         </Button>
       </div>
 
-      {/* Line item rows */}
+      {/* Line item cards */}
       {items.map((item, index) => (
         <div
           key={index}
-          className="grid grid-cols-12 gap-2 items-center line-item-row"
+          className="rounded-lg border border-border/60 bg-muted/20 p-3 space-y-2 line-item-row"
         >
-          {/* Description — col-span-4 */}
-          <div
-            className="col-span-4"
-            onKeyDown={(e) => {
-              // When dropdown is closed, Enter should advance to qty
-              // InlineCombobox consumes Enter when open, so this only fires when closed
-              if (e.key === "Enter") {
-                e.preventDefault();
-                requestAnimationFrame(() => qtyRefs.current[index]?.focus());
-              }
-            }}
-          >
-            <InlineCombobox
-              items={suggestionItems}
-              value={item.description}
-              displayValue={item.description}
-              allowCustom={true}
-              placeholder="Description…"
-              onSelect={(selected) => {
-                const match = suggestions.find((s) => s.description === selected.id);
-                onUpdate(index, {
-                  description: selected.label,
-                  ...(match
-                    ? { unitPrice: match.unitPrice, quantity: 1, extendedPrice: match.unitPrice }
-                    : {}),
-                });
-                requestAnimationFrame(() => qtyRefs.current[index]?.focus());
+          {/* Row 1: Full-width description with actions */}
+          <div className="flex gap-2 items-start">
+            <div
+              className="flex-1 min-w-0"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  requestAnimationFrame(() => qtyRefs.current[index]?.focus());
+                }
               }}
-            />
-          </div>
-
-          {/* Qty — col-span-2 */}
-          <div className="col-span-2">
-            <Input
-              ref={(el) => {
-                qtyRefs.current[index] = el;
-              }}
-              type="number"
-              min={1}
-              value={item.quantity}
-              onChange={(e) =>
-                onUpdate(index, { quantity: Number(e.target.value) })
-              }
-              onKeyDown={(e) => handleQtyKeyDown(e, index)}
-              placeholder="Qty…"
-              name={`lineItem${index}Qty`}
-              inputMode="numeric"
-              className="focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label={`Line item ${index + 1} quantity`}
-            />
-          </div>
-
-          {/* Unit Price — col-span-2 */}
-          <div className="col-span-2">
-            <Input
-              type="number"
-              min={0}
-              step={0.01}
-              value={item.unitPrice}
-              onChange={(e) =>
-                onUpdate(index, { unitPrice: Number(e.target.value) })
-              }
-              onKeyDown={(e) => handleUnitPriceKeyDown(e, index)}
-              placeholder="0.00…"
-              name={`lineItem${index}UnitPrice`}
-              inputMode="decimal"
-              className="focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label={`Line item ${index + 1} unit price`}
-            />
-          </div>
-
-          {/* Extended — col-span-2, readonly */}
-          <div className="col-span-2">
-            <Input
-              readOnly
-              tabIndex={-1}
-              value={`$${Number(item.extendedPrice).toFixed(2)}`}
-              className="bg-muted tabular-nums"
-              aria-label={`Line item ${index + 1} extended price`}
-            />
-          </div>
-
-          {/* Star + Remove — col-span-2 */}
-          <div className="col-span-2 flex justify-center gap-1">
-            {item.description.trim() !== "" && item.unitPrice > 0 && (
+            >
+              <InlineCombobox
+                items={suggestionItems}
+                value={item.description}
+                displayValue={item.description}
+                placeholder="Item description…"
+                onSelect={(selected) => {
+                  const match = suggestions.find((s) => s.description === selected.id);
+                  onUpdate(index, {
+                    description: selected.label,
+                    ...(match
+                      ? { unitPrice: match.unitPrice, quantity: 1, extendedPrice: match.unitPrice }
+                      : {}),
+                  });
+                  requestAnimationFrame(() => qtyRefs.current[index]?.focus());
+                }}
+                onCommitText={(text) => {
+                  onUpdate(index, { description: text });
+                  requestAnimationFrame(() => qtyRefs.current[index]?.focus());
+                }}
+              />
+            </div>
+            <div className="flex items-center gap-0.5 shrink-0">
+              {item.description.trim() !== "" && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => onTogglePick?.(item.description, item.unitPrice, department)}
+                  className={cn(
+                    userPickDescriptions.has(item.description)
+                      ? "text-amber-500 hover:text-amber-600"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                  aria-label={
+                    userPickDescriptions.has(item.description)
+                      ? "Remove from quick picks"
+                      : "Save to quick picks"
+                  }
+                >
+                  <Star
+                    className="h-3.5 w-3.5"
+                    fill={userPickDescriptions.has(item.description) ? "currentColor" : "none"}
+                    aria-hidden="true"
+                  />
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
-                onClick={() => onTogglePick?.(item.description, item.unitPrice, department)}
-                className={cn(
-                  "focus-visible:ring-2 focus-visible:ring-ring",
-                  userPickDescriptions.has(item.description)
-                    ? "text-amber-500 hover:text-amber-600"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-                aria-label={
-                  userPickDescriptions.has(item.description)
-                    ? "Remove from quick picks"
-                    : "Save to quick picks"
-                }
+                size="icon-sm"
+                onClick={() => onRemove(index)}
+                disabled={items.length === 1}
+                className="text-destructive hover:text-destructive"
+                aria-label={`Remove line item ${index + 1}`}
               >
-                <Star
-                  className="h-4 w-4"
-                  fill={userPickDescriptions.has(item.description) ? "currentColor" : "none"}
-                  aria-hidden="true"
-                />
+                ×
               </Button>
-            )}
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => onRemove(index)}
-              disabled={items.length === 1}
-              className="text-destructive hover:text-destructive focus-visible:ring-2 focus-visible:ring-ring"
-              aria-label={`Remove line item ${index + 1}`}
-            >
-              ×
-            </Button>
+            </div>
+          </div>
+
+          {/* Row 2: Qty, Unit Price, Extended */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <Label className="text-xs text-muted-foreground whitespace-nowrap">Qty</Label>
+              <Input
+                ref={(el) => { qtyRefs.current[index] = el; }}
+                type="number"
+                min={1}
+                value={item.quantity}
+                onChange={(e) => onUpdate(index, { quantity: Number(e.target.value) })}
+                onKeyDown={(e) => handleQtyKeyDown(e, index)}
+                name={`lineItem${index}Qty`}
+                inputMode="numeric"
+                className="w-16 h-8 text-sm"
+                aria-label={`Line item ${index + 1} quantity`}
+              />
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Label className="text-xs text-muted-foreground whitespace-nowrap">Price</Label>
+              <Input
+                type="number"
+                min={0}
+                step={0.01}
+                value={item.unitPrice}
+                onChange={(e) => onUpdate(index, { unitPrice: Number(e.target.value) })}
+                onKeyDown={(e) => handleUnitPriceKeyDown(e, index)}
+                name={`lineItem${index}UnitPrice`}
+                inputMode="decimal"
+                className="w-24 h-8 text-sm"
+                aria-label={`Line item ${index + 1} unit price`}
+              />
+            </div>
+            <div className="flex items-center gap-1.5 ml-auto">
+              <span
+                className="text-sm font-medium tabular-nums"
+                aria-label={`Line item ${index + 1} extended price`}
+              >
+                ${Number(item.extendedPrice).toFixed(2)}
+              </span>
+              {marginAppliedIndices.has(index) && (
+                <span
+                  className="text-[10px] font-medium text-blue-600 bg-blue-100 dark:text-blue-400 dark:bg-blue-950 px-1 py-0.5 rounded leading-none"
+                  title="Margin applied"
+                >
+                  M
+                </span>
+              )}
+            </div>
           </div>
         </div>
       ))}

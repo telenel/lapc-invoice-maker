@@ -109,6 +109,7 @@ export function KeyboardMode({
   const [userPickDescriptions, setUserPickDescriptions] = useState<Set<string>>(new Set());
   const [userPicks, setUserPicks] = useState<{ id: string; description: string; unitPrice: number; department: string }[]>([]);
   const [marginPercent, setMarginPercent] = useState("");
+  const [marginApplied, setMarginApplied] = useState<Set<number>>(new Set());
   const [isMac, setIsMac] = useState(false);
 
   // Inline editing for staff summary fields
@@ -215,13 +216,16 @@ export function KeyboardMode({
       return;
     }
     const multiplier = 1 + pct / 100;
+    const applied = new Set(marginApplied);
     form.items.forEach((item, index) => {
       if (item.unitPrice > 0 && !item.description.includes("Tax")) {
         const newPrice = Math.round(item.unitPrice * multiplier * 100) / 100;
         const newExt = Math.round(newPrice * item.quantity * 100) / 100;
         updateItem(index, { unitPrice: newPrice, extendedPrice: newExt });
+        applied.add(index);
       }
     });
+    setMarginApplied(applied);
     toast.success(`${pct}% margin applied to all items`);
     setMarginPercent("");
   }
@@ -254,25 +258,28 @@ export function KeyboardMode({
 
   // ---- Star toggle handler ----
   async function handleTogglePick(description: string, unitPrice: number, department: string) {
+    const dept = department || "__ALL__";
     if (userPickDescriptions.has(description)) {
-      const pick = userPicks.find((p) => p.description === description && p.department === department);
+      const pick = userPicks.find((p) => p.description === description && (p.department === dept || p.department === department));
       if (pick) {
         await fetch(`/api/user-quick-picks?id=${pick.id}`, { method: "DELETE" });
         setUserPicks((prev) => prev.filter((p) => p.id !== pick.id));
         setUserPickDescriptions((prev) => { const next = new Set(prev); next.delete(description); return next; });
-        toast.success("Removed from quick picks");
+        toast.success(`"${description}" removed from quick picks`);
       }
     } else {
       const res = await fetch("/api/user-quick-picks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ description, unitPrice, department }),
+        body: JSON.stringify({ description, unitPrice, department: dept }),
       });
       if (res.ok) {
         const newPick = await res.json();
         setUserPicks((prev) => [...prev, newPick]);
         setUserPickDescriptions((prev) => new Set(prev).add(description));
-        toast.success("Added to quick picks");
+        toast.success(`"${description}" saved to quick picks`);
+      } else {
+        toast.error("Failed to save quick pick");
       }
     }
   }
@@ -694,6 +701,7 @@ export function KeyboardMode({
               suggestions={suggestions}
               userPickDescriptions={userPickDescriptions}
               onTogglePick={handleTogglePick}
+              marginAppliedIndices={marginApplied}
             />
           </div>
           <QuickPicksSidePanel

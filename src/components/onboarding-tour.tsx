@@ -127,9 +127,10 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
       return;
     }
     const rect = el.getBoundingClientRect();
+    // Store viewport-relative coordinates (for position: fixed)
     setSpotlightRect({
-      top: rect.top + window.scrollY,
-      left: rect.left + window.scrollX,
+      top: rect.top,
+      left: rect.left,
       width: rect.width,
       height: rect.height,
     });
@@ -202,25 +203,32 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
 
     const tooltipWidth = 300;
     const tooltipGap = 16;
+    const margin = 12;
     const viewportHeight = window.innerHeight;
-    const spotlightBottom =
-      spotlightRect.top - window.scrollY + spotlightRect.height;
+    const viewportWidth = window.innerWidth;
+    const tooltipHeight = tooltipRef.current?.offsetHeight || 180;
+
+    const spotlightTop = spotlightRect.top;
+    const spotlightBottom = spotlightTop + spotlightRect.height;
     const spaceBelow = viewportHeight - spotlightBottom;
+    const spaceAbove = spotlightTop;
 
     let top: number;
-    let left: number;
-
-    if (spaceBelow >= 200) {
-      // Place below
+    if (spaceBelow >= tooltipHeight + tooltipGap + margin) {
       top = spotlightBottom + tooltipGap;
+    } else if (spaceAbove >= tooltipHeight + tooltipGap + margin) {
+      top = spotlightTop - tooltipHeight - tooltipGap;
     } else {
-      // Place above
-      top = spotlightRect.top - window.scrollY - 160 - tooltipGap;
+      // Neither side fits — center vertically
+      top = (viewportHeight - tooltipHeight) / 2;
     }
 
+    // Clamp to viewport
+    top = Math.max(margin, Math.min(top, viewportHeight - tooltipHeight - margin));
+
     // Horizontally align with spotlight center, clamped to viewport
-    left = spotlightRect.left + spotlightRect.width / 2 - tooltipWidth / 2;
-    left = Math.max(12, Math.min(left, window.innerWidth - tooltipWidth - 12));
+    let left = spotlightRect.left + spotlightRect.width / 2 - tooltipWidth / 2;
+    left = Math.max(margin, Math.min(left, viewportWidth - tooltipWidth - margin));
 
     return {
       position: "fixed",
@@ -243,7 +251,7 @@ export function OnboardingTour({ onComplete }: OnboardingTourProps) {
       {spotlightRect && (
         <div
           style={{
-            position: "absolute",
+            position: "fixed",
             top: spotlightRect.top - 6,
             left: spotlightRect.left - 6,
             width: spotlightRect.width + 12,

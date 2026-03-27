@@ -7,8 +7,9 @@ import { CategoryManager } from "./category-manager";
 import { InvoiceManager } from "./invoice-manager";
 import { LineItemManager } from "./line-item-manager";
 import { DbHealth } from "./db-health";
+import { AccountCodeManager } from "./account-code-manager";
 
-const VALID_TABS = ["users", "categories", "invoices", "line-items", "database", "general"];
+const VALID_TABS = ["users", "categories", "account-codes", "invoices", "line-items", "database", "general"];
 
 export function SettingsPanel() {
   const searchParams = useSearchParams();
@@ -30,6 +31,7 @@ export function SettingsPanel() {
         <TabsList>
           <TabsTrigger value="users">Users &amp; Access Codes</TabsTrigger>
           <TabsTrigger value="categories">Invoice Categories</TabsTrigger>
+          <TabsTrigger value="account-codes">Account Numbers</TabsTrigger>
           <TabsTrigger value="invoices">Invoices</TabsTrigger>
           <TabsTrigger value="line-items">Line Items</TabsTrigger>
           <TabsTrigger value="database">Database</TabsTrigger>
@@ -41,6 +43,11 @@ export function SettingsPanel() {
       {activeTab === "categories" && (
         <div className="border rounded-lg p-6">
           <CategoryManager />
+        </div>
+      )}
+      {activeTab === "account-codes" && (
+        <div className="border rounded-lg p-6">
+          <AccountCodeManager />
         </div>
       )}
       {activeTab === "invoices" && (
