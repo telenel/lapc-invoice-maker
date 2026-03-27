@@ -8,17 +8,16 @@ datasource db {
 }
 
 model User {
-  id           String    @id @default(uuid())
-  username     String    @unique
-  passwordHash String    @map("password_hash")
-  name         String
-  email        String    @default("")
-  accessCode   String?   @unique @map("access_code")
-  role         String    @default("user")
-  active       Boolean   @default(true)
-  needsSetup   Boolean   @default(true) @map("needs_setup")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
+  id             String    @id @default(uuid())
+  username       String    @unique
+  passwordHash   String    @map("password_hash")
+  name           String
+  email          String    @default("")
+  role           String    @default("user")
+  active         Boolean   @default(true)
+  setupComplete  Boolean   @default(false) @map("setup_complete")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
   invoices       Invoice[]
   userQuickPicks UserQuickPick[]
 
