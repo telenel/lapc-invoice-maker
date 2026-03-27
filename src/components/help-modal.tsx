@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { HelpCircle } from "lucide-react";
+import { resetTour } from "@/components/onboarding-tour";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -41,6 +43,14 @@ const sections = [
 
 export function HelpModal() {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
+
+  function handleTakeTour() {
+    resetTour();
+    setOpen(false);
+    router.push("/");
+    router.refresh();
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -68,7 +78,8 @@ export function HelpModal() {
             </div>
           ))}
         </div>
-        <DialogFooter>
+        <DialogFooter className="flex justify-between sm:justify-between">
+          <Button variant="outline" onClick={handleTakeTour}>Take the Tour</Button>
           <Button onClick={() => setOpen(false)}>Got it</Button>
         </DialogFooter>
       </DialogContent>
