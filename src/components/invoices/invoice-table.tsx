@@ -29,6 +29,8 @@ interface Invoice {
   totalAmount: string | number;
   status: "DRAFT" | "FINAL" | "PENDING_CHARGE";
   isRecurring: boolean;
+  isRunning: boolean;
+  runningTitle: string | null;
   staff: { id: string; name: string; title: string; department: string };
   creator: { id: string; name: string; username: string };
 }
@@ -221,7 +223,9 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
                       <div className="min-w-0">
                         <p className="text-[13px] font-semibold truncate">
                           <span className="inline-flex items-center gap-1">
-                            {invoice.invoiceNumber} · {invoice.staff.name}
+                            {invoice.isRunning && invoice.runningTitle
+                              ? invoice.runningTitle
+                              : invoice.invoiceNumber} · {invoice.staff.name}
                             {invoice.isRecurring && (
                               <span title="Recurring invoice">
                                 <RefreshCwIcon className="size-3 text-muted-foreground shrink-0" aria-hidden="true" />
@@ -243,22 +247,26 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
                     <p className="text-[13px] font-bold tabular-nums">
                       {formatAmount(invoice.totalAmount)}
                     </p>
-                    <Badge
-                      variant={
-                        invoice.status === "FINAL"
-                          ? "success"
+                    <div className="flex items-center gap-1 justify-end mt-0.5">
+                      {invoice.isRunning && (
+                        <Badge variant="info" className="text-[9px]">Running</Badge>
+                      )}
+                      <Badge
+                        variant={
+                          invoice.status === "FINAL"
+                            ? "success"
+                            : invoice.status === "PENDING_CHARGE"
+                              ? "info"
+                              : "warning"
+                        }
+                      >
+                        {invoice.status === "FINAL"
+                          ? "Final"
                           : invoice.status === "PENDING_CHARGE"
-                            ? "info"
-                            : "warning"
-                      }
-                      className="mt-0.5"
-                    >
-                      {invoice.status === "FINAL"
-                        ? "Final"
-                        : invoice.status === "PENDING_CHARGE"
-                          ? "Pending Charge"
-                          : "Draft"}
-                    </Badge>
+                            ? "Pending Charge"
+                            : "Draft"}
+                      </Badge>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
