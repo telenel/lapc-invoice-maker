@@ -52,7 +52,8 @@ COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/src/generated/prisma ./src/generated/prisma
 
 # Install prisma CLI + dotenv for migrations at runtime
-RUN npm install --no-save prisma dotenv
+# Force dotenv to top-level node_modules so prisma.config.ts can find it
+RUN npm install --no-save prisma && npm install --no-save dotenv && ls node_modules/dotenv/config.js
 
 RUN mkdir -p data/pdfs public/uploads
 
@@ -60,4 +61,4 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["sh", "-c", "NODE_PATH=/app/node_modules npx prisma migrate deploy && node server.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
