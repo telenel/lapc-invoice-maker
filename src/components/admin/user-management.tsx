@@ -6,28 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
 interface User {
@@ -35,9 +20,9 @@ interface User {
   username: string;
   name: string;
   email: string;
-  accessCode: string | null;
   role: string;
   active: boolean;
+  setupComplete: boolean;
   createdAt: string;
 }
 
@@ -47,41 +32,29 @@ export function UserManagement() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editUser, setEditUser] = useState<User | null>(null);
   const [newName, setNewName] = useState("");
-  const [newEmail, setNewEmail] = useState("");
-  const [generatedCode, setGeneratedCode] = useState<string | null>(null);
+  const [createdUsername, setCreatedUsername] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editRole, setEditRole] = useState("user");
-  const [resetCodeUser, setResetCodeUser] = useState<User | null>(null);
-  const [resetedCode, setResetedCode] = useState<string | null>(null);
 
   const fetchUsers = useCallback(async () => {
     try {
       const res = await fetch("/api/admin/users");
-      if (res.ok) {
-        const data = await res.json();
-        setUsers(data);
-      }
-    } catch {
-      // ignore
-    } finally {
-      setLoading(false);
-    }
+      if (res.ok) setUsers(await res.json());
+    } catch { /* ignore */ } finally { setLoading(false); }
   }, []);
 
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+  useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   async function handleCreate() {
     const res = await fetch("/api/admin/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newName, email: newEmail }),
+      body: JSON.stringify({ name: newName }),
     });
     if (res.ok) {
       const created = await res.json();
-      setGeneratedCode(created.accessCode);
+      setCreatedUsername(created.username);
       setUsers((prev) => [created, ...prev]);
     }
   }
@@ -89,8 +62,7 @@ export function UserManagement() {
   function handleCloseCreate() {
     setCreateOpen(false);
     setNewName("");
-    setNewEmail("");
-    setGeneratedCode(null);
+    setCreatedUsername(null);
   }
 
   function openEdit(user: User) {
@@ -114,18 +86,17 @@ export function UserManagement() {
     }
   }
 
-  async function handleResetCode(user: User) {
-    setResetCodeUser(user);
-    setResetedCode(null);
+  async function handleResetPassword(user: User) {
+    if (!confirm(`Reset password for ${user.name}? They will need to go through onboarding again.`)) return;
     const res = await fetch(`/api/admin/users/${user.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ resetCode: true }),
+      body: JSON.stringify({ resetPassword: true }),
     });
     if (res.ok) {
       const updated = await res.json();
-      setResetedCode(updated.accessCode);
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+      alert(`Password reset. Tell ${user.name} to log in as "${updated.username}" with password "password123".`);
     }
   }
 
@@ -133,76 +104,47 @@ export function UserManagement() {
     if (!confirm("Are you sure you want to deactivate this user?")) return;
     const res = await fetch(`/api/admin/users/${id}`, { method: "DELETE" });
     if (res.ok) {
-      setUsers((prev) =>
-        prev.map((u) => (u.id === id ? { ...u, active: false } : u))
-      );
+      setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, active: false } : u)));
     }
   }
 
-  if (loading) {
-    return <p className="text-center py-8 text-muted-foreground">Loading users…</p>;
-  }
+  if (loading) return <p className="text-center py-8 text-muted-foreground">Loading users...</p>;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">User Management</h1>
-        <Dialog open={createOpen} onOpenChange={(open) => {
-          if (!open) handleCloseCreate();
-          else setCreateOpen(true);
-        }}>
-          <DialogTrigger render={<Button>Generate Code</Button>} />
+        <Dialog open={createOpen} onOpenChange={(open) => { if (!open) handleCloseCreate(); else setCreateOpen(true); }}>
+          <DialogTrigger render={<Button>Create User</Button>} />
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create User with Access Code</DialogTitle>
+              <DialogTitle>Create New User</DialogTitle>
               <DialogDescription>
-                Enter the user details. A 6-digit login code will be generated automatically.
+                Enter the user&apos;s full name. They&apos;ll log in with a temporary username and default password.
               </DialogDescription>
             </DialogHeader>
-            {generatedCode ? (
+            {createdUsername ? (
               <div className="space-y-4 py-4">
-                <p className="text-sm text-muted-foreground">
-                  User created successfully. Share this code with them:
-                </p>
-                <div className="text-center">
-                  <span className="text-4xl font-mono font-bold tracking-widest">
-                    {generatedCode}
-                  </span>
+                <p className="text-sm text-muted-foreground">User created successfully. Share these credentials:</p>
+                <div className="rounded-lg bg-muted p-4 space-y-2">
+                  <p className="text-sm"><span className="text-muted-foreground">Username:</span> <strong className="font-mono">{createdUsername}</strong></p>
+                  <p className="text-sm"><span className="text-muted-foreground">Password:</span> <strong className="font-mono">password123</strong></p>
                 </div>
-                <p className="text-xs text-muted-foreground text-center">
-                  This code can be used to sign in without a password.
-                </p>
+                <p className="text-xs text-muted-foreground">They&apos;ll be prompted to set up their profile on first login.</p>
               </div>
             ) : (
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="user-create-name">Name</Label>
-                  <Input
-                    id="user-create-name"
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    placeholder="Full name…"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="user-create-email">Email</Label>
-                  <Input
-                    id="user-create-email"
-                    value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
-                    placeholder="Email (optional)…"
-                    type="email"
-                  />
+                  <Label htmlFor="user-create-name">Full Name</Label>
+                  <Input id="user-create-name" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Jane Smith" />
                 </div>
               </div>
             )}
             <DialogFooter>
-              {generatedCode ? (
+              {createdUsername ? (
                 <Button onClick={handleCloseCreate}>Done</Button>
               ) : (
-                <Button onClick={handleCreate} disabled={!newName.trim()}>
-                  Generate Code
-                </Button>
+                <Button onClick={handleCreate} disabled={!newName.trim()}>Create User</Button>
               )}
             </DialogFooter>
           </DialogContent>
@@ -215,7 +157,6 @@ export function UserManagement() {
             <TableHead>Name</TableHead>
             <TableHead>Username</TableHead>
             <TableHead>Email</TableHead>
-            <TableHead>Access Code</TableHead>
             <TableHead>Role</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Actions</TableHead>
@@ -225,50 +166,27 @@ export function UserManagement() {
           {users.map((user) => (
             <TableRow key={user.id} className={!user.active ? "opacity-50" : ""}>
               <TableCell className="font-medium">{user.name}</TableCell>
-              <TableCell>{user.username}</TableCell>
+              <TableCell className="font-mono text-sm">{user.username}</TableCell>
               <TableCell>{user.email || "-"}</TableCell>
               <TableCell>
-                {user.accessCode ? (
-                  <code className="text-sm font-mono">{user.accessCode}</code>
+                <Badge variant={user.role === "admin" ? "default" : "secondary"}>{user.role}</Badge>
+              </TableCell>
+              <TableCell>
+                {!user.active ? (
+                  <Badge variant="outline">Inactive</Badge>
+                ) : !user.setupComplete ? (
+                  <Badge variant="secondary">Pending Setup</Badge>
                 ) : (
-                  "-"
+                  <Badge variant="default">Active</Badge>
                 )}
-              </TableCell>
-              <TableCell>
-                <Badge variant={user.role === "admin" ? "default" : "secondary"}>
-                  {user.role}
-                </Badge>
-              </TableCell>
-              <TableCell>
-                <Badge variant={user.active ? "default" : "outline"}>
-                  {user.active ? "Active" : "Inactive"}
-                </Badge>
               </TableCell>
               <TableCell className="text-right space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => openEdit(user)}
-                >
-                  Edit
-                </Button>
+                <Button variant="outline" size="sm" onClick={() => openEdit(user)}>Edit</Button>
                 {user.active && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleResetCode(user)}
-                  >
-                    Reset Code
-                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => handleResetPassword(user)}>Reset Password</Button>
                 )}
                 {user.active && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDeactivate(user.id)}
-                  >
-                    Deactivate
-                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => handleDeactivate(user.id)}>Deactivate</Button>
                 )}
               </TableCell>
             </TableRow>
@@ -276,76 +194,26 @@ export function UserManagement() {
         </TableBody>
       </Table>
 
-      {/* Reset Code dialog */}
-      <Dialog open={!!resetCodeUser} onOpenChange={(open) => { if (!open) { setResetCodeUser(null); setResetedCode(null); } }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reset Access Code</DialogTitle>
-            <DialogDescription>
-              {resetedCode
-                ? `A new access code has been generated for ${resetCodeUser?.name}.`
-                : `Generating a new access code for ${resetCodeUser?.name}…`}
-            </DialogDescription>
-          </DialogHeader>
-          {resetedCode && (
-            <div className="space-y-4 py-4">
-              <p className="text-sm text-muted-foreground">
-                Share this new code with the user. They will be prompted to set their own code on next login.
-              </p>
-              <div className="text-center">
-                <span className="text-4xl font-mono font-bold tracking-widest">
-                  {resetedCode}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground text-center">
-                This is a temporary code — the user will choose a permanent one after signing in.
-              </p>
-            </div>
-          )}
-          <DialogFooter>
-            <Button onClick={() => { setResetCodeUser(null); setResetedCode(null); }}>
-              Done
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* Edit dialog */}
       <Dialog open={!!editUser} onOpenChange={(open) => { if (!open) setEditUser(null); }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>
-              Update user details.
-            </DialogDescription>
+            <DialogDescription>Update user details.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="user-edit-name">Name</Label>
-              <Input
-                id="user-edit-name"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-              />
+              <Input id="user-edit-name" value={editName} onChange={(e) => setEditName(e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="user-edit-email">Email</Label>
-              <Input
-                id="user-edit-email"
-                value={editEmail}
-                onChange={(e) => setEditEmail(e.target.value)}
-                type="email"
-              />
+              <Input id="user-edit-email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} type="email" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="user-edit-role">Role</Label>
-              <Select
-                value={editRole || null}
-                onValueChange={(v) => setEditRole(v ?? "user")}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
+              <Select value={editRole || null} onValueChange={(v) => setEditRole(v ?? "user")}>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="user">User</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
@@ -354,9 +222,7 @@ export function UserManagement() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditUser(null)}>
-              Cancel
-            </Button>
+            <Button variant="outline" onClick={() => setEditUser(null)}>Cancel</Button>
             <Button onClick={handleEdit}>Save</Button>
           </DialogFooter>
         </DialogContent>

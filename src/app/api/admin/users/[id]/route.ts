@@ -3,10 +3,24 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { adminUserUpdateSchema } from "@/lib/validators";
+import bcrypt from "bcryptjs";
+
+const DEFAULT_PASSWORD = "password123";
+
+const userSelect = {
+  id: true,
+  username: true,
+  name: true,
+  email: true,
+  role: true,
+  active: true,
+  setupComplete: true,
+  createdAt: true,
+};
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -14,29 +28,29 @@ export async function PUT(
   const role = (session.user as { role?: string }).role;
   if (role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
+  const { id } = await params;
+
   try {
     const body = await request.json();
 
-    // Handle reset code request separately (bypasses normal schema validation)
-    if (body.resetCode) {
-      let newCode: string;
-      do {
-        newCode = String(Math.floor(100000 + Math.random() * 900000));
-      } while (await prisma.user.findUnique({ where: { accessCode: newCode } }));
+    if (body.resetPassword) {
+      const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 10);
+      const firstName = (await prisma.user.findUnique({ where: { id }, select: { name: true } }))
+        ?.name.split(/\s+/)[0].toLowerCase() || "user";
+
+      let username = firstName;
+      let suffix = 2;
+      while (true) {
+        const existing = await prisma.user.findUnique({ where: { username } });
+        if (!existing || existing.id === id) break;
+        username = `${firstName}${suffix}`;
+        suffix++;
+      }
 
       const updated = await prisma.user.update({
-        where: { id: params.id },
-        data: { accessCode: newCode, needsSetup: true },
-        select: {
-          id: true,
-          username: true,
-          name: true,
-          email: true,
-          accessCode: true,
-          role: true,
-          active: true,
-          createdAt: true,
-        },
+        where: { id },
+        data: { passwordHash, setupComplete: false, username },
+        select: userSelect,
       });
       return NextResponse.json(updated);
     }
@@ -48,22 +62,13 @@ export async function PUT(
     const { name, email, role: newRole } = parsed.data;
 
     const user = await prisma.user.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...(name !== undefined && { name }),
         ...(email !== undefined && { email }),
         ...(newRole !== undefined && { role: newRole }),
       },
-      select: {
-        id: true,
-        username: true,
-        name: true,
-        email: true,
-        accessCode: true,
-        role: true,
-        active: true,
-        createdAt: true,
-      },
+      select: userSelect,
     });
 
     return NextResponse.json(user);
@@ -75,7 +80,7 @@ export async function PUT(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -83,9 +88,11 @@ export async function DELETE(
   const role = (session.user as { role?: string }).role;
   if (role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
+  const { id } = await params;
+
   try {
     await prisma.user.update({
-      where: { id: params.id },
+      where: { id },
       data: { active: false },
     });
 

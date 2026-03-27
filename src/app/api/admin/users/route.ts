@@ -3,10 +3,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { adminUserCreateSchema } from "@/lib/validators";
+import bcrypt from "bcryptjs";
 
-function generateAccessCode(): string {
-  return String(Math.floor(100000 + Math.random() * 900000));
-}
+const DEFAULT_PASSWORD = "password123";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -23,9 +22,9 @@ export async function GET() {
         username: true,
         name: true,
         email: true,
-        accessCode: true,
         role: true,
         active: true,
+        setupComplete: true,
         createdAt: true,
       },
     });
@@ -49,33 +48,24 @@ export async function POST(request: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
-  const { name, email } = parsed.data;
+  const { name } = parsed.data;
 
   try {
-    // Generate a unique 6-digit code
-    let accessCode: string;
-    let attempts = 0;
-    do {
-      accessCode = generateAccessCode();
-      const existing = await prisma.user.findUnique({ where: { accessCode } });
-      if (!existing) break;
-      attempts++;
-    } while (attempts < 100);
-
-    if (attempts >= 100) {
-      return NextResponse.json({ error: "Could not generate unique code" }, { status: 500 });
+    const firstName = name.trim().split(/\s+/)[0].toLowerCase();
+    let username = firstName;
+    let suffix = 2;
+    while (await prisma.user.findUnique({ where: { username } })) {
+      username = `${firstName}${suffix}`;
+      suffix++;
     }
 
-    // Generate a username from the name
-    const username = name.toLowerCase().replace(/\s+/g, ".") + "." + accessCode.slice(-3);
+    const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 10);
 
     const user = await prisma.user.create({
       data: {
         username,
-        passwordHash: "", // access-code-only users don't need a password
-        name,
-        email: email || "",
-        accessCode,
+        passwordHash,
+        name: name.trim(),
         role: "user",
       },
       select: {
@@ -83,9 +73,9 @@ export async function POST(request: NextRequest) {
         username: true,
         name: true,
         email: true,
-        accessCode: true,
         role: true,
         active: true,
+        setupComplete: true,
         createdAt: true,
       },
     });

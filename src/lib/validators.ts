@@ -72,7 +72,6 @@ export const staffAccountNumberSchema = z.object({
 
 export const adminUserCreateSchema = z.object({
   name: z.string().min(1, "Name is required"),
-  email: z.string().email().optional().or(z.literal("")),
 });
 
 export const adminUserUpdateSchema = z.object({
