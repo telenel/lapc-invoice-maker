@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth } from "@/domains/shared/auth";
+import { withAuth, forbiddenResponse } from "@/domains/shared/auth";
 import { quoteService } from "@/domains/quote/service";
 
-export const GET = withAuth(async (_req: NextRequest, _session, ctx) => {
+export const GET = withAuth(async (_req: NextRequest, session, ctx) => {
   const { id } = await ctx!.params;
   try {
+    const quote = await quoteService.getById(id);
+    if (!quote) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
+    if (session.user.role !== "admin" && quote.creatorId !== session.user.id) {
+      return forbiddenResponse();
+    }
     const views = await quoteService.getViews(id);
     return NextResponse.json(views);
   } catch (err) {

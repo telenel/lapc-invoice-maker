@@ -56,10 +56,12 @@ COPY --from=builder /app/src/generated/prisma ./src/generated/prisma
 RUN npm install --no-save prisma
 COPY --from=deps /app/node_modules/dotenv ./node_modules/dotenv
 
-RUN mkdir -p data/pdfs public/uploads
+RUN addgroup --system app && adduser --system --ingroup app app
+RUN mkdir -p data/pdfs public/uploads && chown -R app:app data public/uploads
 
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
+USER app
 CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]

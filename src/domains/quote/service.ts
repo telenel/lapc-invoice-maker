@@ -54,6 +54,7 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
     shareToken: quote.shareToken ?? null,
     createdAt: quote.createdAt.toISOString(),
     staff,
+    creatorId: quote.creator.id,
     creatorName: quote.creator.name,
     items,
     convertedToInvoice: "convertedToInvoice" in quote

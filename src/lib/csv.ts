@@ -4,15 +4,19 @@
  * - Doubles any embedded double quotes (RFC 4180)
  */
 export function escapeCsv(value: string): string {
+  // Prevent CSV formula injection: prefix cells starting with formula triggers
+  const sanitized =
+    value.length > 0 && /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+
   if (
-    value.includes(",") ||
-    value.includes('"') ||
-    value.includes("\n") ||
-    value.includes("\r")
+    sanitized.includes(",") ||
+    sanitized.includes('"') ||
+    sanitized.includes("\n") ||
+    sanitized.includes("\r")
   ) {
-    return `"${value.replace(/"/g, '""')}"`;
+    return `"${sanitized.replace(/"/g, '""')}"`;
   }
-  return value;
+  return sanitized;
 }
 
 /**

@@ -329,8 +329,8 @@ export function QuoteDetailView({ id }: { id: string }) {
           {/* Mark as Sent: DRAFT only */}
           {status === "DRAFT" && (
             <Button
-              variant="outline"
               size="sm"
+              className="bg-green-600 hover:bg-green-700 text-white"
               onClick={handleMarkAsSent}
               disabled={sending}
             >

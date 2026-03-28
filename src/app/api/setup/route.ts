@@ -32,21 +32,27 @@ export async function POST(request: NextRequest) {
 
   const passwordHash = await bcrypt.hash(password, 10);
 
-  // First user to complete setup becomes admin
-  const userCount = await prisma.user.count({ where: { setupComplete: true } });
-  const isFirstUser = userCount === 0;
+  // Atomic: first user to complete setup becomes admin.
+  // Serializable isolation prevents two concurrent requests from both seeing count=0.
+  await prisma.$transaction(
+    async (tx) => {
+      const userCount = await tx.user.count({ where: { setupComplete: true } });
+      const isFirstUser = userCount === 0;
 
-  await prisma.user.update({
-    where: { id: userId },
-    data: {
-      name: name.trim(),
-      email: email.toLowerCase(),
-      username: email.toLowerCase(),
-      passwordHash,
-      setupComplete: true,
-      ...(isFirstUser && { role: "admin" }),
+      await tx.user.update({
+        where: { id: userId },
+        data: {
+          name: name.trim(),
+          email: email.toLowerCase(),
+          username: email.toLowerCase(),
+          passwordHash,
+          setupComplete: true,
+          ...(isFirstUser && { role: "admin" }),
+        },
+      });
     },
-  });
+    { isolationLevel: "Serializable" }
+  );
 
   return NextResponse.json({ success: true });
 }

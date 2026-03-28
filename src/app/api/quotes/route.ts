@@ -3,12 +3,13 @@ import { withAuth } from "@/domains/shared/auth";
 import { quoteService } from "@/domains/quote/service";
 import { quoteCreateSchema } from "@/lib/validators";
 import { Prisma } from "@/generated/prisma/client";
+import type { QuoteFilters } from "@/domains/quote/types";
 
-export const GET = withAuth(async (req: NextRequest) => {
+export const GET = withAuth(async (req: NextRequest, session) => {
   try {
     const sp = req.nextUrl.searchParams;
 
-    const filters = {
+    let filters: QuoteFilters & { sortBy?: string; sortOrder?: "asc" | "desc" } = {
       search: sp.get("search") ?? undefined,
       quoteStatus: (sp.get("quoteStatus") ?? undefined) as
         | "DRAFT"
@@ -27,6 +28,11 @@ export const GET = withAuth(async (req: NextRequest) => {
       sortBy: sp.get("sortBy") ?? "createdAt",
       sortOrder: (sp.get("sortDir") ?? "desc") as "asc" | "desc",
     };
+
+    // Non-admin users can only see their own quotes
+    if (session.user.role !== "admin") {
+      filters = { ...filters, creatorId: session.user.id };
+    }
 
     return NextResponse.json(await quoteService.list(filters));
   } catch (err) {

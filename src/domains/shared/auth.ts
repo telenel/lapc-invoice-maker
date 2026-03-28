@@ -17,6 +17,10 @@ export function withAuth(handler: AuthHandler) {
   };
 }
 
+export function forbiddenResponse() {
+  return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+}
+
 export function withAdmin(handler: AuthHandler) {
   return async (req: NextRequest, ctx?: RouteContext): Promise<NextResponse> => {
     const session = await getServerSession(authOptions);

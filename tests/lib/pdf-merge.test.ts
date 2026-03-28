@@ -20,9 +20,9 @@ async function makePdf(pageCount: number): Promise<Uint8Array> {
 // Paths used across tests
 const TMP_DIR = path.join(process.cwd(), "tmp-test-pdfs");
 const INVOICE_PATH = path.join(TMP_DIR, "invoice.pdf");
-const PUBLIC_DIR = path.join(process.cwd(), "public");
-const PRISMCORE_RELATIVE = "prismcore-test.pdf"; // relative to public/
-const PRISMCORE_ABS = path.join(PUBLIC_DIR, PRISMCORE_RELATIVE);
+const UPLOADS_DIR = path.join(process.cwd(), "public", "uploads");
+const PRISMCORE_RELATIVE = "uploads/prismcore-test.pdf"; // relative to public/
+const PRISMCORE_ABS = path.join(process.cwd(), "public", PRISMCORE_RELATIVE);
 
 // ---------------------------------------------------------------------------
 // Setup / teardown
@@ -30,7 +30,7 @@ const PRISMCORE_ABS = path.join(PUBLIC_DIR, PRISMCORE_RELATIVE);
 
 beforeAll(async () => {
   await mkdir(TMP_DIR, { recursive: true });
-  await mkdir(PUBLIC_DIR, { recursive: true });
+  await mkdir(UPLOADS_DIR, { recursive: true });
 });
 
 afterAll(async () => {

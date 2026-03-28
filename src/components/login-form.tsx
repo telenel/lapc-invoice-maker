@@ -8,6 +8,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+function safeRedirectUrl(url: string | null): string {
+  if (!url) return "/";
+  // Only allow relative paths starting with / (not // or javascript:)
+  if (!url.startsWith("/") || url.startsWith("//")) return "/";
+  try {
+    const parsed = new URL(url, "http://localhost");
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return "/";
+  } catch {
+    return "/";
+  }
+  return url;
+}
+
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -30,7 +43,7 @@ export function LoginForm() {
       setError("Invalid username or password");
       setLoading(false);
     } else {
-      router.push(searchParams.get("callbackUrl") || "/");
+      router.push(safeRedirectUrl(searchParams.get("callbackUrl")));
       router.refresh();
     }
   }

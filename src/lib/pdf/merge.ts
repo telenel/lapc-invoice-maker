@@ -15,6 +15,13 @@ export async function mergePrismCorePDF(
 ): Promise<void> {
   const prismcoreAbsPath = path.join(process.cwd(), "public", prismcoreRelativePath);
 
+  // Validate path to prevent directory traversal
+  const uploadsDir = path.resolve(process.cwd(), "public", "uploads");
+  const resolved = path.resolve(process.cwd(), "public", prismcoreRelativePath);
+  if (!resolved.startsWith(uploadsDir)) {
+    throw new Error("Invalid prismcore path");
+  }
+
   const [invoiceBytes, prismcoreBytes] = await Promise.all([
     readFile(invoicePdfPath),
     readFile(prismcoreAbsPath),

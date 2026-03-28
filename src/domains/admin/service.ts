@@ -1,4 +1,5 @@
 // src/domains/admin/service.ts
+import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { adminRepository } from "./repository";
 import type {
@@ -10,7 +11,9 @@ import type {
   CreateAccountCodeInput,
 } from "./types";
 
-const DEFAULT_PASSWORD = "password123";
+function generateTemporaryPassword(): string {
+  return crypto.randomBytes(16).toString("hex");
+}
 
 function toUserResponse(user: {
   id: string;
@@ -80,15 +83,18 @@ export const adminService = {
     return users.map(toUserResponse);
   },
 
-  async createUser(input: CreateUserInput): Promise<UserResponse> {
+  async createUser(
+    input: CreateUserInput
+  ): Promise<UserResponse & { temporaryPassword: string }> {
     const username = await generateUsername(input.name);
-    const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 10);
+    const temporaryPassword = generateTemporaryPassword();
+    const passwordHash = await bcrypt.hash(temporaryPassword, 10);
     const user = await adminRepository.createUser({
       username,
       passwordHash,
       name: input.name.trim(),
     });
-    return toUserResponse(user);
+    return { ...toUserResponse(user), temporaryPassword };
   },
 
   async updateUser(id: string, input: UpdateUserInput): Promise<UserResponse> {
@@ -100,16 +106,19 @@ export const adminService = {
     return toUserResponse(user);
   },
 
-  async resetPassword(id: string): Promise<UserResponse> {
+  async resetPassword(
+    id: string
+  ): Promise<UserResponse & { temporaryPassword: string }> {
     const existing = await adminRepository.findUserById(id);
     const name = existing?.name ?? "user";
     const username = await generateUsername(name, id);
-    const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 10);
+    const temporaryPassword = generateTemporaryPassword();
+    const passwordHash = await bcrypt.hash(temporaryPassword, 10);
     const user = await adminRepository.resetUserPassword(id, {
       passwordHash,
       username,
     });
-    return toUserResponse(user);
+    return { ...toUserResponse(user), temporaryPassword };
   },
 
   async deleteUser(id: string): Promise<void> {

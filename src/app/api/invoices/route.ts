@@ -4,7 +4,7 @@ import { invoiceService } from "@/domains/invoice/service";
 import { invoiceCreateSchema } from "@/lib/validators";
 import { Prisma } from "@/generated/prisma/client";
 
-export const GET = withAuth(async (req: NextRequest) => {
+export const GET = withAuth(async (req: NextRequest, session) => {
   try {
     const sp = req.nextUrl.searchParams;
 
@@ -16,7 +16,7 @@ export const GET = withAuth(async (req: NextRequest) => {
       return NextResponse.json(await invoiceService.getCreatorStats(status));
     }
 
-    const filters = {
+    let filters = {
       search: sp.get("search") ?? undefined,
       status: (sp.get("status") ?? undefined) as "DRAFT" | "FINAL" | "PENDING_CHARGE" | undefined,
       isRunning: sp.get("isRunning") === "true" ? true : undefined,
@@ -35,6 +35,11 @@ export const GET = withAuth(async (req: NextRequest) => {
       sortBy: sp.get("sortBy") ?? "createdAt",
       sortOrder: (sp.get("sortDir") ?? "desc") as "asc" | "desc",
     };
+
+    // Non-admin users can only see their own invoices
+    if (session.user.role !== "admin") {
+      filters = { ...filters, creatorId: session.user.id };
+    }
 
     if (statsOnly) {
       return NextResponse.json(await invoiceService.getStats(filters));
