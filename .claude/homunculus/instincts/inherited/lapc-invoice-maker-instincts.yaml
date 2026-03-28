@@ -1,0 +1,807 @@
+# Instincts generated from https://github.com/telenel/lapc-invoice-maker
+# Generated: 2026-03-28T19:24:40.721Z
+# Version: 2.0
+# NOTE: This file supplements (does not replace) any existing curated instincts.
+# High-confidence manually curated instincts should be preserved alongside these.
+
+---
+id: lapc-invoice-maker-commit-conventional
+trigger: "when writing a commit message"
+confidence: 0.85
+domain: git
+source: repo-analysis
+source_repo: https://github.com/telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Commit Conventional
+
+## Action
+
+Use conventional commit format with prefixes: feat, fix, docs, style, chore
+
+## Evidence
+
+- 199 commits analyzed
+- Detected conventional commit pattern
+- Examples: feat: online quote sharing with approval, tracking & SSE notifications (#7), chore: add .worktrees/ to gitignore
+
+---
+id: lapc-invoice-maker-commit-length
+trigger: "when writing a commit message"
+confidence: 0.6
+domain: git
+source: repo-analysis
+source_repo: https://github.com/telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Commit Length
+
+## Action
+
+Write moderate-length commit messages (~58 characters)
+
+## Evidence
+
+- Average commit message length: 58 chars
+- Based on 199 commits
+
+---
+id: lapc-invoice-maker-naming-files
+trigger: "when creating a new file"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Naming Files
+
+## Action
+
+Use camelCase naming convention
+
+## Evidence
+
+- Analyzed file naming patterns in repository
+- Dominant pattern: camelCase
+
+---
+id: lapc-invoice-maker-import-alias
+trigger: "when importing modules"
+confidence: 0.85
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Import Alias
+
+## Action
+
+Use path aliases (@/, ~/) instead of relative imports
+
+## Evidence
+
+- Import analysis shows alias pattern
+- Example: import { x } from '@/lib/x'
+
+---
+id: lapc-invoice-maker-export-style
+trigger: "when exporting from a module"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: https://github.com/telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Export Style
+
+## Action
+
+Prefer mixed exports
+
+## Evidence
+
+- Export pattern analysis
+- Dominant style: mixed
+
+---
+id: lapc-invoice-maker-test-separate
+trigger: "when writing tests"
+confidence: 0.8
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Test Separate
+
+## Action
+
+Place tests in the tests/ or __tests__/ directory, mirroring src structure
+
+## Evidence
+
+- Separate test directory pattern detected
+- Tests live in dedicated test folders
+
+---
+id: lapc-invoice-maker-test-framework
+trigger: "when writing tests"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Test Framework
+
+## Action
+
+Use vitest as the test framework
+
+## Evidence
+
+- Test framework detected: vitest
+- File pattern: *.test.ts
+
+---
+id: lapc-invoice-maker-test-naming
+trigger: "when creating a test file"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Test Naming
+
+## Action
+
+Name test files using the pattern: *.test.ts
+
+## Evidence
+
+- File pattern: *.test.ts
+- Consistent across test files
+
+---
+id: lapc-invoice-maker-test-mocking
+trigger: "when mocking dependencies in tests"
+confidence: 0.75
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Test Mocking
+
+## Action
+
+Use vi.mock for mocking
+
+## Evidence
+
+- Mocking pattern detected: vi.mock
+- Consistent across test files
+
+---
+id: lapc-invoice-maker-test-types
+trigger: "when planning tests for a feature"
+confidence: 0.7
+domain: testing
+source: repo-analysis
+source_repo: https://github.com/telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Test Types
+
+## Action
+
+Write unit, integration tests to match project standards
+
+## Evidence
+
+- Test types detected: unit, integration
+- Coverage config: no
+
+---
+id: lapc-invoice-maker-workflow-database-migration
+trigger: "when modifying the database schema or adding tables"
+confidence: 0.65
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Workflow Database Migration
+
+## Action
+
+Follow the database-migration workflow:
+1. Create migration file
+2. Update schema definitions
+3. Generate/update types
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~3x per month
+- Files: migrations/*, **/schema.*, **/types.ts
+
+---
+id: lapc-invoice-maker-workflow-feature-development
+trigger: "when implementing a new feature"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Workflow Feature Development
+
+## Action
+
+Follow the feature-development workflow:
+1. Add feature implementation
+2. Add tests for feature
+3. Update documentation
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~23x per month
+- Files: src/components/admin/*, src/components/*, src/lib/*
+
+---
+id: lapc-invoice-maker-workflow-refactoring
+trigger: "when refactoring code"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Workflow Refactoring
+
+## Action
+
+Follow the refactoring workflow:
+1. Ensure tests pass before refactor
+2. Refactor code structure
+3. Verify tests still pass
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: src/**/*
+
+---
+id: lapc-invoice-maker-workflow-add-or-modify-database-table-or-field
+trigger: "when doing add or modify database table or field"
+confidence: 0.7
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Workflow Add Or Modify Database Table Or Field
+
+## Action
+
+Follow the add-or-modify-database-table-or-field workflow:
+1. Edit prisma/schema.prisma to define the new table or field.
+2. Generate a new migration in prisma/migrations/ with the appropriate SQL.
+3. Update backend logic (repositories, services, or API routes) to use the new/changed field.
+4. Update or add tests if needed.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~4x per month
+- Files: prisma/schema.prisma, prisma/migrations/*/migration.sql, src/domains/*/repository.ts
+
+---
+id: lapc-invoice-maker-workflow-add-new-api-endpoint
+trigger: "when doing add new api endpoint"
+confidence: 0.65
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Workflow Add New Api Endpoint
+
+## Action
+
+Follow the add-new-api-endpoint workflow:
+1. Create or modify a route handler in src/app/api/...
+2. Implement or update logic in the corresponding domain's service and/or repository.
+3. Update or add types in domain/types.ts if needed.
+4. Write or update tests for the new endpoint.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~3x per month
+- Files: src/app/api/**/*.ts, src/domains/*/service.ts, src/domains/*/repository.ts
+
+---
+id: lapc-invoice-maker-workflow-feature-development-spec-plan-impl
+trigger: "when doing feature development spec plan impl"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Workflow Feature Development Spec Plan Impl
+
+## Action
+
+Follow the feature-development-spec-plan-impl workflow:
+1. Write a design spec in docs/superpowers/specs/...
+2. Write an implementation plan in docs/superpowers/plans/...
+3. Implement the feature across relevant files (API, domains, components, etc).
+4. Update docs/PROJECT-OVERVIEW.md and/or README.md to reflect changes.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: docs/superpowers/specs/*.md, docs/superpowers/plans/*.md, src/app/api/**/*.ts
+
+---
+id: lapc-invoice-maker-workflow-add-or-refactor-domain-module
+trigger: "when doing add or refactor domain module"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Workflow Add Or Refactor Domain Module
+
+## Action
+
+Follow the add-or-refactor-domain-module workflow:
+1. Create or update src/domains/{domain}/repository.ts, service.ts, api-client.ts, hooks.ts, and types.ts.
+2. Update API routes to delegate to the new domain service.
+3. Update components to use the new domain api-client and types.
+4. Write or update tests for the domain logic.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: src/domains/*/repository.ts, src/domains/*/service.ts, src/domains/*/api-client.ts
+
+---
+id: lapc-invoice-maker-workflow-add-or-update-admin-ui-crud
+trigger: "when doing add or update admin ui crud"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Workflow Add Or Update Admin Ui Crud
+
+## Action
+
+Follow the add-or-update-admin-ui-crud workflow:
+1. Create or update API routes under src/app/api/admin/...
+2. Update or implement domain logic (repository/service) for admin features.
+3. Update or add React components in src/components/admin/ for the UI.
+4. Update or add tests for admin logic.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: src/app/api/admin/**/*.ts, src/domains/admin/*.ts, src/components/admin/**/*.tsx
+
+---
+id: lapc-invoice-maker-workflow-add-dashboard-or-activity-card
+trigger: "when doing add dashboard or activity card"
+confidence: 0.6
+domain: workflow
+source: repo-analysis
+source_repo: https://github.com/telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Workflow Add Dashboard Or Activity Card
+
+## Action
+
+Follow the add-dashboard-or-activity-card workflow:
+1. Implement or update backend aggregation logic (API route, domain service/repository).
+2. Create or update React component(s) for the dashboard card in src/components/dashboard/.
+3. Wire the new card into src/app/page.tsx (dashboard).
+4. Update types if needed.
+
+## Evidence
+
+- Workflow detected from commit patterns
+- Frequency: ~2x per month
+- Files: src/app/api/**/*.ts, src/domains/*/service.ts, src/domains/*/repository.ts
+
+---
+id: lapc-invoice-maker-instinct-file-naming
+trigger: "When creating a new file"
+confidence: 0.85
+domain: code-style
+source: repo-analysis
+source_repo: telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Instinct File Naming
+
+## Action
+
+Name the file using camelCase (e.g., userRepository.ts)
+
+## Evidence
+
+- Pattern in namingConventions.files: camelCase
+- Files in src/components/, src/domains/ follow camelCase
+
+---
+id: lapc-invoice-maker-instinct-function-naming
+trigger: "When defining a new function"
+confidence: 0.85
+domain: code-style
+source: repo-analysis
+source_repo: telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Instinct Function Naming
+
+## Action
+
+Name the function using camelCase (e.g., getUserData)
+
+## Evidence
+
+- Pattern in namingConventions.functions: camelCase
+- Functions in src/domains/*/service.ts
+
+---
+id: lapc-invoice-maker-instinct-class-naming
+trigger: "When defining a new class"
+confidence: 0.85
+domain: code-style
+source: repo-analysis
+source_repo: telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Instinct Class Naming
+
+## Action
+
+Name the class using PascalCase (e.g., UserService)
+
+## Evidence
+
+- Pattern in namingConventions.classes: PascalCase
+- Classes in src/domains/*/service.ts
+
+---
+id: lapc-invoice-maker-instinct-constant-naming
+trigger: "When defining a constant"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Instinct Constant Naming
+
+## Action
+
+Name the constant using SCREAMING_SNAKE_CASE (e.g., MAX_USERS)
+
+## Evidence
+
+- Pattern in namingConventions.constants: SCREAMING_SNAKE_CASE
+
+---
+id: lapc-invoice-maker-instinct-import-style
+trigger: "When importing modules"
+confidence: 0.8
+domain: code-style
+source: repo-analysis
+source_repo: telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Instinct Import Style
+
+## Action
+
+Use alias import style for modules
+
+## Evidence
+
+- Pattern in importStyle: alias
+- Imports in src/components/, src/domains/
+
+---
+id: lapc-invoice-maker-instinct-export-style
+trigger: "When exporting modules or functions"
+confidence: 0.7
+domain: code-style
+source: repo-analysis
+source_repo: telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Instinct Export Style
+
+## Action
+
+Use mixed export style (named and default exports as appropriate)
+
+## Evidence
+
+- Pattern in exportStyle: mixed
+- Exports in src/domains/*/service.ts
+
+---
+id: lapc-invoice-maker-instinct-test-file-location
+trigger: "When adding tests"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Instinct Test File Location
+
+## Action
+
+Place test files in a separate __tests__ or tests/ directory, using *.test.ts naming
+
+## Evidence
+
+- Pattern in testing.filePattern: *.test.ts
+- Test files in __tests__ and tests/domains/
+
+---
+id: lapc-invoice-maker-instinct-test-framework
+trigger: "When writing tests"
+confidence: 0.95
+domain: testing
+source: repo-analysis
+source_repo: telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Instinct Test Framework
+
+## Action
+
+Use the Vitest framework for all tests
+
+## Evidence
+
+- Pattern in testing.framework: vitest
+- vitest.config.ts present
+
+---
+id: lapc-invoice-maker-instinct-test-types
+trigger: "When deciding test coverage"
+confidence: 0.85
+domain: testing
+source: repo-analysis
+source_repo: telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Instinct Test Types
+
+## Action
+
+Write both unit and integration tests as appropriate
+
+## Evidence
+
+- Pattern in testing.testTypes: unit, integration
+- Examples in tests/domains/
+
+---
+id: lapc-invoice-maker-instinct-test-mocking
+trigger: "When mocking dependencies in tests"
+confidence: 0.9
+domain: testing
+source: repo-analysis
+source_repo: telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Instinct Test Mocking
+
+## Action
+
+Use vi.mock for mocking in Vitest tests
+
+## Evidence
+
+- Pattern in testing.mockingStyle: vi.mock
+- Seen in *.test.ts files
+
+---
+id: lapc-invoice-maker-instinct-commit-format
+trigger: "When making a git commit"
+confidence: 0.95
+domain: git
+source: repo-analysis
+source_repo: telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Instinct Commit Format
+
+## Action
+
+Format the commit message using Conventional Commits (e.g., feat: add X, fix: correct Y)
+
+## Evidence
+
+- Pattern in commits.type: conventional
+- Examples: 'feat: ...', 'fix: ...'
+
+---
+id: lapc-invoice-maker-instinct-commit-prefixes
+trigger: "When choosing a commit type"
+confidence: 0.95
+domain: git
+source: repo-analysis
+source_repo: telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Instinct Commit Prefixes
+
+## Action
+
+Use one of the prefixes: feat, fix, docs, style, chore, test
+
+## Evidence
+
+- Pattern in commits.prefixes
+- Examples: 'feat: ...', 'docs: ...'
+
+---
+id: lapc-invoice-maker-instinct-commit-length
+trigger: "When writing a commit message"
+confidence: 0.7
+domain: git
+source: repo-analysis
+source_repo: telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Instinct Commit Length
+
+## Action
+
+Keep the commit message concise, around 58 characters on average
+
+## Evidence
+
+- Pattern in commits.averageLength: 58
+
+---
+id: lapc-invoice-maker-instinct-add-or-modify-database-table-or-field
+trigger: "When someone wants to add a new field/table or change the database schema"
+confidence: 0.95
+domain: workflow
+source: repo-analysis
+source_repo: telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Instinct Add Or Modify Database Table Or Field
+
+## Action
+
+Edit prisma/schema.prisma, generate a migration, update backend logic, and update/add tests
+
+## Evidence
+
+- Workflow: add-or-modify-database-table-or-field
+- Example commits: 'feat: add needsSetup field to User model'
+
+---
+id: lapc-invoice-maker-instinct-add-new-api-endpoint
+trigger: "When someone wants to expose new backend functionality via an API route"
+confidence: 0.9
+domain: workflow
+source: repo-analysis
+source_repo: telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Instinct Add New Api Endpoint
+
+## Action
+
+Create/modify route handler, update domain service/repository, update/add types, write/update tests
+
+## Evidence
+
+- Workflow: add-new-api-endpoint
+- Example commit sequences for new endpoints
+
+---
+id: lapc-invoice-maker-instinct-feature-development-spec-plan-impl
+trigger: "When someone wants to add a significant new feature or workflow"
+confidence: 0.88
+domain: workflow
+source: repo-analysis
+source_repo: telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Instinct Feature Development Spec Plan Impl
+
+## Action
+
+Write a design spec, implementation plan, implement feature, update documentation
+
+## Evidence
+
+- Workflow: feature-development-spec-plan-impl
+- Example: 'docs: add online quote sharing implementation plan'
+
+---
+id: lapc-invoice-maker-instinct-add-or-refactor-domain-module
+trigger: "When someone wants to introduce or restructure a business domain"
+confidence: 0.92
+domain: workflow
+source: repo-analysis
+source_repo: telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Instinct Add Or Refactor Domain Module
+
+## Action
+
+Create/update repository, service, api-client, hooks, types; update API routes, components, and tests
+
+## Evidence
+
+- Workflow: add-or-refactor-domain-module
+- Example: 'refactor: domain module architecture for decoupling (#1)'
+
+---
+id: lapc-invoice-maker-instinct-add-or-update-admin-ui-crud
+trigger: "When someone wants to add or improve admin-facing CRUD features"
+confidence: 0.87
+domain: workflow
+source: repo-analysis
+source_repo: telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Instinct Add Or Update Admin Ui Crud
+
+## Action
+
+Create/update admin API routes, domain logic, React components, and tests
+
+## Evidence
+
+- Workflow: add-or-update-admin-ui-crud
+- Example: 'feat: wire invoice and line item managers into admin panel tabs'
+
+---
+id: lapc-invoice-maker-instinct-add-dashboard-or-activity-card
+trigger: "When someone wants to visualize new data or activity on the dashboard"
+confidence: 0.85
+domain: workflow
+source: repo-analysis
+source_repo: telenel/lapc-invoice-maker
+---
+
+# Lapc Invoice Maker Instinct Add Dashboard Or Activity Card
+
+## Action
+
+Implement/update backend aggregation, create/update dashboard React component, wire into dashboard, update types
+
+## Evidence
+
+- Workflow: add-dashboard-or-activity-card
+- Example: 'feat: personalized dashboard with drag-and-drop and user context (#8)'
+
