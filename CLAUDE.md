@@ -34,6 +34,7 @@ src/
 │   ├── staff/     # types, repository, service, api-client, hooks
 │   ├── invoice/   # types, constants, calculations, repository, service, api-client, hooks
 │   ├── quote/     # types, repository, service, api-client, hooks
+│   ├── notification/ # types, repository, service, api-client, hooks
 │   ├── pdf/       # types, storage, service
 │   ├── admin/     # types, repository, service, api-client
 │   ├── analytics/ # types, repository, service
@@ -74,6 +75,8 @@ Docker Compose on montalvo.io behind Traefik. CI/CD via GitHub Actions — push 
 - **Route handlers** are thin dispatchers using `withAuth()`/`withAdmin()` wrappers from `src/domains/shared/auth.ts`
 - **Components** use domain api-clients (never raw `fetch()`) and domain types (never local interface duplicates)
 - **Cross-domain** calls go through services and types only — never import another domain's repository
+- **SSE notifications** — in-memory pub/sub in `src/lib/sse.ts`, streamed via `GET /api/notifications/stream`
+- **Public routes** — `/quotes/review/[token]` and `/api/quotes/public/*` bypass auth (excluded in `src/middleware.ts`)
 
 ## Conventions
 

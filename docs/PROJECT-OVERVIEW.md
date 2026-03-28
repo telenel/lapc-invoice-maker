@@ -1,6 +1,6 @@
 # LAPC InvoiceMaker — Project Overview
 
-Invoice generation webapp for Los Angeles Pierce College. Handles invoice drafting, finalization, and PDF generation for campus purchasing requests. Supports running/recurring invoices, quote creation, staff management, admin controls, and dashboard analytics.
+Invoice generation webapp for Los Angeles Pierce College. Handles invoice drafting, finalization, and PDF generation for campus purchasing requests. Supports running/recurring invoices, quote creation with online sharing and approval, staff management, admin controls, real-time notifications, and dashboard analytics.
 
 ---
 
@@ -25,8 +25,9 @@ Invoice generation webapp for Los Angeles Pierce College. Handles invoice drafti
 src/
 ├── app/                   # Next.js App Router pages and API routes
 │   ├── api/               # Route handlers (admin, analytics, auth, categories,
-│   │   │                  #   invoices, quick-picks, quotes, saved-items,
-│   │   │                  #   setup, staff, upload, user-quick-picks)
+│   │   │                  #   invoices, notifications, quick-picks, quotes,
+│   │   │                  #   quotes/public, saved-items, setup, staff,
+│   │   │                  #   upload, user-quick-picks)
 │   ├── admin/
 │   ├── analytics/
 │   ├── invoices/
@@ -39,8 +40,10 @@ src/
 │   ├── ui/                # shadcn/ui base components
 │   ├── invoice/
 │   ├── invoices/
+│   ├── notifications/     # Notification bell + dropdown
 │   ├── quote/
-│   ├── quotes/
+│   ├── quotes/            # Includes share-link-dialog, quote-activity,
+│   │                      #   public-quote-view
 │   ├── staff/
 │   ├── admin/
 │   ├── analytics/
@@ -51,6 +54,7 @@ src/
 │   ├── shared/
 │   ├── invoice/
 │   ├── quote/
+│   ├── notification/
 │   ├── staff/
 │   ├── admin/
 │   ├── analytics/
@@ -69,6 +73,7 @@ src/
     ├── formatters.ts
     ├── prisma.ts
     ├── quote-number.ts
+    ├── sse.ts             # In-memory SSE pub/sub for real-time notifications
     ├── themes.ts
     ├── utils.ts
     ├── validators.ts
@@ -116,6 +121,13 @@ src/domains/
 │   └── constants.ts
 │
 ├── quote/
+│   ├── types.ts
+│   ├── repository.ts
+│   ├── service.ts
+│   ├── api-client.ts
+│   └── hooks.ts
+│
+├── notification/
 │   ├── types.ts
 │   ├── repository.ts
 │   ├── service.ts
@@ -187,6 +199,7 @@ src/domains/
 | staff | yes | yes | yes | yes |
 | admin | yes | yes | yes | — |
 | analytics | yes | yes | — | — |
+| notification | yes | yes | yes | yes |
 | pdf | — | yes | — | — |
 | shared | — | — | — | — |
 
@@ -212,8 +225,10 @@ These domains encapsulate endpoint URLs and response parsing for smaller feature
 | `StaffSignerHistory` | Approval chain signer history per staff member |
 | `Invoice` | Core invoice records with status, line items, PDF paths |
 | `LineItem` | Invoice line items (description, quantity, unit cost) |
-| `Quote` | Quote records with auto-expiry and conversion to invoice |
+| `Quote` | Quote records with auto-expiry, conversion to invoice, and online sharing (shareToken) |
 | `QuoteLineItem` | Quote line items |
+| `QuoteView` | Tracks public quote page views (IP, user-agent, referrer, viewport, duration, response) |
+| `Notification` | Real-time notifications for quote events (viewed, approved, declined) |
 | `AccountCode` | Admin-managed account code catalog |
 | `SavedLineItem` | Admin-managed saved line items catalog |
 | `QuickPick` | Admin-managed quick pick items |
@@ -238,6 +253,41 @@ These domains encapsulate endpoint URLs and response parsing for smaller feature
 - Roles: `admin` and `user`. First user to complete setup is automatically admin.
 - `withAuth()` / `withAdmin()` route wrappers in `shared/auth.ts` centralize session checks.
 - Setup flow redirects unauthenticated users to `/setup` or `/login` via middleware.
+
+---
+
+## Online Quote Sharing
+
+Quotes can be shared with external recipients via token-based public links.
+
+### Flow
+
+1. User clicks "Mark as Sent" on a DRAFT quote → backend generates a UUID `shareToken`, sets status to SENT
+2. A dialog appears with the share URL, a "Copy Link" button, and an "Email Link" button (opens `mailto:`)
+3. Recipient opens the link → public review page at `/quotes/review/[token]` (no auth required)
+4. Page visit is recorded as a `QuoteView` (IP, user-agent, referrer, viewport, duration via `sendBeacon`)
+5. Recipient clicks "Approve" or "Decline" → quote status updates, notification pushed to creator
+
+### SSE Notifications
+
+Real-time notifications via Server-Sent Events:
+
+- **Endpoint:** `GET /api/notifications/stream` (authenticated)
+- **Pub/sub:** In-memory `Map<userId, Set<controller>>` in `src/lib/sse.ts`
+- **Events:** `QUOTE_VIEWED` (10-min debounce), `QUOTE_APPROVED`, `QUOTE_DECLINED`
+- **UI:** Bell icon in navbar with unread count badge and dropdown
+
+### Public Routes (no auth)
+
+| Route | Method | Purpose |
+|-------|--------|---------|
+| `/quotes/review/[token]` | Page | Public quote review page |
+| `/api/quotes/public/[token]` | GET | Fetch quote by share token |
+| `/api/quotes/public/[token]/view` | POST | Register page view |
+| `/api/quotes/public/[token]/view/[viewId]` | PATCH | Update view duration (beacon) |
+| `/api/quotes/public/[token]/respond` | POST | Accept/decline quote |
+
+These routes are excluded from auth middleware in `src/middleware.ts`.
 
 ---
 
