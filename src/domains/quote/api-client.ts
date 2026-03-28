@@ -68,8 +68,8 @@ export const quoteApi = {
     if (!res.ok) throw await ApiError.fromResponse(res);
   },
 
-  async markSent(id: string): Promise<{ success: boolean }> {
-    return request<{ success: boolean }>(`${BASE}/${id}/send`, {
+  async markSent(id: string): Promise<{ success: boolean; shareUrl: string }> {
+    return request<{ success: boolean; shareUrl: string }>(`${BASE}/${id}/send`, {
       method: "POST",
     });
   },
@@ -84,5 +84,9 @@ export const quoteApi = {
     const res = await fetch(`${BASE}/${id}/pdf`);
     if (!res.ok) throw await ApiError.fromResponse(res);
     return res.blob();
+  },
+
+  async getViews(id: string): Promise<import("./types").QuoteViewResponse[]> {
+    return request<import("./types").QuoteViewResponse[]>(`${BASE}/${id}/views`);
   },
 };

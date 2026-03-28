@@ -131,6 +131,16 @@ export async function findById(id: string) {
   });
 }
 
+/**
+ * Find a quote by its public share token.
+ */
+export async function findByShareToken(token: string) {
+  return prisma.invoice.findUnique({
+    where: { shareToken: token },
+    include: detailInclude,
+  });
+}
+
 export interface CalculatedLineItem {
   description: string;
   quantity: number;
@@ -258,6 +268,27 @@ export async function markSent(id: string) {
 }
 
 /**
+ * Mark a quote as SENT and generate a share token.
+ */
+export async function markSentWithToken(id: string, shareToken: string) {
+  return prisma.invoice.update({
+    where: { id },
+    data: { quoteStatus: "SENT", shareToken },
+  });
+}
+
+/**
+ * Get the share token for an existing quote.
+ */
+export async function getShareToken(id: string): Promise<string | null> {
+  const result = await prisma.invoice.findUnique({
+    where: { id },
+    select: { shareToken: true },
+  });
+  return result?.shareToken ?? null;
+}
+
+/**
  * Mark a quote as ACCEPTED and record conversion timestamp.
  */
 export async function markAccepted(id: string) {
@@ -291,4 +322,62 @@ export async function generateNumber(): Promise<string> {
   }
 
   return `${prefix}${String(nextSeq).padStart(4, "0")}`;
+}
+
+/**
+ * Record a quote view.
+ */
+export async function createView(data: {
+  invoiceId: string;
+  ipAddress?: string;
+  userAgent?: string;
+  referrer?: string;
+  viewport?: string;
+}) {
+  return prisma.quoteView.create({ data });
+}
+
+/**
+ * Update view duration (called via sendBeacon on page unload).
+ */
+export async function updateViewDuration(viewId: string, durationSeconds: number) {
+  return prisma.quoteView.update({
+    where: { id: viewId },
+    data: { durationSeconds },
+  });
+}
+
+/**
+ * Update the respondedWith field on a view.
+ */
+export async function updateViewResponse(viewId: string, respondedWith: string) {
+  return prisma.quoteView.update({
+    where: { id: viewId },
+    data: { respondedWith },
+  });
+}
+
+/**
+ * Find all views for a quote (for activity display).
+ */
+export async function findViewsByInvoiceId(invoiceId: string) {
+  return prisma.quoteView.findMany({
+    where: { invoiceId },
+    orderBy: { viewedAt: "desc" },
+  });
+}
+
+/**
+ * Check if a view was recorded for this quote in the last N minutes.
+ */
+export async function hasRecentView(invoiceId: string, withinMinutes: number): Promise<boolean> {
+  const since = new Date(Date.now() - withinMinutes * 60 * 1000);
+  const count = await prisma.quoteView.count({
+    where: {
+      invoiceId,
+      viewedAt: { gte: since },
+    },
+  });
+  // count > 1 because the current view was already created
+  return count > 1;
 }

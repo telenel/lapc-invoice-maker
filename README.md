@@ -8,7 +8,8 @@ Invoice generation webapp for **Los Angeles Pierce College**. Handles the full l
 
 - **Invoice creation** with keyboard-first workflow, staff autofill, line items, tax calculation, and approval chains
 - **PDF generation** — cover sheets (Puppeteer), IDP forms (pdf-lib), PrismCore merge
-- **Quote management** — create, send, auto-expire, convert to invoice
+- **Quote management** — create, send, auto-expire, convert to invoice, online sharing with approve/decline workflow
+- **Online quote sharing** — shareable public links, recipient approve/decline, view tracking (IP, browser, duration), real-time SSE notifications
 - **Staff directory** — CRUD with account numbers, signer history tracking
 - **Admin panel** — user management, account codes, invoice manager with inline editing, saved line items catalog, analytics dashboard
 - **Dark/light theme** with UI scale controls
@@ -34,7 +35,7 @@ Route Handler → withAuth() → Domain Service → Domain Repository → Prisma
 Component → Domain API Client → Domain Hooks → Domain Types (DTOs)
 ```
 
-12 domain modules under `src/domains/` — each with types, repository, service, api-client, and hooks as needed. See [docs/PROJECT-OVERVIEW.md](docs/PROJECT-OVERVIEW.md) for full architecture details.
+13 domain modules under `src/domains/` — each with types, repository, service, api-client, and hooks as needed. See [docs/PROJECT-OVERVIEW.md](docs/PROJECT-OVERVIEW.md) for full architecture details.
 
 ## Development
 
