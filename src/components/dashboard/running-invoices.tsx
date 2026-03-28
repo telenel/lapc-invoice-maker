@@ -33,7 +33,7 @@ export function RunningInvoices() {
   });
 
   return (
-    <Card>
+    <Card className="card-hover">
       <CardHeader className="border-b border-border/50">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-bold">Running Invoices</CardTitle>

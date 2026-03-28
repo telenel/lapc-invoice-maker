@@ -29,6 +29,7 @@ export const GET = withAuth(async (req: NextRequest) => {
       category: sp.get("category") ?? undefined,
       amountMin: sp.get("amountMin") ? Number(sp.get("amountMin")) : undefined,
       amountMax: sp.get("amountMax") ? Number(sp.get("amountMax")) : undefined,
+      creatorId: sp.get("creatorId") ?? undefined,
       page: Math.max(1, parseInt(sp.get("page") ?? "1", 10)),
       pageSize: Math.max(1, parseInt(sp.get("pageSize") ?? "20", 10)),
       sortBy: sp.get("sortBy") ?? "createdAt",
