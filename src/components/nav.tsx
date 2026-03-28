@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { HelpModal } from "@/components/help-modal";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useUIScale } from "@/components/ui-scale-provider";
 
 const links = [
@@ -111,6 +112,7 @@ export function Nav() {
         </div>
         <div ref={menuRef} className="ml-auto flex items-center gap-1">
           <HelpModal />
+          <NotificationBell />
 
           {/* Theme picker */}
           <div className="relative">
