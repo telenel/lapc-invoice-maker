@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { quoteService } from "@/domains/quote/service";
+import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@/generated/prisma/client";
+import type { CateringDetails } from "@/domains/quote/types";
 
 type RouteContext = { params: Promise<{ token: string }> };
 
@@ -13,6 +16,22 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
   }
 
   try {
+    // If catering details were submitted, persist them before processing the response
+    const cateringDetails = body.cateringDetails as CateringDetails | undefined;
+    if (cateringDetails) {
+      // Look up the quote to get its id for the update
+      const quote = await prisma.invoice.findFirst({
+        where: { shareToken: token },
+        select: { id: true },
+      });
+      if (quote) {
+        await prisma.invoice.update({
+          where: { id: quote.id },
+          data: { cateringDetails: cateringDetails as unknown as Prisma.InputJsonValue },
+        });
+      }
+    }
+
     const result = await quoteService.respondToQuote(token, response, body.viewId);
     if (!result) {
       return NextResponse.json({ error: "Quote not found" }, { status: 404 });

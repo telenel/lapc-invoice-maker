@@ -10,6 +10,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -18,7 +21,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
+import type { CateringDetails } from "@/domains/quote/types";
 
 interface QuoteItem {
   id: string;
@@ -50,6 +55,8 @@ interface PublicQuote {
     email: string | null;
   };
   items: QuoteItem[];
+  isCateringEvent: boolean;
+  cateringDetails: CateringDetails | null;
 }
 
 function expirationText(dateStr: string): string {
@@ -62,12 +69,43 @@ function expirationText(dateStr: string): string {
   return `Expired ${Math.abs(diffDays)} day${Math.abs(diffDays) !== 1 ? "s" : ""} ago`;
 }
 
+// ── Catering form state (public-facing subset) ────────────────────────────
+
+interface PublicCateringForm {
+  contactName: string;
+  contactPhone: string;
+  location: string;
+  headcount: string;
+  setupRequired: boolean;
+  setupTime: string;
+  takedownRequired: boolean;
+  takedownTime: string;
+  specialInstructions: string;
+}
+
+function makeCateringForm(existing: CateringDetails | null): PublicCateringForm {
+  return {
+    contactName: existing?.contactName ?? "",
+    contactPhone: existing?.contactPhone ?? "",
+    location: existing?.location ?? "",
+    headcount: existing?.headcount != null ? String(existing.headcount) : "",
+    setupRequired: existing?.setupRequired ?? false,
+    setupTime: existing?.setupTime ?? "",
+    takedownRequired: existing?.takedownRequired ?? false,
+    takedownTime: existing?.takedownTime ?? "",
+    specialInstructions: existing?.specialInstructions ?? "",
+  };
+}
+
+const labelClass = "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
+
 export function PublicQuoteView({ token }: { token: string }) {
   const [quote, setQuote] = useState<PublicQuote | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [responding, setResponding] = useState(false);
   const [responded, setResponded] = useState(false);
+  const [cateringForm, setCateringForm] = useState<PublicCateringForm>(makeCateringForm(null));
   const viewIdRef = useRef<string | null>(null);
   const loadTimeRef = useRef<number>(Date.now());
 
@@ -83,6 +121,9 @@ export function PublicQuoteView({ token }: { token: string }) {
         }
         const quoteData: PublicQuote = await quoteRes.json();
         setQuote(quoteData);
+        if (quoteData.isCateringEvent) {
+          setCateringForm(makeCateringForm(quoteData.cateringDetails));
+        }
 
         // Register view
         const viewRes = await fetch(`/api/quotes/public/${token}/view`, {
@@ -126,10 +167,27 @@ export function PublicQuoteView({ token }: { token: string }) {
   async function handleRespond(response: "ACCEPTED" | "DECLINED") {
     setResponding(true);
     try {
+      // Build catering details from form when approving a catering event
+      const cateringDetails =
+        quote?.isCateringEvent && response === "ACCEPTED"
+          ? {
+              ...quote.cateringDetails,
+              contactName: cateringForm.contactName,
+              contactPhone: cateringForm.contactPhone,
+              location: cateringForm.location,
+              headcount: cateringForm.headcount ? Number(cateringForm.headcount) : undefined,
+              setupRequired: cateringForm.setupRequired,
+              setupTime: cateringForm.setupRequired ? cateringForm.setupTime : undefined,
+              takedownRequired: cateringForm.takedownRequired,
+              takedownTime: cateringForm.takedownRequired ? cateringForm.takedownTime : undefined,
+              specialInstructions: cateringForm.specialInstructions || undefined,
+            }
+          : undefined;
+
       const res = await fetch(`/api/quotes/public/${token}/respond`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ response, viewId: viewIdRef.current }),
+        body: JSON.stringify({ response, viewId: viewIdRef.current, cateringDetails }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -173,6 +231,12 @@ export function PublicQuoteView({ token }: { token: string }) {
   const isExpired = quote.quoteStatus === "EXPIRED";
   const alreadyResponded = quote.quoteStatus === "ACCEPTED" || quote.quoteStatus === "DECLINED";
   const canRespond = quote.quoteStatus === "SENT" && !responded;
+  const isCatering = quote.isCateringEvent;
+  const cateringRequiredMissing =
+    isCatering &&
+    (!cateringForm.contactName.trim() ||
+      !cateringForm.contactPhone.trim() ||
+      !cateringForm.location.trim());
 
   return (
     <div className="min-h-screen bg-background">
@@ -313,6 +377,174 @@ export function PublicQuoteView({ token }: { token: string }) {
           </CardContent>
         </Card>
 
+        {/* Catering event details */}
+        {isCatering && canRespond && (
+          <Card className="border-orange-500/20">
+            <CardHeader className="bg-orange-500/5">
+              <div>
+                <CardTitle className="text-orange-500">Event Details Required</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Please fill out before approving
+                </p>
+              </div>
+            </CardHeader>
+
+            <CardContent className="space-y-5">
+              {/* Contact Name, Contact Number, Location (required) */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="pub-contact-name" className={labelClass}>
+                    Contact Name <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="pub-contact-name"
+                    type="text"
+                    placeholder="Your full name"
+                    value={cateringForm.contactName}
+                    onChange={(e) =>
+                      setCateringForm((prev) => ({ ...prev, contactName: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="pub-contact-number" className={labelClass}>
+                    Contact Number <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="pub-contact-number"
+                    type="text"
+                    placeholder="(555) 123-4567"
+                    value={cateringForm.contactPhone}
+                    onChange={(e) =>
+                      setCateringForm((prev) => ({ ...prev, contactPhone: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="pub-location" className={labelClass}>
+                    Event Location <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="pub-location"
+                    type="text"
+                    placeholder="Building, Room, Area"
+                    value={cateringForm.location}
+                    onChange={(e) =>
+                      setCateringForm((prev) => ({ ...prev, location: e.target.value }))
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* Headcount (optional) */}
+              <div className="w-[180px] space-y-1.5">
+                <Label htmlFor="pub-headcount" className={labelClass}>
+                  Expected Headcount
+                </Label>
+                <Input
+                  id="pub-headcount"
+                  type="number"
+                  min={0}
+                  placeholder="e.g. 50"
+                  value={cateringForm.headcount}
+                  onChange={(e) =>
+                    setCateringForm((prev) => ({ ...prev, headcount: e.target.value }))
+                  }
+                />
+              </div>
+
+              {/* Setup & Takedown */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Setup */}
+                <div className="space-y-3 rounded-lg border border-orange-500/10 p-4">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="pub-setup-needed"
+                      checked={cateringForm.setupRequired}
+                      onCheckedChange={(checked) =>
+                        setCateringForm((prev) => ({
+                          ...prev,
+                          setupRequired: checked === true,
+                        }))
+                      }
+                    />
+                    <Label htmlFor="pub-setup-needed" className="text-sm font-medium">
+                      Setup Needed
+                    </Label>
+                  </div>
+                  {cateringForm.setupRequired && (
+                    <div className="space-y-1.5 pl-6">
+                      <Label htmlFor="pub-setup-time" className={labelClass}>
+                        When should we arrive?
+                      </Label>
+                      <Input
+                        id="pub-setup-time"
+                        type="time"
+                        value={cateringForm.setupTime}
+                        onChange={(e) =>
+                          setCateringForm((prev) => ({ ...prev, setupTime: e.target.value }))
+                        }
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Takedown */}
+                <div className="space-y-3 rounded-lg border border-orange-500/10 p-4">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="pub-takedown-needed"
+                      checked={cateringForm.takedownRequired}
+                      onCheckedChange={(checked) =>
+                        setCateringForm((prev) => ({
+                          ...prev,
+                          takedownRequired: checked === true,
+                        }))
+                      }
+                    />
+                    <Label htmlFor="pub-takedown-needed" className="text-sm font-medium">
+                      Takedown Needed
+                    </Label>
+                  </div>
+                  {cateringForm.takedownRequired && (
+                    <div className="space-y-1.5 pl-6">
+                      <Label htmlFor="pub-takedown-time" className={labelClass}>
+                        When should we return?
+                      </Label>
+                      <Input
+                        id="pub-takedown-time"
+                        type="time"
+                        value={cateringForm.takedownTime}
+                        onChange={(e) =>
+                          setCateringForm((prev) => ({ ...prev, takedownTime: e.target.value }))
+                        }
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Special instructions */}
+              <div className="space-y-1.5">
+                <Label htmlFor="pub-special-instructions" className={labelClass}>
+                  Anything else we should know?
+                </Label>
+                <Textarea
+                  id="pub-special-instructions"
+                  placeholder="Dietary needs, equipment requests, access instructions, etc."
+                  value={cateringForm.specialInstructions}
+                  onChange={(e) =>
+                    setCateringForm((prev) => ({
+                      ...prev,
+                      specialInstructions: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Response section */}
         {canRespond && (
           <Card>
@@ -324,8 +556,9 @@ export function PublicQuoteView({ token }: { token: string }) {
                 <Button
                   size="lg"
                   onClick={() => handleRespond("ACCEPTED")}
-                  disabled={responding}
+                  disabled={responding || cateringRequiredMissing}
                   className="bg-green-600 text-white hover:bg-green-700 min-w-[140px]"
+                  title={cateringRequiredMissing ? "Fill in required event details above" : undefined}
                 >
                   {responding ? "Submitting..." : "Approve Quote"}
                 </Button>
