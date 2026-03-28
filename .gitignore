@@ -29,6 +29,9 @@ yarn-error.log*
 .env
 .env*.local
 
+# local claude overrides
+.claude.local.md
+
 # vercel
 .vercel
 

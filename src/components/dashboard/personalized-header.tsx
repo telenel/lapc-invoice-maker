@@ -1,0 +1,89 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { Plus, FileText, Sun, Sunset, Moon } from "lucide-react";
+
+type TimeOfDay = "morning" | "afternoon" | "evening";
+
+function getTimeOfDay(): TimeOfDay {
+  const hour = new Date().getHours();
+  if (hour < 12) return "morning";
+  if (hour < 17) return "afternoon";
+  return "evening";
+}
+
+const greetingMap: Record<TimeOfDay, string> = {
+  morning: "Good morning",
+  afternoon: "Good afternoon",
+  evening: "Good evening",
+};
+
+const iconMap: Record<TimeOfDay, typeof Sun> = {
+  morning: Sun,
+  afternoon: Sunset,
+  evening: Moon,
+};
+
+const iconColorMap: Record<TimeOfDay, string> = {
+  morning: "text-muted-foreground",
+  afternoon: "text-muted-foreground",
+  evening: "text-muted-foreground",
+};
+
+function getFormattedDate(): string {
+  return new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+export function PersonalizedHeader() {
+  const { data: session } = useSession();
+  const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>("morning");
+  const [date, setDate] = useState("");
+
+  useEffect(() => {
+    setTimeOfDay(getTimeOfDay());
+    setDate(getFormattedDate());
+  }, []);
+
+  const firstName = session?.user?.name?.split(" ")[0] ?? "";
+  const Icon = iconMap[timeOfDay];
+
+  return (
+    <div className="pb-1">
+      <div className="flex items-end justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <Icon className={`h-5 w-5 ${iconColorMap[timeOfDay]}`} aria-hidden="true" />
+            <h1 className="text-2xl font-bold tracking-tight">
+              {greetingMap[timeOfDay]}{firstName ? `, ${firstName}` : ""}
+            </h1>
+          </div>
+          <p className="text-[13px] text-muted-foreground mt-0.5 ml-7">{date}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/quotes/new"
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            <FileText className="h-4 w-4" aria-hidden="true" />
+            New Quote
+          </Link>
+          <Link
+            href="/invoices/new"
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-red-600 to-red-800 px-3 text-sm font-semibold text-white transition-colors hover:from-red-700 hover:to-red-900"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            New Invoice
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
