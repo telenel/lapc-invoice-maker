@@ -5,6 +5,27 @@ import type { StaffSummary } from "@/domains/staff/types";
 
 export type QuoteStatus = "DRAFT" | "SENT" | "ACCEPTED" | "DECLINED" | "EXPIRED";
 
+// ── Catering ──────────────────────────────────────────────────────────────
+
+export interface CateringDetails {
+  eventDate: string;
+  startTime: string;
+  endTime: string;
+  location: string;
+  contactName: string;
+  contactPhone: string;
+  contactEmail?: string;
+  headcount?: number;
+  eventName?: string;
+  setupRequired: boolean;
+  setupTime?: string;
+  setupInstructions?: string;
+  takedownRequired: boolean;
+  takedownTime?: string;
+  takedownInstructions?: string;
+  specialInstructions?: string;
+}
+
 // ── DTOs ──────────────────────────────────────────────────────────────────
 
 export interface QuoteItemResponse {
@@ -14,6 +35,9 @@ export interface QuoteItemResponse {
   unitPrice: number;
   extendedPrice: number;
   sortOrder: number;
+  isTaxable: boolean;
+  marginOverride: number | null;
+  costPrice: number | null;
 }
 
 export interface QuoteResponse {
@@ -40,6 +64,12 @@ export interface QuoteResponse {
   creatorId: string;
   creatorName: string;
   items: QuoteItemResponse[];
+  isCateringEvent: boolean;
+  cateringDetails: CateringDetails | null;
+  marginEnabled: boolean;
+  marginPercent: number | null;
+  taxEnabled: boolean;
+  taxRate: number;
   convertedToInvoice?: { id: string; invoiceNumber: string | null } | null;
 }
 
@@ -61,11 +91,20 @@ export interface CreateQuoteInput {
   accountNumber?: string;
   approvalChain?: string[];
   notes?: string;
-  items: CreateLineItemInput[];
+  items: (CreateLineItemInput & {
+    isTaxable?: boolean;
+    marginOverride?: number;
+    costPrice?: number;
+  })[];
   expirationDate: string;
   recipientName: string;
   recipientEmail?: string;
   recipientOrg?: string;
+  isCateringEvent?: boolean;
+  cateringDetails?: CateringDetails;
+  marginEnabled?: boolean;
+  marginPercent?: number;
+  taxEnabled?: boolean;
 }
 
 export interface UpdateQuoteInput {
@@ -77,12 +116,21 @@ export interface UpdateQuoteInput {
   accountNumber?: string;
   approvalChain?: string[];
   notes?: string;
-  items?: CreateLineItemInput[];
+  items?: (CreateLineItemInput & {
+    isTaxable?: boolean;
+    marginOverride?: number;
+    costPrice?: number;
+  })[];
   expirationDate?: string;
   recipientName?: string;
   recipientEmail?: string;
   recipientOrg?: string;
   quoteStatus?: QuoteStatus;
+  isCateringEvent?: boolean;
+  cateringDetails?: CateringDetails;
+  marginEnabled?: boolean;
+  marginPercent?: number;
+  taxEnabled?: boolean;
 }
 
 export interface QuoteFilters {
