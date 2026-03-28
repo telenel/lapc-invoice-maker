@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { uploadApi } from "@/domains/upload/api-client";
 
 interface PrismcoreUploadProps {
   value: string | null;
@@ -22,17 +23,7 @@ export function PrismcoreUpload({ value, onChange }: PrismcoreUploadProps) {
 
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!res.ok) throw new Error("Upload failed");
-
-      const data = (await res.json()) as { path: string; filename: string };
+      const data = await uploadApi.uploadPdf(file);
       setFilename(data.filename);
       onChange(data.path);
     } catch {

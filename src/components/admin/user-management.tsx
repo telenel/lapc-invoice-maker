@@ -14,12 +14,13 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { adminApi } from "@/domains/admin/api-client";
 
 interface User {
   id: string;
   username: string;
   name: string;
-  email: string;
+  email: string | null;
   role: string;
   active: boolean;
   setupComplete: boolean;
@@ -39,24 +40,19 @@ export function UserManagement() {
 
   const fetchUsers = useCallback(async () => {
     try {
-      const res = await fetch("/api/admin/users");
-      if (res.ok) setUsers(await res.json());
+      const data = await adminApi.listUsers();
+      setUsers(data);
     } catch { /* ignore */ } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   async function handleCreate() {
-    const res = await fetch("/api/admin/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: newName }),
-    });
-    if (res.ok) {
-      const created = await res.json();
+    try {
+      const created = await adminApi.createUser({ name: newName });
       setCreatedUsername(created.username);
       setUsers((prev) => [created, ...prev]);
-    }
+    } catch { /* ignore */ }
   }
 
   function handleCloseCreate() {
@@ -68,46 +64,35 @@ export function UserManagement() {
   function openEdit(user: User) {
     setEditUser(user);
     setEditName(user.name);
-    setEditEmail(user.email);
+    setEditEmail(user.email ?? "");
     setEditRole(user.role);
   }
 
   async function handleEdit() {
     if (!editUser) return;
-    const res = await fetch(`/api/admin/users/${editUser.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: editName, email: editEmail, role: editRole }),
-    });
-    if (res.ok) {
-      const updated = await res.json();
+    try {
+      const updated = await adminApi.updateUser(editUser.id, { name: editName, email: editEmail, role: editRole });
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
       setEditUser(null);
-    }
+    } catch { /* ignore */ }
   }
 
   async function handleResetPassword(user: User) {
     if (!confirm(`Reset password for ${user.name}? They will need to go through onboarding again.`)) return;
-    const res = await fetch(`/api/admin/users/${user.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ resetPassword: true }),
-    });
-    if (res.ok) {
-      const updated = await res.json();
+    try {
+      const updated = await adminApi.updateUser(user.id, { resetPassword: true });
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
       alert(`Password reset. Tell ${user.name} to log in as "${updated.username}" with password "password123".`);
-    }
+    } catch { /* ignore */ }
   }
 
   async function handleDelete(id: string) {
     if (!confirm("Are you sure you want to permanently delete this user? This cannot be undone.")) return;
-    const res = await fetch(`/api/admin/users/${id}`, { method: "DELETE" });
-    if (res.ok) {
+    try {
+      await adminApi.deleteUser(id);
       setUsers((prev) => prev.filter((u) => u.id !== id));
-    } else {
-      const data = await res.json().catch(() => null);
-      alert(data?.error || "Failed to delete user");
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to delete user");
     }
   }
 

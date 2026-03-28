@@ -268,6 +268,10 @@ export function useQuoteForm(
     };
   }
 
+  // Raw fetch is used instead of quoteApi.create/update because the API returns
+  // structured Zod field errors ({ error: { fieldErrors, formErrors } }) that
+  // ApiError.fromResponse() cannot preserve — it only extracts a plain string.
+  // Keeping raw fetch lets us surface the first field-level message to the user.
   async function postQuote(): Promise<string> {
     const res = await fetch("/api/quotes", {
       method: "POST",

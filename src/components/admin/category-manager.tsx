@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { categoryApi } from "@/domains/category/api-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,11 +52,8 @@ export function CategoryManager() {
 
   const fetchCategories = useCallback(async () => {
     try {
-      const res = await fetch("/api/categories?all=true");
-      if (res.ok) {
-        const data = await res.json();
-        setCategories(data);
-      }
+      const data = await categoryApi.list(true);
+      setCategories(data);
     } catch {
       // ignore
     } finally {
@@ -71,23 +69,13 @@ export function CategoryManager() {
     setCreateError(null);
     setCreateSaving(true);
     try {
-      const res = await fetch("/api/categories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName.trim(), label: newLabel.trim() }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        setCreateError(data.error ?? "Failed to create category");
-        return;
-      }
-      const created = await res.json();
+      const created = await categoryApi.create({ name: newName.trim(), label: newLabel.trim() });
       setCategories((prev) => [...prev, created]);
       setCreateOpen(false);
       setNewName("");
       setNewLabel("");
-    } catch {
-      setCreateError("An unexpected error occurred");
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : "Failed to create category");
     } finally {
       setCreateSaving(false);
     }
