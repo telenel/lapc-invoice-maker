@@ -24,11 +24,17 @@ function buildPayload(form: InvoiceFormData) {
     recurringEmail: form.recurringEmail || undefined,
     isRunning: form.isRunning,
     runningTitle: form.runningTitle || undefined,
+    marginEnabled: form.marginEnabled,
+    marginPercent: form.marginEnabled ? form.marginPercent : undefined,
+    taxEnabled: form.taxEnabled,
     items: form.items.map((item, i) => ({
       description: item.description,
       quantity: item.quantity,
       unitPrice: item.unitPrice,
       sortOrder: item.sortOrder ?? i,
+      isTaxable: item.isTaxable,
+      marginOverride: item.marginOverride ?? undefined,
+      costPrice: item.costPrice ?? undefined,
     })),
   };
 }

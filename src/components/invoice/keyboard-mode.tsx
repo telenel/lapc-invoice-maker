@@ -2,9 +2,18 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
+import { InfoIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { InlineCombobox } from "@/components/ui/inline-combobox";
 import type { ComboboxItem } from "@/components/ui/inline-combobox";
 import { LineItems } from "./line-items";
@@ -46,6 +55,10 @@ interface KeyboardModeProps {
   addItem: () => void;
   removeItem: (index: number) => void;
   total: number;
+  itemsWithMargin: InvoiceItem[];
+  subtotal: number;
+  taxAmount: number;
+  grandTotal: number;
   handleStaffSelect: (staff: StaffDetailResponse) => void;
   handleStaffEdit: (updated: StaffDetailResponse) => void;
   staffAccountNumbers: StaffAccountNumber[];
@@ -84,6 +97,10 @@ export function KeyboardMode({
   addItem,
   removeItem,
   total,
+  itemsWithMargin,
+  subtotal,
+  taxAmount,
+  grandTotal,
   handleStaffSelect,
   staffAccountNumbers,
   saveDraft,
@@ -101,8 +118,6 @@ export function KeyboardMode({
   const [suggestions, setSuggestions] = useState<{ description: string; unitPrice: number }[]>([]);
   const [userPickDescriptions, setUserPickDescriptions] = useState<Set<string>>(new Set());
   const [userPicks, setUserPicks] = useState<{ id: string; description: string; unitPrice: number; department: string }[]>([]);
-  const [marginPercent, setMarginPercent] = useState("");
-  const [marginApplied, setMarginApplied] = useState<Set<number>>(new Set());
   const [isMac, setIsMac] = useState(false);
 
   // Inline editing for staff summary fields
@@ -207,28 +222,6 @@ export function KeyboardMode({
       return () => el.removeEventListener("keydown", handleKeyDown);
     }
   }, [handleGenerate]);
-
-  // ---- Margin handler ----
-  function handleApplyMargin() {
-    const pct = parseFloat(marginPercent);
-    if (isNaN(pct) || pct <= 0) {
-      toast.error("Enter a valid margin percentage");
-      return;
-    }
-    const multiplier = 1 + pct / 100;
-    const applied = new Set(marginApplied);
-    form.items.forEach((item, index) => {
-      if (item.unitPrice > 0 && !item.description.includes("Tax")) {
-        const newPrice = Math.round(item.unitPrice * multiplier * 100) / 100;
-        const newExt = Math.round(newPrice * item.quantity * 100) / 100;
-        updateItem(index, { unitPrice: newPrice, extendedPrice: newExt });
-        applied.add(index);
-      }
-    });
-    setMarginApplied(applied);
-    toast.success(`${pct}% margin applied to all items`);
-    setMarginPercent("");
-  }
 
   // ---- Quick pick handler ----
   function handleQuickPick(description: string, unitPrice: number) {
@@ -663,27 +656,110 @@ export function KeyboardMode({
         )}
       </div>
 
+      {/* ============ PRICING ============ */}
+      <SectionDivider label="PRICING" />
+
+      <div className="space-y-3">
+        {/* Apply Margin */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="marginEnabled"
+              checked={form.marginEnabled}
+              onCheckedChange={(checked) =>
+                updateField("marginEnabled", checked === true)
+              }
+            />
+            <Label
+              htmlFor="marginEnabled"
+              className="text-sm font-medium cursor-pointer"
+            >
+              Apply Margin
+            </Label>
+          </div>
+          {form.marginEnabled && (
+            <div className="flex items-center gap-1">
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                value={form.marginPercent}
+                onChange={(e) =>
+                  updateField("marginPercent", Number(e.target.value))
+                }
+                className="w-20 h-7 text-sm"
+                aria-label="Margin percentage"
+              />
+              <span className="text-sm text-muted-foreground">%</span>
+            </div>
+          )}
+        </div>
+
+        {/* Apply Sales Tax */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="taxEnabled"
+              checked={form.taxEnabled}
+              onCheckedChange={(checked) =>
+                updateField("taxEnabled", checked === true)
+              }
+            />
+            <Label
+              htmlFor="taxEnabled"
+              className="text-sm font-medium cursor-pointer"
+            >
+              Apply Sales Tax{" "}
+              <span className="text-muted-foreground font-normal">
+                (9.75%)
+              </span>
+            </Label>
+          </div>
+
+          {/* CA Tax Rules info */}
+          <Popover>
+            <PopoverTrigger
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <InfoIcon className="size-3.5" />
+              <span>CA Tax Rules</span>
+            </PopoverTrigger>
+            <PopoverContent side="bottom" align="start" className="w-80">
+              <div className="space-y-2 text-xs">
+                <p className="font-semibold text-sm">
+                  California Food Tax Rules
+                </p>
+                <ul className="space-y-1.5 list-disc pl-4">
+                  <li>
+                    <strong>Hot prepared food</strong> — always taxable
+                  </li>
+                  <li>
+                    <strong>Cold food to-go</strong> (no eating establishment)
+                    — usually exempt
+                  </li>
+                  <li>
+                    <strong>Catering</strong> (food + service) — always fully
+                    taxable
+                  </li>
+                  <li>
+                    <strong>Carbonated beverages, candy</strong> — always
+                    taxable
+                  </li>
+                </ul>
+                <p className="text-muted-foreground pt-1">
+                  Source: CDTFA Regulation 1603
+                </p>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+
       {/* ============ LINE ITEMS ============ */}
       <SectionDivider label="LINE ITEMS" />
 
       <div className="space-y-3">
-        <div className="flex items-center gap-2 mt-2 mb-3">
-          <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Margin %</span>
-          <Input
-            type="number"
-            min={0}
-            step={0.1}
-            value={marginPercent}
-            onChange={(e) => setMarginPercent(e.target.value)}
-            placeholder="e.g. 15"
-            className="w-24 h-8 text-sm"
-            tabIndex={-1}
-          />
-          <Button type="button" variant="outline" size="xs" tabIndex={-1} onClick={handleApplyMargin}>
-            Apply
-          </Button>
-        </div>
-
         <div className="flex gap-4">
           <div className="flex-1 min-w-0">
             <LineItems
@@ -696,7 +772,9 @@ export function KeyboardMode({
               suggestions={suggestions}
               userPickDescriptions={userPickDescriptions}
               onTogglePick={handleTogglePick}
-              marginAppliedIndices={marginApplied}
+              marginEnabled={form.marginEnabled}
+              itemsWithMargin={itemsWithMargin}
+              taxEnabled={form.taxEnabled}
             />
           </div>
           <QuickPicksSidePanel
@@ -716,6 +794,54 @@ export function KeyboardMode({
             name="notes"
             rows={3}
           />
+        </div>
+      </div>
+
+      {/* ============ TOTALS ============ */}
+      <Separator className="mt-6" />
+
+      <div className="pt-4 space-y-1.5 text-sm tabular-nums">
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Subtotal</span>
+          <span>
+            ${subtotal.toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </span>
+        </div>
+
+        {form.marginEnabled && form.marginPercent > 0 && (
+          <div className="flex justify-between text-violet-600">
+            <span>Margin (+{form.marginPercent}%) included</span>
+            <span />
+          </div>
+        )}
+
+        {form.taxEnabled && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">
+              CA Sales Tax (9.75% on taxable items)
+            </span>
+            <span>
+              ${taxAmount.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>
+          </div>
+        )}
+
+        <Separator />
+
+        <div className="flex justify-between text-lg font-semibold">
+          <span>Total</span>
+          <span>
+            ${grandTotal.toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </span>
         </div>
       </div>
 

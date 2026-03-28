@@ -15,6 +15,7 @@ export type { GenerationStep } from "./hooks/use-invoice-save";
 import { useInvoiceFormState } from "./hooks/use-invoice-form-state";
 import type { InvoiceFormData } from "./hooks/use-invoice-form-state";
 import { useTaxCalculation } from "./hooks/use-tax-calculation";
+import { TAX_RATE } from "@/domains/invoice/constants";
 import { useStaffAutofill } from "./hooks/use-staff-autofill";
 import { useStaffAutoSave } from "./hooks/use-staff-auto-save";
 import { useInvoiceSave } from "./hooks/use-invoice-save";
@@ -23,10 +24,15 @@ export function useInvoiceForm(
   initial?: Partial<InvoiceFormData>,
   existingId?: string
 ) {
-  const { form, setForm, updateField, updateItem, addItem, removeItem } =
+  const { form, setForm, updateField, updateItem, addItem, removeItem, total, itemsWithMargin } =
     useInvoiceFormState(initial);
 
-  const { total } = useTaxCalculation(form.items, setForm);
+  const taxItems = form.marginEnabled ? itemsWithMargin : form.items;
+  const { subtotal, taxAmount, total: grandTotal } = useTaxCalculation(
+    taxItems,
+    form.taxEnabled,
+    TAX_RATE
+  );
 
   const { staffAccountNumbers, originalStaffRef, handleStaffSelect, handleStaffEdit } =
     useStaffAutofill(setForm);
@@ -52,6 +58,10 @@ export function useInvoiceForm(
     addItem,
     removeItem,
     total,
+    itemsWithMargin,
+    subtotal,
+    taxAmount,
+    grandTotal,
     handleStaffSelect,
     handleStaffEdit,
     staffAccountNumbers,
