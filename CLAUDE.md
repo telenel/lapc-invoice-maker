@@ -2,6 +2,8 @@
 
 Invoice generation webapp for Los Angeles Pierce College. Next.js 14 (App Router), Prisma 7, PostgreSQL, Tailwind CSS 4, shadcn/ui v4.
 
+> **Comprehensive documentation:** See [docs/PROJECT-OVERVIEW.md](docs/PROJECT-OVERVIEW.md) for full architecture, domain module details, API routes reference, PDF pipeline, testing guide, and all workflows.
+
 ## Stack Gotchas
 
 ### Prisma 7
@@ -27,13 +29,27 @@ Invoice generation webapp for Los Angeles Pierce College. Next.js 14 (App Router
 src/
 ├── app/           # Next.js App Router pages and API routes
 ├── components/    # React components (ui/, invoice/, staff/, etc.)
+├── domains/       # Domain modules (see docs/PROJECT-OVERVIEW.md for details)
+│   ├── shared/    # Auth wrappers, formatters, errors, types
+│   ├── staff/     # types, repository, service, api-client, hooks
+│   ├── invoice/   # types, constants, calculations, repository, service, api-client, hooks
+│   ├── quote/     # types, repository, service, api-client, hooks
+│   ├── pdf/       # types, storage, service
+│   ├── admin/     # types, repository, service, api-client
+│   ├── analytics/ # types, repository, service
+│   ├── category/  # api-client
+│   ├── quick-picks/      # api-client
+│   ├── saved-items/      # api-client
+│   ├── user-quick-picks/ # api-client
+│   └── upload/    # api-client
 ├── generated/     # Prisma generated client (do not edit)
-└── lib/           # Utilities, auth, PDF generation
+└── lib/           # Utilities, auth, PDF generation, validators
 prisma/
 ├── schema.prisma  # Database schema
 ├── migrations/    # Migration history
 └── seed.ts        # Database seeding
 scripts/           # One-off scripts (staff import, etc.)
+tests/domains/     # Domain layer tests (350 tests total)
 ```
 
 ## Commands
@@ -52,9 +68,18 @@ npx prisma generate  # Regenerate client after schema changes
 
 Docker Compose on montalvo.io behind Traefik. CI/CD via GitHub Actions — push to main triggers lint, build, test, then SSH deploy.
 
+## Architecture
+
+- **Domain modules** in `src/domains/` — each domain has types, repository, service, api-client, hooks
+- **Route handlers** are thin dispatchers using `withAuth()`/`withAdmin()` wrappers from `src/domains/shared/auth.ts`
+- **Components** use domain api-clients (never raw `fetch()`) and domain types (never local interface duplicates)
+- **Cross-domain** calls go through services and types only — never import another domain's repository
+
 ## Conventions
 
 - All Prisma models: `@@map("snake_case_table")`, fields: `@map("snake_case_column")`
 - Files: kebab-case. Components: PascalCase
-- API routes: validate with Zod, check `getServerSession()`, return `NextResponse`
+- API routes: validate with Zod, use `withAuth`/`withAdmin`, return `NextResponse`
 - Account Number and Account Code are separate fields — don't conflate them
+- TAX_RATE = 0.095 lives in `src/domains/invoice/constants.ts`
+- Always push changes through PRs — never merge directly to main
