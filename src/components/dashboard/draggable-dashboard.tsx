@@ -28,6 +28,7 @@ import { PendingCharges } from "./pending-charges";
 import { RunningInvoices } from "./running-invoices";
 import { RecentInvoices } from "./recent-invoices";
 import { YourFocus } from "./your-focus";
+import { TodaysEvents } from "./todays-events";
 
 const STORAGE_KEY = "lapc-dashboard-order";
 
@@ -38,6 +39,7 @@ interface WidgetConfig {
 }
 
 const SORTABLE_WIDGETS: WidgetConfig[] = [
+  { id: "todays-events", label: "Today's Events", component: () => <TodaysEvents /> },
   { id: "your-focus", label: "Your Focus", component: () => <YourFocus /> },
   { id: "stats", label: "Stats", component: () => <StatsCards /> },
   { id: "pending-charges", label: "Pending Charges", component: () => <PendingCharges /> },
