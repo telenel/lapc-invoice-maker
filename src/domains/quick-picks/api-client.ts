@@ -11,7 +11,7 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 export interface QuickPickResponse {
   id: string;
   description: string;
-  unitPrice: number;
+  defaultPrice: number | string;
   department: string;
   usageCount: number;
 }

@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { QuickPickForm } from "./quick-pick-form";
+import { quickPicksApi } from "@/domains/quick-picks/api-client";
 
 interface QuickPickItem {
   id: string;
@@ -29,11 +30,10 @@ export function QuickPickTable() {
 
   const fetchItems = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/quick-picks");
-    if (res.ok) {
-      const data = await res.json();
+    try {
+      const data = await quickPicksApi.list();
       setItems(data);
-    } else {
+    } catch {
       toast.error("Failed to load quick-pick items");
     }
     setLoading(false);
@@ -46,11 +46,11 @@ export function QuickPickTable() {
   async function handleDelete(id: string) {
     if (!confirm("Delete this quick-pick item?")) return;
 
-    const res = await fetch(`/api/quick-picks/${id}`, { method: "DELETE" });
-    if (res.ok) {
+    try {
+      await quickPicksApi.delete(id);
       toast.success("Item deleted");
       fetchItems();
-    } else {
+    } catch {
       toast.error("Failed to delete item");
     }
   }

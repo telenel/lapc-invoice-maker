@@ -23,6 +23,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { formatAmount } from "@/lib/formatters";
+import { savedItemsApi } from "@/domains/saved-items/api-client";
 
 interface SavedLineItem {
   id: string;
@@ -59,10 +60,8 @@ export function LineItemManager() {
 
   const fetchItems = useCallback(async () => {
     try {
-      const res = await fetch("/api/saved-items");
-      if (res.ok) {
-        setItems(await res.json());
-      }
+      const data = await savedItemsApi.list();
+      setItems(data);
     } catch {
       // ignore
     } finally {
@@ -94,26 +93,17 @@ export function LineItemManager() {
     setCreateError(null);
     setCreateSaving(true);
     try {
-      const res = await fetch("/api/saved-items", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          description: newDescription.trim(),
-          department: newDepartment.trim(),
-          unitPrice: Number(newPrice),
-        }),
+      await savedItemsApi.create({
+        description: newDescription.trim(),
+        department: newDepartment.trim(),
+        unitPrice: Number(newPrice),
       });
-      if (!res.ok) {
-        const data = await res.json();
-        setCreateError(typeof data.error === "string" ? data.error : "Failed to save");
-        return;
-      }
       toast.success("Line item saved");
       setCreateOpen(false);
       resetCreate();
       fetchItems();
-    } catch {
-      setCreateError("An unexpected error occurred");
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : "Failed to save");
     } finally {
       setCreateSaving(false);
     }
@@ -132,25 +122,16 @@ export function LineItemManager() {
     setEditError(null);
     setEditSaving(true);
     try {
-      const res = await fetch(`/api/saved-items/${editItem.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          description: editDescription.trim(),
-          department: editDepartment.trim(),
-          unitPrice: Number(editPrice),
-        }),
+      await savedItemsApi.update(editItem.id, {
+        description: editDescription.trim(),
+        department: editDepartment.trim(),
+        unitPrice: Number(editPrice),
       });
-      if (!res.ok) {
-        const data = await res.json();
-        setEditError(typeof data.error === "string" ? data.error : "Failed to update");
-        return;
-      }
       toast.success("Line item updated");
       setEditItem(null);
       fetchItems();
-    } catch {
-      setEditError("An unexpected error occurred");
+    } catch (err) {
+      setEditError(err instanceof Error ? err.message : "Failed to update");
     } finally {
       setEditSaving(false);
     }
@@ -160,18 +141,12 @@ export function LineItemManager() {
     if (!deleteItem) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/saved-items/${deleteItem.id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) {
-        toast.error("Failed to delete line item");
-        return;
-      }
+      await savedItemsApi.delete(deleteItem.id);
       toast.success("Line item deleted");
       setItems((prev) => prev.filter((i) => i.id !== deleteItem.id));
       setDeleteItem(null);
     } catch {
-      toast.error("An unexpected error occurred");
+      toast.error("Failed to delete line item");
     } finally {
       setDeleting(false);
     }

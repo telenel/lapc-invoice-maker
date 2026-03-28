@@ -24,12 +24,14 @@ export interface AccountCodeResponse {
   staffId: string;
   accountCode: string;
   description: string;
+  lastUsedAt?: string;
   createdAt: string;
   staff: AccountCodeStaffSummary;
 }
 
 // ── DB Health DTOs ──
 export interface DbHealthTables {
+  [key: string]: number;
   users: number;
   staff: number;
   invoices: number;

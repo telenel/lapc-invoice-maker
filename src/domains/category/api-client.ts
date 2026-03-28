@@ -11,12 +11,14 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 export interface CategoryResponse {
   id: string;
   name: string;
+  label: string;
   active: boolean;
   sortOrder: number;
 }
 
 export interface CreateCategoryInput {
   name: string;
+  label: string;
   sortOrder?: number;
 }
 

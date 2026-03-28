@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { adminApi } from "@/domains/admin/api-client";
 
 interface DbHealthData {
   status: "connected" | "error";
   message?: string;
   timestamp: string;
-  dbSize: string | null;
-  tables: Record<string, number>;
+  dbSize?: string | null;
+  tables?: Record<string, number>;
 }
 
 const TABLE_LABELS: Record<string, string> = {
@@ -33,13 +34,10 @@ export function DbHealth() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/admin/db-health");
-      const json = await res.json();
-      if (!res.ok) {
-        setError(json.message || json.error || "Failed to fetch database health");
-        setData(json.status ? json : null);
-      } else {
-        setData(json);
+      const json = await adminApi.getDbHealth();
+      setData(json as DbHealthData);
+      if (json.status === "error" && "message" in json) {
+        setError(json.message);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Network error");
