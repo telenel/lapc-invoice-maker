@@ -26,6 +26,7 @@ import { AccountSelect } from "@/components/invoice/account-select";
 import { LineItems } from "@/components/invoice/line-items";
 import { QuickPickPanel } from "@/components/invoice/quick-pick-panel";
 import { cn } from "@/lib/utils";
+import { categoryApi } from "@/domains/category/api-client";
 import type {
   QuoteFormData,
   QuoteItem,
@@ -104,9 +105,8 @@ export function QuoteMode({
 
   // ---- Data fetching ----
   useEffect(() => {
-    fetch("/api/categories")
-      .then((res) => res.json())
-      .then((data: Category[]) => setCategories(data))
+    categoryApi.list()
+      .then((data) => setCategories(data))
       .catch(() => {})
       .finally(() => setCategoriesLoading(false));
   }, []);

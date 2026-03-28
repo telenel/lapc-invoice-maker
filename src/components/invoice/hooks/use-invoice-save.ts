@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { invoiceApi } from "@/domains/invoice/api-client";
 import type { InvoiceFormData } from "./use-invoice-form-state";
 
 export type GenerationStep = null | "saving" | "generating" | "done";
@@ -31,6 +32,11 @@ function buildPayload(form: InvoiceFormData) {
     })),
   };
 }
+
+// Raw fetch is used below instead of invoiceApi.create/update because the API
+// returns structured Zod field errors ({ error: { fieldErrors, formErrors } })
+// that ApiError.fromResponse() cannot preserve — it only extracts a plain string.
+// Keeping raw fetch lets us surface the first field-level message to the user.
 
 /** POST to /api/invoices, returns the created invoice id */
 async function postDraft(form: InvoiceFormData): Promise<string> {
@@ -113,26 +119,14 @@ export function useInvoiceSave(form: InvoiceFormData, existingId?: string) {
 
       setGenerationStep("generating");
 
-      const finalizePayload = {
-        prismcorePath: form.prismcorePath,
+      await invoiceApi.finalize(id, {
+        prismcorePath: form.prismcorePath ?? undefined,
         signatures: form.signatures,
         signatureStaffIds: form.signatureStaffIds,
         semesterYearDept: form.semesterYearDept,
         contactName: form.contactName,
         contactExtension: form.contactExtension,
-      };
-
-      const res = await fetch(`/api/invoices/${id}/finalize`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(finalizePayload),
       });
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        const msg = data?.error ?? "Failed to finalize invoice";
-        throw new Error(msg);
-      }
 
       setGenerationStep("done");
       toast.success("Invoice finalized");
@@ -151,6 +145,7 @@ export function useInvoiceSave(form: InvoiceFormData, existingId?: string) {
     }
   }, [form, router]);
 
+  // Raw fetch here for the same reason as postDraft/putDraft: Zod field error parsing.
   const savePendingCharge = useCallback(async () => {
     setSaving(true);
     try {

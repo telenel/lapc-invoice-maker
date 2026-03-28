@@ -23,13 +23,14 @@ import {
 } from "@/components/ui/dialog";
 import { staffApi } from "@/domains/staff/api-client";
 import type { StaffResponse } from "@/domains/staff/types";
+import { adminApi } from "@/domains/admin/api-client";
 
 interface AccountCode {
   id: string;
   staffId: string;
   accountCode: string;
   description: string;
-  lastUsedAt: string;
+  lastUsedAt?: string;
   createdAt: string;
   staff: Pick<StaffResponse, "id" | "name" | "department">;
 }
@@ -50,8 +51,8 @@ export function AccountCodeManager() {
 
   const fetchCodes = useCallback(async () => {
     try {
-      const res = await fetch("/api/admin/account-codes");
-      if (res.ok) setCodes(await res.json());
+      const data = await adminApi.listAccountCodes();
+      setCodes(data);
     } catch {
       // ignore
     } finally {
@@ -77,25 +78,15 @@ export function AccountCodeManager() {
     setCreateError(null);
     setCreateSaving(true);
     try {
-      const res = await fetch("/api/admin/account-codes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          staffId: newStaffId,
-          accountCode: newCode.trim(),
-          description: newDescription.trim(),
-        }),
+      const created = await adminApi.createAccountCode({
+        staffId: newStaffId,
+        accountCode: newCode.trim(),
+        description: newDescription.trim(),
       });
-      if (!res.ok) {
-        const data = await res.json();
-        setCreateError(data.error ?? "Failed to create account code");
-        return;
-      }
-      const created = await res.json();
       setCodes((prev) => [...prev, created]);
       resetCreateForm();
-    } catch {
-      setCreateError("An unexpected error occurred");
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : "Failed to create account code");
     } finally {
       setCreateSaving(false);
     }
@@ -103,10 +94,8 @@ export function AccountCodeManager() {
 
   async function handleDelete(id: string) {
     try {
-      const res = await fetch(`/api/admin/account-codes/${id}`, { method: "DELETE" });
-      if (res.ok) {
-        setCodes((prev) => prev.filter((c) => c.id !== id));
-      }
+      await adminApi.deleteAccountCode(id);
+      setCodes((prev) => prev.filter((c) => c.id !== id));
     } catch {
       // ignore
     }
