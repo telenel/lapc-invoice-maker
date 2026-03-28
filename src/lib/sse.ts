@@ -22,12 +22,12 @@ export function publish(userId: string, data: unknown): void {
   const set = connections.get(userId);
   if (!set) return;
   const encoded = new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`);
-  for (const controller of set) {
+  Array.from(set).forEach((controller) => {
     try {
       controller.enqueue(encoded);
     } catch {
       // Connection closed — clean up
       set.delete(controller);
     }
-  }
+  });
 }
