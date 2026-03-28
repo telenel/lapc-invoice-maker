@@ -1,0 +1,68 @@
+import { ApiError } from "@/domains/shared/types";
+import type {
+  UserResponse,
+  AccountCodeResponse,
+  DbHealthResponse,
+  DbHealthErrorResponse,
+  CreateUserInput,
+  UpdateUserInput,
+  CreateAccountCodeInput,
+} from "./types";
+
+const BASE_USERS = "/api/admin/users";
+const BASE_ACCOUNT_CODES = "/api/admin/account-codes";
+const BASE_DB_HEALTH = "/api/admin/db-health";
+
+async function request<T>(url: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(url, init);
+  if (!res.ok) throw await ApiError.fromResponse(res);
+  return res.json();
+}
+
+export const adminApi = {
+  async listUsers(): Promise<UserResponse[]> {
+    return request<UserResponse[]>(BASE_USERS);
+  },
+
+  async createUser(input: CreateUserInput): Promise<UserResponse> {
+    return request<UserResponse>(BASE_USERS, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+  },
+
+  async updateUser(id: string, input: UpdateUserInput | { resetPassword: true }): Promise<UserResponse> {
+    return request<UserResponse>(`${BASE_USERS}/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+  },
+
+  async deleteUser(id: string): Promise<void> {
+    const res = await fetch(`${BASE_USERS}/${id}`, { method: "DELETE" });
+    if (!res.ok) throw await ApiError.fromResponse(res);
+  },
+
+  async listAccountCodes(): Promise<AccountCodeResponse[]> {
+    return request<AccountCodeResponse[]>(BASE_ACCOUNT_CODES);
+  },
+
+  async createAccountCode(input: CreateAccountCodeInput): Promise<AccountCodeResponse> {
+    return request<AccountCodeResponse>(BASE_ACCOUNT_CODES, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+  },
+
+  async deleteAccountCode(id: string): Promise<void> {
+    const res = await fetch(`${BASE_ACCOUNT_CODES}/${id}`, { method: "DELETE" });
+    if (!res.ok) throw await ApiError.fromResponse(res);
+  },
+
+  async getDbHealth(): Promise<DbHealthResponse | DbHealthErrorResponse> {
+    return request<DbHealthResponse | DbHealthErrorResponse>(BASE_DB_HEALTH);
+  },
+};

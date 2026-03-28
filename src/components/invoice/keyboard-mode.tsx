@@ -20,6 +20,10 @@ import type {
 } from "./invoice-form";
 import { staffApi } from "@/domains/staff/api-client";
 import type { StaffResponse, StaffDetailResponse } from "@/domains/staff/types";
+import { categoryApi } from "@/domains/category/api-client";
+import { quickPicksApi } from "@/domains/quick-picks/api-client";
+import { savedItemsApi } from "@/domains/saved-items/api-client";
+import { userQuickPicksApi } from "@/domains/user-quick-picks/api-client";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -138,9 +142,8 @@ export function KeyboardMode({
   }, []);
 
   useEffect(() => {
-    fetch("/api/categories")
-      .then((res) => res.json())
-      .then((data: Category[]) => setCategories(data))
+    categoryApi.list()
+      .then((data) => setCategories(data))
       .catch(() => {})
       .finally(() => setCategoriesLoading(false));
   }, []);
@@ -151,9 +154,9 @@ export function KeyboardMode({
     let cancelled = false;
 
     Promise.all([
-      fetch(`/api/quick-picks?department=${encodeURIComponent(form.department)}`).then((r) => r.ok ? r.json() : []),
-      fetch(`/api/saved-items?department=${encodeURIComponent(form.department)}`).then((r) => r.ok ? r.json() : []),
-      fetch(`/api/user-quick-picks?department=${encodeURIComponent(form.department)}`).then((r) => r.ok ? r.json() : []),
+      quickPicksApi.list(form.department).catch(() => []),
+      savedItemsApi.list(form.department).catch(() => []),
+      userQuickPicksApi.list(form.department).catch(() => []),
     ]).then(([picks, saved, uPicks]) => {
       if (cancelled) return;
       const combined = new Map<string, { description: string; unitPrice: number }>();
@@ -259,23 +262,18 @@ export function KeyboardMode({
     if (userPickDescriptions.has(description)) {
       const pick = userPicks.find((p) => p.description === description && (p.department === dept || p.department === department));
       if (pick) {
-        await fetch(`/api/user-quick-picks?id=${pick.id}`, { method: "DELETE" });
+        await userQuickPicksApi.delete(pick.id);
         setUserPicks((prev) => prev.filter((p) => p.id !== pick.id));
         setUserPickDescriptions((prev) => { const next = new Set(prev); next.delete(description); return next; });
         toast.success(`"${description}" removed from quick picks`);
       }
     } else {
-      const res = await fetch("/api/user-quick-picks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ description, unitPrice, department: dept }),
-      });
-      if (res.ok) {
-        const newPick = await res.json();
+      try {
+        const newPick = await userQuickPicksApi.create({ description, unitPrice, department: dept });
         setUserPicks((prev) => [...prev, newPick]);
         setUserPickDescriptions((prev) => new Set(prev).add(description));
         toast.success(`"${description}" saved to quick picks`);
-      } else {
+      } catch {
         toast.error("Failed to save quick pick");
       }
     }
