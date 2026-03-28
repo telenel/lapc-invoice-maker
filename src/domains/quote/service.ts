@@ -289,8 +289,8 @@ export const quoteService = {
       items: quote.items.map((item) => ({
         description: item.description,
         quantity: Number(item.quantity),
-        unitPrice: formatCurrency(Number(item.unitPrice)),
-        extendedPrice: formatCurrency(Number(item.extendedPrice)),
+        unitPrice: String(Number(item.unitPrice)),
+        extendedPrice: String(Number(item.extendedPrice)),
       })),
       totalAmount: Number(quote.totalAmount),
     });
