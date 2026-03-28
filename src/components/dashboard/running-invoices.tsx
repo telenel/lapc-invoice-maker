@@ -14,7 +14,7 @@ interface RunningInvoice {
   totalAmount: string | number;
   staff: { name: string };
   creator: { id: string; name: string };
-  _count: { items: number };
+  items: { id: string }[];
 }
 
 export function RunningInvoices() {
@@ -68,7 +68,7 @@ export function RunningInvoices() {
                     {isMine && <span className="text-[10px] text-primary font-medium ml-2">Yours</span>}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
-                    {inv.creator.name} · {inv.department} · {inv._count.items} item{inv._count.items !== 1 ? "s" : ""}
+                    {inv.creator.name} · {inv.department} · {inv.items.length} item{inv.items.length !== 1 ? "s" : ""}
                   </p>
                 </div>
                 <div className="text-right shrink-0">

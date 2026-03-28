@@ -9,6 +9,7 @@ import type { InvoiceFilters } from "./types";
 const listInclude = {
   staff: { select: { id: true, name: true, title: true, department: true } },
   creator: { select: { id: true, name: true, username: true } },
+  items: { orderBy: { sortOrder: "asc" as const } },
   _count: { select: { items: true } },
 } as const;
 
@@ -46,6 +47,14 @@ function buildWhere(filters: InvoiceFilters): Prisma.InvoiceWhereInput {
   }
   if (filters.creatorId) {
     where.createdBy = filters.creatorId;
+  }
+  if (filters.isRunning) {
+    where.isRunning = true;
+  }
+  if (filters.createdFrom || filters.createdTo) {
+    where.createdAt = {};
+    if (filters.createdFrom) where.createdAt.gte = new Date(filters.createdFrom);
+    if (filters.createdTo) where.createdAt.lte = new Date(filters.createdTo + "T23:59:59.999Z");
   }
   if (filters.dateFrom || filters.dateTo) {
     where.date = {};
@@ -266,6 +275,46 @@ export async function countAndSum(filters: InvoiceFilters) {
     total,
     sumTotalAmount: Number(agg._sum.totalAmount ?? 0),
   };
+}
+
+/**
+ * Aggregate invoice counts and totals grouped by creator for the current month.
+ */
+export async function countByCreator(status?: string) {
+  const now = new Date();
+  const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const invoices = await prisma.invoice.findMany({
+    where: {
+      type: "INVOICE",
+      status: status ? (status as "FINAL" | "PENDING_CHARGE") : { in: ["FINAL", "PENDING_CHARGE"] },
+      createdAt: { gte: firstOfMonth },
+    },
+    select: {
+      totalAmount: true,
+      creator: { select: { id: true, name: true } },
+    },
+  });
+
+  const userMap = new Map<string, { id: string; name: string; invoiceCount: number; totalAmount: number }>();
+  for (const inv of invoices) {
+    const key = inv.creator.id;
+    const existing = userMap.get(key);
+    if (existing) {
+      existing.invoiceCount++;
+      existing.totalAmount += Number(inv.totalAmount);
+    } else {
+      userMap.set(key, {
+        id: inv.creator.id,
+        name: inv.creator.name,
+        invoiceCount: 1,
+        totalAmount: Number(inv.totalAmount),
+      });
+    }
+  }
+
+  const users = Array.from(userMap.values()).sort((a, b) => b.totalAmount - a.totalAmount);
+  return { users };
 }
 
 /**

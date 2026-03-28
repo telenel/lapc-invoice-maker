@@ -72,9 +72,12 @@ export interface InvoiceFilters {
   category?: string;
   dateFrom?: string;
   dateTo?: string;
+  createdFrom?: string;
+  createdTo?: string;
   amountMin?: number;
   amountMax?: number;
   creatorId?: string;
+  isRunning?: boolean;
   page?: number;
   pageSize?: number;
   sortBy?: string;

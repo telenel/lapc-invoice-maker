@@ -25,6 +25,15 @@ function parseSignature(raw: string): { name: string; title?: string } {
   };
 }
 
+// ── Creator stats ──────────────────────────────────────────────────────────
+
+export interface CreatorStatEntry {
+  id: string;
+  name: string;
+  invoiceCount: number;
+  totalAmount: number;
+}
+
 // ── DTO mapper ─────────────────────────────────────────────────────────────
 
 type InvoiceWithRelations = Awaited<ReturnType<typeof invoiceRepository.findById>>;
@@ -287,5 +296,13 @@ export const invoiceService = {
    */
   async getStats(filters: InvoiceFilters): Promise<InvoiceStatsResponse> {
     return invoiceRepository.countAndSum(filters);
+  },
+
+  /**
+   * Aggregate invoice stats grouped by creator for the current month.
+   * Used by the pending-charges dashboard panel.
+   */
+  async getCreatorStats(status?: InvoiceFilters["status"]): Promise<{ users: CreatorStatEntry[] }> {
+    return invoiceRepository.countByCreator(status);
   },
 };
