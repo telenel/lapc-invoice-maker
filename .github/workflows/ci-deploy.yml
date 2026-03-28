@@ -90,7 +90,7 @@ jobs:
             src/generated/prisma
           key: deps-${{ runner.os }}-${{ hashFiles('package-lock.json', 'prisma/schema.prisma') }}
 
-      - run: npx vitest run --dir tests --dir src/__tests__
+      - run: npx vitest run --dir tests && npx vitest run --dir src/__tests__
 
   deploy:
     name: Deploy to VPS
