@@ -12,7 +12,7 @@ import type {
   FinalizeInput,
   InvoiceStatsResponse,
 } from "./types";
-import type { StaffSummary } from "@/domains/staff/types";
+import type { InvoiceStaffDetail } from "./types";
 
 // ── Signature parser ───────────────────────────────────────────────────────
 
@@ -39,11 +39,13 @@ export interface CreatorStatEntry {
 type InvoiceWithRelations = Awaited<ReturnType<typeof invoiceRepository.findById>>;
 
 function toInvoiceResponse(invoice: NonNullable<InvoiceWithRelations>): InvoiceResponse {
-  const staff: StaffSummary = {
+  const staff: InvoiceStaffDetail = {
     id: invoice.staff.id,
     name: invoice.staff.name,
     title: invoice.staff.title,
     department: invoice.staff.department,
+    extension: (invoice.staff as { extension?: string | null }).extension ?? null,
+    email: (invoice.staff as { email?: string | null }).email ?? null,
   };
 
   const items: InvoiceItemResponse[] = invoice.items.map((item) => ({

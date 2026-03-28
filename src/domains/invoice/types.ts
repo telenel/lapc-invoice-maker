@@ -3,6 +3,13 @@ import type { StaffSummary } from "@/domains/staff/types";
 import type { InvoiceStatus } from "./constants";
 
 // ── DTOs ──
+
+/** Staff shape on InvoiceResponse — includes contact fields available in detail view */
+export interface InvoiceStaffDetail extends StaffSummary {
+  extension: string | null;
+  email: string | null;
+}
+
 export interface InvoiceResponse {
   id: string;
   invoiceNumber: string | null;
@@ -24,7 +31,7 @@ export interface InvoiceResponse {
   pdfPath: string | null;
   prismcorePath: string | null;
   createdAt: string;
-  staff: StaffSummary;
+  staff: InvoiceStaffDetail;
   creatorName: string;
   items: InvoiceItemResponse[];
 }
