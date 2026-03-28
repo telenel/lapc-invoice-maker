@@ -1,0 +1,6 @@
+interface:
+  display_name: "Lapc Invoice Maker"
+  short_description: "Repo-specific patterns and workflows for lapc-invoice-maker"
+  default_prompt: "Use the lapc-invoice-maker repo skill to follow existing architecture, testing, and workflow conventions."
+policy:
+  allow_implicit_invocation: true
