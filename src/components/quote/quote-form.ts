@@ -100,6 +100,15 @@ export function useQuoteForm(
     ...initial,
   }));
 
+  // Handle async initial data (e.g., fetched after mount on edit page)
+  const initialApplied = useRef(false);
+  useEffect(() => {
+    if (initial && !initialApplied.current) {
+      initialApplied.current = true;
+      setForm({ ...defaultForm(), ...initial });
+    }
+  }, [initial]);
+
   const [saving, setSaving] = useState(false);
 
   const updateField = useCallback(
