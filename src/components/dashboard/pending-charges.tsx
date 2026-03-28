@@ -24,7 +24,7 @@ export function PendingCharges() {
   if (loading || users.length === 0) return null;
 
   return (
-    <Card>
+    <Card className="card-hover">
       <CardHeader className="pb-2 border-b border-border/50">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-bold">Pending POS Charges</CardTitle>
