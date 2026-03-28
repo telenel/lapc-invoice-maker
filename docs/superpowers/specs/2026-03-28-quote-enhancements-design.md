@@ -23,7 +23,7 @@ All data originates in the quote form. Everything downstream (calendar, dashboar
 
 ### Invoice model (existing — add fields)
 
-```
+```prisma
 isCateringEvent    Boolean   @default(false)
 cateringDetails    Json?                       // structured JSON, see below
 marginEnabled      Boolean   @default(false)
@@ -34,7 +34,7 @@ taxRate            Decimal   @default(0.0975) @db.Decimal(5, 4)  // stored per-q
 
 ### InvoiceItem model (existing — add fields)
 
-```
+```prisma
 isTaxable       Boolean   @default(true)
 marginOverride  Decimal?  @db.Decimal(5, 2)   // null = use global margin
 costPrice       Decimal?  @db.Decimal(10, 2)  // original vendor price before markup
@@ -87,6 +87,7 @@ New control row above line items grid:
 - **"Apply Sales Tax" checkbox** + rate display (9.75%)
   - When enabled: each line item gets a "Taxable" checkbox (default checked)
   - Uncheck for exempt items (e.g., bottled water, cold grab-and-go)
+  - If `isCateringEvent = true`, all items are forced taxable and item-level tax toggles are disabled (catering is always fully taxable per CDTFA Regulation 1603)
 - **"CA Tax Rules" info button** — tooltip/popover with CDTFA Regulation 1603 summary:
   - Hot prepared food → always taxable
   - Cold food to-go (no eating establishment) → usually exempt
@@ -134,7 +135,7 @@ New section between quote details and line items:
 
 Replace simple sum with breakdown:
 
-```
+```text
 Subtotal                              $331.70
 Margin (+15%)                         included
 CA Sales Tax (9.75% on taxable items) $ 30.56
@@ -189,18 +190,19 @@ Unchanged — simple approve/decline flow as today.
 - **Views:** Month, Week (default), Day
 - **Event source:** `GET /api/calendar/events?start=YYYY-MM-DD&end=YYYY-MM-DD`
   - Returns quotes where `isCateringEvent = true` AND `quoteStatus` IN ('SENT', 'ACCEPTED')
-  - Mapped to FullCalendar event format: `{ id, title, start, end, extendedProps: { location, headcount, quoteId, setupTime, takedownTime } }`
+  - API returns flat objects; client-side mapping to FullCalendar format wraps extra fields in `extendedProps`
 - **Event display:** Orange accent, shows time + event name + location + headcount
 - **Click handler:** Navigate to `/quotes/[quoteId]` (quote detail page with catering guide)
 - **Navigation:** New "Calendar" item in the sidebar/nav
 
 ### API Endpoint
 
-```
+```http
 GET /api/calendar/events?start=2026-03-01&end=2026-03-31
 ```
 
 Response:
+
 ```json
 [
   {
@@ -226,7 +228,7 @@ Response:
 - Badge count in header
 - "View Calendar →" link to `/calendar`
 - Empty state: "No events today"
-- Data source: `GET /api/calendar/events?start=TODAY&end=TODAY`
+- Data source: `GET /api/calendar/events?start=YYYY-MM-DD&end=YYYY-MM-DD` using today's local date for both values (e.g., `?start=2026-03-28&end=2026-03-28`)
 
 ---
 
@@ -253,7 +255,7 @@ When `isCateringEvent = true`, the quote detail page renders a "Catering Guide" 
 `@media print` CSS:
 - Hide navigation, sidebar, action buttons, notification bell
 - Show only the catering guide content + line items
-- Clean, single-column layout suitable for handing to staff
+- Clean single-column layout suitable for handing to staff
 - LAPC logo at top
 - No Puppeteer PDF — browser Ctrl+P is sufficient for internal use
 
@@ -263,7 +265,7 @@ When `isCateringEvent = true`, the quote detail page renders a "Catering Guide" 
 
 Data flows from creation through every downstream view:
 
-```
+```text
 Staff Select → contact phone, department → Catering Card
 Recipient Info → contact name, email → Catering Card
 Quote Date → event date (default) → Catering Card
@@ -285,6 +287,7 @@ No field is entered twice. The quote is the single source of truth.
 ## 7. Files to Create/Modify
 
 ### New files
+
 - `src/components/quote/catering-details-card.tsx` — catering event form card
 - `src/components/invoice/hooks/use-margin-calculation.ts` — margin logic (shared)
 - `src/components/dashboard/todays-events.tsx` — dashboard calendar widget
@@ -293,6 +296,7 @@ No field is entered twice. The quote is the single source of truth.
 - `src/domains/calendar/api-client.ts` — client-side calendar API wrapper
 
 ### Modified files
+
 - `prisma/schema.prisma` — new fields on Invoice and InvoiceItem
 - `src/domains/invoice/constants.ts` — TAX_RATE 0.095 → 0.0975
 - `src/components/quote/quote-mode.tsx` — add catering card, margin/tax controls
