@@ -86,3 +86,6 @@ Docker Compose on montalvo.io behind Traefik. CI/CD via GitHub Actions — push 
 - Account Number and Account Code are separate fields — don't conflate them
 - TAX_RATE = 0.095 lives in `src/domains/invoice/constants.ts`
 - Always push changes through PRs — never merge directly to main
+- **Always branch before editing** — never modify files on `main`, even for experiments. Run `git checkout -b feature/<name>` before touching code
+- **Commit or stash before switching context** — never leave uncommitted changes on a branch when starting different work
+- **One concern per branch** — don't mix unrelated changes in the same branch (e.g., dashboard UI + quote feature)
