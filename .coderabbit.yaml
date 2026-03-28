@@ -1,0 +1,13 @@
+language: en-US
+reviews:
+  profile: "assertive"
+  auto_review:
+    enabled: true
+    drafts: false
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: false
+  review_status: true
+  path_instructions: []
+chat:
+  auto_reply: true
