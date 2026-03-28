@@ -69,11 +69,7 @@ interface Quote {
     extension: string | null;
     email: string | null;
   };
-  creator: {
-    id: string;
-    name: string;
-    username: string;
-  };
+  creatorName: string;
   items: QuoteItem[];
   convertedToInvoice: {
     id: string;
@@ -261,7 +257,7 @@ export function QuoteDetailView({ id }: { id: string }) {
             {quote.quoteNumber ?? "Untitled Quote"}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Created {formatDate(quote.createdAt)} by {quote.creator.name}
+            Created {formatDate(quote.createdAt)} by {quote.creatorName}
           </p>
           {quote.expirationDate && (
             <p className="text-sm text-muted-foreground mt-0.5">

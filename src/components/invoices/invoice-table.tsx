@@ -16,33 +16,13 @@ import {
 } from "@/components/ui/table";
 import {
   InvoiceFiltersBar,
-  type InvoiceFilters,
+  type InvoiceFilters as FilterBarFilters,
 } from "./invoice-filters";
 import { formatAmount, formatDate, getInitials } from "@/lib/formatters";
+import { invoiceApi } from "@/domains/invoice/api-client";
+import type { InvoiceResponse } from "@/domains/invoice/types";
 
-interface Invoice {
-  id: string;
-  invoiceNumber: string;
-  date: string;
-  department: string;
-  category: string;
-  totalAmount: string | number;
-  status: "DRAFT" | "FINAL" | "PENDING_CHARGE";
-  isRecurring: boolean;
-  isRunning: boolean;
-  runningTitle: string | null;
-  staff: { id: string; name: string; title: string; department: string };
-  creator: { id: string; name: string; username: string };
-}
-
-interface InvoicesResponse {
-  invoices: Invoice[];
-  total: number;
-  page: number;
-  pageSize: number;
-}
-
-const EMPTY_FILTERS: InvoiceFilters = {
+const EMPTY_FILTERS: FilterBarFilters = {
   search: "",
   status: "",
   category: "",
@@ -66,8 +46,8 @@ interface InvoiceTableProps {
 export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
   const router = useRouter();
 
-  const [filters, setFilters] = useState<InvoiceFilters>(EMPTY_FILTERS);
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [filters, setFilters] = useState<FilterBarFilters>(EMPTY_FILTERS);
+  const [invoices, setInvoices] = useState<InvoiceResponse[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -78,30 +58,24 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
 
   const fetchInvoices = useCallback(async () => {
     setLoading(true);
-
-    const params = new URLSearchParams();
-    if (filters.search) params.set("search", filters.search);
-    if (filters.status && filters.status !== "all")
-      params.set("status", filters.status);
-    if (filters.category && filters.category !== "all")
-      params.set("category", filters.category);
-    if (filters.department && filters.department !== "all")
-      params.set("department", filters.department);
-    if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
-    if (filters.dateTo) params.set("dateTo", filters.dateTo);
-    if (filters.amountMin) params.set("amountMin", filters.amountMin);
-    if (filters.amountMax) params.set("amountMax", filters.amountMax);
-    params.set("page", String(page));
-    params.set("pageSize", String(PAGE_SIZE));
-    params.set("sortBy", sortBy);
-    params.set("sortDir", sortDir);
-
-    const res = await fetch(`/api/invoices?${params.toString()}`);
-    if (res.ok) {
-      const data: InvoicesResponse = await res.json();
+    try {
+      const data = await invoiceApi.list({
+        search: filters.search || undefined,
+        status: (filters.status && filters.status !== "all" ? filters.status : undefined) as import("@/domains/invoice/types").InvoiceFilters["status"],
+        category: filters.category && filters.category !== "all" ? filters.category : undefined,
+        department: filters.department && filters.department !== "all" ? filters.department : undefined,
+        dateFrom: filters.dateFrom || undefined,
+        dateTo: filters.dateTo || undefined,
+        amountMin: filters.amountMin ? Number(filters.amountMin) : undefined,
+        amountMax: filters.amountMax ? Number(filters.amountMax) : undefined,
+        page,
+        pageSize: PAGE_SIZE,
+        sortBy,
+        sortOrder: sortDir,
+      });
       setInvoices(data.invoices);
       setTotal(data.total);
-    } else {
+    } catch {
       toast.error("Failed to load invoices");
     }
     setLoading(false);
@@ -112,7 +86,7 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
   }, [fetchInvoices]);
 
   // Reset to page 1 when filters or sort changes
-  function handleFiltersChange(next: InvoiceFilters) {
+  function handleFiltersChange(next: FilterBarFilters) {
     setFilters(next);
     setPage(1);
   }
@@ -138,19 +112,20 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
   }
 
   function handleExportCsv() {
-    const params = new URLSearchParams();
-    if (filters.search) params.set("search", filters.search);
-    if (filters.status && filters.status !== "all")
-      params.set("status", filters.status);
-    if (filters.category && filters.category !== "all")
-      params.set("category", filters.category);
-    if (filters.department && filters.department !== "all")
-      params.set("department", filters.department);
-    if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
-    if (filters.dateTo) params.set("dateTo", filters.dateTo);
-    if (filters.amountMin) params.set("amountMin", filters.amountMin);
-    if (filters.amountMax) params.set("amountMax", filters.amountMax);
-    window.open(`/api/invoices/export?${params.toString()}`, "_blank");
+    invoiceApi.exportCsv({
+      search: filters.search || undefined,
+      status: (filters.status && filters.status !== "all" ? filters.status : undefined) as import("@/domains/invoice/types").InvoiceFilters["status"],
+      category: filters.category && filters.category !== "all" ? filters.category : undefined,
+      department: filters.department && filters.department !== "all" ? filters.department : undefined,
+      dateFrom: filters.dateFrom || undefined,
+      dateTo: filters.dateTo || undefined,
+      amountMin: filters.amountMin ? Number(filters.amountMin) : undefined,
+      amountMax: filters.amountMax ? Number(filters.amountMax) : undefined,
+    }).then((blob) => {
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    }).catch(() => toast.error("Failed to export CSV"));
   }
 
   return (
@@ -225,7 +200,7 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
                           <span className="inline-flex items-center gap-1">
                             {invoice.isRunning && invoice.runningTitle
                               ? invoice.runningTitle
-                              : invoice.invoiceNumber} · {invoice.staff.name}
+                              : (invoice.invoiceNumber ?? "—")} · {invoice.staff.name}
                             {invoice.isRecurring && (
                               <span title="Recurring invoice">
                                 <RefreshCwIcon className="size-3 text-muted-foreground shrink-0" aria-hidden="true" />
@@ -238,7 +213,7 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
                           {invoice.category && (
                             <> · {invoice.category.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}</>
                           )}
-                          {" "}· by {invoice.creator.name}
+                          {" "}· by {invoice.creatorName}
                         </p>
                       </div>
                     </div>
