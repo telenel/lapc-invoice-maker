@@ -150,6 +150,9 @@ export interface CalculatedLineItem {
   unitPrice: number;
   extendedPrice: number;
   sortOrder: number;
+  isTaxable?: boolean;
+  marginOverride?: number;
+  costPrice?: number;
 }
 
 /**
@@ -169,13 +172,18 @@ export async function create(
     recipientName: string;
     recipientEmail?: string;
     recipientOrg?: string;
+    isCateringEvent?: boolean;
+    cateringDetails?: Prisma.InputJsonValue;
+    marginEnabled?: boolean;
+    marginPercent?: number;
+    taxEnabled?: boolean;
   },
   calculatedItems: CalculatedLineItem[],
   totalAmount: number,
   creatorId: string,
   quoteNumber: string
 ) {
-  const { date, expirationDate, accountCode, ...quoteData } = input;
+  const { date, expirationDate, accountCode, isCateringEvent, cateringDetails, marginEnabled, marginPercent, taxEnabled, ...quoteData } = input;
 
   return prisma.invoice.create({
     data: {
@@ -188,6 +196,11 @@ export async function create(
       expirationDate: new Date(expirationDate),
       createdBy: creatorId,
       totalAmount,
+      isCateringEvent: isCateringEvent ?? false,
+      cateringDetails: cateringDetails ?? undefined,
+      marginEnabled: marginEnabled ?? false,
+      marginPercent: marginPercent ?? undefined,
+      taxEnabled: taxEnabled ?? false,
       items: {
         create: calculatedItems.map((item) => ({
           description: item.description,
@@ -195,6 +208,9 @@ export async function create(
           unitPrice: item.unitPrice,
           extendedPrice: item.extendedPrice,
           sortOrder: item.sortOrder,
+          isTaxable: item.isTaxable ?? true,
+          marginOverride: item.marginOverride ?? undefined,
+          costPrice: item.costPrice ?? undefined,
         })),
       },
     },
@@ -236,6 +252,9 @@ export async function update(
               unitPrice: item.unitPrice,
               extendedPrice: item.extendedPrice,
               sortOrder: item.sortOrder,
+              isTaxable: item.isTaxable ?? true,
+              marginOverride: item.marginOverride ?? undefined,
+              costPrice: item.costPrice ?? undefined,
             })),
           },
         },
