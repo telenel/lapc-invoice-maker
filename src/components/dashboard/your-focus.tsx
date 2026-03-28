@@ -72,7 +72,7 @@ export function YourFocus() {
           invoiceApi.list({ status: "DRAFT", isRunning: true, creatorId: userId, pageSize: 1 }),
           invoiceApi.getStats({ status: "FINAL", creatorId: userId, dateFrom, dateTo }),
           invoiceApi.getStats({ status: "FINAL", creatorId: userId, dateFrom: lastMonthFrom, dateTo: lastMonthTo }),
-          quoteApi.list({ quoteStatus: "SENT", pageSize: 1 }),
+          quoteApi.list({ quoteStatus: "SENT", creatorId: userId, pageSize: 1 }),
         ]);
 
         setData({

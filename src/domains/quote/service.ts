@@ -223,7 +223,8 @@ export const quoteService = {
     const { notificationService } = await import("@/domains/notification/service");
     const notifType = response === "ACCEPTED" ? "QUOTE_APPROVED" : "QUOTE_DECLINED";
     const verb = response === "ACCEPTED" ? "approved" : "declined";
-    await notificationService.createAndPublishToAll({
+    await notificationService.createAndPublish({
+      userId: quote.createdBy,
       type: notifType,
       title: `${quote.quoteNumber ?? "Quote"} was ${verb}`,
       message: quote.recipientName ? `${verb.charAt(0).toUpperCase() + verb.slice(1)} by ${quote.recipientName}` : undefined,

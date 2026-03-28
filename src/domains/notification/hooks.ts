@@ -13,8 +13,11 @@ export function useNotifications() {
   const eventSourceRef = useRef<EventSource | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sseConnected = useRef(false);
+  const fetchingRef = useRef(false);
 
   const fetchNotifications = useCallback(async () => {
+    if (fetchingRef.current) return;
+    fetchingRef.current = true;
     try {
       const result = await notificationApi.list();
       setNotifications(result.notifications);
@@ -23,6 +26,7 @@ export function useNotifications() {
       // Silently fail — notifications are non-critical
     } finally {
       setLoading(false);
+      fetchingRef.current = false;
     }
   }, []);
 
@@ -49,12 +53,12 @@ export function useNotifications() {
 
     es.onerror = () => {
       sseConnected.current = false;
-      // EventSource auto-reconnects, but fetch on reconnect to catch missed notifications
       fetchNotifications();
     };
 
-    // Polling fallback — catches notifications missed during SSE disconnects
+    // Polling fallback — only fires when SSE is disconnected
     pollRef.current = setInterval(() => {
+      if (sseConnected.current) return;
       fetchNotifications();
     }, POLL_INTERVAL);
 

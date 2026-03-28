@@ -42,8 +42,3 @@ export async function markAllRead(userId: string) {
     data: { read: true },
   });
 }
-
-export async function getAllUserIds(): Promise<string[]> {
-  const users = await prisma.user.findMany({ select: { id: true } });
-  return users.map((u) => u.id);
-}
