@@ -3,6 +3,7 @@ import { DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Nav } from "@/components/nav";
+import { Footer } from "@/components/footer";
 import { AuthSessionProvider } from "@/components/session-provider";
 import { ThemeProviderWrapper } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -37,13 +38,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={cn(dmSans.variable, jetbrainsMono.variable)} suppressHydrationWarning>
-      <body className="antialiased">
+      <body className="antialiased min-h-screen flex flex-col">
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-background focus:text-foreground">Skip to main content</a>
         <AuthSessionProvider>
           <ThemeProviderWrapper>
             <UIScaleProvider>
               <Nav />
-              <main id="main-content" className="mx-auto max-w-7xl px-4 py-6">{children}</main>
+              <main id="main-content" className="mx-auto max-w-7xl px-4 py-6 flex-1">{children}</main>
+              <Footer />
               <Toaster />
             </UIScaleProvider>
           </ThemeProviderWrapper>
