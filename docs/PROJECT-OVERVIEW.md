@@ -279,7 +279,7 @@ These domains encapsulate endpoint URLs and response parsing for smaller feature
 
 The home page (`src/app/page.tsx`) features a personalized dashboard:
 
-- **Personalized header** — time-based greeting (Good Morning/Afternoon/Evening) with user name
+- **Personalized header** — time-based greeting (Good Morning/Afternoon/Evening) with username
 - **YourFocus widget** — prioritized action items for the current user
 - **Drag-and-drop layout** — widgets can be reordered, persisted to `localStorage` (key: `lapc-dashboard-order`)
 - **Stats cards** — invoice/quote counts filtered by `createdAt` (not invoice date)
@@ -414,7 +414,7 @@ All changes go through pull requests targeting `main`. PRs are squash-merged aft
 
 ### CI/CD Pipeline
 
-GitHub Actions runs on every push to `main`, every PR targeting `main`, and on manual `workflow_dispatch`:
+GitHub Actions runs on every push to `main` and every PR targeting `main`:
 
 1. **Setup** — `npm ci` + `npx prisma generate`, caches `node_modules` and `src/generated/prisma`
 2. **Lint** / **Build** / **Tests** — run in parallel after Setup (Node 22)
