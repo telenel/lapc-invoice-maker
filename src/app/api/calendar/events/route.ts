@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/domains/shared/auth";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/prisma/client";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const GET = withAuth(async (req: NextRequest, _session) => {
@@ -20,7 +21,7 @@ export const GET = withAuth(async (req: NextRequest, _session) => {
       type: "QUOTE",
       isCateringEvent: true,
       quoteStatus: { in: ["SENT", "ACCEPTED"] },
-      cateringDetails: { not: null },
+      cateringDetails: { not: Prisma.JsonNull },
     },
     select: {
       id: true,
