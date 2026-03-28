@@ -302,7 +302,7 @@ export function InvoiceManagerTable({
                   </TableCell>
                   {/* Creator — read-only */}
                   <TableCell className="text-xs text-muted-foreground">
-                    {invoice.creator.name}
+                    {invoice.creatorName}
                   </TableCell>
                   {/* Delete */}
                   <TableCell className="text-right">
