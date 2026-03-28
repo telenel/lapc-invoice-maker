@@ -1,0 +1,33 @@
+// src/lib/sse.ts
+
+type SSEWriter = ReadableStreamDefaultController<Uint8Array>;
+
+const connections = new Map<string, Set<SSEWriter>>();
+
+export function subscribe(userId: string, controller: SSEWriter): void {
+  if (!connections.has(userId)) {
+    connections.set(userId, new Set());
+  }
+  connections.get(userId)!.add(controller);
+}
+
+export function unsubscribe(userId: string, controller: SSEWriter): void {
+  const set = connections.get(userId);
+  if (!set) return;
+  set.delete(controller);
+  if (set.size === 0) connections.delete(userId);
+}
+
+export function publish(userId: string, data: unknown): void {
+  const set = connections.get(userId);
+  if (!set) return;
+  const encoded = new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`);
+  for (const controller of set) {
+    try {
+      controller.enqueue(encoded);
+    } catch {
+      // Connection closed — clean up
+      set.delete(controller);
+    }
+  }
+}
