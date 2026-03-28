@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { formatAmount } from "@/lib/formatters";
 import { invoiceApi } from "@/domains/invoice/api-client";
+import { quoteApi } from "@/domains/quote/api-client";
 
 interface FocusData {
   myDrafts: number;
@@ -14,12 +15,16 @@ interface FocusData {
   myFinalThisMonth: number;
   myTotalThisMonth: number;
   myFinalLastMonth: number;
+  myQuotesAwaitingResponse: number;
 }
 
 function getNudge(data: FocusData): string | null {
-  const { myDrafts, myRunning, myFinalThisMonth, myFinalLastMonth } = data;
+  const { myDrafts, myRunning, myFinalThisMonth, myFinalLastMonth, myQuotesAwaitingResponse } = data;
 
   // Actionable nudges first
+  if (myQuotesAwaitingResponse > 0) {
+    return `${myQuotesAwaitingResponse} quote${myQuotesAwaitingResponse !== 1 ? "s" : ""} awaiting response`;
+  }
   if (myDrafts > 0 && myRunning > 0) {
     return `${myDrafts} draft${myDrafts !== 1 ? "s" : ""} and ${myRunning} running invoice${myRunning !== 1 ? "s" : ""} waiting for you`;
   }
@@ -62,11 +67,12 @@ export function YourFocus() {
         const lastMonthFrom = firstOfLastMonth.toISOString().split("T")[0];
         const lastMonthTo = lastOfLastMonth.toISOString().split("T")[0];
 
-        const [drafts, running, monthStats, lastMonthStats] = await Promise.all([
+        const [drafts, running, monthStats, lastMonthStats, sentQuotes] = await Promise.all([
           invoiceApi.getStats({ status: "DRAFT", creatorId: userId }),
           invoiceApi.list({ status: "DRAFT", isRunning: true, creatorId: userId, pageSize: 1 }),
           invoiceApi.getStats({ status: "FINAL", creatorId: userId, dateFrom, dateTo }),
           invoiceApi.getStats({ status: "FINAL", creatorId: userId, dateFrom: lastMonthFrom, dateTo: lastMonthTo }),
+          quoteApi.list({ quoteStatus: "SENT", pageSize: 1 }),
         ]);
 
         setData({
@@ -75,6 +81,7 @@ export function YourFocus() {
           myFinalThisMonth: monthStats.total,
           myTotalThisMonth: monthStats.sumTotalAmount,
           myFinalLastMonth: lastMonthStats.total,
+          myQuotesAwaitingResponse: sentQuotes.total,
         });
       } catch (err) {
         console.error("Failed to fetch focus data:", err);
@@ -91,8 +98,8 @@ export function YourFocus() {
       <Card className="card-hover">
         <CardContent className="py-3 px-4">
           <div className="skeleton h-3 w-20 mb-3" />
-          <div className="grid grid-cols-3 gap-3">
-            {[0, 1, 2].map((i) => (
+          <div className="grid grid-cols-4 gap-3">
+            {[0, 1, 2, 3].map((i) => (
               <div key={i} className="rounded-lg bg-muted/50 px-3 py-2.5">
                 <div className="skeleton h-2.5 w-16 mb-2" />
                 <div className="skeleton h-5 w-8" />
@@ -106,7 +113,7 @@ export function YourFocus() {
 
   if (!data) return null;
 
-  const hasWork = data.myDrafts > 0 || data.myRunning > 0;
+  const hasWork = data.myDrafts > 0 || data.myRunning > 0 || data.myQuotesAwaitingResponse > 0;
   const nudge = getNudge(data);
 
   const items = [
@@ -125,6 +132,14 @@ export function YourFocus() {
       color: data.myRunning > 0 ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground",
       bgColor: data.myRunning > 0 ? "bg-blue-500/10" : "bg-muted/50",
       dotColor: data.myRunning > 0 ? "bg-blue-500" : "bg-muted-foreground/30",
+    },
+    {
+      label: "Awaiting Response",
+      value: data.myQuotesAwaitingResponse,
+      href: "/quotes?quoteStatus=SENT",
+      color: data.myQuotesAwaitingResponse > 0 ? "text-violet-600 dark:text-violet-400" : "text-muted-foreground",
+      bgColor: data.myQuotesAwaitingResponse > 0 ? "bg-violet-500/10" : "bg-muted/50",
+      dotColor: data.myQuotesAwaitingResponse > 0 ? "bg-violet-500" : "bg-muted-foreground/30",
     },
     {
       label: "Finalized This Month",
@@ -158,7 +173,7 @@ export function YourFocus() {
             </span>
           )}
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-3">
           {items.map((item) => (
             <Link
               key={item.label}
