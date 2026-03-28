@@ -31,6 +31,7 @@ import { StaffSelect } from "@/components/invoice/staff-select";
 import { AccountSelect } from "@/components/invoice/account-select";
 import { LineItems } from "@/components/invoice/line-items";
 import { QuickPickPanel } from "@/components/invoice/quick-pick-panel";
+import { CateringDetailsCard } from "@/components/quote/catering-details-card";
 import { useTaxCalculation } from "@/components/invoice/hooks/use-tax-calculation";
 import { TAX_RATE } from "@/domains/invoice/constants";
 import { cn } from "@/lib/utils";
@@ -185,6 +186,22 @@ export function QuoteMode({
     }
   }
 
+
+  // ---- Catering toggle ----
+  function handleCateringToggle(checked: boolean) {
+    updateField("isCateringEvent", checked);
+    if (checked && !form.cateringDetails.contactName && form.recipientName) {
+      updateField("cateringDetails", {
+        ...form.cateringDetails,
+        contactName: form.recipientName,
+        contactEmail: form.recipientEmail,
+        eventDate: form.date,
+      });
+    }
+    if (checked && !form.taxEnabled) {
+      updateField("taxEnabled", true);
+    }
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-2">
@@ -422,6 +439,29 @@ export function QuoteMode({
               placeholder="Account code..."
             />
           </div>
+        )}
+      </div>
+
+      {/* ============ CATERING ============ */}
+      <SectionDivider label="CATERING" />
+
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Checkbox
+            checked={form.isCateringEvent}
+            onCheckedChange={(checked) => handleCateringToggle(!!checked)}
+          />
+          <Label className="text-sm font-medium">This is a catering event</Label>
+          <span className="text-xs text-muted-foreground">
+            Adds event to calendar and enables catering guide
+          </span>
+        </div>
+
+        {form.isCateringEvent && (
+          <CateringDetailsCard
+            details={form.cateringDetails}
+            onChange={(details) => updateField("cateringDetails", details)}
+          />
         )}
       </div>
 
