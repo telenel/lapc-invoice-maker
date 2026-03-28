@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { staffApi } from "@/domains/staff/api-client";
 import type { StaffResponse, StaffDetailResponse, AccountNumberResponse } from "@/domains/staff/types";
+import type { CateringDetails } from "@/domains/quote/types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -16,6 +17,9 @@ export interface QuoteItem {
   unitPrice: number;
   extendedPrice: number;
   sortOrder: number;
+  isTaxable: boolean;
+  marginOverride: number | null;
+  costPrice: number | null;
 }
 
 export interface QuoteFormData {
@@ -37,6 +41,13 @@ export interface QuoteFormData {
   recipientName: string;
   recipientEmail: string;
   recipientOrg: string;
+  // Margin & Tax
+  marginEnabled: boolean;
+  marginPercent: number;
+  taxEnabled: boolean;
+  // Catering
+  isCateringEvent: boolean;
+  cateringDetails: CateringDetails;
 }
 
 // StaffAccountNumber = AccountNumberResponse from staff domain (re-exported for consumers)
@@ -60,7 +71,16 @@ function thirtyDaysFromNow(): string {
 }
 
 function emptyItem(sortOrder = 0): QuoteItem {
-  return { description: "", quantity: 1, unitPrice: 0, extendedPrice: 0, sortOrder };
+  return {
+    description: "",
+    quantity: 1,
+    unitPrice: 0,
+    extendedPrice: 0,
+    sortOrder,
+    isTaxable: true,
+    marginOverride: null,
+    costPrice: null,
+  };
 }
 
 function defaultForm(): QuoteFormData {
@@ -82,6 +102,28 @@ function defaultForm(): QuoteFormData {
     recipientName: "",
     recipientEmail: "",
     recipientOrg: "",
+    marginEnabled: false,
+    marginPercent: 0,
+    taxEnabled: false,
+    isCateringEvent: false,
+    cateringDetails: {
+      eventDate: todayISO(),
+      startTime: "",
+      endTime: "",
+      location: "",
+      contactName: "",
+      contactPhone: "",
+      contactEmail: "",
+      headcount: undefined,
+      eventName: "",
+      setupRequired: false,
+      setupTime: "",
+      setupInstructions: "",
+      takedownRequired: false,
+      takedownTime: "",
+      takedownInstructions: "",
+      specialInstructions: "",
+    },
   };
 }
 
@@ -154,6 +196,16 @@ export function useQuoteForm(
     [form.items]
   );
 
+  const itemsWithMargin = useMemo(() => {
+    if (!form.marginEnabled || form.marginPercent <= 0) return form.items;
+    return form.items.map((item) => {
+      const effectiveMargin = item.marginOverride ?? form.marginPercent;
+      const cost = item.costPrice ?? item.unitPrice;
+      const charged = Math.round(cost * (1 + effectiveMargin / 100) * 100) / 100;
+      return { ...item, extendedPrice: charged * item.quantity };
+    });
+  }, [form.items, form.marginEnabled, form.marginPercent]);
+
   // ---------- Staff autofill ----------
 
   const [staffAccountNumbers, setStaffAccountNumbers] = useState<AccountNumberResponse[]>([]);
@@ -186,6 +238,12 @@ export function useQuoteForm(
       contactEmail: staff.email,
       contactPhone: staff.phone,
       approvalChain: staff.approvalChain,
+      cateringDetails: {
+        ...prev.cateringDetails,
+        contactName: prev.cateringDetails.contactName || staff.name,
+        contactPhone: prev.cateringDetails.contactPhone || staff.extension,
+        contactEmail: prev.cateringDetails.contactEmail || staff.email,
+      },
     }));
   }, []);
 
@@ -259,11 +317,19 @@ export function useQuoteForm(
       recipientName: form.recipientName,
       recipientEmail: form.recipientEmail || undefined,
       recipientOrg: form.recipientOrg,
+      marginEnabled: form.marginEnabled,
+      marginPercent: form.marginEnabled ? form.marginPercent : undefined,
+      taxEnabled: form.taxEnabled,
+      isCateringEvent: form.isCateringEvent,
+      cateringDetails: form.isCateringEvent ? form.cateringDetails : undefined,
       items: form.items.map((item, i) => ({
         description: item.description,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         sortOrder: item.sortOrder ?? i,
+        isTaxable: item.isTaxable,
+        marginOverride: item.marginOverride ?? undefined,
+        costPrice: item.costPrice ?? undefined,
       })),
     };
   }
@@ -338,6 +404,7 @@ export function useQuoteForm(
     addItem,
     removeItem,
     total,
+    itemsWithMargin,
     handleStaffSelect,
     handleStaffEdit,
     staffAccountNumbers,
