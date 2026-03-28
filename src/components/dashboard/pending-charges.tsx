@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatAmount, getInitials } from "@/lib/formatters";
+import { invoiceApi } from "@/domains/invoice/api-client";
 
 interface PendingUser {
   id: string;
@@ -13,13 +14,19 @@ interface PendingUser {
   totalAmount: number;
 }
 
+interface PendingGroupResponse {
+  users: PendingUser[];
+}
+
 export function PendingCharges() {
   const [users, setUsers] = useState<PendingUser[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/invoices?statsOnly=true&groupBy=creator&status=PENDING_CHARGE")
-      .then((r) => r.ok ? r.json() : { users: [] })
+    // Uses groupBy=creator which returns { users } — not covered by invoiceApi.getStats()
+    const params = new URLSearchParams({ statsOnly: "true", groupBy: "creator", status: "PENDING_CHARGE" });
+    fetch(`/api/invoices?${params}`)
+      .then((r) => r.ok ? r.json() as Promise<PendingGroupResponse> : { users: [] as PendingUser[] })
       .then((data) => setUsers(data.users || []))
       .catch(() => {})
       .finally(() => setLoading(false));

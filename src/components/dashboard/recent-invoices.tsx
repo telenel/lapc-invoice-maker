@@ -7,37 +7,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { formatAmount, formatDate, getInitials } from "@/lib/formatters";
-
-interface Invoice {
-  id: string;
-  invoiceNumber: string;
-  date: string;
-  department: string;
-  totalAmount: number;
-  status: "DRAFT" | "FINAL" | "PENDING_CHARGE";
-  staff: {
-    id: string;
-    name: string;
-  };
-  creator: {
-    id: string;
-    name: string;
-  };
-}
+import { invoiceApi } from "@/domains/invoice/api-client";
+import type { InvoiceResponse } from "@/domains/invoice/types";
 
 export function RecentInvoices() {
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [invoices, setInvoices] = useState<InvoiceResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     async function fetchInvoices() {
       try {
-        const res = await fetch(
-          `/api/invoices?pageSize=10&sortBy=createdAt&sortDir=desc`
-        );
-        const data = await res.json();
-        setInvoices(data.invoices);
+        const data = await invoiceApi.list({ pageSize: 10, sortBy: "createdAt", sortOrder: "desc" });
+        setInvoices(data.data);
       } catch (err) {
         console.error("Failed to fetch recent invoices:", err);
       } finally {
@@ -85,10 +67,10 @@ export function RecentInvoices() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-semibold truncate">
-                    {invoice.invoiceNumber} · {invoice.staff.name}
+                    {invoice.invoiceNumber ?? "—"} · {invoice.staff.name}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
-                    {invoice.department} · {formatDate(invoice.date)} · by {invoice.creator?.name}
+                    {invoice.department} · {formatDate(invoice.date)} · by {invoice.creatorName}
                   </p>
                 </div>
                 <div className="text-right shrink-0">
