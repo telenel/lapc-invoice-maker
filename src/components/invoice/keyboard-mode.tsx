@@ -811,7 +811,7 @@ export function KeyboardMode({
           </span>
         </div>
 
-        {form.marginEnabled && form.marginPercent > 0 && (
+        {form.marginEnabled && (form.marginPercent ?? 0) > 0 && (
           <div className="flex justify-between text-violet-600">
             <span>Margin (+{form.marginPercent}%) included</span>
             <span />

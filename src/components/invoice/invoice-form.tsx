@@ -15,7 +15,6 @@ export type { GenerationStep } from "./hooks/use-invoice-save";
 import { useInvoiceFormState } from "./hooks/use-invoice-form-state";
 import type { InvoiceFormData } from "./hooks/use-invoice-form-state";
 import { useTaxCalculation } from "./hooks/use-tax-calculation";
-import { TAX_RATE } from "@/domains/invoice/constants";
 import { useStaffAutofill } from "./hooks/use-staff-autofill";
 import { useStaffAutoSave } from "./hooks/use-staff-auto-save";
 import { useInvoiceSave } from "./hooks/use-invoice-save";
@@ -31,7 +30,7 @@ export function useInvoiceForm(
   const { subtotal, taxAmount, total: grandTotal } = useTaxCalculation(
     taxItems,
     form.taxEnabled,
-    TAX_RATE
+    form.taxRate
   );
 
   const { staffAccountNumbers, originalStaffRef, handleStaffSelect, handleStaffEdit } =

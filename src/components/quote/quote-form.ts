@@ -241,7 +241,7 @@ export function useQuoteForm(
       cateringDetails: {
         ...prev.cateringDetails,
         contactName: prev.cateringDetails.contactName || staff.name,
-        contactPhone: prev.cateringDetails.contactPhone || staff.extension,
+        contactPhone: prev.cateringDetails.contactPhone || staff.phone,
         contactEmail: prev.cateringDetails.contactEmail || staff.email,
       },
     }));

@@ -120,7 +120,7 @@ export function renderQuote(data: QuotePDFData): string {
         .filter((item) => item.isTaxable)
         .reduce((sum, item) => sum + item.extendedPrice, 0)
     : 0;
-  const taxAmount = data.taxEnabled ? taxableSubtotal * data.taxRate : 0;
+  const taxAmount = data.taxEnabled ? Math.round(taxableSubtotal * data.taxRate * 100) / 100 : 0;
   const taxRatePercent = (data.taxRate * 100).toFixed(2).replace(/\.?0+$/, "");
 
   return `<!DOCTYPE html>
@@ -203,7 +203,7 @@ export function renderQuote(data: QuotePDFData): string {
       ` : ""}
       <tr style="font-weight:bold;font-size:13px;color:#1a3a5c;">
         <td style="padding:8px 0;border-top:1px solid #e0e0e0;">Total:</td>
-        <td style="padding:8px 0;border-top:1px solid #e0e0e0;text-align:right;">${escapeHtml(formatCurrency(data.totalAmount))}</td>
+        <td style="padding:8px 0;border-top:1px solid #e0e0e0;text-align:right;">${escapeHtml(formatCurrency(subtotal + taxAmount))}</td>
       </tr>
     </table>
   </div>

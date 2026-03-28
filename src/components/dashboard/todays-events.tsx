@@ -10,11 +10,12 @@ export function TodaysEvents() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const today = new Date().toISOString().split("T")[0];
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
     calendarApi
       .getEvents(today, today)
       .then(setEvents)
-      .catch(() => {})
+      .catch((err) => console.error("Failed to fetch events:", err))
       .finally(() => setLoading(false));
   }, []);
 

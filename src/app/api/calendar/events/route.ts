@@ -38,7 +38,7 @@ export const GET = withAuth(async (req: NextRequest, _session) => {
       if (!details?.eventDate) return null;
 
       const eventDate = details.eventDate as string;
-      if (eventDate < start || eventDate > end) return null;
+      if (eventDate < start || eventDate >= end) return null;
 
       const startTime = (details.startTime as string) || "09:00";
       const endTime = (details.endTime as string) || "10:00";

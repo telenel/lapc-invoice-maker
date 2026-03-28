@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { TAX_RATE } from "@/domains/invoice/constants";
 
 // ---------------------------------------------------------------------------
 // Types (re-exported so consumers can import from here)
@@ -49,6 +50,8 @@ export interface InvoiceFormData {
   marginEnabled: boolean;
   marginPercent: number;
   taxEnabled: boolean;
+  /** Stored tax rate from existing invoice; falls back to TAX_RATE for new invoices */
+  taxRate: number;
   // Line items
   items: InvoiceItem[];
   // Finalization
@@ -110,6 +113,7 @@ export function defaultForm(): InvoiceFormData {
     marginEnabled: false,
     marginPercent: 0,
     taxEnabled: false,
+    taxRate: TAX_RATE,
     items: [emptyItem(0)],
     prismcorePath: null,
     signatures: { line1: "", line2: "", line3: "" },

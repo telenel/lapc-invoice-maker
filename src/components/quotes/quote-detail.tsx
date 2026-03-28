@@ -120,7 +120,7 @@ const statusLabel: Record<QuoteStatus, string> = {
 };
 
 function formatCateringDateTime(catering: CateringDetails): string {
-  const date = new Date(catering.eventDate);
+  const date = new Date(catering.eventDate + "T00:00:00");
   const dateStr = date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",

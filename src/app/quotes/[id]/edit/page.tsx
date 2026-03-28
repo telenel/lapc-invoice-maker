@@ -16,6 +16,25 @@ interface ApiQuoteItem {
   costPrice?: string | number | null;
 }
 
+interface ApiCateringDetails {
+  eventDate: string;
+  startTime: string;
+  endTime: string;
+  location: string;
+  contactName: string;
+  contactPhone: string;
+  contactEmail?: string;
+  headcount?: number;
+  eventName?: string;
+  setupRequired: boolean;
+  setupTime?: string;
+  setupInstructions?: string;
+  takedownRequired: boolean;
+  takedownTime?: string;
+  takedownInstructions?: string;
+  specialInstructions?: string;
+}
+
 interface ApiQuote {
   id: string;
   date: string;
@@ -35,6 +54,7 @@ interface ApiQuote {
   marginPercent?: number;
   taxEnabled?: boolean;
   isCateringEvent?: boolean;
+  cateringDetails?: ApiCateringDetails | null;
   items: ApiQuoteItem[];
 }
 
@@ -60,24 +80,43 @@ function mapApiToFormData(quote: ApiQuote): QuoteFormData {
     marginPercent: quote.marginPercent ?? 0,
     taxEnabled: quote.taxEnabled ?? false,
     isCateringEvent: quote.isCateringEvent ?? false,
-    cateringDetails: {
-      eventDate: new Date().toISOString().split("T")[0],
-      startTime: "",
-      endTime: "",
-      location: "",
-      contactName: "",
-      contactPhone: "",
-      contactEmail: "",
-      headcount: undefined,
-      eventName: "",
-      setupRequired: false,
-      setupTime: "",
-      setupInstructions: "",
-      takedownRequired: false,
-      takedownTime: "",
-      takedownInstructions: "",
-      specialInstructions: "",
-    },
+    cateringDetails: quote.cateringDetails
+      ? {
+          eventDate: quote.cateringDetails.eventDate,
+          startTime: quote.cateringDetails.startTime,
+          endTime: quote.cateringDetails.endTime,
+          location: quote.cateringDetails.location,
+          contactName: quote.cateringDetails.contactName,
+          contactPhone: quote.cateringDetails.contactPhone,
+          contactEmail: quote.cateringDetails.contactEmail ?? "",
+          headcount: quote.cateringDetails.headcount,
+          eventName: quote.cateringDetails.eventName ?? "",
+          setupRequired: quote.cateringDetails.setupRequired,
+          setupTime: quote.cateringDetails.setupTime ?? "",
+          setupInstructions: quote.cateringDetails.setupInstructions ?? "",
+          takedownRequired: quote.cateringDetails.takedownRequired,
+          takedownTime: quote.cateringDetails.takedownTime ?? "",
+          takedownInstructions: quote.cateringDetails.takedownInstructions ?? "",
+          specialInstructions: quote.cateringDetails.specialInstructions ?? "",
+        }
+      : {
+          eventDate: new Date().toISOString().split("T")[0],
+          startTime: "",
+          endTime: "",
+          location: "",
+          contactName: "",
+          contactPhone: "",
+          contactEmail: "",
+          headcount: undefined,
+          eventName: "",
+          setupRequired: false,
+          setupTime: "",
+          setupInstructions: "",
+          takedownRequired: false,
+          takedownTime: "",
+          takedownInstructions: "",
+          specialInstructions: "",
+        },
     items: quote.items.map((item) => ({
       description: item.description,
       quantity: Number(item.quantity),

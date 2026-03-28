@@ -34,8 +34,8 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
     extendedPrice: Number(item.extendedPrice),
     sortOrder: item.sortOrder,
     isTaxable: item.isTaxable,
-    marginOverride: item.marginOverride ? Number(item.marginOverride) : null,
-    costPrice: item.costPrice ? Number(item.costPrice) : null,
+    marginOverride: item.marginOverride != null ? Number(item.marginOverride) : null,
+    costPrice: item.costPrice != null ? Number(item.costPrice) : null,
   }));
 
   return {
@@ -65,7 +65,7 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
     isCateringEvent: quote.isCateringEvent,
     cateringDetails: quote.cateringDetails as CateringDetails | null,
     marginEnabled: quote.marginEnabled,
-    marginPercent: quote.marginPercent ? Number(quote.marginPercent) : null,
+    marginPercent: quote.marginPercent != null ? Number(quote.marginPercent) : null,
     taxEnabled: quote.taxEnabled,
     taxRate: Number(quote.taxRate),
     convertedToInvoice: "convertedToInvoice" in quote

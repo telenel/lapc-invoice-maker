@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useInvoiceForm, InvoiceFormData } from "@/components/invoice/invoice-form";
 import { KeyboardMode } from "@/components/invoice/keyboard-mode";
+import { TAX_RATE } from "@/domains/invoice/constants";
 
 interface ApiInvoiceItem {
   description: string;
@@ -36,6 +37,7 @@ interface ApiInvoice {
   marginEnabled?: boolean;
   marginPercent?: number;
   taxEnabled?: boolean;
+  taxRate?: number;
   prismcorePath: string | null;
   isRunning: boolean;
   runningTitle: string | null;
@@ -69,6 +71,7 @@ function mapApiToFormData(invoice: ApiInvoice): InvoiceFormData {
     marginEnabled: invoice.marginEnabled ?? false,
     marginPercent: invoice.marginPercent ?? 0,
     taxEnabled: invoice.taxEnabled ?? false,
+    taxRate: invoice.taxRate ?? TAX_RATE,
     isRecurring: invoice.isRecurring ?? false,
     recurringInterval: invoice.recurringInterval ?? "",
     recurringEmail: invoice.recurringEmail ?? "",

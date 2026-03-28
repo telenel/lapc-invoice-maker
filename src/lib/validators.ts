@@ -16,6 +16,9 @@ export const invoiceItemSchema = z.object({
   quantity: z.number().positive("Quantity must be positive"),
   unitPrice: z.number().min(0, "Price must be non-negative"),
   sortOrder: z.number().int().default(0),
+  isTaxable: z.boolean().default(true),
+  marginOverride: z.number().optional(),
+  costPrice: z.number().optional(),
 });
 
 export const invoiceCreateSchema = z.object({
@@ -35,6 +38,9 @@ export const invoiceCreateSchema = z.object({
   isRunning: z.boolean().default(false),
   runningTitle: z.string().optional(),
   status: z.enum(["DRAFT", "PENDING_CHARGE"]).optional(),
+  marginEnabled: z.boolean().default(false),
+  marginPercent: z.number().min(0).optional(),
+  taxEnabled: z.boolean().default(false),
 });
 
 export const invoiceUpdateSchema = invoiceCreateSchema.partial().extend({
@@ -85,6 +91,9 @@ export const quoteItemSchema = z.object({
   quantity: z.number().positive("Quantity must be positive"),
   unitPrice: z.number().min(0, "Price must be non-negative"),
   sortOrder: z.number().int().default(0),
+  isTaxable: z.boolean().default(true),
+  marginOverride: z.number().optional(),
+  costPrice: z.number().optional(),
 });
 
 export const quoteCreateSchema = z.object({
@@ -101,6 +110,28 @@ export const quoteCreateSchema = z.object({
   recipientName: z.string().min(1, "Recipient name is required"),
   recipientEmail: z.string().email().optional().or(z.literal("")),
   recipientOrg: z.string().default(""),
+  marginEnabled: z.boolean().default(false),
+  marginPercent: z.number().min(0).optional(),
+  taxEnabled: z.boolean().default(false),
+  isCateringEvent: z.boolean().default(false),
+  cateringDetails: z.object({
+    eventDate: z.string(),
+    startTime: z.string(),
+    endTime: z.string(),
+    location: z.string(),
+    contactName: z.string(),
+    contactPhone: z.string(),
+    contactEmail: z.string().optional(),
+    headcount: z.number().optional(),
+    eventName: z.string().optional(),
+    setupRequired: z.boolean(),
+    setupTime: z.string().optional(),
+    setupInstructions: z.string().optional(),
+    takedownRequired: z.boolean(),
+    takedownTime: z.string().optional(),
+    takedownInstructions: z.string().optional(),
+    specialInstructions: z.string().optional(),
+  }).optional(),
 });
 
 export const quoteUpdateSchema = quoteCreateSchema.partial().extend({
