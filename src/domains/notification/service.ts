@@ -33,6 +33,19 @@ export const notificationService = {
     return response;
   },
 
+  async createAndPublishToAll(
+    input: Omit<CreateNotificationInput, "userId">
+  ): Promise<void> {
+    const userIds = await notificationRepository.getAllUserIds();
+    await Promise.all(
+      userIds.map(async (userId) => {
+        const notification = await notificationRepository.create({ ...input, userId });
+        const response = toResponse(notification);
+        publish(userId, response);
+      })
+    );
+  },
+
   async list(userId: string, limit = 20, offset = 0) {
     const [notifications, unreadCount] = await Promise.all([
       notificationRepository.findByUserId(userId, limit, offset),
