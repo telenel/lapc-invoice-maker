@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { TAX_RATE } from "@/domains/invoice/constants";
 
 // ---------------------------------------------------------------------------
 // Types (re-exported so consumers can import from here)
@@ -12,6 +13,12 @@ export interface InvoiceItem {
   unitPrice: number;
   extendedPrice: number;
   sortOrder: number;
+  /** Whether this item is subject to sales tax */
+  isTaxable: boolean;
+  /** Per-item margin override percentage */
+  marginOverride: number | null;
+  /** Original cost price before margin */
+  costPrice: number | null;
 }
 
 export interface InvoiceFormData {
@@ -39,6 +46,12 @@ export interface InvoiceFormData {
   // Running invoice fields
   isRunning: boolean;
   runningTitle: string;
+  // Margin & Tax
+  marginEnabled: boolean;
+  marginPercent: number;
+  taxEnabled: boolean;
+  /** Stored tax rate from existing invoice; falls back to TAX_RATE for new invoices */
+  taxRate: number;
   // Line items
   items: InvoiceItem[];
   // Finalization
@@ -70,6 +83,9 @@ export function emptyItem(sortOrder = 0): InvoiceItem {
     unitPrice: 0,
     extendedPrice: 0,
     sortOrder,
+    isTaxable: true,
+    marginOverride: null,
+    costPrice: null,
   };
 }
 
@@ -94,6 +110,10 @@ export function defaultForm(): InvoiceFormData {
     recurringEmail: "",
     isRunning: false,
     runningTitle: "",
+    marginEnabled: false,
+    marginPercent: 0,
+    taxEnabled: false,
+    taxRate: TAX_RATE,
     items: [emptyItem(0)],
     prismcorePath: null,
     signatures: { line1: "", line2: "", line3: "" },
@@ -159,5 +179,20 @@ export function useInvoiceFormState(initial?: Partial<InvoiceFormData>) {
     });
   }, []);
 
-  return { form, setForm, updateField, updateItem, addItem, removeItem };
+  const total = useMemo(
+    () => form.items.reduce((sum, item) => sum + Number(item.extendedPrice), 0),
+    [form.items]
+  );
+
+  const itemsWithMargin = useMemo(() => {
+    if (!form.marginEnabled || form.marginPercent <= 0) return form.items;
+    return form.items.map((item) => {
+      const effectiveMargin = item.marginOverride ?? form.marginPercent;
+      const cost = item.costPrice ?? item.unitPrice;
+      const charged = Math.round(cost * (1 + effectiveMargin / 100) * 100) / 100;
+      return { ...item, extendedPrice: charged * item.quantity };
+    });
+  }, [form.items, form.marginEnabled, form.marginPercent]);
+
+  return { form, setForm, updateField, updateItem, addItem, removeItem, total, itemsWithMargin };
 }

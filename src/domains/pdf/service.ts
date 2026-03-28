@@ -33,6 +33,7 @@ export const pdfService = {
         ...item,
         unitPrice: Number(item.unitPrice),
         extendedPrice: Number(item.extendedPrice),
+        costPrice: item.costPrice != null ? Number(item.costPrice) : null,
       })),
     };
     return generateQuotePDF(adapted);

@@ -5,6 +5,7 @@ import { InvoiceItem } from "./invoice-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Star } from "lucide-react";
 import { InlineCombobox } from "@/components/ui/inline-combobox";
 import type { ComboboxItem } from "@/components/ui/inline-combobox";
@@ -29,6 +30,14 @@ interface LineItemsProps {
   onTogglePick?: (description: string, unitPrice: number, department: string) => void;
   /** Indices of items that have had margin applied */
   marginAppliedIndices?: Set<number>;
+  /** Whether margin pricing is enabled (quote mode) */
+  marginEnabled?: boolean;
+  /** Items with margin-adjusted extended prices (quote mode) */
+  itemsWithMargin?: InvoiceItem[];
+  /** Whether sales tax is enabled (quote mode) */
+  taxEnabled?: boolean;
+  /** Whether this is a catering event (forces all items taxable) */
+  isCateringEvent?: boolean;
 }
 
 export function LineItems({
@@ -44,6 +53,10 @@ export function LineItems({
   userPickDescriptions = new Set<string>(),
   onTogglePick,
   marginAppliedIndices = new Set<number>(),
+  marginEnabled = false,
+  itemsWithMargin,
+  taxEnabled = false,
+  isCateringEvent = false,
 }: LineItemsProps) {
   // Refs for qty fields so we can programmatically focus
   const qtyRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -188,7 +201,7 @@ export function LineItems({
             </div>
           </div>
 
-          {/* Row 2: Qty, Unit Price, Extended */}
+          {/* Row 2: Qty, Unit Price, Charged (margin), Extended, Taxable */}
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5">
               <Label className="text-xs text-muted-foreground whitespace-nowrap">Qty</Label>
@@ -206,7 +219,9 @@ export function LineItems({
               />
             </div>
             <div className="flex items-center gap-1.5">
-              <Label className="text-xs text-muted-foreground whitespace-nowrap">Price</Label>
+              <Label className="text-xs text-muted-foreground whitespace-nowrap">
+                {marginEnabled ? "Cost" : "Price"}
+              </Label>
               <Input
                 type="number"
                 min={0}
@@ -216,16 +231,37 @@ export function LineItems({
                 onKeyDown={(e) => handleUnitPriceKeyDown(e, index)}
                 name={`lineItem${index}UnitPrice`}
                 inputMode="decimal"
-                className="w-24 h-8 text-sm"
+                className={cn(
+                  "w-24 h-8 text-sm",
+                  marginEnabled && "text-muted-foreground line-through"
+                )}
                 aria-label={`Line item ${index + 1} unit price`}
               />
             </div>
+            {marginEnabled && itemsWithMargin && (
+              <div className="flex items-center gap-1.5">
+                <Label className="text-xs text-violet-600 whitespace-nowrap">Charged</Label>
+                <span
+                  className="text-sm font-medium tabular-nums text-violet-600"
+                  aria-label={`Line item ${index + 1} charged price`}
+                >
+                  ${(Number(itemsWithMargin[index]?.extendedPrice ?? 0) / Math.max(item.quantity, 1)).toFixed(2)}
+                </span>
+              </div>
+            )}
             <div className="flex items-center gap-1.5 ml-auto">
               <span
-                className="text-sm font-medium tabular-nums"
+                className={cn(
+                  "text-sm font-medium tabular-nums",
+                  marginEnabled && "text-violet-600"
+                )}
                 aria-label={`Line item ${index + 1} extended price`}
               >
-                ${Number(item.extendedPrice).toFixed(2)}
+                ${Number(
+                  marginEnabled && itemsWithMargin
+                    ? itemsWithMargin[index]?.extendedPrice ?? 0
+                    : item.extendedPrice
+                ).toFixed(2)}
               </span>
               {marginAppliedIndices.has(index) && (
                 <span
@@ -237,6 +273,39 @@ export function LineItems({
               )}
             </div>
           </div>
+
+          {/* Row 3: Taxable checkbox (only when tax enabled) */}
+          {taxEnabled && (
+            <div className="flex items-center gap-2 pt-1">
+              <Checkbox
+                id={`taxable-${index}`}
+                checked={item.isTaxable}
+                disabled={isCateringEvent}
+                onCheckedChange={(checked) =>
+                  onUpdate(index, { isTaxable: checked === true })
+                }
+                className={cn(
+                  item.isTaxable
+                    ? "data-[checked]:bg-green-600 data-[checked]:border-green-600"
+                    : ""
+                )}
+              />
+              <Label
+                htmlFor={`taxable-${index}`}
+                className={cn(
+                  "text-xs cursor-pointer",
+                  item.isTaxable
+                    ? "text-green-700 dark:text-green-400"
+                    : "text-muted-foreground"
+                )}
+              >
+                Taxable
+                {isCateringEvent && (
+                  <span className="text-muted-foreground ml-1">(catering)</span>
+                )}
+              </Label>
+            </div>
+          )}
         </div>
       ))}
 

@@ -112,12 +112,19 @@ describe("pdfService", () => {
         accountCode: "AC1",
         notes: "Please review",
         totalAmount: 750,
+        marginEnabled: false,
+        taxEnabled: false,
+        taxRate: 0.0975,
+        isCateringEvent: false,
+        cateringDetails: null,
         items: [
           {
             description: "Camera rental",
             quantity: 3,
             unitPrice: "250.00",
             extendedPrice: "750.00",
+            isTaxable: true,
+            costPrice: null,
           },
         ],
       };

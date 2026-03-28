@@ -24,6 +24,7 @@ const links = [
   { href: "/", label: "Dashboard" },
   { href: "/invoices", label: "Invoices" },
   { href: "/quotes", label: "Quotes" },
+  { href: "/calendar", label: "Calendar" },
   { href: "/staff", label: "Staff" },
   { href: "/quick-picks", label: "Quick Picks" },
   { href: "/analytics", label: "Analytics" },

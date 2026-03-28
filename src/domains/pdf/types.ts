@@ -28,6 +28,25 @@ export interface IDPOverlayData {
   totalAmount: string;
 }
 
+export interface QuotePDFCateringDetails {
+  eventName?: string;
+  eventDate: string;
+  startTime: string;
+  endTime: string;
+  location: string;
+  contactName: string;
+  contactPhone: string;
+  contactEmail?: string;
+  headcount?: number;
+  setupRequired: boolean;
+  setupTime?: string;
+  setupInstructions?: string;
+  takedownRequired: boolean;
+  takedownTime?: string;
+  takedownInstructions?: string;
+  specialInstructions?: string;
+}
+
 export interface QuotePDFData {
   quoteNumber: string;
   date: string;
@@ -44,8 +63,15 @@ export interface QuotePDFData {
     quantity: number;
     unitPrice: string;
     extendedPrice: string;
+    isTaxable: boolean;
+    costPrice: string | null;
   }[];
   totalAmount: number;
+  marginEnabled: boolean;
+  taxEnabled: boolean;
+  taxRate: number;
+  isCateringEvent: boolean;
+  cateringDetails: QuotePDFCateringDetails | null;
 }
 
 export interface GenerateInvoicePDFInput {

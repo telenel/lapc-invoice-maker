@@ -30,10 +30,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { LinkIcon } from "lucide-react";
+import { LinkIcon, PrinterIcon } from "lucide-react";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
 import { ShareLinkDialog } from "@/components/quotes/share-link-dialog";
 import { QuoteActivity } from "@/components/quotes/quote-activity";
+import type { CateringDetails } from "@/domains/quote/types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -75,6 +76,8 @@ interface Quote {
   };
   creatorName: string;
   items: QuoteItem[];
+  isCateringEvent: boolean;
+  cateringDetails: unknown;
   convertedToInvoice: {
     id: string;
     invoiceNumber: string | null;
@@ -115,6 +118,25 @@ const statusLabel: Record<QuoteStatus, string> = {
   DECLINED: "Declined",
   EXPIRED: "Expired",
 };
+
+function formatCateringDateTime(catering: CateringDetails): string {
+  const date = new Date(catering.eventDate + "T00:00:00");
+  const dateStr = date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  function formatTime(t: string): string {
+    const [h, m] = t.split(":");
+    const hour = Number(h);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const display = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${display}:${m} ${ampm}`;
+  }
+
+  return `${dateStr}, ${formatTime(catering.startTime)} \u2013 ${formatTime(catering.endTime)}`;
+}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -284,7 +306,7 @@ export function QuoteDetailView({ id }: { id: string }) {
           )}
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap justify-end">
+        <div className="flex items-center gap-2 flex-wrap justify-end" data-print-hide>
           <Badge variant={statusBadgeVariant[status]}>
             {statusLabel[status]}
           </Badge>
@@ -592,6 +614,110 @@ export function QuoteDetailView({ id }: { id: string }) {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Catering Guide */}
+      {quote.isCateringEvent && (() => {
+        const catering = quote.cateringDetails as CateringDetails | null;
+        if (!catering) return null;
+        return (
+          <Card className="catering-guide border-orange-500/20 bg-orange-500/5">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-orange-600 dark:text-orange-400">
+                🍽 Catering Guide
+              </CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                data-print-hide
+                onClick={() => window.print()}
+              >
+                <PrinterIcon className="size-3.5 mr-1.5" />
+                Print Catering Guide
+              </Button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Event name and date/time */}
+              <div>
+                <p className="text-lg font-semibold">
+                  {catering.eventName
+                    ? `${catering.eventName} — ${formatCateringDateTime(catering)}`
+                    : formatCateringDateTime(catering)}
+                </p>
+              </div>
+
+              {/* Location */}
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Location</span>
+                <span className="font-medium">{catering.location}</span>
+              </div>
+
+              {/* Contact */}
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Contact</p>
+                <div className="text-sm space-y-0.5 pl-2">
+                  <p className="font-medium">{catering.contactName}</p>
+                  {catering.contactPhone && <p>{catering.contactPhone}</p>}
+                  {catering.contactEmail && <p>{catering.contactEmail}</p>}
+                </div>
+              </div>
+
+              {/* Headcount */}
+              {catering.headcount != null && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Headcount</span>
+                  <span className="font-medium">{catering.headcount} attendees</span>
+                </div>
+              )}
+
+              <Separator />
+
+              {/* Setup */}
+              {catering.setupRequired && (
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Setup</p>
+                  <div className="text-sm space-y-0.5 pl-2">
+                    {catering.setupTime && (
+                      <p>
+                        <span className="text-muted-foreground">Time:</span> {catering.setupTime}
+                      </p>
+                    )}
+                    {catering.setupInstructions && (
+                      <p className="whitespace-pre-wrap">{catering.setupInstructions}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Takedown */}
+              {catering.takedownRequired && (
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Takedown</p>
+                  <div className="text-sm space-y-0.5 pl-2">
+                    {catering.takedownTime && (
+                      <p>
+                        <span className="text-muted-foreground">Time:</span> {catering.takedownTime}
+                      </p>
+                    )}
+                    {catering.takedownInstructions && (
+                      <p className="whitespace-pre-wrap">{catering.takedownInstructions}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Special Instructions */}
+              {catering.specialInstructions && (
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Special Instructions</p>
+                  <p className="text-sm whitespace-pre-wrap pl-2">
+                    {catering.specialInstructions}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Activity tracking */}
       {(status === "SENT" || status === "ACCEPTED" || status === "DECLINED") && (

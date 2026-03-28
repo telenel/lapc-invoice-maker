@@ -79,10 +79,14 @@ async function main() {
   }
 
   // Seed default global quick picks
+  // Remove legacy tax quick pick (replaced by proper tax system)
+  await prisma.quickPickItem.deleteMany({
+    where: { id: "default-ca-state-tax" },
+  });
+
   const defaultQuickPicks = [
     { id: "default-shipping-fee", department: "__ALL__", description: "Shipping Fee", defaultPrice: 0 },
     { id: "default-service-fee", department: "__ALL__", description: "Service Fee", defaultPrice: 0 },
-    { id: "default-ca-state-tax", department: "__ALL__", description: "CA State Tax (9.5%)", defaultPrice: 0 },
   ];
 
   for (const qp of defaultQuickPicks) {

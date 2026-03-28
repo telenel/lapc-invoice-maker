@@ -397,3 +397,19 @@
   text-decoration: underline;
   text-decoration-style: dotted;
 }
+
+@media print {
+  nav,
+  [data-print-hide] {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .catering-guide {
+    break-inside: avoid;
+  }
+}

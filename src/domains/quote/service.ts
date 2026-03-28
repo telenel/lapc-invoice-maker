@@ -2,6 +2,7 @@
 import * as quoteRepository from "./repository";
 import { pdfService } from "@/domains/pdf/service";
 import { formatDateFromDate } from "@/domains/shared/formatters";
+import type { Prisma } from "@/generated/prisma/client";
 import type {
   QuoteResponse,
   QuoteItemResponse,
@@ -9,6 +10,7 @@ import type {
   CreateQuoteInput,
   UpdateQuoteInput,
   QuoteViewResponse,
+  CateringDetails,
 } from "./types";
 import type { StaffSummary } from "@/domains/staff/types";
 
@@ -31,6 +33,9 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
     unitPrice: Number(item.unitPrice),
     extendedPrice: Number(item.extendedPrice),
     sortOrder: item.sortOrder,
+    isTaxable: item.isTaxable,
+    marginOverride: item.marginOverride != null ? Number(item.marginOverride) : null,
+    costPrice: item.costPrice != null ? Number(item.costPrice) : null,
   }));
 
   return {
@@ -57,6 +62,12 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
     creatorId: quote.creator.id,
     creatorName: quote.creator.name,
     items,
+    isCateringEvent: quote.isCateringEvent,
+    cateringDetails: quote.cateringDetails as CateringDetails | null,
+    marginEnabled: quote.marginEnabled,
+    marginPercent: quote.marginPercent != null ? Number(quote.marginPercent) : null,
+    taxEnabled: quote.taxEnabled,
+    taxRate: Number(quote.taxRate),
     convertedToInvoice: "convertedToInvoice" in quote
       ? (quote.convertedToInvoice as { id: string; invoiceNumber: string | null } | null)
       : null,
@@ -75,6 +86,9 @@ function calculateLineItems(
       unitPrice: price,
       extendedPrice: qty * price,
       sortOrder: item.sortOrder ?? index,
+      isTaxable: item.isTaxable,
+      marginOverride: item.marginOverride,
+      costPrice: item.costPrice,
     };
   });
 }
@@ -261,7 +275,11 @@ export const quoteService = {
     const quoteNumber = await quoteRepository.generateNumber();
 
     const quote = await quoteRepository.create(
-      { ...quoteData, accountCode: quoteData.accountCode ?? "" },
+      {
+        ...quoteData,
+        accountCode: quoteData.accountCode ?? "",
+        cateringDetails: quoteData.cateringDetails as Prisma.InputJsonValue | undefined,
+      },
       calculatedItems,
       totalAmount,
       creatorId,
@@ -409,6 +427,8 @@ export const quoteService = {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
     }
 
+    const cateringRaw = quote.cateringDetails as CateringDetails | null;
+
     const pdfPath = await pdfService.generateQuote({
       quoteNumber: quote.quoteNumber ?? "DRAFT",
       date: formatDateFromDate(new Date(quote.date)),
@@ -427,8 +447,34 @@ export const quoteService = {
         quantity: Number(item.quantity),
         unitPrice: String(Number(item.unitPrice)),
         extendedPrice: String(Number(item.extendedPrice)),
+        isTaxable: item.isTaxable,
+        costPrice: item.costPrice != null ? String(Number(item.costPrice)) : null,
       })),
       totalAmount: Number(quote.totalAmount),
+      marginEnabled: quote.marginEnabled,
+      taxEnabled: quote.taxEnabled,
+      taxRate: Number(quote.taxRate),
+      isCateringEvent: quote.isCateringEvent,
+      cateringDetails: cateringRaw
+        ? {
+            eventName: cateringRaw.eventName,
+            eventDate: cateringRaw.eventDate,
+            startTime: cateringRaw.startTime,
+            endTime: cateringRaw.endTime,
+            location: cateringRaw.location,
+            contactName: cateringRaw.contactName,
+            contactPhone: cateringRaw.contactPhone,
+            contactEmail: cateringRaw.contactEmail,
+            headcount: cateringRaw.headcount,
+            setupRequired: cateringRaw.setupRequired,
+            setupTime: cateringRaw.setupTime,
+            setupInstructions: cateringRaw.setupInstructions,
+            takedownRequired: cateringRaw.takedownRequired,
+            takedownTime: cateringRaw.takedownTime,
+            takedownInstructions: cateringRaw.takedownInstructions,
+            specialInstructions: cateringRaw.specialInstructions,
+          }
+        : null,
     });
 
     const buffer = await pdfService.readPdf(pdfPath);

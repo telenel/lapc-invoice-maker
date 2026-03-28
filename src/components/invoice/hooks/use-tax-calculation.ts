@@ -1,58 +1,45 @@
 "use client";
 
-import { useMemo, useEffect, useRef } from "react";
-import { TAX_RATE } from "@/domains/invoice/constants";
-import type { InvoiceItem, InvoiceFormData } from "./use-invoice-form-state";
+import { useMemo } from "react";
 
-/**
- * Computes the running total from all line items (sum of extendedPrice).
- * Also auto-updates any "Tax" line items to reflect 9.5% of the non-tax subtotal.
- */
+interface TaxableItem {
+  extendedPrice: number;
+  isTaxable: boolean;
+}
+
+interface TaxResult {
+  subtotal: number;
+  taxableAmount: number;
+  taxAmount: number;
+  total: number;
+}
+
 export function useTaxCalculation(
-  items: InvoiceItem[],
-  setForm: React.Dispatch<React.SetStateAction<InvoiceFormData>>
-) {
-  const total = useMemo(
-    () => items.reduce((sum, item) => sum + Number(item.extendedPrice), 0),
-    [items]
-  );
+  items: TaxableItem[],
+  taxEnabled: boolean,
+  taxRate: number
+): TaxResult {
+  return useMemo(() => {
+    const subtotal = items.reduce(
+      (sum, item) => sum + Number(item.extendedPrice),
+      0
+    );
 
-  // Prevent re-entrancy when we update the tax items ourselves
-  const taxUpdateRef = useRef(false);
-
-  useEffect(() => {
-    if (taxUpdateRef.current) {
-      taxUpdateRef.current = false;
-      return;
+    if (!taxEnabled) {
+      return { subtotal, taxableAmount: 0, taxAmount: 0, total: subtotal };
     }
 
-    const hasTaxItem = items.some((item) => item.description.includes("Tax"));
-    if (!hasTaxItem) return;
-
-    const nonTaxSubtotal = items
-      .filter((item) => !item.description.includes("Tax"))
+    const taxableAmount = items
+      .filter((item) => item.isTaxable)
       .reduce((sum, item) => sum + Number(item.extendedPrice), 0);
 
-    const correctTax = Math.round(nonTaxSubtotal * TAX_RATE * 100) / 100;
+    const taxAmount = Math.round(taxableAmount * taxRate * 100) / 100;
 
-    let needsUpdate = false;
-    const updatedItems = items.map((item) => {
-      if (!item.description.includes("Tax")) return item;
-      const currentTax = Math.round(Number(item.unitPrice) * 100) / 100;
-      if (currentTax === correctTax) return item;
-      needsUpdate = true;
-      return {
-        ...item,
-        unitPrice: correctTax,
-        extendedPrice: correctTax * item.quantity,
-      };
-    });
-
-    if (needsUpdate) {
-      taxUpdateRef.current = true;
-      setForm((prev) => ({ ...prev, items: updatedItems }));
-    }
-  }, [items, setForm]);
-
-  return { total };
+    return {
+      subtotal,
+      taxableAmount,
+      taxAmount,
+      total: Math.round((subtotal + taxAmount) * 100) / 100,
+    };
+  }, [items, taxEnabled, taxRate]);
 }

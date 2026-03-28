@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useInvoiceForm, InvoiceFormData } from "@/components/invoice/invoice-form";
 import { KeyboardMode } from "@/components/invoice/keyboard-mode";
+import { TAX_RATE } from "@/domains/invoice/constants";
 
 interface ApiInvoiceItem {
   description: string;
@@ -11,6 +12,9 @@ interface ApiInvoiceItem {
   unitPrice: string | number;
   extendedPrice: string | number;
   sortOrder: number;
+  isTaxable?: boolean;
+  marginOverride?: number | null;
+  costPrice?: string | number | null;
 }
 
 interface ApiInvoice {
@@ -30,6 +34,10 @@ interface ApiInvoice {
   semesterYearDept: string | null;
   notes: string | null;
   status: string;
+  marginEnabled?: boolean;
+  marginPercent?: number;
+  taxEnabled?: boolean;
+  taxRate?: number;
   prismcorePath: string | null;
   isRunning: boolean;
   runningTitle: string | null;
@@ -60,6 +68,10 @@ function mapApiToFormData(invoice: ApiInvoice): InvoiceFormData {
     notes: invoice.notes ?? "",
     isRunning: invoice.isRunning ?? false,
     runningTitle: invoice.runningTitle ?? "",
+    marginEnabled: invoice.marginEnabled ?? false,
+    marginPercent: invoice.marginPercent ?? 0,
+    taxEnabled: invoice.taxEnabled ?? false,
+    taxRate: invoice.taxRate ?? TAX_RATE,
     isRecurring: invoice.isRecurring ?? false,
     recurringInterval: invoice.recurringInterval ?? "",
     recurringEmail: invoice.recurringEmail ?? "",
@@ -72,6 +84,9 @@ function mapApiToFormData(invoice: ApiInvoice): InvoiceFormData {
       unitPrice: Number(item.unitPrice),
       extendedPrice: Number(item.extendedPrice),
       sortOrder: item.sortOrder,
+      isTaxable: item.isTaxable ?? true,
+      marginOverride: item.marginOverride ?? null,
+      costPrice: item.costPrice != null ? Number(item.costPrice) : null,
     })),
   };
 }

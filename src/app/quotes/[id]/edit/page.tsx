@@ -11,6 +11,28 @@ interface ApiQuoteItem {
   unitPrice: string | number;
   extendedPrice: string | number;
   sortOrder: number;
+  isTaxable?: boolean;
+  marginOverride?: number | null;
+  costPrice?: string | number | null;
+}
+
+interface ApiCateringDetails {
+  eventDate: string;
+  startTime: string;
+  endTime: string;
+  location: string;
+  contactName: string;
+  contactPhone: string;
+  contactEmail?: string;
+  headcount?: number;
+  eventName?: string;
+  setupRequired: boolean;
+  setupTime?: string;
+  setupInstructions?: string;
+  takedownRequired: boolean;
+  takedownTime?: string;
+  takedownInstructions?: string;
+  specialInstructions?: string;
 }
 
 interface ApiQuote {
@@ -28,6 +50,11 @@ interface ApiQuote {
   recipientEmail: string | null;
   recipientOrg: string | null;
   quoteStatus: string;
+  marginEnabled?: boolean;
+  marginPercent?: number;
+  taxEnabled?: boolean;
+  isCateringEvent?: boolean;
+  cateringDetails?: ApiCateringDetails | null;
   items: ApiQuoteItem[];
 }
 
@@ -49,12 +76,56 @@ function mapApiToFormData(quote: ApiQuote): QuoteFormData {
     recipientName: quote.recipientName ?? "",
     recipientEmail: quote.recipientEmail ?? "",
     recipientOrg: quote.recipientOrg ?? "",
+    marginEnabled: quote.marginEnabled ?? false,
+    marginPercent: quote.marginPercent ?? 0,
+    taxEnabled: quote.taxEnabled ?? false,
+    isCateringEvent: quote.isCateringEvent ?? false,
+    cateringDetails: quote.cateringDetails
+      ? {
+          eventDate: quote.cateringDetails.eventDate,
+          startTime: quote.cateringDetails.startTime,
+          endTime: quote.cateringDetails.endTime,
+          location: quote.cateringDetails.location,
+          contactName: quote.cateringDetails.contactName,
+          contactPhone: quote.cateringDetails.contactPhone,
+          contactEmail: quote.cateringDetails.contactEmail ?? "",
+          headcount: quote.cateringDetails.headcount,
+          eventName: quote.cateringDetails.eventName ?? "",
+          setupRequired: quote.cateringDetails.setupRequired,
+          setupTime: quote.cateringDetails.setupTime ?? "",
+          setupInstructions: quote.cateringDetails.setupInstructions ?? "",
+          takedownRequired: quote.cateringDetails.takedownRequired,
+          takedownTime: quote.cateringDetails.takedownTime ?? "",
+          takedownInstructions: quote.cateringDetails.takedownInstructions ?? "",
+          specialInstructions: quote.cateringDetails.specialInstructions ?? "",
+        }
+      : {
+          eventDate: new Date().toISOString().split("T")[0],
+          startTime: "",
+          endTime: "",
+          location: "",
+          contactName: "",
+          contactPhone: "",
+          contactEmail: "",
+          headcount: undefined,
+          eventName: "",
+          setupRequired: false,
+          setupTime: "",
+          setupInstructions: "",
+          takedownRequired: false,
+          takedownTime: "",
+          takedownInstructions: "",
+          specialInstructions: "",
+        },
     items: quote.items.map((item) => ({
       description: item.description,
       quantity: Number(item.quantity),
       unitPrice: Number(item.unitPrice),
       extendedPrice: Number(item.extendedPrice),
       sortOrder: item.sortOrder,
+      isTaxable: item.isTaxable ?? true,
+      marginOverride: item.marginOverride ?? null,
+      costPrice: item.costPrice != null ? Number(item.costPrice) : null,
     })),
   };
 }

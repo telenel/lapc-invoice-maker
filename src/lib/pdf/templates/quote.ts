@@ -1,5 +1,33 @@
 import { escapeHtml } from "@/lib/html";
 
+export interface CateringDetailsPDF {
+  eventName?: string;
+  eventDate: string;
+  startTime: string;
+  endTime: string;
+  location: string;
+  contactName: string;
+  contactPhone: string;
+  contactEmail?: string;
+  headcount?: number;
+  setupRequired: boolean;
+  setupTime?: string;
+  setupInstructions?: string;
+  takedownRequired: boolean;
+  takedownTime?: string;
+  takedownInstructions?: string;
+  specialInstructions?: string;
+}
+
+export interface QuotePDFItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  extendedPrice: number;
+  isTaxable: boolean;
+  costPrice: number | null;
+}
+
 export interface QuotePDFData {
   quoteNumber: string;
   date: string;
@@ -11,16 +39,67 @@ export interface QuotePDFData {
   category: string;
   accountCode: string;
   notes: string;
-  items: { description: string; quantity: number; unitPrice: number; extendedPrice: number }[];
+  items: QuotePDFItem[];
   totalAmount: number;
   logoDataUri?: string;
+  marginEnabled: boolean;
+  taxEnabled: boolean;
+  taxRate: number;
+  isCateringEvent: boolean;
+  cateringDetails: CateringDetailsPDF | null;
 }
 
 function formatCurrency(amount: number): string {
   return `$${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+function renderCateringSection(details: CateringDetailsPDF): string {
+  const rows: string[] = [];
+
+  if (details.eventName) {
+    rows.push(`<tr><td style="padding:4px 8px;font-weight:bold;width:160px;vertical-align:top;">Event Name</td><td style="padding:4px 8px;">${escapeHtml(details.eventName)}</td></tr>`);
+  }
+  rows.push(`<tr><td style="padding:4px 8px;font-weight:bold;vertical-align:top;">Date</td><td style="padding:4px 8px;">${escapeHtml(details.eventDate)}</td></tr>`);
+  rows.push(`<tr><td style="padding:4px 8px;font-weight:bold;vertical-align:top;">Time</td><td style="padding:4px 8px;">${escapeHtml(details.startTime)} &ndash; ${escapeHtml(details.endTime)}</td></tr>`);
+  rows.push(`<tr><td style="padding:4px 8px;font-weight:bold;vertical-align:top;">Location</td><td style="padding:4px 8px;">${escapeHtml(details.location)}</td></tr>`);
+  rows.push(`<tr><td style="padding:4px 8px;font-weight:bold;vertical-align:top;">Contact</td><td style="padding:4px 8px;">${escapeHtml(details.contactName)} &bull; ${escapeHtml(details.contactPhone)}${details.contactEmail ? ` &bull; ${escapeHtml(details.contactEmail)}` : ""}</td></tr>`);
+
+  if (details.headcount != null) {
+    rows.push(`<tr><td style="padding:4px 8px;font-weight:bold;vertical-align:top;">Headcount</td><td style="padding:4px 8px;">${escapeHtml(details.headcount)}</td></tr>`);
+  }
+
+  if (details.setupRequired) {
+    const setupParts: string[] = [];
+    if (details.setupTime) setupParts.push(escapeHtml(details.setupTime));
+    if (details.setupInstructions) setupParts.push(escapeHtml(details.setupInstructions));
+    rows.push(`<tr><td style="padding:4px 8px;font-weight:bold;vertical-align:top;">Setup</td><td style="padding:4px 8px;">${setupParts.length > 0 ? setupParts.join(" &mdash; ") : "Yes"}</td></tr>`);
+  }
+
+  if (details.takedownRequired) {
+    const takedownParts: string[] = [];
+    if (details.takedownTime) takedownParts.push(escapeHtml(details.takedownTime));
+    if (details.takedownInstructions) takedownParts.push(escapeHtml(details.takedownInstructions));
+    rows.push(`<tr><td style="padding:4px 8px;font-weight:bold;vertical-align:top;">Takedown</td><td style="padding:4px 8px;">${takedownParts.length > 0 ? takedownParts.join(" &mdash; ") : "Yes"}</td></tr>`);
+  }
+
+  if (details.specialInstructions) {
+    rows.push(`<tr><td style="padding:4px 8px;font-weight:bold;vertical-align:top;">Special Instructions</td><td style="padding:4px 8px;">${escapeHtml(details.specialInstructions)}</td></tr>`);
+  }
+
+  return `
+<!-- Catering Details -->
+<div style="margin-top:16px;margin-bottom:16px;">
+  <div style="font-weight:bold;color:#1a3a5c;text-transform:uppercase;font-size:9px;letter-spacing:1px;margin-bottom:6px;border-bottom:2px solid #1a3a5c;padding-bottom:4px;">Catering Event Details</div>
+  <table style="width:100%;border-collapse:collapse;font-size:11px;">
+    ${rows.join("\n    ")}
+  </table>
+</div>`;
+}
+
 export function renderQuote(data: QuotePDFData): string {
+  // When margin is enabled, the unitPrice/extendedPrice already reflect the
+  // marked-up price. The customer just sees these as the price — no indication
+  // of markup in the PDF.
   const itemRows = data.items
     .map(
       (item) => `
@@ -34,6 +113,15 @@ export function renderQuote(data: QuotePDFData): string {
     .join("\n");
 
   const subtotal = data.items.reduce((sum, item) => sum + item.extendedPrice, 0);
+
+  // Calculate tax: sum extended prices of taxable items * tax rate
+  const taxableSubtotal = data.taxEnabled
+    ? data.items
+        .filter((item) => item.isTaxable)
+        .reduce((sum, item) => sum + item.extendedPrice, 0)
+    : 0;
+  const taxAmount = data.taxEnabled ? Math.round(taxableSubtotal * data.taxRate * 100) / 100 : 0;
+  const taxRatePercent = (data.taxRate * 100).toFixed(2).replace(/\.?0+$/, "");
 
   return `<!DOCTYPE html>
 <html>
@@ -101,13 +189,23 @@ export function renderQuote(data: QuotePDFData): string {
 
 <!-- Total -->
 <div style="display:flex;justify-content:flex-end;margin-bottom:24px;">
-  <div style="width:220px;">
-    <div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #e0e0e0;">
-      <span>Subtotal</span><span>${escapeHtml(formatCurrency(subtotal))}</span>
-    </div>
-    <div style="display:flex;justify-content:space-between;padding:8px 0;font-weight:bold;font-size:13px;color:#1a3a5c;">
-      <span>Total</span><span>${escapeHtml(formatCurrency(data.totalAmount))}</span>
-    </div>
+  <div style="width:240px;">
+    <table style="width:100%;border-collapse:collapse;">
+      <tr>
+        <td style="padding:4px 0;">Subtotal:</td>
+        <td style="padding:4px 0;text-align:right;">${escapeHtml(formatCurrency(subtotal))}</td>
+      </tr>
+      ${data.taxEnabled ? `
+      <tr>
+        <td style="padding:4px 0;">CA Sales Tax (${escapeHtml(taxRatePercent)}%):</td>
+        <td style="padding:4px 0;text-align:right;">${escapeHtml(formatCurrency(taxAmount))}</td>
+      </tr>
+      ` : ""}
+      <tr style="font-weight:bold;font-size:13px;color:#1a3a5c;">
+        <td style="padding:8px 0;border-top:1px solid #e0e0e0;">Total:</td>
+        <td style="padding:8px 0;border-top:1px solid #e0e0e0;text-align:right;">${escapeHtml(formatCurrency(subtotal + taxAmount))}</td>
+      </tr>
+    </table>
   </div>
 </div>
 
@@ -117,6 +215,8 @@ ${data.notes ? `
   <strong>Notes:</strong> ${escapeHtml(data.notes)}
 </div>
 ` : ""}
+
+${data.isCateringEvent && data.cateringDetails ? renderCateringSection(data.cateringDetails) : ""}
 
 <!-- Footer -->
 <div style="margin-top:20px;padding-top:12px;border-top:1px solid #ddd;text-align:center;color:#999;font-size:9px;">

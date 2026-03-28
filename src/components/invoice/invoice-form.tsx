@@ -23,10 +23,15 @@ export function useInvoiceForm(
   initial?: Partial<InvoiceFormData>,
   existingId?: string
 ) {
-  const { form, setForm, updateField, updateItem, addItem, removeItem } =
+  const { form, setForm, updateField, updateItem, addItem, removeItem, total, itemsWithMargin } =
     useInvoiceFormState(initial);
 
-  const { total } = useTaxCalculation(form.items, setForm);
+  const taxItems = form.marginEnabled ? itemsWithMargin : form.items;
+  const { subtotal, taxAmount, total: grandTotal } = useTaxCalculation(
+    taxItems,
+    form.taxEnabled,
+    form.taxRate
+  );
 
   const { staffAccountNumbers, originalStaffRef, handleStaffSelect, handleStaffEdit } =
     useStaffAutofill(setForm);
@@ -52,6 +57,10 @@ export function useInvoiceForm(
     addItem,
     removeItem,
     total,
+    itemsWithMargin,
+    subtotal,
+    taxAmount,
+    grandTotal,
     handleStaffSelect,
     handleStaffEdit,
     staffAccountNumbers,
