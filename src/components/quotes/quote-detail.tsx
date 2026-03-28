@@ -30,7 +30,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { LinkIcon } from "lucide-react";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
+import { ShareLinkDialog } from "@/components/quotes/share-link-dialog";
+import { QuoteActivity } from "@/components/quotes/quote-activity";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -61,6 +64,7 @@ interface Quote {
   recipientName: string | null;
   recipientEmail: string | null;
   recipientOrg: string | null;
+  shareToken: string | null;
   staff: {
     id: string;
     name: string;
@@ -126,6 +130,8 @@ export function QuoteDetailView({ id }: { id: string }) {
   const [declining, setDeclining] = useState(false);
   const [sending, setSending] = useState(false);
   const [converting, setConverting] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchQuote() {
@@ -176,17 +182,29 @@ export function QuoteDetailView({ id }: { id: string }) {
         const data = await res.json();
         toast.error(data.error ?? "Failed to mark quote as sent");
       } else {
+        const data = await res.json();
         toast.success("Quote marked as sent");
+        setShareUrl(data.shareUrl);
+        setShareDialogOpen(true);
+        // Refresh quote data
         const refreshRes = await fetch(`/api/quotes/${id}`);
         if (refreshRes.ok) {
-          const data: Quote = await refreshRes.json();
-          setQuote(data);
+          const refreshData: Quote = await refreshRes.json();
+          setQuote(refreshData);
         }
       }
     } catch {
       toast.error("Failed to mark quote as sent");
     } finally {
       setSending(false);
+    }
+  }
+
+  async function handleShareLink() {
+    if (!quote) return;
+    if (quote.shareToken) {
+      setShareUrl(`${window.location.origin}/quotes/review/${quote.shareToken}`);
+      setShareDialogOpen(true);
     }
   }
 
@@ -299,6 +317,14 @@ export function QuoteDetailView({ id }: { id: string }) {
           >
             Download PDF
           </Button>
+
+          {/* Share Link: SENT, ACCEPTED, DECLINED (has shareToken) */}
+          {status !== "DRAFT" && quote.shareToken && (
+            <Button variant="outline" size="sm" onClick={handleShareLink}>
+              <LinkIcon className="size-3.5 mr-1.5" />
+              Share Link
+            </Button>
+          )}
 
           {/* Mark as Sent: DRAFT only */}
           {status === "DRAFT" && (
@@ -566,6 +592,22 @@ export function QuoteDetailView({ id }: { id: string }) {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Activity tracking */}
+      {(status === "SENT" || status === "ACCEPTED" || status === "DECLINED") && (
+        <QuoteActivity quoteId={id} />
+      )}
+
+      {/* Share Link Dialog */}
+      {shareUrl && (
+        <ShareLinkDialog
+          open={shareDialogOpen}
+          onOpenChange={setShareDialogOpen}
+          shareUrl={shareUrl}
+          quoteNumber={quote.quoteNumber}
+          recipientEmail={quote.recipientEmail}
+        />
+      )}
     </div>
   );
 }
