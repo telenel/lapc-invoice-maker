@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LAPC InvoiceMaker
 
-## Getting Started
+Invoice generation webapp for **Los Angeles Pierce College**. Handles the full lifecycle of inter-department purchase orders: invoice creation, quote management, PDF generation, staff directory, and admin operations.
 
-First, run the development server:
+**Live:** [invoice.montalvo.io](https://invoice.montalvo.io)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Features
+
+- **Invoice creation** with keyboard-first workflow, staff autofill, line items, tax calculation, and approval chains
+- **PDF generation** — cover sheets (Puppeteer), IDP forms (pdf-lib), PrismCore merge
+- **Quote management** — create, send, auto-expire, convert to invoice
+- **Staff directory** — CRUD with account numbers, signer history tracking
+- **Admin panel** — user management, account codes, invoice manager with inline editing, saved line items catalog, analytics dashboard
+- **Dark/light theme** with UI scale controls
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 14 (App Router) |
+| Database | PostgreSQL + Prisma 7 |
+| Styling | Tailwind CSS 4 + shadcn/ui v4 |
+| Auth | NextAuth (JWT + Credentials) |
+| PDF | Puppeteer + pdf-lib |
+| Testing | Vitest + React Testing Library |
+| Deploy | Docker Compose, Traefik, GitHub Actions CI/CD |
+
+## Architecture
+
+Domain module architecture with isolated layers:
+
+```
+Route Handler → withAuth() → Domain Service → Domain Repository → Prisma
+Component → Domain API Client → Domain Hooks → Domain Types (DTOs)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+12 domain modules under `src/domains/` — each with types, repository, service, api-client, and hooks as needed. See [docs/PROJECT-OVERVIEW.md](docs/PROJECT-OVERVIEW.md) for full architecture details.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Development
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install              # Install dependencies
+npx prisma generate      # Generate Prisma client
+npm run dev              # Start dev server (localhost:3000)
+npm test                 # Run tests (350 tests)
+npm run build            # Production build
+```
 
-## Learn More
+### Database
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npx prisma migrate dev --name <name>   # Create migration
+npx prisma db seed                     # Seed database
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Environment Variables
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+DATABASE_URL=postgresql://user:pass@localhost:5432/invoicemaker
+NEXTAUTH_SECRET=<secret>
+NEXTAUTH_URL=http://localhost:3000
+```
 
-## Deploy on Vercel
+## Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Docker Compose behind Traefik on [montalvo.io](https://montalvo.io). CI/CD via GitHub Actions — push to main triggers lint, build, test, then webhook deploy.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+All changes go through PRs with squash merge. Build version (git SHA) is displayed in the nav bar.
+
+## Project Documentation
+
+- [CLAUDE.md](CLAUDE.md) — Quick reference for AI agents and contributors
+- [docs/PROJECT-OVERVIEW.md](docs/PROJECT-OVERVIEW.md) — Comprehensive architecture, workflows, API reference
+- [docs/superpowers/specs/](docs/superpowers/specs/) — Design specifications
+- [docs/superpowers/plans/](docs/superpowers/plans/) — Implementation plans
+
+## License
+
+Private project for Los Angeles Pierce College.
