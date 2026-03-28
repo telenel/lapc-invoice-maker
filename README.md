@@ -70,7 +70,6 @@ All changes go through PRs with squash merge. Build version (git SHA) is display
 
 ## Project Documentation
 
-- [CLAUDE.md](CLAUDE.md) — Quick reference for AI agents and contributors
 - [docs/PROJECT-OVERVIEW.md](docs/PROJECT-OVERVIEW.md) — Comprehensive architecture, workflows, API reference
 - [docs/superpowers/specs/](docs/superpowers/specs/) — Design specifications
 - [docs/superpowers/plans/](docs/superpowers/plans/) — Implementation plans
