@@ -8,6 +8,7 @@ import type {
   QuoteFilters,
   CreateQuoteInput,
   UpdateQuoteInput,
+  QuoteViewResponse,
 } from "./types";
 import type { StaffSummary } from "@/domains/staff/types";
 
@@ -50,6 +51,7 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
     recipientEmail: quote.recipientEmail ?? "",
     recipientOrg: quote.recipientOrg ?? "",
     pdfPath: quote.pdfPath,
+    shareToken: quote.shareToken ?? null,
     createdAt: quote.createdAt.toISOString(),
     staff,
     creatorName: quote.creator.name,
@@ -116,6 +118,136 @@ export const quoteService = {
     }
 
     return toQuoteResponse(quote);
+  },
+
+  /**
+   * Get a quote by its share token (for public access).
+   */
+  async getByShareToken(token: string): Promise<QuoteResponse | null> {
+    const quote = await quoteRepository.findByShareToken(token);
+    if (!quote || quote.type !== "QUOTE") return null;
+
+    // Auto-expire if past expiration date
+    if (
+      quote.expirationDate &&
+      new Date(quote.expirationDate) < new Date() &&
+      (quote.quoteStatus === "DRAFT" || quote.quoteStatus === "SENT")
+    ) {
+      await quoteRepository.update(quote.id, { quoteStatus: "EXPIRED" });
+      quote.quoteStatus = "EXPIRED";
+    }
+
+    return toQuoteResponse(quote);
+  },
+
+  /**
+   * Get the share token for a quote (for share link dialog on already-sent quotes).
+   */
+  async getShareToken(id: string): Promise<string | null> {
+    return quoteRepository.getShareToken(id);
+  },
+
+  /**
+   * Record a quote page view and optionally trigger a notification.
+   */
+  async recordView(
+    token: string,
+    data: { ipAddress?: string; userAgent?: string; referrer?: string; viewport?: string }
+  ): Promise<{ viewId: string } | null> {
+    const quote = await quoteRepository.findByShareToken(token);
+    if (!quote || quote.type !== "QUOTE") return null;
+
+    const view = await quoteRepository.createView({
+      invoiceId: quote.id,
+      ...data,
+    });
+
+    // Debounce: only notify if no view in last 10 minutes
+    const hasRecent = await quoteRepository.hasRecentView(quote.id, 10);
+    if (!hasRecent) {
+      const { notificationService } = await import("@/domains/notification/service");
+      await notificationService.createAndPublish({
+        userId: quote.createdBy,
+        type: "QUOTE_VIEWED",
+        title: `${quote.quoteNumber ?? "Quote"} was viewed`,
+        message: quote.recipientName ? `Viewed by ${quote.recipientName}` : "Someone viewed your quote",
+        quoteId: quote.id,
+      });
+    }
+
+    return { viewId: view.id };
+  },
+
+  /**
+   * Update the duration of a page view (called via sendBeacon).
+   */
+  async updateViewDuration(viewId: string, durationSeconds: number): Promise<void> {
+    await quoteRepository.updateViewDuration(viewId, durationSeconds);
+  },
+
+  /**
+   * Handle a recipient's response (approve/decline) to a quote.
+   */
+  async respondToQuote(
+    token: string,
+    response: "ACCEPTED" | "DECLINED",
+    viewId?: string
+  ): Promise<{ success: boolean; status: string } | null> {
+    const quote = await quoteRepository.findByShareToken(token);
+    if (!quote || quote.type !== "QUOTE") return null;
+
+    if (quote.quoteStatus !== "SENT") {
+      throw Object.assign(
+        new Error(
+          quote.quoteStatus === "ACCEPTED" || quote.quoteStatus === "DECLINED"
+            ? "This quote has already been responded to"
+            : "This quote is no longer available"
+        ),
+        { code: "FORBIDDEN" }
+      );
+    }
+
+    // Check expiration
+    if (quote.expirationDate && new Date(quote.expirationDate) < new Date()) {
+      await quoteRepository.update(quote.id, { quoteStatus: "EXPIRED" });
+      throw Object.assign(new Error("This quote has expired"), { code: "FORBIDDEN" });
+    }
+
+    await quoteRepository.update(quote.id, { quoteStatus: response });
+
+    if (viewId) {
+      await quoteRepository.updateViewResponse(viewId, response);
+    }
+
+    const { notificationService } = await import("@/domains/notification/service");
+    const notifType = response === "ACCEPTED" ? "QUOTE_APPROVED" : "QUOTE_DECLINED";
+    const verb = response === "ACCEPTED" ? "approved" : "declined";
+    await notificationService.createAndPublish({
+      userId: quote.createdBy,
+      type: notifType,
+      title: `${quote.quoteNumber ?? "Quote"} was ${verb}`,
+      message: quote.recipientName ? `${verb.charAt(0).toUpperCase() + verb.slice(1)} by ${quote.recipientName}` : undefined,
+      quoteId: quote.id,
+    });
+
+    return { success: true, status: response };
+  },
+
+  /**
+   * Get all views for a quote (for activity display on detail page).
+   */
+  async getViews(id: string): Promise<QuoteViewResponse[]> {
+    const views = await quoteRepository.findViewsByInvoiceId(id);
+    return views.map((v) => ({
+      id: v.id,
+      viewedAt: v.viewedAt.toISOString(),
+      ipAddress: v.ipAddress,
+      userAgent: v.userAgent,
+      referrer: v.referrer,
+      viewport: v.viewport,
+      durationSeconds: v.durationSeconds,
+      respondedWith: v.respondedWith,
+    }));
   },
 
   /**
@@ -188,9 +320,10 @@ export const quoteService = {
   },
 
   /**
-   * Mark a DRAFT quote as SENT.
+   * Mark a DRAFT quote as SENT and generate a share token.
+   * Returns the share token for URL construction.
    */
-  async markSent(id: string): Promise<void> {
+  async markSent(id: string): Promise<{ shareToken: string }> {
     const quote = await quoteRepository.findById(id);
     if (!quote || quote.type !== "QUOTE") {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
@@ -201,7 +334,9 @@ export const quoteService = {
         { code: "FORBIDDEN" }
       );
     }
-    await quoteRepository.markSent(id);
+    const shareToken = quote.shareToken ?? crypto.randomUUID();
+    await quoteRepository.markSentWithToken(id, shareToken);
+    return { shareToken };
   },
 
   /**

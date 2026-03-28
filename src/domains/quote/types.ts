@@ -34,6 +34,7 @@ export interface QuoteResponse {
   recipientEmail: string;
   recipientOrg: string;
   pdfPath: string | null;
+  shareToken: string | null;
   createdAt: string;
   staff: StaffSummary;
   creatorName: string;
@@ -94,4 +95,15 @@ export interface QuoteFilters {
   pageSize?: number;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
+}
+
+export interface QuoteViewResponse {
+  id: string;
+  viewedAt: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  referrer: string | null;
+  viewport: string | null;
+  durationSeconds: number | null;
+  respondedWith: string | null;
 }
