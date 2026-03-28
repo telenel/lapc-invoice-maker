@@ -1,74 +1,22 @@
+// src/app/api/staff/[id]/account-numbers/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { withAuth } from "@/domains/shared/auth";
+import { staffService } from "@/domains/staff/service";
 import { staffAccountNumberSchema } from "@/lib/validators";
 
-// GET /api/staff/:id/account-numbers — list account numbers for a staff member, most recent first
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const session = await getServerSession(authOptions);
-  if (!session)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export const GET = withAuth(async (req, session, ctx) => {
+  const { id } = await ctx!.params;
+  const accounts = await staffService.getAccountNumbers(id);
+  return NextResponse.json(accounts);
+});
 
-  try {
-    const accounts = await prisma.staffAccountNumber.findMany({
-      where: { staffId: params.id },
-      orderBy: { lastUsedAt: "desc" },
-    });
-
-    return NextResponse.json(accounts);
-  } catch (err) {
-    console.error("GET /api/staff/[id]/account-numbers failed:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
-}
-
-// POST /api/staff/:id/account-numbers — add or update an account number
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const session = await getServerSession(authOptions);
-  if (!session)
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const body = await request.json();
-  const parsed = staffAccountNumberSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: parsed.error.flatten() },
-      { status: 400 }
-    );
-  }
-
-  const { accountCode, description } = parsed.data;
-
-  try {
-    // Upsert: create if new, update lastUsedAt + description if exists
-    const account = await prisma.staffAccountNumber.upsert({
-      where: {
-        staffId_accountCode: {
-          staffId: params.id,
-          accountCode: accountCode.trim(),
-        },
-      },
-      update: {
-        lastUsedAt: new Date(),
-        ...(description !== undefined ? { description } : {}),
-      },
-      create: {
-        staffId: params.id,
-        accountCode: accountCode.trim(),
-        description: description?.trim() ?? "",
-      },
-    });
-
-    return NextResponse.json(account, { status: 201 });
-  } catch (err) {
-    console.error("POST /api/staff/[id]/account-numbers failed:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
-}
+export const POST = withAuth(async (req, session, ctx) => {
+  const { id } = await ctx!.params;
+  const body = staffAccountNumberSchema.parse(await req.json());
+  await staffService.upsertAccountNumber({
+    staffId: id,
+    accountCode: body.accountCode.trim(),
+    description: body.description?.trim(),
+  });
+  return NextResponse.json({ success: true }, { status: 201 });
+});
