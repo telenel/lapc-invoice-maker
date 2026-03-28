@@ -68,6 +68,11 @@ export function Nav() {
             <img src="/lapc-logo.png" alt="LAPC" width={22} style={{ height: "22px" }} />
           </div>
           <span className="font-bold tracking-tight text-lg">InvoiceMaker</span>
+          {process.env.NEXT_PUBLIC_BUILD_SHA && (
+            <span className="text-[10px] text-muted-foreground/50 font-mono -ml-1 mt-1.5 select-all" title={`Built ${process.env.NEXT_PUBLIC_BUILD_TIME ?? ""}`}>
+              {process.env.NEXT_PUBLIC_BUILD_SHA}
+            </span>
+          )}
         </Link>
         <div className="flex gap-0.5">
           {links.map((link) => {
