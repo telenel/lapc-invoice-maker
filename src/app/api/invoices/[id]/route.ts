@@ -1,161 +1,50 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { withAuth } from "@/domains/shared/auth";
+import { invoiceService } from "@/domains/invoice/service";
 import { invoiceUpdateSchema } from "@/lib/validators";
-import { unlink } from "fs/promises";
-import path from "path";
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const { id } = params;
-
+export const GET = withAuth(async (_req: NextRequest, _session, ctx) => {
+  const { id } = await ctx!.params;
   try {
-    const invoice = await prisma.invoice.findUnique({
-      where: { id },
-      include: {
-        staff: { select: { id: true, name: true, title: true, department: true, extension: true, email: true } },
-        creator: { select: { id: true, name: true, username: true } },
-        items: { orderBy: { sortOrder: "asc" } },
-      },
-    });
-
-    if (!invoice) {
-      return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
-    }
-
+    const invoice = await invoiceService.getById(id);
+    if (!invoice) return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
     return NextResponse.json(invoice);
   } catch (err) {
     console.error("GET /api/invoices/[id] failed:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-}
+});
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+export const PUT = withAuth(async (req: NextRequest, _session, ctx) => {
+  const { id } = await ctx!.params;
+  const body = await req.json();
+  const parsed = invoiceUpdateSchema.safeParse(body);
 
-  const { id } = params;
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
 
   try {
-    const existing = await prisma.invoice.findUnique({ where: { id } });
-    if (!existing) {
-      return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
-    }
-    if (existing.status === "FINAL") {
-      return NextResponse.json({ error: "Cannot update a finalized invoice" }, { status: 400 });
-    }
-
-    const body = await request.json();
-    const parsed = invoiceUpdateSchema.safeParse(body);
-
-    if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-    }
-
-    const { items, date, ...invoiceData } = parsed.data;
-
-    const updateData: Record<string, unknown> = { ...invoiceData };
-    if (date) {
-      updateData.date = new Date(date);
-    }
-
-    const include = {
-      staff: { select: { id: true, name: true, title: true, department: true, extension: true, email: true } },
-      creator: { select: { id: true, name: true, username: true } },
-      items: { orderBy: { sortOrder: "asc" } },
-    } as const;
-
-    let invoice;
-    if (items) {
-      const calculatedItems = items.map((item) => {
-        const extendedPrice = Number(item.quantity) * Number(item.unitPrice);
-        return { ...item, extendedPrice };
-      });
-      const totalAmount = calculatedItems.reduce((sum, item) => sum + Number(item.extendedPrice), 0);
-      updateData.totalAmount = totalAmount;
-
-      [, invoice] = await prisma.$transaction([
-        prisma.invoiceItem.deleteMany({ where: { invoiceId: id } }),
-        prisma.invoice.update({
-          where: { id },
-          data: {
-            ...updateData,
-            items: {
-              create: calculatedItems.map((item) => ({
-                description: item.description,
-                quantity: item.quantity,
-                unitPrice: item.unitPrice,
-                extendedPrice: item.extendedPrice,
-                sortOrder: item.sortOrder,
-              })),
-            },
-          },
-          include,
-        }),
-      ]);
-    } else {
-      invoice = await prisma.invoice.update({ where: { id }, data: updateData, include });
-    }
-
+    const invoice = await invoiceService.update(id, parsed.data);
     return NextResponse.json(invoice);
   } catch (err) {
+    const code = (err as { code?: string }).code;
+    if (code === "NOT_FOUND") return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
+    if (code === "FORBIDDEN") return NextResponse.json({ error: (err as Error).message }, { status: 400 });
     console.error("PUT /api/invoices/[id] failed:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const { id } = params;
-
+export const DELETE = withAuth(async (_req: NextRequest, _session, ctx) => {
+  const { id } = await ctx!.params;
   try {
-    const invoice = await prisma.invoice.findUnique({ where: { id } });
-    if (!invoice) {
-      return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
-    }
-
-    // Delete PDF file from disk if FINAL and has pdfPath
-    if (invoice.status === "FINAL" && invoice.pdfPath) {
-      try {
-        await unlink(invoice.pdfPath);
-      } catch {
-        // File may not exist on disk — ignore
-      }
-    }
-
-    // Delete prismcore file if present
-    if (invoice.prismcorePath) {
-      try {
-        const uploadsDir = path.resolve(process.cwd(), "public", "uploads");
-        const prismcoreFullPath = path.resolve(process.cwd(), "public", invoice.prismcorePath);
-        if (prismcoreFullPath.startsWith(uploadsDir + path.sep)) {
-          await unlink(prismcoreFullPath);
-        }
-      } catch {
-        // File may not exist on disk — ignore
-      }
-    }
-
-    // Delete the invoice (Prisma cascade will handle items)
-    await prisma.invoice.delete({ where: { id } });
-
+    await invoiceService.delete(id);
     return NextResponse.json({ success: true });
   } catch (err) {
+    const code = (err as { code?: string }).code;
+    if (code === "NOT_FOUND") return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
     console.error("DELETE /api/invoices/[id] failed:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-}
+});

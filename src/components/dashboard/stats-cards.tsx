@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { invoiceApi } from "@/domains/invoice/api-client";
 
 interface StatsData {
   invoicesThisMonth: number;
@@ -29,15 +30,11 @@ export function StatsCards() {
         const lastMonthFrom = firstOfLastMonth.toISOString().split("T")[0];
         const lastMonthTo = lastOfLastMonth.toISOString().split("T")[0];
 
-        const [monthRes, lastMonthRes, draftsRes] = await Promise.all([
-          fetch(`/api/invoices?status=FINAL&createdFrom=${dateFrom}&createdTo=${dateTo}&statsOnly=true`),
-          fetch(`/api/invoices?status=FINAL&createdFrom=${lastMonthFrom}&createdTo=${lastMonthTo}&statsOnly=true`),
-          fetch(`/api/invoices?status=DRAFT&statsOnly=true`),
+        const [monthData, lastMonthData, draftsData] = await Promise.all([
+          invoiceApi.getStats({ status: "FINAL", dateFrom, dateTo }),
+          invoiceApi.getStats({ status: "FINAL", dateFrom: lastMonthFrom, dateTo: lastMonthTo }),
+          invoiceApi.getStats({ status: "DRAFT" }),
         ]);
-
-        const monthData = await monthRes.json();
-        const lastMonthData = await lastMonthRes.json();
-        const draftsData = await draftsRes.json();
 
         setStats({
           invoicesThisMonth: monthData.total,

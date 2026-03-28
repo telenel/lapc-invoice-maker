@@ -6,28 +6,19 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatAmount, getInitials } from "@/lib/formatters";
-
-interface RunningInvoice {
-  id: string;
-  runningTitle: string | null;
-  department: string;
-  totalAmount: string | number;
-  staff: { name: string };
-  creator: { id: string; name: string };
-  _count: { items: number };
-}
+import { invoiceApi } from "@/domains/invoice/api-client";
+import type { InvoiceResponse } from "@/domains/invoice/types";
 
 export function RunningInvoices() {
   const { data: session } = useSession();
-  const [invoices, setInvoices] = useState<RunningInvoice[]>([]);
+  const [invoices, setInvoices] = useState<InvoiceResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
 
   useEffect(() => {
-    fetch("/api/invoices?status=DRAFT&isRunning=true&pageSize=50")
-      .then((r) => r.ok ? r.json() : { invoices: [] })
-      .then((data) => setInvoices(data.invoices || []))
+    invoiceApi.list({ status: "DRAFT", isRunning: true, pageSize: 50 })
+      .then((data) => setInvoices(data.invoices ?? []))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -36,8 +27,8 @@ export function RunningInvoices() {
 
   // Sort: current user's running invoices first
   const sorted = [...invoices].sort((a, b) => {
-    const aIsMine = a.creator.id === currentUserId ? 0 : 1;
-    const bIsMine = b.creator.id === currentUserId ? 0 : 1;
+    const aIsMine = a.creatorId === currentUserId ? 0 : 1;
+    const bIsMine = b.creatorId === currentUserId ? 0 : 1;
     return aIsMine - bIsMine;
   });
 
@@ -52,7 +43,7 @@ export function RunningInvoices() {
       <CardContent className="p-0">
         <div>
           {sorted.map((inv, i) => {
-            const isMine = inv.creator.id === currentUserId;
+            const isMine = inv.creatorId === currentUserId;
             return (
               <Link
                 key={inv.id}
@@ -60,7 +51,7 @@ export function RunningInvoices() {
                 className={`flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors ${i < sorted.length - 1 ? "border-b border-border/30" : ""} ${isMine ? "bg-primary/[0.03]" : ""}`}
               >
                 <div className="flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-muted text-[11px] font-bold text-muted-foreground shrink-0">
-                  {getInitials(inv.creator.name)}
+                  {getInitials(inv.creatorName)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-semibold truncate">
@@ -68,7 +59,7 @@ export function RunningInvoices() {
                     {isMine && <span className="text-[10px] text-primary font-medium ml-2">Yours</span>}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
-                    {inv.creator.name} · {inv.department} · {inv._count.items} item{inv._count.items !== 1 ? "s" : ""}
+                    {inv.creatorName} · {inv.department} · {inv.items.length} item{inv.items.length !== 1 ? "s" : ""}
                   </p>
                 </div>
                 <div className="text-right shrink-0">

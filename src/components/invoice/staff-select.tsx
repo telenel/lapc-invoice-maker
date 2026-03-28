@@ -16,23 +16,12 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-
-interface StaffMember {
-  id: string;
-  name: string;
-  title: string;
-  department: string;
-  accountCode: string;
-  extension: string;
-  email: string;
-  phone: string;
-  approvalChain: string[];
-  active: boolean;
-}
+import { staffApi } from "@/domains/staff/api-client";
+import type { StaffResponse } from "@/domains/staff/types";
 
 interface StaffSelectProps {
   selectedId?: string;
-  onSelect: (staff: StaffMember) => void;
+  onSelect: (staff: StaffResponse) => void;
   placeholder?: string;
   className?: string;
 }
@@ -44,16 +33,15 @@ export function StaffSelect({
   className,
 }: StaffSelectProps) {
   const [open, setOpen] = useState(false);
-  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [staff, setStaff] = useState<StaffResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const commandRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setLoading(true);
-    fetch("/api/staff")
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data: StaffMember[]) => setStaff(data))
+    staffApi.list()
+      .then((data) => setStaff(data))
       .catch(() => setStaff([]))
       .finally(() => setLoading(false));
   }, []);
@@ -73,7 +61,7 @@ export function StaffSelect({
 
   const selected = staff.find((s) => s.id === selectedId);
 
-  function handleSelect(staffMember: StaffMember) {
+  function handleSelect(staffMember: StaffResponse) {
     onSelect(staffMember);
     setOpen(false);
   }

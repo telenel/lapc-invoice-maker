@@ -5,22 +5,16 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatAmount, getInitials } from "@/lib/formatters";
-
-interface PendingUser {
-  id: string;
-  name: string;
-  invoiceCount: number;
-  totalAmount: number;
-}
+import { invoiceApi } from "@/domains/invoice/api-client";
+import type { CreatorStatEntry } from "@/domains/invoice/types";
 
 export function PendingCharges() {
-  const [users, setUsers] = useState<PendingUser[]>([]);
+  const [users, setUsers] = useState<CreatorStatEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/invoices?statsOnly=true&groupBy=creator&status=PENDING_CHARGE")
-      .then((r) => r.ok ? r.json() : { users: [] })
-      .then((data) => setUsers(data.users || []))
+    invoiceApi.getCreatorStats("PENDING_CHARGE")
+      .then((data) => setUsers(data.users))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);

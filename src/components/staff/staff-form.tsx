@@ -12,21 +12,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-interface StaffMember {
-  id: string;
-  name: string;
-  title: string;
-  department: string;
-  accountCode: string;
-  extension: string;
-  email: string;
-  phone: string;
-  approvalChain: string[];
-}
+import { staffApi } from "@/domains/staff/api-client";
+import type { StaffResponse } from "@/domains/staff/types";
 
 interface StaffFormProps {
-  staff?: StaffMember;
+  staff?: StaffResponse;
   onSave: () => void;
   trigger: React.ReactNode;
 }
@@ -34,7 +24,7 @@ interface StaffFormProps {
 export function StaffForm({ staff, onSave, trigger }: StaffFormProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [allStaff, setAllStaff] = useState<StaffMember[]>([]);
+  const [allStaff, setAllStaff] = useState<StaffResponse[]>([]);
 
   const [name, setName] = useState(staff?.name ?? "");
   const [title, setTitle] = useState(staff?.title ?? "");
@@ -60,10 +50,11 @@ export function StaffForm({ staff, onSave, trigger }: StaffFormProps) {
     setApprovalChain(staff?.approvalChain ?? []);
     setOpen(true);
 
-    const res = await fetch("/api/staff");
-    if (res.ok) {
-      const data = await res.json();
+    try {
+      const data = await staffApi.list();
       setAllStaff(data);
+    } catch {
+      // non-critical — approval chain picker won't show
     }
   }
 
@@ -88,32 +79,19 @@ export function StaffForm({ staff, onSave, trigger }: StaffFormProps) {
       approvalChain,
     };
 
-    const url = isEdit ? `/api/staff/${staff.id}` : "/api/staff";
-    const method = isEdit ? "PUT" : "POST";
-
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    setLoading(false);
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      const fieldErrors = data?.error?.fieldErrors as
-        | Record<string, string[]>
-        | undefined;
-      const firstFieldError = fieldErrors
-        ? (Object.values(fieldErrors)[0]?.[0] ?? undefined)
-        : undefined;
-      const msg =
-        (data?.error?.formErrors as string[] | undefined)?.[0] ??
-        firstFieldError ??
-        "Failed to save staff member";
-      toast.error(msg);
+    try {
+      if (isEdit) {
+        await staffApi.update(staff.id, payload);
+      } else {
+        await staffApi.create(payload);
+      }
+    } catch (err) {
+      setLoading(false);
+      toast.error(err instanceof Error ? err.message : "Failed to save staff member");
       return;
     }
+
+    setLoading(false);
 
     toast.success(isEdit ? "Staff member updated" : "Staff member created");
     setOpen(false);

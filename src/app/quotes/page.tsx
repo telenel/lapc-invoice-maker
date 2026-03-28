@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { staffService } from "@/domains/staff/service";
 import { prisma } from "@/lib/prisma";
 import { QuoteTable } from "@/components/quotes/quote-table";
 import { Button } from "@/components/ui/button";
@@ -11,12 +12,7 @@ export default async function QuotesPage() {
   if (!session) redirect("/login");
 
   const [staffList, categories] = await Promise.all([
-    prisma.staff.findMany({
-      where: { active: true },
-      select: { department: true },
-      distinct: ["department"],
-      orderBy: { department: "asc" },
-    }),
+    staffService.list({}),
     prisma.category.findMany({
       where: { active: true },
       select: { name: true, label: true },
@@ -24,7 +20,8 @@ export default async function QuotesPage() {
     }),
   ]);
 
-  const departments = staffList.map((s) => s.department).filter(Boolean) as string[];
+  const departmentSet = new Set(staffList.map((s) => s.department).filter(Boolean) as string[]);
+  const departments = Array.from(departmentSet).sort();
 
   return (
     <div className="space-y-4">

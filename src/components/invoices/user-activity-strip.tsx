@@ -2,21 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { formatAmount, getInitials } from "@/lib/formatters";
-
-interface UserActivity {
-  id: string;
-  name: string;
-  invoiceCount: number;
-  totalAmount: number;
-}
+import { invoiceApi } from "@/domains/invoice/api-client";
+import type { CreatorStatEntry } from "@/domains/invoice/types";
 
 export function UserActivityStrip() {
-  const [users, setUsers] = useState<UserActivity[]>([]);
+  const [users, setUsers] = useState<CreatorStatEntry[]>([]);
 
   useEffect(() => {
-    fetch("/api/invoices?statsOnly=true&groupBy=creator")
-      .then((r) => r.ok ? r.json() : { users: [] })
-      .then((data) => setUsers(data.users || []))
+    invoiceApi.getCreatorStats()
+      .then((data) => setUsers(data.users))
       .catch(() => {});
   }, []);
 
