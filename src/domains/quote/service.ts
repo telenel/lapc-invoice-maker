@@ -427,6 +427,8 @@ export const quoteService = {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
     }
 
+    const cateringRaw = quote.cateringDetails as CateringDetails | null;
+
     const pdfPath = await pdfService.generateQuote({
       quoteNumber: quote.quoteNumber ?? "DRAFT",
       date: formatDateFromDate(new Date(quote.date)),
@@ -445,8 +447,34 @@ export const quoteService = {
         quantity: Number(item.quantity),
         unitPrice: String(Number(item.unitPrice)),
         extendedPrice: String(Number(item.extendedPrice)),
+        isTaxable: item.isTaxable,
+        costPrice: item.costPrice != null ? String(Number(item.costPrice)) : null,
       })),
       totalAmount: Number(quote.totalAmount),
+      marginEnabled: quote.marginEnabled,
+      taxEnabled: quote.taxEnabled,
+      taxRate: Number(quote.taxRate),
+      isCateringEvent: quote.isCateringEvent,
+      cateringDetails: cateringRaw
+        ? {
+            eventName: cateringRaw.eventName,
+            eventDate: cateringRaw.eventDate,
+            startTime: cateringRaw.startTime,
+            endTime: cateringRaw.endTime,
+            location: cateringRaw.location,
+            contactName: cateringRaw.contactName,
+            contactPhone: cateringRaw.contactPhone,
+            contactEmail: cateringRaw.contactEmail,
+            headcount: cateringRaw.headcount,
+            setupRequired: cateringRaw.setupRequired,
+            setupTime: cateringRaw.setupTime,
+            setupInstructions: cateringRaw.setupInstructions,
+            takedownRequired: cateringRaw.takedownRequired,
+            takedownTime: cateringRaw.takedownTime,
+            takedownInstructions: cateringRaw.takedownInstructions,
+            specialInstructions: cateringRaw.specialInstructions,
+          }
+        : null,
     });
 
     const buffer = await pdfService.readPdf(pdfPath);
