@@ -15,23 +15,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { StaffForm } from "./staff-form";
+import { staffApi } from "@/domains/staff/api-client";
+import type { StaffResponse } from "@/domains/staff/types";
 
 const PAGE_SIZE = 20;
 
-interface StaffMember {
-  id: string;
-  name: string;
-  title: string;
-  department: string;
-  accountCode: string;
-  extension: string;
-  email: string;
-  phone: string;
-  approvalChain: string[];
-}
-
 export function StaffTable() {
-  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [staff, setStaff] = useState<StaffResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -41,18 +31,15 @@ export function StaffTable() {
 
   const fetchStaff = useCallback(async () => {
     setLoading(true);
-    const params = new URLSearchParams({
-      page: String(page),
-      pageSize: String(PAGE_SIZE),
-    });
-    if (search) params.set("search", search);
-
-    const res = await fetch(`/api/staff?${params}`);
-    if (res.ok) {
-      const data = await res.json();
-      setStaff(data.staff);
-      setTotal(data.total);
-    } else {
+    try {
+      const result = await staffApi.listPaginated({
+        page,
+        pageSize: PAGE_SIZE,
+        search: search || undefined,
+      });
+      setStaff(result.data);
+      setTotal(result.total);
+    } catch {
       toast.error("Failed to load staff directory");
     }
     setLoading(false);
@@ -72,11 +59,11 @@ export function StaffTable() {
     if (!confirm(`Deactivate ${name}? They will be removed from the directory.`))
       return;
 
-    const res = await fetch(`/api/staff/${id}`, { method: "DELETE" });
-    if (res.ok) {
+    try {
+      await staffApi.delete(id);
       toast.success("Staff member deactivated");
       fetchStaff();
-    } else {
+    } catch {
       toast.error("Failed to deactivate staff member");
     }
   }

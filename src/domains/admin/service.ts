@@ -1,0 +1,157 @@
+// src/domains/admin/service.ts
+import bcrypt from "bcryptjs";
+import { adminRepository } from "./repository";
+import type {
+  UserResponse,
+  AccountCodeResponse,
+  DbHealthResponse,
+  CreateUserInput,
+  UpdateUserInput,
+  CreateAccountCodeInput,
+} from "./types";
+
+const DEFAULT_PASSWORD = "password123";
+
+function toUserResponse(user: {
+  id: string;
+  username: string;
+  name: string;
+  email: string | null;
+  role: string;
+  active: boolean;
+  setupComplete: boolean;
+  createdAt: Date;
+}): UserResponse {
+  return {
+    id: user.id,
+    username: user.username,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    active: user.active,
+    setupComplete: user.setupComplete,
+    createdAt: user.createdAt.toISOString(),
+  };
+}
+
+function toAccountCodeResponse(row: {
+  id: string;
+  staffId: string;
+  accountCode: string;
+  description: string;
+  createdAt: Date;
+  staff: { id: string; name: string; department: string };
+}): AccountCodeResponse {
+  return {
+    id: row.id,
+    staffId: row.staffId,
+    accountCode: row.accountCode,
+    description: row.description,
+    createdAt: row.createdAt.toISOString(),
+    staff: row.staff,
+  };
+}
+
+async function generateUsername(
+  name: string,
+  excludeId?: string
+): Promise<string> {
+  const firstName = name.trim().split(/\s+/)[0].toLowerCase();
+  let username = firstName;
+  let suffix = 2;
+
+  while (true) {
+    const existing = excludeId
+      ? await adminRepository.findUserByUsernameExcluding(username, excludeId)
+      : await adminRepository.findUserByUsername(username);
+    if (!existing) break;
+    username = `${firstName}${suffix}`;
+    suffix++;
+  }
+
+  return username;
+}
+
+export const adminService = {
+  // ── Users ──
+
+  async listUsers(): Promise<UserResponse[]> {
+    const users = await adminRepository.findAllUsers();
+    return users.map(toUserResponse);
+  },
+
+  async createUser(input: CreateUserInput): Promise<UserResponse> {
+    const username = await generateUsername(input.name);
+    const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 10);
+    const user = await adminRepository.createUser({
+      username,
+      passwordHash,
+      name: input.name.trim(),
+    });
+    return toUserResponse(user);
+  },
+
+  async updateUser(id: string, input: UpdateUserInput): Promise<UserResponse> {
+    const data: UpdateUserInput = {};
+    if (input.name !== undefined) data.name = input.name;
+    if (input.email !== undefined) data.email = input.email;
+    if (input.role !== undefined) data.role = input.role;
+    const user = await adminRepository.updateUser(id, data);
+    return toUserResponse(user);
+  },
+
+  async resetPassword(id: string): Promise<UserResponse> {
+    const existing = await adminRepository.findUserById(id);
+    const name = existing?.name ?? "user";
+    const username = await generateUsername(name, id);
+    const passwordHash = await bcrypt.hash(DEFAULT_PASSWORD, 10);
+    const user = await adminRepository.resetUserPassword(id, {
+      passwordHash,
+      username,
+    });
+    return toUserResponse(user);
+  },
+
+  async deleteUser(id: string): Promise<void> {
+    await adminRepository.deleteUser(id);
+  },
+
+  // ── Account codes ──
+
+  async listAccountCodes(): Promise<AccountCodeResponse[]> {
+    const codes = await adminRepository.findAllAccountCodes();
+    return codes.map(toAccountCodeResponse);
+  },
+
+  async createAccountCode(
+    input: CreateAccountCodeInput
+  ): Promise<AccountCodeResponse> {
+    const staff = await adminRepository.findStaffById(input.staffId);
+    if (!staff) {
+      throw Object.assign(new Error("Staff member not found"), {
+        statusCode: 404,
+      });
+    }
+    const code = await adminRepository.createAccountCode(input);
+    return toAccountCodeResponse(code);
+  },
+
+  async deleteAccountCode(id: string): Promise<void> {
+    await adminRepository.deleteAccountCode(id);
+  },
+
+  // ── DB health ──
+
+  async getDbHealth(): Promise<DbHealthResponse> {
+    const [tables, dbSize] = await Promise.all([
+      adminRepository.getTableCounts(),
+      adminRepository.getDatabaseSize(),
+    ]);
+    return {
+      status: "connected",
+      timestamp: new Date().toISOString(),
+      dbSize,
+      tables,
+    };
+  },
+};

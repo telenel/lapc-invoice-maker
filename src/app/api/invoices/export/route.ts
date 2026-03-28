@@ -1,64 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { Prisma } from "@/generated/prisma/client";
+import { withAuth } from "@/domains/shared/auth";
+import { invoiceService } from "@/domains/invoice/service";
 import { escapeCsv } from "@/lib/csv";
 
-export async function GET(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
+export const GET = withAuth(async (req: NextRequest) => {
   try {
-    const { searchParams } = new URL(request.url);
+    const sp = req.nextUrl.searchParams;
 
-    const search = searchParams.get("search") ?? undefined;
-    const status = searchParams.get("status") as "DRAFT" | "FINAL" | null;
-    const category = searchParams.get("category") ?? undefined;
-    const department = searchParams.get("department") ?? undefined;
-    const dateFrom = searchParams.get("dateFrom") ?? undefined;
-    const dateTo = searchParams.get("dateTo") ?? undefined;
-    const amountMin = searchParams.get("amountMin") ?? undefined;
-    const amountMax = searchParams.get("amountMax") ?? undefined;
+    const filters = {
+      search: sp.get("search") ?? undefined,
+      status: (sp.get("status") ?? undefined) as "DRAFT" | "FINAL" | "PENDING_CHARGE" | undefined,
+      category: sp.get("category") ?? undefined,
+      department: sp.get("department") ?? undefined,
+      dateFrom: sp.get("dateFrom") ?? undefined,
+      dateTo: sp.get("dateTo") ?? undefined,
+      amountMin: sp.get("amountMin") ? Number(sp.get("amountMin")) : undefined,
+      amountMax: sp.get("amountMax") ? Number(sp.get("amountMax")) : undefined,
+      // Fetch all records for export (no pagination)
+      page: 1,
+      pageSize: 100_000,
+      sortBy: "createdAt",
+      sortOrder: "desc" as const,
+    };
 
-    const where: Prisma.InvoiceWhereInput = { type: "INVOICE" };
-
-    if (status) {
-      where.status = status;
-    }
-    if (department) {
-      where.department = { contains: department, mode: "insensitive" };
-    }
-    if (category) {
-      where.category = category as Prisma.InvoiceWhereInput["category"];
-    }
-    if (dateFrom || dateTo) {
-      where.date = {};
-      if (dateFrom) where.date.gte = new Date(dateFrom);
-      if (dateTo) where.date.lte = new Date(dateTo);
-    }
-    if (amountMin || amountMax) {
-      where.totalAmount = {};
-      if (amountMin) where.totalAmount.gte = amountMin;
-      if (amountMax) where.totalAmount.lte = amountMax;
-    }
-    if (search) {
-      where.OR = [
-        { invoiceNumber: { contains: search, mode: "insensitive" } },
-        { department: { contains: search, mode: "insensitive" } },
-        { staff: { name: { contains: search, mode: "insensitive" } } },
-        { items: { some: { description: { contains: search, mode: "insensitive" } } } },
-      ];
-    }
-
-    const invoices = await prisma.invoice.findMany({
-      where,
-      include: {
-        staff: { select: { name: true } },
-        items: { orderBy: { sortOrder: "asc" } },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+    const { invoices } = await invoiceService.list(filters);
 
     const headers = [
       "Invoice Number",
@@ -103,4 +68,4 @@ export async function GET(request: NextRequest) {
     console.error("GET /api/invoices/export failed:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-}
+});

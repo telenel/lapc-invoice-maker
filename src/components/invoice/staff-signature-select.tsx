@@ -16,20 +16,15 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-
-interface StaffMember {
-  id: string;
-  name: string;
-  title: string;
-  department: string;
-}
+import { staffApi } from "@/domains/staff/api-client";
+import type { StaffResponse } from "@/domains/staff/types";
 
 interface StaffSignatureSelectProps {
   /** The staff ID that is currently selected (for highlighting) */
   selectedId?: string;
   /** The display string shown in the trigger (e.g. "Jane Doe, Dean") */
   displayValue?: string;
-  onSelect: (staff: StaffMember) => void;
+  onSelect: (staff: StaffResponse) => void;
   placeholder?: string;
   className?: string;
 }
@@ -42,16 +37,15 @@ export function StaffSignatureSelect({
   className,
 }: StaffSignatureSelectProps) {
   const [open, setOpen] = useState(false);
-  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [staff, setStaff] = useState<StaffResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const commandRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setLoading(true);
-    fetch("/api/staff")
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data: StaffMember[]) => setStaff(data))
+    staffApi.list()
+      .then((data) => setStaff(data))
       .catch(() => setStaff([]))
       .finally(() => setLoading(false));
   }, []);
@@ -66,7 +60,7 @@ export function StaffSignatureSelect({
     return () => { clearTimeout(timer); list.removeEventListener("scroll", reset); };
   }, [search, open]);
 
-  function handleSelect(staffMember: StaffMember) {
+  function handleSelect(staffMember: StaffResponse) {
     onSelect(staffMember);
     setOpen(false);
   }

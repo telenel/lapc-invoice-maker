@@ -3,6 +3,8 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { staffApi } from "@/domains/staff/api-client";
+import type { StaffResponse, StaffDetailResponse, AccountNumberResponse } from "@/domains/staff/types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -37,31 +39,11 @@ export interface QuoteFormData {
   recipientOrg: string;
 }
 
-export interface StaffAccountNumber {
-  id: string;
-  accountCode: string;
-  description: string;
-  lastUsedAt: string;
-}
+// StaffAccountNumber = AccountNumberResponse from staff domain (re-exported for consumers)
+export type { AccountNumberResponse as StaffAccountNumber };
 
-interface SignerHistory {
-  position: number;
-  signer: { id: string; name: string; title: string };
-}
-
-export interface StaffMember {
-  id: string;
-  name: string;
-  title: string;
-  department: string;
-  accountCode: string;
-  extension: string;
-  email: string;
-  phone: string;
-  approvalChain: string[];
-  accountNumbers?: StaffAccountNumber[];
-  signerHistories?: SignerHistory[];
-}
+// StaffMember = StaffResponse from staff domain (re-exported for consumers)
+export type { StaffResponse as StaffMember };
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -118,6 +100,15 @@ export function useQuoteForm(
     ...initial,
   }));
 
+  // Handle async initial data (e.g., fetched after mount on edit page)
+  const initialApplied = useRef(false);
+  useEffect(() => {
+    if (initial && !initialApplied.current) {
+      initialApplied.current = true;
+      setForm({ ...defaultForm(), ...initial });
+    }
+  }, [initial]);
+
   const [saving, setSaving] = useState(false);
 
   const updateField = useCallback(
@@ -165,7 +156,7 @@ export function useQuoteForm(
 
   // ---------- Staff autofill ----------
 
-  const [staffAccountNumbers, setStaffAccountNumbers] = useState<StaffAccountNumber[]>([]);
+  const [staffAccountNumbers, setStaffAccountNumbers] = useState<AccountNumberResponse[]>([]);
 
   const originalStaffRef = useRef<{
     extension: string;
@@ -174,7 +165,7 @@ export function useQuoteForm(
     department: string;
   } | null>(null);
 
-  const handleStaffSelect = useCallback((staff: StaffMember) => {
+  const handleStaffSelect = useCallback((staff: StaffResponse & Partial<Pick<StaffDetailResponse, "accountNumbers">>) => {
     const latestAccount = staff.accountNumbers?.[0];
     setStaffAccountNumbers(staff.accountNumbers ?? []);
     originalStaffRef.current = {
@@ -198,7 +189,7 @@ export function useQuoteForm(
     }));
   }, []);
 
-  const handleStaffEdit = useCallback((updated: StaffMember) => {
+  const handleStaffEdit = useCallback((updated: StaffResponse) => {
     originalStaffRef.current = {
       extension: updated.extension,
       email: updated.email,
@@ -233,25 +224,19 @@ export function useQuoteForm(
     const timer = setTimeout(async () => {
       if (!originalStaffRef.current) return;
       try {
-        const res = await fetch(`/api/staff/${form.staffId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            extension: form.contactExtension,
-            email: form.contactEmail,
-            phone: form.contactPhone,
-            department: form.department,
-          }),
+        await staffApi.partialUpdate(form.staffId, {
+          extension: form.contactExtension,
+          email: form.contactEmail,
+          phone: form.contactPhone,
+          department: form.department,
         });
-        if (res.ok) {
-          originalStaffRef.current = {
-            extension: form.contactExtension,
-            email: form.contactEmail,
-            phone: form.contactPhone,
-            department: form.department,
-          };
-          toast.success("Staff info saved", { duration: 1500 });
-        }
+        originalStaffRef.current = {
+          extension: form.contactExtension,
+          email: form.contactEmail,
+          phone: form.contactPhone,
+          department: form.department,
+        };
+        toast.success("Staff info saved", { duration: 1500 });
       } catch { /* ignore */ }
     }, 1000);
 

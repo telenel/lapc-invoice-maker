@@ -1,28 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { readFile } from "fs/promises";
+import { withAuth } from "@/domains/shared/auth";
+import { invoiceService } from "@/domains/invoice/service";
+import { pdfService } from "@/domains/pdf/service";
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const session = await getServerSession(authOptions);
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+export const GET = withAuth(async (_req: NextRequest, _session, ctx) => {
+  const { id } = await ctx!.params;
 
-  const { id } = params;
-
-  const invoice = await prisma.invoice.findUnique({
-    where: { id },
-    select: { pdfPath: true, invoiceNumber: true },
-  });
-
-  if (!invoice) {
-    return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
-  }
+  const invoice = await invoiceService.getById(id);
+  if (!invoice) return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
 
   if (!invoice.pdfPath) {
     return NextResponse.json(
@@ -32,9 +17,8 @@ export async function GET(
   }
 
   try {
-    const pdfBuffer = await readFile(invoice.pdfPath);
-
-    return new NextResponse(pdfBuffer, {
+    const pdfBuffer = await pdfService.readPdf(invoice.pdfPath);
+    return new NextResponse(new Uint8Array(pdfBuffer), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
@@ -43,9 +27,6 @@ export async function GET(
       },
     });
   } catch {
-    return NextResponse.json(
-      { error: "PDF file not found on disk" },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: "PDF file not found on disk" }, { status: 404 });
   }
-}
+});
