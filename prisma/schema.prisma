@@ -20,6 +20,7 @@ model User {
   updatedAt      DateTime  @updatedAt @map("updated_at")
   invoices       Invoice[]
   userQuickPicks UserQuickPick[]
+  notifications  Notification[]
 
   @@map("users")
 }
@@ -88,6 +89,7 @@ model Invoice {
   recipientEmail    String?         @map("recipient_email")
   recipientOrg      String?         @map("recipient_org")
   quoteNumber       String?         @unique @map("quote_number")
+  shareToken        String?         @unique @map("share_token")
   convertedFromQuoteId String?      @unique @map("converted_from_quote_id")
   convertedAt       DateTime?       @map("converted_at")
   createdAt         DateTime        @default(now()) @map("created_at")
@@ -99,6 +101,7 @@ model Invoice {
 
   convertedFromQuote   Invoice?  @relation("QuoteToInvoice", fields: [convertedFromQuoteId], references: [id])
   convertedToInvoice   Invoice?  @relation("QuoteToInvoice")
+  quoteViews       QuoteView[]
 
   @@map("invoices")
 }
@@ -198,4 +201,35 @@ model UserQuickPick {
 
   @@unique([userId, department, description])
   @@map("user_quick_picks")
+}
+
+model QuoteView {
+  id              String   @id @default(uuid())
+  invoiceId       String   @map("invoice_id")
+  viewedAt        DateTime @default(now()) @map("viewed_at")
+  ipAddress       String?  @map("ip_address")
+  userAgent       String?  @map("user_agent")
+  referrer        String?
+  viewport        String?
+  durationSeconds Int?     @map("duration_seconds")
+  respondedWith   String?  @map("responded_with")
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@map("quote_views")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  type      String
+  title     String
+  message   String?
+  quoteId   String?  @map("quote_id")
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
 }

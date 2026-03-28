@@ -8,6 +8,14 @@ vi.mock("@/domains/quote/repository", () => ({
   update: vi.fn(),
   deleteById: vi.fn(),
   markSent: vi.fn(),
+  markSentWithToken: vi.fn(),
+  getShareToken: vi.fn(),
+  createView: vi.fn(),
+  updateViewDuration: vi.fn(),
+  updateViewResponse: vi.fn(),
+  findViewsByInvoiceId: vi.fn(),
+  hasRecentView: vi.fn(),
+  findByShareToken: vi.fn(),
   generateNumber: vi.fn(),
   expireOverdue: vi.fn(),
 }));
@@ -396,13 +404,14 @@ describe("quoteService", () => {
       await expect(quoteService.markSent("q1")).rejects.toMatchObject({ code: "FORBIDDEN" });
     });
 
-    it("calls repository markSent for a DRAFT quote", async () => {
+    it("calls repository markSentWithToken for a DRAFT quote", async () => {
       mockRepo.findById.mockResolvedValue(makeQuote({ quoteStatus: "DRAFT" }) as never);
-      mockRepo.markSent.mockResolvedValue(undefined as never);
+      mockRepo.markSentWithToken.mockResolvedValue(undefined as never);
 
-      await quoteService.markSent("q1");
+      const result = await quoteService.markSent("q1");
 
-      expect(mockRepo.markSent).toHaveBeenCalledWith("q1");
+      expect(mockRepo.markSentWithToken).toHaveBeenCalledWith("q1", expect.any(String));
+      expect(result).toHaveProperty("shareToken");
     });
   });
 

@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/domains/shared/auth";
 import { quoteService } from "@/domains/quote/service";
 
-export const POST = withAuth(async (_req: NextRequest, _session, ctx) => {
+export const POST = withAuth(async (req: NextRequest, _session, ctx) => {
   const { id } = await ctx!.params;
   try {
-    await quoteService.markSent(id);
-    return NextResponse.json({ success: true });
+    const { shareToken } = await quoteService.markSent(id);
+    const origin = req.headers.get("origin") ?? req.headers.get("host") ?? "";
+    const protocol = origin.startsWith("http") ? "" : "https://";
+    const shareUrl = `${protocol}${origin}/quotes/review/${shareToken}`;
+    return NextResponse.json({ success: true, shareUrl });
   } catch (err) {
     const code = (err as { code?: string }).code;
     if (code === "NOT_FOUND") return NextResponse.json({ error: "Quote not found" }, { status: 404 });
