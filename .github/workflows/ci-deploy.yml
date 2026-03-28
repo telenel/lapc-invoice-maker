@@ -89,7 +89,7 @@ jobs:
             src/generated/prisma
           key: deps-${{ runner.os }}-${{ hashFiles('package-lock.json', 'prisma/schema.prisma') }}
 
-      - run: npx vitest run --dir tests
+      - run: npx vitest run --dir tests --dir src/__tests__
 
   deploy:
     name: Deploy to VPS
@@ -99,7 +99,7 @@ jobs:
     steps:
       - name: Trigger deploy webhook
         run: |
-          response=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+          response=$(curl -sS --connect-timeout 10 --max-time 30 -o /dev/null -w "%{http_code}" -X POST \
             https://montalvo.io/hooks/deploy-lapc \
             -H "X-Deploy-Secret: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}")
           echo "Webhook response: $response"
@@ -114,7 +114,7 @@ jobs:
           echo "Waiting 90s for deploy to complete..."
           sleep 90
           for i in 1 2 3; do
-            status=$(curl -s -o /dev/null -w "%{http_code}" https://invoice.montalvo.io/api/auth/session)
+            status=$(curl -sS --connect-timeout 10 --max-time 20 -o /dev/null -w "%{http_code}" https://invoice.montalvo.io/api/auth/session)
             echo "Attempt $i: HTTP $status"
             if [ "$status" = "200" ]; then
               echo "Health check passed"
