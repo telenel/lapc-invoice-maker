@@ -3,6 +3,8 @@
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { staffApi } from "@/domains/staff/api-client";
+import type { StaffDetailResponse, AccountNumberResponse, SignerHistoryResponse } from "@/domains/staff/types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -57,35 +59,8 @@ export interface InvoiceFormData {
   };
 }
 
-export interface StaffAccountNumber {
-  id: string;
-  accountCode: string;
-  description: string;
-  lastUsedAt: string;
-}
-
-interface SignerHistory {
-  position: number;
-  signer: {
-    id: string;
-    name: string;
-    title: string;
-  };
-}
-
-interface StaffMember {
-  id: string;
-  name: string;
-  title: string;
-  department: string;
-  accountCode: string;
-  extension: string;
-  email: string;
-  phone: string;
-  approvalChain: string[];
-  accountNumbers?: StaffAccountNumber[];
-  signerHistories?: SignerHistory[];
-}
+// Re-exported for backward compatibility with account-select.tsx and keyboard-mode.tsx
+export type StaffAccountNumber = AccountNumberResponse;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -263,7 +238,7 @@ export function useInvoiceForm(
     department: string;
   } | null>(null);
 
-  const handleStaffSelect = useCallback((staff: StaffMember) => {
+  const handleStaffSelect = useCallback((staff: StaffDetailResponse) => {
     // Most recently used account number (first in the list, already sorted by lastUsedAt desc)
     const latestAccount = staff.accountNumbers?.[0];
     setStaffAccountNumbers(staff.accountNumbers ?? []);
@@ -276,7 +251,7 @@ export function useInvoiceForm(
 
     // Auto-populate signatures from signer history (sorted by position)
     const histories = staff.signerHistories ?? [];
-    const byPosition: Record<number, SignerHistory> = {};
+    const byPosition: Record<number, SignerHistoryResponse> = {};
     for (const h of histories) {
       // Keep only the first entry per position (already sorted by lastUsedAt desc)
       if (!(h.position in byPosition)) byPosition[h.position] = h;
@@ -319,7 +294,7 @@ export function useInvoiceForm(
   }, []);
 
   // Called after the inline StaffForm dialog saves, to re-sync form fields
-  const handleStaffEdit = useCallback((updated: StaffMember) => {
+  const handleStaffEdit = useCallback((updated: StaffDetailResponse) => {
     originalStaffRef.current = {
       extension: updated.extension,
       email: updated.email,
@@ -358,26 +333,21 @@ export function useInvoiceForm(
       // Re-check that the ref is still current (staff may have changed)
       if (!originalStaffRef.current) return;
       try {
-        const res = await fetch(`/api/staff/${form.staffId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            extension: form.contactExtension,
-            email: form.contactEmail,
-            phone: form.contactPhone,
-            department: form.department,
-          }),
-        });
-        if (res.ok) {
-          // Update baseline so next change detection is relative to saved values
-          originalStaffRef.current = {
-            extension: form.contactExtension,
-            email: form.contactEmail,
-            phone: form.contactPhone,
-            department: form.department,
-          };
-          toast.success("Staff info saved", { duration: 1500 });
-        }
+        const patchData = {
+          extension: form.contactExtension,
+          email: form.contactEmail,
+          phone: form.contactPhone,
+          department: form.department,
+        };
+        await staffApi.partialUpdate(form.staffId, patchData);
+        // Update baseline so next change detection is relative to saved values
+        originalStaffRef.current = {
+          extension: form.contactExtension,
+          email: form.contactEmail,
+          phone: form.contactPhone,
+          department: form.department,
+        };
+        toast.success("Staff info saved", { duration: 1500 });
       } catch {
         // Silently ignore auto-save network failures
       }

@@ -18,23 +18,11 @@ import type {
   StaffAccountNumber,
   GenerationStep,
 } from "./invoice-form";
+import type { StaffResponse, StaffDetailResponse } from "@/domains/staff/types";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
-
-interface StaffMember {
-  id: string;
-  name: string;
-  title: string;
-  department: string;
-  accountCode: string;
-  extension: string;
-  email: string;
-  phone: string;
-  approvalChain: string[];
-  active: boolean;
-}
 
 interface Category {
   id: string;
@@ -53,8 +41,8 @@ interface KeyboardModeProps {
   addItem: () => void;
   removeItem: (index: number) => void;
   total: number;
-  handleStaffSelect: (staff: StaffMember) => void;
-  handleStaffEdit: (updated: StaffMember) => void;
+  handleStaffSelect: (staff: StaffDetailResponse) => void;
+  handleStaffEdit: (updated: StaffDetailResponse) => void;
   staffAccountNumbers: StaffAccountNumber[];
   saveDraft: () => Promise<void>;
   saveAndFinalize: () => Promise<void>;
@@ -101,7 +89,7 @@ export function KeyboardMode({
   isPendingCharge = false,
 }: KeyboardModeProps) {
   // ---- Local state ----
-  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [staff, setStaff] = useState<StaffResponse[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [staffLoading, setStaffLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
@@ -135,13 +123,13 @@ export function KeyboardMode({
   useEffect(() => {
     fetch("/api/staff")
       .then((res) => res.json())
-      .then((data: StaffMember[]) => {
+      .then((data: StaffResponse[]) => {
         setStaff(data);
         // When editing an existing invoice, re-populate signatures and account numbers
         // from the staff record (these aren't stored on the invoice)
         if (form.staffId) {
-          const match = data.find((s: StaffMember) => s.id === form.staffId);
-          if (match) handleStaffSelect(match);
+          const match = data.find((s: StaffResponse) => s.id === form.staffId);
+          if (match) handleStaffSelect(match as StaffDetailResponse);
         }
       })
       .catch(() => {})
@@ -346,7 +334,7 @@ export function KeyboardMode({
   function handleStaffComboboxSelect(item: ComboboxItem) {
     const found = staff.find((s) => s.id === item.id);
     if (!found) return;
-    handleStaffSelect(found);
+    handleStaffSelect(found as StaffDetailResponse);
   }
 
   // ---- Account number select handler ----
