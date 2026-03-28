@@ -12,6 +12,12 @@ export interface InvoiceItem {
   unitPrice: number;
   extendedPrice: number;
   sortOrder: number;
+  /** Whether this item is subject to sales tax (used in quote mode) */
+  isTaxable?: boolean;
+  /** Per-item margin override percentage (used in quote mode) */
+  marginOverride?: number | null;
+  /** Original cost price before margin (used in quote mode) */
+  costPrice?: number | null;
 }
 
 export interface InvoiceFormData {

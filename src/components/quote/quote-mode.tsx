@@ -1,13 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ChevronDownIcon, ChevronRightIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronRightIcon, InfoIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Card,
   CardContent,
@@ -25,6 +31,8 @@ import { StaffSelect } from "@/components/invoice/staff-select";
 import { AccountSelect } from "@/components/invoice/account-select";
 import { LineItems } from "@/components/invoice/line-items";
 import { QuickPickPanel } from "@/components/invoice/quick-pick-panel";
+import { useTaxCalculation } from "@/components/invoice/hooks/use-tax-calculation";
+import { TAX_RATE } from "@/domains/invoice/constants";
 import { cn } from "@/lib/utils";
 import { categoryApi } from "@/domains/category/api-client";
 import type {
@@ -55,6 +63,7 @@ interface QuoteModeProps {
   addItem: () => void;
   removeItem: (index: number) => void;
   total: number;
+  itemsWithMargin: QuoteItem[];
   handleStaffSelect: (staff: StaffMember) => void;
   staffAccountNumbers: StaffAccountNumber[];
   saveQuote: () => Promise<void>;
@@ -88,6 +97,7 @@ export function QuoteMode({
   addItem,
   removeItem,
   total,
+  itemsWithMargin,
   handleStaffSelect,
   staffAccountNumbers,
   saveQuote,
@@ -97,6 +107,14 @@ export function QuoteMode({
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [quickPicksOpen, setQuickPicksOpen] = useState(false);
+
+  // ---- Tax calculation ----
+  const taxItems = form.marginEnabled ? itemsWithMargin : form.items;
+  const { subtotal, taxAmount, total: grandTotal } = useTaxCalculation(
+    taxItems,
+    form.taxEnabled,
+    TAX_RATE
+  );
 
   // Inline editing for staff summary fields
   const [editingField, setEditingField] = useState<
@@ -407,6 +425,106 @@ export function QuoteMode({
         )}
       </div>
 
+      {/* ============ MARGIN & TAX ============ */}
+      <SectionDivider label="PRICING" />
+
+      <div className="space-y-3">
+        {/* Apply Margin */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="marginEnabled"
+              checked={form.marginEnabled}
+              onCheckedChange={(checked) =>
+                updateField("marginEnabled", checked === true)
+              }
+            />
+            <Label
+              htmlFor="marginEnabled"
+              className="text-sm font-medium cursor-pointer"
+            >
+              Apply Margin
+            </Label>
+          </div>
+          {form.marginEnabled && (
+            <div className="flex items-center gap-1">
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                value={form.marginPercent}
+                onChange={(e) =>
+                  updateField("marginPercent", Number(e.target.value))
+                }
+                className="w-20 h-7 text-sm"
+                aria-label="Margin percentage"
+              />
+              <span className="text-sm text-muted-foreground">%</span>
+            </div>
+          )}
+        </div>
+
+        {/* Apply Sales Tax */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="taxEnabled"
+              checked={form.taxEnabled}
+              onCheckedChange={(checked) =>
+                updateField("taxEnabled", checked === true)
+              }
+            />
+            <Label
+              htmlFor="taxEnabled"
+              className="text-sm font-medium cursor-pointer"
+            >
+              Apply Sales Tax{" "}
+              <span className="text-muted-foreground font-normal">
+                (9.75%)
+              </span>
+            </Label>
+          </div>
+
+          {/* CA Tax Rules info */}
+          <Popover>
+            <PopoverTrigger
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <InfoIcon className="size-3.5" />
+              <span>CA Tax Rules</span>
+            </PopoverTrigger>
+            <PopoverContent side="bottom" align="start" className="w-80">
+              <div className="space-y-2 text-xs">
+                <p className="font-semibold text-sm">
+                  California Food Tax Rules
+                </p>
+                <ul className="space-y-1.5 list-disc pl-4">
+                  <li>
+                    <strong>Hot prepared food</strong> — always taxable
+                  </li>
+                  <li>
+                    <strong>Cold food to-go</strong> (no eating establishment)
+                    — usually exempt
+                  </li>
+                  <li>
+                    <strong>Catering</strong> (food + service) — always fully
+                    taxable
+                  </li>
+                  <li>
+                    <strong>Carbonated beverages, candy</strong> — always
+                    taxable
+                  </li>
+                </ul>
+                <p className="text-muted-foreground pt-1">
+                  Source: CDTFA Regulation 1603
+                </p>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+
       {/* ============ LINE ITEMS ============ */}
       <SectionDivider label="LINE ITEMS">
         <button
@@ -442,22 +560,67 @@ export function QuoteMode({
           onRemove={removeItem}
           total={total}
           department={form.department}
+          marginEnabled={form.marginEnabled}
+          itemsWithMargin={itemsWithMargin}
+          taxEnabled={form.taxEnabled}
+          isCateringEvent={form.isCateringEvent}
         />
       </div>
 
-      {/* ============ TOTAL + SAVE ============ */}
+      {/* ============ TOTALS + SAVE ============ */}
       <Separator className="mt-6" />
 
-      <div className="flex items-center justify-between pt-4 pb-8">
-        <div className="text-lg font-semibold">
-          Total:{" "}
-          <span className="tabular-nums">
-            ${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-          </span>
+      <div className="pt-4 pb-8 space-y-3">
+        <div className="space-y-1.5 text-sm tabular-nums">
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">Subtotal</span>
+            <span>
+              ${subtotal.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>
+          </div>
+
+          {form.marginEnabled && form.marginPercent > 0 && (
+            <div className="flex justify-between text-violet-600">
+              <span>Margin (+{form.marginPercent}%) included</span>
+              <span />
+            </div>
+          )}
+
+          {form.taxEnabled && (
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">
+                CA Sales Tax (9.75% on taxable items)
+              </span>
+              <span>
+                ${taxAmount.toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </span>
+            </div>
+          )}
+
+          <Separator />
+
+          <div className="flex justify-between text-lg font-semibold">
+            <span>Total</span>
+            <span>
+              ${grandTotal.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>
+          </div>
         </div>
-        <Button onClick={handleSave} disabled={saving} size="lg">
-          {saving ? "Saving..." : "Save Quote"}
-        </Button>
+
+        <div className="flex justify-end">
+          <Button onClick={handleSave} disabled={saving} size="lg">
+            {saving ? "Saving..." : "Save Quote"}
+          </Button>
+        </div>
       </div>
     </div>
   );

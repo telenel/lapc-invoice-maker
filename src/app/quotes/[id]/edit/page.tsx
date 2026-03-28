@@ -11,6 +11,9 @@ interface ApiQuoteItem {
   unitPrice: string | number;
   extendedPrice: string | number;
   sortOrder: number;
+  isTaxable?: boolean;
+  marginOverride?: number | null;
+  costPrice?: string | number | null;
 }
 
 interface ApiQuote {
@@ -28,6 +31,10 @@ interface ApiQuote {
   recipientEmail: string | null;
   recipientOrg: string | null;
   quoteStatus: string;
+  marginEnabled?: boolean;
+  marginPercent?: number;
+  taxEnabled?: boolean;
+  isCateringEvent?: boolean;
   items: ApiQuoteItem[];
 }
 
@@ -49,12 +56,37 @@ function mapApiToFormData(quote: ApiQuote): QuoteFormData {
     recipientName: quote.recipientName ?? "",
     recipientEmail: quote.recipientEmail ?? "",
     recipientOrg: quote.recipientOrg ?? "",
+    marginEnabled: quote.marginEnabled ?? false,
+    marginPercent: quote.marginPercent ?? 0,
+    taxEnabled: quote.taxEnabled ?? false,
+    isCateringEvent: quote.isCateringEvent ?? false,
+    cateringDetails: {
+      eventDate: new Date().toISOString().split("T")[0],
+      startTime: "",
+      endTime: "",
+      location: "",
+      contactName: "",
+      contactPhone: "",
+      contactEmail: "",
+      headcount: undefined,
+      eventName: "",
+      setupRequired: false,
+      setupTime: "",
+      setupInstructions: "",
+      takedownRequired: false,
+      takedownTime: "",
+      takedownInstructions: "",
+      specialInstructions: "",
+    },
     items: quote.items.map((item) => ({
       description: item.description,
       quantity: Number(item.quantity),
       unitPrice: Number(item.unitPrice),
       extendedPrice: Number(item.extendedPrice),
       sortOrder: item.sortOrder,
+      isTaxable: item.isTaxable ?? true,
+      marginOverride: item.marginOverride ?? null,
+      costPrice: item.costPrice != null ? Number(item.costPrice) : null,
     })),
   };
 }
