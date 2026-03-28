@@ -1,7 +1,7 @@
 // src/domains/quote/service.ts
 import * as quoteRepository from "./repository";
 import { pdfService } from "@/domains/pdf/service";
-import { formatDateFromDate, formatCurrency } from "@/domains/shared/formatters";
+import { formatDateFromDate } from "@/domains/shared/formatters";
 import type {
   QuoteResponse,
   QuoteItemResponse,

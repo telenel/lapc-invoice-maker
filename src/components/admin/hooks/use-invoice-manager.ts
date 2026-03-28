@@ -19,7 +19,7 @@ export interface Invoice {
   notes?: string | null;
   createdAt: string;
   staff: { id: string; name: string; title: string; department: string };
-  creator: { id: string; name: string; username: string };
+  creatorName: string;
 }
 
 interface ApiResponse {

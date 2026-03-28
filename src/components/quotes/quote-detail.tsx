@@ -69,11 +69,7 @@ interface Quote {
     extension: string | null;
     email: string | null;
   };
-  creator: {
-    id: string;
-    name: string;
-    username: string;
-  };
+  creatorName: string;
   items: QuoteItem[];
   convertedToInvoice: {
     id: string;
