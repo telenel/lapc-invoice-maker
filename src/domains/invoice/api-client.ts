@@ -28,6 +28,8 @@ function buildFilterParams(filters: InvoiceFilters): URLSearchParams {
   if (filters.dateTo) params.set("dateTo", filters.dateTo);
   if (filters.amountMin !== undefined) params.set("amountMin", String(filters.amountMin));
   if (filters.amountMax !== undefined) params.set("amountMax", String(filters.amountMax));
+  if (filters.creatorId) params.set("creatorId", filters.creatorId);
+  if (filters.isRunning !== undefined) params.set("isRunning", String(filters.isRunning));
   if (filters.page) params.set("page", String(filters.page));
   if (filters.pageSize) params.set("pageSize", String(filters.pageSize));
   if (filters.sortBy) params.set("sortBy", filters.sortBy);
