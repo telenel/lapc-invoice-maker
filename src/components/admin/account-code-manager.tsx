@@ -21,12 +21,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
-interface StaffSummary {
-  id: string;
-  name: string;
-  department: string;
-}
+import { staffApi } from "@/domains/staff/api-client";
+import type { StaffResponse } from "@/domains/staff/types";
 
 interface AccountCode {
   id: string;
@@ -35,12 +31,12 @@ interface AccountCode {
   description: string;
   lastUsedAt: string;
   createdAt: string;
-  staff: StaffSummary;
+  staff: Pick<StaffResponse, "id" | "name" | "department">;
 }
 
 export function AccountCodeManager() {
   const [codes, setCodes] = useState<AccountCode[]>([]);
-  const [staffList, setStaffList] = useState<StaffSummary[]>([]);
+  const [staffList, setStaffList] = useState<StaffResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [filter, setFilter] = useState("");
@@ -65,11 +61,8 @@ export function AccountCodeManager() {
 
   const fetchStaff = useCallback(async () => {
     try {
-      const res = await fetch("/api/staff");
-      if (res.ok) {
-        const data = await res.json();
-        setStaffList(data.map((s: StaffSummary) => ({ id: s.id, name: s.name, department: s.department })));
-      }
+      const data = await staffApi.list();
+      setStaffList(data);
     } catch {
       // ignore
     }

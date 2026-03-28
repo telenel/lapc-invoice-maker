@@ -73,7 +73,7 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
         sortBy,
         sortOrder: sortDir,
       });
-      setInvoices(data.data);
+      setInvoices(data.invoices);
       setTotal(data.total);
     } catch {
       toast.error("Failed to load invoices");

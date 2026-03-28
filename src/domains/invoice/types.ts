@@ -32,6 +32,7 @@ export interface InvoiceResponse {
   prismcorePath: string | null;
   createdAt: string;
   staff: InvoiceStaffDetail;
+  creatorId: string;
   creatorName: string;
   items: InvoiceItemResponse[];
 }
@@ -100,7 +101,25 @@ export interface FinalizeInput {
   contactExtension?: string;
 }
 
+export interface InvoiceListResponse {
+  invoices: InvoiceResponse[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 export interface InvoiceStatsResponse {
   total: number;
   sumTotalAmount: number;
+}
+
+export interface CreatorStatEntry {
+  id: string;
+  name: string;
+  invoiceCount: number;
+  totalAmount: number;
+}
+
+export interface CreatorStatsResponse {
+  users: CreatorStatEntry[];
 }

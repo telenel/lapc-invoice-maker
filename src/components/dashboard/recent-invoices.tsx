@@ -19,7 +19,7 @@ export function RecentInvoices() {
     async function fetchInvoices() {
       try {
         const data = await invoiceApi.list({ pageSize: 10, sortBy: "createdAt", sortOrder: "desc" });
-        setInvoices(data.data);
+        setInvoices(data.invoices);
       } catch (err) {
         console.error("Failed to fetch recent invoices:", err);
       } finally {

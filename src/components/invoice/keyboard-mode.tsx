@@ -18,6 +18,7 @@ import type {
   StaffAccountNumber,
   GenerationStep,
 } from "./invoice-form";
+import { staffApi } from "@/domains/staff/api-client";
 import type { StaffResponse, StaffDetailResponse } from "@/domains/staff/types";
 
 // ---------------------------------------------------------------------------
@@ -121,8 +122,7 @@ export function KeyboardMode({
 
   // ---- Data fetching ----
   useEffect(() => {
-    fetch("/api/staff")
-      .then((res) => res.json())
+    staffApi.list()
       .then((data: StaffResponse[]) => {
         setStaff(data);
         // When editing an existing invoice, re-populate signatures and account numbers

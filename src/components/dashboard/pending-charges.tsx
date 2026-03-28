@@ -6,28 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatAmount, getInitials } from "@/lib/formatters";
 import { invoiceApi } from "@/domains/invoice/api-client";
-
-interface PendingUser {
-  id: string;
-  name: string;
-  invoiceCount: number;
-  totalAmount: number;
-}
-
-interface PendingGroupResponse {
-  users: PendingUser[];
-}
+import type { CreatorStatEntry } from "@/domains/invoice/types";
 
 export function PendingCharges() {
-  const [users, setUsers] = useState<PendingUser[]>([]);
+  const [users, setUsers] = useState<CreatorStatEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Uses groupBy=creator which returns { users } — not covered by invoiceApi.getStats()
-    const params = new URLSearchParams({ statsOnly: "true", groupBy: "creator", status: "PENDING_CHARGE" });
-    fetch(`/api/invoices?${params}`)
-      .then((r) => r.ok ? r.json() as Promise<PendingGroupResponse> : { users: [] as PendingUser[] })
-      .then((data) => setUsers(data.users || []))
+    invoiceApi.getCreatorStats("PENDING_CHARGE")
+      .then((data) => setUsers(data.users))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);

@@ -1,6 +1,6 @@
 // src/domains/admin/repository.ts
 import { prisma } from "@/lib/prisma";
-import type { CreateUserInput, UpdateUserInput, CreateAccountCodeInput } from "./types";
+import type { UpdateUserInput, CreateAccountCodeInput } from "./types";
 
 const userSelect = {
   id: true,

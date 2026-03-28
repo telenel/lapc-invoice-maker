@@ -39,8 +39,9 @@ function toStaffResponse(staff: {
 
 function toDetailResponse(staff: Awaited<ReturnType<typeof staffRepository.findById>>): StaffDetailResponse | null {
   if (!staff) return null;
+  const base = toStaffResponse({ ...staff, approvalChain: (staff.approvalChain as string[]) ?? [] });
   return {
-    ...toStaffResponse(staff),
+    ...base,
     accountNumbers: staff.accountNumbers.map((a) => ({
       id: a.id,
       accountCode: a.accountCode,
@@ -62,13 +63,13 @@ function toDetailResponse(staff: Awaited<ReturnType<typeof staffRepository.findB
 export const staffService = {
   async list(filters: StaffFilters): Promise<StaffResponse[]> {
     const staff = await staffRepository.findMany(filters);
-    return staff.map(toStaffResponse);
+    return staff.map((s) => toStaffResponse({ ...s, approvalChain: (s.approvalChain as string[]) ?? [] }));
   },
 
   async listPaginated(filters: StaffFilters & { page: number; pageSize: number }): Promise<PaginatedResponse<StaffResponse>> {
     const { data, total } = await staffRepository.findManyPaginated(filters);
     return {
-      data: data.map(toStaffResponse),
+      data: data.map((s) => toStaffResponse({ ...s, approvalChain: (s.approvalChain as string[]) ?? [] })),
       total,
       page: filters.page,
       pageSize: filters.pageSize,
@@ -82,7 +83,7 @@ export const staffService = {
 
   async create(input: CreateStaffInput): Promise<StaffResponse> {
     const staff = await staffRepository.create(input);
-    return toStaffResponse(staff);
+    return toStaffResponse({ ...staff, approvalChain: (staff.approvalChain as string[]) ?? [] });
   },
 
   async update(id: string, input: UpdateStaffInput): Promise<StaffDetailResponse | null> {

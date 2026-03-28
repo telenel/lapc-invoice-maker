@@ -3,11 +3,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { invoiceApi } from "./api-client";
 import { handleApiError } from "@/domains/shared/errors";
-import type { InvoiceResponse, InvoiceFilters, InvoiceStatsResponse } from "./types";
-import type { PaginatedResponse } from "@/domains/shared/types";
+import type { InvoiceResponse, InvoiceListResponse, InvoiceFilters, InvoiceStatsResponse } from "./types";
 
 export function useInvoices(filters: InvoiceFilters) {
-  const [data, setData] = useState<PaginatedResponse<InvoiceResponse> | null>(null);
+  const [data, setData] = useState<InvoiceListResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refetch = useCallback(async () => {

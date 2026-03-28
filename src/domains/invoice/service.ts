@@ -79,6 +79,7 @@ function toInvoiceResponse(invoice: NonNullable<InvoiceWithRelations>): InvoiceR
     prismcorePath: invoice.prismcorePath,
     createdAt: invoice.createdAt.toISOString(),
     staff,
+    creatorId: invoice.creator.id,
     creatorName: invoice.creator.name,
     items,
   };

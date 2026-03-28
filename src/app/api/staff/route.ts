@@ -1,5 +1,5 @@
 // src/app/api/staff/route.ts
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { withAuth } from "@/domains/shared/auth";
 import { staffService } from "@/domains/staff/service";
 import { staffSchema } from "@/lib/validators";

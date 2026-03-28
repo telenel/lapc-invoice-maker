@@ -97,7 +97,7 @@ export interface CreateStaffInput {
   approvalChain?: string[];
 }
 
-export interface UpdateStaffInput extends Partial<CreateStaffInput> {}
+export type UpdateStaffInput = Partial<CreateStaffInput>;
 
 export interface UpsertAccountNumberInput {
   staffId: string;

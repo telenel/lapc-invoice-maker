@@ -123,13 +123,13 @@ export const staffRepository = {
     });
   },
 
-  async upsertSignerHistory(invoiceId: string, staffId: string, position: number, signerId: string) {
+  async upsertSignerHistory(_invoiceId: string, staffId: string, position: number, signerStaffId: string) {
     return prisma.staffSignerHistory.upsert({
       where: {
-        staffId_position: { staffId, position },
+        staffId_signerStaffId_position: { staffId, signerStaffId, position },
       },
-      update: { signerId },
-      create: { staffId, position, signerId, invoiceId },
+      update: { lastUsedAt: new Date() },
+      create: { staffId, position, signerStaffId },
     });
   },
 };

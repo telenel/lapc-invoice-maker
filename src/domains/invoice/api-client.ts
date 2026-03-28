@@ -1,12 +1,13 @@
 import { ApiError } from "@/domains/shared/types";
 import type {
   InvoiceResponse,
+  InvoiceListResponse,
   CreateInvoiceInput,
   InvoiceFilters,
   FinalizeInput,
   InvoiceStatsResponse,
+  CreatorStatsResponse,
 } from "./types";
-import type { PaginatedResponse } from "@/domains/shared/types";
 
 const BASE = "/api/invoices";
 
@@ -35,9 +36,9 @@ function buildFilterParams(filters: InvoiceFilters): URLSearchParams {
 }
 
 export const invoiceApi = {
-  async list(filters: InvoiceFilters = {}): Promise<PaginatedResponse<InvoiceResponse>> {
+  async list(filters: InvoiceFilters = {}): Promise<InvoiceListResponse> {
     const params = buildFilterParams(filters);
-    return request<PaginatedResponse<InvoiceResponse>>(`${BASE}?${params}`);
+    return request<InvoiceListResponse>(`${BASE}?${params}`);
   },
 
   async getById(id: string): Promise<InvoiceResponse> {
@@ -77,6 +78,12 @@ export const invoiceApi = {
     const params = buildFilterParams(filters);
     params.set("statsOnly", "true");
     return request<InvoiceStatsResponse>(`${BASE}?${params}`);
+  },
+
+  async getCreatorStats(status?: "DRAFT" | "FINAL" | "PENDING_CHARGE"): Promise<CreatorStatsResponse> {
+    const params = new URLSearchParams({ statsOnly: "true", groupBy: "creator" });
+    if (status) params.set("status", status);
+    return request<CreatorStatsResponse>(`${BASE}?${params}`);
   },
 
   async getPdf(id: string): Promise<Blob> {
