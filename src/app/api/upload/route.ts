@@ -21,6 +21,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Only PDF files are allowed" }, { status: 400 });
     }
 
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json({ error: "File size exceeds 10MB limit" }, { status: 400 });
+    }
+
     const uploadDir = path.join(process.cwd(), "public", "uploads");
     await mkdir(uploadDir, { recursive: true });
 

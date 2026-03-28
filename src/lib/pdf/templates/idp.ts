@@ -1,3 +1,5 @@
+import { escapeHtml } from "@/lib/html";
+
 export interface IDPItem {
   description: string;
   quantity: string;
@@ -29,16 +31,16 @@ export function renderIDP(data: IDPData): string {
   // Format extended price: show "$ -" for empty/zero, otherwise "$ 123.45"
   function fmtPrice(val: string): string {
     if (!val || val === "$0.00" || val === "0.00" || val === "0") return "$ &nbsp;&nbsp;&nbsp;-";
-    if (val.startsWith("$")) return val;
-    return `$ ${val}`;
+    if (val.startsWith("$")) return escapeHtml(val);
+    return `$ ${escapeHtml(val)}`;
   }
 
   const deptItemRows = rows
     .map(
       (item) => `
         <tr>
-          <td class="c" style="height:19px;">${item.description}</td>
-          <td class="c" style="text-align:center;">${item.quantity}</td>
+          <td class="c" style="height:19px;">${escapeHtml(item.description)}</td>
+          <td class="c" style="text-align:center;">${escapeHtml(item.quantity)}</td>
           <td class="c" style="text-align:right;">${item.unitPrice ? fmtPrice(item.unitPrice) : ""}</td>
           <td class="c" style="text-align:right;">${fmtPrice(item.extendedPrice)}</td>
         </tr>`
@@ -189,10 +191,10 @@ export function renderIDP(data: IDPData): string {
         <!-- Row 1: Date boxes | Dept or Unit Requesting Services | Document # -->
         <tr>
           <td class="v" style="width:16%; padding:3px 4px;">
-            <span class="date-box">${datePart1}</span><span class="date-box">${datePart2}</span><span class="date-box" style="width:44px;">${datePart3}</span>
+            <span class="date-box">${escapeHtml(datePart1)}</span><span class="date-box">${escapeHtml(datePart2)}</span><span class="date-box" style="width:44px;">${escapeHtml(datePart3)}</span>
           </td>
-          <td class="v" style="width:54%;">${data.department}</td>
-          <td class="v" style="width:30%;">${data.documentNumber}</td>
+          <td class="v" style="width:54%;">${escapeHtml(data.department)}</td>
+          <td class="v" style="width:30%;">${escapeHtml(data.documentNumber)}</td>
         </tr>
         <tr>
           <td class="lb" style="width:16%;">Date</td>
@@ -202,9 +204,9 @@ export function renderIDP(data: IDPData): string {
 
         <!-- Row 2: Requesting Department | SAP Account | Estimated Cost -->
         <tr>
-          <td class="v" colspan="1">${data.requestingDept}</td>
-          <td class="v" colspan="1">${data.sapAccount}</td>
-          <td class="v" colspan="1">${data.estimatedCost}</td>
+          <td class="v" colspan="1">${escapeHtml(data.requestingDept)}</td>
+          <td class="v" colspan="1">${escapeHtml(data.sapAccount)}</td>
+          <td class="v" colspan="1">${escapeHtml(data.estimatedCost)}</td>
         </tr>
         <tr>
           <td class="lb">Requesting Department</td>
@@ -214,9 +216,9 @@ export function renderIDP(data: IDPData): string {
 
         <!-- Row 3: Name of Dept Approver | Department Contact | Contact Phone -->
         <tr>
-          <td class="v">${data.approverName}</td>
-          <td class="v">${data.contactName}</td>
-          <td class="v">${data.contactPhone}</td>
+          <td class="v">${escapeHtml(data.approverName)}</td>
+          <td class="v">${escapeHtml(data.contactName)}</td>
+          <td class="v">${escapeHtml(data.contactPhone)}</td>
         </tr>
         <tr>
           <td class="lb">Name of Department Approver</td>
@@ -228,7 +230,7 @@ export function renderIDP(data: IDPData): string {
         <tr>
           <td colspan="3" style="border:1px solid #000; padding:2px 4px; height:20px; vertical-align:top;">
             <span style="font-weight:bold; font-size:7.5pt;">Comments:</span>
-            <span style="font-size:9pt; margin-left:4px;">${data.comments ?? ""}</span>
+            <span style="font-size:9pt; margin-left:4px;">${escapeHtml(data.comments ?? "")}</span>
           </td>
         </tr>
 

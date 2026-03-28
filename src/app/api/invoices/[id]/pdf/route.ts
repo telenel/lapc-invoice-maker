@@ -22,7 +22,7 @@ export const GET = withAuth(async (_req: NextRequest, _session, ctx) => {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="${invoice.invoiceNumber ?? "invoice"}.pdf"`,
+        "Content-Disposition": `inline; filename="${(invoice.invoiceNumber ?? "invoice").replace(/[\r\n"]/g, "")}.pdf"`,
         "Content-Length": pdfBuffer.length.toString(),
       },
     });

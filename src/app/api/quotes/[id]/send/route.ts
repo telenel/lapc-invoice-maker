@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth } from "@/domains/shared/auth";
+import { withAuth, forbiddenResponse } from "@/domains/shared/auth";
 import { quoteService } from "@/domains/quote/service";
 
-export const POST = withAuth(async (req: NextRequest, _session, ctx) => {
+export const POST = withAuth(async (req: NextRequest, session, ctx) => {
   const { id } = await ctx!.params;
   try {
+    const existing = await quoteService.getById(id);
+    if (!existing) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
+    if (session.user.role !== "admin" && existing.creatorId !== session.user.id) {
+      return forbiddenResponse();
+    }
     const { shareToken } = await quoteService.markSent(id);
     const origin = req.headers.get("origin") ?? req.headers.get("host") ?? "";
     const protocol = origin.startsWith("http") ? "" : "https://";

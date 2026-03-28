@@ -37,6 +37,7 @@ export interface QuoteResponse {
   shareToken: string | null;
   createdAt: string;
   staff: StaffSummary;
+  creatorId: string;
   creatorName: string;
   items: QuoteItemResponse[];
   convertedToInvoice?: { id: string; invoiceNumber: string | null } | null;
@@ -89,6 +90,7 @@ export interface QuoteFilters {
   quoteStatus?: QuoteStatus | "all";
   department?: string;
   category?: string;
+  creatorId?: string;
   dateFrom?: string;
   dateTo?: string;
   page?: number;

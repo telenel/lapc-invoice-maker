@@ -41,6 +41,9 @@ function buildWhere(filters: QuoteFilters): Prisma.InvoiceWhereInput {
   if (filters.category) {
     where.category = filters.category as Prisma.InvoiceWhereInput["category"];
   }
+  if (filters.creatorId) {
+    where.createdBy = filters.creatorId;
+  }
   if (filters.dateFrom || filters.dateTo) {
     where.date = {};
     if (filters.dateFrom) where.date.gte = new Date(filters.dateFrom);

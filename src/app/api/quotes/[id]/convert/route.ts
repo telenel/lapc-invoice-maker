@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth } from "@/domains/shared/auth";
+import { withAuth, forbiddenResponse } from "@/domains/shared/auth";
 import { quoteService } from "@/domains/quote/service";
 
 export const POST = withAuth(async (_req: NextRequest, session, ctx) => {
   const { id } = await ctx!.params;
   try {
+    const existing = await quoteService.getById(id);
+    if (!existing) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
+    if (session.user.role !== "admin" && existing.creatorId !== session.user.id) {
+      return forbiddenResponse();
+    }
     const invoice = await quoteService.convertToInvoice(id, session.user.id);
     return NextResponse.json(
       { invoice, redirectTo: `/invoices/${invoice.id}/edit` },

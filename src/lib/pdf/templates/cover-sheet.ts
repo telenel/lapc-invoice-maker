@@ -1,3 +1,5 @@
+import { escapeHtml } from "@/lib/html";
+
 export interface CoverSheetData {
   date: string;
   semesterYearDept: string;
@@ -20,7 +22,7 @@ export function renderCoverSheet(data: CoverSheetData): string {
       (sig) => `
       <div class="sig-block">
         <div class="sig-line"></div>
-        <div class="sig-name">${sig.name}${sig.title ? `, ${sig.title}` : ""}</div>
+        <div class="sig-name">${escapeHtml(sig.name)}${sig.title ? `, ${escapeHtml(sig.title)}` : ""}</div>
       </div>`
     )
     .join("\n");
@@ -173,7 +175,7 @@ export function renderCoverSheet(data: CoverSheetData): string {
   </div>
   <div class="memo-row">
     <span class="memo-label">DATE:</span>
-    <span class="memo-value">${data.date}</span>
+    <span class="memo-value">${escapeHtml(data.date)}</span>
   </div>
   <div class="memo-row">
     <span class="memo-label">SUBJECT:</span>
@@ -183,25 +185,25 @@ export function renderCoverSheet(data: CoverSheetData): string {
 
 <div class="body-text">
   This memorandum authorizes payment to the Pierce College Store for goods and/or services provided to the following department:<br/>
-  <span class="highlight">${data.semesterYearDept}</span>
+  <span class="highlight">${escapeHtml(data.semesterYearDept)}</span>
 </div>
 
 <div class="invoice-fields">
   <div class="field-row">
     <span class="field-label">INVOICE NUMBER:</span>
-    <span class="field-value">${data.invoiceNumber}</span>
+    <span class="field-value">${escapeHtml(data.invoiceNumber)}</span>
   </div>
   <div class="field-row">
     <span class="field-label">CHARGE ACCOUNT NUMBER:</span>
-    <span class="field-value">${data.chargeAccountNumber}</span>
+    <span class="field-value">${escapeHtml(data.chargeAccountNumber)}</span>
   </div>
   <div class="field-row">
     <span class="field-label">ACCOUNT CODE:</span>
-    <span class="field-value">${data.accountCode}</span>
+    <span class="field-value">${escapeHtml(data.accountCode)}</span>
   </div>
   <div class="field-row">
     <span class="field-label">TOTAL PAYMENT AUTHORIZED:</span>
-    <span class="field-value">${data.totalAmount}</span>
+    <span class="field-value">${escapeHtml(data.totalAmount)}</span>
   </div>
 </div>
 

@@ -292,7 +292,8 @@ describe("renderIDP", () => {
         { description: "Book & Pen (x2) <special>", quantity: "1", unitPrice: "$10.00", extendedPrice: "$10.00" },
       ],
     });
-    expect(html).toContain("Book & Pen (x2) <special>");
+    // After HTML escaping, special characters should be encoded
+    expect(html).toContain("Book &amp; Pen (x2) &lt;special&gt;");
   });
 
   it("handles empty string values without 'undefined' in output", () => {

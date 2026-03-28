@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth } from "@/domains/shared/auth";
+import { withAuth, forbiddenResponse } from "@/domains/shared/auth";
 import { quoteService } from "@/domains/quote/service";
 import { quoteUpdateSchema } from "@/lib/validators";
 
-export const GET = withAuth(async (_req: NextRequest, _session, ctx) => {
+export const GET = withAuth(async (_req: NextRequest, session, ctx) => {
   const { id } = await ctx!.params;
   try {
     const quote = await quoteService.getById(id);
     if (!quote) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
+    if (session.user.role !== "admin" && quote.creatorId !== session.user.id) {
+      return forbiddenResponse();
+    }
     return NextResponse.json(quote);
   } catch (err) {
     console.error("GET /api/quotes/[id] failed:", err);
@@ -15,7 +18,7 @@ export const GET = withAuth(async (_req: NextRequest, _session, ctx) => {
   }
 });
 
-export const PUT = withAuth(async (req: NextRequest, _session, ctx) => {
+export const PUT = withAuth(async (req: NextRequest, session, ctx) => {
   const { id } = await ctx!.params;
   const body = await req.json();
   const parsed = quoteUpdateSchema.safeParse(body);
@@ -25,6 +28,11 @@ export const PUT = withAuth(async (req: NextRequest, _session, ctx) => {
   }
 
   try {
+    const existing = await quoteService.getById(id);
+    if (!existing) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
+    if (session.user.role !== "admin" && existing.creatorId !== session.user.id) {
+      return forbiddenResponse();
+    }
     const quote = await quoteService.update(id, parsed.data);
     return NextResponse.json(quote);
   } catch (err) {
@@ -36,9 +44,14 @@ export const PUT = withAuth(async (req: NextRequest, _session, ctx) => {
   }
 });
 
-export const DELETE = withAuth(async (_req: NextRequest, _session, ctx) => {
+export const DELETE = withAuth(async (_req: NextRequest, session, ctx) => {
   const { id } = await ctx!.params;
   try {
+    const existing = await quoteService.getById(id);
+    if (!existing) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
+    if (session.user.role !== "admin" && existing.creatorId !== session.user.id) {
+      return forbiddenResponse();
+    }
     await quoteService.delete(id);
     return NextResponse.json({ success: true });
   } catch (err) {
