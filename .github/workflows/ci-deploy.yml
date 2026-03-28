@@ -7,38 +7,93 @@ on:
     branches: [main]
 
 jobs:
-  check:
-    name: Lint & Build
+  setup:
+    name: Setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
       - run: npm ci
       - run: npx prisma generate
-      - run: npm run build
 
-  test:
-    name: Tests
+      - uses: actions/cache/save@v4
+        with:
+          path: |
+            node_modules
+            src/generated/prisma
+          key: deps-${{ runner.os }}-${{ hashFiles('package-lock.json', 'prisma/schema.prisma') }}
+
+  lint:
+    name: Lint
+    needs: setup
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
 
-      - run: npm ci
-      - run: npm test
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            src/generated/prisma
+          key: deps-${{ runner.os }}-${{ hashFiles('package-lock.json', 'prisma/schema.prisma') }}
+
+      - run: npm run lint
+
+  build:
+    name: Build
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            src/generated/prisma
+          key: deps-${{ runner.os }}-${{ hashFiles('package-lock.json', 'prisma/schema.prisma') }}
+
+      - run: npm run build
+
+  test:
+    name: Tests
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            node_modules
+            src/generated/prisma
+          key: deps-${{ runner.os }}-${{ hashFiles('package-lock.json', 'prisma/schema.prisma') }}
+
+      - run: npx vitest run --dir tests
 
   deploy:
     name: Deploy to VPS
-    needs: [check, test]
+    needs: [lint, build, test]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
@@ -53,3 +108,19 @@ jobs:
             exit 1
           fi
           echo "Deploy triggered successfully"
+
+      - name: Health check
+        run: |
+          echo "Waiting 90s for deploy to complete..."
+          sleep 90
+          for i in 1 2 3; do
+            status=$(curl -s -o /dev/null -w "%{http_code}" https://invoice.montalvo.io/api/auth/session)
+            echo "Attempt $i: HTTP $status"
+            if [ "$status" = "200" ]; then
+              echo "Health check passed"
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "Health check failed after 3 attempts"
+          exit 1
