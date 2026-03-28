@@ -15,7 +15,8 @@ Invoice generation webapp for Los Angeles Pierce College. Handles invoice drafti
 | PDF | Puppeteer (render) + pdf-lib (merge) |
 | Testing | Vitest |
 | Deployment | Docker Compose + Traefik on montalvo.io |
-| CI/CD | GitHub Actions (lint → build → test → deploy) |
+| CI/CD | GitHub Actions (setup → lint/build/test parallel → deploy) |
+| Code Review | CodeRabbit (assertive profile, auto-review on PRs) |
 
 ---
 
@@ -67,12 +68,14 @@ src/
 │
 ├── generated/             # Prisma generated client (do not edit)
 │
-└── lib/                   # Legacy utilities (being migrated to domains)
+└── lib/                   # Utilities, auth, PDF generation, validators
     ├── auth.ts
     ├── csv.ts
     ├── formatters.ts
+    ├── html.ts            # escapeHtml() for XSS prevention in PDF templates
     ├── prisma.ts
     ├── quote-number.ts
+    ├── rate-limit.ts      # Sliding window rate limiter (login protection)
     ├── sse.ts             # In-memory SSE pub/sub for real-time notifications
     ├── themes.ts
     ├── utils.ts
@@ -84,7 +87,9 @@ prisma/
 ├── migrations/
 └── seed.ts
 
-tests/
+src/__tests__/             # Component and integration tests (7 files, 47 tests)
+
+tests/                     # Domain and lib tests (19 files, 303 tests)
 ├── components/
 ├── domains/
 └── lib/
@@ -244,6 +249,20 @@ These domains encapsulate endpoint URLs and response parsing for smaller feature
 - Logo loaded as base64 data URI from `public/lapc-logo.png`.
 - Cover sheet: portrait Letter. IDP (Internal Distribution Page): landscape 11×8.5in.
 - `pdf/service.ts` owns the Puppeteer lifecycle; `pdf/storage.ts` abstracts file I/O.
+- ALL interpolated values must use `escapeHtml()` from `src/lib/html.ts` — prevents XSS.
+- Puppeteer blocks all external requests via request interception — only `data:` and `file:` URLs allowed.
+
+---
+
+## Security
+
+- **XSS prevention** — `escapeHtml()` in `src/lib/html.ts` wraps all user input in PDF templates
+- **Rate limiting** — sliding window limiter in `src/lib/rate-limit.ts`: 5 login attempts per 15min per IP+username
+- **Puppeteer sandboxing** — request interception blocks all external URLs; only `data:` and `file:` protocols allowed
+- **Path traversal protection** — `prismcorePath` must resolve within `public/uploads/`
+- **CSV injection** — `escapeCsv()` prefixes formula triggers (`=+-@`) with `'`
+- **Ownership verification** — all single-resource endpoints verify `resource.createdBy === session.user.id` (admins bypass)
+- **Auth wrappers** — `withAuth()` / `withAdmin()` centralize session checks in route handlers
 
 ---
 
@@ -253,6 +272,20 @@ These domains encapsulate endpoint URLs and response parsing for smaller feature
 - Roles: `admin` and `user`. First user to complete setup is automatically admin.
 - `withAuth()` / `withAdmin()` route wrappers in `shared/auth.ts` centralize session checks.
 - Setup flow redirects unauthenticated users to `/setup` or `/login` via middleware.
+
+---
+
+## Dashboard
+
+The home page (`src/app/page.tsx`) features a personalized dashboard:
+
+- **Personalized header** — time-based greeting (Good Morning/Afternoon/Evening) with username
+- **YourFocus widget** — prioritized action items for the current user
+- **Drag-and-drop layout** — widgets can be reordered, persisted to `localStorage` (key: `lapc-dashboard-order`)
+- **Stats cards** — invoice/quote counts filtered by `createdAt` (not invoice date)
+- **Recent invoices, running invoices, pending charges, team activity** — all role-aware
+
+Components in `src/components/dashboard/`.
 
 ---
 
@@ -293,9 +326,9 @@ These routes are excluded from auth middleware in `src/middleware.ts`.
 
 ## Testing
 
-**Total: 350 tests** across 19 test files.
+**Total: 350 tests** across 26 test files in two directories.
 
-### Test Files
+### Test Files — `tests/` (303 tests)
 
 | File | Domain/Layer |
 |---|---|
@@ -319,11 +352,25 @@ These routes are excluded from auth middleware in `src/middleware.ts`.
 | `tests/lib/themes.test.ts` | Themes lib |
 | `tests/lib/validators.test.ts` | Validators lib |
 
+### Test Files — `src/__tests__/` (47 tests)
+
+| File | Area |
+|---|---|
+| `src/__tests__/csv-export.test.ts` | CSV export integration |
+| `src/__tests__/idp-data-mapping.test.ts` | IDP data mapping |
+| `src/__tests__/inline-combobox.test.tsx` | Inline combobox component |
+| `src/__tests__/keyboard-mode.test.tsx` | Keyboard mode component |
+| `src/__tests__/line-items-keyboard.test.tsx` | Line items keyboard nav |
+| `src/__tests__/quick-pick-tax.test.tsx` | Quick pick tax calculation |
+| `src/__tests__/quote-lifecycle.test.ts` | Quote lifecycle integration |
+
 ### Commands
 
 ```bash
-npm test              # Run all tests
-npm run test:watch    # Watch mode
+npm test                    # Run all tests (may include ECC tests)
+npm run test:watch          # Watch mode
+npx vitest run --dir tests  # Run project tests only
+npx vitest run --dir tests && npx vitest run --dir src/__tests__  # Full CI test run
 ```
 
 ---
@@ -357,13 +404,21 @@ In production, `NEXT_PUBLIC_BUILD_SHA` reflects the exact commit deployed. Falls
 
 All changes go through pull requests targeting `main`. PRs are squash-merged after CI passes. Direct pushes to `main` are not used for feature work.
 
+**Branch protection on `main`:**
+- Required checks: Lint, Build, Tests (all must pass)
+- Required reviews: 1 approval (CodeRabbit counts)
+- Stale reviews dismissed on new pushes
+- Enforce admins: OFF (admin can bypass when needed)
+
+**CodeRabbit** reviews every PR automatically with the `assertive` profile. Config in `.coderabbit.yaml`. Uses `request_changes_workflow: true` — if CodeRabbit requests changes, it blocks merge until resolved.
+
 ### CI/CD Pipeline
 
 GitHub Actions runs on every push to `main` and every PR targeting `main`:
 
-1. **Lint & Build** — `npm run lint` + `npx prisma generate` + `npm run build`
-2. **Tests** — `npm test`
-3. **Deploy** (push to `main` only) — triggers HTTPS webhook at `montalvo.io/hooks/deploy-lapc`
+1. **Setup** — `npm ci` + `npx prisma generate`, caches `node_modules` and `src/generated/prisma`
+2. **Lint** / **Build** / **Tests** — run in parallel after Setup (Node 22)
+3. **Deploy** (push to `main` only) — triggers HTTPS webhook at `montalvo.io/hooks/deploy-lapc`, then polls health check at `invoice.montalvo.io`
 
 Deployment is Docker Compose on montalvo.io behind Traefik. The deploy webhook triggers a build-first strategy (no docker-down before build).
 
@@ -383,5 +438,5 @@ Deployment is Docker Compose on montalvo.io behind Traefik. The deploy webhook t
 
 - All Prisma models: `@@map("snake_case_table")`, fields: `@map("snake_case_column")`
 - Files: kebab-case. Components: PascalCase
-- API routes: validate with Zod, check `getServerSession()`, return `NextResponse`
+- API routes: validate with Zod, use `withAuth`/`withAdmin` wrappers, return `NextResponse`
 - Account Number and Account Code are separate fields — do not conflate them
