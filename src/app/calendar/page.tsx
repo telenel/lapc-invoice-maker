@@ -15,6 +15,7 @@ import { eventApi } from "@/domains/event/api-client";
 import type { EventResponse } from "@/domains/event/types";
 import { EventLegend } from "@/components/calendar/event-legend";
 import { AddEventModal } from "@/components/calendar/add-event-modal";
+import { useCalendarSSE } from "@/domains/calendar/hooks";
 
 export default function CalendarPage() {
   const router = useRouter();
@@ -25,6 +26,8 @@ export default function CalendarPage() {
   function refetchEvents() {
     calendarRef.current?.getApi().refetchEvents();
   }
+
+  useCalendarSSE(refetchEvents);
 
   const fetchEvents = useCallback(
     async (

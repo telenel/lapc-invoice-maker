@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 import { StatsCards } from "./stats-cards";
 import { PendingCharges } from "./pending-charges";
 import { RunningInvoices } from "./running-invoices";
-import { RecentInvoices } from "./recent-invoices";
+import { RecentActivity } from "./recent-invoices";
 import { YourFocus } from "./your-focus";
 import { TodaysEvents } from "./todays-events";
 
@@ -209,7 +209,7 @@ export function DraggableDashboard() {
 
       {/* Recent Invoices — always pinned to bottom */}
       <div className="mt-3">
-        <RecentInvoices />
+        <RecentActivity />
       </div>
     </div>
   );

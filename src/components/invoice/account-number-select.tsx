@@ -13,7 +13,7 @@ import type { InvoiceFormData, StaffAccountNumber } from "./invoice-form";
 // ---------------------------------------------------------------------------
 
 interface AccountNumberSelectProps {
-  form: Pick<InvoiceFormData, "staffId" | "accountNumber">;
+  form: Pick<InvoiceFormData, "staffId" | "accountNumber" | "accountCode">;
   updateField: <K extends keyof InvoiceFormData>(
     key: K,
     value: InvoiceFormData[K]
@@ -42,13 +42,17 @@ export function AccountNumberSelect({
 
   function handleAccountNumberSelect(item: ComboboxItem) {
     if (item.isCustom) {
+      if (!form.staffId) {
+        toast.error("Select a staff member before adding a custom account code");
+        return;
+      }
       const raw = item.label.replace(/^Add new:\s*/, "");
       setPendingAccountCode(raw);
       setNewAccountDescription("");
       setShowAccountDescInput(true);
-      updateField("accountNumber", raw);
+      updateField("accountCode", raw);
     } else {
-      updateField("accountNumber", item.label);
+      updateField("accountCode", item.label);
       setShowAccountDescInput(false);
     }
   }
@@ -79,14 +83,14 @@ export function AccountNumberSelect({
 
   return (
     <div className="space-y-1">
-      <label className="text-sm font-medium">Account Number</label>
+      <label className="text-sm font-medium">Account Code</label>
       <InlineCombobox
         items={accountNumberItems}
-        value={form.accountNumber}
-        displayValue={form.accountNumber}
+        value={form.accountCode}
+        displayValue={form.accountCode}
         onSelect={handleAccountNumberSelect}
-        placeholder="Search or add account number…"
-        allowCustom
+        placeholder="Search or add account code…"
+        allowCustom={Boolean(form.staffId)}
         customPrefix="Add new:"
       />
       {showAccountDescInput && (

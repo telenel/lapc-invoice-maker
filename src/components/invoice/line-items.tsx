@@ -12,6 +12,12 @@ import { InlineCombobox } from "@/components/ui/inline-combobox";
 import type { ComboboxItem } from "@/components/ui/inline-combobox";
 import { cn } from "@/lib/utils";
 
+/** Case-insensitive check so picks saved as "Coffee" still match "COFFEE". */
+function hasPickMatch(picks: Set<string>, description: string): boolean {
+  const upper = description.toUpperCase();
+  return Array.from(picks).some((p) => p.toUpperCase() === upper);
+}
+
 interface LineItemsProps {
   items: InvoiceItem[];
   onUpdate: (index: number, updates: Partial<InvoiceItem>) => void;
@@ -177,19 +183,19 @@ export function LineItems({
                   size="icon-sm"
                   onClick={() => onTogglePick?.(item.description, item.unitPrice, department)}
                   className={cn(
-                    userPickDescriptions.has(item.description)
+                    hasPickMatch(userPickDescriptions, item.description)
                       ? "text-amber-500 hover:text-amber-600"
                       : "text-muted-foreground hover:text-foreground"
                   )}
                   aria-label={
-                    userPickDescriptions.has(item.description)
+                    hasPickMatch(userPickDescriptions, item.description)
                       ? "Remove from quick picks"
                       : "Save to quick picks"
                   }
                 >
                   <Star
                     className="h-3.5 w-3.5"
-                    fill={userPickDescriptions.has(item.description) ? "currentColor" : "none"}
+                    fill={hasPickMatch(userPickDescriptions, item.description) ? "currentColor" : "none"}
                     aria-hidden="true"
                   />
                 </Button>

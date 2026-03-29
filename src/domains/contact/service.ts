@@ -38,7 +38,7 @@ export const contactService = {
   /**
    * Search contacts by name, email, or org, scoped to the requesting user.
    */
-  async search(query: string, userId?: string): Promise<ContactResponse[]> {
+  async search(query: string, userId: string): Promise<ContactResponse[]> {
     const contacts = await contactRepository.search(query, userId);
     return contacts.map(toContactResponse);
   },

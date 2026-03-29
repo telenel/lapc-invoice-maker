@@ -43,7 +43,9 @@ export function useNotifications() {
 
     es.onmessage = (event) => {
       try {
-        const notification: NotificationResponse = JSON.parse(event.data);
+        const data = JSON.parse(event.data);
+        if (!data.id || !data.title) return; // Skip non-notification SSE events (e.g., calendar-changed)
+        const notification: NotificationResponse = data;
         setNotifications((prev) => [notification, ...prev]);
         setUnreadCount((prev) => prev + 1);
       } catch {

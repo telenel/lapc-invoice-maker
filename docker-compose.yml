@@ -26,6 +26,7 @@ services:
       PDF_STORAGE_PATH: ./data/pdfs
       UPLOAD_PATH: ./public/uploads
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      POWER_AUTOMATE_EMAIL_URL: ${POWER_AUTOMATE_EMAIL_URL}
     volumes:
       - pdf-data:/app/data/pdfs
       - uploads:/app/public/uploads

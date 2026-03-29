@@ -117,17 +117,24 @@ function mapApiToFormData(quote: ApiQuote): QuoteFormData {
           takedownInstructions: "",
           specialInstructions: "",
         },
-    items: quote.items.map((item) => ({
-      _key: crypto.randomUUID(),
-      description: item.description,
-      quantity: Number(item.quantity),
-      unitPrice: Number(item.unitPrice),
-      extendedPrice: Number(item.extendedPrice),
-      sortOrder: item.sortOrder,
-      isTaxable: item.isTaxable ?? true,
-      marginOverride: item.marginOverride ?? null,
-      costPrice: item.costPrice != null ? Number(item.costPrice) : null,
-    })),
+    items: quote.items.map((item) => {
+      const dbUnitPrice = Number(item.unitPrice);
+      const dbCostPrice = item.costPrice != null ? Number(item.costPrice) : null;
+      // When costPrice exists, the DB unitPrice is the marked-up charged price.
+      // The form's unitPrice is the editable cost; itemsWithMargin re-derives the charged display.
+      const formUnitPrice = dbCostPrice ?? dbUnitPrice;
+      return {
+        _key: crypto.randomUUID(),
+        description: item.description,
+        quantity: Number(item.quantity),
+        unitPrice: formUnitPrice,
+        extendedPrice: Number(item.quantity) * formUnitPrice,
+        sortOrder: item.sortOrder,
+        isTaxable: item.isTaxable ?? true,
+        marginOverride: item.marginOverride ?? null,
+        costPrice: dbCostPrice,
+      };
+    }),
   };
 }
 

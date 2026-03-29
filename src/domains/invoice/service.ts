@@ -4,6 +4,7 @@ import { calculateLineItems, calculateTotal } from "./calculations";
 import { pdfService } from "@/domains/pdf/service";
 import { staffService } from "@/domains/staff/service";
 import { formatCurrency, formatDateFromDate } from "@/domains/shared/formatters";
+import { publishAll } from "@/lib/sse";
 import type {
   InvoiceResponse,
   InvoiceItemResponse,
@@ -14,6 +15,7 @@ import type {
 } from "./types";
 import type { InvoiceStaffDetail } from "./types";
 import type { ContactResponse } from "@/domains/contact/types";
+import type { Prisma } from "@/generated/prisma/client";
 
 // ── Signature parser ───────────────────────────────────────────────────────
 
@@ -73,6 +75,9 @@ function toInvoiceResponse(invoice: NonNullable<InvoiceWithRelations>): InvoiceR
     unitPrice: Number(item.unitPrice),
     extendedPrice: Number(item.extendedPrice),
     sortOrder: item.sortOrder,
+    isTaxable: item.isTaxable,
+    costPrice: item.costPrice != null ? Number(item.costPrice) : null,
+    marginOverride: item.marginOverride != null ? Number(item.marginOverride) : null,
   }));
 
   return {
@@ -95,6 +100,12 @@ function toInvoiceResponse(invoice: NonNullable<InvoiceWithRelations>): InvoiceR
     runningTitle: invoice.runningTitle,
     pdfPath: invoice.pdfPath,
     prismcorePath: invoice.prismcorePath,
+    marginEnabled: invoice.marginEnabled,
+    marginPercent: invoice.marginPercent != null ? Number(invoice.marginPercent) : null,
+    taxEnabled: invoice.taxEnabled,
+    taxRate: Number(invoice.taxRate),
+    isCateringEvent: invoice.isCateringEvent,
+    cateringDetails: invoice.cateringDetails,
     createdAt: invoice.createdAt.toISOString(),
     staff,
     contact,
@@ -139,8 +150,13 @@ export const invoiceService = {
     const calculatedItems = calculateLineItems(items);
     const totalAmount = calculateTotal(calculatedItems);
 
+    const { cateringDetails, ...restInvoiceData } = invoiceData;
     const invoice = await invoiceRepository.create(
-      { ...invoiceData, accountCode: invoiceData.accountCode ?? "" },
+      {
+        ...restInvoiceData,
+        accountCode: restInvoiceData.accountCode ?? "",
+        cateringDetails: cateringDetails as Prisma.InputJsonValue | undefined,
+      },
       calculatedItems,
       totalAmount,
       creatorId
@@ -155,6 +171,8 @@ export const invoiceService = {
         })
         .catch(() => {});
     }
+
+    publishAll({ type: "invoice-changed" });
 
     return toInvoiceResponse(invoice);
   },
@@ -181,10 +199,12 @@ export const invoiceService = {
       const calculatedItems = calculateLineItems(items);
       const totalAmount = calculateTotal(calculatedItems);
       const updated = await invoiceRepository.update(id, invoiceData, calculatedItems, totalAmount);
+      publishAll({ type: "invoice-changed" });
       return toInvoiceResponse(updated as unknown as NonNullable<InvoiceWithRelations>);
     }
 
     const updated = await invoiceRepository.update(id, invoiceData);
+    publishAll({ type: "invoice-changed" });
     return toInvoiceResponse(updated as unknown as NonNullable<InvoiceWithRelations>);
   },
 
@@ -202,6 +222,7 @@ export const invoiceService = {
     await pdfService.deletePdfFiles(pdfPath, invoice.prismcorePath);
 
     await invoiceRepository.deleteById(id);
+    publishAll({ type: "invoice-changed" });
   },
 
   /**
@@ -309,6 +330,8 @@ export const invoiceService = {
 
     // Run all post-finalize updates in parallel, non-critically
     await Promise.all(postUpdates).catch(() => {});
+
+    publishAll({ type: "invoice-changed" });
 
     return { pdfPath };
   },

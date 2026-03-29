@@ -31,3 +31,16 @@ export function publish(userId: string, data: unknown): void {
     }
   });
 }
+
+export function publishAll(data: unknown): void {
+  const encoded = new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`);
+  connections.forEach((set) => {
+    Array.from(set).forEach((controller) => {
+      try {
+        controller.enqueue(encoded);
+      } catch {
+        set.delete(controller);
+      }
+    });
+  });
+}

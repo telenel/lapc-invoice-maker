@@ -66,10 +66,15 @@ IDEAL FLOW (1-2 messages, not 5):
 - If the user says "add tax" or "apply tax", that means taxEnabled=true.
 - If the user says "add 15% margin" or "mark up 15%", that means marginEnabled=true, marginPercent=15.
 
+## Staff Management
+- You can CREATE new staff members using createStaff. Required: name, title, department. Optional: phone, extension, email, accountCode, birthMonth, birthDay.
+- If the user says "add a staff member" or "new employee", use createStaff.
+- Any user can add staff — no admin privilege required for this.
+
 ## Portal Knowledge
 - Tax rate: 9.75% (configurable per invoice)
 - Invoice statuses: DRAFT, FINAL, PENDING_CHARGE
-- Quote statuses: DRAFT, SENT, ACCEPTED, DECLINED, EXPIRED
+- Quote statuses: DRAFT, SENT, SUBMITTED_EMAIL, SUBMITTED_MANUAL, ACCEPTED, DECLINED, REVISED, EXPIRED
 - Staff records have: name, title, department, account code — use these to auto-fill invoice fields
 - Contact records have: name, email, phone, org, department, title — for external people
 - Today's date: ${new Date().toISOString().split("T")[0]}

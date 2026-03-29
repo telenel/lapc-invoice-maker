@@ -107,7 +107,10 @@ export function QuoteFiltersBar({
                   <SelectItem value="SENT">Sent</SelectItem>
                   <SelectItem value="ACCEPTED">Accepted</SelectItem>
                   <SelectItem value="DECLINED">Declined</SelectItem>
+                  <SelectItem value="SUBMITTED_EMAIL">Sent (Email)</SelectItem>
+                  <SelectItem value="SUBMITTED_MANUAL">Sent (Manual)</SelectItem>
                   <SelectItem value="EXPIRED">Expired</SelectItem>
+                  <SelectItem value="REVISED">Revised</SelectItem>
                 </SelectContent>
               </Select>
             </div>

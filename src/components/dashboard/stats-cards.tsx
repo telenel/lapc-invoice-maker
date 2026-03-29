@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import NumberFlow from "@number-flow/react";
@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { formatAmount, getInitials } from "@/lib/formatters";
 import { invoiceApi } from "@/domains/invoice/api-client";
 import type { CreatorStatEntry } from "@/domains/invoice/types";
+import { useSSE } from "@/lib/use-sse";
 
 interface StatsData {
   invoicesThisMonth: number;
@@ -26,42 +27,45 @@ export function StatsCards() {
 
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
 
-  useEffect(() => {
-    async function fetchStats() {
-      try {
-        const now = new Date();
-        const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const firstOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const lastOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+  const fetchStats = useCallback(async () => {
+    try {
+      const now = new Date();
+      const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const firstOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const lastOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 
-        const dateFrom = firstOfMonth.toISOString().split("T")[0];
-        const dateTo = now.toISOString().split("T")[0];
-        const lastMonthFrom = firstOfLastMonth.toISOString().split("T")[0];
-        const lastMonthTo = lastOfLastMonth.toISOString().split("T")[0];
+      const dateFrom = firstOfMonth.toISOString().split("T")[0];
+      const dateTo = now.toISOString().split("T")[0];
+      const lastMonthFrom = firstOfLastMonth.toISOString().split("T")[0];
+      const lastMonthTo = lastOfLastMonth.toISOString().split("T")[0];
 
-        const [monthData, lastMonthData, creatorStats] = await Promise.all([
-          invoiceApi.getStats({ status: "FINAL", dateFrom, dateTo }),
-          invoiceApi.getStats({ status: "FINAL", dateFrom: lastMonthFrom, dateTo: lastMonthTo }),
-          invoiceApi.getCreatorStats(),
-        ]);
+      const [monthData, lastMonthData, creatorStats] = await Promise.all([
+        invoiceApi.getStats({ status: "FINAL", dateFrom, dateTo }),
+        invoiceApi.getStats({ status: "FINAL", dateFrom: lastMonthFrom, dateTo: lastMonthTo }),
+        invoiceApi.getCreatorStats(),
+      ]);
 
-        setStats({
-          invoicesThisMonth: monthData.total,
-          totalThisMonth: monthData.sumTotalAmount,
-          invoicesLastMonth: lastMonthData.total,
-          totalLastMonth: lastMonthData.sumTotalAmount,
-        });
-        setTeamUsers(creatorStats.users);
-      } catch (err) {
-        console.error("Failed to fetch stats:", err);
-        toast.error("Failed to load stats");
-      } finally {
-        setLoading(false);
-      }
+      setStats({
+        invoicesThisMonth: monthData.total,
+        totalThisMonth: monthData.sumTotalAmount,
+        invoicesLastMonth: lastMonthData.total,
+        totalLastMonth: lastMonthData.sumTotalAmount,
+      });
+      setTeamUsers(creatorStats.users);
+    } catch (err) {
+      console.error("Failed to fetch stats:", err);
+      toast.error("Failed to load stats");
+    } finally {
+      setLoading(false);
     }
-
-    fetchStats();
   }, []);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
+
+  useSSE("invoice-changed", fetchStats);
+  useSSE("quote-changed", fetchStats);
 
   const invoiceDelta = (stats?.invoicesThisMonth ?? 0) - (stats?.invoicesLastMonth ?? 0);
   const totalPctChange = stats?.totalLastMonth

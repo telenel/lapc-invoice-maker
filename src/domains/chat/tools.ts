@@ -310,17 +310,19 @@ export function buildTools(user: ChatUser) {
             })
           )
           .describe("Line items"),
+        recipientEmail: z.string().optional().describe("Contact email (used when auto-creating a contact)"),
+        recipientOrg: z.string().optional().describe("Contact organization (used when auto-creating a contact)"),
         accountCode: z.string().optional().describe("Account code"),
         notes: z.string().optional().describe("Notes"),
         marginEnabled: z.boolean().optional().describe("Enable margin markup"),
         marginPercent: z.number().optional().describe("Margin percentage (e.g., 15 for 15%)"),
         taxEnabled: z.boolean().optional().describe("Enable sales tax (9.75%)"),
       }),
-      execute: async ({ date, staffId, contactId, contactName, department, category, items, accountCode, notes, marginEnabled, marginPercent, taxEnabled }) => {
+      execute: async ({ date, staffId, contactId, contactName, department, category, items, recipientEmail, recipientOrg, accountCode, notes, marginEnabled, marginPercent, taxEnabled }) => {
         // Resolve contact if needed
         let resolvedContactId = contactId;
         if (!staffId && !contactId && contactName) {
-          const contact = await contactService.findOrCreate(contactName, user.id, { department });
+          const contact = await contactService.findOrCreate(contactName, user.id, { department, email: recipientEmail, org: recipientOrg });
           resolvedContactId = contact.id;
         }
 
@@ -338,7 +340,7 @@ export function buildTools(user: ChatUser) {
           status: invoice.status,
           totalAmount: invoice.totalAmount,
           link: `/invoices/${invoice.id}`,
-          message: `Draft invoice created. Total: $${invoice.totalAmount}. Link: /invoices/${invoice.id}`,
+          message: `Draft invoice created. Total: $${invoice.totalAmount}. [View Invoice](/invoices/${invoice.id})`,
         };
       },
     }),
@@ -432,7 +434,7 @@ export function buildTools(user: ChatUser) {
           totalAmount: quote.totalAmount,
           recipientName: quote.recipientName,
           link: `/quotes/${quote.id}`,
-          message: `Draft quote created for ${quote.recipientName}. Total: $${quote.totalAmount}. Link: /quotes/${quote.id}`,
+          message: `Draft quote created for ${quote.recipientName}. Total: $${quote.totalAmount}. [View Quote](/quotes/${quote.id})`,
         };
       },
     }),
@@ -612,6 +614,35 @@ export function buildTools(user: ChatUser) {
       execute: async ({ id }) => {
         await eventService.remove(id);
         return { success: true, message: "Calendar event deleted." };
+      },
+    }),
+
+    createStaff: tool({
+      description:
+        "Create a new staff member. Requires name, title, and department at minimum. Can also include phone, extension, email, account code, and birthday.",
+      inputSchema: z.object({
+        name: z.string().describe("Full name of the staff member"),
+        title: z.string().describe("Job title"),
+        department: z.string().describe("Department name"),
+        phone: z.string().optional().describe("Phone number"),
+        extension: z.string().optional().describe("Phone extension"),
+        email: z.string().optional().describe("Email address"),
+        accountCode: z.string().optional().describe("Account code"),
+        birthMonth: z.number().min(1).max(12).optional().describe("Birth month (1-12)"),
+        birthDay: z.number().min(1).max(31).optional().describe("Birth day (1-31)"),
+      }),
+      execute: async (input) => {
+        const staff = await staffService.create(input);
+        return {
+          id: staff.id,
+          name: staff.name,
+          title: staff.title,
+          department: staff.department,
+          extension: staff.extension,
+          phone: staff.phone,
+          email: staff.email,
+          message: `Staff member "${staff.name}" created successfully (${staff.title}, ${staff.department}). [View Staff](/staff)`,
+        };
       },
     }),
   };

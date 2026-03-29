@@ -158,6 +158,12 @@ export async function create(
     isRunning?: boolean;
     runningTitle?: string;
     status?: "DRAFT" | "PENDING_CHARGE";
+    marginEnabled?: boolean;
+    marginPercent?: number;
+    taxEnabled?: boolean;
+    taxRate?: number;
+    isCateringEvent?: boolean;
+    cateringDetails?: Prisma.InputJsonValue;
   },
   calculatedItems: CalculatedLineItem[],
   totalAmount: number,
@@ -181,6 +187,9 @@ export async function create(
           unitPrice: item.unitPrice,
           extendedPrice: item.extendedPrice,
           sortOrder: item.sortOrder,
+          isTaxable: item.isTaxable,
+          costPrice: item.costPrice,
+          marginOverride: item.marginOverride,
         })),
       },
     },
@@ -222,6 +231,9 @@ export async function update(
               unitPrice: item.unitPrice,
               extendedPrice: item.extendedPrice,
               sortOrder: item.sortOrder,
+              isTaxable: item.isTaxable,
+              costPrice: item.costPrice,
+              marginOverride: item.marginOverride,
             })),
           },
         },

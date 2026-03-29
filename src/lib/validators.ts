@@ -44,6 +44,9 @@ export const invoiceCreateSchema = z.object({
   marginEnabled: z.boolean().default(false),
   marginPercent: z.number().min(0).optional(),
   taxEnabled: z.boolean().default(false),
+  taxRate: z.number().min(0).optional(),
+  isCateringEvent: z.boolean().default(false),
+  cateringDetails: z.unknown().optional(),
 });
 
 export const invoiceUpdateSchema = invoiceCreateSchema.partial().extend({
@@ -140,6 +143,7 @@ export const quoteCreateSchema = z.object({
 
 export const quoteUpdateSchema = quoteCreateSchema.partial().extend({
   items: z.array(quoteItemSchema).min(1).optional(),
+  quoteStatus: z.enum(["DRAFT", "SENT", "SUBMITTED_EMAIL", "SUBMITTED_MANUAL", "ACCEPTED", "DECLINED", "REVISED", "EXPIRED"]).optional(),
 });
 
 export const eventSchema = z.object({

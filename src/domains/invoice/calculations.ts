@@ -7,6 +7,9 @@ export interface CalculatedLineItem {
   unitPrice: number;
   extendedPrice: number;
   sortOrder: number;
+  isTaxable?: boolean;
+  costPrice?: number;
+  marginOverride?: number;
 }
 
 export function calculateLineItems(
@@ -21,6 +24,9 @@ export function calculateLineItems(
       unitPrice: price,
       extendedPrice: qty * price,
       sortOrder: item.sortOrder ?? index,
+      isTaxable: item.isTaxable,
+      costPrice: item.costPrice,
+      marginOverride: item.marginOverride,
     };
   });
 }

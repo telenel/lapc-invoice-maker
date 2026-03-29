@@ -18,10 +18,12 @@ import {
   type QuoteFilters,
 } from "./quote-filters";
 import { formatAmount, formatDate, getInitials } from "@/lib/formatters";
+import { cn } from "@/lib/utils";
 import { ClipboardListIcon } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { useSSE } from "@/lib/use-sse";
 
-type QuoteStatus = "DRAFT" | "SENT" | "ACCEPTED" | "DECLINED" | "EXPIRED";
+type QuoteStatus = "DRAFT" | "SENT" | "SUBMITTED_EMAIL" | "SUBMITTED_MANUAL" | "ACCEPTED" | "DECLINED" | "REVISED" | "EXPIRED";
 
 interface Quote {
   id: string;
@@ -54,7 +56,7 @@ const EMPTY_FILTERS: QuoteFilters = {
   amountMax: "",
 };
 
-type SortField = "quoteNumber" | "date" | "totalAmount" | "expirationDate";
+type SortField = "quoteNumber" | "date" | "createdAt" | "totalAmount" | "expirationDate";
 type SortDir = "asc" | "desc";
 
 const PAGE_SIZE = 20;
@@ -62,16 +64,22 @@ const PAGE_SIZE = 20;
 const STATUS_BADGE_VARIANT: Record<QuoteStatus, "success" | "info" | "warning" | "destructive" | "outline"> = {
   DRAFT: "warning",
   SENT: "info",
+  SUBMITTED_EMAIL: "info",
+  SUBMITTED_MANUAL: "info",
   ACCEPTED: "success",
   DECLINED: "destructive",
+  REVISED: "outline",
   EXPIRED: "outline",
 };
 
 const STATUS_LABEL: Record<QuoteStatus, string> = {
   DRAFT: "Draft",
   SENT: "Sent",
+  SUBMITTED_EMAIL: "Sent (Email)",
+  SUBMITTED_MANUAL: "Sent (Manual)",
   ACCEPTED: "Accepted",
   DECLINED: "Declined",
+  REVISED: "Revised",
   EXPIRED: "Expired",
 };
 
@@ -98,7 +106,7 @@ const QuoteRow = React.memo(function QuoteRow({ quote, onClick }: QuoteRowProps)
   return (
     <TableRow
       key={quote.id}
-      className="cursor-pointer group"
+      className={cn("cursor-pointer group", quote.quoteStatus === "REVISED" && "opacity-60")}
       onClick={() => onClick(quote.id)}
       role="link"
       tabIndex={0}
@@ -148,7 +156,7 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<SortField>("date");
+  const [sortBy, setSortBy] = useState<SortField>("createdAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -187,6 +195,8 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
   useEffect(() => {
     fetchQuotes();
   }, [fetchQuotes]);
+
+  useSSE("quote-changed", fetchQuotes);
 
   // Reset to page 1 when filters or sort changes
   function handleFiltersChange(next: QuoteFilters) {

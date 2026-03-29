@@ -37,7 +37,7 @@ interface QuoteItem {
 interface PublicQuote {
   id: string;
   quoteNumber: string | null;
-  quoteStatus: "DRAFT" | "SENT" | "ACCEPTED" | "DECLINED" | "EXPIRED";
+  quoteStatus: "DRAFT" | "SENT" | "SUBMITTED_EMAIL" | "SUBMITTED_MANUAL" | "ACCEPTED" | "DECLINED" | "REVISED" | "EXPIRED";
   date: string;
   expirationDate: string | null;
   department: string;
@@ -241,8 +241,8 @@ export function PublicQuoteView({ token }: { token: string }) {
   }
 
   const isExpired = quote.quoteStatus === "EXPIRED";
-  const alreadyResponded = quote.quoteStatus === "ACCEPTED" || quote.quoteStatus === "DECLINED";
-  const canRespond = quote.quoteStatus === "SENT" && !responded;
+  const alreadyResponded = quote.quoteStatus === "ACCEPTED" || quote.quoteStatus === "DECLINED" || quote.quoteStatus === "REVISED";
+  const canRespond = (quote.quoteStatus === "SENT" || quote.quoteStatus === "SUBMITTED_EMAIL" || quote.quoteStatus === "SUBMITTED_MANUAL") && !responded;
   const isCatering = quote.isCateringEvent;
   const cateringRequiredMissing =
     isCatering &&
@@ -283,6 +283,7 @@ export function PublicQuoteView({ token }: { token: string }) {
           {isExpired && <Badge variant="outline">Expired</Badge>}
           {quote.quoteStatus === "ACCEPTED" && <Badge variant="default">Approved</Badge>}
           {quote.quoteStatus === "DECLINED" && <Badge variant="destructive">Declined</Badge>}
+          {quote.quoteStatus === "REVISED" && <Badge variant="outline">Revised</Badge>}
         </div>
 
         {/* Info grid */}
@@ -626,6 +627,8 @@ export function PublicQuoteView({ token }: { token: string }) {
               <p className="text-sm text-muted-foreground">
                 {quote.quoteStatus === "ACCEPTED"
                   ? "This quote has been approved."
+                  : quote.quoteStatus === "REVISED"
+                  ? "This quote has been revised. A new version has been issued."
                   : "This quote has been declined."}
               </p>
             </CardContent>

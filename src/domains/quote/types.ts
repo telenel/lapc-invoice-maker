@@ -4,7 +4,7 @@ import type { ContactResponse } from "@/domains/contact/types";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
-export type QuoteStatus = "DRAFT" | "SENT" | "ACCEPTED" | "DECLINED" | "EXPIRED";
+export type QuoteStatus = "DRAFT" | "SENT" | "SUBMITTED_EMAIL" | "SUBMITTED_MANUAL" | "ACCEPTED" | "DECLINED" | "REVISED" | "EXPIRED";
 
 // ── Catering ──────────────────────────────────────────────────────────────
 
@@ -73,6 +73,8 @@ export interface QuoteResponse {
   taxEnabled: boolean;
   taxRate: number;
   convertedToInvoice?: { id: string; invoiceNumber: string | null } | null;
+  revisedFromQuote?: { id: string; quoteNumber: string | null } | null;
+  revisedToQuote?: { id: string; quoteNumber: string | null } | null;
 }
 
 // ── Inputs ─────────────────────────────────────────────────────────────────

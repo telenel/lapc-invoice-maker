@@ -1,23 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatAmount, getInitials } from "@/lib/formatters";
 import { invoiceApi } from "@/domains/invoice/api-client";
 import type { CreatorStatEntry } from "@/domains/invoice/types";
+import { useSSE } from "@/lib/use-sse";
 
 export function PendingCharges() {
   const [users, setUsers] = useState<CreatorStatEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchPending = useCallback(() => {
     invoiceApi.getCreatorStats("PENDING_CHARGE")
       .then((data) => setUsers(data.users))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    fetchPending();
+  }, [fetchPending]);
+
+  useSSE("invoice-changed", fetchPending);
 
   const totalCount = users.reduce((sum, u) => sum + u.invoiceCount, 0);
 
