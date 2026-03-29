@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -78,8 +78,64 @@ interface QuoteTableProps {
   categories: { name: string; label: string }[];
 }
 
+interface QuoteRowProps {
+  quote: Quote;
+  onClick: (id: string) => void;
+}
+
+const QuoteRow = React.memo(function QuoteRow({ quote, onClick }: QuoteRowProps) {
+  function isExpired(dateStr: string | null): boolean {
+    if (!dateStr) return false;
+    return new Date(dateStr) < new Date();
+  }
+
+  return (
+    <TableRow
+      key={quote.id}
+      className="cursor-pointer group"
+      onClick={() => onClick(quote.id)}
+      role="link"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter") onClick(quote.id); }}
+    >
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-muted text-[11px] font-bold text-muted-foreground shrink-0">
+            {getInitials(quote.recipientName || quote.recipientOrg || "??")}
+          </div>
+          <div className="min-w-0">
+            <p className="text-[13px] font-semibold truncate">
+              {quote.quoteNumber} · {quote.recipientName || quote.recipientOrg || "—"}
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              {quote.department} · {formatDate(quote.date)}
+              {quote.expirationDate && (
+                <span className={isExpired(quote.expirationDate) ? " text-destructive" : ""}>
+                  {" "}· Exp {formatDate(quote.expirationDate)}
+                </span>
+              )}
+            </p>
+          </div>
+        </div>
+      </TableCell>
+      <TableCell className="text-right">
+        <p className="text-[13px] font-bold tabular-nums">
+          {formatAmount(quote.totalAmount)}
+        </p>
+        <Badge variant={STATUS_BADGE_VARIANT[quote.quoteStatus]} className="mt-0.5">
+          {STATUS_LABEL[quote.quoteStatus]}
+        </Badge>
+      </TableCell>
+    </TableRow>
+  );
+});
+
 export function QuoteTable({ departments, categories }: QuoteTableProps) {
   const router = useRouter();
+
+  const handleRowClick = useCallback((id: string) => {
+    router.push(`/quotes/${id}`);
+  }, [router]);
 
   const [filters, setFilters] = useState<QuoteFilters>(EMPTY_FILTERS);
   const [quotes, setQuotes] = useState<Quote[]>([]);
@@ -152,11 +208,6 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
     return sortDir === "asc" ? " \u2191" : " \u2193";
   }
 
-  function isExpired(dateStr: string | null): boolean {
-    if (!dateStr) return false;
-    return new Date(dateStr) < new Date();
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex-1">
@@ -212,43 +263,7 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
             </TableHeader>
             <TableBody>
               {quotes.map((quote) => (
-                <TableRow
-                  key={quote.id}
-                  className="cursor-pointer group"
-                  onClick={() => router.push(`/quotes/${quote.id}`)}
-                  role="link"
-                  tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === "Enter") router.push(`/quotes/${quote.id}`); }}
-                >
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-muted text-[11px] font-bold text-muted-foreground shrink-0">
-                        {getInitials(quote.recipientName || quote.recipientOrg || "??")}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[13px] font-semibold truncate">
-                          {quote.quoteNumber} · {quote.recipientName || quote.recipientOrg || "—"}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground">
-                          {quote.department} · {formatDate(quote.date)}
-                          {quote.expirationDate && (
-                            <span className={isExpired(quote.expirationDate) ? " text-destructive" : ""}>
-                              {" "}· Exp {formatDate(quote.expirationDate)}
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <p className="text-[13px] font-bold tabular-nums">
-                      {formatAmount(quote.totalAmount)}
-                    </p>
-                    <Badge variant={STATUS_BADGE_VARIANT[quote.quoteStatus]} className="mt-0.5">
-                      {STATUS_LABEL[quote.quoteStatus]}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
+                <QuoteRow key={quote.id} quote={quote} onClick={handleRowClick} />
               ))}
             </TableBody>
           </Table>

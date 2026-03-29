@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -164,12 +164,14 @@ export function QuoteDetailView({ id }: { id: string }) {
   const router = useRouter();
   const [quote, setQuote] = useState<Quote | null>(null);
   const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState(false);
+  const [actionState, setActionState] = useState({
+    deleting: false,
+    declining: false,
+    sending: false,
+    converting: false,
+  });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
-  const [declining, setDeclining] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [converting, setConverting] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
 
@@ -193,9 +195,9 @@ export function QuoteDetailView({ id }: { id: string }) {
     fetchQuote();
   }, [id]);
 
-  async function handleDelete() {
+  const handleDelete = useCallback(async () => {
     if (!quote) return;
-    setDeleting(true);
+    setActionState((prev) => ({ ...prev, deleting: true }));
     try {
       const res = await fetch(`/api/quotes/${id}`, { method: "DELETE" });
       if (!res.ok) {
@@ -208,14 +210,14 @@ export function QuoteDetailView({ id }: { id: string }) {
     } catch {
       toast.error("Failed to delete quote");
     } finally {
-      setDeleting(false);
+      setActionState((prev) => ({ ...prev, deleting: false }));
       setDeleteDialogOpen(false);
     }
-  }
+  }, [quote, id, router]);
 
-  async function handleMarkAsSent() {
+  const handleMarkAsSent = useCallback(async () => {
     if (!quote) return;
-    setSending(true);
+    setActionState((prev) => ({ ...prev, sending: true }));
     try {
       const res = await fetch(`/api/quotes/${id}/send`, { method: "POST" });
       if (!res.ok) {
@@ -236,21 +238,21 @@ export function QuoteDetailView({ id }: { id: string }) {
     } catch {
       toast.error("Failed to mark quote as sent");
     } finally {
-      setSending(false);
+      setActionState((prev) => ({ ...prev, sending: false }));
     }
-  }
+  }, [quote, id]);
 
-  async function handleShareLink() {
+  const handleShareLink = useCallback(() => {
     if (!quote) return;
     if (quote.shareToken) {
       setShareUrl(`${window.location.origin}/quotes/review/${quote.shareToken}`);
       setShareDialogOpen(true);
     }
-  }
+  }, [quote]);
 
-  async function handleConvertToInvoice() {
+  const handleConvertToInvoice = useCallback(async () => {
     if (!quote) return;
-    setConverting(true);
+    setActionState((prev) => ({ ...prev, converting: true }));
     try {
       const res = await fetch(`/api/quotes/${id}/convert`, { method: "POST" });
       if (!res.ok) {
@@ -264,13 +266,13 @@ export function QuoteDetailView({ id }: { id: string }) {
     } catch {
       toast.error("Failed to convert quote to invoice");
     } finally {
-      setConverting(false);
+      setActionState((prev) => ({ ...prev, converting: false }));
     }
-  }
+  }, [quote, id, router]);
 
-  async function handleDecline() {
+  const handleDecline = useCallback(async () => {
     if (!quote) return;
-    setDeclining(true);
+    setActionState((prev) => ({ ...prev, declining: true }));
     try {
       const res = await fetch(`/api/quotes/${id}`, {
         method: "PUT",
@@ -291,10 +293,10 @@ export function QuoteDetailView({ id }: { id: string }) {
     } catch {
       toast.error("Failed to decline quote");
     } finally {
-      setDeclining(false);
+      setActionState((prev) => ({ ...prev, declining: false }));
       setDeclineDialogOpen(false);
     }
-  }
+  }, [quote, id]);
 
   if (loading) {
     return <p className="text-muted-foreground text-sm">Loading...</p>;
@@ -372,9 +374,9 @@ export function QuoteDetailView({ id }: { id: string }) {
               size="sm"
               className="bg-green-600 hover:bg-green-700 text-white"
               onClick={handleMarkAsSent}
-              disabled={sending}
+              disabled={actionState.sending}
             >
-              {sending ? "Sending..." : "Mark as Sent"}
+              {actionState.sending ? "Sending..." : "Mark as Sent"}
             </Button>
           )}
 
@@ -384,9 +386,9 @@ export function QuoteDetailView({ id }: { id: string }) {
               variant="outline"
               size="sm"
               onClick={handleConvertToInvoice}
-              disabled={converting}
+              disabled={actionState.converting}
             >
-              {converting ? "Converting..." : "Convert to Invoice"}
+              {actionState.converting ? "Converting..." : "Convert to Invoice"}
             </Button>
           )}
 
@@ -395,8 +397,8 @@ export function QuoteDetailView({ id }: { id: string }) {
             <Dialog open={declineDialogOpen} onOpenChange={setDeclineDialogOpen}>
               <DialogTrigger
                 render={
-                  <Button variant="destructive" size="sm" disabled={declining}>
-                    {declining ? "Declining..." : "Decline"}
+                  <Button variant="destructive" size="sm" disabled={actionState.declining}>
+                    {actionState.declining ? "Declining..." : "Decline"}
                   </Button>
                 }
               />
@@ -418,9 +420,9 @@ export function QuoteDetailView({ id }: { id: string }) {
                   <Button
                     variant="destructive"
                     onClick={handleDecline}
-                    disabled={declining}
+                    disabled={actionState.declining}
                   >
-                    {declining ? "Declining..." : "Decline Quote"}
+                    {actionState.declining ? "Declining..." : "Decline Quote"}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -435,8 +437,8 @@ export function QuoteDetailView({ id }: { id: string }) {
             <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
               <DialogTrigger
                 render={
-                  <Button variant="destructive" size="sm" disabled={deleting}>
-                    {deleting ? "Deleting..." : "Delete"}
+                  <Button variant="destructive" size="sm" disabled={actionState.deleting}>
+                    {actionState.deleting ? "Deleting..." : "Delete"}
                   </Button>
                 }
               />
@@ -458,9 +460,9 @@ export function QuoteDetailView({ id }: { id: string }) {
                   <Button
                     variant="destructive"
                     onClick={handleDelete}
-                    disabled={deleting}
+                    disabled={actionState.deleting}
                   >
-                    {deleting ? "Deleting..." : "Delete Quote"}
+                    {actionState.deleting ? "Deleting..." : "Delete Quote"}
                   </Button>
                 </DialogFooter>
               </DialogContent>
