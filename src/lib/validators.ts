@@ -26,7 +26,8 @@ export const invoiceItemSchema = z.object({
 export const invoiceCreateSchema = z.object({
   invoiceNumber: z.string().nullable().default(""),
   date: z.string().min(1, "Date is required"),
-  staffId: z.string().min(1, "Staff member is required"),
+  staffId: z.string().optional(),
+  contactId: z.string().optional(),
   department: z.string().min(1, "Department is required"),
   category: z.string().min(1, "Category is required"),
   accountCode: z.string().default(""),
@@ -100,7 +101,8 @@ export const quoteItemSchema = z.object({
 
 export const quoteCreateSchema = z.object({
   date: z.string().min(1, "Date is required"),
-  staffId: z.string().min(1, "Staff member is required"),
+  staffId: z.string().optional(),
+  contactId: z.string().optional(),
   department: z.string().min(1, "Department is required"),
   category: z.string().min(1, "Category is required"),
   accountCode: z.string().default(""),

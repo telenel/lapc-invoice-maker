@@ -13,6 +13,7 @@ import type {
   InvoiceStatsResponse,
 } from "./types";
 import type { InvoiceStaffDetail } from "./types";
+import type { ContactResponse } from "@/domains/contact/types";
 
 // ── Signature parser ───────────────────────────────────────────────────────
 
@@ -39,14 +40,31 @@ export interface CreatorStatEntry {
 type InvoiceWithRelations = Awaited<ReturnType<typeof invoiceRepository.findById>>;
 
 function toInvoiceResponse(invoice: NonNullable<InvoiceWithRelations>): InvoiceResponse {
-  const staff: InvoiceStaffDetail = {
-    id: invoice.staff.id,
-    name: invoice.staff.name,
-    title: invoice.staff.title,
-    department: invoice.staff.department,
-    extension: (invoice.staff as { extension?: string | null }).extension ?? null,
-    email: (invoice.staff as { email?: string | null }).email ?? null,
-  };
+  const staff: InvoiceStaffDetail | null = invoice.staff
+    ? {
+        id: invoice.staff.id,
+        name: invoice.staff.name,
+        title: invoice.staff.title,
+        department: invoice.staff.department,
+        extension: (invoice.staff as { extension?: string | null }).extension ?? null,
+        email: (invoice.staff as { email?: string | null }).email ?? null,
+      }
+    : null;
+
+  const contactRaw = (invoice as { contact?: { id: string; name: string; email: string; phone: string; org: string; department: string; title: string; notes: string | null; createdAt: Date } | null }).contact;
+  const contact: ContactResponse | null = contactRaw
+    ? {
+        id: contactRaw.id,
+        name: contactRaw.name,
+        email: contactRaw.email,
+        phone: contactRaw.phone,
+        org: contactRaw.org,
+        department: contactRaw.department,
+        title: contactRaw.title,
+        notes: contactRaw.notes,
+        createdAt: contactRaw.createdAt.toISOString(),
+      }
+    : null;
 
   const items: InvoiceItemResponse[] = invoice.items.map((item) => ({
     id: item.id,
@@ -79,6 +97,7 @@ function toInvoiceResponse(invoice: NonNullable<InvoiceWithRelations>): InvoiceR
     prismcorePath: invoice.prismcorePath,
     createdAt: invoice.createdAt.toISOString(),
     staff,
+    contact,
     creatorId: invoice.creator.id,
     creatorName: invoice.creator.name,
     items,
@@ -241,8 +260,8 @@ export const invoiceService = {
         sapAccount: invoice.accountNumber ?? invoice.accountCode,
         estimatedCost: totalStr,
         approverName: resolvedSignatures.length > 0 ? resolvedSignatures[0].name : "",
-        contactName: contactName ?? invoice.staff.name,
-        contactPhone: contactExtension ?? (invoice.staff as { extension?: string }).extension ?? "",
+        contactName: contactName ?? invoice.staff?.name ?? (invoice as { contact?: { name: string } | null }).contact?.name ?? "",
+        contactPhone: contactExtension ?? (invoice.staff as { extension?: string } | null)?.extension ?? "",
         items: invoice.items.map((item) => ({
           description: item.description,
           quantity: Number(item.quantity),

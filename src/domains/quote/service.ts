@@ -13,18 +13,36 @@ import type {
   CateringDetails,
 } from "./types";
 import type { StaffSummary } from "@/domains/staff/types";
+import type { ContactResponse } from "@/domains/contact/types";
 
 // ── DTO mapper ─────────────────────────────────────────────────────────────
 
 type QuoteWithRelations = Awaited<ReturnType<typeof quoteRepository.findById>>;
 
 function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse {
-  const staff: StaffSummary = {
-    id: quote.staff.id,
-    name: quote.staff.name,
-    title: quote.staff.title,
-    department: quote.staff.department,
-  };
+  const staff: StaffSummary | null = quote.staff
+    ? {
+        id: quote.staff.id,
+        name: quote.staff.name,
+        title: quote.staff.title,
+        department: quote.staff.department,
+      }
+    : null;
+
+  const contactRaw = (quote as { contact?: { id: string; name: string; email: string; phone: string; org: string; department: string; title: string; notes: string | null; createdAt: Date } | null }).contact;
+  const contact: ContactResponse | null = contactRaw
+    ? {
+        id: contactRaw.id,
+        name: contactRaw.name,
+        email: contactRaw.email,
+        phone: contactRaw.phone,
+        org: contactRaw.org,
+        department: contactRaw.department,
+        title: contactRaw.title,
+        notes: contactRaw.notes,
+        createdAt: contactRaw.createdAt.toISOString(),
+      }
+    : null;
 
   const items: QuoteItemResponse[] = quote.items.map((item) => ({
     id: item.id,
@@ -59,6 +77,7 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
     shareToken: quote.shareToken ?? null,
     createdAt: quote.createdAt.toISOString(),
     staff,
+    contact,
     creatorId: quote.creator.id,
     creatorName: quote.creator.name,
     items,
@@ -403,7 +422,8 @@ export const quoteService = {
           date: quote.date,
           category: quote.category,
           department: quote.department,
-          staffId: quote.staffId,
+          staffId: quote.staffId ?? undefined,
+          contactId: (quote as { contactId?: string | null }).contactId ?? undefined,
           accountCode: quote.accountCode,
           accountNumber: quote.accountNumber,
           approvalChain: quote.approvalChain ?? [],

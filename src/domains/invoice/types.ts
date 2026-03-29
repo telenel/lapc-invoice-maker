@@ -1,5 +1,6 @@
 // src/domains/invoice/types.ts
 import type { StaffSummary } from "@/domains/staff/types";
+import type { ContactResponse } from "@/domains/contact/types";
 import type { InvoiceStatus } from "./constants";
 
 // ── DTOs ──
@@ -31,7 +32,8 @@ export interface InvoiceResponse {
   pdfPath: string | null;
   prismcorePath: string | null;
   createdAt: string;
-  staff: InvoiceStaffDetail;
+  staff: InvoiceStaffDetail | null;
+  contact: ContactResponse | null;
   creatorId: string;
   creatorName: string;
   items: InvoiceItemResponse[];
@@ -56,7 +58,8 @@ export interface CreateLineItemInput {
 export interface CreateInvoiceInput {
   invoiceNumber?: string | null;
   date: string;
-  staffId: string;
+  staffId?: string;
+  contactId?: string;
   department: string;
   category: string;
   accountCode?: string;
@@ -70,6 +73,9 @@ export interface CreateInvoiceInput {
   isRunning?: boolean;
   runningTitle?: string;
   status?: "DRAFT" | "PENDING_CHARGE";
+  marginEnabled?: boolean;
+  marginPercent?: number;
+  taxEnabled?: boolean;
 }
 
 export interface InvoiceFilters {
