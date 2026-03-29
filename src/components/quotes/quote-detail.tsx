@@ -78,6 +78,10 @@ interface Quote {
   items: QuoteItem[];
   isCateringEvent: boolean;
   cateringDetails: unknown;
+  marginEnabled: boolean;
+  marginPercent: number | null;
+  taxEnabled: boolean;
+  taxRate: number;
   convertedToInvoice: {
     id: string;
     invoiceNumber: string | null;
@@ -619,103 +623,192 @@ export function QuoteDetailView({ id }: { id: string }) {
       {quote.isCateringEvent && (() => {
         const catering = quote.cateringDetails as CateringDetails | null;
         if (!catering) return null;
+
+        // Calculate subtotal / tax for the printable guide
+        const itemSubtotal = quote.items.reduce(
+          (sum, item) => sum + Number(item.extendedPrice),
+          0
+        );
+        const taxRate = quote.taxRate ?? 0;
+        const taxableSubtotal = quote.taxEnabled
+          ? quote.items.reduce((sum, item) => sum + Number(item.extendedPrice), 0)
+          : 0;
+        const taxAmount = quote.taxEnabled ? taxableSubtotal * taxRate : 0;
+        const grandTotal = Number(quote.totalAmount);
+
         return (
-          <Card className="catering-guide border-orange-500/20 bg-orange-500/5">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-orange-600 dark:text-orange-400">
-                🍽 Catering Guide
-              </CardTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                data-print-hide
-                onClick={() => window.print()}
-              >
-                <PrinterIcon className="size-3.5 mr-1.5" />
-                Print Catering Guide
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Event name and date/time */}
-              <div>
-                <p className="text-lg font-semibold">
-                  {catering.eventName
-                    ? `${catering.eventName} — ${formatCateringDateTime(catering)}`
-                    : formatCateringDateTime(catering)}
-                </p>
-              </div>
-
-              {/* Location */}
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Location</span>
-                <span className="font-medium">{catering.location}</span>
-              </div>
-
-              {/* Contact */}
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Contact</p>
-                <div className="text-sm space-y-0.5 pl-2">
-                  <p className="font-medium">{catering.contactName}</p>
-                  {catering.contactPhone && <p>{catering.contactPhone}</p>}
-                  {catering.contactEmail && <p>{catering.contactEmail}</p>}
-                </div>
-              </div>
-
-              {/* Headcount */}
-              {catering.headcount != null && (
+          <div className="catering-guide">
+            <Card className="border-orange-500/20 bg-orange-500/5">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-orange-600 dark:text-orange-400">
+                  🍽 Catering Guide
+                </CardTitle>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  data-print-hide
+                  onClick={() => window.print()}
+                >
+                  <PrinterIcon className="size-3.5 mr-1.5" />
+                  Print Catering Guide
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Quote header */}
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Headcount</span>
-                  <span className="font-medium">{catering.headcount} attendees</span>
-                </div>
-              )}
-
-              <Separator />
-
-              {/* Setup */}
-              {catering.setupRequired && (
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Setup</p>
-                  <div className="text-sm space-y-0.5 pl-2">
-                    {catering.setupTime && (
-                      <p>
-                        <span className="text-muted-foreground">Time:</span> {catering.setupTime}
-                      </p>
-                    )}
-                    {catering.setupInstructions && (
-                      <p className="whitespace-pre-wrap">{catering.setupInstructions}</p>
-                    )}
+                  <div>
+                    <h3 className="font-semibold text-base">
+                      {quote.quoteNumber ?? "Quote"}
+                    </h3>
+                    <p className="text-muted-foreground">
+                      {formatDate(quote.date)} &middot; {quote.staff.name}
+                    </p>
                   </div>
+                  {quote.recipientName && (
+                    <div className="text-right">
+                      <p className="font-medium">{quote.recipientName}</p>
+                      {quote.recipientOrg && (
+                        <p className="text-muted-foreground">{quote.recipientOrg}</p>
+                      )}
+                    </div>
+                  )}
                 </div>
-              )}
 
-              {/* Takedown */}
-              {catering.takedownRequired && (
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Takedown</p>
-                  <div className="text-sm space-y-0.5 pl-2">
-                    {catering.takedownTime && (
-                      <p>
-                        <span className="text-muted-foreground">Time:</span> {catering.takedownTime}
-                      </p>
-                    )}
-                    {catering.takedownInstructions && (
-                      <p className="whitespace-pre-wrap">{catering.takedownInstructions}</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Special Instructions */}
-              {catering.specialInstructions && (
-                <div className="space-y-1">
-                  <p className="text-sm font-medium">Special Instructions</p>
-                  <p className="text-sm whitespace-pre-wrap pl-2">
-                    {catering.specialInstructions}
+                {/* Event name and date/time */}
+                <div>
+                  <p className="text-lg font-semibold">
+                    {catering.eventName
+                      ? `${catering.eventName} — ${formatCateringDateTime(catering)}`
+                      : formatCateringDateTime(catering)}
                   </p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+
+                {/* Location */}
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Location</span>
+                  <span className="font-medium">{catering.location}</span>
+                </div>
+
+                {/* Contact */}
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Contact</p>
+                  <div className="text-sm space-y-0.5 pl-2">
+                    <p className="font-medium">{catering.contactName}</p>
+                    {catering.contactPhone && <p>{catering.contactPhone}</p>}
+                    {catering.contactEmail && <p>{catering.contactEmail}</p>}
+                  </div>
+                </div>
+
+                {/* Headcount */}
+                {catering.headcount != null && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Headcount</span>
+                    <span className="font-medium">{catering.headcount} attendees</span>
+                  </div>
+                )}
+
+                <Separator />
+
+                {/* Line Items table */}
+                <div>
+                  <h3 className="text-sm font-semibold mb-2">Line Items</h3>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Description</TableHead>
+                        <TableHead className="text-center">Qty</TableHead>
+                        <TableHead className="text-right">Unit Price</TableHead>
+                        <TableHead className="text-right">Extended</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {quote.items.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell>{item.description}</TableCell>
+                          <TableCell className="text-center tabular-nums">
+                            {Number(item.quantity)}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {formatAmount(item.unitPrice)}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {formatAmount(item.extendedPrice)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+
+                  {/* Totals */}
+                  <div className="mt-2 space-y-1 text-sm tabular-nums">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span>{formatAmount(itemSubtotal)}</span>
+                    </div>
+                    {quote.taxEnabled && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">
+                          Tax ({(taxRate * 100).toFixed(2)}%)
+                        </span>
+                        <span>{formatAmount(taxAmount)}</span>
+                      </div>
+                    )}
+                    <Separator />
+                    <div className="flex justify-between font-bold">
+                      <span>Total</span>
+                      <span>{formatAmount(grandTotal)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                {/* Setup */}
+                {catering.setupRequired && (
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium">Setup</p>
+                    <div className="text-sm space-y-0.5 pl-2">
+                      {catering.setupTime && (
+                        <p>
+                          <span className="text-muted-foreground">Time:</span> {catering.setupTime}
+                        </p>
+                      )}
+                      {catering.setupInstructions && (
+                        <p className="whitespace-pre-wrap">{catering.setupInstructions}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Takedown */}
+                {catering.takedownRequired && (
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium">Takedown</p>
+                    <div className="text-sm space-y-0.5 pl-2">
+                      {catering.takedownTime && (
+                        <p>
+                          <span className="text-muted-foreground">Time:</span> {catering.takedownTime}
+                        </p>
+                      )}
+                      {catering.takedownInstructions && (
+                        <p className="whitespace-pre-wrap">{catering.takedownInstructions}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Special Instructions */}
+                {catering.specialInstructions && (
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium">Special Instructions</p>
+                    <p className="text-sm whitespace-pre-wrap pl-2">
+                      {catering.specialInstructions}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         );
       })()}
 

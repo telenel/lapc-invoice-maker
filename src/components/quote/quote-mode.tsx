@@ -108,6 +108,7 @@ export function QuoteMode({
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [quickPicksOpen, setQuickPicksOpen] = useState(false);
+  const [cateringOverride, setCateringOverride] = useState(false);
 
   // ---- Tax calculation ----
   const taxItems = form.marginEnabled ? itemsWithMargin : form.items;
@@ -461,6 +462,8 @@ export function QuoteMode({
           <CateringDetailsCard
             details={form.cateringDetails}
             onChange={(details) => updateField("cateringDetails", details)}
+            overrideMode={cateringOverride}
+            onOverrideChange={setCateringOverride}
           />
         )}
       </div>
@@ -504,6 +507,11 @@ export function QuoteMode({
             </div>
           )}
         </div>
+        {form.marginEnabled && (
+          <span className="text-xs text-muted-foreground italic">
+            Margin is internal only — the customer sees the final price, not the markup
+          </span>
+        )}
 
         {/* Apply Sales Tax */}
         <div className="flex items-center gap-3">

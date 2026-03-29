@@ -407,9 +407,22 @@
   body {
     background: white !important;
     color: black !important;
+    font-size: 11px !important;
   }
 
   .catering-guide {
     break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Compact layout for single page */
+  .catering-guide table {
+    font-size: 10px;
+  }
+
+  .catering-guide h2,
+  .catering-guide h3 {
+    margin: 0.25rem 0;
+    font-size: 14px;
   }
 }
