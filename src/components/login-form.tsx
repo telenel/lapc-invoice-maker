@@ -81,6 +81,7 @@ export function LoginForm() {
               required
               autoFocus
               className="h-11"
+              type="email"
               placeholder="you@piercecollege.edu"
               autoComplete="username"
               spellCheck={false}
