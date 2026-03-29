@@ -15,8 +15,12 @@ Invoice generation webapp for Los Angeles Pierce College. Handles invoice drafti
 | PDF | Puppeteer (render) + pdf-lib (merge) |
 | Testing | Vitest |
 | Deployment | Docker Compose + Traefik on montalvo.io |
+| AI Assistant | Vercel AI SDK + Claude Haiku (streaming chat sidebar) |
+| Calendar | FullCalendar (catering + manual events + birthdays) |
+| Email | Power Automate webhook (shared mailbox) |
 | CI/CD | GitHub Actions (setup → lint/build/test parallel → deploy) |
 | Code Review | CodeRabbit (assertive profile, auto-review on PRs) |
+| Auto-fix | Claude Code Action (fixes CodeRabbit reviews, resolves threads) |
 
 ---
 
@@ -61,6 +65,9 @@ src/
 │   ├── analytics/
 │   ├── pdf/
 │   ├── category/
+│   ├── event/
+│   ├── chat/
+│   ├── calendar/
 │   ├── quick-picks/
 │   ├── saved-items/
 │   ├── user-quick-picks/
@@ -205,6 +212,9 @@ src/domains/
 | admin | yes | yes | yes | — |
 | analytics | yes | yes | — | — |
 | notification | yes | yes | yes | yes |
+| event | yes | yes | yes | yes |
+| chat | — | — | — | yes |
+| calendar | — | — | yes | — |
 | pdf | — | yes | — | — |
 | shared | — | — | — | — |
 
@@ -233,7 +243,8 @@ These domains encapsulate endpoint URLs and response parsing for smaller feature
 | `Quote` | Quote records with auto-expiry, conversion to invoice, and online sharing (shareToken) |
 | `QuoteLineItem` | Quote line items |
 | `QuoteView` | Tracks public quote page views (IP, user-agent, referrer, viewport, duration, response) |
-| `Notification` | Real-time notifications for quote events (viewed, approved, declined) |
+| `Event` | Calendar events with type (Meeting/Seminar/Vendor/Other), recurrence, reminders |
+| `Notification` | Real-time notifications for quote events and event reminders |
 | `AccountCode` | Admin-managed account code catalog |
 | `SavedLineItem` | Admin-managed saved line items catalog |
 | `QuickPick` | Admin-managed quick pick items |
@@ -324,6 +335,45 @@ These routes are excluded from auth middleware in `src/middleware.ts`.
 
 ---
 
+## AI Assistant (Chat Sidebar)
+
+A Claude Haiku-powered chatbot in a collapsible right sidebar. Staff can ask about invoices, quotes, events, staff, and analytics.
+
+- **Stack:** Vercel AI SDK (`streamText()` + `useChat` hook), Claude Haiku model
+- **Domain:** `src/domains/chat/` — `types.ts`, `tools.ts`, `system-prompt.ts`, `hooks.ts`
+- **Route:** `POST /api/chat` (authenticated, rate-limited per user)
+- **Tools:** List/view/create invoices and quotes, search staff, CRUD calendar events, view analytics, navigate user to pages
+- **Safeguards:** Ownership enforcement (users can only modify their own records, admins bypass), destructive action confirmation, rate limiting
+- **Conversations:** Ephemeral (no persistence, resets on page refresh)
+- **UI:** Right sidebar (320px), minimize to icon strip, state persisted in localStorage
+- **Security:** User name escaped in system prompt to prevent injection; link URLs sanitized (http/https/relative only)
+
+---
+
+## Calendar
+
+FullCalendar page at `/calendar` merging three event sources:
+
+1. **Catering events** — derived from quotes with `isCateringEvent=true`
+2. **Manual events** — `Event` model with types (Meeting, Seminar, Vendor, Other), recurrence (Daily/Weekly/Monthly/Yearly), color coding
+3. **Staff birthdays** — auto-generated from `Staff.birthMonth`/`birthDay` fields (handles Feb 29 on non-leap years)
+
+- **API:** `GET /api/calendar/events` merges all sources; `GET/POST /api/events` for CRUD
+- **Reminders:** `src/domains/event/reminders.ts` checks due reminders via scheduled trigger, sends `EVENT_REMINDER` notifications to all users
+- **UI:** `AddEventModal` for create/edit, `EventLegend` for color key, click-to-edit for manual events
+
+---
+
+## Login
+
+- **Email label** — field shows "Email" with `you@piercecollege.edu` placeholder
+- **Remember Me** — checkbox (default: on). Checked = 90-day session, unchecked = 24-hour session. Preference persisted in localStorage
+- **Show/hide password** — eye icon toggle with `aria-pressed` for accessibility
+- **Caps Lock warning** — amber text with `aria-live` region when Caps Lock is detected
+- **Session enforcement** — `session.maxAge` set to 90 days (max), per-session expiration enforced via `token.iat` check in JWT callback
+
+---
+
 ## Testing
 
 **Total: 350 tests** across 26 test files in two directories.
@@ -411,6 +461,16 @@ All changes go through pull requests targeting `main`. PRs are squash-merged aft
 - Enforce admins: OFF (admin can bypass when needed)
 
 **CodeRabbit** reviews every PR automatically with the `assertive` profile. Config in `.coderabbit.yaml`. Uses `request_changes_workflow: true` — if CodeRabbit requests changes, it blocks merge until resolved.
+
+**Auto-fix workflow** (`.github/workflows/autofix-reviews.yml`):
+- Triggers on `pull_request_review` when CodeRabbit requests changes
+- Uses `anthropics/claude-code-action@v1` with `claude_args`:
+  - `--allowedTools "Bash(gh *),Bash(npm *),..."` — explicit tool permissions (Bash disabled by default in the action)
+  - `--disallowedTools "WebFetch,Agent"` — prevents token waste on blocked tools
+  - `--max-turns 30` — caps API calls to prevent spiraling
+- `allowed_bots: "coderabbitai[bot]"` — required since bots are blocked by default
+- After fixing code: resolves GitHub review threads via GraphQL mutation → triggers CodeRabbit auto-approve → unblocks auto-merge
+- Concurrency group per PR with `cancel-in-progress: true`; 10-minute timeout
 
 ### CI/CD Pipeline
 
