@@ -3,7 +3,7 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useChat, Chat } from "@ai-sdk/react";
+import { useChat, Chat, type UIMessage } from "@ai-sdk/react";
 import {
   MessageSquareIcon,
   PanelRightCloseIcon,
@@ -24,10 +24,10 @@ const QUICK_ACTIONS = [
 ];
 
 // Singleton Chat instance — survives component re-mounts during navigation
-let chatInstance: Chat | null = null;
-function getChatInstance(): Chat {
+let chatInstance: Chat<UIMessage> | null = null;
+function getChatInstance(): Chat<UIMessage> {
   if (!chatInstance) {
-    chatInstance = new Chat({ id: "lapc-chat" });
+    chatInstance = new Chat<UIMessage>({ id: "lapc-chat" });
   }
   return chatInstance;
 }

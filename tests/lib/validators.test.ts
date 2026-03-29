@@ -228,10 +228,10 @@ describe("invoiceCreateSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects missing staffId", () => {
+  it("accepts missing staffId (now optional — contacts can be used instead)", () => {
     const { staffId: _omit, ...withoutStaffId } = validInvoiceBase;
     const result = invoiceCreateSchema.safeParse(withoutStaffId);
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
   });
 
   it("rejects missing date", () => {
