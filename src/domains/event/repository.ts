@@ -1,8 +1,12 @@
 import { prisma } from "@/lib/prisma";
+import type {
+  EventType as PrismaEventType,
+  Recurrence as PrismaRecurrence,
+} from "@/generated/prisma/client";
 
 export async function create(data: {
   title: string;
-  type: string;
+  type: PrismaEventType;
   date: Date;
   color: string;
   allDay: boolean;
@@ -10,7 +14,7 @@ export async function create(data: {
   endTime?: string | null;
   description?: string | null;
   location?: string | null;
-  recurrence?: string | null;
+  recurrence?: PrismaRecurrence | null;
   recurrenceEnd?: Date | null;
   reminderMinutes?: number | null;
   createdBy: string;

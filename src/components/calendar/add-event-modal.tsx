@@ -109,7 +109,7 @@ export function AddEventModal({ event, onSave, trigger, defaultOpen = false }: A
           recurrence: recurrence === "none" ? null : recurrence,
           recurrenceEnd: recurrence !== "none" && recurrenceEnd ? recurrenceEnd : null,
           location: location || null,
-          description: description || null,
+          description: description || undefined,
           reminderMinutes,
         };
         await updateEvent(event.id, input);
