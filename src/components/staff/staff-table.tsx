@@ -18,6 +18,7 @@ import {
 import { StaffForm } from "./staff-form";
 import { staffApi } from "@/domains/staff/api-client";
 import type { StaffResponse } from "@/domains/staff/types";
+import { getInitials } from "@/lib/formatters";
 
 const PAGE_SIZE = 20;
 
@@ -122,9 +123,19 @@ export function StaffTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {staff.map((member) => (
-                <TableRow key={member.id}>
-                  <TableCell className="font-bold">{member.name}</TableCell>
+              {staff.map((member, index) => (
+                <TableRow
+                  key={member.id}
+                  className={`hover:bg-muted/50 transition-colors ${index % 2 === 1 ? "bg-muted/20" : ""}`}
+                >
+                  <TableCell>
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex items-center justify-center w-[30px] h-[30px] rounded-lg bg-muted text-[10px] font-bold text-muted-foreground shrink-0">
+                        {getInitials(member.name)}
+                      </div>
+                      <span className="font-bold">{member.name}</span>
+                    </div>
+                  </TableCell>
                   <TableCell>{member.title}</TableCell>
                   <TableCell>
                     <Badge variant="secondary">{member.department.replace(/^[,\s]+/, '').trim()}</Badge>
