@@ -346,7 +346,7 @@ A Claude Haiku-powered chatbot in a collapsible right sidebar. Staff can ask abo
 - **Safeguards:** Ownership enforcement (users can only modify their own records, admins bypass), destructive action confirmation, rate limiting
 - **Conversations:** Ephemeral (no persistence, resets on page refresh)
 - **UI:** Right sidebar (320px), minimize to icon strip, state persisted in localStorage
-- **Security:** User name escaped in system prompt to prevent injection; link URLs sanitized (http/https/relative only)
+- **Security:** Username escaped in system prompt to prevent injection; link URLs sanitized (http/https/relative only)
 
 ---
 
