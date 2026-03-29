@@ -358,7 +358,7 @@ FullCalendar page at `/calendar` merging three event sources:
 2. **Manual events** — `Event` model with types (Meeting, Seminar, Vendor, Other), recurrence (Daily/Weekly/Monthly/Yearly), color coding
 3. **Staff birthdays** — auto-generated from `Staff.birthMonth`/`birthDay` fields (handles Feb 29 on non-leap years)
 
-- **API:** `GET /api/calendar/events` merges all sources; `GET/POST /api/events` for CRUD
+- **API:** `GET /api/calendar/events` merges all sources; `GET /api/events` (list), `POST /api/events` (create), `GET/PUT/PATCH/DELETE /api/events/:id` (read/update/delete)
 - **Reminders:** `src/domains/event/reminders.ts` checks due reminders via scheduled trigger, sends `EVENT_REMINDER` notifications to all users
 - **UI:** `AddEventModal` for create/edit, `EventLegend` for color key, click-to-edit for manual events
 

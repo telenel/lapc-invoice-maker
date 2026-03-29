@@ -3,6 +3,7 @@
 
 interface RateLimitEntry {
   timestamps: number[];
+  maxWindowMs: number;
 }
 
 const store = new Map<string, RateLimitEntry>();
@@ -23,11 +24,17 @@ export function checkRateLimit(
 } {
   const maxAttempts = options?.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
   const windowMs = options?.windowMs ?? DEFAULT_WINDOW_MS;
+  if (!Number.isInteger(maxAttempts) || maxAttempts <= 0) {
+    throw new Error("checkRateLimit: maxAttempts must be a positive integer");
+  }
+  if (!Number.isFinite(windowMs) || windowMs <= 0) {
+    throw new Error("checkRateLimit: windowMs must be a positive number");
+  }
   const now = Date.now();
   const entry = store.get(key);
 
   if (!entry) {
-    store.set(key, { timestamps: [now] });
+    store.set(key, { timestamps: [now], maxWindowMs: windowMs });
     return { allowed: true };
   }
 
@@ -36,11 +43,14 @@ export function checkRateLimit(
   if (valid.length >= maxAttempts) {
     const oldest = valid[0];
     const retryAfterMs = windowMs - (now - oldest);
-    store.set(key, { timestamps: valid });
+    store.set(key, { timestamps: valid, maxWindowMs: Math.max(entry.maxWindowMs, windowMs) });
     return { allowed: false, retryAfterMs };
   }
 
-  store.set(key, { timestamps: [...valid, now] });
+  store.set(key, {
+    timestamps: [...valid, now],
+    maxWindowMs: Math.max(entry.maxWindowMs, windowMs),
+  });
   return { allowed: true };
 }
 
@@ -49,11 +59,12 @@ const CLEANUP_WINDOW_MS = 60 * 60 * 1000; // 1 hour — covers all rate limit wi
 setInterval(() => {
   const now = Date.now();
   store.forEach((entry, key) => {
-    const valid = entry.timestamps.filter((t) => now - t < CLEANUP_WINDOW_MS);
+    const cleanupWindowMs = Math.max(CLEANUP_WINDOW_MS, entry.maxWindowMs);
+    const valid = entry.timestamps.filter((t) => now - t < cleanupWindowMs);
     if (valid.length === 0) {
       store.delete(key);
     } else {
-      store.set(key, { timestamps: valid });
+      store.set(key, { ...entry, timestamps: valid });
     }
   });
 }, 60 * 1000);
