@@ -83,5 +83,17 @@ export function useNotifications() {
     setUnreadCount(0);
   }, []);
 
-  return { notifications, unreadCount, loading, markRead, markAllRead, refetch: fetchNotifications };
+  const dismiss = useCallback(async (id: string) => {
+    await notificationApi.dismiss(id);
+    setNotifications((prev) => {
+      const removed = prev.find((n) => n.id === id);
+      const next = prev.filter((n) => n.id !== id);
+      if (removed && !removed.read) {
+        setUnreadCount((c) => Math.max(0, c - 1));
+      }
+      return next;
+    });
+  }, []);
+
+  return { notifications, unreadCount, loading, markRead, markAllRead, dismiss, refetch: fetchNotifications };
 }

@@ -9,3 +9,9 @@ export const PATCH = withAuth(async (_req: NextRequest, _session, ctx) => {
   await notificationService.markRead(id);
   return NextResponse.json({ success: true });
 });
+
+export const DELETE = withAuth(async (_req: NextRequest, _session, ctx) => {
+  const { id } = await (ctx as RouteContext).params;
+  await notificationService.delete(id);
+  return NextResponse.json({ success: true });
+});

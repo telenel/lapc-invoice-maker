@@ -51,4 +51,8 @@ export const notificationService = {
   async markAllRead(userId: string): Promise<void> {
     await notificationRepository.markAllRead(userId);
   },
+
+  async delete(id: string): Promise<void> {
+    await notificationRepository.deleteById(id);
+  },
 };

@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { BellIcon } from "lucide-react";
+import { BellIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/domains/notification/hooks";
@@ -20,7 +20,7 @@ function timeAgo(dateStr: string): string {
 
 export function NotificationBell() {
   const router = useRouter();
-  const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
+  const { notifications, unreadCount, markRead, markAllRead, dismiss } = useNotifications();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -77,20 +77,34 @@ export function NotificationBell() {
               </p>
             ) : (
               notifications.slice(0, 20).map((n) => (
-                <button
+                <div
                   key={n.id}
                   className={cn(
-                    "w-full text-left px-3 py-2.5 hover:bg-accent transition-colors border-b border-border/50 last:border-0",
+                    "group relative flex items-start border-b border-border/50 last:border-0",
                     !n.read && "bg-accent/30"
                   )}
-                  onClick={() => handleNotificationClick(n.id, n.quoteId)}
                 >
-                  <p className={cn("text-sm", !n.read && "font-medium")}>{n.title}</p>
-                  {n.message && (
-                    <p className="text-xs text-muted-foreground mt-0.5">{n.message}</p>
-                  )}
-                  <p className="text-xs text-muted-foreground mt-0.5">{timeAgo(n.createdAt)}</p>
-                </button>
+                  <button
+                    className="flex-1 text-left px-3 py-2.5 hover:bg-accent transition-colors"
+                    onClick={() => handleNotificationClick(n.id, n.quoteId)}
+                  >
+                    <p className={cn("text-sm", !n.read && "font-medium")}>{n.title}</p>
+                    {n.message && (
+                      <p className="text-xs text-muted-foreground mt-0.5">{n.message}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-0.5">{timeAgo(n.createdAt)}</p>
+                  </button>
+                  <button
+                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 mt-2 mr-2 rounded text-muted-foreground hover:text-foreground hover:bg-accent shrink-0"
+                    aria-label="Dismiss notification"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      dismiss(n.id);
+                    }}
+                  >
+                    <XIcon className="size-3" aria-hidden="true" />
+                  </button>
+                </div>
               ))
             )}
           </div>

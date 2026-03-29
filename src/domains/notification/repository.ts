@@ -42,3 +42,7 @@ export async function markAllRead(userId: string) {
     data: { read: true },
   });
 }
+
+export async function deleteById(id: string): Promise<void> {
+  await prisma.notification.delete({ where: { id } });
+}

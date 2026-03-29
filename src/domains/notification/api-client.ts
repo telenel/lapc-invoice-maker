@@ -26,4 +26,8 @@ export const notificationApi = {
   async markAllRead(): Promise<void> {
     await request(`${BASE}/read-all`, { method: "PATCH" });
   },
+
+  async dismiss(id: string): Promise<void> {
+    await request(`${BASE}/${id}`, { method: "DELETE" });
+  },
 };
