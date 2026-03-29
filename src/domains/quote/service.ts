@@ -245,6 +245,20 @@ export const quoteService = {
       quoteId: quote.id,
     });
 
+    // Send email notification to bookstore (non-critical)
+    try {
+      const { sendEmail } = await import("@/lib/email");
+      const { escapeHtml } = await import("@/lib/html");
+      const quoteUrl = `${process.env.NEXTAUTH_URL}/quotes/${quote.id}`;
+      await sendEmail(
+        "bookstore@piercecollege.edu",
+        `${quote.quoteNumber ?? "Quote"} was ${verb}`,
+        `<p>${escapeHtml(quote.quoteNumber ?? "Quote")} was <strong>${verb}</strong>${quote.recipientName ? ` by ${escapeHtml(quote.recipientName)}` : ""}.</p><p><a href="${escapeHtml(quoteUrl)}">View Quote</a></p>`
+      );
+    } catch {
+      // Email is non-critical — don't fail the response
+    }
+
     return { success: true, status: response };
   },
 
