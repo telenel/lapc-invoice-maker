@@ -72,8 +72,12 @@ export interface CalendarEventItem {
     location?: string | null;
     headcount?: number | null;
     quoteId?: string | null;
+    quoteNumber?: string | null;
+    quoteStatus?: string | null;
     staffId?: string | null;
     eventId?: string | null;
     description?: string | null;
+    setupTime?: string | null;
+    takedownTime?: string | null;
   };
 }
