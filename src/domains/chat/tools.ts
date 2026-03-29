@@ -350,7 +350,6 @@ export function buildTools(user: ChatUser) {
         recipientName,
         expirationDate,
         recipientEmail,
-        accountCode,
         recipientOrg,
         accountCode,
         notes,
