@@ -46,6 +46,7 @@ interface QuoteItem {
   quantity: string | number;
   unitPrice: string | number;
   extendedPrice: string | number;
+  isTaxable: boolean;
   sortOrder: number;
 }
 
@@ -631,7 +632,7 @@ export function QuoteDetailView({ id }: { id: string }) {
         );
         const taxRate = quote.taxRate ?? 0;
         const taxableSubtotal = quote.taxEnabled
-          ? quote.items.reduce((sum, item) => sum + Number(item.extendedPrice), 0)
+          ? quote.items.filter((item) => item.isTaxable).reduce((sum, item) => sum + Number(item.extendedPrice), 0)
           : 0;
         const taxAmount = quote.taxEnabled ? taxableSubtotal * taxRate : 0;
         const grandTotal = Number(quote.totalAmount);

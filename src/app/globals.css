@@ -412,7 +412,6 @@
 
   .catering-guide {
     break-inside: avoid;
-    page-break-inside: avoid;
   }
 
   /* Compact layout for single page */
