@@ -62,8 +62,18 @@ export function StaffSelect({
   const selected = staff.find((s) => s.id === selectedId);
 
   function handleSelect(staffMember: StaffResponse) {
+    // Capture scroll position before the parent re-renders.
+    // Selecting a staff member can cause new DOM sections to appear
+    // (staff summary, account select, account code) which shifts layout.
+    // The browser's focus-restoration on popover close may then scroll
+    // to the top of the page.
+    const scrollY = window.scrollY;
     onSelect(staffMember);
     setOpen(false);
+    // Restore scroll after the DOM settles from the re-render.
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: scrollY });
+    });
   }
 
   function handleTriggerKeyDown(e: React.KeyboardEvent<HTMLButtonElement>) {
