@@ -551,8 +551,11 @@ export const quoteService = {
 
     // Fetch the full quote with all relations for the response
     const created = await quoteRepository.findById(newQuote.id);
+    if (!created) {
+      throw new Error(`Failed to fetch newly created revision (id: ${newQuote.id}) as QuoteWithRelations`);
+    }
     safePublishAll({ type: "quote-changed" });
-    return toQuoteResponse(created as NonNullable<QuoteWithRelations>);
+    return toQuoteResponse(created);
   },
 
   /**

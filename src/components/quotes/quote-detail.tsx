@@ -178,6 +178,7 @@ export function QuoteDetailView({ id }: { id: string }) {
     sending: false,
     converting: false,
     revising: false,
+    markingSubmitted: false,
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
@@ -329,6 +330,7 @@ export function QuoteDetailView({ id }: { id: string }) {
   }, [quote, id, router]);
 
   const handleMarkSubmitted = useCallback(async (method: "email" | "manual") => {
+    setActionState((prev) => ({ ...prev, markingSubmitted: true }));
     try {
       const res = await fetch(`/api/quotes/${id}/mark-submitted`, {
         method: "POST",
@@ -344,6 +346,8 @@ export function QuoteDetailView({ id }: { id: string }) {
       fetchQuote();
     } catch {
       toast.error("Failed to update status");
+    } finally {
+      setActionState((prev) => ({ ...prev, markingSubmitted: false }));
     }
   }, [id, fetchQuote]);
 
@@ -441,8 +445,8 @@ export function QuoteDetailView({ id }: { id: string }) {
 
           {/* Mark Sent (Manual): SENT only */}
           {status === "SENT" && (
-            <Button variant="outline" size="sm" onClick={() => handleMarkSubmitted("manual")}>
-              Mark Sent (Manual)
+            <Button variant="outline" size="sm" onClick={() => handleMarkSubmitted("manual")} disabled={actionState.markingSubmitted}>
+              {actionState.markingSubmitted ? "Submitting..." : "Mark Sent (Manual)"}
             </Button>
           )}
 
