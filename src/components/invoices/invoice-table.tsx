@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { RefreshCwIcon } from "lucide-react";
+import { FileTextIcon, RefreshCwIcon } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -148,7 +149,20 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
       {loading ? (
         <p className="text-muted-foreground text-sm">Loading…</p>
       ) : invoices.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No invoices found.</p>
+        <EmptyState
+          icon={<FileTextIcon className="size-7" />}
+          title="No invoices found"
+          description={
+            Object.values(filters).some((v) => v !== "")
+              ? "Try adjusting your filters to find what you're looking for."
+              : "Create your first invoice to get started."
+          }
+          action={
+            Object.values(filters).some((v) => v !== "")
+              ? { label: "Clear Filters", onClick: handleClear, variant: "outline" as const }
+              : undefined
+          }
+        />
       ) : (
         <>
           <Table>
