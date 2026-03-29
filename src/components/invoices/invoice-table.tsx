@@ -131,20 +131,14 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-end justify-between gap-4">
-        <div className="flex-1">
-          <InvoiceFiltersBar
-            filters={filters}
-            departments={departments}
-            categories={categories}
-            onChange={handleFiltersChange}
-            onClear={handleClear}
-          />
-        </div>
-        <Button variant="outline" size="sm" onClick={handleExportCsv}>
-          Export CSV
-        </Button>
-      </div>
+      <InvoiceFiltersBar
+        filters={filters}
+        departments={departments}
+        categories={categories}
+        onChange={handleFiltersChange}
+        onClear={handleClear}
+        onExportCsv={handleExportCsv}
+      />
 
       {loading ? (
         <p className="text-muted-foreground text-sm">Loading…</p>
