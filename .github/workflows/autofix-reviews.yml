@@ -31,30 +31,10 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           allowed_bots: "coderabbitai[bot]"
-          settings: |
-            {
-              "permissions": {
-                "allow": [
-                  "Bash(gh *)",
-                  "Bash(npm run lint*)",
-                  "Bash(npm run build*)",
-                  "Bash(npm install*)",
-                  "Bash(npx *)",
-                  "Bash(git *)",
-                  "Bash(curl *)",
-                  "Read",
-                  "Edit",
-                  "Write",
-                  "Grep",
-                  "Glob"
-                ],
-                "deny": [
-                  "Bash(rm -rf *)",
-                  "Bash(git push --force*)",
-                  "Bash(git reset --hard*)"
-                ]
-              }
-            }
+          claude_args: |
+            --max-turns 30
+            --allowedTools "Bash(gh:*),Bash(npm:*),Bash(npx:*),Bash(git:*),Bash(curl:*),Read,Edit,Write,Grep,Glob"
+            --disallowedTools "WebFetch,Agent"
           prompt: |
             CodeRabbit has requested changes on this PR. Fix them.
 
@@ -89,8 +69,6 @@ jobs:
 
             ## Rules
             - Do NOT use $() command substitution — it is blocked
-            - Do NOT spawn subagents — you have all the tools you need
-            - Do NOT use WebFetch — use `gh` CLI for GitHub API calls
             - Do NOT retry a command more than twice if it fails — move on
             - Only fix issues from CodeRabbit — no unrelated changes
             - Project conventions: `escapeHtml()` for HTML templates, `!= null` for Decimal fields, update Zod schemas when adding fields
