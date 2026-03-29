@@ -10,7 +10,7 @@ concurrency:
 
 jobs:
   autofix:
-    timeout-minutes: 15
+    timeout-minutes: 10
     if: >
       github.event.review.state == 'changes_requested' &&
       github.event.review.user.login == 'coderabbitai[bot]' &&
@@ -31,7 +31,6 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           allowed_bots: "coderabbitai[bot]"
-          show_full_output: true
           settings: |
             {
               "permissions": {
@@ -39,35 +38,59 @@ jobs:
                   "Bash(gh *)",
                   "Bash(npm run lint*)",
                   "Bash(npm run build*)",
+                  "Bash(npm install*)",
                   "Bash(npx *)",
                   "Bash(git *)",
+                  "Bash(curl *)",
                   "Read",
                   "Edit",
                   "Write",
                   "Grep",
                   "Glob"
+                ],
+                "deny": [
+                  "Bash(rm -rf *)",
+                  "Bash(git push --force*)",
+                  "Bash(git reset --hard*)"
                 ]
               }
             }
           prompt: |
-            CodeRabbit has requested changes on this PR.
+            CodeRabbit has requested changes on this PR. Fix them.
 
-            You have access to `gh` CLI (pre-authenticated). The repo is telenel/lapc-invoice-maker, PR #${{ github.event.pull_request.number }}.
+            ## Context
+            - Repo: telenel/lapc-invoice-maker
+            - PR: #${{ github.event.pull_request.number }}
+            - Branch: ${{ github.event.pull_request.head.ref }}
+            - `gh` CLI is pre-authenticated. Do NOT set GH_TOKEN or use $() substitution.
 
-            Instructions:
-            1. Run `gh api repos/telenel/lapc-invoice-maker/pulls/${{ github.event.pull_request.number }}/reviews` to find review comments
-            2. For each unresolved thread from coderabbitai[bot], read the comment
-            3. If the comment contains a "Prompt for AI Agents" section, follow those instructions
-            4. If no agent prompt exists, read the comment body and apply the suggested fix
-            5. Run `npm run lint && npm run build` to verify fixes don't break anything
-            6. Commit all fixes in a single commit with message "fix: address CodeRabbit review"
-            7. Push to the PR branch
+            ## Step 1: Get review comments
+            Run this exact command to get unresolved review threads:
+            ```
+            gh api graphql -f query='query { repository(owner: "telenel", name: "lapc-invoice-maker") { pullRequest(number: ${{ github.event.pull_request.number }}) { reviewThreads(first: 50) { nodes { isResolved path line comments(first: 3) { nodes { author { login } body } } } } } } }' --jq '.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved == false)'
+            ```
 
-            Important:
-            - Only fix issues flagged by CodeRabbit — don't make unrelated changes
-            - If a suggestion is wrong or doesn't apply, skip it
-            - Always verify with lint and build before committing
-            - Do NOT use $() command substitution in bash commands — use variables instead
-            - Use `escapeHtml()` for any user input in HTML templates (security requirement)
-            - Use explicit null checks (`!= null`) not truthy checks for Decimal fields
-            - Always update Zod schemas in src/lib/validators.ts when adding new fields
+            ## Step 2: Fix each issue
+            For each unresolved thread from coderabbitai[bot]:
+            - If the comment has a "Prompt for AI Agents" section, follow those instructions exactly
+            - Otherwise read the suggestion and apply the fix
+            - Skip suggestions that are wrong or don't apply
+
+            ## Step 3: Verify
+            Run: `npm run lint && npm run build`
+            If either fails, fix the errors before proceeding.
+
+            ## Step 4: Commit and push
+            ```
+            git add -A
+            git commit -m "fix: address CodeRabbit review"
+            git push
+            ```
+
+            ## Rules
+            - Do NOT use $() command substitution — it is blocked
+            - Do NOT spawn subagents — you have all the tools you need
+            - Do NOT use WebFetch — use `gh` CLI for GitHub API calls
+            - Do NOT retry a command more than twice if it fails — move on
+            - Only fix issues from CodeRabbit — no unrelated changes
+            - Project conventions: `escapeHtml()` for HTML templates, `!= null` for Decimal fields, update Zod schemas when adding fields
