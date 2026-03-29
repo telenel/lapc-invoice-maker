@@ -103,10 +103,10 @@ jobs:
             https://montalvo.io/hooks/deploy-lapc \
             -H "X-Deploy-Secret: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}" \
             -w "\n%{http_code}")
-          body=$(echo "$response" | head -1)
-          code=$(echo "$response" | tail -1)
+          body=$(printf '%s\n' "$response" | sed '$d')
+          code=$(printf '%s\n' "$response" | tail -1)
           echo "Webhook response: HTTP $code — $body"
-          if [ "$code" != "200" ] || ! echo "$body" | grep -q "Deploy triggered"; then
+          if [ "$code" != "200" ] || ! printf '%s' "$body" | grep -Fq "Deploy triggered"; then
             echo "Deploy webhook failed: HTTP $code — $body"
             exit 1
           fi
