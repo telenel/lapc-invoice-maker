@@ -55,10 +55,6 @@ export async function POST(req: NextRequest) {
     return new Response("Invalid messages format", { status: 400 });
   }
 
-  const tools = buildTools(user);
-
-  const modelMessages = await convertToModelMessages(messages, { tools });
-
   const result = streamText({
     model: anthropic("claude-haiku-4-5-20251001"),
     system: buildSystemPrompt(user),
