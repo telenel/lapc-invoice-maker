@@ -695,6 +695,11 @@ export function KeyboardMode({
             </div>
           )}
         </div>
+        {form.marginEnabled && (
+          <span className="text-xs text-muted-foreground italic">
+            Margin is internal only — the customer sees the final price, not the markup
+          </span>
+        )}
 
         {/* Apply Sales Tax */}
         <div className="flex items-center gap-3">
