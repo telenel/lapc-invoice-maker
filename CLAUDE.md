@@ -43,6 +43,7 @@ src/
 │   ├── notification/ # types, repository, service, api-client, hooks
 │   ├── event/     # types, repository, service, api-client, hooks, reminders
 │   ├── chat/      # types, tools, system-prompt, hooks
+│   ├── contact/   # types, repository, service (external people)
 │   ├── calendar/  # api-client
 │   ├── pdf/       # types, storage, service
 │   ├── admin/     # types, repository, service, api-client
@@ -77,7 +78,8 @@ npx prisma generate  # Regenerate client after schema changes
 
 ## Environment
 
-Required: `DATABASE_URL` (PostgreSQL connection string) in `.env`
+Required in `.env`: `DATABASE_URL` (PostgreSQL), `ANTHROPIC_API_KEY` (for AI chatbot)
+Note: `ANTHROPIC_API_KEY` must ALSO be in `docker-compose.yml` environment section for production.
 
 ## Scripts
 
@@ -89,19 +91,12 @@ npx tsx scripts/import-staff.ts /path/to/csv
 
 ## Deployment
 
-Docker Compose on montalvo.io behind Traefik. Fully automated CI/CD pipeline:
+Docker Compose on montalvo.io behind Traefik. CI/CD pipeline:
 
-1. PR created → CI (lint/build/test) + CodeRabbit review
-2. CodeRabbit requests changes → Claude Code Action auto-fixes, resolves threads, pushes
+1. PR created → CI (single lint/build/test job with paths-filter + Next.js cache) + CodeRabbit review
+2. CodeRabbit requests changes → fix manually, resolve threads via GraphQL API
 3. CodeRabbit auto-approves → auto-merge (squash) → CI on main → deploy to VPS
-4. Deploy webhook validates response body (not just status code), passes `BUILD_SHA` as Docker build arg
-
-**Auto-fix workflow** (`.github/workflows/autofix-reviews.yml`):
-- Uses `anthropics/claude-code-action@v1` with `claude_args: --allowedTools "Bash(gh *),Bash(npm *),..."`
-- `--max-turns 30` caps token usage; `--disallowedTools "WebFetch,Agent"` prevents waste
-- After fixing code, resolves GitHub review threads via GraphQL mutation to trigger auto-approve
-- `allowed_bots: "coderabbitai[bot]"` required since bots are blocked by default
-- Concurrency group per PR prevents overlapping runs; 10-minute timeout
+4. Deploy webhook validates response body, passes `BUILD_SHA` as Docker build arg
 
 **Email:** Power Automate webhook sends from `bookstore@piercecollege.edu` shared mailbox. URL in `POWER_AUTOMATE_EMAIL_URL` env var.
 
