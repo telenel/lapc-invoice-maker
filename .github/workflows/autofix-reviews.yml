@@ -33,7 +33,7 @@ jobs:
           allowed_bots: "coderabbitai[bot]"
           claude_args: |
             --max-turns 30
-            --allowedTools "Bash(gh:*),Bash(npm:*),Bash(npx:*),Bash(git:*),Bash(curl:*),Read,Edit,Write,Grep,Glob"
+            --allowedTools "Bash(gh *),Bash(npm *),Bash(npx *),Bash(git *),Bash(curl *),Read,Edit,Write,Grep,Glob"
             --disallowedTools "WebFetch,Agent"
           prompt: |
             CodeRabbit has requested changes on this PR. Fix them.
