@@ -1,0 +1,47 @@
+name: Auto-fix CodeRabbit Reviews
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  autofix:
+    if: >
+      github.event.review.state == 'changes_requested' &&
+      github.event.review.user.login == 'coderabbitai[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            CodeRabbit has requested changes on PR #${{ github.event.pull_request.number }}.
+
+            Instructions:
+            1. Use `gh api` to fetch the unresolved review threads from this PR
+            2. For each unresolved thread from coderabbitai[bot], read the comment and look for the "Prompt for AI Agents" section
+            3. Follow those instructions to apply fixes
+            4. Run `npm run lint` and `npm run build` to verify fixes don't break anything
+            5. Commit all fixes in a single commit with message "fix: address CodeRabbit review"
+            6. Push to the PR branch
+
+            Important:
+            - Only fix issues flagged by CodeRabbit — don't make unrelated changes
+            - If a suggestion is wrong or doesn't apply, skip it
+            - Always verify with lint and build before committing
+            - Use `escapeHtml()` for any user input in HTML templates (security requirement)
+            - Use explicit null checks (`!= null`) not truthy checks for Decimal fields
+            - Always update Zod schemas in src/lib/validators.ts when adding new fields
+          direct_prompt: |
+            CodeRabbit requested changes on this PR. Read the review comments and apply the requested fixes.
+          timeout_minutes: 15
