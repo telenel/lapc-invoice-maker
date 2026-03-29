@@ -6,8 +6,8 @@ import { useSession } from "next-auth/react";
 import { useChat, Chat, type UIMessage } from "@ai-sdk/react";
 import {
   MessageSquareIcon,
-  PanelRightCloseIcon,
-  PanelRightOpenIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   Trash2Icon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -109,117 +109,118 @@ export function ChatSidebar() {
     return null;
   }
 
-  // Collapsed state: thin strip
-  if (!isOpen) {
-    return (
-      <div className="hidden lg:flex flex-col items-center py-4 border-l bg-background print:hidden h-screen" data-print-hide>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleOpen}
-          className="h-8 w-8"
-          title="Open AI assistant"
-        >
-          <PanelRightOpenIcon className="h-4 w-4" />
-        </Button>
-        <div className="mt-2">
-          <MessageSquareIcon className="h-4 w-4 text-muted-foreground" />
-        </div>
-      </div>
-    );
-  }
-
-  // Open state: full sidebar
   return (
     <div
-      className="hidden lg:flex w-80 shrink-0 flex-col border-l bg-background print:hidden h-screen"
+      className="hidden lg:flex shrink-0 h-screen print:hidden relative"
       data-print-hide
     >
-      {/* Header */}
-      <div className="flex items-center justify-between border-b px-3 py-2">
-        <div className="flex items-center gap-2">
-          <MessageSquareIcon className="h-4 w-4 text-purple-600" />
-          <span className="text-sm font-medium">LAPC Assistant</span>
-        </div>
-        <div className="flex items-center gap-1">
-          {messages.length > 0 && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleClear}
-              className="h-7 w-7"
-              title="Clear chat"
-            >
-              <Trash2Icon className="h-3.5 w-3.5" />
-            </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleOpen}
-            className="h-7 w-7"
-            title="Close assistant"
-          >
-            <PanelRightCloseIcon className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      </div>
-
-      {/* Messages area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
-        {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground text-sm px-4">
-            <MessageSquareIcon className="h-8 w-8 mb-2 opacity-50" />
-            <p className="font-medium">
-              Hi, {session.user.name?.split(" ")[0] ?? "there"}!
-            </p>
-            <p className="mt-1 text-xs">
-              Ask me about invoices, quotes, events, or staff.
-            </p>
-          </div>
+      {/* Toggle handle — always visible on the left edge */}
+      <button
+        onClick={toggleOpen}
+        className={cn(
+          "absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10",
+          "flex items-center justify-center",
+          "w-5 h-10 rounded-full",
+          "bg-muted border border-border shadow-sm",
+          "hover:bg-accent hover:scale-110",
+          "transition-all duration-200",
+          "text-muted-foreground hover:text-foreground"
         )}
-        {messages.map((message) => (
-          <ChatMessage key={message.id} message={message} />
-        ))}
-        {isLoading && (
-          <div className="flex gap-2">
-            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted">
-              <span className="flex gap-0.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:0ms]" />
-                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:150ms]" />
-                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:300ms]" />
-              </span>
+        title={isOpen ? "Close assistant" : "Open assistant"}
+      >
+        {isOpen ? (
+          <ChevronRightIcon className="h-3 w-3" />
+        ) : (
+          <ChevronLeftIcon className="h-3 w-3" />
+        )}
+      </button>
+
+      {/* Sidebar panel with smooth width transition */}
+      <div
+        className={cn(
+          "flex flex-col border-l bg-background overflow-hidden",
+          "transition-[width] duration-300 ease-in-out",
+          isOpen ? "w-80" : "w-0"
+        )}
+      >
+        {/* Inner content — fixed width so it doesn't reflow during animation */}
+        <div className="w-80 flex flex-col h-full">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b px-3 py-2 shrink-0">
+            <div className="flex items-center gap-2">
+              <MessageSquareIcon className="h-4 w-4 text-purple-600" />
+              <span className="text-sm font-medium">LAPC Assistant</span>
             </div>
-          </div>
-        )}
-      </div>
-
-      {/* Quick actions */}
-      {messages.length === 0 && (
-        <div className="border-t px-3 py-2">
-          <div className="flex flex-wrap gap-1.5">
-            {QUICK_ACTIONS.map((action) => (
-              <button
-                key={action.label}
-                onClick={() => handleSend(action.text)}
-                disabled={isLoading}
-                className={cn(
-                  "rounded-full border px-2.5 py-1 text-xs",
-                  "hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700",
-                  "dark:hover:bg-purple-950 dark:hover:border-purple-700 dark:hover:text-purple-300",
-                  "transition-colors disabled:opacity-50"
-                )}
+            {messages.length > 0 && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleClear}
+                className="h-7 w-7"
+                title="Clear chat"
               >
-                {action.label}
-              </button>
+                <Trash2Icon className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
+
+          {/* Messages area */}
+          <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
+            {messages.length === 0 && (
+              <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground text-sm px-4">
+                <MessageSquareIcon className="h-8 w-8 mb-2 opacity-50" />
+                <p className="font-medium">
+                  Hi, {session.user.name?.split(" ")[0] ?? "there"}!
+                </p>
+                <p className="mt-1 text-xs">
+                  Ask me about invoices, quotes, events, or staff.
+                </p>
+              </div>
+            )}
+            {messages.map((message) => (
+              <ChatMessage key={message.id} message={message} />
             ))}
+            {isLoading && (
+              <div className="flex gap-2">
+                <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted">
+                  <span className="flex gap-0.5">
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:0ms]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:150ms]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:300ms]" />
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Quick actions */}
+          {messages.length === 0 && (
+            <div className="border-t px-3 py-2 shrink-0">
+              <div className="flex flex-wrap gap-1.5">
+                {QUICK_ACTIONS.map((action) => (
+                  <button
+                    key={action.label}
+                    onClick={() => handleSend(action.text)}
+                    disabled={isLoading}
+                    className={cn(
+                      "rounded-full border px-2.5 py-1 text-xs",
+                      "hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700",
+                      "dark:hover:bg-purple-950 dark:hover:border-purple-700 dark:hover:text-purple-300",
+                      "transition-colors disabled:opacity-50"
+                    )}
+                  >
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Input */}
+          <div className="border-t px-3 py-2 shrink-0">
+            <ChatInput onSend={handleSend} isLoading={isLoading} />
           </div>
         </div>
-      )}
-
-      {/* Input */}
-      <div className="border-t px-3 py-2">
-        <ChatInput onSend={handleSend} isLoading={isLoading} />
       </div>
     </div>
   );
