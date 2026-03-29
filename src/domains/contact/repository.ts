@@ -21,28 +21,46 @@ export async function create(data: CreateContactInput, createdBy: string) {
 }
 
 /**
- * Case-insensitive search by exact name.
+ * Case-insensitive search by exact name, scoped to owner.
  */
-export async function findByName(name: string) {
+export async function findByName(name: string, createdBy?: string) {
   return prisma.contact.findMany({
     where: {
       name: { equals: name, mode: "insensitive" },
+      ...(createdBy ? { createdBy } : {}),
     },
     orderBy: { updatedAt: "desc" },
   });
 }
 
 /**
- * Case-insensitive search by name, email, or org.
+ * Case-insensitive search by name, email, or org, scoped to owner.
  */
-export async function search(query: string) {
+export async function search(query: string, createdBy?: string) {
+  const q = query.trim();
+  if (!q) return [];
   return prisma.contact.findMany({
     where: {
+      ...(createdBy ? { createdBy } : {}),
       OR: [
-        { name: { contains: query, mode: "insensitive" } },
-        { email: { contains: query, mode: "insensitive" } },
-        { org: { contains: query, mode: "insensitive" } },
+        { name: { contains: q, mode: "insensitive" } },
+        { email: { contains: q, mode: "insensitive" } },
+        { org: { contains: q, mode: "insensitive" } },
       ],
+    },
+    orderBy: { updatedAt: "desc" },
+    take: 100,
+  });
+}
+
+/**
+ * Find a contact by email (case-insensitive), scoped to owner.
+ */
+export async function findByEmail(email: string, createdBy?: string) {
+  return prisma.contact.findMany({
+    where: {
+      email: { equals: email, mode: "insensitive" },
+      ...(createdBy ? { createdBy } : {}),
     },
     orderBy: { updatedAt: "desc" },
   });

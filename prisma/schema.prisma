@@ -74,7 +74,7 @@ model Contact {
   title       String    @default("")
   notes       String?
   createdBy   String    @map("created_by")
-  creator     User      @relation("ContactCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+  creator     User      @relation("ContactCreator", fields: [createdBy], references: [id], onDelete: Restrict)
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
   invoices    Invoice[]

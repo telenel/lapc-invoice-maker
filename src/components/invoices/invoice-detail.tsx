@@ -44,7 +44,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
     const body = encodeURIComponent(
       `Invoice ${invoice.invoiceNumber} is ready for processing. Please find the attached invoice.\n\n` +
       `Department: ${invoice.department}\n` +
-      `Staff: ${invoice.staff?.name ?? invoice.contact?.name ?? "N/A"}\n` +
+      `${invoice.staff?.name ? "Staff" : "Contact"}: ${invoice.staff?.name ?? invoice.contact?.name ?? "N/A"}\n` +
       `Account Number: ${invoice.accountNumber || "N/A"}\n` +
       `Account Code: ${invoice.accountCode || "N/A"}\n` +
       `Amount: ${formatAmount(invoice.totalAmount)}\n` +

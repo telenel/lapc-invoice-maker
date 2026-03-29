@@ -43,6 +43,10 @@ export async function markAllRead(userId: string) {
   });
 }
 
+export async function findById(id: string) {
+  return prisma.notification.findUnique({ where: { id } });
+}
+
 export async function deleteById(id: string): Promise<void> {
   await prisma.notification.delete({ where: { id } });
 }

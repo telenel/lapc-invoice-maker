@@ -24,13 +24,15 @@ const QUICK_ACTIONS = [
   { label: "Create a quote", text: "Help me create a new quote" },
 ];
 
-// Singleton Chat instance — survives component re-mounts during navigation
-let chatInstance: Chat<UIMessage> | null = null;
-function getChatInstance(): Chat<UIMessage> {
-  if (!chatInstance) {
-    chatInstance = new Chat<UIMessage>({ id: "lapc-chat" });
+// Per-user Chat instances — keyed by user ID to prevent cross-session leakage
+const chatInstances = new Map<string, Chat<UIMessage>>();
+function getChatInstance(userId: string): Chat<UIMessage> {
+  let instance = chatInstances.get(userId);
+  if (!instance) {
+    instance = new Chat<UIMessage>({ id: `lapc-chat-${userId}` });
+    chatInstances.set(userId, instance);
   }
-  return chatInstance;
+  return instance;
 }
 
 const sidebarSpring = { type: "spring" as const, stiffness: 300, damping: 30 };
@@ -47,8 +49,9 @@ export function ChatSidebar() {
     setIsOpen(stored === null ? true : stored === "true");
   }, []);
 
+  const sessionUserId = (session?.user as { id?: string } | undefined)?.id ?? "anonymous";
   const { messages, sendMessage, setMessages, status } = useChat({
-    chat: getChatInstance(),
+    chat: getChatInstance(sessionUserId),
   });
 
   const isLoading = status === "submitted" || status === "streaming";
@@ -103,9 +106,9 @@ export function ChatSidebar() {
   );
 
   const handleClear = useCallback(() => {
-    chatInstance = null;
+    chatInstances.delete(sessionUserId);
     setMessages([]);
-  }, [setMessages]);
+  }, [setMessages, sessionUserId]);
 
   // Don't render until session is loaded and we know open state
   if (sessionStatus !== "authenticated" || !session?.user || isOpen === null) {
@@ -149,7 +152,17 @@ export function ChatSidebar() {
         transition={sidebarSpring}
       >
         {/* Fixed-width inner so content doesn't reflow during animation */}
-        <div style={{ width: SIDEBAR_WIDTH }} className="flex flex-col h-full">
+        <div
+          style={{ width: SIDEBAR_WIDTH }}
+          className="flex flex-col h-full"
+          aria-hidden={!isOpen ? true : undefined}
+          ref={(el) => {
+            if (el) {
+              if (!isOpen) el.setAttribute("inert", "");
+              else el.removeAttribute("inert");
+            }
+          }}
+        >
           {/* Header */}
           <div className="flex items-center justify-between border-b px-3 py-2 shrink-0">
             <div className="flex items-center gap-2">

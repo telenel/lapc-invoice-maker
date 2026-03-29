@@ -52,7 +52,10 @@ export const notificationService = {
     await notificationRepository.markAllRead(userId);
   },
 
-  async delete(id: string): Promise<void> {
+  async delete(id: string, userId: string, isAdmin: boolean): Promise<void | "forbidden"> {
+    const notification = await notificationRepository.findById(id);
+    if (!notification) return;
+    if (!isAdmin && notification.userId !== userId) return "forbidden";
     await notificationRepository.deleteById(id);
   },
 };

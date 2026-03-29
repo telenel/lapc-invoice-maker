@@ -87,11 +87,10 @@ export function useNotifications() {
     await notificationApi.dismiss(id);
     setNotifications((prev) => {
       const removed = prev.find((n) => n.id === id);
-      const next = prev.filter((n) => n.id !== id);
       if (removed && !removed.read) {
         setUnreadCount((c) => Math.max(0, c - 1));
       }
-      return next;
+      return prev.filter((n) => n.id !== id);
     });
   }, []);
 

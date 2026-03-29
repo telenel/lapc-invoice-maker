@@ -261,7 +261,7 @@ export const invoiceService = {
         estimatedCost: totalStr,
         approverName: resolvedSignatures.length > 0 ? resolvedSignatures[0].name : "",
         contactName: contactName ?? invoice.staff?.name ?? (invoice as { contact?: { name: string } | null }).contact?.name ?? "",
-        contactPhone: contactExtension ?? (invoice.staff as { extension?: string } | null)?.extension ?? "",
+        contactPhone: contactExtension ?? (invoice.staff as { extension?: string } | null)?.extension ?? (invoice as { contact?: { phone?: string } | null }).contact?.phone ?? "",
         items: invoice.items.map((item) => ({
           description: item.description,
           quantity: Number(item.quantity),

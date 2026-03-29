@@ -69,6 +69,11 @@ export function AddEventModal({ event, onSave, onClose, trigger, defaultOpen = f
   const isEdit = !!event;
   const loading = creating || updating || deleting;
 
+  function closeModal() {
+    setOpen(false);
+    onClose?.();
+  }
+
   const [title, setTitle] = useState(event?.title ?? "");
   const [type, setType] = useState<EventType>(event?.type ?? "MEETING");
   const [date, setDate] = useState(event?.date ?? todayStr());
@@ -137,8 +142,8 @@ export function AddEventModal({ event, onSave, onClose, trigger, defaultOpen = f
       }
 
       toast.success(isEdit ? "Event updated" : "Event created");
-      setOpen(false);
       onSave();
+      closeModal();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save event");
     }
@@ -157,8 +162,8 @@ export function AddEventModal({ event, onSave, onClose, trigger, defaultOpen = f
     try {
       await deleteEvent(event.id);
       toast.success("Event deleted");
-      setOpen(false);
       onSave();
+      closeModal();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to delete event");
     }
@@ -169,7 +174,7 @@ export function AddEventModal({ event, onSave, onClose, trigger, defaultOpen = f
       <div onClick={handleOpen} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleOpen(); } }} role="button" tabIndex={0} style={{ display: "contents" }}>
         {trigger}
       </div>
-      <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) onClose?.(); }}>
+      <Dialog open={open} onOpenChange={(val) => { if (!val) closeModal(); else setOpen(val); }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{isEdit ? "Edit Event" : "Add Event"}</DialogTitle>

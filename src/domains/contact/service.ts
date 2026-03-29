@@ -36,10 +36,10 @@ export const contactService = {
   },
 
   /**
-   * Search contacts by name, email, or org.
+   * Search contacts by name, email, or org, scoped to the requesting user.
    */
-  async search(query: string): Promise<ContactResponse[]> {
-    const contacts = await contactRepository.search(query);
+  async search(query: string, userId?: string): Promise<ContactResponse[]> {
+    const contacts = await contactRepository.search(query, userId);
     return contacts.map(toContactResponse);
   },
 
@@ -61,10 +61,25 @@ export const contactService = {
     userId: string,
     extra?: { department?: string; email?: string; org?: string }
   ): Promise<ContactResponse> {
-    const existing = await contactRepository.findByName(name);
-    if (existing.length > 0) {
-      return toContactResponse(existing[0]);
+    // If email is provided, try matching by email first (stronger identifier)
+    if (extra?.email) {
+      const byEmail = await contactRepository.findByEmail(extra.email, userId);
+      if (byEmail.length > 0) {
+        return toContactResponse(byEmail[0]);
+      }
     }
+
+    // Fall back to name matching, but only reuse if metadata agrees
+    const existing = await contactRepository.findByName(name, userId);
+    if (existing.length > 0) {
+      const match = existing.find((c) => {
+        if (extra?.org && c.org && c.org.toLowerCase() !== extra.org.toLowerCase()) return false;
+        if (extra?.department && c.department && c.department.toLowerCase() !== extra.department.toLowerCase()) return false;
+        return true;
+      });
+      if (match) return toContactResponse(match);
+    }
+
     const contact = await contactRepository.create(
       {
         name,

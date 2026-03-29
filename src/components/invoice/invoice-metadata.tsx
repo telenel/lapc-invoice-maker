@@ -114,7 +114,6 @@ export function InvoiceMetadata({
           <label className="text-sm font-medium">Date</label>
           <Input
             type="date"
-            tabIndex={-1}
             value={form.date}
             onChange={(e) => updateField("date", e.target.value)}
             name="date"

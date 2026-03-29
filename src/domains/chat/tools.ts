@@ -134,7 +134,7 @@ export function buildTools(user: ChatUser) {
       execute: async ({ search }) => {
         const [staff, contacts] = await Promise.all([
           staffService.list({ search }),
-          contactService.search(search),
+          contactService.search(search, user.id),
         ]);
         return {
           staff: staff.slice(0, 10).map((s) => ({
@@ -396,7 +396,7 @@ export function buildTools(user: ChatUser) {
         // Resolve contact if needed
         let resolvedContactId = contactId;
         if (!staffId && !contactId && contactName) {
-          const contact = await contactService.findOrCreate(contactName, user.id, { department });
+          const contact = await contactService.findOrCreate(contactName, user.id, { department, email: recipientEmail, org: recipientOrg });
           resolvedContactId = contact.id;
         }
 
