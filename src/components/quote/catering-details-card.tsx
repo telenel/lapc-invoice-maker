@@ -104,6 +104,7 @@ export function CateringDetailsCard({
             <Input
               id="catering-event-date"
               type="date"
+              tabIndex={-1}
               value={details.eventDate}
               onChange={(e) => updateField("eventDate", e.target.value)}
             />

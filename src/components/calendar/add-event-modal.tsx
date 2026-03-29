@@ -25,6 +25,7 @@ import type {
 interface AddEventModalProps {
   event?: EventResponse;
   onSave: () => void;
+  onClose?: () => void;
   trigger: React.ReactNode;
   defaultOpen?: boolean;
 }
@@ -58,7 +59,7 @@ function todayStr(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-export function AddEventModal({ event, onSave, trigger, defaultOpen = false }: AddEventModalProps) {
+export function AddEventModal({ event, onSave, onClose, trigger, defaultOpen = false }: AddEventModalProps) {
   const [open, setOpen] = useState(defaultOpen);
   const { createEvent, loading: creating } = useCreateEvent();
   const { updateEvent, loading: updating } = useUpdateEvent();
@@ -156,7 +157,7 @@ export function AddEventModal({ event, onSave, trigger, defaultOpen = false }: A
       <div onClick={handleOpen} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleOpen(); } }} role="button" tabIndex={0} style={{ display: "contents" }}>
         {trigger}
       </div>
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={(val) => { setOpen(val); if (!val) onClose?.(); }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{isEdit ? "Edit Event" : "Add Event"}</DialogTitle>

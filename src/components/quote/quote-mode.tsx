@@ -258,6 +258,7 @@ export function QuoteMode({
             <Input
               id="quoteDate"
               type="date"
+              tabIndex={-1}
               value={form.date}
               onChange={(e) => updateField("date", e.target.value)}
             />
@@ -267,6 +268,7 @@ export function QuoteMode({
             <Input
               id="expirationDate"
               type="date"
+              tabIndex={-1}
               value={form.expirationDate}
               onChange={(e) => updateField("expirationDate", e.target.value)}
             />

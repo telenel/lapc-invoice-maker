@@ -142,14 +142,18 @@ export const quoteUpdateSchema = quoteCreateSchema.partial().extend({
 
 export const eventSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
+  description: z.string().nullable().optional(),
   type: z.enum(["MEETING", "SEMINAR", "VENDOR", "OTHER"]),
   date: z.string().min(1, "Date is required").regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD"),
-  startTime: z.string().optional(),
-  endTime: z.string().optional(),
-  allDay: z.boolean().default(false),
-  location: z.string().optional(),
-  recurrence: z.enum(["DAILY", "WEEKLY", "MONTHLY", "YEARLY"]).optional(),
-  recurrenceEnd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD").optional(),
-  reminderMinutes: z.number().int().min(0).max(10080).optional(),
+  startTime: z.string().nullable().optional(),
+  endTime: z.string().nullable().optional(),
+  allDay: z.boolean().optional().default(false),
+  location: z.string().nullable().optional(),
+  recurrence: z.enum(["DAILY", "WEEKLY", "MONTHLY", "YEARLY"]).nullable().optional(),
+  recurrenceEnd: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD")
+    .nullable()
+    .optional(),
+  reminderMinutes: z.number().int().min(0).max(10080).nullable().optional(),
 });

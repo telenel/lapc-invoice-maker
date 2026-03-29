@@ -31,16 +31,16 @@ export interface EventResponse {
 
 export interface CreateEventInput {
   title: string;
-  description?: string;
+  description?: string | null;
   type: EventType;
   date: string;
-  startTime?: string;
-  endTime?: string;
+  startTime?: string | null;
+  endTime?: string | null;
   allDay?: boolean;
-  location?: string;
-  recurrence?: Recurrence;
-  recurrenceEnd?: string;
-  reminderMinutes?: number;
+  location?: string | null;
+  recurrence?: Recurrence | null;
+  recurrenceEnd?: string | null;
+  reminderMinutes?: number | null;
 }
 
 export interface UpdateEventInput {
