@@ -21,6 +21,10 @@ export async function POST(req: NextRequest) {
 
   const { messages } = await req.json();
 
+  if (!Array.isArray(messages)) {
+    return new Response("Invalid messages format", { status: 400 });
+  }
+
   const tools = buildTools(user);
 
   const modelMessages = await convertToModelMessages(messages, { tools });
