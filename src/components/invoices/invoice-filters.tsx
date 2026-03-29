@@ -97,7 +97,7 @@ export function InvoiceFiltersBar({
             <div className="grid gap-1.5">
               <Label>Status</Label>
               <Select
-                value={filters.status || null}
+                value={filters.status || undefined}
                 onValueChange={(value) => set("status", value ?? "")}
               >
                 <SelectTrigger className="w-full">
@@ -116,7 +116,7 @@ export function InvoiceFiltersBar({
             <div className="grid gap-1.5">
               <Label>Category</Label>
               <Select
-                value={filters.category || null}
+                value={filters.category || undefined}
                 onValueChange={(value) => set("category", value ?? "")}
               >
                 <SelectTrigger className="w-full">
@@ -137,7 +137,7 @@ export function InvoiceFiltersBar({
             <div className="grid gap-1.5">
               <Label>Department</Label>
               <Select
-                value={filters.department || null}
+                value={filters.department || undefined}
                 onValueChange={(value) => set("department", value ?? "")}
               >
                 <SelectTrigger className="w-full">

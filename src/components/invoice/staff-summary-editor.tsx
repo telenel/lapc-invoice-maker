@@ -60,6 +60,7 @@ export function StaffSummaryEditor({
       {editingField === "department" ? (
         <Input
           className="h-6 w-40 text-sm"
+          aria-label="Department"
           value={form.department}
           onChange={(e) => updateField("department", e.target.value)}
           onBlur={handleSummaryBlur}
@@ -83,6 +84,7 @@ export function StaffSummaryEditor({
       {editingField === "contactExtension" ? (
         <Input
           className="h-6 w-24 text-sm"
+          aria-label="Extension"
           value={form.contactExtension}
           onChange={(e) =>
             updateField("contactExtension", e.target.value)
@@ -108,6 +110,7 @@ export function StaffSummaryEditor({
       {editingField === "contactEmail" ? (
         <Input
           className="h-6 w-48 text-sm"
+          aria-label="Email"
           type="email"
           value={form.contactEmail}
           onChange={(e) => updateField("contactEmail", e.target.value)}
@@ -132,6 +135,7 @@ export function StaffSummaryEditor({
       {editingField === "contactPhone" ? (
         <Input
           className="h-6 w-36 text-sm"
+          aria-label="Phone"
           type="tel"
           value={form.contactPhone}
           onChange={(e) => updateField("contactPhone", e.target.value)}

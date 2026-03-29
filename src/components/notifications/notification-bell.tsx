@@ -109,11 +109,11 @@ export function NotificationBell() {
                         <p className="text-xs text-muted-foreground mt-0.5">{timeAgo(n.createdAt)}</p>
                       </button>
                       <button
-                        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity p-1 mt-2 mr-2 rounded text-muted-foreground hover:text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0"
+                        className="sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity p-1 mt-2 mr-2 rounded text-muted-foreground hover:text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0"
                         aria-label={`Dismiss notification: ${n.title}`}
                         onClick={(e) => {
                           e.stopPropagation();
-                          dismiss(n.id);
+                          dismiss(n.id).catch(() => {/* already handled by hook */});
                         }}
                       >
                         <XIcon className="size-3" aria-hidden="true" />

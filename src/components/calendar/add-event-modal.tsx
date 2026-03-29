@@ -79,6 +79,7 @@ export function AddEventModal({ event, onSave, onClose, trigger, defaultOpen = f
 
   function closeModal() {
     setOpen(false);
+    setConfirmDelete(false);
     onClose?.();
   }
 
