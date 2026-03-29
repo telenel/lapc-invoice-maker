@@ -120,7 +120,7 @@ export function ChatSidebar() {
         className={cn(
           "absolute left-0 top-1/2 -translate-x-1/2 z-10",
           "flex items-center justify-center",
-          "w-6 h-12 rounded-full",
+          "w-8 h-16 rounded-full",
           "bg-muted/80 backdrop-blur-sm border border-border/50 shadow-md",
           "text-muted-foreground hover:text-foreground",
           "hover:bg-accent hover:shadow-lg",
@@ -136,7 +136,7 @@ export function ChatSidebar() {
           animate={{ rotate: isOpen ? 0 : 180 }}
           transition={{ duration: 0.3 }}
         >
-          <ChevronsRightIcon className="h-3.5 w-3.5" />
+          <ChevronsRightIcon className="h-5 w-5" />
         </motion.div>
       </motion.button>
 
