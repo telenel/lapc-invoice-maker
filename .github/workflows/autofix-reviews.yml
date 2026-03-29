@@ -31,9 +31,9 @@ jobs:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           allowed_bots: "coderabbitai[bot]"
-          model: claude-opus-4-6
           claude_args: |
-            --max-turns 30
+            --model claude-opus-4-6
+            --max-turns 100
             --allowedTools "Bash(gh *),Bash(npm *),Bash(npx *),Bash(git *),Bash(curl *),Read,Edit,Write,Grep,Glob"
             --disallowedTools "WebFetch,Agent"
           prompt: |
