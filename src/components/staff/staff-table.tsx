@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { PlusIcon, PencilIcon, UserMinus, SearchIcon } from "lucide-react";
+import { PlusIcon, PencilIcon, UserMinus, SearchIcon, UsersIcon } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -96,9 +97,16 @@ export function StaffTable() {
       {loading ? (
         <p className="text-muted-foreground text-sm">Loading…</p>
       ) : staff.length === 0 ? (
-        <p className="text-muted-foreground text-sm">
-          {search ? "No staff members match your search." : "No staff members yet. Add one to get started."}
-        </p>
+        <EmptyState
+          icon={<UsersIcon className="size-7" />}
+          title={search ? "No staff members match your search" : "No staff members yet"}
+          description={search ? "Try a different search term." : "Add your first staff member to get started."}
+          action={
+            search
+              ? { label: "Clear Search", onClick: () => handleSearch(""), variant: "outline" as const }
+              : undefined
+          }
+        />
       ) : (
         <>
           <Table className="table-fixed w-full">
