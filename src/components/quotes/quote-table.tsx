@@ -18,6 +18,8 @@ import {
   type QuoteFilters,
 } from "./quote-filters";
 import { formatAmount, formatDate, getInitials } from "@/lib/formatters";
+import { ClipboardListIcon } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 
 type QuoteStatus = "DRAFT" | "SENT" | "ACCEPTED" | "DECLINED" | "EXPIRED";
 
@@ -227,7 +229,20 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
       {loading ? (
         <p className="text-muted-foreground text-sm">Loading...</p>
       ) : quotes.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No quotes found.</p>
+        <EmptyState
+          icon={<ClipboardListIcon className="size-7" />}
+          title="No quotes found"
+          description={
+            Object.values(filters).some((v) => v !== "")
+              ? "Try adjusting your filters to find what you're looking for."
+              : "Create your first quote to get started."
+          }
+          action={
+            Object.values(filters).some((v) => v !== "")
+              ? { label: "Clear Filters", onClick: handleClear, variant: "outline" as const }
+              : undefined
+          }
+        />
       ) : (
         <>
           <Table>
