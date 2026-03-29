@@ -335,6 +335,7 @@ export function buildTools(user: ChatUser) {
         expirationDate: z.string().describe("Expiration date in YYYY-MM-DD format"),
         recipientEmail: z.string().optional().describe("Recipient email"),
         recipientOrg: z.string().optional().describe("Recipient organization"),
+        accountCode: z.string().optional().describe("Account code"),
         notes: z.string().optional().describe("Notes"),
         marginEnabled: z.boolean().optional().describe("Enable margin markup"),
         marginPercent: z.number().optional().describe("Margin percentage"),
@@ -350,6 +351,7 @@ export function buildTools(user: ChatUser) {
         expirationDate,
         recipientEmail,
         recipientOrg,
+        accountCode,
         notes,
         marginEnabled,
         marginPercent,
@@ -366,6 +368,7 @@ export function buildTools(user: ChatUser) {
             expirationDate,
             recipientEmail,
             recipientOrg,
+            accountCode,
             notes,
             marginEnabled,
             marginPercent,
@@ -413,6 +416,9 @@ export function buildTools(user: ChatUser) {
         }
         if (user.role !== "admin" && existing.creatorId !== user.id) {
           return { error: "You do not have permission to update this invoice" };
+        }
+        if (existing.type === "QUOTE") {
+          return { error: "Use updateQuote tool to modify quotes" };
         }
         const updated = await invoiceService.update(id, input);
         return {
@@ -527,12 +533,12 @@ export function buildTools(user: ChatUser) {
         const input: UpdateEventInput = {
           ...rest,
           ...(type ? { type: type as EventType } : {}),
-          ...(description !== undefined ? { description: description ?? undefined } : {}),
-          ...(location !== undefined ? { location: location ?? undefined } : {}),
-          ...(startTime !== undefined ? { startTime: startTime ?? undefined } : {}),
-          ...(endTime !== undefined ? { endTime: endTime ?? undefined } : {}),
-          ...(recurrence !== undefined ? { recurrence: recurrence ?? undefined } : {}),
-          ...(reminderMinutes !== undefined ? { reminderMinutes: reminderMinutes ?? undefined } : {}),
+          ...(description !== undefined ? { description } : {}),
+          ...(location !== undefined ? { location } : {}),
+          ...(startTime !== undefined ? { startTime } : {}),
+          ...(endTime !== undefined ? { endTime } : {}),
+          ...(recurrence !== undefined ? { recurrence } : {}),
+          ...(reminderMinutes !== undefined ? { reminderMinutes } : {}),
         };
         const updated = await eventService.update(id, input);
         if (!updated) {
