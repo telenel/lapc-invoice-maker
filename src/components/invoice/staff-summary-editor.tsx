@@ -70,8 +70,9 @@ export function StaffSummaryEditor({
       ) : (
         <span
           className="auto-filled-summary"
-          tabIndex={-1}
+          tabIndex={0}
           onClick={() => handleSummaryClick("department")}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSummaryClick("department"); } }}
           role="button"
         >
           {form.department || "Department"}
@@ -94,8 +95,9 @@ export function StaffSummaryEditor({
       ) : (
         <span
           className="auto-filled-summary"
-          tabIndex={-1}
+          tabIndex={0}
           onClick={() => handleSummaryClick("contactExtension")}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSummaryClick("contactExtension"); } }}
           role="button"
         >
           ext. {form.contactExtension || "—"}
@@ -117,8 +119,9 @@ export function StaffSummaryEditor({
       ) : (
         <span
           className="auto-filled-summary"
-          tabIndex={-1}
+          tabIndex={0}
           onClick={() => handleSummaryClick("contactEmail")}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSummaryClick("contactEmail"); } }}
           role="button"
         >
           {form.contactEmail || "email"}
@@ -140,8 +143,9 @@ export function StaffSummaryEditor({
       ) : (
         <span
           className="auto-filled-summary"
-          tabIndex={-1}
+          tabIndex={0}
           onClick={() => handleSummaryClick("contactPhone")}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSummaryClick("contactPhone"); } }}
           role="button"
         >
           {form.contactPhone || "phone"}

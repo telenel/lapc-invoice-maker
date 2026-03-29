@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -65,6 +65,14 @@ export function AddEventModal({ event, onSave, onClose, trigger, defaultOpen = f
   const { createEvent, loading: creating } = useCreateEvent();
   const { updateEvent, loading: updating } = useUpdateEvent();
   const { deleteEvent, loading: deleting } = useDeleteEvent();
+
+  const confirmDeleteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (confirmDeleteTimeoutRef.current) clearTimeout(confirmDeleteTimeoutRef.current);
+    };
+  }, []);
 
   const isEdit = !!event;
   const loading = creating || updating || deleting;
@@ -154,10 +162,12 @@ export function AddEventModal({ event, onSave, onClose, trigger, defaultOpen = f
 
     if (!confirmDelete) {
       setConfirmDelete(true);
-      setTimeout(() => setConfirmDelete(false), 3000);
+      if (confirmDeleteTimeoutRef.current) clearTimeout(confirmDeleteTimeoutRef.current);
+      confirmDeleteTimeoutRef.current = setTimeout(() => setConfirmDelete(false), 3000);
       return;
     }
 
+    if (confirmDeleteTimeoutRef.current) clearTimeout(confirmDeleteTimeoutRef.current);
     setConfirmDelete(false);
     try {
       await deleteEvent(event.id);

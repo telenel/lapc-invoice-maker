@@ -558,7 +558,7 @@ export function KeyboardMode({
               Save Draft
             </Button>
           )}
-          {!form.isRunning && (
+          {!form.isRunning && !existingId && (
             <Button variant="secondary" tabIndex={-1} onClick={() => setShowChargeLaterDialog(true)} disabled={saving}>
               Charge Later
             </Button>

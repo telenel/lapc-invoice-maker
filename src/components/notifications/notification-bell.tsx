@@ -80,13 +80,13 @@ export function NotificationBell() {
               )}
             </div>
             <div className="max-h-80 overflow-y-auto">
-              {notifications.length === 0 ? (
-                <p className="px-3 py-6 text-sm text-muted-foreground text-center">
-                  No notifications
-                </p>
-              ) : (
-                <AnimatePresence initial={false}>
-                  {notifications.slice(0, 20).map((n, i) => (
+              <AnimatePresence initial={false}>
+                {notifications.length === 0 ? (
+                  <p key="empty" className="px-3 py-6 text-sm text-muted-foreground text-center">
+                    No notifications
+                  </p>
+                ) : (
+                  notifications.slice(0, 20).map((n, i) => (
                     <motion.div
                       key={n.id}
                       initial={{ opacity: 0, x: -10 }}
@@ -110,7 +110,7 @@ export function NotificationBell() {
                       </button>
                       <button
                         className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity p-1 mt-2 mr-2 rounded text-muted-foreground hover:text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0"
-                        aria-label="Dismiss notification"
+                        aria-label={`Dismiss notification: ${n.title}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           dismiss(n.id);
@@ -119,9 +119,9 @@ export function NotificationBell() {
                         <XIcon className="size-3" aria-hidden="true" />
                       </button>
                     </motion.div>
-                  ))}
-                </AnimatePresence>
-              )}
+                  ))
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         )}

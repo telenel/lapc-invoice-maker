@@ -86,7 +86,11 @@ interface QuoteRowProps {
 const QuoteRow = React.memo(function QuoteRow({ quote, onClick }: QuoteRowProps) {
   function isExpired(dateStr: string | null): boolean {
     if (!dateStr) return false;
-    return new Date(dateStr) < new Date();
+    const expiry = new Date(dateStr);
+    expiry.setUTCHours(0, 0, 0, 0);
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+    return expiry < today;
   }
 
   return (
