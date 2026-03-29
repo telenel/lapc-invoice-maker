@@ -9,8 +9,9 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        username: { label: "Username", type: "text" },
+        username: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
+        rememberMe: { label: "Remember Me", type: "text" },
       },
       async authorize(credentials, req) {
         if (!credentials?.username || !credentials?.password) return null;
@@ -24,8 +25,15 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Too many login attempts. Please try again later.");
         }
 
+        const loginInput = credentials.username.trim().toLowerCase();
         const user = await prisma.user.findFirst({
-          where: { username: credentials.username.trim().toLowerCase(), active: true },
+          where: {
+            active: true,
+            OR: [
+              { username: loginInput },
+              { email: loginInput },
+            ],
+          },
         });
 
         if (!user) return null;
@@ -39,19 +47,35 @@ export const authOptions: NextAuthOptions = {
           username: user.username,
           role: user.role,
           setupComplete: user.setupComplete,
+          rememberMe: credentials.rememberMe === "true",
         };
       },
     }),
   ],
-  session: { strategy: "jwt" },
+  session: { strategy: "jwt", maxAge: 90 * 24 * 60 * 60 },
   pages: { signIn: "/login" },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.id = user.id;
         token.username = (user as unknown as { username: string }).username;
         token.role = (user as unknown as { role: string }).role;
         token.setupComplete = (user as unknown as { setupComplete: boolean }).setupComplete;
+        // rememberMe is passed from the client via the credentials object
+        const rememberMe = (user as unknown as { rememberMe?: boolean }).rememberMe;
+        token.maxAge = rememberMe ? 90 * 24 * 60 * 60 : 24 * 60 * 60;
+        return token;
+      }
+      // Enforce per-session expiration based on stored maxAge and issuance time
+      if (token.iat && token.maxAge) {
+        const elapsed = Math.floor(Date.now() / 1000) - (token.iat as number);
+        if (elapsed > (token.maxAge as number)) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          return null as any;
+        }
+      }
+      if (trigger === "update" || !token.maxAge) {
+        token.maxAge = token.maxAge ?? 90 * 24 * 60 * 60;
       } else if (token.id) {
         const dbUser = await prisma.user.findUnique({
           where: { id: token.id as string },
