@@ -27,6 +27,8 @@ const detailInclude = {
   creator: { select: { id: true, name: true, username: true } },
   items: { orderBy: { sortOrder: "asc" as const } },
   convertedToInvoice: { select: { id: true, invoiceNumber: true } },
+  revisedFromQuote: { select: { id: true, quoteNumber: true } },
+  revisedToQuote: { select: { id: true, quoteNumber: true } },
 } as const;
 
 // ── Where builder ──────────────────────────────────────────────────────────
@@ -91,7 +93,7 @@ export async function expireOverdue(): Promise<void> {
   await prisma.invoice.updateMany({
     where: {
       type: "QUOTE",
-      quoteStatus: { in: ["DRAFT", "SENT"] },
+      quoteStatus: { in: ["DRAFT", "SENT", "SUBMITTED_EMAIL", "SUBMITTED_MANUAL"] },
       expirationDate: { lt: new Date() },
     },
     data: { quoteStatus: "EXPIRED" },

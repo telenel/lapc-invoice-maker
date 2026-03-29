@@ -27,15 +27,24 @@ function buildPayload(form: InvoiceFormData) {
     marginEnabled: form.marginEnabled,
     marginPercent: form.marginEnabled ? form.marginPercent : undefined,
     taxEnabled: form.taxEnabled,
-    items: form.items.map((item, i) => ({
-      description: item.description,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      sortOrder: item.sortOrder ?? i,
-      isTaxable: item.isTaxable,
-      marginOverride: item.marginOverride ?? undefined,
-      costPrice: item.costPrice ?? undefined,
-    })),
+    taxRate: form.taxRate,
+    items: form.items.map((item, i) => {
+      const cost = Number(item.costPrice ?? item.unitPrice);
+      const effectiveMargin = item.marginOverride ?? form.marginPercent;
+      const charged =
+        form.marginEnabled && effectiveMargin > 0
+          ? Math.round(cost * (1 + effectiveMargin / 100) * 100) / 100
+          : cost;
+      return {
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: charged,
+        sortOrder: item.sortOrder ?? i,
+        isTaxable: item.isTaxable,
+        marginOverride: item.marginOverride ?? undefined,
+        costPrice: form.marginEnabled ? cost : undefined,
+      };
+    }),
   };
 }
 

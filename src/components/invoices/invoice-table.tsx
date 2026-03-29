@@ -22,6 +22,7 @@ import {
 import { formatAmount, formatDate, getInitials } from "@/lib/formatters";
 import { invoiceApi } from "@/domains/invoice/api-client";
 import type { InvoiceResponse } from "@/domains/invoice/types";
+import { useSSE } from "@/lib/use-sse";
 
 const EMPTY_FILTERS: FilterBarFilters = {
   search: "",
@@ -85,6 +86,8 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
   useEffect(() => {
     fetchInvoices();
   }, [fetchInvoices]);
+
+  useSSE("invoice-changed", fetchInvoices);
 
   // Reset to page 1 when filters or sort changes
   function handleFiltersChange(next: FilterBarFilters) {

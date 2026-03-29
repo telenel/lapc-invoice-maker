@@ -74,7 +74,7 @@ model Contact {
   title       String    @default("")
   notes       String?
   createdBy   String    @map("created_by")
-  creator     User      @relation("ContactCreator", fields: [createdBy], references: [id], onDelete: Restrict)
+  creator     User      @relation("ContactCreator", fields: [createdBy], references: [id])
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
   invoices    Invoice[]
@@ -133,6 +133,9 @@ model Invoice {
 
   convertedFromQuote   Invoice?  @relation("QuoteToInvoice", fields: [convertedFromQuoteId], references: [id])
   convertedToInvoice   Invoice?  @relation("QuoteToInvoice")
+  revisedFromQuoteId  String?   @unique @map("revised_from_quote_id")
+  revisedFromQuote    Invoice?  @relation("QuoteRevision", fields: [revisedFromQuoteId], references: [id])
+  revisedToQuote      Invoice?  @relation("QuoteRevision")
   quoteViews       QuoteView[]
 
   @@map("invoices")
@@ -182,8 +185,11 @@ enum DocumentType {
 enum QuoteStatus {
   DRAFT
   SENT
+  SUBMITTED_EMAIL
+  SUBMITTED_MANUAL
   ACCEPTED
   DECLINED
+  REVISED
   EXPIRED
 }
 

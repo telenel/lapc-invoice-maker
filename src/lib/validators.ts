@@ -26,6 +26,7 @@ export const invoiceItemSchema = z.object({
 export const invoiceCreateSchema = z.object({
   invoiceNumber: z.string().nullable().default(""),
   date: z.string().min(1, "Date is required"),
+  // staffId and contactId are both optional — service layer ensures at least one is set
   staffId: z.string().optional(),
   contactId: z.string().optional(),
   department: z.string().min(1, "Department is required"),
@@ -44,6 +45,9 @@ export const invoiceCreateSchema = z.object({
   marginEnabled: z.boolean().default(false),
   marginPercent: z.number().min(0).optional(),
   taxEnabled: z.boolean().default(false),
+  taxRate: z.number().min(0).max(1).optional(),
+  isCateringEvent: z.boolean().default(false),
+  cateringDetails: z.unknown().optional(),
 });
 
 export const invoiceUpdateSchema = invoiceCreateSchema.partial().extend({
@@ -101,6 +105,7 @@ export const quoteItemSchema = z.object({
 
 export const quoteCreateSchema = z.object({
   date: z.string().min(1, "Date is required"),
+  // staffId and contactId are both optional — service layer ensures at least one is set
   staffId: z.string().optional(),
   contactId: z.string().optional(),
   department: z.string().min(1, "Department is required"),
@@ -140,6 +145,7 @@ export const quoteCreateSchema = z.object({
 
 export const quoteUpdateSchema = quoteCreateSchema.partial().extend({
   items: z.array(quoteItemSchema).min(1).optional(),
+  quoteStatus: z.enum(["DRAFT", "SENT", "SUBMITTED_EMAIL", "SUBMITTED_MANUAL", "ACCEPTED", "DECLINED", "EXPIRED"]).optional(),
 });
 
 export const eventSchema = z.object({

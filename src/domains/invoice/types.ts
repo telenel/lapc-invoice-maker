@@ -31,6 +31,12 @@ export interface InvoiceResponse {
   runningTitle: string | null;
   pdfPath: string | null;
   prismcorePath: string | null;
+  marginEnabled: boolean;
+  marginPercent: number | null;
+  taxEnabled: boolean;
+  taxRate: number;
+  isCateringEvent: boolean;
+  cateringDetails: unknown;
   createdAt: string;
   staff: InvoiceStaffDetail | null;
   contact: ContactResponse | null;
@@ -46,6 +52,9 @@ export interface InvoiceItemResponse {
   unitPrice: number;
   extendedPrice: number;
   sortOrder: number;
+  isTaxable: boolean;
+  costPrice: number | null;
+  marginOverride: number | null;
 }
 
 export interface CreateLineItemInput {
@@ -53,6 +62,9 @@ export interface CreateLineItemInput {
   quantity: number;
   unitPrice: number;
   sortOrder?: number;
+  isTaxable?: boolean;
+  costPrice?: number;
+  marginOverride?: number;
 }
 
 export interface CreateInvoiceInput {
@@ -76,6 +88,9 @@ export interface CreateInvoiceInput {
   marginEnabled?: boolean;
   marginPercent?: number;
   taxEnabled?: boolean;
+  taxRate?: number;
+  isCateringEvent?: boolean;
+  cateringDetails?: unknown;
 }
 
 export interface InvoiceFilters {

@@ -254,14 +254,19 @@ export function KeyboardMode({
   // ---- Star toggle handler ----
   async function handleTogglePick(description: string, unitPrice: number, department: string) {
     const dept = department || "__ALL__";
-    if (userPickDescriptions.has(description)) {
-      const pick = userPicks.find((p) => p.description === description && (p.department === dept || p.department === department));
-      if (pick) {
-        await userQuickPicksApi.delete(pick.id);
-        setUserPicks((prev) => prev.filter((p) => p.id !== pick.id));
-        setUserPickDescriptions((prev) => { const next = new Set(prev); next.delete(description); return next; });
-        toast.success(`"${description}" removed from quick picks`);
-      }
+    const descUpper = description.toUpperCase();
+    const existingPick = userPicks.find(
+      (p) => p.description.toUpperCase() === descUpper && (p.department === dept || p.department === department)
+    );
+    if (existingPick) {
+      await userQuickPicksApi.delete(existingPick.id);
+      setUserPicks((prev) => prev.filter((p) => p.id !== existingPick.id));
+      setUserPickDescriptions((prev) => {
+        const next = new Set(prev);
+        next.delete(existingPick.description);
+        return next;
+      });
+      toast.success(`"${description}" removed from quick picks`);
     } else {
       try {
         const newPick = await userQuickPicksApi.create({ description, unitPrice, department: dept });

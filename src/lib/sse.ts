@@ -31,3 +31,25 @@ export function publish(userId: string, data: unknown): void {
     }
   });
 }
+
+export function publishAll(data: unknown): void {
+  const encoded = new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`);
+  connections.forEach((set) => {
+    Array.from(set).forEach((controller) => {
+      try {
+        controller.enqueue(encoded);
+      } catch {
+        set.delete(controller);
+      }
+    });
+  });
+}
+
+/** Fire-and-forget wrapper — SSE broadcast failures are non-critical */
+export function safePublishAll(data: unknown): void {
+  try {
+    publishAll(data);
+  } catch {
+    /* SSE broadcast failure is non-critical */
+  }
+}

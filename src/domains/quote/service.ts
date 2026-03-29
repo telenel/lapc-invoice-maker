@@ -2,6 +2,7 @@
 import * as quoteRepository from "./repository";
 import { pdfService } from "@/domains/pdf/service";
 import { formatDateFromDate } from "@/domains/shared/formatters";
+import { safePublishAll } from "@/lib/sse";
 import type { Prisma } from "@/generated/prisma/client";
 import type {
   QuoteResponse,
@@ -90,6 +91,12 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
     convertedToInvoice: "convertedToInvoice" in quote
       ? (quote.convertedToInvoice as { id: string; invoiceNumber: string | null } | null)
       : null,
+    revisedFromQuote: "revisedFromQuote" in quote && (quote as { revisedFromQuote?: { id: string; quoteNumber: string | null } | null }).revisedFromQuote
+      ? { id: (quote as { revisedFromQuote: { id: string; quoteNumber: string | null } }).revisedFromQuote.id, quoteNumber: (quote as { revisedFromQuote: { id: string; quoteNumber: string | null } }).revisedFromQuote.quoteNumber }
+      : null,
+    revisedToQuote: "revisedToQuote" in quote && (quote as { revisedToQuote?: { id: string; quoteNumber: string | null } | null }).revisedToQuote
+      ? { id: (quote as { revisedToQuote: { id: string; quoteNumber: string | null } }).revisedToQuote.id, quoteNumber: (quote as { revisedToQuote: { id: string; quoteNumber: string | null } }).revisedToQuote.quoteNumber }
+      : null,
   };
 }
 
@@ -145,7 +152,7 @@ export const quoteService = {
     if (
       quote.expirationDate &&
       new Date(quote.expirationDate) < new Date() &&
-      (quote.quoteStatus === "DRAFT" || quote.quoteStatus === "SENT")
+      (quote.quoteStatus === "DRAFT" || quote.quoteStatus === "SENT" || quote.quoteStatus === "SUBMITTED_EMAIL" || quote.quoteStatus === "SUBMITTED_MANUAL")
     ) {
       await quoteRepository.update(id, { quoteStatus: "EXPIRED" });
       quote.quoteStatus = "EXPIRED";
@@ -165,7 +172,7 @@ export const quoteService = {
     if (
       quote.expirationDate &&
       new Date(quote.expirationDate) < new Date() &&
-      (quote.quoteStatus === "DRAFT" || quote.quoteStatus === "SENT")
+      (quote.quoteStatus === "DRAFT" || quote.quoteStatus === "SENT" || quote.quoteStatus === "SUBMITTED_EMAIL" || quote.quoteStatus === "SUBMITTED_MANUAL")
     ) {
       await quoteRepository.update(quote.id, { quoteStatus: "EXPIRED" });
       quote.quoteStatus = "EXPIRED";
@@ -230,10 +237,10 @@ export const quoteService = {
     const quote = await quoteRepository.findByShareToken(token);
     if (!quote || quote.type !== "QUOTE") return null;
 
-    if (quote.quoteStatus !== "SENT") {
+    if (!["SENT", "SUBMITTED_EMAIL", "SUBMITTED_MANUAL"].includes(quote.quoteStatus as string)) {
       throw Object.assign(
         new Error(
-          quote.quoteStatus === "ACCEPTED" || quote.quoteStatus === "DECLINED"
+          quote.quoteStatus === "ACCEPTED" || quote.quoteStatus === "DECLINED" || quote.quoteStatus === "REVISED"
             ? "This quote has already been responded to"
             : "This quote is no longer available"
         ),
@@ -278,6 +285,8 @@ export const quoteService = {
       // Email is non-critical — don't fail the response
     }
 
+    safePublishAll({ type: "quote-changed" });
+
     return { success: true, status: response };
   },
 
@@ -319,6 +328,8 @@ export const quoteService = {
       quoteNumber
     );
 
+    safePublishAll({ type: "quote-changed" });
+
     return toQuoteResponse(quote as unknown as NonNullable<QuoteWithRelations>);
   },
 
@@ -334,10 +345,11 @@ export const quoteService = {
     if (
       existing.quoteStatus === "ACCEPTED" ||
       existing.quoteStatus === "DECLINED" ||
-      existing.quoteStatus === "EXPIRED"
+      existing.quoteStatus === "EXPIRED" ||
+      existing.quoteStatus === "REVISED"
     ) {
       throw Object.assign(
-        new Error("Cannot update a quote that is accepted, declined, or expired"),
+        new Error("Cannot update a quote that is accepted, declined, expired, or revised"),
         { code: "FORBIDDEN" }
       );
     }
@@ -348,10 +360,12 @@ export const quoteService = {
       const calculatedItems = calculateLineItems(items);
       const totalAmount = calculateTotal(calculatedItems);
       const updated = await quoteRepository.update(id, quoteData, calculatedItems, totalAmount);
+      safePublishAll({ type: "quote-changed" });
       return toQuoteResponse(updated as unknown as NonNullable<QuoteWithRelations>);
     }
 
     const updated = await quoteRepository.update(id, quoteData);
+    safePublishAll({ type: "quote-changed" });
     return toQuoteResponse(updated as unknown as NonNullable<QuoteWithRelations>);
   },
 
@@ -388,6 +402,7 @@ export const quoteService = {
     }
     const shareToken = quote.shareToken ?? crypto.randomUUID();
     await quoteRepository.markSentWithToken(id, shareToken);
+    safePublishAll({ type: "quote-changed" });
     return { shareToken };
   },
 
@@ -405,9 +420,9 @@ export const quoteService = {
     if (quote.quoteStatus === "ACCEPTED") {
       throw Object.assign(new Error("Quote has already been converted"), { code: "FORBIDDEN" });
     }
-    if (quote.quoteStatus === "DECLINED" || quote.quoteStatus === "EXPIRED") {
+    if (quote.quoteStatus === "DECLINED" || quote.quoteStatus === "EXPIRED" || quote.quoteStatus === "REVISED") {
       throw Object.assign(
-        new Error("Cannot convert a declined or expired quote"),
+        new Error("Cannot convert a declined, expired, or revised quote"),
         { code: "FORBIDDEN" }
       );
     }
@@ -429,6 +444,12 @@ export const quoteService = {
           approvalChain: quote.approvalChain ?? [],
           notes: quote.notes,
           totalAmount: quote.totalAmount,
+          marginEnabled: quote.marginEnabled,
+          marginPercent: quote.marginPercent,
+          taxEnabled: quote.taxEnabled,
+          taxRate: quote.taxRate,
+          isCateringEvent: quote.isCateringEvent,
+          cateringDetails: quote.cateringDetails ?? undefined,
           createdBy: creatorId,
           convertedFromQuoteId: quote.id,
           items: {
@@ -438,6 +459,9 @@ export const quoteService = {
               unitPrice: item.unitPrice,
               extendedPrice: item.extendedPrice,
               sortOrder: item.sortOrder,
+              isTaxable: item.isTaxable,
+              costPrice: item.costPrice ?? undefined,
+              marginOverride: item.marginOverride ?? undefined,
             })),
           },
         },
@@ -449,7 +473,124 @@ export const quoteService = {
       }),
     ]);
 
+    safePublishAll({ type: "quote-changed" });
+    safePublishAll({ type: "invoice-changed" });
+
     return invoice;
+  },
+
+  /**
+   * Create a revised copy of a declined or expired quote.
+   * Marks the original as REVISED and creates a new DRAFT quote with the same data.
+   */
+  async createRevision(id: string, creatorId: string): Promise<QuoteResponse> {
+    const { prisma } = await import("@/lib/prisma");
+    const quote = await quoteRepository.findById(id);
+    if (!quote || quote.type !== "QUOTE") {
+      throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
+    }
+    if (quote.quoteStatus !== "DECLINED" && quote.quoteStatus !== "EXPIRED") {
+      throw Object.assign(new Error("Only declined or expired quotes can be revised"), { code: "FORBIDDEN" });
+    }
+
+    const now = new Date();
+    const expirationDate = new Date(now);
+    expirationDate.setDate(expirationDate.getDate() + 30);
+
+    const quoteNumber = await quoteRepository.generateNumber();
+
+    const [newQuote] = await prisma.$transaction([
+      prisma.invoice.create({
+        data: {
+          type: "QUOTE",
+          status: "DRAFT",
+          quoteStatus: "DRAFT",
+          quoteNumber,
+          date: now,
+          category: quote.category,
+          department: quote.department,
+          staffId: quote.staffId ?? undefined,
+          contactId: (quote as { contactId?: string | null }).contactId ?? undefined,
+          accountCode: quote.accountCode,
+          accountNumber: quote.accountNumber,
+          approvalChain: quote.approvalChain ?? [],
+          notes: quote.notes,
+          recipientName: quote.recipientName,
+          recipientEmail: quote.recipientEmail,
+          recipientOrg: quote.recipientOrg,
+          expirationDate,
+          totalAmount: quote.totalAmount,
+          marginEnabled: quote.marginEnabled,
+          marginPercent: quote.marginPercent,
+          taxEnabled: quote.taxEnabled,
+          taxRate: quote.taxRate,
+          isCateringEvent: quote.isCateringEvent,
+          cateringDetails: quote.cateringDetails ?? undefined,
+          createdBy: creatorId,
+          revisedFromQuoteId: quote.id,
+          items: {
+            create: quote.items.map((item) => ({
+              description: item.description,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              extendedPrice: item.extendedPrice,
+              sortOrder: item.sortOrder,
+              isTaxable: item.isTaxable,
+              costPrice: item.costPrice ?? undefined,
+              marginOverride: item.marginOverride ?? undefined,
+            })),
+          },
+        },
+        select: { id: true, invoiceNumber: true },
+      }),
+      prisma.invoice.update({
+        where: { id },
+        data: { quoteStatus: "REVISED" },
+      }),
+    ]);
+
+    // Fetch the full quote with all relations for the response
+    const created = await quoteRepository.findById(newQuote.id);
+    if (!created) {
+      throw new Error(`Failed to fetch newly created revision (id: ${newQuote.id}) as QuoteWithRelations`);
+    }
+    safePublishAll({ type: "quote-changed" });
+    return toQuoteResponse(created);
+  },
+
+  /**
+   * Mark a SENT quote as submitted via email.
+   */
+  async markSubmittedEmail(id: string): Promise<void> {
+    const quote = await quoteRepository.findById(id);
+    if (!quote || quote.type !== "QUOTE") {
+      throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
+    }
+    if (quote.quoteStatus !== "SENT") {
+      throw Object.assign(new Error("Only sent quotes can be marked as submitted via email"), { code: "FORBIDDEN" });
+    }
+    await quoteRepository.update(id, { quoteStatus: "SUBMITTED_EMAIL" });
+    safePublishAll({ type: "quote-changed" });
+  },
+
+  /**
+   * Mark a DRAFT or SENT quote as submitted manually.
+   * Generates a share token if one does not exist.
+   */
+  async markSubmittedManual(id: string): Promise<void> {
+    const quote = await quoteRepository.findById(id);
+    if (!quote || quote.type !== "QUOTE") {
+      throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
+    }
+    if (quote.quoteStatus !== "SENT" && quote.quoteStatus !== "DRAFT") {
+      throw Object.assign(new Error("Only draft or sent quotes can be marked as submitted manually"), { code: "FORBIDDEN" });
+    }
+    const data: Record<string, unknown> = { quoteStatus: "SUBMITTED_MANUAL" };
+    if (!quote.shareToken) {
+      data.shareToken = crypto.randomUUID();
+    }
+    await quoteRepository.update(id, data);
+    safePublishAll({ type: "quote-changed" });
   },
 
   /**

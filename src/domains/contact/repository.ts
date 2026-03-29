@@ -23,11 +23,11 @@ export async function create(data: CreateContactInput, createdBy: string) {
 /**
  * Case-insensitive search by exact name, scoped to owner.
  */
-export async function findByName(name: string, createdBy?: string) {
+export async function findByName(name: string, createdBy: string) {
   return prisma.contact.findMany({
     where: {
       name: { equals: name, mode: "insensitive" },
-      ...(createdBy ? { createdBy } : {}),
+      createdBy,
     },
     orderBy: { updatedAt: "desc" },
   });
@@ -36,12 +36,12 @@ export async function findByName(name: string, createdBy?: string) {
 /**
  * Case-insensitive search by name, email, or org, scoped to owner.
  */
-export async function search(query: string, createdBy?: string) {
+export async function search(query: string, createdBy: string) {
   const q = query.trim();
   if (!q) return [];
   return prisma.contact.findMany({
     where: {
-      ...(createdBy ? { createdBy } : {}),
+      createdBy,
       OR: [
         { name: { contains: q, mode: "insensitive" } },
         { email: { contains: q, mode: "insensitive" } },
@@ -49,26 +49,26 @@ export async function search(query: string, createdBy?: string) {
       ],
     },
     orderBy: { updatedAt: "desc" },
-    take: 100,
+    take: 50,
   });
 }
 
 /**
  * Find a contact by email (case-insensitive), scoped to owner.
  */
-export async function findByEmail(email: string, createdBy?: string) {
+export async function findByEmail(email: string, createdBy: string) {
   return prisma.contact.findMany({
     where: {
       email: { equals: email, mode: "insensitive" },
-      ...(createdBy ? { createdBy } : {}),
+      createdBy,
     },
     orderBy: { updatedAt: "desc" },
   });
 }
 
 /**
- * Find a contact by ID.
+ * Find a contact by ID, scoped to owner.
  */
-export async function findById(id: string) {
-  return prisma.contact.findUnique({ where: { id } });
+export async function findById(id: string, createdBy: string) {
+  return prisma.contact.findFirst({ where: { id, createdBy } });
 }

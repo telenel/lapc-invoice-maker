@@ -19,6 +19,7 @@ import { StaffForm } from "./staff-form";
 import { staffApi } from "@/domains/staff/api-client";
 import type { StaffResponse } from "@/domains/staff/types";
 import { getInitials } from "@/lib/formatters";
+import { useSSE } from "@/lib/use-sse";
 
 const PAGE_SIZE = 20;
 
@@ -50,6 +51,8 @@ export function StaffTable() {
   useEffect(() => {
     fetchStaff();
   }, [fetchStaff]);
+
+  useSSE("staff-changed", fetchStaff);
 
   // Reset to page 1 when search changes
   function handleSearch(value: string) {

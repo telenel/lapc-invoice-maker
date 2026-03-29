@@ -14,8 +14,11 @@ export const GET = withAuth(async (req: NextRequest, session) => {
       quoteStatus: (sp.get("quoteStatus") ?? undefined) as
         | "DRAFT"
         | "SENT"
+        | "SUBMITTED_EMAIL"
+        | "SUBMITTED_MANUAL"
         | "ACCEPTED"
         | "DECLINED"
+        | "REVISED"
         | "EXPIRED"
         | "all"
         | undefined,

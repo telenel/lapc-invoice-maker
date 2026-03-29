@@ -1,52 +1,7 @@
 "use client";
 
+import { Spinner, Checkmark } from "@/components/ui/step-indicators";
 import type { GenerationStep } from "./invoice-form";
-
-interface PdfProgressProps {
-  step: GenerationStep;
-}
-
-function Spinner() {
-  return (
-    <svg
-      className="animate-spin motion-reduce:animate-none size-5 text-primary"
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      aria-hidden="true"
-    >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      />
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-      />
-    </svg>
-  );
-}
-
-function Checkmark() {
-  return (
-    <svg
-      className="size-5 text-green-600"
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth="3"
-      aria-hidden="true"
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-    </svg>
-  );
-}
 
 const STEPS: { key: GenerationStep; label: string }[] = [
   { key: "saving", label: "Creating invoice…" },
@@ -61,7 +16,7 @@ function stepIndex(step: GenerationStep): number {
   return -1;
 }
 
-export function PdfProgress({ step }: PdfProgressProps) {
+export function PdfProgress({ step }: { step: GenerationStep }) {
   if (!step) return null;
 
   const currentIdx = stepIndex(step);

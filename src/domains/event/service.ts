@@ -1,4 +1,5 @@
 import * as eventRepository from "./repository";
+import { safePublishAll } from "@/lib/sse";
 import { EVENT_TYPE_COLORS } from "./types";
 import type {
   EventResponse,
@@ -156,6 +157,7 @@ export const eventService = {
       reminderMinutes: input.reminderMinutes !== undefined ? input.reminderMinutes : 60,
       createdBy: userId,
     });
+    safePublishAll({ type: "calendar-changed" });
     return toResponse(event);
   },
 
@@ -181,11 +183,13 @@ export const eventService = {
     }
 
     const updated = await eventRepository.update(id, data);
+    safePublishAll({ type: "calendar-changed" });
     return toResponse(updated);
   },
 
   async remove(id: string): Promise<void> {
     await eventRepository.remove(id);
+    safePublishAll({ type: "calendar-changed" });
   },
 
   async listForDateRange(start: Date, end: Date): Promise<CalendarEventItem[]> {

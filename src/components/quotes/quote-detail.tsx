@@ -53,7 +53,7 @@ interface QuoteItem {
 interface Quote {
   id: string;
   quoteNumber: string | null;
-  quoteStatus: "DRAFT" | "SENT" | "ACCEPTED" | "DECLINED" | "EXPIRED";
+  quoteStatus: "DRAFT" | "SENT" | "SUBMITTED_EMAIL" | "SUBMITTED_MANUAL" | "ACCEPTED" | "DECLINED" | "REVISED" | "EXPIRED";
   category: string;
   date: string;
   createdAt: string;
@@ -96,6 +96,8 @@ interface Quote {
     id: string;
     invoiceNumber: string | null;
   } | null;
+  revisedFromQuote?: { id: string; quoteNumber: string | null } | null;
+  revisedToQuote?: { id: string; quoteNumber: string | null } | null;
 }
 
 type QuoteStatus = Quote["quoteStatus"];
@@ -120,16 +122,22 @@ const statusBadgeVariant: Record<
 > = {
   DRAFT: "outline",
   SENT: "secondary",
+  SUBMITTED_EMAIL: "secondary",
+  SUBMITTED_MANUAL: "secondary",
   ACCEPTED: "default",
   DECLINED: "destructive",
+  REVISED: "outline",
   EXPIRED: "outline",
 };
 
 const statusLabel: Record<QuoteStatus, string> = {
   DRAFT: "Draft",
   SENT: "Sent",
+  SUBMITTED_EMAIL: "Sent (Email)",
+  SUBMITTED_MANUAL: "Sent (Manual)",
   ACCEPTED: "Accepted",
   DECLINED: "Declined",
+  REVISED: "Revised",
   EXPIRED: "Expired",
 };
 
@@ -169,31 +177,34 @@ export function QuoteDetailView({ id }: { id: string }) {
     declining: false,
     sending: false,
     converting: false,
+    revising: false,
+    markingSubmitted: false,
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchQuote() {
-      try {
-        const res = await fetch(`/api/quotes/${id}`);
-        if (!res.ok) {
-          const data = await res.json();
-          toast.error(data.error ?? "Failed to load quote");
-          return;
-        }
-        const data: Quote = await res.json();
-        setQuote(data);
-      } catch {
-        toast.error("Failed to load quote");
-      } finally {
-        setLoading(false);
+  const fetchQuote = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/quotes/${id}`);
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.error ?? "Failed to load quote");
+        return;
       }
+      const data: Quote = await res.json();
+      setQuote(data);
+    } catch {
+      toast.error("Failed to load quote");
+    } finally {
+      setLoading(false);
     }
-    fetchQuote();
   }, [id]);
+
+  useEffect(() => {
+    fetchQuote();
+  }, [fetchQuote]);
 
   const handleDelete = useCallback(async () => {
     if (!quote) return;
@@ -298,6 +309,48 @@ export function QuoteDetailView({ id }: { id: string }) {
     }
   }, [quote, id]);
 
+  const handleRevise = useCallback(async () => {
+    if (!quote) return;
+    setActionState((prev) => ({ ...prev, revising: true }));
+    try {
+      const res = await fetch(`/api/quotes/${id}/revise`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.error ?? "Failed to create revision");
+        return;
+      }
+      const data = await res.json();
+      toast.success("Revision created — redirecting to edit page");
+      router.push(data.redirectTo);
+    } catch {
+      toast.error("Failed to create revision");
+    } finally {
+      setActionState((prev) => ({ ...prev, revising: false }));
+    }
+  }, [quote, id, router]);
+
+  const handleMarkSubmitted = useCallback(async (method: "email" | "manual") => {
+    setActionState((prev) => ({ ...prev, markingSubmitted: true }));
+    try {
+      const res = await fetch(`/api/quotes/${id}/mark-submitted`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ method }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.error ?? "Failed to update status");
+        return;
+      }
+      toast.success(method === "email" ? "Marked as sent via email" : "Marked as sent manually");
+      fetchQuote();
+    } catch {
+      toast.error("Failed to update status");
+    } finally {
+      setActionState((prev) => ({ ...prev, markingSubmitted: false }));
+    }
+  }, [id, fetchQuote]);
+
   if (loading) {
     return <p className="text-muted-foreground text-sm">Loading...</p>;
   }
@@ -324,6 +377,16 @@ export function QuoteDetailView({ id }: { id: string }) {
               {expirationText(quote.expirationDate)}
             </p>
           )}
+          {quote.revisedFromQuote && (
+            <Link href={`/quotes/${quote.revisedFromQuote.id}`} className="text-xs text-muted-foreground hover:text-foreground">
+              Revised from {quote.revisedFromQuote.quoteNumber}
+            </Link>
+          )}
+          {quote.revisedToQuote && (
+            <Link href={`/quotes/${quote.revisedToQuote.id}`} className="text-xs text-blue-600 hover:underline">
+              → Revised as {quote.revisedToQuote.quoteNumber}
+            </Link>
+          )}
         </div>
 
         <div className="flex items-center gap-2 flex-wrap justify-end" data-print-hide>
@@ -341,8 +404,8 @@ export function QuoteDetailView({ id }: { id: string }) {
             </Link>
           )}
 
-          {/* Edit button: DRAFT and SENT only */}
-          {(status === "DRAFT" || status === "SENT") && (
+          {/* Edit button: DRAFT, SENT, SUBMITTED_EMAIL, SUBMITTED_MANUAL */}
+          {(status === "DRAFT" || status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
             <Link
               href={`/quotes/${id}/edit`}
               className={buttonVariants({ variant: "outline", size: "sm" })}
@@ -380,8 +443,27 @@ export function QuoteDetailView({ id }: { id: string }) {
             </Button>
           )}
 
-          {/* Convert to Invoice: SENT only */}
+          {/* Mark Sent (Manual): SENT only */}
           {status === "SENT" && (
+            <Button variant="outline" size="sm" onClick={() => handleMarkSubmitted("manual")} disabled={actionState.markingSubmitted}>
+              {actionState.markingSubmitted ? "Submitting..." : "Mark Sent (Manual)"}
+            </Button>
+          )}
+
+          {/* Edit & Resubmit: DECLINED only */}
+          {status === "DECLINED" && (
+            <Button
+              size="sm"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={handleRevise}
+              disabled={actionState.revising}
+            >
+              {actionState.revising ? "Creating revision..." : "Edit & Resubmit"}
+            </Button>
+          )}
+
+          {/* Convert to Invoice: SENT, SUBMITTED_EMAIL, SUBMITTED_MANUAL */}
+          {(status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
             <Button
               variant="outline"
               size="sm"
@@ -392,8 +474,8 @@ export function QuoteDetailView({ id }: { id: string }) {
             </Button>
           )}
 
-          {/* Decline: SENT only, with confirmation dialog */}
-          {status === "SENT" && (
+          {/* Decline: SENT, SUBMITTED_EMAIL, SUBMITTED_MANUAL */}
+          {(status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
             <Dialog open={declineDialogOpen} onOpenChange={setDeclineDialogOpen}>
               <DialogTrigger
                 render={
@@ -429,7 +511,7 @@ export function QuoteDetailView({ id }: { id: string }) {
             </Dialog>
           )}
 
-          {/* Delete: DRAFT, SENT, DECLINED, EXPIRED */}
+          {/* Delete: DRAFT, SENT, DECLINED, EXPIRED (not REVISED — they're history for the revision chain) */}
           {(status === "DRAFT" ||
             status === "SENT" ||
             status === "DECLINED" ||
@@ -880,7 +962,7 @@ export function QuoteDetailView({ id }: { id: string }) {
       })()}
 
       {/* Activity tracking */}
-      {(status === "SENT" || status === "ACCEPTED" || status === "DECLINED") && (
+      {(status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL" || status === "ACCEPTED" || status === "DECLINED") && (
         <QuoteActivity quoteId={id} />
       )}
 
@@ -893,6 +975,7 @@ export function QuoteDetailView({ id }: { id: string }) {
           quoteNumber={quote.quoteNumber}
           recipientEmail={quote.recipientEmail}
           recipientName={quote.recipientName}
+          quoteId={id}
         />
       )}
     </div>

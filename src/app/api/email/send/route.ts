@@ -101,7 +101,18 @@ export const POST = withAuth(async (req: NextRequest) => {
 
   const success = await sendEmail(to, subject, html);
   if (!success) {
-    return NextResponse.json({ error: "Failed to send email" }, { status: 502 });
+    return NextResponse.json(
+      {
+        error: "Failed to send email",
+        detail: !process.env.POWER_AUTOMATE_EMAIL_URL ? "not_configured" : "webhook_rejected",
+        recipient: to,
+      },
+      { status: 502 }
+    );
   }
-  return NextResponse.json({ success: true });
+  return NextResponse.json({
+    success: true,
+    recipient: to,
+    timestamp: new Date().toISOString(),
+  });
 });
