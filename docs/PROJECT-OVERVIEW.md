@@ -67,6 +67,7 @@ src/
 │   ├── category/
 │   ├── event/
 │   ├── chat/
+│   ├── contact/           # types, repository, service (external people)
 │   ├── calendar/
 │   ├── quick-picks/
 │   ├── saved-items/
@@ -84,6 +85,7 @@ src/
     ├── quote-number.ts
     ├── rate-limit.ts      # Sliding window rate limiter (login protection)
     ├── sse.ts             # In-memory SSE pub/sub for real-time notifications
+    ├── use-sse.ts         # Generic SSE hook for real-time updates
     ├── themes.ts
     ├── utils.ts
     ├── validators.ts
@@ -169,6 +171,11 @@ src/domains/
 │   ├── service.ts
 │   └── storage.ts
 │
+├── contact/
+│   ├── types.ts
+│   ├── repository.ts
+│   └── service.ts
+│
 ├── category/
 │   └── api-client.ts
 │
@@ -213,6 +220,7 @@ src/domains/
 | analytics | yes | yes | — | — |
 | notification | yes | yes | yes | yes |
 | event | yes | yes | yes | yes |
+| contact | yes | yes | — | — |
 | chat | — | — | — | yes |
 | calendar | — | — | yes | — |
 | pdf | — | yes | — | — |
@@ -228,6 +236,15 @@ These domains encapsulate endpoint URLs and response parsing for smaller feature
 - `user-quick-picks` — per-user quick pick selections
 - `upload` — file upload handling
 
+### Contact Domain
+
+External people (vendors, customers, catering contacts) who are not Pierce College staff. Key design:
+
+- **Owner-scoped** — all queries filter by `createdBy` so users only see their own contacts
+- **findOrCreate with dedup** — matches on name + email + organization to avoid duplicates
+- Used by invoice/quote forms for attribution when the counterparty is not a staff member
+- AI Assistant auto-creates contacts via `createInvoice`/`createQuote` tools when `contactName` is provided
+
 ---
 
 ## Data Models (Key)
@@ -238,10 +255,11 @@ These domains encapsulate endpoint URLs and response parsing for smaller feature
 | `Staff` | Pierce College staff members for invoice attribution |
 | `StaffAccountNumber` | Account numbers associated with staff |
 | `StaffSignerHistory` | Approval chain signer history per staff member |
-| `Invoice` | Core invoice records with status, line items, PDF paths |
-| `LineItem` | Invoice line items (description, quantity, unit cost) |
-| `Quote` | Quote records with auto-expiry, conversion to invoice, and online sharing (shareToken) |
-| `QuoteLineItem` | Quote line items |
+| `Contact` | External people (vendors, customers) — id, name, email, phone, org, department, title, notes, createdBy |
+| `Invoice` | Core invoice records with status, line items, PDF paths. Optional `staffId`/`contactId`, `marginEnabled`, `marginPercent`, `taxEnabled`, `taxRate`, `isCateringEvent`, `cateringDetails` |
+| `LineItem` | Invoice line items (description, quantity, unit cost, `isTaxable`, `costPrice`, `marginOverride`) |
+| `Quote` | Quote records with auto-expiry, conversion to invoice, online sharing (`shareToken`), `revisedFromQuoteId` for revision chains. Statuses include SUBMITTED_EMAIL, SUBMITTED_MANUAL, REVISED |
+| `QuoteLineItem` | Quote line items (same fields as LineItem including `isTaxable`, `costPrice`, `marginOverride`) |
 | `QuoteView` | Tracks public quote page views (IP, user-agent, referrer, viewport, duration, response) |
 | `Event` | Calendar events with type (Meeting/Seminar/Vendor/Other), recurrence, reminders |
 | `Notification` | Real-time notifications for quote events and event reminders |
@@ -294,7 +312,9 @@ The home page (`src/app/page.tsx`) features a personalized dashboard:
 - **YourFocus widget** — prioritized action items for the current user
 - **Drag-and-drop layout** — widgets can be reordered, persisted to `localStorage` (key: `lapc-dashboard-order`)
 - **Stats cards** — invoice/quote counts filtered by `createdAt` (not invoice date)
-- **Recent invoices, running invoices, pending charges, team activity** — all role-aware
+- **Recent activity** — shows both invoices and quotes (not just invoices)
+- **Running invoices, pending charges, team activity** — all role-aware
+- **Real-time updates** — all dashboard widgets update in real-time via SSE
 
 Components in `src/components/dashboard/`.
 
@@ -333,6 +353,51 @@ Real-time notifications via Server-Sent Events:
 
 These routes are excluded from auth middleware in `src/middleware.ts`.
 
+### Quote Revision Workflow
+
+- DECLINED quotes get an "Edit & Resubmit" button
+- Creates a new DRAFT copy with all fields (items, margin, tax, catering details)
+- Original quote is marked REVISED with a link to the new quote
+- New quote has a link back to the original for traceability
+- New statuses: `SUBMITTED_EMAIL` (auto-set when email sent via Power Automate webhook), `SUBMITTED_MANUAL` (user marks manually), `REVISED` (original of a revision)
+
+---
+
+## Real-Time SSE Architecture
+
+Real-time updates are powered by Server-Sent Events with a generic hook and singleton connection.
+
+- **Generic hook:** `useSSE(eventType, callback, debounceMs)` in `src/lib/use-sse.ts`
+- **Singleton EventSource:** shared across all consumers — one connection per browser tab
+- **Server broadcast:** `safePublishAll()` in `src/lib/sse.ts` — non-throwing broadcast wrapper that silently handles disconnected clients
+- **Event types:** `calendar-changed`, `quote-changed`, `invoice-changed`, `staff-changed`
+- **Emission:** Services emit after every mutation (create, update, delete, status change)
+- **Consumers:** quote table, invoice table, staff table, dashboard stats, recent activity, pending charges, calendar
+
+---
+
+## Margin & Tax Calculation Pipeline
+
+Invoices and quotes support per-item margin markup and tax calculation.
+
+- **Form display:** `chargedPrice = costPrice * (1 + marginPercent / 100)`
+- **DB storage:** `unitPrice` = charged price shown to customer, `costPrice` = original cost
+- **On reload:** if `costPrice` exists, use as editable base; re-derive charged price from margin
+- **Per-item flags:** `isTaxable` (whether tax applies), `marginOverride` (item-level margin override)
+- **Tax rate:** stored as fraction (0.0975 = 9.75%) in `taxRate` field on the invoice/quote
+- **Quote-to-invoice conversion:** copies ALL fields including margin, tax, catering, per-item `costPrice`/`marginOverride`
+
+---
+
+## Email Webhook Integration
+
+- Power Automate webhook sends from `bookstore@piercecollege.edu` shared mailbox
+- **Endpoint:** `POST /api/email/send` with type `quote-share` or `quote-response`
+- **Config:** `POWER_AUTOMATE_EMAIL_URL` env var required
+- **UI:** Email progress dialog with stepper and terminal animation
+- **Auto-upgrade:** SENT -> SUBMITTED_EMAIL on successful send
+- **Manual fallback:** user can mark as SUBMITTED_MANUAL if email sent outside the app
+
 ---
 
 ## AI Assistant (Chat Sidebar)
@@ -342,7 +407,7 @@ A Claude Haiku-powered chatbot in a collapsible right sidebar. Staff can ask abo
 - **Stack:** Vercel AI SDK (`streamText()` + `useChat` hook), Claude Haiku model
 - **Domain:** `src/domains/chat/` — `types.ts`, `tools.ts`, `system-prompt.ts`, `hooks.ts`
 - **Route:** `POST /api/chat` (authenticated, rate-limited per user)
-- **Tools:** List/view invoices and quotes, search staff, list/create calendar events, view analytics, navigate user to pages
+- **Tools:** List/view invoices and quotes, search staff, create staff, list/create calendar events, view analytics, navigate user to pages. `searchPeople` searches both Staff and Contact tables. `createInvoice`/`createQuote` accept `contactName` for auto-creating contacts
 - **Safeguards:** Ownership enforcement (users can only modify their own records, admins bypass), destructive action confirmation, rate limiting
 - **Conversations:** Ephemeral (no persistence, resets on page refresh)
 - **UI:** Right sidebar (320px), minimize to icon strip, state persisted in localStorage
@@ -361,6 +426,7 @@ FullCalendar page at `/calendar` merging three event sources:
 - **API:** `GET /api/calendar/events` merges all sources; `GET /api/events` (list), `POST /api/events` (create), `GET/PUT/PATCH/DELETE /api/events/:id` (read/update/delete)
 - **Reminders:** `src/domains/event/reminders.ts` checks due reminders via scheduled trigger, sends `EVENT_REMINDER` notifications to all users
 - **UI:** `AddEventModal` for create/edit, `EventLegend` for color key, click-to-edit for manual events
+- **Real-time:** Updates via `calendar-changed` SSE event — events created from chatbot or modal appear instantly without refresh
 
 ---
 
