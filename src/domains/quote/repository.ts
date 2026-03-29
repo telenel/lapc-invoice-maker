@@ -27,8 +27,8 @@ const detailInclude = {
   creator: { select: { id: true, name: true, username: true } },
   items: { orderBy: { sortOrder: "asc" as const } },
   convertedToInvoice: { select: { id: true, invoiceNumber: true } },
-  revisedFromQuote: { select: { id: true, invoiceNumber: true } },
-  revisedToQuote: { select: { id: true, invoiceNumber: true } },
+  revisedFromQuote: { select: { id: true, quoteNumber: true } },
+  revisedToQuote: { select: { id: true, quoteNumber: true } },
 } as const;
 
 // ── Where builder ──────────────────────────────────────────────────────────

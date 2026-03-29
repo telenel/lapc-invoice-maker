@@ -145,13 +145,17 @@ export function ShareLinkDialog({
       addLog(`Response: 202 Accepted`, "ok");
       addLog(`Email queued for delivery to ${data.recipient}`, "ok");
 
-      // Upgrade status to SUBMITTED_EMAIL
+      // Upgrade status to SUBMITTED_EMAIL (best-effort — email was already sent)
       try {
-        await fetch(`/api/quotes/${quoteId}/mark-submitted`, {
+        const markRes = await fetch(`/api/quotes/${quoteId}/mark-submitted`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ method: "email" }),
         });
+        if (!markRes.ok) {
+          // Log but don't block — email was already sent successfully
+          console.warn("Failed to update quote status to SUBMITTED_EMAIL");
+        }
       } catch {
         // Non-critical — status upgrade is best-effort
       }

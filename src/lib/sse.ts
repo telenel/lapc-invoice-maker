@@ -44,3 +44,12 @@ export function publishAll(data: unknown): void {
     });
   });
 }
+
+/** Fire-and-forget wrapper — SSE broadcast failures are non-critical */
+export function safePublishAll(data: unknown): void {
+  try {
+    publishAll(data);
+  } catch {
+    /* SSE broadcast failure is non-critical */
+  }
+}

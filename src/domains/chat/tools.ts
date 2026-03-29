@@ -321,6 +321,15 @@ export function buildTools(user: ChatUser) {
       execute: async ({ date, staffId, contactId, contactName, department, category, items, recipientEmail, recipientOrg, accountCode, notes, marginEnabled, marginPercent, taxEnabled }) => {
         // Resolve contact if needed
         let resolvedContactId = contactId;
+
+        // Verify explicit contactId belongs to the current user
+        if (contactId && !staffId) {
+          const owned = await contactService.findById(contactId, user.id);
+          if (!owned) {
+            return { error: "Contact not found or does not belong to you" };
+          }
+        }
+
         if (!staffId && !contactId && contactName) {
           const contact = await contactService.findOrCreate(contactName, user.id, { department, email: recipientEmail, org: recipientOrg });
           resolvedContactId = contact.id;
@@ -397,6 +406,15 @@ export function buildTools(user: ChatUser) {
       }) => {
         // Resolve contact if needed
         let resolvedContactId = contactId;
+
+        // Verify explicit contactId belongs to the current user
+        if (contactId && !staffId) {
+          const owned = await contactService.findById(contactId, user.id);
+          if (!owned) {
+            return { error: "Contact not found or does not belong to you" };
+          }
+        }
+
         if (!staffId && !contactId && contactName) {
           const contact = await contactService.findOrCreate(contactName, user.id, { department, email: recipientEmail, org: recipientOrg });
           resolvedContactId = contact.id;
@@ -617,6 +635,7 @@ export function buildTools(user: ChatUser) {
       },
     }),
 
+    // Staff creation is intentionally open to all users per business requirement
     createStaff: tool({
       description:
         "Create a new staff member. Requires name, title, and department at minimum. Can also include phone, extension, email, account code, and birthday.",

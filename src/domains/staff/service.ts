@@ -1,6 +1,6 @@
 // src/domains/staff/service.ts
 import { staffRepository } from "./repository";
-import { publishAll } from "@/lib/sse";
+import { safePublishAll } from "@/lib/sse";
 import type {
   StaffResponse,
   StaffDetailResponse,
@@ -88,13 +88,13 @@ export const staffService = {
 
   async create(input: CreateStaffInput): Promise<StaffResponse> {
     const staff = await staffRepository.create(input);
-    publishAll({ type: "staff-changed" });
+    safePublishAll({ type: "staff-changed" });
     return toStaffResponse({ ...staff, approvalChain: (staff.approvalChain as string[]) ?? [] });
   },
 
   async update(id: string, input: UpdateStaffInput): Promise<StaffDetailResponse | null> {
     const staff = await staffRepository.update(id, input);
-    publishAll({ type: "staff-changed" });
+    safePublishAll({ type: "staff-changed" });
     return toDetailResponse(staff);
   },
 
@@ -105,7 +105,7 @@ export const staffService = {
 
   async softDelete(id: string): Promise<void> {
     await staffRepository.softDelete(id);
-    publishAll({ type: "staff-changed" });
+    safePublishAll({ type: "staff-changed" });
   },
 
   async getAccountNumbers(staffId: string): Promise<AccountNumberResponse[]> {

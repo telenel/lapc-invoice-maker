@@ -507,12 +507,11 @@ export function QuoteDetailView({ id }: { id: string }) {
             </Dialog>
           )}
 
-          {/* Delete: DRAFT, SENT, DECLINED, EXPIRED, REVISED */}
+          {/* Delete: DRAFT, SENT, DECLINED, EXPIRED (not REVISED — they're history for the revision chain) */}
           {(status === "DRAFT" ||
             status === "SENT" ||
             status === "DECLINED" ||
-            status === "EXPIRED" ||
-            status === "REVISED") && (
+            status === "EXPIRED") && (
             <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
               <DialogTrigger
                 render={

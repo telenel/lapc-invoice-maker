@@ -67,8 +67,8 @@ export async function findByEmail(email: string, createdBy: string) {
 }
 
 /**
- * Find a contact by ID.
+ * Find a contact by ID, scoped to owner.
  */
-export async function findById(id: string) {
-  return prisma.contact.findUnique({ where: { id } });
+export async function findById(id: string, createdBy: string) {
+  return prisma.contact.findFirst({ where: { id, createdBy } });
 }

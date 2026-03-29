@@ -49,7 +49,8 @@ IDEAL FLOW (1-2 messages, not 5):
 - User: "Make a quote for Grigor, 24 subway boxes at 12.50"
 - You: [call searchPeople("Grigor")] → get staffId + department → [call createQuote with recipientName=Grigor's name, expirationDate=30 days from today] → return result with link
 - User: "Invoice for John Smith from ACME Corp, 10 widgets at $5"
-- You: [call searchPeople("John Smith")] → not found → [call createInvoice with contactName="John Smith", department="Bookstore"] → auto-creates contact → return result with link
+- You: [call searchPeople("John Smith")] → not found → [call createInvoice with contactName="John Smith"] → auto-creates contact → return result with link
+- If you cannot infer the department from context, ask the user.
 - That's it. One tool call to search, one to create. Done.
 
 ## Links

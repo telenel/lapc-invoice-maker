@@ -2,7 +2,7 @@
 import * as quoteRepository from "./repository";
 import { pdfService } from "@/domains/pdf/service";
 import { formatDateFromDate } from "@/domains/shared/formatters";
-import { publishAll } from "@/lib/sse";
+import { safePublishAll } from "@/lib/sse";
 import type { Prisma } from "@/generated/prisma/client";
 import type {
   QuoteResponse,
@@ -91,11 +91,11 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
     convertedToInvoice: "convertedToInvoice" in quote
       ? (quote.convertedToInvoice as { id: string; invoiceNumber: string | null } | null)
       : null,
-    revisedFromQuote: "revisedFromQuote" in quote && (quote as { revisedFromQuote?: { id: string; invoiceNumber: string | null } | null }).revisedFromQuote
-      ? { id: (quote as { revisedFromQuote: { id: string; invoiceNumber: string | null } }).revisedFromQuote.id, quoteNumber: (quote as { revisedFromQuote: { id: string; invoiceNumber: string | null } }).revisedFromQuote.invoiceNumber }
+    revisedFromQuote: "revisedFromQuote" in quote && (quote as { revisedFromQuote?: { id: string; quoteNumber: string | null } | null }).revisedFromQuote
+      ? { id: (quote as { revisedFromQuote: { id: string; quoteNumber: string | null } }).revisedFromQuote.id, quoteNumber: (quote as { revisedFromQuote: { id: string; quoteNumber: string | null } }).revisedFromQuote.quoteNumber }
       : null,
-    revisedToQuote: "revisedToQuote" in quote && (quote as { revisedToQuote?: { id: string; invoiceNumber: string | null } | null }).revisedToQuote
-      ? { id: (quote as { revisedToQuote: { id: string; invoiceNumber: string | null } }).revisedToQuote.id, quoteNumber: (quote as { revisedToQuote: { id: string; invoiceNumber: string | null } }).revisedToQuote.invoiceNumber }
+    revisedToQuote: "revisedToQuote" in quote && (quote as { revisedToQuote?: { id: string; quoteNumber: string | null } | null }).revisedToQuote
+      ? { id: (quote as { revisedToQuote: { id: string; quoteNumber: string | null } }).revisedToQuote.id, quoteNumber: (quote as { revisedToQuote: { id: string; quoteNumber: string | null } }).revisedToQuote.quoteNumber }
       : null,
   };
 }
@@ -285,7 +285,7 @@ export const quoteService = {
       // Email is non-critical — don't fail the response
     }
 
-    publishAll({ type: "quote-changed" });
+    safePublishAll({ type: "quote-changed" });
 
     return { success: true, status: response };
   },
@@ -328,7 +328,7 @@ export const quoteService = {
       quoteNumber
     );
 
-    publishAll({ type: "quote-changed" });
+    safePublishAll({ type: "quote-changed" });
 
     return toQuoteResponse(quote as unknown as NonNullable<QuoteWithRelations>);
   },
@@ -360,12 +360,12 @@ export const quoteService = {
       const calculatedItems = calculateLineItems(items);
       const totalAmount = calculateTotal(calculatedItems);
       const updated = await quoteRepository.update(id, quoteData, calculatedItems, totalAmount);
-      publishAll({ type: "quote-changed" });
+      safePublishAll({ type: "quote-changed" });
       return toQuoteResponse(updated as unknown as NonNullable<QuoteWithRelations>);
     }
 
     const updated = await quoteRepository.update(id, quoteData);
-    publishAll({ type: "quote-changed" });
+    safePublishAll({ type: "quote-changed" });
     return toQuoteResponse(updated as unknown as NonNullable<QuoteWithRelations>);
   },
 
@@ -402,7 +402,7 @@ export const quoteService = {
     }
     const shareToken = quote.shareToken ?? crypto.randomUUID();
     await quoteRepository.markSentWithToken(id, shareToken);
-    publishAll({ type: "quote-changed" });
+    safePublishAll({ type: "quote-changed" });
     return { shareToken };
   },
 
@@ -473,8 +473,8 @@ export const quoteService = {
       }),
     ]);
 
-    publishAll({ type: "quote-changed" });
-    publishAll({ type: "invoice-changed" });
+    safePublishAll({ type: "quote-changed" });
+    safePublishAll({ type: "invoice-changed" });
 
     return invoice;
   },
@@ -551,7 +551,7 @@ export const quoteService = {
 
     // Fetch the full quote with all relations for the response
     const created = await quoteRepository.findById(newQuote.id);
-    publishAll({ type: "quote-changed" });
+    safePublishAll({ type: "quote-changed" });
     return toQuoteResponse(created as NonNullable<QuoteWithRelations>);
   },
 
@@ -567,7 +567,7 @@ export const quoteService = {
       throw Object.assign(new Error("Only sent quotes can be marked as submitted via email"), { code: "FORBIDDEN" });
     }
     await quoteRepository.update(id, { quoteStatus: "SUBMITTED_EMAIL" });
-    publishAll({ type: "quote-changed" });
+    safePublishAll({ type: "quote-changed" });
   },
 
   /**
@@ -587,7 +587,7 @@ export const quoteService = {
       data.shareToken = crypto.randomUUID();
     }
     await quoteRepository.update(id, data);
-    publishAll({ type: "quote-changed" });
+    safePublishAll({ type: "quote-changed" });
   },
 
   /**

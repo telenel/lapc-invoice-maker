@@ -4,7 +4,7 @@ import { calculateLineItems, calculateTotal } from "./calculations";
 import { pdfService } from "@/domains/pdf/service";
 import { staffService } from "@/domains/staff/service";
 import { formatCurrency, formatDateFromDate } from "@/domains/shared/formatters";
-import { publishAll } from "@/lib/sse";
+import { safePublishAll } from "@/lib/sse";
 import type {
   InvoiceResponse,
   InvoiceItemResponse,
@@ -172,7 +172,7 @@ export const invoiceService = {
         .catch(() => {});
     }
 
-    publishAll({ type: "invoice-changed" });
+    safePublishAll({ type: "invoice-changed" });
 
     return toInvoiceResponse(invoice);
   },
@@ -199,12 +199,12 @@ export const invoiceService = {
       const calculatedItems = calculateLineItems(items);
       const totalAmount = calculateTotal(calculatedItems);
       const updated = await invoiceRepository.update(id, invoiceData, calculatedItems, totalAmount);
-      publishAll({ type: "invoice-changed" });
+      safePublishAll({ type: "invoice-changed" });
       return toInvoiceResponse(updated as unknown as NonNullable<InvoiceWithRelations>);
     }
 
     const updated = await invoiceRepository.update(id, invoiceData);
-    publishAll({ type: "invoice-changed" });
+    safePublishAll({ type: "invoice-changed" });
     return toInvoiceResponse(updated as unknown as NonNullable<InvoiceWithRelations>);
   },
 
@@ -222,7 +222,7 @@ export const invoiceService = {
     await pdfService.deletePdfFiles(pdfPath, invoice.prismcorePath);
 
     await invoiceRepository.deleteById(id);
-    publishAll({ type: "invoice-changed" });
+    safePublishAll({ type: "invoice-changed" });
   },
 
   /**
@@ -331,7 +331,7 @@ export const invoiceService = {
     // Run all post-finalize updates in parallel, non-critically
     await Promise.all(postUpdates).catch(() => {});
 
-    publishAll({ type: "invoice-changed" });
+    safePublishAll({ type: "invoice-changed" });
 
     return { pdfPath };
   },

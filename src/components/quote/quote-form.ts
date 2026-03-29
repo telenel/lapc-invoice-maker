@@ -222,12 +222,13 @@ export function useQuoteForm(
 
   // When editing an existing quote, re-populate account numbers and contact
   // fields from the staff record (these aren't stored on the quote itself)
-  const staffPopulated = useRef(false);
+  const staffPopulated = useRef<string | null>(null);
   useEffect(() => {
-    if (!form.staffId || staffPopulated.current) return;
-    staffPopulated.current = true;
+    if (!form.staffId || staffPopulated.current === form.staffId) return;
 
     staffApi.getById(form.staffId).then((detail) => {
+      // Set after success so transient failures allow a retry
+      staffPopulated.current = form.staffId;
       setStaffAccountNumbers(detail.accountNumbers ?? []);
       originalStaffRef.current = {
         extension: detail.extension,
@@ -245,7 +246,8 @@ export function useQuoteForm(
         contactPhone: prev.contactPhone || detail.phone,
       }));
     }).catch(() => {
-      // Staff may have been deleted — ignore
+      // Staff may have been deleted or transient failure — don't set
+      // staffPopulated so the next render retries
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.staffId]);
@@ -356,7 +358,7 @@ export function useQuoteForm(
       isCateringEvent: form.isCateringEvent,
       cateringDetails: form.isCateringEvent ? form.cateringDetails : undefined,
       items: form.items.map((item, i) => {
-        const cost = Number(item.unitPrice);
+        const cost = Number(item.costPrice ?? item.unitPrice);
         const effectiveMargin = item.marginOverride ?? form.marginPercent;
         const charged =
           form.marginEnabled && effectiveMargin > 0

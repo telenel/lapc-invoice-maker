@@ -44,10 +44,10 @@ export const contactService = {
   },
 
   /**
-   * Find a contact by ID.
+   * Find a contact by ID, scoped to the requesting user.
    */
-  async findById(id: string): Promise<ContactResponse | null> {
-    const contact = await contactRepository.findById(id);
+  async findById(id: string, userId: string): Promise<ContactResponse | null> {
+    const contact = await contactRepository.findById(id, userId);
     if (!contact) return null;
     return toContactResponse(contact);
   },
@@ -69,12 +69,20 @@ export const contactService = {
       }
     }
 
-    // Fall back to name matching, but only reuse if metadata agrees
+    // Fall back to name matching, but only reuse if metadata agrees.
+    // If the caller provides org/department but the existing record is blank, treat as no match
+    // to avoid incorrectly reusing "John Smith" (no org) for "John Smith from ACME".
     const existing = await contactRepository.findByName(name, userId);
     if (existing.length > 0) {
       const match = existing.find((c) => {
-        if (extra?.org && c.org && c.org.toLowerCase() !== extra.org.toLowerCase()) return false;
-        if (extra?.department && c.department && c.department.toLowerCase() !== extra.department.toLowerCase()) return false;
+        if (extra?.org) {
+          if (!c.org) return false;
+          if (c.org.toLowerCase() !== extra.org.toLowerCase()) return false;
+        }
+        if (extra?.department) {
+          if (!c.department) return false;
+          if (c.department.toLowerCase() !== extra.department.toLowerCase()) return false;
+        }
         return true;
       });
       if (match) return toContactResponse(match);

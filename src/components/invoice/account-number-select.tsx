@@ -50,7 +50,7 @@ export function AccountNumberSelect({
       setPendingAccountCode(raw);
       setNewAccountDescription("");
       setShowAccountDescInput(true);
-      updateField("accountCode", raw);
+      // Don't update form.accountCode yet — wait until POST succeeds
     } else {
       updateField("accountCode", item.label);
       setShowAccountDescInput(false);
@@ -72,6 +72,8 @@ export function AccountNumberSelect({
         }
       );
       if (!res.ok) throw new Error("Failed to save");
+      // POST succeeded — now safe to update the form
+      updateField("accountCode", pendingAccountCode);
       toast.success("Account number saved");
       setShowAccountDescInput(false);
       setPendingAccountCode("");

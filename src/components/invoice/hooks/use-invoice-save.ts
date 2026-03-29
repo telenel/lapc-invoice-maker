@@ -29,7 +29,7 @@ function buildPayload(form: InvoiceFormData) {
     taxEnabled: form.taxEnabled,
     taxRate: form.taxRate,
     items: form.items.map((item, i) => {
-      const cost = Number(item.unitPrice);
+      const cost = Number(item.costPrice ?? item.unitPrice);
       const effectiveMargin = item.marginOverride ?? form.marginPercent;
       const charged =
         form.marginEnabled && effectiveMargin > 0

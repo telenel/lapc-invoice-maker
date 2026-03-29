@@ -34,10 +34,12 @@ export function StatsCards() {
       const firstOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       const lastOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
 
-      const dateFrom = firstOfMonth.toISOString().split("T")[0];
-      const dateTo = now.toISOString().split("T")[0];
-      const lastMonthFrom = firstOfLastMonth.toISOString().split("T")[0];
-      const lastMonthTo = lastOfLastMonth.toISOString().split("T")[0];
+      const pad = (d: Date) =>
+        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      const dateFrom = pad(firstOfMonth);
+      const dateTo = pad(now);
+      const lastMonthFrom = pad(firstOfLastMonth);
+      const lastMonthTo = pad(lastOfLastMonth);
 
       const [monthData, lastMonthData, creatorStats] = await Promise.all([
         invoiceApi.getStats({ status: "FINAL", dateFrom, dateTo }),
