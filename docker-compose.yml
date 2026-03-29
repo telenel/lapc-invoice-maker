@@ -25,6 +25,7 @@ services:
       NEXTAUTH_URL: ${NEXTAUTH_URL:-https://invoice.montalvo.io}
       PDF_STORAGE_PATH: ./data/pdfs
       UPLOAD_PATH: ./public/uploads
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
     volumes:
       - pdf-data:/app/data/pdfs
       - uploads:/app/public/uploads
