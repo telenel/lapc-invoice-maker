@@ -3,6 +3,13 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
 import { InfoIcon } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -129,6 +136,8 @@ export function KeyboardMode({
   const [newAccountDescription, setNewAccountDescription] = useState("");
   const [showAccountDescInput, setShowAccountDescInput] = useState(false);
   const [pendingAccountCode, setPendingAccountCode] = useState("");
+
+  const [showChargeLaterDialog, setShowChargeLaterDialog] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const invoiceNumberRef = useRef<HTMLInputElement>(null);
@@ -890,8 +899,8 @@ export function KeyboardMode({
             </Button>
           )}
           {!form.isRunning && (
-            <Button variant="secondary" tabIndex={-1} onClick={savePendingCharge} disabled={saving}>
-              Charge at Register
+            <Button variant="secondary" tabIndex={-1} onClick={() => setShowChargeLaterDialog(true)} disabled={saving}>
+              Charge Later
             </Button>
           )}
           {form.isRunning ? (
@@ -907,6 +916,41 @@ export function KeyboardMode({
       </div>
 
       <PdfProgress step={generationStep} />
+
+      <Dialog open={showChargeLaterDialog} onOpenChange={setShowChargeLaterDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Charge Later</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <p>
+              This will save the invoice as a <strong className="text-foreground">Pending Charge</strong>. Here&apos;s what happens next:
+            </p>
+            <ol className="list-decimal list-inside space-y-2">
+              <li>The invoice is saved without an invoice number or final PDF.</li>
+              <li>It will appear in your <strong className="text-foreground">Pending POS Charges</strong> on the dashboard.</li>
+              <li>When you&apos;re ready, open the pending charge, enter the AG invoice number, upload the PrismCore PDF, and finalize.</li>
+            </ol>
+            <p>
+              Use this when you need to create the invoice now but charge at the register later.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowChargeLaterDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                setShowChargeLaterDialog(false);
+                savePendingCharge();
+              }}
+              disabled={saving}
+            >
+              {saving ? "Saving..." : "Save as Pending Charge"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
