@@ -57,7 +57,6 @@ export function LoginForm() {
       setError("Invalid email or password");
       setLoading(false);
     } else {
-      localStorage.setItem("lapc-remember-me", String(rememberMe));
       router.push(safeRedirectUrl(searchParams.get("callbackUrl")));
       router.refresh();
     }
@@ -81,7 +80,7 @@ export function LoginForm() {
               required
               autoFocus
               className="h-11"
-              type="email"
+              type="text"
               placeholder="you@piercecollege.edu"
               autoComplete="username"
               spellCheck={false}
@@ -105,7 +104,7 @@ export function LoginForm() {
                 onClick={() => setShowPassword((prev) => !prev)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 aria-label={showPassword ? "Hide password" : "Show password"}
-                tabIndex={-1}
+                aria-pressed={showPassword}
               >
                 {showPassword ? (
                   <EyeOffIcon className="h-4 w-4" />
@@ -114,16 +113,25 @@ export function LoginForm() {
                 )}
               </button>
             </div>
-            {capsLock && (
-              <p className="text-xs text-amber-500">Caps Lock is on</p>
-            )}
+            <p
+              className={`text-xs text-amber-500${capsLock ? "" : " invisible"}`}
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              Caps Lock is on
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <input
               id="remember-me"
               type="checkbox"
               checked={rememberMe}
-              onChange={(e) => setRememberMe(e.target.checked)}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setRememberMe(checked);
+                localStorage.setItem("lapc-remember-me", String(checked));
+              }}
               className="h-4 w-4 rounded border-border"
             />
             <Label htmlFor="remember-me" className="text-sm font-normal cursor-pointer">
