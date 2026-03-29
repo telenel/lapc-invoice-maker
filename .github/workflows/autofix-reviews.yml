@@ -4,8 +4,13 @@ on:
   pull_request_review:
     types: [submitted]
 
+concurrency:
+  group: autofix-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   autofix:
+    timeout-minutes: 15
     if: >
       github.event.review.state == 'changes_requested' &&
       github.event.review.user.login == 'coderabbitai[bot]' &&
