@@ -42,6 +42,3 @@ jobs:
             - Use `escapeHtml()` for any user input in HTML templates (security requirement)
             - Use explicit null checks (`!= null`) not truthy checks for Decimal fields
             - Always update Zod schemas in src/lib/validators.ts when adding new fields
-          direct_prompt: |
-            CodeRabbit requested changes on this PR. Read the review comments and apply the requested fixes.
-          timeout_minutes: 15
