@@ -217,6 +217,36 @@ export function useQuoteForm(
     department: string;
   } | null>(null);
 
+  // When editing an existing quote, re-populate account numbers and contact
+  // fields from the staff record (these aren't stored on the quote itself)
+  const staffPopulated = useRef(false);
+  useEffect(() => {
+    if (!form.staffId || staffPopulated.current) return;
+    staffPopulated.current = true;
+
+    staffApi.getById(form.staffId).then((detail) => {
+      setStaffAccountNumbers(detail.accountNumbers ?? []);
+      originalStaffRef.current = {
+        extension: detail.extension,
+        email: detail.email,
+        phone: detail.phone,
+        department: detail.department,
+      };
+      // Fill in contact fields that are blank on edit (they come as empty
+      // strings from mapApiToFormData because they aren't stored on the quote)
+      setForm((prev) => ({
+        ...prev,
+        contactName: prev.contactName || detail.name,
+        contactExtension: prev.contactExtension || detail.extension,
+        contactEmail: prev.contactEmail || detail.email,
+        contactPhone: prev.contactPhone || detail.phone,
+      }));
+    }).catch(() => {
+      // Staff may have been deleted — ignore
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.staffId]);
+
   const handleStaffSelect = useCallback((staff: StaffResponse & Partial<Pick<StaffDetailResponse, "accountNumbers">>) => {
     const latestAccount = staff.accountNumbers?.[0];
     setStaffAccountNumbers(staff.accountNumbers ?? []);
@@ -410,5 +440,6 @@ export function useQuoteForm(
     staffAccountNumbers,
     saveQuote,
     saving,
+    existingId,
   };
 }

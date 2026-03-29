@@ -75,6 +75,7 @@ interface KeyboardModeProps {
   saving: boolean;
   generationStep: GenerationStep;
   isPendingCharge?: boolean;
+  existingId?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -116,6 +117,7 @@ export function KeyboardMode({
   saving,
   generationStep,
   isPendingCharge = false,
+  existingId,
 }: KeyboardModeProps) {
   // ---- Local state ----
   const [staff, setStaff] = useState<StaffResponse[]>([]);
@@ -907,6 +909,10 @@ export function KeyboardMode({
           {form.isRunning ? (
             <Button onClick={saveDraft} disabled={saving}>
               Save Running Invoice
+            </Button>
+          ) : existingId ? (
+            <Button onClick={saveDraft} disabled={saving}>
+              {saving ? "Updating..." : "Update"}
             </Button>
           ) : (
             <Button onClick={handleGenerate} disabled={saving}>

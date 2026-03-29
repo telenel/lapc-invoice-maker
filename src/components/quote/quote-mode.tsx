@@ -69,6 +69,7 @@ interface QuoteModeProps {
   staffAccountNumbers: StaffAccountNumber[];
   saveQuote: () => Promise<void>;
   saving: boolean;
+  existingId?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -103,6 +104,7 @@ export function QuoteMode({
   staffAccountNumbers,
   saveQuote,
   saving,
+  existingId,
 }: QuoteModeProps) {
   // ---- Local state ----
   const [categories, setCategories] = useState<Category[]>([]);
@@ -668,7 +670,7 @@ export function QuoteMode({
 
         <div className="flex justify-end">
           <Button onClick={handleSave} disabled={saving} size="lg">
-            {saving ? "Saving..." : "Save Quote"}
+            {saving ? "Saving..." : existingId ? "Update Quote" : "Save Quote"}
           </Button>
         </div>
       </div>
