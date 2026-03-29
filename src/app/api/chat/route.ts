@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { streamText, stepCountIs } from "ai";
+import { streamText, convertToModelMessages, stepCountIs } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -21,11 +21,15 @@ export async function POST(req: NextRequest) {
 
   const { messages } = await req.json();
 
+  const tools = buildTools(user);
+
+  const modelMessages = await convertToModelMessages(messages, { tools });
+
   const result = streamText({
     model: anthropic("claude-haiku-4-5-20251001"),
     system: buildSystemPrompt(user),
-    messages,
-    tools: buildTools(user),
+    messages: modelMessages,
+    tools,
     stopWhen: stepCountIs(5),
   });
 
