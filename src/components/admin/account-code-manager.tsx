@@ -197,7 +197,7 @@ export function AccountCodeManager() {
       </div>
 
       <Input
-        placeholder="Filter by number, description, staff, or department..."
+        placeholder="Filter by number, description, staff, or department…"
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
         className="max-w-sm"

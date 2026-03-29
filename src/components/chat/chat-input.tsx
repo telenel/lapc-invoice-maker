@@ -31,7 +31,7 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
         id="chat-input"
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Ask anything..."
+        placeholder="Ask anything…"
         disabled={isLoading}
         className="text-sm"
       />

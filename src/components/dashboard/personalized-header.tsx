@@ -69,14 +69,14 @@ export function PersonalizedHeader() {
         <div className="flex items-center gap-2">
           <Link
             href="/quotes/new"
-            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-green-600 to-green-800 px-3 text-sm font-semibold text-white transition-colors hover:from-green-700 hover:to-green-900"
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-green-600 to-green-800 px-3 text-sm font-semibold text-white transition-colors hover:from-green-700 hover:to-green-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <FileText className="h-4 w-4" aria-hidden="true" />
             New Quote
           </Link>
           <Link
             href="/invoices/new"
-            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-red-600 to-red-800 px-3 text-sm font-semibold text-white transition-colors hover:from-red-700 hover:to-red-900"
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-red-600 to-red-800 px-3 text-sm font-semibold text-white transition-colors hover:from-red-700 hover:to-red-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             New Invoice

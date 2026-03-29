@@ -130,6 +130,7 @@ export function ChatSidebar() {
         whileHover={{ scale: 1.15 }}
         whileTap={{ scale: 0.95 }}
         title={isOpen ? "Close assistant" : "Open assistant"}
+        aria-label={isOpen ? "Close assistant" : "Open assistant"}
       >
         <motion.div
           initial={false}
@@ -168,6 +169,7 @@ export function ChatSidebar() {
                     onClick={handleClear}
                     className="h-7 w-7"
                     title="Clear chat"
+                    aria-label="Clear chat"
                   >
                     <Trash2Icon className="h-3.5 w-3.5" />
                   </Button>
@@ -215,9 +217,9 @@ export function ChatSidebar() {
               >
                 <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted">
                   <span className="flex gap-0.5">
-                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:0ms]" />
-                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:150ms]" />
-                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:300ms]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce motion-reduce:animate-none [animation-delay:0ms]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce motion-reduce:animate-none [animation-delay:150ms]" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce motion-reduce:animate-none [animation-delay:300ms]" />
                   </span>
                 </div>
               </motion.div>

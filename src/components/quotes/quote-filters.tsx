@@ -51,7 +51,7 @@ export function QuoteFiltersBar({
           <Input
             id="quote-search"
             name="search"
-            placeholder="Quote #, recipient, department..."
+            placeholder="Quote #, recipient, department…"
             value={filters.search}
             onChange={(e) => set("search", e.target.value)}
           />

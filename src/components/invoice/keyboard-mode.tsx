@@ -430,7 +430,7 @@ export function KeyboardMode({
             value={form.staffId}
             displayValue={form.contactName}
             onSelect={handleStaffComboboxSelect}
-            placeholder="Search staff..."
+            placeholder="Search staff…"
             loading={staffLoading}
           />
         </div>
@@ -544,7 +544,7 @@ export function KeyboardMode({
             value={form.accountNumber}
             displayValue={form.accountNumber}
             onSelect={handleAccountNumberSelect}
-            placeholder="Search or add account number..."
+            placeholder="Search or add account number…"
             allowCustom
             customPrefix="Add new:"
           />
@@ -554,7 +554,7 @@ export function KeyboardMode({
                 className="h-7 flex-1 text-sm"
                 value={newAccountDescription}
                 onChange={(e) => setNewAccountDescription(e.target.value)}
-                placeholder="Description for this account number..."
+                placeholder="Description for this account number…"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
@@ -581,7 +581,7 @@ export function KeyboardMode({
           <Input
             value={form.accountCode}
             onChange={(e) => updateField("accountCode", e.target.value)}
-            placeholder="Account code..."
+            placeholder="Account code…"
             name="accountCode"
           />
         </div>
@@ -626,7 +626,7 @@ export function KeyboardMode({
             value={form.category}
             displayValue={selectedCategory?.label ?? ""}
             onSelect={handleCategorySelect}
-            placeholder="Search categories..."
+            placeholder="Search categories…"
             loading={categoriesLoading}
           />
         </div>
@@ -641,7 +641,7 @@ export function KeyboardMode({
             onChange={(e) =>
               updateField("semesterYearDept", e.target.value)
             }
-            placeholder="e.g. Fall 2025 - Math..."
+            placeholder="e.g. Fall 2025 - Math…"
             name="semesterYearDept"
           />
         </div>
@@ -807,7 +807,7 @@ export function KeyboardMode({
           <Textarea
             value={form.notes}
             onChange={(e) => updateField("notes", e.target.value)}
-            placeholder="Additional notes or comments..."
+            placeholder="Additional notes or comments…"
             name="notes"
             rows={3}
           />
@@ -876,7 +876,7 @@ export function KeyboardMode({
               value={form.signatureStaffIds[line]}
               displayValue={form.signatures[line]}
               onSelect={(item) => handleSignatureSelect(line, item)}
-              placeholder={`Signature line ${idx + 1}...`}
+              placeholder={`Signature line ${idx + 1}…`}
               loading={staffLoading}
             />
           </div>

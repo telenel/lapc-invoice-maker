@@ -181,19 +181,19 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
                 <TableHead>
                   <div className="flex gap-4">
                     <button
-                      className="cursor-pointer select-none text-xs font-medium hover:text-foreground transition-colors"
+                      className="cursor-pointer select-none text-xs font-medium hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
                       onClick={() => handleSort("quoteNumber")}
                     >
                       Quote #{sortIndicator("quoteNumber")}
                     </button>
                     <button
-                      className="cursor-pointer select-none text-xs font-medium hover:text-foreground transition-colors"
+                      className="cursor-pointer select-none text-xs font-medium hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
                       onClick={() => handleSort("date")}
                     >
                       Date{sortIndicator("date")}
                     </button>
                     <button
-                      className="cursor-pointer select-none text-xs font-medium hover:text-foreground transition-colors"
+                      className="cursor-pointer select-none text-xs font-medium hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
                       onClick={() => handleSort("expirationDate")}
                     >
                       Expires{sortIndicator("expirationDate")}

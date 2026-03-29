@@ -88,7 +88,7 @@ export function TodaysEvents() {
               >
               <Link
                 href={getLink(event)}
-                className="block rounded-lg p-2.5 transition-colors"
+                className="block rounded-lg p-2.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 style={{
                   borderWidth: "1px",
                   borderColor: `${event.borderColor}33`,

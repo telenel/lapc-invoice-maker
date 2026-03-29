@@ -86,7 +86,7 @@ export function StaffTable() {
       <div className="relative max-w-xs">
         <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
         <Input
-          placeholder="Search staff..."
+          placeholder="Search staff…"
           value={search}
           onChange={(e) => handleSearch(e.target.value)}
           className="pl-8 h-8"

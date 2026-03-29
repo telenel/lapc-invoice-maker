@@ -170,7 +170,7 @@ export function AddEventModal({ event, onSave, onClose, trigger, defaultOpen = f
                 id="event-title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Staff meeting..."
+                placeholder="e.g. Staff meeting…"
                 required
               />
             </div>
@@ -304,7 +304,7 @@ export function AddEventModal({ event, onSave, onClose, trigger, defaultOpen = f
                 id="event-location"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g. Room 1600..."
+                placeholder="e.g. Room 1600…"
               />
             </div>
 
@@ -315,7 +315,7 @@ export function AddEventModal({ event, onSave, onClose, trigger, defaultOpen = f
                 id="event-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Optional notes..."
+                placeholder="Optional notes…"
                 rows={3}
                 className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               />

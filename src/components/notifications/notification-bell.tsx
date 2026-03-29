@@ -71,7 +71,8 @@ export function NotificationBell() {
               <span className="text-sm font-medium">Notifications</span>
               {unreadCount > 0 && (
                 <button
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
+                  aria-label="Mark all notifications as read"
                   onClick={() => markAllRead()}
                 >
                   Mark all as read
@@ -98,7 +99,7 @@ export function NotificationBell() {
                       )}
                     >
                       <button
-                        className="flex-1 text-left px-3 py-2.5 hover:bg-accent transition-colors"
+                        className="flex-1 text-left px-3 py-2.5 hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         onClick={() => handleNotificationClick(n.id, n.quoteId)}
                       >
                         <p className={cn("text-sm", !n.read && "font-medium")}>{n.title}</p>
@@ -108,7 +109,7 @@ export function NotificationBell() {
                         <p className="text-xs text-muted-foreground mt-0.5">{timeAgo(n.createdAt)}</p>
                       </button>
                       <button
-                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 mt-2 mr-2 rounded text-muted-foreground hover:text-foreground hover:bg-accent shrink-0"
+                        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity p-1 mt-2 mr-2 rounded text-muted-foreground hover:text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring shrink-0"
                         aria-label="Dismiss notification"
                         onClick={(e) => {
                           e.stopPropagation();
