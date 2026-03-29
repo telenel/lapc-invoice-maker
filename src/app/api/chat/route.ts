@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { streamText, stepCountIs } from "ai";
+import { streamText, convertToModelMessages, stepCountIs } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -19,13 +19,34 @@ export async function POST(req: NextRequest) {
     role: (session.user as { role: string }).role,
   };
 
-  const { messages } = await req.json();
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return new Response("Invalid JSON body", { status: 400 });
+  }
+
+  const { messages } =
+    body && typeof body === "object" ? (body as { messages?: unknown }) : {};
+
+  if (!Array.isArray(messages)) {
+    return new Response("Invalid messages format", { status: 400 });
+  }
+
+  const tools = buildTools(user);
+
+  let modelMessages;
+  try {
+    modelMessages = await convertToModelMessages(messages, { tools });
+  } catch {
+    return new Response("Invalid messages format", { status: 400 });
+  }
 
   const result = streamText({
     model: anthropic("claude-haiku-4-5-20251001"),
     system: buildSystemPrompt(user),
-    messages,
-    tools: buildTools(user),
+    messages: modelMessages,
+    tools,
     stopWhen: stepCountIs(5),
   });
 

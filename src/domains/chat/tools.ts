@@ -2,11 +2,13 @@
 import { tool } from "ai";
 import { z } from "zod";
 import { invoiceService } from "@/domains/invoice/service";
+import { quoteService } from "@/domains/quote/service";
 import { staffService } from "@/domains/staff/service";
 import { eventService } from "@/domains/event/service";
+import { prisma } from "@/lib/prisma";
 import type { ChatUser } from "./types";
 import type { InvoiceFilters } from "@/domains/invoice/types";
-import type { EventType } from "@/domains/event/types";
+import type { EventType, UpdateEventInput } from "@/domains/event/types";
 
 export function buildTools(user: ChatUser) {
   return {
@@ -249,6 +251,317 @@ export function buildTools(user: ChatUser) {
       }),
       execute: async ({ path }) => {
         return { action: "navigate" as const, path };
+      },
+    }),
+
+    listCategories: tool({
+      description:
+        "Fetch all active categories so the bot can present valid options when creating or updating invoices and quotes.",
+      inputSchema: z.object({}),
+      execute: async () => {
+        try {
+          const categories = await prisma.category.findMany({
+            where: { active: true },
+            orderBy: { sortOrder: "asc" },
+          });
+          return {
+            categories: categories.map((c) => ({
+              id: c.id,
+              name: c.name,
+              label: c.label,
+            })),
+          };
+        } catch (error) {
+          console.error("Failed to fetch categories:", error);
+          return { error: "Failed to fetch categories" };
+        }
+      },
+    }),
+
+    createInvoice: tool({
+      description:
+        "Create a new draft invoice. Returns the new invoice ID, number, status, and total amount.",
+      inputSchema: z.object({
+        date: z.string().describe("Invoice date in YYYY-MM-DD format"),
+        staffId: z.string().describe("Staff member ID"),
+        department: z.string().describe("Department name"),
+        category: z.string().describe("Category name"),
+        items: z
+          .array(
+            z.object({
+              description: z.string(),
+              quantity: z.number(),
+              unitPrice: z.number(),
+            })
+          )
+          .describe("Line items"),
+        accountCode: z.string().optional().describe("Account code"),
+        notes: z.string().optional().describe("Notes"),
+      }),
+      execute: async ({ date, staffId, department, category, items, accountCode, notes }) => {
+        const invoice = await invoiceService.create(
+          { date, staffId, department, category, items, accountCode, notes },
+          user.id
+        );
+        return {
+          id: invoice.id,
+          invoiceNumber: invoice.invoiceNumber,
+          status: invoice.status,
+          totalAmount: invoice.totalAmount,
+          message: `Draft invoice created successfully${invoice.invoiceNumber ? ` (${invoice.invoiceNumber})` : ""}.`,
+        };
+      },
+    }),
+
+    createQuote: tool({
+      description:
+        "Create a new draft quote. Returns the new quote ID, number, status, total, and recipient name.",
+      inputSchema: z.object({
+        date: z.string().describe("Quote date in YYYY-MM-DD format"),
+        staffId: z.string().describe("Staff member ID"),
+        department: z.string().describe("Department name"),
+        category: z.string().describe("Category name"),
+        items: z
+          .array(
+            z.object({
+              description: z.string(),
+              quantity: z.number(),
+              unitPrice: z.number(),
+              isTaxable: z.boolean().optional(),
+            })
+          )
+          .describe("Line items"),
+        recipientName: z.string().describe("Recipient name"),
+        expirationDate: z.string().describe("Expiration date in YYYY-MM-DD format"),
+        recipientEmail: z.string().optional().describe("Recipient email"),
+        recipientOrg: z.string().optional().describe("Recipient organization"),
+        accountCode: z.string().optional().describe("Account code"),
+        notes: z.string().optional().describe("Notes"),
+        marginEnabled: z.boolean().optional().describe("Enable margin markup"),
+        marginPercent: z.number().optional().describe("Margin percentage"),
+        taxEnabled: z.boolean().optional().describe("Enable tax"),
+      }),
+      execute: async ({
+        date,
+        staffId,
+        department,
+        category,
+        items,
+        recipientName,
+        expirationDate,
+        recipientEmail,
+        recipientOrg,
+        accountCode,
+        notes,
+        marginEnabled,
+        marginPercent,
+        taxEnabled,
+      }) => {
+        const quote = await quoteService.create(
+          {
+            date,
+            staffId,
+            department,
+            category,
+            items,
+            recipientName,
+            expirationDate,
+            recipientEmail,
+            recipientOrg,
+            accountCode,
+            notes,
+            marginEnabled,
+            marginPercent,
+            taxEnabled,
+          },
+          user.id
+        );
+        return {
+          id: quote.id,
+          quoteNumber: quote.quoteNumber,
+          quoteStatus: quote.quoteStatus,
+          totalAmount: quote.totalAmount,
+          recipientName: quote.recipientName,
+          message: `Draft quote created successfully for ${quote.recipientName}${quote.quoteNumber ? ` (${quote.quoteNumber})` : ""}.`,
+        };
+      },
+    }),
+
+    updateInvoice: tool({
+      description:
+        "Update a draft invoice. Only the invoice owner (or admin) can update it. Returns updated summary.",
+      inputSchema: z.object({
+        id: z.string().describe("Invoice ID"),
+        date: z.string().optional().describe("New date in YYYY-MM-DD format"),
+        staffId: z.string().optional().describe("New staff member ID"),
+        department: z.string().optional().describe("New department"),
+        category: z.string().optional().describe("New category"),
+        accountCode: z.string().optional().describe("New account code"),
+        notes: z.string().optional().describe("New notes"),
+        items: z
+          .array(
+            z.object({
+              description: z.string(),
+              quantity: z.number(),
+              unitPrice: z.number(),
+            })
+          )
+          .optional()
+          .describe("Replacement line items"),
+      }),
+      execute: async ({ id, ...input }) => {
+        const existing = await invoiceService.getById(id);
+        if (!existing) {
+          return { error: "Invoice not found" };
+        }
+        if (user.role !== "admin" && existing.creatorId !== user.id) {
+          return { error: "You do not have permission to update this invoice" };
+        }
+        if (existing.type === "QUOTE") {
+          return { error: "Use updateQuote tool to modify quotes" };
+        }
+        const updated = await invoiceService.update(id, input);
+        return {
+          id: updated.id,
+          invoiceNumber: updated.invoiceNumber,
+          status: updated.status,
+          totalAmount: updated.totalAmount,
+          message: `Invoice updated successfully.`,
+        };
+      },
+    }),
+
+    updateQuote: tool({
+      description:
+        "Update a draft or sent quote. Only the quote owner (or admin) can update it. Returns updated summary.",
+      inputSchema: z.object({
+        id: z.string().describe("Quote ID"),
+        date: z.string().optional().describe("New date in YYYY-MM-DD format"),
+        staffId: z.string().optional().describe("New staff member ID"),
+        department: z.string().optional().describe("New department"),
+        category: z.string().optional().describe("New category"),
+        notes: z.string().optional().describe("New notes"),
+        recipientName: z.string().optional().describe("New recipient name"),
+        recipientEmail: z.string().optional().describe("New recipient email"),
+        expirationDate: z.string().optional().describe("New expiration date in YYYY-MM-DD format"),
+        marginEnabled: z.boolean().optional().describe("Enable margin markup"),
+        marginPercent: z.number().optional().describe("Margin percentage"),
+        taxEnabled: z.boolean().optional().describe("Enable tax"),
+        items: z
+          .array(
+            z.object({
+              description: z.string(),
+              quantity: z.number(),
+              unitPrice: z.number(),
+              isTaxable: z.boolean().optional(),
+            })
+          )
+          .optional()
+          .describe("Replacement line items"),
+      }),
+      execute: async ({ id, ...input }) => {
+        const existing = await quoteService.getById(id);
+        if (!existing) {
+          return { error: "Quote not found" };
+        }
+        if (user.role !== "admin" && existing.creatorId !== user.id) {
+          return { error: "You do not have permission to update this quote" };
+        }
+        const updated = await quoteService.update(id, input);
+        return {
+          id: updated.id,
+          quoteNumber: updated.quoteNumber,
+          quoteStatus: updated.quoteStatus,
+          totalAmount: updated.totalAmount,
+          recipientName: updated.recipientName,
+          message: `Quote updated successfully.`,
+        };
+      },
+    }),
+
+    markQuoteSent: tool({
+      description:
+        "Mark a draft quote as sent and generate a share link. Only the quote owner (or admin) can do this.",
+      inputSchema: z.object({
+        id: z.string().describe("Quote ID"),
+      }),
+      execute: async ({ id }) => {
+        const existing = await quoteService.getById(id);
+        if (!existing) {
+          return { error: "Quote not found" };
+        }
+        if (user.role !== "admin" && existing.creatorId !== user.id) {
+          return { error: "You do not have permission to send this quote" };
+        }
+        const { shareToken } = await quoteService.markSent(id);
+        const baseUrl = process.env.NEXTAUTH_URL ?? "";
+        if (!baseUrl) {
+          console.warn("NEXTAUTH_URL not configured; share URL will be relative");
+        }
+        const shareUrl = `${baseUrl}/quotes/review/${shareToken}`;
+        return {
+          shareToken,
+          shareUrl,
+          message: `Quote marked as sent. Share link: ${shareUrl}`,
+        };
+      },
+    }),
+
+    updateCalendarEvent: tool({
+      description: "Update an existing calendar event. All users can update events.",
+      inputSchema: z.object({
+        id: z.string().describe("Event ID"),
+        title: z.string().optional().describe("New title"),
+        type: z
+          .enum(["MEETING", "SEMINAR", "VENDOR", "OTHER"])
+          .optional()
+          .describe("New event type"),
+        date: z.string().optional().describe("New date in YYYY-MM-DD format"),
+        startTime: z.string().nullable().optional().describe("New start time in HH:MM format (24h), or null to clear"),
+        endTime: z.string().nullable().optional().describe("New end time in HH:MM format (24h), or null to clear"),
+        allDay: z.boolean().optional().describe("Whether this is an all-day event"),
+        location: z.string().nullable().optional().describe("New location, or null to clear"),
+        description: z.string().nullable().optional().describe("New description, or null to clear"),
+        recurrence: z
+          .enum(["DAILY", "WEEKLY", "MONTHLY", "YEARLY"])
+          .nullable()
+          .optional()
+          .describe("Recurrence pattern, or null to clear"),
+        reminderMinutes: z.number().nullable().optional().describe("Reminder in minutes before event"),
+      }),
+      execute: async ({ id, type, description, location, startTime, endTime, recurrence, reminderMinutes, ...rest }) => {
+        const input: UpdateEventInput = {
+          ...rest,
+          ...(type ? { type: type as EventType } : {}),
+          ...(description !== undefined ? { description } : {}),
+          ...(location !== undefined ? { location } : {}),
+          ...(startTime !== undefined ? { startTime } : {}),
+          ...(endTime !== undefined ? { endTime } : {}),
+          ...(recurrence !== undefined ? { recurrence } : {}),
+          ...(reminderMinutes !== undefined ? { reminderMinutes } : {}),
+        };
+        const updated = await eventService.update(id, input);
+        if (!updated) {
+          return { error: "Calendar event not found" };
+        }
+        return {
+          id: updated.id,
+          title: updated.title,
+          date: updated.date,
+          type: updated.type,
+          message: `Event "${updated.title}" updated.`,
+        };
+      },
+    }),
+
+    deleteCalendarEvent: tool({
+      description: "Delete a calendar event. All users can delete events.",
+      inputSchema: z.object({
+        id: z.string().describe("Event ID"),
+      }),
+      execute: async ({ id }) => {
+        await eventService.remove(id);
+        return { success: true, message: "Calendar event deleted." };
       },
     }),
   };

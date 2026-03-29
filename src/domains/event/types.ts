@@ -45,7 +45,7 @@ export interface CreateEventInput {
 
 export interface UpdateEventInput {
   title?: string;
-  description?: string;
+  description?: string | null;
   type?: EventType;
   date?: string;
   startTime?: string | null;
