@@ -1,4 +1,5 @@
 import { ApiError } from "@/domains/shared/types";
+import type { CalendarEventItem } from "@/domains/event/types";
 
 const BASE = "/api/calendar";
 
@@ -8,19 +9,7 @@ async function request<T>(url: string): Promise<T> {
   return res.json();
 }
 
-export interface CalendarEvent {
-  id: string;
-  title: string;
-  start: string;
-  end: string;
-  location: string;
-  headcount: number | null;
-  quoteId: string;
-  quoteNumber: string | null;
-  quoteStatus: string;
-  setupTime: string | null;
-  takedownTime: string | null;
-}
+export type CalendarEvent = CalendarEventItem;
 
 export const calendarApi = {
   async getEvents(start: string, end: string): Promise<CalendarEvent[]> {
