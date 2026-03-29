@@ -10,11 +10,15 @@ export async function sendEmail(
     return false;
   }
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10_000);
     const res = await fetch(WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ to, subject, body }),
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
     return res.status === 202;
   } catch (err) {
     console.error("Failed to send email:", err);
@@ -23,5 +27,5 @@ export async function sendEmail(
 }
 
 export function isEmailConfigured(): boolean {
-  return !!process.env.POWER_AUTOMATE_EMAIL_URL;
+  return !!WEBHOOK_URL;
 }

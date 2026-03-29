@@ -253,7 +253,7 @@ export const quoteService = {
       await sendEmail(
         "bookstore@piercecollege.edu",
         `${quote.quoteNumber ?? "Quote"} was ${verb}`,
-        `<p>${escapeHtml(quote.quoteNumber ?? "Quote")} was <strong>${verb}</strong>${quote.recipientName ? ` by ${escapeHtml(quote.recipientName)}` : ""}.</p><p><a href="${quoteUrl}">View Quote</a></p>`
+        `<p>${escapeHtml(quote.quoteNumber ?? "Quote")} was <strong>${verb}</strong>${quote.recipientName ? ` by ${escapeHtml(quote.recipientName)}` : ""}.</p><p><a href="${escapeHtml(quoteUrl)}">View Quote</a></p>`
       );
     } catch {
       // Email is non-critical — don't fail the response

@@ -45,7 +45,12 @@ function buildQuoteResponseHtml(data: QuoteResponseData): string {
 }
 
 export const POST = withAuth(async (req: NextRequest) => {
-  const body = await req.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
   const { type, to, data } = body as {
     type: string;
     to: string;

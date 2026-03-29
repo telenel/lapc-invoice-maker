@@ -46,7 +46,7 @@ export function ShareLinkDialog({
     setToAddress(recipientEmail ?? "");
     let cancelled = false;
     fetch("/api/email/status")
-      .then((res) => res.json())
+      .then((res) => (res.ok ? res.json() : { available: false }))
       .then((data: { available: boolean }) => {
         if (!cancelled) setEmailAvailable(data.available);
       })
