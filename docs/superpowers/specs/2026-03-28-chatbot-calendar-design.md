@@ -21,7 +21,7 @@ A persistent AI assistant sidebar powered by Claude Haiku via the Vercel AI SDK.
 
 ### 1.3 Architecture
 
-```
+```text
 React Sidebar (useChat) ↔ POST /api/chat (withAuth + streamText) ↔ Claude Haiku + Tools
                                                                          ↓
                                                               Existing Domain Services
@@ -72,7 +72,7 @@ The assistant has access to these tool groups, all calling existing domain servi
 ### 1.7 Conversations
 
 - **Ephemeral**: No conversation history stored in the database. Chat resets on page refresh.
-- **No rate limiting**: Internal use only, trusted users.
+- **Rate limiting**: Per-user rate limit (e.g., 20 requests/minute) to prevent accidental cost exhaustion. Uses the existing `src/lib/rate-limit.ts` infrastructure.
 - **Context**: Each conversation starts fresh with a system prompt containing portal knowledge, the user's name/role, and tool definitions.
 
 ---
@@ -205,8 +205,8 @@ Reminders use the existing notification infrastructure:
 
 ### 3.2 Reminder Trigger Mechanism
 
-- **Lightweight polling**: When the calendar page loads, SSE reconnects, or any authenticated API call occurs, check for events with due reminders (`date - reminderMinutes <= now` and `reminderSent = false`).
-- After sending, append the occurrence date to `reminderSentDates` JSON array to prevent duplicates.
+- **Scheduled check**: Reminders are checked via a dedicated scheduled trigger (e.g., cron-based API route or `setInterval` in the SSE connection handler), not piggybacked on unrelated API calls. This avoids unpredictable side effects and duplicate work during traffic spikes.
+- After sending, append the occurrence date to `reminderSentDates` JSON array to prevent duplicates (idempotent processing).
 - This supports recurring events naturally — each occurrence date is tracked independently.
 
 ### 3.3 Reminder Defaults
@@ -226,7 +226,7 @@ Reminders use the existing notification infrastructure:
 
 Following the existing domain pattern:
 
-```
+```text
 src/domains/event/
 ├── types.ts          # Event, EventType, Recurrence types
 ├── repository.ts     # Prisma CRUD + recurrence expansion
@@ -239,7 +239,7 @@ src/domains/event/
 
 ## 5. New Domain Module: `chat`
 
-```
+```text
 src/domains/chat/
 ├── types.ts          # Message types, tool definitions
 ├── tools.ts          # Tool implementations (invoke, quote, staff, etc.)
@@ -275,7 +275,7 @@ Component: `src/components/chat/chat-sidebar.tsx`
 - `src/components/staff/` — add birthday fields to staff forms
 - `src/components/dashboard/todays-events.tsx` — show all event types, not just catering
 - `package.json` — add Vercel AI SDK packages
-- `.env` — add ANTHROPIC_API_KEY
+- `.env.local` (untracked) — add ANTHROPIC_API_KEY; also add as GitHub Actions secret and VPS env var for production
 
 ---
 

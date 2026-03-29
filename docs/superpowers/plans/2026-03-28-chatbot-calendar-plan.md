@@ -1287,16 +1287,14 @@ export async function checkAndSendReminders(): Promise<void> {
 
 - [ ] **Step 2: Call reminder check from calendar events route**
 
-Add to the top of the GET handler in `src/app/api/calendar/events/route.ts`:
+Trigger reminder checks from a scheduled or background mechanism (e.g., a cron-based API route or a `setInterval` in the SSE stream) rather than piggybacking on the calendar GET endpoint. This avoids latency spikes and duplicate sends under concurrent requests. Use an idempotency check (`reminderSentDates` array) to prevent duplicate notifications.
 
 ```typescript
 import { checkAndSendReminders } from "@/domains/event/reminders";
 
-// Inside the GET handler, before returning:
-checkAndSendReminders().catch(() => {});
+// Called from a scheduled trigger, NOT from the read endpoint
+await checkAndSendReminders();
 ```
-
-The `.catch(() => {})` ensures reminder failures never break calendar loading.
 
 - [ ] **Step 3: Commit**
 
@@ -1617,13 +1615,15 @@ export async function POST(req: NextRequest) {
 }
 ```
 
-- [ ] **Step 2: Add ANTHROPIC_API_KEY to env**
+- [ ] **Step 2: Add ANTHROPIC_API_KEY to local env (untracked) and CI secrets**
 
-Add to `.env`:
+Add to `.env.local` (ensure this file is in `.gitignore` — never commit secrets):
 
-```
+```bash
 ANTHROPIC_API_KEY=your-key-here
 ```
+
+For production, add `ANTHROPIC_API_KEY` as a GitHub Actions secret and to the VPS `.env` file.
 
 - [ ] **Step 3: Commit**
 
