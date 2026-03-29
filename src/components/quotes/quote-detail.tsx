@@ -124,13 +124,17 @@ const statusLabel: Record<QuoteStatus, string> = {
   EXPIRED: "Expired",
 };
 
-function formatCateringDateTime(catering: CateringDetails): string {
+function formatCateringDateTime(catering: CateringDetails): string | null {
+  if (!catering.eventDate) return null;
+
   const date = new Date(catering.eventDate + "T00:00:00");
   const dateStr = date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
   });
+
+  if (!catering.startTime || !catering.endTime) return dateStr;
 
   function formatTime(t: string): string {
     const [h, m] = t.split(":");
@@ -678,9 +682,13 @@ export function QuoteDetailView({ id }: { id: string }) {
                 {/* Event name and date/time */}
                 <div>
                   <p className="text-lg font-semibold">
-                    {catering.eventName
-                      ? `${catering.eventName} — ${formatCateringDateTime(catering)}`
-                      : formatCateringDateTime(catering)}
+                    {(() => {
+                      const dateTime = formatCateringDateTime(catering);
+                      if (catering.eventName && dateTime) return `${catering.eventName} — ${dateTime}`;
+                      if (catering.eventName) return catering.eventName;
+                      if (dateTime) return dateTime;
+                      return "Catering Event";
+                    })()}
                   </p>
                 </div>
 
