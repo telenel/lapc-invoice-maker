@@ -259,17 +259,22 @@ export function buildTools(user: ChatUser) {
         "Fetch all active categories so the bot can present valid options when creating or updating invoices and quotes.",
       inputSchema: z.object({}),
       execute: async () => {
-        const categories = await prisma.category.findMany({
-          where: { active: true },
-          orderBy: { sortOrder: "asc" },
-        });
-        return {
-          categories: categories.map((c) => ({
-            id: c.id,
-            name: c.name,
-            label: c.label,
-          })),
-        };
+        try {
+          const categories = await prisma.category.findMany({
+            where: { active: true },
+            orderBy: { sortOrder: "asc" },
+          });
+          return {
+            categories: categories.map((c) => ({
+              id: c.id,
+              name: c.name,
+              label: c.label,
+            })),
+          };
+        } catch (error) {
+          console.error("Failed to fetch categories:", error);
+          return { error: "Failed to fetch categories" };
+        }
       },
     }),
 
@@ -484,6 +489,9 @@ export function buildTools(user: ChatUser) {
         }
         const { shareToken } = await quoteService.markSent(id);
         const baseUrl = process.env.NEXTAUTH_URL ?? "";
+        if (!baseUrl) {
+          console.warn("NEXTAUTH_URL not configured; share URL will be relative");
+        }
         const shareUrl = `${baseUrl}/quotes/review/${shareToken}`;
         return {
           shareToken,
@@ -520,11 +528,11 @@ export function buildTools(user: ChatUser) {
           ...rest,
           ...(type ? { type: type as EventType } : {}),
           ...(description !== undefined ? { description: description ?? undefined } : {}),
-          ...(location !== undefined ? { location } : {}),
-          ...(startTime !== undefined ? { startTime } : {}),
-          ...(endTime !== undefined ? { endTime } : {}),
-          ...(recurrence !== undefined ? { recurrence } : {}),
-          ...(reminderMinutes !== undefined ? { reminderMinutes } : {}),
+          ...(location !== undefined ? { location: location ?? undefined } : {}),
+          ...(startTime !== undefined ? { startTime: startTime ?? undefined } : {}),
+          ...(endTime !== undefined ? { endTime: endTime ?? undefined } : {}),
+          ...(recurrence !== undefined ? { recurrence: recurrence ?? undefined } : {}),
+          ...(reminderMinutes !== undefined ? { reminderMinutes: reminderMinutes ?? undefined } : {}),
         };
         const updated = await eventService.update(id, input);
         if (!updated) {
