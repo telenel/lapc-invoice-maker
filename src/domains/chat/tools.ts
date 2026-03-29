@@ -126,7 +126,7 @@ export function buildTools(user: ChatUser) {
 
     searchStaff: tool({
       description:
-        "Search staff members by name, department, or title. Returns name, title, department, email, phone, and extension.",
+        "Search staff members by name, department, or title. Returns id, name, title, department, email, phone, extension. IMPORTANT: Use the returned 'id' as staffId and 'department' as the department when creating invoices/quotes — do NOT ask the user for these.",
       inputSchema: z.object({
         search: z.string().describe("Search term for name, department, or title"),
       }),
@@ -308,7 +308,8 @@ export function buildTools(user: ChatUser) {
           invoiceNumber: invoice.invoiceNumber,
           status: invoice.status,
           totalAmount: invoice.totalAmount,
-          message: `Draft invoice created successfully${invoice.invoiceNumber ? ` (${invoice.invoiceNumber})` : ""}.`,
+          link: `/invoices/${invoice.id}`,
+          message: `Draft invoice created. Total: $${invoice.totalAmount}. Link: /invoices/${invoice.id}`,
         };
       },
     }),
@@ -382,7 +383,8 @@ export function buildTools(user: ChatUser) {
           quoteStatus: quote.quoteStatus,
           totalAmount: quote.totalAmount,
           recipientName: quote.recipientName,
-          message: `Draft quote created successfully for ${quote.recipientName}${quote.quoteNumber ? ` (${quote.quoteNumber})` : ""}.`,
+          link: `/quotes/${quote.id}`,
+          message: `Draft quote created for ${quote.recipientName}. Total: $${quote.totalAmount}. Link: /quotes/${quote.id}`,
         };
       },
     }),
