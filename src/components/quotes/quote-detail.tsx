@@ -512,6 +512,21 @@ export function QuoteDetailView({ id }: { id: string }) {
               <span className="font-bold">{formatAmount(quote.totalAmount)}</span>
             </div>
 
+            {(quote.marginEnabled || quote.taxEnabled) && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {quote.marginEnabled && quote.marginPercent != null && (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">
+                    Margin: {Number(quote.marginPercent)}%
+                  </span>
+                )}
+                {quote.taxEnabled && (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+                    Tax: {(Number(quote.taxRate) * 100).toFixed(2)}%
+                  </span>
+                )}
+              </div>
+            )}
+
             {quote.notes && (
               <>
                 <Separator />
@@ -639,7 +654,7 @@ export function QuoteDetailView({ id }: { id: string }) {
             <TableBody>
               {quote.items.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell>{item.description}</TableCell>
+                  <TableCell className="uppercase">{item.description}</TableCell>
                   <TableCell className="text-center tabular-nums">
                     {Number(item.quantity)}
                   </TableCell>
@@ -774,7 +789,7 @@ export function QuoteDetailView({ id }: { id: string }) {
                     <TableBody>
                       {quote.items.map((item) => (
                         <TableRow key={item.id}>
-                          <TableCell>{item.description}</TableCell>
+                          <TableCell className="uppercase">{item.description}</TableCell>
                           <TableCell className="text-center tabular-nums">
                             {Number(item.quantity)}
                           </TableCell>

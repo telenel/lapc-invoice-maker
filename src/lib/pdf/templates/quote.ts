@@ -104,7 +104,7 @@ export function renderQuote(data: QuotePDFData): string {
     .map(
       (item) => `
       <tr>
-        <td style="padding:8px 10px;border-bottom:1px solid #e0e0e0;">${escapeHtml(item.description)}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid #e0e0e0;">${escapeHtml(item.description.toUpperCase())}</td>
         <td style="padding:8px 10px;text-align:center;border-bottom:1px solid #e0e0e0;">${escapeHtml(item.quantity)}</td>
         <td style="padding:8px 10px;text-align:right;border-bottom:1px solid #e0e0e0;">${escapeHtml(formatCurrency(item.unitPrice))}</td>
         <td style="padding:8px 10px;text-align:right;border-bottom:1px solid #e0e0e0;">${escapeHtml(formatCurrency(item.extendedPrice))}</td>

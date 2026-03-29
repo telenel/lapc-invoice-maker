@@ -149,7 +149,7 @@ export function LineItems({
                 onSelect={(selected) => {
                   const match = suggestions.find((s) => s.description === selected.id);
                   onUpdate(index, {
-                    description: selected.label,
+                    description: selected.label.toUpperCase(),
                     ...(match
                       ? { unitPrice: match.unitPrice, quantity: 1, extendedPrice: match.unitPrice }
                       : {}),
@@ -157,7 +157,7 @@ export function LineItems({
                   requestAnimationFrame(() => qtyRefs.current[index]?.focus());
                 }}
                 onCommitText={(text) => {
-                  onUpdate(index, { description: text });
+                  onUpdate(index, { description: text.toUpperCase() });
                   requestAnimationFrame(() => qtyRefs.current[index]?.focus());
                 }}
               />
