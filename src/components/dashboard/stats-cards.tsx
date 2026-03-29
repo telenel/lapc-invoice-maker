@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import NumberFlow from "@number-flow/react";
 import { motion } from "framer-motion";
@@ -53,6 +54,7 @@ export function StatsCards() {
         setTeamUsers(creatorStats.users);
       } catch (err) {
         console.error("Failed to fetch stats:", err);
+        toast.error("Failed to load stats");
       } finally {
         setLoading(false);
       }

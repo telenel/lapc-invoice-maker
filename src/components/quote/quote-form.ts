@@ -12,6 +12,8 @@ import type { CateringDetails } from "@/domains/quote/types";
 // ---------------------------------------------------------------------------
 
 export interface QuoteItem {
+  /** Stable client-side key for React reconciliation (not persisted) */
+  _key: string;
   description: string;
   quantity: number;
   unitPrice: number;
@@ -72,6 +74,7 @@ function thirtyDaysFromNow(): string {
 
 function emptyItem(sortOrder = 0): QuoteItem {
   return {
+    _key: crypto.randomUUID(),
     description: "",
     quantity: 1,
     unitPrice: 0,

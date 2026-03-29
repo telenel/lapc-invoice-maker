@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { calendarApi, type CalendarEvent } from "@/domains/calendar/api-client";
@@ -33,7 +34,10 @@ export function TodaysEvents() {
     calendarApi
       .getEvents(today, today)
       .then(setEvents)
-      .catch((err) => console.error("Failed to fetch events:", err))
+      .catch((err) => {
+        console.error("Failed to fetch events:", err);
+        toast.error("Failed to load events");
+      })
       .finally(() => setLoading(false));
   }, []);
 

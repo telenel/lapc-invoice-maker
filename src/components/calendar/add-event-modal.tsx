@@ -61,6 +61,7 @@ function todayStr(): string {
 
 export function AddEventModal({ event, onSave, onClose, trigger, defaultOpen = false }: AddEventModalProps) {
   const [open, setOpen] = useState(defaultOpen);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const { createEvent, loading: creating } = useCreateEvent();
   const { updateEvent, loading: updating } = useUpdateEvent();
   const { deleteEvent, loading: deleting } = useDeleteEvent();
@@ -97,6 +98,11 @@ export function AddEventModal({ event, onSave, onClose, trigger, defaultOpen = f
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (!allDay && startTime && endTime && endTime <= startTime) {
+      toast.error("End time must be after start time");
+      return;
+    }
 
     try {
       if (isEdit) {
@@ -140,8 +146,14 @@ export function AddEventModal({ event, onSave, onClose, trigger, defaultOpen = f
 
   async function handleDelete() {
     if (!event) return;
-    if (!window.confirm("Delete this event? This cannot be undone.")) return;
 
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      setTimeout(() => setConfirmDelete(false), 3000);
+      return;
+    }
+
+    setConfirmDelete(false);
     try {
       await deleteEvent(event.id);
       toast.success("Event deleted");
@@ -359,8 +371,9 @@ export function AddEventModal({ event, onSave, onClose, trigger, defaultOpen = f
                     variant="destructive"
                     onClick={handleDelete}
                     disabled={loading}
+                    className={confirmDelete ? "bg-red-700 hover:bg-red-800" : ""}
                   >
-                    Delete
+                    {confirmDelete ? "Confirm Delete?" : "Delete"}
                   </Button>
                 ) : (
                   <div />

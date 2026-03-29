@@ -118,6 +118,7 @@ function mapApiToFormData(quote: ApiQuote): QuoteFormData {
           specialInstructions: "",
         },
     items: quote.items.map((item) => ({
+      _key: crypto.randomUUID(),
       description: item.description,
       quantity: Number(item.quantity),
       unitPrice: Number(item.unitPrice),

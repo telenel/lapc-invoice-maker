@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useSession } from "next-auth/react";
@@ -23,6 +24,7 @@ export function RecentInvoices() {
         setInvoices(data.invoices);
       } catch (err) {
         console.error("Failed to fetch recent invoices:", err);
+        toast.error("Failed to load invoices");
       } finally {
         setLoading(false);
       }
