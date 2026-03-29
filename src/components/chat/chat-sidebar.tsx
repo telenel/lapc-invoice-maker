@@ -4,10 +4,10 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useChat, Chat, type UIMessage } from "@ai-sdk/react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   MessageSquareIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
+  ChevronsRightIcon,
   Trash2Icon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { ChatMessage } from "./chat-message";
 import { ChatInput } from "./chat-input";
 
 const STORAGE_KEY = "lapc-chat-open";
+const SIDEBAR_WIDTH = 320;
 
 const QUICK_ACTIONS = [
   { label: "Show pending invoices", text: "Show my pending invoices" },
@@ -31,6 +32,8 @@ function getChatInstance(): Chat<UIMessage> {
   }
   return chatInstance;
 }
+
+const sidebarSpring = { type: "spring" as const, stiffness: 300, damping: 30 };
 
 export function ChatSidebar() {
   const { data: session, status: sessionStatus } = useSession();
@@ -110,78 +113,106 @@ export function ChatSidebar() {
   }
 
   return (
-    <div
-      className="hidden lg:flex shrink-0 h-screen print:hidden relative"
-      data-print-hide
-    >
-      {/* Toggle handle — always visible on the left edge */}
-      <button
+    <div className="hidden lg:flex shrink-0 h-screen print:hidden relative" data-print-hide>
+      {/* Toggle handle — centered on left edge */}
+      <motion.button
         onClick={toggleOpen}
         className={cn(
-          "absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10",
+          "absolute left-0 top-1/2 -translate-x-1/2 z-10",
           "flex items-center justify-center",
-          "w-5 h-10 rounded-full",
-          "bg-muted border border-border shadow-sm",
-          "hover:bg-accent hover:scale-110",
-          "transition-all duration-200",
-          "text-muted-foreground hover:text-foreground"
+          "w-6 h-12 rounded-full",
+          "bg-muted/80 backdrop-blur-sm border border-border/50 shadow-md",
+          "text-muted-foreground hover:text-foreground",
+          "hover:bg-accent hover:shadow-lg",
         )}
+        initial={false}
+        animate={{ y: "-50%", scale: 1 }}
+        whileHover={{ scale: 1.15 }}
+        whileTap={{ scale: 0.95 }}
         title={isOpen ? "Close assistant" : "Open assistant"}
       >
-        {isOpen ? (
-          <ChevronRightIcon className="h-3 w-3" />
-        ) : (
-          <ChevronLeftIcon className="h-3 w-3" />
-        )}
-      </button>
+        <motion.div
+          initial={false}
+          animate={{ rotate: isOpen ? 0 : 180 }}
+          transition={{ duration: 0.3 }}
+        >
+          <ChevronsRightIcon className="h-3.5 w-3.5" />
+        </motion.div>
+      </motion.button>
 
-      {/* Sidebar panel with smooth width transition */}
-      <div
-        className={cn(
-          "flex flex-col border-l bg-background overflow-hidden",
-          "transition-[width] duration-300 ease-in-out",
-          isOpen ? "w-80" : "w-0"
-        )}
+      {/* Sidebar with spring animation */}
+      <motion.div
+        className="flex flex-col border-l bg-background overflow-hidden"
+        initial={false}
+        animate={{ width: isOpen ? SIDEBAR_WIDTH : 0 }}
+        transition={sidebarSpring}
       >
-        {/* Inner content — fixed width so it doesn't reflow during animation */}
-        <div className="w-80 flex flex-col h-full">
+        {/* Fixed-width inner so content doesn't reflow during animation */}
+        <div style={{ width: SIDEBAR_WIDTH }} className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between border-b px-3 py-2 shrink-0">
             <div className="flex items-center gap-2">
               <MessageSquareIcon className="h-4 w-4 text-purple-600" />
               <span className="text-sm font-medium">LAPC Assistant</span>
             </div>
-            {messages.length > 0 && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleClear}
-                className="h-7 w-7"
-                title="Clear chat"
-              >
-                <Trash2Icon className="h-3.5 w-3.5" />
-              </Button>
-            )}
+            <AnimatePresence>
+              {messages.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                >
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleClear}
+                    className="h-7 w-7"
+                    title="Clear chat"
+                  >
+                    <Trash2Icon className="h-3.5 w-3.5" />
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Messages area */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
-            {messages.length === 0 && (
-              <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground text-sm px-4">
-                <MessageSquareIcon className="h-8 w-8 mb-2 opacity-50" />
-                <p className="font-medium">
-                  Hi, {session.user.name?.split(" ")[0] ?? "there"}!
-                </p>
-                <p className="mt-1 text-xs">
-                  Ask me about invoices, quotes, events, or staff.
-                </p>
-              </div>
-            )}
+            <AnimatePresence mode="wait">
+              {messages.length === 0 && (
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="flex flex-col items-center justify-center h-full text-center text-muted-foreground text-sm px-4"
+                >
+                  <MessageSquareIcon className="h-8 w-8 mb-2 opacity-50" />
+                  <p className="font-medium">
+                    Hi, {session.user.name?.split(" ")[0] ?? "there"}!
+                  </p>
+                  <p className="mt-1 text-xs">
+                    Ask me about invoices, quotes, events, or staff.
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
             {messages.map((message) => (
-              <ChatMessage key={message.id} message={message} />
+              <motion.div
+                key={message.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <ChatMessage message={message} />
+              </motion.div>
             ))}
             {isLoading && (
-              <div className="flex gap-2">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex gap-2"
+              >
                 <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted">
                   <span className="flex gap-0.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:0ms]" />
@@ -189,39 +220,51 @@ export function ChatSidebar() {
                     <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-bounce [animation-delay:300ms]" />
                   </span>
                 </div>
-              </div>
+              </motion.div>
             )}
           </div>
 
           {/* Quick actions */}
-          {messages.length === 0 && (
-            <div className="border-t px-3 py-2 shrink-0">
-              <div className="flex flex-wrap gap-1.5">
-                {QUICK_ACTIONS.map((action) => (
-                  <button
-                    key={action.label}
-                    onClick={() => handleSend(action.text)}
-                    disabled={isLoading}
-                    className={cn(
-                      "rounded-full border px-2.5 py-1 text-xs",
-                      "hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700",
-                      "dark:hover:bg-purple-950 dark:hover:border-purple-700 dark:hover:text-purple-300",
-                      "transition-colors disabled:opacity-50"
-                    )}
-                  >
-                    {action.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+          <AnimatePresence>
+            {messages.length === 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="border-t px-3 py-2 shrink-0"
+              >
+                <div className="flex flex-wrap gap-1.5">
+                  {QUICK_ACTIONS.map((action, i) => (
+                    <motion.button
+                      key={action.label}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: i * 0.05 }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleSend(action.text)}
+                      disabled={isLoading}
+                      className={cn(
+                        "rounded-full border px-2.5 py-1 text-xs",
+                        "hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700",
+                        "dark:hover:bg-purple-950 dark:hover:border-purple-700 dark:hover:text-purple-300",
+                        "transition-colors disabled:opacity-50"
+                      )}
+                    >
+                      {action.label}
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Input */}
           <div className="border-t px-3 py-2 shrink-0">
             <ChatInput onSend={handleSend} isLoading={isLoading} />
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
