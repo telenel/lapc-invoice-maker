@@ -297,10 +297,13 @@ export function buildTools(user: ChatUser) {
           .describe("Line items"),
         accountCode: z.string().optional().describe("Account code"),
         notes: z.string().optional().describe("Notes"),
+        marginEnabled: z.boolean().optional().describe("Enable margin markup"),
+        marginPercent: z.number().optional().describe("Margin percentage (e.g., 15 for 15%)"),
+        taxEnabled: z.boolean().optional().describe("Enable sales tax (9.75%)"),
       }),
-      execute: async ({ date, staffId, department, category, items, accountCode, notes }) => {
+      execute: async ({ date, staffId, department, category, items, accountCode, notes, marginEnabled, marginPercent, taxEnabled }) => {
         const invoice = await invoiceService.create(
-          { date, staffId, department, category, items, accountCode, notes },
+          { date, staffId, department, category, items, accountCode, notes, marginEnabled, marginPercent, taxEnabled },
           user.id
         );
         return {
@@ -339,8 +342,9 @@ export function buildTools(user: ChatUser) {
         accountCode: z.string().optional().describe("Account code"),
         notes: z.string().optional().describe("Notes"),
         marginEnabled: z.boolean().optional().describe("Enable margin markup"),
-        marginPercent: z.number().optional().describe("Margin percentage"),
-        taxEnabled: z.boolean().optional().describe("Enable tax"),
+        marginPercent: z.number().optional().describe("Margin percentage (e.g., 15 for 15%)"),
+        taxEnabled: z.boolean().optional().describe("Enable sales tax (9.75%)"),
+        isCateringEvent: z.boolean().optional().describe("Whether this is a catering event. If true, tell the user to fill in catering details on the quote form."),
       }),
       execute: async ({
         date,
@@ -357,6 +361,7 @@ export function buildTools(user: ChatUser) {
         marginEnabled,
         marginPercent,
         taxEnabled,
+        isCateringEvent,
       }) => {
         const quote = await quoteService.create(
           {
@@ -374,6 +379,7 @@ export function buildTools(user: ChatUser) {
             marginEnabled,
             marginPercent,
             taxEnabled,
+            isCateringEvent,
           },
           user.id
         );

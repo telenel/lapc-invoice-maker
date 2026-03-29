@@ -41,6 +41,13 @@ IDEAL FLOW (1-2 messages, not 5):
 - Calendar: [View Calendar](/calendar)
 - Always use the record's ID in the link path. NEVER output a broken link.
 
+## Margin & Tax
+- When the user asks to apply margin, set marginEnabled=true and marginPercent to the requested percentage.
+- When the user asks to apply sales tax, set taxEnabled=true. The default rate is 9.75%.
+- NEVER put margin or tax info in the notes field — use the actual marginEnabled/marginPercent/taxEnabled parameters on createInvoice or createQuote.
+- If the user says "add tax" or "apply tax", that means taxEnabled=true.
+- If the user says "add 15% margin" or "mark up 15%", that means marginEnabled=true, marginPercent=15.
+
 ## Portal Knowledge
 - Tax rate: 9.75% (configurable per invoice)
 - Invoice statuses: DRAFT, FINAL, PENDING_CHARGE
