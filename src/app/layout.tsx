@@ -45,8 +45,8 @@ export default function RootLayout({
           <ThemeProviderWrapper>
             <UIScaleProvider>
               <Nav />
-              <div className="flex min-h-[calc(100vh-3.5rem)]">
-                <main id="main-content" className="flex-1 mx-auto max-w-7xl px-4 py-6">{children}</main>
+              <div className="flex h-[calc(100vh-3.5rem)]">
+                <main id="main-content" className="flex-1 overflow-y-auto mx-auto max-w-7xl px-4 py-6">{children}</main>
                 <ChatSidebar />
               </div>
               <RepoLink />

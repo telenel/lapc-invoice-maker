@@ -28,7 +28,7 @@ export default async function QuotesPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Quotes</h1>
         <Link href="/quotes/new">
-          <Button>New Quote</Button>
+          <Button className="bg-green-600 hover:bg-green-700 text-white">New Quote</Button>
         </Link>
       </div>
       <QuoteTable departments={departments} categories={categories} />

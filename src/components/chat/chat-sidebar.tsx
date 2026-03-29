@@ -102,7 +102,7 @@ export function ChatSidebar() {
   // Collapsed state: thin strip
   if (!isOpen) {
     return (
-      <div className="hidden lg:flex flex-col items-center py-4 border-l bg-background print:hidden" data-print-hide>
+      <div className="hidden lg:flex flex-col items-center py-4 border-l bg-background print:hidden h-full sticky top-0" data-print-hide>
         <Button
           variant="ghost"
           size="icon"
@@ -122,7 +122,7 @@ export function ChatSidebar() {
   // Open state: full sidebar
   return (
     <div
-      className="hidden lg:flex w-80 shrink-0 flex-col border-l bg-background print:hidden"
+      className="hidden lg:flex w-80 shrink-0 flex-col border-l bg-background print:hidden h-full sticky top-0"
       data-print-hide
     >
       {/* Header */}

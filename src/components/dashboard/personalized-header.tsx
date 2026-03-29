@@ -69,7 +69,7 @@ export function PersonalizedHeader() {
         <div className="flex items-center gap-2">
           <Link
             href="/quotes/new"
-            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-green-600 to-green-800 px-3 text-sm font-semibold text-white transition-colors hover:from-green-700 hover:to-green-900"
           >
             <FileText className="h-4 w-4" aria-hidden="true" />
             New Quote
