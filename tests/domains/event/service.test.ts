@@ -96,9 +96,9 @@ describe("eventService", () => {
       );
 
       expect(results).toHaveLength(3);
-      expect(results[0].start).toBe("2026-03-09");
-      expect(results[1].start).toBe("2026-03-16");
-      expect(results[2].start).toBe("2026-03-23");
+      expect(results[0].start).toBe("2026-03-09T09:00:00");
+      expect(results[1].start).toBe("2026-03-16T09:00:00");
+      expect(results[2].start).toBe("2026-03-23T09:00:00");
     });
 
     it("stops at recurrenceEnd (5 occurrences for daily Mar 1-5)", () => {
@@ -116,8 +116,8 @@ describe("eventService", () => {
       );
 
       expect(results).toHaveLength(5);
-      expect(results[0].start).toBe("2026-03-01");
-      expect(results[4].start).toBe("2026-03-05");
+      expect(results[0].start).toBe("2026-03-01T09:00:00");
+      expect(results[4].start).toBe("2026-03-05T09:00:00");
     });
 
     it("returns single occurrence for non-recurring event in range", () => {
@@ -135,7 +135,7 @@ describe("eventService", () => {
       );
 
       expect(results).toHaveLength(1);
-      expect(results[0].start).toBe("2026-03-15");
+      expect(results[0].start).toBe("2026-03-15T09:00:00");
       expect(results[0].source).toBe("manual");
     });
 
