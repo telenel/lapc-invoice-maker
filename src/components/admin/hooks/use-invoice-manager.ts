@@ -18,7 +18,8 @@ export interface Invoice {
   accountCode?: string | null;
   notes?: string | null;
   createdAt: string;
-  staff: { id: string; name: string; title: string; department: string };
+  staff: { id: string; name: string; title: string; department: string } | null;
+  contact: { id: string; name: string; title: string; org: string; department: string; email: string } | null;
   creatorName: string;
 }
 

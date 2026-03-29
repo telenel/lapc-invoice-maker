@@ -88,11 +88,11 @@ export function RecentInvoices() {
                     ? "bg-primary/10 text-primary"
                     : "bg-muted text-muted-foreground"
                 )}>
-                  {getInitials(invoice.staff.name)}
+                  {getInitials(invoice.staff?.name ?? invoice.contact?.name ?? "?")}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-semibold truncate">
-                    {invoice.invoiceNumber ?? "—"} · {invoice.staff.name}
+                    {invoice.invoiceNumber ?? "—"} · {invoice.staff?.name ?? invoice.contact?.name ?? "Unknown"}
                     {isMine && <span className="text-[10px] text-primary font-medium ml-1.5">You</span>}
                   </p>
                   <p className="text-[11px] text-muted-foreground">

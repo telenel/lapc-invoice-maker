@@ -196,7 +196,7 @@ export function InvoiceManagerTable({
                     {...editableCellProps}
                   />
                   {/* Staff — read-only */}
-                  <TableCell className="text-sm">{invoice.staff.name}</TableCell>
+                  <TableCell className="text-sm">{invoice.staff?.name ?? invoice.contact?.name ?? "Unknown"}</TableCell>
                   <EditableCell
                     invoice={invoice}
                     field="department"

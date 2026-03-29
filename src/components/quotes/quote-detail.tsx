@@ -74,7 +74,16 @@ interface Quote {
     department: string;
     extension: string | null;
     email: string | null;
-  };
+  } | null;
+  contact: {
+    id: string;
+    name: string;
+    title: string;
+    org: string;
+    department: string;
+    email: string;
+    phone: string;
+  } | null;
   creatorName: string;
   items: QuoteItem[];
   isCateringEvent: boolean;
@@ -517,37 +526,69 @@ export function QuoteDetailView({ id }: { id: string }) {
 
         <div className="space-y-4">
           {/* Staff Member */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Staff Member</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Name</span>
-                <span className="font-bold">{quote.staff.name}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Title</span>
-                <span>{quote.staff.title}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Department</span>
-                <span>{quote.staff.department}</span>
-              </div>
-              {quote.staff.extension && (
+          {quote.staff ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Staff Member</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Extension</span>
-                  <span>{quote.staff.extension}</span>
+                  <span className="text-muted-foreground">Name</span>
+                  <span className="font-bold">{quote.staff.name}</span>
                 </div>
-              )}
-              {quote.staff.email && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Email</span>
-                  <span>{quote.staff.email}</span>
+                  <span className="text-muted-foreground">Title</span>
+                  <span>{quote.staff.title}</span>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Department</span>
+                  <span>{quote.staff.department}</span>
+                </div>
+                {quote.staff.extension && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Extension</span>
+                    <span>{quote.staff.extension}</span>
+                  </div>
+                )}
+                {quote.staff.email && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Email</span>
+                    <span>{quote.staff.email}</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ) : quote.contact ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Contact</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Name</span>
+                  <span className="font-bold">{quote.contact.name}</span>
+                </div>
+                {quote.contact.title && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Title</span>
+                    <span>{quote.contact.title}</span>
+                  </div>
+                )}
+                {quote.contact.org && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Organization</span>
+                    <span>{quote.contact.org}</span>
+                  </div>
+                )}
+                {quote.contact.email && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Email</span>
+                    <span>{quote.contact.email}</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ) : null}
 
           {/* Recipient */}
           {(quote.recipientName || quote.recipientEmail || quote.recipientOrg) && (
@@ -666,7 +707,7 @@ export function QuoteDetailView({ id }: { id: string }) {
                       {quote.quoteNumber ?? "Quote"}
                     </h3>
                     <p className="text-muted-foreground">
-                      {formatDate(quote.date)} &middot; {quote.staff.name}
+                      {formatDate(quote.date)} &middot; {quote.staff?.name ?? quote.contact?.name ?? "Unknown"}
                     </p>
                   </div>
                   {quote.recipientName && (

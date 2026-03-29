@@ -193,14 +193,14 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-muted text-[11px] font-bold text-muted-foreground shrink-0">
-                        {getInitials(invoice.staff.name)}
+                        {getInitials(invoice.staff?.name ?? invoice.contact?.name ?? "?")}
                       </div>
                       <div className="min-w-0">
                         <p className="text-[13px] font-semibold truncate">
                           <span className="inline-flex items-center gap-1">
                             {invoice.isRunning && invoice.runningTitle
                               ? invoice.runningTitle
-                              : (invoice.invoiceNumber ?? "—")} · {invoice.staff.name}
+                              : (invoice.invoiceNumber ?? "—")} · {invoice.staff?.name ?? invoice.contact?.name ?? "Unknown"}
                             {invoice.isRecurring && (
                               <span title="Recurring invoice">
                                 <RefreshCwIcon className="size-3 text-muted-foreground shrink-0" aria-hidden="true" />
