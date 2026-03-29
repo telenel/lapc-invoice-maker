@@ -33,6 +33,12 @@ export function StaffForm({ staff, onSave, trigger }: StaffFormProps) {
   const [extension, setExtension] = useState(staff?.extension ?? "");
   const [email, setEmail] = useState(staff?.email ?? "");
   const [phone, setPhone] = useState(staff?.phone ?? "");
+  const [birthMonth, setBirthMonth] = useState<number | undefined>(
+    staff?.birthMonth ?? undefined
+  );
+  const [birthDay, setBirthDay] = useState<number | undefined>(
+    staff?.birthDay ?? undefined
+  );
   const [approvalChain, setApprovalChain] = useState<string[]>(
     staff?.approvalChain ?? []
   );
@@ -47,6 +53,8 @@ export function StaffForm({ staff, onSave, trigger }: StaffFormProps) {
     setExtension(staff?.extension ?? "");
     setEmail(staff?.email ?? "");
     setPhone(staff?.phone ?? "");
+    setBirthMonth(staff?.birthMonth ?? undefined);
+    setBirthDay(staff?.birthDay ?? undefined);
     setApprovalChain(staff?.approvalChain ?? []);
     setOpen(true);
 
@@ -76,6 +84,8 @@ export function StaffForm({ staff, onSave, trigger }: StaffFormProps) {
       extension,
       email,
       phone,
+      ...(birthMonth !== undefined ? { birthMonth } : {}),
+      ...(birthDay !== undefined ? { birthDay } : {}),
       approvalChain,
     };
 
@@ -180,6 +190,45 @@ export function StaffForm({ staff, onSave, trigger }: StaffFormProps) {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="e.g. (213) 555-0100…"
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="staff-birth-month">Birth Month</Label>
+                <select
+                  id="staff-birth-month"
+                  value={birthMonth ?? ""}
+                  onChange={(e) =>
+                    setBirthMonth(e.target.value ? Number(e.target.value) : undefined)
+                  }
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <option value="">Select month...</option>
+                  <option value="1">January</option>
+                  <option value="2">February</option>
+                  <option value="3">March</option>
+                  <option value="4">April</option>
+                  <option value="5">May</option>
+                  <option value="6">June</option>
+                  <option value="7">July</option>
+                  <option value="8">August</option>
+                  <option value="9">September</option>
+                  <option value="10">October</option>
+                  <option value="11">November</option>
+                  <option value="12">December</option>
+                </select>
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="staff-birth-day">Birth Day</Label>
+                <Input
+                  id="staff-birth-day"
+                  type="number"
+                  min={1}
+                  max={31}
+                  value={birthDay ?? ""}
+                  onChange={(e) =>
+                    setBirthDay(e.target.value ? Number(e.target.value) : undefined)
+                  }
+                  placeholder="e.g. 15…"
                 />
               </div>
             </div>

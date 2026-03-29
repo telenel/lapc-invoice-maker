@@ -57,6 +57,8 @@ export interface StaffResponse {
   extension: string;
   email: string;
   phone: string;
+  birthMonth: number | null;
+  birthDay: number | null;
   approvalChain: string[];
   active: boolean;
 }
@@ -94,6 +96,8 @@ export interface CreateStaffInput {
   extension?: string;
   email?: string;
   phone?: string;
+  birthMonth?: number;
+  birthDay?: number;
   approvalChain?: string[];
 }
 

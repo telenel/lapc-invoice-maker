@@ -8,6 +8,8 @@ export const staffSchema = z.object({
   extension: z.string().default(""),
   email: z.string().default(""),
   phone: z.string().default(""),
+  birthMonth: z.number().int().min(1).max(12).optional(),
+  birthDay: z.number().int().min(1).max(31).optional(),
   approvalChain: z.array(z.string()).default([]),
 });
 

@@ -20,6 +20,8 @@ function toStaffResponse(staff: {
   extension: string;
   email: string;
   phone: string;
+  birthMonth?: number | null;
+  birthDay?: number | null;
   approvalChain: string[];
   active: boolean;
 }): StaffResponse {
@@ -32,6 +34,8 @@ function toStaffResponse(staff: {
     extension: staff.extension,
     email: staff.email,
     phone: staff.phone,
+    birthMonth: staff.birthMonth ?? null,
+    birthDay: staff.birthDay ?? null,
     approvalChain: staff.approvalChain,
     active: staff.active,
   };
