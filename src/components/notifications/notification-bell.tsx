@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { BellIcon, XIcon } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useNotifications } from "@/domains/notification/hooks";
@@ -57,59 +58,73 @@ export function NotificationBell() {
         )}
       </Button>
 
-      {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-lg border border-border bg-popover shadow-lg">
-          <div className="flex items-center justify-between px-3 py-2 border-b border-border">
-            <span className="text-sm font-medium">Notifications</span>
-            {unreadCount > 0 && (
-              <button
-                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                onClick={() => markAllRead()}
-              >
-                Mark all as read
-              </button>
-            )}
-          </div>
-          <div className="max-h-80 overflow-y-auto">
-            {notifications.length === 0 ? (
-              <p className="px-3 py-6 text-sm text-muted-foreground text-center">
-                No notifications
-              </p>
-            ) : (
-              notifications.slice(0, 20).map((n) => (
-                <div
-                  key={n.id}
-                  className={cn(
-                    "group relative flex items-start border-b border-border/50 last:border-0",
-                    !n.read && "bg-accent/30"
-                  )}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            className="absolute right-0 top-full z-50 mt-2 w-80 rounded-lg border border-border bg-popover shadow-lg"
+            initial={{ opacity: 0, scale: 0.95, y: -8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -8 }}
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          >
+            <div className="flex items-center justify-between px-3 py-2 border-b border-border">
+              <span className="text-sm font-medium">Notifications</span>
+              {unreadCount > 0 && (
+                <button
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  onClick={() => markAllRead()}
                 >
-                  <button
-                    className="flex-1 text-left px-3 py-2.5 hover:bg-accent transition-colors"
-                    onClick={() => handleNotificationClick(n.id, n.quoteId)}
-                  >
-                    <p className={cn("text-sm", !n.read && "font-medium")}>{n.title}</p>
-                    {n.message && (
-                      <p className="text-xs text-muted-foreground mt-0.5">{n.message}</p>
-                    )}
-                    <p className="text-xs text-muted-foreground mt-0.5">{timeAgo(n.createdAt)}</p>
-                  </button>
-                  <button
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-1 mt-2 mr-2 rounded text-muted-foreground hover:text-foreground hover:bg-accent shrink-0"
-                    aria-label="Dismiss notification"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      dismiss(n.id);
-                    }}
-                  >
-                    <XIcon className="size-3" aria-hidden="true" />
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
+                  Mark all as read
+                </button>
+              )}
+            </div>
+            <div className="max-h-80 overflow-y-auto">
+              {notifications.length === 0 ? (
+                <p className="px-3 py-6 text-sm text-muted-foreground text-center">
+                  No notifications
+                </p>
+              ) : (
+                <AnimatePresence initial={false}>
+                  {notifications.slice(0, 20).map((n, i) => (
+                    <motion.div
+                      key={n.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 50, height: 0 }}
+                      transition={{ delay: i * 0.03 }}
+                      className={cn(
+                        "group relative flex items-start border-b border-border/50 last:border-0",
+                        !n.read && "bg-accent/30"
+                      )}
+                    >
+                      <button
+                        className="flex-1 text-left px-3 py-2.5 hover:bg-accent transition-colors"
+                        onClick={() => handleNotificationClick(n.id, n.quoteId)}
+                      >
+                        <p className={cn("text-sm", !n.read && "font-medium")}>{n.title}</p>
+                        {n.message && (
+                          <p className="text-xs text-muted-foreground mt-0.5">{n.message}</p>
+                        )}
+                        <p className="text-xs text-muted-foreground mt-0.5">{timeAgo(n.createdAt)}</p>
+                      </button>
+                      <button
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 mt-2 mr-2 rounded text-muted-foreground hover:text-foreground hover:bg-accent shrink-0"
+                        aria-label="Dismiss notification"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          dismiss(n.id);
+                        }}
+                      >
+                        <XIcon className="size-3" aria-hidden="true" />
+                      </button>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

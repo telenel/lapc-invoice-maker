@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { InvoiceItem } from "./invoice-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -125,9 +126,15 @@ export function LineItems({
       </div>
 
       {/* Line item cards */}
+      <AnimatePresence mode="popLayout">
       {items.map((item, index) => (
-        <div
+        <motion.div
           key={index}
+          layout
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, x: -100, height: 0 }}
+          transition={{ type: "spring", stiffness: 200, damping: 25 }}
           className="rounded-lg border border-border/60 bg-muted/20 p-3 space-y-2 line-item-row"
         >
           {/* Row 1: Full-width description with actions */}
@@ -306,8 +313,9 @@ export function LineItems({
               </Label>
             </div>
           )}
-        </div>
+        </motion.div>
       ))}
+      </AnimatePresence>
 
       {/* Total */}
       <div className="flex justify-end pt-2 border-t">

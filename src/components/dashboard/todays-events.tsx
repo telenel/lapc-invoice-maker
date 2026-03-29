@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { calendarApi, type CalendarEvent } from "@/domains/calendar/api-client";
 
@@ -78,9 +79,14 @@ export function TodaysEvents() {
           </p>
         ) : (
           <div className="flex flex-col gap-2">
-            {events.map((event) => (
-              <Link
+            {events.map((event, i) => (
+              <motion.div
                 key={event.id}
+                initial={{ opacity: 0, x: -15 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.05 }}
+              >
+              <Link
                 href={getLink(event)}
                 className="block rounded-lg p-2.5 transition-colors"
                 style={{
@@ -129,6 +135,7 @@ export function TodaysEvents() {
                     </div>
                   )}
               </Link>
+              </motion.div>
             ))}
           </div>
         )}
