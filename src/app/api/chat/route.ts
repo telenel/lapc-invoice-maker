@@ -19,7 +19,15 @@ export async function POST(req: NextRequest) {
     role: (session.user as { role: string }).role,
   };
 
-  const { messages } = await req.json();
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return new Response("Invalid JSON body", { status: 400 });
+  }
+
+  const { messages } =
+    body && typeof body === "object" ? (body as { messages?: unknown }) : {};
 
   if (!Array.isArray(messages)) {
     return new Response("Invalid messages format", { status: 400 });
@@ -27,7 +35,12 @@ export async function POST(req: NextRequest) {
 
   const tools = buildTools(user);
 
-  const modelMessages = await convertToModelMessages(messages, { tools });
+  let modelMessages;
+  try {
+    modelMessages = await convertToModelMessages(messages, { tools });
+  } catch {
+    return new Response("Invalid messages format", { status: 400 });
+  }
 
   const result = streamText({
     model: anthropic("claude-haiku-4-5-20251001"),
