@@ -171,9 +171,13 @@ export function PublicQuoteView({ token }: { token: string }) {
       const cateringDetails =
         quote?.isCateringEvent && response === "ACCEPTED"
           ? {
-              ...quote.cateringDetails,
+              eventDate: quote.cateringDetails?.eventDate ?? "",
+              startTime: quote.cateringDetails?.startTime ?? "",
+              endTime: quote.cateringDetails?.endTime ?? "",
+              eventName: quote.cateringDetails?.eventName ?? "",
               contactName: cateringForm.contactName,
               contactPhone: cateringForm.contactPhone,
+              contactEmail: quote.cateringDetails?.contactEmail ?? "",
               location: cateringForm.location,
               headcount: cateringForm.headcount ? Number(cateringForm.headcount) : undefined,
               setupRequired: cateringForm.setupRequired,

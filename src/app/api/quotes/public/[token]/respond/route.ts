@@ -6,22 +6,22 @@ import type { Prisma } from "@/generated/prisma/client";
 import type { CateringDetails } from "@/domains/quote/types";
 
 const cateringDetailsSchema = z.object({
-  eventDate: z.string().min(1),
-  startTime: z.string().min(1),
-  endTime: z.string().min(1),
+  eventDate: z.string().optional().default(""),
+  startTime: z.string().optional().default(""),
+  endTime: z.string().optional().default(""),
   location: z.string().min(1, "Location is required"),
   contactName: z.string().min(1, "Contact name is required"),
   contactPhone: z.string().min(1, "Contact phone is required"),
-  contactEmail: z.string().optional(),
-  headcount: z.number().optional(),
-  eventName: z.string().optional(),
-  setupRequired: z.boolean(),
-  setupTime: z.string().optional(),
-  setupInstructions: z.string().optional(),
-  takedownRequired: z.boolean(),
-  takedownTime: z.string().optional(),
-  takedownInstructions: z.string().optional(),
-  specialInstructions: z.string().optional(),
+  contactEmail: z.string().optional().default(""),
+  headcount: z.coerce.number().optional(),
+  eventName: z.string().optional().default(""),
+  setupRequired: z.boolean().optional().default(false),
+  setupTime: z.string().optional().default(""),
+  setupInstructions: z.string().optional().default(""),
+  takedownRequired: z.boolean().optional().default(false),
+  takedownTime: z.string().optional().default(""),
+  takedownInstructions: z.string().optional().default(""),
+  specialInstructions: z.string().optional().default(""),
 });
 
 type RouteContext = { params: Promise<{ token: string }> };
