@@ -57,6 +57,7 @@ jobs:
             - If the comment has a "Prompt for AI Agents" section, follow those instructions exactly
             - Otherwise read the suggestion and apply the fix
             - Skip suggestions that are wrong or don't apply
+            - CRITICAL: When wrapping code in try/catch or refactoring, DELETE the original lines you replaced. Never leave duplicate declarations. After every edit, re-read the file to confirm there are no duplicate const/let/function declarations.
 
             ## Step 3: Verify
             Run: `npm run lint && npm run build`
