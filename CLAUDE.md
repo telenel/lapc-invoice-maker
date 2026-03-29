@@ -7,6 +7,7 @@ Invoice generation webapp for Los Angeles Pierce College. Next.js 14 (App Router
 ## Stack Gotchas
 
 ### Prisma 7
+
 - Client imports: `import { PrismaClient } from "@/generated/prisma/client"` — NOT `@prisma/client`
 - Constructor: `new PrismaClient({ adapter: new PrismaPg({ connectionString }) })`
 - Decimal fields come back as strings — always `Number(field)` before `.toFixed()` or arithmetic
@@ -14,21 +15,23 @@ Invoice generation webapp for Los Angeles Pierce College. Next.js 14 (App Router
 - Standalone scripts need `import "dotenv/config"` and the PrismaPg adapter
 
 ### shadcn/ui v4 (base-ui)
+
 - Uses base-ui, NOT Radix — no `asChild` prop, no `buttonVariants` in server components
 - Component imports from `@/components/ui/*`
 
 ### PDF Generation
+
 - Puppeteer renders HTML templates to PDF, pdf-lib merges pages
 - Templates in `src/lib/pdf/templates/` — all styles inline (no Tailwind in Puppeteer)
 - Logo loaded as base64 data URI from `public/lapc-logo.png`
 - Cover sheet: portrait Letter, IDP: landscape 11x8.5in
-- ALL interpolated values must use `escapeHtml()` from `src/lib/html.ts` — prevents SSRF/XSS
+- ALL interpolated values must use `escapeHtml()` from `src/lib/html.ts` — prevents XSS/injection in rendered HTML
 - Puppeteer uses `waitUntil: "domcontentloaded"` and blocks external requests
 - `prismcorePath` must resolve within `public/uploads/` (path traversal protection)
 
 ## Project Structure
 
-```
+```text
 src/
 ├── app/           # Next.js App Router pages and API routes
 ├── components/    # React components (ui/, invoice/, staff/, etc.)
@@ -79,6 +82,7 @@ Required: `DATABASE_URL` (PostgreSQL connection string) in `.env`
 ## Scripts
 
 Standalone scripts use `npx tsx`:
+
 ```bash
 npx tsx scripts/import-staff.ts /path/to/csv
 ```

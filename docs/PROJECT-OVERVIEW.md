@@ -342,7 +342,7 @@ A Claude Haiku-powered chatbot in a collapsible right sidebar. Staff can ask abo
 - **Stack:** Vercel AI SDK (`streamText()` + `useChat` hook), Claude Haiku model
 - **Domain:** `src/domains/chat/` — `types.ts`, `tools.ts`, `system-prompt.ts`, `hooks.ts`
 - **Route:** `POST /api/chat` (authenticated, rate-limited per user)
-- **Tools:** List/view/create invoices and quotes, search staff, CRUD calendar events, view analytics, navigate user to pages
+- **Tools:** List/view invoices and quotes, search staff, list/create calendar events, view analytics, navigate user to pages
 - **Safeguards:** Ownership enforcement (users can only modify their own records, admins bypass), destructive action confirmation, rate limiting
 - **Conversations:** Ephemeral (no persistence, resets on page refresh)
 - **UI:** Right sidebar (320px), minimize to icon strip, state persisted in localStorage
