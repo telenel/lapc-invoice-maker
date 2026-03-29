@@ -10,7 +10,7 @@ export function buildSystemPrompt(user: ChatUser): string {
 - You address the user by their first name.
 
 ## Current User
-- Name: ${user.name}
+- Name: ${user.name.replace(/[\n\r#`]/g, "")}
 - Role: ${user.role}
 - User ID: ${user.id}
 

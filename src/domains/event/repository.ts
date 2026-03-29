@@ -29,6 +29,27 @@ export async function findByDateRange(start: Date, end: Date) {
   });
 }
 
+export async function findByDateRangeIncludingRecurring(start: Date, end: Date) {
+  return prisma.event.findMany({
+    where: {
+      OR: [
+        // Non-recurring events in range
+        { recurrence: null, date: { gte: start, lte: end } },
+        // Recurring events that started before end and haven't ended before start
+        {
+          recurrence: { not: null },
+          date: { lte: end },
+          OR: [
+            { recurrenceEnd: null },
+            { recurrenceEnd: { gte: start } },
+          ],
+        },
+      ],
+    },
+    orderBy: { date: "asc" },
+  });
+}
+
 export async function findById(id: string) {
   return prisma.event.findUnique({ where: { id } });
 }

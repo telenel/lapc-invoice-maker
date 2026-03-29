@@ -63,14 +63,18 @@ function MessageContent({ text }: { text: string }) {
         // Links: [text](url)
         const linkMatch = part.match(/^\[(.*?)\]\((.*?)\)$/);
         if (linkMatch) {
-          return (
+          const url = linkMatch[2];
+          const isSafe = /^(https?:\/\/|\/)/i.test(url);
+          return isSafe ? (
             <a
               key={i}
-              href={linkMatch[2]}
+              href={url}
               className="text-purple-400 underline hover:text-purple-300"
             >
               {linkMatch[1]}
             </a>
+          ) : (
+            <span key={i}>{linkMatch[1]}</span>
           );
         }
         // Bold: **text**

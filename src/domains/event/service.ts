@@ -83,13 +83,15 @@ function toCalendarItem(
   if (!event) return null;
   const color = event.color;
   const date = occurrenceDate ?? event.date;
-  const start = date.toISOString().split("T")[0];
+  const dateStr = date.toISOString().split("T")[0];
+  const start = !event.allDay && event.startTime ? `${dateStr}T${event.startTime}:00` : dateStr;
+  const end = !event.allDay && event.endTime ? `${dateStr}T${event.endTime}:00` : null;
 
   return {
-    id: occurrenceDate ? `${event.id}__${start}` : event.id,
+    id: occurrenceDate ? `${event.id}__${dateStr}` : event.id,
     title: event.title,
     start,
-    end: null,
+    end,
     allDay: event.allDay,
     color: `${color}26`,
     borderColor: color,
@@ -151,7 +153,7 @@ export const eventService = {
       location: input.location ?? null,
       recurrence: input.recurrence ?? null,
       recurrenceEnd: input.recurrenceEnd ? new Date(input.recurrenceEnd) : null,
-      reminderMinutes: input.reminderMinutes ?? 60,
+      reminderMinutes: input.reminderMinutes !== undefined ? input.reminderMinutes : 60,
       createdBy: userId,
     });
     return toResponse(event);
@@ -187,9 +189,7 @@ export const eventService = {
   },
 
   async listForDateRange(start: Date, end: Date): Promise<CalendarEventItem[]> {
-    // Fetch from 365 days before start to catch recurring events that started earlier
-    const expandedStart = addDays(start, -365);
-    const events = await eventRepository.findByDateRange(expandedStart, end);
+    const events = await eventRepository.findByDateRangeIncludingRecurring(start, end);
 
     const items: CalendarEventItem[] = [];
     for (const event of events) {

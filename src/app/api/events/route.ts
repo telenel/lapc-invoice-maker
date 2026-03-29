@@ -10,7 +10,15 @@ export const GET = withAuth(async (req: NextRequest) => {
   if (!start || !end) {
     return NextResponse.json({ error: "start and end query params required" }, { status: 400 });
   }
-  const events = await eventService.listForDateRange(new Date(start), new Date(end));
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+    return NextResponse.json({ error: "Invalid date format for start or end" }, { status: 400 });
+  }
+  if (startDate >= endDate) {
+    return NextResponse.json({ error: "start must be before end" }, { status: 400 });
+  }
+  const events = await eventService.listForDateRange(startDate, endDate);
   return NextResponse.json(events);
 });
 

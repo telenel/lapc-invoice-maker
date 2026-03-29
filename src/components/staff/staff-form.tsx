@@ -84,8 +84,8 @@ export function StaffForm({ staff, onSave, trigger }: StaffFormProps) {
       extension,
       email,
       phone,
-      ...(birthMonth !== undefined ? { birthMonth } : {}),
-      ...(birthDay !== undefined ? { birthDay } : {}),
+      ...(isEdit || birthMonth !== undefined ? { birthMonth } : {}),
+      ...(isEdit || birthDay !== undefined ? { birthDay } : {}),
       approvalChain,
     };
 
@@ -224,6 +224,7 @@ export function StaffForm({ staff, onSave, trigger }: StaffFormProps) {
                   type="number"
                   min={1}
                   max={31}
+                  step={1}
                   value={birthDay ?? ""}
                   onChange={(e) =>
                     setBirthDay(e.target.value ? Number(e.target.value) : undefined)

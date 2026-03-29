@@ -41,7 +41,8 @@ export function ChatSidebar() {
 
   const isLoading = status === "submitted" || status === "streaming";
 
-  // Handle navigate tool results
+  // Handle navigate tool results — track processed calls to avoid re-navigation
+  const processedNavs = useRef(new Set<string>());
   useEffect(() => {
     for (const message of messages) {
       if (message.role !== "assistant") continue;
@@ -56,7 +57,11 @@ export function ChatSidebar() {
           (part.output as { action: string }).action === "navigate" &&
           "path" in part.output
         ) {
-          router.push((part.output as { path: string }).path);
+          const callId = (part as { toolCallId: string }).toolCallId;
+          if (!processedNavs.current.has(callId)) {
+            processedNavs.current.add(callId);
+            router.push((part.output as { path: string }).path);
+          }
         }
       }
     }

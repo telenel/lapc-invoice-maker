@@ -14,14 +14,16 @@ export async function checkAndSendReminders(): Promise<void> {
       : [];
 
     const eventDate = new Date(event.date);
-    const dateStr = eventDate.toISOString().split("T")[0];
+    const dateStr = `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, "0")}-${String(eventDate.getDate()).padStart(2, "0")}`;
 
     if (sentDates.includes(dateStr)) continue;
 
     const reminderTime = new Date(eventDate);
-    if (event.startTime) {
+    if (event.startTime && /^\d{1,2}:\d{2}$/.test(event.startTime)) {
       const [hours, minutes] = event.startTime.split(":").map(Number);
-      reminderTime.setHours(hours, minutes, 0, 0);
+      if (!isNaN(hours) && !isNaN(minutes)) {
+        reminderTime.setHours(hours, minutes, 0, 0);
+      }
     }
     reminderTime.setMinutes(reminderTime.getMinutes() - event.reminderMinutes);
 
@@ -35,7 +37,7 @@ export async function checkAndSendReminders(): Promise<void> {
     for (const user of users) {
       await notificationService.createAndPublish({
         userId: user.id,
-        type: "QUOTE_VIEWED" as never,
+        type: "EVENT_REMINDER",
         title: `Reminder: ${event.title}`,
         message: event.startTime
           ? `Starting at ${event.startTime}${event.location ? ` \u2014 ${event.location}` : ""}`

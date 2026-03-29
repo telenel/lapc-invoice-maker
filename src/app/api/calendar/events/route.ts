@@ -3,7 +3,6 @@ import { withAuth } from "@/domains/shared/auth";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
 import { eventService } from "@/domains/event/service";
-import { checkAndSendReminders } from "@/domains/event/reminders";
 import { BIRTHDAY_COLOR, CATERING_COLOR } from "@/domains/event/types";
 import type { CalendarEventItem } from "@/domains/event/types";
 
@@ -107,16 +106,19 @@ export const GET = withAuth(async (req: NextRequest, _session) => {
     const endYear = rangeEnd.getFullYear();
 
     for (let year = startYear; year <= endYear; year++) {
-      const month = String(staff.birthMonth).padStart(2, "0");
-      const day = String(staff.birthDay).padStart(2, "0");
-      const dateStr = `${year}-${month}-${day}`;
-      const date = new Date(dateStr);
+      const bMonth: string = String(staff.birthMonth).padStart(2, "0");
+      const bDay: string = String(staff.birthDay).padStart(2, "0");
+      const bDateStr: string = `${year}-${bMonth}-${bDay}`;
+      const bDate: Date = new Date(bDateStr);
 
-      if (date >= rangeStart && date < rangeEnd) {
+      // Skip invalid dates (e.g., Feb 29 on non-leap years)
+      if (isNaN(bDate.getTime()) || bDate.getMonth() + 1 !== staff.birthMonth) continue;
+
+      if (bDate >= rangeStart && bDate < rangeEnd) {
         birthdayEvents.push({
           id: `birthday-${staff.id}-${year}`,
           title: `🎂 ${staff.name}'s Birthday`,
-          start: dateStr,
+          start: bDateStr,
           end: null,
           allDay: true,
           color: `${BIRTHDAY_COLOR}26`,
@@ -131,8 +133,6 @@ export const GET = withAuth(async (req: NextRequest, _session) => {
     }
   }
 
-  // Fire-and-forget: check for due reminders
-  checkAndSendReminders().catch(() => {});
 
   return NextResponse.json([
     ...cateringEvents,

@@ -26,7 +26,9 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2">
+      <label htmlFor="chat-input" className="sr-only">Message</label>
       <Input
+        id="chat-input"
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Ask anything..."
@@ -38,6 +40,7 @@ export function ChatInput({ onSend, isLoading }: ChatInputProps) {
         size="icon"
         disabled={isLoading || !value.trim()}
         className="shrink-0 bg-purple-600 hover:bg-purple-700 text-white"
+        aria-label="Send message"
       >
         <SendIcon className="h-4 w-4" />
       </Button>

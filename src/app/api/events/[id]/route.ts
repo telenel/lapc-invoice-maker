@@ -30,6 +30,8 @@ export const PATCH = withAuth(async (req: NextRequest, _session, ctx) => {
 
 export const DELETE = withAuth(async (_req: NextRequest, _session, ctx) => {
   const { id } = await (ctx as RouteContext).params;
+  const existing = await eventService.getById(id);
+  if (!existing) return NextResponse.json({ error: "Event not found" }, { status: 404 });
   await eventService.remove(id);
   return NextResponse.json({ success: true });
 });

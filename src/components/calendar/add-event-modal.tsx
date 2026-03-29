@@ -67,17 +67,17 @@ export function AddEventModal({ event, onSave, trigger, defaultOpen = false }: A
   const isEdit = !!event;
   const loading = creating || updating || deleting;
 
-  const [title, setTitle] = useState("");
-  const [type, setType] = useState<EventType>("MEETING");
-  const [date, setDate] = useState(todayStr());
-  const [allDay, setAllDay] = useState(false);
-  const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("10:00");
-  const [recurrence, setRecurrence] = useState<Recurrence | "none">("none");
-  const [recurrenceEnd, setRecurrenceEnd] = useState("");
-  const [location, setLocation] = useState("");
-  const [description, setDescription] = useState("");
-  const [reminderMinutes, setReminderMinutes] = useState<number | null>(60);
+  const [title, setTitle] = useState(event?.title ?? "");
+  const [type, setType] = useState<EventType>(event?.type ?? "MEETING");
+  const [date, setDate] = useState(event?.date ?? todayStr());
+  const [allDay, setAllDay] = useState(event?.allDay ?? false);
+  const [startTime, setStartTime] = useState(event?.startTime ?? "09:00");
+  const [endTime, setEndTime] = useState(event?.endTime ?? "10:00");
+  const [recurrence, setRecurrence] = useState<Recurrence | "none">(event?.recurrence ?? "none");
+  const [recurrenceEnd, setRecurrenceEnd] = useState(event?.recurrenceEnd ?? "");
+  const [location, setLocation] = useState(event?.location ?? "");
+  const [description, setDescription] = useState(event?.description ?? "");
+  const [reminderMinutes, setReminderMinutes] = useState<number | null>(event?.reminderMinutes ?? 60);
 
   function handleOpen() {
     setTitle(event?.title ?? "");
@@ -124,7 +124,7 @@ export function AddEventModal({ event, onSave, trigger, defaultOpen = false }: A
           ...(recurrence !== "none" && recurrenceEnd ? { recurrenceEnd } : {}),
           ...(location ? { location } : {}),
           ...(description ? { description } : {}),
-          reminderMinutes: reminderMinutes ?? undefined,
+          reminderMinutes: reminderMinutes !== null ? reminderMinutes : undefined,
         };
         await createEvent(input);
       }
@@ -153,7 +153,7 @@ export function AddEventModal({ event, onSave, trigger, defaultOpen = false }: A
 
   return (
     <>
-      <div onClick={handleOpen} role="button" tabIndex={-1} style={{ display: "contents" }}>
+      <div onClick={handleOpen} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleOpen(); } }} role="button" tabIndex={0} style={{ display: "contents" }}>
         {trigger}
       </div>
       <Dialog open={open} onOpenChange={setOpen}>

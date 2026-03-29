@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -8,6 +8,7 @@ import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import type { EventClickArg, EventInput } from "@fullcalendar/core";
 import { Plus } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { calendarApi } from "@/domains/calendar/api-client";
 import { eventApi } from "@/domains/event/api-client";
@@ -17,12 +18,12 @@ import { AddEventModal } from "@/components/calendar/add-event-modal";
 
 export default function CalendarPage() {
   const router = useRouter();
-  const [calendarRef, setCalendarRef] = useState<FullCalendar | null>(null);
+  const calendarRef = useRef<FullCalendar | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<EventResponse | undefined>(undefined);
   const [editModalKey, setEditModalKey] = useState(0);
 
   function refetchEvents() {
-    calendarRef?.getApi().refetchEvents();
+    calendarRef.current?.getApi().refetchEvents();
   }
 
   const fetchEvents = useCallback(
@@ -76,8 +77,7 @@ export default function CalendarPage() {
             setSelectedEvent(eventData);
             setEditModalKey((prev) => prev + 1);
           } catch {
-            // If fetch fails, navigate to calendar instead
-            router.push("/calendar");
+            toast.error("Failed to load event details");
           }
         }
       } else if (source === "birthday") {
@@ -121,7 +121,7 @@ export default function CalendarPage() {
       )}
 
       <FullCalendar
-        ref={(ref) => setCalendarRef(ref)}
+        ref={calendarRef}
         plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
         initialView="timeGridWeek"
         headerToolbar={{
