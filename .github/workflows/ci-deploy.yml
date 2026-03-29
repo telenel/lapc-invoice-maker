@@ -9,10 +9,6 @@ on:
       - ".superpowers/**"
   pull_request:
     branches: [main]
-    paths-ignore:
-      - "**.md"
-      - "docs/**"
-      - ".superpowers/**"
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -25,13 +21,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Detect changed paths
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            code:
+              - '!**.md'
+              - '!docs/**'
+              - '!.superpowers/**'
+
       - uses: actions/setup-node@v4
+        if: steps.filter.outputs.code == 'true'
         with:
           node-version: 22
           cache: npm
 
       - name: Restore deps cache
         id: cache
+        if: steps.filter.outputs.code == 'true'
         uses: actions/cache@v4
         with:
           path: |
@@ -40,6 +48,7 @@ jobs:
           key: deps-${{ runner.os }}-${{ hashFiles('package-lock.json', 'prisma/schema.prisma') }}
 
       - name: Restore Next.js build cache
+        if: steps.filter.outputs.code == 'true'
         uses: actions/cache@v4
         with:
           path: .next/cache
@@ -48,16 +57,19 @@ jobs:
             nextjs-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
 
       - name: Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
+        if: steps.filter.outputs.code == 'true' && steps.cache.outputs.cache-hit != 'true'
         run: npm ci && npx prisma generate
 
       - name: Lint
+        if: steps.filter.outputs.code == 'true'
         run: npm run lint
 
       - name: Test
-        run: npx vitest run --dir tests && npx vitest run --dir src/__tests__
+        if: steps.filter.outputs.code == 'true'
+        run: npx vitest run --dir tests --dir src/__tests__
 
       - name: Build
+        if: steps.filter.outputs.code == 'true'
         run: npm run build
 
   deploy:
