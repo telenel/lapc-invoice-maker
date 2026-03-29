@@ -1,6 +1,10 @@
 import { execSync } from "child_process";
 
 function gitSha() {
+  // Prefer build arg (Docker), fall back to git, then "dev"
+  if (process.env.NEXT_PUBLIC_BUILD_SHA && process.env.NEXT_PUBLIC_BUILD_SHA !== "dev") {
+    return process.env.NEXT_PUBLIC_BUILD_SHA;
+  }
   try {
     return execSync("git rev-parse --short HEAD").toString().trim();
   } catch {

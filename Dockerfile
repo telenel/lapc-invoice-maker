@@ -33,6 +33,8 @@ RUN npm ci
 
 # Build stage
 FROM base AS builder
+ARG BUILD_SHA=dev
+ENV NEXT_PUBLIC_BUILD_SHA=${BUILD_SHA}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate
