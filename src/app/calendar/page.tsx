@@ -7,7 +7,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import type { EventClickArg, EventInput } from "@fullcalendar/core";
-import { Plus } from "lucide-react";
+import { CalendarDays, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { calendarApi } from "@/domains/calendar/api-client";
@@ -67,10 +67,10 @@ export default function CalendarPage() {
       const source = info.event.extendedProps.source as string;
 
       if (source === "catering") {
-        const quoteId = info.event.extendedProps.quoteId;
+        const quoteId = info.event.extendedProps.quoteId as string | undefined;
         if (quoteId) router.push(`/quotes/${quoteId}`);
       } else if (source === "manual") {
-        const eventId = info.event.extendedProps.eventId as string;
+        const eventId = info.event.extendedProps.eventId as string | undefined;
         if (eventId) {
           try {
             const eventData = await eventApi.getById(eventId);
@@ -81,28 +81,43 @@ export default function CalendarPage() {
           }
         }
       } else if (source === "birthday") {
-        router.push("/staff");
+        const staffId = info.event.extendedProps.staffId as string | undefined;
+        if (staffId) {
+          router.push(`/staff/${staffId}`);
+        } else {
+          router.push("/staff");
+        }
       }
     },
     [router],
   );
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-2xl font-bold">Calendar</h1>
+    <div className="container mx-auto px-6 py-8 max-w-[1400px]">
+      {/* Page header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400">
+            <CalendarDays className="h-5 w-5" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold leading-tight">Calendar</h1>
+            <p className="text-sm text-muted-foreground">Catering, events, and staff birthdays</p>
+          </div>
+        </div>
         <AddEventModal
           onSave={refetchEvents}
           trigger={
-            <Button className="bg-purple-600 hover:bg-purple-700">
-              <Plus className="w-4 h-4 mr-1" />
+            <Button className="bg-purple-600 hover:bg-purple-700 text-white gap-1.5">
+              <Plus className="h-4 w-4" />
               Add Event
             </Button>
           }
         />
       </div>
 
-      <div className="mb-4">
+      {/* Legend */}
+      <div className="mb-5">
         <EventLegend />
       </div>
 
@@ -116,26 +131,35 @@ export default function CalendarPage() {
             setSelectedEvent(undefined);
             refetchEvents();
           }}
+          onClose={() => setSelectedEvent(undefined)}
           trigger={<span />}
         />
       )}
 
-      <FullCalendar
-        ref={calendarRef}
-        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-        initialView="timeGridWeek"
-        headerToolbar={{
-          left: "prev,next today",
-          center: "title",
-          right: "dayGridMonth,timeGridWeek,timeGridDay",
-        }}
-        events={fetchEvents}
-        eventClick={handleEventClick}
-        height="auto"
-        weekends={false}
-        slotMinTime="07:00:00"
-        slotMaxTime="19:00:00"
-      />
+      {/* Calendar */}
+      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+        <div className="p-4">
+          <FullCalendar
+            ref={calendarRef}
+            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+            initialView="timeGridWeek"
+            headerToolbar={{
+              left: "prev,next today",
+              center: "title",
+              right: "dayGridMonth,timeGridWeek,timeGridDay",
+            }}
+            events={fetchEvents}
+            eventClick={handleEventClick}
+            height="auto"
+            weekends={false}
+            slotMinTime="07:00:00"
+            slotMaxTime="19:00:00"
+            nowIndicator
+            eventMaxStack={3}
+            dayMaxEvents={4}
+          />
+        </div>
+      </div>
     </div>
   );
 }

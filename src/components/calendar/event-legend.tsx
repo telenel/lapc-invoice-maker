@@ -11,10 +11,14 @@ const LEGEND_ITEMS = [
 
 export function EventLegend() {
   return (
-    <div className="flex flex-wrap gap-3 px-3 py-2 bg-muted/50 rounded-lg">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-3 py-2 bg-muted/40 rounded-lg border border-border/60">
+      <span className="text-xs font-medium text-muted-foreground mr-1">Key:</span>
       {LEGEND_ITEMS.map((item) => (
         <div key={item.label} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: item.color }} />
+          <span
+            className="inline-block w-2.5 h-2.5 rounded-sm shrink-0"
+            style={{ backgroundColor: item.color }}
+          />
           {item.label}
         </div>
       ))}
