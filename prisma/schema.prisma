@@ -79,6 +79,8 @@ model Contact {
   updatedAt   DateTime  @updatedAt @map("updated_at")
   invoices    Invoice[]
 
+  @@index([createdBy, name])
+  @@index([createdBy, email])
   @@map("contacts")
 }
 
