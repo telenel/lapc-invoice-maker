@@ -549,3 +549,9 @@
     font-size: 14px;
   }
 }
+
+/* Login page background pattern */
+.login-dots {
+  background-image: radial-gradient(circle, oklch(0.75 0.01 60 / 0.3) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
