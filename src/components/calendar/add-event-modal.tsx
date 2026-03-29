@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -25,6 +25,7 @@ import type {
 interface AddEventModalProps {
   event?: EventResponse;
   onSave: () => void;
+  onClose?: () => void;
   trigger: React.ReactNode;
   defaultOpen?: boolean;
 }
@@ -58,14 +59,29 @@ function todayStr(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-export function AddEventModal({ event, onSave, trigger, defaultOpen = false }: AddEventModalProps) {
+export function AddEventModal({ event, onSave, onClose, trigger, defaultOpen = false }: AddEventModalProps) {
   const [open, setOpen] = useState(defaultOpen);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const { createEvent, loading: creating } = useCreateEvent();
   const { updateEvent, loading: updating } = useUpdateEvent();
   const { deleteEvent, loading: deleting } = useDeleteEvent();
 
+  const confirmDeleteTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (confirmDeleteTimeoutRef.current) clearTimeout(confirmDeleteTimeoutRef.current);
+    };
+  }, []);
+
   const isEdit = !!event;
   const loading = creating || updating || deleting;
+
+  function closeModal() {
+    setOpen(false);
+    setConfirmDelete(false);
+    onClose?.();
+  }
 
   const [title, setTitle] = useState(event?.title ?? "");
   const [type, setType] = useState<EventType>(event?.type ?? "MEETING");
@@ -96,6 +112,11 @@ export function AddEventModal({ event, onSave, trigger, defaultOpen = false }: A
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (!allDay && startTime && endTime && endTime <= startTime) {
+      toast.error("End time must be after start time");
+      return;
+    }
 
     try {
       if (isEdit) {
@@ -130,8 +151,8 @@ export function AddEventModal({ event, onSave, trigger, defaultOpen = false }: A
       }
 
       toast.success(isEdit ? "Event updated" : "Event created");
-      setOpen(false);
       onSave();
+      closeModal();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save event");
     }
@@ -139,13 +160,21 @@ export function AddEventModal({ event, onSave, trigger, defaultOpen = false }: A
 
   async function handleDelete() {
     if (!event) return;
-    if (!window.confirm("Delete this event? This cannot be undone.")) return;
 
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      if (confirmDeleteTimeoutRef.current) clearTimeout(confirmDeleteTimeoutRef.current);
+      confirmDeleteTimeoutRef.current = setTimeout(() => setConfirmDelete(false), 3000);
+      return;
+    }
+
+    if (confirmDeleteTimeoutRef.current) clearTimeout(confirmDeleteTimeoutRef.current);
+    setConfirmDelete(false);
     try {
       await deleteEvent(event.id);
       toast.success("Event deleted");
-      setOpen(false);
       onSave();
+      closeModal();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to delete event");
     }
@@ -156,7 +185,7 @@ export function AddEventModal({ event, onSave, trigger, defaultOpen = false }: A
       <div onClick={handleOpen} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleOpen(); } }} role="button" tabIndex={0} style={{ display: "contents" }}>
         {trigger}
       </div>
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={(val) => { if (!val) closeModal(); else setOpen(val); }}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{isEdit ? "Edit Event" : "Add Event"}</DialogTitle>
@@ -169,7 +198,7 @@ export function AddEventModal({ event, onSave, trigger, defaultOpen = false }: A
                 id="event-title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Staff meeting..."
+                placeholder="e.g. Staff meeting…"
                 required
               />
             </div>
@@ -303,7 +332,7 @@ export function AddEventModal({ event, onSave, trigger, defaultOpen = false }: A
                 id="event-location"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g. Room 1600..."
+                placeholder="e.g. Room 1600…"
               />
             </div>
 
@@ -314,7 +343,7 @@ export function AddEventModal({ event, onSave, trigger, defaultOpen = false }: A
                 id="event-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Optional notes..."
+                placeholder="Optional notes…"
                 rows={3}
                 className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               />
@@ -358,8 +387,9 @@ export function AddEventModal({ event, onSave, trigger, defaultOpen = false }: A
                     variant="destructive"
                     onClick={handleDelete}
                     disabled={loading}
+                    className={confirmDelete ? "bg-red-700 hover:bg-red-800" : ""}
                   >
-                    Delete
+                    {confirmDelete ? "Confirm Delete?" : "Delete"}
                   </Button>
                 ) : (
                   <div />

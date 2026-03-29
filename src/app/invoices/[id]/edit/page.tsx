@@ -79,6 +79,7 @@ function mapApiToFormData(invoice: ApiInvoice): InvoiceFormData {
     signatures: invoice.signatures ?? { line1: "", line2: "", line3: "" },
     signatureStaffIds: { line1: "", line2: "", line3: "" },
     items: invoice.items.map((item) => ({
+      _key: crypto.randomUUID(),
       description: item.description,
       quantity: Number(item.quantity),
       unitPrice: Number(item.unitPrice),

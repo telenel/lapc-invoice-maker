@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -74,7 +74,16 @@ interface Quote {
     department: string;
     extension: string | null;
     email: string | null;
-  };
+  } | null;
+  contact: {
+    id: string;
+    name: string;
+    title: string;
+    org: string;
+    department: string;
+    email: string;
+    phone: string;
+  } | null;
   creatorName: string;
   items: QuoteItem[];
   isCateringEvent: boolean;
@@ -155,12 +164,14 @@ export function QuoteDetailView({ id }: { id: string }) {
   const router = useRouter();
   const [quote, setQuote] = useState<Quote | null>(null);
   const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState(false);
+  const [actionState, setActionState] = useState({
+    deleting: false,
+    declining: false,
+    sending: false,
+    converting: false,
+  });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
-  const [declining, setDeclining] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [converting, setConverting] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
 
@@ -184,9 +195,9 @@ export function QuoteDetailView({ id }: { id: string }) {
     fetchQuote();
   }, [id]);
 
-  async function handleDelete() {
+  const handleDelete = useCallback(async () => {
     if (!quote) return;
-    setDeleting(true);
+    setActionState((prev) => ({ ...prev, deleting: true }));
     try {
       const res = await fetch(`/api/quotes/${id}`, { method: "DELETE" });
       if (!res.ok) {
@@ -199,14 +210,14 @@ export function QuoteDetailView({ id }: { id: string }) {
     } catch {
       toast.error("Failed to delete quote");
     } finally {
-      setDeleting(false);
+      setActionState((prev) => ({ ...prev, deleting: false }));
       setDeleteDialogOpen(false);
     }
-  }
+  }, [quote, id, router]);
 
-  async function handleMarkAsSent() {
+  const handleMarkAsSent = useCallback(async () => {
     if (!quote) return;
-    setSending(true);
+    setActionState((prev) => ({ ...prev, sending: true }));
     try {
       const res = await fetch(`/api/quotes/${id}/send`, { method: "POST" });
       if (!res.ok) {
@@ -227,21 +238,21 @@ export function QuoteDetailView({ id }: { id: string }) {
     } catch {
       toast.error("Failed to mark quote as sent");
     } finally {
-      setSending(false);
+      setActionState((prev) => ({ ...prev, sending: false }));
     }
-  }
+  }, [quote, id]);
 
-  async function handleShareLink() {
+  const handleShareLink = useCallback(() => {
     if (!quote) return;
     if (quote.shareToken) {
       setShareUrl(`${window.location.origin}/quotes/review/${quote.shareToken}`);
       setShareDialogOpen(true);
     }
-  }
+  }, [quote]);
 
-  async function handleConvertToInvoice() {
+  const handleConvertToInvoice = useCallback(async () => {
     if (!quote) return;
-    setConverting(true);
+    setActionState((prev) => ({ ...prev, converting: true }));
     try {
       const res = await fetch(`/api/quotes/${id}/convert`, { method: "POST" });
       if (!res.ok) {
@@ -255,13 +266,13 @@ export function QuoteDetailView({ id }: { id: string }) {
     } catch {
       toast.error("Failed to convert quote to invoice");
     } finally {
-      setConverting(false);
+      setActionState((prev) => ({ ...prev, converting: false }));
     }
-  }
+  }, [quote, id, router]);
 
-  async function handleDecline() {
+  const handleDecline = useCallback(async () => {
     if (!quote) return;
-    setDeclining(true);
+    setActionState((prev) => ({ ...prev, declining: true }));
     try {
       const res = await fetch(`/api/quotes/${id}`, {
         method: "PUT",
@@ -282,10 +293,10 @@ export function QuoteDetailView({ id }: { id: string }) {
     } catch {
       toast.error("Failed to decline quote");
     } finally {
-      setDeclining(false);
+      setActionState((prev) => ({ ...prev, declining: false }));
       setDeclineDialogOpen(false);
     }
-  }
+  }, [quote, id]);
 
   if (loading) {
     return <p className="text-muted-foreground text-sm">Loading...</p>;
@@ -363,9 +374,9 @@ export function QuoteDetailView({ id }: { id: string }) {
               size="sm"
               className="bg-green-600 hover:bg-green-700 text-white"
               onClick={handleMarkAsSent}
-              disabled={sending}
+              disabled={actionState.sending}
             >
-              {sending ? "Sending..." : "Mark as Sent"}
+              {actionState.sending ? "Sending..." : "Mark as Sent"}
             </Button>
           )}
 
@@ -375,9 +386,9 @@ export function QuoteDetailView({ id }: { id: string }) {
               variant="outline"
               size="sm"
               onClick={handleConvertToInvoice}
-              disabled={converting}
+              disabled={actionState.converting}
             >
-              {converting ? "Converting..." : "Convert to Invoice"}
+              {actionState.converting ? "Converting..." : "Convert to Invoice"}
             </Button>
           )}
 
@@ -386,8 +397,8 @@ export function QuoteDetailView({ id }: { id: string }) {
             <Dialog open={declineDialogOpen} onOpenChange={setDeclineDialogOpen}>
               <DialogTrigger
                 render={
-                  <Button variant="destructive" size="sm" disabled={declining}>
-                    {declining ? "Declining..." : "Decline"}
+                  <Button variant="destructive" size="sm" disabled={actionState.declining}>
+                    {actionState.declining ? "Declining..." : "Decline"}
                   </Button>
                 }
               />
@@ -409,9 +420,9 @@ export function QuoteDetailView({ id }: { id: string }) {
                   <Button
                     variant="destructive"
                     onClick={handleDecline}
-                    disabled={declining}
+                    disabled={actionState.declining}
                   >
-                    {declining ? "Declining..." : "Decline Quote"}
+                    {actionState.declining ? "Declining..." : "Decline Quote"}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -426,8 +437,8 @@ export function QuoteDetailView({ id }: { id: string }) {
             <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
               <DialogTrigger
                 render={
-                  <Button variant="destructive" size="sm" disabled={deleting}>
-                    {deleting ? "Deleting..." : "Delete"}
+                  <Button variant="destructive" size="sm" disabled={actionState.deleting}>
+                    {actionState.deleting ? "Deleting..." : "Delete"}
                   </Button>
                 }
               />
@@ -449,9 +460,9 @@ export function QuoteDetailView({ id }: { id: string }) {
                   <Button
                     variant="destructive"
                     onClick={handleDelete}
-                    disabled={deleting}
+                    disabled={actionState.deleting}
                   >
-                    {deleting ? "Deleting..." : "Delete Quote"}
+                    {actionState.deleting ? "Deleting..." : "Delete Quote"}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -503,6 +514,21 @@ export function QuoteDetailView({ id }: { id: string }) {
               <span className="font-bold">{formatAmount(quote.totalAmount)}</span>
             </div>
 
+            {(quote.marginEnabled || quote.taxEnabled) && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {quote.marginEnabled && quote.marginPercent != null && (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">
+                    Margin: {Number(quote.marginPercent)}%
+                  </span>
+                )}
+                {quote.taxEnabled && (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+                    Tax: {(Number(quote.taxRate) * 100).toFixed(2)}%
+                  </span>
+                )}
+              </div>
+            )}
+
             {quote.notes && (
               <>
                 <Separator />
@@ -517,37 +543,69 @@ export function QuoteDetailView({ id }: { id: string }) {
 
         <div className="space-y-4">
           {/* Staff Member */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Staff Member</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Name</span>
-                <span className="font-bold">{quote.staff.name}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Title</span>
-                <span>{quote.staff.title}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Department</span>
-                <span>{quote.staff.department}</span>
-              </div>
-              {quote.staff.extension && (
+          {quote.staff ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Staff Member</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Extension</span>
-                  <span>{quote.staff.extension}</span>
+                  <span className="text-muted-foreground">Name</span>
+                  <span className="font-bold">{quote.staff.name}</span>
                 </div>
-              )}
-              {quote.staff.email && (
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Email</span>
-                  <span>{quote.staff.email}</span>
+                  <span className="text-muted-foreground">Title</span>
+                  <span>{quote.staff.title}</span>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Department</span>
+                  <span>{quote.staff.department}</span>
+                </div>
+                {quote.staff.extension && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Extension</span>
+                    <span>{quote.staff.extension}</span>
+                  </div>
+                )}
+                {quote.staff.email && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Email</span>
+                    <span>{quote.staff.email}</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ) : quote.contact ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Contact</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Name</span>
+                  <span className="font-bold">{quote.contact.name}</span>
+                </div>
+                {quote.contact.title && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Title</span>
+                    <span>{quote.contact.title}</span>
+                  </div>
+                )}
+                {quote.contact.org && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Organization</span>
+                    <span>{quote.contact.org}</span>
+                  </div>
+                )}
+                {quote.contact.email && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Email</span>
+                    <span>{quote.contact.email}</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ) : null}
 
           {/* Recipient */}
           {(quote.recipientName || quote.recipientEmail || quote.recipientOrg) && (
@@ -598,7 +656,7 @@ export function QuoteDetailView({ id }: { id: string }) {
             <TableBody>
               {quote.items.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell>{item.description}</TableCell>
+                  <TableCell className="uppercase">{item.description}</TableCell>
                   <TableCell className="text-center tabular-nums">
                     {Number(item.quantity)}
                   </TableCell>
@@ -666,7 +724,7 @@ export function QuoteDetailView({ id }: { id: string }) {
                       {quote.quoteNumber ?? "Quote"}
                     </h3>
                     <p className="text-muted-foreground">
-                      {formatDate(quote.date)} &middot; {quote.staff.name}
+                      {formatDate(quote.date)} &middot; {quote.staff?.name ?? quote.contact?.name ?? "Unknown"}
                     </p>
                   </div>
                   {quote.recipientName && (
@@ -733,7 +791,7 @@ export function QuoteDetailView({ id }: { id: string }) {
                     <TableBody>
                       {quote.items.map((item) => (
                         <TableRow key={item.id}>
-                          <TableCell>{item.description}</TableCell>
+                          <TableCell className="uppercase">{item.description}</TableCell>
                           <TableCell className="text-center tabular-nums">
                             {Number(item.quantity)}
                           </TableCell>

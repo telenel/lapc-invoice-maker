@@ -3,7 +3,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { RefreshCwIcon } from "lucide-react";
+import { FileTextIcon, RefreshCwIcon } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -130,25 +131,32 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-end justify-between gap-4">
-        <div className="flex-1">
-          <InvoiceFiltersBar
-            filters={filters}
-            departments={departments}
-            categories={categories}
-            onChange={handleFiltersChange}
-            onClear={handleClear}
-          />
-        </div>
-        <Button variant="outline" size="sm" onClick={handleExportCsv}>
-          Export CSV
-        </Button>
-      </div>
+      <InvoiceFiltersBar
+        filters={filters}
+        departments={departments}
+        categories={categories}
+        onChange={handleFiltersChange}
+        onClear={handleClear}
+        onExportCsv={handleExportCsv}
+      />
 
       {loading ? (
         <p className="text-muted-foreground text-sm">Loading…</p>
       ) : invoices.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No invoices found.</p>
+        <EmptyState
+          icon={<FileTextIcon className="size-7" />}
+          title="No invoices found"
+          description={
+            Object.values(filters).some((v) => v !== "")
+              ? "Try adjusting your filters to find what you're looking for."
+              : "Create your first invoice to get started."
+          }
+          action={
+            Object.values(filters).some((v) => v !== "")
+              ? { label: "Clear Filters", onClick: handleClear, variant: "outline" as const }
+              : undefined
+          }
+        />
       ) : (
         <>
           <Table>
@@ -193,14 +201,14 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-muted text-[11px] font-bold text-muted-foreground shrink-0">
-                        {getInitials(invoice.staff.name)}
+                        {getInitials(invoice.staff?.name ?? invoice.contact?.name ?? "?")}
                       </div>
                       <div className="min-w-0">
                         <p className="text-[13px] font-semibold truncate">
                           <span className="inline-flex items-center gap-1">
                             {invoice.isRunning && invoice.runningTitle
                               ? invoice.runningTitle
-                              : (invoice.invoiceNumber ?? "—")} · {invoice.staff.name}
+                              : (invoice.invoiceNumber ?? "—")} · {invoice.staff?.name ?? invoice.contact?.name ?? "Unknown"}
                             {invoice.isRecurring && (
                               <span title="Recurring invoice">
                                 <RefreshCwIcon className="size-3 text-muted-foreground shrink-0" aria-hidden="true" />

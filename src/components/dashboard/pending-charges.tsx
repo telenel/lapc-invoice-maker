@@ -37,7 +37,7 @@ export function PendingCharges() {
             <Link
               key={user.id}
               href={`/invoices?status=PENDING_CHARGE&search=${encodeURIComponent(user.name)}`}
-              className="flex items-center gap-3 rounded-md px-2 py-2 hover:bg-muted/50 transition-colors"
+              className="flex items-center gap-3 rounded-md px-2 py-2 hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <div className="flex items-center justify-center w-[28px] h-[28px] rounded-lg bg-muted text-[9px] font-bold text-muted-foreground shrink-0">
                 {getInitials(user.name)}

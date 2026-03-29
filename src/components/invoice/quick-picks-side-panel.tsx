@@ -73,7 +73,7 @@ export function QuickPicksSidePanel({
       <Input
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
-        placeholder="Filter picks..."
+        placeholder="Filter picks…"
         className="h-7 text-[10px] mb-2"
         tabIndex={-1}
       />

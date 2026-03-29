@@ -22,6 +22,7 @@ model User {
   userQuickPicks UserQuickPick[]
   notifications  Notification[]
   events         Event[]
+  contacts       Contact[] @relation("ContactCreator")
 
   @@map("users")
 }
@@ -63,6 +64,26 @@ model StaffAccountNumber {
   @@map("staff_account_numbers")
 }
 
+model Contact {
+  id          String    @id @default(uuid())
+  name        String
+  email       String    @default("")
+  phone       String    @default("")
+  org         String    @default("")
+  department  String    @default("")
+  title       String    @default("")
+  notes       String?
+  createdBy   String    @map("created_by")
+  creator     User      @relation("ContactCreator", fields: [createdBy], references: [id], onDelete: Restrict)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  invoices    Invoice[]
+
+  @@index([createdBy, name])
+  @@index([createdBy, email])
+  @@map("contacts")
+}
+
 model Invoice {
   id             String          @id @default(uuid())
   invoiceNumber  String?         @unique @map("invoice_number")
@@ -70,7 +91,8 @@ model Invoice {
   category       String          @default("SUPPLIES")
   date           DateTime        @db.Date
   createdBy      String          @map("created_by")
-  staffId        String          @map("staff_id")
+  staffId        String?         @map("staff_id")
+  contactId      String?         @map("contact_id")
   department     String
   accountCode    String          @map("account_code")
   accountNumber  String          @default("") @map("account_number")
@@ -105,7 +127,8 @@ model Invoice {
   updatedAt      DateTime        @updatedAt @map("updated_at")
 
   creator  User          @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-  staff    Staff         @relation(fields: [staffId], references: [id])
+  staff    Staff?        @relation(fields: [staffId], references: [id])
+  contact  Contact?      @relation(fields: [contactId], references: [id])
   items    InvoiceItem[]
 
   convertedFromQuote   Invoice?  @relation("QuoteToInvoice", fields: [convertedFromQuoteId], references: [id])

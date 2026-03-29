@@ -1,5 +1,6 @@
 // src/domains/quote/types.ts
 import type { StaffSummary } from "@/domains/staff/types";
+import type { ContactResponse } from "@/domains/contact/types";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -60,7 +61,8 @@ export interface QuoteResponse {
   pdfPath: string | null;
   shareToken: string | null;
   createdAt: string;
-  staff: StaffSummary;
+  staff: StaffSummary | null;
+  contact: ContactResponse | null;
   creatorId: string;
   creatorName: string;
   items: QuoteItemResponse[];
@@ -84,7 +86,8 @@ export interface CreateLineItemInput {
 
 export interface CreateQuoteInput {
   date: string;
-  staffId: string;
+  staffId?: string;
+  contactId?: string;
   department: string;
   category: string;
   accountCode?: string;

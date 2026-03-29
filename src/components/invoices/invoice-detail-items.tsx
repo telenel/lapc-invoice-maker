@@ -39,7 +39,7 @@ export function InvoiceDetailItems({ items, totalAmount }: InvoiceDetailItemsPro
           <TableBody>
             {items.map((item) => (
               <TableRow key={item.id}>
-                <TableCell>{item.description}</TableCell>
+                <TableCell className="uppercase">{item.description}</TableCell>
                 <TableCell className="text-center tabular-nums">
                   {Number(item.quantity)}
                 </TableCell>

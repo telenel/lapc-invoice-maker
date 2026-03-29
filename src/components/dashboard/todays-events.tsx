@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
+import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { calendarApi, type CalendarEvent } from "@/domains/calendar/api-client";
 
@@ -32,7 +34,10 @@ export function TodaysEvents() {
     calendarApi
       .getEvents(today, today)
       .then(setEvents)
-      .catch((err) => console.error("Failed to fetch events:", err))
+      .catch((err) => {
+        console.error("Failed to fetch events:", err);
+        toast.error("Failed to load events");
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -78,11 +83,16 @@ export function TodaysEvents() {
           </p>
         ) : (
           <div className="flex flex-col gap-2">
-            {events.map((event) => (
-              <Link
+            {events.map((event, i) => (
+              <motion.div
                 key={event.id}
+                initial={{ opacity: 0, x: -15 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.05 }}
+              >
+              <Link
                 href={getLink(event)}
-                className="block rounded-lg p-2.5 transition-colors"
+                className="block rounded-lg p-2.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 style={{
                   borderWidth: "1px",
                   borderColor: `${event.borderColor}33`,
@@ -129,6 +139,7 @@ export function TodaysEvents() {
                     </div>
                   )}
               </Link>
+              </motion.div>
             ))}
           </div>
         )}

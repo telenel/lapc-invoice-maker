@@ -7,6 +7,7 @@ import type { QuoteFilters } from "./types";
 
 const listInclude = {
   staff: { select: { id: true, name: true, title: true, department: true } },
+  contact: { select: { id: true, name: true, email: true, phone: true, org: true, department: true, title: true, notes: true, createdAt: true } },
   creator: { select: { id: true, name: true, username: true } },
   items: { orderBy: { sortOrder: "asc" as const } },
 } as const;
@@ -22,6 +23,7 @@ const detailInclude = {
       email: true,
     },
   },
+  contact: { select: { id: true, name: true, email: true, phone: true, org: true, department: true, title: true, notes: true, createdAt: true } },
   creator: { select: { id: true, name: true, username: true } },
   items: { orderBy: { sortOrder: "asc" as const } },
   convertedToInvoice: { select: { id: true, invoiceNumber: true } },
@@ -56,6 +58,7 @@ function buildWhere(filters: QuoteFilters): Prisma.InvoiceWhereInput {
       { recipientName: { contains: filters.search, mode: "insensitive" } },
       { recipientOrg: { contains: filters.search, mode: "insensitive" } },
       { staff: { name: { contains: filters.search, mode: "insensitive" } } },
+      { contact: { name: { contains: filters.search, mode: "insensitive" } } },
       {
         items: {
           some: { description: { contains: filters.search, mode: "insensitive" } },
@@ -161,7 +164,8 @@ export interface CalculatedLineItem {
 export async function create(
   input: {
     date: string;
-    staffId: string;
+    staffId?: string;
+    contactId?: string;
     department: string;
     category: string;
     accountCode?: string;

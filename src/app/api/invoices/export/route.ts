@@ -45,7 +45,7 @@ export const GET = withAuth(async (req: NextRequest) => {
         inv.invoiceNumber ?? "",
         new Date(inv.date).toISOString().split("T")[0],
         inv.category,
-        inv.staff.name,
+        inv.staff?.name ?? inv.contact?.name ?? "",
         inv.department,
         inv.accountNumber,
         inv.accountCode,

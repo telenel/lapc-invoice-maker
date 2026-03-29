@@ -4,6 +4,7 @@ import { z } from "zod";
 import { invoiceService } from "@/domains/invoice/service";
 import { quoteService } from "@/domains/quote/service";
 import { staffService } from "@/domains/staff/service";
+import { contactService } from "@/domains/contact/service";
 import { eventService } from "@/domains/event/service";
 import { prisma } from "@/lib/prisma";
 import type { ChatUser } from "./types";
@@ -42,7 +43,7 @@ export function buildTools(user: ChatUser) {
             department: inv.department,
             totalAmount: inv.totalAmount,
             date: inv.date,
-            staffName: inv.staff.name,
+            staffName: inv.staff?.name ?? inv.contact?.name ?? "Unknown",
             creatorName: inv.creatorName,
           })),
           total: result.total,
@@ -81,7 +82,7 @@ export function buildTools(user: ChatUser) {
             department: inv.department,
             totalAmount: inv.totalAmount,
             date: inv.date,
-            staffName: inv.staff.name,
+            staffName: inv.staff?.name ?? inv.contact?.name ?? "Unknown",
             creatorName: inv.creatorName,
           })),
           total: result.total,
@@ -111,7 +112,7 @@ export function buildTools(user: ChatUser) {
           totalAmount: invoice.totalAmount,
           date: invoice.date,
           notes: invoice.notes,
-          staffName: invoice.staff.name,
+          staffName: invoice.staff?.name ?? invoice.contact?.name ?? "Unknown",
           creatorId: invoice.creatorId,
           creatorName: invoice.creatorName,
           items: invoice.items.map((item) => ({
@@ -124,16 +125,19 @@ export function buildTools(user: ChatUser) {
       },
     }),
 
-    searchStaff: tool({
+    searchPeople: tool({
       description:
-        "Search staff members by name, department, or title. Returns id, name, title, department, email, phone, extension. IMPORTANT: Use the returned 'id' as staffId and 'department' as the department when creating invoices/quotes — do NOT ask the user for these.",
+        "Search staff members AND external contacts by name, department, or title. Returns results from both tables, clearly labeled with type 'staff' or 'contact'. Use the returned 'id' as staffId (for staff) or contactId (for contacts) and 'department' as the department when creating invoices/quotes.",
       inputSchema: z.object({
         search: z.string().describe("Search term for name, department, or title"),
       }),
       execute: async ({ search }) => {
-        const staff = await staffService.list({ search });
+        const [staff, contacts] = await Promise.all([
+          staffService.list({ search }),
+          contactService.search(search, user.id),
+        ]);
         return {
-          staff: staff.slice(0, 20).map((s) => ({
+          staff: staff.slice(0, 10).map((s) => ({
             id: s.id,
             name: s.name,
             title: s.title,
@@ -141,8 +145,17 @@ export function buildTools(user: ChatUser) {
             email: s.email,
             phone: s.phone,
             extension: s.extension,
+            type: "staff" as const,
           })),
-          total: staff.length,
+          contacts: contacts.slice(0, 10).map((c) => ({
+            id: c.id,
+            name: c.name,
+            org: c.org,
+            department: c.department,
+            email: c.email,
+            type: "contact" as const,
+          })),
+          total: staff.length + contacts.length,
         };
       },
     }),
@@ -280,10 +293,12 @@ export function buildTools(user: ChatUser) {
 
     createInvoice: tool({
       description:
-        "Create a new draft invoice. Returns the new invoice ID, number, status, and total amount.",
+        "Create a new draft invoice. Provide staffId for Pierce College employees, or contactId/contactName for external people. At least one of staffId, contactId, or contactName is required.",
       inputSchema: z.object({
         date: z.string().describe("Invoice date in YYYY-MM-DD format"),
-        staffId: z.string().describe("Staff member ID"),
+        staffId: z.string().optional().describe("Staff member ID (for internal Pierce College employees)"),
+        contactId: z.string().optional().describe("Contact ID (for external people already in the system)"),
+        contactName: z.string().optional().describe("Contact name — if no staffId or contactId, auto-creates or finds a contact with this name"),
         department: z.string().describe("Department name"),
         category: z.string().describe("Category name"),
         items: z
@@ -297,10 +312,24 @@ export function buildTools(user: ChatUser) {
           .describe("Line items"),
         accountCode: z.string().optional().describe("Account code"),
         notes: z.string().optional().describe("Notes"),
+        marginEnabled: z.boolean().optional().describe("Enable margin markup"),
+        marginPercent: z.number().optional().describe("Margin percentage (e.g., 15 for 15%)"),
+        taxEnabled: z.boolean().optional().describe("Enable sales tax (9.75%)"),
       }),
-      execute: async ({ date, staffId, department, category, items, accountCode, notes }) => {
+      execute: async ({ date, staffId, contactId, contactName, department, category, items, accountCode, notes, marginEnabled, marginPercent, taxEnabled }) => {
+        // Resolve contact if needed
+        let resolvedContactId = contactId;
+        if (!staffId && !contactId && contactName) {
+          const contact = await contactService.findOrCreate(contactName, user.id, { department });
+          resolvedContactId = contact.id;
+        }
+
+        if (!staffId && !resolvedContactId) {
+          return { error: "Either a staff member or contact must be specified" };
+        }
+
         const invoice = await invoiceService.create(
-          { date, staffId, department, category, items, accountCode, notes },
+          { date, staffId, contactId: resolvedContactId, department, category, items, accountCode, notes, marginEnabled, marginPercent, taxEnabled },
           user.id
         );
         return {
@@ -316,10 +345,12 @@ export function buildTools(user: ChatUser) {
 
     createQuote: tool({
       description:
-        "Create a new draft quote. Returns the new quote ID, number, status, total, and recipient name.",
+        "Create a new draft quote. Provide staffId for Pierce College employees, or contactId/contactName for external people. At least one of staffId, contactId, or contactName is required.",
       inputSchema: z.object({
         date: z.string().describe("Quote date in YYYY-MM-DD format"),
-        staffId: z.string().describe("Staff member ID"),
+        staffId: z.string().optional().describe("Staff member ID (for internal Pierce College employees)"),
+        contactId: z.string().optional().describe("Contact ID (for external people already in the system)"),
+        contactName: z.string().optional().describe("Contact name — if no staffId or contactId, auto-creates or finds a contact with this name"),
         department: z.string().describe("Department name"),
         category: z.string().describe("Category name"),
         items: z
@@ -339,12 +370,15 @@ export function buildTools(user: ChatUser) {
         accountCode: z.string().optional().describe("Account code"),
         notes: z.string().optional().describe("Notes"),
         marginEnabled: z.boolean().optional().describe("Enable margin markup"),
-        marginPercent: z.number().optional().describe("Margin percentage"),
-        taxEnabled: z.boolean().optional().describe("Enable tax"),
+        marginPercent: z.number().optional().describe("Margin percentage (e.g., 15 for 15%)"),
+        taxEnabled: z.boolean().optional().describe("Enable sales tax (9.75%)"),
+        isCateringEvent: z.boolean().optional().describe("Whether this is a catering event. If true, tell the user to fill in catering details on the quote form."),
       }),
       execute: async ({
         date,
         staffId,
+        contactId,
+        contactName,
         department,
         category,
         items,
@@ -357,11 +391,24 @@ export function buildTools(user: ChatUser) {
         marginEnabled,
         marginPercent,
         taxEnabled,
+        isCateringEvent,
       }) => {
+        // Resolve contact if needed
+        let resolvedContactId = contactId;
+        if (!staffId && !contactId && contactName) {
+          const contact = await contactService.findOrCreate(contactName, user.id, { department, email: recipientEmail, org: recipientOrg });
+          resolvedContactId = contact.id;
+        }
+
+        if (!staffId && !resolvedContactId) {
+          return { error: "Either a staff member or contact must be specified" };
+        }
+
         const quote = await quoteService.create(
           {
             date,
             staffId,
+            contactId: resolvedContactId,
             department,
             category,
             items,
@@ -374,6 +421,7 @@ export function buildTools(user: ChatUser) {
             marginEnabled,
             marginPercent,
             taxEnabled,
+            isCateringEvent,
           },
           user.id
         );

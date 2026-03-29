@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { PlusIcon, PencilIcon, UserMinus, SearchIcon } from "lucide-react";
+import { PlusIcon, PencilIcon, UserMinus, SearchIcon, UsersIcon } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -17,6 +18,7 @@ import {
 import { StaffForm } from "./staff-form";
 import { staffApi } from "@/domains/staff/api-client";
 import type { StaffResponse } from "@/domains/staff/types";
+import { getInitials } from "@/lib/formatters";
 
 const PAGE_SIZE = 20;
 
@@ -86,7 +88,7 @@ export function StaffTable() {
       <div className="relative max-w-xs">
         <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
         <Input
-          placeholder="Search staff..."
+          placeholder="Search staff…"
           value={search}
           onChange={(e) => handleSearch(e.target.value)}
           className="pl-8 h-8"
@@ -96,9 +98,16 @@ export function StaffTable() {
       {loading ? (
         <p className="text-muted-foreground text-sm">Loading…</p>
       ) : staff.length === 0 ? (
-        <p className="text-muted-foreground text-sm">
-          {search ? "No staff members match your search." : "No staff members yet. Add one to get started."}
-        </p>
+        <EmptyState
+          icon={<UsersIcon className="size-7" />}
+          title={search ? "No staff members match your search" : "No staff members yet"}
+          description={search ? "Try a different search term." : "Add your first staff member to get started."}
+          action={
+            search
+              ? { label: "Clear Search", onClick: () => handleSearch(""), variant: "outline" as const }
+              : undefined
+          }
+        />
       ) : (
         <>
           <Table className="table-fixed w-full">
@@ -114,9 +123,19 @@ export function StaffTable() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {staff.map((member) => (
-                <TableRow key={member.id}>
-                  <TableCell className="font-bold">{member.name}</TableCell>
+              {staff.map((member, index) => (
+                <TableRow
+                  key={member.id}
+                  className={`hover:bg-muted/50 transition-colors ${index % 2 === 1 ? "bg-muted/20" : ""}`}
+                >
+                  <TableCell>
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex items-center justify-center w-[30px] h-[30px] rounded-lg bg-muted text-[10px] font-bold text-muted-foreground shrink-0">
+                        {getInitials(member.name)}
+                      </div>
+                      <span className="font-bold">{member.name}</span>
+                    </div>
+                  </TableCell>
                   <TableCell>{member.title}</TableCell>
                   <TableCell>
                     <Badge variant="secondary">{member.department.replace(/^[,\s]+/, '').trim()}</Badge>

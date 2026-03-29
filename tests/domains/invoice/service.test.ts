@@ -71,6 +71,7 @@ const mockInvoiceRow = {
     extension: "x100",
     email: "alice@test.com",
   },
+  contact: null,
   creator: { id: "u1", name: "Bob", username: "bob" },
   items: [
     {
@@ -145,10 +146,11 @@ describe("invoiceService", () => {
       const result = await invoiceService.list({});
       const staff = result.invoices[0].staff;
 
-      expect(staff.id).toBe("s1");
-      expect(staff.name).toBe("Alice");
-      expect(staff.extension).toBe("x100");
-      expect(staff.email).toBe("alice@test.com");
+      expect(staff).not.toBeNull();
+      expect(staff!.id).toBe("s1");
+      expect(staff!.name).toBe("Alice");
+      expect(staff!.extension).toBe("x100");
+      expect(staff!.email).toBe("alice@test.com");
     });
   });
 

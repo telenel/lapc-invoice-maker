@@ -69,5 +69,6 @@ export function useInvoiceForm(
     savePendingCharge,
     saving,
     generationStep,
+    existingId,
   };
 }

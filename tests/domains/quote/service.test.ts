@@ -69,6 +69,7 @@ function makeQuote(overrides: Record<string, unknown> = {}) {
     createdAt: new Date("2026-01-01"),
     staffId: "s1",
     staff: { id: "s1", name: "Alice", title: "Manager", department: "IT" },
+    contact: null,
     creator: { id: "u1", name: "Admin", username: "admin" },
     items: [
       {

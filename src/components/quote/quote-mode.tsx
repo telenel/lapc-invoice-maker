@@ -69,6 +69,7 @@ interface QuoteModeProps {
   staffAccountNumbers: StaffAccountNumber[];
   saveQuote: () => Promise<void>;
   saving: boolean;
+  existingId?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -103,6 +104,7 @@ export function QuoteMode({
   staffAccountNumbers,
   saveQuote,
   saving,
+  existingId,
 }: QuoteModeProps) {
   // ---- Local state ----
   const [categories, setCategories] = useState<Category[]>([]);
@@ -220,7 +222,7 @@ export function QuoteMode({
               id="recipientName"
               value={form.recipientName}
               onChange={(e) => updateField("recipientName", e.target.value)}
-              placeholder="Contact name..."
+              placeholder="Contact name…"
             />
           </div>
 
@@ -241,7 +243,7 @@ export function QuoteMode({
                 id="recipientOrg"
                 value={form.recipientOrg}
                 onChange={(e) => updateField("recipientOrg", e.target.value)}
-                placeholder="Company or organization..."
+                placeholder="Company or organization…"
               />
             </div>
           </div>
@@ -258,6 +260,7 @@ export function QuoteMode({
             <Input
               id="quoteDate"
               type="date"
+              tabIndex={-1}
               value={form.date}
               onChange={(e) => updateField("date", e.target.value)}
             />
@@ -267,6 +270,7 @@ export function QuoteMode({
             <Input
               id="expirationDate"
               type="date"
+              tabIndex={-1}
               value={form.expirationDate}
               onChange={(e) => updateField("expirationDate", e.target.value)}
             />
@@ -276,14 +280,14 @@ export function QuoteMode({
         <div className="space-y-1">
           <Label>Category</Label>
           {categoriesLoading ? (
-            <Input disabled placeholder="Loading categories..." />
+            <Input disabled placeholder="Loading categories…" />
           ) : (
             <Select
               value={form.category || null}
               onValueChange={(value) => updateField("category", value ?? "")}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select category..." />
+                <SelectValue placeholder="Select category…" />
               </SelectTrigger>
               <SelectContent>
                 {categories
@@ -304,7 +308,7 @@ export function QuoteMode({
             id="quoteNotes"
             value={form.notes}
             onChange={(e) => updateField("notes", e.target.value)}
-            placeholder="Additional notes or comments..."
+            placeholder="Additional notes or comments…"
             rows={3}
           />
         </div>
@@ -319,7 +323,7 @@ export function QuoteMode({
           <StaffSelect
             selectedId={form.staffId}
             onSelect={handleStaffSelect}
-            placeholder="Select staff member..."
+            placeholder="Select staff member…"
           />
         </div>
 
@@ -437,7 +441,7 @@ export function QuoteMode({
               id="accountCode"
               value={form.accountCode}
               onChange={(e) => updateField("accountCode", e.target.value)}
-              placeholder="Account code..."
+              placeholder="Account code…"
             />
           </div>
         )}
@@ -666,7 +670,7 @@ export function QuoteMode({
 
         <div className="flex justify-end">
           <Button onClick={handleSave} disabled={saving} size="lg">
-            {saving ? "Saving..." : "Save Quote"}
+            {saving ? "Saving..." : existingId ? "Update Quote" : "Save Quote"}
           </Button>
         </div>
       </div>

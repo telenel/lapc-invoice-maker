@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useSession } from "next-auth/react";
@@ -15,7 +15,6 @@ export function RecentInvoices() {
   const { data: session } = useSession();
   const [invoices, setInvoices] = useState<InvoiceResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
 
   useEffect(() => {
@@ -25,6 +24,7 @@ export function RecentInvoices() {
         setInvoices(data.invoices);
       } catch (err) {
         console.error("Failed to fetch recent invoices:", err);
+        toast.error("Failed to load invoices");
       } finally {
         setLoading(false);
       }
@@ -70,17 +70,14 @@ export function RecentInvoices() {
             {invoices.map((invoice, i) => {
               const isMine = invoice.creatorId === currentUserId;
               return (
-              <div
+              <Link
                 key={invoice.id}
+                href={`/invoices/${invoice.id}`}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-muted/50",
+                  "flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   i < invoices.length - 1 && "border-b border-border/30",
                   isMine && "bg-primary/[0.03]"
                 )}
-                onClick={() => router.push(`/invoices/${invoice.id}`)}
-                role="link"
-                tabIndex={0}
-                onKeyDown={(e) => { if (e.key === "Enter") router.push(`/invoices/${invoice.id}`); }}
               >
                 <div className={cn(
                   "flex items-center justify-center w-[34px] h-[34px] rounded-lg text-[11px] font-bold shrink-0",
@@ -88,11 +85,11 @@ export function RecentInvoices() {
                     ? "bg-primary/10 text-primary"
                     : "bg-muted text-muted-foreground"
                 )}>
-                  {getInitials(invoice.staff.name)}
+                  {getInitials(invoice.staff?.name ?? invoice.contact?.name ?? "?")}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-semibold truncate">
-                    {invoice.invoiceNumber ?? "—"} · {invoice.staff.name}
+                    {invoice.invoiceNumber ?? "—"} · {invoice.staff?.name ?? invoice.contact?.name ?? "Unknown"}
                     {isMine && <span className="text-[10px] text-primary font-medium ml-1.5">You</span>}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
@@ -110,7 +107,7 @@ export function RecentInvoices() {
                     {invoice.status === "FINAL" ? "Final" : invoice.status === "PENDING_CHARGE" ? "Pending" : "Draft"}
                   </Badge>
                 </div>
-              </div>
+              </Link>
               );
             })}
           </div>
