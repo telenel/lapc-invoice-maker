@@ -25,11 +25,16 @@ jobs:
         id: filter
         uses: dorny/paths-filter@v3
         with:
+          predicate-quantifier: every
           filters: |
             code:
-              - '!**.md'
-              - '!docs/**'
-              - '!.superpowers/**'
+              - 'src/**'
+              - 'prisma/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'tsconfig.json'
+              - 'next.config.*'
+              - '.github/workflows/**'
 
       - uses: actions/setup-node@v4
         if: steps.filter.outputs.code == 'true'
@@ -80,7 +85,7 @@ jobs:
     steps:
       - name: Trigger deploy webhook
         run: |
-          response=$(curl -sS --connect-timeout 10 --max-time 30 -X POST \
+          response=$(curl -sfS --connect-timeout 10 --max-time 30 -X POST \
             https://montalvo.io/hooks/deploy-lapc \
             -H "X-Deploy-Secret: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}" \
             -w "\n%{http_code}")
@@ -98,7 +103,7 @@ jobs:
           echo "Waiting 60s for deploy to complete..."
           sleep 60
           for i in 1 2 3 4 5; do
-            status=$(curl -sS --connect-timeout 10 --max-time 20 -o /dev/null -w "%{http_code}" https://invoice.montalvo.io/api/auth/session)
+            status=$(curl -sfS --connect-timeout 10 --max-time 20 -o /dev/null -w "%{http_code}" https://invoice.montalvo.io/api/auth/session)
             echo "Attempt $i: HTTP $status"
             if [ "$status" = "200" ]; then
               echo "Health check passed"
