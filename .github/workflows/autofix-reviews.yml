@@ -8,13 +8,13 @@ jobs:
   autofix:
     if: >
       github.event.review.state == 'changes_requested' &&
-      github.event.review.user.login == 'coderabbitai[bot]'
+      github.event.review.user.login == 'coderabbitai[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
       issues: read
-      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -24,16 +24,18 @@ jobs:
       - uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           prompt: |
             CodeRabbit has requested changes on PR #${{ github.event.pull_request.number }}.
 
             Instructions:
             1. Use `gh api` to fetch the unresolved review threads from this PR
-            2. For each unresolved thread from coderabbitai[bot], read the comment and look for the "Prompt for AI Agents" section
-            3. Follow those instructions to apply fixes
-            4. Run `npm run lint` and `npm run build` to verify fixes don't break anything
-            5. Commit all fixes in a single commit with message "fix: address CodeRabbit review"
-            6. Push to the PR branch
+            2. For each unresolved thread from coderabbitai[bot], read the comment
+            3. If the comment contains a "Prompt for AI Agents" section, follow those instructions
+            4. If no agent prompt exists, read the comment body and apply the suggested fix
+            5. Run `npm run lint` and `npm run build` to verify fixes don't break anything
+            6. Commit all fixes in a single commit with message "fix: address CodeRabbit review"
+            7. Push to the PR branch
 
             Important:
             - Only fix issues flagged by CodeRabbit — don't make unrelated changes
