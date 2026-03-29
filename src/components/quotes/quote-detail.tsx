@@ -732,6 +732,7 @@ export function QuoteDetailView({ id }: { id: string }) {
           shareUrl={shareUrl}
           quoteNumber={quote.quoteNumber}
           recipientEmail={quote.recipientEmail}
+          recipientName={quote.recipientName}
         />
       )}
     </div>
