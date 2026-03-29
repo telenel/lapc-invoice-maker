@@ -3,7 +3,7 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useChat } from "@ai-sdk/react";
+import { useChat, Chat } from "@ai-sdk/react";
 import {
   MessageSquareIcon,
   PanelRightCloseIcon,
@@ -23,6 +23,15 @@ const QUICK_ACTIONS = [
   { label: "Create a quote", text: "Help me create a new quote" },
 ];
 
+// Singleton Chat instance — survives component re-mounts during navigation
+let chatInstance: Chat | null = null;
+function getChatInstance(): Chat {
+  if (!chatInstance) {
+    chatInstance = new Chat({ id: "lapc-chat" });
+  }
+  return chatInstance;
+}
+
 export function ChatSidebar() {
   const { data: session, status: sessionStatus } = useSession();
   const router = useRouter();
@@ -36,7 +45,7 @@ export function ChatSidebar() {
   }, []);
 
   const { messages, sendMessage, setMessages, status } = useChat({
-    id: "lapc-chat",
+    chat: getChatInstance(),
   });
 
   const isLoading = status === "submitted" || status === "streaming";
@@ -91,6 +100,7 @@ export function ChatSidebar() {
   );
 
   const handleClear = useCallback(() => {
+    chatInstance = null;
     setMessages([]);
   }, [setMessages]);
 
