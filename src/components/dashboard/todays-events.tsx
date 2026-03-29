@@ -5,6 +5,23 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { calendarApi, type CalendarEvent } from "@/domains/calendar/api-client";
 
+function getEmoji(event: CalendarEvent): string {
+  if (event.source === "catering") return "\u{1F37D}";
+  if (event.source === "birthday") return "\u{1F382}";
+  const type = event.extendedProps.type;
+  if (type === "MEETING") return "\u{1F4C5}";
+  if (type === "SEMINAR") return "\u{1F393}";
+  if (type === "VENDOR") return "\u{1F69A}";
+  return "\u{1F4CC}";
+}
+
+function getLink(event: CalendarEvent): string {
+  if (event.source === "catering" && event.extendedProps.quoteId) {
+    return `/quotes/${event.extendedProps.quoteId}`;
+  }
+  return "/calendar";
+}
+
 export function TodaysEvents() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,7 +56,10 @@ export function TodaysEvents() {
               Today&apos;s Events
             </span>
             {events.length > 0 && (
-              <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-orange-500 rounded-full">
+              <span
+                className="flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white rounded-full"
+                style={{ backgroundColor: events[0]?.borderColor ?? "#f97316" }}
+              >
                 {events.length}
               </span>
             )}
@@ -61,36 +81,53 @@ export function TodaysEvents() {
             {events.map((event) => (
               <Link
                 key={event.id}
-                href={`/quotes/${event.quoteId}`}
-                className="block border border-orange-500/20 rounded-lg p-2.5 bg-orange-500/5 hover:bg-orange-500/10 transition-colors"
+                href={getLink(event)}
+                className="block rounded-lg p-2.5 transition-colors"
+                style={{
+                  borderWidth: "1px",
+                  borderColor: `${event.borderColor}33`,
+                  backgroundColor: event.color,
+                }}
               >
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-semibold">🍽 {event.title}</span>
-                  <span className="text-xs font-semibold text-orange-500">
-                    {new Date(event.start).toLocaleTimeString([], {
-                      hour: "numeric",
-                      minute: "2-digit",
-                    })}
+                  <span className="text-sm font-semibold">
+                    {getEmoji(event)} {event.title}
                   </span>
+                  {!event.allDay && (
+                    <span
+                      className="text-xs font-semibold"
+                      style={{ color: event.borderColor }}
+                    >
+                      {new Date(event.start).toLocaleTimeString([], {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  )}
                 </div>
                 <div className="flex gap-3 text-xs text-muted-foreground">
-                  {event.location && <span>📍 {event.location}</span>}
-                  {event.headcount && <span>👥 {event.headcount}</span>}
+                  {event.extendedProps.location && (
+                    <span>{"\u{1F4CD}"} {event.extendedProps.location}</span>
+                  )}
+                  {event.extendedProps.headcount && (
+                    <span>{"\u{1F465}"} {event.extendedProps.headcount}</span>
+                  )}
                 </div>
-                {(event.setupTime || event.takedownTime) && (
-                  <div className="flex gap-1.5 mt-1.5">
-                    {event.setupTime && (
-                      <span className="text-[10px] bg-blue-500/15 text-blue-400 px-1.5 py-0.5 rounded">
-                        Setup {event.setupTime}
-                      </span>
-                    )}
-                    {event.takedownTime && (
-                      <span className="text-[10px] bg-blue-500/15 text-blue-400 px-1.5 py-0.5 rounded">
-                        Takedown {event.takedownTime}
-                      </span>
-                    )}
-                  </div>
-                )}
+                {event.source === "catering" &&
+                  (event.extendedProps.setupTime || event.extendedProps.takedownTime) && (
+                    <div className="flex gap-1.5 mt-1.5">
+                      {event.extendedProps.setupTime && (
+                        <span className="text-[10px] bg-blue-500/15 text-blue-400 px-1.5 py-0.5 rounded">
+                          Setup {event.extendedProps.setupTime}
+                        </span>
+                      )}
+                      {event.extendedProps.takedownTime && (
+                        <span className="text-[10px] bg-blue-500/15 text-blue-400 px-1.5 py-0.5 rounded">
+                          Takedown {event.extendedProps.takedownTime}
+                        </span>
+                      )}
+                    </div>
+                  )}
               </Link>
             ))}
           </div>

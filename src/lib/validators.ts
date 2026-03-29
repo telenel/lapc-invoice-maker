@@ -8,6 +8,8 @@ export const staffSchema = z.object({
   extension: z.string().default(""),
   email: z.string().default(""),
   phone: z.string().default(""),
+  birthMonth: z.number().int().min(1).max(12).optional(),
+  birthDay: z.number().int().min(1).max(31).optional(),
   approvalChain: z.array(z.string()).default([]),
 });
 
@@ -136,4 +138,18 @@ export const quoteCreateSchema = z.object({
 
 export const quoteUpdateSchema = quoteCreateSchema.partial().extend({
   items: z.array(quoteItemSchema).min(1).optional(),
+});
+
+export const eventSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  type: z.enum(["MEETING", "SEMINAR", "VENDOR", "OTHER"]),
+  date: z.string().min(1, "Date is required").regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD"),
+  startTime: z.string().optional(),
+  endTime: z.string().optional(),
+  allDay: z.boolean().default(false),
+  location: z.string().optional(),
+  recurrence: z.enum(["DAILY", "WEEKLY", "MONTHLY", "YEARLY"]).optional(),
+  recurrenceEnd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be YYYY-MM-DD").optional(),
+  reminderMinutes: z.number().int().min(0).max(10080).optional(),
 });

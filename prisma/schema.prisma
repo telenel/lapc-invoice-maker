@@ -21,6 +21,7 @@ model User {
   invoices       Invoice[]
   userQuickPicks UserQuickPick[]
   notifications  Notification[]
+  events         Event[]
 
   @@map("users")
 }
@@ -34,6 +35,8 @@ model Staff {
   extension       String              @default("")
   email           String              @default("")
   phone           String              @default("")
+  birthMonth      Int?                @map("birth_month")
+  birthDay        Int?                @map("birth_day")
   approvalChain   Json                @default("[]") @map("approval_chain")
   active          Boolean             @default(true)
   createdAt       DateTime            @default(now()) @map("created_at")
@@ -159,6 +162,43 @@ enum QuoteStatus {
   ACCEPTED
   DECLINED
   EXPIRED
+}
+
+enum EventType {
+  MEETING
+  SEMINAR
+  VENDOR
+  OTHER
+}
+
+enum Recurrence {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+model Event {
+  id                String      @id @default(uuid())
+  title             String
+  description       String?
+  type              EventType
+  date              DateTime    @db.Date
+  startTime         String?     @map("start_time")
+  endTime           String?     @map("end_time")
+  allDay            Boolean     @default(false) @map("all_day")
+  location          String?
+  color             String
+  recurrence        Recurrence?
+  recurrenceEnd     DateTime?   @map("recurrence_end") @db.Date
+  reminderMinutes   Int?        @map("reminder_minutes")
+  reminderSentDates Json        @default("[]") @map("reminder_sent_dates")
+  createdBy         String      @map("created_by")
+  creator           User        @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  createdAt         DateTime    @default(now()) @map("created_at")
+  updatedAt         DateTime    @updatedAt @map("updated_at")
+
+  @@map("events")
 }
 
 model Category {

@@ -67,6 +67,8 @@ export const staffRepository = {
         extension: data.extension ?? "",
         email: data.email ?? "",
         phone: data.phone ?? "",
+        birthMonth: data.birthMonth ?? null,
+        birthDay: data.birthDay ?? null,
         approvalChain: data.approvalChain ?? [],
       },
       include: { accountNumbers: true },

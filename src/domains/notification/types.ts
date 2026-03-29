@@ -1,6 +1,6 @@
 // src/domains/notification/types.ts
 
-export type NotificationType = "QUOTE_VIEWED" | "QUOTE_APPROVED" | "QUOTE_DECLINED";
+export type NotificationType = "QUOTE_VIEWED" | "QUOTE_APPROVED" | "QUOTE_DECLINED" | "EVENT_REMINDER";
 
 export interface NotificationResponse {
   id: string;
