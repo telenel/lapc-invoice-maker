@@ -3,6 +3,7 @@ import { withAuth } from "@/domains/shared/auth";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
 import { eventService } from "@/domains/event/service";
+import { checkAndSendReminders } from "@/domains/event/reminders";
 import { BIRTHDAY_COLOR, CATERING_COLOR } from "@/domains/event/types";
 import type { CalendarEventItem } from "@/domains/event/types";
 
@@ -130,6 +131,9 @@ export const GET = withAuth(async (req: NextRequest, _session) => {
       }
     }
   }
+
+  // Fire-and-forget: check for due reminders
+  checkAndSendReminders().catch(() => {});
 
   return NextResponse.json([
     ...cateringEvents,
