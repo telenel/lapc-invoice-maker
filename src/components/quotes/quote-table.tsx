@@ -31,7 +31,7 @@ interface Quote {
   category: string;
   totalAmount: string | number;
   expirationDate: string | null;
-  status: QuoteStatus;
+  quoteStatus: QuoteStatus;
 }
 
 interface QuotesResponse {
@@ -244,8 +244,8 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
                     <p className="text-[13px] font-bold tabular-nums">
                       {formatAmount(quote.totalAmount)}
                     </p>
-                    <Badge variant={STATUS_BADGE_VARIANT[quote.status]} className="mt-0.5">
-                      {STATUS_LABEL[quote.status]}
+                    <Badge variant={STATUS_BADGE_VARIANT[quote.quoteStatus]} className="mt-0.5">
+                      {STATUS_LABEL[quote.quoteStatus]}
                     </Badge>
                   </TableCell>
                 </TableRow>
