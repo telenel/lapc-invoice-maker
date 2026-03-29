@@ -137,3 +137,17 @@ export const quoteCreateSchema = z.object({
 export const quoteUpdateSchema = quoteCreateSchema.partial().extend({
   items: z.array(quoteItemSchema).min(1).optional(),
 });
+
+export const eventSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().optional(),
+  type: z.enum(["MEETING", "SEMINAR", "VENDOR", "OTHER"]),
+  date: z.string().min(1, "Date is required"),
+  startTime: z.string().optional(),
+  endTime: z.string().optional(),
+  allDay: z.boolean().default(false),
+  location: z.string().optional(),
+  recurrence: z.enum(["DAILY", "WEEKLY", "MONTHLY", "YEARLY"]).optional(),
+  recurrenceEnd: z.string().optional(),
+  reminderMinutes: z.number().int().optional(),
+});
