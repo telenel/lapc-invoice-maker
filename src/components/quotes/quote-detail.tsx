@@ -634,8 +634,8 @@ export function QuoteDetailView({ id }: { id: string }) {
         const taxableSubtotal = quote.taxEnabled
           ? quote.items.filter((item) => item.isTaxable).reduce((sum, item) => sum + Number(item.extendedPrice), 0)
           : 0;
-        const taxAmount = quote.taxEnabled ? taxableSubtotal * taxRate : 0;
-        const grandTotal = Number(quote.totalAmount);
+        const taxAmount = quote.taxEnabled ? Math.round(taxableSubtotal * taxRate * 100) / 100 : 0;
+        const grandTotal = itemSubtotal + taxAmount;
 
         return (
           <div className="catering-guide">
