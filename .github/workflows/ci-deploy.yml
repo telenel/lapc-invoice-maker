@@ -99,12 +99,15 @@ jobs:
     steps:
       - name: Trigger deploy webhook
         run: |
-          response=$(curl -sS --connect-timeout 10 --max-time 30 -o /dev/null -w "%{http_code}" -X POST \
+          response=$(curl -sS --connect-timeout 10 --max-time 30 -X POST \
             https://montalvo.io/hooks/deploy-lapc \
-            -H "X-Deploy-Secret: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}")
-          echo "Webhook response: $response"
-          if [ "$response" != "200" ]; then
-            echo "Deploy webhook failed with status $response"
+            -H "X-Deploy-Secret: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}" \
+            -w "\n%{http_code}")
+          body=$(echo "$response" | head -1)
+          code=$(echo "$response" | tail -1)
+          echo "Webhook response: HTTP $code — $body"
+          if [ "$code" != "200" ] || ! echo "$body" | grep -q "Deploy triggered"; then
+            echo "Deploy webhook failed: HTTP $code — $body"
             exit 1
           fi
           echo "Deploy triggered successfully"
