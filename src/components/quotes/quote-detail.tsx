@@ -19,8 +19,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import {
   Table,
@@ -30,7 +36,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CopyIcon, LinkIcon, PrinterIcon } from "lucide-react";
+import { LinkIcon, MoreHorizontalIcon, PrinterIcon } from "lucide-react";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
 import { useSSE } from "@/lib/use-sse";
 import { ShareLinkDialog } from "@/components/quotes/share-link-dialog";
@@ -50,6 +56,7 @@ interface QuoteItem {
   isTaxable: boolean;
   sortOrder: number;
   costPrice: string | number | null;
+  marginOverride: number | null;
 }
 
 interface Quote {
@@ -182,9 +189,11 @@ export function QuoteDetailView({ id }: { id: string }) {
     revising: false,
     markingSubmitted: false,
     duplicating: false,
+    approving: false,
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
+  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
 
@@ -375,6 +384,26 @@ export function QuoteDetailView({ id }: { id: string }) {
     }
   }, [id, quote, router]);
 
+  const handleApproveManually = useCallback(async () => {
+    if (!quote) return;
+    setActionState((prev) => ({ ...prev, approving: true }));
+    try {
+      const res = await fetch(`/api/quotes/${id}/approve`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.error ?? "Failed to approve quote");
+      } else {
+        toast.success("Quote approved manually");
+        fetchQuote();
+      }
+    } catch {
+      toast.error("Failed to approve quote");
+    } finally {
+      setActionState((prev) => ({ ...prev, approving: false }));
+      setApproveDialogOpen(false);
+    }
+  }, [quote, id, fetchQuote]);
+
   if (loading) {
     return <p className="text-muted-foreground text-sm">Loading...</p>;
   }
@@ -418,69 +447,60 @@ export function QuoteDetailView({ id }: { id: string }) {
             {statusLabel[status]}
           </Badge>
 
+          {/* ── Primary actions ─────────────────────────────────────── */}
+
+          {/* DRAFT: Mark as Sent + Edit */}
+          {status === "DRAFT" && (
+            <>
+              <Button
+                size="sm"
+                className="bg-green-600 hover:bg-green-700 text-white"
+                onClick={handleMarkAsSent}
+                disabled={actionState.sending}
+              >
+                {actionState.sending ? "Sending..." : "Mark as Sent"}
+              </Button>
+              <Link
+                href={`/quotes/${id}/edit`}
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                Edit
+              </Link>
+            </>
+          )}
+
+          {/* SENT / SUBMITTED: Approve Manually + Convert to Invoice */}
+          {(status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
+            <>
+              <Button
+                size="sm"
+                className="bg-green-600 hover:bg-green-700 text-white"
+                onClick={() => setApproveDialogOpen(true)}
+                disabled={actionState.approving}
+              >
+                {actionState.approving ? "Approving..." : "Approve Manually"}
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleConvertToInvoice}
+                disabled={actionState.converting}
+              >
+                {actionState.converting ? "Converting..." : "Convert to Invoice"}
+              </Button>
+            </>
+          )}
+
           {/* ACCEPTED: link to converted invoice */}
           {status === "ACCEPTED" && quote.convertedToInvoice && (
             <Link
               href={`/invoices/${quote.convertedToInvoice.id}`}
               className={buttonVariants({ variant: "outline", size: "sm" })}
             >
-              Converted to Invoice {quote.convertedToInvoice.invoiceNumber ?? ""}
+              View Invoice {quote.convertedToInvoice.invoiceNumber ?? ""}
             </Link>
           )}
 
-          {/* Edit button: DRAFT, SENT, SUBMITTED_EMAIL, SUBMITTED_MANUAL */}
-          {(status === "DRAFT" || status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
-            <Link
-              href={`/quotes/${id}/edit`}
-              className={buttonVariants({ variant: "outline", size: "sm" })}
-            >
-              Edit
-            </Link>
-          )}
-
-          {/* Download PDF: all statuses */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => window.open(`/api/quotes/${id}/pdf`, "_blank")}
-          >
-            Download PDF
-          </Button>
-
-          {/* Duplicate: all statuses */}
-          <Button variant="outline" size="sm" onClick={handleDuplicate} disabled={actionState.duplicating}>
-            <CopyIcon className="size-3.5 mr-1.5" />
-            {actionState.duplicating ? "Duplicating..." : "Duplicate"}
-          </Button>
-
-          {/* Share Link: SENT, ACCEPTED, DECLINED (has shareToken) */}
-          {status !== "DRAFT" && quote.shareToken && (
-            <Button variant="outline" size="sm" onClick={handleShareLink}>
-              <LinkIcon className="size-3.5 mr-1.5" />
-              Share Link
-            </Button>
-          )}
-
-          {/* Mark as Sent: DRAFT only */}
-          {status === "DRAFT" && (
-            <Button
-              size="sm"
-              className="bg-green-600 hover:bg-green-700 text-white"
-              onClick={handleMarkAsSent}
-              disabled={actionState.sending}
-            >
-              {actionState.sending ? "Sending..." : "Mark as Sent"}
-            </Button>
-          )}
-
-          {/* Mark Sent (Manual): SENT only */}
-          {status === "SENT" && (
-            <Button variant="outline" size="sm" onClick={() => handleMarkSubmitted("manual")} disabled={actionState.markingSubmitted}>
-              {actionState.markingSubmitted ? "Submitting..." : "Mark Sent (Manual)"}
-            </Button>
-          )}
-
-          {/* Edit & Resubmit: DECLINED only */}
+          {/* DECLINED: Revise & Resubmit */}
           {status === "DECLINED" && (
             <Button
               size="sm"
@@ -488,99 +508,169 @@ export function QuoteDetailView({ id }: { id: string }) {
               onClick={handleRevise}
               disabled={actionState.revising}
             >
-              {actionState.revising ? "Creating revision..." : "Edit & Resubmit"}
+              {actionState.revising ? "Creating revision..." : "Revise & Resubmit"}
             </Button>
           )}
 
-          {/* Convert to Invoice: SENT, SUBMITTED_EMAIL, SUBMITTED_MANUAL */}
-          {(status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleConvertToInvoice}
-              disabled={actionState.converting}
-            >
-              {actionState.converting ? "Converting..." : "Convert to Invoice"}
+          {/* ── Secondary actions ──────────────────────────────────── */}
+
+          {/* Share Link: visible for SENT/SUBMITTED statuses */}
+          {(status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && quote.shareToken && (
+            <Button variant="outline" size="sm" onClick={handleShareLink}>
+              <LinkIcon className="size-3.5 mr-1.5" />
+              Share Link
             </Button>
           )}
 
-          {/* Decline: SENT, SUBMITTED_EMAIL, SUBMITTED_MANUAL */}
-          {(status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
-            <Dialog open={declineDialogOpen} onOpenChange={setDeclineDialogOpen}>
-              <DialogTrigger
-                render={
-                  <Button variant="destructive" size="sm" disabled={actionState.declining}>
-                    {actionState.declining ? "Declining..." : "Decline"}
-                  </Button>
-                }
-              />
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Decline Quote</DialogTitle>
-                  <DialogDescription>
-                    Are you sure you want to decline this quote? This will mark it
-                    as declined.
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => setDeclineDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={handleDecline}
-                    disabled={actionState.declining}
-                  >
-                    {actionState.declining ? "Declining..." : "Decline Quote"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          )}
+          {/* ── More dropdown ──────────────────────────────────────── */}
 
-          {/* Delete: DRAFT, SENT, DECLINED, EXPIRED (not REVISED — they're history for the revision chain) */}
-          {(status === "DRAFT" ||
-            status === "SENT" ||
-            status === "DECLINED" ||
-            status === "EXPIRED") && (
-            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-              <DialogTrigger
-                render={
-                  <Button variant="destructive" size="sm" disabled={actionState.deleting}>
-                    {actionState.deleting ? "Deleting..." : "Delete"}
-                  </Button>
-                }
-              />
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Delete Quote</DialogTitle>
-                  <DialogDescription>
-                    This will permanently delete the quote. This action cannot be
-                    undone.
-                  </DialogDescription>
-                </DialogHeader>
-                <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => setDeleteDialogOpen(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    onClick={handleDelete}
-                    disabled={actionState.deleting}
-                  >
-                    {actionState.deleting ? "Deleting..." : "Delete Quote"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button variant="outline" size="sm">
+                  <MoreHorizontalIcon className="size-4 mr-1.5" />
+                  More
+                </Button>
+              }
+            />
+            <DropdownMenuContent align="end">
+              {/* Edit (when not shown as primary) */}
+              {(status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
+                <DropdownMenuItem onClick={() => router.push(`/quotes/${id}/edit`)}>
+                  Edit
+                </DropdownMenuItem>
+              )}
+
+              {/* Download PDF: all statuses */}
+              <DropdownMenuItem onClick={() => window.open(`/api/quotes/${id}/pdf`, "_blank")}>
+                Download PDF
+              </DropdownMenuItem>
+
+              {/* Duplicate: all statuses */}
+              <DropdownMenuItem onClick={handleDuplicate} disabled={actionState.duplicating}>
+                {actionState.duplicating ? "Duplicating..." : "Duplicate"}
+              </DropdownMenuItem>
+
+              {/* Share Link: in dropdown for ACCEPTED, DECLINED, REVISED, EXPIRED */}
+              {status !== "DRAFT" && status !== "SENT" && status !== "SUBMITTED_EMAIL" && status !== "SUBMITTED_MANUAL" && quote.shareToken && (
+                <DropdownMenuItem onClick={handleShareLink}>
+                  Share Link
+                </DropdownMenuItem>
+              )}
+
+              {/* Mark as Delivered: SENT only */}
+              {status === "SENT" && (
+                <DropdownMenuItem onClick={() => handleMarkSubmitted("manual")} disabled={actionState.markingSubmitted}>
+                  {actionState.markingSubmitted ? "Updating..." : "Mark as Delivered"}
+                </DropdownMenuItem>
+              )}
+
+              {/* Destructive actions separator */}
+              {(status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL" ||
+                status === "DRAFT" || status === "DECLINED" || status === "EXPIRED") && (
+                <DropdownMenuSeparator />
+              )}
+
+              {/* Decline: SENT, SUBMITTED_EMAIL, SUBMITTED_MANUAL */}
+              {(status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => setDeclineDialogOpen(true)}
+                >
+                  Decline
+                </DropdownMenuItem>
+              )}
+
+              {/* Delete: DRAFT, SENT, DECLINED, EXPIRED */}
+              {(status === "DRAFT" || status === "SENT" || status === "DECLINED" || status === "EXPIRED") && (
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => setDeleteDialogOpen(true)}
+                >
+                  Delete
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
+
+        {/* ── Confirmation dialogs (rendered outside dropdown tree) ── */}
+
+        {/* Approve manually dialog */}
+        <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Approve Quote Manually</DialogTitle>
+              <DialogDescription>
+                This will mark the quote as approved without client confirmation.
+                Use this when the client has approved verbally or by other means
+                outside the system.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setApproveDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                className="bg-green-600 hover:bg-green-700 text-white"
+                onClick={handleApproveManually}
+                disabled={actionState.approving}
+              >
+                {actionState.approving ? "Approving..." : "Approve Quote"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Decline dialog */}
+        <Dialog open={declineDialogOpen} onOpenChange={setDeclineDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Decline Quote</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to decline this quote? This will mark it
+                as declined.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeclineDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDecline}
+                disabled={actionState.declining}
+              >
+                {actionState.declining ? "Declining..." : "Decline Quote"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Quote</DialogTitle>
+              <DialogDescription>
+                This will permanently delete the quote. This action cannot be
+                undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleDelete}
+                disabled={actionState.deleting}
+              >
+                {actionState.deleting ? "Deleting..." : "Delete Quote"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Two-column grid: Quote Information + Staff Member / Recipient */}
@@ -760,14 +850,19 @@ export function QuoteDetailView({ id }: { id: string }) {
           return sum + cost * Number(item.quantity);
         }, 0);
 
-        // Charged subtotal (with margin) = sum of extendedPrice
-        const chargedSubtotal = quote.items.reduce(
-          (sum, item) => sum + Number(item.extendedPrice),
-          0
-        );
-
-        // Margin amount
-        const marginAmt = quote.marginEnabled ? chargedSubtotal - costSubtotal : 0;
+        // Margin amount — mirror the backend percentage-based calculation
+        // with per-item marginOverride support
+        const globalMargin = Number(quote.marginPercent ?? 0);
+        const marginAmt = quote.marginEnabled
+          ? quote.items.reduce((sum, item) => {
+              const cost = item.costPrice != null ? Number(item.costPrice) : Number(item.unitPrice);
+              const qty = Number(item.quantity);
+              const effectiveMargin = item.marginOverride != null
+                ? Number(item.marginOverride)
+                : globalMargin;
+              return sum + cost * qty * (effectiveMargin / 100);
+            }, 0)
+          : 0;
 
         // Tax
         const taxableTotal = quote.items

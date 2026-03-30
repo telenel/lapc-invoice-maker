@@ -20,6 +20,7 @@ export interface TemplateResponse {
   marginEnabled: boolean;
   marginPercent: number | null;
   taxEnabled: boolean;
+  taxRate: number;
   notes: string;
   isCateringEvent: boolean;
   cateringDetails: unknown;
@@ -37,6 +38,7 @@ export interface CreateTemplateInput {
   marginEnabled?: boolean;
   marginPercent?: number;
   taxEnabled?: boolean;
+  taxRate?: number;
   notes?: string;
   isCateringEvent?: boolean;
   cateringDetails?: unknown;

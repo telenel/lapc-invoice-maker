@@ -2,6 +2,7 @@
 import * as quoteRepository from "./repository";
 import { pdfService } from "@/domains/pdf/service";
 import { formatDateFromDate } from "@/domains/shared/formatters";
+import { calculateTotal } from "@/domains/invoice/calculations";
 import { safePublishAll } from "@/lib/sse";
 import type { Prisma } from "@/generated/prisma/client";
 import type {
@@ -117,34 +118,6 @@ function calculateLineItems(
       costPrice: item.costPrice,
     };
   });
-}
-
-function calculateTotal(
-  items: { extendedPrice: number; isTaxable?: boolean }[],
-  marginEnabled?: boolean,
-  marginPercent?: number,
-  taxEnabled?: boolean,
-  taxRate?: number
-): number {
-  let subtotal = items.reduce((sum, item) => sum + item.extendedPrice, 0);
-
-  // Apply margin markup
-  if (marginEnabled && marginPercent) {
-    subtotal = subtotal * (1 + marginPercent / 100);
-  }
-
-  // Apply tax on taxable items
-  if (taxEnabled) {
-    const rate = taxRate ?? 0.0975;
-    const taxableTotal = items.reduce((sum, item) => {
-      const ext = item.extendedPrice;
-      const withMargin = marginEnabled && marginPercent ? ext * (1 + marginPercent / 100) : ext;
-      return item.isTaxable !== false ? sum + withMargin : sum;
-    }, 0);
-    subtotal += taxableTotal * rate;
-  }
-
-  return Math.round(subtotal * 100) / 100;
 }
 
 // ── Service ────────────────────────────────────────────────────────────────
@@ -275,6 +248,7 @@ export const quoteService = {
     // Check expiration
     if (quote.expirationDate && new Date(quote.expirationDate) < new Date()) {
       await quoteRepository.update(quote.id, { quoteStatus: "EXPIRED" });
+      safePublishAll({ type: "quote-changed" });
       throw Object.assign(new Error("This quote has expired"), { code: "FORBIDDEN" });
     }
 
@@ -284,18 +258,23 @@ export const quoteService = {
       await quoteRepository.updateViewResponse(viewId, response);
     }
 
-    const { notificationService } = await import("@/domains/notification/service");
     const notifType = response === "ACCEPTED" ? "QUOTE_APPROVED" : "QUOTE_DECLINED";
     const verb = response === "ACCEPTED" ? "approved" : "declined";
-    await notificationService.createAndPublish({
-      userId: quote.createdBy,
-      type: notifType,
-      title: `${quote.quoteNumber ?? "Quote"} was ${verb}`,
-      message: quote.recipientName ? `${verb.charAt(0).toUpperCase() + verb.slice(1)} by ${quote.recipientName}` : undefined,
-      quoteId: quote.id,
-    });
 
-    // Send email notification to bookstore (non-critical)
+    // Notification + email are non-critical — never fail the response
+    try {
+      const { notificationService } = await import("@/domains/notification/service");
+      await notificationService.createAndPublish({
+        userId: quote.createdBy,
+        type: notifType,
+        title: `${quote.quoteNumber ?? "Quote"} was ${verb}`,
+        message: quote.recipientName ? `${verb.charAt(0).toUpperCase() + verb.slice(1)} by ${quote.recipientName}` : undefined,
+        quoteId: quote.id,
+      });
+    } catch (err) {
+      console.error("[respondToQuote] notification failed:", err);
+    }
+
     try {
       const { sendEmail } = await import("@/lib/email");
       const { escapeHtml } = await import("@/lib/html");
@@ -309,6 +288,7 @@ export const quoteService = {
       // Email is non-critical — don't fail the response
     }
 
+    // Always broadcast after status update, regardless of notification/email failures
     safePublishAll({ type: "quote-changed" });
 
     return { success: true, status: response };
@@ -434,6 +414,62 @@ export const quoteService = {
     }
 
     await quoteRepository.deleteById(id);
+  },
+
+  /**
+   * Manually approve a quote (admin override when client can't use email/public link).
+   */
+  async approveManually(id: string): Promise<{ success: boolean; status: string }> {
+    const quote = await quoteRepository.findById(id);
+    if (!quote || quote.type !== "QUOTE") {
+      throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
+    }
+
+    if (!["SENT", "SUBMITTED_EMAIL", "SUBMITTED_MANUAL"].includes(quote.quoteStatus as string)) {
+      throw Object.assign(
+        new Error(
+          quote.quoteStatus === "ACCEPTED" || quote.quoteStatus === "DECLINED" || quote.quoteStatus === "REVISED"
+            ? "This quote has already been responded to"
+            : "This quote is not in a state that can be approved"
+        ),
+        { code: "FORBIDDEN" }
+      );
+    }
+
+    // Check expiration
+    if (quote.expirationDate && new Date(quote.expirationDate) < new Date()) {
+      await quoteRepository.update(quote.id, { quoteStatus: "EXPIRED" });
+      throw Object.assign(new Error("This quote has expired"), { code: "FORBIDDEN" });
+    }
+
+    await quoteRepository.update(quote.id, { quoteStatus: "ACCEPTED" });
+
+    const { notificationService } = await import("@/domains/notification/service");
+    await notificationService.createAndPublish({
+      userId: quote.createdBy,
+      type: "QUOTE_APPROVED",
+      title: `${quote.quoteNumber ?? "Quote"} was manually approved`,
+      message: "Approved manually by staff",
+      quoteId: quote.id,
+    });
+
+    // Send email notification to bookstore (non-critical)
+    try {
+      const { sendEmail } = await import("@/lib/email");
+      const { escapeHtml } = await import("@/lib/html");
+      const quoteUrl = `${process.env.NEXTAUTH_URL}/quotes/${quote.id}`;
+      await sendEmail(
+        "bookstore@piercecollege.edu",
+        `${quote.quoteNumber ?? "Quote"} was manually approved`,
+        `<p>${escapeHtml(quote.quoteNumber ?? "Quote")} was <strong>manually approved</strong> by staff.</p><p><a href="${escapeHtml(quoteUrl)}">View Quote</a></p>`
+      );
+    } catch {
+      // Email is non-critical — don't fail the response
+    }
+
+    safePublishAll({ type: "quote-changed" });
+
+    return { success: true, status: "ACCEPTED" };
   },
 
   /**

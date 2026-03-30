@@ -32,24 +32,28 @@ export function calculateLineItems(
 }
 
 export function calculateTotal(
-  items: { extendedPrice: number | unknown; isTaxable?: boolean }[],
+  items: { extendedPrice: number | unknown; isTaxable?: boolean; marginOverride?: number | null }[],
   marginEnabled?: boolean,
   marginPercent?: number,
   taxEnabled?: boolean,
   taxRate?: number
 ): number {
-  let subtotal = items.reduce((sum, item) => sum + Number(item.extendedPrice), 0);
-
-  if (marginEnabled && marginPercent) {
-    subtotal = subtotal * (1 + marginPercent / 100);
-  }
+  // Compute per-item charged amounts using item-level marginOverride or global marginPercent
+  let subtotal = items.reduce((sum, item) => {
+    const ext = Number(item.extendedPrice);
+    if (!marginEnabled) return sum + ext;
+    const effectiveMargin = item.marginOverride != null ? Number(item.marginOverride) : (marginPercent ?? 0);
+    return sum + ext * (1 + effectiveMargin / 100);
+  }, 0);
 
   if (taxEnabled) {
     const rate = taxRate ?? 0.0975;
     const taxableTotal = items.reduce((sum, item) => {
+      if (item.isTaxable === false) return sum;
       const ext = Number(item.extendedPrice);
-      const withMargin = marginEnabled && marginPercent ? ext * (1 + marginPercent / 100) : ext;
-      return item.isTaxable !== false ? sum + withMargin : sum;
+      if (!marginEnabled) return sum + ext;
+      const effectiveMargin = item.marginOverride != null ? Number(item.marginOverride) : (marginPercent ?? 0);
+      return sum + ext * (1 + effectiveMargin / 100);
     }, 0);
     subtotal += taxableTotal * rate;
   }

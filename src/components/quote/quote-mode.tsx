@@ -240,10 +240,11 @@ export function QuoteMode({
         category: form.category,
         accountCode: form.accountCode || undefined,
         marginEnabled: form.marginEnabled,
-        marginPercent: form.marginPercent ? Number(form.marginPercent) : undefined,
+        marginPercent: form.marginPercent !== undefined ? Number(form.marginPercent) : undefined,
         taxEnabled: form.taxEnabled,
         notes: form.notes || undefined,
         isCateringEvent: form.isCateringEvent,
+        cateringDetails: form.isCateringEvent ? form.cateringDetails : undefined,
         items: form.items.filter((i) => i.description.trim()).map((item, idx) => ({
           description: item.description,
           quantity: Number(item.quantity),
@@ -304,15 +305,18 @@ export function QuoteMode({
             onChange={(e) => {
               const t = templates.find((tmpl) => tmpl.id === e.target.value);
               if (!t) return;
-              if (t.staffId) updateField("staffId", t.staffId);
-              if (t.department) updateField("department", t.department);
-              if (t.category) updateField("category", t.category);
-              if (t.accountCode) updateField("accountCode", t.accountCode);
+              updateField("staffId", t.staffId ?? "");
+              updateField("department", t.department ?? "");
+              updateField("category", t.category ?? "");
+              updateField("accountCode", t.accountCode ?? "");
               updateField("marginEnabled", t.marginEnabled);
-              if (t.marginPercent != null) updateField("marginPercent", t.marginPercent);
+              updateField("marginPercent", t.marginPercent ?? 0);
               updateField("taxEnabled", t.taxEnabled);
-              if (t.notes) updateField("notes", t.notes);
+              updateField("notes", t.notes ?? "");
               updateField("isCateringEvent", t.isCateringEvent);
+              if (t.cateringDetails) {
+                updateField("cateringDetails", t.cateringDetails as QuoteFormData["cateringDetails"]);
+              }
               const newItems = t.items.map((item, idx) => ({
                 _key: crypto.randomUUID(),
                 description: item.description,

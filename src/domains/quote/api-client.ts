@@ -86,6 +86,12 @@ export const quoteApi = {
     return res.blob();
   },
 
+  async approveManually(id: string): Promise<{ success: boolean }> {
+    return request<{ success: boolean }>(`${BASE}/${id}/approve`, {
+      method: "POST",
+    });
+  },
+
   async getViews(id: string): Promise<import("./types").QuoteViewResponse[]> {
     return request<import("./types").QuoteViewResponse[]>(`${BASE}/${id}/views`);
   },
