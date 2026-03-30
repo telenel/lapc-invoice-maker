@@ -50,7 +50,7 @@ export function InvoiceDetailHeader({
   const isPendingCharge = invoice.status === "PENDING_CHARGE";
 
   return (
-    <div className="flex items-start justify-between gap-4">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <h1 className="text-2xl font-bold text-balance">
           {invoice.isRunning && invoice.runningTitle
@@ -67,7 +67,7 @@ export function InvoiceDetailHeader({
         </p>
       </div>
 
-      <div className="flex items-center gap-2 flex-wrap justify-end">
+      <div className="flex flex-wrap items-center gap-2 sm:justify-end">
         <Badge
           variant={
             isFinal ? "success" : isPendingCharge ? "info" : "warning"

@@ -43,7 +43,7 @@ export function PdfProgress({ step }: { step: GenerationStep }) {
                     : "text-muted-foreground/50"
                 }`}
               >
-                <div className="flex-shrink-0 size-5">
+                <div className="shrink-0 size-5">
                   {isActive && step !== "done" ? (
                     <Spinner />
                   ) : isDone ? (

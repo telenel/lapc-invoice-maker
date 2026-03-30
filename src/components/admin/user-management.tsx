@@ -78,7 +78,7 @@ export function UserManagement() {
   }
 
   async function handleResetPassword(user: User) {
-    if (!confirm(`Reset password for ${user.name}? They will need to go through onboarding again.`)) return;
+    if (!confirm(`Reset password for ${user.name}? They will need to complete account setup again.`)) return;
     try {
       const updated = await adminApi.updateUser(user.id, { resetPassword: true });
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));

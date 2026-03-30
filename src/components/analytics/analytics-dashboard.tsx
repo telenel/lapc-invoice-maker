@@ -61,8 +61,8 @@ export function AnalyticsDashboard() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <h1 className="text-3xl font-bold text-balance">Analytics</h1>
-        <div className="flex flex-wrap items-end gap-3">
+        <h1 className="text-2xl font-bold text-balance sm:text-3xl">Analytics</h1>
+        <div className="grid w-full gap-3 sm:w-auto sm:grid-flow-col sm:auto-cols-max sm:items-end">
           <div className="flex flex-col gap-1">
             <label className="text-xs text-muted-foreground font-medium" htmlFor="dateFrom">
               From
@@ -73,7 +73,7 @@ export function AnalyticsDashboard() {
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="h-8 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
           <div className="flex flex-col gap-1">
@@ -86,7 +86,7 @@ export function AnalyticsDashboard() {
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="h-8 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
         </div>

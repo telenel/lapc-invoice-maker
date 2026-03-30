@@ -96,7 +96,7 @@ export function CateringDetailsCard({
 
         <Separator />
         {/* Row 1 — Event Date & Time */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="space-y-1.5">
             <Label htmlFor="catering-event-date" className={labelClass}>
               Event Date
@@ -148,7 +148,7 @@ export function CateringDetailsCard({
         </div>
 
         {/* Row 3 — Contact */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="space-y-1.5">
             <Label htmlFor="catering-contact-name" className={labelClass}>
               Contact Name
@@ -185,8 +185,8 @@ export function CateringDetailsCard({
         </div>
 
         {/* Row 4 — Headcount & Event Name */}
-        <div className="flex gap-4">
-          <div className="w-[120px] shrink-0 space-y-1.5">
+        <div className="flex flex-col gap-4 sm:flex-row">
+          <div className="space-y-1.5 sm:w-[120px] sm:shrink-0">
             <Label htmlFor="catering-headcount" className={labelClass}>
               Headcount
             </Label>
@@ -223,7 +223,7 @@ export function CateringDetailsCard({
         {/* Row 5 — Setup & Takedown */}
         <Separator />
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {/* Setup card */}
           <Card size="sm" className="border-orange-500/10">
             <CardContent className="space-y-3">

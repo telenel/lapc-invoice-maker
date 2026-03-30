@@ -97,7 +97,7 @@ function SectionDivider({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 pt-6 pb-2">
+    <div className="flex flex-wrap items-center gap-3 pb-2 pt-6">
       <span className="section-label">{label}</span>
       <div className="flex-1 border-t border-border" />
       {children}
@@ -391,7 +391,7 @@ export function KeyboardMode({
   return (
     <div
       ref={containerRef}
-      className="keyboard-mode max-w-2xl mx-auto"
+      className="keyboard-mode mx-auto max-w-2xl"
       tabIndex={-1}
     >
       {draftEntry && (
@@ -497,7 +497,7 @@ export function KeyboardMode({
 
       <div className="space-y-3">
         {/* Apply Margin */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
             <Checkbox
               id="marginEnabled"
@@ -538,7 +538,7 @@ export function KeyboardMode({
         )}
 
         {/* Apply Sales Tax */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
             <Checkbox
               id="taxEnabled"
@@ -566,7 +566,7 @@ export function KeyboardMode({
               <InfoIcon className="size-3.5" />
               <span>CA Tax Rules</span>
             </PopoverTrigger>
-            <PopoverContent side="bottom" align="start" className="w-80">
+            <PopoverContent side="bottom" align="start" className="w-[min(20rem,calc(100vw-2rem))]">
               <div className="space-y-2 text-xs">
                 <p className="font-semibold text-sm">
                   California Food Tax Rules
@@ -601,7 +601,7 @@ export function KeyboardMode({
       <SectionDivider label="LINE ITEMS" />
 
       <div className="space-y-3">
-        <div className="flex gap-4">
+        <div className="flex flex-col gap-4 lg:flex-row">
           <div className="flex-1 min-w-0">
             <LineItems
               items={form.items}
@@ -708,32 +708,32 @@ export function KeyboardMode({
           />
         </div>
 
-        <div className="flex justify-end gap-2 pt-2">
+        <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:flex-wrap sm:justify-end">
           {!form.isRunning && (
             <>
-              <Button variant="outline" tabIndex={-1} onClick={handleSaveAsTemplate} disabled={saving}>
+              <Button variant="outline" onClick={handleSaveAsTemplate} disabled={saving} className="w-full sm:w-auto">
                 Save as Template
               </Button>
-              <Button variant="outline" tabIndex={-1} onClick={handleSaveDraft} disabled={saving}>
+              <Button variant="outline" onClick={handleSaveDraft} disabled={saving} className="w-full sm:w-auto">
                 Save Draft
               </Button>
             </>
           )}
           {!form.isRunning && !existingId && (
-            <Button variant="secondary" tabIndex={-1} onClick={() => setShowChargeLaterDialog(true)} disabled={saving}>
+            <Button variant="secondary" onClick={() => setShowChargeLaterDialog(true)} disabled={saving} className="w-full sm:w-auto">
               Charge Later
             </Button>
           )}
           {form.isRunning ? (
-            <Button onClick={handleSaveDraft} disabled={saving}>
+            <Button onClick={handleSaveDraft} disabled={saving} className="w-full sm:w-auto">
               Save Running Invoice
             </Button>
           ) : existingId ? (
-            <Button onClick={handleSaveDraft} disabled={saving}>
+            <Button onClick={handleSaveDraft} disabled={saving} className="w-full sm:w-auto">
               {saving ? "Updating..." : "Update"}
             </Button>
           ) : (
-            <Button onClick={handleGenerate} disabled={saving}>
+            <Button onClick={handleGenerate} disabled={saving} className="w-full sm:w-auto">
               Generate PDF {isMac ? "\u2318\u21B5" : "Ctrl\u21B5"}
             </Button>
           )}

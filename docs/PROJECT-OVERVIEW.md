@@ -8,7 +8,7 @@ Operations portal for Los Angeles Pierce College. Handles invoice drafting, fina
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 14 (App Router) |
+| Framework | Next.js 15 (App Router) |
 | Database ORM | Prisma 7 + PostgreSQL |
 | Styling | Tailwind CSS 4 + shadcn/ui v4 (base-ui) |
 | Auth | NextAuth.js (credentials provider) |
@@ -19,8 +19,7 @@ Operations portal for Los Angeles Pierce College. Handles invoice drafting, fina
 | Calendar | FullCalendar (catering + manual events + birthdays) |
 | Email | Power Automate webhook (shared mailbox) |
 | CI/CD | GitHub Actions (setup → lint/build/test parallel → deploy) |
-| Code Review | CodeRabbit (assertive profile, auto-review on PRs) |
-| Auto-fix | Claude Code Action (fixes CodeRabbit reviews, resolves threads) |
+| Code Review | CodeRabbit (chill profile, auto-review on PRs) |
 
 ---
 
@@ -102,6 +101,9 @@ tests/                     # Domain and lib tests (19 files, 303 tests)
 ├── components/
 ├── domains/
 └── lib/
+
+hooks/
+└── pre-push               # Blocks pushes to branches with open PRs
 
 docs/
 ├── superpowers/
@@ -315,6 +317,7 @@ The home page (`src/app/page.tsx`) features a personalized dashboard:
 - **Recent activity** — shows both invoices and quotes (not just invoices)
 - **Running invoices, pending charges, team activity** — all role-aware
 - **Real-time updates** — all dashboard widgets update in real-time via SSE
+- **Help modal** — accessible from nav bar, covers invoice creation, line items, signatures, PDF generation, invoice management, and analytics
 
 Components in `src/components/dashboard/`.
 
@@ -520,23 +523,16 @@ In production, `NEXT_PUBLIC_BUILD_SHA` reflects the exact commit deployed. Falls
 
 All changes go through pull requests targeting `main`. PRs are squash-merged after CI passes. Direct pushes to `main` are not used for feature work.
 
+**PRs are finalized once created** — no further pushes to a branch with an open PR, except to fix CodeRabbit review issues (`CR_FIX=1 git push`). Enforced by a tracked pre-push hook in `hooks/pre-push` (auto-configured via `npm install` postinstall script).
+
 **Branch protection on `main`:**
 - Required checks: Lint, Build, Tests (all must pass)
 - Required reviews: 1 approval (CodeRabbit counts)
-- Stale reviews dismissed on new pushes
-- Enforce admins: OFF (admin can bypass when needed)
+- Stale review dismissal is OFF — CodeRabbit approval persists across pushes
+- Conversation resolution required — all review threads must be resolved before merge
+- Admin bypass allowed (`gh pr merge --admin` when needed)
 
-**CodeRabbit** reviews every PR automatically with the `assertive` profile. Config in `.coderabbit.yaml`. Uses `request_changes_workflow: true` — if CodeRabbit requests changes, it blocks merge until resolved.
-
-**Auto-fix workflow** (`.github/workflows/autofix-reviews.yml`):
-- Triggers on `pull_request_review` when CodeRabbit requests changes
-- Uses `anthropics/claude-code-action@v1` with `claude_args`:
-  - `--allowedTools "Bash(gh *),Bash(npm *),..."` — explicit tool permissions (Bash disabled by default in the action)
-  - `--disallowedTools "WebFetch,Agent"` — prevents token waste on blocked tools
-  - `--max-turns 30` — caps API calls to prevent spiraling
-- `allowed_bots: "coderabbitai[bot]"` — required since bots are blocked by default
-- After fixing code: resolves GitHub review threads via GraphQL mutation → triggers CodeRabbit auto-approve → unblocks auto-merge
-- Concurrency group per PR with `cancel-in-progress: true`; 10-minute timeout
+**CodeRabbit** reviews every PR automatically with the `chill` profile. Config in `.coderabbit.yaml`. All review threads must be resolved before merge. CodeRabbit issues are fixed manually (no auto-fix workflow).
 
 ### CI/CD Pipeline
 
