@@ -248,6 +248,7 @@ export const quoteService = {
     // Check expiration
     if (quote.expirationDate && new Date(quote.expirationDate) < new Date()) {
       await quoteRepository.update(quote.id, { quoteStatus: "EXPIRED" });
+      safePublishAll({ type: "quote-changed" });
       throw Object.assign(new Error("This quote has expired"), { code: "FORBIDDEN" });
     }
 
@@ -257,18 +258,23 @@ export const quoteService = {
       await quoteRepository.updateViewResponse(viewId, response);
     }
 
-    const { notificationService } = await import("@/domains/notification/service");
     const notifType = response === "ACCEPTED" ? "QUOTE_APPROVED" : "QUOTE_DECLINED";
     const verb = response === "ACCEPTED" ? "approved" : "declined";
-    await notificationService.createAndPublish({
-      userId: quote.createdBy,
-      type: notifType,
-      title: `${quote.quoteNumber ?? "Quote"} was ${verb}`,
-      message: quote.recipientName ? `${verb.charAt(0).toUpperCase() + verb.slice(1)} by ${quote.recipientName}` : undefined,
-      quoteId: quote.id,
-    });
 
-    // Send email notification to bookstore (non-critical)
+    // Notification + email are non-critical — never fail the response
+    try {
+      const { notificationService } = await import("@/domains/notification/service");
+      await notificationService.createAndPublish({
+        userId: quote.createdBy,
+        type: notifType,
+        title: `${quote.quoteNumber ?? "Quote"} was ${verb}`,
+        message: quote.recipientName ? `${verb.charAt(0).toUpperCase() + verb.slice(1)} by ${quote.recipientName}` : undefined,
+        quoteId: quote.id,
+      });
+    } catch (err) {
+      console.error("[respondToQuote] notification failed:", err);
+    }
+
     try {
       const { sendEmail } = await import("@/lib/email");
       const { escapeHtml } = await import("@/lib/html");
@@ -282,6 +288,7 @@ export const quoteService = {
       // Email is non-critical — don't fail the response
     }
 
+    // Always broadcast after status update, regardless of notification/email failures
     safePublishAll({ type: "quote-changed" });
 
     return { success: true, status: response };
