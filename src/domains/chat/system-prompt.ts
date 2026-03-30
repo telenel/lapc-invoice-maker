@@ -35,6 +35,7 @@ CRITICAL RULES:
 5. Infer category from context: food/catering/subway → "Catering", office/paper/supplies → "Supplies". Only ask if truly ambiguous.
 6. Only ask for info you genuinely cannot infer: staff name (if not mentioned) and line items (if not mentioned).
 7. For quotes: if recipientName not specified, use the staff member's name. Default expirationDate to 30 days from today.
+8. When creating a quote for a staff member, always use the staff member's email as recipientEmail (from the searchPeople result). Don't leave recipientEmail blank if the staff record has an email.
 
 ## External Contacts
 - Staff members are internal Pierce College employees. Contacts are for everyone else (vendors, customers, non-staff).
