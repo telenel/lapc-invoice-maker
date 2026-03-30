@@ -27,6 +27,7 @@ function toTemplateResponse(template: NonNullable<TemplateWithItems>): TemplateR
     marginEnabled: template.marginEnabled,
     marginPercent: template.marginPercent != null ? Number(template.marginPercent) : null,
     taxEnabled: template.taxEnabled,
+    taxRate: Number(template.taxRate),
     notes: template.notes,
     isCateringEvent: template.isCateringEvent,
     cateringDetails: template.cateringDetails as Prisma.JsonValue,
