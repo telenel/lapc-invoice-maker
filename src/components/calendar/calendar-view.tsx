@@ -61,6 +61,8 @@ export function CalendarView() {
   }, []);
 
   function refetchEvents() {
+    setHoveredEvent(null);
+    setPinnedEvent(null);
     calendarRef.current?.getApi().refetchEvents();
   }
 
