@@ -26,8 +26,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "LAPC InvoiceMaker",
-  description: "Invoice generation for Los Angeles Pierce College",
+  title: "LAPortal",
+  description: "Operations portal for Los Angeles Pierce College",
 };
 
 export const viewport: Viewport = {

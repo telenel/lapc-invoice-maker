@@ -32,7 +32,7 @@ export function LoginForm() {
   const [rememberMe, setRememberMe] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem("lapc-remember-me");
+    const stored = localStorage.getItem("laportal-remember-me");
     if (stored !== null) setRememberMe(stored === "true");
   }, []);
 
@@ -66,7 +66,7 @@ export function LoginForm() {
     <Card className="w-full max-w-sm shadow-lg border-border/40">
       <CardHeader className="pb-2">
         <CardTitle className="text-3xl font-bold tracking-tight text-center">
-          InvoiceMaker
+          <span className="text-red-600">LA</span>Portal
         </CardTitle>
         <p className="text-sm text-muted-foreground text-center">Los Angeles Pierce College</p>
       </CardHeader>
@@ -130,7 +130,7 @@ export function LoginForm() {
               onChange={(e) => {
                 const checked = e.target.checked;
                 setRememberMe(checked);
-                localStorage.setItem("lapc-remember-me", String(checked));
+                localStorage.setItem("laportal-remember-me", String(checked));
               }}
               className="h-4 w-4 rounded border-border"
             />

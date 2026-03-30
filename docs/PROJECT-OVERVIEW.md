@@ -1,6 +1,6 @@
-# LAPC InvoiceMaker — Project Overview
+# LAPortal — Project Overview
 
-Invoice generation webapp for Los Angeles Pierce College. Handles invoice drafting, finalization, and PDF generation for campus purchasing requests. Supports running/recurring invoices, quote creation with online sharing and approval, staff management, admin controls, real-time notifications, and dashboard analytics.
+Operations portal for Los Angeles Pierce College. Handles invoice drafting, finalization, and PDF generation for campus purchasing requests. Supports running/recurring invoices, quote creation with online sharing and approval, staff management, admin controls, real-time notifications, calendar, AI assistant, and dashboard analytics.
 
 ---
 
@@ -310,7 +310,7 @@ The home page (`src/app/page.tsx`) features a personalized dashboard:
 
 - **Personalized header** — time-based greeting (Good Morning/Afternoon/Evening) with username
 - **YourFocus widget** — prioritized action items for the current user
-- **Drag-and-drop layout** — widgets can be reordered, persisted to `localStorage` (key: `lapc-dashboard-order`)
+- **Drag-and-drop layout** — widgets can be reordered, persisted to `localStorage` (key: `laportal-dashboard-order`)
 - **Stats cards** — invoice/quote counts filtered by `createdAt` (not invoice date)
 - **Recent activity** — shows both invoices and quotes (not just invoices)
 - **Running invoices, pending charges, team activity** — all role-aware
@@ -544,7 +544,7 @@ GitHub Actions runs on every push to `main` and every PR targeting `main`:
 
 1. **Setup** — `npm ci` + `npx prisma generate`, caches `node_modules` and `src/generated/prisma`
 2. **Lint** / **Build** / **Tests** — run in parallel after Setup (Node 22)
-3. **Deploy** (push to `main` only) — triggers HTTPS webhook at `montalvo.io/hooks/deploy-lapc`, then polls health check at `invoice.montalvo.io`
+3. **Deploy** (push to `main` only) — triggers HTTPS webhook at `montalvo.io/hooks/deploy-laportal`, then polls health check at `laportal.montalvo.io`
 
 Deployment is Docker Compose on montalvo.io behind Traefik. The deploy webhook triggers a build-first strategy (no docker-down before build).
 

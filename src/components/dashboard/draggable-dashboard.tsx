@@ -30,7 +30,7 @@ import { RecentActivity } from "./recent-invoices";
 import { YourFocus } from "./your-focus";
 import { TodaysEvents } from "./todays-events";
 
-const STORAGE_KEY = "lapc-dashboard-order";
+const STORAGE_KEY = "laportal-dashboard-order";
 
 interface WidgetConfig {
   id: string;

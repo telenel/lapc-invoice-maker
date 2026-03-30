@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-const STORAGE_KEY = "lapc-welcome-dismissed";
+const STORAGE_KEY = "laportal-welcome-dismissed";
 
 export function WelcomeBanner() {
   const [visible, setVisible] = useState(false);
@@ -44,7 +44,7 @@ export function WelcomeBanner() {
         <CardContent className="py-4 px-5">
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-1.5">
-              <p className="font-semibold text-sm">Welcome to LAPC InvoiceMaker</p>
+              <p className="font-semibold text-sm">Welcome to LAPortal</p>
               <ul className="text-sm leading-relaxed text-muted-foreground space-y-1 list-disc list-inside">
                 <li>
                   Select a staff member and their department, contact info, and account numbers auto-fill.

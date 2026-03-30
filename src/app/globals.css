@@ -35,6 +35,9 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-brand-teal: var(--brand-teal);
+  --color-brand-teal-light: var(--brand-teal-light);
+  --color-brand-teal-foreground: var(--brand-teal-foreground);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -51,7 +54,7 @@
     --card-foreground: oklch(0.175 0.012 60);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.175 0.012 60);
-    --primary: oklch(0.45 0.18 25);           /* LAPC red */
+    --primary: oklch(0.45 0.18 25);           /* LAPortal red */
     --primary-foreground: oklch(0.98 0 0);    /* white on red */
     --secondary: oklch(0.955 0.005 75);       /* warm light gray */
     --secondary-foreground: oklch(0.25 0.01 60);
@@ -62,8 +65,11 @@
     --destructive: oklch(0.55 0.2 25);        /* red for errors */
     --border: oklch(0.9 0.005 75);            /* subtle warm border */
     --input: oklch(0.92 0.005 75);
-    --ring: oklch(0.45 0.18 25);              /* LAPC red ring */
-    --chart-1: oklch(0.45 0.18 25);   /* LAPC red */
+    --ring: oklch(0.45 0.18 25);              /* LAPortal red ring */
+    --brand-teal: oklch(0.65 0.14 180);       /* teal accent */
+    --brand-teal-light: oklch(0.80 0.10 180); /* teal light */
+    --brand-teal-foreground: oklch(0.98 0 0); /* white on teal */
+    --chart-1: oklch(0.45 0.18 25);   /* LAPortal red */
     --chart-2: oklch(0.6 0.15 250);   /* steel blue */
     --chart-3: oklch(0.65 0.14 155);  /* emerald */
     --chart-4: oklch(0.7 0.12 85);    /* warm amber */
@@ -97,7 +103,10 @@
     --border: oklch(0.28 0.01 60);
     --input: oklch(0.25 0.01 60);
     --ring: oklch(0.58 0.18 25);
-    --chart-1: oklch(0.45 0.18 25);   /* LAPC red */
+    --brand-teal: oklch(0.70 0.12 180);       /* teal accent (dark) */
+    --brand-teal-light: oklch(0.35 0.08 180); /* teal light (dark) */
+    --brand-teal-foreground: oklch(0.98 0 0);
+    --chart-1: oklch(0.45 0.18 25);   /* LAPortal red */
     --chart-2: oklch(0.6 0.15 250);   /* steel blue */
     --chart-3: oklch(0.65 0.14 155);  /* emerald */
     --chart-4: oklch(0.7 0.12 85);    /* warm amber */

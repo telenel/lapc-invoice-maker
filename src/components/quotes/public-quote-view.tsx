@@ -255,10 +255,7 @@ export function PublicQuoteView({ token }: { token: string }) {
       {/* Header */}
       <div className="border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-red-600 to-red-800">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/lapc-logo.png" alt="LAPC" width={22} style={{ height: "22px" }} />
-          </div>
+          <span className="font-bold text-lg"><span className="text-red-600">LA</span>Portal</span>
           <div>
             <h1 className="font-bold text-lg">Los Angeles Pierce College</h1>
             <p className="text-sm text-muted-foreground">Quote Review</p>

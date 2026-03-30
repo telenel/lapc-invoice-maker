@@ -9,12 +9,12 @@ export function RepoLink() {
 
   return (
     <a
-      href="https://github.com/telenel/lapc-invoice-maker"
+      href="https://github.com/telenel/laportal"
       target="_blank"
       rel="noopener noreferrer"
       className="fixed bottom-3 left-4 font-mono text-[10px] lowercase text-muted-foreground/30 hover:text-muted-foreground/60 transition-colors z-10"
     >
-      github.com/telenel/lapc-invoice-maker
+      github.com/telenel/laportal
     </a>
   );
 }

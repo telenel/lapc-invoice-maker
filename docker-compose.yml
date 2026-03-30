@@ -22,7 +22,7 @@ services:
     environment:
       DATABASE_URL: "postgresql://invoicemaker:${DB_PASSWORD:-invoicemaker}@db:5432/invoicemaker"
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
-      NEXTAUTH_URL: ${NEXTAUTH_URL:-https://invoice.montalvo.io}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-https://laportal.montalvo.io}
       PDF_STORAGE_PATH: ./data/pdfs
       UPLOAD_PATH: ./public/uploads
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
@@ -35,10 +35,10 @@ services:
         condition: service_healthy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.invoicemaker.rule=Host(`invoice.montalvo.io`)"
-      - "traefik.http.routers.invoicemaker.entrypoints=websecure"
-      - "traefik.http.routers.invoicemaker.tls.certresolver=letsencrypt"
-      - "traefik.http.services.invoicemaker.loadbalancer.server.port=3000"
+      - "traefik.http.routers.laportal.rule=Host(`laportal.montalvo.io`)"
+      - "traefik.http.routers.laportal.entrypoints=websecure"
+      - "traefik.http.routers.laportal.tls.certresolver=letsencrypt"
+      - "traefik.http.services.laportal.loadbalancer.server.port=3000"
     networks:
       - default
       - traefik-net

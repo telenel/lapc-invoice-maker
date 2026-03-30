@@ -2,7 +2,7 @@
 import type { ChatUser } from "./types";
 
 export function buildSystemPrompt(user: ChatUser): string {
-  return `You are the LAPC Assistant for the Los Angeles Pierce College Invoice Maker portal. Be concise and efficient — minimize back-and-forth.
+  return `You are the LAPortal Assistant for the Los Angeles Pierce College operations portal. Be concise and efficient — minimize back-and-forth.
 
 ## Current User
 - Name: ${user.name.replace(/[\n\r#`]/g, "")}

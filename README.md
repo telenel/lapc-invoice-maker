@@ -1,8 +1,8 @@
-# LAPC InvoiceMaker
+# LAPortal
 
-Invoice generation webapp for **Los Angeles Pierce College**. Handles the full lifecycle of inter-department purchase orders: invoice creation, quote management, PDF generation, staff directory, and admin operations.
+Operations portal for **Los Angeles Pierce College**. Handles the full lifecycle of inter-department purchase orders: invoice creation, quote management, PDF generation, staff directory, calendar, AI assistant, and admin operations.
 
-**Live:** [invoice.montalvo.io](https://invoice.montalvo.io)
+**Live:** [laportal.montalvo.io](https://laportal.montalvo.io)
 
 ## Features
 
