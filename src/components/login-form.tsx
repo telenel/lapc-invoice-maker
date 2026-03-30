@@ -66,7 +66,7 @@ export function LoginForm() {
     <Card className="w-full max-w-sm shadow-lg border-border/40">
       <CardHeader className="pb-2">
         <CardTitle className="text-3xl font-bold tracking-tight text-center">
-          InvoiceMaker
+          <span className="text-red-600">LA</span>Portal
         </CardTitle>
         <p className="text-sm text-muted-foreground text-center">Los Angeles Pierce College</p>
       </CardHeader>

@@ -66,11 +66,7 @@ export function Nav() {
     <nav className="sticky top-0 z-50 bg-background/85 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
       <div className="mx-auto flex h-16 max-w-7xl items-center px-4 gap-6">
         <Link href="/" className="flex items-center gap-2 shrink-0">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-red-600 to-red-800">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/lapc-logo.png" alt="LAPC" width={22} style={{ height: "22px" }} />
-          </div>
-          <span className="font-bold tracking-tight text-lg">InvoiceMaker</span>
+          <span className="font-bold tracking-tight text-lg"><span className="text-red-600">LA</span>Portal</span>
           {process.env.NEXT_PUBLIC_BUILD_SHA && (
             <span className="text-[10px] text-muted-foreground/50 font-mono -ml-1 mt-1.5 select-all" title={`Built ${process.env.NEXT_PUBLIC_BUILD_TIME ?? ""}`}>
               {process.env.NEXT_PUBLIC_BUILD_SHA}

@@ -167,7 +167,7 @@ export function ChatSidebar() {
           <div className="flex items-center justify-between border-b px-3 py-2 shrink-0">
             <div className="flex items-center gap-2">
               <MessageSquareIcon className="h-4 w-4 text-purple-600" />
-              <span className="text-sm font-medium">LAPC Assistant</span>
+              <span className="text-sm font-medium">LAPortal Assistant</span>
             </div>
             <AnimatePresence initial={false}>
               {messages.length > 0 && (

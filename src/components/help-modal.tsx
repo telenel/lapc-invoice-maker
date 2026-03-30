@@ -29,7 +29,7 @@ const sections = [
   },
   {
     title: "Generating the PDF",
-    body: "Click Generate Invoice PDF. The system creates a CoverSheet and IDP form matching the official LAPC format.",
+    body: "Click Generate Invoice PDF. The system creates a CoverSheet and IDP form matching the official Pierce College format.",
   },
   {
     title: "Managing Invoices",
@@ -68,7 +68,7 @@ export function HelpModal() {
       />
       <DialogContent className="sm:max-w-lg" showCloseButton>
         <DialogHeader>
-          <DialogTitle>How to Use InvoiceMaker</DialogTitle>
+          <DialogTitle>How to Use LAPortal</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-2">
           {sections.map((section) => (
