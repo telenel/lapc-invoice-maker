@@ -921,8 +921,10 @@ export function buildTools(user: ChatUser) {
       },
     }),
 
+    // Staff records are shared resources (no creatorId), so admin role is
+    // required for updates — unlike invoices/quotes which use owner checks.
     updateStaff: tool({
-      description: "Update an existing staff member's information.",
+      description: "Update an existing staff member's information. Requires admin role.",
       inputSchema: z.object({
         id: z.string().describe("Staff member ID"),
         name: z.string().optional().describe("New name"),
@@ -936,8 +938,13 @@ export function buildTools(user: ChatUser) {
         birthDay: z.number().min(1).max(31).optional().describe("Birth day (1-31)"),
       }),
       execute: async ({ id, ...input }) => {
+        if (user.role !== "admin") {
+          return { error: "You do not have permission to update staff members" };
+        }
+        const existing = await staffService.getById(id);
+        if (!existing) return { error: "Staff member not found" };
         const staff = await staffService.update(id, input);
-        if (!staff) return { error: "Staff member not found" };
+        if (!staff) return { error: "Failed to update staff member" };
         return {
           id: staff.id,
           name: staff.name,
