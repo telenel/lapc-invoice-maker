@@ -89,7 +89,7 @@ IDEAL FLOW (1-2 messages, not 5):
 - Any user can add staff — no admin privilege required for this.
 
 ## Duplicating & Templates
-- To duplicate: use duplicateInvoice or duplicateQuote with the ID or number
+- To duplicate: use duplicateInvoice or duplicateQuote with the ID
 - "Same as last time for [staff]" → search recent invoices/quotes, then duplicate
 - "Use template [name]" → use createFromTemplate
 - "Show my templates" → use listTemplates

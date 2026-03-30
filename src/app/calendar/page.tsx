@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -13,7 +13,10 @@ import { Button } from "@/components/ui/button";
 import { calendarApi } from "@/domains/calendar/api-client";
 import { eventApi } from "@/domains/event/api-client";
 import type { EventResponse } from "@/domains/event/types";
-import { EventLegend } from "@/components/calendar/event-legend";
+import {
+  EventDetailSidebar,
+  type CalendarEvent,
+} from "@/components/calendar/event-detail-sidebar";
 import { AddEventModal } from "@/components/calendar/add-event-modal";
 import { useCalendarSSE } from "@/domains/calendar/hooks";
 
@@ -22,6 +25,15 @@ export default function CalendarPage() {
   const calendarRef = useRef<FullCalendar | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<EventResponse | undefined>(undefined);
   const [editModalKey, setEditModalKey] = useState(0);
+  const [hoveredEvent, setHoveredEvent] = useState<CalendarEvent | null>(null);
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Clear pending hover debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      clearTimeout(hoverTimerRef.current);
+    };
+  }, []);
 
   function refetchEvents() {
     calendarRef.current?.getApi().refetchEvents();
@@ -95,6 +107,105 @@ export default function CalendarPage() {
     [router],
   );
 
+  const handleEventMouseEnter = useCallback(
+    (info: {
+      event: {
+        id: string;
+        title: string;
+        startStr: string;
+        endStr?: string;
+        allDay: boolean;
+        extendedProps: Record<string, unknown>;
+      };
+    }) => {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = setTimeout(() => {
+        const ep = info.event.extendedProps;
+        setHoveredEvent({
+          id: info.event.id,
+          title: info.event.title,
+          start: info.event.startStr,
+          end: info.event.endStr ?? null,
+          allDay: info.event.allDay,
+          source: (ep.source as "catering" | "manual" | "birthday") ?? "manual",
+          type: ep.type as string | undefined,
+          location: ep.location as string | undefined,
+          description: ep.description as string | undefined,
+          eventId: ep.eventId as string | undefined,
+          quoteId: ep.quoteId as string | undefined,
+          quoteStatus: ep.quoteStatus as string | undefined,
+          quoteNumber: ep.quoteNumber as string | undefined,
+          totalAmount: ep.totalAmount as number | undefined,
+          headcount: ep.headcount as number | undefined,
+          setupTime: ep.setupTime as string | undefined,
+          takedownTime: ep.takedownTime as string | undefined,
+          staffId: ep.staffId as string | undefined,
+          department: ep.department as string | undefined,
+        });
+      }, 150);
+    },
+    [],
+  );
+
+  const handleEventMouseLeave = useCallback(() => {
+    clearTimeout(hoverTimerRef.current);
+    // Don't clear hoveredEvent — sticky behavior
+  }, []);
+
+  const renderEventContent = useCallback(
+    (arg: {
+      event: { title: string; extendedProps: Record<string, unknown> };
+      timeText: string;
+    }) => {
+      const source = arg.event.extendedProps.source as string;
+      const type = arg.event.extendedProps.type as string | undefined;
+      const location = arg.event.extendedProps.location as string | undefined;
+      const headcount = arg.event.extendedProps.headcount as number | undefined;
+
+      const icon =
+        source === "catering"
+          ? "🍽️"
+          : source === "birthday"
+            ? "🎂"
+            : type === "VENDOR"
+              ? "🏢"
+              : type === "SEMINAR"
+                ? "🎓"
+                : "📋";
+
+      return (
+        <div className="px-1 py-0.5 overflow-hidden">
+          <div className="flex items-center gap-1">
+            <span className="text-xs">{icon}</span>
+            <span className="font-semibold text-[0.8rem] truncate">{arg.event.title}</span>
+          </div>
+          {(() => {
+            const parts: string[] = [];
+            if (arg.timeText) parts.push(arg.timeText);
+            if (location) parts.push(location);
+            if (headcount != null) parts.push(`${headcount} guests`);
+            const subtitle = parts.join(" \u00b7 ");
+            return subtitle ? (
+              <div className="text-[0.65rem] opacity-80 truncate mt-0.5">
+                {subtitle}
+              </div>
+            ) : null;
+          })()}
+        </div>
+      );
+    },
+    [],
+  );
+
+  const handleEventDidMount = useCallback((info: { el: HTMLElement }) => {
+    info.el.addEventListener("mouseenter", () =>
+      info.el.classList.add("event-hovered"),
+    );
+    info.el.addEventListener("mouseleave", () =>
+      info.el.classList.remove("event-hovered"),
+    );
+  }, []);
+
   return (
     <div className="container mx-auto px-6 py-8 max-w-[1400px]">
       {/* Page header */}
@@ -119,11 +230,6 @@ export default function CalendarPage() {
         />
       </div>
 
-      {/* Legend */}
-      <div className="mb-5">
-        <EventLegend />
-      </div>
-
       {/* Edit modal triggered by clicking a manual event */}
       {selectedEvent && (
         <AddEventModal
@@ -139,27 +245,51 @@ export default function CalendarPage() {
         />
       )}
 
-      {/* Calendar */}
-      <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-        <div className="p-4">
-          <FullCalendar
-            ref={calendarRef}
-            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-            initialView="timeGridWeek"
-            headerToolbar={{
-              left: "prev,next today",
-              center: "title",
-              right: "dayGridMonth,timeGridWeek,timeGridDay",
+      <div className="flex gap-6">
+        {/* Calendar */}
+        <div className="flex-1 min-w-0 rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+          <div className="p-4">
+            <FullCalendar
+              ref={calendarRef}
+              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+              initialView="timeGridWeek"
+              headerToolbar={{
+                left: "prev,next today",
+                center: "title",
+                right: "dayGridMonth,timeGridWeek,timeGridDay",
+              }}
+              events={fetchEvents}
+              eventClick={handleEventClick}
+              eventMouseEnter={handleEventMouseEnter}
+              eventMouseLeave={handleEventMouseLeave}
+              eventContent={renderEventContent}
+              eventDidMount={handleEventDidMount}
+              height="auto"
+              weekends={false}
+              slotMinTime="07:00:00"
+              slotMaxTime="19:00:00"
+              nowIndicator
+              eventMaxStack={3}
+              dayMaxEvents={4}
+            />
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <div className="hidden lg:block">
+          <EventDetailSidebar
+            event={hoveredEvent}
+            onEditEvent={(eventId) => {
+              eventApi
+                .getById(eventId)
+                .then((eventData) => {
+                  setSelectedEvent(eventData);
+                  setEditModalKey((prev) => prev + 1);
+                })
+                .catch(() => {
+                  toast.error("Failed to load event details");
+                });
             }}
-            events={fetchEvents}
-            eventClick={handleEventClick}
-            height="auto"
-            weekends={false}
-            slotMinTime="07:00:00"
-            slotMaxTime="19:00:00"
-            nowIndicator
-            eventMaxStack={3}
-            dayMaxEvents={4}
           />
         </div>
       </div>

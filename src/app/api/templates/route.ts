@@ -5,7 +5,13 @@ import { templateService } from "@/domains/template/service";
 export const GET = withAuth(async (req: NextRequest, session) => {
   try {
     const rawType = req.nextUrl.searchParams.get("type");
-    const type = rawType === "INVOICE" || rawType === "QUOTE" ? rawType : undefined;
+    if (rawType !== null && rawType !== "INVOICE" && rawType !== "QUOTE") {
+      return NextResponse.json(
+        { error: "type must be INVOICE or QUOTE" },
+        { status: 400 },
+      );
+    }
+    const type = rawType ?? undefined;
     const templates = await templateService.list(session.user.id, type);
     return NextResponse.json(templates);
   } catch (err) {

@@ -389,7 +389,7 @@
 }
 
 .fc .fc-timegrid-slot {
-  height: 2rem;
+  height: 2.5rem;
 }
 
 .fc .fc-timegrid-slot-label {
@@ -398,16 +398,23 @@
 }
 
 .fc .fc-event {
-  border-radius: 4px;
-  font-size: 0.75rem;
+  border-radius: 0 6px 6px 0;
+  font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
   transition: opacity 150ms ease, filter 150ms ease;
+  border-left-width: 3px;
 }
 
 .fc .fc-event:hover {
   opacity: 0.85;
   filter: brightness(0.95);
+}
+
+.fc .fc-event.event-hovered {
+  outline: 2px solid currentcolor;
+  outline-offset: 1px;
+  z-index: 5;
 }
 
 .fc .fc-daygrid-event {

@@ -646,7 +646,7 @@ export function buildTools(user: ChatUser) {
         let sourceId = id;
 
         if (!sourceId && invoiceNumber) {
-          const result = await invoiceService.list({ search: invoiceNumber, pageSize: 10 });
+          const result = await invoiceService.list({ search: invoiceNumber, pageSize: 50 });
           const match = result.invoices.find((i) => i.invoiceNumber === invoiceNumber);
           if (!match) {
             return { error: `Invoice "${invoiceNumber}" not found` };
@@ -685,7 +685,7 @@ export function buildTools(user: ChatUser) {
         let sourceId = id;
 
         if (!sourceId && quoteNumber) {
-          const result = await quoteService.list({ search: quoteNumber, pageSize: 10 });
+          const result = await quoteService.list({ search: quoteNumber, pageSize: 50 });
           const match = result.quotes.find((q) => q.quoteNumber === quoteNumber);
           if (!match) {
             return { error: `Quote "${quoteNumber}" not found` };

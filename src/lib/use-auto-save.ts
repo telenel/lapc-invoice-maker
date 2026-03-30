@@ -9,7 +9,7 @@ function getDraftKey(userId: string, routeKey: string): string {
   return `draft:${userId}:${routeKey}`;
 }
 
-export function useAutoSave<T>(formState: T, routeKey: string, userId: string) {
+export function useAutoSave<T>(formState: T, routeKey: string, userId: string | null) {
   const timerRef = useRef<ReturnType<typeof setInterval>>();
   const formStateRef = useRef(formState);
   const initialStateRef = useRef(formState);
@@ -21,9 +21,11 @@ export function useAutoSave<T>(formState: T, routeKey: string, userId: string) {
     isDirtyRef.current = true;
   }
 
-  const key = getDraftKey(userId, routeKey);
+  const stableUserId = userId && userId !== "anonymous" ? userId : null;
+  const key = stableUserId ? getDraftKey(stableUserId, routeKey) : null;
 
   useEffect(() => {
+    if (!key) return;
     timerRef.current = setInterval(() => {
       if (!isDirtyRef.current) return; // Don't save until user actually edits
       try {
@@ -38,7 +40,7 @@ export function useAutoSave<T>(formState: T, routeKey: string, userId: string) {
   }, [key]);
 
   const clearDraft = useCallback(() => {
-    localStorage.removeItem(key);
+    if (key) localStorage.removeItem(key);
     isDirtyRef.current = false;
   }, [key]);
 
