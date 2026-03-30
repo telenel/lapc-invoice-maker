@@ -90,7 +90,7 @@ export function EmailProgress({
                     : "text-muted-foreground/40"
                 }`}
               >
-                <div className="flex-shrink-0 size-5">
+                <div className="shrink-0 size-5">
                   {isFailed ? (
                     <ErrorX />
                   ) : isActive && !isDone ? (

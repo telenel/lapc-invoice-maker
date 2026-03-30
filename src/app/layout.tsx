@@ -44,15 +44,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={cn(dmSans.variable, jetbrainsMono.variable)} suppressHydrationWarning>
-      <body className="antialiased">
+      <body className="min-h-dvh overflow-x-hidden antialiased">
         <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-background focus:text-foreground">Skip to main content</a>
         <AuthSessionProvider>
           <ThemeProviderWrapper>
             <UIScaleProvider>
-              <div className="flex h-screen">
-                <div className="flex-1 flex flex-col min-w-0">
+              <div className="flex min-h-dvh flex-col lg:h-screen lg:flex-row">
+                <div className="flex min-w-0 flex-1 flex-col">
                   <Nav />
-                  <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto px-6 py-6">{children}</main>
+                  <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">{children}</main>
                 </div>
                 <ChatSidebar />
               </div>

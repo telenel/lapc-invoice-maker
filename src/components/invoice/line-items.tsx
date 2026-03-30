@@ -116,7 +116,7 @@ export function LineItems({
   return (
     <div className="space-y-3">
       {/* Add button */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Line Items</Label>
         <Button
           ref={addButtonRef}
@@ -215,7 +215,7 @@ export function LineItems({
           </div>
 
           {/* Row 2: Qty, Unit Price, Charged (margin), Extended, Taxable */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-1.5">
               <Label className="text-xs text-muted-foreground whitespace-nowrap">Qty</Label>
               <Input
@@ -262,7 +262,7 @@ export function LineItems({
                 </span>
               </div>
             )}
-            <div className="flex items-center gap-1.5 ml-auto">
+            <div className="ml-auto flex items-center gap-1.5 max-sm:w-full max-sm:justify-end">
               <span
                 className={cn(
                   "text-sm font-medium tabular-nums",

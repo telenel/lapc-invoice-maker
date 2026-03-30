@@ -18,11 +18,13 @@ import {
 } from "@/components/calendar/event-detail-sidebar";
 import { AddEventModal } from "@/components/calendar/add-event-modal";
 import { useCalendarSSE } from "@/domains/calendar/hooks";
+import { cn } from "@/lib/utils";
 
 export function CalendarView() {
   const calendarRef = useRef<FullCalendar | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [calendarHeight, setCalendarHeight] = useState<number>(600);
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
   // Sidebar state
   const [hoveredEvent, setHoveredEvent] = useState<CalendarEvent | null>(null);
@@ -42,18 +44,33 @@ export function CalendarView() {
   useEffect(() => {
     const main = document.getElementById("main-content");
     if (!main) return;
-    const prevOverflow = main.style.overflow;
-    const prevPadding = main.style.padding;
-    main.style.overflow = "hidden";
-    main.style.padding = "0";
+    const mainEl = main;
+    const prevOverflow = mainEl.style.overflow;
+    const prevPadding = mainEl.style.padding;
 
     let debounceTimer: ReturnType<typeof setTimeout>;
     function sync() {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
         const navH = document.querySelector("nav")?.getBoundingClientRect().height ?? 64;
-        const available = window.innerHeight - navH;
-        setCalendarHeight(available);
+        const mobile = window.innerWidth < 1024;
+        setIsMobile(mobile);
+
+        if (mobile) {
+          mainEl.style.overflow = prevOverflow;
+          mainEl.style.padding = prevPadding;
+          document.documentElement.style.removeProperty("--fc-slot-height");
+          document.documentElement.style.removeProperty("--fc-slot-font");
+          const sidebarHeight =
+            document.querySelector<HTMLElement>("[data-calendar-sidebar]")?.getBoundingClientRect().height ?? 320;
+          setCalendarHeight(Math.max(window.innerHeight - navH - sidebarHeight - 24, 480));
+          calendarRef.current?.getApi().updateSize();
+          return;
+        }
+
+        mainEl.style.overflow = "hidden";
+        mainEl.style.padding = "0";
+        setCalendarHeight(window.innerHeight - navH);
 
         requestAnimationFrame(() => {
           const container = containerRef.current;
@@ -63,24 +80,25 @@ export function CalendarView() {
           const allSlots = container.querySelectorAll(".fc-timegrid-slot");
           if (!scroller || allSlots.length === 0) return;
 
-          // Use fractional px so slots fill the scroller exactly
+          // Use fractional px so slots fill the scroller exactly.
           const slotH = Math.max(scroller.clientHeight / allSlots.length, 10);
           const root = document.documentElement;
           root.style.setProperty("--fc-slot-height", `${slotH}px`);
           root.style.setProperty("--fc-slot-font", `${Math.min(Math.max(slotH * 0.85, 9), 13)}px`);
           scroller.style.overflow = "hidden";
+          calendarRef.current?.getApi().updateSize();
         });
       }, 50);
     }
 
     sync();
     const ro = new ResizeObserver(sync);
-    ro.observe(main);
+    ro.observe(mainEl);
     window.addEventListener("resize", sync, { passive: true });
     return () => {
       clearTimeout(debounceTimer);
-      main.style.overflow = prevOverflow;
-      main.style.padding = prevPadding;
+      mainEl.style.overflow = prevOverflow;
+      mainEl.style.padding = prevPadding;
       document.documentElement.style.removeProperty("--fc-slot-height");
       document.documentElement.style.removeProperty("--fc-slot-font");
       ro.disconnect();
@@ -334,7 +352,7 @@ export function CalendarView() {
   const sidebarEvent = pinnedEvent ?? hoveredEvent;
 
   return (
-    <div className="flex" style={{ height: "calc(100vh - 64px)" }}>
+    <div className={cn("flex", isMobile ? "flex-col gap-3" : "")} style={isMobile ? undefined : { height: "calc(100vh - 64px)" }}>
       {/* Edit modal triggered by sidebar Edit button */}
       {selectedEvent && (
         <AddEventModal
@@ -351,7 +369,7 @@ export function CalendarView() {
       )}
 
       {/* Main content: sidebar + calendar */}
-      <div ref={containerRef} className="flex flex-1 min-h-0 border-t border-border bg-card overflow-hidden">
+      <div ref={containerRef} className="flex min-h-0 flex-1 flex-col overflow-hidden border-t border-border bg-card lg:flex-row">
         {/* Left sidebar */}
         <EventDetailSidebar
           event={sidebarEvent}
@@ -389,15 +407,16 @@ export function CalendarView() {
         />
 
         {/* Calendar */}
-        <div className="flex-1 min-w-0 p-2 overflow-hidden">
+        <div className="min-h-[480px] flex-1 min-w-0 overflow-hidden p-2">
           <FullCalendar
+            key={isMobile ? "mobile" : "desktop"}
             ref={calendarRef}
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-            initialView="timeGridWeek"
+            initialView={isMobile ? "timeGridDay" : "timeGridWeek"}
             headerToolbar={{
-              left: "prev,next today",
+              left: isMobile ? "prev,next" : "prev,next today",
               center: "title",
-              right: "dayGridMonth,timeGridWeek,timeGridDay",
+              right: isMobile ? "dayGridMonth,timeGridDay" : "dayGridMonth,timeGridWeek,timeGridDay",
             }}
             events={fetchEvents}
             datesSet={handleDatesSet}

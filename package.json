@@ -9,7 +9,7 @@
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "postinstall": "[ -d .git ] && git config core.hooksPath hooks || true"
+    "postinstall": "node ./scripts/postinstall.js"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.64",

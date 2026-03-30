@@ -25,9 +25,9 @@ export default async function QuotesPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold">Quotes</h1>
-        <Button className="bg-green-600 hover:bg-green-700 text-white" render={<Link href="/quotes/new" />}>
+        <Button className="w-full bg-green-600 text-white hover:bg-green-700 sm:w-auto" render={<Link href="/quotes/new" />}>
           New Quote
         </Button>
       </div>

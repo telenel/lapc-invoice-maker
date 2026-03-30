@@ -115,6 +115,22 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
     return sortDir === "asc" ? " ↑" : " ↓";
   }
 
+  function statusLabel(status: InvoiceResponse["status"]) {
+    return status === "FINAL"
+      ? "Final"
+      : status === "PENDING_CHARGE"
+        ? "Pending Charge"
+        : "Draft";
+  }
+
+  function statusVariant(status: InvoiceResponse["status"]): "success" | "info" | "warning" {
+    return status === "FINAL"
+      ? "success"
+      : status === "PENDING_CHARGE"
+        ? "info"
+        : "warning";
+  }
+
   function handleExportCsv() {
     invoiceApi.exportCsv({
       search: filters.search || undefined,
@@ -162,7 +178,49 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
         />
       ) : (
         <>
-          <Table>
+          <div className="space-y-3 md:hidden">
+            {invoices.map((invoice) => (
+              <button
+                key={invoice.id}
+                type="button"
+                className="w-full rounded-xl border border-border/60 bg-card p-4 text-left shadow-sm transition-colors hover:bg-muted/20"
+                onClick={() => router.push(`/invoices/${invoice.id}`)}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-lg bg-muted text-[11px] font-bold text-muted-foreground">
+                    {getInitials(invoice.staff?.name ?? invoice.contact?.name ?? "?")}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <p className="min-w-0 flex-1 text-sm font-semibold leading-tight">
+                        {invoice.isRunning && invoice.runningTitle
+                          ? invoice.runningTitle
+                          : (invoice.invoiceNumber ?? "—")}
+                      </p>
+                      {invoice.isRunning && <Badge variant="info" className="text-[9px]">Running</Badge>}
+                      <Badge variant={statusVariant(invoice.status)}>{statusLabel(invoice.status)}</Badge>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {invoice.staff?.name ?? invoice.contact?.name ?? "Unknown"} · {formatDate(invoice.date)}
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {invoice.department}
+                      {invoice.category && (
+                        <> · {invoice.category.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}</>
+                      )}
+                      {" "}· by {invoice.creatorName}
+                    </p>
+                    <div className="mt-3 flex items-center justify-between gap-3">
+                      <p className="text-sm font-bold tabular-nums">{formatAmount(invoice.totalAmount)}</p>
+                      {invoice.isRecurring && <RefreshCwIcon className="size-3.5 text-muted-foreground" aria-hidden="true" />}
+                    </div>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+
+          <Table className="hidden md:table">
             <TableHeader>
               <TableRow>
                 <TableHead>
@@ -237,20 +295,8 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
                       {invoice.isRunning && (
                         <Badge variant="info" className="text-[9px]">Running</Badge>
                       )}
-                      <Badge
-                        variant={
-                          invoice.status === "FINAL"
-                            ? "success"
-                            : invoice.status === "PENDING_CHARGE"
-                              ? "info"
-                              : "warning"
-                        }
-                      >
-                        {invoice.status === "FINAL"
-                          ? "Final"
-                          : invoice.status === "PENDING_CHARGE"
-                            ? "Pending Charge"
-                            : "Draft"}
+                      <Badge variant={statusVariant(invoice.status)}>
+                        {statusLabel(invoice.status)}
                       </Badge>
                     </div>
                   </TableCell>
@@ -260,7 +306,7 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
           </Table>
 
           {/* Pagination */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-muted-foreground">
               Page {page} of {totalPages} ({total} invoice
               {total !== 1 ? "s" : ""})
@@ -271,6 +317,7 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
                 size="sm"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="flex-1 sm:flex-none"
               >
                 Previous
               </Button>
@@ -279,6 +326,7 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
                 size="sm"
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                className="flex-1 sm:flex-none"
               >
                 Next
               </Button>

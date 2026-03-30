@@ -75,12 +75,12 @@ export function StaffTable() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">Staff Directory</h1>
         <StaffForm
           onSave={fetchStaff}
           trigger={
-            <Button>
+            <Button className="w-full sm:w-auto">
               <PlusIcon />
               Add Staff Member
             </Button>
@@ -88,7 +88,7 @@ export function StaffTable() {
         />
       </div>
 
-      <div className="relative max-w-xs">
+      <div className="relative w-full max-w-xs">
         <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
         <Input
           placeholder="Search staff…"
@@ -113,7 +113,54 @@ export function StaffTable() {
         />
       ) : (
         <>
-          <Table className="table-fixed w-full">
+          <div className="space-y-3 md:hidden">
+            {staff.map((member) => (
+              <div key={member.id} className="rounded-xl border border-border/60 bg-card p-4 shadow-sm">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-lg bg-muted text-[10px] font-bold text-muted-foreground">
+                    {getInitials(member.name)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm font-bold">{member.name}</p>
+                      <Badge variant="secondary">{member.department.replace(/^[,\s]+/, "").trim()}</Badge>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">{member.title}</p>
+                    <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+                      <p>{member.email || "No email listed"}</p>
+                      <p>
+                        {member.extension ? `Ext. ${member.extension}` : "No extension"}
+                        {member.accountCode ? ` · ${member.accountCode}` : ""}
+                      </p>
+                    </div>
+                    <div className="mt-3 flex gap-2">
+                      <StaffForm
+                        staff={member}
+                        onSave={fetchStaff}
+                        trigger={
+                          <Button variant="outline" size="sm" className="flex-1">
+                            <PencilIcon />
+                            Edit
+                          </Button>
+                        }
+                      />
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleDeactivate(member.id, member.name)}
+                      >
+                        <UserMinus />
+                        Deactivate
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <Table className="hidden w-full table-fixed md:table">
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
@@ -175,7 +222,7 @@ export function StaffTable() {
             </TableBody>
           </Table>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-muted-foreground">
               Page {page} of {totalPages} ({total} staff member{total !== 1 ? "s" : ""})
             </p>
@@ -185,6 +232,7 @@ export function StaffTable() {
                 size="sm"
                 disabled={page <= 1}
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="flex-1 sm:flex-none"
               >
                 Previous
               </Button>
@@ -193,6 +241,7 @@ export function StaffTable() {
                 size="sm"
                 disabled={page >= totalPages}
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                className="flex-1 sm:flex-none"
               >
                 Next
               </Button>
