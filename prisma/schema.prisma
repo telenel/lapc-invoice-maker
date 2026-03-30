@@ -325,6 +325,7 @@ model Template {
   marginEnabled   Boolean        @default(false) @map("margin_enabled")
   marginPercent   Decimal?       @map("margin_percent") @db.Decimal(5, 2)
   taxEnabled      Boolean        @default(false) @map("tax_enabled")
+  taxRate         Decimal        @default(0.0975) @map("tax_rate") @db.Decimal(5, 4)
   notes           String         @default("")
   isCateringEvent Boolean        @default(false) @map("is_catering_event")
   cateringDetails Json?          @map("catering_details")

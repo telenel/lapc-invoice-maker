@@ -17,6 +17,15 @@ export const GET = withAuth(async (req: NextRequest, session) => {
 export const POST = withAuth(async (req: NextRequest, session) => {
   try {
     const body = await req.json();
+    if (!body.name || typeof body.name !== "string" || !body.name.trim()) {
+      return NextResponse.json({ error: "name is required" }, { status: 400 });
+    }
+    if (body.type !== "INVOICE" && body.type !== "QUOTE") {
+      return NextResponse.json({ error: "type must be INVOICE or QUOTE" }, { status: 400 });
+    }
+    if (!Array.isArray(body.items) || body.items.length === 0) {
+      return NextResponse.json({ error: "items must be a non-empty array" }, { status: 400 });
+    }
     const template = await templateService.create(body, session.user.id);
     return NextResponse.json(template, { status: 201 });
   } catch (err) {

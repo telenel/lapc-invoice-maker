@@ -12,12 +12,20 @@ function getDraftKey(userId: string, routeKey: string): string {
 export function useAutoSave<T>(formState: T, routeKey: string, userId: string) {
   const timerRef = useRef<ReturnType<typeof setInterval>>();
   const formStateRef = useRef(formState);
+  const initialStateRef = useRef(formState);
+  const isDirtyRef = useRef(false);
   formStateRef.current = formState;
+
+  // Detect dirty state by comparing current to initial
+  if (!isDirtyRef.current && JSON.stringify(formState) !== JSON.stringify(initialStateRef.current)) {
+    isDirtyRef.current = true;
+  }
 
   const key = getDraftKey(userId, routeKey);
 
   useEffect(() => {
     timerRef.current = setInterval(() => {
+      if (!isDirtyRef.current) return; // Don't save until user actually edits
       try {
         const entry = { data: formStateRef.current, savedAt: Date.now() };
         localStorage.setItem(key, JSON.stringify(entry));
@@ -31,6 +39,7 @@ export function useAutoSave<T>(formState: T, routeKey: string, userId: string) {
 
   const clearDraft = useCallback(() => {
     localStorage.removeItem(key);
+    isDirtyRef.current = false;
   }, [key]);
 
   return { clearDraft };

@@ -50,6 +50,7 @@ interface QuoteItem {
   isTaxable: boolean;
   sortOrder: number;
   costPrice: string | number | null;
+  marginOverride: number | null;
 }
 
 interface Quote {
@@ -760,14 +761,19 @@ export function QuoteDetailView({ id }: { id: string }) {
           return sum + cost * Number(item.quantity);
         }, 0);
 
-        // Charged subtotal (with margin) = sum of extendedPrice
-        const chargedSubtotal = quote.items.reduce(
-          (sum, item) => sum + Number(item.extendedPrice),
-          0
-        );
-
-        // Margin amount
-        const marginAmt = quote.marginEnabled ? chargedSubtotal - costSubtotal : 0;
+        // Margin amount — mirror the backend percentage-based calculation
+        // with per-item marginOverride support
+        const globalMargin = Number(quote.marginPercent ?? 0);
+        const marginAmt = quote.marginEnabled
+          ? quote.items.reduce((sum, item) => {
+              const cost = item.costPrice != null ? Number(item.costPrice) : Number(item.unitPrice);
+              const qty = Number(item.quantity);
+              const effectiveMargin = item.marginOverride != null
+                ? Number(item.marginOverride)
+                : globalMargin;
+              return sum + cost * qty * (effectiveMargin / 100);
+            }, 0)
+          : 0;
 
         // Tax
         const taxableTotal = quote.items
