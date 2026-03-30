@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
+import { useAutoSave, loadDraft } from "@/lib/use-auto-save";
+import { DraftRecoveryBanner } from "@/components/ui/draft-recovery-banner";
 import { InfoIcon } from "lucide-react";
 import {
   Dialog,
@@ -134,6 +136,30 @@ export function KeyboardMode({
 
   const [showChargeLaterDialog, setShowChargeLaterDialog] = useState(false);
 
+  // ---- Auto-save + draft recovery ----
+  const routeKey = existingId ? `/invoices/${existingId}/edit` : "/invoices/new";
+  const { clearDraft } = useAutoSave(form, routeKey);
+  const [draftEntry, setDraftEntry] = useState(() => {
+    if (typeof window === "undefined") return null;
+    return loadDraft<InvoiceFormData>(routeKey);
+  });
+
+  // ---- Save wrappers that clear the draft on success ----
+  const handleSaveDraft = useCallback(async () => {
+    await saveDraft();
+    clearDraft();
+  }, [saveDraft, clearDraft]);
+
+  const handleSaveAndFinalize = useCallback(async () => {
+    await saveAndFinalize();
+    clearDraft();
+  }, [saveAndFinalize, clearDraft]);
+
+  const handleSavePendingCharge = useCallback(async () => {
+    await savePendingCharge();
+    clearDraft();
+  }, [savePendingCharge, clearDraft]);
+
   const containerRef = useRef<HTMLDivElement>(null);
   const invoiceNumberRef = useRef<HTMLInputElement>(null);
 
@@ -207,8 +233,8 @@ export function KeyboardMode({
       toast.error("Please select a category");
       return;
     }
-    saveAndFinalize();
-  }, [form.staffId, form.invoiceNumber, form.category, saveAndFinalize]);
+    handleSaveAndFinalize();
+  }, [form.staffId, form.invoiceNumber, form.category, handleSaveAndFinalize]);
 
   // ---- Keyboard shortcut: Ctrl/Cmd+Enter -> Generate PDF ----
   useEffect(() => {
@@ -300,6 +326,23 @@ export function KeyboardMode({
       className="keyboard-mode max-w-2xl mx-auto"
       tabIndex={-1}
     >
+      {draftEntry && (
+        <DraftRecoveryBanner
+          savedAt={draftEntry.savedAt}
+          onResume={() => {
+            const draft = draftEntry.data;
+            (Object.keys(draft) as (keyof InvoiceFormData)[]).forEach((key) => {
+              updateField(key, draft[key] as InvoiceFormData[typeof key]);
+            });
+            setDraftEntry(null);
+          }}
+          onDiscard={() => {
+            clearDraft();
+            setDraftEntry(null);
+          }}
+        />
+      )}
+
       {isPendingCharge && (
         <div className="rounded-lg border-l-4 border-l-amber-500 bg-amber-50 dark:bg-amber-950/20 p-4 mb-4">
           <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
@@ -559,7 +602,7 @@ export function KeyboardMode({
 
         <div className="flex justify-end gap-2 pt-2">
           {!form.isRunning && (
-            <Button variant="outline" tabIndex={-1} onClick={saveDraft} disabled={saving}>
+            <Button variant="outline" tabIndex={-1} onClick={handleSaveDraft} disabled={saving}>
               Save Draft
             </Button>
           )}
@@ -569,11 +612,11 @@ export function KeyboardMode({
             </Button>
           )}
           {form.isRunning ? (
-            <Button onClick={saveDraft} disabled={saving}>
+            <Button onClick={handleSaveDraft} disabled={saving}>
               Save Running Invoice
             </Button>
           ) : existingId ? (
-            <Button onClick={saveDraft} disabled={saving}>
+            <Button onClick={handleSaveDraft} disabled={saving}>
               {saving ? "Updating..." : "Update"}
             </Button>
           ) : (
@@ -611,7 +654,7 @@ export function KeyboardMode({
             <Button
               onClick={() => {
                 setShowChargeLaterDialog(false);
-                savePendingCharge();
+                handleSavePendingCharge();
               }}
               disabled={saving}
             >

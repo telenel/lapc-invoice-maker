@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ChevronDownIcon, ChevronRightIcon, InfoIcon } from "lucide-react";
 import { toast } from "sonner";
+import { useAutoSave, loadDraft } from "@/lib/use-auto-save";
+import { DraftRecoveryBanner } from "@/components/ui/draft-recovery-banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -112,6 +114,20 @@ export function QuoteMode({
   const [quickPicksOpen, setQuickPicksOpen] = useState(false);
   const [cateringOverride, setCateringOverride] = useState(false);
 
+  // ---- Auto-save + draft recovery ----
+  const routeKey = existingId ? `/quotes/${existingId}/edit` : "/quotes/new";
+  const { clearDraft } = useAutoSave(form, routeKey);
+  const [draftEntry, setDraftEntry] = useState(() => {
+    if (typeof window === "undefined") return null;
+    return loadDraft<QuoteFormData>(routeKey);
+  });
+
+  // ---- Save wrapper that clears the draft on success ----
+  const handleSaveQuote = useCallback(async () => {
+    await saveQuote();
+    clearDraft();
+  }, [saveQuote, clearDraft]);
+
   // ---- Tax calculation ----
   const taxItems = form.marginEnabled ? itemsWithMargin : form.items;
   const { subtotal, taxAmount, total: grandTotal } = useTaxCalculation(
@@ -169,7 +185,7 @@ export function QuoteMode({
       toast.error("Please enter a recipient name");
       return;
     }
-    saveQuote();
+    handleSaveQuote();
   }
 
   // ---- Staff summary inline editing ----
@@ -208,6 +224,23 @@ export function QuoteMode({
 
   return (
     <div className="max-w-2xl mx-auto space-y-2">
+      {draftEntry && (
+        <DraftRecoveryBanner
+          savedAt={draftEntry.savedAt}
+          onResume={() => {
+            const draft = draftEntry.data;
+            (Object.keys(draft) as (keyof QuoteFormData)[]).forEach((key) => {
+              updateField(key, draft[key] as QuoteFormData[typeof key]);
+            });
+            setDraftEntry(null);
+          }}
+          onDiscard={() => {
+            clearDraft();
+            setDraftEntry(null);
+          }}
+        />
+      )}
+
       {/* ============ RECIPIENT ============ */}
       <Card>
         <CardHeader>
