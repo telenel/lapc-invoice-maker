@@ -14,6 +14,7 @@ function gitSha() {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: false,
   output: "standalone",
   env: {
     NEXT_PUBLIC_BUILD_SHA: gitSha(),

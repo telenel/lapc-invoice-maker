@@ -6,7 +6,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import type { EventClickArg, EventInput, DatesSetArg } from "@fullcalendar/core";
-import { CalendarDays, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { calendarApi } from "@/domains/calendar/api-client";
@@ -284,29 +284,7 @@ export default function CalendarPage() {
   const sidebarEvent = pinnedEvent ?? hoveredEvent;
 
   return (
-    <div className="flex flex-col" style={{ height: "calc(100vh - 64px)" }}>
-      {/* Page header */}
-      <div className="flex items-center justify-between px-6 py-3 shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400">
-            <CalendarDays className="h-5 w-5" />
-          </div>
-          <div>
-            <h1 className="text-xl font-semibold leading-tight">Calendar</h1>
-            <p className="text-sm text-muted-foreground">Catering, events, and staff birthdays</p>
-          </div>
-        </div>
-        <AddEventModal
-          onSave={refetchEvents}
-          trigger={
-            <Button className="bg-purple-600 hover:bg-purple-700 text-white gap-1.5">
-              <Plus className="h-4 w-4" />
-              Add Event
-            </Button>
-          }
-        />
-      </div>
-
+    <div className="flex" style={{ height: "calc(100vh - 64px)" }}>
       {/* Edit modal triggered by sidebar Edit button */}
       {selectedEvent && (
         <AddEventModal
@@ -323,7 +301,7 @@ export default function CalendarPage() {
       )}
 
       {/* Main content: sidebar + calendar */}
-      <div ref={containerRef} className="flex flex-1 min-h-0 mx-6 mb-4 rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+      <div ref={containerRef} className="flex flex-1 min-h-0 border-t border-border bg-card overflow-hidden">
         {/* Left sidebar */}
         <EventDetailSidebar
           event={sidebarEvent}
@@ -347,10 +325,21 @@ export default function CalendarPage() {
           onMonthChange={setDisplayMonth}
           onDateClick={handleMiniDateClick}
           activeRange={activeRange}
+          addEventTrigger={
+            <AddEventModal
+              onSave={refetchEvents}
+              trigger={
+                <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white gap-1.5">
+                  <Plus className="h-4 w-4" />
+                  Add Event
+                </Button>
+              }
+            />
+          }
         />
 
         {/* Calendar */}
-        <div className="flex-1 min-w-0 p-3 overflow-hidden">
+        <div className="flex-1 min-w-0 p-2 overflow-hidden">
           <FullCalendar
             ref={calendarRef}
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}

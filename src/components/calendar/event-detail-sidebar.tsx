@@ -1,6 +1,5 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import { Pin } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -41,6 +40,8 @@ interface EventDetailSidebarProps {
   onMonthChange: (date: Date) => void;
   onDateClick: (dateStr: string) => void;
   activeRange?: { start: string; end: string };
+  /** Slot for the Add Event trigger (rendered at bottom of default state) */
+  addEventTrigger?: React.ReactNode;
 }
 
 const TYPE_CONFIG: Record<string, { color: string; icon: string; label: string }> = {
@@ -254,59 +255,57 @@ export function EventDetailSidebar({
   onMonthChange,
   onDateClick,
   activeRange,
+  addEventTrigger,
 }: EventDetailSidebarProps) {
   const showEvent = event !== null;
 
   return (
-    <div className="w-[260px] shrink-0 border-r border-border bg-card flex flex-col h-full overflow-hidden">
-      <AnimatePresence mode="wait">
-        {!showEvent ? (
-          <motion.div
-            key="default"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="flex flex-col h-full p-4 gap-4"
-          >
-            {/* Mini month calendar */}
-            <MiniMonth
-              displayMonth={displayMonth}
-              onMonthChange={onMonthChange}
-              onDateClick={onDateClick}
-              activeRange={activeRange}
-            />
+    <div className="w-[260px] shrink-0 border-r border-border bg-card flex flex-col h-full overflow-hidden relative">
+      {/* Default state — always mounted, toggled via opacity */}
+      <div
+        className="absolute inset-0 flex flex-col h-full p-4 gap-4 transition-opacity duration-150"
+        style={{ opacity: showEvent ? 0 : 1, pointerEvents: showEvent ? "none" : "auto" }}
+      >
+        {/* Add Event button */}
+        {addEventTrigger && (
+          <div>{addEventTrigger}</div>
+        )}
 
-            {/* Legend */}
-            <div className="border-t border-border pt-3">
-              <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                Legend
+        {/* Mini month calendar */}
+        <MiniMonth
+          displayMonth={displayMonth}
+          onMonthChange={onMonthChange}
+          onDateClick={onDateClick}
+          activeRange={activeRange}
+        />
+
+        {/* Legend */}
+        <div className="border-t border-border pt-3">
+          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+            Legend
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {LEGEND.map((item) => (
+              <div key={item.label} className="flex items-center gap-2">
+                <div
+                  className="w-2.5 h-2.5 rounded-sm shrink-0"
+                  style={{ background: item.color }}
+                />
+                <span className="text-xs text-muted-foreground">
+                  {item.icon} {item.label}
+                </span>
               </div>
-              <div className="flex flex-col gap-1.5">
-                {LEGEND.map((item) => (
-                  <div key={item.label} className="flex items-center gap-2">
-                    <div
-                      className="w-2.5 h-2.5 rounded-sm shrink-0"
-                      style={{ background: item.color }}
-                    />
-                    <span className="text-xs text-muted-foreground">
-                      {item.icon} {item.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            key={event.id}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -10 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="flex flex-col h-full overflow-hidden"
-          >
-            {(() => {
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Event detail state — always mounted, toggled via opacity */}
+      <div
+        className="absolute inset-0 flex flex-col h-full overflow-hidden transition-opacity duration-150"
+        style={{ opacity: showEvent ? 1 : 0, pointerEvents: showEvent ? "auto" : "none" }}
+      >
+            {event != null && (() => {
               const cfg = getTypeConfig(event);
               return (
                 <>
@@ -371,9 +370,7 @@ export function EventDetailSidebar({
                 </>
               );
             })()}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      </div>
     </div>
   );
 }
