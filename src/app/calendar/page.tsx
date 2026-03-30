@@ -22,7 +22,7 @@ import { useCalendarSSE } from "@/domains/calendar/hooks";
 export default function CalendarPage() {
   const calendarRef = useRef<FullCalendar | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [calendarHeight, setCalendarHeight] = useState<number>(600);
+  const [calendarHeight, setCalendarHeight] = useState(600);
 
   // Sidebar state
   const [hoveredEvent, setHoveredEvent] = useState<CalendarEvent | null>(null);
@@ -38,18 +38,48 @@ export default function CalendarPage() {
   const [displayMonth, setDisplayMonth] = useState(() => new Date());
   const [activeRange, setActiveRange] = useState<{ start: string; end: string }>();
 
-  // Compute calendar height to fill viewport
+  // Calendar fills viewport: disable main scrolling/padding, compute slot height
   useEffect(() => {
-    function updateHeight() {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        // 16px bottom padding
-        setCalendarHeight(window.innerHeight - rect.top - 16);
-      }
+    const main = document.getElementById("main-content");
+    if (!main) return;
+    const prevOverflow = main.style.overflow;
+    const prevPadding = main.style.padding;
+    main.style.overflow = "hidden";
+    main.style.padding = "0";
+
+    function sync() {
+      const navH = document.querySelector("nav")?.getBoundingClientRect().height ?? 64;
+      const available = window.innerHeight - navH;
+      setCalendarHeight(available);
+      calendarRef.current?.getApi().updateSize();
+
+      // Fit all time slots in the viewport — compute slot height from scroller
+      requestAnimationFrame(() => {
+        const scroller = document.querySelector(".fc-scroller-liquid-absolute");
+        const slots = document.querySelectorAll(".fc-timegrid-slot");
+        if (!scroller || slots.length === 0) return;
+
+        const slotH = Math.max(Math.floor(scroller.clientHeight / slots.length), 10);
+        const root = document.documentElement;
+        root.style.setProperty("--fc-slot-height", `${slotH}px`);
+        // Scale font to fill the slot — cap at 13px for readability
+        root.style.setProperty("--fc-slot-font", `${Math.min(Math.max(slotH * 0.85, 9), 13)}px`);
+        calendarRef.current?.getApi().updateSize();
+      });
     }
-    updateHeight();
-    window.addEventListener("resize", updateHeight);
-    return () => window.removeEventListener("resize", updateHeight);
+
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(main);
+    window.addEventListener("resize", sync, { passive: true });
+    return () => {
+      main.style.overflow = prevOverflow;
+      main.style.padding = prevPadding;
+      document.documentElement.style.removeProperty("--fc-slot-height");
+      document.documentElement.style.removeProperty("--fc-slot-font");
+      ro.disconnect();
+      window.removeEventListener("resize", sync);
+    };
   }, []);
 
   // Clean up timers
@@ -287,7 +317,7 @@ export default function CalendarPage() {
   const sidebarEvent = pinnedEvent ?? hoveredEvent;
 
   return (
-    <div className="flex" style={{ height: "calc(100vh - 64px)" }}>
+    <div className="flex overflow-hidden" style={{ height: calendarHeight }}>
       {/* Edit modal triggered by sidebar Edit button */}
       {selectedEvent && (
         <AddEventModal
@@ -304,7 +334,7 @@ export default function CalendarPage() {
       )}
 
       {/* Main content: sidebar + calendar */}
-      <div ref={containerRef} className="flex flex-1 min-h-0 border-t border-border bg-card overflow-hidden">
+      <div ref={containerRef} className="flex flex-1 min-h-0 min-w-0 border-t border-border bg-card">
         {/* Left sidebar */}
         <EventDetailSidebar
           event={sidebarEvent}
@@ -362,7 +392,7 @@ export default function CalendarPage() {
             height={calendarHeight}
             weekends={false}
             slotMinTime="07:00:00"
-            slotMaxTime="19:00:00"
+            slotMaxTime="19:30:00"
             nowIndicator
             slotEventOverlap
           />
