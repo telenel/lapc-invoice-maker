@@ -113,7 +113,7 @@ export function QuoteMode({
 }: QuoteModeProps) {
   // ---- Session ----
   const { data: session } = useSession();
-  const userId = (session?.user as { id?: string } | undefined)?.id ?? "anonymous";
+  const userId = (session?.user as { id?: string } | undefined)?.id ?? null;
 
   // ---- Local state ----
   const [categories, setCategories] = useState<Category[]>([]);
@@ -126,9 +126,16 @@ export function QuoteMode({
   const routeKey = existingId ? `/quotes/${existingId}/edit` : "/quotes/new";
   const { clearDraft } = useAutoSave(form, routeKey, userId);
   const [draftEntry, setDraftEntry] = useState(() => {
-    if (typeof window === "undefined") return null;
+    if (typeof window === "undefined" || !userId) return null;
     return loadDraft<QuoteFormData>(routeKey, userId);
   });
+
+  // Reload draft when userId resolves from null to the real user id
+  useEffect(() => {
+    if (typeof window === "undefined" || !userId) return;
+    const entry = loadDraft<QuoteFormData>(routeKey, userId);
+    setDraftEntry(entry);
+  }, [userId, routeKey]);
 
   // ---- Save wrapper that clears the draft on success ----
   const handleSaveQuote = useCallback(async () => {
@@ -243,8 +250,8 @@ export function QuoteMode({
           unitPrice: Number(item.unitPrice),
           sortOrder: idx,
           isTaxable: item.isTaxable,
-          costPrice: item.costPrice ? Number(item.costPrice) : undefined,
-          marginOverride: item.marginOverride ? Number(item.marginOverride) : undefined,
+          costPrice: item.costPrice !== undefined ? Number(item.costPrice) : undefined,
+          marginOverride: item.marginOverride !== undefined ? Number(item.marginOverride) : undefined,
         })),
       });
       toast.success(`Template "${name.trim()}" saved`);

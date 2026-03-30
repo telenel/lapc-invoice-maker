@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useInvoice } from "@/domains/invoice/hooks";
@@ -18,6 +18,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
   const [regenerating, setRegenerating] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
+  const duplicatingRef = useRef(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   async function handleRegeneratePdf() {
@@ -81,7 +82,8 @@ export function InvoiceDetailView({ id }: { id: string }) {
   }
 
   const handleDuplicate = useCallback(async () => {
-    if (!invoice || duplicating) return;
+    if (!invoice || duplicatingRef.current) return;
+    duplicatingRef.current = true;
     setDuplicating(true);
     try {
       const res = await fetch(`/api/invoices/${invoice.id}/duplicate`, { method: "POST" });
@@ -96,9 +98,10 @@ export function InvoiceDetailView({ id }: { id: string }) {
     } catch {
       toast.error("Failed to duplicate");
     } finally {
+      duplicatingRef.current = false;
       setDuplicating(false);
     }
-  }, [invoice, duplicating, router]);
+  }, [invoice, router]);
 
   function handleDeleteClick() {
     if (!invoice) return;
