@@ -55,8 +55,11 @@ export default function CalendarPage() {
 
       // Fit all time slots in the viewport — compute slot height from scroller
       requestAnimationFrame(() => {
-        const scroller = document.querySelector(".fc-scroller-liquid-absolute");
-        const slots = document.querySelectorAll(".fc-timegrid-slot");
+        const container = containerRef.current;
+        if (!container) return;
+
+        const scroller = container.querySelector<HTMLElement>(".fc-scroller-liquid-absolute");
+        const slots = container.querySelectorAll(".fc-timegrid-slot-lane");
         if (!scroller || slots.length === 0) return;
 
         const slotH = Math.max(Math.floor(scroller.clientHeight / slots.length), 10);
