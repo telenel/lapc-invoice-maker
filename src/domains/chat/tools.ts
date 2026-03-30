@@ -825,6 +825,127 @@ export function buildTools(user: ChatUser) {
       },
     }),
 
+    finalizeInvoice: tool({
+      description:
+        "Finalize a draft invoice — changes status to FINAL and generates PDF. The invoice must have an invoice number (AG number) assigned before finalizing.",
+      inputSchema: z.object({
+        id: z.string().describe("Invoice ID"),
+      }),
+      execute: async ({ id }) => {
+        const existing = await invoiceService.getById(id);
+        if (!existing) return { error: "Invoice not found" };
+        if (user.role !== "admin" && existing.creatorId !== user.id) {
+          return { error: "You don't have permission to finalize this invoice" };
+        }
+        if (existing.status === "FINAL") return { error: "Invoice is already finalized" };
+        try {
+          const result = await invoiceService.finalize(id, {});
+          return {
+            pdfPath: result.pdfPath,
+            message: `Invoice finalized and PDF generated. [View Invoice](/invoices/${id})`,
+          };
+        } catch (err) {
+          return { error: (err as Error).message ?? "Failed to finalize invoice" };
+        }
+      },
+    }),
+
+    deleteInvoice: tool({
+      description:
+        "Delete a draft or pending invoice. ALWAYS ask the user to confirm before deleting.",
+      inputSchema: z.object({
+        id: z.string().describe("Invoice ID"),
+        confirmed: z.boolean().describe("Whether the user has confirmed deletion"),
+      }),
+      execute: async ({ id, confirmed }) => {
+        if (!confirmed) return { error: "Please confirm you want to delete this invoice" };
+        const existing = await invoiceService.getById(id);
+        if (!existing) return { error: "Invoice not found" };
+        if (user.role !== "admin" && existing.creatorId !== user.id) {
+          return { error: "You don't have permission to delete this invoice" };
+        }
+        try {
+          await invoiceService.delete(id);
+          return { message: "Invoice deleted successfully." };
+        } catch (err) {
+          return { error: (err as Error).message ?? "Failed to delete invoice" };
+        }
+      },
+    }),
+
+    deleteQuote: tool({
+      description:
+        "Delete a draft or pending quote. ALWAYS ask the user to confirm before deleting.",
+      inputSchema: z.object({
+        id: z.string().describe("Quote ID"),
+        confirmed: z.boolean().describe("Whether the user has confirmed deletion"),
+      }),
+      execute: async ({ id, confirmed }) => {
+        if (!confirmed) return { error: "Please confirm you want to delete this quote" };
+        const existing = await quoteService.getById(id);
+        if (!existing) return { error: "Quote not found" };
+        if (user.role !== "admin" && existing.creatorId !== user.id) {
+          return { error: "You don't have permission to delete this quote" };
+        }
+        try {
+          await quoteService.delete(id);
+          return { message: "Quote deleted successfully." };
+        } catch (err) {
+          return { error: (err as Error).message ?? "Failed to delete quote" };
+        }
+      },
+    }),
+
+    convertQuoteToInvoice: tool({
+      description:
+        "Convert a sent or submitted quote to a draft invoice. Copies all fields from the quote.",
+      inputSchema: z.object({
+        id: z.string().describe("Quote ID"),
+      }),
+      execute: async ({ id }) => {
+        const existing = await quoteService.getById(id);
+        if (!existing) return { error: "Quote not found" };
+        if (user.role !== "admin" && existing.creatorId !== user.id) {
+          return { error: "You don't have permission to convert this quote" };
+        }
+        try {
+          const result = await quoteService.convertToInvoice(id, user.id);
+          return {
+            invoiceId: result.id,
+            invoiceNumber: result.invoiceNumber,
+            message: `Quote converted to invoice. [View Invoice](/invoices/${result.id})`,
+          };
+        } catch (err) {
+          return { error: (err as Error).message ?? "Failed to convert quote" };
+        }
+      },
+    }),
+
+    updateStaff: tool({
+      description: "Update an existing staff member's information.",
+      inputSchema: z.object({
+        id: z.string().describe("Staff member ID"),
+        name: z.string().optional().describe("New name"),
+        title: z.string().optional().describe("New title"),
+        department: z.string().optional().describe("New department"),
+        phone: z.string().optional().describe("New phone number"),
+        extension: z.string().optional().describe("New phone extension"),
+        email: z.string().optional().describe("New email address"),
+        accountCode: z.string().optional().describe("New account code"),
+        birthMonth: z.number().min(1).max(12).optional().describe("Birth month (1-12)"),
+        birthDay: z.number().min(1).max(31).optional().describe("Birth day (1-31)"),
+      }),
+      execute: async ({ id, ...input }) => {
+        const staff = await staffService.update(id, input);
+        if (!staff) return { error: "Staff member not found" };
+        return {
+          id: staff.id,
+          name: staff.name,
+          message: `Staff member "${staff.name}" updated. [View Staff](/staff)`,
+        };
+      },
+    }),
+
     // Staff creation is intentionally open to all users per business requirement
     createStaff: tool({
       description:
