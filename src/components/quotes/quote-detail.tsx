@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/table";
 import { CopyIcon, LinkIcon, PrinterIcon } from "lucide-react";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
+import { useSSE } from "@/lib/use-sse";
 import { ShareLinkDialog } from "@/components/quotes/share-link-dialog";
 import { QuoteActivity } from "@/components/quotes/quote-activity";
 import type { CateringDetails } from "@/domains/quote/types";
@@ -48,6 +49,7 @@ interface QuoteItem {
   extendedPrice: string | number;
   isTaxable: boolean;
   sortOrder: number;
+  costPrice: string | number | null;
 }
 
 interface Quote {
@@ -206,6 +208,8 @@ export function QuoteDetailView({ id }: { id: string }) {
   useEffect(() => {
     fetchQuote();
   }, [fetchQuote]);
+
+  useSSE("quote-changed", fetchQuote);
 
   const handleDelete = useCallback(async () => {
     if (!quote) return;
@@ -747,48 +751,138 @@ export function QuoteDetailView({ id }: { id: string }) {
       </div>
 
       {/* Line Items */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Line Items</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Description</TableHead>
-                <TableHead className="text-center">Qty</TableHead>
-                <TableHead className="text-right">Unit Price</TableHead>
-                <TableHead className="text-right">Extended</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {quote.items.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="uppercase">{item.description}</TableCell>
-                  <TableCell className="text-center tabular-nums">
-                    {Number(item.quantity)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatAmount(item.unitPrice)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatAmount(item.extendedPrice)}
-                  </TableCell>
-                </TableRow>
-              ))}
-              {/* Total row */}
-              <TableRow>
-                <TableCell colSpan={3} className="text-right font-bold">
-                  Total
-                </TableCell>
-                <TableCell className="text-right font-bold tabular-nums">
-                  {formatAmount(quote.totalAmount)}
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {(() => {
+        const colCount = quote.marginEnabled ? 5 : 4;
+
+        // Cost subtotal (before margin)
+        const costSubtotal = quote.items.reduce((sum, item) => {
+          const cost = item.costPrice != null ? Number(item.costPrice) : Number(item.unitPrice);
+          return sum + cost * Number(item.quantity);
+        }, 0);
+
+        // Charged subtotal (with margin) = sum of extendedPrice
+        const chargedSubtotal = quote.items.reduce(
+          (sum, item) => sum + Number(item.extendedPrice),
+          0
+        );
+
+        // Margin amount
+        const marginAmt = quote.marginEnabled ? chargedSubtotal - costSubtotal : 0;
+
+        // Tax
+        const taxableTotal = quote.items
+          .filter((item) => item.isTaxable !== false)
+          .reduce((sum, item) => sum + Number(item.extendedPrice), 0);
+        const taxRate = Number(quote.taxRate ?? 0.0975);
+        const taxAmt = quote.taxEnabled
+          ? Math.round(taxableTotal * taxRate * 100) / 100
+          : 0;
+
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>Line Items</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Description</TableHead>
+                    <TableHead className="text-center">Qty</TableHead>
+                    {quote.marginEnabled ? (
+                      <>
+                        <TableHead className="text-right">Cost</TableHead>
+                        <TableHead className="text-right">Charged</TableHead>
+                      </>
+                    ) : (
+                      <TableHead className="text-right">Unit Price</TableHead>
+                    )}
+                    <TableHead className="text-right">Extended</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {quote.items.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell className="uppercase">{item.description}</TableCell>
+                      <TableCell className="text-center tabular-nums">
+                        {Number(item.quantity)}
+                      </TableCell>
+                      {quote.marginEnabled ? (
+                        <>
+                          <TableCell className="text-right tabular-nums">
+                            {formatAmount(item.costPrice != null ? Number(item.costPrice) : Number(item.unitPrice))}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {formatAmount(item.unitPrice)}
+                          </TableCell>
+                        </>
+                      ) : (
+                        <TableCell className="text-right tabular-nums">
+                          {formatAmount(item.unitPrice)}
+                        </TableCell>
+                      )}
+                      <TableCell className="text-right tabular-nums">
+                        {formatAmount(item.extendedPrice)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+
+                  {/* Breakdown rows */}
+                  {quote.marginEnabled && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={colCount - 1}
+                        className="text-right text-sm text-muted-foreground"
+                      >
+                        Subtotal (Cost)
+                      </TableCell>
+                      <TableCell className="text-right text-sm text-muted-foreground tabular-nums">
+                        {formatAmount(costSubtotal)}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {quote.marginEnabled && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={colCount - 1}
+                        className="text-right text-sm text-muted-foreground"
+                      >
+                        Margin ({Number(quote.marginPercent ?? 0)}%)
+                      </TableCell>
+                      <TableCell className="text-right text-sm text-muted-foreground tabular-nums">
+                        +{formatAmount(marginAmt)}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                  {quote.taxEnabled && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={colCount - 1}
+                        className="text-right text-sm text-muted-foreground"
+                      >
+                        Tax ({(taxRate * 100).toFixed(2)}%)
+                      </TableCell>
+                      <TableCell className="text-right text-sm text-muted-foreground tabular-nums">
+                        +{formatAmount(taxAmt)}
+                      </TableCell>
+                    </TableRow>
+                  )}
+
+                  {/* Total row */}
+                  <TableRow>
+                    <TableCell colSpan={colCount - 1} className="text-right font-bold">
+                      Total
+                    </TableCell>
+                    <TableCell className="text-right font-bold tabular-nums">
+                      {formatAmount(quote.totalAmount)}
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Catering Guide */}
       {quote.isCateringEvent && (() => {

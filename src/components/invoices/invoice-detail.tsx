@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useInvoice } from "@/domains/invoice/hooks";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
+import { useSSE } from "@/lib/use-sse";
 import { InvoiceDetailHeader } from "./invoice-detail-header";
 import { InvoiceDetailInfo } from "./invoice-detail-info";
 import { InvoiceDetailStaff } from "./invoice-detail-staff";
@@ -12,7 +13,8 @@ import { InvoiceDetailItems } from "./invoice-detail-items";
 
 export function InvoiceDetailView({ id }: { id: string }) {
   const router = useRouter();
-  const { data: invoice, loading } = useInvoice(id);
+  const { data: invoice, loading, refetch } = useInvoice(id);
+  useSSE("invoice-changed", refetch);
   const [regenerating, setRegenerating] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
@@ -139,7 +141,14 @@ export function InvoiceDetailView({ id }: { id: string }) {
         <InvoiceDetailStaff staff={invoice.staff} contact={invoice.contact} />
       </div>
 
-      <InvoiceDetailItems items={invoice.items} totalAmount={invoice.totalAmount} />
+      <InvoiceDetailItems
+        items={invoice.items}
+        totalAmount={invoice.totalAmount}
+        marginEnabled={invoice.marginEnabled}
+        marginPercent={invoice.marginPercent}
+        taxEnabled={invoice.taxEnabled}
+        taxRate={invoice.taxRate}
+      />
     </div>
   );
 }
