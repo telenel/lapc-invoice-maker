@@ -19,6 +19,19 @@ export const GET = withAuth(async (req: NextRequest, _session) => {
     );
   }
 
+  const rangeStart = new Date(start);
+  const rangeEnd = new Date(end);
+  if (
+    Number.isNaN(rangeStart.getTime()) ||
+    Number.isNaN(rangeEnd.getTime()) ||
+    rangeStart >= rangeEnd
+  ) {
+    return NextResponse.json(
+      { error: "Invalid date range. Use valid ISO dates and ensure start < end." },
+      { status: 400 },
+    );
+  }
+
   // Fetch all three data sources in parallel
   const [quotes, manualEvents, staffWithBirthdays] = await Promise.all([
     prisma.invoice.findMany({
@@ -36,7 +49,7 @@ export const GET = withAuth(async (req: NextRequest, _session) => {
         cateringDetails: true,
       },
     }),
-    eventService.listForDateRange(new Date(start), new Date(end)),
+    eventService.listForDateRange(rangeStart, rangeEnd),
     prisma.staff.findMany({
       where: {
         birthMonth: { not: null },
@@ -90,8 +103,6 @@ export const GET = withAuth(async (req: NextRequest, _session) => {
   }
 
   const birthdayEvents: CalendarEventItem[] = [];
-  const rangeStart = new Date(start);
-  const rangeEnd = new Date(end);
 
   for (const staff of staffWithBirthdays) {
     if (staff.birthMonth === null || staff.birthDay === null) continue;

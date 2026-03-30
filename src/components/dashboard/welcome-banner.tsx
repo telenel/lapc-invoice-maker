@@ -24,8 +24,8 @@ export function WelcomeBanner() {
     setExiting(true);
   }
 
-  function handleTransitionEnd() {
-    if (exiting) setVisible(false);
+  function handleTransitionEnd(e: React.TransitionEvent) {
+    if (exiting && e.propertyName === "opacity") setVisible(false);
   }
 
   if (!visible) return null;
