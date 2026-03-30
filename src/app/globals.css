@@ -438,11 +438,11 @@
 }
 
 .fc .fc-timegrid-slot {
-  height: 2.5rem;
+  height: var(--fc-slot-height, 2.5rem);
 }
 
 .fc .fc-timegrid-slot-label {
-  font-size: 0.75rem;
+  font-size: var(--fc-slot-font, 0.75rem);
   color: var(--muted-foreground);
 }
 
