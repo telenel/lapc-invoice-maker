@@ -89,7 +89,7 @@ function SectionDivider({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3 pt-6 pb-2">
+    <div className="flex flex-wrap items-center gap-3 pt-6 pb-2">
       <span className="section-label">{label}</span>
       <div className="flex-1 border-t border-border" />
       {children}
@@ -584,7 +584,7 @@ export function QuoteMode({
       <SectionDivider label="CATERING" />
 
       <div className="space-y-3">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Checkbox
             checked={form.isCateringEvent}
             onCheckedChange={(checked) => handleCateringToggle(!!checked)}
@@ -610,7 +610,7 @@ export function QuoteMode({
 
       <div className="space-y-3">
         {/* Apply Margin */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
             <Checkbox
               id="marginEnabled"
@@ -679,7 +679,7 @@ export function QuoteMode({
               <InfoIcon className="size-3.5" />
               <span>CA Tax Rules</span>
             </PopoverTrigger>
-            <PopoverContent side="bottom" align="start" className="w-80">
+            <PopoverContent side="bottom" align="start" className="w-[min(20rem,calc(100vw-2rem))]">
               <div className="space-y-2 text-xs">
                 <p className="font-semibold text-sm">
                   California Food Tax Rules
@@ -801,11 +801,11 @@ export function QuoteMode({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={handleSaveAsTemplate} disabled={saving}>
+        <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+          <Button variant="outline" onClick={handleSaveAsTemplate} disabled={saving} className="w-full sm:w-auto">
             Save as Template
           </Button>
-          <Button onClick={handleSave} disabled={saving} size="lg">
+          <Button onClick={handleSave} disabled={saving} size="lg" className="w-full sm:w-auto">
             {saving ? "Saving..." : existingId ? "Update Quote" : "Save Quote"}
           </Button>
         </div>

@@ -57,12 +57,12 @@ export function QuickPickTable() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold">Quick-Pick Items</h1>
         <QuickPickForm
           onSave={fetchItems}
           trigger={
-            <Button>
+            <Button className="w-full sm:w-auto">
               <PlusIcon />
               Add Item
             </Button>
@@ -77,60 +77,109 @@ export function QuickPickTable() {
           No quick-pick items yet. Add one to get started.
         </p>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Description</TableHead>
-              <TableHead>Department</TableHead>
-              <TableHead>Default Price</TableHead>
-              <TableHead>Times Used</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        <>
+          <div className="space-y-3 md:hidden">
             {items.map((item) => (
-              <TableRow key={item.id}>
-                <TableCell>{item.description}</TableCell>
-                <TableCell>
-                  <Badge variant="secondary">
-                    {item.department === "__ALL__" ? "All Departments" : item.department}
-                  </Badge>
-                </TableCell>
-                <TableCell className="tabular-nums">
-                  $
-                  {Number(item.defaultPrice).toLocaleString("en-US", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}
-                </TableCell>
-                <TableCell>{item.usageCount}</TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
+              <div key={item.id} className="rounded-xl border border-border/60 bg-card p-4 shadow-sm">
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <p className="text-sm font-semibold">{item.description}</p>
+                    <Badge variant="secondary">
+                      {item.department === "__ALL__" ? "All Departments" : item.department}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
+                    <span>
+                      $
+                      {Number(item.defaultPrice).toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </span>
+                    <span>{item.usageCount} uses</span>
+                  </div>
+                  <div className="flex gap-2">
                     <QuickPickForm
                       item={item}
                       onSave={fetchItems}
                       trigger={
-                        <Button variant="ghost" size="icon-sm" aria-label="Edit quick pick">
+                        <Button variant="outline" size="sm" className="flex-1" aria-label="Edit quick pick">
                           <PencilIcon />
-                          <span className="sr-only">Edit</span>
+                          Edit
                         </Button>
                       }
                     />
                     <Button
-                      variant="ghost"
-                      size="icon-sm"
+                      variant="destructive"
+                      size="sm"
+                      className="flex-1"
                       aria-label="Delete quick pick"
                       onClick={() => handleDelete(item.id)}
                     >
-                      <TrashIcon className="text-destructive" />
-                      <span className="sr-only">Delete</span>
+                      <TrashIcon />
+                      Delete
                     </Button>
                   </div>
-                </TableCell>
-              </TableRow>
+                </div>
+              </div>
             ))}
-          </TableBody>
-        </Table>
+          </div>
+
+          <Table className="hidden md:table">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Description</TableHead>
+                <TableHead>Department</TableHead>
+                <TableHead>Default Price</TableHead>
+                <TableHead>Times Used</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {items.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell>{item.description}</TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">
+                      {item.department === "__ALL__" ? "All Departments" : item.department}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="tabular-nums">
+                    $
+                    {Number(item.defaultPrice).toLocaleString("en-US", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </TableCell>
+                  <TableCell>{item.usageCount}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <QuickPickForm
+                        item={item}
+                        onSave={fetchItems}
+                        trigger={
+                          <Button variant="ghost" size="icon-sm" aria-label="Edit quick pick">
+                            <PencilIcon />
+                            <span className="sr-only">Edit</span>
+                          </Button>
+                        }
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label="Delete quick pick"
+                        onClick={() => handleDelete(item.id)}
+                      >
+                        <TrashIcon className="text-destructive" />
+                        <span className="sr-only">Delete</span>
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </>
       )}
     </div>
   );

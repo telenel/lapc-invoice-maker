@@ -142,7 +142,7 @@ export default function EditInvoicePage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <div className="mx-auto max-w-5xl px-0 py-4 sm:px-4 sm:py-8">
         <p className="text-muted-foreground">Loading invoice…</p>
       </div>
     );
@@ -150,15 +150,15 @@ export default function EditInvoicePage() {
 
   if (fetchError) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
+      <div className="mx-auto max-w-5xl px-0 py-4 sm:px-4 sm:py-8">
         <p className="text-destructive">{fetchError}</p>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl">
-      <h1 className="text-2xl font-semibold mb-6">
+    <div className="mx-auto max-w-5xl px-0 py-4 sm:px-4 sm:py-8">
+      <h1 className="mb-4 text-2xl font-semibold sm:mb-6">
         {isPendingCharge ? "Complete POS Charge" : "Edit Invoice"}
       </h1>
       <KeyboardMode {...invoiceForm} isPendingCharge={isPendingCharge} />

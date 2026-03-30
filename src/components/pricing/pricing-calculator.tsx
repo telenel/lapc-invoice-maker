@@ -359,11 +359,11 @@ export function PricingCalculator({ pricing }: PricingCalculatorProps) {
   }
 
   return (
-    <div className="relative mx-auto max-w-7xl pb-28 md:pb-10">
-      <div className="mb-8 rounded-[28px] border border-border/70 bg-[linear-gradient(135deg,rgba(248,250,252,0.95),rgba(255,255,255,0.92))] px-6 py-8 shadow-[0_18px_40px_rgba(15,23,42,0.06)]">
+    <div className="relative mx-auto max-w-7xl pb-24 md:pb-10">
+      <div className="mb-6 rounded-[28px] border border-border/70 bg-[linear-gradient(135deg,rgba(248,250,252,0.95),rgba(255,255,255,0.92))] px-4 py-6 shadow-[0_18px_40px_rgba(15,23,42,0.06)] sm:mb-8 sm:px-6 sm:py-8">
         <div className="max-w-3xl space-y-3">
           <p className="text-sm font-medium uppercase tracking-[0.18em] text-muted-foreground">Public estimator</p>
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl md:text-4xl">
             Print shop price calculator
           </h1>
           <p className="text-sm leading-6 text-muted-foreground md:text-base">
@@ -635,7 +635,7 @@ export function PricingCalculator({ pricing }: PricingCalculatorProps) {
         </div>
 
         <div className="hidden xl:block">
-          <div className="sticky top-24">
+          <div className="xl:sticky xl:top-24">
             <Card className="border border-border/70 shadow-[0_16px_36px_rgba(15,23,42,0.06)]">
               <CardHeader>
                 <CardTitle>Live summary</CardTitle>

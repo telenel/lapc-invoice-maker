@@ -59,7 +59,7 @@ export function QuoteFiltersBar({
   return (
     <div className="space-y-3">
       {/* Search row — always visible */}
-      <div className="flex items-end gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <div className="grid gap-1.5 flex-1">
           <Label htmlFor="quote-search" className="sr-only">Search</Label>
           <Input
@@ -74,7 +74,7 @@ export function QuoteFiltersBar({
           variant="outline"
           size="sm"
           onClick={() => setOpen((o) => !o)}
-          className="shrink-0 gap-1.5"
+          className="w-full shrink-0 gap-1.5 sm:w-auto"
         >
           <FilterIcon className="size-3.5" />
           Filters
@@ -158,7 +158,7 @@ export function QuoteFiltersBar({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {/* Date From */}
             <div className="grid gap-1.5">
               <Label htmlFor="quote-date-from">From</Label>
@@ -215,7 +215,7 @@ export function QuoteFiltersBar({
           </div>
 
           <div className="flex justify-end">
-            <Button variant="outline" size="sm" onClick={onClear}>
+            <Button variant="outline" size="sm" onClick={onClear} className="w-full sm:w-auto">
               Clear Filters
             </Button>
           </div>

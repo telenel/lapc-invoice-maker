@@ -321,7 +321,7 @@ export function EventDetailSidebar({
   const showEvent = event !== null;
 
   return (
-    <div className="w-[260px] shrink-0 border-r border-border bg-card flex flex-col h-full overflow-hidden relative">
+    <div className="relative flex min-h-[20rem] w-full shrink-0 flex-col overflow-hidden border-b border-border bg-card lg:h-full lg:w-[260px] lg:border-r lg:border-b-0">
       {/* Default state — always mounted, toggled via opacity */}
       <div
         className="absolute inset-0 flex flex-col h-full p-4 gap-4 transition-opacity duration-150"
