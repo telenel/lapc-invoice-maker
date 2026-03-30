@@ -1,13 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import type { EventClickArg, EventInput } from "@fullcalendar/core";
-import { CalendarDays, Plus } from "lucide-react";
+import type { EventClickArg, EventInput, DatesSetArg } from "@fullcalendar/core";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { calendarApi } from "@/domains/calendar/api-client";
@@ -21,17 +20,43 @@ import { AddEventModal } from "@/components/calendar/add-event-modal";
 import { useCalendarSSE } from "@/domains/calendar/hooks";
 
 export default function CalendarPage() {
-  const router = useRouter();
   const calendarRef = useRef<FullCalendar | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [calendarHeight, setCalendarHeight] = useState<number>(600);
+
+  // Sidebar state
+  const [hoveredEvent, setHoveredEvent] = useState<CalendarEvent | null>(null);
+  const [pinnedEvent, setPinnedEvent] = useState<CalendarEvent | null>(null);
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const leaveTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Edit modal state
   const [selectedEvent, setSelectedEvent] = useState<EventResponse | undefined>(undefined);
   const [editModalKey, setEditModalKey] = useState(0);
-  const [hoveredEvent, setHoveredEvent] = useState<CalendarEvent | null>(null);
-  const hoverTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  // Clear pending hover debounce timer on unmount
+  // Mini month state
+  const [displayMonth, setDisplayMonth] = useState(() => new Date());
+  const [activeRange, setActiveRange] = useState<{ start: string; end: string }>();
+
+  // Compute calendar height to fill viewport
+  useEffect(() => {
+    function updateHeight() {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        // 16px bottom padding
+        setCalendarHeight(window.innerHeight - rect.top - 16);
+      }
+    }
+    updateHeight();
+    window.addEventListener("resize", updateHeight);
+    return () => window.removeEventListener("resize", updateHeight);
+  }, []);
+
+  // Clean up timers
   useEffect(() => {
     return () => {
       clearTimeout(hoverTimerRef.current);
+      clearTimeout(leaveTimerRef.current);
     };
   }, []);
 
@@ -40,6 +65,16 @@ export default function CalendarPage() {
   }
 
   useCalendarSSE(refetchEvents);
+
+  // Track FullCalendar's visible date range for mini month highlighting
+  const handleDatesSet = useCallback((info: DatesSetArg) => {
+    setActiveRange({
+      start: info.startStr.split("T")[0],
+      end: info.endStr.split("T")[0],
+    });
+    // Sync mini month to the calendar's displayed month (not padded range start)
+    setDisplayMonth(info.view.currentStart);
+  }, []);
 
   const fetchEvents = useCallback(
     async (
@@ -77,34 +112,59 @@ export default function CalendarPage() {
     [],
   );
 
-  const handleEventClick = useCallback(
-    async (info: EventClickArg) => {
-      const source = info.event.extendedProps.source as string;
+  // Build a CalendarEvent from FullCalendar's event object
+  function toCalendarEvent(fcEvent: {
+    id: string;
+    title: string;
+    startStr: string;
+    endStr?: string;
+    allDay: boolean;
+    extendedProps: Record<string, unknown>;
+  }): CalendarEvent {
+    const ep = fcEvent.extendedProps;
+    return {
+      id: fcEvent.id,
+      title: fcEvent.title,
+      start: fcEvent.startStr,
+      end: fcEvent.endStr ?? null,
+      allDay: fcEvent.allDay,
+      source: (ep.source as "catering" | "manual" | "birthday") ?? "manual",
+      type: ep.type as string | undefined,
+      location: ep.location as string | undefined,
+      description: ep.description as string | undefined,
+      eventId: ep.eventId as string | undefined,
+      quoteId: ep.quoteId as string | undefined,
+      quoteStatus: ep.quoteStatus as string | undefined,
+      quoteNumber: ep.quoteNumber as string | undefined,
+      totalAmount: ep.totalAmount as number | undefined,
+      headcount: ep.headcount as number | undefined,
+      setupTime: ep.setupTime as string | undefined,
+      takedownTime: ep.takedownTime as string | undefined,
+      staffId: ep.staffId as string | undefined,
+      department: ep.department as string | undefined,
+    };
+  }
 
-      if (source === "catering") {
-        const quoteId = info.event.extendedProps.quoteId as string | undefined;
-        if (quoteId) router.push(`/quotes/${quoteId}`);
-      } else if (source === "manual") {
-        const eventId = info.event.extendedProps.eventId as string | undefined;
-        if (eventId) {
-          try {
-            const eventData = await eventApi.getById(eventId);
-            setSelectedEvent(eventData);
-            setEditModalKey((prev) => prev + 1);
-          } catch {
-            toast.error("Failed to load event details");
-          }
-        }
-      } else if (source === "birthday") {
-        const staffId = info.event.extendedProps.staffId as string | undefined;
-        if (staffId) {
-          router.push(`/staff/${staffId}`);
-        } else {
-          router.push("/staff");
-        }
+  // Click pins/unpins event in sidebar (no navigation)
+  const handleEventClick = useCallback(
+    (info: EventClickArg) => {
+      info.jsEvent.preventDefault();
+      // Clear pending hover timers before changing pin state
+      clearTimeout(hoverTimerRef.current);
+      clearTimeout(leaveTimerRef.current);
+      const clicked = toCalendarEvent(info.event);
+
+      if (pinnedEvent?.id === clicked.id) {
+        // Unpin
+        setPinnedEvent(null);
+        setHoveredEvent(null);
+      } else {
+        // Pin this event
+        setPinnedEvent(clicked);
+        setHoveredEvent(null);
       }
     },
-    [router],
+    [pinnedEvent],
   );
 
   const handleEventMouseEnter = useCallback(
@@ -118,49 +178,42 @@ export default function CalendarPage() {
         extendedProps: Record<string, unknown>;
       };
     }) => {
+      // Don't update hover preview while something is pinned
+      if (pinnedEvent) return;
       clearTimeout(hoverTimerRef.current);
+      clearTimeout(leaveTimerRef.current);
       hoverTimerRef.current = setTimeout(() => {
-        const ep = info.event.extendedProps;
-        setHoveredEvent({
-          id: info.event.id,
-          title: info.event.title,
-          start: info.event.startStr,
-          end: info.event.endStr ?? null,
-          allDay: info.event.allDay,
-          source: (ep.source as "catering" | "manual" | "birthday") ?? "manual",
-          type: ep.type as string | undefined,
-          location: ep.location as string | undefined,
-          description: ep.description as string | undefined,
-          eventId: ep.eventId as string | undefined,
-          quoteId: ep.quoteId as string | undefined,
-          quoteStatus: ep.quoteStatus as string | undefined,
-          quoteNumber: ep.quoteNumber as string | undefined,
-          totalAmount: ep.totalAmount as number | undefined,
-          headcount: ep.headcount as number | undefined,
-          setupTime: ep.setupTime as string | undefined,
-          takedownTime: ep.takedownTime as string | undefined,
-          staffId: ep.staffId as string | undefined,
-          department: ep.department as string | undefined,
-        });
+        setHoveredEvent(toCalendarEvent(info.event));
       }, 150);
     },
-    [],
+    [pinnedEvent],
   );
 
   const handleEventMouseLeave = useCallback(() => {
+    if (pinnedEvent) return;
     clearTimeout(hoverTimerRef.current);
-    // Don't clear hoveredEvent — sticky behavior
-  }, []);
+    leaveTimerRef.current = setTimeout(() => {
+      setHoveredEvent(null);
+    }, 300);
+  }, [pinnedEvent]);
 
+  // Dense event content renderer — show as much info as the block allows
   const renderEventContent = useCallback(
     (arg: {
-      event: { title: string; extendedProps: Record<string, unknown> };
+      event: {
+        title: string;
+        extendedProps: Record<string, unknown>;
+        start: Date | null;
+        end: Date | null;
+      };
       timeText: string;
     }) => {
       const source = arg.event.extendedProps.source as string;
       const type = arg.event.extendedProps.type as string | undefined;
       const location = arg.event.extendedProps.location as string | undefined;
       const headcount = arg.event.extendedProps.headcount as number | undefined;
+      const quoteNumber = arg.event.extendedProps.quoteNumber as string | undefined;
+      const description = arg.event.extendedProps.description as string | undefined;
 
       const icon =
         source === "catering"
@@ -173,24 +226,40 @@ export default function CalendarPage() {
                 ? "🎓"
                 : "📋";
 
+      // Calculate duration for layout decisions
+      const start = arg.event.start;
+      const end = arg.event.end;
+      const durationMin =
+        start && end
+          ? (end.getTime() - start.getTime()) / 60000
+          : 60;
+      const isTall = durationMin >= 60;
+
+      const subtitleParts: string[] = [];
+      if (arg.timeText) subtitleParts.push(arg.timeText);
+      if (location) subtitleParts.push(location);
+
+      const extraParts: string[] = [];
+      if (headcount != null) extraParts.push(`👥 ${headcount}`);
+      if (quoteNumber) extraParts.push(quoteNumber);
+      if (description && !location) extraParts.push(description);
+
       return (
-        <div className="px-1 py-0.5 overflow-hidden">
-          <div className="flex items-center gap-1">
-            <span className="text-xs">{icon}</span>
-            <span className="font-semibold text-[0.8rem] truncate">{arg.event.title}</span>
+        <div className="px-1 py-0.5 overflow-hidden w-full">
+          <div className="flex items-center gap-1 min-w-0">
+            <span className="text-[0.7rem] shrink-0">{icon}</span>
+            <span className="font-semibold text-[0.75rem] truncate">{arg.event.title}</span>
           </div>
-          {(() => {
-            const parts: string[] = [];
-            if (arg.timeText) parts.push(arg.timeText);
-            if (location) parts.push(location);
-            if (headcount != null) parts.push(`${headcount} guests`);
-            const subtitle = parts.join(" \u00b7 ");
-            return subtitle ? (
-              <div className="text-[0.65rem] opacity-80 truncate mt-0.5">
-                {subtitle}
-              </div>
-            ) : null;
-          })()}
+          {isTall && subtitleParts.length > 0 && (
+            <div className="text-[0.6rem] opacity-80 truncate mt-0.5">
+              {subtitleParts.join(" · ")}
+            </div>
+          )}
+          {isTall && extraParts.length > 0 && (
+            <div className="text-[0.6rem] opacity-70 truncate mt-0.5">
+              {extraParts.join(" · ")}
+            </div>
+          )}
         </div>
       );
     },
@@ -206,31 +275,20 @@ export default function CalendarPage() {
     );
   }, []);
 
-  return (
-    <div className="container mx-auto px-6 py-8 max-w-[1400px]">
-      {/* Page header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400">
-            <CalendarDays className="h-5 w-5" />
-          </div>
-          <div>
-            <h1 className="text-xl font-semibold leading-tight">Calendar</h1>
-            <p className="text-sm text-muted-foreground">Catering, events, and staff birthdays</p>
-          </div>
-        </div>
-        <AddEventModal
-          onSave={refetchEvents}
-          trigger={
-            <Button className="bg-purple-600 hover:bg-purple-700 text-white gap-1.5">
-              <Plus className="h-4 w-4" />
-              Add Event
-            </Button>
-          }
-        />
-      </div>
+  // Mini month date click navigates FullCalendar
+  const handleMiniDateClick = useCallback((dateStr: string) => {
+    const api = calendarRef.current?.getApi();
+    if (api) {
+      api.gotoDate(dateStr);
+    }
+  }, []);
 
-      {/* Edit modal triggered by clicking a manual event */}
+  // The event to show in sidebar: pinned takes priority, then hovered
+  const sidebarEvent = pinnedEvent ?? hoveredEvent;
+
+  return (
+    <div className="flex" style={{ height: "calc(100vh - 64px)" }}>
+      {/* Edit modal triggered by sidebar Edit button */}
       {selectedEvent && (
         <AddEventModal
           key={editModalKey}
@@ -245,51 +303,68 @@ export default function CalendarPage() {
         />
       )}
 
-      <div className="flex gap-6">
-        {/* Calendar */}
-        <div className="flex-1 min-w-0 rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-          <div className="p-4">
-            <FullCalendar
-              ref={calendarRef}
-              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-              initialView="timeGridWeek"
-              headerToolbar={{
-                left: "prev,next today",
-                center: "title",
-                right: "dayGridMonth,timeGridWeek,timeGridDay",
-              }}
-              events={fetchEvents}
-              eventClick={handleEventClick}
-              eventMouseEnter={handleEventMouseEnter}
-              eventMouseLeave={handleEventMouseLeave}
-              eventContent={renderEventContent}
-              eventDidMount={handleEventDidMount}
-              height="auto"
-              weekends={false}
-              slotMinTime="07:00:00"
-              slotMaxTime="19:00:00"
-              nowIndicator
-              eventMaxStack={3}
-              dayMaxEvents={4}
+      {/* Main content: sidebar + calendar */}
+      <div ref={containerRef} className="flex flex-1 min-h-0 border-t border-border bg-card overflow-hidden">
+        {/* Left sidebar */}
+        <EventDetailSidebar
+          event={sidebarEvent}
+          pinned={pinnedEvent !== null}
+          onEditEvent={(eventId) => {
+            eventApi
+              .getById(eventId)
+              .then((eventData) => {
+                setSelectedEvent(eventData);
+                setEditModalKey((prev) => prev + 1);
+              })
+              .catch(() => {
+                toast.error("Failed to load event details");
+              });
+          }}
+          onUnpin={() => {
+            setPinnedEvent(null);
+            setHoveredEvent(null);
+          }}
+          displayMonth={displayMonth}
+          onMonthChange={setDisplayMonth}
+          onDateClick={handleMiniDateClick}
+          activeRange={activeRange}
+          addEventTrigger={
+            <AddEventModal
+              onSave={refetchEvents}
+              trigger={
+                <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white gap-1.5">
+                  <Plus className="h-4 w-4" />
+                  Add Event
+                </Button>
+              }
             />
-          </div>
-        </div>
+          }
+        />
 
-        {/* Sidebar */}
-        <div className="hidden lg:block">
-          <EventDetailSidebar
-            event={hoveredEvent}
-            onEditEvent={(eventId) => {
-              eventApi
-                .getById(eventId)
-                .then((eventData) => {
-                  setSelectedEvent(eventData);
-                  setEditModalKey((prev) => prev + 1);
-                })
-                .catch(() => {
-                  toast.error("Failed to load event details");
-                });
+        {/* Calendar */}
+        <div className="flex-1 min-w-0 p-2 overflow-hidden">
+          <FullCalendar
+            ref={calendarRef}
+            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+            initialView="timeGridWeek"
+            headerToolbar={{
+              left: "prev,next today",
+              center: "title",
+              right: "dayGridMonth,timeGridWeek,timeGridDay",
             }}
+            events={fetchEvents}
+            datesSet={handleDatesSet}
+            eventClick={handleEventClick}
+            eventMouseEnter={handleEventMouseEnter}
+            eventMouseLeave={handleEventMouseLeave}
+            eventContent={renderEventContent}
+            eventDidMount={handleEventDidMount}
+            height={calendarHeight}
+            weekends={false}
+            slotMinTime="07:00:00"
+            slotMaxTime="19:00:00"
+            nowIndicator
+            slotEventOverlap
           />
         </div>
       </div>

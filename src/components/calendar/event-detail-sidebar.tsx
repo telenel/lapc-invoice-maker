@@ -1,9 +1,9 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
-import { CalendarDays } from "lucide-react";
+import { Pin } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { MiniMonth } from "@/components/calendar/mini-month";
 
 export interface CalendarEvent {
   id: string;
@@ -28,9 +28,20 @@ export interface CalendarEvent {
 }
 
 interface EventDetailSidebarProps {
+  /** Event to display (hover preview or pinned) */
   event: CalendarEvent | null;
+  /** Whether the current event is pinned (click-selected) */
+  pinned: boolean;
   onEditEvent?: (eventId: string) => void;
   onDeleteEvent?: (eventId: string) => void;
+  onUnpin?: () => void;
+  /** Mini month props */
+  displayMonth: Date;
+  onMonthChange: (date: Date) => void;
+  onDateClick: (dateStr: string) => void;
+  activeRange?: { start: string; end: string };
+  /** Slot for the Add Event trigger (rendered at bottom of default state) */
+  addEventTrigger?: React.ReactNode;
 }
 
 const TYPE_CONFIG: Record<string, { color: string; icon: string; label: string }> = {
@@ -129,7 +140,7 @@ function DetailRow({ icon, children }: { icon: string; children: React.ReactNode
   );
 }
 
-function CateringDetails({ event }: { event: CalendarEvent }) {
+function EventDetails({ event }: { event: CalendarEvent }) {
   return (
     <div className="space-y-2.5">
       <DetailRow icon="📅">
@@ -151,36 +162,13 @@ function CateringDetails({ event }: { event: CalendarEvent }) {
       {event.takedownTime && (
         <DetailRow icon="🕐">Takedown: {formatTime(event.takedownTime)}</DetailRow>
       )}
-    </div>
-  );
-}
-
-function ManualDetails({ event }: { event: CalendarEvent }) {
-  return (
-    <div className="space-y-2.5">
-      <DetailRow icon="📅">
-        {formatEventDateTime(event.start, event.end, event.allDay)}
-      </DetailRow>
-      {event.location && <DetailRow icon="📍">{event.location}</DetailRow>}
+      {event.department && <DetailRow icon="🏢">{event.department}</DetailRow>}
       {event.description && (
         <div className="mt-3 rounded-md bg-muted/60 px-3 py-2.5">
           <p className="text-sm text-muted-foreground leading-relaxed">
             {event.description}
           </p>
         </div>
-      )}
-    </div>
-  );
-}
-
-function BirthdayDetails({ event }: { event: CalendarEvent }) {
-  return (
-    <div className="space-y-2.5">
-      <DetailRow icon="📅">
-        {formatEventDateTime(event.start, event.end, event.allDay)}
-      </DetailRow>
-      {event.department && (
-        <DetailRow icon="🏢">{event.department}</DetailRow>
       )}
     </div>
   );
@@ -249,89 +237,159 @@ function EventActions({
   return null;
 }
 
-export function EventDetailSidebar({ event, onEditEvent, onDeleteEvent }: EventDetailSidebarProps) {
+const LEGEND = (["MEETING", "SEMINAR", "VENDOR", "OTHER", "catering", "birthday"] as const).map(
+  (key) => TYPE_CONFIG[key],
+);
+
+function EventDetailContent({
+  event,
+  pinned,
+  onUnpin,
+  onEditEvent,
+  onDeleteEvent,
+}: {
+  event: CalendarEvent;
+  pinned: boolean;
+  onUnpin?: () => void;
+  onEditEvent?: (eventId: string) => void;
+  onDeleteEvent?: (eventId: string) => void;
+}) {
+  const cfg = getTypeConfig(event);
   return (
-    <div className="w-80 border-l border-border bg-card flex flex-col">
-      <AnimatePresence mode="wait">
-        {event === null ? (
-          <motion.div
-            key="placeholder"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center"
-          >
-            <motion.div
-              animate={{ opacity: [0.3, 0.6, 0.3] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+    <>
+      {/* Colored top border */}
+      <div className="h-1 w-full shrink-0" style={{ background: cfg.color }} />
+
+      {/* Header */}
+      <div className="px-4 pt-3 pb-2">
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="size-2 rounded-full shrink-0" style={{ background: cfg.color }} />
+            <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: cfg.color }}>
+              {cfg.icon} {cfg.label}
+            </span>
+            {event.source === "catering" && event.quoteStatus && (
+              <QuoteStatusBadge status={event.quoteStatus} />
+            )}
+          </div>
+          {pinned && (
+            <button
+              onClick={onUnpin}
+              className="text-muted-foreground hover:text-foreground transition-colors p-1"
+              title="Unpin event"
+              aria-label="Unpin event"
             >
-              <CalendarDays className="size-10 text-muted-foreground" />
-            </motion.div>
-            <p className="text-sm text-muted-foreground">
-              Hover over an event to see details
-            </p>
-          </motion.div>
-        ) : (
-          <motion.div
-            key={event.id}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -10 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="flex flex-1 flex-col overflow-hidden"
-          >
-            {/* Colored top border */}
-            {(() => {
-              const cfg = getTypeConfig(event);
-              return (
-                <>
-                  <div
-                    className="h-1 w-full shrink-0"
-                    style={{ background: cfg.color }}
-                  />
+              <Pin className="size-3.5 fill-current" />
+            </button>
+          )}
+        </div>
+        <h3 className="text-base font-bold leading-tight">{event.title}</h3>
+      </div>
 
-                  {/* Header */}
-                  <div className="px-5 pt-4 pb-3">
-                    <div className="flex items-center gap-2 mb-2 flex-wrap">
-                      <div
-                        className="size-2 rounded-full shrink-0"
-                        style={{ background: cfg.color }}
-                      />
-                      <span
-                        className="text-xs font-semibold uppercase tracking-wide"
-                        style={{ color: cfg.color }}
-                      >
-                        {cfg.icon} {cfg.label}
-                      </span>
-                      {event.source === "catering" && event.quoteStatus && (
-                        <QuoteStatusBadge status={event.quoteStatus} />
-                      )}
-                    </div>
-                    <h3 className="text-lg font-bold leading-tight">{event.title}</h3>
-                  </div>
+      {/* Details */}
+      <div className="flex-1 overflow-y-auto px-4 pb-3">
+        <EventDetails event={event} />
+      </div>
 
-                  {/* Details */}
-                  <div className="flex-1 overflow-y-auto px-5 pb-4">
-                    {event.source === "catering" && <CateringDetails event={event} />}
-                    {event.source === "manual" && <ManualDetails event={event} />}
-                    {event.source === "birthday" && <BirthdayDetails event={event} />}
-                  </div>
+      {/* Action buttons */}
+      <div className="shrink-0 border-t border-border px-4 py-3">
+        <EventActions event={event} typeColor={cfg.color} onEditEvent={onEditEvent} onDeleteEvent={onDeleteEvent} />
+      </div>
 
-                  {/* Action buttons */}
-                  <div className="shrink-0 border-t border-border px-5 py-4">
-                    <EventActions
-                      event={event}
-                      typeColor={cfg.color}
-                      onEditEvent={onEditEvent}
-                      onDeleteEvent={onDeleteEvent}
-                    />
-                  </div>
-                </>
-              );
-            })()}
-          </motion.div>
+      {/* Hint */}
+      <div className="text-center pb-2">
+        <span className="text-[10px] text-muted-foreground">
+          {pinned ? "Click event to unpin" : "Click to pin · Hover to preview"}
+        </span>
+      </div>
+    </>
+  );
+}
+
+export function EventDetailSidebar({
+  event,
+  pinned,
+  onEditEvent,
+  onDeleteEvent,
+  onUnpin,
+  displayMonth,
+  onMonthChange,
+  onDateClick,
+  activeRange,
+  addEventTrigger,
+}: EventDetailSidebarProps) {
+  const showEvent = event !== null;
+
+  return (
+    <div className="w-[260px] shrink-0 border-r border-border bg-card flex flex-col h-full overflow-hidden relative">
+      {/* Default state — always mounted, toggled via opacity */}
+      <div
+        className="absolute inset-0 flex flex-col h-full p-4 gap-4 transition-opacity duration-150"
+        style={{ opacity: showEvent ? 0 : 1, pointerEvents: showEvent ? "none" : "auto" }}
+        aria-hidden={showEvent || undefined}
+        ref={(el) => {
+          if (el) {
+            if (showEvent) el.setAttribute("inert", "");
+            else el.removeAttribute("inert");
+          }
+        }}
+      >
+        {/* Add Event button */}
+        {addEventTrigger && (
+          <div>{addEventTrigger}</div>
         )}
-      </AnimatePresence>
+
+        {/* Mini month calendar */}
+        <MiniMonth
+          displayMonth={displayMonth}
+          onMonthChange={onMonthChange}
+          onDateClick={onDateClick}
+          activeRange={activeRange}
+        />
+
+        {/* Legend */}
+        <div className="border-t border-border pt-3">
+          <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+            Legend
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {LEGEND.map((item) => (
+              <div key={item.label} className="flex items-center gap-2">
+                <div
+                  className="w-2.5 h-2.5 rounded-sm shrink-0"
+                  style={{ background: item.color }}
+                />
+                <span className="text-xs text-muted-foreground">
+                  {item.icon} {item.label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Event detail state — always mounted, toggled via opacity */}
+      <div
+        className="absolute inset-0 flex flex-col h-full overflow-hidden transition-opacity duration-150"
+        style={{ opacity: showEvent ? 1 : 0, pointerEvents: showEvent ? "auto" : "none" }}
+        aria-hidden={!showEvent || undefined}
+        ref={(el) => {
+          if (el) {
+            if (!showEvent) el.setAttribute("inert", "");
+            else el.removeAttribute("inert");
+          }
+        }}
+      >
+            {event != null && (
+              <EventDetailContent
+                event={event}
+                pinned={pinned}
+                onUnpin={onUnpin}
+                onEditEvent={onEditEvent}
+                onDeleteEvent={onDeleteEvent}
+              />
+            )}
+      </div>
     </div>
   );
 }

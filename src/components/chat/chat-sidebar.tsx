@@ -169,7 +169,7 @@ export function ChatSidebar() {
               <MessageSquareIcon className="h-4 w-4 text-purple-600" />
               <span className="text-sm font-medium">LAPC Assistant</span>
             </div>
-            <AnimatePresence>
+            <AnimatePresence initial={false}>
               {messages.length > 0 && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -193,7 +193,7 @@ export function ChatSidebar() {
 
           {/* Messages area */}
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
-            <AnimatePresence mode="wait">
+            <AnimatePresence mode="popLayout" initial={false}>
               {messages.length === 0 && (
                 <motion.div
                   key="empty"
@@ -240,7 +240,7 @@ export function ChatSidebar() {
           </div>
 
           {/* Quick actions */}
-          <AnimatePresence>
+          <AnimatePresence initial={false}>
             {messages.length === 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
