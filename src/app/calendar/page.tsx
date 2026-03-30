@@ -172,13 +172,18 @@ export default function CalendarPage() {
             <span className="text-xs">{icon}</span>
             <span className="font-semibold text-[0.8rem] truncate">{arg.event.title}</span>
           </div>
-          {(arg.timeText || location || headcount) && (
-            <div className="text-[0.65rem] opacity-80 truncate mt-0.5">
-              {arg.timeText}
-              {location ? ` · ${location}` : ""}
-              {headcount ? ` · ${headcount} guests` : ""}
-            </div>
-          )}
+          {(() => {
+            const parts: string[] = [];
+            if (arg.timeText) parts.push(arg.timeText);
+            if (location) parts.push(location);
+            if (headcount != null) parts.push(`${headcount} guests`);
+            const subtitle = parts.join(" \u00b7 ");
+            return subtitle ? (
+              <div className="text-[0.65rem] opacity-80 truncate mt-0.5">
+                {subtitle}
+              </div>
+            ) : null;
+          })()}
         </div>
       );
     },

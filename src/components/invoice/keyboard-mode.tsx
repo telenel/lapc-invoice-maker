@@ -129,7 +129,7 @@ export function KeyboardMode({
 }: KeyboardModeProps) {
   // ---- Session ----
   const { data: session } = useSession();
-  const userId = (session?.user as { id?: string } | undefined)?.id ?? "anonymous";
+  const userId = (session?.user as { id?: string } | undefined)?.id ?? null;
 
   // ---- Local state ----
   const [staff, setStaff] = useState<StaffResponse[]>([]);
@@ -148,9 +148,16 @@ export function KeyboardMode({
   const routeKey = existingId ? `/invoices/${existingId}/edit` : "/invoices/new";
   const { clearDraft } = useAutoSave(form, routeKey, userId);
   const [draftEntry, setDraftEntry] = useState(() => {
-    if (typeof window === "undefined") return null;
+    if (typeof window === "undefined" || !userId) return null;
     return loadDraft<InvoiceFormData>(routeKey, userId);
   });
+
+  // Reload draft when userId resolves from null to the real user id
+  useEffect(() => {
+    if (typeof window === "undefined" || !userId) return;
+    const entry = loadDraft<InvoiceFormData>(routeKey, userId);
+    setDraftEntry(entry);
+  }, [userId, routeKey]);
 
   // ---- Save wrappers that clear the draft on success ----
   const handleSaveDraft = useCallback(async () => {
@@ -341,6 +348,8 @@ export function KeyboardMode({
           unitPrice: Number(item.unitPrice),
           sortOrder: idx,
           isTaxable: item.isTaxable,
+          costPrice: item.costPrice !== undefined ? Number(item.costPrice) : undefined,
+          marginOverride: item.marginOverride !== undefined ? Number(item.marginOverride) : undefined,
         })),
       });
       toast.success(`Template "${name.trim()}" saved`);

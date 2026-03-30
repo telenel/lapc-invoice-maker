@@ -684,8 +684,8 @@ export function buildTools(user: ChatUser) {
         let sourceId = id;
 
         if (!sourceId && quoteNumber) {
-          const result = await invoiceService.list({ search: quoteNumber, pageSize: 1 });
-          const match = result.invoices[0];
+          const result = await quoteService.list({ search: quoteNumber, pageSize: 1 });
+          const match = result.quotes.find((q) => q.quoteNumber === quoteNumber);
           if (!match) {
             return { error: `Quote "${quoteNumber}" not found` };
           }

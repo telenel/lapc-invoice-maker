@@ -30,6 +30,7 @@ export interface CalendarEvent {
 interface EventDetailSidebarProps {
   event: CalendarEvent | null;
   onEditEvent?: (eventId: string) => void;
+  onDeleteEvent?: (eventId: string) => void;
 }
 
 const TYPE_CONFIG: Record<string, { color: string; icon: string; label: string }> = {
@@ -49,12 +50,21 @@ const QUOTE_STATUS_LABELS: Record<string, string> = {
   EXPIRED: "Expired",
 };
 
+function parseDateLocal(value: string): Date {
+  const dateOnlyPattern = /^\d{4}-\d{2}-\d{2}$/;
+  if (dateOnlyPattern.test(value)) {
+    const [year, month, day] = value.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  }
+  return new Date(value);
+}
+
 function formatEventDateTime(
   start: string,
   end?: string | null,
   allDay?: boolean,
 ): string {
-  const startDate = new Date(start);
+  const startDate = parseDateLocal(start);
   const dateStr = startDate.toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
@@ -66,7 +76,8 @@ function formatEventDateTime(
     minute: "2-digit",
   });
   if (!end) return `${dateStr} · ${startTime}`;
-  const endTime = new Date(end).toLocaleTimeString("en-US", {
+  const endDate = parseDateLocal(end);
+  const endTime = endDate.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
   });
@@ -179,10 +190,12 @@ function EventActions({
   event,
   typeColor,
   onEditEvent,
+  onDeleteEvent,
 }: {
   event: CalendarEvent;
   typeColor: string;
   onEditEvent?: (eventId: string) => void;
+  onDeleteEvent?: (eventId: string) => void;
 }) {
   if (event.source === "catering" && event.quoteId) {
     return (
@@ -207,9 +220,15 @@ function EventActions({
         >
           Edit Event
         </Button>
-        <Button variant="outline" className="flex-1">
-          Delete
-        </Button>
+        {onDeleteEvent && (
+          <Button
+            variant="outline"
+            className="flex-1"
+            onClick={() => onDeleteEvent(event.eventId!)}
+          >
+            Delete
+          </Button>
+        )}
       </div>
     );
   }
@@ -230,7 +249,7 @@ function EventActions({
   return null;
 }
 
-export function EventDetailSidebar({ event, onEditEvent }: EventDetailSidebarProps) {
+export function EventDetailSidebar({ event, onEditEvent, onDeleteEvent }: EventDetailSidebarProps) {
   return (
     <div className="w-80 border-l border-border bg-card flex flex-col">
       <AnimatePresence mode="wait">
@@ -304,6 +323,7 @@ export function EventDetailSidebar({ event, onEditEvent }: EventDetailSidebarPro
                       event={event}
                       typeColor={cfg.color}
                       onEditEvent={onEditEvent}
+                      onDeleteEvent={onDeleteEvent}
                     />
                   </div>
                 </>

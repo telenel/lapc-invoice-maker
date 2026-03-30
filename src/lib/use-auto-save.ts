@@ -9,14 +9,16 @@ function getDraftKey(userId: string, routeKey: string): string {
   return `draft:${userId}:${routeKey}`;
 }
 
-export function useAutoSave<T>(formState: T, routeKey: string, userId: string) {
+export function useAutoSave<T>(formState: T, routeKey: string, userId: string | null) {
   const timerRef = useRef<ReturnType<typeof setInterval>>();
   const formStateRef = useRef(formState);
   formStateRef.current = formState;
 
-  const key = getDraftKey(userId, routeKey);
+  const stableUserId = userId && userId !== "anonymous" ? userId : null;
+  const key = stableUserId ? getDraftKey(stableUserId, routeKey) : null;
 
   useEffect(() => {
+    if (!key) return;
     timerRef.current = setInterval(() => {
       try {
         const entry = { data: formStateRef.current, savedAt: Date.now() };
@@ -30,7 +32,7 @@ export function useAutoSave<T>(formState: T, routeKey: string, userId: string) {
   }, [key]);
 
   const clearDraft = useCallback(() => {
-    localStorage.removeItem(key);
+    if (key) localStorage.removeItem(key);
   }, [key]);
 
   return { clearDraft };
