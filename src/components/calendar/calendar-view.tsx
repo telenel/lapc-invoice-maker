@@ -38,18 +38,50 @@ export function CalendarView() {
   const [displayMonth, setDisplayMonth] = useState(() => new Date());
   const [activeRange, setActiveRange] = useState<{ start: string; end: string }>();
 
-  // Compute calendar height to fill viewport
+  // Calendar fills viewport: disable main scrolling/padding, compute slot height
   useEffect(() => {
-    function updateHeight() {
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect();
-        // 16px bottom padding
-        setCalendarHeight(window.innerHeight - rect.top - 16);
-      }
+    const main = document.getElementById("main-content");
+    if (!main) return;
+    const prevOverflow = main.style.overflow;
+    const prevPadding = main.style.padding;
+    main.style.overflow = "hidden";
+    main.style.padding = "0";
+
+    function sync() {
+      const navH = document.querySelector("nav")?.getBoundingClientRect().height ?? 64;
+      const available = window.innerHeight - navH;
+      setCalendarHeight(available);
+      calendarRef.current?.getApi().updateSize();
+
+      // Fit all time slots in the viewport — compute slot height from scroller
+      requestAnimationFrame(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        const scroller = container.querySelector<HTMLElement>(".fc-scroller-liquid-absolute");
+        const slots = container.querySelectorAll(".fc-timegrid-slot-lane");
+        if (!scroller || slots.length === 0) return;
+
+        const slotH = Math.max(Math.floor(scroller.clientHeight / slots.length), 10);
+        const root = document.documentElement;
+        root.style.setProperty("--fc-slot-height", `${slotH}px`);
+        root.style.setProperty("--fc-slot-font", `${Math.min(Math.max(slotH * 0.85, 9), 13)}px`);
+        calendarRef.current?.getApi().updateSize();
+      });
     }
-    updateHeight();
-    window.addEventListener("resize", updateHeight, { passive: true });
-    return () => window.removeEventListener("resize", updateHeight);
+
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(main);
+    window.addEventListener("resize", sync, { passive: true });
+    return () => {
+      main.style.overflow = prevOverflow;
+      main.style.padding = prevPadding;
+      document.documentElement.style.removeProperty("--fc-slot-height");
+      document.documentElement.style.removeProperty("--fc-slot-font");
+      ro.disconnect();
+      window.removeEventListener("resize", sync);
+    };
   }, []);
 
   // Clean up timers
