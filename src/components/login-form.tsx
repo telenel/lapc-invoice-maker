@@ -79,16 +79,16 @@ export function LoginForm() {
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="username">Email</Label>
+            <Label htmlFor="username">Username or Email</Label>
             <Input
               ref={usernameRef}
               id="username"
               name="username"
               required
               className="h-11"
-              type="email"
+              type="text"
               inputMode="email"
-              placeholder="you@piercecollege.edu…"
+              placeholder="username or email"
               autoComplete="username"
               spellCheck={false}
             />

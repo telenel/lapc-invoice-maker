@@ -272,10 +272,16 @@ export function CalendarView() {
     const onLeave = () => el.classList.remove("event-hovered");
     el.addEventListener("mouseenter", onEnter);
     el.addEventListener("mouseleave", onLeave);
-    return () => {
-      el.removeEventListener("mouseenter", onEnter);
-      el.removeEventListener("mouseleave", onLeave);
-    };
+    (el as HTMLElement & { __fcHoverHandlers?: { onEnter: () => void; onLeave: () => void } }).__fcHoverHandlers = { onEnter, onLeave };
+  }, []);
+
+  const handleEventWillUnmount = useCallback((info: { el: HTMLElement }) => {
+    const el = info.el as HTMLElement & { __fcHoverHandlers?: { onEnter: () => void; onLeave: () => void } };
+    if (el.__fcHoverHandlers) {
+      el.removeEventListener("mouseenter", el.__fcHoverHandlers.onEnter);
+      el.removeEventListener("mouseleave", el.__fcHoverHandlers.onLeave);
+      delete el.__fcHoverHandlers;
+    }
   }, []);
 
   // Mini month date click navigates FullCalendar
@@ -362,6 +368,7 @@ export function CalendarView() {
             eventMouseLeave={handleEventMouseLeave}
             eventContent={renderEventContent}
             eventDidMount={handleEventDidMount}
+            eventWillUnmount={handleEventWillUnmount}
             height={calendarHeight}
             weekends={false}
             slotMinTime="07:00:00"
