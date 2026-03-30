@@ -237,13 +237,74 @@ function EventActions({
   return null;
 }
 
-const LEGEND = [
-  { color: "#3b82f6", icon: "📋", label: "Meeting" },
-  { color: "#8b5cf6", icon: "🎓", label: "Seminar" },
-  { color: "#14b8a6", icon: "🏢", label: "Vendor" },
-  { color: "#f97316", icon: "🍽️", label: "Catering" },
-  { color: "#ec4899", icon: "🎂", label: "Birthday" },
-];
+const LEGEND = (["MEETING", "SEMINAR", "VENDOR", "catering", "birthday"] as const).map(
+  (key) => TYPE_CONFIG[key],
+);
+
+function EventDetailContent({
+  event,
+  pinned,
+  onUnpin,
+  onEditEvent,
+  onDeleteEvent,
+}: {
+  event: CalendarEvent;
+  pinned: boolean;
+  onUnpin?: () => void;
+  onEditEvent?: (eventId: string) => void;
+  onDeleteEvent?: (eventId: string) => void;
+}) {
+  const cfg = getTypeConfig(event);
+  return (
+    <>
+      {/* Colored top border */}
+      <div className="h-1 w-full shrink-0" style={{ background: cfg.color }} />
+
+      {/* Header */}
+      <div className="px-4 pt-3 pb-2">
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="size-2 rounded-full shrink-0" style={{ background: cfg.color }} />
+            <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: cfg.color }}>
+              {cfg.icon} {cfg.label}
+            </span>
+            {event.source === "catering" && event.quoteStatus && (
+              <QuoteStatusBadge status={event.quoteStatus} />
+            )}
+          </div>
+          {pinned && (
+            <button
+              onClick={onUnpin}
+              className="text-muted-foreground hover:text-foreground transition-colors p-1"
+              title="Unpin event"
+              aria-label="Unpin event"
+            >
+              <Pin className="size-3.5 fill-current" />
+            </button>
+          )}
+        </div>
+        <h3 className="text-base font-bold leading-tight">{event.title}</h3>
+      </div>
+
+      {/* Details */}
+      <div className="flex-1 overflow-y-auto px-4 pb-3">
+        <EventDetails event={event} />
+      </div>
+
+      {/* Action buttons */}
+      <div className="shrink-0 border-t border-border px-4 py-3">
+        <EventActions event={event} typeColor={cfg.color} onEditEvent={onEditEvent} onDeleteEvent={onDeleteEvent} />
+      </div>
+
+      {/* Hint */}
+      <div className="text-center pb-2">
+        <span className="text-[10px] text-muted-foreground">
+          {pinned ? "Click event to unpin" : "Click to pin · Hover to preview"}
+        </span>
+      </div>
+    </>
+  );
+}
 
 export function EventDetailSidebar({
   event,
@@ -305,71 +366,15 @@ export function EventDetailSidebar({
         className="absolute inset-0 flex flex-col h-full overflow-hidden transition-opacity duration-150"
         style={{ opacity: showEvent ? 1 : 0, pointerEvents: showEvent ? "auto" : "none" }}
       >
-            {event != null && (() => {
-              const cfg = getTypeConfig(event);
-              return (
-                <>
-                  {/* Colored top border */}
-                  <div
-                    className="h-1 w-full shrink-0"
-                    style={{ background: cfg.color }}
-                  />
-
-                  {/* Header */}
-                  <div className="px-4 pt-3 pb-2">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <div
-                          className="size-2 rounded-full shrink-0"
-                          style={{ background: cfg.color }}
-                        />
-                        <span
-                          className="text-xs font-semibold uppercase tracking-wide"
-                          style={{ color: cfg.color }}
-                        >
-                          {cfg.icon} {cfg.label}
-                        </span>
-                        {event.source === "catering" && event.quoteStatus && (
-                          <QuoteStatusBadge status={event.quoteStatus} />
-                        )}
-                      </div>
-                      {pinned && (
-                        <button
-                          onClick={onUnpin}
-                          className="text-muted-foreground hover:text-foreground transition-colors p-1"
-                          title="Unpin event"
-                        >
-                          <Pin className="size-3.5 fill-current" />
-                        </button>
-                      )}
-                    </div>
-                    <h3 className="text-base font-bold leading-tight">{event.title}</h3>
-                  </div>
-
-                  {/* Details */}
-                  <div className="flex-1 overflow-y-auto px-4 pb-3">
-                    <EventDetails event={event} />
-                  </div>
-
-                  {/* Action buttons */}
-                  <div className="shrink-0 border-t border-border px-4 py-3">
-                    <EventActions
-                      event={event}
-                      typeColor={cfg.color}
-                      onEditEvent={onEditEvent}
-                      onDeleteEvent={onDeleteEvent}
-                    />
-                  </div>
-
-                  {/* Hint */}
-                  <div className="text-center pb-2">
-                    <span className="text-[10px] text-muted-foreground">
-                      {pinned ? "Click event to unpin" : "Click to pin · Hover to preview"}
-                    </span>
-                  </div>
-                </>
-              );
-            })()}
+            {event != null && (
+              <EventDetailContent
+                event={event}
+                pinned={pinned}
+                onUnpin={onUnpin}
+                onEditEvent={onEditEvent}
+                onDeleteEvent={onDeleteEvent}
+              />
+            )}
       </div>
     </div>
   );

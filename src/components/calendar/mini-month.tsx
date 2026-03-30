@@ -107,6 +107,7 @@ export function MiniMonth({
             size="sm"
             className="h-6 w-6 p-0"
             onClick={() => onMonthChange(new Date(year, month - 1, 1))}
+            aria-label="Previous month"
           >
             <ChevronLeft className="h-3.5 w-3.5" />
           </Button>
@@ -115,6 +116,7 @@ export function MiniMonth({
             size="sm"
             className="h-6 w-6 p-0"
             onClick={() => onMonthChange(new Date(year, month + 1, 1))}
+            aria-label="Next month"
           >
             <ChevronRight className="h-3.5 w-3.5" />
           </Button>
@@ -143,6 +145,8 @@ export function MiniMonth({
               <button
                 key={cell.dateStr}
                 onClick={() => onDateClick(cell.dateStr)}
+                aria-label={new Date(cell.dateStr + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                aria-current={isToday ? "date" : undefined}
                 className={cn(
                   "h-7 w-7 mx-auto text-[11px] rounded-md transition-colors",
                   "hover:bg-accent hover:text-accent-foreground",

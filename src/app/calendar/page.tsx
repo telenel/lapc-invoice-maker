@@ -72,8 +72,8 @@ export default function CalendarPage() {
       start: info.startStr.split("T")[0],
       end: info.endStr.split("T")[0],
     });
-    // Sync mini month to the visible range's month
-    setDisplayMonth(info.start);
+    // Sync mini month to the calendar's displayed month (not padded range start)
+    setDisplayMonth(info.view.currentStart);
   }, []);
 
   const fetchEvents = useCallback(
@@ -149,6 +149,9 @@ export default function CalendarPage() {
   const handleEventClick = useCallback(
     (info: EventClickArg) => {
       info.jsEvent.preventDefault();
+      // Clear pending hover timers before changing pin state
+      clearTimeout(hoverTimerRef.current);
+      clearTimeout(leaveTimerRef.current);
       const clicked = toCalendarEvent(info.event);
 
       if (pinnedEvent?.id === clicked.id) {
