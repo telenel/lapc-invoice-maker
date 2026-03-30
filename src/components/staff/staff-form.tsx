@@ -112,7 +112,7 @@ export function StaffForm({ staff, onSave, trigger }: StaffFormProps) {
 
   return (
     <>
-      <div onClick={handleOpen} role="button" tabIndex={-1} style={{ display: "contents" }}>
+      <div onClick={handleOpen} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleOpen(); } }} role="button" tabIndex={0} style={{ display: "contents" }}>
         {trigger}
       </div>
       <Dialog open={open} onOpenChange={setOpen}>

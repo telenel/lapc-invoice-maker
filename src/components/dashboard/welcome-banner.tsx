@@ -33,7 +33,7 @@ export function WelcomeBanner() {
   return (
     <div
       ref={ref}
-      className="overflow-hidden transition-all duration-300 ease-out"
+      className="overflow-hidden transition-[opacity,max-height] duration-300 ease-out"
       style={{
         opacity: exiting ? 0 : 1,
         maxHeight: exiting ? 0 : 500,
