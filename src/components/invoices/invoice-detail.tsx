@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useInvoice } from "@/domains/invoice/hooks";
@@ -15,6 +15,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
   const { data: invoice, loading } = useInvoice(id);
   const [regenerating, setRegenerating] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   async function handleRegeneratePdf() {
@@ -77,6 +78,26 @@ export function InvoiceDetailView({ id }: { id: string }) {
     }
   }
 
+  const handleDuplicate = useCallback(async () => {
+    if (!invoice || duplicating) return;
+    setDuplicating(true);
+    try {
+      const res = await fetch(`/api/invoices/${invoice.id}/duplicate`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.error ?? "Failed to duplicate");
+        return;
+      }
+      const data = await res.json();
+      toast.success(`Draft created from ${invoice.invoiceNumber ?? "invoice"}`);
+      router.push(data.redirectTo);
+    } catch {
+      toast.error("Failed to duplicate");
+    } finally {
+      setDuplicating(false);
+    }
+  }, [invoice, duplicating, router]);
+
   function handleDeleteClick() {
     if (!invoice) return;
     if (invoice.status === "DRAFT" || invoice.status === "PENDING_CHARGE") {
@@ -102,6 +123,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
         invoice={invoice}
         regenerating={regenerating}
         deleting={deleting}
+        duplicating={duplicating}
         deleteDialogOpen={deleteDialogOpen}
         onDeleteDialogOpenChange={setDeleteDialogOpen}
         onDownloadPdf={() => window.open(`/api/invoices/${id}/pdf`, "_blank")}
@@ -109,6 +131,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
         onEmail={handleEmail}
         onDeleteClick={handleDeleteClick}
         onDeleteConfirm={handleDelete}
+        onDuplicate={handleDuplicate}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

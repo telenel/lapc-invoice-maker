@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { MailIcon } from "lucide-react";
+import { CopyIcon, MailIcon } from "lucide-react";
 import { formatDateLong as formatDate } from "@/lib/formatters";
 import type { InvoiceResponse } from "@/domains/invoice/types";
 
@@ -20,6 +20,7 @@ interface InvoiceDetailHeaderProps {
   invoice: InvoiceResponse;
   regenerating: boolean;
   deleting: boolean;
+  duplicating: boolean;
   deleteDialogOpen: boolean;
   onDeleteDialogOpenChange: (open: boolean) => void;
   onDownloadPdf: () => void;
@@ -27,12 +28,14 @@ interface InvoiceDetailHeaderProps {
   onEmail: () => void;
   onDeleteClick: () => void;
   onDeleteConfirm: () => void;
+  onDuplicate: () => void;
 }
 
 export function InvoiceDetailHeader({
   invoice,
   regenerating,
   deleting,
+  duplicating,
   deleteDialogOpen,
   onDeleteDialogOpenChange,
   onDownloadPdf,
@@ -40,6 +43,7 @@ export function InvoiceDetailHeader({
   onEmail,
   onDeleteClick,
   onDeleteConfirm,
+  onDuplicate,
 }: InvoiceDetailHeaderProps) {
   const isDraft = invoice.status === "DRAFT";
   const isFinal = invoice.status === "FINAL";
@@ -99,6 +103,11 @@ export function InvoiceDetailHeader({
           onClick={onDownloadPdf}
         >
           Download PDF
+        </Button>
+
+        <Button variant="outline" size="sm" onClick={onDuplicate} disabled={duplicating}>
+          <CopyIcon className="size-3.5 mr-1.5" />
+          {duplicating ? "Duplicating…" : "Duplicate"}
         </Button>
 
         {isFinal && (

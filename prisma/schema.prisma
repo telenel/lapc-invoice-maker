@@ -23,6 +23,7 @@ model User {
   notifications  Notification[]
   events         Event[]
   contacts       Contact[] @relation("ContactCreator")
+  templates      Template[]
 
   @@map("users")
 }
@@ -46,6 +47,7 @@ model Staff {
   accountNumbers  StaffAccountNumber[]
   signerHistories StaffSignerHistory[] @relation("signerFor")
   signedFor       StaffSignerHistory[] @relation("signsFor")
+  templates       Template[]
 
   @@map("staff")
 }
@@ -310,4 +312,45 @@ model Notification {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notifications")
+}
+
+model Template {
+  id              String         @id @default(uuid())
+  name            String
+  type            DocumentType   @default(INVOICE)
+  staffId         String?        @map("staff_id")
+  department      String         @default("")
+  category        String         @default("")
+  accountCode     String         @default("") @map("account_code")
+  marginEnabled   Boolean        @default(false) @map("margin_enabled")
+  marginPercent   Decimal?       @map("margin_percent") @db.Decimal(5, 2)
+  taxEnabled      Boolean        @default(false) @map("tax_enabled")
+  notes           String         @default("")
+  isCateringEvent Boolean        @default(false) @map("is_catering_event")
+  cateringDetails Json?          @map("catering_details")
+  createdBy       String         @map("created_by")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  creator         User           @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  staff           Staff?         @relation(fields: [staffId], references: [id], onDelete: SetNull)
+  items           TemplateItem[]
+
+  @@map("templates")
+}
+
+model TemplateItem {
+  id             String   @id @default(uuid())
+  templateId     String   @map("template_id")
+  description    String
+  quantity       Decimal  @db.Decimal(10, 2)
+  unitPrice      Decimal  @map("unit_price") @db.Decimal(10, 2)
+  sortOrder      Int      @default(0) @map("sort_order")
+  isTaxable      Boolean  @default(true) @map("is_taxable")
+  costPrice      Decimal? @map("cost_price") @db.Decimal(10, 2)
+  marginOverride Decimal? @map("margin_override") @db.Decimal(5, 2)
+
+  template       Template @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@map("template_items")
 }

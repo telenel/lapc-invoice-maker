@@ -110,6 +110,7 @@ export interface CreateQuoteInput {
   marginEnabled?: boolean;
   marginPercent?: number;
   taxEnabled?: boolean;
+  taxRate?: number;
 }
 
 export interface UpdateQuoteInput {
@@ -136,6 +137,7 @@ export interface UpdateQuoteInput {
   marginEnabled?: boolean;
   marginPercent?: number;
   taxEnabled?: boolean;
+  taxRate?: number;
 }
 
 export interface QuoteFilters {

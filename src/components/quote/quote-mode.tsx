@@ -1,8 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { ChevronDownIcon, ChevronRightIcon, InfoIcon } from "lucide-react";
 import { toast } from "sonner";
+import { useAutoSave, loadDraft } from "@/lib/use-auto-save";
+import { DraftRecoveryBanner } from "@/components/ui/draft-recovery-banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,6 +39,8 @@ import { useTaxCalculation } from "@/components/invoice/hooks/use-tax-calculatio
 import { TAX_RATE } from "@/domains/invoice/constants";
 import { cn } from "@/lib/utils";
 import { categoryApi } from "@/domains/category/api-client";
+import { templateApi } from "@/domains/template/api-client";
+import type { TemplateResponse } from "@/domains/template/types";
 import type {
   QuoteFormData,
   QuoteItem,
@@ -106,11 +111,30 @@ export function QuoteMode({
   saving,
   existingId,
 }: QuoteModeProps) {
+  // ---- Session ----
+  const { data: session } = useSession();
+  const userId = (session?.user as { id?: string } | undefined)?.id ?? "anonymous";
+
   // ---- Local state ----
   const [categories, setCategories] = useState<Category[]>([]);
+  const [templates, setTemplates] = useState<TemplateResponse[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [quickPicksOpen, setQuickPicksOpen] = useState(false);
   const [cateringOverride, setCateringOverride] = useState(false);
+
+  // ---- Auto-save + draft recovery ----
+  const routeKey = existingId ? `/quotes/${existingId}/edit` : "/quotes/new";
+  const { clearDraft } = useAutoSave(form, routeKey, userId);
+  const [draftEntry, setDraftEntry] = useState(() => {
+    if (typeof window === "undefined") return null;
+    return loadDraft<QuoteFormData>(routeKey, userId);
+  });
+
+  // ---- Save wrapper that clears the draft on success ----
+  const handleSaveQuote = useCallback(async () => {
+    await saveQuote();
+    clearDraft();
+  }, [saveQuote, clearDraft]);
 
   // ---- Tax calculation ----
   const taxItems = form.marginEnabled ? itemsWithMargin : form.items;
@@ -131,6 +155,12 @@ export function QuoteMode({
       .then((data) => setCategories(data))
       .catch(() => {})
       .finally(() => setCategoriesLoading(false));
+  }, []);
+
+  useEffect(() => {
+    templateApi.list("QUOTE")
+      .then((data) => setTemplates(data))
+      .catch(() => {});
   }, []);
 
   // ---- Quick pick handler ----
@@ -169,7 +199,7 @@ export function QuoteMode({
       toast.error("Please enter a recipient name");
       return;
     }
-    saveQuote();
+    handleSaveQuote();
   }
 
   // ---- Staff summary inline editing ----
@@ -190,6 +220,40 @@ export function QuoteMode({
   }
 
 
+  // ---- Save as Template ----
+  async function handleSaveAsTemplate() {
+    const name = prompt("Template name:");
+    if (!name?.trim()) return;
+    try {
+      await templateApi.create({
+        name: name.trim(),
+        type: "QUOTE",
+        staffId: form.staffId || undefined,
+        department: form.department,
+        category: form.category,
+        accountCode: form.accountCode || undefined,
+        marginEnabled: form.marginEnabled,
+        marginPercent: form.marginPercent ? Number(form.marginPercent) : undefined,
+        taxEnabled: form.taxEnabled,
+        notes: form.notes || undefined,
+        isCateringEvent: form.isCateringEvent,
+        items: form.items.filter((i) => i.description.trim()).map((item, idx) => ({
+          description: item.description,
+          quantity: Number(item.quantity),
+          unitPrice: Number(item.unitPrice),
+          sortOrder: idx,
+          isTaxable: item.isTaxable,
+          costPrice: item.costPrice ? Number(item.costPrice) : undefined,
+          marginOverride: item.marginOverride ? Number(item.marginOverride) : undefined,
+        })),
+      });
+      toast.success(`Template "${name.trim()}" saved`);
+      templateApi.list("QUOTE").then((data) => setTemplates(data)).catch(() => {});
+    } catch {
+      toast.error("Failed to save template");
+    }
+  }
+
   // ---- Catering toggle ----
   function handleCateringToggle(checked: boolean) {
     updateField("isCateringEvent", checked);
@@ -208,6 +272,64 @@ export function QuoteMode({
 
   return (
     <div className="max-w-2xl mx-auto space-y-2">
+      {draftEntry && (
+        <DraftRecoveryBanner
+          savedAt={draftEntry.savedAt}
+          onResume={() => {
+            const draft = draftEntry.data;
+            (Object.keys(draft) as (keyof QuoteFormData)[]).forEach((key) => {
+              updateField(key, draft[key] as QuoteFormData[typeof key]);
+            });
+            setDraftEntry(null);
+          }}
+          onDiscard={() => {
+            clearDraft();
+            setDraftEntry(null);
+          }}
+        />
+      )}
+
+      {templates.length > 0 && (
+        <div className="mb-4">
+          <select
+            className="rounded-md border border-input bg-background px-3 py-2 text-sm w-full"
+            defaultValue=""
+            onChange={(e) => {
+              const t = templates.find((tmpl) => tmpl.id === e.target.value);
+              if (!t) return;
+              if (t.staffId) updateField("staffId", t.staffId);
+              if (t.department) updateField("department", t.department);
+              if (t.category) updateField("category", t.category);
+              if (t.accountCode) updateField("accountCode", t.accountCode);
+              updateField("marginEnabled", t.marginEnabled);
+              if (t.marginPercent != null) updateField("marginPercent", t.marginPercent);
+              updateField("taxEnabled", t.taxEnabled);
+              if (t.notes) updateField("notes", t.notes);
+              updateField("isCateringEvent", t.isCateringEvent);
+              const newItems = t.items.map((item, idx) => ({
+                _key: crypto.randomUUID(),
+                description: item.description,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                isTaxable: item.isTaxable,
+                extendedPrice: item.quantity * item.unitPrice,
+                sortOrder: idx,
+                marginOverride: item.marginOverride,
+                costPrice: item.costPrice,
+              }));
+              updateField("items", newItems);
+              toast.success(`Loaded template "${t.name}"`);
+              e.target.value = "";
+            }}
+          >
+            <option value="">Load from template...</option>
+            {templates.map((t) => (
+              <option key={t.id} value={t.id}>{t.name}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
       {/* ============ RECIPIENT ============ */}
       <Card>
         <CardHeader>
@@ -668,7 +790,10 @@ export function QuoteMode({
           </div>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={handleSaveAsTemplate} disabled={saving}>
+            Save as Template
+          </Button>
           <Button onClick={handleSave} disabled={saving} size="lg">
             {saving ? "Saving..." : existingId ? "Update Quote" : "Save Quote"}
           </Button>

@@ -1,6 +1,7 @@
 "use client";
 
 import type { UIMessage } from "ai";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { BotIcon, UserIcon } from "lucide-react";
 
@@ -54,6 +55,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
 }
 
 function MessageContent({ text }: { text: string }) {
+  const router = useRouter();
   // Simple markdown-like rendering: bold, links, line breaks
   const parts = text.split(/(\[.*?\]\(.*?\)|\*\*.*?\*\*|\n)/g);
 
@@ -65,11 +67,18 @@ function MessageContent({ text }: { text: string }) {
         if (linkMatch) {
           const url = linkMatch[2];
           const isSafe = /^(https?:\/\/|\/)/i.test(url);
+          const isInternal = /^\/(?!\/)/.test(url);
           return isSafe ? (
             <a
               key={i}
               href={url}
               className="text-purple-400 underline hover:text-purple-300"
+              onClick={isInternal ? (e: React.MouseEvent<HTMLAnchorElement>) => {
+                if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+                  e.preventDefault();
+                  router.push(url);
+                }
+              } : undefined}
             >
               {linkMatch[1]}
             </a>

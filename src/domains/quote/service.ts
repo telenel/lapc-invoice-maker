@@ -119,8 +119,32 @@ function calculateLineItems(
   });
 }
 
-function calculateTotal(items: { extendedPrice: number }[]): number {
-  return items.reduce((sum, item) => sum + item.extendedPrice, 0);
+function calculateTotal(
+  items: { extendedPrice: number; isTaxable?: boolean }[],
+  marginEnabled?: boolean,
+  marginPercent?: number,
+  taxEnabled?: boolean,
+  taxRate?: number
+): number {
+  let subtotal = items.reduce((sum, item) => sum + item.extendedPrice, 0);
+
+  // Apply margin markup
+  if (marginEnabled && marginPercent) {
+    subtotal = subtotal * (1 + marginPercent / 100);
+  }
+
+  // Apply tax on taxable items
+  if (taxEnabled) {
+    const rate = taxRate ?? 0.0975;
+    const taxableTotal = items.reduce((sum, item) => {
+      const ext = item.extendedPrice;
+      const withMargin = marginEnabled && marginPercent ? ext * (1 + marginPercent / 100) : ext;
+      return item.isTaxable !== false ? sum + withMargin : sum;
+    }, 0);
+    subtotal += taxableTotal * rate;
+  }
+
+  return Math.round(subtotal * 100) / 100;
 }
 
 // ── Service ────────────────────────────────────────────────────────────────
@@ -313,7 +337,13 @@ export const quoteService = {
   async create(input: CreateQuoteInput, creatorId: string): Promise<QuoteResponse> {
     const { items, ...quoteData } = input;
     const calculatedItems = calculateLineItems(items);
-    const totalAmount = calculateTotal(calculatedItems);
+    const totalAmount = calculateTotal(
+      calculatedItems,
+      quoteData.marginEnabled,
+      quoteData.marginPercent ? Number(quoteData.marginPercent) : undefined,
+      quoteData.taxEnabled,
+      quoteData.taxRate != null ? Number(quoteData.taxRate) : undefined
+    );
     const quoteNumber = await quoteRepository.generateNumber();
 
     const quote = await quoteRepository.create(
@@ -356,9 +386,30 @@ export const quoteService = {
 
     const { items, ...quoteData } = input;
 
-    if (items && Array.isArray(items)) {
-      const calculatedItems = calculateLineItems(items);
-      const totalAmount = calculateTotal(calculatedItems);
+    const mEnabled = Boolean(quoteData.marginEnabled ?? existing.marginEnabled);
+    const mPercent = quoteData.marginPercent != null ? Number(quoteData.marginPercent) : (existing.marginPercent != null ? Number(existing.marginPercent) : undefined);
+    const tEnabled = Boolean(quoteData.taxEnabled ?? existing.taxEnabled);
+    const tRate = quoteData.taxRate != null ? Number(quoteData.taxRate) : (existing.taxRate != null ? Number(existing.taxRate) : undefined);
+
+    const needsRecalc = items && Array.isArray(items)
+      || quoteData.marginEnabled !== undefined
+      || quoteData.marginPercent !== undefined
+      || quoteData.taxEnabled !== undefined
+      || quoteData.taxRate !== undefined;
+
+    if (needsRecalc) {
+      const sourceItems = items && Array.isArray(items)
+        ? items
+        : existing.items.map((item) => ({
+            description: item.description,
+            quantity: Number(item.quantity),
+            unitPrice: Number(item.unitPrice),
+            isTaxable: item.isTaxable,
+            costPrice: item.costPrice != null ? Number(item.costPrice) : undefined,
+            marginOverride: item.marginOverride != null ? Number(item.marginOverride) : undefined,
+          }));
+      const calculatedItems = calculateLineItems(sourceItems);
+      const totalAmount = calculateTotal(calculatedItems, mEnabled, mPercent, tEnabled, tRate);
       const updated = await quoteRepository.update(id, quoteData, calculatedItems, totalAmount);
       safePublishAll({ type: "quote-changed" });
       return toQuoteResponse(updated as unknown as NonNullable<QuoteWithRelations>);
@@ -556,6 +607,93 @@ export const quoteService = {
     }
     safePublishAll({ type: "quote-changed" });
     return toQuoteResponse(created);
+  },
+
+  /**
+   * Duplicate a quote without changing the original's status.
+   * Creates a new DRAFT quote with the same data as the source.
+   */
+  async duplicate(
+    id: string,
+    creatorId: string,
+  ): Promise<{ id: string; quoteNumber: string | null }> {
+    const { prisma } = await import("@/lib/prisma");
+    const quote = await quoteRepository.findById(id);
+    if (!quote || quote.type !== "QUOTE") {
+      throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
+    }
+
+    const now = new Date();
+    const expirationDate = new Date(now);
+    expirationDate.setDate(expirationDate.getDate() + 30);
+
+    const quoteNumber = await quoteRepository.generateNumber();
+
+    const calculatedItems = calculateLineItems(
+      quote.items.map((item) => ({
+        description: item.description,
+        quantity: Number(item.quantity),
+        unitPrice: Number(item.unitPrice),
+        isTaxable: item.isTaxable,
+        costPrice: item.costPrice != null ? Number(item.costPrice) : undefined,
+        marginOverride:
+          item.marginOverride != null ? Number(item.marginOverride) : undefined,
+      })),
+    );
+
+    const total = calculateTotal(
+      calculatedItems,
+      quote.marginEnabled,
+      quote.marginPercent != null ? Number(quote.marginPercent) : undefined,
+      quote.taxEnabled,
+      quote.taxRate != null ? Number(quote.taxRate) : undefined,
+    );
+
+    const newQuote = await prisma.invoice.create({
+      data: {
+        type: "QUOTE",
+        status: "DRAFT",
+        quoteStatus: "DRAFT",
+        quoteNumber,
+        date: now,
+        category: quote.category,
+        department: quote.department,
+        staffId: quote.staffId ?? undefined,
+        contactId: (quote as { contactId?: string | null }).contactId ?? undefined,
+        accountCode: quote.accountCode,
+        accountNumber: quote.accountNumber,
+        approvalChain: quote.approvalChain ?? [],
+        notes: quote.notes,
+        recipientName: quote.recipientName,
+        recipientEmail: quote.recipientEmail,
+        recipientOrg: quote.recipientOrg,
+        expirationDate,
+        totalAmount: total,
+        marginEnabled: quote.marginEnabled,
+        marginPercent: quote.marginPercent,
+        taxEnabled: quote.taxEnabled,
+        taxRate: quote.taxRate,
+        isCateringEvent: quote.isCateringEvent,
+        cateringDetails: quote.cateringDetails ?? undefined,
+        createdBy: creatorId,
+        items: {
+          create: quote.items.map((item) => ({
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            extendedPrice: item.extendedPrice,
+            sortOrder: item.sortOrder,
+            isTaxable: item.isTaxable,
+            costPrice: item.costPrice ?? undefined,
+            marginOverride: item.marginOverride ?? undefined,
+          })),
+        },
+      },
+      select: { id: true, quoteNumber: true },
+    });
+
+    safePublishAll({ type: "quote-changed" });
+    return { id: newQuote.id, quoteNumber: newQuote.quoteNumber };
   },
 
   /**

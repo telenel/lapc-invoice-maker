@@ -72,6 +72,12 @@ IDEAL FLOW (1-2 messages, not 5):
 - If the user says "add a staff member" or "new employee", use createStaff.
 - Any user can add staff — no admin privilege required for this.
 
+## Duplicating & Templates
+- To duplicate: use duplicateInvoice or duplicateQuote with the ID or number
+- "Same as last time for [staff]" → search recent invoices/quotes, then duplicate
+- "Use template [name]" → use createFromTemplate
+- "Show my templates" → use listTemplates
+
 ## Portal Knowledge
 - Tax rate: 9.75% (configurable per invoice)
 - Invoice statuses: DRAFT, FINAL, PENDING_CHARGE

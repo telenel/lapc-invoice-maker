@@ -635,6 +635,196 @@ export function buildTools(user: ChatUser) {
       },
     }),
 
+    duplicateInvoice: tool({
+      description: "Duplicate an existing invoice into a new draft",
+      inputSchema: z.object({
+        id: z.string().optional().describe("Invoice ID"),
+        invoiceNumber: z.string().optional().describe("Invoice number (used to look up the ID if id is not provided)"),
+      }),
+      execute: async ({ id, invoiceNumber }) => {
+        let sourceId = id;
+
+        if (!sourceId && invoiceNumber) {
+          const result = await invoiceService.list({ search: invoiceNumber, pageSize: 1 });
+          const match = result.invoices[0];
+          if (!match) {
+            return { error: `Invoice "${invoiceNumber}" not found` };
+          }
+          sourceId = match.id;
+        }
+
+        if (!sourceId) {
+          return { error: "Provide either id or invoiceNumber" };
+        }
+
+        const existing = await invoiceService.getById(sourceId);
+        if (!existing) {
+          return { error: "Invoice not found" };
+        }
+        if (user.role !== "admin" && existing.creatorId !== user.id) {
+          return { error: "You do not have permission to duplicate this invoice" };
+        }
+
+        const duplicate = await invoiceService.duplicate(sourceId, user.id);
+        return {
+          id: duplicate.id,
+          invoiceNumber: duplicate.invoiceNumber,
+          message: `Duplicated as draft. [View Invoice](/invoices/${duplicate.id})`,
+        };
+      },
+    }),
+
+    duplicateQuote: tool({
+      description: "Duplicate an existing quote into a new draft",
+      inputSchema: z.object({
+        id: z.string().optional().describe("Quote ID"),
+        quoteNumber: z.string().optional().describe("Quote number (used to look up the ID if id is not provided)"),
+      }),
+      execute: async ({ id, quoteNumber }) => {
+        let sourceId = id;
+
+        if (!sourceId && quoteNumber) {
+          const result = await invoiceService.list({ search: quoteNumber, pageSize: 1 });
+          const match = result.invoices[0];
+          if (!match) {
+            return { error: `Quote "${quoteNumber}" not found` };
+          }
+          sourceId = match.id;
+        }
+
+        if (!sourceId) {
+          return { error: "Provide either id or quoteNumber" };
+        }
+
+        const existing = await quoteService.getById(sourceId);
+        if (!existing) {
+          return { error: "Quote not found" };
+        }
+        if (user.role !== "admin" && existing.creatorId !== user.id) {
+          return { error: "You do not have permission to duplicate this quote" };
+        }
+
+        const duplicate = await quoteService.duplicate(sourceId, user.id);
+        return {
+          id: duplicate.id,
+          quoteNumber: duplicate.quoteNumber,
+          message: `Duplicated as draft. [View Quote](/quotes/${duplicate.id})`,
+        };
+      },
+    }),
+
+    listTemplates: tool({
+      description: "List the user's saved invoice/quote templates",
+      inputSchema: z.object({
+        type: z.enum(["INVOICE", "QUOTE"]).optional().describe("Filter by template type"),
+      }),
+      execute: async ({ type }) => {
+        const { templateService } = await import("@/domains/template/service");
+        const templates = await templateService.list(user.id, type);
+        return {
+          templates: templates.map((t) => ({
+            id: t.id,
+            name: t.name,
+            type: t.type,
+            department: t.department,
+            category: t.category,
+            itemCount: t.items.length,
+            createdAt: t.createdAt,
+          })),
+          total: templates.length,
+        };
+      },
+    }),
+
+    createFromTemplate: tool({
+      description: "Create a new invoice or quote from a saved template",
+      inputSchema: z.object({
+        templateId: z.string().optional().describe("Template ID"),
+        templateName: z.string().optional().describe("Template name (used to find the template if templateId is not provided)"),
+        staffId: z.string().optional().describe("Override staff member ID"),
+        date: z.string().optional().describe("Override date in YYYY-MM-DD format"),
+      }),
+      execute: async ({ templateId, templateName, staffId, date }) => {
+        const { templateService } = await import("@/domains/template/service");
+
+        let template = null;
+        if (templateId) {
+          template = await templateService.getById(templateId, user.id);
+        } else if (templateName) {
+          const all = await templateService.list(user.id);
+          template = all.find((t) => t.name.toLowerCase().includes(templateName.toLowerCase())) ?? null;
+        }
+
+        if (!template) {
+          return { error: "Template not found" };
+        }
+
+        const resolvedDate = date ?? new Date().toISOString().split("T")[0];
+        const resolvedStaffId = staffId ?? template.staffId ?? undefined;
+
+        const items = template.items.map((item) => ({
+          description: item.description,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          isTaxable: item.isTaxable,
+        }));
+
+        if (template.type === "INVOICE") {
+          if (!resolvedStaffId) {
+            return { error: "Template has no staff member. Provide staffId to create an invoice." };
+          }
+          const invoice = await invoiceService.create(
+            {
+              date: resolvedDate,
+              staffId: resolvedStaffId,
+              department: template.department,
+              category: template.category,
+              accountCode: template.accountCode || undefined,
+              notes: template.notes || undefined,
+              marginEnabled: template.marginEnabled,
+              marginPercent: template.marginPercent ?? undefined,
+              taxEnabled: template.taxEnabled,
+              items,
+            },
+            user.id
+          );
+          return {
+            id: invoice.id,
+            invoiceNumber: invoice.invoiceNumber,
+            type: "INVOICE",
+            message: `Invoice created from template "${template.name}". [View Invoice](/invoices/${invoice.id})`,
+          };
+        } else {
+          const expirationDate = new Date();
+          expirationDate.setDate(expirationDate.getDate() + 30);
+          const quote = await quoteService.create(
+            {
+              date: resolvedDate,
+              staffId: resolvedStaffId,
+              department: template.department,
+              category: template.category,
+              accountCode: template.accountCode || undefined,
+              notes: template.notes || undefined,
+              marginEnabled: template.marginEnabled,
+              marginPercent: template.marginPercent ?? undefined,
+              taxEnabled: template.taxEnabled,
+              isCateringEvent: template.isCateringEvent,
+              items,
+              recipientName: "",
+              expirationDate: expirationDate.toISOString().split("T")[0],
+            },
+            user.id
+          );
+          return {
+            id: quote.id,
+            quoteNumber: quote.quoteNumber,
+            type: "QUOTE",
+            message: `Quote created from template "${template.name}". Recipient name is blank — update it on the quote form. [View Quote](/quotes/${quote.id})`,
+          };
+        }
+      },
+    }),
+
     // Staff creation is intentionally open to all users per business requirement
     createStaff: tool({
       description:
