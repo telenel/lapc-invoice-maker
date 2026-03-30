@@ -211,7 +211,7 @@ export function InvoiceFiltersBar({
             </div>
           </div>
 
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
             {onExportCsv && (
               <Button variant="outline" size="sm" onClick={onExportCsv} className="w-full sm:w-auto">
                 Export CSV

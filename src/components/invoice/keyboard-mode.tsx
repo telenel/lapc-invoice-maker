@@ -697,16 +697,16 @@ export function KeyboardMode({
         <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:flex-wrap sm:justify-end">
           {!form.isRunning && (
             <>
-              <Button variant="outline" tabIndex={-1} onClick={handleSaveAsTemplate} disabled={saving} className="w-full sm:w-auto">
+              <Button variant="outline" onClick={handleSaveAsTemplate} disabled={saving} className="w-full sm:w-auto">
                 Save as Template
               </Button>
-              <Button variant="outline" tabIndex={-1} onClick={handleSaveDraft} disabled={saving} className="w-full sm:w-auto">
+              <Button variant="outline" onClick={handleSaveDraft} disabled={saving} className="w-full sm:w-auto">
                 Save Draft
               </Button>
             </>
           )}
           {!form.isRunning && !existingId && (
-            <Button variant="secondary" tabIndex={-1} onClick={() => setShowChargeLaterDialog(true)} disabled={saving} className="w-full sm:w-auto">
+            <Button variant="secondary" onClick={() => setShowChargeLaterDialog(true)} disabled={saving} className="w-full sm:w-auto">
               Charge Later
             </Button>
           )}

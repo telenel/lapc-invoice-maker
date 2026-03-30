@@ -24,7 +24,7 @@ export function CalendarView() {
   const calendarRef = useRef<FullCalendar | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [calendarHeight, setCalendarHeight] = useState<number>(600);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState<boolean | null>(null);
 
   // Sidebar state
   const [hoveredEvent, setHoveredEvent] = useState<CalendarEvent | null>(null);
@@ -58,7 +58,9 @@ export function CalendarView() {
         mainEl.style.padding = prevPadding;
         document.documentElement.style.removeProperty("--fc-slot-height");
         document.documentElement.style.removeProperty("--fc-slot-font");
-        setCalendarHeight(Math.max(window.innerHeight - navH - 280, 480));
+        const sidebarHeight =
+          document.querySelector<HTMLElement>("[data-calendar-sidebar]")?.getBoundingClientRect().height ?? 320;
+        setCalendarHeight(Math.max(window.innerHeight - navH - sidebarHeight - 24, 480));
         calendarRef.current?.getApi().updateSize();
         return;
       }

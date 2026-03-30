@@ -13,8 +13,17 @@ if [ "$branch" = "main" ] || [ -z "$branch" ]; then
   exit 0
 fi
 
+# Skip check if GitHub CLI is unavailable
+if ! command -v gh >/dev/null 2>&1; then
+  exit 0
+fi
+
 # Check for open PR on this branch
-pr_count=$(gh pr list --head "$branch" --state open --json number --jq 'length' 2>/dev/null)
+pr_count=$(gh pr list --head "$branch" --state open --json number --jq 'length' 2>/dev/null || printf '0')
+[ -n "$pr_count" ] || pr_count=0
+case "$pr_count" in
+  ''|*[!0-9]*) pr_count=0 ;;
+esac
 
 if [ "$pr_count" -gt 0 ]; then
   pr_info=$(gh pr list --head "$branch" --state open --json number,title --jq '.[0] | "#\(.number) \(.title)"')

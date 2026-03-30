@@ -20,7 +20,13 @@ import { HelpModal } from "@/components/help-modal";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useUIScale } from "@/components/ui-scale-provider";
 
-const links = [
+type NavLink = {
+  href: string;
+  label: string;
+  matchPrefix?: string;
+};
+
+const links: NavLink[] = [
   { href: "/", label: "Dashboard" },
   { href: "/invoices", label: "Invoices" },
   { href: "/quotes", label: "Quotes" },
@@ -66,9 +72,17 @@ export function Nav() {
   if (status !== "authenticated") return null;
 
   const role = (session?.user as { role?: string } | undefined)?.role;
+  const adminLink: NavLink = { href: "/admin/settings", label: "Admin", matchPrefix: "/admin" };
   const allLinks = role === "admin"
-    ? [...links, { href: "/admin/settings", label: "Admin" }]
+    ? [...links, adminLink]
     : links;
+
+  function isLinkActive(link: NavLink) {
+    const matchTarget = link.matchPrefix ?? link.href;
+    return matchTarget === "/"
+      ? pathname === "/"
+      : pathname === matchTarget || pathname.startsWith(matchTarget + "/");
+  }
 
   return (
     <nav className="sticky top-0 z-50 bg-background/85 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
@@ -83,10 +97,7 @@ export function Nav() {
         </Link>
         <div className="hidden gap-0.5 md:flex">
           {links.map((link) => {
-            const isActive =
-              link.href === "/"
-                ? pathname === "/"
-                : pathname === link.href || pathname.startsWith(link.href + "/");
+            const isActive = isLinkActive(link);
             return (
               <Link
                 key={link.href}
@@ -104,15 +115,15 @@ export function Nav() {
           })}
           {role === "admin" && (
             <Link
-              href="/admin/settings"
+              href={adminLink.href}
               className={cn(
                 "relative rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
-                pathname === "/admin/settings" || pathname === "/admin/users"
+                isLinkActive(adminLink)
                   ? "bg-muted text-foreground"
                   : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
               )}
             >
-              Admin
+              {adminLink.label}
             </Link>
           )}
         </div>
@@ -216,10 +227,7 @@ export function Nav() {
         <div className="border-t border-border/60 bg-background/95 px-4 py-4 md:hidden">
           <div className="grid gap-2">
             {allLinks.map((link) => {
-              const isActive =
-                link.href === "/"
-                  ? pathname === "/"
-                  : pathname === link.href || pathname.startsWith(link.href + "/");
+              const isActive = isLinkActive(link);
               return (
                 <Link
                   key={link.href}

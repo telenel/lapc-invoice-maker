@@ -69,7 +69,7 @@ export function QuickPicksSidePanel({
   const hasContent = filteredGlobal.length > 0 || deptPicks.length > 0 || otherPicks.length > 0;
 
   return (
-    <div className="flex w-full flex-col border-t border-border/60 pt-3 lg:max-h-[500px] lg:w-[160px] lg:flex-shrink-0 lg:border-t-0 lg:border-l lg:pl-3 lg:pt-0">
+    <div className="flex w-full flex-col border-t border-border/60 pt-3 lg:max-h-[500px] lg:w-[160px] lg:shrink-0 lg:border-t-0 lg:border-l lg:pl-3 lg:pt-0">
       <Input
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
