@@ -15,6 +15,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
   const { data: invoice, loading } = useInvoice(id);
   const [regenerating, setRegenerating] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [duplicating, setDuplicating] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   async function handleRegeneratePdf() {
@@ -78,7 +79,8 @@ export function InvoiceDetailView({ id }: { id: string }) {
   }
 
   const handleDuplicate = useCallback(async () => {
-    if (!invoice) return;
+    if (!invoice || duplicating) return;
+    setDuplicating(true);
     try {
       const res = await fetch(`/api/invoices/${invoice.id}/duplicate`, { method: "POST" });
       if (!res.ok) {
@@ -91,8 +93,10 @@ export function InvoiceDetailView({ id }: { id: string }) {
       router.push(data.redirectTo);
     } catch {
       toast.error("Failed to duplicate");
+    } finally {
+      setDuplicating(false);
     }
-  }, [invoice, router]);
+  }, [invoice, duplicating, router]);
 
   function handleDeleteClick() {
     if (!invoice) return;
@@ -119,6 +123,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
         invoice={invoice}
         regenerating={regenerating}
         deleting={deleting}
+        duplicating={duplicating}
         deleteDialogOpen={deleteDialogOpen}
         onDeleteDialogOpenChange={setDeleteDialogOpen}
         onDownloadPdf={() => window.open(`/api/invoices/${id}/pdf`, "_blank")}

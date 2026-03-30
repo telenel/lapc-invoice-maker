@@ -4,8 +4,9 @@ import { templateService } from "@/domains/template/service";
 
 export const GET = withAuth(async (req: NextRequest, session) => {
   try {
-    const type = req.nextUrl.searchParams.get("type") as "INVOICE" | "QUOTE" | null;
-    const templates = await templateService.list(session.user.id, type ?? undefined);
+    const rawType = req.nextUrl.searchParams.get("type");
+    const type = rawType === "INVOICE" || rawType === "QUOTE" ? rawType : undefined;
+    const templates = await templateService.list(session.user.id, type);
     return NextResponse.json(templates);
   } catch (err) {
     console.error("GET /api/templates failed:", err);

@@ -20,6 +20,7 @@ interface InvoiceDetailHeaderProps {
   invoice: InvoiceResponse;
   regenerating: boolean;
   deleting: boolean;
+  duplicating: boolean;
   deleteDialogOpen: boolean;
   onDeleteDialogOpenChange: (open: boolean) => void;
   onDownloadPdf: () => void;
@@ -34,6 +35,7 @@ export function InvoiceDetailHeader({
   invoice,
   regenerating,
   deleting,
+  duplicating,
   deleteDialogOpen,
   onDeleteDialogOpenChange,
   onDownloadPdf,
@@ -103,9 +105,9 @@ export function InvoiceDetailHeader({
           Download PDF
         </Button>
 
-        <Button variant="outline" size="sm" onClick={onDuplicate}>
+        <Button variant="outline" size="sm" onClick={onDuplicate} disabled={duplicating}>
           <CopyIcon className="size-3.5 mr-1.5" />
-          Duplicate
+          {duplicating ? "Duplicating…" : "Duplicate"}
         </Button>
 
         {isFinal && (

@@ -67,13 +67,18 @@ function MessageContent({ text }: { text: string }) {
         if (linkMatch) {
           const url = linkMatch[2];
           const isSafe = /^(https?:\/\/|\/)/i.test(url);
-          const isInternal = url.startsWith("/");
+          const isInternal = /^\/(?!\/)/.test(url);
           return isSafe ? (
             <a
               key={i}
               href={url}
               className="text-purple-400 underline hover:text-purple-300"
-              onClick={isInternal ? (e) => { e.preventDefault(); router.push(url); } : undefined}
+              onClick={isInternal ? (e: React.MouseEvent<HTMLAnchorElement>) => {
+                if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) {
+                  e.preventDefault();
+                  router.push(url);
+                }
+              } : undefined}
             >
               {linkMatch[1]}
             </a>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useAutoSave, loadDraft } from "@/lib/use-auto-save";
 import { DraftRecoveryBanner } from "@/components/ui/draft-recovery-banner";
@@ -126,6 +127,10 @@ export function KeyboardMode({
   isPendingCharge = false,
   existingId,
 }: KeyboardModeProps) {
+  // ---- Session ----
+  const { data: session } = useSession();
+  const userId = (session?.user as { id?: string } | undefined)?.id ?? "anonymous";
+
   // ---- Local state ----
   const [staff, setStaff] = useState<StaffResponse[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -141,10 +146,10 @@ export function KeyboardMode({
 
   // ---- Auto-save + draft recovery ----
   const routeKey = existingId ? `/invoices/${existingId}/edit` : "/invoices/new";
-  const { clearDraft } = useAutoSave(form, routeKey);
+  const { clearDraft } = useAutoSave(form, routeKey, userId);
   const [draftEntry, setDraftEntry] = useState(() => {
     if (typeof window === "undefined") return null;
-    return loadDraft<InvoiceFormData>(routeKey);
+    return loadDraft<InvoiceFormData>(routeKey, userId);
   });
 
   // ---- Save wrappers that clear the draft on success ----

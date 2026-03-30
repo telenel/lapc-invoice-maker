@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { ChevronDownIcon, ChevronRightIcon, InfoIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useAutoSave, loadDraft } from "@/lib/use-auto-save";
@@ -110,6 +111,10 @@ export function QuoteMode({
   saving,
   existingId,
 }: QuoteModeProps) {
+  // ---- Session ----
+  const { data: session } = useSession();
+  const userId = (session?.user as { id?: string } | undefined)?.id ?? "anonymous";
+
   // ---- Local state ----
   const [categories, setCategories] = useState<Category[]>([]);
   const [templates, setTemplates] = useState<TemplateResponse[]>([]);
@@ -119,10 +124,10 @@ export function QuoteMode({
 
   // ---- Auto-save + draft recovery ----
   const routeKey = existingId ? `/quotes/${existingId}/edit` : "/quotes/new";
-  const { clearDraft } = useAutoSave(form, routeKey);
+  const { clearDraft } = useAutoSave(form, routeKey, userId);
   const [draftEntry, setDraftEntry] = useState(() => {
     if (typeof window === "undefined") return null;
-    return loadDraft<QuoteFormData>(routeKey);
+    return loadDraft<QuoteFormData>(routeKey, userId);
   });
 
   // ---- Save wrapper that clears the draft on success ----

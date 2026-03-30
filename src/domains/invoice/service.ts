@@ -226,6 +226,11 @@ export const invoiceService = {
         marginPercent: source.marginPercent != null ? Number(source.marginPercent) : undefined,
         taxEnabled: source.taxEnabled,
         taxRate: source.taxRate != null ? Number(source.taxRate) : undefined,
+        isRecurring: source.isRecurring ?? undefined,
+        recurringInterval: source.recurringInterval ?? undefined,
+        recurringEmail: source.recurringEmail ?? undefined,
+        isRunning: source.isRunning ?? undefined,
+        runningTitle: source.runningTitle ?? undefined,
         isCateringEvent: source.isCateringEvent,
         cateringDetails: source.cateringDetails as Prisma.InputJsonValue | undefined,
       },
@@ -257,12 +262,29 @@ export const invoiceService = {
 
     const { items, ...invoiceData } = input;
 
-    if (items && Array.isArray(items)) {
-      const calculatedItems = calculateLineItems(items);
-      const mEnabled = Boolean(invoiceData.marginEnabled ?? existing.marginEnabled);
-      const mPercent = invoiceData.marginPercent != null ? Number(invoiceData.marginPercent) : (existing.marginPercent != null ? Number(existing.marginPercent) : undefined);
-      const tEnabled = Boolean(invoiceData.taxEnabled ?? existing.taxEnabled);
-      const tRate = invoiceData.taxRate != null ? Number(invoiceData.taxRate) : (existing.taxRate != null ? Number(existing.taxRate) : undefined);
+    const mEnabled = Boolean(invoiceData.marginEnabled ?? existing.marginEnabled);
+    const mPercent = invoiceData.marginPercent != null ? Number(invoiceData.marginPercent) : (existing.marginPercent != null ? Number(existing.marginPercent) : undefined);
+    const tEnabled = Boolean(invoiceData.taxEnabled ?? existing.taxEnabled);
+    const tRate = invoiceData.taxRate != null ? Number(invoiceData.taxRate) : (existing.taxRate != null ? Number(existing.taxRate) : undefined);
+
+    const needsRecalc = items && Array.isArray(items)
+      || invoiceData.marginEnabled !== undefined
+      || invoiceData.marginPercent !== undefined
+      || invoiceData.taxEnabled !== undefined
+      || invoiceData.taxRate !== undefined;
+
+    if (needsRecalc) {
+      const sourceItems = items && Array.isArray(items)
+        ? items
+        : existing.items.map((item) => ({
+            description: item.description,
+            quantity: Number(item.quantity),
+            unitPrice: Number(item.unitPrice),
+            isTaxable: item.isTaxable,
+            costPrice: item.costPrice != null ? Number(item.costPrice) : undefined,
+            marginOverride: item.marginOverride != null ? Number(item.marginOverride) : undefined,
+          }));
+      const calculatedItems = calculateLineItems(sourceItems);
       const totalAmount = calculateTotal(calculatedItems, mEnabled, mPercent, tEnabled, tRate);
       const updated = await invoiceRepository.update(id, invoiceData, calculatedItems, totalAmount);
       safePublishAll({ type: "invoice-changed" });

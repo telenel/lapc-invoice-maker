@@ -342,7 +342,7 @@ export const quoteService = {
       quoteData.marginEnabled,
       quoteData.marginPercent ? Number(quoteData.marginPercent) : undefined,
       quoteData.taxEnabled,
-      undefined // taxRate defaults to 0.0975 in calculateTotal
+      quoteData.taxRate != null ? Number(quoteData.taxRate) : undefined
     );
     const quoteNumber = await quoteRepository.generateNumber();
 
@@ -386,13 +386,29 @@ export const quoteService = {
 
     const { items, ...quoteData } = input;
 
-    if (items && Array.isArray(items)) {
-      const calculatedItems = calculateLineItems(items);
-      // Use updated values if provided, fall back to existing record values
-      const mEnabled = Boolean(quoteData.marginEnabled ?? existing.marginEnabled);
-      const mPercent = quoteData.marginPercent != null ? Number(quoteData.marginPercent) : (existing.marginPercent != null ? Number(existing.marginPercent) : undefined);
-      const tEnabled = Boolean(quoteData.taxEnabled ?? existing.taxEnabled);
-      const tRate = existing.taxRate != null ? Number(existing.taxRate) : undefined;
+    const mEnabled = Boolean(quoteData.marginEnabled ?? existing.marginEnabled);
+    const mPercent = quoteData.marginPercent != null ? Number(quoteData.marginPercent) : (existing.marginPercent != null ? Number(existing.marginPercent) : undefined);
+    const tEnabled = Boolean(quoteData.taxEnabled ?? existing.taxEnabled);
+    const tRate = quoteData.taxRate != null ? Number(quoteData.taxRate) : (existing.taxRate != null ? Number(existing.taxRate) : undefined);
+
+    const needsRecalc = items && Array.isArray(items)
+      || quoteData.marginEnabled !== undefined
+      || quoteData.marginPercent !== undefined
+      || quoteData.taxEnabled !== undefined
+      || quoteData.taxRate !== undefined;
+
+    if (needsRecalc) {
+      const sourceItems = items && Array.isArray(items)
+        ? items
+        : existing.items.map((item) => ({
+            description: item.description,
+            quantity: Number(item.quantity),
+            unitPrice: Number(item.unitPrice),
+            isTaxable: item.isTaxable,
+            costPrice: item.costPrice != null ? Number(item.costPrice) : undefined,
+            marginOverride: item.marginOverride != null ? Number(item.marginOverride) : undefined,
+          }));
+      const calculatedItems = calculateLineItems(sourceItems);
       const totalAmount = calculateTotal(calculatedItems, mEnabled, mPercent, tEnabled, tRate);
       const updated = await quoteRepository.update(id, quoteData, calculatedItems, totalAmount);
       safePublishAll({ type: "quote-changed" });
@@ -673,11 +689,11 @@ export const quoteService = {
           })),
         },
       },
-      select: { id: true, invoiceNumber: true },
+      select: { id: true, quoteNumber: true },
     });
 
     safePublishAll({ type: "quote-changed" });
-    return { id: newQuote.id, quoteNumber: newQuote.invoiceNumber };
+    return { id: newQuote.id, quoteNumber: newQuote.quoteNumber };
   },
 
   /**
