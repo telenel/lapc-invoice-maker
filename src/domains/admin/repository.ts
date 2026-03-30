@@ -152,19 +152,21 @@ export const adminRepository = {
   // ── Invoice batch operations ──
 
   async batchDeleteInvoices(ids: string[]) {
-    return prisma.invoice.deleteMany({ where: { id: { in: ids } } });
+    return prisma.invoice.deleteMany({
+      where: { id: { in: ids }, type: "INVOICE" },
+    });
   },
 
   async batchUpdateInvoiceStatus(ids: string[], status: string) {
     return prisma.invoice.updateMany({
-      where: { id: { in: ids } },
+      where: { id: { in: ids }, type: "INVOICE" },
       data: { status: status as "DRAFT" | "FINAL" | "PENDING_CHARGE" },
     });
   },
 
   async batchReassignInvoices(ids: string[], userId: string) {
     return prisma.invoice.updateMany({
-      where: { id: { in: ids } },
+      where: { id: { in: ids }, type: "INVOICE" },
       data: { createdBy: userId },
     });
   },

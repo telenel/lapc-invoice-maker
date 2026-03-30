@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -43,12 +43,21 @@ export function QuoteManager() {
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set());
   const [users, setUsers] = useState<UserResponse[]>([]);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
-  const totalPages = Math.ceil(total / PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  // Debounce search input → committed search value
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setPage(1);
+      setSearch(searchInput);
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [searchInput]);
 
   const fetchQuotes = useCallback(async () => {
     setLoading(true);
@@ -58,6 +67,12 @@ export function QuoteManager() {
         search: search || undefined,
         quoteStatus: statusFilter !== "all" ? (statusFilter as QuoteStatus) : undefined,
       });
+      // Clamp page if batch action shrunk result set
+      const newTotalPages = Math.max(1, Math.ceil(result.total / PAGE_SIZE));
+      if (page > newTotalPages) {
+        setPage(newTotalPages);
+        return;
+      }
       setQuotes(result.quotes);
       setTotal(result.total);
     } catch { toast.error("Failed to load quotes"); }
@@ -82,18 +97,12 @@ export function QuoteManager() {
     } catch { toast.error("Batch action failed"); }
   }
 
-  function handleSearchChange(value: string) {
-    setSearch(value);
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => setPage(1), 300);
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-lg font-semibold">Quote Manager</h2>
         <div className="flex items-center gap-2">
-          <Input className="h-8 w-56 text-sm" placeholder="Search quotes..." value={search} onChange={(e) => handleSearchChange(e.target.value)} />
+          <Input className="h-8 w-56 text-sm" placeholder="Search quotes..." value={searchInput} onChange={(e) => setSearchInput(e.target.value)} />
           <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v ?? "all"); setPage(1); }}>
             <SelectTrigger className="h-8 w-48 text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
