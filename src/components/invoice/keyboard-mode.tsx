@@ -138,7 +138,7 @@ export function KeyboardMode({
   const [staffLoading, setStaffLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [suggestions, setSuggestions] = useState<{ description: string; unitPrice: number }[]>([]);
-  const [userPickDescriptions, setUserPickDescriptions] = useState<Set<string>>(new Set());
+  const [userPickDescriptions, setUserPickDescriptions] = useState<Set<string>>(() => new Set());
   const [userPicks, setUserPicks] = useState<{ id: string; description: string; unitPrice: number; department: string }[]>([]);
   const [isMac, setIsMac] = useState(false);
 

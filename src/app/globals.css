@@ -317,6 +317,15 @@
   from { width: 0; }
 }
 
+@keyframes event-slide-in {
+  from { opacity: 0; transform: translateX(-15px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.event-slide-in {
+  animation: event-slide-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 @keyframes dot-pop {
   0% { transform: scale(0); opacity: 0; }
   70% { transform: scale(1.2); }

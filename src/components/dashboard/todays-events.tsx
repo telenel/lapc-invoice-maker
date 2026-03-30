@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { calendarApi, type CalendarEvent } from "@/domains/calendar/api-client";
 
@@ -84,11 +83,10 @@ export function TodaysEvents() {
         ) : (
           <div className="flex flex-col gap-2">
             {events.map((event, i) => (
-              <motion.div
+              <div
                 key={event.id}
-                initial={{ opacity: 0, x: -15 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.05 }}
+                className="event-slide-in"
+                style={{ animationDelay: `${i * 50}ms` }}
               >
               <Link
                 href={getLink(event)}
@@ -139,7 +137,7 @@ export function TodaysEvents() {
                     </div>
                   )}
               </Link>
-              </motion.div>
+              </div>
             ))}
           </div>
         )}

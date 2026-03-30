@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
 import NumberFlow from "@number-flow/react";
-import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { formatAmount, getInitials } from "@/lib/formatters";
@@ -93,11 +92,7 @@ export function StatsCards() {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       {/* Invoices This Month */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0, type: "spring", stiffness: 100 }}
-      >
+      <div className="dashboard-enter dashboard-enter-1">
       <Card className="card-hover">
         <CardContent className="pt-4">
           <div className="flex items-start justify-between">
@@ -133,14 +128,10 @@ export function StatsCards() {
           </div>
         </CardContent>
       </Card>
-      </motion.div>
+      </div>
 
       {/* Total This Month */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1, type: "spring", stiffness: 100 }}
-      >
+      <div className="dashboard-enter dashboard-enter-2">
       <Card className="card-hover">
         <CardContent className="pt-4">
           <div className="flex items-start justify-between">
@@ -171,14 +162,10 @@ export function StatsCards() {
           </div>
         </CardContent>
       </Card>
-      </motion.div>
+      </div>
 
       {/* Team Activity (compact) */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, type: "spring", stiffness: 100 }}
-      >
+      <div className="dashboard-enter dashboard-enter-3">
       <Card className="card-hover">
         <CardContent className="pt-4">
           <div className="flex items-start justify-between mb-2">
@@ -215,7 +202,7 @@ export function StatsCards() {
           )}
         </CardContent>
       </Card>
-      </motion.div>
+      </div>
     </div>
   );
 }

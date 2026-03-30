@@ -19,22 +19,38 @@ export const GET = withAuth(async (req: NextRequest, _session) => {
     );
   }
 
-  // 1. Catering events (existing)
-  const quotes = await prisma.invoice.findMany({
-    where: {
-      type: "QUOTE",
-      isCateringEvent: true,
-      quoteStatus: { in: ["SENT", "ACCEPTED"] },
-      cateringDetails: { not: Prisma.JsonNull },
-    },
-    select: {
-      id: true,
-      quoteNumber: true,
-      quoteStatus: true,
-      recipientName: true,
-      cateringDetails: true,
-    },
-  });
+  // Fetch all three data sources in parallel
+  const [quotes, manualEvents, staffWithBirthdays] = await Promise.all([
+    prisma.invoice.findMany({
+      where: {
+        type: "QUOTE",
+        isCateringEvent: true,
+        quoteStatus: { in: ["SENT", "ACCEPTED"] },
+        cateringDetails: { not: Prisma.JsonNull },
+      },
+      select: {
+        id: true,
+        quoteNumber: true,
+        quoteStatus: true,
+        recipientName: true,
+        cateringDetails: true,
+      },
+    }),
+    eventService.listForDateRange(new Date(start), new Date(end)),
+    prisma.staff.findMany({
+      where: {
+        birthMonth: { not: null },
+        birthDay: { not: null },
+        active: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        birthMonth: true,
+        birthDay: true,
+      },
+    }),
+  ]);
 
   const cateringEvents: CalendarEventItem[] = [];
   for (const q of quotes) {
@@ -72,27 +88,6 @@ export const GET = withAuth(async (req: NextRequest, _session) => {
       },
     });
   }
-
-  // 2. Manual events
-  const manualEvents = await eventService.listForDateRange(
-    new Date(start),
-    new Date(end),
-  );
-
-  // 3. Birthdays
-  const staffWithBirthdays = await prisma.staff.findMany({
-    where: {
-      birthMonth: { not: null },
-      birthDay: { not: null },
-      active: true,
-    },
-    select: {
-      id: true,
-      name: true,
-      birthMonth: true,
-      birthDay: true,
-    },
-  });
 
   const birthdayEvents: CalendarEventItem[] = [];
   const rangeStart = new Date(start);
