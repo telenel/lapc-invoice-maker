@@ -47,29 +47,30 @@ export function CalendarView() {
     main.style.overflow = "hidden";
     main.style.padding = "0";
 
+    let debounceTimer: ReturnType<typeof setTimeout>;
     function sync() {
-      const navH = document.querySelector("nav")?.getBoundingClientRect().height ?? 64;
-      const available = window.innerHeight - navH;
-      setCalendarHeight(available);
-      calendarRef.current?.getApi().updateSize();
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        const navH = document.querySelector("nav")?.getBoundingClientRect().height ?? 64;
+        const available = window.innerHeight - navH;
+        setCalendarHeight(available);
 
-      // Fit all time slots in the viewport — compute slot height from scroller
-      requestAnimationFrame(() => {
-        const container = containerRef.current;
-        if (!container) return;
+        requestAnimationFrame(() => {
+          const container = containerRef.current;
+          if (!container) return;
 
-        const scroller = container.querySelector<HTMLElement>(".fc-scroller-liquid-absolute");
-        const allSlots = container.querySelectorAll(".fc-timegrid-slot");
-        if (!scroller || allSlots.length === 0) return;
+          const scroller = container.querySelector<HTMLElement>(".fc-scroller-liquid-absolute");
+          const allSlots = container.querySelectorAll(".fc-timegrid-slot");
+          if (!scroller || allSlots.length === 0) return;
 
-        // All slots (lane + label rows) share the same CSS height
-        const slotH = Math.max(Math.floor(scroller.clientHeight / allSlots.length), 10);
-        const root = document.documentElement;
-        root.style.setProperty("--fc-slot-height", `${slotH}px`);
-        root.style.setProperty("--fc-slot-font", `${Math.min(Math.max(slotH * 0.85, 9), 13)}px`);
-        scroller.style.overflow = "hidden";
-        calendarRef.current?.getApi().updateSize();
-      });
+          // Use fractional px so slots fill the scroller exactly
+          const slotH = Math.max(scroller.clientHeight / allSlots.length, 10);
+          const root = document.documentElement;
+          root.style.setProperty("--fc-slot-height", `${slotH}px`);
+          root.style.setProperty("--fc-slot-font", `${Math.min(Math.max(slotH * 0.85, 9), 13)}px`);
+          scroller.style.overflow = "hidden";
+        });
+      }, 50);
     }
 
     sync();
@@ -77,6 +78,7 @@ export function CalendarView() {
     ro.observe(main);
     window.addEventListener("resize", sync, { passive: true });
     return () => {
+      clearTimeout(debounceTimer);
       main.style.overflow = prevOverflow;
       main.style.padding = prevPadding;
       document.documentElement.style.removeProperty("--fc-slot-height");
@@ -408,7 +410,7 @@ export function CalendarView() {
             height={calendarHeight}
             weekends={false}
             slotMinTime="07:00:00"
-            slotMaxTime="19:00:00"
+            slotMaxTime="19:30:00"
             nowIndicator
             slotEventOverlap
           />
