@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { ChatMessage } from "./chat-message";
 import { ChatInput } from "./chat-input";
 
-const STORAGE_KEY = "lapc-chat-open";
+const STORAGE_KEY = "laportal-chat-open";
 const SIDEBAR_WIDTH = 320;
 
 const QUICK_ACTIONS = [
@@ -29,7 +29,7 @@ const chatInstances = new Map<string, Chat<UIMessage>>();
 function getChatInstance(userId: string): Chat<UIMessage> {
   let instance = chatInstances.get(userId);
   if (!instance) {
-    instance = new Chat<UIMessage>({ id: `lapc-chat-${userId}` });
+    instance = new Chat<UIMessage>({ id: `laportal-chat-${userId}` });
     chatInstances.set(userId, instance);
   }
   return instance;

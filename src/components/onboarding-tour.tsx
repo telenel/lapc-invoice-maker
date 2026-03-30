@@ -92,15 +92,15 @@ interface SpotlightRect {
 
 export function shouldShowTour(): boolean {
   if (typeof window === "undefined") return false;
-  return localStorage.getItem("lapc-onboarding-complete") !== "true";
+  return localStorage.getItem("laportal-onboarding-complete") !== "true";
 }
 
 export function markTourComplete(): void {
-  localStorage.setItem("lapc-onboarding-complete", "true");
+  localStorage.setItem("laportal-onboarding-complete", "true");
 }
 
 export function resetTour(): void {
-  localStorage.removeItem("lapc-onboarding-complete");
+  localStorage.removeItem("laportal-onboarding-complete");
 }
 
 interface OnboardingTourProps {

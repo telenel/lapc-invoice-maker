@@ -5,7 +5,7 @@ import { X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-const STORAGE_KEY = "lapc-welcome-dismissed";
+const STORAGE_KEY = "laportal-welcome-dismissed";
 
 export function WelcomeBanner() {
   const [visible, setVisible] = useState(false);

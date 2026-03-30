@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 
-export const HINTS_KEY = "lapc-hints-dismissed";
+export const HINTS_KEY = "laportal-hints-dismissed";
 
 export function useHintsDismissed() {
   const [dismissed, setDismissed] = useState(true); // default true to avoid SSR flash

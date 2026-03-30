@@ -32,7 +32,7 @@ export function LoginForm() {
   const [rememberMe, setRememberMe] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem("lapc-remember-me");
+    const stored = localStorage.getItem("laportal-remember-me");
     if (stored !== null) setRememberMe(stored === "true");
   }, []);
 
@@ -130,7 +130,7 @@ export function LoginForm() {
               onChange={(e) => {
                 const checked = e.target.checked;
                 setRememberMe(checked);
-                localStorage.setItem("lapc-remember-me", String(checked));
+                localStorage.setItem("laportal-remember-me", String(checked));
               }}
               className="h-4 w-4 rounded border-border"
             />
