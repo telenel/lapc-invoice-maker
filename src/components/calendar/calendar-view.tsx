@@ -59,13 +59,15 @@ export function CalendarView() {
         if (!container) return;
 
         const scroller = container.querySelector<HTMLElement>(".fc-scroller-liquid-absolute");
-        const slots = container.querySelectorAll(".fc-timegrid-slot-lane");
-        if (!scroller || slots.length === 0) return;
+        const allSlots = container.querySelectorAll(".fc-timegrid-slot");
+        if (!scroller || allSlots.length === 0) return;
 
-        const slotH = Math.max(Math.floor(scroller.clientHeight / slots.length), 10);
+        // All slots (lane + label rows) share the same CSS height
+        const slotH = Math.max(Math.floor(scroller.clientHeight / allSlots.length), 10);
         const root = document.documentElement;
         root.style.setProperty("--fc-slot-height", `${slotH}px`);
         root.style.setProperty("--fc-slot-font", `${Math.min(Math.max(slotH * 0.85, 9), 13)}px`);
+        scroller.style.overflow = "hidden";
         calendarRef.current?.getApi().updateSize();
       });
     }
