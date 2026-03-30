@@ -86,7 +86,7 @@ jobs:
       - name: Trigger deploy webhook
         run: |
           response=$(curl -sfS --connect-timeout 10 --max-time 30 -X POST \
-            https://montalvo.io/hooks/deploy-lapc \
+            https://montalvo.io/hooks/deploy-laportal \
             -H "X-Deploy-Secret: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}" \
             -w "\n%{http_code}")
           body=$(printf '%s\n' "$response" | sed '$d')
@@ -103,7 +103,7 @@ jobs:
           echo "Waiting 60s for deploy to complete..."
           sleep 60
           for i in 1 2 3 4 5; do
-            status=$(curl -sfS --connect-timeout 10 --max-time 20 -o /dev/null -w "%{http_code}" https://invoice.montalvo.io/api/auth/session)
+            status=$(curl -sfS --connect-timeout 10 --max-time 20 -o /dev/null -w "%{http_code}" https://laportal.montalvo.io/api/auth/session)
             echo "Attempt $i: HTTP $status"
             if [ "$status" = "200" ]; then
               echo "Health check passed"
