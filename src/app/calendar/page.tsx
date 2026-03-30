@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
@@ -27,6 +27,13 @@ export default function CalendarPage() {
   const [editModalKey, setEditModalKey] = useState(0);
   const [hoveredEvent, setHoveredEvent] = useState<CalendarEvent | null>(null);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Clear pending hover debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      clearTimeout(hoverTimerRef.current);
+    };
+  }, []);
 
   function refetchEvents() {
     calendarRef.current?.getApi().refetchEvents();

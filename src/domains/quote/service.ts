@@ -677,12 +677,12 @@ export const quoteService = {
         cateringDetails: quote.cateringDetails ?? undefined,
         createdBy: creatorId,
         items: {
-          create: calculatedItems.map((ci, idx) => ({
+          create: calculatedItems.map((ci) => ({
             description: ci.description,
             quantity: ci.quantity,
             unitPrice: ci.unitPrice,
             extendedPrice: ci.extendedPrice,
-            sortOrder: idx,
+            sortOrder: ci.sortOrder,
             isTaxable: ci.isTaxable,
             costPrice: ci.costPrice ?? undefined,
             marginOverride: ci.marginOverride ?? undefined,
