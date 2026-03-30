@@ -27,6 +27,7 @@ const links = [
   { href: "/calendar", label: "Calendar" },
   { href: "/staff", label: "Staff" },
   { href: "/quick-picks", label: "Quick Picks" },
+  { href: "/pricing-calculator", label: "Print Pricing" },
   { href: "/analytics", label: "Analytics" },
 ];
 
@@ -98,17 +99,30 @@ export function Nav() {
             );
           })}
           {role === "admin" && (
-            <Link
-              href="/admin/settings"
-              className={cn(
-                "relative px-3 py-1.5 text-sm font-medium rounded-lg transition-colors",
-                pathname.startsWith("/admin")
-                  ? "bg-muted text-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              )}
-            >
-              Admin
-            </Link>
+            <>
+              <Link
+                href="/admin/settings"
+                className={cn(
+                  "relative px-3 py-1.5 text-sm font-medium rounded-lg transition-colors",
+                  pathname === "/admin/settings" || pathname === "/admin/users"
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+              >
+                Admin
+              </Link>
+              <Link
+                href="/admin/pricing"
+                className={cn(
+                  "relative px-3 py-1.5 text-sm font-medium rounded-lg transition-colors",
+                  pathname === "/admin/pricing"
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                )}
+              >
+                Print Admin
+              </Link>
+            </>
           )}
         </div>
         <div ref={menuRef} className="ml-auto flex items-center gap-1">
