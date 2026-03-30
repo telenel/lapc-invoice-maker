@@ -243,6 +243,8 @@ export function QuoteMode({
           unitPrice: Number(item.unitPrice),
           sortOrder: idx,
           isTaxable: item.isTaxable,
+          costPrice: item.costPrice ? Number(item.costPrice) : undefined,
+          marginOverride: item.marginOverride ? Number(item.marginOverride) : undefined,
         })),
       });
       toast.success(`Template "${name.trim()}" saved`);
