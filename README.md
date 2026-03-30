@@ -18,7 +18,7 @@ Operations portal for **Los Angeles Pierce College**. Handles the full lifecycle
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | Next.js 14 (App Router) |
+| Framework | Next.js 15 (App Router) |
 | Database | PostgreSQL + Prisma 7 |
 | Styling | Tailwind CSS 4 + shadcn/ui v4 |
 | Auth | NextAuth (JWT + Credentials) |
@@ -40,12 +40,14 @@ Component → Domain API Client → Domain Hooks → Domain Types (DTOs)
 ## Development
 
 ```bash
-npm install              # Install dependencies
+npm install              # Install dependencies + configure git hooks
 npx prisma generate      # Generate Prisma client
 npm run dev              # Start dev server (localhost:3000)
 npm test                 # Run tests (350 tests)
 npm run build            # Production build
 ```
+
+> `npm install` automatically sets `git config core.hooksPath hooks`, which enables the tracked pre-push hook that blocks pushes to branches with open PRs.
 
 ### Database
 
@@ -66,7 +68,7 @@ NEXTAUTH_URL=http://localhost:3000
 
 Docker Compose behind Traefik on [montalvo.io](https://montalvo.io). CI/CD via GitHub Actions — push to main triggers lint, build, test, then webhook deploy.
 
-All changes go through PRs with squash merge. Build version (git SHA) is displayed in the nav bar.
+All changes go through PRs with squash merge. PRs are finalized once created — no further pushes except CodeRabbit fixes (`CR_FIX=1 git push`). Build version (git SHA) is displayed in the nav bar.
 
 ## Project Documentation
 

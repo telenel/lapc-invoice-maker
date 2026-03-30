@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "postinstall": "git config core.hooksPath hooks"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.64",
