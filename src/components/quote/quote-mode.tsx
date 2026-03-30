@@ -158,16 +158,26 @@ export function QuoteMode({
 
   // ---- Data fetching ----
   useEffect(() => {
-    categoryApi.list()
-      .then((data) => setCategories(data))
-      .catch(() => {})
-      .finally(() => setCategoriesLoading(false));
-  }, []);
+    let cancelled = false;
 
-  useEffect(() => {
-    templateApi.list("QUOTE")
-      .then((data) => setTemplates(data))
-      .catch(() => {});
+    Promise.all([
+      categoryApi.list().catch(() => [] as Category[]),
+      templateApi.list("QUOTE").catch(() => [] as TemplateResponse[]),
+    ])
+      .then(([categoryData, templateData]) => {
+        if (cancelled) return;
+        setCategories(categoryData);
+        setTemplates(templateData);
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setCategoriesLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // ---- Quick pick handler ----

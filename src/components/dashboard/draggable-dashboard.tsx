@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, type ReactNode } from "react";
+import dynamic from "next/dynamic";
 import {
   DndContext,
   closestCenter,
@@ -23,14 +24,36 @@ import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-import { StatsCards } from "./stats-cards";
-import { PendingCharges } from "./pending-charges";
-import { RunningInvoices } from "./running-invoices";
-import { RecentActivity } from "./recent-invoices";
-import { YourFocus } from "./your-focus";
-import { TodaysEvents } from "./todays-events";
-
 const STORAGE_KEY = "laportal-dashboard-order";
+
+function WidgetSkeleton() {
+  return <div className="h-32 rounded-xl border border-border/60 bg-muted/20" />;
+}
+
+const StatsCards = dynamic(
+  () => import("./stats-cards").then((m) => m.StatsCards),
+  { ssr: false, loading: () => <WidgetSkeleton /> },
+);
+const PendingCharges = dynamic(
+  () => import("./pending-charges").then((m) => m.PendingCharges),
+  { ssr: false, loading: () => <WidgetSkeleton /> },
+);
+const RunningInvoices = dynamic(
+  () => import("./running-invoices").then((m) => m.RunningInvoices),
+  { ssr: false, loading: () => <WidgetSkeleton /> },
+);
+const RecentActivity = dynamic(
+  () => import("./recent-invoices").then((m) => m.RecentActivity),
+  { ssr: false, loading: () => <WidgetSkeleton /> },
+);
+const YourFocus = dynamic(
+  () => import("./your-focus").then((m) => m.YourFocus),
+  { ssr: false, loading: () => <WidgetSkeleton /> },
+);
+const TodaysEvents = dynamic(
+  () => import("./todays-events").then((m) => m.TodaysEvents),
+  { ssr: false, loading: () => <WidgetSkeleton /> },
+);
 
 interface WidgetConfig {
   id: string;

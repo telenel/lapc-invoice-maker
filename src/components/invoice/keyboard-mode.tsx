@@ -43,11 +43,10 @@ import type {
 import { staffApi } from "@/domains/staff/api-client";
 import type { StaffResponse, StaffDetailResponse } from "@/domains/staff/types";
 import { categoryApi } from "@/domains/category/api-client";
-import { quickPicksApi } from "@/domains/quick-picks/api-client";
-import { savedItemsApi } from "@/domains/saved-items/api-client";
 import { userQuickPicksApi } from "@/domains/user-quick-picks/api-client";
 import { templateApi } from "@/domains/template/api-client";
 import type { TemplateResponse } from "@/domains/template/types";
+import { getQuickPickResources } from "./hooks/quick-pick-resource-cache";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -186,30 +185,34 @@ export function KeyboardMode({
 
   // ---- Data fetching ----
   useEffect(() => {
-    staffApi.list()
-      .then((data: StaffResponse[]) => {
-        setStaff(data);
+    let cancelled = false;
+
+    Promise.all([
+      staffApi.list().catch(() => [] as StaffResponse[]),
+      categoryApi.list().catch(() => [] as Category[]),
+      templateApi.list("INVOICE").catch(() => [] as TemplateResponse[]),
+    ])
+      .then(([staffData, categoryData, templateData]) => {
+        if (cancelled) return;
+        setStaff(staffData);
+        setCategories(categoryData);
+        setTemplates(templateData);
+
         if (form.staffId) {
-          const match = data.find((s: StaffResponse) => s.id === form.staffId);
+          const match = staffData.find((s: StaffResponse) => s.id === form.staffId);
           if (match) handleStaffSelect(match as StaffDetailResponse);
         }
       })
-      .catch(() => {})
-      .finally(() => setStaffLoading(false));
+      .finally(() => {
+        if (cancelled) return;
+        setStaffLoading(false);
+        setCategoriesLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    categoryApi.list()
-      .then((data) => setCategories(data))
-      .catch(() => {})
-      .finally(() => setCategoriesLoading(false));
-  }, []);
-
-  useEffect(() => {
-    templateApi.list("INVOICE")
-      .then((data) => setTemplates(data))
-      .catch(() => {});
   }, []);
 
   // ---- Autocomplete + user picks fetch ----
@@ -217,19 +220,15 @@ export function KeyboardMode({
     if (!form.department) return;
     let cancelled = false;
 
-    Promise.all([
-      quickPicksApi.list(form.department).catch(() => []),
-      savedItemsApi.list(form.department).catch(() => []),
-      userQuickPicksApi.list(form.department).catch(() => []),
-    ]).then(([picks, saved, uPicks]) => {
+    getQuickPickResources(form.department).then(({ quickPicks, savedItems, userPicks: cachedUserPicks }) => {
       if (cancelled) return;
       const combined = new Map<string, { description: string; unitPrice: number }>();
-      for (const p of picks) combined.set(p.description, { description: p.description, unitPrice: Number(p.defaultPrice) });
-      for (const s of saved) combined.set(s.description, { description: s.description, unitPrice: Number(s.unitPrice) });
-      for (const u of uPicks) combined.set(u.description, { description: u.description, unitPrice: Number(u.unitPrice) });
+      for (const p of quickPicks) combined.set(p.description, { description: p.description, unitPrice: Number(p.defaultPrice) });
+      for (const s of savedItems) combined.set(s.description, { description: s.description, unitPrice: Number(s.unitPrice) });
+      for (const u of cachedUserPicks) combined.set(u.description, { description: u.description, unitPrice: Number(u.unitPrice) });
       setSuggestions(Array.from(combined.values()));
-      setUserPicks(uPicks);
-      setUserPickDescriptions(new Set(uPicks.map((p: { description: string }) => p.description)));
+      setUserPicks(cachedUserPicks);
+      setUserPickDescriptions(new Set(cachedUserPicks.map((p: { description: string }) => p.description)));
     });
 
     return () => { cancelled = true; };

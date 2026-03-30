@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useDeferredValue, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { FileTextIcon, RefreshCwIcon } from "lucide-react";
@@ -55,6 +55,7 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<SortField>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const deferredSearch = useDeferredValue(filters.search);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -62,7 +63,7 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
     setLoading(true);
     try {
       const data = await invoiceApi.list({
-        search: filters.search || undefined,
+        search: deferredSearch || undefined,
         status: (filters.status && filters.status !== "all" ? filters.status : undefined) as import("@/domains/invoice/types").InvoiceFilters["status"],
         category: filters.category && filters.category !== "all" ? filters.category : undefined,
         department: filters.department && filters.department !== "all" ? filters.department : undefined,
@@ -81,7 +82,7 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
       toast.error("Failed to load invoices");
     }
     setLoading(false);
-  }, [filters, page, sortBy, sortDir]);
+  }, [deferredSearch, filters.status, filters.category, filters.department, filters.dateFrom, filters.dateTo, filters.amountMin, filters.amountMax, page, sortBy, sortDir]);
 
   useEffect(() => {
     fetchInvoices();

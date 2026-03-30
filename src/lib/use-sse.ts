@@ -56,6 +56,10 @@ function subscribe(listener: Listener): () => void {
   };
 }
 
+export function subscribeToSSE(listener: Listener): () => void {
+  return subscribe(listener);
+}
+
 // ---------------------------------------------------------------------------
 // Hook
 // ---------------------------------------------------------------------------

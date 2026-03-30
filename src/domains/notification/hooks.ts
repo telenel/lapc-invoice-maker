@@ -3,16 +3,12 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { notificationApi } from "./api-client";
 import type { NotificationResponse } from "./types";
-
-const POLL_INTERVAL = 30_000; // 30s fallback polling
+import { subscribeToSSE } from "@/lib/use-sse";
 
 export function useNotifications() {
   const [notifications, setNotifications] = useState<NotificationResponse[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const eventSourceRef = useRef<EventSource | null>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const sseConnected = useRef(false);
   const fetchingRef = useRef(false);
 
   const fetchNotifications = useCallback(async () => {
@@ -32,43 +28,23 @@ export function useNotifications() {
 
   useEffect(() => {
     fetchNotifications();
-
-    // SSE for real-time push
-    const es = new EventSource("/api/notifications/stream");
-    eventSourceRef.current = es;
-
-    es.onopen = () => {
-      sseConnected.current = true;
-    };
-
-    es.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (!data.id || !data.title) return; // Skip non-notification SSE events (e.g., calendar-changed)
-        const notification: NotificationResponse = data;
-        setNotifications((prev) => [notification, ...prev]);
+    return subscribeToSSE((data) => {
+      if ("id" in data && "title" in data) {
+        const notification = data as NotificationResponse;
+        setNotifications((prev) => {
+          if (prev.some((item) => item.id === notification.id)) {
+            return prev;
+          }
+          return [notification, ...prev];
+        });
         setUnreadCount((prev) => prev + 1);
-      } catch {
-        // Ignore parse errors
+        return;
       }
-    };
 
-    es.onerror = () => {
-      sseConnected.current = false;
-      fetchNotifications();
-    };
-
-    // Polling fallback — only fires when SSE is disconnected
-    pollRef.current = setInterval(() => {
-      if (sseConnected.current) return;
-      fetchNotifications();
-    }, POLL_INTERVAL);
-
-    return () => {
-      es.close();
-      eventSourceRef.current = null;
-      if (pollRef.current) clearInterval(pollRef.current);
-    };
+      if (data.type === "notification-changed") {
+        fetchNotifications();
+      }
+    });
   }, [fetchNotifications]);
 
   const markRead = useCallback(async (id: string) => {

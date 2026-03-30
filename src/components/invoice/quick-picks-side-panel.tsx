@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { formatAmount } from "@/lib/formatters";
+import { getQuickPickResources } from "./hooks/quick-pick-resource-cache";
 
 interface QuickPick {
   id: string;
@@ -39,15 +40,17 @@ export function QuickPicksSidePanel({
   useEffect(() => {
     let cancelled = false;
 
-    const deptParam = department ? `?department=${encodeURIComponent(department)}` : "";
-    Promise.all([
-      fetch(`/api/quick-picks${deptParam}`).then((r) => r.ok ? r.json() : []),
-      department ? fetch(`/api/user-quick-picks${deptParam}`).then((r) => r.ok ? r.json() : []) : Promise.resolve([]),
-    ]).then(([picks, uPicks]) => {
-      if (cancelled) return;
-      setGlobalPicks(Array.isArray(picks) ? picks : []);
-      setUserPicks(Array.isArray(uPicks) ? uPicks : []);
-    });
+    getQuickPickResources(department)
+      .then(({ quickPicks, userPicks: nextUserPicks }) => {
+        if (cancelled) return;
+        setGlobalPicks(quickPicks);
+        setUserPicks(nextUserPicks);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setGlobalPicks([]);
+        setUserPicks([]);
+      });
 
     return () => { cancelled = true; };
   }, [department]);

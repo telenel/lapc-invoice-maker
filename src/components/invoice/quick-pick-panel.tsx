@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { getQuickPickResources } from "./hooks/quick-pick-resource-cache";
 
 interface QuickPick {
   id: string;
@@ -39,22 +40,16 @@ export function QuickPickPanel({ department, onSelect, currentSubtotal }: QuickP
 
     let cancelled = false;
 
-    fetch(`/api/quick-picks?department=${encodeURIComponent(department)}`)
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data: QuickPick[]) => {
-        if (!cancelled) setPicks(Array.isArray(data) ? data : []);
+    getQuickPickResources(department)
+      .then(({ quickPicks, savedItems: nextSavedItems }) => {
+        if (cancelled) return;
+        setPicks(quickPicks);
+        setSavedItems(nextSavedItems);
       })
       .catch(() => {
-        if (!cancelled) setPicks([]);
-      });
-
-    fetch(`/api/saved-items?department=${encodeURIComponent(department)}`)
-      .then((res) => (res.ok ? res.json() : []))
-      .then((data: SavedItem[]) => {
-        if (!cancelled) setSavedItems(Array.isArray(data) ? data : []);
-      })
-      .catch(() => {
-        if (!cancelled) setSavedItems([]);
+        if (cancelled) return;
+        setPicks([]);
+        setSavedItems([]);
       });
 
     return () => { cancelled = true; };

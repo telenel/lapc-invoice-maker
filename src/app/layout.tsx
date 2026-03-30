@@ -8,12 +8,7 @@ import { AuthSessionProvider } from "@/components/session-provider";
 import { ThemeProviderWrapper } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { UIScaleProvider } from "@/components/ui-scale-provider";
-import dynamic from "next/dynamic";
-
-const ChatSidebar = dynamic(
-  () => import("@/components/chat/chat-sidebar").then((m) => m.ChatSidebar),
-  { ssr: false },
-);
+import { ChatSidebarShell } from "@/components/chat/chat-sidebar-shell";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -54,7 +49,7 @@ export default function RootLayout({
                   <Nav />
                   <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto px-6 py-6">{children}</main>
                 </div>
-                <ChatSidebar />
+                <ChatSidebarShell />
               </div>
               <RepoLink />
               <Toaster />
