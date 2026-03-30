@@ -2,6 +2,7 @@ import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
+import { defaultPrintPricingConfig } from "../src/domains/print-pricing/defaults";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
@@ -97,6 +98,105 @@ async function main() {
     });
   }
   console.log("Seeded default quick picks");
+
+  const printPricingConfig = await prisma.printPricingConfig.upsert({
+    where: { id: "default" },
+    update: {
+      shopTitle: defaultPrintPricingConfig.shopTitle,
+      quotePrefix: defaultPrintPricingConfig.quotePrefix,
+      quoteDisclaimer: defaultPrintPricingConfig.quoteDisclaimer,
+      taxEnabled: defaultPrintPricingConfig.taxEnabled,
+      taxRateBasisPoints: defaultPrintPricingConfig.taxRateBasisPoints,
+      bwDuplexMultiplierBasisPoints: defaultPrintPricingConfig.bwDuplexMultiplierBasisPoints,
+      colorDuplexMultiplierBasisPoints: defaultPrintPricingConfig.colorDuplexMultiplierBasisPoints,
+    },
+    create: {
+      id: "default",
+      shopTitle: defaultPrintPricingConfig.shopTitle,
+      quotePrefix: defaultPrintPricingConfig.quotePrefix,
+      quoteDisclaimer: defaultPrintPricingConfig.quoteDisclaimer,
+      taxEnabled: defaultPrintPricingConfig.taxEnabled,
+      taxRateBasisPoints: defaultPrintPricingConfig.taxRateBasisPoints,
+      bwDuplexMultiplierBasisPoints: defaultPrintPricingConfig.bwDuplexMultiplierBasisPoints,
+      colorDuplexMultiplierBasisPoints: defaultPrintPricingConfig.colorDuplexMultiplierBasisPoints,
+    },
+  });
+
+  await prisma.printPricingTier.deleteMany({
+    where: { configId: printPricingConfig.id },
+  });
+
+  await prisma.printPricingTier.createMany({
+    data: [
+      ...defaultPrintPricingConfig.copyTiers.BW.map((tier) => ({
+        configId: printPricingConfig.id,
+        service: "COPY" as const,
+        variant: tier.variant,
+        label: tier.label,
+        description: tier.description,
+        minQuantity: tier.minQuantity,
+        maxQuantity: tier.maxQuantity,
+        unitPriceCents: tier.unitPriceCents,
+        sortOrder: tier.sortOrder,
+      })),
+      ...defaultPrintPricingConfig.copyTiers.COLOR.map((tier) => ({
+        configId: printPricingConfig.id,
+        service: "COPY" as const,
+        variant: tier.variant,
+        label: tier.label,
+        description: tier.description,
+        minQuantity: tier.minQuantity,
+        maxQuantity: tier.maxQuantity,
+        unitPriceCents: tier.unitPriceCents,
+        sortOrder: tier.sortOrder,
+      })),
+      ...defaultPrintPricingConfig.scanTiers.map((tier) => ({
+        configId: printPricingConfig.id,
+        service: "SCANNING" as const,
+        variant: tier.variant,
+        label: tier.label,
+        description: tier.description,
+        minQuantity: tier.minQuantity,
+        maxQuantity: tier.maxQuantity,
+        unitPriceCents: tier.unitPriceCents,
+        sortOrder: tier.sortOrder,
+      })),
+      ...Object.values(defaultPrintPricingConfig.posterTiers).map((tier) => ({
+        configId: printPricingConfig.id,
+        service: "POSTER" as const,
+        variant: tier.variant,
+        label: tier.label,
+        description: tier.description,
+        minQuantity: null,
+        maxQuantity: null,
+        unitPriceCents: tier.unitPriceCents,
+        sortOrder: tier.sortOrder,
+      })),
+      ...Object.values(defaultPrintPricingConfig.bindingTiers).map((tier) => ({
+        configId: printPricingConfig.id,
+        service: "BINDING" as const,
+        variant: tier.variant,
+        label: tier.label,
+        description: tier.description,
+        minQuantity: null,
+        maxQuantity: null,
+        unitPriceCents: tier.unitPriceCents,
+        sortOrder: tier.sortOrder,
+      })),
+      {
+        configId: printPricingConfig.id,
+        service: "SCANNING" as const,
+        variant: "MINIMUM_CHARGE",
+        label: "Minimum Scan Charge",
+        description: "Minimum charge applied to low-volume scanning jobs.",
+        minQuantity: null,
+        maxQuantity: null,
+        unitPriceCents: defaultPrintPricingConfig.minimumScanChargeCents,
+        sortOrder: 999,
+      },
+    ],
+  });
+  console.log("Seeded print pricing configuration");
 
   console.log("Seed complete");
 }
