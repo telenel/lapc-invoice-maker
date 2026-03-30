@@ -26,7 +26,8 @@ export const GET = withAuth(async (_req: NextRequest, _session, ctx) => {
         "Content-Length": pdfBuffer.length.toString(),
       },
     });
-  } catch {
+  } catch (err) {
+    console.error("GET /api/invoices/[id]/pdf failed:", err);
     return NextResponse.json({ error: "PDF file not found on disk" }, { status: 404 });
   }
 });
