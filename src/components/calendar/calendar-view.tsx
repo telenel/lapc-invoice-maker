@@ -48,47 +48,47 @@ export function CalendarView() {
     const prevOverflow = mainEl.style.overflow;
     const prevPadding = mainEl.style.padding;
 
+    let debounceTimer: ReturnType<typeof setTimeout>;
     function sync() {
-      const navH = document.querySelector("nav")?.getBoundingClientRect().height ?? 64;
-      const mobile = window.innerWidth < 1024;
-      setIsMobile(mobile);
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        const navH = document.querySelector("nav")?.getBoundingClientRect().height ?? 64;
+        const mobile = window.innerWidth < 1024;
+        setIsMobile(mobile);
 
-      if (mobile) {
-        mainEl.style.overflow = prevOverflow;
-        mainEl.style.padding = prevPadding;
-        document.documentElement.style.removeProperty("--fc-slot-height");
-        document.documentElement.style.removeProperty("--fc-slot-font");
-        const sidebarHeight =
-          document.querySelector<HTMLElement>("[data-calendar-sidebar]")?.getBoundingClientRect().height ?? 320;
-        setCalendarHeight(Math.max(window.innerHeight - navH - sidebarHeight - 24, 480));
-        calendarRef.current?.getApi().updateSize();
-        return;
-      }
+        if (mobile) {
+          mainEl.style.overflow = prevOverflow;
+          mainEl.style.padding = prevPadding;
+          document.documentElement.style.removeProperty("--fc-slot-height");
+          document.documentElement.style.removeProperty("--fc-slot-font");
+          const sidebarHeight =
+            document.querySelector<HTMLElement>("[data-calendar-sidebar]")?.getBoundingClientRect().height ?? 320;
+          setCalendarHeight(Math.max(window.innerHeight - navH - sidebarHeight - 24, 480));
+          calendarRef.current?.getApi().updateSize();
+          return;
+        }
 
-      mainEl.style.overflow = "hidden";
-      mainEl.style.padding = "0";
+        mainEl.style.overflow = "hidden";
+        mainEl.style.padding = "0";
+        setCalendarHeight(window.innerHeight - navH);
 
-      const available = window.innerHeight - navH;
-      setCalendarHeight(available);
-      calendarRef.current?.getApi().updateSize();
+        requestAnimationFrame(() => {
+          const container = containerRef.current;
+          if (!container) return;
 
-      // Fit all time slots in the viewport — compute slot height from scroller
-      requestAnimationFrame(() => {
-        const container = containerRef.current;
-        if (!container) return;
+          const scroller = container.querySelector<HTMLElement>(".fc-scroller-liquid-absolute");
+          const allSlots = container.querySelectorAll(".fc-timegrid-slot");
+          if (!scroller || allSlots.length === 0) return;
 
-        const scroller = container.querySelector<HTMLElement>(".fc-scroller-liquid-absolute");
-        const allSlots = container.querySelectorAll(".fc-timegrid-slot");
-        if (!scroller || allSlots.length === 0) return;
-
-        // All slots (lane + label rows) share the same CSS height
-        const slotH = Math.max(Math.floor(scroller.clientHeight / allSlots.length), 10);
-        const root = document.documentElement;
-        root.style.setProperty("--fc-slot-height", `${slotH}px`);
-        root.style.setProperty("--fc-slot-font", `${Math.min(Math.max(slotH * 0.85, 9), 13)}px`);
-        scroller.style.overflow = "hidden";
-        calendarRef.current?.getApi().updateSize();
-      });
+          // Use fractional px so slots fill the scroller exactly.
+          const slotH = Math.max(scroller.clientHeight / allSlots.length, 10);
+          const root = document.documentElement;
+          root.style.setProperty("--fc-slot-height", `${slotH}px`);
+          root.style.setProperty("--fc-slot-font", `${Math.min(Math.max(slotH * 0.85, 9), 13)}px`);
+          scroller.style.overflow = "hidden";
+          calendarRef.current?.getApi().updateSize();
+        });
+      }, 50);
     }
 
     sync();
@@ -96,6 +96,7 @@ export function CalendarView() {
     ro.observe(mainEl);
     window.addEventListener("resize", sync, { passive: true });
     return () => {
+      clearTimeout(debounceTimer);
       mainEl.style.overflow = prevOverflow;
       mainEl.style.padding = prevPadding;
       document.documentElement.style.removeProperty("--fc-slot-height");
@@ -428,7 +429,7 @@ export function CalendarView() {
             height={calendarHeight}
             weekends={false}
             slotMinTime="07:00:00"
-            slotMaxTime="19:00:00"
+            slotMaxTime="19:30:00"
             nowIndicator
             slotEventOverlap
           />
