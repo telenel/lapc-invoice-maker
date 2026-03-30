@@ -45,6 +45,8 @@ import { categoryApi } from "@/domains/category/api-client";
 import { quickPicksApi } from "@/domains/quick-picks/api-client";
 import { savedItemsApi } from "@/domains/saved-items/api-client";
 import { userQuickPicksApi } from "@/domains/user-quick-picks/api-client";
+import { templateApi } from "@/domains/template/api-client";
+import type { TemplateResponse } from "@/domains/template/types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -127,6 +129,7 @@ export function KeyboardMode({
   // ---- Local state ----
   const [staff, setStaff] = useState<StaffResponse[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [templates, setTemplates] = useState<TemplateResponse[]>([]);
   const [staffLoading, setStaffLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [suggestions, setSuggestions] = useState<{ description: string; unitPrice: number }[]>([]);
@@ -189,6 +192,12 @@ export function KeyboardMode({
       .then((data) => setCategories(data))
       .catch(() => {})
       .finally(() => setCategoriesLoading(false));
+  }, []);
+
+  useEffect(() => {
+    templateApi.list("INVOICE")
+      .then((data) => setTemplates(data))
+      .catch(() => {});
   }, []);
 
   // ---- Autocomplete + user picks fetch ----
@@ -305,6 +314,37 @@ export function KeyboardMode({
     }
   }
 
+  // ---- Save as Template ----
+  async function handleSaveAsTemplate() {
+    const name = prompt("Template name:");
+    if (!name?.trim()) return;
+    try {
+      await templateApi.create({
+        name: name.trim(),
+        type: "INVOICE",
+        staffId: form.staffId || undefined,
+        department: form.department,
+        category: form.category,
+        accountCode: form.accountCode || undefined,
+        marginEnabled: form.marginEnabled,
+        marginPercent: form.marginPercent ? Number(form.marginPercent) : undefined,
+        taxEnabled: form.taxEnabled,
+        notes: form.notes || undefined,
+        items: form.items.filter((i) => i.description.trim()).map((item, idx) => ({
+          description: item.description,
+          quantity: Number(item.quantity),
+          unitPrice: Number(item.unitPrice),
+          sortOrder: idx,
+          isTaxable: item.isTaxable,
+        })),
+      });
+      toast.success(`Template "${name.trim()}" saved`);
+      templateApi.list("INVOICE").then((data) => setTemplates(data)).catch(() => {});
+    } catch {
+      toast.error("Failed to save template");
+    }
+  }
+
   // ---- Staff combobox items ----
   const staffItems: ComboboxItem[] = staff.map((s) => ({
     id: s.id,
@@ -341,6 +381,46 @@ export function KeyboardMode({
             setDraftEntry(null);
           }}
         />
+      )}
+
+      {templates.length > 0 && (
+        <div className="mb-4">
+          <select
+            className="rounded-md border border-input bg-background px-3 py-2 text-sm w-full"
+            defaultValue=""
+            onChange={(e) => {
+              const t = templates.find((tmpl) => tmpl.id === e.target.value);
+              if (!t) return;
+              if (t.staffId) updateField("staffId", t.staffId);
+              if (t.department) updateField("department", t.department);
+              if (t.category) updateField("category", t.category);
+              if (t.accountCode) updateField("accountCode", t.accountCode);
+              updateField("marginEnabled", t.marginEnabled);
+              if (t.marginPercent != null) updateField("marginPercent", t.marginPercent);
+              updateField("taxEnabled", t.taxEnabled);
+              if (t.notes) updateField("notes", t.notes);
+              const newItems = t.items.map((item, idx) => ({
+                _key: crypto.randomUUID(),
+                description: item.description,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                isTaxable: item.isTaxable,
+                extendedPrice: item.quantity * item.unitPrice,
+                sortOrder: idx,
+                marginOverride: item.marginOverride,
+                costPrice: item.costPrice,
+              }));
+              updateField("items", newItems);
+              toast.success(`Loaded template "${t.name}"`);
+              e.target.value = "";
+            }}
+          >
+            <option value="">Load from template...</option>
+            {templates.map((t) => (
+              <option key={t.id} value={t.id}>{t.name}</option>
+            ))}
+          </select>
+        </div>
       )}
 
       {isPendingCharge && (
@@ -602,9 +682,14 @@ export function KeyboardMode({
 
         <div className="flex justify-end gap-2 pt-2">
           {!form.isRunning && (
-            <Button variant="outline" tabIndex={-1} onClick={handleSaveDraft} disabled={saving}>
-              Save Draft
-            </Button>
+            <>
+              <Button variant="outline" tabIndex={-1} onClick={handleSaveAsTemplate} disabled={saving}>
+                Save as Template
+              </Button>
+              <Button variant="outline" tabIndex={-1} onClick={handleSaveDraft} disabled={saving}>
+                Save Draft
+              </Button>
+            </>
           )}
           {!form.isRunning && !existingId && (
             <Button variant="secondary" tabIndex={-1} onClick={() => setShowChargeLaterDialog(true)} disabled={saving}>
