@@ -76,3 +76,17 @@ export interface CreateAccountCodeInput {
   accountCode: string;
   description: string;
 }
+
+// ── Batch action DTOs ──
+export type BatchAction = "status" | "reassign" | "delete";
+
+export interface BatchActionInput {
+  ids: string[];
+  action: BatchAction;
+  value?: string;
+}
+
+export interface BatchActionResponse {
+  updated?: number;
+  deleted?: number;
+}

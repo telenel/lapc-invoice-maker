@@ -5,11 +5,12 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { UserManagement } from "./user-management";
 import { CategoryManager } from "./category-manager";
 import { InvoiceManager } from "./invoice-manager";
+import { QuoteManager } from "./quote-manager";
 import { LineItemManager } from "./line-item-manager";
 import { DbHealth } from "./db-health";
 import { AccountCodeManager } from "./account-code-manager";
 
-const VALID_TABS = ["users", "categories", "account-codes", "invoices", "line-items", "database", "general"];
+const VALID_TABS = ["users", "categories", "account-codes", "invoices", "quotes", "line-items", "database", "general"];
 
 export function SettingsPanel() {
   const searchParams = useSearchParams();
@@ -33,6 +34,7 @@ export function SettingsPanel() {
           <TabsTrigger value="categories">Invoice Categories</TabsTrigger>
           <TabsTrigger value="account-codes">Account Numbers</TabsTrigger>
           <TabsTrigger value="invoices">Invoices</TabsTrigger>
+          <TabsTrigger value="quotes">Quotes</TabsTrigger>
           <TabsTrigger value="line-items">Line Items</TabsTrigger>
           <TabsTrigger value="database">Database</TabsTrigger>
           <TabsTrigger value="general">General Settings</TabsTrigger>
@@ -53,6 +55,11 @@ export function SettingsPanel() {
       {activeTab === "invoices" && (
         <div className="border rounded-lg p-6">
           <InvoiceManager />
+        </div>
+      )}
+      {activeTab === "quotes" && (
+        <div className="border rounded-lg p-6">
+          <QuoteManager />
         </div>
       )}
       {activeTab === "line-items" && (

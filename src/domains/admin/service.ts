@@ -9,6 +9,8 @@ import type {
   CreateUserInput,
   UpdateUserInput,
   CreateAccountCodeInput,
+  BatchActionInput,
+  BatchActionResponse,
 } from "./types";
 
 function generateTemporaryPassword(): string {
@@ -147,6 +149,52 @@ export const adminService = {
 
   async deleteAccountCode(id: string): Promise<void> {
     await adminRepository.deleteAccountCode(id);
+  },
+
+  // ── Batch operations ──
+
+  async batchInvoices(input: BatchActionInput): Promise<BatchActionResponse> {
+    const { ids, action, value } = input;
+    if (ids.length === 0) return { updated: 0 };
+
+    switch (action) {
+      case "delete": {
+        const result = await adminRepository.batchDeleteInvoices(ids);
+        return { deleted: result.count };
+      }
+      case "status": {
+        if (!value) throw Object.assign(new Error("Value required for status change"), { statusCode: 400 });
+        const result = await adminRepository.batchUpdateInvoiceStatus(ids, value);
+        return { updated: result.count };
+      }
+      case "reassign": {
+        if (!value) throw Object.assign(new Error("Value required for reassign"), { statusCode: 400 });
+        const result = await adminRepository.batchReassignInvoices(ids, value);
+        return { updated: result.count };
+      }
+    }
+  },
+
+  async batchQuotes(input: BatchActionInput): Promise<BatchActionResponse> {
+    const { ids, action, value } = input;
+    if (ids.length === 0) return { updated: 0 };
+
+    switch (action) {
+      case "delete": {
+        const result = await adminRepository.batchDeleteQuotes(ids);
+        return { deleted: result.count };
+      }
+      case "status": {
+        if (!value) throw Object.assign(new Error("Value required for status change"), { statusCode: 400 });
+        const result = await adminRepository.batchUpdateQuoteStatus(ids, value);
+        return { updated: result.count };
+      }
+      case "reassign": {
+        if (!value) throw Object.assign(new Error("Value required for reassign"), { statusCode: 400 });
+        const result = await adminRepository.batchReassignQuotes(ids, value);
+        return { updated: result.count };
+      }
+    }
   },
 
   // ── DB health ──

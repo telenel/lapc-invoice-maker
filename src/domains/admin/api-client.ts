@@ -7,6 +7,8 @@ import type {
   CreateUserInput,
   UpdateUserInput,
   CreateAccountCodeInput,
+  BatchActionInput,
+  BatchActionResponse,
 } from "./types";
 
 const BASE_USERS = "/api/admin/users";
@@ -64,5 +66,21 @@ export const adminApi = {
 
   async getDbHealth(): Promise<DbHealthResponse | DbHealthErrorResponse> {
     return request<DbHealthResponse | DbHealthErrorResponse>(BASE_DB_HEALTH);
+  },
+
+  async batchInvoices(input: BatchActionInput): Promise<BatchActionResponse> {
+    return request<BatchActionResponse>("/api/admin/invoices/batch", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+  },
+
+  async batchQuotes(input: BatchActionInput): Promise<BatchActionResponse> {
+    return request<BatchActionResponse>("/api/admin/quotes/batch", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
   },
 };

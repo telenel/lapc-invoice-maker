@@ -9,6 +9,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -112,6 +113,9 @@ interface InvoiceManagerTableProps {
   totalPages: number;
   edit: InlineEditState;
   onPageChange: (page: number | ((p: number) => number)) => void;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
+  onToggleSelectAll?: () => void;
 }
 
 export function InvoiceManagerTable({
@@ -122,7 +126,12 @@ export function InvoiceManagerTable({
   totalPages,
   edit,
   onPageChange,
+  selectedIds,
+  onToggleSelect,
+  onToggleSelectAll,
 }: InvoiceManagerTableProps) {
+  const hasSelection = selectedIds !== undefined && onToggleSelect !== undefined;
+  const allOnPageSelected = hasSelection && invoices.length > 0 && invoices.every((i) => selectedIds.has(i.id));
   const editableCellProps = {
     editingCell: edit.editingCell,
     editValue: edit.editValue,
@@ -143,6 +152,11 @@ export function InvoiceManagerTable({
         <Table>
           <TableHeader>
             <TableRow>
+              {hasSelection && (
+                <TableHead className="w-10">
+                  <Checkbox checked={allOnPageSelected} onCheckedChange={onToggleSelectAll} aria-label="Select all" />
+                </TableHead>
+              )}
               <TableHead>Invoice #</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Staff</TableHead>
@@ -162,7 +176,7 @@ export function InvoiceManagerTable({
             {invoices.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={13}
+                  colSpan={hasSelection ? 14 : 13}
                   className="text-center py-10 text-muted-foreground"
                 >
                   No invoices found.
@@ -170,7 +184,16 @@ export function InvoiceManagerTable({
               </TableRow>
             ) : (
               invoices.map((invoice) => (
-                <TableRow key={invoice.id}>
+                <TableRow key={invoice.id} className={hasSelection && selectedIds.has(invoice.id) ? "bg-primary/5" : ""}>
+                  {hasSelection && (
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.has(invoice.id)}
+                        onCheckedChange={() => onToggleSelect(invoice.id)}
+                        aria-label={`Select ${invoice.invoiceNumber ?? invoice.id}`}
+                      />
+                    </TableCell>
+                  )}
                   <EditableCell
                     invoice={invoice}
                     field="invoiceNumber"
