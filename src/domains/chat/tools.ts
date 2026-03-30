@@ -7,6 +7,7 @@ import { staffService } from "@/domains/staff/service";
 import { contactService } from "@/domains/contact/service";
 import { eventService } from "@/domains/event/service";
 import { prisma } from "@/lib/prisma";
+import { safePublishAll } from "@/lib/sse";
 import type { ChatUser } from "./types";
 import type { InvoiceFilters } from "@/domains/invoice/types";
 import type { EventType, UpdateEventInput } from "@/domains/event/types";
@@ -837,7 +838,9 @@ export function buildTools(user: ChatUser) {
         if (user.role !== "admin" && existing.creatorId !== user.id) {
           return { error: "You don't have permission to finalize this invoice" };
         }
-        if (existing.status === "FINAL") return { error: "Invoice is already finalized" };
+        if (existing.status !== "DRAFT") {
+          return { error: `Cannot finalize invoice with status "${existing.status}" — only DRAFT invoices can be finalized` };
+        }
         try {
           const result = await invoiceService.finalize(id, {});
           return {
@@ -861,6 +864,12 @@ export function buildTools(user: ChatUser) {
         if (!confirmed) return { error: "Please confirm you want to delete this invoice" };
         const existing = await invoiceService.getById(id);
         if (!existing) return { error: "Invoice not found" };
+        if (existing.type !== "INVOICE") {
+          return { error: "Record is not an invoice" };
+        }
+        if (existing.status === "FINAL") {
+          return { error: "Cannot delete a finalized invoice" };
+        }
         if (user.role !== "admin" && existing.creatorId !== user.id) {
           return { error: "You don't have permission to delete this invoice" };
         }
@@ -889,6 +898,7 @@ export function buildTools(user: ChatUser) {
         }
         try {
           await quoteService.delete(id);
+          safePublishAll({ type: "quote-changed" });
           return { message: "Quote deleted successfully." };
         } catch (err) {
           return { error: (err as Error).message ?? "Failed to delete quote" };
@@ -907,6 +917,10 @@ export function buildTools(user: ChatUser) {
         if (!existing) return { error: "Quote not found" };
         if (user.role !== "admin" && existing.creatorId !== user.id) {
           return { error: "You don't have permission to convert this quote" };
+        }
+        const allowedStatuses = ["SENT", "SUBMITTED_EMAIL", "SUBMITTED_MANUAL"];
+        if (!allowedStatuses.includes(existing.quoteStatus)) {
+          return { error: "Quote must be sent or submitted before conversion" };
         }
         try {
           const result = await quoteService.convertToInvoice(id, user.id);
