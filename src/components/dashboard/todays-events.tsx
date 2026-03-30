@@ -30,8 +30,11 @@ export function TodaysEvents() {
   useEffect(() => {
     const now = new Date();
     const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
     calendarApi
-      .getEvents(today, today)
+      .getEvents(today, tomorrowStr)
       .then(setEvents)
       .catch((err) => {
         console.error("Failed to fetch events:", err);
