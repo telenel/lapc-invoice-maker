@@ -149,6 +149,48 @@ export const adminRepository = {
     };
   },
 
+  // ── Invoice batch operations ──
+
+  async batchDeleteInvoices(ids: string[]) {
+    return prisma.invoice.deleteMany({ where: { id: { in: ids } } });
+  },
+
+  async batchUpdateInvoiceStatus(ids: string[], status: string) {
+    return prisma.invoice.updateMany({
+      where: { id: { in: ids } },
+      data: { status: status as "DRAFT" | "FINAL" | "PENDING_CHARGE" },
+    });
+  },
+
+  async batchReassignInvoices(ids: string[], userId: string) {
+    return prisma.invoice.updateMany({
+      where: { id: { in: ids } },
+      data: { createdBy: userId },
+    });
+  },
+
+  // ── Quote batch operations ──
+
+  async batchDeleteQuotes(ids: string[]) {
+    return prisma.invoice.deleteMany({
+      where: { id: { in: ids }, type: "QUOTE" },
+    });
+  },
+
+  async batchUpdateQuoteStatus(ids: string[], status: string) {
+    return prisma.invoice.updateMany({
+      where: { id: { in: ids }, type: "QUOTE" },
+      data: { quoteStatus: status as "DRAFT" | "SENT" | "SUBMITTED_EMAIL" | "SUBMITTED_MANUAL" | "ACCEPTED" | "DECLINED" | "REVISED" | "EXPIRED" },
+    });
+  },
+
+  async batchReassignQuotes(ids: string[], userId: string) {
+    return prisma.invoice.updateMany({
+      where: { id: { in: ids }, type: "QUOTE" },
+      data: { createdBy: userId },
+    });
+  },
+
   async getDatabaseSize(): Promise<string | null> {
     try {
       const result = await prisma.$queryRaw<{ size: string }[]>`
