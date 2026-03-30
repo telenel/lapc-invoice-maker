@@ -37,16 +37,21 @@ async function getCachedJson<T>(key: string, url: string): Promise<T> {
   const now = Date.now();
   const existing = cache.get(key) as CacheEntry<T> | undefined;
 
-  if (existing?.data !== undefined && existing.expiresAt > now) {
-    return existing.data;
-  }
-
   if (existing?.promise) {
     return existing.promise;
   }
 
+  if (existing?.data !== undefined && existing.expiresAt > now) {
+    return existing.data;
+  }
+
   const promise = fetch(url)
-    .then((response) => (response.ok ? response.json() : []))
+    .then(async (response) => {
+      if (!response.ok) {
+        throw new Error(`Failed to fetch ${key}: ${response.status}`);
+      }
+      return response.json();
+    })
     .then((data) => {
       cache.set(key, {
         data,
@@ -60,23 +65,32 @@ async function getCachedJson<T>(key: string, url: string): Promise<T> {
     });
 
   cache.set(key, {
-    ...existing,
-    expiresAt: now + CACHE_TTL_MS,
+    data: existing?.data,
+    expiresAt: existing?.expiresAt ?? 0,
     promise,
   });
 
   return promise;
 }
 
-export async function getQuickPickResources(department: string) {
+interface QuickPickResourceOptions {
+  includeSavedItems?: boolean;
+  includeUserPicks?: boolean;
+}
+
+export async function getQuickPickResources(
+  department: string,
+  options: QuickPickResourceOptions = {},
+) {
+  const { includeSavedItems = true, includeUserPicks = true } = options;
   const deptParam = department ? `?department=${encodeURIComponent(department)}` : "";
 
   const [quickPicks, savedItems, userPicks] = await Promise.all([
     getCachedJson<QuickPick[]>(`quick-picks:${department}`, `/api/quick-picks${deptParam}`).catch(() => []),
-    department
+    includeSavedItems && department
       ? getCachedJson<SavedItem[]>(`saved-items:${department}`, `/api/saved-items${deptParam}`).catch(() => [])
       : Promise.resolve([]),
-    department
+    includeUserPicks && department
       ? getCachedJson<UserPick[]>(`user-quick-picks:${department}`, `/api/user-quick-picks${deptParam}`).catch(() => [])
       : Promise.resolve([]),
   ]);

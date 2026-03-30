@@ -8,16 +8,22 @@ import { useEffect, useRef } from "react";
 
 const RECONNECT_DELAY_MS = 3000;
 
-type Listener = (data: { type: string }) => void;
+type Listener = (data: unknown) => void;
+type ConnectionListener = (connected: boolean) => void;
 
 let sharedES: EventSource | null = null;
 const listeners = new Set<Listener>();
+const connectionListeners = new Set<ConnectionListener>();
 let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
 
 function ensureConnection() {
   if (sharedES) return;
 
   const es = new EventSource("/api/notifications/stream");
+
+  es.onopen = () => {
+    connectionListeners.forEach((fn) => fn(true));
+  };
 
   es.onmessage = (event) => {
     try {
@@ -31,6 +37,7 @@ function ensureConnection() {
   es.onerror = () => {
     es.close();
     sharedES = null;
+    connectionListeners.forEach((fn) => fn(false));
     // Reconnect only if there are still active listeners
     if (listeners.size > 0) {
       clearTimeout(reconnectTimer);
@@ -41,12 +48,24 @@ function ensureConnection() {
   sharedES = es;
 }
 
-function subscribe(listener: Listener): () => void {
+function subscribe(
+  listener: Listener,
+  options?: { onConnectionChange?: ConnectionListener },
+): () => void {
   listeners.add(listener);
+  if (options?.onConnectionChange) {
+    connectionListeners.add(options.onConnectionChange);
+    if (sharedES?.readyState === EventSource.OPEN) {
+      options.onConnectionChange(true);
+    }
+  }
   ensureConnection();
 
   return () => {
     listeners.delete(listener);
+    if (options?.onConnectionChange) {
+      connectionListeners.delete(options.onConnectionChange);
+    }
     // Close connection when no listeners remain
     if (listeners.size === 0) {
       clearTimeout(reconnectTimer);
@@ -56,8 +75,11 @@ function subscribe(listener: Listener): () => void {
   };
 }
 
-export function subscribeToSSE(listener: Listener): () => void {
-  return subscribe(listener);
+export function subscribeToSSE(
+  listener: Listener,
+  options?: { onConnectionChange?: ConnectionListener },
+): () => void {
+  return subscribe(listener, options);
 }
 
 // ---------------------------------------------------------------------------
@@ -71,7 +93,12 @@ export function useSSE(eventType: string, callback: () => void, debounceMs = 500
 
   useEffect(() => {
     const listener: Listener = (data) => {
-      if (data.type === eventType) {
+      if (
+        typeof data === "object" &&
+        data !== null &&
+        typeof (data as { type?: unknown }).type === "string" &&
+        (data as { type: string }).type === eventType
+      ) {
         clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => cbRef.current(), debounceMs);
       }

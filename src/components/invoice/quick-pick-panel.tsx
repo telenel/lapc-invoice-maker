@@ -40,7 +40,7 @@ export function QuickPickPanel({ department, onSelect, currentSubtotal }: QuickP
 
     let cancelled = false;
 
-    getQuickPickResources(department)
+    getQuickPickResources(department, { includeUserPicks: false })
       .then(({ quickPicks, savedItems: nextSavedItems }) => {
         if (cancelled) return;
         setPicks(quickPicks);

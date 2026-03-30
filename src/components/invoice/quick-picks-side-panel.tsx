@@ -40,7 +40,7 @@ export function QuickPicksSidePanel({
   useEffect(() => {
     let cancelled = false;
 
-    getQuickPickResources(department)
+    getQuickPickResources(department, { includeSavedItems: false })
       .then(({ quickPicks, userPicks: nextUserPicks }) => {
         if (cancelled) return;
         setGlobalPicks(quickPicks);

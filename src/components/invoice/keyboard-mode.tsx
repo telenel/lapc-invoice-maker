@@ -187,26 +187,41 @@ export function KeyboardMode({
   useEffect(() => {
     let cancelled = false;
 
-    Promise.all([
-      staffApi.list().catch(() => [] as StaffResponse[]),
-      categoryApi.list().catch(() => [] as Category[]),
-      templateApi.list("INVOICE").catch(() => [] as TemplateResponse[]),
-    ])
-      .then(([staffData, categoryData, templateData]) => {
+    staffApi.list()
+      .catch(() => [] as StaffResponse[])
+      .then((staffData) => {
         if (cancelled) return;
         setStaff(staffData);
-        setCategories(categoryData);
-        setTemplates(templateData);
-
         if (form.staffId) {
           const match = staffData.find((s: StaffResponse) => s.id === form.staffId);
           if (match) handleStaffSelect(match as StaffDetailResponse);
         }
       })
       .finally(() => {
-        if (cancelled) return;
-        setStaffLoading(false);
-        setCategoriesLoading(false);
+        if (!cancelled) {
+          setStaffLoading(false);
+        }
+      });
+
+    categoryApi.list()
+      .catch(() => [] as Category[])
+      .then((categoryData) => {
+        if (!cancelled) {
+          setCategories(categoryData);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setCategoriesLoading(false);
+        }
+      });
+
+    templateApi.list("INVOICE")
+      .catch(() => [] as TemplateResponse[])
+      .then((templateData) => {
+        if (!cancelled) {
+          setTemplates(templateData);
+        }
       });
 
     return () => {

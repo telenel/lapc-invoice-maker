@@ -160,18 +160,24 @@ export function QuoteMode({
   useEffect(() => {
     let cancelled = false;
 
-    Promise.all([
-      categoryApi.list().catch(() => [] as Category[]),
-      templateApi.list("QUOTE").catch(() => [] as TemplateResponse[]),
-    ])
-      .then(([categoryData, templateData]) => {
-        if (cancelled) return;
-        setCategories(categoryData);
-        setTemplates(templateData);
+    categoryApi.list()
+      .catch(() => [] as Category[])
+      .then((categoryData) => {
+        if (!cancelled) {
+          setCategories(categoryData);
+        }
       })
       .finally(() => {
         if (!cancelled) {
           setCategoriesLoading(false);
+        }
+      });
+
+    templateApi.list("QUOTE")
+      .catch(() => [] as TemplateResponse[])
+      .then((templateData) => {
+        if (!cancelled) {
+          setTemplates(templateData);
         }
       });
 
