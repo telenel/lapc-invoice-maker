@@ -47,6 +47,37 @@
 }
 
 @layer base {
+  /* Dark mode: set color-scheme so native scrollbars/inputs match */
+  .dark,
+  .theme-frappe,
+  .theme-macchiato,
+  .theme-mocha {
+    color-scheme: dark;
+  }
+
+  /* Eliminate 300ms tap delay on touch devices */
+  button,
+  a,
+  [role="button"],
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
+  }
+
+  /* Prevent scroll bleed-through on modals/drawers */
+  [data-slot="dialog-content"],
+  [data-slot="drawer-content"],
+  [data-slot="sheet-content"],
+  [role="dialog"] {
+    overscroll-behavior: contain;
+  }
+
+  /* Balanced text wrapping on headings */
+  h1, h2, h3, h4, h5, h6 {
+    text-wrap: balance;
+  }
+
   :root {
     --background: oklch(0.985 0.002 75);      /* warm off-white */
     --foreground: oklch(0.175 0.012 60);      /* warm near-black */

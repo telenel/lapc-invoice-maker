@@ -6,7 +6,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background via-secondary/20 to-red-50/30 login-dots">
       <div className="mb-8">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/lapc-logo.png" alt="Los Angeles Pierce College" className="mx-auto" style={{ height: 80, width: "auto" }} />
+        <img src="/lapc-logo.png" alt="Los Angeles Pierce College" className="mx-auto" width={80} height={80} />
       </div>
       <Suspense>
         <LoginForm />

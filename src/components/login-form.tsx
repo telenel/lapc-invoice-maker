@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
@@ -30,10 +30,15 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [capsLock, setCapsLock] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
+  const usernameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("laportal-remember-me");
     if (stored !== null) setRememberMe(stored === "true");
+    // Auto-focus username on desktop only (avoid forcing keyboard on mobile)
+    if (window.matchMedia("(pointer: fine)").matches) {
+      usernameRef.current?.focus();
+    }
   }, []);
 
   function handleCapsLock(e: React.KeyboardEvent) {
@@ -56,6 +61,7 @@ export function LoginForm() {
     if (result?.error) {
       setError("Invalid email or password");
       setLoading(false);
+      usernameRef.current?.focus();
     } else {
       router.push(safeRedirectUrl(searchParams.get("callbackUrl")));
       router.refresh();
@@ -75,13 +81,14 @@ export function LoginForm() {
           <div className="space-y-2">
             <Label htmlFor="username">Email</Label>
             <Input
+              ref={usernameRef}
               id="username"
               name="username"
               required
-              autoFocus
               className="h-11"
-              type="text"
-              placeholder="you@piercecollege.edu"
+              type="email"
+              inputMode="email"
+              placeholder="you@piercecollege.edu…"
               autoComplete="username"
               spellCheck={false}
             />
