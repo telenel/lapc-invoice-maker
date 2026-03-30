@@ -237,7 +237,7 @@ function EventActions({
   return null;
 }
 
-const LEGEND = (["MEETING", "SEMINAR", "VENDOR", "catering", "birthday"] as const).map(
+const LEGEND = (["MEETING", "SEMINAR", "VENDOR", "OTHER", "catering", "birthday"] as const).map(
   (key) => TYPE_CONFIG[key],
 );
 
@@ -326,6 +326,13 @@ export function EventDetailSidebar({
       <div
         className="absolute inset-0 flex flex-col h-full p-4 gap-4 transition-opacity duration-150"
         style={{ opacity: showEvent ? 0 : 1, pointerEvents: showEvent ? "none" : "auto" }}
+        aria-hidden={showEvent || undefined}
+        ref={(el) => {
+          if (el) {
+            if (showEvent) el.setAttribute("inert", "");
+            else el.removeAttribute("inert");
+          }
+        }}
       >
         {/* Add Event button */}
         {addEventTrigger && (
@@ -365,6 +372,13 @@ export function EventDetailSidebar({
       <div
         className="absolute inset-0 flex flex-col h-full overflow-hidden transition-opacity duration-150"
         style={{ opacity: showEvent ? 1 : 0, pointerEvents: showEvent ? "auto" : "none" }}
+        aria-hidden={!showEvent || undefined}
+        ref={(el) => {
+          if (el) {
+            if (!showEvent) el.setAttribute("inert", "");
+            else el.removeAttribute("inert");
+          }
+        }}
       >
             {event != null && (
               <EventDetailContent
