@@ -1,7 +1,12 @@
+import dynamic from "next/dynamic";
 import { WelcomeBanner } from "@/components/dashboard/welcome-banner";
 import { OnboardingWrapper } from "@/components/dashboard/onboarding-wrapper";
 import { PersonalizedHeader } from "@/components/dashboard/personalized-header";
-import { DraggableDashboard } from "@/components/dashboard/draggable-dashboard";
+
+const DraggableDashboard = dynamic(
+  () => import("@/components/dashboard/draggable-dashboard").then((m) => m.DraggableDashboard),
+  { ssr: false },
+);
 
 export default function DashboardPage() {
   return (

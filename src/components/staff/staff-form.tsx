@@ -40,7 +40,7 @@ export function StaffForm({ staff, onSave, trigger }: StaffFormProps) {
     staff?.birthDay ?? undefined
   );
   const [approvalChain, setApprovalChain] = useState<string[]>(
-    staff?.approvalChain ?? []
+    () => staff?.approvalChain ?? [],
   );
 
   const isEdit = !!staff;

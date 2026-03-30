@@ -85,7 +85,7 @@ export function AddEventModal({ event, onSave, onClose, trigger, defaultOpen = f
 
   const [title, setTitle] = useState(event?.title ?? "");
   const [type, setType] = useState<EventType>(event?.type ?? "MEETING");
-  const [date, setDate] = useState(event?.date ?? todayStr());
+  const [date, setDate] = useState(() => event?.date ?? todayStr());
   const [allDay, setAllDay] = useState(event?.allDay ?? false);
   const [startTime, setStartTime] = useState(event?.startTime ?? "09:00");
   const [endTime, setEndTime] = useState(event?.endTime ?? "10:00");

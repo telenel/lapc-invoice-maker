@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -10,6 +9,8 @@ const STORAGE_KEY = "lapc-welcome-dismissed";
 
 export function WelcomeBanner() {
   const [visible, setVisible] = useState(false);
+  const [exiting, setExiting] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const dismissed = localStorage.getItem(STORAGE_KEY);
@@ -20,60 +21,64 @@ export function WelcomeBanner() {
 
   function dismiss() {
     localStorage.setItem(STORAGE_KEY, "true");
-    setVisible(false);
+    setExiting(true);
   }
 
+  function handleTransitionEnd(e: React.TransitionEvent) {
+    if (exiting && e.propertyName === "opacity") setVisible(false);
+  }
+
+  if (!visible) return null;
+
   return (
-    <AnimatePresence>
-      {visible && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={{ opacity: 0, height: 0 }}
-          transition={{ type: "spring", stiffness: 100, damping: 20 }}
-          style={{ overflow: "hidden" }}
-        >
-          <Card className="bg-muted/30">
-            <CardContent className="py-4 px-5">
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-1.5">
-                  <p className="font-semibold text-sm">Welcome to LAPC InvoiceMaker</p>
-                  <ul className="text-sm leading-relaxed text-muted-foreground space-y-1 list-disc list-inside">
-                    <li>
-                      Select a staff member and their department, contact info, and account numbers auto-fill.
-                    </li>
-                    <li>
-                      Account numbers are saved per person — the most recent one loads automatically.
-                    </li>
-                    <li>
-                      Signature approvers are remembered per staff member.
-                    </li>
-                    <li>
-                      Use <strong>Quick Picks</strong> or save your own line items for one-click reuse.
-                    </li>
-                    <li>
-                      Categorize each invoice (CopyTech, Catering, Supplies, Dept Purchase) for analytics tracking.
-                    </li>
-                    <li>
-                      Export your invoices to CSV anytime from the <strong>Invoices</strong> page.
-                    </li>
-                  </ul>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="shrink-0 h-7 px-2 text-xs"
-                  onClick={dismiss}
-                  aria-label="Dismiss welcome banner"
-                >
-                  Got it
-                  <X className="ml-1 size-3" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <div
+      ref={ref}
+      className="overflow-hidden transition-all duration-300 ease-out"
+      style={{
+        opacity: exiting ? 0 : 1,
+        maxHeight: exiting ? 0 : 500,
+      }}
+      onTransitionEnd={handleTransitionEnd}
+    >
+      <Card className="bg-muted/30">
+        <CardContent className="py-4 px-5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1.5">
+              <p className="font-semibold text-sm">Welcome to LAPC InvoiceMaker</p>
+              <ul className="text-sm leading-relaxed text-muted-foreground space-y-1 list-disc list-inside">
+                <li>
+                  Select a staff member and their department, contact info, and account numbers auto-fill.
+                </li>
+                <li>
+                  Account numbers are saved per person — the most recent one loads automatically.
+                </li>
+                <li>
+                  Signature approvers are remembered per staff member.
+                </li>
+                <li>
+                  Use <strong>Quick Picks</strong> or save your own line items for one-click reuse.
+                </li>
+                <li>
+                  Categorize each invoice (CopyTech, Catering, Supplies, Dept Purchase) for analytics tracking.
+                </li>
+                <li>
+                  Export your invoices to CSV anytime from the <strong>Invoices</strong> page.
+                </li>
+              </ul>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="shrink-0 h-7 px-2 text-xs"
+              onClick={dismiss}
+              aria-label="Dismiss welcome banner"
+            >
+              Got it
+              <X className="ml-1 size-3" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

@@ -8,7 +8,12 @@ import { AuthSessionProvider } from "@/components/session-provider";
 import { ThemeProviderWrapper } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { UIScaleProvider } from "@/components/ui-scale-provider";
-import { ChatSidebar } from "@/components/chat/chat-sidebar";
+import dynamic from "next/dynamic";
+
+const ChatSidebar = dynamic(
+  () => import("@/components/chat/chat-sidebar").then((m) => m.ChatSidebar),
+  { ssr: false },
+);
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
