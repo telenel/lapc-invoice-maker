@@ -30,7 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { LinkIcon, PrinterIcon } from "lucide-react";
+import { CopyIcon, LinkIcon, PrinterIcon } from "lucide-react";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
 import { ShareLinkDialog } from "@/components/quotes/share-link-dialog";
 import { QuoteActivity } from "@/components/quotes/quote-activity";
@@ -179,6 +179,7 @@ export function QuoteDetailView({ id }: { id: string }) {
     converting: false,
     revising: false,
     markingSubmitted: false,
+    duplicating: false,
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
@@ -351,6 +352,25 @@ export function QuoteDetailView({ id }: { id: string }) {
     }
   }, [id, fetchQuote]);
 
+  const handleDuplicate = useCallback(async () => {
+    setActionState((prev) => ({ ...prev, duplicating: true }));
+    try {
+      const res = await fetch(`/api/quotes/${id}/duplicate`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.error ?? "Failed to duplicate");
+        return;
+      }
+      const data = await res.json();
+      toast.success(`Draft created from ${quote?.quoteNumber ?? "quote"}`);
+      router.push(data.redirectTo);
+    } catch {
+      toast.error("Failed to duplicate");
+    } finally {
+      setActionState((prev) => ({ ...prev, duplicating: false }));
+    }
+  }, [id, quote, router]);
+
   if (loading) {
     return <p className="text-muted-foreground text-sm">Loading...</p>;
   }
@@ -421,6 +441,12 @@ export function QuoteDetailView({ id }: { id: string }) {
             onClick={() => window.open(`/api/quotes/${id}/pdf`, "_blank")}
           >
             Download PDF
+          </Button>
+
+          {/* Duplicate: all statuses */}
+          <Button variant="outline" size="sm" onClick={handleDuplicate} disabled={actionState.duplicating}>
+            <CopyIcon className="size-3.5 mr-1.5" />
+            {actionState.duplicating ? "Duplicating..." : "Duplicate"}
           </Button>
 
           {/* Share Link: SENT, ACCEPTED, DECLINED (has shareToken) */}

@@ -148,7 +148,13 @@ export const invoiceService = {
     const { items, ...invoiceData } = input;
 
     const calculatedItems = calculateLineItems(items);
-    const totalAmount = calculateTotal(calculatedItems);
+    const totalAmount = calculateTotal(
+      calculatedItems,
+      invoiceData.marginEnabled,
+      invoiceData.marginPercent ? Number(invoiceData.marginPercent) : undefined,
+      invoiceData.taxEnabled,
+      invoiceData.taxRate ? Number(invoiceData.taxRate) : undefined
+    );
 
     const { cateringDetails, ...restInvoiceData } = invoiceData;
     const invoice = await invoiceRepository.create(
@@ -178,6 +184,62 @@ export const invoiceService = {
   },
 
   /**
+   * Duplicate an invoice as a new DRAFT with date reset to today.
+   * Copies all fields except invoiceNumber, pdfPath, convertedFromQuoteId, and revisedFromQuoteId.
+   */
+  async duplicate(id: string, creatorId: string): Promise<InvoiceResponse> {
+    const source = await invoiceRepository.findById(id);
+    if (!source) {
+      throw Object.assign(new Error("Invoice not found"), { code: "NOT_FOUND" });
+    }
+
+    const items: CreateInvoiceInput["items"] = source.items.map((item) => ({
+      description: item.description,
+      quantity: Number(item.quantity),
+      unitPrice: Number(item.unitPrice),
+      isTaxable: item.isTaxable,
+      costPrice: item.costPrice != null ? Number(item.costPrice) : undefined,
+      marginOverride: item.marginOverride != null ? Number(item.marginOverride) : undefined,
+    }));
+
+    const calculatedItems = calculateLineItems(items);
+    const totalAmount = calculateTotal(
+      calculatedItems,
+      source.marginEnabled,
+      source.marginPercent != null ? Number(source.marginPercent) : undefined,
+      source.taxEnabled,
+      source.taxRate != null ? Number(source.taxRate) : undefined
+    );
+
+    const invoice = await invoiceRepository.create(
+      {
+        date: new Date().toISOString().split("T")[0],
+        category: source.category,
+        department: source.department,
+        staffId: source.staffId ?? undefined,
+        contactId: (source as { contactId?: string | null }).contactId ?? undefined,
+        accountCode: source.accountCode,
+        accountNumber: source.accountNumber ?? undefined,
+        approvalChain: (source.approvalChain as string[]) ?? [],
+        notes: source.notes ?? undefined,
+        marginEnabled: source.marginEnabled,
+        marginPercent: source.marginPercent != null ? Number(source.marginPercent) : undefined,
+        taxEnabled: source.taxEnabled,
+        taxRate: source.taxRate != null ? Number(source.taxRate) : undefined,
+        isCateringEvent: source.isCateringEvent,
+        cateringDetails: source.cateringDetails as Prisma.InputJsonValue | undefined,
+      },
+      calculatedItems,
+      totalAmount,
+      creatorId
+    );
+
+    safePublishAll({ type: "invoice-changed" });
+
+    return toInvoiceResponse(invoice);
+  },
+
+  /**
    * Update an invoice. Blocks updates on FINAL invoices.
    * Recalculates totals if items are provided.
    */
@@ -197,7 +259,11 @@ export const invoiceService = {
 
     if (items && Array.isArray(items)) {
       const calculatedItems = calculateLineItems(items);
-      const totalAmount = calculateTotal(calculatedItems);
+      const mEnabled = Boolean(invoiceData.marginEnabled ?? existing.marginEnabled);
+      const mPercent = invoiceData.marginPercent != null ? Number(invoiceData.marginPercent) : (existing.marginPercent != null ? Number(existing.marginPercent) : undefined);
+      const tEnabled = Boolean(invoiceData.taxEnabled ?? existing.taxEnabled);
+      const tRate = invoiceData.taxRate != null ? Number(invoiceData.taxRate) : (existing.taxRate != null ? Number(existing.taxRate) : undefined);
+      const totalAmount = calculateTotal(calculatedItems, mEnabled, mPercent, tEnabled, tRate);
       const updated = await invoiceRepository.update(id, invoiceData, calculatedItems, totalAmount);
       safePublishAll({ type: "invoice-changed" });
       return toInvoiceResponse(updated as unknown as NonNullable<InvoiceWithRelations>);
