@@ -94,7 +94,7 @@ function toCalendarItem(
     start,
     end,
     allDay: event.allDay,
-    color: `${color}26`,
+    color: `${color}80`,
     borderColor: color,
     textColor: color,
     source: "manual",
