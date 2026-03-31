@@ -54,15 +54,16 @@ async function claimPaymentFollowUp(quoteId: string, now: Date) {
     const convertedInvoices = await tx.$queryRaw<Array<{
       id: string;
       status: string | null;
+      paymentMethod: string | null;
       createdBy: string;
     }>>`
-      SELECT id, status, created_by AS "createdBy"
+      SELECT id, status, payment_method AS "paymentMethod", created_by AS "createdBy"
       FROM invoices
       WHERE converted_from_quote_id = ${quoteId}
       FOR UPDATE
     `;
     const convertedInvoice = convertedInvoices[0];
-    if (convertedInvoice?.status === "FINAL") {
+    if (convertedInvoice?.status === "FINAL" || convertedInvoice?.paymentMethod) {
       return null;
     }
 
@@ -148,7 +149,14 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
         shareToken: { not: null },
         OR: [
           { convertedToInvoice: null },
-          { convertedToInvoice: { is: { status: { not: "FINAL" } } } },
+          {
+            convertedToInvoice: {
+              is: {
+                status: { not: "FINAL" },
+                paymentMethod: null,
+              },
+            },
+          },
         ],
       },
       include: {

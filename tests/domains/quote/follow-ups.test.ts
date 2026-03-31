@@ -156,11 +156,65 @@ describe("checkAndSendPaymentFollowUps", () => {
           acceptedAt: { not: null },
           OR: [
             { convertedToInvoice: null },
-            { convertedToInvoice: { is: { status: { not: "FINAL" } } } },
+            { convertedToInvoice: { is: { status: { not: "FINAL" }, paymentMethod: null } } },
           ],
         }),
       }),
     );
+  });
+
+  it("skips reminders for quotes whose converted invoice already has payment details", async () => {
+    const scanTx = makeTx();
+    const claimTx = makeTx();
+
+    scanTx.$queryRaw.mockResolvedValue([{ acquired: true }]);
+    vi.mocked(businessDaysBetween).mockReturnValue(7);
+    scanTx.invoice.findMany.mockResolvedValue([
+      {
+        id: "q1",
+        quoteNumber: "Q-1",
+        recipientName: "Jane",
+        recipientEmail: "jane@example.com",
+        shareToken: "token",
+        acceptedAt: new Date("2026-03-01T12:00:00.000Z"),
+        updatedAt: new Date("2026-03-01T12:00:00.000Z"),
+        followUps: [],
+        creator: { id: "u1", name: "Admin" },
+      },
+    ] as never);
+    claimTx.$queryRaw
+      .mockResolvedValueOnce([
+        {
+          id: "q1",
+          quoteNumber: "Q-1",
+          recipientName: "Jane",
+          recipientEmail: "jane@example.com",
+          shareToken: "token",
+          quoteStatus: "ACCEPTED",
+          acceptedAt: new Date("2026-03-01T12:00:00.000Z"),
+          updatedAt: new Date("2026-03-01T12:00:00.000Z"),
+          paymentMethod: null,
+          createdBy: "u1",
+        },
+      ] as never)
+      .mockResolvedValueOnce([
+        {
+          id: "inv1",
+          status: "DRAFT",
+          paymentMethod: "ACCOUNT_NUMBER",
+          createdBy: "u2",
+        },
+      ] as never);
+    claimTx.quoteFollowUp.findFirst.mockResolvedValue(null as never);
+    vi.mocked(prisma.$transaction)
+      .mockImplementationOnce(async (callback) => callback(scanTx as never) as never)
+      .mockImplementationOnce(async (callback) => callback(claimTx as never) as never);
+
+    await checkAndSendPaymentFollowUps();
+
+    expect(claimTx.quoteFollowUp.create).not.toHaveBeenCalled();
+    expect(sendEmail).not.toHaveBeenCalled();
+    expect(vi.mocked(prisma.quoteFollowUp.update)).not.toHaveBeenCalled();
   });
 
   it("requires a share token before emailing payment reminders", async () => {

@@ -883,7 +883,7 @@ export function QuoteDetailView({ id }: { id: string }) {
       </div>
 
       {/* Payment status banner */}
-      {quote.quoteStatus === "ACCEPTED" && !quote.paymentMethod && (
+      {quote.quoteStatus === "ACCEPTED" && !quote.paymentDetailsResolved && (
         <Card className="border-amber-500/30 bg-amber-50 dark:bg-amber-950/20">
           <CardContent className="py-4">
             <div className="flex items-center gap-2">
@@ -895,14 +895,22 @@ export function QuoteDetailView({ id }: { id: string }) {
         </Card>
       )}
 
-      {quote.quoteStatus === "ACCEPTED" && quote.paymentMethod && (
+      {quote.quoteStatus === "ACCEPTED" && quote.paymentDetailsResolved && (
         <Card className="border-green-500/30 bg-green-50 dark:bg-green-950/20">
           <CardContent className="py-4">
             <div className="flex items-center gap-2 text-sm">
-              <span className="text-green-600 font-medium">Payment method:</span>
-              <span>{quote.paymentMethod.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}</span>
-              {quote.paymentAccountNumber && (
-                <span className="text-muted-foreground">• Account: {quote.paymentAccountNumber}</span>
+              {quote.paymentMethod ? (
+                <>
+                  <span className="text-green-600 font-medium">Payment method:</span>
+                  <span>{quote.paymentMethod.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}</span>
+                  {quote.paymentAccountNumber && (
+                    <span className="text-muted-foreground">• Account: {quote.paymentAccountNumber}</span>
+                  )}
+                </>
+              ) : (
+                <span className="text-green-600 font-medium">
+                  Payment details are already on file for this quote.
+                </span>
               )}
             </div>
           </CardContent>
