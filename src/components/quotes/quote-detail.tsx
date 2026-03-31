@@ -104,6 +104,12 @@ interface Quote {
   paymentMethod: string | null;
   paymentAccountNumber: string | null;
   paymentDetailsResolved: boolean;
+  viewerAccess?: {
+    canViewQuote: boolean;
+    canManageActions: boolean;
+    canViewActivity: boolean;
+    canViewSensitiveFields: boolean;
+  };
   convertedToInvoice: {
     id: string;
     invoiceNumber: string | null;
@@ -427,12 +433,24 @@ export function QuoteDetailView({ id }: { id: string }) {
   }
 
   const status = quote.quoteStatus;
+  const viewerAccess = quote.viewerAccess ?? {
+    canViewQuote: true,
+    canManageActions: true,
+    canViewActivity: true,
+    canViewSensitiveFields: true,
+  };
+  const canManageActions = viewerAccess.canManageActions;
+  const canViewActivity = viewerAccess.canViewActivity;
+  const canViewPaymentDetails = viewerAccess.canViewSensitiveFields;
   const canEdit =
-    status === "DRAFT" ||
-    status === "SENT" ||
-    status === "SUBMITTED_EMAIL" ||
-    status === "SUBMITTED_MANUAL" ||
-    (status === "ACCEPTED" && !quote.convertedToInvoice);
+    canManageActions &&
+    (
+      status === "DRAFT" ||
+      status === "SENT" ||
+      status === "SUBMITTED_EMAIL" ||
+      status === "SUBMITTED_MANUAL" ||
+      (status === "ACCEPTED" && !quote.convertedToInvoice)
+    );
 
   return (
     <div className="space-y-6">
@@ -474,62 +492,66 @@ export function QuoteDetailView({ id }: { id: string }) {
 
           {/* ── Primary actions ─────────────────────────────────────── */}
 
-          {/* DRAFT: Mark as Sent + Edit */}
-          {status === "DRAFT" && (
+          {canManageActions && (
             <>
-              <Button
-                size="sm"
-                className="bg-green-600 hover:bg-green-700 text-white"
-                onClick={handleMarkAsSent}
-                disabled={actionState.sending}
-              >
-                {actionState.sending ? "Sending..." : "Mark as Sent"}
-              </Button>
-              <Link
-                href={`/quotes/${id}/edit`}
-                className={buttonVariants({ variant: "outline", size: "sm" })}
-              >
-                Edit
-              </Link>
-            </>
-          )}
+              {/* DRAFT: Mark as Sent + Edit */}
+              {status === "DRAFT" && (
+                <>
+                  <Button
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    onClick={handleMarkAsSent}
+                    disabled={actionState.sending}
+                  >
+                    {actionState.sending ? "Sending..." : "Mark as Sent"}
+                  </Button>
+                  <Link
+                    href={`/quotes/${id}/edit`}
+                    className={buttonVariants({ variant: "outline", size: "sm" })}
+                  >
+                    Edit
+                  </Link>
+                </>
+              )}
 
-          {status === "ACCEPTED" && !quote.convertedToInvoice && (
-            <>
-              <Link
-                href={`/quotes/${id}/edit`}
-                className={buttonVariants({ variant: "outline", size: "sm" })}
-              >
-                Edit
-              </Link>
-              <Button
-                size="sm"
-                onClick={handleConvertToInvoice}
-                disabled={actionState.converting}
-              >
-                {actionState.converting ? "Converting..." : "Convert to Invoice"}
-              </Button>
-            </>
-          )}
+              {status === "ACCEPTED" && !quote.convertedToInvoice && (
+                <>
+                  <Link
+                    href={`/quotes/${id}/edit`}
+                    className={buttonVariants({ variant: "outline", size: "sm" })}
+                  >
+                    Edit
+                  </Link>
+                  <Button
+                    size="sm"
+                    onClick={handleConvertToInvoice}
+                    disabled={actionState.converting}
+                  >
+                    {actionState.converting ? "Converting..." : "Convert to Invoice"}
+                  </Button>
+                </>
+              )}
 
-          {/* SENT / SUBMITTED: Approve Manually + Convert to Invoice */}
-          {(status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
-            <>
-              <Button
-                size="sm"
-                className="bg-green-600 hover:bg-green-700 text-white"
-                onClick={() => setApproveDialogOpen(true)}
-                disabled={actionState.approving}
-              >
-                {actionState.approving ? "Approving..." : "Approve Manually"}
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleConvertToInvoice}
-                disabled={actionState.converting}
-              >
-                {actionState.converting ? "Converting..." : "Convert to Invoice"}
-              </Button>
+              {/* SENT / SUBMITTED: Approve Manually + Convert to Invoice */}
+              {(status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
+                <>
+                  <Button
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    onClick={() => setApproveDialogOpen(true)}
+                    disabled={actionState.approving}
+                  >
+                    {actionState.approving ? "Approving..." : "Approve Manually"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleConvertToInvoice}
+                    disabled={actionState.converting}
+                  >
+                    {actionState.converting ? "Converting..." : "Convert to Invoice"}
+                  </Button>
+                </>
+              )}
             </>
           )}
 
@@ -544,7 +566,7 @@ export function QuoteDetailView({ id }: { id: string }) {
           )}
 
           {/* DECLINED: Revise & Resubmit */}
-          {status === "DECLINED" && (
+          {canManageActions && status === "DECLINED" && (
             <Button
               size="sm"
               className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -558,7 +580,7 @@ export function QuoteDetailView({ id }: { id: string }) {
           {/* ── Secondary actions ──────────────────────────────────── */}
 
           {/* Share Link: visible for SENT/SUBMITTED statuses */}
-          {(status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && quote.shareToken && (
+          {canManageActions && (status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && quote.shareToken && (
             <Button variant="outline" size="sm" onClick={handleShareLink}>
               <LinkIcon className="size-3.5 mr-1.5" />
               Share Link
@@ -578,7 +600,7 @@ export function QuoteDetailView({ id }: { id: string }) {
             />
             <DropdownMenuContent align="end">
               {/* Edit (when not shown as primary) */}
-              {(canEdit && status !== "DRAFT" && !(status === "ACCEPTED" && !quote.convertedToInvoice)) && (
+              {canManageActions && canEdit && status !== "DRAFT" && !(status === "ACCEPTED" && !quote.convertedToInvoice) && (
                 <DropdownMenuItem onClick={() => router.push(`/quotes/${id}/edit`)}>
                   Edit
                 </DropdownMenuItem>
@@ -590,32 +612,34 @@ export function QuoteDetailView({ id }: { id: string }) {
               </DropdownMenuItem>
 
               {/* Duplicate: all statuses */}
-              <DropdownMenuItem onClick={handleDuplicate} disabled={actionState.duplicating}>
-                {actionState.duplicating ? "Duplicating..." : "Duplicate"}
-              </DropdownMenuItem>
+              {canManageActions && (
+                <DropdownMenuItem onClick={handleDuplicate} disabled={actionState.duplicating}>
+                  {actionState.duplicating ? "Duplicating..." : "Duplicate"}
+                </DropdownMenuItem>
+              )}
 
               {/* Share Link: in dropdown for ACCEPTED, DECLINED, REVISED, EXPIRED */}
-              {status !== "DRAFT" && status !== "SENT" && status !== "SUBMITTED_EMAIL" && status !== "SUBMITTED_MANUAL" && quote.shareToken && (
+              {canManageActions && status !== "DRAFT" && status !== "SENT" && status !== "SUBMITTED_EMAIL" && status !== "SUBMITTED_MANUAL" && quote.shareToken && (
                 <DropdownMenuItem onClick={handleShareLink}>
                   Share Link
                 </DropdownMenuItem>
               )}
 
               {/* Mark as Delivered: SENT only */}
-              {status === "SENT" && (
+              {canManageActions && status === "SENT" && (
                 <DropdownMenuItem onClick={() => handleMarkSubmitted("manual")} disabled={actionState.markingSubmitted}>
                   {actionState.markingSubmitted ? "Updating..." : "Mark as Delivered"}
                 </DropdownMenuItem>
               )}
 
               {/* Destructive actions separator */}
-              {(status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL" ||
+              {canManageActions && (status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL" ||
                 status === "DRAFT" || status === "DECLINED" || status === "EXPIRED") && (
                 <DropdownMenuSeparator />
               )}
 
               {/* Decline: SENT, SUBMITTED_EMAIL, SUBMITTED_MANUAL */}
-              {(status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
+              {canManageActions && (status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
                 <DropdownMenuItem
                   variant="destructive"
                   onClick={() => setDeclineDialogOpen(true)}
@@ -625,7 +649,7 @@ export function QuoteDetailView({ id }: { id: string }) {
               )}
 
               {/* Delete: DRAFT, SENT, DECLINED, EXPIRED */}
-              {(status === "DRAFT" || status === "SENT" || status === "DECLINED" || status === "EXPIRED") && (
+              {canManageActions && (status === "DRAFT" || status === "SENT" || status === "DECLINED" || status === "EXPIRED") && (
                 <DropdownMenuItem
                   variant="destructive"
                   onClick={() => setDeleteDialogOpen(true)}
@@ -884,7 +908,7 @@ export function QuoteDetailView({ id }: { id: string }) {
       </div>
 
       {/* Payment status banner */}
-      {quote.quoteStatus === "ACCEPTED" && !quote.paymentDetailsResolved && (
+      {canViewPaymentDetails && quote.quoteStatus === "ACCEPTED" && !quote.paymentDetailsResolved && (
         <Card className="border-amber-500/30 bg-amber-50 dark:bg-amber-950/20">
           <CardContent className="py-4">
             <div className="flex items-center gap-2">
@@ -896,7 +920,7 @@ export function QuoteDetailView({ id }: { id: string }) {
         </Card>
       )}
 
-      {quote.quoteStatus === "ACCEPTED" && quote.paymentDetailsResolved && (
+      {canViewPaymentDetails && quote.quoteStatus === "ACCEPTED" && quote.paymentDetailsResolved && (
         <Card className="border-green-500/30 bg-green-50 dark:bg-green-950/20">
           <CardContent className="py-4">
             <div className="flex items-center gap-2 text-sm">
@@ -1273,7 +1297,7 @@ export function QuoteDetailView({ id }: { id: string }) {
       })()}
 
       {/* Activity tracking */}
-      {(status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL" || status === "ACCEPTED" || status === "DECLINED") && (
+      {canViewActivity && (status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL" || status === "ACCEPTED" || status === "DECLINED") && (
         <QuoteActivity quoteId={id} />
       )}
 

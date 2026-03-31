@@ -1,11 +1,77 @@
 import type { QuoteResponse } from "./types";
 
+export interface QuoteViewerAccess {
+  canViewQuote: boolean;
+  canManageActions: boolean;
+  canViewActivity: boolean;
+  canViewSensitiveFields: boolean;
+}
+
+export function getQuoteViewerAccess(
+  quote: Pick<QuoteResponse, "creatorId" | "convertedToInvoice">,
+  userId: string,
+  isAdmin: boolean,
+): QuoteViewerAccess {
+  if (isAdmin || quote.creatorId === userId) {
+    return {
+      canViewQuote: true,
+      canManageActions: true,
+      canViewActivity: true,
+      canViewSensitiveFields: true,
+    };
+  }
+
+  if (quote.convertedToInvoice?.createdBy === userId) {
+    return {
+      canViewQuote: true,
+      canManageActions: false,
+      canViewActivity: false,
+      canViewSensitiveFields: false,
+    };
+  }
+
+  return {
+    canViewQuote: false,
+    canManageActions: false,
+    canViewActivity: false,
+    canViewSensitiveFields: false,
+  };
+}
+
 export function canViewQuoteDetails(
   quote: Pick<QuoteResponse, "creatorId" | "convertedToInvoice">,
   userId: string,
   isAdmin: boolean,
 ): boolean {
-  if (isAdmin) return true;
-  if (quote.creatorId === userId) return true;
-  return quote.convertedToInvoice?.createdBy === userId;
+  return getQuoteViewerAccess(quote, userId, isAdmin).canViewQuote;
+}
+
+export function canViewQuoteActivity(
+  quote: Pick<QuoteResponse, "creatorId" | "convertedToInvoice">,
+  userId: string,
+  isAdmin: boolean,
+): boolean {
+  return getQuoteViewerAccess(quote, userId, isAdmin).canViewActivity;
+}
+
+export function redactQuoteForViewer<T extends QuoteResponse>(
+  quote: T,
+  access: QuoteViewerAccess,
+): T {
+  if (access.canViewSensitiveFields) {
+    return {
+      ...quote,
+      viewerAccess: access,
+    };
+  }
+
+  return {
+    ...quote,
+    shareToken: null,
+    recipientEmail: null,
+    recipientOrg: null,
+    paymentMethod: null,
+    paymentAccountNumber: null,
+    viewerAccess: access,
+  };
 }
