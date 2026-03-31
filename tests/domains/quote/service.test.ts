@@ -794,7 +794,7 @@ describe("quoteService", () => {
       });
     });
 
-    it("creates invoice and marks quote ACCEPTED via transaction", async () => {
+    it("creates invoice and marks quote ACCEPTED without inventing acceptedAt", async () => {
       const { prisma } = await import("@/lib/prisma");
       const mockPrisma = vi.mocked(prisma, true);
 
@@ -827,7 +827,7 @@ describe("quoteService", () => {
           where: { id: "q1" },
           data: expect.objectContaining({
             quoteStatus: "ACCEPTED",
-            acceptedAt: expect.any(Date),
+            acceptedAt: null,
             convertedAt: expect.any(Date),
           }),
         }),

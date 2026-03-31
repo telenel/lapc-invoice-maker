@@ -884,7 +884,7 @@ export const quoteService = {
         where: { id },
         data: {
           quoteStatus: "ACCEPTED",
-          acceptedAt: quote.acceptedAt ?? now,
+          acceptedAt: quote.acceptedAt ?? null,
           convertedAt: now,
         },
       });
