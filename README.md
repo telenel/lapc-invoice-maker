@@ -43,6 +43,8 @@ Component → Domain API Client → Domain Hooks → Domain Types (DTOs)
 npm install              # Install dependencies + configure git hooks
 npx prisma generate      # Generate Prisma client
 npm run dev              # Start dev server (localhost:3000)
+npm run ship-check       # git status + lint + test + build + stamp current HEAD
+npm run review:codex     # Local Codex review against main with a fixed prompt
 npm test                 # Run tests (350 tests)
 npm run build            # Production build
 ```
@@ -70,9 +72,16 @@ Docker Compose behind Traefik on [montalvo.io](https://montalvo.io). CI/CD via G
 
 All changes go through PRs with squash merge. PRs are finalized once created — no further pushes except review follow-up fixes (`CR_FIX=1 git push`). Build version (git SHA) is displayed in the nav bar.
 
+Local AI workflow is hard-coded through tracked scripts and hooks:
+
+- `npm run ship-check`
+- `npm run review:codex`
+- `./scripts/publish-pr.sh`
+
 ## Project Documentation
 
 - [docs/PROJECT-OVERVIEW.md](docs/PROJECT-OVERVIEW.md) — Comprehensive architecture, workflows, API reference
+- [docs/AI-WORKFLOW.md](docs/AI-WORKFLOW.md) — Hard-coded local agent workflow and enforcement rules
 - [docs/superpowers/specs/](docs/superpowers/specs/) — Design specifications
 - [docs/superpowers/plans/](docs/superpowers/plans/) — Implementation plans
 

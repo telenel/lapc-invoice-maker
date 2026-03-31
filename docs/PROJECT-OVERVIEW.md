@@ -19,7 +19,7 @@ Operations portal for Los Angeles Pierce College. Handles invoice drafting, fina
 | Calendar | FullCalendar (catering + manual events + birthdays) |
 | Email | Power Automate webhook (shared mailbox) |
 | CI/CD | GitHub Actions (setup → lint/build/test parallel → deploy) |
-| Code Review | Local AI review + GitHub PR review |
+| Code Review | Hard-coded local AI review + GitHub PR review |
 
 ---
 
@@ -533,6 +533,14 @@ All changes go through pull requests targeting `main`. PRs are squash-merged aft
 - Admin bypass allowed (`gh pr merge --admin` when needed)
 
 CodeRabbit may comment on PRs, but it is advisory only. Local AI review is performed before PR creation, and the only required repository check remains the standard CI workflow.
+
+Required local workflow commands:
+
+- `npm run ship-check`
+- `npm run review:codex`
+- `./scripts/publish-pr.sh`
+
+Hard-coded workflow controls are intentionally stronger than agent memory or plain-text prompts. Hooks, scripts, CI, and permission limits are the primary enforcement layers for this repo.
 
 ### CI/CD Pipeline
 

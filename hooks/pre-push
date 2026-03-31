@@ -1,24 +1,47 @@
 #!/bin/bash
-# Block pushes to branches that already have an open PR.
-# Override with: CR_FIX=1 git push
+# Block pushes that have not passed ship-check for the current HEAD.
+# Also block pushes to branches with open PRs unless CR_FIX=1 is set.
 
-if [ "$CR_FIX" = "1" ]; then
-  exit 0
-fi
+set -euo pipefail
 
-branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+branch=$(git symbolic-ref --short HEAD 2>/dev/null || true)
 
 # Only check feature branches, not main
 if [ "$branch" = "main" ] || [ -z "$branch" ]; then
   exit 0
 fi
 
-# Skip check if GitHub CLI is unavailable
+git_dir=$(git rev-parse --git-dir)
+head_sha=$(git rev-parse HEAD)
+ship_check_file="$git_dir/laportal/ship-check.env"
+
+if [ ! -f "$ship_check_file" ]; then
+  echo ""
+  echo "BLOCKED: No ship-check stamp found for this repo."
+  echo "Run: npm run ship-check"
+  echo ""
+  exit 1
+fi
+
+# shellcheck disable=SC1090
+. "$ship_check_file"
+if [ "${SHIP_CHECK_HEAD:-}" != "$head_sha" ]; then
+  echo ""
+  echo "BLOCKED: ship-check stamp does not match HEAD $head_sha"
+  echo "Run: npm run ship-check"
+  echo ""
+  exit 1
+fi
+
+if [ "${CR_FIX:-}" = "1" ]; then
+  exit 0
+fi
+
+# Skip PR-open check if GitHub CLI is unavailable
 if ! command -v gh >/dev/null 2>&1; then
   exit 0
 fi
 
-# Check for open PR on this branch
 pr_count=$(gh pr list --head "$branch" --state open --json number --jq 'length' 2>/dev/null || printf '0')
 [ -n "$pr_count" ] || pr_count=0
 case "$pr_count" in
