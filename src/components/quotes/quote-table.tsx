@@ -55,7 +55,7 @@ interface QuotesResponse {
   pageSize: number;
 }
 
-const URL_FILTER_DEFAULTS = {
+const URL_FILTER_DEFAULTS: Record<string, string> = {
   search: "",
   quoteStatus: "",
   category: "",
@@ -67,7 +67,7 @@ const URL_FILTER_DEFAULTS = {
   page: "1",
   sortBy: "createdAt",
   sortOrder: "desc",
-} as const;
+};
 
 const SAVED_VIEWS = [
   { label: "Awaiting Response", params: { quoteStatus: "SENT" } },
@@ -277,7 +277,7 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
   useSSE("quote-changed", fetchQuotes);
 
   function handleFiltersChange(next: QuoteFilters) {
-    setFilters(next);
+    setFilters({ ...next });
   }
 
   function handleClear() {

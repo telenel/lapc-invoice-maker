@@ -27,7 +27,7 @@ import { useSSE } from "@/lib/use-sse";
 import { useUrlFilters } from "@/lib/use-url-filters";
 import { cn } from "@/lib/utils";
 
-const URL_FILTER_DEFAULTS = {
+const URL_FILTER_DEFAULTS: Record<string, string> = {
   search: "",
   status: "",
   category: "",
@@ -40,7 +40,7 @@ const URL_FILTER_DEFAULTS = {
   page: "1",
   sortBy: "date",
   sortOrder: "desc",
-} as const;
+};
 
 const SAVED_VIEWS = [
   { label: "My Drafts", params: { status: "DRAFT" } },
@@ -145,7 +145,7 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
   useSSE("invoice-changed", fetchInvoices);
 
   function handleFiltersChange(next: FilterBarFilters) {
-    setFilters(next);
+    setFilters({ ...next });
   }
 
   function handleClear() {
