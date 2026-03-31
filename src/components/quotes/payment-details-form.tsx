@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { quoteApi } from "@/domains/quote/api-client";
 import { QUOTE_PAYMENT_METHODS } from "@/domains/quote/payment";
 import type { QuoteStatus } from "@/domains/quote/types";
 
@@ -51,23 +52,14 @@ export function PaymentDetailsForm({
     }
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/quotes/public/${token}/payment`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          paymentMethod,
-          accountNumber: accountNumberRequired ? normalizedAccountNumber : undefined,
-        }),
+      await quoteApi.submitPublicPaymentDetails(token, {
+        paymentMethod,
+        accountNumber: accountNumberRequired ? normalizedAccountNumber : undefined,
       });
-      if (!res.ok) {
-        const data = await res.json();
-        toast.error(data.error ?? "Failed to submit");
-        return;
-      }
       setSubmitted(true);
       toast.success("Payment details submitted — thank you!");
-    } catch {
-      toast.error("Something went wrong");
+    } catch (err) {
+      toast.error((err as Error).message ?? "Something went wrong");
     } finally {
       setSubmitting(false);
     }

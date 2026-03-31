@@ -80,6 +80,40 @@ export interface QuoteResponse {
   revisedToQuote?: { id: string; quoteNumber: string | null } | null;
 }
 
+export interface PublicQuoteResponse {
+  id: string;
+  quoteNumber: string | null;
+  quoteStatus: QuoteStatus;
+  date: string;
+  expirationDate: string | null;
+  department: string;
+  category: string;
+  notes: string;
+  totalAmount: number;
+  recipientName: string;
+  recipientEmail: string;
+  recipientOrg: string;
+  staff: {
+    name: string;
+    title: string;
+    department: string;
+    extension: string | null;
+    email: string | null;
+  } | null;
+  contact: {
+    name: string;
+    title: string;
+    org: string;
+    department: string;
+    email: string;
+    phone: string;
+  } | null;
+  items: QuoteItemResponse[];
+  isCateringEvent: boolean;
+  cateringDetails: CateringDetails | null;
+  paymentDetailsResolved: boolean;
+}
+
 // ── Inputs ─────────────────────────────────────────────────────────────────
 
 export interface CreateLineItemInput {
@@ -189,4 +223,26 @@ export interface QuoteViewResponse {
   viewport: string | null;
   durationSeconds: number | null;
   respondedWith: string | null;
+}
+
+export interface QuotePublicSettingsResponse {
+  [key: string]: {
+    name?: string;
+    phone?: string;
+    email?: string;
+    note?: string;
+  } | undefined;
+}
+
+export interface QuotePublicResponseSubmission {
+  response: "ACCEPTED" | "DECLINED";
+  viewId?: string | null;
+  cateringDetails?: CateringDetails;
+  paymentMethod?: string;
+  accountNumber?: string | null;
+}
+
+export interface QuotePublicPaymentSubmission {
+  paymentMethod: string;
+  accountNumber?: string | null;
 }

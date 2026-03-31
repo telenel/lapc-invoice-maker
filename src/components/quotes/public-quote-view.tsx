@@ -22,52 +22,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { quoteApi } from "@/domains/quote/api-client";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
-import type { CateringDetails } from "@/domains/quote/types";
+import type { CateringDetails, PublicQuoteResponse, QuotePublicSettingsResponse } from "@/domains/quote/types";
 import { QUOTE_PAYMENT_METHODS } from "@/domains/quote/payment";
-
-interface QuoteItem {
-  id: string;
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  extendedPrice: number;
-  sortOrder: number;
-}
-
-interface PublicQuote {
-  id: string;
-  quoteNumber: string | null;
-  quoteStatus: "DRAFT" | "SENT" | "SUBMITTED_EMAIL" | "SUBMITTED_MANUAL" | "ACCEPTED" | "DECLINED" | "REVISED" | "EXPIRED";
-  date: string;
-  expirationDate: string | null;
-  department: string;
-  category: string;
-  notes: string;
-  totalAmount: number;
-  recipientName: string;
-  recipientEmail: string;
-  recipientOrg: string;
-  staff: {
-    name: string;
-    title: string;
-    department: string;
-    extension: string | null;
-    email: string | null;
-  } | null;
-  contact: {
-    name: string;
-    title: string;
-    org: string;
-    department: string;
-    email: string;
-    phone: string;
-  } | null;
-  items: QuoteItem[];
-  isCateringEvent: boolean;
-  cateringDetails: CateringDetails | null;
-  paymentDetailsResolved: boolean;
-}
 
 function expirationText(dateStr: string): string {
   const exp = new Date(dateStr);
@@ -110,7 +68,7 @@ function makeCateringForm(existing: CateringDetails | null): PublicCateringForm 
 const labelClass = "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
 
 export function PublicQuoteView({ token }: { token: string }) {
-  const [quote, setQuote] = useState<PublicQuote | null>(null);
+  const [quote, setQuote] = useState<PublicQuoteResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [responding, setResponding] = useState(false);
@@ -118,7 +76,7 @@ export function PublicQuoteView({ token }: { token: string }) {
   const [cateringForm, setCateringForm] = useState<PublicCateringForm>(makeCateringForm(null));
   const [paymentMethod, setPaymentMethod] = useState("");
   const [sapAccountNumber, setSapAccountNumber] = useState("");
-  const [contactInfo, setContactInfo] = useState<Record<string, { name?: string; phone?: string; email?: string; note?: string }>>({});
+  const [contactInfo, setContactInfo] = useState<QuotePublicSettingsResponse>({});
   const viewIdRef = useRef<string | null>(null);
   const loadTimeRef = useRef<number>(Date.now());
   const accountNumberRequired = paymentMethod === "ACCOUNT_NUMBER";
@@ -129,13 +87,7 @@ export function PublicQuoteView({ token }: { token: string }) {
   useEffect(() => {
     async function init() {
       try {
-        // Fetch quote data
-        const quoteRes = await fetch(`/api/quotes/public/${token}`);
-        if (!quoteRes.ok) {
-          setNotFound(true);
-          return;
-        }
-        const quoteData: PublicQuote = await quoteRes.json();
+        const quoteData = await quoteApi.getPublicQuote(token);
         setQuote(quoteData);
         if (quoteData.isCateringEvent) {
           setCateringForm(makeCateringForm(quoteData.cateringDetails));
@@ -143,22 +95,14 @@ export function PublicQuoteView({ token }: { token: string }) {
 
         // Fetch contact info settings
         try {
-          const settingsRes = await fetch("/api/quotes/public/settings");
-          if (settingsRes.ok) setContactInfo(await settingsRes.json());
-        } catch { /* non-critical */ }
+          setContactInfo(await quoteApi.getPublicSettings());
+        } catch {
+          /* non-critical */
+        }
 
         // Register view
-        const viewRes = await fetch(`/api/quotes/public/${token}/view`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            viewport: `${window.innerWidth}x${window.innerHeight}`,
-          }),
-        });
-        if (viewRes.ok) {
-          const { viewId } = await viewRes.json();
-          viewIdRef.current = viewId;
-        }
+        const { viewId } = await quoteApi.registerPublicView(token, `${window.innerWidth}x${window.innerHeight}`);
+        viewIdRef.current = viewId;
       } catch {
         setNotFound(true);
       } finally {
@@ -173,14 +117,7 @@ export function PublicQuoteView({ token }: { token: string }) {
     function handleUnload() {
       if (!viewIdRef.current) return;
       const duration = Math.round((Date.now() - loadTimeRef.current) / 1000);
-      const blob = new Blob(
-        [JSON.stringify({ durationSeconds: duration })],
-        { type: "application/json" }
-      );
-      navigator.sendBeacon(
-        `/api/quotes/public/${token}/view/${viewIdRef.current}`,
-        blob
-      );
+      quoteApi.recordPublicViewDuration(token, viewIdRef.current, duration);
     }
     window.addEventListener("beforeunload", handleUnload);
     return () => window.removeEventListener("beforeunload", handleUnload);
@@ -217,28 +154,18 @@ export function PublicQuoteView({ token }: { token: string }) {
             }
           : undefined;
 
-      const res = await fetch(`/api/quotes/public/${token}/respond`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          response,
-          viewId: viewIdRef.current,
-          cateringDetails,
-          paymentMethod: response === "ACCEPTED" && paymentMethod ? paymentMethod : undefined,
-          accountNumber: response === "ACCEPTED" && accountNumberRequired ? normalizedSapAccountNumber : undefined,
-        }),
+      const data = await quoteApi.respondToPublicQuote(token, {
+        response,
+        viewId: viewIdRef.current,
+        cateringDetails,
+        paymentMethod: response === "ACCEPTED" && paymentMethod ? paymentMethod : undefined,
+        accountNumber: response === "ACCEPTED" && accountNumberRequired ? normalizedSapAccountNumber : undefined,
       });
-      if (!res.ok) {
-        const data = await res.json();
-        toast.error(data.error ?? "Failed to submit response");
-        return;
-      }
-      const data = await res.json();
       setResponded(true);
       setQuote((prev) => prev ? { ...prev, quoteStatus: data.status } : prev);
       toast.success(response === "ACCEPTED" ? "Quote approved!" : "Quote declined");
-    } catch {
-      toast.error("Failed to submit response");
+    } catch (err) {
+      toast.error((err as Error).message ?? "Failed to submit response");
     } finally {
       setResponding(false);
     }
