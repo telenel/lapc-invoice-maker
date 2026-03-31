@@ -1,6 +1,7 @@
 import { ApiError } from "@/domains/shared/types";
 import type {
   UserResponse,
+  UserWithTemporaryPasswordResponse,
   AccountCodeResponse,
   DbHealthResponse,
   DbHealthErrorResponse,
@@ -26,16 +27,19 @@ export const adminApi = {
     return request<UserResponse[]>(BASE_USERS);
   },
 
-  async createUser(input: CreateUserInput): Promise<UserResponse> {
-    return request<UserResponse>(BASE_USERS, {
+  async createUser(input: CreateUserInput): Promise<UserWithTemporaryPasswordResponse> {
+    return request<UserWithTemporaryPasswordResponse>(BASE_USERS, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
     });
   },
 
-  async updateUser(id: string, input: UpdateUserInput | { resetPassword: true }): Promise<UserResponse> {
-    return request<UserResponse>(`${BASE_USERS}/${id}`, {
+  async updateUser(
+    id: string,
+    input: UpdateUserInput | { resetPassword: true },
+  ): Promise<UserResponse | UserWithTemporaryPasswordResponse> {
+    return request<UserResponse | UserWithTemporaryPasswordResponse>(`${BASE_USERS}/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),

@@ -1,5 +1,4 @@
 // src/domains/admin/service.ts
-import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import { adminRepository } from "./repository";
 import type {
@@ -13,8 +12,10 @@ import type {
   BatchActionResponse,
 } from "./types";
 
+const DEFAULT_TEMPORARY_PASSWORD = "password123";
+
 function generateTemporaryPassword(): string {
-  return crypto.randomBytes(16).toString("hex");
+  return DEFAULT_TEMPORARY_PASSWORD;
 }
 
 function toUserResponse(user: {

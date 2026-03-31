@@ -71,6 +71,7 @@ interface QuoteModeProps {
   total: number;
   itemsWithMargin: QuoteItem[];
   handleStaffSelect: (staff: StaffMember) => void;
+  clearStaffSelection: () => void;
   staffAccountNumbers: StaffAccountNumber[];
   saveQuote: () => Promise<void>;
   saving: boolean;
@@ -106,6 +107,7 @@ export function QuoteMode({
   total,
   itemsWithMargin,
   handleStaffSelect,
+  clearStaffSelection,
   staffAccountNumbers,
   saveQuote,
   saving,
@@ -153,7 +155,7 @@ export function QuoteMode({
 
   // Inline editing for staff summary fields
   const [editingField, setEditingField] = useState<
-    "department" | "contactExtension" | "contactEmail" | "contactPhone" | null
+    "contactExtension" | "contactEmail" | "contactPhone" | null
   >(null);
 
   // ---- Data fetching ----
@@ -214,12 +216,12 @@ export function QuoteMode({
 
   // ---- Validation + save ----
   function handleSave() {
-    if (!form.staffId) {
-      toast.error("Please select a staff member");
-      return;
-    }
     if (!form.recipientName.trim()) {
       toast.error("Please enter a recipient name");
+      return;
+    }
+    if (!form.department.trim()) {
+      toast.error("Please enter a department");
       return;
     }
     handleSaveQuote();
@@ -227,7 +229,7 @@ export function QuoteMode({
 
   // ---- Staff summary inline editing ----
   function handleSummaryClick(
-    field: "department" | "contactExtension" | "contactEmail" | "contactPhone"
+    field: "contactExtension" | "contactEmail" | "contactPhone"
   ) {
     setEditingField(field);
   }
@@ -364,6 +366,29 @@ export function QuoteMode({
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="space-y-1">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <Label>Pierce Staff Recipient</Label>
+              {form.staffId && (
+                <button
+                  type="button"
+                  onClick={clearStaffSelection}
+                  className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Use external recipient instead
+                </button>
+              )}
+            </div>
+            <StaffSelect
+              selectedId={form.staffId}
+              onSelect={handleStaffSelect}
+              placeholder="Select staff recipient (optional)…"
+            />
+            <p className="text-xs text-muted-foreground">
+              Choose a Pierce staff member to autofill recipient, department, and account details. Leave blank for outside vendors.
+            </p>
+          </div>
+
+          <div className="space-y-1">
             <Label htmlFor="recipientName">
               Name <span className="text-destructive">*</span>
             </Label>
@@ -463,44 +488,13 @@ export function QuoteMode({
         </div>
       </div>
 
-      {/* ============ STAFF & ACCOUNT ============ */}
-      <SectionDivider label="STAFF & ACCOUNT" />
+      {/* ============ DEPARTMENT & ACCOUNT ============ */}
+      <SectionDivider label="DEPARTMENT & ACCOUNT" />
 
       <div className="space-y-3">
-        <div className="space-y-1">
-          <Label>Staff Member</Label>
-          <StaffSelect
-            selectedId={form.staffId}
-            onSelect={handleStaffSelect}
-            placeholder="Select staff member…"
-          />
-        </div>
-
         {/* Auto-filled summary row */}
         {form.staffId && (
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground px-1">
-            {editingField === "department" ? (
-              <Input
-                className="h-6 w-40 text-sm"
-                value={form.department}
-                onChange={(e) => updateField("department", e.target.value)}
-                onBlur={handleSummaryBlur}
-                onKeyDown={handleSummaryKeyDown}
-                tabIndex={-1}
-                autoFocus
-              />
-            ) : (
-              <span
-                className="cursor-pointer hover:text-foreground transition-colors"
-                tabIndex={-1}
-                onClick={() => handleSummaryClick("department")}
-                role="button"
-              >
-                {form.department || "Department"}
-              </span>
-            )}
-            <span aria-hidden="true">&middot;</span>
-
             {editingField === "contactExtension" ? (
               <Input
                 className="h-6 w-24 text-sm"
@@ -572,28 +566,48 @@ export function QuoteMode({
           </div>
         )}
 
+        <div className="space-y-1">
+          <Label htmlFor="quoteDepartment">
+            Department <span className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="quoteDepartment"
+            value={form.department}
+            onChange={(e) => updateField("department", e.target.value)}
+            placeholder="Department…"
+          />
+        </div>
+
         {/* Account Number */}
-        {form.staffId && (
+        {form.staffId ? (
           <AccountSelect
             value={form.accountNumber}
             onChange={(value) => updateField("accountNumber", value)}
             staffId={form.staffId}
             accountNumbers={staffAccountNumbers}
           />
-        )}
-
-        {/* Account Code */}
-        {form.staffId && (
+        ) : (
           <div className="space-y-1">
-            <Label htmlFor="accountCode">Account Code</Label>
+            <Label htmlFor="accountNumber">Account Number</Label>
             <Input
-              id="accountCode"
-              value={form.accountCode}
-              onChange={(e) => updateField("accountCode", e.target.value)}
-              placeholder="Account code…"
+              id="accountNumber"
+              value={form.accountNumber}
+              onChange={(e) => updateField("accountNumber", e.target.value)}
+              placeholder="Account number…"
             />
           </div>
         )}
+
+        {/* Account Code */}
+        <div className="space-y-1">
+          <Label htmlFor="accountCode">Account Code</Label>
+          <Input
+            id="accountCode"
+            value={form.accountCode}
+            onChange={(e) => updateField("accountCode", e.target.value)}
+            placeholder="Account code…"
+          />
+        </div>
       </div>
 
       {/* ============ CATERING ============ */}

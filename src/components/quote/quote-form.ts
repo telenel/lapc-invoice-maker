@@ -240,6 +240,8 @@ export function useQuoteForm(
       // strings from mapApiToFormData because they aren't stored on the quote)
       setForm((prev) => ({
         ...prev,
+        recipientName: prev.recipientName || detail.name,
+        recipientEmail: prev.recipientEmail || detail.email,
         contactName: prev.contactName || detail.name,
         contactExtension: prev.contactExtension || detail.extension,
         contactEmail: prev.contactEmail || detail.email,
@@ -268,6 +270,8 @@ export function useQuoteForm(
       department: staff.department,
       accountNumber: latestAccount?.accountCode ?? "",
       accountCode: staff.accountCode,
+      recipientName: staff.name,
+      recipientEmail: staff.email,
       contactName: staff.name,
       contactExtension: staff.extension,
       contactEmail: staff.email,
@@ -279,6 +283,21 @@ export function useQuoteForm(
         contactPhone: prev.cateringDetails.contactPhone || staff.phone,
         contactEmail: prev.cateringDetails.contactEmail || staff.email,
       },
+    }));
+  }, []);
+
+  const clearStaffSelection = useCallback(() => {
+    staffPopulated.current = null;
+    originalStaffRef.current = null;
+    setStaffAccountNumbers([]);
+    setForm((prev) => ({
+      ...prev,
+      staffId: "",
+      approvalChain: [],
+      contactName: "",
+      contactExtension: "",
+      contactEmail: "",
+      contactPhone: "",
     }));
   }, []);
 
@@ -341,7 +360,7 @@ export function useQuoteForm(
   function buildPayload() {
     return {
       date: form.date,
-      staffId: form.staffId,
+      staffId: form.staffId || undefined,
       department: form.department,
       category: form.category,
       accountCode: form.accountCode,
@@ -449,6 +468,7 @@ export function useQuoteForm(
     total,
     itemsWithMargin,
     handleStaffSelect,
+    clearStaffSelection,
     handleStaffEdit,
     staffAccountNumbers,
     saveQuote,

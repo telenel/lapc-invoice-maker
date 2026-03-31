@@ -12,6 +12,10 @@ export interface UserResponse {
   createdAt: string;
 }
 
+export interface UserWithTemporaryPasswordResponse extends UserResponse {
+  temporaryPassword: string;
+}
+
 // ── Account Code DTOs ──
 export interface AccountCodeStaffSummary {
   id: string;

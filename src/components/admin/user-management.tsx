@@ -27,6 +27,10 @@ interface User {
   createdAt: string;
 }
 
+interface CreatedUser extends User {
+  temporaryPassword: string;
+}
+
 export function UserManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,6 +38,8 @@ export function UserManagement() {
   const [editUser, setEditUser] = useState<User | null>(null);
   const [newName, setNewName] = useState("");
   const [createdUsername, setCreatedUsername] = useState<string | null>(null);
+  const [createdPassword, setCreatedPassword] = useState<string | null>(null);
+  const [createError, setCreateError] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editRole, setEditRole] = useState("user");
@@ -49,16 +55,22 @@ export function UserManagement() {
 
   async function handleCreate() {
     try {
-      const created = await adminApi.createUser({ name: newName });
+      setCreateError(null);
+      const created = await adminApi.createUser({ name: newName }) as CreatedUser;
       setCreatedUsername(created.username);
+      setCreatedPassword(created.temporaryPassword);
       setUsers((prev) => [created, ...prev]);
-    } catch { /* ignore */ }
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : "Failed to create user");
+    }
   }
 
   function handleCloseCreate() {
     setCreateOpen(false);
     setNewName("");
     setCreatedUsername(null);
+    setCreatedPassword(null);
+    setCreateError(null);
   }
 
   function openEdit(user: User) {
@@ -80,10 +92,12 @@ export function UserManagement() {
   async function handleResetPassword(user: User) {
     if (!confirm(`Reset password for ${user.name}? They will need to complete account setup again.`)) return;
     try {
-      const updated = await adminApi.updateUser(user.id, { resetPassword: true });
+      const updated = await adminApi.updateUser(user.id, { resetPassword: true }) as CreatedUser;
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
-      alert(`Password reset. Tell ${user.name} to log in as "${updated.username}" with password "password123".`);
-    } catch { /* ignore */ }
+      alert(`Password reset. Tell ${user.name} to log in as "${updated.username}" with password "${updated.temporaryPassword}".`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to reset password");
+    }
   }
 
   async function handleDelete(id: string) {
@@ -116,7 +130,7 @@ export function UserManagement() {
                 <p className="text-sm text-muted-foreground">User created successfully. Share these credentials:</p>
                 <div className="rounded-lg bg-muted p-4 space-y-2">
                   <p className="text-sm"><span className="text-muted-foreground">Username:</span> <strong className="font-mono">{createdUsername}</strong></p>
-                  <p className="text-sm"><span className="text-muted-foreground">Password:</span> <strong className="font-mono">password123</strong></p>
+                  <p className="text-sm"><span className="text-muted-foreground">Password:</span> <strong className="font-mono">{createdPassword}</strong></p>
                 </div>
                 <p className="text-xs text-muted-foreground">They&apos;ll be prompted to set up their profile on first login.</p>
               </div>
@@ -126,6 +140,9 @@ export function UserManagement() {
                   <Label htmlFor="user-create-name">Full Name</Label>
                   <Input id="user-create-name" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Jane Smith" />
                 </div>
+                {createError && (
+                  <p className="text-sm text-destructive">{createError}</p>
+                )}
               </div>
             )}
             <DialogFooter>
