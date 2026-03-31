@@ -1,5 +1,6 @@
 // src/domains/admin/repository.ts
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@/generated/prisma/client";
 import type { UpdateUserInput, CreateAccountCodeInput } from "./types";
 
 const userSelect = {
@@ -127,7 +128,7 @@ export const adminRepository = {
     });
   },
 
-  async upsertSetting(key: string, value: unknown) {
+  async upsertSetting(key: string, value: Prisma.InputJsonValue) {
     return prisma.appSetting.upsert({
       where: { key },
       update: { value },

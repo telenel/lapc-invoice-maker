@@ -1,6 +1,7 @@
 // src/domains/admin/service.ts
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
+import type { Prisma } from "@/generated/prisma/client";
 import { adminRepository } from "./repository";
 import type {
   UserResponse,
@@ -164,7 +165,7 @@ export const adminService = {
     return adminRepository.findSettingsByKeys(keys);
   },
 
-  async saveSetting(key: string, value: unknown): Promise<AppSettingResponse> {
+  async saveSetting(key: string, value: Prisma.InputJsonValue): Promise<AppSettingResponse> {
     return adminRepository.upsertSetting(key.trim(), value);
   },
 
