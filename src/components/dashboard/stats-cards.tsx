@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 import NumberFlow from "@number-flow/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -73,6 +74,16 @@ export function StatsCards() {
     ? Math.round(((stats.totalThisMonth - stats.totalLastMonth) / stats.totalLastMonth) * 100)
     : null;
 
+  /* Date range for deep-link URLs */
+  const now = new Date();
+  const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const padDate = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const monthFromParam = padDate(firstOfMonth);
+  const monthToParam = padDate(now);
+  const invoicesThisMonthHref = `/invoices?status=FINAL&dateFrom=${monthFromParam}&dateTo=${monthToParam}`;
+  const totalThisMonthHref = invoicesThisMonthHref;
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -108,12 +119,14 @@ export function StatsCards() {
               </span>
             )}
           </div>
+          <Link href={invoicesThisMonthHref} className="block hover:opacity-80 transition-opacity">
           <p className="text-[26px] font-extrabold tracking-tight tabular-nums mt-1">
             <NumberFlow
               value={stats?.invoicesThisMonth ?? 0}
               transformTiming={{ duration: 750, easing: "cubic-bezier(0.22, 1, 0.36, 1)" }}
             />
           </p>
+          </Link>
           <div className="flex items-end gap-[3px] mt-3 h-6">
             {[30, 55, 40, 70, 50, 100].map((h, i, arr) => (
               <div
@@ -147,6 +160,7 @@ export function StatsCards() {
               </span>
             )}
           </div>
+          <Link href={totalThisMonthHref} className="block hover:opacity-80 transition-opacity">
           <p className="text-[26px] font-extrabold tracking-tight tabular-nums mt-1">
             <NumberFlow
               value={Number(stats?.totalThisMonth ?? 0)}
@@ -154,6 +168,7 @@ export function StatsCards() {
               transformTiming={{ duration: 750, easing: "cubic-bezier(0.22, 1, 0.36, 1)" }}
             />
           </p>
+          </Link>
           <div className="mt-3.5 h-1 bg-muted rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full progress-fill"

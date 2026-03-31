@@ -128,7 +128,7 @@ export function YourFocus() {
     {
       label: "Running",
       value: data.myRunning,
-      href: "/invoices?status=DRAFT",
+      href: "/invoices?status=DRAFT&isRunning=true",
       color: data.myRunning > 0 ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground",
       bgColor: data.myRunning > 0 ? "bg-blue-500/10" : "bg-muted/50",
       dotColor: data.myRunning > 0 ? "bg-blue-500" : "bg-muted-foreground/30",

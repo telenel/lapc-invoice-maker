@@ -37,7 +37,15 @@ export function RunningInvoices() {
       <CardHeader className="border-b border-border/50">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-bold">Running Invoices</CardTitle>
-          <Badge variant="info" className="tabular-nums">{invoices.length}</Badge>
+          <div className="flex items-center gap-2">
+            <Badge variant="info" className="tabular-nums">{invoices.length}</Badge>
+            <Link
+              href="/invoices?status=DRAFT&isRunning=true"
+              className="text-[11px] font-medium text-primary hover:underline"
+            >
+              View All
+            </Link>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="p-0">
