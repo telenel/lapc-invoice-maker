@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { quoteService } from "@/domains/quote/service";
 import { normalizeQuotePaymentDetails } from "@/domains/quote/payment";
-import type { Prisma } from "@/generated/prisma/client";
 import type { CateringDetails } from "@/domains/quote/types";
 
 const cateringDetailsSchema = z.object({
@@ -79,7 +78,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
 
     if (response === "ACCEPTED" && cateringDetails) {
       await quoteService.update(quote.id, {
-        cateringDetails: cateringDetails as Prisma.InputJsonValue,
+        cateringDetails,
       });
     }
 
