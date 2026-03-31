@@ -141,8 +141,8 @@ export const quoteApi = {
     });
   },
 
-  async respondToPublicQuote(token: string, input: QuotePublicResponseSubmission): Promise<{ success: boolean; status: string }> {
-    return request<{ success: boolean; status: string }>(`${PUBLIC_BASE}/${token}/respond`, {
+  async respondToPublicQuote(token: string, input: QuotePublicResponseSubmission): Promise<{ success: boolean; status: "ACCEPTED" | "DECLINED" }> {
+    return request<{ success: boolean; status: "ACCEPTED" | "DECLINED" }>(`${PUBLIC_BASE}/${token}/respond`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
