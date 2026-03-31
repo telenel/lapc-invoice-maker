@@ -78,7 +78,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     if (!result) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
 
     if (response === "ACCEPTED" && cateringDetails) {
-      await quoteService.update(result.id, {
+      await quoteService.update(quote.id, {
         cateringDetails: cateringDetails as Prisma.InputJsonValue,
       });
     }
