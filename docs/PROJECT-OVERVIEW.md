@@ -8,18 +8,51 @@ Operations portal for Los Angeles Pierce College. Handles invoice drafting, fina
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 15 (App Router) |
+| Framework | Next.js 14 (App Router) |
 | Database ORM | Prisma 7 + PostgreSQL |
 | Styling | Tailwind CSS 4 + shadcn/ui v4 (base-ui) |
 | Auth | NextAuth.js (credentials provider) |
-| PDF | Puppeteer (render) + pdf-lib (merge) |
+| PDF | Chromium CLI (HTML render) + pdf-lib (merge) |
 | Testing | Vitest |
-| Deployment | Docker Compose + Traefik on montalvo.io |
+| Deployment | Docker Compose + Traefik on montalvo.io + VPS webhook |
 | AI Assistant | Vercel AI SDK + Claude Haiku (streaming chat sidebar) |
 | Calendar | FullCalendar (catering + manual events + birthdays) |
 | Email | Power Automate webhook (shared mailbox) |
-| CI/CD | GitHub Actions (setup → lint/build/test parallel → deploy) |
+| CI/CD | GitHub Actions (lint → test → build → webhook deploy → SHA verification) |
 | Code Review | CodeRabbit (chill profile, auto-review on PRs) |
+
+---
+
+## Deployment Topology
+
+- Production URL: `https://laportal.montalvo.io`
+- Deploy trigger: `https://montalvo.io/hooks/deploy-laportal`
+- Health/build probe: `https://laportal.montalvo.io/api/version`
+- VPS checkout path: `/opt/lapc-invoice-maker`
+- Host deploy entrypoint: `/opt/deploy-webhook.sh`
+- Reverse proxy: Traefik
+- Runtime: Docker Compose app + Postgres
+
+The production checkout and container names still use legacy `lapc-invoice-maker` naming after the LAPortal rebrand. That mismatch is expected today.
+
+### Current Deploy Sequence
+
+1. Merge to `main`.
+2. GitHub Actions runs lint, test, and production build.
+3. Actions POSTs to the VPS webhook.
+4. The VPS deploy script fetches and hard-resets to `origin/main`.
+5. Docker rebuilds the app image with the short git SHA embedded as `NEXT_PUBLIC_BUILD_SHA`.
+6. The host script and GitHub Actions both poll `/api/version` until the live `buildSha` matches.
+
+### Recent Operational Fixes
+
+- Added `/api/version` so deploy verification can check the actual live build SHA.
+- Fixed Docker deps stage so `postinstall` succeeds on the VPS.
+- Added rollback behavior when container replacement or verification fails.
+- Expanded deploy health-check timing so healthy deploys are not marked failed during startup.
+- Switched production HTML-to-PDF rendering to direct Chromium CLI execution with explicit temp `HOME` and `XDG_*` paths.
+
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for the full VPS and deploy runbook.
 
 ---
 
