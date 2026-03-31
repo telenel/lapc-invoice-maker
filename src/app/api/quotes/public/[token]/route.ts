@@ -14,7 +14,6 @@ function sanitizeForPublic(quote: QuoteResponse) {
   });
   const contact = quote.contact
     ? {
-        id: quote.contact.id,
         name: quote.contact.name,
         email: quote.contact.email,
         phone: quote.contact.phone,

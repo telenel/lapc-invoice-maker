@@ -83,6 +83,37 @@ describe("POST /api/quotes/public/[token]/respond", () => {
     expect(quoteService.respondToQuote).not.toHaveBeenCalled();
   });
 
+  it("rejects whitespace-only required catering fields", async () => {
+    vi.mocked(quoteService.getByShareToken).mockResolvedValue({
+      id: "q1",
+      quoteStatus: "SENT",
+      isCateringEvent: true,
+    } as never);
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/respond", {
+        method: "POST",
+        body: JSON.stringify({
+          response: "ACCEPTED",
+          paymentMethod: "CHECK",
+          cateringDetails: {
+            eventDate: "2026-04-15",
+            startTime: "10:00",
+            endTime: "12:00",
+            location: "   ",
+            contactName: "   ",
+            contactPhone: "   ",
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(quoteService.respondToQuote).not.toHaveBeenCalled();
+  });
+
   it("rejects catering approval when setup time is missing after setup is requested", async () => {
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",

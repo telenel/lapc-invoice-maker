@@ -76,6 +76,7 @@ describe("GET /api/quotes/public/[token]", () => {
     expect(body.convertedToInvoice).toBeUndefined();
     expect(body.revisedFromQuote).toBeUndefined();
     expect(body.revisedToQuote).toBeUndefined();
+    expect(body.contact?.id).toBeUndefined();
     expect(body.contact?.notes).toBeUndefined();
     expect(body.contact?.createdAt).toBeUndefined();
   });
