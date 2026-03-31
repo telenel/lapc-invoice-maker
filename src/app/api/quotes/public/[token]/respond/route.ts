@@ -76,11 +76,25 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
           { status: 400 },
         );
       }
+      const existingCateringDetails = quote.cateringDetails as CateringDetails | null;
       cateringDetails = {
-        ...parsed.data,
-        setupInstructions: quote.cateringDetails ? (quote.cateringDetails as CateringDetails).setupInstructions : undefined,
-        takedownInstructions: quote.cateringDetails ? (quote.cateringDetails as CateringDetails).takedownInstructions : undefined,
-      };
+        eventDate: parsed.data.eventDate ?? "",
+        startTime: parsed.data.startTime ?? "",
+        endTime: parsed.data.endTime ?? "",
+        location: parsed.data.location,
+        contactName: parsed.data.contactName,
+        contactPhone: parsed.data.contactPhone,
+        setupRequired: parsed.data.setupRequired ?? false,
+        setupInstructions: existingCateringDetails?.setupInstructions,
+        takedownRequired: parsed.data.takedownRequired ?? false,
+        takedownInstructions: existingCateringDetails?.takedownInstructions,
+        ...(parsed.data.contactEmail !== undefined ? { contactEmail: parsed.data.contactEmail } : {}),
+        ...(parsed.data.headcount !== undefined ? { headcount: parsed.data.headcount } : {}),
+        ...(parsed.data.eventName !== undefined ? { eventName: parsed.data.eventName } : {}),
+        ...(parsed.data.setupTime !== undefined ? { setupTime: parsed.data.setupTime } : {}),
+        ...(parsed.data.takedownTime !== undefined ? { takedownTime: parsed.data.takedownTime } : {}),
+        ...(parsed.data.specialInstructions !== undefined ? { specialInstructions: parsed.data.specialInstructions } : {}),
+      } as CateringDetails;
     }
 
     // Extract payment details from the body
