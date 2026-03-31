@@ -80,14 +80,14 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     };
     normalizeQuotePaymentDetails(paymentDetailsInput);
 
-    const result = await quoteService.respondToQuote(token, response, body.viewId, paymentDetailsInput);
+    const result = await quoteService.respondToQuote(
+      token,
+      response,
+      body.viewId,
+      paymentDetailsInput,
+      cateringDetails,
+    );
     if (!result) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
-
-    if (response === "ACCEPTED" && cateringDetails) {
-      await quoteService.update(quote.id, {
-        cateringDetails,
-      });
-    }
 
     return NextResponse.json(result);
   } catch (err) {

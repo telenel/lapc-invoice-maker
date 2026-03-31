@@ -291,7 +291,8 @@ export const quoteService = {
     token: string,
     response: "ACCEPTED" | "DECLINED",
     viewId?: string,
-    paymentDetails?: { paymentMethod?: string; accountNumber?: string | null }
+    paymentDetails?: { paymentMethod?: string; accountNumber?: string | null },
+    cateringDetails?: CateringDetails
   ): Promise<{ success: boolean; status: string } | null> {
     const quote = await quoteRepository.findByShareToken(token);
     if (!quote || quote.type !== "QUOTE") return null;
@@ -315,15 +316,30 @@ export const quoteService = {
     }
 
     const updateData: Record<string, unknown> = { quoteStatus: response };
+    let normalizedPayment;
     if (response === "ACCEPTED") {
       updateData.acceptedAt = new Date();
-      const normalizedPayment = normalizeQuotePaymentDetails(paymentDetails);
+      normalizedPayment = normalizeQuotePaymentDetails(paymentDetails);
       if (normalizedPayment) {
         updateData.paymentMethod = normalizedPayment.paymentMethod;
         updateData.paymentAccountNumber = normalizedPayment.paymentAccountNumber;
       }
+      if (cateringDetails) {
+        updateData.cateringDetails = cateringDetails as Prisma.InputJsonValue;
+      }
     }
     await quoteRepository.update(quote.id, updateData);
+
+    if (response === "ACCEPTED" && normalizedPayment && quote.convertedToInvoice?.id) {
+      await quoteRepository.syncPublicPaymentDetails(
+        quote.id,
+        {
+          paymentMethod: normalizedPayment.paymentMethod,
+          paymentAccountNumber: normalizedPayment.paymentAccountNumber,
+        },
+        quote.convertedToInvoice.id,
+      );
+    }
 
     if (viewId) {
       await quoteRepository.updateViewResponse(viewId, response);

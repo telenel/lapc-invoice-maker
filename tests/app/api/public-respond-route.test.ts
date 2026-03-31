@@ -5,7 +5,6 @@ vi.mock("@/domains/quote/service", () => ({
   quoteService: {
     getByShareToken: vi.fn(),
     respondToQuote: vi.fn(),
-    update: vi.fn(),
   },
 }));
 
@@ -42,15 +41,13 @@ describe("POST /api/quotes/public/[token]/respond", () => {
 
     expect(response.status).toBe(400);
     expect(quoteService.respondToQuote).not.toHaveBeenCalled();
-    expect(quoteService.update).not.toHaveBeenCalled();
   });
 
-  it("persists catering details only after the quote response succeeds", async () => {
+  it("passes catering details through the quote response flow", async () => {
     vi.mocked(quoteService.respondToQuote).mockResolvedValue({
       id: "q1",
       quoteStatus: "ACCEPTED",
     } as never);
-    vi.mocked(quoteService.update).mockResolvedValue({} as never);
 
     const response = await POST(
       new NextRequest("http://localhost/api/quotes/public/token/respond", {
@@ -70,15 +67,18 @@ describe("POST /api/quotes/public/[token]/respond", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(quoteService.respondToQuote).toHaveBeenCalledOnce();
-    expect(quoteService.update).toHaveBeenCalledWith(
-      "q1",
+    expect(quoteService.respondToQuote).toHaveBeenCalledWith(
+      "token",
+      "ACCEPTED",
+      undefined,
+      {
+        paymentMethod: "CHECK",
+        accountNumber: undefined,
+      },
       expect.objectContaining({
-        cateringDetails: expect.objectContaining({
-          location: "Campus",
-          contactName: "Jane",
-          contactPhone: "555-1111",
-        }),
+        location: "Campus",
+        contactName: "Jane",
+        contactPhone: "555-1111",
       }),
     );
   });
@@ -111,6 +111,7 @@ describe("POST /api/quotes/public/[token]/respond", () => {
         paymentMethod: "ACCOUNT_NUMBER",
         accountNumber: "SAP-12345",
       },
+      undefined,
     );
   });
 
@@ -135,6 +136,5 @@ describe("POST /api/quotes/public/[token]/respond", () => {
 
     expect(response.status).toBe(400);
     expect(quoteService.respondToQuote).not.toHaveBeenCalled();
-    expect(quoteService.update).not.toHaveBeenCalled();
   });
 });

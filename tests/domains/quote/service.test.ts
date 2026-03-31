@@ -285,6 +285,75 @@ describe("quoteService", () => {
     });
   });
 
+  describe("respondToQuote", () => {
+    it("syncs approval-time payment details to a pre-converted invoice", async () => {
+      mockRepo.findByShareToken.mockResolvedValue(
+        makeQuote({
+          quoteStatus: "SENT",
+          expirationDate: new Date("2099-02-15"),
+          convertedToInvoice: { id: "inv1", invoiceNumber: "INV-2026-0001" },
+        }) as never,
+      );
+      mockRepo.update.mockResolvedValue(makeQuote({ quoteStatus: "ACCEPTED" }) as never);
+      mockRepo.syncPublicPaymentDetails.mockResolvedValue([] as never);
+
+      await quoteService.respondToQuote(
+        "token",
+        "ACCEPTED",
+        undefined,
+        { paymentMethod: "ACCOUNT_NUMBER", accountNumber: "SAP-12345" },
+      );
+
+      expect(mockRepo.syncPublicPaymentDetails).toHaveBeenCalledWith(
+        "q1",
+        {
+          paymentMethod: "ACCOUNT_NUMBER",
+          paymentAccountNumber: "SAP-12345",
+        },
+        "inv1",
+      );
+    });
+
+    it("persists catering details during approval without calling the blocked update path", async () => {
+      mockRepo.findByShareToken.mockResolvedValue(
+        makeQuote({
+          quoteStatus: "SENT",
+          expirationDate: new Date("2099-02-15"),
+          convertedToInvoice: { id: "inv1", invoiceNumber: "INV-2026-0001" },
+        }) as never,
+      );
+      mockRepo.update.mockResolvedValue(makeQuote({ quoteStatus: "ACCEPTED" }) as never);
+
+      await quoteService.respondToQuote(
+        "token",
+        "ACCEPTED",
+        undefined,
+        { paymentMethod: "CHECK" },
+        {
+          eventDate: "2026-03-31",
+          startTime: "10:00",
+          endTime: "11:00",
+          location: "Campus",
+          contactName: "Jane",
+          contactPhone: "555-1111",
+          setupRequired: false,
+          takedownRequired: false,
+        },
+      );
+
+      expect(mockRepo.update).toHaveBeenCalledWith(
+        "q1",
+        expect.objectContaining({
+          quoteStatus: "ACCEPTED",
+          cateringDetails: expect.objectContaining({
+            location: "Campus",
+            contactName: "Jane",
+          }),
+        }),
+      );
+    });
+  });
+
   // ── create ──────────────────────────────────────────────────────────────
 
   describe("create", () => {
