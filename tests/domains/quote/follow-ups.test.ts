@@ -180,72 +180,6 @@ describe("checkAndSendPaymentFollowUps", () => {
     );
   });
 
-  it("falls back to updatedAt for legacy accepted quotes without acceptedAt", async () => {
-    const updatedAt = new Date("2026-03-20T12:00:00.000Z");
-    const scanTx = makeTx();
-    const claimTx = makeTx();
-    const confirmTx = makeTx();
-
-    scanTx.$queryRaw.mockResolvedValue([{ acquired: true }]);
-    vi.mocked(businessDaysBetween).mockReturnValue(7);
-    scanTx.invoice.findMany.mockResolvedValue([
-      {
-        id: "q1",
-        quoteNumber: "Q-1",
-        recipientName: "Jane",
-        recipientEmail: "jane@example.com",
-        shareToken: "token",
-        acceptedAt: null,
-        updatedAt,
-        followUps: [],
-        creator: { id: "u1", name: "Admin" },
-      },
-    ] as never);
-    claimTx.$queryRaw
-      .mockResolvedValueOnce([
-        {
-          id: "q1",
-          quoteNumber: "Q-1",
-          recipientName: "Jane",
-          recipientEmail: "jane@example.com",
-          shareToken: "token",
-          quoteStatus: "ACCEPTED",
-          acceptedAt: null,
-          updatedAt,
-          paymentMethod: null,
-          createdBy: "u1",
-        },
-      ] as never)
-      .mockResolvedValueOnce([] as never);
-    claimTx.quoteFollowUp.findFirst.mockResolvedValue(null as never);
-    claimTx.quoteFollowUp.count.mockResolvedValue(0 as never);
-    claimTx.quoteFollowUp.create.mockResolvedValue({ id: "fu1" } as never);
-    vi.mocked(prisma.quoteFollowUp.delete).mockResolvedValue({} as never);
-    confirmTx.$queryRaw
-      .mockResolvedValueOnce([
-        {
-          id: "q1",
-          quoteNumber: "Q-1",
-          recipientName: "Jane",
-          recipientEmail: "jane@example.com",
-          shareToken: "token",
-          quoteStatus: "ACCEPTED",
-          acceptedAt: null,
-          updatedAt,
-          paymentMethod: null,
-          createdBy: "u1",
-        },
-      ] as never)
-      .mockResolvedValueOnce([] as never);
-    mockTransactions(scanTx, claimTx, confirmTx);
-    vi.mocked(sendEmail).mockResolvedValue(true as never);
-
-    await checkAndSendPaymentFollowUps();
-
-    const [referenceDate] = vi.mocked(businessDaysBetween).mock.calls[0] ?? [];
-    expect(referenceDate).toBe(updatedAt);
-  });
-
   it("skips reminders for quotes whose converted invoice is already finalized", async () => {
     const scanTx = makeTx();
     scanTx.$queryRaw.mockResolvedValue([{ acquired: true }]);
@@ -258,6 +192,7 @@ describe("checkAndSendPaymentFollowUps", () => {
       expect.objectContaining({
         where: expect.objectContaining({
           quoteStatus: "ACCEPTED",
+          acceptedAt: { not: null },
           OR: [
             { convertedToInvoice: null },
             { convertedToInvoice: { is: { status: { not: "FINAL" }, paymentMethod: null } } },
