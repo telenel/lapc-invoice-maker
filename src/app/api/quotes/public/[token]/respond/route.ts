@@ -5,9 +5,9 @@ import { normalizeQuotePaymentDetails } from "@/domains/quote/payment";
 import type { CateringDetails } from "@/domains/quote/types";
 
 const cateringDetailsSchema = z.object({
-  eventDate: z.string().optional(),
-  startTime: z.string().optional(),
-  endTime: z.string().optional(),
+  eventDate: z.string().trim().min(1, "Event date is required"),
+  startTime: z.string().trim().min(1, "Start time is required"),
+  endTime: z.string().trim().min(1, "End time is required"),
   location: z.string().min(1, "Location is required"),
   contactName: z.string().min(1, "Contact name is required"),
   contactPhone: z.string().min(1, "Contact phone is required"),
@@ -73,6 +73,18 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       if (!parsed.success) {
         return NextResponse.json(
           { error: "Invalid catering details", details: parsed.error.flatten().fieldErrors },
+          { status: 400 },
+        );
+      }
+      if (parsed.data.setupRequired && !parsed.data.setupTime?.trim()) {
+        return NextResponse.json(
+          { error: "Setup time is required when setup is needed" },
+          { status: 400 },
+        );
+      }
+      if (parsed.data.takedownRequired && !parsed.data.takedownTime?.trim()) {
+        return NextResponse.json(
+          { error: "Takedown time is required when takedown is needed" },
           { status: 400 },
         );
       }
