@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/domains/shared/auth";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, type EmailAttachment } from "@/lib/email";
 import { escapeHtml } from "@/lib/html";
 
 interface QuoteShareData {
   quoteNumber: string | null;
   recipientName: string | null;
   shareUrl: string;
+  quoteId?: string;
 }
 
 interface QuoteResponseData {
@@ -66,6 +67,7 @@ export const POST = withAuth(async (req: NextRequest) => {
 
   let subject: string;
   let html: string;
+  let attachments: EmailAttachment[] | undefined;
 
   switch (type) {
     case "quote-share": {
@@ -78,6 +80,22 @@ export const POST = withAuth(async (req: NextRequest) => {
       }
       subject = `Quote ${shareData.quoteNumber ?? ""} from Los Angeles Pierce College`.trim();
       html = buildQuoteShareHtml(shareData);
+
+      // Attach PDF if quoteId is provided
+      if (shareData.quoteId) {
+        try {
+          const { quoteService } = await import("@/domains/quote/service");
+          const { buffer, filename } = await quoteService.generatePdf(shareData.quoteId);
+          const safeName = (filename ?? "quote").replace(/[^a-zA-Z0-9\-]/g, "-");
+          attachments = [{
+            Name: `Quote-${safeName}.pdf`,
+            ContentBytes: buffer.toString("base64"),
+          }];
+        } catch (err) {
+          console.warn("Failed to generate PDF for email attachment:", err);
+          // Continue without attachment — email is more important
+        }
+      }
       break;
     }
     case "quote-response": {
@@ -99,7 +117,7 @@ export const POST = withAuth(async (req: NextRequest) => {
       );
   }
 
-  const success = await sendEmail(to, subject, html);
+  const success = await sendEmail(to, subject, html, attachments);
   if (!success) {
     return NextResponse.json(
       {

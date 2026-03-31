@@ -9,6 +9,7 @@ import { QuoteManager } from "./quote-manager";
 import { LineItemManager } from "./line-item-manager";
 import { DbHealth } from "./db-health";
 import { AccountCodeManager } from "./account-code-manager";
+import { QuoteContactSettings } from "./quote-contact-settings";
 
 const VALID_TABS = ["users", "categories", "account-codes", "invoices", "quotes", "line-items", "database", "general"];
 
@@ -73,11 +74,8 @@ export function SettingsPanel() {
         </div>
       )}
       {activeTab === "general" && (
-        <div className="border rounded-lg p-6 space-y-4">
-          <h2 className="text-lg font-semibold">General Settings</h2>
-          <p className="text-sm text-muted-foreground">
-            Additional settings will be available here in future updates (email configuration, default values, etc.)
-          </p>
+        <div className="border rounded-lg p-6 space-y-6">
+          <QuoteContactSettings />
         </div>
       )}
     </div>

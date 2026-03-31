@@ -72,6 +72,7 @@ export interface QuoteResponse {
   marginPercent: number | null;
   taxEnabled: boolean;
   taxRate: number;
+  paymentMethod: string | null;
   convertedToInvoice?: { id: string; invoiceNumber: string | null } | null;
   revisedFromQuote?: { id: string; quoteNumber: string | null } | null;
   revisedToQuote?: { id: string; quoteNumber: string | null } | null;
@@ -152,6 +153,15 @@ export interface QuoteFilters {
   pageSize?: number;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
+}
+
+export interface QuoteFollowUpResponse {
+  id: string;
+  type: string;
+  recipientEmail: string;
+  subject: string;
+  sentAt: string;
+  metadata: Record<string, unknown> | null;
 }
 
 export interface QuoteViewResponse {

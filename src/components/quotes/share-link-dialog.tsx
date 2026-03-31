@@ -127,7 +127,7 @@ export function ShareLinkDialog({
         body: JSON.stringify({
           type: "quote-share",
           to: email,
-          data: { quoteNumber, recipientName, shareUrl },
+          data: { quoteNumber, recipientName, shareUrl, quoteId },
         }),
       });
 

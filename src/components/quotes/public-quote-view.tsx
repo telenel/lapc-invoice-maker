@@ -114,6 +114,9 @@ export function PublicQuoteView({ token }: { token: string }) {
   const [responding, setResponding] = useState(false);
   const [responded, setResponded] = useState(false);
   const [cateringForm, setCateringForm] = useState<PublicCateringForm>(makeCateringForm(null));
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [sapAccountNumber, setSapAccountNumber] = useState("");
+  const [contactInfo, setContactInfo] = useState<Record<string, { name?: string; phone?: string; email?: string; note?: string }>>({});
   const viewIdRef = useRef<string | null>(null);
   const loadTimeRef = useRef<number>(Date.now());
 
@@ -132,6 +135,12 @@ export function PublicQuoteView({ token }: { token: string }) {
         if (quoteData.isCateringEvent) {
           setCateringForm(makeCateringForm(quoteData.cateringDetails));
         }
+
+        // Fetch contact info settings
+        try {
+          const settingsRes = await fetch("/api/quotes/public/settings");
+          if (settingsRes.ok) setContactInfo(await settingsRes.json());
+        } catch { /* non-critical */ }
 
         // Register view
         const viewRes = await fetch(`/api/quotes/public/${token}/view`, {
@@ -199,7 +208,13 @@ export function PublicQuoteView({ token }: { token: string }) {
       const res = await fetch(`/api/quotes/public/${token}/respond`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ response, viewId: viewIdRef.current, cateringDetails }),
+        body: JSON.stringify({
+          response,
+          viewId: viewIdRef.current,
+          cateringDetails,
+          paymentMethod: response === "ACCEPTED" && paymentMethod ? paymentMethod : undefined,
+          accountNumber: response === "ACCEPTED" && sapAccountNumber ? sapAccountNumber : undefined,
+        }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -586,6 +601,90 @@ export function PublicQuoteView({ token }: { token: string }) {
             </CardContent>
           </Card>
         )}
+
+        {/* Payment details */}
+        {canRespond && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment Details</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                How would you like to pay for this order? These details help us process your order faster.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label className={labelClass}>Payment Method</Label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {[
+                    { value: "ACCOUNT_NUMBER", label: "Account Number" },
+                    { value: "CHECK", label: "Check" },
+                    { value: "CASH", label: "Cash" },
+                    { value: "CREDIT_CARD", label: "Credit Card" },
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setPaymentMethod(option.value)}
+                      className={`rounded-md border px-3 py-2 text-sm transition-colors ${
+                        paymentMethod === option.value
+                          ? "border-primary bg-primary/10 font-medium text-primary"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {paymentMethod === "ACCOUNT_NUMBER" && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="pub-sap-account" className={labelClass}>
+                    SAP Account Number
+                  </Label>
+                  <Input
+                    id="pub-sap-account"
+                    type="text"
+                    placeholder="Enter your SAP account number"
+                    value={sapAccountNumber}
+                    onChange={(e) => setSapAccountNumber(e.target.value)}
+                  />
+                </div>
+              )}
+
+              {!paymentMethod && (
+                <p className="text-xs text-amber-600">
+                  If you don&apos;t have payment details right now, you can still approve the quote.
+                  We&apos;ll follow up with you to collect this information.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Contact information */}
+        {canRespond && (() => {
+          const key = quote.isCateringEvent ? "quote_contact_catering" : "quote_contact_default";
+          const info = contactInfo[key] as { name?: string; phone?: string; email?: string; note?: string } | undefined;
+          if (!info) return null;
+          return (
+            <Card>
+              <CardHeader>
+                <CardTitle>Questions?</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1 text-sm">
+                {info.name && <p className="font-medium">{info.name}</p>}
+                {info.phone && <p className="text-muted-foreground">{info.phone}</p>}
+                {info.email && (
+                  <p>
+                    <a href={`mailto:${info.email}`} className="text-primary underline">{info.email}</a>
+                  </p>
+                )}
+                {info.note && <p className="text-muted-foreground mt-2">{info.note}</p>}
+              </CardContent>
+            </Card>
+          );
+        })()}
 
         {/* Response section */}
         {canRespond && (

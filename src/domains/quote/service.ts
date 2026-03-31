@@ -89,6 +89,7 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
     marginPercent: quote.marginPercent != null ? Number(quote.marginPercent) : null,
     taxEnabled: quote.taxEnabled,
     taxRate: Number(quote.taxRate),
+    paymentMethod: quote.paymentMethod ?? null,
     convertedToInvoice: "convertedToInvoice" in quote
       ? (quote.convertedToInvoice as { id: string; invoiceNumber: string | null } | null)
       : null,
@@ -229,7 +230,8 @@ export const quoteService = {
   async respondToQuote(
     token: string,
     response: "ACCEPTED" | "DECLINED",
-    viewId?: string
+    viewId?: string,
+    paymentDetails?: { paymentMethod?: string; accountNumber?: string }
   ): Promise<{ success: boolean; status: string } | null> {
     const quote = await quoteRepository.findByShareToken(token);
     if (!quote || quote.type !== "QUOTE") return null;
@@ -252,7 +254,12 @@ export const quoteService = {
       throw Object.assign(new Error("This quote has expired"), { code: "FORBIDDEN" });
     }
 
-    await quoteRepository.update(quote.id, { quoteStatus: response });
+    const updateData: Record<string, unknown> = { quoteStatus: response };
+    if (response === "ACCEPTED" && paymentDetails) {
+      if (paymentDetails.paymentMethod) updateData.paymentMethod = paymentDetails.paymentMethod;
+      if (paymentDetails.accountNumber) updateData.accountNumber = paymentDetails.accountNumber;
+    }
+    await quoteRepository.update(quote.id, updateData);
 
     if (viewId) {
       await quoteRepository.updateViewResponse(viewId, response);

@@ -65,7 +65,12 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       }
     }
 
-    const result = await quoteService.respondToQuote(token, response, body.viewId);
+    // Extract payment details from the body
+    const paymentDetails = body.paymentMethod
+      ? { paymentMethod: String(body.paymentMethod), accountNumber: body.accountNumber ? String(body.accountNumber) : undefined }
+      : undefined;
+
+    const result = await quoteService.respondToQuote(token, response, body.viewId, paymentDetails);
     if (!result) {
       return NextResponse.json({ error: "Quote not found" }, { status: 404 });
     }

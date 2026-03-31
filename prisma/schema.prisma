@@ -126,6 +126,7 @@ model Invoice {
   marginPercent        Decimal?      @map("margin_percent") @db.Decimal(5, 2)
   taxEnabled           Boolean       @default(false) @map("tax_enabled")
   taxRate              Decimal       @default(0.0975) @map("tax_rate") @db.Decimal(5, 4)
+  paymentMethod        String?       @map("payment_method")
   createdAt            DateTime      @default(now()) @map("created_at")
   updatedAt            DateTime      @updatedAt @map("updated_at")
 
@@ -134,12 +135,13 @@ model Invoice {
   contact Contact?      @relation(fields: [contactId], references: [id])
   items   InvoiceItem[]
 
-  convertedFromQuote Invoice?    @relation("QuoteToInvoice", fields: [convertedFromQuoteId], references: [id])
-  convertedToInvoice Invoice?    @relation("QuoteToInvoice")
-  revisedFromQuoteId String?     @unique @map("revised_from_quote_id")
-  revisedFromQuote   Invoice?    @relation("QuoteRevision", fields: [revisedFromQuoteId], references: [id])
-  revisedToQuote     Invoice?    @relation("QuoteRevision")
+  convertedFromQuote Invoice?        @relation("QuoteToInvoice", fields: [convertedFromQuoteId], references: [id])
+  convertedToInvoice Invoice?        @relation("QuoteToInvoice")
+  revisedFromQuoteId String?         @unique @map("revised_from_quote_id")
+  revisedFromQuote   Invoice?        @relation("QuoteRevision", fields: [revisedFromQuoteId], references: [id])
+  revisedToQuote     Invoice?        @relation("QuoteRevision")
   quoteViews         QuoteView[]
+  followUps          QuoteFollowUp[]
 
   @@map("invoices")
 }
@@ -448,4 +450,27 @@ enum PrintPricingService {
   POSTER
   BINDING
   SCANNING
+}
+
+model QuoteFollowUp {
+  id             String   @id @default(uuid())
+  invoiceId      String   @map("invoice_id")
+  type           String
+  recipientEmail String   @map("recipient_email")
+  subject        String
+  sentAt         DateTime @default(now()) @map("sent_at")
+  metadata       Json?
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId, sentAt])
+  @@map("quote_follow_ups")
+}
+
+model AppSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("app_settings")
 }
