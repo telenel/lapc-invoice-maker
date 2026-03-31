@@ -888,7 +888,7 @@ export function QuoteDetailView({ id }: { id: string }) {
           <CardContent className="py-4">
             <div className="flex items-center gap-2">
               <span className="text-amber-600 text-sm font-medium">
-                Payment details incomplete — automatic reminders are active
+                Payment details incomplete
               </span>
             </div>
           </CardContent>

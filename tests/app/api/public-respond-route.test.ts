@@ -170,4 +170,27 @@ describe("POST /api/quotes/public/[token]/respond", () => {
     expect(response.status).toBe(400);
     expect(quoteService.respondToQuote).not.toHaveBeenCalled();
   });
+
+  it("returns 409 when approval-time payment details are already resolved", async () => {
+    vi.mocked(quoteService.respondToQuote).mockRejectedValue(
+      Object.assign(new Error("Payment details have already been provided"), {
+        code: "PAYMENT_ALREADY_RESOLVED",
+      }),
+    );
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/respond", {
+        method: "POST",
+        body: JSON.stringify({
+          response: "ACCEPTED",
+          paymentMethod: "ACCOUNT_NUMBER",
+          accountNumber: "SAP-12345",
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    expect(response.status).toBe(409);
+  });
 });

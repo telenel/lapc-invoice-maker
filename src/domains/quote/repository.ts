@@ -519,6 +519,21 @@ export async function applyPublicQuoteResponse(
   },
 ) {
   return prisma.$transaction(async (tx) => {
+    const lockedQuote = await tx.$queryRaw<Array<{
+      id: string;
+      quoteStatus: string | null;
+      paymentMethod: string | null;
+    }>>`
+      SELECT id, quote_status AS "quoteStatus", payment_method AS "paymentMethod"
+      FROM invoices
+      WHERE id = ${quoteId}
+      FOR UPDATE
+    `;
+    const currentQuote = lockedQuote[0];
+    if (!currentQuote) {
+      throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
+    }
+
     const quoteData: Prisma.InvoiceUpdateInput = {
       quoteStatus: input.response,
     };
@@ -527,6 +542,11 @@ export async function applyPublicQuoteResponse(
       quoteData.acceptedAt = input.acceptedAt;
 
       if (input.paymentDetails) {
+        if (currentQuote.paymentMethod) {
+          throw Object.assign(new Error("Payment details have already been provided"), {
+            code: "PAYMENT_ALREADY_RESOLVED",
+          });
+        }
         quoteData.paymentMethod = input.paymentDetails.paymentMethod;
         quoteData.paymentAccountNumber = input.paymentDetails.paymentAccountNumber;
       }
@@ -536,16 +556,18 @@ export async function applyPublicQuoteResponse(
       }
     }
 
-    await tx.invoice.update({
-      where: { id: quoteId },
-      data: quoteData,
-    });
-
     if (input.response === "ACCEPTED" && input.convertedInvoiceId) {
-      const convertedInvoice = await tx.invoice.findUnique({
-        where: { id: input.convertedInvoiceId },
-        select: { status: true },
-      });
+      const convertedInvoices = await tx.$queryRaw<Array<{
+        id: string;
+        status: string | null;
+        paymentMethod: string | null;
+      }>>`
+        SELECT id, status, payment_method AS "paymentMethod"
+        FROM invoices
+        WHERE id = ${input.convertedInvoiceId}
+        FOR UPDATE
+      `;
+      const convertedInvoice = convertedInvoices[0];
 
       if (!convertedInvoice) {
         throw Object.assign(new Error("Converted invoice not found"), { code: "NOT_FOUND" });
@@ -557,6 +579,11 @@ export async function applyPublicQuoteResponse(
 
       const convertedInvoiceData: Prisma.InvoiceUpdateInput = {};
       if (input.paymentDetails) {
+        if (convertedInvoice.paymentMethod) {
+          throw Object.assign(new Error("Payment details have already been provided"), {
+            code: "PAYMENT_ALREADY_RESOLVED",
+          });
+        }
         convertedInvoiceData.paymentMethod = input.paymentDetails.paymentMethod;
         convertedInvoiceData.paymentAccountNumber = input.paymentDetails.paymentAccountNumber;
       }
@@ -571,6 +598,11 @@ export async function applyPublicQuoteResponse(
         });
       }
     }
+
+    await tx.invoice.update({
+      where: { id: quoteId },
+      data: quoteData,
+    });
 
     if (input.viewId) {
       const view = await tx.quoteView.findFirst({
