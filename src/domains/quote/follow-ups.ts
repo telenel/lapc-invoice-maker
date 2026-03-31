@@ -12,32 +12,20 @@ function startOfDay(date: Date): Date {
   return normalized;
 }
 
-async function acquirePaymentFollowUpLock(): Promise<boolean> {
-  const result = await prisma.$queryRaw<Array<{ acquired: boolean }>>`
-    SELECT pg_try_advisory_lock(${PAYMENT_FOLLOW_UP_LOCK_KEY}) AS acquired
-  `;
-
-  return result[0]?.acquired === true;
-}
-
-async function releasePaymentFollowUpLock(): Promise<void> {
-  await prisma.$queryRaw`
-    SELECT pg_advisory_unlock(${PAYMENT_FOLLOW_UP_LOCK_KEY})
-  `;
-}
-
 /**
  * Find ACCEPTED quotes with incomplete payment info and send reminders
  * if enough business days have passed since the last follow-up (or acceptance).
  */
 export async function checkAndSendPaymentFollowUps(): Promise<void> {
-  const lockAcquired = await acquirePaymentFollowUpLock();
-  if (!lockAcquired) return;
-
   const now = new Date();
-  try {
+  await prisma.$transaction(async (tx) => {
+    const result = await tx.$queryRaw<Array<{ acquired: boolean }>>`
+      SELECT pg_try_advisory_xact_lock(${PAYMENT_FOLLOW_UP_LOCK_KEY}) AS acquired
+    `;
+    if (result[0]?.acquired !== true) return;
+
     // Find quotes that are ACCEPTED, have type QUOTE, and no paymentMethod
-    const candidates = await prisma.invoice.findMany({
+    const candidates = await tx.invoice.findMany({
       where: {
         type: "QUOTE",
         quoteStatus: "ACCEPTED",
@@ -74,7 +62,7 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
       const quoteNum = quote.quoteNumber ?? "your quote";
       const paymentUrl = `${appUrl}/quotes/payment/${quote.shareToken}`;
       const attemptNumber = (lastFollowUp
-        ? await prisma.quoteFollowUp.count({
+        ? await tx.quoteFollowUp.count({
             where: { invoiceId: quote.id, type: "PAYMENT_REMINDER" },
           })
         : 0) + 1;
@@ -104,7 +92,7 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
         // PDF is non-critical for follow-up
       }
 
-      const followUp = await prisma.quoteFollowUp.create({
+      const followUp = await tx.quoteFollowUp.create({
         data: {
           invoiceId: quote.id,
           type: "PAYMENT_REMINDER",
@@ -116,7 +104,7 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
 
       const sent = await sendEmail(recipientEmail, subject, html, attachments);
       if (!sent) {
-        await prisma.quoteFollowUp.delete({ where: { id: followUp.id } }).catch(() => {});
+        await tx.quoteFollowUp.delete({ where: { id: followUp.id } }).catch(() => {});
         continue;
       }
 
@@ -134,7 +122,5 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
         // Non-critical
       }
     }
-  } finally {
-    await releasePaymentFollowUpLock();
-  }
+  });
 }

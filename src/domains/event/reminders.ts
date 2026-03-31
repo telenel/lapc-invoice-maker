@@ -1,30 +1,19 @@
-import * as eventRepository from "./repository";
 import { notificationService } from "@/domains/notification/service";
 import { prisma } from "@/lib/prisma";
 
 const EVENT_REMINDER_LOCK_KEY = 914275;
 
-async function acquireEventReminderLock(): Promise<boolean> {
-  const result = await prisma.$queryRaw<Array<{ acquired: boolean }>>`
-    SELECT pg_try_advisory_lock(${EVENT_REMINDER_LOCK_KEY}) AS acquired
-  `;
-
-  return result[0]?.acquired === true;
-}
-
-async function releaseEventReminderLock(): Promise<void> {
-  await prisma.$queryRaw`
-    SELECT pg_advisory_unlock(${EVENT_REMINDER_LOCK_KEY})
-  `;
-}
-
 export async function checkAndSendReminders(): Promise<void> {
-  const lockAcquired = await acquireEventReminderLock();
-  if (!lockAcquired) return;
-
   const now = new Date();
-  try {
-    const events = await eventRepository.findDueReminders();
+  await prisma.$transaction(async (tx) => {
+    const result = await tx.$queryRaw<Array<{ acquired: boolean }>>`
+      SELECT pg_try_advisory_xact_lock(${EVENT_REMINDER_LOCK_KEY}) AS acquired
+    `;
+    if (result[0]?.acquired !== true) return;
+
+    const events = await tx.event.findMany({
+      where: { reminderMinutes: { not: null } },
+    });
 
     for (const event of events) {
       if (event.reminderMinutes === null) continue;
@@ -49,7 +38,7 @@ export async function checkAndSendReminders(): Promise<void> {
 
       if (now < reminderTime) continue;
 
-      const users = await prisma.user.findMany({
+      const users = await tx.user.findMany({
         where: { active: true },
         select: { id: true },
       });
@@ -65,11 +54,12 @@ export async function checkAndSendReminders(): Promise<void> {
         });
       }
 
-      await eventRepository.update(event.id, {
+      await tx.event.update({
+        where: { id: event.id },
+        data: {
         reminderSentDates: [...sentDates, dateStr],
+        },
       });
     }
-  } finally {
-    await releaseEventReminderLock();
-  }
+  });
 }

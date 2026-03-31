@@ -443,6 +443,23 @@ export async function applyPublicPaymentResolution(
   convertedInvoiceId?: string,
 ) {
   return prisma.$transaction(async (tx) => {
+    const lockedQuote = await tx.$queryRaw<Array<{ id: string; paymentMethod: string | null }>>`
+      SELECT id, payment_method AS "paymentMethod"
+      FROM invoices
+      WHERE id = ${quoteId}
+      FOR UPDATE
+    `;
+
+    if (lockedQuote.length === 0) {
+      throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
+    }
+
+    if (lockedQuote[0]?.paymentMethod) {
+      throw Object.assign(new Error("Payment details have already been provided"), {
+        code: "PAYMENT_ALREADY_RESOLVED",
+      });
+    }
+
     await tx.invoice.update({
       where: { id: quoteId },
       data: paymentDetails,
