@@ -794,7 +794,7 @@ describe("quoteService", () => {
       });
     });
 
-    it("creates invoice and marks quote ACCEPTED without inventing acceptedAt", async () => {
+    it("preserves the quote response state when converting a sent quote", async () => {
       const { prisma } = await import("@/lib/prisma");
       const mockPrisma = vi.mocked(prisma, true);
 
@@ -803,7 +803,7 @@ describe("quoteService", () => {
         $queryRaw: vi.fn().mockResolvedValue([{ id: "q1" }]),
         invoice: {
           findFirst: vi.fn().mockResolvedValue(null),
-          findUnique: vi.fn().mockResolvedValue(makeQuote({ quoteStatus: "DRAFT" })),
+          findUnique: vi.fn().mockResolvedValue(makeQuote({ quoteStatus: "SENT" })),
           create: vi.fn().mockResolvedValue(newInvoice),
           update: vi.fn().mockResolvedValue({}),
         },
@@ -826,7 +826,7 @@ describe("quoteService", () => {
         expect.objectContaining({
           where: { id: "q1" },
           data: expect.objectContaining({
-            quoteStatus: "ACCEPTED",
+            quoteStatus: "SENT",
             acceptedAt: null,
             convertedAt: expect.any(Date),
           }),
