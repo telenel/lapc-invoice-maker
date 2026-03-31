@@ -75,7 +75,7 @@ export interface QuoteResponse {
   contact: ContactResponse | null;
   creatorId: string;
   creatorName: string;
-  items: PublicQuoteItemResponse[];
+  items: QuoteItemResponse[];
   isCateringEvent: boolean;
   cateringDetails: CateringDetails | null;
   marginEnabled: boolean;
@@ -125,7 +125,7 @@ export interface PublicQuoteResponse {
     email: string;
     phone: string;
   } | null;
-  items: QuoteItemResponse[];
+  items: PublicQuoteItemResponse[];
   isCateringEvent: boolean;
   cateringDetails: CateringDetails | null;
   paymentDetailsResolved: boolean;
