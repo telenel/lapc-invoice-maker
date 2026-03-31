@@ -12,6 +12,24 @@ cd "$PROJECT_DIR"
 PREV_COMMIT=$(git rev-parse HEAD)
 echo "[deploy] Previous commit: $PREV_COMMIT"
 
+ROLLBACK_COMMIT="$PREV_COMMIT"
+if [ -f .last-good-commit ]; then
+  LAST_GOOD_COMMIT=$(cat .last-good-commit)
+  if [ -n "$LAST_GOOD_COMMIT" ]; then
+    ROLLBACK_COMMIT="$LAST_GOOD_COMMIT"
+  fi
+fi
+
+rollback_deploy() {
+  local target_commit="$1"
+  echo "[deploy] Rolling back to $target_commit"
+  git reset --hard "$target_commit"
+  local rollback_sha
+  rollback_sha=$(git rev-parse --short HEAD)
+  docker compose build --build-arg BUILD_SHA="$rollback_sha" app
+  docker compose up -d --remove-orphans
+}
+
 echo "[deploy] Fetching latest code..."
 git fetch origin "$DEFAULT_BRANCH"
 
@@ -34,13 +52,17 @@ if ! docker compose build --build-arg BUILD_SHA="$BUILD_SHA" app; then
 fi
 
 echo "[deploy] Replacing containers with new image..."
-docker compose up -d --remove-orphans
+if ! docker compose up -d --remove-orphans; then
+  echo "[deploy] ERROR: docker compose up failed"
+  rollback_deploy "$ROLLBACK_COMMIT" || true
+  exit 1
+fi
 
 echo "[deploy] Verifying deployed build SHA..."
 for i in $(seq 1 "$VERIFY_ATTEMPTS"); do
   body=$(curl -fsS --connect-timeout 10 --max-time 20 "$APP_URL" || true)
-  deployed_sha=$(printf '%s' "$body" | grep -oE '"buildSha":"[a-f0-9]+"' | cut -d'"' -f4)
-  status=$(printf '%s' "$body" | grep -oE '"status":"[^"]+"' | cut -d'"' -f4)
+  deployed_sha=$(printf '%s' "$body" | grep -oE '"buildSha":"[a-f0-9]+"' | cut -d'"' -f4 || true)
+  status=$(printf '%s' "$body" | grep -oE '"status":"[^"]+"' | cut -d'"' -f4 || true)
   echo "[deploy] Attempt $i/$VERIFY_ATTEMPTS: status=${status:-unknown} buildSha=${deployed_sha:-missing}"
   if [ "$status" = "ok" ] && [ "$deployed_sha" = "$BUILD_SHA" ]; then
     echo "$NEW_COMMIT" > .last-good-commit
@@ -51,6 +73,7 @@ for i in $(seq 1 "$VERIFY_ATTEMPTS"); do
 done
 
 echo "[deploy] ERROR: live site never reported build SHA $BUILD_SHA"
+rollback_deploy "$ROLLBACK_COMMIT" || true
 docker compose ps
 docker compose logs app --tail 80 || true
 exit 1
