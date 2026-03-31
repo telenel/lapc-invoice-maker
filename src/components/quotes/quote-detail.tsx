@@ -101,6 +101,7 @@ interface Quote {
   marginPercent: number | null;
   taxEnabled: boolean;
   taxRate: number;
+  paymentMethod: string | null;
   convertedToInvoice: {
     id: string;
     invoiceNumber: string | null;
@@ -879,6 +880,33 @@ export function QuoteDetailView({ id }: { id: string }) {
           )}
         </div>
       </div>
+
+      {/* Payment status banner */}
+      {quote.quoteStatus === "ACCEPTED" && !quote.paymentMethod && (
+        <Card className="border-amber-500/30 bg-amber-50 dark:bg-amber-950/20">
+          <CardContent className="py-4">
+            <div className="flex items-center gap-2">
+              <span className="text-amber-600 text-sm font-medium">
+                Payment details incomplete — automatic reminders are active
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {quote.quoteStatus === "ACCEPTED" && quote.paymentMethod && (
+        <Card className="border-green-500/30 bg-green-50 dark:bg-green-950/20">
+          <CardContent className="py-4">
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-green-600 font-medium">Payment method:</span>
+              <span>{quote.paymentMethod.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}</span>
+              {quote.accountNumber && (
+                <span className="text-muted-foreground">• Account: {quote.accountNumber}</span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Line Items */}
       {(() => {
