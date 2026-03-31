@@ -123,14 +123,21 @@ export function InvoiceMetadata({
         </div>
 
         {/* Date */}
-        <div className="space-y-1">
-          <label className="text-sm font-medium">Date</label>
+        <div id="field-date" className="space-y-1">
+          <label className="text-sm font-medium">
+            Date <span className="text-destructive">*</span>
+          </label>
           <Input
             type="date"
             value={form.date}
-            onChange={(e) => updateField("date", e.target.value)}
+            onChange={(e) => {
+              updateField("date", e.target.value);
+              clearValidationError?.("date");
+            }}
             name="date"
+            aria-invalid={!!validationErrors.date}
           />
+          <FormError message={validationErrors.date} />
         </div>
 
         {/* Category */}

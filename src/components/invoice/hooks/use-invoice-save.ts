@@ -5,48 +5,9 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { invoiceApi } from "@/domains/invoice/api-client";
 import type { InvoiceFormData } from "./use-invoice-form-state";
+import { buildInvoicePayload } from "../payload";
 
 export type GenerationStep = null | "saving" | "generating" | "done";
-
-function buildPayload(form: InvoiceFormData) {
-  return {
-    invoiceNumber: form.invoiceNumber,
-    date: form.date,
-    staffId: form.staffId,
-    department: form.department,
-    category: form.category,
-    accountCode: form.accountCode,
-    accountNumber: form.accountNumber,
-    approvalChain: form.approvalChain,
-    notes: form.notes,
-    isRecurring: form.isRecurring,
-    recurringInterval: form.recurringInterval || undefined,
-    recurringEmail: form.recurringEmail || undefined,
-    isRunning: form.isRunning,
-    runningTitle: form.runningTitle || undefined,
-    marginEnabled: form.marginEnabled,
-    marginPercent: form.marginEnabled ? form.marginPercent : undefined,
-    taxEnabled: form.taxEnabled,
-    taxRate: form.taxRate,
-    items: form.items.map((item, i) => {
-      const cost = Number(item.costPrice ?? item.unitPrice);
-      const effectiveMargin = item.marginOverride ?? form.marginPercent;
-      const charged =
-        form.marginEnabled && effectiveMargin > 0
-          ? Math.round(cost * (1 + effectiveMargin / 100) * 100) / 100
-          : cost;
-      return {
-        description: item.description,
-        quantity: item.quantity,
-        unitPrice: charged,
-        sortOrder: item.sortOrder ?? i,
-        isTaxable: item.isTaxable,
-        marginOverride: item.marginOverride ?? undefined,
-        costPrice: form.marginEnabled ? cost : undefined,
-      };
-    }),
-  };
-}
 
 // Raw fetch is used below instead of invoiceApi.create/update because the API
 // returns structured Zod field errors ({ error: { fieldErrors, formErrors } })
@@ -58,7 +19,7 @@ async function postDraft(form: InvoiceFormData): Promise<string> {
   const res = await fetch("/api/invoices", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(buildPayload(form)),
+    body: JSON.stringify(buildInvoicePayload(form)),
   });
 
   if (!res.ok) {
@@ -84,7 +45,7 @@ async function putDraft(form: InvoiceFormData, id: string): Promise<string> {
   const res = await fetch(`/api/invoices/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(buildPayload(form)),
+    body: JSON.stringify(buildInvoicePayload(form)),
   });
 
   if (!res.ok) {
@@ -165,7 +126,7 @@ export function useInvoiceSave(form: InvoiceFormData, existingId?: string) {
     setSaving(true);
     try {
       const payload = {
-        ...buildPayload(form),
+        ...buildInvoicePayload(form),
         invoiceNumber: null,
         status: "PENDING_CHARGE",
       };

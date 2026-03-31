@@ -451,36 +451,67 @@ export function QuoteMode({
 
       <div className="space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label htmlFor="quoteDate">Date</Label>
+          <div id="field-date" className="space-y-1">
+            <Label htmlFor="quoteDate">
+              Date <span className="text-destructive">*</span>
+            </Label>
             <Input
               id="quoteDate"
               type="date"
               tabIndex={-1}
               value={form.date}
-              onChange={(e) => updateField("date", e.target.value)}
+              onChange={(e) => {
+                updateField("date", e.target.value);
+                setValidationErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.date;
+                  return next;
+                });
+              }}
+              aria-invalid={!!validationErrors.date}
             />
+            <FormError message={validationErrors.date} />
           </div>
-          <div className="space-y-1">
-            <Label htmlFor="expirationDate">Expiration Date</Label>
+          <div id="field-expirationDate" className="space-y-1">
+            <Label htmlFor="expirationDate">
+              Expiration Date <span className="text-destructive">*</span>
+            </Label>
             <Input
               id="expirationDate"
               type="date"
               tabIndex={-1}
               value={form.expirationDate}
-              onChange={(e) => updateField("expirationDate", e.target.value)}
+              onChange={(e) => {
+                updateField("expirationDate", e.target.value);
+                setValidationErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.expirationDate;
+                  return next;
+                });
+              }}
+              aria-invalid={!!validationErrors.expirationDate}
             />
+            <FormError message={validationErrors.expirationDate} />
           </div>
         </div>
 
-        <div className="space-y-1">
-          <Label>Category</Label>
+        <div id="field-category" className="space-y-1">
+          <Label>
+            Category <span className="text-destructive">*</span>
+          </Label>
           {categoriesLoading ? (
             <Input disabled placeholder="Loading categories…" />
           ) : (
             <Select
               value={form.category || null}
-              onValueChange={(value) => updateField("category", value ?? "")}
+              onValueChange={(value) => {
+                updateField("category", value ?? "");
+                setValidationErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.category;
+                  return next;
+                });
+              }}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select category…" />
@@ -496,6 +527,7 @@ export function QuoteMode({
               </SelectContent>
             </Select>
           )}
+          <FormError message={validationErrors.category} />
         </div>
 
         <div className="space-y-1">

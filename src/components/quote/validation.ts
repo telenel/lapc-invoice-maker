@@ -3,11 +3,22 @@ import type { QuoteFormData } from "./quote-form";
 export function getQuoteValidationErrors(
   form: Pick<
     QuoteFormData,
-    "recipientName" | "department" | "items" | "isCateringEvent" | "cateringDetails"
+    | "date"
+    | "recipientName"
+    | "department"
+    | "category"
+    | "expirationDate"
+    | "items"
+    | "isCateringEvent"
+    | "cateringDetails"
   >,
   options?: { requireCateringDetails?: boolean },
 ): Record<string, string> {
   const errors: Record<string, string> = {};
+
+  if (!form.date.trim()) {
+    errors.date = "Please enter a date";
+  }
 
   if (!form.recipientName.trim()) {
     errors.recipientName = "Please enter a recipient name";
@@ -15,6 +26,14 @@ export function getQuoteValidationErrors(
 
   if (!form.department.trim()) {
     errors.department = "Please enter a department";
+  }
+
+  if (!form.category.trim()) {
+    errors.category = "Please select a category";
+  }
+
+  if (!form.expirationDate.trim()) {
+    errors.expirationDate = "Please enter an expiration date";
   }
 
   const hasValidItem = form.items.some((item) => item.description.trim() !== "");

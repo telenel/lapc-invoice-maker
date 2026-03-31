@@ -35,6 +35,7 @@ import { PdfProgress } from "./pdf-progress";
 import { StaffSummaryEditor } from "./staff-summary-editor";
 import { SignatureSection } from "./signature-section";
 import { InvoiceMetadata } from "./invoice-metadata";
+import { getInvoiceValidationErrors } from "./validation";
 import { cn } from "@/lib/utils";
 import type {
   InvoiceFormData,
@@ -259,16 +260,7 @@ export function KeyboardMode({
 
   // ---- Validation + generate ----
   const validateInvoiceForm = useCallback(() => {
-    const errors: Record<string, string> = {};
-    if (!form.staffId) errors.staffId = "Please select a staff member";
-    if (!form.invoiceNumber?.trim()) errors.invoiceNumber = "Please enter an invoice number";
-    if (!form.category) errors.category = "Please select a category";
-    if (!form.department?.trim()) errors.department = "Please enter a department";
-    const hasValidItem = form.items.some(
-      (item: { description: string }) => item.description.trim() !== ""
-    );
-    if (!hasValidItem) errors.lineItems = "At least one line item with a description is required";
-    return errors;
+    return getInvoiceValidationErrors(form);
   }, [form]);
 
   const handleGenerate = useCallback(() => {

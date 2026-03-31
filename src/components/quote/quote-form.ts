@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { staffApi } from "@/domains/staff/api-client";
 import type { StaffResponse, StaffDetailResponse, AccountNumberResponse } from "@/domains/staff/types";
 import type { CateringDetails } from "@/domains/quote/types";
+import { buildQuotePayload } from "./payload";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -369,45 +370,6 @@ export function useQuoteForm(
 
   // ---------- Save helpers ----------
 
-  function buildPayload() {
-    return {
-      date: form.date,
-      staffId: existingId ? (form.staffId || null) : (form.staffId || undefined),
-      department: form.department,
-      category: form.category,
-      accountCode: form.accountCode,
-      accountNumber: form.accountNumber,
-      approvalChain: form.approvalChain,
-      notes: form.notes,
-      expirationDate: form.expirationDate,
-      recipientName: form.recipientName,
-      recipientEmail: form.recipientEmail || undefined,
-      recipientOrg: form.recipientOrg,
-      marginEnabled: form.marginEnabled,
-      marginPercent: form.marginEnabled ? form.marginPercent : undefined,
-      taxEnabled: form.taxEnabled,
-      isCateringEvent: form.isCateringEvent,
-      cateringDetails: form.isCateringEvent ? form.cateringDetails : undefined,
-      items: form.items.map((item, i) => {
-        const cost = Number(item.costPrice ?? item.unitPrice);
-        const effectiveMargin = item.marginOverride ?? form.marginPercent;
-        const charged =
-          form.marginEnabled && effectiveMargin > 0
-            ? Math.round(cost * (1 + effectiveMargin / 100) * 100) / 100
-            : cost;
-        return {
-          description: item.description,
-          quantity: item.quantity,
-          unitPrice: charged,
-          sortOrder: item.sortOrder ?? i,
-          isTaxable: item.isTaxable,
-          marginOverride: item.marginOverride ?? undefined,
-          costPrice: form.marginEnabled ? cost : undefined,
-        };
-      }),
-    };
-  }
-
   // Raw fetch is used instead of quoteApi.create/update because the API returns
   // structured Zod field errors ({ error: { fieldErrors, formErrors } }) that
   // ApiError.fromResponse() cannot preserve — it only extracts a plain string.
@@ -416,7 +378,7 @@ export function useQuoteForm(
     const res = await fetch("/api/quotes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(buildPayload()),
+      body: JSON.stringify(buildQuotePayload(form, existingId)),
     });
 
     if (!res.ok) {
@@ -438,7 +400,7 @@ export function useQuoteForm(
     const res = await fetch(`/api/quotes/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(buildPayload()),
+      body: JSON.stringify(buildQuotePayload(form, existingId)),
     });
 
     if (!res.ok) {

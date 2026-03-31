@@ -85,4 +85,37 @@ describe("getQuoteValidationErrors", () => {
       "Event contact phone is required",
     );
   });
+
+  it("requires route-mandated quote scalars before save", () => {
+    const errors = getQuoteValidationErrors(
+      createForm({ date: "", category: "", expirationDate: "" }),
+    );
+
+    expect(errors.date).toBe("Please enter a date");
+    expect(errors.category).toBe("Please select a category");
+    expect(errors.expirationDate).toBe("Please enter an expiration date");
+  });
+
+  it("allows a trailing blank row as long as one real line item exists", () => {
+    const errors = getQuoteValidationErrors(
+      createForm({
+        items: [
+          createForm().items[0],
+          {
+            _key: "item-2",
+            description: "",
+            quantity: 1,
+            unitPrice: 0,
+            extendedPrice: 0,
+            sortOrder: 1,
+            isTaxable: true,
+            marginOverride: null,
+            costPrice: null,
+          },
+        ],
+      }),
+    );
+
+    expect(errors.lineItems).toBeUndefined();
+  });
 });
