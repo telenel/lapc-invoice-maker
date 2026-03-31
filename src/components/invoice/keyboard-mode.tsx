@@ -19,6 +19,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Card, CardContent } from "@/components/ui/card";
+import { FormError } from "@/components/ui/form-error";
 import {
   Popover,
   PopoverContent,
@@ -142,6 +144,7 @@ export function KeyboardMode({
   const [isMac, setIsMac] = useState(false);
 
   const [showChargeLaterDialog, setShowChargeLaterDialog] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   // ---- Auto-save + draft recovery ----
   const routeKey = existingId ? `/invoices/${existingId}/edit` : "/invoices/new";
@@ -255,21 +258,34 @@ export function KeyboardMode({
   }, []);
 
   // ---- Validation + generate ----
+  const validateInvoiceForm = useCallback(() => {
+    const errors: Record<string, string> = {};
+    if (!form.staffId) errors.staffId = "Please select a staff member";
+    if (!form.invoiceNumber?.trim()) errors.invoiceNumber = "Please enter an invoice number";
+    if (!form.category) errors.category = "Please select a category";
+    if (!form.department?.trim()) errors.department = "Please enter a department";
+    const hasValidItem = form.items.some(
+      (item: { description: string }) => item.description.trim() !== ""
+    );
+    if (!hasValidItem) errors.lineItems = "At least one line item with a description is required";
+    return errors;
+  }, [form]);
+
   const handleGenerate = useCallback(() => {
-    if (!form.staffId) {
-      toast.error("Please select a staff member");
-      return;
-    }
-    if (!form.invoiceNumber) {
-      toast.error("Please enter an invoice number");
-      return;
-    }
-    if (!form.category) {
-      toast.error("Please select a category");
+    const errors = validateInvoiceForm();
+    setValidationErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      toast.error(
+        `${Object.keys(errors).length} issue(s) to resolve before finalizing`
+      );
+      const firstKey = Object.keys(errors)[0];
+      document
+        .getElementById(`field-${firstKey}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
     handleSaveAndFinalize();
-  }, [form.staffId, form.invoiceNumber, form.category, handleSaveAndFinalize]);
+  }, [validateInvoiceForm, handleSaveAndFinalize]);
 
   // ---- Keyboard shortcut: Ctrl/Cmd+Enter -> Generate PDF ----
   useEffect(() => {
@@ -463,20 +479,31 @@ export function KeyboardMode({
       <SectionDivider label="STAFF" />
 
       <div className="space-y-3">
-        <div className="space-y-1">
+        <div id="field-staffId" className="space-y-1">
           <label className="text-sm font-medium">Staff Member</label>
           <InlineCombobox
             items={staffItems}
             value={form.staffId}
             displayValue={form.contactName}
-            onSelect={handleStaffComboboxSelect}
+            onSelect={(item) => {
+              handleStaffComboboxSelect(item);
+              setValidationErrors((prev) => {
+                const next = { ...prev };
+                delete next.staffId;
+                return next;
+              });
+            }}
             placeholder="Search staff…"
             loading={staffLoading}
           />
+          <FormError message={validationErrors.staffId} />
         </div>
 
         {/* Auto-filled summary row */}
-        <StaffSummaryEditor form={form} updateField={updateField} />
+        <div id="field-department">
+          <StaffSummaryEditor form={form} updateField={updateField} />
+          <FormError message={validationErrors.department} />
+        </div>
       </div>
 
       {/* ============ INVOICE ============ */}
@@ -490,6 +517,14 @@ export function KeyboardMode({
         staffAccountNumbers={staffAccountNumbers}
         isPendingCharge={isPendingCharge}
         invoiceNumberRef={invoiceNumberRef}
+        validationErrors={validationErrors}
+        clearValidationError={(key) =>
+          setValidationErrors((prev) => {
+            const next = { ...prev };
+            delete next[key];
+            return next;
+          })
+        }
       />
 
       {/* ============ PRICING ============ */}
@@ -600,7 +635,8 @@ export function KeyboardMode({
       {/* ============ LINE ITEMS ============ */}
       <SectionDivider label="LINE ITEMS" />
 
-      <div className="space-y-3">
+      <div id="field-lineItems" className="space-y-3">
+        <FormError message={validationErrors.lineItems} />
         <div className="flex flex-col gap-4 lg:flex-row">
           <div className="flex-1 min-w-0">
             <LineItems
@@ -695,6 +731,34 @@ export function KeyboardMode({
         staff={staff}
         staffLoading={staffLoading}
       />
+
+      {/* ============ VALIDATION SUMMARY ============ */}
+      {Object.keys(validationErrors).length > 0 && (
+        <Card className="border-red-500/30 bg-red-50 dark:bg-red-950/20 mt-6">
+          <CardContent className="py-3">
+            <p className="text-sm font-medium text-red-600 mb-2">
+              {Object.keys(validationErrors).length} issue(s) to resolve:
+            </p>
+            <ul className="space-y-1">
+              {Object.entries(validationErrors).map(([key, msg]) => (
+                <li key={key}>
+                  <button
+                    type="button"
+                    className="text-sm text-red-500 underline hover:text-red-700"
+                    onClick={() =>
+                      document
+                        .getElementById(`field-${key}`)
+                        ?.scrollIntoView({ behavior: "smooth", block: "center" })
+                    }
+                  >
+                    {msg}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       {/* ============ PRISMCORE + ACTIONS ============ */}
       <div className="pt-6 space-y-4">

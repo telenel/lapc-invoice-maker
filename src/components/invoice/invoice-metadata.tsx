@@ -6,6 +6,7 @@ import { InlineCombobox } from "@/components/ui/inline-combobox";
 import type { ComboboxItem } from "@/components/ui/inline-combobox";
 import { cn } from "@/lib/utils";
 import { AccountNumberSelect } from "./account-number-select";
+import { FormError } from "@/components/ui/form-error";
 import type { InvoiceFormData, StaffAccountNumber } from "./invoice-form";
 
 // ---------------------------------------------------------------------------
@@ -41,6 +42,8 @@ interface InvoiceMetadataProps {
   staffAccountNumbers: StaffAccountNumber[];
   isPendingCharge: boolean;
   invoiceNumberRef: Ref<HTMLInputElement>;
+  validationErrors?: Record<string, string>;
+  clearValidationError?: (key: string) => void;
 }
 
 // ---------------------------------------------------------------------------
@@ -55,6 +58,8 @@ export function InvoiceMetadata({
   staffAccountNumbers,
   isPendingCharge,
   invoiceNumberRef,
+  validationErrors = {},
+  clearValidationError,
 }: InvoiceMetadataProps) {
   const categoryItems: ComboboxItem[] = categories
     .filter((c) => c.active)
@@ -92,21 +97,29 @@ export function InvoiceMetadata({
         </div>
 
         {/* Invoice Number */}
-        <div className={cn(
-          "space-y-1",
-          isPendingCharge && !form.invoiceNumber &&
-            "rounded-lg border-l-4 border-l-primary bg-primary/5 p-2 -ml-2"
-        )}>
+        <div
+          id="field-invoiceNumber"
+          className={cn(
+            "space-y-1",
+            isPendingCharge && !form.invoiceNumber &&
+              "rounded-lg border-l-4 border-l-primary bg-primary/5 p-2 -ml-2"
+          )}
+        >
           <label className="text-sm font-medium">
             Invoice Number <span className="text-destructive">*</span>
           </label>
           <Input
             ref={invoiceNumberRef}
             value={form.invoiceNumber}
-            onChange={(e) => updateField("invoiceNumber", e.target.value)}
+            onChange={(e) => {
+              updateField("invoiceNumber", e.target.value);
+              clearValidationError?.("invoiceNumber");
+            }}
             placeholder="AG-XXXXXX (leave blank if not yet charged)"
             name="invoiceNumber"
+            aria-invalid={!!validationErrors.invoiceNumber}
           />
+          <FormError message={validationErrors.invoiceNumber} />
         </div>
 
         {/* Date */}
@@ -121,7 +134,7 @@ export function InvoiceMetadata({
         </div>
 
         {/* Category */}
-        <div className="space-y-1">
+        <div id="field-category" className="space-y-1">
           <label className="text-sm font-medium">
             Category <span className="text-destructive">*</span>
           </label>
@@ -129,10 +142,14 @@ export function InvoiceMetadata({
             items={categoryItems}
             value={form.category}
             displayValue={selectedCategory?.label ?? ""}
-            onSelect={handleCategorySelect}
+            onSelect={(item) => {
+              handleCategorySelect(item);
+              clearValidationError?.("category");
+            }}
             placeholder="Search categories…"
             loading={categoriesLoading}
           />
+          <FormError message={validationErrors.category} />
         </div>
 
         {/* Semester / Year / Dept */}
