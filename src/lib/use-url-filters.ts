@@ -52,6 +52,24 @@ export function useUrlFilters<T extends Record<string, string>>(defaults: T) {
     [searchParams, router, pathname, defaults, startTransition],
   );
 
+  const replaceFilters = useCallback(
+    (updates: Partial<T>) => {
+      const params = new URLSearchParams(searchParams.toString());
+      for (const key of Object.keys(defaults)) {
+        params.delete(key);
+      }
+      for (const [key, value] of Object.entries(updates)) {
+        if (value && value !== defaults[key]) {
+          params.set(key, value as string);
+        }
+      }
+      startTransition(() => {
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      });
+    },
+    [searchParams, router, pathname, defaults, startTransition],
+  );
+
   const resetFilters = useCallback(() => {
     startTransition(() => {
       router.replace(pathname, { scroll: false });
@@ -68,5 +86,12 @@ export function useUrlFilters<T extends Record<string, string>>(defaults: T) {
     return count;
   }, [filters, defaults]);
 
-  return { filters, setFilter, setFilters, resetFilters, activeCount };
+  return {
+    filters,
+    setFilter,
+    setFilters,
+    replaceFilters,
+    resetFilters,
+    activeCount,
+  };
 }

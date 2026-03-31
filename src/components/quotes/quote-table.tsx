@@ -190,9 +190,8 @@ const QuoteRow = React.memo(function QuoteRow({
 
 export function QuoteTable({ departments, categories }: QuoteTableProps) {
   const router = useRouter();
-  const { filters, setFilter, setFilters, resetFilters } = useUrlFilters(
-    URL_FILTER_DEFAULTS,
-  );
+  const { filters, setFilter, setFilters, replaceFilters, resetFilters } =
+    useUrlFilters(URL_FILTER_DEFAULTS);
 
   const handleRowClick = useCallback(
     (id: string) => {
@@ -277,7 +276,7 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
   useSSE("quote-changed", fetchQuotes);
 
   function handleFiltersChange(next: QuoteFilters) {
-    setFilters({ ...next });
+    replaceFilters({ ...next, sortBy: filters.sortBy, sortOrder: filters.sortOrder });
   }
 
   function handleClear() {

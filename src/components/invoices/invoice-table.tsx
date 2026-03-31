@@ -25,9 +25,13 @@ import { invoiceApi } from "@/domains/invoice/api-client";
 import type { InvoiceResponse } from "@/domains/invoice/types";
 import { useSSE } from "@/lib/use-sse";
 import { useUrlFilters } from "@/lib/use-url-filters";
+import {
+  getInvoiceExportFilters,
+  type InvoiceUrlFilters,
+} from "./url-filter-utils";
 import { cn } from "@/lib/utils";
 
-const URL_FILTER_DEFAULTS: Record<string, string> = {
+const URL_FILTER_DEFAULTS: InvoiceUrlFilters = {
   search: "",
   status: "",
   category: "",
@@ -59,7 +63,8 @@ interface InvoiceTableProps {
 
 export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
   const router = useRouter();
-  const { filters, setFilter, setFilters, resetFilters } = useUrlFilters(
+  const { filters, setFilter, setFilters, replaceFilters, resetFilters } =
+    useUrlFilters(
     URL_FILTER_DEFAULTS,
   );
 
@@ -145,7 +150,7 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
   useSSE("invoice-changed", fetchInvoices);
 
   function handleFiltersChange(next: FilterBarFilters) {
-    setFilters({ ...next });
+    replaceFilters({ ...next, sortBy: filters.sortBy, sortOrder: filters.sortOrder });
   }
 
   function handleClear() {
@@ -185,26 +190,7 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
 
   function handleExportCsv() {
     invoiceApi
-      .exportCsv({
-        search: filters.search || undefined,
-        status: (filters.status && filters.status !== "all"
-          ? filters.status
-          : undefined) as
-          | import("@/domains/invoice/types").InvoiceFilters["status"]
-          | undefined,
-        category:
-          filters.category && filters.category !== "all"
-            ? filters.category
-            : undefined,
-        department:
-          filters.department && filters.department !== "all"
-            ? filters.department
-            : undefined,
-        dateFrom: filters.dateFrom || undefined,
-        dateTo: filters.dateTo || undefined,
-        amountMin: filters.amountMin ? Number(filters.amountMin) : undefined,
-        amountMax: filters.amountMax ? Number(filters.amountMax) : undefined,
-      })
+      .exportCsv(getInvoiceExportFilters(filters))
       .then((blob) => {
         const url = URL.createObjectURL(blob);
         window.open(url, "_blank");
