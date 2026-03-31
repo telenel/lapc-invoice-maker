@@ -4,15 +4,15 @@ on:
   pull_request:
     types: [opened, reopened, synchronize, ready_for_review]
     branches: [main]
+  workflow_dispatch:
 
 concurrency:
-  group: codex-review-${{ github.event.pull_request.number }}
+  group: codex-review-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
 
 jobs:
   codex_review:
     name: Codex Review
-    if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -32,12 +32,6 @@ jobs:
             "$PR_BASE_REF" \
             "+refs/pull/$PR_NUMBER/head"
 
-      - name: Ensure Codex secret is configured
-        if: ${{ secrets.OPENAI_API_KEY == '' && secrets.GHRUNNER == '' }}
-        run: |
-          echo "::error::Missing Codex secret. Add OPENAI_API_KEY or GHRUNNER before enabling Codex as a required status check."
-          exit 1
-
       - name: Run Codex PR review
         id: run_codex
         uses: openai/codex-action@v1
@@ -45,7 +39,7 @@ jobs:
           PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY != '' && secrets.OPENAI_API_KEY || secrets.GHRUNNER }}
+          openai-api-key: ${{ secrets.GHRUNNER }}
           prompt-file: .github/prompts/codex-pr-review.md
           sandbox: read-only
           model: gpt-5.4
@@ -54,12 +48,10 @@ jobs:
 
   codex_gate:
     name: Codex Review Gate
-    if: ${{ !github.event.pull_request.draft }}
     runs-on: ubuntu-latest
     needs: codex_review
     permissions:
       contents: read
-      pull-requests: write
     steps:
       - name: Parse Codex result
         env:
