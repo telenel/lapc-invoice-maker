@@ -1,6 +1,6 @@
 FROM node:22-slim AS base
 
-# Install Chromium dependencies for Puppeteer
+# Install Chromium dependencies for server-side PDF rendering
 RUN apt-get update && apt-get install -y \
     chromium \
     fonts-liberation \
@@ -54,6 +54,7 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
+COPY --from=builder /app/scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
 # Prisma v7 generates client to src/generated/prisma (not node_modules/.prisma)
 COPY --from=builder /app/src/generated/prisma ./src/generated/prisma
 
@@ -62,6 +63,7 @@ COPY --from=builder /app/src/generated/prisma ./src/generated/prisma
 RUN npm install --no-save prisma
 COPY --from=deps /app/node_modules/dotenv ./node_modules/dotenv
 
+RUN chmod +x ./scripts/docker-entrypoint.sh
 RUN addgroup --system app && adduser --system --ingroup app app
 RUN mkdir -p data/pdfs public/uploads && chown -R app:app data public/uploads
 
@@ -69,5 +71,4 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-USER app
-CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
+ENTRYPOINT ["./scripts/docker-entrypoint.sh"]

@@ -4,11 +4,17 @@ on:
   push:
     branches: [main]
     paths-ignore:
-      - "**.md"
+      - "*.md"
+      - "**/*.md"
       - "docs/**"
       - ".superpowers/**"
   pull_request:
     branches: [main]
+    paths-ignore:
+      - "*.md"
+      - "**/*.md"
+      - "docs/**"
+      - ".superpowers/**"
 
 concurrency:
   group: ci-${{ github.ref }}
