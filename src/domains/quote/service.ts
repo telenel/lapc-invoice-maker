@@ -295,7 +295,6 @@ export const quoteService = {
           subject,
           metadata: {
             paymentMethod: normalizedPayment.paymentMethod,
-            paymentAccountNumber: normalizedPayment.paymentAccountNumber,
           } as Prisma.InputJsonValue,
         },
       });
@@ -309,7 +308,7 @@ export const quoteService = {
         userId: paymentOwnerUserId,
         type: "PAYMENT_DETAILS_RECEIVED",
         title: `Payment details received for ${quote.quoteNumber ?? "Quote"}`,
-        message: `Payment method: ${normalizedPayment.paymentMethod}${normalizedPayment.paymentAccountNumber ? ` (Account: ${normalizedPayment.paymentAccountNumber})` : ""}`,
+        message: `Payment method: ${normalizedPayment.paymentMethod}`,
         quoteId: quote.id,
       });
     } catch {

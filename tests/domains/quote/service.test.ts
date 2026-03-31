@@ -295,13 +295,13 @@ describe("quoteService", () => {
           subject: "Payment details provided for Q-1",
           metadata: {
             paymentMethod: "ACCOUNT_NUMBER",
-            paymentAccountNumber: "SAP-12345",
           },
         },
       });
       expect(vi.mocked(notificationService.createAndPublish)).toHaveBeenCalledWith(
         expect.objectContaining({
           userId: "u2",
+          message: "Payment method: ACCOUNT_NUMBER",
         }),
       );
     });
