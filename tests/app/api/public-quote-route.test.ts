@@ -59,5 +59,10 @@ describe("GET /api/quotes/public/[token]", () => {
     expect(body.paymentMethod).toBeUndefined();
     expect(body.paymentAccountNumber).toBeUndefined();
     expect(body.accountNumber).toBeUndefined();
+    expect(body.pdfPath).toBeUndefined();
+    expect(body.shareToken).toBeUndefined();
+    expect(body.convertedToInvoice).toBeUndefined();
+    expect(body.revisedFromQuote).toBeUndefined();
+    expect(body.revisedToQuote).toBeUndefined();
   });
 });

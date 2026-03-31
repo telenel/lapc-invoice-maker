@@ -18,10 +18,15 @@ function sanitizeForPublic(quote: QuoteResponse) {
   delete safe.accountCode;
   delete safe.accountNumber;
   delete safe.approvalChain;
+  delete safe.pdfPath;
+  delete safe.shareToken;
   delete safe.creatorId;
   delete safe.creatorName;
   delete safe.paymentMethod;
   delete safe.paymentAccountNumber;
+  delete safe.convertedToInvoice;
+  delete safe.revisedFromQuote;
+  delete safe.revisedToQuote;
 
   return {
     ...safe,

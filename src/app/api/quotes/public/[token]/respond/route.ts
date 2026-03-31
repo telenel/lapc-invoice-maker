@@ -56,6 +56,12 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
 
     // If catering details were submitted, validate and persist them before processing the response
     let cateringDetails: CateringDetails | undefined;
+    if (quote.isCateringEvent && response === "ACCEPTED" && !body.cateringDetails) {
+      return NextResponse.json(
+        { error: "Catering details are required to approve this quote" },
+        { status: 400 },
+      );
+    }
     if (body.cateringDetails) {
       const parsed = cateringDetailsSchema.safeParse(body.cateringDetails);
       if (!parsed.success) {

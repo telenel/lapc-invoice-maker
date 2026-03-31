@@ -18,6 +18,7 @@ describe("POST /api/quotes/public/[token]/respond", () => {
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",
       quoteStatus: "SENT",
+      isCateringEvent: false,
     } as never);
   });
 
@@ -111,5 +112,29 @@ describe("POST /api/quotes/public/[token]/respond", () => {
         accountNumber: "SAP-12345",
       },
     );
+  });
+
+  it("requires catering details when approving a catering quote", async () => {
+    vi.mocked(quoteService.getByShareToken).mockResolvedValue({
+      id: "q1",
+      quoteStatus: "SENT",
+      isCateringEvent: true,
+    } as never);
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/respond", {
+        method: "POST",
+        body: JSON.stringify({
+          response: "ACCEPTED",
+          paymentMethod: "CHECK",
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(quoteService.respondToQuote).not.toHaveBeenCalled();
+    expect(quoteService.update).not.toHaveBeenCalled();
   });
 });
