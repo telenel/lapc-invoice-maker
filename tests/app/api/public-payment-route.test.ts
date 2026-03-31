@@ -72,4 +72,26 @@ describe("POST /api/quotes/public/[token]/payment", () => {
     expect(response.status).toBe(409);
     expect(safePublishAll).not.toHaveBeenCalled();
   });
+
+  it("blocks public payment updates when the converted invoice is finalized", async () => {
+    vi.mocked(quoteService.submitPublicPaymentDetails).mockRejectedValue(
+      Object.assign(new Error("Cannot update a finalized invoice"), {
+        code: "FORBIDDEN",
+      }),
+    );
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/payment", {
+        method: "POST",
+        body: JSON.stringify({
+          paymentMethod: "CHECK",
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    expect(response.status).toBe(409);
+    expect(safePublishAll).not.toHaveBeenCalled();
+  });
 });

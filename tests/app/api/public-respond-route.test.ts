@@ -22,6 +22,12 @@ describe("POST /api/quotes/public/[token]/respond", () => {
   });
 
   it("does not persist catering details when payment validation fails", async () => {
+    vi.mocked(quoteService.getByShareToken).mockResolvedValue({
+      id: "q1",
+      quoteStatus: "SENT",
+      isCateringEvent: true,
+    } as never);
+
     const response = await POST(
       new NextRequest("http://localhost/api/quotes/public/token/respond", {
         method: "POST",
@@ -43,7 +49,34 @@ describe("POST /api/quotes/public/[token]/respond", () => {
     expect(quoteService.respondToQuote).not.toHaveBeenCalled();
   });
 
-  it("passes catering details through the quote response flow", async () => {
+  it("rejects catering details for non-catering quotes", async () => {
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/respond", {
+        method: "POST",
+        body: JSON.stringify({
+          response: "ACCEPTED",
+          paymentMethod: "CHECK",
+          cateringDetails: {
+            location: "Campus",
+            contactName: "Jane",
+            contactPhone: "555-1111",
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(quoteService.respondToQuote).not.toHaveBeenCalled();
+  });
+
+  it("passes catering details through the quote response flow for catering quotes", async () => {
+    vi.mocked(quoteService.getByShareToken).mockResolvedValue({
+      id: "q1",
+      quoteStatus: "SENT",
+      isCateringEvent: true,
+    } as never);
     vi.mocked(quoteService.respondToQuote).mockResolvedValue({
       id: "q1",
       quoteStatus: "ACCEPTED",

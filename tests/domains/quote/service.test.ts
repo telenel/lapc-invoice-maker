@@ -18,6 +18,7 @@ vi.mock("@/domains/quote/repository", () => ({
   findFollowUpsByInvoiceId: vi.fn(),
   hasRecentView: vi.fn(),
   findByShareToken: vi.fn(),
+  applyPublicQuoteResponse: vi.fn(),
   syncPublicPaymentDetails: vi.fn(),
   createFollowUp: vi.fn(),
   generateNumber: vi.fn(),
@@ -283,10 +284,36 @@ describe("quoteService", () => {
       expect(mockRepo.syncPublicPaymentDetails).not.toHaveBeenCalled();
       expect(mockRepo.createFollowUp).not.toHaveBeenCalled();
     });
+
+    it("blocks public payment updates when the converted invoice is finalized", async () => {
+      mockRepo.findAcceptedPublicPaymentCandidate.mockResolvedValue({
+        id: "q1",
+        quoteNumber: "Q-1",
+        recipientEmail: "jane@example.com",
+        createdBy: "u1",
+        paymentMethod: null,
+        convertedToInvoice: { id: "inv1" },
+      } as never);
+      mockRepo.syncPublicPaymentDetails.mockRejectedValue(
+        Object.assign(new Error("Cannot update a finalized invoice"), {
+          code: "FORBIDDEN",
+        }),
+      );
+
+      await expect(
+        quoteService.submitPublicPaymentDetails("token", {
+          paymentMethod: "CHECK",
+        }),
+      ).rejects.toMatchObject({
+        code: "FORBIDDEN",
+      });
+
+      expect(mockRepo.createFollowUp).not.toHaveBeenCalled();
+    });
   });
 
   describe("respondToQuote", () => {
-    it("syncs approval-time payment details to a pre-converted invoice", async () => {
+    it("applies approval-time payment details atomically for a pre-converted invoice", async () => {
       mockRepo.findByShareToken.mockResolvedValue(
         makeQuote({
           quoteStatus: "SENT",
@@ -294,35 +321,43 @@ describe("quoteService", () => {
           convertedToInvoice: { id: "inv1", invoiceNumber: "INV-2026-0001" },
         }) as never,
       );
-      mockRepo.update.mockResolvedValue(makeQuote({ quoteStatus: "ACCEPTED" }) as never);
-      mockRepo.syncPublicPaymentDetails.mockResolvedValue([] as never);
+      mockRepo.applyPublicQuoteResponse.mockResolvedValue(undefined as never);
 
       await quoteService.respondToQuote(
         "token",
         "ACCEPTED",
-        undefined,
+        "view-1",
         { paymentMethod: "ACCOUNT_NUMBER", accountNumber: "SAP-12345" },
       );
 
-      expect(mockRepo.syncPublicPaymentDetails).toHaveBeenCalledWith(
+      expect(mockRepo.applyPublicQuoteResponse).toHaveBeenCalledWith(
         "q1",
         {
-          paymentMethod: "ACCOUNT_NUMBER",
-          paymentAccountNumber: "SAP-12345",
+          response: "ACCEPTED",
+          acceptedAt: expect.any(Date),
+          convertedInvoiceId: "inv1",
+          viewId: "view-1",
+          paymentDetails: {
+            paymentMethod: "ACCOUNT_NUMBER",
+            paymentAccountNumber: "SAP-12345",
+          },
+          cateringDetails: undefined,
         },
-        "inv1",
       );
+      expect(mockRepo.update).not.toHaveBeenCalled();
+      expect(mockRepo.updateViewResponse).not.toHaveBeenCalled();
     });
 
-    it("persists catering details during approval without calling the blocked update path", async () => {
+    it("syncs catering details to the converted invoice inside the public approval transaction", async () => {
       mockRepo.findByShareToken.mockResolvedValue(
         makeQuote({
           quoteStatus: "SENT",
           expirationDate: new Date("2099-02-15"),
+          isCateringEvent: true,
           convertedToInvoice: { id: "inv1", invoiceNumber: "INV-2026-0001" },
         }) as never,
       );
-      mockRepo.update.mockResolvedValue(makeQuote({ quoteStatus: "ACCEPTED" }) as never);
+      mockRepo.applyPublicQuoteResponse.mockResolvedValue(undefined as never);
 
       await quoteService.respondToQuote(
         "token",
@@ -341,16 +376,50 @@ describe("quoteService", () => {
         },
       );
 
-      expect(mockRepo.update).toHaveBeenCalledWith(
+      expect(mockRepo.applyPublicQuoteResponse).toHaveBeenCalledWith(
         "q1",
         expect.objectContaining({
-          quoteStatus: "ACCEPTED",
+          response: "ACCEPTED",
+          convertedInvoiceId: "inv1",
           cateringDetails: expect.objectContaining({
             location: "Campus",
             contactName: "Jane",
           }),
         }),
       );
+    });
+
+    it("rejects catering details for non-catering quotes", async () => {
+      mockRepo.findByShareToken.mockResolvedValue(
+        makeQuote({
+          quoteStatus: "SENT",
+          expirationDate: new Date("2099-02-15"),
+          isCateringEvent: false,
+        }) as never,
+      );
+
+      await expect(
+        quoteService.respondToQuote(
+          "token",
+          "ACCEPTED",
+          undefined,
+          { paymentMethod: "CHECK" },
+          {
+            eventDate: "2026-03-31",
+            startTime: "10:00",
+            endTime: "11:00",
+            location: "Campus",
+            contactName: "Jane",
+            contactPhone: "555-1111",
+            setupRequired: false,
+            takedownRequired: false,
+          },
+        ),
+      ).rejects.toMatchObject({
+        code: "INVALID_INPUT",
+      });
+
+      expect(mockRepo.applyPublicQuoteResponse).not.toHaveBeenCalled();
     });
   });
 

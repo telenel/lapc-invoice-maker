@@ -27,6 +27,9 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     if (code === "INVALID_INPUT") {
       return NextResponse.json({ error: (err as Error).message }, { status: 400 });
     }
+    if (code === "FORBIDDEN") {
+      return NextResponse.json({ error: (err as Error).message }, { status: 409 });
+    }
     if (code === "PAYMENT_ALREADY_RESOLVED") {
       return NextResponse.json({ error: (err as Error).message }, { status: 409 });
     }

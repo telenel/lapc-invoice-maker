@@ -315,35 +315,29 @@ export const quoteService = {
       throw Object.assign(new Error("This quote has expired"), { code: "FORBIDDEN" });
     }
 
-    const updateData: Record<string, unknown> = { quoteStatus: response };
     let normalizedPayment;
+    let normalizedCateringDetails: Prisma.InputJsonValue | undefined;
     if (response === "ACCEPTED") {
-      updateData.acceptedAt = new Date();
       normalizedPayment = normalizeQuotePaymentDetails(paymentDetails);
-      if (normalizedPayment) {
-        updateData.paymentMethod = normalizedPayment.paymentMethod;
-        updateData.paymentAccountNumber = normalizedPayment.paymentAccountNumber;
-      }
       if (cateringDetails) {
-        updateData.cateringDetails = cateringDetails as unknown as Prisma.InputJsonValue;
+        if (!quote.isCateringEvent) {
+          throw Object.assign(new Error("Catering details are only allowed for catering quotes"), {
+            code: "INVALID_INPUT",
+          });
+        }
+        normalizedCateringDetails = cateringDetails as unknown as Prisma.InputJsonValue;
       }
     }
-    await quoteRepository.update(quote.id, updateData);
 
-    if (response === "ACCEPTED" && normalizedPayment && quote.convertedToInvoice?.id) {
-      await quoteRepository.syncPublicPaymentDetails(
-        quote.id,
-        {
-          paymentMethod: normalizedPayment.paymentMethod,
-          paymentAccountNumber: normalizedPayment.paymentAccountNumber,
-        },
-        quote.convertedToInvoice.id,
-      );
-    }
-
-    if (viewId) {
-      await quoteRepository.updateViewResponse(viewId, response);
-    }
+    await quoteRepository.applyPublicQuoteResponse(quote.id, {
+      response,
+      acceptedAt: response === "ACCEPTED" ? new Date() : undefined,
+      paymentDetails: normalizedPayment,
+      cateringDetails: normalizedCateringDetails,
+      convertedInvoiceId:
+        normalizedPayment || normalizedCateringDetails ? quote.convertedToInvoice?.id : undefined,
+      viewId,
+    });
 
     const notifType = response === "ACCEPTED" ? "QUOTE_APPROVED" : "QUOTE_DECLINED";
     const verb = response === "ACCEPTED" ? "approved" : "declined";

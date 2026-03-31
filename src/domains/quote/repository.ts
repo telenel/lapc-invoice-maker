@@ -404,20 +404,115 @@ export async function syncPublicPaymentDetails(
   paymentDetails: { paymentMethod: string; paymentAccountNumber: string | null },
   convertedInvoiceId?: string
 ) {
-  return prisma.$transaction([
-    prisma.invoice.update({
+  return prisma.$transaction(async (tx) => {
+    await tx.invoice.update({
       where: { id: quoteId },
       data: paymentDetails,
-    }),
-    ...(convertedInvoiceId
-      ? [
-          prisma.invoice.update({
-            where: { id: convertedInvoiceId },
-            data: paymentDetails,
-          }),
-        ]
-      : []),
-  ]);
+    });
+
+    if (!convertedInvoiceId) return;
+
+    const convertedInvoice = await tx.invoice.findUnique({
+      where: { id: convertedInvoiceId },
+      select: { status: true },
+    });
+
+    if (!convertedInvoice) {
+      throw Object.assign(new Error("Converted invoice not found"), { code: "NOT_FOUND" });
+    }
+
+    if (convertedInvoice.status === "FINAL") {
+      throw Object.assign(new Error("Cannot update a finalized invoice"), { code: "FORBIDDEN" });
+    }
+
+    await tx.invoice.update({
+      where: { id: convertedInvoiceId },
+      data: paymentDetails,
+    });
+  });
+}
+
+export async function applyPublicQuoteResponse(
+  quoteId: string,
+  input: {
+    response: "ACCEPTED" | "DECLINED";
+    acceptedAt?: Date;
+    paymentDetails?: { paymentMethod: string; paymentAccountNumber: string | null };
+    cateringDetails?: Prisma.InputJsonValue;
+    convertedInvoiceId?: string;
+    viewId?: string;
+  },
+) {
+  return prisma.$transaction(async (tx) => {
+    const quoteData: Prisma.InvoiceUpdateInput = {
+      quoteStatus: input.response,
+    };
+
+    if (input.response === "ACCEPTED") {
+      quoteData.acceptedAt = input.acceptedAt;
+
+      if (input.paymentDetails) {
+        quoteData.paymentMethod = input.paymentDetails.paymentMethod;
+        quoteData.paymentAccountNumber = input.paymentDetails.paymentAccountNumber;
+      }
+
+      if (input.cateringDetails !== undefined) {
+        quoteData.cateringDetails = input.cateringDetails;
+      }
+    }
+
+    await tx.invoice.update({
+      where: { id: quoteId },
+      data: quoteData,
+    });
+
+    if (input.response === "ACCEPTED" && input.convertedInvoiceId) {
+      const convertedInvoice = await tx.invoice.findUnique({
+        where: { id: input.convertedInvoiceId },
+        select: { status: true },
+      });
+
+      if (!convertedInvoice) {
+        throw Object.assign(new Error("Converted invoice not found"), { code: "NOT_FOUND" });
+      }
+
+      if (convertedInvoice.status === "FINAL") {
+        throw Object.assign(new Error("Cannot update a finalized invoice"), { code: "FORBIDDEN" });
+      }
+
+      const convertedInvoiceData: Prisma.InvoiceUpdateInput = {};
+      if (input.paymentDetails) {
+        convertedInvoiceData.paymentMethod = input.paymentDetails.paymentMethod;
+        convertedInvoiceData.paymentAccountNumber = input.paymentDetails.paymentAccountNumber;
+      }
+      if (input.cateringDetails !== undefined) {
+        convertedInvoiceData.cateringDetails = input.cateringDetails;
+      }
+
+      if (Object.keys(convertedInvoiceData).length > 0) {
+        await tx.invoice.update({
+          where: { id: input.convertedInvoiceId },
+          data: convertedInvoiceData,
+        });
+      }
+    }
+
+    if (input.viewId) {
+      const view = await tx.quoteView.findFirst({
+        where: { id: input.viewId, invoiceId: quoteId },
+        select: { id: true },
+      });
+
+      if (!view) {
+        throw Object.assign(new Error("Quote activity session not found"), { code: "INVALID_INPUT" });
+      }
+
+      await tx.quoteView.update({
+        where: { id: input.viewId },
+        data: { respondedWith: input.response },
+      });
+    }
+  });
 }
 
 export async function createFollowUp(data: {

@@ -62,6 +62,12 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         { status: 400 },
       );
     }
+    if (!quote.isCateringEvent && body.cateringDetails) {
+      return NextResponse.json(
+        { error: "Catering details are only allowed for catering quotes" },
+        { status: 400 },
+      );
+    }
     if (body.cateringDetails) {
       const parsed = cateringDetailsSchema.safeParse(body.cateringDetails);
       if (!parsed.success) {
