@@ -80,3 +80,7 @@ git push -u origin "$branch"
 echo ""
 echo "==> gh pr create --fill --base main --head $branch"
 gh pr create --fill --base main --head "$branch"
+
+echo ""
+echo "==> gh pr merge --auto --squash --delete-branch"
+gh pr merge --auto --squash --delete-branch
