@@ -1,11 +1,11 @@
-You are reviewing a pull request for LAPortal, a Next.js 14 + Prisma 7 operations portal for Los Angeles Pierce College.
+You are reviewing local branch changes for LAPortal, a Next.js 14 + Prisma 7 operations portal for Los Angeles Pierce College.
 
-Review ONLY the changes introduced by this pull request.
+Review ONLY the changes introduced by the current branch relative to the base ref in `CODEX_REVIEW_BASE_REF`.
 
 Use the local repository checkout to inspect:
-- `git log --oneline "$PR_BASE_SHA...$PR_HEAD_SHA"`
-- `git diff --stat "$PR_BASE_SHA...$PR_HEAD_SHA"`
-- `git diff --unified=0 "$PR_BASE_SHA...$PR_HEAD_SHA"`
+- `git log --oneline "$CODEX_REVIEW_BASE_REF...HEAD"`
+- `git diff --stat "$CODEX_REVIEW_BASE_REF...HEAD"`
+- `git diff --unified=0 "$CODEX_REVIEW_BASE_REF...HEAD"`
 
 Prioritize:
 - bugs and behavioral regressions

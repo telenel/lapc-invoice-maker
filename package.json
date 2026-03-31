@@ -9,6 +9,9 @@
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "ship-check": "./scripts/ship-check.sh",
+    "review:codex": "./scripts/codex-review-local.sh",
+    "publish:pr": "./scripts/publish-pr.sh",
     "postinstall": "node ./scripts/postinstall.js"
   },
   "dependencies": {
