@@ -1,7 +1,8 @@
 "use client";
 
-import { useDeferredValue, useEffect, useState, useCallback } from "react";
+import { useDeferredValue, useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { toast } from "sonner";
 import { FileTextIcon, RefreshCwIcon } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -23,8 +24,10 @@ import { formatAmount, formatDate, getInitials } from "@/lib/formatters";
 import { invoiceApi } from "@/domains/invoice/api-client";
 import type { InvoiceResponse } from "@/domains/invoice/types";
 import { useSSE } from "@/lib/use-sse";
+import { useUrlFilters } from "@/lib/use-url-filters";
+import { cn } from "@/lib/utils";
 
-const EMPTY_FILTERS: FilterBarFilters = {
+const URL_FILTER_DEFAULTS = {
   search: "",
   status: "",
   category: "",
@@ -33,10 +36,19 @@ const EMPTY_FILTERS: FilterBarFilters = {
   dateTo: "",
   amountMin: "",
   amountMax: "",
-};
+  isRunning: "",
+  page: "1",
+  sortBy: "date",
+  sortOrder: "desc",
+} as const;
+
+const SAVED_VIEWS = [
+  { label: "My Drafts", params: { status: "DRAFT" } },
+  { label: "Running", params: { status: "DRAFT", isRunning: "true" } },
+  { label: "Pending Charges", params: { status: "PENDING_CHARGE" } },
+] as const;
 
 type SortField = "invoiceNumber" | "date" | "totalAmount";
-type SortDir = "asc" | "desc";
 
 const PAGE_SIZE = 20;
 
@@ -47,30 +59,59 @@ interface InvoiceTableProps {
 
 export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
   const router = useRouter();
+  const { filters, setFilter, setFilters, resetFilters } = useUrlFilters(
+    URL_FILTER_DEFAULTS,
+  );
 
-  const [filters, setFilters] = useState<FilterBarFilters>(EMPTY_FILTERS);
   const [invoices, setInvoices] = useState<InvoiceResponse[]>([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<SortField>("date");
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  const page = Number(filters.page) || 1;
+  const sortBy = (filters.sortBy || "date") as SortField;
+  const sortDir = (filters.sortOrder || "desc") as "asc" | "desc";
   const deferredSearch = useDeferredValue(filters.search);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  /* Bridge: build FilterBarFilters object from URL filters */
+  const filterBarFilters: FilterBarFilters = useMemo(
+    () => ({
+      search: filters.search,
+      status: filters.status,
+      category: filters.category,
+      department: filters.department,
+      dateFrom: filters.dateFrom,
+      dateTo: filters.dateTo,
+      amountMin: filters.amountMin,
+      amountMax: filters.amountMax,
+    }),
+    [filters],
+  );
 
   const fetchInvoices = useCallback(async () => {
     setLoading(true);
     try {
       const data = await invoiceApi.list({
         search: deferredSearch || undefined,
-        status: (filters.status && filters.status !== "all" ? filters.status : undefined) as import("@/domains/invoice/types").InvoiceFilters["status"],
-        category: filters.category && filters.category !== "all" ? filters.category : undefined,
-        department: filters.department && filters.department !== "all" ? filters.department : undefined,
+        status: (filters.status && filters.status !== "all"
+          ? filters.status
+          : undefined) as
+          | import("@/domains/invoice/types").InvoiceFilters["status"]
+          | undefined,
+        category:
+          filters.category && filters.category !== "all"
+            ? filters.category
+            : undefined,
+        department:
+          filters.department && filters.department !== "all"
+            ? filters.department
+            : undefined,
         dateFrom: filters.dateFrom || undefined,
         dateTo: filters.dateTo || undefined,
         amountMin: filters.amountMin ? Number(filters.amountMin) : undefined,
         amountMax: filters.amountMax ? Number(filters.amountMax) : undefined,
+        isRunning: filters.isRunning === "true" ? true : undefined,
         page,
         pageSize: PAGE_SIZE,
         sortBy,
@@ -82,7 +123,20 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
       toast.error("Failed to load invoices");
     }
     setLoading(false);
-  }, [deferredSearch, filters.status, filters.category, filters.department, filters.dateFrom, filters.dateTo, filters.amountMin, filters.amountMax, page, sortBy, sortDir]);
+  }, [
+    deferredSearch,
+    filters.status,
+    filters.category,
+    filters.department,
+    filters.dateFrom,
+    filters.dateTo,
+    filters.amountMin,
+    filters.amountMax,
+    filters.isRunning,
+    page,
+    sortBy,
+    sortDir,
+  ]);
 
   useEffect(() => {
     fetchInvoices();
@@ -90,30 +144,25 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
 
   useSSE("invoice-changed", fetchInvoices);
 
-  // Reset to page 1 when filters or sort changes
   function handleFiltersChange(next: FilterBarFilters) {
     setFilters(next);
-    setPage(1);
   }
 
   function handleClear() {
-    setFilters(EMPTY_FILTERS);
-    setPage(1);
+    resetFilters();
   }
 
   function handleSort(field: SortField) {
     if (sortBy === field) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+      setFilter("sortOrder", sortDir === "asc" ? "desc" : "asc");
     } else {
-      setSortBy(field);
-      setSortDir("asc");
+      setFilters({ sortBy: field, sortOrder: "asc" });
     }
-    setPage(1);
   }
 
   function sortIndicator(field: SortField) {
     if (sortBy !== field) return null;
-    return sortDir === "asc" ? " ↑" : " ↓";
+    return sortDir === "asc" ? " \u2191" : " \u2193";
   }
 
   function statusLabel(status: InvoiceResponse["status"]) {
@@ -124,7 +173,9 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
         : "Draft";
   }
 
-  function statusVariant(status: InvoiceResponse["status"]): "success" | "info" | "warning" {
+  function statusVariant(
+    status: InvoiceResponse["status"],
+  ): "success" | "info" | "warning" {
     return status === "FINAL"
       ? "success"
       : status === "PENDING_CHARGE"
@@ -133,26 +184,73 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
   }
 
   function handleExportCsv() {
-    invoiceApi.exportCsv({
-      search: filters.search || undefined,
-      status: (filters.status && filters.status !== "all" ? filters.status : undefined) as import("@/domains/invoice/types").InvoiceFilters["status"],
-      category: filters.category && filters.category !== "all" ? filters.category : undefined,
-      department: filters.department && filters.department !== "all" ? filters.department : undefined,
-      dateFrom: filters.dateFrom || undefined,
-      dateTo: filters.dateTo || undefined,
-      amountMin: filters.amountMin ? Number(filters.amountMin) : undefined,
-      amountMax: filters.amountMax ? Number(filters.amountMax) : undefined,
-    }).then((blob) => {
-      const url = URL.createObjectURL(blob);
-      window.open(url, "_blank");
-      setTimeout(() => URL.revokeObjectURL(url), 10000);
-    }).catch(() => toast.error("Failed to export CSV"));
+    invoiceApi
+      .exportCsv({
+        search: filters.search || undefined,
+        status: (filters.status && filters.status !== "all"
+          ? filters.status
+          : undefined) as
+          | import("@/domains/invoice/types").InvoiceFilters["status"]
+          | undefined,
+        category:
+          filters.category && filters.category !== "all"
+            ? filters.category
+            : undefined,
+        department:
+          filters.department && filters.department !== "all"
+            ? filters.department
+            : undefined,
+        dateFrom: filters.dateFrom || undefined,
+        dateTo: filters.dateTo || undefined,
+        amountMin: filters.amountMin ? Number(filters.amountMin) : undefined,
+        amountMax: filters.amountMax ? Number(filters.amountMax) : undefined,
+      })
+      .then((blob) => {
+        const url = URL.createObjectURL(blob);
+        window.open(url, "_blank");
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      })
+      .catch(() => toast.error("Failed to export CSV"));
+  }
+
+  /** Build a URL string for a saved view */
+  function savedViewHref(params: Record<string, string>) {
+    const sp = new URLSearchParams(params);
+    return `/invoices?${sp.toString()}`;
+  }
+
+  /** Check if a saved view is currently active */
+  function isSavedViewActive(params: Record<string, string>) {
+    return Object.entries(params).every(
+      ([k, v]) => filters[k as keyof typeof filters] === v,
+    );
   }
 
   return (
     <div className="space-y-4">
+      {/* Saved view preset chips */}
+      <div className="flex flex-wrap gap-2">
+        {SAVED_VIEWS.map((view) => {
+          const active = isSavedViewActive(view.params);
+          return (
+            <Link
+              key={view.label}
+              href={savedViewHref(view.params)}
+              className={cn(
+                "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                active
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-card text-muted-foreground hover:bg-muted/50",
+              )}
+            >
+              {view.label}
+            </Link>
+          );
+        })}
+      </div>
+
       <InvoiceFiltersBar
-        filters={filters}
+        filters={filterBarFilters}
         departments={departments}
         categories={categories}
         onChange={handleFiltersChange}
@@ -161,19 +259,23 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
       />
 
       {loading ? (
-        <p className="text-muted-foreground text-sm">Loading…</p>
+        <p className="text-muted-foreground text-sm">Loading...</p>
       ) : invoices.length === 0 ? (
         <EmptyState
           icon={<FileTextIcon className="size-7" />}
           title="No invoices found"
           description={
-            Object.values(filters).some((v) => v !== "")
+            Object.values(filterBarFilters).some((v) => v !== "")
               ? "Try adjusting your filters to find what you're looking for."
               : "Create your first invoice to get started."
           }
           action={
-            Object.values(filters).some((v) => v !== "")
-              ? { label: "Clear Filters", onClick: handleClear, variant: "outline" as const }
+            Object.values(filterBarFilters).some((v) => v !== "")
+              ? {
+                  label: "Clear Filters",
+                  onClick: handleClear,
+                  variant: "outline" as const,
+                }
               : undefined
           }
         />
@@ -189,31 +291,55 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
               >
                 <div className="flex items-start gap-3">
                   <div className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-lg bg-muted text-[11px] font-bold text-muted-foreground">
-                    {getInitials(invoice.staff?.name ?? invoice.contact?.name ?? "?")}
+                    {getInitials(
+                      invoice.staff?.name ?? invoice.contact?.name ?? "?",
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
                       <p className="min-w-0 flex-1 text-sm font-semibold leading-tight">
                         {invoice.isRunning && invoice.runningTitle
                           ? invoice.runningTitle
-                          : (invoice.invoiceNumber ?? "—")}
+                          : (invoice.invoiceNumber ?? "\u2014")}
                       </p>
-                      {invoice.isRunning && <Badge variant="info" className="text-[9px]">Running</Badge>}
-                      <Badge variant={statusVariant(invoice.status)}>{statusLabel(invoice.status)}</Badge>
+                      {invoice.isRunning && (
+                        <Badge variant="info" className="text-[9px]">
+                          Running
+                        </Badge>
+                      )}
+                      <Badge variant={statusVariant(invoice.status)}>
+                        {statusLabel(invoice.status)}
+                      </Badge>
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {invoice.staff?.name ?? invoice.contact?.name ?? "Unknown"} · {formatDate(invoice.date)}
+                      {invoice.staff?.name ??
+                        invoice.contact?.name ??
+                        "Unknown"}{" "}
+                      · {formatDate(invoice.date)}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {invoice.department}
                       {invoice.category && (
-                        <> · {invoice.category.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}</>
+                        <>
+                          {" "}
+                          ·{" "}
+                          {invoice.category
+                            .replace(/_/g, " ")
+                            .replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                        </>
                       )}
                       {" "}· by {invoice.creatorName}
                     </p>
                     <div className="mt-3 flex items-center justify-between gap-3">
-                      <p className="text-sm font-bold tabular-nums">{formatAmount(invoice.totalAmount)}</p>
-                      {invoice.isRecurring && <RefreshCwIcon className="size-3.5 text-muted-foreground" aria-hidden="true" />}
+                      <p className="text-sm font-bold tabular-nums">
+                        {formatAmount(invoice.totalAmount)}
+                      </p>
+                      {invoice.isRecurring && (
+                        <RefreshCwIcon
+                          className="size-3.5 text-muted-foreground"
+                          aria-hidden="true"
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -258,22 +384,36 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
                   onClick={() => router.push(`/invoices/${invoice.id}`)}
                   role="link"
                   tabIndex={0}
-                  onKeyDown={(e) => { if (e.key === "Enter") router.push(`/invoices/${invoice.id}`); }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter")
+                      router.push(`/invoices/${invoice.id}`);
+                  }}
                 >
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-muted text-[11px] font-bold text-muted-foreground shrink-0">
-                        {getInitials(invoice.staff?.name ?? invoice.contact?.name ?? "?")}
+                        {getInitials(
+                          invoice.staff?.name ??
+                            invoice.contact?.name ??
+                            "?",
+                        )}
                       </div>
                       <div className="min-w-0">
                         <p className="text-[13px] font-semibold truncate">
                           <span className="inline-flex items-center gap-1">
                             {invoice.isRunning && invoice.runningTitle
                               ? invoice.runningTitle
-                              : (invoice.invoiceNumber ?? "—")} · {invoice.staff?.name ?? invoice.contact?.name ?? "Unknown"}
+                              : (invoice.invoiceNumber ?? "\u2014")}{" "}
+                            ·{" "}
+                            {invoice.staff?.name ??
+                              invoice.contact?.name ??
+                              "Unknown"}
                             {invoice.isRecurring && (
                               <span title="Recurring invoice">
-                                <RefreshCwIcon className="size-3 text-muted-foreground shrink-0" aria-hidden="true" />
+                                <RefreshCwIcon
+                                  className="size-3 text-muted-foreground shrink-0"
+                                  aria-hidden="true"
+                                />
                               </span>
                             )}
                           </span>
@@ -281,7 +421,15 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
                         <p className="text-[11px] text-muted-foreground">
                           {invoice.department} · {formatDate(invoice.date)}
                           {invoice.category && (
-                            <> · {invoice.category.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}</>
+                            <>
+                              {" "}
+                              ·{" "}
+                              {invoice.category
+                                .replace(/_/g, " ")
+                                .replace(/\b\w/g, (c: string) =>
+                                  c.toUpperCase(),
+                                )}
+                            </>
                           )}
                           {" "}· by {invoice.creatorName}
                         </p>
@@ -294,7 +442,9 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
                     </p>
                     <div className="flex items-center gap-1 justify-end mt-0.5">
                       {invoice.isRunning && (
-                        <Badge variant="info" className="text-[9px]">Running</Badge>
+                        <Badge variant="info" className="text-[9px]">
+                          Running
+                        </Badge>
                       )}
                       <Badge variant={statusVariant(invoice.status)}>
                         {statusLabel(invoice.status)}
@@ -317,7 +467,9 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
                 variant="outline"
                 size="sm"
                 disabled={page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                onClick={() =>
+                  setFilter("page", String(Math.max(1, page - 1)))
+                }
                 className="flex-1 sm:flex-none"
               >
                 Previous
@@ -326,7 +478,9 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
                 variant="outline"
                 size="sm"
                 disabled={page >= totalPages}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                onClick={() =>
+                  setFilter("page", String(Math.min(totalPages, page + 1)))
+                }
                 className="flex-1 sm:flex-none"
               >
                 Next
