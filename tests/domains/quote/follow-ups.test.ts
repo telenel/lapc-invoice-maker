@@ -5,6 +5,7 @@ vi.mock("@/lib/prisma", () => ({
     $transaction: vi.fn(),
     quoteFollowUp: {
       delete: vi.fn(),
+      update: vi.fn(),
     },
   },
 }));
@@ -52,6 +53,7 @@ function makeTx() {
       count: vi.fn(),
       create: vi.fn(),
       delete: vi.fn(),
+      deleteMany: vi.fn(),
     },
   };
 }
@@ -229,6 +231,7 @@ describe("checkAndSendPaymentFollowUps", () => {
     expect(prisma.quoteFollowUp.delete).toHaveBeenCalledWith({
       where: { id: "fu1" },
     });
+    expect(prisma.quoteFollowUp.update).not.toHaveBeenCalled();
   });
 
   it("skips a reminder claim when the quote is no longer accepted at lock time", async () => {
@@ -318,6 +321,10 @@ describe("checkAndSendPaymentFollowUps", () => {
 
     await checkAndSendPaymentFollowUps();
 
+    expect(vi.mocked(prisma.quoteFollowUp.update)).toHaveBeenCalledWith({
+      where: { id: "fu1" },
+      data: { type: "PAYMENT_REMINDER" },
+    });
     expect(vi.mocked(notificationService.createAndPublish)).toHaveBeenCalledWith(
       expect.objectContaining({
         userId: "u2",

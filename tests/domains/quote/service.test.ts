@@ -41,6 +41,13 @@ vi.mock("@/lib/prisma", () => ({
       create: vi.fn(),
       update: vi.fn(),
     },
+    quoteFollowUp: {
+      create: vi.fn(),
+    },
+    quoteView: {
+      findFirst: vi.fn(),
+      update: vi.fn(),
+    },
   },
 }));
 
@@ -56,6 +63,7 @@ vi.mock("@/lib/sse", () => ({
 
 import * as quoteRepository from "@/domains/quote/repository";
 import { pdfService } from "@/domains/pdf/service";
+import { prisma } from "@/lib/prisma";
 import { notificationService } from "@/domains/notification/service";
 import { safePublishAll } from "@/lib/sse";
 import { quoteService } from "@/domains/quote/service";
@@ -244,7 +252,18 @@ describe("quoteService", () => {
         paymentMethod: null,
         convertedToInvoice: { id: "inv1", createdBy: "u2" },
       } as never);
-      mockRepo.applyPublicPaymentResolution.mockResolvedValue(undefined as never);
+      const tx = {
+        $queryRaw: vi.fn()
+          .mockResolvedValueOnce([{ id: "q1", paymentMethod: null, quoteStatus: "ACCEPTED" }])
+          .mockResolvedValueOnce([{ id: "inv1", status: "DRAFT", paymentMethod: null }]),
+        invoice: {
+          update: vi.fn(),
+        },
+        quoteFollowUp: {
+          create: vi.fn(),
+        },
+      };
+      vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => callback(tx as never) as never);
 
       const result = await quoteService.submitPublicPaymentDetails("token", {
         paymentMethod: "ACCOUNT_NUMBER",
@@ -252,13 +271,24 @@ describe("quoteService", () => {
       });
 
       expect(result?.id).toBe("q1");
-      expect(mockRepo.applyPublicPaymentResolution).toHaveBeenCalledWith(
-        "q1",
-        {
+      expect(tx.invoice.update).toHaveBeenNthCalledWith(1, {
+        where: { id: "q1" },
+        data: {
           paymentMethod: "ACCOUNT_NUMBER",
           paymentAccountNumber: "SAP-12345",
         },
-        {
+      });
+      expect(tx.invoice.update).toHaveBeenNthCalledWith(2, {
+        where: { id: "inv1" },
+        data: {
+          paymentMethod: "ACCOUNT_NUMBER",
+          paymentAccountNumber: "SAP-12345",
+        },
+      });
+      expect(tx.quoteFollowUp.create).toHaveBeenCalledWith({
+        data: {
+          invoiceId: "q1",
+          type: "PAYMENT_RESOLVED",
           recipientEmail: "jane@example.com",
           subject: "Payment details provided for Q-1",
           metadata: {
@@ -266,8 +296,7 @@ describe("quoteService", () => {
             paymentAccountNumber: "SAP-12345",
           },
         },
-        "inv1",
-      );
+      });
       expect(vi.mocked(notificationService.createAndPublish)).toHaveBeenCalledWith(
         expect.objectContaining({
           userId: "u2",
@@ -294,7 +323,7 @@ describe("quoteService", () => {
         code: "PAYMENT_ALREADY_RESOLVED",
       });
 
-      expect(mockRepo.applyPublicPaymentResolution).not.toHaveBeenCalled();
+      expect(prisma.$transaction).not.toHaveBeenCalled();
     });
 
     it("blocks public payment updates when the converted invoice is finalized", async () => {
@@ -306,11 +335,18 @@ describe("quoteService", () => {
         paymentMethod: null,
         convertedToInvoice: { id: "inv1" },
       } as never);
-      mockRepo.applyPublicPaymentResolution.mockRejectedValue(
-        Object.assign(new Error("Cannot update a finalized invoice"), {
-          code: "FORBIDDEN",
-        }),
-      );
+      const tx = {
+        $queryRaw: vi.fn()
+          .mockResolvedValueOnce([{ id: "q1", paymentMethod: null, quoteStatus: "ACCEPTED" }])
+          .mockResolvedValueOnce([{ id: "inv1", status: "FINAL", paymentMethod: null }]),
+        invoice: {
+          update: vi.fn(),
+        },
+        quoteFollowUp: {
+          create: vi.fn(),
+        },
+      };
+      vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => callback(tx as never) as never);
 
       await expect(
         quoteService.submitPublicPaymentDetails("token", {
@@ -320,6 +356,7 @@ describe("quoteService", () => {
         code: "FORBIDDEN",
       });
 
+      expect(tx.quoteFollowUp.create).not.toHaveBeenCalled();
       expect(mockRepo.createFollowUp).not.toHaveBeenCalled();
     });
   });
@@ -333,7 +370,19 @@ describe("quoteService", () => {
           convertedToInvoice: { id: "inv1", invoiceNumber: "INV-2026-0001" },
         }) as never,
       );
-      mockRepo.applyPublicQuoteResponse.mockResolvedValue(undefined as never);
+      const tx = {
+        $queryRaw: vi.fn()
+          .mockResolvedValueOnce([{ id: "q1", quoteStatus: "SENT", paymentMethod: null }])
+          .mockResolvedValueOnce([{ id: "inv1", status: "DRAFT", paymentMethod: null }]),
+        invoice: {
+          update: vi.fn(),
+        },
+        quoteView: {
+          findFirst: vi.fn().mockResolvedValue({ id: "view-1" }),
+          update: vi.fn(),
+        },
+      };
+      vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => callback(tx as never) as never);
 
       await quoteService.respondToQuote(
         "token",
@@ -342,20 +391,26 @@ describe("quoteService", () => {
         { paymentMethod: "ACCOUNT_NUMBER", accountNumber: "SAP-12345" },
       );
 
-      expect(mockRepo.applyPublicQuoteResponse).toHaveBeenCalledWith(
-        "q1",
-        {
-          response: "ACCEPTED",
-          acceptedAt: expect.any(Date),
-          convertedInvoiceId: "inv1",
-          viewId: "view-1",
-          paymentDetails: {
-            paymentMethod: "ACCOUNT_NUMBER",
-            paymentAccountNumber: "SAP-12345",
-          },
-          cateringDetails: undefined,
+      expect(tx.invoice.update).toHaveBeenNthCalledWith(1, {
+        where: { id: "inv1" },
+        data: {
+          paymentMethod: "ACCOUNT_NUMBER",
+          paymentAccountNumber: "SAP-12345",
         },
-      );
+      });
+      expect(tx.invoice.update).toHaveBeenNthCalledWith(2, {
+        where: { id: "q1" },
+        data: {
+          quoteStatus: "ACCEPTED",
+          acceptedAt: expect.any(Date),
+          paymentMethod: "ACCOUNT_NUMBER",
+          paymentAccountNumber: "SAP-12345",
+        },
+      });
+      expect(tx.quoteView.update).toHaveBeenCalledWith({
+        where: { id: "view-1" },
+        data: { respondedWith: "ACCEPTED" },
+      });
       expect(mockRepo.update).not.toHaveBeenCalled();
       expect(mockRepo.updateViewResponse).not.toHaveBeenCalled();
       expect(vi.mocked(safePublishAll)).toHaveBeenCalledWith({ type: "quote-changed" });
@@ -371,7 +426,19 @@ describe("quoteService", () => {
           convertedToInvoice: { id: "inv1", invoiceNumber: "INV-2026-0001" },
         }) as never,
       );
-      mockRepo.applyPublicQuoteResponse.mockResolvedValue(undefined as never);
+      const tx = {
+        $queryRaw: vi.fn()
+          .mockResolvedValueOnce([{ id: "q1", quoteStatus: "SENT", paymentMethod: null }])
+          .mockResolvedValueOnce([{ id: "inv1", status: "DRAFT", paymentMethod: null }]),
+        invoice: {
+          update: vi.fn(),
+        },
+        quoteView: {
+          findFirst: vi.fn(),
+          update: vi.fn(),
+        },
+      };
+      vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => callback(tx as never) as never);
 
       await quoteService.respondToQuote(
         "token",
@@ -390,17 +457,27 @@ describe("quoteService", () => {
         },
       );
 
-      expect(mockRepo.applyPublicQuoteResponse).toHaveBeenCalledWith(
-        "q1",
-        expect.objectContaining({
-          response: "ACCEPTED",
-          convertedInvoiceId: "inv1",
+      expect(tx.invoice.update).toHaveBeenNthCalledWith(1, {
+        where: { id: "inv1" },
+        data: expect.objectContaining({
+          paymentMethod: "CHECK",
           cateringDetails: expect.objectContaining({
             location: "Campus",
             contactName: "Jane",
           }),
         }),
-      );
+      });
+      expect(tx.invoice.update).toHaveBeenNthCalledWith(2, {
+        where: { id: "q1" },
+        data: expect.objectContaining({
+          quoteStatus: "ACCEPTED",
+          paymentMethod: "CHECK",
+          cateringDetails: expect.objectContaining({
+            location: "Campus",
+            contactName: "Jane",
+          }),
+        }),
+      });
     });
 
     it("rejects catering details for non-catering quotes", async () => {
@@ -433,7 +510,7 @@ describe("quoteService", () => {
         code: "INVALID_INPUT",
       });
 
-      expect(mockRepo.applyPublicQuoteResponse).not.toHaveBeenCalled();
+      expect(prisma.$transaction).not.toHaveBeenCalled();
     });
   });
 

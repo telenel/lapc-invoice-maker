@@ -6,6 +6,8 @@ import { safePublishAll } from "@/lib/sse";
 
 const FOLLOW_UP_INTERVAL_BUSINESS_DAYS = 7;
 const PAYMENT_FOLLOW_UP_LOCK_KEY = 318742;
+const PAYMENT_REMINDER_CLAIM = "PAYMENT_REMINDER_CLAIM";
+const PAYMENT_REMINDER_CLAIM_TTL_MINUTES = 30;
 
 function startOfDay(date: Date): Date {
   const normalized = new Date(date);
@@ -62,6 +64,27 @@ async function claimPaymentFollowUp(quoteId: string, now: Date) {
       return null;
     }
 
+    const staleClaimThreshold = new Date(now.getTime() - PAYMENT_REMINDER_CLAIM_TTL_MINUTES * 60 * 1000);
+    const activeClaim = await tx.quoteFollowUp.findFirst({
+      where: {
+        invoiceId: quoteId,
+        type: PAYMENT_REMINDER_CLAIM,
+        sentAt: { gte: staleClaimThreshold },
+      },
+      orderBy: { sentAt: "desc" },
+    });
+    if (activeClaim) {
+      return null;
+    }
+
+    await tx.quoteFollowUp.deleteMany({
+      where: {
+        invoiceId: quoteId,
+        type: PAYMENT_REMINDER_CLAIM,
+        sentAt: { lt: staleClaimThreshold },
+      },
+    });
+
     const lastFollowUp = await tx.quoteFollowUp.findFirst({
       where: { invoiceId: quoteId, type: "PAYMENT_REMINDER" },
       orderBy: { sentAt: "desc" },
@@ -80,7 +103,7 @@ async function claimPaymentFollowUp(quoteId: string, now: Date) {
     const followUp = await tx.quoteFollowUp.create({
       data: {
         invoiceId: quote.id,
-        type: "PAYMENT_REMINDER",
+        type: PAYMENT_REMINDER_CLAIM,
         recipientEmail: quote.recipientEmail,
         subject,
         metadata: { attempt: attemptNumber },
@@ -177,6 +200,11 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
       await prisma.quoteFollowUp.delete({ where: { id: claim.followUpId } }).catch(() => {});
       continue;
     }
+
+    await prisma.quoteFollowUp.update({
+      where: { id: claim.followUpId },
+      data: { type: "PAYMENT_REMINDER" },
+    });
 
     try {
       const { notificationService } = await import("@/domains/notification/service");

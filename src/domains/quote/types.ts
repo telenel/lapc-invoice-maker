@@ -176,7 +176,7 @@ export interface QuotePublicPaymentCandidate {
   recipientEmail: string | null;
   createdBy: string;
   paymentMethod: string | null;
-  convertedToInvoice: { id: string } | null;
+  convertedToInvoice: { id: string; createdBy?: string } | null;
 }
 
 export interface QuoteViewResponse {

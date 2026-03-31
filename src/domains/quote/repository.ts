@@ -1,6 +1,8 @@
 // src/domains/quote/repository.ts
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/generated/prisma/client";
+
+const PAYMENT_REMINDER_CLAIM = "PAYMENT_REMINDER_CLAIM";
 import type { QuoteFilters } from "./types";
 
 // ── Shared include shapes ──────────────────────────────────────────────────
@@ -432,208 +434,6 @@ export async function syncPublicPaymentDetails(
   });
 }
 
-export async function applyPublicPaymentResolution(
-  quoteId: string,
-  paymentDetails: { paymentMethod: string; paymentAccountNumber: string | null },
-  followUp: {
-    recipientEmail: string;
-    subject: string;
-    metadata: Prisma.InputJsonValue;
-  },
-  convertedInvoiceId?: string,
-) {
-  return prisma.$transaction(async (tx) => {
-    const lockedQuote = await tx.$queryRaw<Array<{
-      id: string;
-      paymentMethod: string | null;
-      quoteStatus: string | null;
-    }>>`
-      SELECT id, payment_method AS "paymentMethod", quote_status AS "quoteStatus"
-      FROM invoices
-      WHERE id = ${quoteId}
-      FOR UPDATE
-    `;
-
-    if (lockedQuote.length === 0) {
-      throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
-    }
-
-    if (lockedQuote[0]?.paymentMethod) {
-      throw Object.assign(new Error("Payment details have already been provided"), {
-        code: "PAYMENT_ALREADY_RESOLVED",
-      });
-    }
-
-    if (lockedQuote[0]?.quoteStatus !== "ACCEPTED") {
-      throw Object.assign(new Error("This quote is no longer awaiting payment details"), {
-        code: "FORBIDDEN",
-      });
-    }
-
-    await tx.invoice.update({
-      where: { id: quoteId },
-      data: paymentDetails,
-    });
-
-    if (convertedInvoiceId) {
-      const convertedInvoice = await tx.invoice.findUnique({
-        where: { id: convertedInvoiceId },
-        select: { status: true },
-      });
-
-      if (!convertedInvoice) {
-        throw Object.assign(new Error("Converted invoice not found"), { code: "NOT_FOUND" });
-      }
-
-      if (convertedInvoice.status === "FINAL") {
-        throw Object.assign(new Error("Cannot update a finalized invoice"), { code: "FORBIDDEN" });
-      }
-
-      await tx.invoice.update({
-        where: { id: convertedInvoiceId },
-        data: paymentDetails,
-      });
-    }
-
-    await tx.quoteFollowUp.create({
-      data: {
-        invoiceId: quoteId,
-        type: "PAYMENT_RESOLVED",
-        recipientEmail: followUp.recipientEmail,
-        subject: followUp.subject,
-        metadata: followUp.metadata,
-      },
-    });
-  });
-}
-
-export async function applyPublicQuoteResponse(
-  quoteId: string,
-  input: {
-    response: "ACCEPTED" | "DECLINED";
-    acceptedAt?: Date;
-    paymentDetails?: { paymentMethod: string; paymentAccountNumber: string | null };
-    cateringDetails?: Prisma.InputJsonValue;
-    convertedInvoiceId?: string;
-    viewId?: string;
-  },
-) {
-  return prisma.$transaction(async (tx) => {
-    const lockedQuote = await tx.$queryRaw<Array<{
-      id: string;
-      quoteStatus: string | null;
-      paymentMethod: string | null;
-    }>>`
-      SELECT id, quote_status AS "quoteStatus", payment_method AS "paymentMethod"
-      FROM invoices
-      WHERE id = ${quoteId}
-      FOR UPDATE
-    `;
-    const currentQuote = lockedQuote[0];
-    if (!currentQuote) {
-      throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
-    }
-    if (!["SENT", "SUBMITTED_EMAIL", "SUBMITTED_MANUAL"].includes(currentQuote.quoteStatus ?? "")) {
-      throw Object.assign(
-        new Error(
-          currentQuote.quoteStatus === "ACCEPTED" ||
-            currentQuote.quoteStatus === "DECLINED" ||
-            currentQuote.quoteStatus === "REVISED"
-            ? "This quote has already been responded to"
-            : "This quote is no longer available",
-        ),
-        { code: "FORBIDDEN" },
-      );
-    }
-
-    const quoteData: Prisma.InvoiceUpdateInput = {
-      quoteStatus: input.response,
-    };
-
-    if (input.response === "ACCEPTED") {
-      quoteData.acceptedAt = input.acceptedAt;
-
-      if (input.paymentDetails) {
-        if (currentQuote.paymentMethod) {
-          throw Object.assign(new Error("Payment details have already been provided"), {
-            code: "PAYMENT_ALREADY_RESOLVED",
-          });
-        }
-        quoteData.paymentMethod = input.paymentDetails.paymentMethod;
-        quoteData.paymentAccountNumber = input.paymentDetails.paymentAccountNumber;
-      }
-
-      if (input.cateringDetails !== undefined) {
-        quoteData.cateringDetails = input.cateringDetails;
-      }
-    }
-
-    if (input.response === "ACCEPTED" && input.convertedInvoiceId) {
-      const convertedInvoices = await tx.$queryRaw<Array<{
-        id: string;
-        status: string | null;
-        paymentMethod: string | null;
-      }>>`
-        SELECT id, status, payment_method AS "paymentMethod"
-        FROM invoices
-        WHERE id = ${input.convertedInvoiceId}
-        FOR UPDATE
-      `;
-      const convertedInvoice = convertedInvoices[0];
-
-      if (!convertedInvoice) {
-        throw Object.assign(new Error("Converted invoice not found"), { code: "NOT_FOUND" });
-      }
-
-      if (convertedInvoice.status === "FINAL") {
-        throw Object.assign(new Error("Cannot update a finalized invoice"), { code: "FORBIDDEN" });
-      }
-
-      const convertedInvoiceData: Prisma.InvoiceUpdateInput = {};
-      if (input.paymentDetails) {
-        if (convertedInvoice.paymentMethod) {
-          throw Object.assign(new Error("Payment details have already been provided"), {
-            code: "PAYMENT_ALREADY_RESOLVED",
-          });
-        }
-        convertedInvoiceData.paymentMethod = input.paymentDetails.paymentMethod;
-        convertedInvoiceData.paymentAccountNumber = input.paymentDetails.paymentAccountNumber;
-      }
-      if (input.cateringDetails !== undefined) {
-        convertedInvoiceData.cateringDetails = input.cateringDetails;
-      }
-
-      if (Object.keys(convertedInvoiceData).length > 0) {
-        await tx.invoice.update({
-          where: { id: input.convertedInvoiceId },
-          data: convertedInvoiceData,
-        });
-      }
-    }
-
-    await tx.invoice.update({
-      where: { id: quoteId },
-      data: quoteData,
-    });
-
-    if (input.viewId) {
-      const view = await tx.quoteView.findFirst({
-        where: { id: input.viewId, invoiceId: quoteId },
-        select: { id: true },
-      });
-
-      if (!view) {
-        throw Object.assign(new Error("Quote activity session not found"), { code: "INVALID_INPUT" });
-      }
-
-      await tx.quoteView.update({
-        where: { id: input.viewId },
-        data: { respondedWith: input.response },
-      });
-    }
-  });
-}
-
 export async function createFollowUp(data: {
   invoiceId: string;
   type: string;
@@ -659,7 +459,10 @@ export async function findViewsByInvoiceId(invoiceId: string) {
  */
 export async function findFollowUpsByInvoiceId(invoiceId: string) {
   return prisma.quoteFollowUp.findMany({
-    where: { invoiceId },
+    where: {
+      invoiceId,
+      type: { not: PAYMENT_REMINDER_CLAIM },
+    },
     orderBy: { sentAt: "desc" },
   });
 }
