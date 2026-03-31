@@ -54,21 +54,22 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       );
     }
 
-    // If catering details were submitted, validate and persist them before processing the response
     let cateringDetails: CateringDetails | undefined;
-    if (quote.isCateringEvent && response === "ACCEPTED" && !body.cateringDetails) {
-      return NextResponse.json(
-        { error: "Catering details are required to approve this quote" },
-        { status: 400 },
-      );
+    if (response === "ACCEPTED") {
+      if (quote.isCateringEvent && !body.cateringDetails) {
+        return NextResponse.json(
+          { error: "Catering details are required to approve this quote" },
+          { status: 400 },
+        );
+      }
+      if (!quote.isCateringEvent && body.cateringDetails) {
+        return NextResponse.json(
+          { error: "Catering details are only allowed for catering quotes" },
+          { status: 400 },
+        );
+      }
     }
-    if (!quote.isCateringEvent && body.cateringDetails) {
-      return NextResponse.json(
-        { error: "Catering details are only allowed for catering quotes" },
-        { status: 400 },
-      );
-    }
-    if (body.cateringDetails) {
+    if (response === "ACCEPTED" && body.cateringDetails) {
       const parsed = cateringDetailsSchema.safeParse(body.cateringDetails);
       if (!parsed.success) {
         return NextResponse.json(
@@ -109,12 +110,17 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       } as CateringDetails;
     }
 
-    // Extract payment details from the body
-    const paymentDetailsInput = {
-      paymentMethod: body.paymentMethod,
-      accountNumber: body.accountNumber,
-    };
-    normalizeQuotePaymentDetails(paymentDetailsInput);
+    const paymentDetailsInput =
+      response === "ACCEPTED"
+        ? (() => {
+            const normalized = {
+              paymentMethod: body.paymentMethod,
+              accountNumber: body.accountNumber,
+            };
+            normalizeQuotePaymentDetails(normalized);
+            return normalized;
+          })()
+        : undefined;
 
     const result = await quoteService.respondToQuote(
       token,

@@ -290,6 +290,48 @@ describe("POST /api/quotes/public/[token]/respond", () => {
     );
   });
 
+  it("ignores payment and catering fields when declining a quote", async () => {
+    vi.mocked(quoteService.getByShareToken).mockResolvedValue({
+      id: "q1",
+      quoteStatus: "SENT",
+      isCateringEvent: true,
+    } as never);
+    vi.mocked(quoteService.respondToQuote).mockResolvedValue({
+      id: "q1",
+      quoteStatus: "DECLINED",
+    } as never);
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/respond", {
+        method: "POST",
+        body: JSON.stringify({
+          response: "DECLINED",
+          paymentMethod: "ACCOUNT_NUMBER",
+          accountNumber: "",
+          cateringDetails: {
+            eventDate: "",
+            startTime: "",
+            endTime: "",
+            location: "",
+            contactName: "",
+            contactPhone: "",
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(quoteService.respondToQuote).toHaveBeenCalledWith(
+      "token",
+      "DECLINED",
+      undefined,
+      undefined,
+      undefined,
+    );
+  });
+
   it("requires catering details when approving a catering quote", async () => {
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",
