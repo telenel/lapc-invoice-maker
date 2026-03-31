@@ -17,7 +17,8 @@ type PaymentFollowUpQuoteRow = {
   recipientName: string | null;
   recipientEmail: string;
   shareToken: string;
-  acceptedAt: Date;
+  acceptedAt: Date | null;
+  updatedAt: Date;
   paymentMethod: string | null;
   createdBy: string;
 };
@@ -47,6 +48,7 @@ async function readPaymentFollowUpState(
       recipient_email AS "recipientEmail",
       share_token AS "shareToken",
       accepted_at AS "acceptedAt",
+      updated_at AS "updatedAt",
       payment_method AS "paymentMethod",
       created_by AS "createdBy"
     FROM invoices
@@ -58,7 +60,6 @@ async function readPaymentFollowUpState(
   if (
     !quote ||
     quote.quoteStatus !== "ACCEPTED" ||
-    !quote.acceptedAt ||
     quote.paymentMethod ||
     !quote.recipientEmail ||
     !quote.shareToken
@@ -114,7 +115,7 @@ async function claimPaymentFollowUp(quoteId: string, now: Date) {
       where: { invoiceId: quoteId, type: "PAYMENT_REMINDER" },
       orderBy: { sentAt: "desc" },
     });
-    const referenceDate = lastFollowUp ? lastFollowUp.sentAt : quote.acceptedAt;
+    const referenceDate = lastFollowUp ? lastFollowUp.sentAt : (quote.acceptedAt ?? quote.updatedAt);
     const daysSince = businessDaysBetween(referenceDate, now);
     if (daysSince < FOLLOW_UP_INTERVAL_BUSINESS_DAYS) {
       return null;
@@ -163,13 +164,12 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
 
     // Find quotes that are ACCEPTED, have type QUOTE, and no paymentMethod
     return tx.invoice.findMany({
-      where: {
-        type: "QUOTE",
-        quoteStatus: "ACCEPTED",
-        acceptedAt: { not: null },
-        paymentMethod: null,
-        shareToken: { not: null },
-        OR: [
+        where: {
+          type: "QUOTE",
+          quoteStatus: "ACCEPTED",
+          paymentMethod: null,
+          shareToken: { not: null },
+          OR: [
           { convertedToInvoice: null },
           {
             convertedToInvoice: {
@@ -195,7 +195,7 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
 
   for (const quote of candidates) {
     const lastFollowUp = quote.followUps[0];
-    const referenceDate = lastFollowUp ? lastFollowUp.sentAt : quote.acceptedAt!;
+    const referenceDate = lastFollowUp ? lastFollowUp.sentAt : (quote.acceptedAt ?? quote.updatedAt);
     const daysSince = businessDaysBetween(referenceDate, now);
 
     if (daysSince < FOLLOW_UP_INTERVAL_BUSINESS_DAYS || !quote.recipientEmail || !quote.shareToken) {

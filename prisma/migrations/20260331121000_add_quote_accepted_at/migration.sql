@@ -5,7 +5,7 @@ ADD COLUMN "accepted_at" TIMESTAMP(3);
 UPDATE "invoices" AS i
 SET "accepted_at" = accepted_views."accepted_at"
 FROM (
-  SELECT q."id", COALESCE(approval_notifications."accepted_at", q."updated_at") AS "accepted_at"
+  SELECT q."id", approval_notifications."accepted_at" AS "accepted_at"
   FROM "invoices" AS q
   LEFT JOIN (
     SELECT "quote_id", MIN("created_at") AS "accepted_at"
