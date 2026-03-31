@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { signOut, useSession } from "next-auth/react";
@@ -16,9 +17,17 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { HelpModal } from "@/components/help-modal";
-import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useUIScale } from "@/components/ui-scale-provider";
+
+const HelpModal = dynamic(
+  () => import("@/components/help-modal").then((m) => m.HelpModal),
+  { ssr: false },
+);
+
+const NotificationBell = dynamic(
+  () => import("@/components/notifications/notification-bell").then((m) => m.NotificationBell),
+  { ssr: false },
+);
 
 type NavLink = {
   href: string;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useDeferredValue, useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { PlusIcon, PencilIcon, UserMinus, SearchIcon, UsersIcon } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -29,6 +29,7 @@ export function StaffTable() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
@@ -38,7 +39,7 @@ export function StaffTable() {
       const result = await staffApi.listPaginated({
         page,
         pageSize: PAGE_SIZE,
-        search: search || undefined,
+        search: deferredSearch || undefined,
       });
       setStaff(result.data);
       setTotal(result.total);
@@ -46,7 +47,7 @@ export function StaffTable() {
       toast.error("Failed to load staff directory");
     }
     setLoading(false);
-  }, [page, search]);
+  }, [page, deferredSearch]);
 
   useEffect(() => {
     fetchStaff();

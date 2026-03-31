@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useDeferredValue, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -158,6 +158,7 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<SortField>("createdAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const deferredSearch = useDeferredValue(filters.search);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -165,7 +166,7 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
     setLoading(true);
 
     const params = new URLSearchParams();
-    if (filters.search) params.set("search", filters.search);
+    if (deferredSearch) params.set("search", deferredSearch);
     if (filters.quoteStatus && filters.quoteStatus !== "all")
       params.set("quoteStatus", filters.quoteStatus);
     if (filters.category && filters.category !== "all")
@@ -190,7 +191,7 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
       toast.error("Failed to load quotes");
     }
     setLoading(false);
-  }, [filters, page, sortBy, sortDir]);
+  }, [deferredSearch, filters.quoteStatus, filters.category, filters.department, filters.dateFrom, filters.dateTo, filters.amountMin, filters.amountMax, page, sortBy, sortDir]);
 
   useEffect(() => {
     fetchQuotes();
