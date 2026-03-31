@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useDeferredValue, useEffect, useState, useCallback } from "react";
+import React, { useDeferredValue, useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,8 +23,17 @@ import { cn } from "@/lib/utils";
 import { ClipboardListIcon } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useSSE } from "@/lib/use-sse";
+import { useUrlFilters } from "@/lib/use-url-filters";
 
-type QuoteStatus = "DRAFT" | "SENT" | "SUBMITTED_EMAIL" | "SUBMITTED_MANUAL" | "ACCEPTED" | "DECLINED" | "REVISED" | "EXPIRED";
+type QuoteStatus =
+  | "DRAFT"
+  | "SENT"
+  | "SUBMITTED_EMAIL"
+  | "SUBMITTED_MANUAL"
+  | "ACCEPTED"
+  | "DECLINED"
+  | "REVISED"
+  | "EXPIRED";
 
 interface Quote {
   id: string;
@@ -45,7 +55,7 @@ interface QuotesResponse {
   pageSize: number;
 }
 
-const EMPTY_FILTERS: QuoteFilters = {
+const URL_FILTER_DEFAULTS = {
   search: "",
   quoteStatus: "",
   category: "",
@@ -54,14 +64,31 @@ const EMPTY_FILTERS: QuoteFilters = {
   dateTo: "",
   amountMin: "",
   amountMax: "",
-};
+  page: "1",
+  sortBy: "createdAt",
+  sortOrder: "desc",
+} as const;
 
-type SortField = "quoteNumber" | "date" | "createdAt" | "totalAmount" | "expirationDate";
+const SAVED_VIEWS = [
+  { label: "Awaiting Response", params: { quoteStatus: "SENT" } },
+  { label: "My Drafts", params: { quoteStatus: "DRAFT" } },
+  { label: "Accepted", params: { quoteStatus: "ACCEPTED" } },
+] as const;
+
+type SortField =
+  | "quoteNumber"
+  | "date"
+  | "createdAt"
+  | "totalAmount"
+  | "expirationDate";
 type SortDir = "asc" | "desc";
 
 const PAGE_SIZE = 20;
 
-const STATUS_BADGE_VARIANT: Record<QuoteStatus, "success" | "info" | "warning" | "destructive" | "outline"> = {
+const STATUS_BADGE_VARIANT: Record<
+  QuoteStatus,
+  "success" | "info" | "warning" | "destructive" | "outline"
+> = {
   DRAFT: "warning",
   SENT: "info",
   SUBMITTED_EMAIL: "info",
@@ -102,15 +129,23 @@ function isExpired(dateStr: string | null): boolean {
   return expiry < today;
 }
 
-const QuoteRow = React.memo(function QuoteRow({ quote, onClick }: QuoteRowProps) {
+const QuoteRow = React.memo(function QuoteRow({
+  quote,
+  onClick,
+}: QuoteRowProps) {
   return (
     <TableRow
       key={quote.id}
-      className={cn("cursor-pointer group", quote.quoteStatus === "REVISED" && "opacity-60")}
+      className={cn(
+        "cursor-pointer group",
+        quote.quoteStatus === "REVISED" && "opacity-60",
+      )}
       onClick={() => onClick(quote.id)}
       role="link"
       tabIndex={0}
-      onKeyDown={(e) => { if (e.key === "Enter") onClick(quote.id); }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") onClick(quote.id);
+      }}
     >
       <TableCell>
         <div className="flex items-center gap-3">
@@ -119,13 +154,19 @@ const QuoteRow = React.memo(function QuoteRow({ quote, onClick }: QuoteRowProps)
           </div>
           <div className="min-w-0">
             <p className="text-[13px] font-semibold truncate">
-              {quote.quoteNumber} · {quote.recipientName || quote.recipientOrg || "—"}
+              {quote.quoteNumber} ·{" "}
+              {quote.recipientName || quote.recipientOrg || "\u2014"}
             </p>
             <p className="text-[11px] text-muted-foreground">
               {quote.department} · {formatDate(quote.date)}
               {quote.expirationDate && (
-                <span className={isExpired(quote.expirationDate) ? " text-destructive" : ""}>
-                  {" "}· Exp {formatDate(quote.expirationDate)}
+                <span
+                  className={
+                    isExpired(quote.expirationDate) ? " text-destructive" : ""
+                  }
+                >
+                  {" "}
+                  · Exp {formatDate(quote.expirationDate)}
                 </span>
               )}
             </p>
@@ -136,7 +177,10 @@ const QuoteRow = React.memo(function QuoteRow({ quote, onClick }: QuoteRowProps)
         <p className="text-[13px] font-bold tabular-nums">
           {formatAmount(quote.totalAmount)}
         </p>
-        <Badge variant={STATUS_BADGE_VARIANT[quote.quoteStatus]} className="mt-0.5">
+        <Badge
+          variant={STATUS_BADGE_VARIANT[quote.quoteStatus]}
+          className="mt-0.5"
+        >
           {STATUS_LABEL[quote.quoteStatus]}
         </Badge>
       </TableCell>
@@ -146,21 +190,42 @@ const QuoteRow = React.memo(function QuoteRow({ quote, onClick }: QuoteRowProps)
 
 export function QuoteTable({ departments, categories }: QuoteTableProps) {
   const router = useRouter();
+  const { filters, setFilter, setFilters, resetFilters } = useUrlFilters(
+    URL_FILTER_DEFAULTS,
+  );
 
-  const handleRowClick = useCallback((id: string) => {
-    router.push(`/quotes/${id}`);
-  }, [router]);
+  const handleRowClick = useCallback(
+    (id: string) => {
+      router.push(`/quotes/${id}`);
+    },
+    [router],
+  );
 
-  const [filters, setFilters] = useState<QuoteFilters>(EMPTY_FILTERS);
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<SortField>("createdAt");
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
+
+  const page = Number(filters.page) || 1;
+  const sortBy = (filters.sortBy || "createdAt") as SortField;
+  const sortDir = (filters.sortOrder || "desc") as SortDir;
   const deferredSearch = useDeferredValue(filters.search);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  /* Bridge: build QuoteFilters object from URL filters */
+  const filterBarFilters: QuoteFilters = useMemo(
+    () => ({
+      search: filters.search,
+      quoteStatus: filters.quoteStatus,
+      category: filters.category,
+      department: filters.department,
+      dateFrom: filters.dateFrom,
+      dateTo: filters.dateTo,
+      amountMin: filters.amountMin,
+      amountMax: filters.amountMax,
+    }),
+    [filters],
+  );
 
   const fetchQuotes = useCallback(async () => {
     setLoading(true);
@@ -191,7 +256,19 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
       toast.error("Failed to load quotes");
     }
     setLoading(false);
-  }, [deferredSearch, filters.quoteStatus, filters.category, filters.department, filters.dateFrom, filters.dateTo, filters.amountMin, filters.amountMax, page, sortBy, sortDir]);
+  }, [
+    deferredSearch,
+    filters.quoteStatus,
+    filters.category,
+    filters.department,
+    filters.dateFrom,
+    filters.dateTo,
+    filters.amountMin,
+    filters.amountMax,
+    page,
+    sortBy,
+    sortDir,
+  ]);
 
   useEffect(() => {
     fetchQuotes();
@@ -199,25 +276,20 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
 
   useSSE("quote-changed", fetchQuotes);
 
-  // Reset to page 1 when filters or sort changes
   function handleFiltersChange(next: QuoteFilters) {
     setFilters(next);
-    setPage(1);
   }
 
   function handleClear() {
-    setFilters(EMPTY_FILTERS);
-    setPage(1);
+    resetFilters();
   }
 
   function handleSort(field: SortField) {
     if (sortBy === field) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+      setFilter("sortOrder", sortDir === "asc" ? "desc" : "asc");
     } else {
-      setSortBy(field);
-      setSortDir("asc");
+      setFilters({ sortBy: field, sortOrder: "asc" });
     }
-    setPage(1);
   }
 
   function sortIndicator(field: SortField) {
@@ -225,11 +297,45 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
     return sortDir === "asc" ? " \u2191" : " \u2193";
   }
 
+  /** Build a URL string for a saved view */
+  function savedViewHref(params: Record<string, string>) {
+    const sp = new URLSearchParams(params);
+    return `/quotes?${sp.toString()}`;
+  }
+
+  /** Check if a saved view is currently active */
+  function isSavedViewActive(params: Record<string, string>) {
+    return Object.entries(params).every(
+      ([k, v]) => filters[k as keyof typeof filters] === v,
+    );
+  }
+
   return (
     <div className="space-y-4">
+      {/* Saved view preset chips */}
+      <div className="flex flex-wrap gap-2">
+        {SAVED_VIEWS.map((view) => {
+          const active = isSavedViewActive(view.params);
+          return (
+            <Link
+              key={view.label}
+              href={savedViewHref(view.params)}
+              className={cn(
+                "inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                active
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-card text-muted-foreground hover:bg-muted/50",
+              )}
+            >
+              {view.label}
+            </Link>
+          );
+        })}
+      </div>
+
       <div className="flex-1">
         <QuoteFiltersBar
-          filters={filters}
+          filters={filterBarFilters}
           departments={departments}
           categories={categories}
           onChange={handleFiltersChange}
@@ -244,13 +350,17 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
           icon={<ClipboardListIcon className="size-7" />}
           title="No quotes found"
           description={
-            Object.values(filters).some((v) => v !== "")
+            Object.values(filterBarFilters).some((v) => v !== "")
               ? "Try adjusting your filters to find what you're looking for."
               : "Create your first quote to get started."
           }
           action={
-            Object.values(filters).some((v) => v !== "")
-              ? { label: "Clear Filters", onClick: handleClear, variant: "outline" as const }
+            Object.values(filterBarFilters).some((v) => v !== "")
+              ? {
+                  label: "Clear Filters",
+                  onClick: handleClear,
+                  variant: "outline" as const,
+                }
               : undefined
           }
         />
@@ -263,31 +373,44 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
                 type="button"
                 className={cn(
                   "w-full rounded-xl border border-border/60 bg-card p-4 text-left shadow-sm transition-colors hover:bg-muted/20",
-                  quote.quoteStatus === "REVISED" && "opacity-60"
+                  quote.quoteStatus === "REVISED" && "opacity-60",
                 )}
                 onClick={() => handleRowClick(quote.id)}
               >
                 <div className="flex items-start gap-3">
                   <div className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-lg bg-muted text-[11px] font-bold text-muted-foreground">
-                    {getInitials(quote.recipientName || quote.recipientOrg || "??")}
+                    {getInitials(
+                      quote.recipientName || quote.recipientOrg || "??",
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="min-w-0 flex-1 text-sm font-semibold leading-tight">
                         {quote.quoteNumber}
                       </p>
-                      <Badge variant={STATUS_BADGE_VARIANT[quote.quoteStatus]}>
+                      <Badge
+                        variant={STATUS_BADGE_VARIANT[quote.quoteStatus]}
+                      >
                         {STATUS_LABEL[quote.quoteStatus]}
                       </Badge>
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {quote.recipientName || quote.recipientOrg || "—"}
+                      {quote.recipientName ||
+                        quote.recipientOrg ||
+                        "\u2014"}
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {quote.department} · {formatDate(quote.date)}
                       {quote.expirationDate && (
-                        <span className={isExpired(quote.expirationDate) ? " text-destructive" : ""}>
-                          {" "}· Exp {formatDate(quote.expirationDate)}
+                        <span
+                          className={
+                            isExpired(quote.expirationDate)
+                              ? " text-destructive"
+                              : ""
+                          }
+                        >
+                          {" "}
+                          · Exp {formatDate(quote.expirationDate)}
                         </span>
                       )}
                     </p>
@@ -337,7 +460,11 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
             </TableHeader>
             <TableBody>
               {quotes.map((quote) => (
-                <QuoteRow key={quote.id} quote={quote} onClick={handleRowClick} />
+                <QuoteRow
+                  key={quote.id}
+                  quote={quote}
+                  onClick={handleRowClick}
+                />
               ))}
             </TableBody>
           </Table>
@@ -353,7 +480,9 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
                 variant="outline"
                 size="sm"
                 disabled={page <= 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                onClick={() =>
+                  setFilter("page", String(Math.max(1, page - 1)))
+                }
                 className="flex-1 sm:flex-none"
               >
                 Previous
@@ -362,7 +491,9 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
                 variant="outline"
                 size="sm"
                 disabled={page >= totalPages}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                onClick={() =>
+                  setFilter("page", String(Math.min(totalPages, page + 1)))
+                }
                 className="flex-1 sm:flex-none"
               >
                 Next
