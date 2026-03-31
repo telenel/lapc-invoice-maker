@@ -6,7 +6,7 @@ const ALLOWED_KEYS = ["quote_contact_catering", "quote_contact_default"];
 export async function GET(req: NextRequest) {
   const requestedKeys = req.nextUrl.searchParams.get("keys");
   const keys = requestedKeys
-    ? [...new Set(requestedKeys.split(",").map((key) => key.trim()).filter(Boolean))]
+    ? Array.from(new Set(requestedKeys.split(",").map((key) => key.trim()).filter(Boolean)))
     : ALLOWED_KEYS;
   const filtered = keys.filter((k) => ALLOWED_KEYS.includes(k));
 
