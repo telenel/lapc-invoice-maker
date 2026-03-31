@@ -57,6 +57,13 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
       }
     : null;
 
+  const convertedToInvoice = "convertedToInvoice" in quote
+    ? (quote.convertedToInvoice as { id: string; invoiceNumber: string | null; paymentMethod?: string | null } | null)
+    : null;
+  const convertedInvoiceResponse = convertedToInvoice
+    ? { id: convertedToInvoice.id, invoiceNumber: convertedToInvoice.invoiceNumber }
+    : null;
+
   const items: QuoteItemResponse[] = quote.items.map((item) => ({
     id: item.id,
     description: item.description,
@@ -105,9 +112,8 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
       ("paymentAccountNumber" in quote
         ? ((quote as { paymentAccountNumber?: string | null }).paymentAccountNumber ?? null)
         : null),
-    convertedToInvoice: "convertedToInvoice" in quote
-      ? (quote.convertedToInvoice as { id: string; invoiceNumber: string | null } | null)
-      : null,
+    paymentDetailsResolved: Boolean(quote.paymentMethod || convertedToInvoice?.paymentMethod),
+    convertedToInvoice: convertedInvoiceResponse,
     revisedFromQuote: "revisedFromQuote" in quote && (quote as { revisedFromQuote?: { id: string; quoteNumber: string | null } | null }).revisedFromQuote
       ? { id: (quote as { revisedFromQuote: { id: string; quoteNumber: string | null } }).revisedFromQuote.id, quoteNumber: (quote as { revisedFromQuote: { id: string; quoteNumber: string | null } }).revisedFromQuote.quoteNumber }
       : null,

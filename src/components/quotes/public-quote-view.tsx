@@ -66,6 +66,7 @@ interface PublicQuote {
   items: QuoteItem[];
   isCateringEvent: boolean;
   cateringDetails: CateringDetails | null;
+  paymentDetailsResolved: boolean;
 }
 
 function expirationText(dateStr: string): string {
@@ -122,6 +123,7 @@ export function PublicQuoteView({ token }: { token: string }) {
   const loadTimeRef = useRef<number>(Date.now());
   const accountNumberRequired = paymentMethod === "ACCOUNT_NUMBER";
   const normalizedSapAccountNumber = sapAccountNumber.trim();
+  const paymentDetailsResolved = quote?.paymentDetailsResolved ?? false;
 
   // Fetch quote data and register view
   useEffect(() => {
@@ -611,7 +613,7 @@ export function PublicQuoteView({ token }: { token: string }) {
         )}
 
         {/* Payment details */}
-        {canRespond && (
+        {canRespond && !paymentDetailsResolved && (
           <Card>
             <CardHeader>
               <CardTitle>Payment Details</CardTitle>
@@ -670,6 +672,16 @@ export function PublicQuoteView({ token }: { token: string }) {
                   We&apos;ll follow up with you to collect this information.
                 </p>
               )}
+            </CardContent>
+          </Card>
+        )}
+
+        {canRespond && paymentDetailsResolved && (
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-sm text-muted-foreground">
+                Payment details are already on file for this quote. You can approve it without entering new payment information.
+              </p>
             </CardContent>
           </Card>
         )}

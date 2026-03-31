@@ -49,6 +49,7 @@ describe("GET /api/quotes/public/[token]", () => {
       items: [],
       isCateringEvent: false,
       cateringDetails: null,
+      paymentDetailsResolved: true,
       marginEnabled: false,
       marginPercent: null,
       taxEnabled: false,
@@ -68,6 +69,7 @@ describe("GET /api/quotes/public/[token]", () => {
     const body = await response.json();
     expect(body.paymentMethod).toBeUndefined();
     expect(body.paymentAccountNumber).toBeUndefined();
+    expect(body.paymentDetailsResolved).toBe(true);
     expect(body.accountNumber).toBeUndefined();
     expect(body.pdfPath).toBeUndefined();
     expect(body.shareToken).toBeUndefined();

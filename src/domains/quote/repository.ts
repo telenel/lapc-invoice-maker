@@ -28,7 +28,7 @@ const detailInclude = {
   contact: { select: { id: true, name: true, email: true, phone: true, org: true, department: true, title: true, notes: true, createdAt: true } },
   creator: { select: { id: true, name: true, username: true } },
   items: { orderBy: { sortOrder: "asc" as const } },
-  convertedToInvoice: { select: { id: true, invoiceNumber: true } },
+  convertedToInvoice: { select: { id: true, invoiceNumber: true, paymentMethod: true } },
   revisedFromQuote: { select: { id: true, quoteNumber: true } },
   revisedToQuote: { select: { id: true, quoteNumber: true } },
 } as const;
