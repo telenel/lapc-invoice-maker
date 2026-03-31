@@ -8,6 +8,14 @@ const ChatSidebar = dynamic(
   { ssr: false },
 );
 
+const ChatMobileLauncher = dynamic(
+  () =>
+    import("@/components/chat/chat-mobile-launcher").then(
+      (m) => m.ChatMobileLauncher,
+    ),
+  { ssr: false },
+);
+
 type IdleCapableWindow = Window & typeof globalThis & {
   requestIdleCallback?: (
     callback: IdleRequestCallback,
@@ -17,7 +25,8 @@ type IdleCapableWindow = Window & typeof globalThis & {
 };
 
 export function ChatSidebarShell() {
-  const [shouldRender, setShouldRender] = useState(false);
+  const [shouldRenderDesktop, setShouldRenderDesktop] = useState(false);
+  const [shouldRenderMobile, setShouldRenderMobile] = useState(false);
   const handleRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -37,31 +46,42 @@ export function ChatSidebarShell() {
     }
 
     function scheduleLoad() {
-      if (shouldRender || !media.matches) return;
       clearScheduledLoad();
 
+      const isDesktop = media.matches;
+
+      if (isDesktop && shouldRenderDesktop) return;
+      if (!isDesktop && shouldRenderMobile) return;
+
       if (win.requestIdleCallback) {
-        handleRef.current = win.requestIdleCallback(() => {
-          setShouldRender(true);
-          handleRef.current = null;
-        }, { timeout: 1500 });
+        handleRef.current = win.requestIdleCallback(
+          () => {
+            if (media.matches) {
+              setShouldRenderDesktop(true);
+            } else {
+              setShouldRenderMobile(true);
+            }
+            handleRef.current = null;
+          },
+          { timeout: 1500 },
+        );
         return;
       }
 
       handleRef.current = window.setTimeout(() => {
-        setShouldRender(true);
+        if (media.matches) {
+          setShouldRenderDesktop(true);
+        } else {
+          setShouldRenderMobile(true);
+        }
         handleRef.current = null;
       }, 300);
     }
 
     scheduleLoad();
 
-    function handleMediaChange(event: MediaQueryListEvent) {
-      if (event.matches) {
-        scheduleLoad();
-      } else {
-        clearScheduledLoad();
-      }
+    function handleMediaChange() {
+      scheduleLoad();
     }
 
     media.addEventListener("change", handleMediaChange);
@@ -70,11 +90,12 @@ export function ChatSidebarShell() {
       media.removeEventListener("change", handleMediaChange);
       clearScheduledLoad();
     };
-  }, [shouldRender]);
+  }, [shouldRenderDesktop, shouldRenderMobile]);
 
-  if (!shouldRender) {
-    return null;
-  }
-
-  return <ChatSidebar />;
+  return (
+    <>
+      {shouldRenderDesktop && <ChatSidebar />}
+      {shouldRenderMobile && <ChatMobileLauncher />}
+    </>
+  );
 }
