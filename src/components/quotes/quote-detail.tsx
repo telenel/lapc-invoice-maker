@@ -103,6 +103,7 @@ interface Quote {
   taxRate: number;
   paymentMethod: string | null;
   paymentAccountNumber: string | null;
+  paymentDetailsResolved: boolean;
   convertedToInvoice: {
     id: string;
     invoiceNumber: string | null;
