@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { adminApi } from "@/domains/admin/api-client";
 
 interface ContactBlock {
   name: string;
@@ -31,9 +32,7 @@ export function QuoteContactSettings() {
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/admin/settings");
-      if (!res.ok) return;
-      const data = await res.json();
+      const data = await adminApi.listSettings();
       const next: Record<string, ContactBlock> = { ...blocks };
       for (const item of data) {
         if (item.key in next) {
@@ -50,12 +49,7 @@ export function QuoteContactSettings() {
   async function save(key: string) {
     setSaving(true);
     try {
-      const res = await fetch("/api/admin/settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key, value: blocks[key] }),
-      });
-      if (!res.ok) throw new Error("Save failed");
+      await adminApi.saveSetting(key, blocks[key]);
       toast.success("Contact info saved");
     } catch {
       toast.error("Failed to save contact info");

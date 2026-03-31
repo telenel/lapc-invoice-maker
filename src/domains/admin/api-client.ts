@@ -5,6 +5,7 @@ import type {
   AccountCodeResponse,
   DbHealthResponse,
   DbHealthErrorResponse,
+  AppSettingResponse,
   CreateUserInput,
   UpdateUserInput,
   CreateAccountCodeInput,
@@ -15,6 +16,7 @@ import type {
 const BASE_USERS = "/api/admin/users";
 const BASE_ACCOUNT_CODES = "/api/admin/account-codes";
 const BASE_DB_HEALTH = "/api/admin/db-health";
+const BASE_SETTINGS = "/api/admin/settings";
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, init);
@@ -75,6 +77,18 @@ export const adminApi = {
 
   async getDbHealth(): Promise<DbHealthResponse | DbHealthErrorResponse> {
     return request<DbHealthResponse | DbHealthErrorResponse>(BASE_DB_HEALTH);
+  },
+
+  async listSettings(): Promise<AppSettingResponse[]> {
+    return request<AppSettingResponse[]>(BASE_SETTINGS);
+  },
+
+  async saveSetting(key: string, value: unknown): Promise<AppSettingResponse> {
+    return request<AppSettingResponse>(BASE_SETTINGS, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key, value }),
+    });
   },
 
   async batchInvoices(input: BatchActionInput): Promise<BatchActionResponse> {
