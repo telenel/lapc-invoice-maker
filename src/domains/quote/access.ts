@@ -67,11 +67,24 @@ export function redactQuoteForViewer<T extends QuoteResponse>(
 
   return {
     ...quote,
+    pdfPath: null,
+    accountCode: "",
+    accountNumber: "",
+    approvalChain: [],
+    marginEnabled: false,
+    marginPercent: null,
+    taxEnabled: false,
+    taxRate: 0,
     shareToken: null,
     recipientEmail: null,
     recipientOrg: null,
     paymentMethod: null,
     paymentAccountNumber: null,
+    items: quote.items.map((item) => ({
+      ...item,
+      costPrice: null,
+      marginOverride: null,
+    })),
     viewerAccess: access,
   };
 }

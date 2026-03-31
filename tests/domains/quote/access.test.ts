@@ -62,11 +62,32 @@ describe("canViewQuoteDetails", () => {
       id: "q1",
       quoteNumber: "Q-1",
       creatorId: "creator-1",
+      accountCode: "AC1",
+      accountNumber: "12345",
+      approvalChain: ["Boss"],
+      marginEnabled: true,
+      marginPercent: 30,
+      taxEnabled: true,
+      taxRate: 0.08,
       recipientEmail: "jane@example.com",
       recipientOrg: "ACME",
       shareToken: "token-1",
       paymentMethod: "ACCOUNT_NUMBER",
       paymentAccountNumber: "12345",
+      pdfPath: "/tmp/q1.pdf",
+      items: [
+        {
+          id: "item-1",
+          description: "Widget",
+          quantity: 2,
+          unitPrice: 10,
+          extendedPrice: 20,
+          sortOrder: 0,
+          isTaxable: true,
+          marginOverride: 25,
+          costPrice: 8,
+        },
+      ],
     } as const;
 
     const redacted = redactQuoteForViewer(quote as never, {
@@ -76,11 +97,21 @@ describe("canViewQuoteDetails", () => {
       canViewSensitiveFields: false,
     });
 
+    expect(redacted.pdfPath).toBeNull();
+    expect(redacted.accountCode).toBe("");
+    expect(redacted.accountNumber).toBe("");
+    expect(redacted.approvalChain).toEqual([]);
+    expect(redacted.marginEnabled).toBe(false);
+    expect(redacted.marginPercent).toBeNull();
+    expect(redacted.taxEnabled).toBe(false);
+    expect(redacted.taxRate).toBe(0);
     expect(redacted.shareToken).toBeNull();
     expect(redacted.recipientEmail).toBeNull();
     expect(redacted.recipientOrg).toBeNull();
     expect(redacted.paymentMethod).toBeNull();
     expect(redacted.paymentAccountNumber).toBeNull();
+    expect(redacted.items[0].costPrice).toBeNull();
+    expect(redacted.items[0].marginOverride).toBeNull();
     expect(redacted.viewerAccess).toEqual({
       canViewQuote: true,
       canManageActions: false,

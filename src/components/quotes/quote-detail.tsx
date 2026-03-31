@@ -442,6 +442,7 @@ export function QuoteDetailView({ id }: { id: string }) {
   const canManageActions = viewerAccess.canManageActions;
   const canViewActivity = viewerAccess.canViewActivity;
   const canViewPaymentDetails = viewerAccess.canViewSensitiveFields;
+  const showInternalFields = canViewPaymentDetails;
   const canEdit =
     canManageActions &&
     (
@@ -770,20 +771,24 @@ export function QuoteDetailView({ id }: { id: string }) {
                   : "\u2014"}
               </Badge>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Account Number</span>
-              <span>{quote.accountNumber || "\u2014"}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Account Code</span>
-              <span>{quote.accountCode || "\u2014"}</span>
-            </div>
+            {showInternalFields && (
+              <>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Account Number</span>
+                  <span>{quote.accountNumber || "\u2014"}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Account Code</span>
+                  <span>{quote.accountCode || "\u2014"}</span>
+                </div>
+              </>
+            )}
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Total Amount</span>
               <span className="font-bold">{formatAmount(quote.totalAmount)}</span>
             </div>
 
-            {(quote.marginEnabled || quote.taxEnabled) && (
+            {showInternalFields && (quote.marginEnabled || quote.taxEnabled) && (
               <div className="flex flex-wrap gap-2 pt-1">
                 {quote.marginEnabled && quote.marginPercent != null && (
                   <span className="inline-flex items-center gap-1 rounded-md bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">
@@ -944,7 +949,8 @@ export function QuoteDetailView({ id }: { id: string }) {
 
       {/* Line Items */}
       {(() => {
-        const colCount = quote.marginEnabled ? 6 : 4;
+        const showInternalPricing = showInternalFields && quote.marginEnabled;
+        const colCount = showInternalPricing ? 6 : 4;
 
         // Cost subtotal (before margin)
         const costSubtotal = quote.items.reduce((sum, item) => {
@@ -979,7 +985,7 @@ export function QuoteDetailView({ id }: { id: string }) {
           <Card>
             <CardHeader className="flex flex-row items-center gap-3">
               <CardTitle>Line Items</CardTitle>
-              {quote.marginEnabled && (
+              {showInternalPricing && (
                 <span className="rounded-md bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
                   Internal Only
                 </span>
@@ -991,7 +997,7 @@ export function QuoteDetailView({ id }: { id: string }) {
                   <TableRow>
                     <TableHead>Description</TableHead>
                     <TableHead className="text-center">Qty</TableHead>
-                    {quote.marginEnabled ? (
+                    {showInternalPricing ? (
                       <>
                         <TableHead className="text-right">Cost</TableHead>
                         <TableHead className="text-right">Margin</TableHead>
@@ -1010,7 +1016,7 @@ export function QuoteDetailView({ id }: { id: string }) {
                       <TableCell className="text-center tabular-nums">
                         {Number(item.quantity)}
                       </TableCell>
-                      {quote.marginEnabled ? (
+                      {showInternalPricing ? (
                         (() => {
                           const cost = item.costPrice != null ? Number(item.costPrice) : Number(item.unitPrice);
                           const effectiveMargin = item.marginOverride != null
@@ -1043,7 +1049,7 @@ export function QuoteDetailView({ id }: { id: string }) {
                   ))}
 
                   {/* Breakdown rows */}
-                  {quote.marginEnabled && (
+                  {showInternalPricing && (
                     <TableRow>
                       <TableCell
                         colSpan={colCount - 1}
@@ -1056,7 +1062,7 @@ export function QuoteDetailView({ id }: { id: string }) {
                       </TableCell>
                     </TableRow>
                   )}
-                  {quote.marginEnabled && (
+                  {showInternalPricing && (
                     <TableRow>
                       <TableCell
                         colSpan={colCount - 1}

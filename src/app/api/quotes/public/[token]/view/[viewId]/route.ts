@@ -3,7 +3,7 @@ import { quoteService } from "@/domains/quote/service";
 
 type RouteContext = { params: Promise<{ token: string; viewId: string }> };
 
-export async function PATCH(req: NextRequest, ctx: RouteContext) {
+async function updateDuration(req: NextRequest, ctx: RouteContext) {
   const { viewId } = await ctx.params;
   const body = await req.json().catch(() => ({}));
   const duration = Number(body.durationSeconds);
@@ -13,4 +13,12 @@ export async function PATCH(req: NextRequest, ctx: RouteContext) {
   }
 
   return NextResponse.json({ success: true });
+}
+
+export async function PATCH(req: NextRequest, ctx: RouteContext) {
+  return updateDuration(req, ctx);
+}
+
+export async function POST(req: NextRequest, ctx: RouteContext) {
+  return updateDuration(req, ctx);
 }
