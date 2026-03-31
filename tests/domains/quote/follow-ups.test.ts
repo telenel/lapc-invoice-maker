@@ -156,6 +156,7 @@ describe("checkAndSendPaymentFollowUps", () => {
     expect(scanTx.invoice.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
+          acceptedAt: { not: null },
           OR: [
             { convertedToInvoice: null },
             { convertedToInvoice: { is: { status: { not: "FINAL" } } } },

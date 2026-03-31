@@ -414,10 +414,16 @@ export async function syncPublicPaymentDetails(
 
     if (!convertedInvoiceId) return;
 
-    const convertedInvoice = await tx.invoice.findUnique({
-      where: { id: convertedInvoiceId },
-      select: { status: true },
-    });
+    const convertedInvoices = await tx.$queryRaw<Array<{
+      id: string;
+      status: string | null;
+    }>>`
+      SELECT id, status
+      FROM invoices
+      WHERE id = ${convertedInvoiceId}
+      FOR UPDATE
+    `;
+    const convertedInvoice = convertedInvoices[0];
 
     if (!convertedInvoice) {
       throw Object.assign(new Error("Converted invoice not found"), { code: "NOT_FOUND" });
