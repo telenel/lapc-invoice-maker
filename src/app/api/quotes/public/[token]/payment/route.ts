@@ -26,21 +26,40 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
 
   const quote = await prisma.invoice.findFirst({
     where: { shareToken: token, type: "QUOTE", quoteStatus: "ACCEPTED" },
-    select: { id: true, quoteNumber: true, recipientEmail: true, createdBy: true },
+    select: {
+      id: true,
+      quoteNumber: true,
+      recipientEmail: true,
+      createdBy: true,
+      convertedToInvoice: { select: { id: true } },
+    },
   });
 
   if (!quote) {
     return NextResponse.json({ error: "Quote not found or not accepted" }, { status: 404 });
   }
 
-  // Update payment info
-  await prisma.invoice.update({
-    where: { id: quote.id },
-    data: {
-      paymentMethod: paymentDetails.paymentMethod,
-      paymentAccountNumber: paymentDetails.paymentAccountNumber,
-    },
-  });
+  // Update payment info on the quote and any converted invoice that now carries the live accounting state.
+  await prisma.$transaction([
+    prisma.invoice.update({
+      where: { id: quote.id },
+      data: {
+        paymentMethod: paymentDetails.paymentMethod,
+        paymentAccountNumber: paymentDetails.paymentAccountNumber,
+      },
+    }),
+    ...(quote.convertedToInvoice
+      ? [
+          prisma.invoice.update({
+            where: { id: quote.convertedToInvoice.id },
+            data: {
+              paymentMethod: paymentDetails.paymentMethod,
+              paymentAccountNumber: paymentDetails.paymentAccountNumber,
+            },
+          }),
+        ]
+      : []),
+  ]);
 
   // Record the resolution as a follow-up event
   await prisma.quoteFollowUp.create({
@@ -71,5 +90,8 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
   }
 
   safePublishAll({ type: "quote-changed" });
+  if (quote.convertedToInvoice) {
+    safePublishAll({ type: "invoice-changed" });
+  }
   return NextResponse.json({ success: true });
 }

@@ -119,6 +119,7 @@ model Invoice {
   quoteNumber          String?       @unique @map("quote_number")
   shareToken           String?       @unique @map("share_token")
   convertedFromQuoteId String?       @unique @map("converted_from_quote_id")
+  acceptedAt           DateTime?     @map("accepted_at")
   convertedAt          DateTime?     @map("converted_at")
   isCateringEvent      Boolean       @default(false) @map("is_catering_event")
   cateringDetails      Json?         @map("catering_details")

@@ -6,8 +6,16 @@ type RouteContext = { params: Promise<{ token: string }> };
 
 /** Strip internal-only fields before returning to public consumers. */
 function sanitizeForPublic(quote: QuoteResponse) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { marginEnabled, marginPercent, accountCode, accountNumber, approvalChain, creatorId, creatorName, ...safe } = quote;
+  const safe: Record<string, unknown> = { ...quote };
+  delete safe.marginEnabled;
+  delete safe.marginPercent;
+  delete safe.accountCode;
+  delete safe.accountNumber;
+  delete safe.approvalChain;
+  delete safe.creatorId;
+  delete safe.creatorName;
+  delete safe.paymentMethod;
+  delete safe.paymentAccountNumber;
 
   return {
     ...safe,

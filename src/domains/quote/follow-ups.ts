@@ -51,9 +51,9 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
     const appUrl = process.env.NEXTAUTH_URL ?? "https://laportal.montalvo.io";
 
     for (const quote of candidates) {
-      // Determine the reference date — last follow-up or updatedAt (acceptance time)
+      // Determine the reference date — last follow-up or acceptedAt.
       const lastFollowUp = quote.followUps[0];
-      const referenceDate = lastFollowUp ? lastFollowUp.sentAt : quote.updatedAt;
+      const referenceDate = lastFollowUp ? lastFollowUp.sentAt : (quote.acceptedAt ?? quote.updatedAt);
       const daysSince = businessDaysBetween(referenceDate, now);
 
       if (daysSince < FOLLOW_UP_INTERVAL_BUSINESS_DAYS) continue;

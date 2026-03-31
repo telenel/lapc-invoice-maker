@@ -23,8 +23,13 @@ vi.mock("@/domains/quote/service", () => ({
   },
 }));
 
+vi.mock("@/lib/date-utils", () => ({
+  businessDaysBetween: vi.fn(() => 0),
+}));
+
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
+import { businessDaysBetween } from "@/lib/date-utils";
 import { checkAndSendPaymentFollowUps } from "@/domains/quote/follow-ups";
 
 describe("checkAndSendPaymentFollowUps", () => {
@@ -51,5 +56,32 @@ describe("checkAndSendPaymentFollowUps", () => {
 
     expect(prisma.$queryRaw).toHaveBeenCalledTimes(2);
     expect(prisma.invoice.findMany).toHaveBeenCalledOnce();
+  });
+
+  it("uses acceptedAt instead of updatedAt when deciding whether to send the first reminder", async () => {
+    const acceptedAt = new Date("2026-03-01T12:00:00.000Z");
+    const updatedAt = new Date("2026-03-20T12:00:00.000Z");
+
+    vi.mocked(prisma.$queryRaw)
+      .mockResolvedValueOnce([{ acquired: true }] as never)
+      .mockResolvedValueOnce([] as never);
+    vi.mocked(prisma.invoice.findMany).mockResolvedValue([
+      {
+        id: "q1",
+        quoteNumber: "Q-1",
+        recipientName: "Jane",
+        recipientEmail: "jane@example.com",
+        shareToken: "token",
+        acceptedAt,
+        updatedAt,
+        followUps: [],
+        creator: { id: "u1", name: "Admin" },
+      },
+    ] as never);
+
+    await checkAndSendPaymentFollowUps();
+
+    expect(businessDaysBetween).toHaveBeenCalledWith(acceptedAt, expect.any(Date));
+    expect(businessDaysBetween).not.toHaveBeenCalledWith(updatedAt, expect.any(Date));
   });
 });

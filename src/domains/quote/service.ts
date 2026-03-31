@@ -262,6 +262,7 @@ export const quoteService = {
 
     const updateData: Record<string, unknown> = { quoteStatus: response };
     if (response === "ACCEPTED") {
+      updateData.acceptedAt = new Date();
       const normalizedPayment = normalizeQuotePaymentDetails(paymentDetails);
       if (normalizedPayment) {
         updateData.paymentMethod = normalizedPayment.paymentMethod;
@@ -478,7 +479,7 @@ export const quoteService = {
       throw Object.assign(new Error("This quote has expired"), { code: "FORBIDDEN" });
     }
 
-    await quoteRepository.update(quote.id, { quoteStatus: "ACCEPTED" });
+    await quoteRepository.update(quote.id, { quoteStatus: "ACCEPTED", acceptedAt: new Date() });
 
     const { notificationService } = await import("@/domains/notification/service");
     await notificationService.createAndPublish({
