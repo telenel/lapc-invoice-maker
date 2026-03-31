@@ -81,4 +81,35 @@ describe("POST /api/quotes/public/[token]/respond", () => {
       }),
     );
   });
+
+  it("passes the raw account number shape through to the quote service", async () => {
+    vi.mocked(quoteService.respondToQuote).mockResolvedValue({
+      id: "q1",
+      quoteStatus: "ACCEPTED",
+    } as never);
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/respond", {
+        method: "POST",
+        body: JSON.stringify({
+          response: "ACCEPTED",
+          paymentMethod: "ACCOUNT_NUMBER",
+          accountNumber: "SAP-12345",
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(quoteService.respondToQuote).toHaveBeenCalledWith(
+      "token",
+      "ACCEPTED",
+      undefined,
+      {
+        paymentMethod: "ACCOUNT_NUMBER",
+        accountNumber: "SAP-12345",
+      },
+    );
+  });
 });

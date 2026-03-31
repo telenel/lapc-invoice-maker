@@ -39,6 +39,7 @@ describe("POST /api/quotes/public/[token]/payment", () => {
       quoteNumber: "Q-1",
       recipientEmail: "jane@example.com",
       createdBy: "u1",
+      paymentMethod: null,
       convertedToInvoice: { id: "inv1" },
     } as never);
     vi.mocked(prisma.invoice.update)
@@ -82,5 +83,32 @@ describe("POST /api/quotes/public/[token]/payment", () => {
       }),
     );
     expect(safePublishAll).toHaveBeenCalledWith({ type: "invoice-changed" });
+  });
+
+  it("rejects attempts to overwrite already-provided payment details", async () => {
+    vi.mocked(prisma.invoice.findFirst).mockResolvedValue({
+      id: "q1",
+      quoteNumber: "Q-1",
+      recipientEmail: "jane@example.com",
+      createdBy: "u1",
+      paymentMethod: "CHECK",
+      convertedToInvoice: { id: "inv1" },
+    } as never);
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/payment", {
+        method: "POST",
+        body: JSON.stringify({
+          paymentMethod: "ACCOUNT_NUMBER",
+          accountNumber: "SAP-99999",
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    expect(response.status).toBe(409);
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+    expect(prisma.quoteFollowUp.create).not.toHaveBeenCalled();
   });
 });

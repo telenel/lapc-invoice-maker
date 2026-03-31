@@ -68,12 +68,13 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     }
 
     // Extract payment details from the body
-    const paymentDetails = normalizeQuotePaymentDetails({
+    const paymentDetailsInput = {
       paymentMethod: body.paymentMethod,
       accountNumber: body.accountNumber,
-    });
+    };
+    normalizeQuotePaymentDetails(paymentDetailsInput);
 
-    const result = await quoteService.respondToQuote(token, response, body.viewId, paymentDetails);
+    const result = await quoteService.respondToQuote(token, response, body.viewId, paymentDetailsInput);
     if (!result) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
 
     if (response === "ACCEPTED" && cateringDetails) {

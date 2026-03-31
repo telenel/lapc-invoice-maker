@@ -31,12 +31,16 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       quoteNumber: true,
       recipientEmail: true,
       createdBy: true,
+      paymentMethod: true,
       convertedToInvoice: { select: { id: true } },
     },
   });
 
   if (!quote) {
     return NextResponse.json({ error: "Quote not found or not accepted" }, { status: 404 });
+  }
+  if (quote.paymentMethod) {
+    return NextResponse.json({ error: "Payment details have already been provided" }, { status: 409 });
   }
 
   // Update payment info on the quote and any converted invoice that now carries the live accounting state.
