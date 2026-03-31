@@ -6,6 +6,12 @@ type RouteContext = { params: Promise<{ token: string }> };
 
 /** Strip internal-only fields before returning to public consumers. */
 function sanitizeForPublic(quote: QuoteResponse) {
+  const items = quote.items.map((item) => {
+    const safeItem: Record<string, unknown> = { ...item };
+    delete safeItem.costPrice;
+    delete safeItem.marginOverride;
+    return safeItem;
+  });
   const safe: Record<string, unknown> = { ...quote };
   delete safe.marginEnabled;
   delete safe.marginPercent;
@@ -19,8 +25,7 @@ function sanitizeForPublic(quote: QuoteResponse) {
 
   return {
     ...safe,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    items: safe.items.map(({ costPrice, marginOverride, ...item }) => item),
+    items,
   };
 }
 
