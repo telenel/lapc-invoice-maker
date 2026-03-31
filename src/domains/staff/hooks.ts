@@ -9,17 +9,18 @@ import type { PaginatedResponse } from "@/domains/shared/types";
 export function useStaffList(filters?: StaffFilters) {
   const [data, setData] = useState<StaffResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const search = filters?.search;
 
   const refetch = useCallback(async () => {
     setLoading(true);
     try {
-      setData(await staffApi.list(filters));
+      setData(await staffApi.list(search ? { search } : undefined));
     } catch (e) {
       handleApiError(e, "Failed to load staff");
     } finally {
       setLoading(false);
     }
-  }, [filters?.search]);
+  }, [search]);
 
   useEffect(() => {
     refetch();
@@ -31,17 +32,20 @@ export function useStaffList(filters?: StaffFilters) {
 export function useStaffListPaginated(filters: StaffFilters & { page: number; pageSize: number }) {
   const [data, setData] = useState<PaginatedResponse<StaffResponse> | null>(null);
   const [loading, setLoading] = useState(true);
+  const search = filters.search;
+  const page = filters.page;
+  const pageSize = filters.pageSize;
 
   const refetch = useCallback(async () => {
     setLoading(true);
     try {
-      setData(await staffApi.listPaginated(filters));
+      setData(await staffApi.listPaginated({ search, page, pageSize }));
     } catch (e) {
       handleApiError(e, "Failed to load staff");
     } finally {
       setLoading(false);
     }
-  }, [filters.search, filters.page, filters.pageSize]);
+  }, [search, page, pageSize]);
 
   useEffect(() => {
     refetch();
