@@ -17,6 +17,7 @@ import {
   type CalendarEvent,
 } from "@/components/calendar/event-detail-sidebar";
 import { AddEventModal } from "@/components/calendar/add-event-modal";
+import { MobileEventSheet } from "@/components/calendar/mobile-event-sheet";
 import { useCalendarSSE } from "@/domains/calendar/hooks";
 import { cn } from "@/lib/utils";
 
@@ -35,6 +36,10 @@ export function CalendarView() {
   // Edit modal state
   const [selectedEvent, setSelectedEvent] = useState<EventResponse | undefined>(undefined);
   const [editModalKey, setEditModalKey] = useState(0);
+
+  // Mobile bottom sheet state
+  const [mobileSheetEvent, setMobileSheetEvent] = useState<CalendarEvent | null>(null);
+  const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
 
   // Mini month state
   const [displayMonth, setDisplayMonth] = useState(() => new Date());
@@ -61,9 +66,9 @@ export function CalendarView() {
           mainEl.style.padding = prevPadding;
           document.documentElement.style.removeProperty("--fc-slot-height");
           document.documentElement.style.removeProperty("--fc-slot-font");
-          const sidebarHeight =
-            document.querySelector<HTMLElement>("[data-calendar-sidebar]")?.getBoundingClientRect().height ?? 320;
-          setCalendarHeight(Math.max(window.innerHeight - navH - sidebarHeight - 24, 480));
+          // Sidebar is hidden on mobile; calendar gets nearly full viewport
+          const toolbarH = 48;
+          setCalendarHeight(Math.max(window.innerHeight - navH - toolbarH, 400));
           calendarRef.current?.getApi().updateSize();
           return;
         }
@@ -201,26 +206,31 @@ export function CalendarView() {
     };
   }
 
-  // Click pins/unpins event in sidebar (no navigation)
+  // Click pins/unpins event in sidebar (no navigation); on mobile opens bottom sheet
   const handleEventClick = useCallback(
     (info: EventClickArg) => {
       info.jsEvent.preventDefault();
-      // Clear pending hover timers before changing pin state
-      clearTimeout(hoverTimerRef.current);
-      clearTimeout(leaveTimerRef.current);
       const clicked = toCalendarEvent(info.event);
 
+      if (isMobile) {
+        setMobileSheetEvent(clicked);
+        setMobileSheetOpen(true);
+        return;
+      }
+
+      // Desktop: clear pending hover timers before changing pin state
+      clearTimeout(hoverTimerRef.current);
+      clearTimeout(leaveTimerRef.current);
+
       if (pinnedEvent?.id === clicked.id) {
-        // Unpin
         setPinnedEvent(null);
         setHoveredEvent(null);
       } else {
-        // Pin this event
         setPinnedEvent(clicked);
         setHoveredEvent(null);
       }
     },
-    [pinnedEvent],
+    [pinnedEvent, isMobile],
   );
 
   const handleEventMouseEnter = useCallback(
@@ -351,9 +361,25 @@ export function CalendarView() {
   // The event to show in sidebar: pinned takes priority, then hovered
   const sidebarEvent = pinnedEvent ?? hoveredEvent;
 
+  const handleEditFromSheet = useCallback(
+    (eventId: string) => {
+      setMobileSheetOpen(false);
+      eventApi
+        .getById(eventId)
+        .then((eventData) => {
+          setSelectedEvent(eventData);
+          setEditModalKey((prev) => prev + 1);
+        })
+        .catch(() => {
+          toast.error("Failed to load event details");
+        });
+    },
+    [],
+  );
+
   return (
-    <div className={cn("flex", isMobile ? "flex-col gap-3" : "")} style={isMobile ? undefined : { height: "calc(100vh - 64px)" }}>
-      {/* Edit modal triggered by sidebar Edit button */}
+    <div className={cn("flex", isMobile ? "flex-col" : "")} style={isMobile ? undefined : { height: "calc(100vh - 64px)" }}>
+      {/* Edit modal triggered by sidebar Edit button or mobile sheet */}
       {selectedEvent && (
         <AddEventModal
           key={editModalKey}
@@ -368,53 +394,65 @@ export function CalendarView() {
         />
       )}
 
+      {/* Mobile event bottom sheet */}
+      {isMobile && (
+        <MobileEventSheet
+          event={mobileSheetEvent}
+          open={mobileSheetOpen}
+          onClose={() => setMobileSheetOpen(false)}
+          onEditEvent={handleEditFromSheet}
+        />
+      )}
+
       {/* Main content: sidebar + calendar */}
       <div ref={containerRef} className="flex min-h-0 flex-1 flex-col overflow-hidden border-t border-border bg-card lg:flex-row">
-        {/* Left sidebar */}
-        <EventDetailSidebar
-          event={sidebarEvent}
-          pinned={pinnedEvent !== null}
-          onEditEvent={(eventId) => {
-            eventApi
-              .getById(eventId)
-              .then((eventData) => {
-                setSelectedEvent(eventData);
-                setEditModalKey((prev) => prev + 1);
-              })
-              .catch(() => {
-                toast.error("Failed to load event details");
-              });
-          }}
-          onUnpin={() => {
-            setPinnedEvent(null);
-            setHoveredEvent(null);
-          }}
-          displayMonth={displayMonth}
-          onMonthChange={setDisplayMonth}
-          onDateClick={handleMiniDateClick}
-          activeRange={activeRange}
-          addEventTrigger={
-            <AddEventModal
-              onSave={refetchEvents}
-              trigger={
-                <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white gap-1.5">
-                  <Plus className="h-4 w-4" />
-                  Add Event
-                </Button>
-              }
-            />
-          }
-        />
+        {/* Left sidebar — hidden on mobile */}
+        <div className="hidden lg:block">
+          <EventDetailSidebar
+            event={sidebarEvent}
+            pinned={pinnedEvent !== null}
+            onEditEvent={(eventId) => {
+              eventApi
+                .getById(eventId)
+                .then((eventData) => {
+                  setSelectedEvent(eventData);
+                  setEditModalKey((prev) => prev + 1);
+                })
+                .catch(() => {
+                  toast.error("Failed to load event details");
+                });
+            }}
+            onUnpin={() => {
+              setPinnedEvent(null);
+              setHoveredEvent(null);
+            }}
+            displayMonth={displayMonth}
+            onMonthChange={setDisplayMonth}
+            onDateClick={handleMiniDateClick}
+            activeRange={activeRange}
+            addEventTrigger={
+              <AddEventModal
+                onSave={refetchEvents}
+                trigger={
+                  <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white gap-1.5">
+                    <Plus className="h-4 w-4" />
+                    Add Event
+                  </Button>
+                }
+              />
+            }
+          />
+        </div>
 
         {/* Calendar */}
-        <div className="min-h-[480px] flex-1 min-w-0 overflow-hidden p-2">
+        <div className="relative min-h-[400px] flex-1 min-w-0 overflow-hidden p-2">
           <FullCalendar
             key={isMobile ? "mobile" : "desktop"}
             ref={calendarRef}
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-            initialView={isMobile ? "timeGridDay" : "timeGridWeek"}
+            initialView={isMobile ? "dayGridMonth" : "timeGridWeek"}
             headerToolbar={{
-              left: isMobile ? "prev,next" : "prev,next today",
+              left: isMobile ? "prev,next today" : "prev,next today",
               center: "title",
               right: isMobile ? "dayGridMonth,timeGridDay" : "dayGridMonth,timeGridWeek,timeGridDay",
             }}
@@ -433,6 +471,23 @@ export function CalendarView() {
             nowIndicator
             slotEventOverlap
           />
+
+          {/* Mobile floating Add Event button */}
+          {isMobile && (
+            <div className="absolute bottom-4 right-4 z-10">
+              <AddEventModal
+                onSave={refetchEvents}
+                trigger={
+                  <Button
+                    className="h-12 w-12 rounded-full bg-purple-600 hover:bg-purple-700 text-white shadow-lg p-0"
+                    aria-label="Add Event"
+                  >
+                    <Plus className="h-5 w-5" />
+                  </Button>
+                }
+              />
+            </div>
+          )}
         </div>
       </div>
     </div>
