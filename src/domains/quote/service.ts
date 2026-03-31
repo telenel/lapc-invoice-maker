@@ -16,6 +16,7 @@ import type {
   QuoteViewResponse,
   CateringDetails,
   QuotePublicPaymentCandidate,
+  QuotePaymentDetailsSubmission,
 } from "./types";
 import type { StaffSummary } from "@/domains/staff/types";
 import type { ContactResponse } from "@/domains/contact/types";
@@ -383,7 +384,7 @@ export const quoteService = {
       throw Object.assign(new Error("This quote has expired"), { code: "FORBIDDEN" });
     }
 
-    let normalizedPayment;
+    let normalizedPayment: QuotePaymentDetailsSubmission | undefined;
     let normalizedCateringDetails: Prisma.InputJsonValue | undefined;
     const acceptedAt = response === "ACCEPTED" ? new Date() : undefined;
     if (response === "ACCEPTED") {
