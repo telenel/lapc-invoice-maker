@@ -1,0 +1,16 @@
+import { describe, expect, it } from "vitest";
+import { zonedDateTimeToUtc } from "@/lib/date-utils";
+
+describe("zonedDateTimeToUtc", () => {
+  it("resolves Los Angeles spring DST transition correctly", () => {
+    expect(zonedDateTimeToUtc("2026-03-08", "09:00").toISOString()).toBe(
+      "2026-03-08T16:00:00.000Z",
+    );
+  });
+
+  it("resolves Los Angeles fall DST transition correctly", () => {
+    expect(zonedDateTimeToUtc("2026-11-01", "09:00").toISOString()).toBe(
+      "2026-11-01T17:00:00.000Z",
+    );
+  });
+});

@@ -75,9 +75,18 @@ export function addBusinessDays(date: Date, days: number): Date {
 export function zonedDateTimeToUtc(dateKey: string, time: string, timeZone = LOS_ANGELES_TIME_ZONE): Date {
   const [year, month, day] = dateKey.split("-").map(Number);
   const [hour, minute] = time.split(":").map(Number);
-  const candidate = new Date(Date.UTC(year, month - 1, day, hour, minute, 0, 0));
-  const offsetMinutes = getTimeZoneOffsetMinutes(candidate, timeZone);
-  return new Date(candidate.getTime() - offsetMinutes * 60_000);
+  const localWallClockUtc = Date.UTC(year, month - 1, day, hour, minute, 0, 0);
+  let utcMillis = localWallClockUtc;
+
+  // Resolve DST boundaries by iterating until the zone offset stabilizes for the target wall-clock time.
+  for (let i = 0; i < 3; i++) {
+    const offsetMinutes = getTimeZoneOffsetMinutes(new Date(utcMillis), timeZone);
+    const nextUtcMillis = localWallClockUtc - offsetMinutes * 60_000;
+    if (nextUtcMillis === utcMillis) break;
+    utcMillis = nextUtcMillis;
+  }
+
+  return new Date(utcMillis);
 }
 
 /** Count business days between two dates in a specific time zone (exclusive of start, inclusive of end). */
