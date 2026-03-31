@@ -95,4 +95,8 @@ export const quoteApi = {
   async getViews(id: string): Promise<import("./types").QuoteViewResponse[]> {
     return request<import("./types").QuoteViewResponse[]>(`${BASE}/${id}/views`);
   },
+
+  async getFollowUps(id: string): Promise<import("./types").QuoteFollowUpResponse[]> {
+    return request<import("./types").QuoteFollowUpResponse[]>(`${BASE}/${id}/follow-ups`);
+  },
 };
