@@ -25,6 +25,10 @@ vi.mock("@/domains/notification/service", () => ({
   },
 }));
 
+vi.mock("@/lib/sse", () => ({
+  safePublishAll: vi.fn(),
+}));
+
 vi.mock("@/lib/date-utils", () => ({
   businessDaysBetween: vi.fn(() => 0),
 }));
@@ -33,6 +37,7 @@ import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 import { businessDaysBetween } from "@/lib/date-utils";
 import { notificationService } from "@/domains/notification/service";
+import { safePublishAll } from "@/lib/sse";
 import { checkAndSendPaymentFollowUps } from "@/domains/quote/follow-ups";
 
 function makeTx() {
@@ -318,5 +323,6 @@ describe("checkAndSendPaymentFollowUps", () => {
         userId: "u2",
       }),
     );
+    expect(vi.mocked(safePublishAll)).toHaveBeenCalledWith({ type: "quote-changed" });
   });
 });

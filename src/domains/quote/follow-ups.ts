@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { sendEmail, type EmailAttachment } from "@/lib/email";
 import { escapeHtml } from "@/lib/html";
 import { businessDaysBetween } from "@/lib/date-utils";
+import { safePublishAll } from "@/lib/sse";
 
 const FOLLOW_UP_INTERVAL_BUSINESS_DAYS = 7;
 const PAYMENT_FOLLOW_UP_LOCK_KEY = 318742;
@@ -189,5 +190,7 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
     } catch {
       // Non-critical
     }
+
+    safePublishAll({ type: "quote-changed" });
   }
 }

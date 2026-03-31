@@ -369,6 +369,13 @@ export const quoteService = {
 
     // Always broadcast after status update, regardless of notification/email failures
     safePublishAll({ type: "quote-changed" });
+    if (
+      response === "ACCEPTED" &&
+      quote.convertedToInvoice &&
+      (normalizedPayment || normalizedCateringDetails)
+    ) {
+      safePublishAll({ type: "invoice-changed" });
+    }
 
     return { success: true, status: response };
   },

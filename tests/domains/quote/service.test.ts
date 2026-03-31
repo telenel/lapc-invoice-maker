@@ -50,9 +50,14 @@ vi.mock("@/domains/notification/service", () => ({
   },
 }));
 
+vi.mock("@/lib/sse", () => ({
+  safePublishAll: vi.fn(),
+}));
+
 import * as quoteRepository from "@/domains/quote/repository";
 import { pdfService } from "@/domains/pdf/service";
 import { notificationService } from "@/domains/notification/service";
+import { safePublishAll } from "@/lib/sse";
 import { quoteService } from "@/domains/quote/service";
 
 const mockRepo = vi.mocked(quoteRepository, true);
@@ -353,6 +358,8 @@ describe("quoteService", () => {
       );
       expect(mockRepo.update).not.toHaveBeenCalled();
       expect(mockRepo.updateViewResponse).not.toHaveBeenCalled();
+      expect(vi.mocked(safePublishAll)).toHaveBeenCalledWith({ type: "quote-changed" });
+      expect(vi.mocked(safePublishAll)).toHaveBeenCalledWith({ type: "invoice-changed" });
     });
 
     it("syncs catering details to the converted invoice inside the public approval transaction", async () => {
