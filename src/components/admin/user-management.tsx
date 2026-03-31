@@ -50,6 +50,7 @@ export function UserManagement() {
   const [editUser, setEditUser] = useState<User | null>(null);
   const [newName, setNewName] = useState("");
   const [createError, setCreateError] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editRole, setEditRole] = useState("user");
@@ -65,7 +66,9 @@ export function UserManagement() {
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   async function handleCreate() {
+    if (isCreating) return;
     try {
+      setIsCreating(true);
       setCreateError(null);
       const created = await adminApi.createUser({ name: newName });
       const safeUser = stripTemporaryPassword(created);
@@ -79,6 +82,8 @@ export function UserManagement() {
       });
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : "Failed to create user");
+    } finally {
+      setIsCreating(false);
     }
   }
 
@@ -171,7 +176,7 @@ export function UserManagement() {
               )}
             </div>
             <DialogFooter>
-              <Button onClick={handleCreate} disabled={!newName.trim()}>Create User</Button>
+              <Button onClick={handleCreate} disabled={!newName.trim() || isCreating}>Create User</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
