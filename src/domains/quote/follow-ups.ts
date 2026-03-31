@@ -43,6 +43,10 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
         quoteStatus: "ACCEPTED",
         paymentMethod: null,
         shareToken: { not: null },
+        OR: [
+          { convertedToInvoice: null },
+          { convertedToInvoice: { is: { status: { not: "FINAL" } } } },
+        ],
       },
       include: {
         followUps: {

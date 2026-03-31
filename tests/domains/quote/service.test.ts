@@ -774,6 +774,8 @@ describe("quoteService", () => {
       expect(mockPdfService.generateQuote).toHaveBeenCalledWith(
         expect.objectContaining({
           quoteNumber: "Q-2026-0001",
+          date: "January 15, 2026",
+          expirationDate: "February 15, 2026",
           recipientName: "Jane Doe",
           recipientEmail: "jane@test.com",
           recipientOrg: "ACME Corp",

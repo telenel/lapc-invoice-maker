@@ -94,7 +94,7 @@ describe("checkAndSendPaymentFollowUps", () => {
     );
   });
 
-  it("keeps converted accepted quotes eligible for reminders until payment details exist", async () => {
+  it("skips reminders for quotes whose converted invoice is already finalized", async () => {
     vi.mocked(prisma.$queryRaw)
       .mockResolvedValueOnce([{ acquired: true }] as never)
       .mockResolvedValueOnce([] as never);
@@ -104,8 +104,11 @@ describe("checkAndSendPaymentFollowUps", () => {
 
     expect(prisma.invoice.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.not.objectContaining({
-          convertedToInvoice: null,
+        where: expect.objectContaining({
+          OR: [
+            { convertedToInvoice: null },
+            { convertedToInvoice: { is: { status: { not: "FINAL" } } } },
+          ],
         }),
       }),
     );

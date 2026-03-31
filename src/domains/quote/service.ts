@@ -1,7 +1,7 @@
 // src/domains/quote/service.ts
 import * as quoteRepository from "./repository";
 import { pdfService } from "@/domains/pdf/service";
-import { formatDatePacific } from "@/domains/shared/formatters";
+import { formatDateFromDate } from "@/domains/shared/formatters";
 import { calculateTotal } from "@/domains/invoice/calculations";
 import { safePublishAll } from "@/lib/sse";
 import type { Prisma } from "@/generated/prisma/client";
@@ -888,9 +888,9 @@ export const quoteService = {
 
     const pdfPath = await pdfService.generateQuote({
       quoteNumber: quote.quoteNumber ?? "DRAFT",
-      date: formatDatePacific(new Date(quote.date)),
+      date: formatDateFromDate(new Date(quote.date)),
       expirationDate: quote.expirationDate
-        ? formatDatePacific(new Date(quote.expirationDate))
+        ? formatDateFromDate(new Date(quote.expirationDate))
         : "",
       recipientName: quote.recipientName ?? "",
       recipientEmail: quote.recipientEmail ?? "",
