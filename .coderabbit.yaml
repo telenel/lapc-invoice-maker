@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 language: en-US
 reviews:
   profile: "chill"
@@ -11,6 +12,8 @@ reviews:
   path_filters:
     - "!docs/superpowers/**"
     - "!docs/CODEMAPS/**"
+    - "!docs/**"
+    - "!*.md"
     - "!**/*.md"
   path_instructions:
     - path: "prisma/schema.prisma"
