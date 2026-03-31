@@ -1,7 +1,7 @@
 // src/domains/quote/service.ts
 import * as quoteRepository from "./repository";
 import { pdfService } from "@/domains/pdf/service";
-import { formatDateFromDate } from "@/domains/shared/formatters";
+import { formatDatePacific } from "@/domains/shared/formatters";
 import { calculateTotal } from "@/domains/invoice/calculations";
 import { safePublishAll } from "@/lib/sse";
 import type { Prisma } from "@/generated/prisma/client";
@@ -783,11 +783,13 @@ export const quoteService = {
 
     const cateringRaw = quote.cateringDetails as CateringDetails | null;
 
+    const appUrl = process.env.NEXTAUTH_URL ?? "https://laportal.montalvo.io";
+
     const pdfPath = await pdfService.generateQuote({
       quoteNumber: quote.quoteNumber ?? "DRAFT",
-      date: formatDateFromDate(new Date(quote.date)),
+      date: formatDatePacific(new Date(quote.date)),
       expirationDate: quote.expirationDate
-        ? formatDateFromDate(new Date(quote.expirationDate))
+        ? formatDatePacific(new Date(quote.expirationDate))
         : "",
       recipientName: quote.recipientName ?? "",
       recipientEmail: quote.recipientEmail ?? "",
@@ -829,6 +831,8 @@ export const quoteService = {
             specialInstructions: cateringRaw.specialInstructions,
           }
         : null,
+      shareToken: quote.shareToken,
+      appUrl,
     });
 
     const buffer = await pdfService.readPdf(pdfPath);

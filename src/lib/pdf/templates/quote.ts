@@ -47,6 +47,8 @@ export interface QuotePDFData {
   taxRate: number;
   isCateringEvent: boolean;
   cateringDetails: CateringDetailsPDF | null;
+  shareToken?: string | null;
+  appUrl?: string;
 }
 
 function formatCurrency(amount: number): string {
@@ -221,6 +223,7 @@ ${data.isCateringEvent && data.cateringDetails ? renderCateringSection(data.cate
 <!-- Footer -->
 <div style="margin-top:20px;padding-top:12px;border-top:1px solid #ddd;text-align:center;color:#999;font-size:9px;">
   This quote is valid until the expiration date shown above. &bull; Los Angeles Pierce College
+  ${data.shareToken && data.appUrl ? `<br /><a href="${escapeHtml(data.appUrl)}/quotes/review/${escapeHtml(data.shareToken)}" style="color:#1a3a5c;">View this quote online</a>` : data.appUrl ? `<br /><a href="${escapeHtml(data.appUrl)}" style="color:#1a3a5c;">LAPortal</a>` : ""}
 </div>
 
 </body>

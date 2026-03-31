@@ -882,7 +882,7 @@ export function QuoteDetailView({ id }: { id: string }) {
 
       {/* Line Items */}
       {(() => {
-        const colCount = quote.marginEnabled ? 5 : 4;
+        const colCount = quote.marginEnabled ? 6 : 4;
 
         // Cost subtotal (before margin)
         const costSubtotal = quote.items.reduce((sum, item) => {
@@ -915,8 +915,13 @@ export function QuoteDetailView({ id }: { id: string }) {
 
         return (
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center gap-3">
               <CardTitle>Line Items</CardTitle>
+              {quote.marginEnabled && (
+                <span className="rounded-md bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                  Internal Only
+                </span>
+              )}
             </CardHeader>
             <CardContent>
               <Table>
@@ -927,6 +932,7 @@ export function QuoteDetailView({ id }: { id: string }) {
                     {quote.marginEnabled ? (
                       <>
                         <TableHead className="text-right">Cost</TableHead>
+                        <TableHead className="text-right">Margin</TableHead>
                         <TableHead className="text-right">Charged</TableHead>
                       </>
                     ) : (
@@ -943,14 +949,26 @@ export function QuoteDetailView({ id }: { id: string }) {
                         {Number(item.quantity)}
                       </TableCell>
                       {quote.marginEnabled ? (
-                        <>
-                          <TableCell className="text-right tabular-nums">
-                            {formatAmount(item.costPrice != null ? Number(item.costPrice) : Number(item.unitPrice))}
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums">
-                            {formatAmount(item.unitPrice)}
-                          </TableCell>
-                        </>
+                        (() => {
+                          const cost = item.costPrice != null ? Number(item.costPrice) : Number(item.unitPrice);
+                          const effectiveMargin = item.marginOverride != null
+                            ? Number(item.marginOverride)
+                            : globalMargin;
+                          const marginDollars = cost * Number(item.quantity) * (effectiveMargin / 100);
+                          return (
+                            <>
+                              <TableCell className="text-right tabular-nums">
+                                {formatAmount(cost)}
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums text-amber-700">
+                                {effectiveMargin}% ({formatAmount(marginDollars)})
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums">
+                                {formatAmount(item.unitPrice)}
+                              </TableCell>
+                            </>
+                          );
+                        })()
                       ) : (
                         <TableCell className="text-right tabular-nums">
                           {formatAmount(item.unitPrice)}

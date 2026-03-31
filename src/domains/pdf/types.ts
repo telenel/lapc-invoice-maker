@@ -72,6 +72,8 @@ export interface QuotePDFData {
   taxRate: number;
   isCateringEvent: boolean;
   cateringDetails: QuotePDFCateringDetails | null;
+  shareToken?: string | null;
+  appUrl?: string;
 }
 
 export interface GenerateInvoicePDFInput {

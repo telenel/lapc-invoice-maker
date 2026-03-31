@@ -61,3 +61,13 @@ export function formatDateFromDate(date: Date): string {
     timeZone: "UTC",
   });
 }
+
+/** "March 15, 2026" in Pacific time (for customer-facing PDFs) */
+export function formatDatePacific(date: Date): string {
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "America/Los_Angeles",
+  });
+}
