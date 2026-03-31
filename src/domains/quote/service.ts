@@ -261,7 +261,7 @@ export const quoteService = {
       const normalizedPayment = normalizeQuotePaymentDetails(paymentDetails);
       if (normalizedPayment) {
         updateData.paymentMethod = normalizedPayment.paymentMethod;
-        updateData.accountNumber = normalizedPayment.accountNumber;
+        updateData.accountNumber = normalizedPayment.accountNumber ?? "";
       }
     }
     await quoteRepository.update(quote.id, updateData);

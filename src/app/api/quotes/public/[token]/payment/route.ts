@@ -37,7 +37,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     where: { id: quote.id },
     data: {
       paymentMethod: paymentDetails.paymentMethod,
-      accountNumber: paymentDetails.accountNumber,
+      accountNumber: paymentDetails.accountNumber ?? "",
     },
   });
 
