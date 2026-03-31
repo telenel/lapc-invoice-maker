@@ -396,6 +396,16 @@ export async function findViewsByInvoiceId(invoiceId: string) {
 }
 
 /**
+ * Find all follow-up events for a quote (for activity display).
+ */
+export async function findFollowUpsByInvoiceId(invoiceId: string) {
+  return prisma.quoteFollowUp.findMany({
+    where: { invoiceId },
+    orderBy: { sentAt: "desc" },
+  });
+}
+
+/**
  * Check if a view was recorded for this quote in the last N minutes.
  */
 export async function hasRecentView(invoiceId: string, withinMinutes: number): Promise<boolean> {

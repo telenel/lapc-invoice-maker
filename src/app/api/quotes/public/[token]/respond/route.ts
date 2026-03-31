@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { quoteService } from "@/domains/quote/service";
+import { normalizeQuotePaymentDetails } from "@/domains/quote/payment";
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/generated/prisma/client";
 import type { CateringDetails } from "@/domains/quote/types";
@@ -66,9 +67,10 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     }
 
     // Extract payment details from the body
-    const paymentDetails = body.paymentMethod
-      ? { paymentMethod: String(body.paymentMethod), accountNumber: body.accountNumber ? String(body.accountNumber) : undefined }
-      : undefined;
+    const paymentDetails = normalizeQuotePaymentDetails({
+      paymentMethod: body.paymentMethod,
+      accountNumber: body.accountNumber,
+    });
 
     const result = await quoteService.respondToQuote(token, response, body.viewId, paymentDetails);
     if (!result) {
@@ -77,6 +79,9 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     return NextResponse.json(result);
   } catch (err) {
     const code = (err as { code?: string }).code;
+    if (code === "INVALID_INPUT") {
+      return NextResponse.json({ error: (err as Error).message }, { status: 400 });
+    }
     if (code === "FORBIDDEN") {
       return NextResponse.json({ error: (err as Error).message }, { status: 400 });
     }

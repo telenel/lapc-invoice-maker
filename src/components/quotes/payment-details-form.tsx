@@ -6,23 +6,30 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { QUOTE_PAYMENT_METHODS } from "@/domains/quote/payment";
 
-const PAYMENT_OPTIONS = [
-  { value: "ACCOUNT_NUMBER", label: "Account Number" },
-  { value: "CHECK", label: "Check" },
-  { value: "CASH", label: "Cash" },
-  { value: "CREDIT_CARD", label: "Credit Card" },
-] as const;
+const PAYMENT_OPTIONS = QUOTE_PAYMENT_METHODS.map((value) => ({
+  value,
+  label: value === "ACCOUNT_NUMBER"
+    ? "Account Number"
+    : value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()),
+}));
 
 export function PaymentDetailsForm({ token }: { token: string }) {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const accountNumberRequired = paymentMethod === "ACCOUNT_NUMBER";
+  const normalizedAccountNumber = accountNumber.trim();
 
   async function handleSubmit() {
     if (!paymentMethod) {
       toast.error("Please select a payment method");
+      return;
+    }
+    if (accountNumberRequired && !normalizedAccountNumber) {
+      toast.error("Please enter your SAP account number");
       return;
     }
     setSubmitting(true);
@@ -30,7 +37,10 @@ export function PaymentDetailsForm({ token }: { token: string }) {
       const res = await fetch(`/api/quotes/public/${token}/payment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paymentMethod, accountNumber: accountNumber || undefined }),
+        body: JSON.stringify({
+          paymentMethod,
+          accountNumber: accountNumberRequired ? normalizedAccountNumber : undefined,
+        }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -88,7 +98,10 @@ export function PaymentDetailsForm({ token }: { token: string }) {
                   <button
                     key={opt.value}
                     type="button"
-                    onClick={() => setPaymentMethod(opt.value)}
+                    onClick={() => {
+                      setPaymentMethod(opt.value);
+                      if (opt.value !== "ACCOUNT_NUMBER") setAccountNumber("");
+                    }}
                     className={`rounded-md border px-3 py-2 text-sm transition-colors ${
                       paymentMethod === opt.value
                         ? "border-primary bg-primary/10 font-medium text-primary"
@@ -114,7 +127,7 @@ export function PaymentDetailsForm({ token }: { token: string }) {
 
             <Button
               onClick={handleSubmit}
-              disabled={!paymentMethod || submitting}
+              disabled={!paymentMethod || submitting || (accountNumberRequired && !normalizedAccountNumber)}
               className="w-full"
             >
               {submitting ? "Submitting..." : "Submit Payment Details"}

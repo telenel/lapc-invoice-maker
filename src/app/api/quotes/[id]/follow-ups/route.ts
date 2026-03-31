@@ -1,23 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth } from "@/domains/shared/auth";
-import { prisma } from "@/lib/prisma";
+import { withAuth, forbiddenResponse } from "@/domains/shared/auth";
+import { quoteService } from "@/domains/quote/service";
 
-export const GET = withAuth(async (_req: NextRequest, _session, ctx) => {
+export const GET = withAuth(async (_req: NextRequest, session, ctx) => {
   const { id } = await ctx!.params;
 
-  const followUps = await prisma.quoteFollowUp.findMany({
-    where: { invoiceId: id },
-    orderBy: { sentAt: "desc" },
-  });
+  const quote = await quoteService.getById(id);
+  if (!quote) {
+    return NextResponse.json({ error: "Quote not found" }, { status: 404 });
+  }
+  if (session.user.role !== "admin" && quote.creatorId !== session.user.id) {
+    return forbiddenResponse();
+  }
 
-  return NextResponse.json(
-    followUps.map((fu) => ({
-      id: fu.id,
-      type: fu.type,
-      recipientEmail: fu.recipientEmail,
-      subject: fu.subject,
-      sentAt: fu.sentAt.toISOString(),
-      metadata: fu.metadata,
-    }))
-  );
+  const followUps = await quoteService.getFollowUps(id);
+  return NextResponse.json(followUps);
 });

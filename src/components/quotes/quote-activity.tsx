@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import type { QuoteViewResponse, QuoteFollowUpResponse } from "@/domains/quote/types";
+import { useSSE } from "@/lib/use-sse";
 
 type TimelineEntry =
   | { kind: "view"; data: QuoteViewResponse; date: string }
@@ -64,7 +65,7 @@ export function QuoteActivity({ quoteId }: { quoteId: string }) {
   const [followUps, setFollowUps] = useState<QuoteFollowUpResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const loadActivity = useCallback(() => {
     Promise.all([
       fetch(`/api/quotes/${quoteId}/views`).then((r) => (r.ok ? r.json() : [])),
       fetch(`/api/quotes/${quoteId}/follow-ups`).then((r) => (r.ok ? r.json() : [])),
@@ -73,6 +74,13 @@ export function QuoteActivity({ quoteId }: { quoteId: string }) {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [quoteId]);
+
+  useEffect(() => {
+    setLoading(true);
+    loadActivity();
+  }, [loadActivity]);
+
+  useSSE("quote-changed", loadActivity);
 
   if (loading) return null;
   if (views.length === 0 && followUps.length === 0) return null;

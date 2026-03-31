@@ -24,6 +24,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
 import type { CateringDetails } from "@/domains/quote/types";
+import { QUOTE_PAYMENT_METHODS } from "@/domains/quote/payment";
 
 interface QuoteItem {
   id: string;
@@ -119,6 +120,8 @@ export function PublicQuoteView({ token }: { token: string }) {
   const [contactInfo, setContactInfo] = useState<Record<string, { name?: string; phone?: string; email?: string; note?: string }>>({});
   const viewIdRef = useRef<string | null>(null);
   const loadTimeRef = useRef<number>(Date.now());
+  const accountNumberRequired = paymentMethod === "ACCOUNT_NUMBER";
+  const normalizedSapAccountNumber = sapAccountNumber.trim();
 
   // Fetch quote data and register view
   useEffect(() => {
@@ -184,6 +187,11 @@ export function PublicQuoteView({ token }: { token: string }) {
   async function handleRespond(response: "ACCEPTED" | "DECLINED") {
     setResponding(true);
     try {
+      if (response === "ACCEPTED" && accountNumberRequired && !normalizedSapAccountNumber) {
+        toast.error("Please enter your SAP account number");
+        return;
+      }
+
       // Build catering details from form when approving a catering event
       const cateringDetails =
         quote?.isCateringEvent && response === "ACCEPTED"
@@ -213,7 +221,7 @@ export function PublicQuoteView({ token }: { token: string }) {
           viewId: viewIdRef.current,
           cateringDetails,
           paymentMethod: response === "ACCEPTED" && paymentMethod ? paymentMethod : undefined,
-          accountNumber: response === "ACCEPTED" && sapAccountNumber ? sapAccountNumber : undefined,
+          accountNumber: response === "ACCEPTED" && accountNumberRequired ? normalizedSapAccountNumber : undefined,
         }),
       });
       if (!res.ok) {
@@ -615,25 +623,29 @@ export function PublicQuoteView({ token }: { token: string }) {
               <div className="space-y-2">
                 <Label className={labelClass}>Payment Method</Label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                  {[
-                    { value: "ACCOUNT_NUMBER", label: "Account Number" },
-                    { value: "CHECK", label: "Check" },
-                    { value: "CASH", label: "Cash" },
-                    { value: "CREDIT_CARD", label: "Credit Card" },
-                  ].map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => setPaymentMethod(option.value)}
-                      className={`rounded-md border px-3 py-2 text-sm transition-colors ${
-                        paymentMethod === option.value
-                          ? "border-primary bg-primary/10 font-medium text-primary"
-                          : "border-border hover:border-primary/50"
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
+                  {QUOTE_PAYMENT_METHODS.map((value) => {
+                    const label = value === "ACCOUNT_NUMBER"
+                      ? "Account Number"
+                      : value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => {
+                          setPaymentMethod(value);
+                          if (value !== "ACCOUNT_NUMBER") setSapAccountNumber("");
+                        }}
+                        className={`rounded-md border px-3 py-2 text-sm transition-colors ${
+                          paymentMethod === value
+                            ? "border-primary bg-primary/10 font-medium text-primary"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

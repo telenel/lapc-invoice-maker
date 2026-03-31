@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { normalizeQuotePaymentDetails } from "@/domains/quote/payment";
 import { prisma } from "@/lib/prisma";
 import { safePublishAll } from "@/lib/sse";
 
@@ -8,8 +9,17 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
   const { token } = await ctx.params;
   const body = await req.json().catch(() => ({}));
 
-  const { paymentMethod, accountNumber } = body;
-  if (!paymentMethod) {
+  let paymentDetails;
+  try {
+    paymentDetails = normalizeQuotePaymentDetails({
+      paymentMethod: body.paymentMethod,
+      accountNumber: body.accountNumber,
+    });
+  } catch (err) {
+    return NextResponse.json({ error: (err as Error).message }, { status: 400 });
+  }
+
+  if (!paymentDetails) {
     return NextResponse.json({ error: "paymentMethod is required" }, { status: 400 });
   }
 
@@ -26,8 +36,8 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
   await prisma.invoice.update({
     where: { id: quote.id },
     data: {
-      paymentMethod: String(paymentMethod),
-      ...(accountNumber ? { accountNumber: String(accountNumber) } : {}),
+      paymentMethod: paymentDetails.paymentMethod,
+      accountNumber: paymentDetails.accountNumber,
     },
   });
 
@@ -38,7 +48,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       type: "PAYMENT_RESOLVED",
       recipientEmail: quote.recipientEmail ?? "",
       subject: `Payment details provided for ${quote.quoteNumber ?? "quote"}`,
-      metadata: { paymentMethod, accountNumber: accountNumber ?? null },
+      metadata: paymentDetails,
     },
   });
 
@@ -49,7 +59,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       userId: quote.createdBy,
       type: "PAYMENT_DETAILS_RECEIVED",
       title: `Payment details received for ${quote.quoteNumber ?? "Quote"}`,
-      message: `Payment method: ${paymentMethod}${accountNumber ? ` (Account: ${accountNumber})` : ""}`,
+      message: `Payment method: ${paymentDetails.paymentMethod}${paymentDetails.accountNumber ? ` (Account: ${paymentDetails.accountNumber})` : ""}`,
       quoteId: quote.id,
     });
   } catch {

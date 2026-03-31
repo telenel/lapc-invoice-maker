@@ -14,6 +14,7 @@ vi.mock("@/domains/quote/repository", () => ({
   updateViewDuration: vi.fn(),
   updateViewResponse: vi.fn(),
   findViewsByInvoiceId: vi.fn(),
+  findFollowUpsByInvoiceId: vi.fn(),
   hasRecentView: vi.fn(),
   findByShareToken: vi.fn(),
   generateNumber: vi.fn(),
@@ -570,6 +571,35 @@ describe("quoteService", () => {
         expect.objectContaining({ quoteNumber: "DRAFT" })
       );
       expect(result.filename).toBe("quote");
+    });
+  });
+
+  describe("getFollowUps", () => {
+    it("maps follow-up rows to response DTOs", async () => {
+      mockRepo.findFollowUpsByInvoiceId.mockResolvedValue([
+        {
+          id: "fu1",
+          type: "PAYMENT_REMINDER",
+          recipientEmail: "jane@test.com",
+          subject: "Payment details needed",
+          sentAt: new Date("2026-03-31T17:00:00.000Z"),
+          metadata: { attempt: 2 },
+        },
+      ] as never);
+
+      const result = await quoteService.getFollowUps("q1");
+
+      expect(mockRepo.findFollowUpsByInvoiceId).toHaveBeenCalledWith("q1");
+      expect(result).toEqual([
+        {
+          id: "fu1",
+          type: "PAYMENT_REMINDER",
+          recipientEmail: "jane@test.com",
+          subject: "Payment details needed",
+          sentAt: "2026-03-31T17:00:00.000Z",
+          metadata: { attempt: 2 },
+        },
+      ]);
     });
   });
 });

@@ -11,11 +11,13 @@ import type {
   QuoteFilters,
   CreateQuoteInput,
   UpdateQuoteInput,
+  QuoteFollowUpResponse,
   QuoteViewResponse,
   CateringDetails,
 } from "./types";
 import type { StaffSummary } from "@/domains/staff/types";
 import type { ContactResponse } from "@/domains/contact/types";
+import { normalizeQuotePaymentDetails } from "./payment";
 
 // ── DTO mapper ─────────────────────────────────────────────────────────────
 
@@ -255,9 +257,12 @@ export const quoteService = {
     }
 
     const updateData: Record<string, unknown> = { quoteStatus: response };
-    if (response === "ACCEPTED" && paymentDetails) {
-      if (paymentDetails.paymentMethod) updateData.paymentMethod = paymentDetails.paymentMethod;
-      if (paymentDetails.accountNumber) updateData.accountNumber = paymentDetails.accountNumber;
+    if (response === "ACCEPTED") {
+      const normalizedPayment = normalizeQuotePaymentDetails(paymentDetails);
+      if (normalizedPayment) {
+        updateData.paymentMethod = normalizedPayment.paymentMethod;
+        updateData.accountNumber = normalizedPayment.accountNumber;
+      }
     }
     await quoteRepository.update(quote.id, updateData);
 
@@ -315,6 +320,21 @@ export const quoteService = {
       viewport: v.viewport,
       durationSeconds: v.durationSeconds,
       respondedWith: v.respondedWith,
+    }));
+  },
+
+  /**
+   * Get all follow-up events for a quote (for activity display on detail page).
+   */
+  async getFollowUps(id: string): Promise<QuoteFollowUpResponse[]> {
+    const followUps = await quoteRepository.findFollowUpsByInvoiceId(id);
+    return followUps.map((fu) => ({
+      id: fu.id,
+      type: fu.type,
+      recipientEmail: fu.recipientEmail,
+      subject: fu.subject,
+      sentAt: fu.sentAt.toISOString(),
+      metadata: fu.metadata as Record<string, unknown> | null,
     }));
   },
 

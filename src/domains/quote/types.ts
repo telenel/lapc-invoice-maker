@@ -164,6 +164,11 @@ export interface QuoteFollowUpResponse {
   metadata: Record<string, unknown> | null;
 }
 
+export interface QuotePaymentDetailsSubmission {
+  paymentMethod: string;
+  accountNumber: string | null;
+}
+
 export interface QuoteViewResponse {
   id: string;
   viewedAt: string;
