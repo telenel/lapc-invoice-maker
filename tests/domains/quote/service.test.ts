@@ -1018,6 +1018,8 @@ describe("quoteService", () => {
           department: "IT",
           category: "SUPPLIES",
           accountCode: "AC1",
+          shareToken: null,
+          appUrl: undefined,
           notes: "Test notes",
           totalAmount: 150,
           items: [
@@ -1040,6 +1042,22 @@ describe("quoteService", () => {
       expect(mockPdfService.readPdf).toHaveBeenCalledWith("/pdf/q1.pdf");
       expect(result.buffer).toBeInstanceOf(Buffer);
       expect(result.filename).toBe("Q-2026-0001");
+    });
+
+    it("includes the public share link only when explicitly requested", async () => {
+      const quote = makeQuote({ shareToken: "share-token" });
+      mockRepo.findById.mockResolvedValue(quote as never);
+      mockPdfService.generateQuote.mockResolvedValue("/pdf/q1.pdf" as never);
+      mockPdfService.readPdf.mockResolvedValue(Buffer.from("pdf-bytes") as never);
+
+      await quoteService.generatePdf("q1", { includePublicShareLink: true });
+
+      expect(mockPdfService.generateQuote).toHaveBeenCalledWith(
+        expect.objectContaining({
+          shareToken: "share-token",
+          appUrl: expect.any(String),
+        })
+      );
     });
 
     it("uses 'DRAFT' as quoteNumber when quote has no number", async () => {

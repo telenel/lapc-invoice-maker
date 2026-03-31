@@ -1102,7 +1102,10 @@ export const quoteService = {
   /**
    * Generate a PDF for the quote and return the file buffer.
    */
-  async generatePdf(id: string): Promise<{ buffer: Buffer; filename: string }> {
+  async generatePdf(
+    id: string,
+    options?: { includePublicShareLink?: boolean }
+  ): Promise<{ buffer: Buffer; filename: string }> {
     const quote = await quoteRepository.findById(id);
     if (!quote || quote.type !== "QUOTE") {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
@@ -1111,6 +1114,7 @@ export const quoteService = {
     const cateringRaw = quote.cateringDetails as CateringDetails | null;
 
     const appUrl = process.env.NEXTAUTH_URL ?? "https://laportal.montalvo.io";
+    const includePublicShareLink = options?.includePublicShareLink === true;
 
     const pdfPath = await pdfService.generateQuote({
       quoteNumber: quote.quoteNumber ?? "DRAFT",
@@ -1158,8 +1162,8 @@ export const quoteService = {
             specialInstructions: cateringRaw.specialInstructions,
           }
         : null,
-      shareToken: quote.shareToken,
-      appUrl,
+      shareToken: includePublicShareLink ? quote.shareToken : null,
+      appUrl: includePublicShareLink ? appUrl : undefined,
     });
 
     const buffer = await pdfService.readPdf(pdfPath);

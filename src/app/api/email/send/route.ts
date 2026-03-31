@@ -93,7 +93,9 @@ export const POST = withAuth(async (req: NextRequest, session) => {
         }
 
         try {
-          const { buffer, filename } = await quoteService.generatePdf(shareData.quoteId);
+          const { buffer, filename } = await quoteService.generatePdf(shareData.quoteId, {
+            includePublicShareLink: true,
+          });
           const safeName = (filename ?? "quote").replace(/[^a-zA-Z0-9\-]/g, "-");
           attachments = [{
             Name: `Quote-${safeName}.pdf`,

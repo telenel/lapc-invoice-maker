@@ -197,7 +197,9 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
     let attachments: EmailAttachment[] | undefined;
     try {
       const { quoteService } = await import("./service");
-      const { buffer, filename } = await quoteService.generatePdf(claim.quoteId);
+      const { buffer, filename } = await quoteService.generatePdf(claim.quoteId, {
+        includePublicShareLink: true,
+      });
       const safeName = (filename ?? "quote").replace(/[^a-zA-Z0-9\-]/g, "-");
       attachments = [{ Name: `Quote-${safeName}.pdf`, ContentBytes: buffer.toString("base64") }];
     } catch {
