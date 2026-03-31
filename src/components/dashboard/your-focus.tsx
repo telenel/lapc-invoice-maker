@@ -1,109 +1,176 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { ChevronRight, CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { formatAmount } from "@/lib/formatters";
 import { invoiceApi } from "@/domains/invoice/api-client";
 import { quoteApi } from "@/domains/quote/api-client";
+import type { InvoiceResponse } from "@/domains/invoice/types";
+import type { QuoteResponse } from "@/domains/quote/types";
+import { useSSE } from "@/lib/use-sse";
 
-interface FocusData {
-  myDrafts: number;
-  myRunning: number;
-  myFinalThisMonth: number;
-  myTotalThisMonth: number;
-  myFinalLastMonth: number;
-  myQuotesAwaitingResponse: number;
+const EXPIRY_WINDOW_DAYS = 7;
+const STALE_DRAFT_DAYS = 3;
+const MAX_ITEMS = 5;
+
+interface ActionItem {
+  id: string;
+  priority: number;
+  label: string;
+  context: string;
+  href: string;
+  dotColor: string;
 }
 
-function getNudge(data: FocusData): string | null {
-  const { myDrafts, myRunning, myFinalThisMonth, myFinalLastMonth, myQuotesAwaitingResponse } = data;
+function daysUntil(dateStr: string): number {
+  const now = new Date();
+  const target = new Date(dateStr);
+  return Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+}
 
-  // Actionable nudges first
-  if (myQuotesAwaitingResponse > 0) {
-    return `${myQuotesAwaitingResponse} quote${myQuotesAwaitingResponse !== 1 ? "s" : ""} awaiting response`;
-  }
-  if (myDrafts > 0 && myRunning > 0) {
-    return `${myDrafts} draft${myDrafts !== 1 ? "s" : ""} and ${myRunning} running invoice${myRunning !== 1 ? "s" : ""} waiting for you`;
-  }
-  if (myDrafts > 0) {
-    return `${myDrafts} draft${myDrafts !== 1 ? "s" : ""} to finalize`;
-  }
-  if (myRunning > 0) {
-    return `${myRunning} running invoice${myRunning !== 1 ? "s" : ""} in progress`;
-  }
+function daysSince(dateStr: string): number {
+  const now = new Date();
+  const created = new Date(dateStr);
+  return Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
+}
 
-  // Motivational nudges
-  if (myFinalLastMonth > 0 && myFinalThisMonth > myFinalLastMonth) {
-    return `You're ${myFinalThisMonth - myFinalLastMonth} ahead of last month — nice pace`;
-  }
-  if (myFinalThisMonth > 0) {
-    return `${myFinalThisMonth} finalized this month — keep it up`;
-  }
+function buildExpiringQuoteItems(quotes: QuoteResponse[]): ActionItem[] {
+  return quotes
+    .filter((q) => q.expirationDate && daysUntil(q.expirationDate) <= EXPIRY_WINDOW_DAYS && daysUntil(q.expirationDate) >= 0)
+    .sort((a, b) => daysUntil(a.expirationDate!) - daysUntil(b.expirationDate!))
+    .map((q) => {
+      const days = daysUntil(q.expirationDate!);
+      const dayText = days === 0 ? "today" : days === 1 ? "in 1 day" : `in ${days} days`;
+      return {
+        id: `expiring-${q.id}`,
+        priority: 1,
+        label: `${q.quoteNumber ?? "Quote"} expires ${dayText}`,
+        context: q.recipientName,
+        href: `/quotes/${q.id}`,
+        dotColor: days <= 2 ? "bg-red-500" : "bg-amber-500",
+      };
+    });
+}
 
-  return "All clear — ready for a new invoice?";
+function buildStaleDraftItems(invoices: InvoiceResponse[]): ActionItem[] {
+  return invoices
+    .filter((inv) => !inv.isRunning && daysSince(inv.createdAt) >= STALE_DRAFT_DAYS)
+    .sort((a, b) => daysSince(b.createdAt) - daysSince(a.createdAt))
+    .map((inv) => {
+      const days = daysSince(inv.createdAt);
+      return {
+        id: `stale-${inv.id}`,
+        priority: 2,
+        label: `${inv.invoiceNumber ?? "Draft"} draft for ${days} days`,
+        context: inv.department,
+        href: `/invoices/${inv.id}/edit`,
+        dotColor: "bg-amber-500",
+      };
+    });
+}
+
+function buildAwaitingResponseItems(quotes: QuoteResponse[]): ActionItem[] {
+  return quotes.map((q) => ({
+    id: `awaiting-${q.id}`,
+    priority: 3,
+    label: `${q.quoteNumber ?? "Quote"} awaiting response`,
+    context: q.recipientName,
+    href: `/quotes/${q.id}`,
+    dotColor: "bg-violet-500",
+  }));
+}
+
+function buildRunningItems(invoices: InvoiceResponse[]): ActionItem[] {
+  return invoices.map((inv) => ({
+    id: `running-${inv.id}`,
+    priority: 4,
+    label: `Running: ${inv.runningTitle || "Untitled"} (${inv.items.length} item${inv.items.length !== 1 ? "s" : ""})`,
+    context: inv.department,
+    href: `/invoices/${inv.id}/edit`,
+    dotColor: "bg-blue-500",
+  }));
+}
+
+function buildPendingChargeItems(invoices: InvoiceResponse[]): ActionItem[] {
+  return invoices.map((inv) => ({
+    id: `pending-${inv.id}`,
+    priority: 5,
+    label: `${inv.invoiceNumber ?? "Invoice"} pending POS charge`,
+    context: inv.department,
+    href: `/invoices/${inv.id}`,
+    dotColor: "bg-orange-500",
+  }));
 }
 
 export function YourFocus() {
   const { data: session } = useSession();
-  const [data, setData] = useState<FocusData | null>(null);
+  const [items, setItems] = useState<ActionItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   const userId = (session?.user as { id?: string } | undefined)?.id;
 
-  useEffect(() => {
+  const fetchNextSteps = useCallback(async () => {
     if (!userId) return;
 
-    async function fetchFocus() {
-      try {
-        const now = new Date();
-        const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const firstOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const lastOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
-        const dateFrom = firstOfMonth.toISOString().split("T")[0];
-        const dateTo = now.toISOString().split("T")[0];
-        const lastMonthFrom = firstOfLastMonth.toISOString().split("T")[0];
-        const lastMonthTo = lastOfLastMonth.toISOString().split("T")[0];
+    try {
+      const [sentQuotes, drafts, running, pendingCharge] = await Promise.all([
+        quoteApi.list({ quoteStatus: "SENT", pageSize: 10 }),
+        invoiceApi.list({ status: "DRAFT", creatorId: userId, pageSize: 10 }),
+        invoiceApi.list({ status: "DRAFT", isRunning: true, creatorId: userId, pageSize: 5 }),
+        invoiceApi.list({ status: "PENDING_CHARGE", creatorId: userId, pageSize: 5 }),
+      ]);
 
-        const [drafts, running, monthStats, lastMonthStats, sentQuotes] = await Promise.all([
-          invoiceApi.getStats({ status: "DRAFT", creatorId: userId }),
-          invoiceApi.list({ status: "DRAFT", isRunning: true, creatorId: userId, pageSize: 1 }),
-          invoiceApi.getStats({ status: "FINAL", creatorId: userId, dateFrom, dateTo }),
-          invoiceApi.getStats({ status: "FINAL", creatorId: userId, dateFrom: lastMonthFrom, dateTo: lastMonthTo }),
-          quoteApi.list({ quoteStatus: "SENT", creatorId: userId, pageSize: 1 }),
-        ]);
+      const allItems: ActionItem[] = [
+        ...buildExpiringQuoteItems(sentQuotes.quotes),
+        ...buildStaleDraftItems(drafts.invoices ?? []),
+        ...buildAwaitingResponseItems(sentQuotes.quotes),
+        ...buildRunningItems(running.invoices ?? []),
+        ...buildPendingChargeItems(pendingCharge.invoices ?? []),
+      ];
 
-        setData({
-          myDrafts: drafts.total,
-          myRunning: running.total,
-          myFinalThisMonth: monthStats.total,
-          myTotalThisMonth: monthStats.sumTotalAmount,
-          myFinalLastMonth: lastMonthStats.total,
-          myQuotesAwaitingResponse: sentQuotes.total,
-        });
-      } catch (err) {
-        console.error("Failed to fetch focus data:", err);
-      } finally {
-        setLoading(false);
-      }
+      // Deduplicate: expiring quotes already appear in awaiting, so remove duplicates
+      const seen = new Set<string>();
+      const deduped = allItems.filter((item) => {
+        // Extract the entity ID from the composite key
+        const entityId = item.id.split("-").slice(1).join("-");
+        const key = entityId;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+
+      // Sort by priority, then take top N
+      const sorted = deduped
+        .sort((a, b) => a.priority - b.priority)
+        .slice(0, MAX_ITEMS);
+
+      setItems(sorted);
+    } catch (err) {
+      console.error("Failed to fetch next steps:", err);
+    } finally {
+      setLoading(false);
     }
-
-    fetchFocus();
   }, [userId]);
+
+  useEffect(() => {
+    fetchNextSteps();
+  }, [fetchNextSteps]);
+
+  useSSE("invoice-changed", fetchNextSteps);
+  useSSE("quote-changed", fetchNextSteps);
 
   if (loading) {
     return (
       <Card className="card-hover">
         <CardContent className="py-3 px-4">
           <div className="skeleton h-3 w-20 mb-3" />
-          <div className="grid grid-cols-4 gap-3">
-            {[0, 1, 2, 3].map((i) => (
-              <div key={i} className="rounded-lg bg-muted/50 px-3 py-2.5">
-                <div className="skeleton h-2.5 w-16 mb-2" />
-                <div className="skeleton h-5 w-8" />
-              </div>
+          <div className="space-y-2">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="skeleton h-10 w-full rounded-lg" />
             ))}
           </div>
         </CardContent>
@@ -111,46 +178,7 @@ export function YourFocus() {
     );
   }
 
-  if (!data) return null;
-
-  const hasWork = data.myDrafts > 0 || data.myRunning > 0 || data.myQuotesAwaitingResponse > 0;
-  const nudge = getNudge(data);
-
-  const items = [
-    {
-      label: "Your Drafts",
-      value: data.myDrafts,
-      href: "/invoices?status=DRAFT",
-      color: data.myDrafts > 0 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground",
-      bgColor: data.myDrafts > 0 ? "bg-amber-500/10" : "bg-muted/50",
-      dotColor: data.myDrafts > 0 ? "bg-amber-500" : "bg-muted-foreground/30",
-    },
-    {
-      label: "Running",
-      value: data.myRunning,
-      href: "/invoices?status=DRAFT",
-      color: data.myRunning > 0 ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground",
-      bgColor: data.myRunning > 0 ? "bg-blue-500/10" : "bg-muted/50",
-      dotColor: data.myRunning > 0 ? "bg-blue-500" : "bg-muted-foreground/30",
-    },
-    {
-      label: "Awaiting Response",
-      value: data.myQuotesAwaitingResponse,
-      href: "/quotes?quoteStatus=SENT",
-      color: data.myQuotesAwaitingResponse > 0 ? "text-violet-600 dark:text-violet-400" : "text-muted-foreground",
-      bgColor: data.myQuotesAwaitingResponse > 0 ? "bg-violet-500/10" : "bg-muted/50",
-      dotColor: data.myQuotesAwaitingResponse > 0 ? "bg-violet-500" : "bg-muted-foreground/30",
-    },
-    {
-      label: "Finalized This Month",
-      value: data.myFinalThisMonth,
-      href: "/invoices?status=FINAL",
-      color: "text-emerald-600 dark:text-emerald-400",
-      bgColor: data.myFinalThisMonth > 0 ? "bg-emerald-500/10" : "bg-muted/50",
-      dotColor: "bg-emerald-500",
-      suffix: data.myTotalThisMonth > 0 ? ` · ${formatAmount(data.myTotalThisMonth)}` : "",
-    },
-  ];
+  const hasWork = items.length > 0;
 
   return (
     <Card className={cn(
@@ -161,54 +189,42 @@ export function YourFocus() {
         <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center gap-1.5">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Your Focus
+              Next Steps
             </span>
             {hasWork && (
-              <span className="flex h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+              <>
+                <Badge variant="secondary" className="h-4 min-w-[18px] px-1 text-[10px] font-bold">
+                  {items.length}
+                </Badge>
+                <span className="flex h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+              </>
             )}
           </div>
-          {nudge && (
-            <span className="text-[11px] text-muted-foreground italic">
-              {nudge}
-            </span>
-          )}
         </div>
-        <div className="grid grid-cols-4 gap-3">
-          {items.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className={cn(
-                "group flex flex-col gap-1.5 rounded-lg px-3 py-2.5 transition-colors",
-                item.bgColor,
-                "hover:bg-accent"
-              )}
-            >
-              <div className="flex items-center gap-1.5">
-                <span className={cn("h-1.5 w-1.5 rounded-full", item.dotColor)} />
-                <span className="text-[11px] font-medium text-muted-foreground">
-                  {item.label}
-                </span>
-              </div>
-              <div className="flex flex-col">
-                {"suffix" in item && item.suffix ? (
-                  <>
-                    <span className={cn("text-[22px] font-extrabold tracking-tight tabular-nums", item.color)}>
-                      {formatAmount(data.myTotalThisMonth)}
-                    </span>
-                    <span className="text-[11px] font-medium text-muted-foreground">
-                      {item.value} invoice{item.value !== 1 ? "s" : ""}
-                    </span>
-                  </>
-                ) : (
-                  <span className={cn("text-2xl font-extrabold tabular-nums", item.color)}>
-                    {item.value}
-                  </span>
-                )}
-              </div>
-            </Link>
-          ))}
-        </div>
+
+        {hasWork ? (
+          <div className="flex flex-col gap-1">
+            {items.map((item) => (
+              <Link
+                key={item.id}
+                href={item.href}
+                className="group flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <span className={cn("h-2 w-2 rounded-full shrink-0", item.dotColor)} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{item.label}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">{item.context}</p>
+                </div>
+                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50 group-hover:text-foreground transition-colors shrink-0" />
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center gap-2 py-6 text-sm text-muted-foreground">
+            <CheckCircle2 className="h-5 w-5 text-emerald-500" />
+            <span>All clear — you&apos;re caught up!</span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
