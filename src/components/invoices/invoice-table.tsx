@@ -27,6 +27,7 @@ import { useSSE } from "@/lib/use-sse";
 import { useUrlFilters } from "@/lib/use-url-filters";
 import {
   getInvoiceExportFilters,
+  getNextInvoiceFilterState,
 } from "./url-filter-utils";
 import { cn } from "@/lib/utils";
 
@@ -149,7 +150,16 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
   useSSE("invoice-changed", fetchInvoices);
 
   function handleFiltersChange(next: FilterBarFilters) {
-    replaceFilters({ ...next, sortBy: filters.sortBy, sortOrder: filters.sortOrder });
+    replaceFilters(
+      getNextInvoiceFilterState(
+        {
+          isRunning: filters.isRunning,
+          sortBy: filters.sortBy,
+          sortOrder: filters.sortOrder,
+        },
+        next,
+      ),
+    );
   }
 
   function handleClear() {

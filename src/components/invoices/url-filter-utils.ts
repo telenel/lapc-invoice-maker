@@ -15,6 +15,33 @@ export interface InvoiceUrlFilters {
   sortOrder: string;
 }
 
+export interface InvoiceVisibleFilters {
+  search: string;
+  status: string;
+  category: string;
+  department: string;
+  dateFrom: string;
+  dateTo: string;
+  amountMin: string;
+  amountMax: string;
+}
+
+export function getNextInvoiceFilterState(
+  current: Pick<InvoiceUrlFilters, "isRunning" | "sortBy" | "sortOrder">,
+  next: InvoiceVisibleFilters,
+): Partial<InvoiceUrlFilters> {
+  const keepRunning =
+    current.isRunning === "true" &&
+    next.status === "DRAFT";
+
+  return {
+    ...next,
+    isRunning: keepRunning ? "true" : "",
+    sortBy: current.sortBy,
+    sortOrder: current.sortOrder,
+  };
+}
+
 export function getInvoiceExportFilters(
   filters: Pick<
     InvoiceUrlFilters,
