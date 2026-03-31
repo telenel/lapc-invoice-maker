@@ -39,7 +39,7 @@ export function renderIDP(data: IDPData): string {
     .map(
       (item) => `
         <tr>
-          <td class="c" style="height:19px;">${escapeHtml(item.description.toUpperCase())}</td>
+          <td class="c" style="height:19px;">${escapeHtml(item.description)}</td>
           <td class="c" style="text-align:center;">${escapeHtml(item.quantity)}</td>
           <td class="c" style="text-align:right;">${item.unitPrice ? fmtPrice(item.unitPrice) : ""}</td>
           <td class="c" style="text-align:right;">${fmtPrice(item.extendedPrice)}</td>

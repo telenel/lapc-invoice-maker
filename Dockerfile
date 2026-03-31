@@ -29,6 +29,7 @@ WORKDIR /app
 # Dependencies stage
 FROM base AS deps
 COPY package.json package-lock.json ./
+COPY scripts/postinstall.js ./scripts/postinstall.js
 RUN npm ci
 
 # Build stage
@@ -43,6 +44,9 @@ RUN npm run build
 # Production stage
 FROM base AS runner
 ENV NODE_ENV=production
+ENV HOME=/tmp
+ENV XDG_CONFIG_HOME=/tmp/.chromium/config
+ENV XDG_CACHE_HOME=/tmp/.chromium/cache
 WORKDIR /app
 
 COPY --from=builder /app/public ./public
