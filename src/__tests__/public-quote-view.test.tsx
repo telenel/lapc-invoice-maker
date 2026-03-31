@@ -4,6 +4,8 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PublicQuoteView } from "@/components/quotes/public-quote-view";
 
+const pushMock = vi.fn();
+
 vi.mock("@/domains/quote/api-client", () => ({
   quoteApi: {
     getPublicQuote: vi.fn(),
@@ -12,6 +14,12 @@ vi.mock("@/domains/quote/api-client", () => ({
     recordPublicViewDuration: vi.fn(),
     respondToPublicQuote: vi.fn(),
   },
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: pushMock,
+  }),
 }));
 
 vi.mock("sonner", () => ({
@@ -26,6 +34,7 @@ import { quoteApi } from "@/domains/quote/api-client";
 describe("PublicQuoteView", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    pushMock.mockReset();
     vi.mocked(quoteApi.getPublicQuote).mockResolvedValue({
       id: "q1",
       quoteNumber: "Q-1",
@@ -94,5 +103,48 @@ describe("PublicQuoteView", () => {
         }),
       );
     });
+  });
+
+  it("keeps the quote visible if analytics registration fails", async () => {
+    vi.mocked(quoteApi.registerPublicView).mockRejectedValueOnce(new Error("boom"));
+
+    render(<PublicQuoteView token="token" />);
+
+    await waitFor(() => {
+      expect(screen.getByText("Approve Quote")).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText("Quote Not Found")).not.toBeInTheDocument();
+  });
+
+  it("routes accepted quotes without payment details to the payment page", async () => {
+    vi.mocked(quoteApi.getPublicQuote).mockResolvedValueOnce({
+      id: "q1",
+      quoteNumber: "Q-1",
+      quoteStatus: "ACCEPTED",
+      date: "2026-03-31T00:00:00.000Z",
+      expirationDate: null,
+      department: "IT",
+      category: "SUPPLIES",
+      notes: "",
+      totalAmount: 10,
+      recipientName: "Jane",
+      recipientEmail: "jane@example.com",
+      recipientOrg: "",
+      staff: null,
+      contact: null,
+      items: [],
+      isCateringEvent: false,
+      cateringDetails: null,
+      paymentDetailsResolved: false,
+    } as never);
+
+    render(<PublicQuoteView token="token" />);
+
+    await screen.findByText("Provide Payment Details");
+
+    await userEvent.click(screen.getByRole("button", { name: "Provide Payment Details" }));
+
+    expect(pushMock).toHaveBeenCalledWith("/quotes/payment/token");
   });
 });

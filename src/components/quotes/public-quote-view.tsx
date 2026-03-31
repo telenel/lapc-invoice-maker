@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -74,6 +75,7 @@ function makeCateringForm(existing: CateringDetails | null): PublicCateringForm 
 const labelClass = "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
 
 export function PublicQuoteView({ token }: { token: string }) {
+  const router = useRouter();
   const [quote, setQuote] = useState<PublicQuoteResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -98,19 +100,19 @@ export function PublicQuoteView({ token }: { token: string }) {
         if (quoteData.isCateringEvent) {
           setCateringForm(makeCateringForm(quoteData.cateringDetails));
         }
-
-        // Fetch contact info settings
-        try {
-          setContactInfo(await quoteApi.getPublicSettings());
-        } catch {
+        quoteApi.getPublicSettings().then(setContactInfo).catch(() => {
           /* non-critical */
-        }
-
-        // Register view
-        const { viewId } = await quoteApi.registerPublicView(token, `${window.innerWidth}x${window.innerHeight}`);
-        viewIdRef.current = viewId;
+        });
+        quoteApi.registerPublicView(token, `${window.innerWidth}x${window.innerHeight}`)
+          .then(({ viewId }) => {
+            viewIdRef.current = viewId;
+          })
+          .catch((err) => {
+            console.warn("Failed to register quote view:", err);
+          });
       } catch {
         setNotFound(true);
+        return;
       } finally {
         setLoading(false);
       }
@@ -168,7 +170,16 @@ export function PublicQuoteView({ token }: { token: string }) {
         accountNumber: response === "ACCEPTED" && accountNumberRequired ? normalizedSapAccountNumber : undefined,
       });
       setResponded(true);
-      setQuote((prev) => prev ? { ...prev, quoteStatus: data.status } : prev);
+      setQuote((prev) =>
+        prev
+          ? {
+              ...prev,
+              quoteStatus: data.status,
+              paymentDetailsResolved:
+                response === "ACCEPTED" && Boolean(paymentMethod) ? true : prev.paymentDetailsResolved,
+            }
+          : prev,
+      );
       toast.success(response === "ACCEPTED" ? "Quote approved!" : "Quote declined");
     } catch (err) {
       toast.error((err as Error).message ?? "Failed to submit response");
@@ -723,15 +734,30 @@ export function PublicQuoteView({ token }: { token: string }) {
         )}
 
         {alreadyResponded && (
-          <Card>
-            <CardContent className="pt-6 text-center">
-              <p className="text-sm text-muted-foreground">
-                {quote.quoteStatus === "ACCEPTED"
-                  ? "This quote has been approved."
-                  : quote.quoteStatus === "REVISED"
-                  ? "This quote has been revised. A new version has been issued."
-                  : "This quote has been declined."}
-              </p>
+      <Card>
+        <CardContent className="pt-6 text-center">
+              {quote.quoteStatus === "ACCEPTED" && !paymentDetailsResolved ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Your approval was received. Payment details are still needed to finish processing this quote.
+                  </p>
+                  <Button
+                    type="button"
+                    onClick={() => router.push(`/quotes/payment/${token}`)}
+                    className="min-w-[220px]"
+                  >
+                    Provide Payment Details
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  {quote.quoteStatus === "ACCEPTED"
+                    ? "This quote has been approved."
+                    : quote.quoteStatus === "REVISED"
+                    ? "This quote has been revised. A new version has been issued."
+                    : "This quote has been declined."}
+                </p>
+              )}
             </CardContent>
           </Card>
         )}
