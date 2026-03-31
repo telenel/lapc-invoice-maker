@@ -38,6 +38,7 @@ import { CateringDetailsCard } from "@/components/quote/catering-details-card";
 import { useTaxCalculation } from "@/components/invoice/hooks/use-tax-calculation";
 import { TAX_RATE } from "@/domains/invoice/constants";
 import { FormError } from "@/components/ui/form-error";
+import { getQuoteValidationErrors } from "./validation";
 import { cn } from "@/lib/utils";
 import { categoryApi } from "@/domains/category/api-client";
 import { templateApi } from "@/domains/template/api-client";
@@ -218,23 +219,10 @@ export function QuoteMode({
 
   // ---- Validation + save ----
   const validateQuoteForm = useCallback(() => {
-    const errors: Record<string, string> = {};
-    if (!form.recipientName.trim()) errors.recipientName = "Please enter a recipient name";
-    if (!form.department.trim()) errors.department = "Please enter a department";
-    const hasValidItem = form.items.some(
-      (item: { description: string }) => item.description.trim() !== ""
-    );
-    if (!hasValidItem) errors.lineItems = "At least one line item with a description is required";
-    if (form.isCateringEvent) {
-      if (!form.cateringDetails.location?.trim())
-        errors["cateringDetails.location"] = "Event location is required";
-      if (!form.cateringDetails.contactName?.trim())
-        errors["cateringDetails.contactName"] = "Event contact name is required";
-      if (!form.cateringDetails.contactPhone?.trim())
-        errors["cateringDetails.contactPhone"] = "Event contact phone is required";
-    }
-    return errors;
-  }, [form]);
+    return getQuoteValidationErrors(form, {
+      requireCateringDetails: form.isCateringEvent && cateringOverride,
+    });
+  }, [form, cateringOverride]);
 
   function handleSave() {
     const errors = validateQuoteForm();
@@ -683,7 +671,18 @@ export function QuoteMode({
               });
             }}
             overrideMode={cateringOverride}
-            onOverrideChange={setCateringOverride}
+            onOverrideChange={(override) => {
+              setCateringOverride(override);
+              if (!override) {
+                setValidationErrors((prev) => {
+                  const next = { ...prev };
+                  delete next["cateringDetails.location"];
+                  delete next["cateringDetails.contactName"];
+                  delete next["cateringDetails.contactPhone"];
+                  return next;
+                });
+              }
+            }}
             validationErrors={validationErrors}
           />
         )}
