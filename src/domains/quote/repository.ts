@@ -533,6 +533,18 @@ export async function applyPublicQuoteResponse(
     if (!currentQuote) {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
     }
+    if (!["SENT", "SUBMITTED_EMAIL", "SUBMITTED_MANUAL"].includes(currentQuote.quoteStatus ?? "")) {
+      throw Object.assign(
+        new Error(
+          currentQuote.quoteStatus === "ACCEPTED" ||
+            currentQuote.quoteStatus === "DECLINED" ||
+            currentQuote.quoteStatus === "REVISED"
+            ? "This quote has already been responded to"
+            : "This quote is no longer available",
+        ),
+        { code: "FORBIDDEN" },
+      );
+    }
 
     const quoteData: Prisma.InvoiceUpdateInput = {
       quoteStatus: input.response,

@@ -100,4 +100,34 @@ describe("quoteRepository.applyPublicQuoteResponse", () => {
 
     expect(tx.invoice.update).not.toHaveBeenCalled();
   });
+
+  it("rejects a second public response after the quote has already been accepted", async () => {
+    const tx = {
+      $queryRaw: vi.fn().mockResolvedValue([
+        {
+          id: "q1",
+          quoteStatus: "ACCEPTED",
+          paymentMethod: null,
+        },
+      ]),
+      invoice: {
+        update: vi.fn(),
+      },
+      quoteView: {
+        findFirst: vi.fn(),
+        update: vi.fn(),
+      },
+    };
+    vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => callback(tx as never) as never);
+
+    await expect(
+      applyPublicQuoteResponse("q1", {
+        response: "DECLINED",
+      }),
+    ).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+
+    expect(tx.invoice.update).not.toHaveBeenCalled();
+  });
 });
