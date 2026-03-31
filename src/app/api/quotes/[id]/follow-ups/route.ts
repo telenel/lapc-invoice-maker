@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth, forbiddenResponse } from "@/domains/shared/auth";
+import { canViewQuoteDetails } from "@/domains/quote/access";
 import { quoteService } from "@/domains/quote/service";
 
 export const GET = withAuth(async (_req: NextRequest, session, ctx) => {
@@ -9,7 +10,7 @@ export const GET = withAuth(async (_req: NextRequest, session, ctx) => {
   if (!quote) {
     return NextResponse.json({ error: "Quote not found" }, { status: 404 });
   }
-  if (session.user.role !== "admin" && quote.creatorId !== session.user.id) {
+  if (!canViewQuoteDetails(quote, session.user.id, session.user.role === "admin")) {
     return forbiddenResponse();
   }
 

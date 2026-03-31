@@ -58,10 +58,14 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
     : null;
 
   const convertedToInvoice = "convertedToInvoice" in quote
-    ? (quote.convertedToInvoice as { id: string; invoiceNumber: string | null; paymentMethod?: string | null } | null)
+    ? (quote.convertedToInvoice as { id: string; invoiceNumber: string | null; createdBy?: string | null; paymentMethod?: string | null } | null)
     : null;
   const convertedInvoiceResponse = convertedToInvoice
-    ? { id: convertedToInvoice.id, invoiceNumber: convertedToInvoice.invoiceNumber }
+    ? {
+        id: convertedToInvoice.id,
+        invoiceNumber: convertedToInvoice.invoiceNumber,
+        ...(convertedToInvoice.createdBy !== undefined ? { createdBy: convertedToInvoice.createdBy } : {}),
+      }
     : null;
 
   const items: QuoteItemResponse[] = quote.items.map((item) => ({

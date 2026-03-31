@@ -210,6 +210,21 @@ describe("quoteService", () => {
       expect(result!.creatorName).toBe("Admin");
     });
 
+    it("includes converted invoice ownership in the mapped quote response", async () => {
+      const quote = makeQuote({
+        convertedToInvoice: { id: "inv1", invoiceNumber: "INV-2026-0001", createdBy: "u2" },
+      });
+      mockRepo.findById.mockResolvedValue(quote as never);
+
+      const result = await quoteService.getById("q1");
+
+      expect(result?.convertedToInvoice).toEqual({
+        id: "inv1",
+        invoiceNumber: "INV-2026-0001",
+        createdBy: "u2",
+      });
+    });
+
     it("auto-expires a DRAFT quote past its expiration date", async () => {
       const pastDate = new Date("2020-01-01");
       const quote = makeQuote({ expirationDate: pastDate, quoteStatus: "DRAFT" });
