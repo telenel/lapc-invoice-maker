@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { QUOTE_PAYMENT_METHODS } from "@/domains/quote/payment";
+import type { QuoteStatus } from "@/domains/quote/types";
 
 const PAYMENT_OPTIONS = QUOTE_PAYMENT_METHODS.map((value) => ({
   value,
@@ -15,13 +16,29 @@ const PAYMENT_OPTIONS = QUOTE_PAYMENT_METHODS.map((value) => ({
     : value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()),
 }));
 
-export function PaymentDetailsForm({ token }: { token: string }) {
+type PaymentQuoteState = {
+  quoteStatus: QuoteStatus;
+  paymentDetailsResolved: boolean;
+  quoteNumber: string | null;
+};
+
+export function PaymentDetailsForm({
+  token,
+  initialQuote,
+}: {
+  token: string;
+  initialQuote: PaymentQuoteState | null;
+}) {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const accountNumberRequired = paymentMethod === "ACCOUNT_NUMBER";
   const normalizedAccountNumber = accountNumber.trim();
+  const quote = initialQuote;
+  const isAccepted = quote?.quoteStatus === "ACCEPTED";
+  const isExpired = quote?.quoteStatus === "EXPIRED";
+  const isResolved = Boolean(quote && quote.paymentDetailsResolved);
 
   async function handleSubmit() {
     if (!paymentMethod) {
@@ -56,6 +73,66 @@ export function PaymentDetailsForm({ token }: { token: string }) {
     }
   }
 
+  if (!quote) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-6 text-center space-y-2">
+            <h2 className="text-lg font-semibold">Quote Not Found</h2>
+            <p className="text-sm text-muted-foreground">
+              This payment link is invalid or has expired.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isExpired) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-6 text-center space-y-2">
+            <h2 className="text-lg font-semibold">Quote Expired</h2>
+            <p className="text-sm text-muted-foreground">
+              This quote is no longer active, so payment details cannot be submitted here.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!isAccepted) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-6 text-center space-y-2">
+            <h2 className="text-lg font-semibold">Payment Link Not Ready</h2>
+            <p className="text-sm text-muted-foreground">
+              Payment details can only be submitted after the quote is approved.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isResolved) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-6 text-center space-y-2">
+            <h2 className="text-lg font-semibold">Payment Details Already On File</h2>
+            <p className="text-sm text-muted-foreground">
+              We already have payment details for {quote.quoteNumber ?? "this quote"}.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (submitted) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -85,7 +162,7 @@ export function PaymentDetailsForm({ token }: { token: string }) {
           <CardHeader>
             <CardTitle>Provide Payment Details</CardTitle>
             <p className="text-sm text-muted-foreground mt-1">
-              Please select how you&apos;d like to pay for your approved quote.
+              Please select how you&apos;d like to pay for {quote.quoteNumber ?? "your approved quote"}.
             </p>
           </CardHeader>
           <CardContent className="space-y-4">
