@@ -219,6 +219,18 @@ export function useQuoteForm(
     phone: string;
     department: string;
   } | null>(null);
+  const externalRecipientRef = useRef({
+    name: "",
+    email: "",
+  });
+
+  useEffect(() => {
+    if (form.staffId) return;
+    externalRecipientRef.current = {
+      name: form.recipientName,
+      email: form.recipientEmail,
+    };
+  }, [form.staffId, form.recipientEmail, form.recipientName]);
 
   // When editing an existing quote, re-populate account numbers and contact
   // fields from the staff record (these aren't stored on the quote itself)
@@ -294,6 +306,8 @@ export function useQuoteForm(
       ...prev,
       staffId: "",
       approvalChain: [],
+      recipientName: externalRecipientRef.current.name,
+      recipientEmail: externalRecipientRef.current.email,
       contactName: "",
       contactExtension: "",
       contactEmail: "",
@@ -328,8 +342,7 @@ export function useQuoteForm(
     const changed =
       form.contactExtension !== orig.extension ||
       form.contactEmail !== orig.email ||
-      form.contactPhone !== orig.phone ||
-      form.department !== orig.department;
+      form.contactPhone !== orig.phone;
 
     if (!changed) return;
 
@@ -340,27 +353,26 @@ export function useQuoteForm(
           extension: form.contactExtension,
           email: form.contactEmail,
           phone: form.contactPhone,
-          department: form.department,
         });
         originalStaffRef.current = {
           extension: form.contactExtension,
           email: form.contactEmail,
           phone: form.contactPhone,
-          department: form.department,
+          department: orig.department,
         };
         toast.success("Staff info saved", { duration: 1500 });
       } catch { /* ignore */ }
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [form.staffId, form.contactExtension, form.contactEmail, form.contactPhone, form.department]);
+  }, [form.staffId, form.contactExtension, form.contactEmail, form.contactPhone]);
 
   // ---------- Save helpers ----------
 
   function buildPayload() {
     return {
       date: form.date,
-      staffId: form.staffId || undefined,
+      staffId: existingId ? (form.staffId || null) : (form.staffId || undefined),
       department: form.department,
       category: form.category,
       accountCode: form.accountCode,

@@ -492,12 +492,21 @@ export function QuoteDetailView({ id }: { id: string }) {
           )}
 
           {status === "ACCEPTED" && !quote.convertedToInvoice && (
-            <Link
-              href={`/quotes/${id}/edit`}
-              className={buttonVariants({ variant: "outline", size: "sm" })}
-            >
-              Edit
-            </Link>
+            <>
+              <Link
+                href={`/quotes/${id}/edit`}
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                Edit
+              </Link>
+              <Button
+                size="sm"
+                onClick={handleConvertToInvoice}
+                disabled={actionState.converting}
+              >
+                {actionState.converting ? "Converting..." : "Convert to Invoice"}
+              </Button>
+            </>
           )}
 
           {/* SENT / SUBMITTED: Approve Manually + Convert to Invoice */}

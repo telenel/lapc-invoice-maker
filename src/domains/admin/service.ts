@@ -1,8 +1,10 @@
 // src/domains/admin/service.ts
+import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import { adminRepository } from "./repository";
 import type {
   UserResponse,
+  UserWithTemporaryPasswordResponse,
   AccountCodeResponse,
   DbHealthResponse,
   CreateUserInput,
@@ -12,10 +14,8 @@ import type {
   BatchActionResponse,
 } from "./types";
 
-const DEFAULT_TEMPORARY_PASSWORD = "password123";
-
 function generateTemporaryPassword(): string {
-  return DEFAULT_TEMPORARY_PASSWORD;
+  return crypto.randomBytes(12).toString("base64url");
 }
 
 function toUserResponse(user: {
@@ -88,7 +88,7 @@ export const adminService = {
 
   async createUser(
     input: CreateUserInput
-  ): Promise<UserResponse & { temporaryPassword: string }> {
+  ): Promise<UserWithTemporaryPasswordResponse> {
     const username = await generateUsername(input.name);
     const temporaryPassword = generateTemporaryPassword();
     const passwordHash = await bcrypt.hash(temporaryPassword, 10);
@@ -111,7 +111,7 @@ export const adminService = {
 
   async resetPassword(
     id: string
-  ): Promise<UserResponse & { temporaryPassword: string }> {
+  ): Promise<UserWithTemporaryPasswordResponse> {
     const existing = await adminRepository.findUserById(id);
     const name = existing?.name ?? "user";
     const username = await generateUsername(name, id);

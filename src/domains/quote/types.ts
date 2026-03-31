@@ -115,7 +115,7 @@ export interface CreateQuoteInput {
 
 export interface UpdateQuoteInput {
   date?: string;
-  staffId?: string;
+  staffId?: string | null;
   department?: string;
   category?: string;
   accountCode?: string;

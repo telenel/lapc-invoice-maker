@@ -509,7 +509,7 @@ export const quoteService = {
     if (!quote || quote.type !== "QUOTE") {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
     }
-    if (quote.quoteStatus === "ACCEPTED") {
+    if ("convertedToInvoice" in quote && quote.convertedToInvoice) {
       throw Object.assign(new Error("Quote has already been converted"), { code: "FORBIDDEN" });
     }
     if (quote.quoteStatus === "DECLINED" || quote.quoteStatus === "EXPIRED" || quote.quoteStatus === "REVISED") {

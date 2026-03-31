@@ -35,14 +35,19 @@ export const adminApi = {
     });
   },
 
-  async updateUser(
-    id: string,
-    input: UpdateUserInput | { resetPassword: true },
-  ): Promise<UserResponse | UserWithTemporaryPasswordResponse> {
-    return request<UserResponse | UserWithTemporaryPasswordResponse>(`${BASE_USERS}/${id}`, {
+  async updateUser(id: string, input: UpdateUserInput): Promise<UserResponse> {
+    return request<UserResponse>(`${BASE_USERS}/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
+    });
+  },
+
+  async resetUserPassword(id: string): Promise<UserWithTemporaryPasswordResponse> {
+    return request<UserWithTemporaryPasswordResponse>(`${BASE_USERS}/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ resetPassword: true }),
     });
   },
 
