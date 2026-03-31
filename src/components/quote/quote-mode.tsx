@@ -37,6 +37,7 @@ import { QuickPickPanel } from "@/components/invoice/quick-pick-panel";
 import { CateringDetailsCard } from "@/components/quote/catering-details-card";
 import { useTaxCalculation } from "@/components/invoice/hooks/use-tax-calculation";
 import { TAX_RATE } from "@/domains/invoice/constants";
+import { FormError } from "@/components/ui/form-error";
 import { cn } from "@/lib/utils";
 import { categoryApi } from "@/domains/category/api-client";
 import { templateApi } from "@/domains/template/api-client";
@@ -123,6 +124,7 @@ export function QuoteMode({
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [quickPicksOpen, setQuickPicksOpen] = useState(false);
   const [cateringOverride, setCateringOverride] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   // ---- Auto-save + draft recovery ----
   const routeKey = existingId ? `/quotes/${existingId}/edit` : "/quotes/new";
@@ -215,13 +217,36 @@ export function QuoteMode({
   }
 
   // ---- Validation + save ----
-  function handleSave() {
-    if (!form.recipientName.trim()) {
-      toast.error("Please enter a recipient name");
-      return;
+  const validateQuoteForm = useCallback(() => {
+    const errors: Record<string, string> = {};
+    if (!form.recipientName.trim()) errors.recipientName = "Please enter a recipient name";
+    if (!form.department.trim()) errors.department = "Please enter a department";
+    const hasValidItem = form.items.some(
+      (item: { description: string }) => item.description.trim() !== ""
+    );
+    if (!hasValidItem) errors.lineItems = "At least one line item with a description is required";
+    if (form.isCateringEvent) {
+      if (!form.cateringDetails.location?.trim())
+        errors["cateringDetails.location"] = "Event location is required";
+      if (!form.cateringDetails.contactName?.trim())
+        errors["cateringDetails.contactName"] = "Event contact name is required";
+      if (!form.cateringDetails.contactPhone?.trim())
+        errors["cateringDetails.contactPhone"] = "Event contact phone is required";
     }
-    if (!form.department.trim()) {
-      toast.error("Please enter a department");
+    return errors;
+  }, [form]);
+
+  function handleSave() {
+    const errors = validateQuoteForm();
+    setValidationErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      toast.error(
+        `${Object.keys(errors).length} issue(s) to resolve before saving`
+      );
+      const firstKey = Object.keys(errors)[0];
+      document
+        .getElementById(`field-${firstKey}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
     handleSaveQuote();
@@ -388,16 +413,25 @@ export function QuoteMode({
             </p>
           </div>
 
-          <div className="space-y-1">
+          <div id="field-recipientName" className="space-y-1">
             <Label htmlFor="recipientName">
               Name <span className="text-destructive">*</span>
             </Label>
             <Input
               id="recipientName"
               value={form.recipientName}
-              onChange={(e) => updateField("recipientName", e.target.value)}
+              onChange={(e) => {
+                updateField("recipientName", e.target.value);
+                setValidationErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.recipientName;
+                  return next;
+                });
+              }}
               placeholder="Contact name…"
+              aria-invalid={!!validationErrors.recipientName}
             />
+            <FormError message={validationErrors.recipientName} />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -566,16 +600,25 @@ export function QuoteMode({
           </div>
         )}
 
-        <div className="space-y-1">
+        <div id="field-department" className="space-y-1">
           <Label htmlFor="quoteDepartment">
             Department <span className="text-destructive">*</span>
           </Label>
           <Input
             id="quoteDepartment"
             value={form.department}
-            onChange={(e) => updateField("department", e.target.value)}
+            onChange={(e) => {
+              updateField("department", e.target.value);
+              setValidationErrors((prev) => {
+                const next = { ...prev };
+                delete next.department;
+                return next;
+              });
+            }}
             placeholder="Department…"
+            aria-invalid={!!validationErrors.department}
           />
+          <FormError message={validationErrors.department} />
         </div>
 
         {/* Account Number */}
@@ -628,9 +671,20 @@ export function QuoteMode({
         {form.isCateringEvent && (
           <CateringDetailsCard
             details={form.cateringDetails}
-            onChange={(details) => updateField("cateringDetails", details)}
+            onChange={(details) => {
+              updateField("cateringDetails", details);
+              // Clear catering-related validation errors when details change
+              setValidationErrors((prev) => {
+                const next = { ...prev };
+                delete next["cateringDetails.location"];
+                delete next["cateringDetails.contactName"];
+                delete next["cateringDetails.contactPhone"];
+                return next;
+              });
+            }}
             overrideMode={cateringOverride}
             onOverrideChange={setCateringOverride}
+            validationErrors={validationErrors}
           />
         )}
       </div>
@@ -759,7 +813,8 @@ export function QuoteMode({
         </button>
       </SectionDivider>
 
-      <div className="space-y-3">
+      <div id="field-lineItems" className="space-y-3">
+        <FormError message={validationErrors.lineItems} />
         {quickPicksOpen && (
           <QuickPickPanel
             department={form.department}
@@ -830,6 +885,33 @@ export function QuoteMode({
             </span>
           </div>
         </div>
+
+        {Object.keys(validationErrors).length > 0 && (
+          <Card className="border-red-500/30 bg-red-50 dark:bg-red-950/20">
+            <CardContent className="py-3">
+              <p className="text-sm font-medium text-red-600 mb-2">
+                {Object.keys(validationErrors).length} issue(s) to resolve:
+              </p>
+              <ul className="space-y-1">
+                {Object.entries(validationErrors).map(([key, msg]) => (
+                  <li key={key}>
+                    <button
+                      type="button"
+                      className="text-sm text-red-500 underline hover:text-red-700"
+                      onClick={() =>
+                        document
+                          .getElementById(`field-${key}`)
+                          ?.scrollIntoView({ behavior: "smooth", block: "center" })
+                      }
+                    >
+                      {msg}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={handleSaveAsTemplate} disabled={saving} className="w-full sm:w-auto">

@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { FormError } from "@/components/ui/form-error";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -17,6 +18,7 @@ interface CateringDetailsCardProps {
   onChange: (details: CateringDetails) => void;
   overrideMode?: boolean;
   onOverrideChange?: (override: boolean) => void;
+  validationErrors?: Record<string, string>;
 }
 
 // ---------------------------------------------------------------------------
@@ -48,6 +50,7 @@ export function CateringDetailsCard({
   onChange,
   overrideMode = false,
   onOverrideChange,
+  validationErrors = {},
 }: CateringDetailsCardProps) {
   function updateField<K extends keyof CateringDetails>(key: K, value: CateringDetails[K]) {
     onChange({ ...details, [key]: value });
@@ -133,7 +136,7 @@ export function CateringDetailsCard({
         </div>
 
         {/* Row 2 — Location */}
-        <div className="space-y-1.5">
+        <div id="field-cateringDetails.location" className="space-y-1.5">
           <Label htmlFor="catering-location" className={labelClass}>
             Location
           </Label>
@@ -144,12 +147,14 @@ export function CateringDetailsCard({
             value={details.location}
             onChange={(e) => updateField("location", e.target.value)}
             disabled={isCustomerField("location")}
+            aria-invalid={!!validationErrors["cateringDetails.location"]}
           />
+          <FormError message={validationErrors["cateringDetails.location"]} />
         </div>
 
         {/* Row 3 — Contact */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="space-y-1.5">
+          <div id="field-cateringDetails.contactName" className="space-y-1.5">
             <Label htmlFor="catering-contact-name" className={labelClass}>
               Contact Name
             </Label>
@@ -158,9 +163,11 @@ export function CateringDetailsCard({
               type="text"
               value={details.contactName}
               onChange={(e) => updateField("contactName", e.target.value)}
+              aria-invalid={!!validationErrors["cateringDetails.contactName"]}
             />
+            <FormError message={validationErrors["cateringDetails.contactName"]} />
           </div>
-          <div className="space-y-1.5">
+          <div id="field-cateringDetails.contactPhone" className="space-y-1.5">
             <Label htmlFor="catering-contact-phone" className={labelClass}>
               Contact Phone
             </Label>
@@ -169,7 +176,9 @@ export function CateringDetailsCard({
               type="text"
               value={details.contactPhone}
               onChange={(e) => updateField("contactPhone", e.target.value)}
+              aria-invalid={!!validationErrors["cateringDetails.contactPhone"]}
             />
+            <FormError message={validationErrors["cateringDetails.contactPhone"]} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="catering-contact-email" className={labelClass}>
