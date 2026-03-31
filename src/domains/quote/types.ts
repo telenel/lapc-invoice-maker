@@ -75,7 +75,7 @@ export interface QuoteResponse {
   paymentMethod: string | null;
   paymentAccountNumber: string | null;
   paymentDetailsResolved: boolean;
-  convertedToInvoice?: { id: string; invoiceNumber: string | null; createdBy?: string | null } | null;
+  convertedToInvoice?: { id: string; invoiceNumber: string | null; status?: string | null; createdBy?: string | null } | null;
   revisedFromQuote?: { id: string; quoteNumber: string | null } | null;
   revisedToQuote?: { id: string; quoteNumber: string | null } | null;
 }

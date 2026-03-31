@@ -58,12 +58,13 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
     : null;
 
   const convertedToInvoice = "convertedToInvoice" in quote
-    ? (quote.convertedToInvoice as { id: string; invoiceNumber: string | null; createdBy?: string | null; paymentMethod?: string | null } | null)
+    ? (quote.convertedToInvoice as { id: string; invoiceNumber: string | null; status?: string | null; createdBy?: string | null; paymentMethod?: string | null } | null)
     : null;
   const convertedInvoiceResponse = convertedToInvoice
     ? {
         id: convertedToInvoice.id,
         invoiceNumber: convertedToInvoice.invoiceNumber,
+        ...(convertedToInvoice.status !== undefined ? { status: convertedToInvoice.status } : {}),
         ...(convertedToInvoice.createdBy !== undefined ? { createdBy: convertedToInvoice.createdBy } : {}),
       }
     : null;
@@ -116,7 +117,7 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
       ("paymentAccountNumber" in quote
         ? ((quote as { paymentAccountNumber?: string | null }).paymentAccountNumber ?? null)
         : null),
-    paymentDetailsResolved: Boolean(quote.paymentMethod || convertedToInvoice?.paymentMethod),
+    paymentDetailsResolved: Boolean(quote.paymentMethod || convertedToInvoice?.paymentMethod || convertedToInvoice?.status === "FINAL"),
     convertedToInvoice: convertedInvoiceResponse,
     revisedFromQuote: "revisedFromQuote" in quote && (quote as { revisedFromQuote?: { id: string; quoteNumber: string | null } | null }).revisedFromQuote
       ? { id: (quote as { revisedFromQuote: { id: string; quoteNumber: string | null } }).revisedFromQuote.id, quoteNumber: (quote as { revisedFromQuote: { id: string; quoteNumber: string | null } }).revisedFromQuote.quoteNumber }

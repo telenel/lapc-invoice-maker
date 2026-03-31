@@ -225,6 +225,23 @@ describe("quoteService", () => {
       });
     });
 
+    it("marks finalized converted invoices as payment resolved", async () => {
+      const quote = makeQuote({
+        quoteStatus: "ACCEPTED",
+        convertedToInvoice: {
+          id: "inv1",
+          invoiceNumber: "INV-2026-0001",
+          status: "FINAL",
+          createdBy: "u2",
+        },
+      });
+      mockRepo.findById.mockResolvedValue(quote as never);
+
+      const result = await quoteService.getById("q1");
+
+      expect(result?.paymentDetailsResolved).toBe(true);
+    });
+
     it("auto-expires a DRAFT quote past its expiration date", async () => {
       const pastDate = new Date("2020-01-01");
       const quote = makeQuote({ expirationDate: pastDate, quoteStatus: "DRAFT" });
