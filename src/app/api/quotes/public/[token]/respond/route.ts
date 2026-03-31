@@ -76,7 +76,11 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
           { status: 400 },
         );
       }
-      cateringDetails = parsed.data as CateringDetails;
+      cateringDetails = {
+        ...parsed.data,
+        setupInstructions: quote.cateringDetails ? (quote.cateringDetails as CateringDetails).setupInstructions : undefined,
+        takedownInstructions: quote.cateringDetails ? (quote.cateringDetails as CateringDetails).takedownInstructions : undefined,
+      };
     }
 
     // Extract payment details from the body

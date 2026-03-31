@@ -273,8 +273,8 @@ describe("checkAndSendPaymentFollowUps", () => {
     claimTx.quoteFollowUp.findFirst.mockResolvedValue(null as never);
     claimTx.quoteFollowUp.count.mockResolvedValue(0 as never);
     claimTx.quoteFollowUp.create.mockResolvedValue({ id: "fu1" } as never);
-    claimTx.quoteFollowUp.update.mockResolvedValue({} as never);
     vi.mocked(sendEmail).mockResolvedValue(false as never);
+    vi.mocked(prisma.quoteFollowUp.delete).mockResolvedValue({} as never);
     vi.mocked(prisma.$transaction)
       .mockImplementationOnce(async (callback) => callback(scanTx as never) as never)
       .mockImplementationOnce(async (callback) => callback(claimTx as never) as never);
@@ -282,13 +282,10 @@ describe("checkAndSendPaymentFollowUps", () => {
     await checkAndSendPaymentFollowUps();
 
     expect(claimTx.quoteFollowUp.create).toHaveBeenCalledOnce();
-    expect(claimTx.quoteFollowUp.update).toHaveBeenCalledWith({
+    expect(prisma.quoteFollowUp.delete).toHaveBeenCalledWith({
       where: { id: "fu1" },
-      data: { type: "PAYMENT_REMINDER" },
     });
-    expect(claimTx.quoteFollowUp.update.mock.invocationCallOrder[0]).toBeLessThan(
-      vi.mocked(sendEmail).mock.invocationCallOrder[0],
-    );
+    expect(prisma.quoteFollowUp.update).not.toHaveBeenCalled();
   });
 
   it("skips a reminder claim when the quote is no longer accepted at lock time", async () => {
@@ -379,7 +376,7 @@ describe("checkAndSendPaymentFollowUps", () => {
 
     await checkAndSendPaymentFollowUps();
 
-    expect(claimTx.quoteFollowUp.update).toHaveBeenCalledWith({
+    expect(vi.mocked(prisma.quoteFollowUp.update)).toHaveBeenCalledWith({
       where: { id: "fu1" },
       data: { type: "PAYMENT_REMINDER" },
     });

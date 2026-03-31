@@ -130,7 +130,9 @@ describe("POST /api/quotes/public/[token]/respond", () => {
         contactPhone: "555-1111",
         contactEmail: "jane@example.com",
         setupRequired: true,
+        setupInstructions: "Keep the prep table against the north wall.",
         takedownRequired: false,
+        takedownInstructions: "Leave equipment by the loading dock.",
       },
     } as never);
     vi.mocked(quoteService.respondToQuote).mockResolvedValue({
@@ -176,6 +178,8 @@ describe("POST /api/quotes/public/[token]/respond", () => {
     expect(cateringDetails).not.toHaveProperty("setupTime");
     expect(cateringDetails).not.toHaveProperty("takedownTime");
     expect(cateringDetails).not.toHaveProperty("specialInstructions");
+    expect(cateringDetails).toHaveProperty("setupInstructions", "Keep the prep table against the north wall.");
+    expect(cateringDetails).toHaveProperty("takedownInstructions", "Leave equipment by the loading dock.");
   });
 
   it("passes the raw account number shape through to the quote service", async () => {

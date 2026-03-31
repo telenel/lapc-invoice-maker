@@ -397,6 +397,7 @@ export const quoteService = {
 
     let normalizedPayment: QuotePaymentDetailsSubmission | undefined;
     let normalizedCateringDetails: Prisma.InputJsonValue | undefined;
+    const existingCateringDetails = quote.cateringDetails as CateringDetails | null;
     const acceptedAt = response === "ACCEPTED" ? new Date() : undefined;
     if (response === "ACCEPTED") {
       normalizedPayment = normalizeQuotePaymentDetails(paymentDetails);
@@ -447,7 +448,11 @@ export const quoteService = {
           quoteData.paymentAccountNumber = normalizedPayment.paymentAccountNumber;
         }
         if (normalizedCateringDetails !== undefined) {
-          quoteData.cateringDetails = normalizedCateringDetails;
+          quoteData.cateringDetails = {
+            ...(normalizedCateringDetails as Record<string, unknown>),
+            setupInstructions: existingCateringDetails?.setupInstructions ?? undefined,
+            takedownInstructions: existingCateringDetails?.takedownInstructions ?? undefined,
+          };
         }
       }
 
@@ -479,7 +484,11 @@ export const quoteService = {
             convertedInvoiceData.paymentAccountNumber = normalizedPayment.paymentAccountNumber;
           }
           if (normalizedCateringDetails !== undefined) {
-            convertedInvoiceData.cateringDetails = normalizedCateringDetails;
+            convertedInvoiceData.cateringDetails = {
+              ...(normalizedCateringDetails as Record<string, unknown>),
+              setupInstructions: existingCateringDetails?.setupInstructions ?? undefined,
+              takedownInstructions: existingCateringDetails?.takedownInstructions ?? undefined,
+            };
           }
           if (Object.keys(convertedInvoiceData).length > 0) {
             await tx.invoice.update({
