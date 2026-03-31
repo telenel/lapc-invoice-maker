@@ -17,12 +17,16 @@ export async function register() {
       );
     });
 
-    // Payment follow-ups — daily at 9 AM PT (16:00 UTC), weekdays only
-    cron.schedule("0 16 * * 1-5", () => {
-      checkAndSendPaymentFollowUps().catch((err) =>
-        console.error("[cron] payment follow-ups failed:", err)
-      );
-    });
+    // Payment follow-ups — daily at 9 AM Los Angeles time, weekdays only
+    cron.schedule(
+      "0 9 * * 1-5",
+      () => {
+        checkAndSendPaymentFollowUps().catch((err) =>
+          console.error("[cron] payment follow-ups failed:", err)
+        );
+      },
+      { timezone: "America/Los_Angeles" },
+    );
 
     console.log("[instrumentation] cron jobs registered");
   }

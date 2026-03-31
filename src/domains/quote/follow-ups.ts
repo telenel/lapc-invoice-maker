@@ -36,7 +36,6 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
         type: "QUOTE",
         quoteStatus: "ACCEPTED",
         paymentMethod: null,
-        convertedToInvoice: null, // not already converted
       },
       include: {
         followUps: {

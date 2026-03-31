@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { quoteService } from "@/domains/quote/service";
 import { normalizeQuotePaymentDetails } from "@/domains/quote/payment";
-import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/generated/prisma/client";
 import type { CateringDetails } from "@/domains/quote/types";
 
@@ -69,13 +68,6 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       cateringDetails = parsed.data as CateringDetails;
     }
 
-    if (response === "ACCEPTED" && cateringDetails) {
-      await prisma.invoice.update({
-        where: { id: quote.id },
-        data: { cateringDetails: cateringDetails as unknown as Prisma.InputJsonValue },
-      });
-    }
-
     // Extract payment details from the body
     const paymentDetails = normalizeQuotePaymentDetails({
       paymentMethod: body.paymentMethod,
@@ -84,6 +76,13 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
 
     const result = await quoteService.respondToQuote(token, response, body.viewId, paymentDetails);
     if (!result) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
+
+    if (response === "ACCEPTED" && cateringDetails) {
+      await quoteService.update(result.id, {
+        cateringDetails: cateringDetails as Prisma.InputJsonValue,
+      });
+    }
+
     return NextResponse.json(result);
   } catch (err) {
     const code = (err as { code?: string }).code;

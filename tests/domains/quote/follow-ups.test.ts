@@ -84,4 +84,21 @@ describe("checkAndSendPaymentFollowUps", () => {
     expect(businessDaysBetween).toHaveBeenCalledWith(acceptedAt, expect.any(Date));
     expect(businessDaysBetween).not.toHaveBeenCalledWith(updatedAt, expect.any(Date));
   });
+
+  it("keeps converted accepted quotes eligible for reminders until payment details exist", async () => {
+    vi.mocked(prisma.$queryRaw)
+      .mockResolvedValueOnce([{ acquired: true }] as never)
+      .mockResolvedValueOnce([] as never);
+    vi.mocked(prisma.invoice.findMany).mockResolvedValue([] as never);
+
+    await checkAndSendPaymentFollowUps();
+
+    expect(prisma.invoice.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.not.objectContaining({
+          convertedToInvoice: null,
+        }),
+      }),
+    );
+  });
 });
