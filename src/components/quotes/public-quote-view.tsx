@@ -222,7 +222,9 @@ export function PublicQuoteView({ token }: { token: string }) {
       !cateringForm.endTime.trim() ||
       !cateringForm.contactName.trim() ||
       !cateringForm.contactPhone.trim() ||
-      !cateringForm.location.trim());
+      !cateringForm.location.trim() ||
+      (cateringForm.setupRequired && !cateringForm.setupTime.trim()) ||
+      (cateringForm.takedownRequired && !cateringForm.takedownTime.trim()));
 
   return (
     <div className="min-h-screen bg-background">

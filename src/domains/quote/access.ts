@@ -80,6 +80,14 @@ export function redactQuoteForViewer<T extends QuoteResponse>(
     recipientOrg: null,
     paymentMethod: null,
     paymentAccountNumber: null,
+    contact: quote.contact
+      ? {
+          ...quote.contact,
+          id: "",
+          notes: null,
+          createdAt: "",
+        }
+      : null,
     items: quote.items.map((item) => ({
       ...item,
       costPrice: null,

@@ -105,6 +105,42 @@ describe("PublicQuoteView", () => {
     });
   });
 
+  it("disables approval when setup is requested without a setup time", async () => {
+    const user = userEvent.setup();
+    render(<PublicQuoteView token="token" />);
+
+    await screen.findByText("Event Details Required");
+
+    await user.type(screen.getByLabelText(/Event Date/i), "2026-04-15");
+    await user.type(screen.getByLabelText(/Start Time/i), "10:00");
+    await user.type(screen.getByLabelText(/End Time/i), "12:00");
+    await user.type(screen.getByLabelText(/Contact Name/i), "Jane");
+    await user.type(screen.getByLabelText(/Contact Number/i), "555-1111");
+    await user.type(screen.getByLabelText(/Event Location/i), "Campus");
+    await user.click(screen.getByRole("checkbox", { name: /Setup Needed/i }));
+
+    expect(screen.getByRole("button", { name: "Approve Quote" })).toBeDisabled();
+    expect(quoteApi.respondToPublicQuote).not.toHaveBeenCalled();
+  });
+
+  it("disables approval when takedown is requested without a takedown time", async () => {
+    const user = userEvent.setup();
+    render(<PublicQuoteView token="token" />);
+
+    await screen.findByText("Event Details Required");
+
+    await user.type(screen.getByLabelText(/Event Date/i), "2026-04-15");
+    await user.type(screen.getByLabelText(/Start Time/i), "10:00");
+    await user.type(screen.getByLabelText(/End Time/i), "12:00");
+    await user.type(screen.getByLabelText(/Contact Name/i), "Jane");
+    await user.type(screen.getByLabelText(/Contact Number/i), "555-1111");
+    await user.type(screen.getByLabelText(/Event Location/i), "Campus");
+    await user.click(screen.getByRole("checkbox", { name: /Takedown Needed/i }));
+
+    expect(screen.getByRole("button", { name: "Approve Quote" })).toBeDisabled();
+    expect(quoteApi.respondToPublicQuote).not.toHaveBeenCalled();
+  });
+
   it("keeps the quote visible if analytics registration fails", async () => {
     vi.mocked(quoteApi.registerPublicView).mockRejectedValueOnce(new Error("boom"));
 

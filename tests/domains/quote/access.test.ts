@@ -75,6 +75,17 @@ describe("canViewQuoteDetails", () => {
       paymentMethod: "ACCOUNT_NUMBER",
       paymentAccountNumber: "12345",
       pdfPath: "/tmp/q1.pdf",
+      contact: {
+        id: "c1",
+        name: "Vendor",
+        email: "vendor@example.com",
+        phone: "555-1212",
+        org: "ACME",
+        department: "Sales",
+        title: "Rep",
+        notes: "internal-only",
+        createdAt: "2026-03-31T00:00:00.000Z",
+      },
       items: [
         {
           id: "item-1",
@@ -110,6 +121,17 @@ describe("canViewQuoteDetails", () => {
     expect(redacted.recipientOrg).toBeNull();
     expect(redacted.paymentMethod).toBeNull();
     expect(redacted.paymentAccountNumber).toBeNull();
+    expect(redacted.contact).toEqual({
+      id: "",
+      name: "Vendor",
+      email: "vendor@example.com",
+      phone: "555-1212",
+      org: "ACME",
+      department: "Sales",
+      title: "Rep",
+      notes: null,
+      createdAt: "",
+    });
     expect(redacted.items[0].costPrice).toBeNull();
     expect(redacted.items[0].marginOverride).toBeNull();
     expect(redacted.viewerAccess).toEqual({
