@@ -3,25 +3,31 @@ import { withAuth } from "@/domains/shared/auth";
 import { invoiceService } from "@/domains/invoice/service";
 import { escapeCsv } from "@/lib/csv";
 
-export const GET = withAuth(async (req: NextRequest) => {
+export const GET = withAuth(async (req: NextRequest, session) => {
   try {
     const sp = req.nextUrl.searchParams;
 
-    const filters = {
+    let filters = {
       search: sp.get("search") ?? undefined,
       status: (sp.get("status") ?? undefined) as "DRAFT" | "FINAL" | "PENDING_CHARGE" | undefined,
       category: sp.get("category") ?? undefined,
       department: sp.get("department") ?? undefined,
+      creatorId: sp.get("creatorId") ?? undefined,
       dateFrom: sp.get("dateFrom") ?? undefined,
       dateTo: sp.get("dateTo") ?? undefined,
       amountMin: sp.get("amountMin") ? Number(sp.get("amountMin")) : undefined,
       amountMax: sp.get("amountMax") ? Number(sp.get("amountMax")) : undefined,
+      isRunning: sp.get("isRunning") === "true" ? true : undefined,
       // Fetch all records for export (no pagination)
       page: 1,
       pageSize: 100_000,
       sortBy: "createdAt",
       sortOrder: "desc" as const,
     };
+
+    if (session.user.role !== "admin") {
+      filters = { ...filters, creatorId: session.user.id };
+    }
 
     const { invoices } = await invoiceService.list(filters);
 

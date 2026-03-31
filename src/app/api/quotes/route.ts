@@ -24,6 +24,7 @@ export const GET = withAuth(async (req: NextRequest, session) => {
         | undefined,
       department: sp.get("department") ?? undefined,
       category: sp.get("category") ?? undefined,
+      creatorId: sp.get("creatorId") ?? undefined,
       dateFrom: sp.get("dateFrom") ?? undefined,
       dateTo: sp.get("dateTo") ?? undefined,
       page: Math.max(1, parseInt(sp.get("page") ?? "1", 10)),
