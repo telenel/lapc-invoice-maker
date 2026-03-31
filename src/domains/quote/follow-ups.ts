@@ -112,6 +112,10 @@ async function claimPaymentFollowUp(quoteId: string, now: Date) {
         metadata: { attempt: attemptNumber },
       },
     });
+    await tx.quoteFollowUp.update({
+      where: { id: followUp.id },
+      data: { type: "PAYMENT_REMINDER" },
+    });
 
     return {
       creatorId: convertedInvoice?.createdBy ?? quote.createdBy,
@@ -210,14 +214,8 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
 
     const sent = await sendEmail(claim.recipientEmail, claim.subject, html, attachments);
     if (!sent) {
-      await prisma.quoteFollowUp.delete({ where: { id: claim.followUpId } }).catch(() => {});
       continue;
     }
-
-    await prisma.quoteFollowUp.update({
-      where: { id: claim.followUpId },
-      data: { type: "PAYMENT_REMINDER" },
-    });
 
     try {
       const { notificationService } = await import("@/domains/notification/service");

@@ -51,6 +51,7 @@ function makeTx() {
       findFirst: vi.fn(),
       count: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
       delete: vi.fn(),
       deleteMany: vi.fn(),
     },
@@ -214,7 +215,7 @@ describe("checkAndSendPaymentFollowUps", () => {
 
     expect(claimTx.quoteFollowUp.create).not.toHaveBeenCalled();
     expect(sendEmail).not.toHaveBeenCalled();
-    expect(vi.mocked(prisma.quoteFollowUp.update)).not.toHaveBeenCalled();
+    expect(claimTx.quoteFollowUp.update).not.toHaveBeenCalled();
   });
 
   it("requires a share token before emailing payment reminders", async () => {
@@ -234,7 +235,7 @@ describe("checkAndSendPaymentFollowUps", () => {
     );
   });
 
-  it("releases the reminder claim if the email send fails", async () => {
+  it("promotes the reminder claim before emailing, even if the send fails", async () => {
     const scanTx = makeTx();
     const claimTx = makeTx();
 
@@ -272,19 +273,22 @@ describe("checkAndSendPaymentFollowUps", () => {
     claimTx.quoteFollowUp.findFirst.mockResolvedValue(null as never);
     claimTx.quoteFollowUp.count.mockResolvedValue(0 as never);
     claimTx.quoteFollowUp.create.mockResolvedValue({ id: "fu1" } as never);
+    claimTx.quoteFollowUp.update.mockResolvedValue({} as never);
     vi.mocked(sendEmail).mockResolvedValue(false as never);
     vi.mocked(prisma.$transaction)
       .mockImplementationOnce(async (callback) => callback(scanTx as never) as never)
       .mockImplementationOnce(async (callback) => callback(claimTx as never) as never);
-    vi.mocked(prisma.quoteFollowUp.delete).mockResolvedValue({} as never);
 
     await checkAndSendPaymentFollowUps();
 
     expect(claimTx.quoteFollowUp.create).toHaveBeenCalledOnce();
-    expect(prisma.quoteFollowUp.delete).toHaveBeenCalledWith({
+    expect(claimTx.quoteFollowUp.update).toHaveBeenCalledWith({
       where: { id: "fu1" },
+      data: { type: "PAYMENT_REMINDER" },
     });
-    expect(prisma.quoteFollowUp.update).not.toHaveBeenCalled();
+    expect(claimTx.quoteFollowUp.update.mock.invocationCallOrder[0]).toBeLessThan(
+      vi.mocked(sendEmail).mock.invocationCallOrder[0],
+    );
   });
 
   it("skips a reminder claim when the quote is no longer accepted at lock time", async () => {
@@ -375,7 +379,7 @@ describe("checkAndSendPaymentFollowUps", () => {
 
     await checkAndSendPaymentFollowUps();
 
-    expect(vi.mocked(prisma.quoteFollowUp.update)).toHaveBeenCalledWith({
+    expect(claimTx.quoteFollowUp.update).toHaveBeenCalledWith({
       where: { id: "fu1" },
       data: { type: "PAYMENT_REMINDER" },
     });
