@@ -5,6 +5,7 @@ export interface InvoiceUrlFilters {
   status: string;
   category: string;
   department: string;
+  creatorId: string;
   dateFrom: string;
   dateTo: string;
   amountMin: string;
@@ -27,7 +28,10 @@ export interface InvoiceVisibleFilters {
 }
 
 export function getNextInvoiceFilterState(
-  current: Pick<InvoiceUrlFilters, "isRunning" | "sortBy" | "sortOrder">,
+  current: Pick<
+    InvoiceUrlFilters,
+    "creatorId" | "isRunning" | "sortBy" | "sortOrder"
+  >,
   next: InvoiceVisibleFilters,
 ): Partial<InvoiceUrlFilters> {
   const keepRunning =
@@ -36,6 +40,7 @@ export function getNextInvoiceFilterState(
 
   return {
     ...next,
+    creatorId: current.creatorId,
     isRunning: keepRunning ? "true" : "",
     sortBy: current.sortBy,
     sortOrder: current.sortOrder,
@@ -49,6 +54,7 @@ export function getInvoiceExportFilters(
     | "status"
     | "category"
     | "department"
+    | "creatorId"
     | "dateFrom"
     | "dateTo"
     | "amountMin"
@@ -70,6 +76,7 @@ export function getInvoiceExportFilters(
       filters.department && filters.department !== "all"
         ? filters.department
         : undefined,
+    creatorId: filters.creatorId || undefined,
     dateFrom: filters.dateFrom || undefined,
     dateTo: filters.dateTo || undefined,
     amountMin: filters.amountMin ? Number(filters.amountMin) : undefined,

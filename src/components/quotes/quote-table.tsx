@@ -3,6 +3,7 @@
 import React, { useDeferredValue, useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ import { ClipboardListIcon } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useSSE } from "@/lib/use-sse";
 import { useUrlFilters } from "@/lib/use-url-filters";
+import { getNextQuoteFilterState } from "./url-filter-utils";
 
 type QuoteStatus =
   | "DRAFT"
@@ -60,6 +62,7 @@ const URL_FILTER_DEFAULTS: Record<string, string> = {
   quoteStatus: "",
   category: "",
   department: "",
+  creatorId: "",
   dateFrom: "",
   dateTo: "",
   amountMin: "",
@@ -190,8 +193,10 @@ const QuoteRow = React.memo(function QuoteRow({
 
 export function QuoteTable({ departments, categories }: QuoteTableProps) {
   const router = useRouter();
+  const { data: session } = useSession();
   const { filters, setFilter, setFilters, replaceFilters, resetFilters } =
     useUrlFilters(URL_FILTER_DEFAULTS);
+  const userId = (session?.user as { id?: string } | undefined)?.id ?? "";
 
   const handleRowClick = useCallback(
     (id: string) => {
@@ -237,6 +242,7 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
       params.set("category", filters.category);
     if (filters.department && filters.department !== "all")
       params.set("department", filters.department);
+    if (filters.creatorId) params.set("creatorId", filters.creatorId);
     if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
     if (filters.dateTo) params.set("dateTo", filters.dateTo);
     if (filters.amountMin) params.set("amountMin", filters.amountMin);
@@ -260,6 +266,7 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
     filters.quoteStatus,
     filters.category,
     filters.department,
+    filters.creatorId,
     filters.dateFrom,
     filters.dateTo,
     filters.amountMin,
@@ -276,7 +283,16 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
   useSSE("quote-changed", fetchQuotes);
 
   function handleFiltersChange(next: QuoteFilters) {
-    replaceFilters({ ...next, sortBy: filters.sortBy, sortOrder: filters.sortOrder });
+    replaceFilters(
+      getNextQuoteFilterState(
+        {
+          creatorId: filters.creatorId,
+          sortBy: filters.sortBy,
+          sortOrder: filters.sortOrder,
+        },
+        next,
+      ),
+    );
   }
 
   function handleClear() {
@@ -298,7 +314,10 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
 
   /** Build a URL string for a saved view */
   function savedViewHref(params: Record<string, string>) {
-    const sp = new URLSearchParams(params);
+    const sp = new URLSearchParams({
+      ...params,
+      ...(params.quoteStatus === "DRAFT" && userId ? { creatorId: userId } : {}),
+    });
     return `/quotes?${sp.toString()}`;
   }
 

@@ -3,6 +3,7 @@
 import { useDeferredValue, useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { FileTextIcon, RefreshCwIcon } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -36,6 +37,7 @@ const URL_FILTER_DEFAULTS = {
   status: "",
   category: "",
   department: "",
+  creatorId: "",
   dateFrom: "",
   dateTo: "",
   amountMin: "",
@@ -63,10 +65,12 @@ interface InvoiceTableProps {
 
 export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
   const router = useRouter();
+  const { data: session } = useSession();
   const { filters, setFilter, setFilters, replaceFilters, resetFilters } =
     useUrlFilters(
     URL_FILTER_DEFAULTS,
   );
+  const userId = (session?.user as { id?: string } | undefined)?.id ?? "";
 
   const [invoices, setInvoices] = useState<InvoiceResponse[]>([]);
   const [total, setTotal] = useState(0);
@@ -112,6 +116,7 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
           filters.department && filters.department !== "all"
             ? filters.department
             : undefined,
+        creatorId: filters.creatorId || undefined,
         dateFrom: filters.dateFrom || undefined,
         dateTo: filters.dateTo || undefined,
         amountMin: filters.amountMin ? Number(filters.amountMin) : undefined,
@@ -133,6 +138,7 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
     filters.status,
     filters.category,
     filters.department,
+    filters.creatorId,
     filters.dateFrom,
     filters.dateTo,
     filters.amountMin,
@@ -153,6 +159,7 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
     replaceFilters(
       getNextInvoiceFilterState(
         {
+          creatorId: filters.creatorId,
           isRunning: filters.isRunning,
           sortBy: filters.sortBy,
           sortOrder: filters.sortOrder,
@@ -210,7 +217,10 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
 
   /** Build a URL string for a saved view */
   function savedViewHref(params: Record<string, string>) {
-    const sp = new URLSearchParams(params);
+    const sp = new URLSearchParams({
+      ...params,
+      ...(params.status === "DRAFT" && userId ? { creatorId: userId } : {}),
+    });
     return `/invoices?${sp.toString()}`;
   }
 

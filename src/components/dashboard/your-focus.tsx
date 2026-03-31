@@ -120,7 +120,7 @@ export function YourFocus() {
     {
       label: "Your Drafts",
       value: data.myDrafts,
-      href: "/invoices?status=DRAFT",
+      href: userId ? `/invoices?status=DRAFT&creatorId=${userId}` : "/invoices?status=DRAFT",
       color: data.myDrafts > 0 ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground",
       bgColor: data.myDrafts > 0 ? "bg-amber-500/10" : "bg-muted/50",
       dotColor: data.myDrafts > 0 ? "bg-amber-500" : "bg-muted-foreground/30",
@@ -128,7 +128,9 @@ export function YourFocus() {
     {
       label: "Running",
       value: data.myRunning,
-      href: "/invoices?status=DRAFT&isRunning=true",
+      href: userId
+        ? `/invoices?status=DRAFT&isRunning=true&creatorId=${userId}`
+        : "/invoices?status=DRAFT&isRunning=true",
       color: data.myRunning > 0 ? "text-blue-600 dark:text-blue-400" : "text-muted-foreground",
       bgColor: data.myRunning > 0 ? "bg-blue-500/10" : "bg-muted/50",
       dotColor: data.myRunning > 0 ? "bg-blue-500" : "bg-muted-foreground/30",
@@ -136,7 +138,7 @@ export function YourFocus() {
     {
       label: "Awaiting Response",
       value: data.myQuotesAwaitingResponse,
-      href: "/quotes?quoteStatus=SENT",
+      href: userId ? `/quotes?quoteStatus=SENT&creatorId=${userId}` : "/quotes?quoteStatus=SENT",
       color: data.myQuotesAwaitingResponse > 0 ? "text-violet-600 dark:text-violet-400" : "text-muted-foreground",
       bgColor: data.myQuotesAwaitingResponse > 0 ? "bg-violet-500/10" : "bg-muted/50",
       dotColor: data.myQuotesAwaitingResponse > 0 ? "bg-violet-500" : "bg-muted-foreground/30",
@@ -144,7 +146,7 @@ export function YourFocus() {
     {
       label: "Finalized This Month",
       value: data.myFinalThisMonth,
-      href: "/invoices?status=FINAL",
+      href: userId ? `/invoices?status=FINAL&creatorId=${userId}` : "/invoices?status=FINAL",
       color: "text-emerald-600 dark:text-emerald-400",
       bgColor: data.myFinalThisMonth > 0 ? "bg-emerald-500/10" : "bg-muted/50",
       dotColor: "bg-emerald-500",
