@@ -4,8 +4,9 @@ set -euo pipefail
 PROJECT_DIR="/opt/lapc-invoice-maker"
 DEFAULT_BRANCH="main"
 APP_URL="https://laportal.montalvo.io/api/version"
-VERIFY_ATTEMPTS=12
+VERIFY_ATTEMPTS=18
 VERIFY_SLEEP=10
+VERIFY_INITIAL_SLEEP=5
 
 cd "$PROJECT_DIR"
 
@@ -59,8 +60,12 @@ if ! docker compose up -d --remove-orphans; then
 fi
 
 echo "[deploy] Verifying deployed build SHA..."
+sleep "$VERIFY_INITIAL_SLEEP"
 for i in $(seq 1 "$VERIFY_ATTEMPTS"); do
-  body=$(curl -fsS --connect-timeout 10 --max-time 20 "$APP_URL" || true)
+  body=""
+  if ! body=$(curl -fsS --connect-timeout 10 --max-time 20 "$APP_URL" 2>/dev/null); then
+    body=""
+  fi
   deployed_sha=$(printf '%s' "$body" | grep -oE '"buildSha":"[a-f0-9]+"' | cut -d'"' -f4 || true)
   status=$(printf '%s' "$body" | grep -oE '"status":"[^"]+"' | cut -d'"' -f4 || true)
   echo "[deploy] Attempt $i/$VERIFY_ATTEMPTS: status=${status:-unknown} buildSha=${deployed_sha:-missing}"
