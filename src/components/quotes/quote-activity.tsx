@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { quoteApi } from "@/domains/quote/api-client";
 import type { QuoteViewResponse, QuoteFollowUpResponse } from "@/domains/quote/types";
 import { useSSE } from "@/lib/use-sse";
 
@@ -64,14 +65,18 @@ export function QuoteActivity({ quoteId }: { quoteId: string }) {
   const [views, setViews] = useState<QuoteViewResponse[]>([]);
   const [followUps, setFollowUps] = useState<QuoteFollowUpResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const loadActivity = useCallback(() => {
-    Promise.all([
-      fetch(`/api/quotes/${quoteId}/views`).then((r) => (r.ok ? r.json() : [])),
-      fetch(`/api/quotes/${quoteId}/follow-ups`).then((r) => (r.ok ? r.json() : [])),
-    ])
-      .then(([v, f]) => { setViews(v); setFollowUps(f); })
-      .catch(() => {})
+    setError(null);
+    Promise.all([quoteApi.getViews(quoteId), quoteApi.getFollowUps(quoteId)])
+      .then(([v, f]) => {
+        setViews(v);
+        setFollowUps(f);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "Failed to load activity");
+      })
       .finally(() => setLoading(false));
   }, [quoteId]);
 
@@ -83,6 +88,18 @@ export function QuoteActivity({ quoteId }: { quoteId: string }) {
   useSSE("quote-changed", loadActivity);
 
   if (loading) return null;
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Activity</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-destructive">{error}</p>
+        </CardContent>
+      </Card>
+    );
+  }
   if (views.length === 0 && followUps.length === 0) return null;
 
   // Build unified timeline
