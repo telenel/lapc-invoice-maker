@@ -325,7 +325,7 @@ export const quoteService = {
         updateData.paymentAccountNumber = normalizedPayment.paymentAccountNumber;
       }
       if (cateringDetails) {
-        updateData.cateringDetails = cateringDetails as Prisma.InputJsonValue;
+        updateData.cateringDetails = cateringDetails as unknown as Prisma.InputJsonValue;
       }
     }
     await quoteRepository.update(quote.id, updateData);
