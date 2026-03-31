@@ -54,6 +54,10 @@ const TodaysEvents = dynamic(
   () => import("./todays-events").then((m) => m.TodaysEvents),
   { ssr: false, loading: () => <WidgetSkeleton /> },
 );
+const ExpiringQuotes = dynamic(
+  () => import("./expiring-quotes").then((m) => m.ExpiringQuotes),
+  { ssr: false, loading: () => <WidgetSkeleton /> },
+);
 
 interface WidgetConfig {
   id: string;
@@ -63,7 +67,8 @@ interface WidgetConfig {
 
 const SORTABLE_WIDGETS: WidgetConfig[] = [
   { id: "todays-events", label: "Today's Events", component: () => <TodaysEvents /> },
-  { id: "your-focus", label: "Your Focus", component: () => <YourFocus /> },
+  { id: "expiring-quotes", label: "Expiring Quotes", component: () => <ExpiringQuotes /> },
+  { id: "your-focus", label: "Next Steps", component: () => <YourFocus /> },
   { id: "stats", label: "Stats", component: () => <StatsCards /> },
   { id: "pending-charges", label: "Pending Charges", component: () => <PendingCharges /> },
   { id: "running-invoices", label: "Running Invoices", component: () => <RunningInvoices /> },
