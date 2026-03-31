@@ -6,6 +6,12 @@ import { businessDaysBetween } from "@/lib/date-utils";
 const FOLLOW_UP_INTERVAL_BUSINESS_DAYS = 7;
 const PAYMENT_FOLLOW_UP_LOCK_KEY = 318742;
 
+function startOfDay(date: Date): Date {
+  const normalized = new Date(date);
+  normalized.setHours(0, 0, 0, 0);
+  return normalized;
+}
+
 async function acquirePaymentFollowUpLock(): Promise<boolean> {
   const result = await prisma.$queryRaw<Array<{ acquired: boolean }>>`
     SELECT pg_try_advisory_lock(${PAYMENT_FOLLOW_UP_LOCK_KEY}) AS acquired
@@ -54,7 +60,7 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
       // Determine the reference date — last follow-up or acceptedAt.
       const lastFollowUp = quote.followUps[0];
       const referenceDate = lastFollowUp ? lastFollowUp.sentAt : (quote.acceptedAt ?? quote.updatedAt);
-      const daysSince = businessDaysBetween(referenceDate, now);
+      const daysSince = businessDaysBetween(startOfDay(referenceDate), startOfDay(now));
 
       if (daysSince < FOLLOW_UP_INTERVAL_BUSINESS_DAYS) continue;
 
