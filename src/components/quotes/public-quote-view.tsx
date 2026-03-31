@@ -40,6 +40,9 @@ function expirationText(dateStr: string): string {
 // ── Catering form state (public-facing subset) ────────────────────────────
 
 interface PublicCateringForm {
+  eventDate: string;
+  startTime: string;
+  endTime: string;
   contactName: string;
   contactPhone: string;
   location: string;
@@ -53,6 +56,9 @@ interface PublicCateringForm {
 
 function makeCateringForm(existing: CateringDetails | null): PublicCateringForm {
   return {
+    eventDate: existing?.eventDate ?? "",
+    startTime: existing?.startTime ?? "",
+    endTime: existing?.endTime ?? "",
     contactName: existing?.contactName ?? "",
     contactPhone: existing?.contactPhone ?? "",
     location: existing?.location ?? "",
@@ -135,9 +141,9 @@ export function PublicQuoteView({ token }: { token: string }) {
       const cateringDetails =
         quote?.isCateringEvent && response === "ACCEPTED"
           ? {
-              eventDate: quote.cateringDetails?.eventDate ?? "",
-              startTime: quote.cateringDetails?.startTime ?? "",
-              endTime: quote.cateringDetails?.endTime ?? "",
+              eventDate: cateringForm.eventDate.trim(),
+              startTime: cateringForm.startTime.trim(),
+              endTime: cateringForm.endTime.trim(),
               eventName: quote.cateringDetails?.eventName ?? "",
               contactName: cateringForm.contactName,
               contactPhone: cateringForm.contactPhone,
@@ -200,7 +206,10 @@ export function PublicQuoteView({ token }: { token: string }) {
   const isCatering = quote.isCateringEvent;
   const cateringRequiredMissing =
     isCatering &&
-    (!cateringForm.contactName.trim() ||
+    (!cateringForm.eventDate.trim() ||
+      !cateringForm.startTime.trim() ||
+      !cateringForm.endTime.trim() ||
+      !cateringForm.contactName.trim() ||
       !cateringForm.contactPhone.trim() ||
       !cateringForm.location.trim());
 
@@ -386,6 +395,49 @@ export function PublicQuoteView({ token }: { token: string }) {
             </CardHeader>
 
             <CardContent className="space-y-5">
+              {/* Event schedule */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="pub-event-date" className={labelClass}>
+                    Event Date <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="pub-event-date"
+                    type="date"
+                    value={cateringForm.eventDate}
+                    onChange={(e) =>
+                      setCateringForm((prev) => ({ ...prev, eventDate: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="pub-start-time" className={labelClass}>
+                    Start Time <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="pub-start-time"
+                    type="time"
+                    value={cateringForm.startTime}
+                    onChange={(e) =>
+                      setCateringForm((prev) => ({ ...prev, startTime: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="pub-end-time" className={labelClass}>
+                    End Time <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="pub-end-time"
+                    type="time"
+                    value={cateringForm.endTime}
+                    onChange={(e) =>
+                      setCateringForm((prev) => ({ ...prev, endTime: e.target.value }))
+                    }
+                  />
+                </div>
+              </div>
+
               {/* Contact Name, Contact Number, Location (required) */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
