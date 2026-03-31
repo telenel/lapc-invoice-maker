@@ -63,11 +63,14 @@ jobs:
         run: |
           expected_sha="${GITHUB_SHA::7}"
           echo "Waiting for deployed build SHA $expected_sha..."
-          sleep 30
-          for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
-            body=$(curl -fsS --connect-timeout 10 --max-time 20 https://laportal.montalvo.io/api/version || true)
-            status=$(printf '%s' "$body" | grep -oE '"status":"[^"]+"' | cut -d'"' -f4)
-            deployed_sha=$(printf '%s' "$body" | grep -oE '"buildSha":"[a-f0-9]+"' | cut -d'"' -f4)
+          sleep 45
+          for i in $(seq 1 20); do
+            body=""
+            if ! body=$(curl -fsS --connect-timeout 10 --max-time 20 https://laportal.montalvo.io/api/version 2>/dev/null); then
+              body=""
+            fi
+            status=$(printf '%s' "$body" | grep -oE '"status":"[^"]+"' | cut -d'"' -f4 || true)
+            deployed_sha=$(printf '%s' "$body" | grep -oE '"buildSha":"[a-f0-9]+"' | cut -d'"' -f4 || true)
             echo "Attempt $i: status=${status:-unknown} buildSha=${deployed_sha:-missing}"
             if [ "$status" = "ok" ] && [ "$deployed_sha" = "$expected_sha" ]; then
               echo "Deploy verification passed"
