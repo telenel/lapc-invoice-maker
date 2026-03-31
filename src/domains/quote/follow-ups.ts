@@ -12,20 +12,100 @@ function startOfDay(date: Date): Date {
   return normalized;
 }
 
+async function claimPaymentFollowUp(quoteId: string, now: Date) {
+  return prisma.$transaction(async (tx) => {
+    const lockedQuotes = await tx.$queryRaw<Array<{
+      id: string;
+      quoteNumber: string | null;
+      recipientName: string | null;
+      recipientEmail: string | null;
+      shareToken: string | null;
+      acceptedAt: Date | null;
+      updatedAt: Date;
+      paymentMethod: string | null;
+      createdBy: string;
+    }>>`
+      SELECT
+        id,
+        quote_number AS "quoteNumber",
+        recipient_name AS "recipientName",
+        recipient_email AS "recipientEmail",
+        share_token AS "shareToken",
+        accepted_at AS "acceptedAt",
+        updated_at AS "updatedAt",
+        payment_method AS "paymentMethod",
+        created_by AS "createdBy"
+      FROM invoices
+      WHERE id = ${quoteId}
+      FOR UPDATE
+    `;
+
+    const quote = lockedQuotes[0];
+    if (!quote || quote.paymentMethod || !quote.recipientEmail || !quote.shareToken) {
+      return null;
+    }
+
+    const convertedInvoice = await tx.invoice.findFirst({
+      where: { convertedFromQuoteId: quoteId },
+      select: { status: true },
+    });
+    if (convertedInvoice?.status === "FINAL") {
+      return null;
+    }
+
+    const lastFollowUp = await tx.quoteFollowUp.findFirst({
+      where: { invoiceId: quoteId, type: "PAYMENT_REMINDER" },
+      orderBy: { sentAt: "desc" },
+    });
+    const referenceDate = lastFollowUp ? lastFollowUp.sentAt : (quote.acceptedAt ?? quote.updatedAt);
+    const daysSince = businessDaysBetween(startOfDay(referenceDate), startOfDay(now));
+    if (daysSince < FOLLOW_UP_INTERVAL_BUSINESS_DAYS) {
+      return null;
+    }
+
+    const attemptNumber = await tx.quoteFollowUp.count({
+      where: { invoiceId: quoteId, type: "PAYMENT_REMINDER" },
+    }) + 1;
+    const quoteNum = quote.quoteNumber ?? "your quote";
+    const subject = `Payment details needed — ${quoteNum}`;
+    const followUp = await tx.quoteFollowUp.create({
+      data: {
+        invoiceId: quote.id,
+        type: "PAYMENT_REMINDER",
+        recipientEmail: quote.recipientEmail,
+        subject,
+        metadata: { attempt: attemptNumber },
+      },
+    });
+
+    return {
+      creatorId: quote.createdBy,
+      followUpId: followUp.id,
+      quoteId: quote.id,
+      quoteNum,
+      recipientEmail: quote.recipientEmail,
+      recipientName: quote.recipientName,
+      shareToken: quote.shareToken,
+      attemptNumber,
+      subject,
+    };
+  });
+}
+
 /**
  * Find ACCEPTED quotes with incomplete payment info and send reminders
  * if enough business days have passed since the last follow-up (or acceptance).
  */
 export async function checkAndSendPaymentFollowUps(): Promise<void> {
   const now = new Date();
-  await prisma.$transaction(async (tx) => {
+  const candidates = await prisma.$transaction(async (tx) => {
     const result = await tx.$queryRaw<Array<{ acquired: boolean }>>`
       SELECT pg_try_advisory_xact_lock(${PAYMENT_FOLLOW_UP_LOCK_KEY}) AS acquired
     `;
-    if (result[0]?.acquired !== true) return;
+    if (result[0]?.acquired !== true) return [];
 
     // Find quotes that are ACCEPTED, have type QUOTE, and no paymentMethod
-    const candidates = await tx.invoice.findMany({
+    return tx.invoice.findMany({
       where: {
         type: "QUOTE",
         quoteStatus: "ACCEPTED",
@@ -45,34 +125,26 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
         creator: { select: { id: true, name: true } },
       },
     });
+  });
+  const appUrl = process.env.NEXTAUTH_URL ?? "https://laportal.montalvo.io";
 
-    const appUrl = process.env.NEXTAUTH_URL ?? "https://laportal.montalvo.io";
+  for (const quote of candidates) {
+    const lastFollowUp = quote.followUps[0];
+    const referenceDate = lastFollowUp ? lastFollowUp.sentAt : (quote.acceptedAt ?? quote.updatedAt);
+    const daysSince = businessDaysBetween(startOfDay(referenceDate), startOfDay(now));
 
-    for (const quote of candidates) {
-      // Determine the reference date — last follow-up or acceptedAt.
-      const lastFollowUp = quote.followUps[0];
-      const referenceDate = lastFollowUp ? lastFollowUp.sentAt : (quote.acceptedAt ?? quote.updatedAt);
-      const daysSince = businessDaysBetween(startOfDay(referenceDate), startOfDay(now));
+    if (daysSince < FOLLOW_UP_INTERVAL_BUSINESS_DAYS || !quote.recipientEmail || !quote.shareToken) {
+      continue;
+    }
 
-      if (daysSince < FOLLOW_UP_INTERVAL_BUSINESS_DAYS) continue;
+    const claim = await claimPaymentFollowUp(quote.id, now);
+    if (!claim) continue;
 
-      const recipientEmail = quote.recipientEmail;
-      if (!recipientEmail) continue;
-
-      const quoteNum = quote.quoteNumber ?? "your quote";
-      const paymentUrl = `${appUrl}/quotes/payment/${quote.shareToken}`;
-      const attemptNumber = (lastFollowUp
-        ? await tx.quoteFollowUp.count({
-            where: { invoiceId: quote.id, type: "PAYMENT_REMINDER" },
-          })
-        : 0) + 1;
-
-      // Build email
-      const subject = `Payment details needed — ${quoteNum}`;
-      const html = `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+    const paymentUrl = `${appUrl}/quotes/payment/${claim.shareToken}`;
+    const html = `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
   <h2 style="color: #1a1a1a;">Payment Details Needed</h2>
-  <p>Hello${quote.recipientName ? ` ${escapeHtml(quote.recipientName)}` : ""},</p>
-  <p>You approved quote <strong>${escapeHtml(quoteNum)}</strong>, but we still need your payment information to process the order.</p>
+  <p>Hello${claim.recipientName ? ` ${escapeHtml(claim.recipientName)}` : ""},</p>
+  <p>You approved quote <strong>${escapeHtml(claim.quoteNum)}</strong>, but we still need your payment information to process the order.</p>
   <p style="margin: 24px 0;">
     <a href="${escapeHtml(paymentUrl)}" style="background-color: #16a34a; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">Provide Payment Details</a>
   </p>
@@ -81,46 +153,33 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
   <p style="color: #999; font-size: 12px;">Los Angeles Pierce College Bookstore</p>
 </div>`;
 
-      // Try to attach the PDF
-      let attachments: EmailAttachment[] | undefined;
-      try {
-        const { quoteService } = await import("./service");
-        const { buffer, filename } = await quoteService.generatePdf(quote.id);
-        const safeName = (filename ?? "quote").replace(/[^a-zA-Z0-9\-]/g, "-");
-        attachments = [{ Name: `Quote-${safeName}.pdf`, ContentBytes: buffer.toString("base64") }];
-      } catch {
-        // PDF is non-critical for follow-up
-      }
-
-      const followUp = await tx.quoteFollowUp.create({
-        data: {
-          invoiceId: quote.id,
-          type: "PAYMENT_REMINDER",
-          recipientEmail,
-          subject,
-          metadata: { attempt: attemptNumber },
-        },
-      });
-
-      const sent = await sendEmail(recipientEmail, subject, html, attachments);
-      if (!sent) {
-        await tx.quoteFollowUp.delete({ where: { id: followUp.id } }).catch(() => {});
-        continue;
-      }
-
-      // Notify the quote creator
-      try {
-        const { notificationService } = await import("@/domains/notification/service");
-        await notificationService.createAndPublish({
-          userId: quote.creator.id,
-          type: "PAYMENT_FOLLOWUP_SENT",
-          title: `Payment reminder sent for ${quoteNum}`,
-          message: `Reminder #${attemptNumber} sent to ${recipientEmail}`,
-          quoteId: quote.id,
-        });
-      } catch {
-        // Non-critical
-      }
+    let attachments: EmailAttachment[] | undefined;
+    try {
+      const { quoteService } = await import("./service");
+      const { buffer, filename } = await quoteService.generatePdf(claim.quoteId);
+      const safeName = (filename ?? "quote").replace(/[^a-zA-Z0-9\-]/g, "-");
+      attachments = [{ Name: `Quote-${safeName}.pdf`, ContentBytes: buffer.toString("base64") }];
+    } catch {
+      // PDF is non-critical for follow-up
     }
-  });
+
+    const sent = await sendEmail(claim.recipientEmail, claim.subject, html, attachments);
+    if (!sent) {
+      await prisma.quoteFollowUp.delete({ where: { id: claim.followUpId } }).catch(() => {});
+      continue;
+    }
+
+    try {
+      const { notificationService } = await import("@/domains/notification/service");
+      await notificationService.createAndPublish({
+        userId: claim.creatorId,
+        type: "PAYMENT_FOLLOWUP_SENT",
+        title: `Payment reminder sent for ${claim.quoteNum}`,
+        message: `Reminder #${claim.attemptNumber} sent to ${claim.recipientEmail}`,
+        quoteId: claim.quoteId,
+      });
+    } catch {
+      // Non-critical
+    }
+  }
 }

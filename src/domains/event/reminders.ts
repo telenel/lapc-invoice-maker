@@ -1,19 +1,35 @@
-import { notificationService } from "@/domains/notification/service";
 import { prisma } from "@/lib/prisma";
+import { publish } from "@/lib/sse";
 
 const EVENT_REMINDER_LOCK_KEY = 914275;
 
 export async function checkAndSendReminders(): Promise<void> {
   const now = new Date();
-  await prisma.$transaction(async (tx) => {
+  const pendingPublishes = await prisma.$transaction(async (tx) => {
     const result = await tx.$queryRaw<Array<{ acquired: boolean }>>`
       SELECT pg_try_advisory_xact_lock(${EVENT_REMINDER_LOCK_KEY}) AS acquired
     `;
-    if (result[0]?.acquired !== true) return;
+    if (result[0]?.acquired !== true) return [];
 
     const events = await tx.event.findMany({
       where: { reminderMinutes: { not: null } },
     });
+    const users = await tx.user.findMany({
+      where: { active: true },
+      select: { id: true },
+    });
+    const createdNotifications: Array<{
+      userId: string;
+      notification: {
+        id: string;
+        type: string;
+        title: string;
+        message: string | null;
+        quoteId: string | null;
+        read: boolean;
+        createdAt: string;
+      };
+    }> = [];
 
     for (const event of events) {
       if (event.reminderMinutes === null) continue;
@@ -38,28 +54,44 @@ export async function checkAndSendReminders(): Promise<void> {
 
       if (now < reminderTime) continue;
 
-      const users = await tx.user.findMany({
-        where: { active: true },
-        select: { id: true },
-      });
-
       for (const user of users) {
-        await notificationService.createAndPublish({
+        const notification = await tx.notification.create({
+          data: {
+            userId: user.id,
+            type: "EVENT_REMINDER",
+            title: `Reminder: ${event.title}`,
+            message: event.startTime
+              ? `Starting at ${event.startTime}${event.location ? ` \u2014 ${event.location}` : ""}`
+              : `Today${event.location ? ` \u2014 ${event.location}` : ""}`,
+            quoteId: null,
+          },
+        });
+        createdNotifications.push({
           userId: user.id,
-          type: "EVENT_REMINDER",
-          title: `Reminder: ${event.title}`,
-          message: event.startTime
-            ? `Starting at ${event.startTime}${event.location ? ` \u2014 ${event.location}` : ""}`
-            : `Today${event.location ? ` \u2014 ${event.location}` : ""}`,
+          notification: {
+            id: notification.id,
+            type: notification.type,
+            title: notification.title,
+            message: notification.message,
+            quoteId: notification.quoteId,
+            read: notification.read,
+            createdAt: notification.createdAt.toISOString(),
+          },
         });
       }
 
       await tx.event.update({
         where: { id: event.id },
         data: {
-        reminderSentDates: [...sentDates, dateStr],
+          reminderSentDates: [...sentDates, dateStr],
         },
       });
     }
+
+    return createdNotifications;
   });
+
+  for (const { userId, notification } of pendingPublishes) {
+    publish(userId, notification);
+  }
 }

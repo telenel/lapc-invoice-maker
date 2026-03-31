@@ -3,6 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     $transaction: vi.fn(),
+    quoteFollowUp: {
+      delete: vi.fn(),
+    },
   },
 }));
 
@@ -30,8 +33,10 @@ function makeTx() {
     $queryRaw: vi.fn(),
     invoice: {
       findMany: vi.fn(),
+      findFirst: vi.fn(),
     },
     quoteFollowUp: {
+      findFirst: vi.fn(),
       count: vi.fn(),
       create: vi.fn(),
       delete: vi.fn(),
@@ -41,39 +46,41 @@ function makeTx() {
 
 describe("checkAndSendPaymentFollowUps", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
+    vi.mocked(businessDaysBetween).mockReturnValue(0);
   });
 
   it("returns early when another process already holds the advisory lock", async () => {
-    const tx = makeTx();
-    tx.$queryRaw.mockResolvedValue([{ acquired: false }]);
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as never) as never);
+    const scanTx = makeTx();
+    scanTx.$queryRaw.mockResolvedValue([{ acquired: false }]);
+    vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => callback(scanTx as never) as never);
 
     await checkAndSendPaymentFollowUps();
 
-    expect(tx.invoice.findMany).not.toHaveBeenCalled();
+    expect(scanTx.invoice.findMany).not.toHaveBeenCalled();
     expect(sendEmail).not.toHaveBeenCalled();
   });
 
   it("uses a transaction-scoped advisory lock before scanning candidates", async () => {
-    const tx = makeTx();
-    tx.$queryRaw.mockResolvedValue([{ acquired: true }]);
-    tx.invoice.findMany.mockResolvedValue([] as never);
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as never) as never);
+    const scanTx = makeTx();
+    scanTx.$queryRaw.mockResolvedValue([{ acquired: true }]);
+    scanTx.invoice.findMany.mockResolvedValue([] as never);
+    vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => callback(scanTx as never) as never);
 
     await checkAndSendPaymentFollowUps();
 
-    expect(tx.$queryRaw).toHaveBeenCalledTimes(1);
-    expect(tx.invoice.findMany).toHaveBeenCalledOnce();
+    expect(scanTx.$queryRaw).toHaveBeenCalledTimes(1);
+    expect(scanTx.invoice.findMany).toHaveBeenCalledOnce();
   });
 
   it("uses acceptedAt instead of updatedAt when deciding whether to send the first reminder", async () => {
     const acceptedAt = new Date("2026-03-01T12:00:00.000Z");
     const updatedAt = new Date("2026-03-20T12:00:00.000Z");
-    const tx = makeTx();
+    const scanTx = makeTx();
+    const claimTx = makeTx();
 
-    tx.$queryRaw.mockResolvedValue([{ acquired: true }]);
-    tx.invoice.findMany.mockResolvedValue([
+    scanTx.$queryRaw.mockResolvedValue([{ acquired: true }]);
+    scanTx.invoice.findMany.mockResolvedValue([
       {
         id: "q1",
         quoteNumber: "Q-1",
@@ -86,7 +93,27 @@ describe("checkAndSendPaymentFollowUps", () => {
         creator: { id: "u1", name: "Admin" },
       },
     ] as never);
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as never) as never);
+    claimTx.$queryRaw.mockResolvedValue([
+      {
+        id: "q1",
+        quoteNumber: "Q-1",
+        recipientName: "Jane",
+        recipientEmail: "jane@example.com",
+        shareToken: "token",
+        acceptedAt,
+        updatedAt,
+        paymentMethod: null,
+        createdBy: "u1",
+      },
+    ] as never);
+    claimTx.invoice.findFirst.mockResolvedValue(null as never);
+    claimTx.quoteFollowUp.findFirst.mockResolvedValue(null as never);
+    claimTx.quoteFollowUp.count.mockResolvedValue(0 as never);
+    claimTx.quoteFollowUp.create.mockResolvedValue({ id: "fu1" } as never);
+    vi.mocked(prisma.$transaction)
+      .mockImplementationOnce(async (callback) => callback(scanTx as never) as never)
+      .mockImplementationOnce(async (callback) => callback(claimTx as never) as never);
+    vi.mocked(sendEmail).mockResolvedValue(true as never);
 
     await checkAndSendPaymentFollowUps();
 
@@ -104,14 +131,14 @@ describe("checkAndSendPaymentFollowUps", () => {
   });
 
   it("skips reminders for quotes whose converted invoice is already finalized", async () => {
-    const tx = makeTx();
-    tx.$queryRaw.mockResolvedValue([{ acquired: true }]);
-    tx.invoice.findMany.mockResolvedValue([] as never);
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as never) as never);
+    const scanTx = makeTx();
+    scanTx.$queryRaw.mockResolvedValue([{ acquired: true }]);
+    scanTx.invoice.findMany.mockResolvedValue([] as never);
+    vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => callback(scanTx as never) as never);
 
     await checkAndSendPaymentFollowUps();
 
-    expect(tx.invoice.findMany).toHaveBeenCalledWith(
+    expect(scanTx.invoice.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           OR: [
@@ -124,14 +151,14 @@ describe("checkAndSendPaymentFollowUps", () => {
   });
 
   it("requires a share token before emailing payment reminders", async () => {
-    const tx = makeTx();
-    tx.$queryRaw.mockResolvedValue([{ acquired: true }]);
-    tx.invoice.findMany.mockResolvedValue([] as never);
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as never) as never);
+    const scanTx = makeTx();
+    scanTx.$queryRaw.mockResolvedValue([{ acquired: true }]);
+    scanTx.invoice.findMany.mockResolvedValue([] as never);
+    vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => callback(scanTx as never) as never);
 
     await checkAndSendPaymentFollowUps();
 
-    expect(tx.invoice.findMany).toHaveBeenCalledWith(
+    expect(scanTx.invoice.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           shareToken: { not: null },
@@ -141,10 +168,12 @@ describe("checkAndSendPaymentFollowUps", () => {
   });
 
   it("releases the reminder claim if the email send fails", async () => {
-    const tx = makeTx();
-    tx.$queryRaw.mockResolvedValue([{ acquired: true }]);
+    const scanTx = makeTx();
+    const claimTx = makeTx();
+
+    scanTx.$queryRaw.mockResolvedValue([{ acquired: true }]);
     vi.mocked(businessDaysBetween).mockReturnValue(7);
-    tx.invoice.findMany.mockResolvedValue([
+    scanTx.invoice.findMany.mockResolvedValue([
       {
         id: "q1",
         quoteNumber: "Q-1",
@@ -157,16 +186,33 @@ describe("checkAndSendPaymentFollowUps", () => {
         creator: { id: "u1", name: "Admin" },
       },
     ] as never);
-    tx.quoteFollowUp.count.mockResolvedValue(0 as never);
-    tx.quoteFollowUp.create.mockResolvedValue({ id: "fu1" } as never);
-    tx.quoteFollowUp.delete.mockResolvedValue({} as never);
+    claimTx.$queryRaw.mockResolvedValue([
+      {
+        id: "q1",
+        quoteNumber: "Q-1",
+        recipientName: "Jane",
+        recipientEmail: "jane@example.com",
+        shareToken: "token",
+        acceptedAt: new Date("2026-03-01T12:00:00.000Z"),
+        updatedAt: new Date("2026-03-01T12:00:00.000Z"),
+        paymentMethod: null,
+        createdBy: "u1",
+      },
+    ] as never);
+    claimTx.invoice.findFirst.mockResolvedValue(null as never);
+    claimTx.quoteFollowUp.findFirst.mockResolvedValue(null as never);
+    claimTx.quoteFollowUp.count.mockResolvedValue(0 as never);
+    claimTx.quoteFollowUp.create.mockResolvedValue({ id: "fu1" } as never);
     vi.mocked(sendEmail).mockResolvedValue(false as never);
-    vi.mocked(prisma.$transaction).mockImplementation(async (callback) => callback(tx as never) as never);
+    vi.mocked(prisma.$transaction)
+      .mockImplementationOnce(async (callback) => callback(scanTx as never) as never)
+      .mockImplementationOnce(async (callback) => callback(claimTx as never) as never);
+    vi.mocked(prisma.quoteFollowUp.delete).mockResolvedValue({} as never);
 
     await checkAndSendPaymentFollowUps();
 
-    expect(tx.quoteFollowUp.create).toHaveBeenCalledOnce();
-    expect(tx.quoteFollowUp.delete).toHaveBeenCalledWith({
+    expect(claimTx.quoteFollowUp.create).toHaveBeenCalledOnce();
+    expect(prisma.quoteFollowUp.delete).toHaveBeenCalledWith({
       where: { id: "fu1" },
     });
   });
