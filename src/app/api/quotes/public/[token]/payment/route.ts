@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import type { Prisma } from "@/generated/prisma/client";
 import { normalizeQuotePaymentDetails } from "@/domains/quote/payment";
 import { prisma } from "@/lib/prisma";
 import { safePublishAll } from "@/lib/sse";
@@ -48,7 +49,10 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       type: "PAYMENT_RESOLVED",
       recipientEmail: quote.recipientEmail ?? "",
       subject: `Payment details provided for ${quote.quoteNumber ?? "quote"}`,
-      metadata: paymentDetails,
+      metadata: {
+        paymentMethod: paymentDetails.paymentMethod,
+        accountNumber: paymentDetails.accountNumber,
+      } as Prisma.InputJsonValue,
     },
   });
 
