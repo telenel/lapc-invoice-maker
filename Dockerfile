@@ -44,6 +44,9 @@ RUN npm run build
 # Production stage
 FROM base AS runner
 ENV NODE_ENV=production
+ENV HOME=/tmp
+ENV XDG_CONFIG_HOME=/tmp/.chromium/config
+ENV XDG_CACHE_HOME=/tmp/.chromium/cache
 WORKDIR /app
 
 COPY --from=builder /app/public ./public
