@@ -80,4 +80,52 @@ describe("GET /api/quotes/public/[token]", () => {
     expect(body.contact?.notes).toBeUndefined();
     expect(body.contact?.createdAt).toBeUndefined();
   });
+
+  it("hides quotes that have already been converted", async () => {
+    vi.mocked(quoteService.getByShareToken).mockResolvedValue({
+      id: "q1",
+      quoteNumber: "Q-1",
+      quoteStatus: "SENT",
+      date: "2026-03-01T00:00:00.000Z",
+      expirationDate: null,
+      type: "QUOTE",
+      department: "IT",
+      category: "SUPPLIES",
+      accountCode: "AC1",
+      accountNumber: "INTERNAL-001",
+      approvalChain: [],
+      notes: "",
+      totalAmount: 10,
+      recipientName: "Jane",
+      recipientEmail: "jane@example.com",
+      recipientOrg: "",
+      pdfPath: null,
+      shareToken: "token",
+      createdAt: "2026-03-01T00:00:00.000Z",
+      staff: null,
+      contact: null,
+      creatorId: "u1",
+      creatorName: "Admin",
+      items: [],
+      isCateringEvent: false,
+      cateringDetails: null,
+      paymentDetailsResolved: false,
+      marginEnabled: false,
+      marginPercent: null,
+      taxEnabled: false,
+      taxRate: 0,
+      paymentMethod: null,
+      paymentAccountNumber: null,
+      convertedToInvoice: { id: "inv1", invoiceNumber: "INV-1" },
+      revisedFromQuote: null,
+      revisedToQuote: null,
+    } as never);
+
+    const response = await GET(
+      new NextRequest("http://localhost/api/quotes/public/token"),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    expect(response.status).toBe(404);
+  });
 });

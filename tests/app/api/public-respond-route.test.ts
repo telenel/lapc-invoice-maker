@@ -147,6 +147,29 @@ describe("POST /api/quotes/public/[token]/respond", () => {
     expect(quoteService.respondToQuote).not.toHaveBeenCalled();
   });
 
+  it("blocks responses for quotes that have already been converted to invoices", async () => {
+    vi.mocked(quoteService.getByShareToken).mockResolvedValue({
+      id: "q1",
+      quoteStatus: "SENT",
+      isCateringEvent: false,
+      convertedToInvoice: { id: "inv1" },
+    } as never);
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/respond", {
+        method: "POST",
+        body: JSON.stringify({
+          response: "DECLINED",
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(quoteService.respondToQuote).not.toHaveBeenCalled();
+  });
+
   it("rejects catering details for non-catering quotes", async () => {
     const response = await POST(
       new NextRequest("http://localhost/api/quotes/public/token/respond", {

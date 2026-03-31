@@ -39,6 +39,9 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     if (!quote) {
       return NextResponse.json({ error: "Quote not found" }, { status: 404 });
     }
+    if (quote.convertedToInvoice) {
+      return NextResponse.json({ error: "This quote is no longer available" }, { status: 400 });
+    }
     if (quote.quoteStatus === "EXPIRED") {
       return NextResponse.json({ error: "This quote has expired" }, { status: 400 });
     }

@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 
 vi.mock("@/domains/quote/service", () => ({
   quoteService: {
+    getByShareToken: vi.fn(),
     submitPublicPaymentDetails: vi.fn(),
   },
 }));
@@ -18,6 +19,11 @@ import { POST } from "@/app/api/quotes/public/[token]/payment/route";
 describe("POST /api/quotes/public/[token]/payment", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(quoteService.getByShareToken).mockResolvedValue({
+      id: "q1",
+      quoteStatus: "ACCEPTED",
+      convertedToInvoice: null,
+    } as never);
   });
 
   it("updates the converted invoice alongside the quote", async () => {
@@ -92,6 +98,29 @@ describe("POST /api/quotes/public/[token]/payment", () => {
     );
 
     expect(response.status).toBe(409);
+    expect(safePublishAll).not.toHaveBeenCalled();
+  });
+
+  it("blocks public payment updates once a quote has been converted", async () => {
+    vi.mocked(quoteService.getByShareToken).mockResolvedValue({
+      id: "q1",
+      quoteStatus: "ACCEPTED",
+      convertedToInvoice: { id: "inv1" },
+    } as never);
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/payment", {
+        method: "POST",
+        body: JSON.stringify({
+          paymentMethod: "CHECK",
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    expect(response.status).toBe(409);
+    expect(quoteService.submitPublicPaymentDetails).not.toHaveBeenCalled();
     expect(safePublishAll).not.toHaveBeenCalled();
   });
 });
