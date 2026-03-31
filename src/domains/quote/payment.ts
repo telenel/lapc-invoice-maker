@@ -9,7 +9,7 @@ export type QuotePaymentMethod = (typeof QUOTE_PAYMENT_METHODS)[number];
 
 export interface QuotePaymentDetailsInput {
   paymentMethod?: string;
-  accountNumber?: string;
+  accountNumber?: string | null;
 }
 
 export interface NormalizedQuotePaymentDetails {
