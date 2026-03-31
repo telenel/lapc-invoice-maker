@@ -25,6 +25,7 @@ describe("register", () => {
       }
     ).__laportalCronRegistered;
     process.env.NEXT_RUNTIME = "nodejs";
+    process.env.NODE_ENV = "production";
   });
 
   it("registers payment follow-ups in Los Angeles time", async () => {
@@ -37,5 +38,14 @@ describe("register", () => {
       expect.any(Function),
       { timezone: "America/Los_Angeles" },
     );
+  });
+
+  it("does not register cron jobs outside production", async () => {
+    process.env.NODE_ENV = "development";
+    const { register } = await import("@/instrumentation");
+
+    await register();
+
+    expect(schedule).not.toHaveBeenCalled();
   });
 });

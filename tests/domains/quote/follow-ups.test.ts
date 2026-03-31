@@ -46,7 +46,6 @@ function makeTx() {
     $queryRaw: vi.fn(),
     invoice: {
       findMany: vi.fn(),
-      findFirst: vi.fn(),
     },
     quoteFollowUp: {
       findFirst: vi.fn(),
@@ -107,21 +106,22 @@ describe("checkAndSendPaymentFollowUps", () => {
         creator: { id: "u1", name: "Admin" },
       },
     ] as never);
-    claimTx.$queryRaw.mockResolvedValue([
-      {
-        id: "q1",
-        quoteNumber: "Q-1",
-        recipientName: "Jane",
-        recipientEmail: "jane@example.com",
-        shareToken: "token",
-        quoteStatus: "ACCEPTED",
-        acceptedAt,
-        updatedAt,
-        paymentMethod: null,
-        createdBy: "u1",
-      },
-    ] as never);
-    claimTx.invoice.findFirst.mockResolvedValue(null as never);
+    claimTx.$queryRaw
+      .mockResolvedValueOnce([
+        {
+          id: "q1",
+          quoteNumber: "Q-1",
+          recipientName: "Jane",
+          recipientEmail: "jane@example.com",
+          shareToken: "token",
+          quoteStatus: "ACCEPTED",
+          acceptedAt,
+          updatedAt,
+          paymentMethod: null,
+          createdBy: "u1",
+        },
+      ] as never)
+      .mockResolvedValueOnce([] as never);
     claimTx.quoteFollowUp.findFirst.mockResolvedValue(null as never);
     claimTx.quoteFollowUp.count.mockResolvedValue(0 as never);
     claimTx.quoteFollowUp.create.mockResolvedValue({ id: "fu1" } as never);
@@ -202,21 +202,22 @@ describe("checkAndSendPaymentFollowUps", () => {
         creator: { id: "u1", name: "Admin" },
       },
     ] as never);
-    claimTx.$queryRaw.mockResolvedValue([
-      {
-        id: "q1",
-        quoteNumber: "Q-1",
-        recipientName: "Jane",
-        recipientEmail: "jane@example.com",
-        shareToken: "token",
-        quoteStatus: "ACCEPTED",
-        acceptedAt: new Date("2026-03-01T12:00:00.000Z"),
-        updatedAt: new Date("2026-03-01T12:00:00.000Z"),
-        paymentMethod: null,
-        createdBy: "u1",
-      },
-    ] as never);
-    claimTx.invoice.findFirst.mockResolvedValue(null as never);
+    claimTx.$queryRaw
+      .mockResolvedValueOnce([
+        {
+          id: "q1",
+          quoteNumber: "Q-1",
+          recipientName: "Jane",
+          recipientEmail: "jane@example.com",
+          shareToken: "token",
+          quoteStatus: "ACCEPTED",
+          acceptedAt: new Date("2026-03-01T12:00:00.000Z"),
+          updatedAt: new Date("2026-03-01T12:00:00.000Z"),
+          paymentMethod: null,
+          createdBy: "u1",
+        },
+      ] as never)
+      .mockResolvedValueOnce([] as never);
     claimTx.quoteFollowUp.findFirst.mockResolvedValue(null as never);
     claimTx.quoteFollowUp.count.mockResolvedValue(0 as never);
     claimTx.quoteFollowUp.create.mockResolvedValue({ id: "fu1" } as never);
@@ -254,7 +255,7 @@ describe("checkAndSendPaymentFollowUps", () => {
         creator: { id: "u1", name: "Admin" },
       },
     ] as never);
-    claimTx.$queryRaw.mockResolvedValue([
+    claimTx.$queryRaw.mockResolvedValueOnce([
       {
         id: "q1",
         quoteNumber: "Q-1",
@@ -297,21 +298,22 @@ describe("checkAndSendPaymentFollowUps", () => {
         creator: { id: "u1", name: "Original Owner" },
       },
     ] as never);
-    claimTx.$queryRaw.mockResolvedValue([
-      {
-        id: "q1",
-        quoteNumber: "Q-1",
-        recipientName: "Jane",
-        recipientEmail: "jane@example.com",
-        shareToken: "token",
-        quoteStatus: "ACCEPTED",
-        acceptedAt: new Date("2026-03-01T12:00:00.000Z"),
-        updatedAt: new Date("2026-03-01T12:00:00.000Z"),
-        paymentMethod: null,
-        createdBy: "u1",
-      },
-    ] as never);
-    claimTx.invoice.findFirst.mockResolvedValue({ status: "DRAFT", createdBy: "u2" } as never);
+    claimTx.$queryRaw
+      .mockResolvedValueOnce([
+        {
+          id: "q1",
+          quoteNumber: "Q-1",
+          recipientName: "Jane",
+          recipientEmail: "jane@example.com",
+          shareToken: "token",
+          quoteStatus: "ACCEPTED",
+          acceptedAt: new Date("2026-03-01T12:00:00.000Z"),
+          updatedAt: new Date("2026-03-01T12:00:00.000Z"),
+          paymentMethod: null,
+          createdBy: "u1",
+        },
+      ] as never)
+      .mockResolvedValueOnce([{ id: "inv1", status: "DRAFT", createdBy: "u2" }] as never);
     claimTx.quoteFollowUp.findFirst.mockResolvedValue(null as never);
     claimTx.quoteFollowUp.count.mockResolvedValue(0 as never);
     claimTx.quoteFollowUp.create.mockResolvedValue({ id: "fu1" } as never);
@@ -332,5 +334,50 @@ describe("checkAndSendPaymentFollowUps", () => {
       }),
     );
     expect(vi.mocked(safePublishAll)).toHaveBeenCalledWith({ type: "quote-changed" });
+  });
+
+  it("skips reminder claims when the converted invoice finalizes before the claim commits", async () => {
+    const scanTx = makeTx();
+    const claimTx = makeTx();
+
+    scanTx.$queryRaw.mockResolvedValue([{ acquired: true }]);
+    vi.mocked(businessDaysBetween).mockReturnValue(7);
+    scanTx.invoice.findMany.mockResolvedValue([
+      {
+        id: "q1",
+        quoteNumber: "Q-1",
+        recipientName: "Jane",
+        recipientEmail: "jane@example.com",
+        shareToken: "token",
+        acceptedAt: new Date("2026-03-01T12:00:00.000Z"),
+        updatedAt: new Date("2026-03-01T12:00:00.000Z"),
+        followUps: [],
+        creator: { id: "u1", name: "Original Owner" },
+      },
+    ] as never);
+    claimTx.$queryRaw
+      .mockResolvedValueOnce([
+        {
+          id: "q1",
+          quoteNumber: "Q-1",
+          recipientName: "Jane",
+          recipientEmail: "jane@example.com",
+          shareToken: "token",
+          quoteStatus: "ACCEPTED",
+          acceptedAt: new Date("2026-03-01T12:00:00.000Z"),
+          updatedAt: new Date("2026-03-01T12:00:00.000Z"),
+          paymentMethod: null,
+          createdBy: "u1",
+        },
+      ] as never)
+      .mockResolvedValueOnce([{ id: "inv1", status: "FINAL", createdBy: "u2" }] as never);
+    vi.mocked(prisma.$transaction)
+      .mockImplementationOnce(async (callback) => callback(scanTx as never) as never)
+      .mockImplementationOnce(async (callback) => callback(claimTx as never) as never);
+
+    await checkAndSendPaymentFollowUps();
+
+    expect(claimTx.quoteFollowUp.create).not.toHaveBeenCalled();
+    expect(sendEmail).not.toHaveBeenCalled();
   });
 });

@@ -57,10 +57,17 @@ async function claimPaymentFollowUp(quoteId: string, now: Date) {
       return null;
     }
 
-    const convertedInvoice = await tx.invoice.findFirst({
-      where: { convertedFromQuoteId: quoteId },
-      select: { status: true, createdBy: true },
-    });
+    const convertedInvoices = await tx.$queryRaw<Array<{
+      id: string;
+      status: string | null;
+      createdBy: string;
+    }>>`
+      SELECT id, status, created_by AS "createdBy"
+      FROM invoices
+      WHERE converted_from_quote_id = ${quoteId}
+      FOR UPDATE
+    `;
+    const convertedInvoice = convertedInvoices[0];
     if (convertedInvoice?.status === "FINAL") {
       return null;
     }
