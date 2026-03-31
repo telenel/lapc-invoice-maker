@@ -3,69 +3,91 @@ import { sendEmail, type EmailAttachment } from "@/lib/email";
 import { escapeHtml } from "@/lib/html";
 import { businessDaysBetween } from "@/lib/date-utils";
 import { safePublishAll } from "@/lib/sse";
+import type { Prisma } from "@/generated/prisma/client";
 
 const FOLLOW_UP_INTERVAL_BUSINESS_DAYS = 7;
 const PAYMENT_FOLLOW_UP_LOCK_KEY = 318742;
 const PAYMENT_REMINDER_CLAIM = "PAYMENT_REMINDER_CLAIM";
 const PAYMENT_REMINDER_CLAIM_TTL_MINUTES = 30;
 
+type PaymentFollowUpQuoteRow = {
+  id: string;
+  quoteNumber: string | null;
+  quoteStatus: string | null;
+  recipientName: string | null;
+  recipientEmail: string;
+  shareToken: string;
+  acceptedAt: Date;
+  paymentMethod: string | null;
+  createdBy: string;
+};
+
+type PaymentFollowUpConvertedInvoiceRow = {
+  id: string;
+  status: string | null;
+  paymentMethod: string | null;
+  createdBy: string;
+};
+
+type PaymentFollowUpState = {
+  quote: PaymentFollowUpQuoteRow;
+  convertedInvoice: PaymentFollowUpConvertedInvoiceRow | null;
+};
+
+async function readPaymentFollowUpState(
+  tx: Prisma.TransactionClient,
+  quoteId: string,
+): Promise<PaymentFollowUpState | null> {
+  const lockedQuotes = await tx.$queryRaw<PaymentFollowUpQuoteRow[]>`
+    SELECT
+      id,
+      quote_number AS "quoteNumber",
+      quote_status AS "quoteStatus",
+      recipient_name AS "recipientName",
+      recipient_email AS "recipientEmail",
+      share_token AS "shareToken",
+      accepted_at AS "acceptedAt",
+      payment_method AS "paymentMethod",
+      created_by AS "createdBy"
+    FROM invoices
+    WHERE id = ${quoteId}
+    FOR UPDATE
+  `;
+
+  const quote = lockedQuotes[0];
+  if (
+    !quote ||
+    quote.quoteStatus !== "ACCEPTED" ||
+    !quote.acceptedAt ||
+    quote.paymentMethod ||
+    !quote.recipientEmail ||
+    !quote.shareToken
+  ) {
+    return null;
+  }
+
+  const convertedInvoices = await tx.$queryRaw<PaymentFollowUpConvertedInvoiceRow[]>`
+    SELECT id, status, payment_method AS "paymentMethod", created_by AS "createdBy"
+    FROM invoices
+    WHERE converted_from_quote_id = ${quoteId}
+    FOR UPDATE
+  `;
+  const convertedInvoice = convertedInvoices[0];
+  if (convertedInvoice?.status === "FINAL" || convertedInvoice?.paymentMethod) {
+    return null;
+  }
+
+  return { quote, convertedInvoice: convertedInvoice ?? null };
+}
+
 async function claimPaymentFollowUp(quoteId: string, now: Date) {
   return prisma.$transaction(async (tx) => {
-    const lockedQuotes = await tx.$queryRaw<Array<{
-      id: string;
-      quoteNumber: string | null;
-      quoteStatus: string | null;
-      recipientName: string | null;
-      recipientEmail: string | null;
-      shareToken: string | null;
-      acceptedAt: Date | null;
-      updatedAt: Date;
-      paymentMethod: string | null;
-      createdBy: string;
-    }>>`
-      SELECT
-        id,
-        quote_number AS "quoteNumber",
-        quote_status AS "quoteStatus",
-        recipient_name AS "recipientName",
-        recipient_email AS "recipientEmail",
-        share_token AS "shareToken",
-        accepted_at AS "acceptedAt",
-        updated_at AS "updatedAt",
-        payment_method AS "paymentMethod",
-        created_by AS "createdBy"
-      FROM invoices
-      WHERE id = ${quoteId}
-      FOR UPDATE
-    `;
-
-    const quote = lockedQuotes[0];
-    if (
-      !quote ||
-      quote.quoteStatus !== "ACCEPTED" ||
-      !quote.acceptedAt ||
-      quote.paymentMethod ||
-      !quote.recipientEmail ||
-      !quote.shareToken
-    ) {
+    const state = await readPaymentFollowUpState(tx, quoteId);
+    if (!state) {
       return null;
     }
 
-    const convertedInvoices = await tx.$queryRaw<Array<{
-      id: string;
-      status: string | null;
-      paymentMethod: string | null;
-      createdBy: string;
-    }>>`
-      SELECT id, status, payment_method AS "paymentMethod", created_by AS "createdBy"
-      FROM invoices
-      WHERE converted_from_quote_id = ${quoteId}
-      FOR UPDATE
-    `;
-    const convertedInvoice = convertedInvoices[0];
-    if (convertedInvoice?.status === "FINAL" || convertedInvoice?.paymentMethod) {
-      return null;
-    }
+    const { quote, convertedInvoice } = state;
 
     const staleClaimThreshold = new Date(now.getTime() - PAYMENT_REMINDER_CLAIM_TTL_MINUTES * 60 * 1000);
     const activeClaim = await tx.quoteFollowUp.findFirst({
@@ -183,6 +205,12 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
     const claim = await claimPaymentFollowUp(quote.id, now);
     if (!claim) continue;
 
+    const freshState = await prisma.$transaction(async (tx) => readPaymentFollowUpState(tx, claim.quoteId));
+    if (!freshState) {
+      await prisma.quoteFollowUp.delete({ where: { id: claim.followUpId } }).catch(() => {});
+      continue;
+    }
+
     const paymentUrl = `${appUrl}/quotes/payment/${claim.shareToken}`;
     const html = `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
   <h2 style="color: #1a1a1a;">Payment Details Needed</h2>
@@ -210,6 +238,12 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
 
     const sent = await sendEmail(claim.recipientEmail, claim.subject, html, attachments);
     if (!sent) {
+      await prisma.quoteFollowUp.delete({ where: { id: claim.followUpId } }).catch(() => {});
+      continue;
+    }
+
+    const confirmedState = await prisma.$transaction(async (tx) => readPaymentFollowUpState(tx, claim.quoteId));
+    if (!confirmedState) {
       await prisma.quoteFollowUp.delete({ where: { id: claim.followUpId } }).catch(() => {});
       continue;
     }
