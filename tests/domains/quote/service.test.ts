@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("@/domains/quote/repository", () => ({
   findMany: vi.fn(),
   findById: vi.fn(),
+  findAcceptedPublicPaymentCandidate: vi.fn(),
   create: vi.fn(),
   update: vi.fn(),
   deleteById: vi.fn(),
@@ -17,6 +18,8 @@ vi.mock("@/domains/quote/repository", () => ({
   findFollowUpsByInvoiceId: vi.fn(),
   hasRecentView: vi.fn(),
   findByShareToken: vi.fn(),
+  syncPublicPaymentDetails: vi.fn(),
+  createFollowUp: vi.fn(),
   generateNumber: vi.fn(),
   expireOverdue: vi.fn(),
 }));
@@ -36,6 +39,12 @@ vi.mock("@/lib/prisma", () => ({
       create: vi.fn(),
       update: vi.fn(),
     },
+  },
+}));
+
+vi.mock("@/domains/notification/service", () => ({
+  notificationService: {
+    createAndPublish: vi.fn(),
   },
 }));
 
@@ -214,6 +223,65 @@ describe("quoteService", () => {
       await quoteService.getById("q1");
 
       expect(mockRepo.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("submitPublicPaymentDetails", () => {
+    it("syncs quote and converted invoice payment details", async () => {
+      mockRepo.findAcceptedPublicPaymentCandidate.mockResolvedValue({
+        id: "q1",
+        quoteNumber: "Q-1",
+        recipientEmail: "jane@example.com",
+        createdBy: "u1",
+        paymentMethod: null,
+        convertedToInvoice: { id: "inv1" },
+      } as never);
+      mockRepo.syncPublicPaymentDetails.mockResolvedValue([] as never);
+      mockRepo.createFollowUp.mockResolvedValue({} as never);
+
+      const result = await quoteService.submitPublicPaymentDetails("token", {
+        paymentMethod: "ACCOUNT_NUMBER",
+        accountNumber: "SAP-12345",
+      });
+
+      expect(result?.id).toBe("q1");
+      expect(mockRepo.syncPublicPaymentDetails).toHaveBeenCalledWith(
+        "q1",
+        {
+          paymentMethod: "ACCOUNT_NUMBER",
+          paymentAccountNumber: "SAP-12345",
+        },
+        "inv1",
+      );
+      expect(mockRepo.createFollowUp).toHaveBeenCalledWith(
+        expect.objectContaining({
+          invoiceId: "q1",
+          type: "PAYMENT_RESOLVED",
+        }),
+      );
+    });
+
+    it("rejects overwriting already-resolved public payment details", async () => {
+      mockRepo.findAcceptedPublicPaymentCandidate.mockResolvedValue({
+        id: "q1",
+        quoteNumber: "Q-1",
+        recipientEmail: "jane@example.com",
+        createdBy: "u1",
+        paymentMethod: "CHECK",
+        convertedToInvoice: { id: "inv1" },
+      } as never);
+
+      await expect(
+        quoteService.submitPublicPaymentDetails("token", {
+          paymentMethod: "ACCOUNT_NUMBER",
+          accountNumber: "SAP-12345",
+        }),
+      ).rejects.toMatchObject({
+        code: "PAYMENT_ALREADY_RESOLVED",
+      });
+
+      expect(mockRepo.syncPublicPaymentDetails).not.toHaveBeenCalled();
+      expect(mockRepo.createFollowUp).not.toHaveBeenCalled();
     });
   });
 

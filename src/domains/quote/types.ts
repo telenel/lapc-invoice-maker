@@ -170,6 +170,15 @@ export interface QuotePaymentDetailsSubmission {
   paymentAccountNumber: string | null;
 }
 
+export interface QuotePublicPaymentCandidate {
+  id: string;
+  quoteNumber: string | null;
+  recipientEmail: string | null;
+  createdBy: string;
+  paymentMethod: string | null;
+  convertedToInvoice: { id: string } | null;
+}
+
 export interface QuoteViewResponse {
   id: string;
   viewedAt: string;

@@ -112,6 +112,29 @@ export const adminRepository = {
     return prisma.staffAccountNumber.delete({ where: { id } });
   },
 
+  // ── App settings ──
+
+  async findAllSettings() {
+    return prisma.appSetting.findMany({
+      orderBy: { key: "asc" },
+    });
+  },
+
+  async findSettingsByKeys(keys: string[]) {
+    return prisma.appSetting.findMany({
+      where: { key: { in: keys } },
+      orderBy: { key: "asc" },
+    });
+  },
+
+  async upsertSetting(key: string, value: unknown) {
+    return prisma.appSetting.upsert({
+      where: { key },
+      update: { value },
+      create: { key, value },
+    });
+  },
+
   // ── DB health queries ──
 
   async getTableCounts() {

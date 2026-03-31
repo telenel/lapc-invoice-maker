@@ -7,6 +7,7 @@ import type {
   UserWithTemporaryPasswordResponse,
   AccountCodeResponse,
   DbHealthResponse,
+  AppSettingResponse,
   CreateUserInput,
   UpdateUserInput,
   CreateAccountCodeInput,
@@ -150,6 +151,21 @@ export const adminService = {
 
   async deleteAccountCode(id: string): Promise<void> {
     await adminRepository.deleteAccountCode(id);
+  },
+
+  // ── App settings ──
+
+  async listSettings(): Promise<AppSettingResponse[]> {
+    return adminRepository.findAllSettings();
+  },
+
+  async listSettingsByKeys(keys: string[]): Promise<AppSettingResponse[]> {
+    if (keys.length === 0) return [];
+    return adminRepository.findSettingsByKeys(keys);
+  },
+
+  async saveSetting(key: string, value: unknown): Promise<AppSettingResponse> {
+    return adminRepository.upsertSetting(key.trim(), value);
   },
 
   // ── Batch operations ──

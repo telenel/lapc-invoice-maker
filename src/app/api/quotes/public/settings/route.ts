@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { adminService } from "@/domains/admin/service";
 
 const ALLOWED_KEYS = ["quote_contact_catering", "quote_contact_default"];
 
@@ -11,9 +11,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({});
   }
 
-  const settings = await prisma.appSetting.findMany({
-    where: { key: { in: filtered } },
-  });
+  const settings = await adminService.listSettingsByKeys(filtered);
 
   const result: Record<string, unknown> = {};
   for (const s of settings) {

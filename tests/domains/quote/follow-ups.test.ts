@@ -101,4 +101,21 @@ describe("checkAndSendPaymentFollowUps", () => {
       }),
     );
   });
+
+  it("requires a share token before emailing payment reminders", async () => {
+    vi.mocked(prisma.$queryRaw)
+      .mockResolvedValueOnce([{ acquired: true }] as never)
+      .mockResolvedValueOnce([] as never);
+    vi.mocked(prisma.invoice.findMany).mockResolvedValue([] as never);
+
+    await checkAndSendPaymentFollowUps();
+
+    expect(prisma.invoice.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          shareToken: { not: null },
+        }),
+      }),
+    );
+  });
 });

@@ -149,6 +149,20 @@ export async function findByShareToken(token: string) {
   });
 }
 
+export async function findAcceptedPublicPaymentCandidate(token: string) {
+  return prisma.invoice.findFirst({
+    where: { shareToken: token, type: "QUOTE", quoteStatus: "ACCEPTED" },
+    select: {
+      id: true,
+      quoteNumber: true,
+      recipientEmail: true,
+      createdBy: true,
+      paymentMethod: true,
+      convertedToInvoice: { select: { id: true } },
+    },
+  });
+}
+
 export interface CalculatedLineItem {
   description: string;
   quantity: number;
@@ -383,6 +397,37 @@ export async function updateViewResponse(viewId: string, respondedWith: string) 
     where: { id: viewId },
     data: { respondedWith },
   });
+}
+
+export async function syncPublicPaymentDetails(
+  quoteId: string,
+  paymentDetails: { paymentMethod: string; paymentAccountNumber: string | null },
+  convertedInvoiceId?: string
+) {
+  return prisma.$transaction([
+    prisma.invoice.update({
+      where: { id: quoteId },
+      data: paymentDetails,
+    }),
+    ...(convertedInvoiceId
+      ? [
+          prisma.invoice.update({
+            where: { id: convertedInvoiceId },
+            data: paymentDetails,
+          }),
+        ]
+      : []),
+  ]);
+}
+
+export async function createFollowUp(data: {
+  invoiceId: string;
+  type: string;
+  recipientEmail: string;
+  subject: string;
+  metadata?: Prisma.InputJsonValue;
+}) {
+  return prisma.quoteFollowUp.create({ data });
 }
 
 /**

@@ -14,6 +14,7 @@ import type {
   QuoteFollowUpResponse,
   QuoteViewResponse,
   CateringDetails,
+  QuotePublicPaymentCandidate,
 } from "./types";
 import type { StaffSummary } from "@/domains/staff/types";
 import type { ContactResponse } from "@/domains/contact/types";
@@ -183,6 +184,59 @@ export const quoteService = {
     }
 
     return toQuoteResponse(quote);
+  },
+
+  async submitPublicPaymentDetails(
+    token: string,
+    paymentDetails?: { paymentMethod?: string; accountNumber?: string | null }
+  ): Promise<QuotePublicPaymentCandidate | null> {
+    const normalizedPayment = normalizeQuotePaymentDetails(paymentDetails);
+    if (!normalizedPayment) {
+      throw Object.assign(new Error("paymentMethod is required"), { code: "INVALID_INPUT" });
+    }
+
+    const quote = await quoteRepository.findAcceptedPublicPaymentCandidate(token);
+    if (!quote) return null;
+    if (quote.paymentMethod) {
+      throw Object.assign(new Error("Payment details have already been provided"), {
+        code: "PAYMENT_ALREADY_RESOLVED",
+      });
+    }
+
+    await quoteRepository.syncPublicPaymentDetails(
+      quote.id,
+      {
+        paymentMethod: normalizedPayment.paymentMethod,
+        paymentAccountNumber: normalizedPayment.paymentAccountNumber,
+      },
+      quote.convertedToInvoice?.id,
+    );
+
+    await quoteRepository.createFollowUp({
+      invoiceId: quote.id,
+      type: "PAYMENT_RESOLVED",
+      recipientEmail: quote.recipientEmail ?? "",
+      subject: `Payment details provided for ${quote.quoteNumber ?? "quote"}`,
+      metadata: {
+        paymentMethod: normalizedPayment.paymentMethod,
+        paymentAccountNumber: normalizedPayment.paymentAccountNumber,
+      } as Prisma.InputJsonValue,
+    });
+
+    try {
+      const { notificationService } = await import("@/domains/notification/service");
+      await notificationService.createAndPublish({
+        userId: quote.createdBy,
+        type: "PAYMENT_DETAILS_RECEIVED",
+        title: `Payment details received for ${quote.quoteNumber ?? "Quote"}`,
+        message: `Payment method: ${normalizedPayment.paymentMethod}${normalizedPayment.paymentAccountNumber ? ` (Account: ${normalizedPayment.paymentAccountNumber})` : ""}`,
+        quoteId: quote.id,
+      });
+    } catch {
+      // Non-critical
+    }
+
+    return quote;
   },
 
   /**
