@@ -41,4 +41,20 @@ describe("PaymentDetailsForm", () => {
     expect(screen.getByText("Provide Payment Details")).toBeInTheDocument();
     expect(screen.getByText("Submit Payment Details")).toBeInTheDocument();
   });
+
+  it("shows a closed state when public payment collection is no longer available", () => {
+    render(
+      <PaymentDetailsForm
+        token="token"
+        initialQuote={{
+          quoteStatus: "ACCEPTED",
+          paymentDetailsResolved: false,
+          paymentLinkAvailable: false,
+          quoteNumber: "Q-1",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Payment Link Closed")).toBeInTheDocument();
+  });
 });

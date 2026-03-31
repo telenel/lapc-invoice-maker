@@ -69,6 +69,7 @@ describe("GET /api/quotes/public/[token]", () => {
     const body = await response.json();
     expect(body.paymentMethod).toBeUndefined();
     expect(body.paymentAccountNumber).toBeUndefined();
+    expect(body.paymentLinkAvailable).toBe(true);
     expect(body.paymentDetailsResolved).toBe(true);
     expect(body.accountNumber).toBeUndefined();
     expect(body.pdfPath).toBeUndefined();
@@ -81,7 +82,7 @@ describe("GET /api/quotes/public/[token]", () => {
     expect(body.contact?.createdAt).toBeUndefined();
   });
 
-  it("hides quotes that have already been converted", async () => {
+  it("marks converted quotes as closed for public payment links", async () => {
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",
       quoteNumber: "Q-1",
@@ -126,6 +127,8 @@ describe("GET /api/quotes/public/[token]", () => {
       { params: Promise.resolve({ token: "token" }) },
     );
 
-    expect(response.status).toBe(404);
+    const body = await response.json();
+    expect(response.status).toBe(200);
+    expect(body.paymentLinkAvailable).toBe(false);
   });
 });

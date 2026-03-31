@@ -52,9 +52,9 @@ export async function GET(_req: NextRequest, ctx: RouteContext) {
   if (!quote) {
     return NextResponse.json({ error: "Quote not found" }, { status: 404 });
   }
-  if (quote.convertedToInvoice) {
-    return NextResponse.json({ error: "This quote is no longer available" }, { status: 404 });
-  }
 
-  return NextResponse.json(sanitizeForPublic(quote));
+  return NextResponse.json({
+    ...sanitizeForPublic(quote),
+    paymentLinkAvailable: !quote.convertedToInvoice,
+  });
 }

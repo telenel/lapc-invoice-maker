@@ -39,6 +39,7 @@ describe("PublicQuoteView", () => {
       id: "q1",
       quoteNumber: "Q-1",
       quoteStatus: "SENT",
+      paymentLinkAvailable: true,
       date: "2026-03-31T00:00:00.000Z",
       expirationDate: null,
       department: "IT",
@@ -158,6 +159,7 @@ describe("PublicQuoteView", () => {
       id: "q1",
       quoteNumber: "Q-1",
       quoteStatus: "ACCEPTED",
+      paymentLinkAvailable: true,
       date: "2026-03-31T00:00:00.000Z",
       expirationDate: null,
       department: "IT",
@@ -182,5 +184,34 @@ describe("PublicQuoteView", () => {
     await userEvent.click(screen.getByRole("button", { name: "Provide Payment Details" }));
 
     expect(pushMock).toHaveBeenCalledWith("/quotes/payment/token");
+  });
+
+  it("does not show the payment CTA when public payment collection is closed", async () => {
+    vi.mocked(quoteApi.getPublicQuote).mockResolvedValueOnce({
+      id: "q1",
+      quoteNumber: "Q-1",
+      quoteStatus: "ACCEPTED",
+      paymentLinkAvailable: false,
+      date: "2026-03-31T00:00:00.000Z",
+      expirationDate: null,
+      department: "IT",
+      category: "SUPPLIES",
+      notes: "",
+      totalAmount: 10,
+      recipientName: "Jane",
+      recipientEmail: "jane@example.com",
+      recipientOrg: "",
+      staff: null,
+      contact: null,
+      items: [],
+      isCateringEvent: false,
+      cateringDetails: null,
+      paymentDetailsResolved: false,
+    } as never);
+
+    render(<PublicQuoteView token="token" />);
+
+    await screen.findByText(/Payment collection for this quote is now closed/i);
+    expect(screen.queryByRole("button", { name: "Provide Payment Details" })).not.toBeInTheDocument();
   });
 });

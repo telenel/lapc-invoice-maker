@@ -20,6 +20,7 @@ const PAYMENT_OPTIONS = QUOTE_PAYMENT_METHODS.map((value) => ({
 type PaymentQuoteState = {
   quoteStatus: QuoteStatus;
   paymentDetailsResolved: boolean;
+  paymentLinkAvailable?: boolean;
   quoteNumber: string | null;
 };
 
@@ -40,6 +41,7 @@ export function PaymentDetailsForm({
   const isAccepted = quote?.quoteStatus === "ACCEPTED";
   const isExpired = quote?.quoteStatus === "EXPIRED";
   const isResolved = Boolean(quote && quote.paymentDetailsResolved);
+  const isPaymentLinkClosed = Boolean(quote && quote.paymentLinkAvailable === false);
 
   async function handleSubmit() {
     if (!paymentMethod) {
@@ -103,6 +105,21 @@ export function PaymentDetailsForm({
             <h2 className="text-lg font-semibold">Payment Link Not Ready</h2>
             <p className="text-sm text-muted-foreground">
               Payment details can only be submitted after the quote is approved.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isPaymentLinkClosed) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-6 text-center space-y-2">
+            <h2 className="text-lg font-semibold">Payment Link Closed</h2>
+            <p className="text-sm text-muted-foreground">
+              Payment details can no longer be submitted through this quote link.
             </p>
           </CardContent>
         </Card>

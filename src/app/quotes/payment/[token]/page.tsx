@@ -15,6 +15,7 @@ export default async function PaymentPage(
           ? {
               quoteStatus: quote.quoteStatus,
               paymentDetailsResolved: quote.paymentDetailsResolved,
+              paymentLinkAvailable: !quote.convertedToInvoice,
               quoteNumber: quote.quoteNumber,
             }
           : null

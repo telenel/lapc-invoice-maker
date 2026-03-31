@@ -90,6 +90,7 @@ export interface PublicQuoteResponse {
   id: string;
   quoteNumber: string | null;
   quoteStatus: QuoteStatus;
+  paymentLinkAvailable: boolean;
   date: string;
   expirationDate: string | null;
   department: string;

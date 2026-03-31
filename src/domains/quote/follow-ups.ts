@@ -73,7 +73,7 @@ async function readPaymentFollowUpState(
     FOR UPDATE
   `;
   const convertedInvoice = convertedInvoices[0];
-  if (convertedInvoice?.status === "FINAL" || convertedInvoice?.paymentMethod) {
+  if (convertedInvoice) {
     return null;
   }
 
@@ -87,7 +87,7 @@ async function claimPaymentFollowUp(quoteId: string, now: Date) {
       return null;
     }
 
-    const { quote, convertedInvoice } = state;
+    const { quote } = state;
 
     const staleClaimThreshold = new Date(now.getTime() - PAYMENT_REMINDER_CLAIM_TTL_MINUTES * 60 * 1000);
     const activeClaim = await tx.quoteFollowUp.findFirst({
@@ -136,7 +136,7 @@ async function claimPaymentFollowUp(quoteId: string, now: Date) {
     });
 
     return {
-      creatorId: convertedInvoice?.createdBy ?? quote.createdBy,
+      creatorId: quote.createdBy,
       followUpId: followUp.id,
       quoteId: quote.id,
       quoteNum,
@@ -169,17 +169,7 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
           acceptedAt: { not: null },
           paymentMethod: null,
           shareToken: { not: null },
-          OR: [
-          { convertedToInvoice: null },
-          {
-            convertedToInvoice: {
-              is: {
-                status: { not: "FINAL" },
-                paymentMethod: null,
-              },
-            },
-          },
-        ],
+          convertedToInvoice: null,
       },
       include: {
         followUps: {

@@ -180,7 +180,7 @@ describe("checkAndSendPaymentFollowUps", () => {
     );
   });
 
-  it("skips reminders for quotes whose converted invoice is already finalized", async () => {
+  it("skips reminders for quotes that already have a converted invoice", async () => {
     const scanTx = makeTx();
     scanTx.$queryRaw.mockResolvedValue([{ acquired: true }]);
     scanTx.invoice.findMany.mockResolvedValue([] as never);
@@ -193,16 +193,13 @@ describe("checkAndSendPaymentFollowUps", () => {
         where: expect.objectContaining({
           quoteStatus: "ACCEPTED",
           acceptedAt: { not: null },
-          OR: [
-            { convertedToInvoice: null },
-            { convertedToInvoice: { is: { status: { not: "FINAL" }, paymentMethod: null } } },
-          ],
+          convertedToInvoice: null,
         }),
       }),
     );
   });
 
-  it("skips reminders for quotes whose converted invoice already has payment details", async () => {
+  it("skips reminder claims when a converted invoice already exists at lock time", async () => {
     const scanTx = makeTx();
     const claimTx = makeTx();
 
@@ -383,7 +380,7 @@ describe("checkAndSendPaymentFollowUps", () => {
     expect(sendEmail).not.toHaveBeenCalled();
   });
 
-  it("notifies the converted invoice owner after a reminder send", async () => {
+  it("notifies the original quote owner after a reminder send", async () => {
     const scanTx = makeTx();
     const claimTx = makeTx();
     const refreshTx = makeTx();
@@ -419,7 +416,7 @@ describe("checkAndSendPaymentFollowUps", () => {
           createdBy: "u1",
         },
       ] as never)
-      .mockResolvedValueOnce([{ id: "inv1", status: "DRAFT", createdBy: "u2" }] as never);
+      .mockResolvedValueOnce([] as never);
     claimTx.quoteFollowUp.findFirst.mockResolvedValue(null as never);
     claimTx.quoteFollowUp.count.mockResolvedValue(0 as never);
     claimTx.quoteFollowUp.create.mockResolvedValue({ id: "fu1" } as never);
@@ -464,13 +461,13 @@ describe("checkAndSendPaymentFollowUps", () => {
     });
     expect(vi.mocked(notificationService.createAndPublish)).toHaveBeenCalledWith(
       expect.objectContaining({
-        userId: "u2",
+        userId: "u1",
       }),
     );
     expect(vi.mocked(safePublishAll)).toHaveBeenCalledWith({ type: "quote-changed" });
   });
 
-  it("skips reminder claims when the converted invoice finalizes before the claim commits", async () => {
+  it("skips reminder claims when a converted invoice appears before the claim commits", async () => {
     const scanTx = makeTx();
     const claimTx = makeTx();
 
@@ -504,7 +501,7 @@ describe("checkAndSendPaymentFollowUps", () => {
           createdBy: "u1",
         },
       ] as never)
-      .mockResolvedValueOnce([{ id: "inv1", status: "FINAL", createdBy: "u2" }] as never);
+      .mockResolvedValueOnce([{ id: "inv1", status: "DRAFT", createdBy: "u2" }] as never);
     vi.mocked(prisma.$transaction)
       .mockImplementationOnce(async (callback) => callback(scanTx as never) as never)
       .mockImplementationOnce(async (callback) => callback(claimTx as never) as never);

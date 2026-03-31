@@ -214,6 +214,7 @@ export function PublicQuoteView({ token }: { token: string }) {
   const isExpired = quote.quoteStatus === "EXPIRED";
   const alreadyResponded = quote.quoteStatus === "ACCEPTED" || quote.quoteStatus === "DECLINED" || quote.quoteStatus === "REVISED";
   const canRespond = (quote.quoteStatus === "SENT" || quote.quoteStatus === "SUBMITTED_EMAIL" || quote.quoteStatus === "SUBMITTED_MANUAL") && !responded;
+  const paymentLinkAvailable = quote.paymentLinkAvailable !== false;
   const isCatering = quote.isCateringEvent;
   const cateringRequiredMissing =
     isCatering &&
@@ -738,7 +739,7 @@ export function PublicQuoteView({ token }: { token: string }) {
         {alreadyResponded && (
       <Card>
         <CardContent className="pt-6 text-center">
-              {quote.quoteStatus === "ACCEPTED" && !paymentDetailsResolved ? (
+              {quote.quoteStatus === "ACCEPTED" && !paymentDetailsResolved && paymentLinkAvailable ? (
                 <div className="space-y-3">
                   <p className="text-sm text-muted-foreground">
                     Your approval was received. Payment details are still needed to finish processing this quote.
@@ -751,6 +752,10 @@ export function PublicQuoteView({ token }: { token: string }) {
                     Provide Payment Details
                   </Button>
                 </div>
+              ) : quote.quoteStatus === "ACCEPTED" && !paymentDetailsResolved ? (
+                <p className="text-sm text-muted-foreground">
+                  Your approval was received. Payment collection for this quote is now closed.
+                </p>
               ) : (
                 <p className="text-sm text-muted-foreground">
                   {quote.quoteStatus === "ACCEPTED"
