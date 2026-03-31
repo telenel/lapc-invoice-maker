@@ -76,16 +76,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
           { status: 400 },
         );
       }
-      const existingCateringDetails = (quote.cateringDetails ?? {}) as Partial<CateringDetails>;
-      cateringDetails = {
-        eventDate: "",
-        startTime: "",
-        endTime: "",
-        setupRequired: false,
-        takedownRequired: false,
-        ...existingCateringDetails,
-        ...parsed.data,
-      };
+      cateringDetails = parsed.data as CateringDetails;
     }
 
     // Extract payment details from the body

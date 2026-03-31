@@ -116,7 +116,7 @@ describe("POST /api/quotes/public/[token]/respond", () => {
     );
   });
 
-  it("preserves existing catering schedule fields when the public form omits them", async () => {
+  it("does not preserve omitted optional catering fields from the existing quote", async () => {
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",
       quoteStatus: "SENT",
@@ -165,14 +165,17 @@ describe("POST /api/quotes/public/[token]/respond", () => {
         accountNumber: undefined,
       },
       expect.objectContaining({
-        eventDate: "2026-04-15",
-        startTime: "10:00",
-        endTime: "12:00",
         location: "Campus",
-        setupRequired: true,
-        takedownRequired: false,
+        contactName: "Jane",
+        contactPhone: "555-1111",
       }),
     );
+    const cateringDetails = vi.mocked(quoteService.respondToQuote).mock.calls[0]?.[4] as Record<string, unknown> | undefined;
+    expect(cateringDetails).toBeDefined();
+    expect(cateringDetails).not.toHaveProperty("headcount");
+    expect(cateringDetails).not.toHaveProperty("setupTime");
+    expect(cateringDetails).not.toHaveProperty("takedownTime");
+    expect(cateringDetails).not.toHaveProperty("specialInstructions");
   });
 
   it("passes the raw account number shape through to the quote service", async () => {
