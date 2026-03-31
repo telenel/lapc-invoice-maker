@@ -1,8 +1,14 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
+    const state = globalThis as typeof globalThis & {
+      __laportalCronRegistered?: boolean;
+    };
+    if (state.__laportalCronRegistered) return;
+
     const cron = await import("node-cron");
     const { checkAndSendReminders } = await import("@/domains/event/reminders");
     const { checkAndSendPaymentFollowUps } = await import("@/domains/quote/follow-ups");
+    state.__laportalCronRegistered = true;
 
     // Event reminders — every 15 minutes
     cron.schedule("*/15 * * * *", () => {

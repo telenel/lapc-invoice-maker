@@ -14,7 +14,7 @@ export interface QuotePaymentDetailsInput {
 
 export interface NormalizedQuotePaymentDetails {
   paymentMethod: QuotePaymentMethod;
-  accountNumber: string | null;
+  paymentAccountNumber: string | null;
 }
 
 function isQuotePaymentMethod(value: string): value is QuotePaymentMethod {
@@ -31,8 +31,8 @@ export function normalizeQuotePaymentDetails(
     throw Object.assign(new Error("Invalid payment method"), { code: "INVALID_INPUT" });
   }
 
-  const accountNumber = input.accountNumber?.trim() || null;
-  if (paymentMethod === "ACCOUNT_NUMBER" && !accountNumber) {
+  const paymentAccountNumber = input.accountNumber?.trim() || null;
+  if (paymentMethod === "ACCOUNT_NUMBER" && !paymentAccountNumber) {
     throw Object.assign(new Error("Account number is required for account number payments"), {
       code: "INVALID_INPUT",
     });
@@ -40,6 +40,6 @@ export function normalizeQuotePaymentDetails(
 
   return {
     paymentMethod,
-    accountNumber: paymentMethod === "ACCOUNT_NUMBER" ? accountNumber : null,
+    paymentAccountNumber: paymentMethod === "ACCOUNT_NUMBER" ? paymentAccountNumber : null,
   };
 }

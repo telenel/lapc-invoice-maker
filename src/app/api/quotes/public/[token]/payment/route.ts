@@ -38,7 +38,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     where: { id: quote.id },
     data: {
       paymentMethod: paymentDetails.paymentMethod,
-      accountNumber: paymentDetails.accountNumber ?? "",
+      paymentAccountNumber: paymentDetails.paymentAccountNumber,
     },
   });
 
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       subject: `Payment details provided for ${quote.quoteNumber ?? "quote"}`,
       metadata: {
         paymentMethod: paymentDetails.paymentMethod,
-        accountNumber: paymentDetails.accountNumber,
+        paymentAccountNumber: paymentDetails.paymentAccountNumber,
       } as Prisma.InputJsonValue,
     },
   });
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       userId: quote.createdBy,
       type: "PAYMENT_DETAILS_RECEIVED",
       title: `Payment details received for ${quote.quoteNumber ?? "Quote"}`,
-      message: `Payment method: ${paymentDetails.paymentMethod}${paymentDetails.accountNumber ? ` (Account: ${paymentDetails.accountNumber})` : ""}`,
+      message: `Payment method: ${paymentDetails.paymentMethod}${paymentDetails.paymentAccountNumber ? ` (Account: ${paymentDetails.paymentAccountNumber})` : ""}`,
       quoteId: quote.id,
     });
   } catch {

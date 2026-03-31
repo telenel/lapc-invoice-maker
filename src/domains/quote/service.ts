@@ -92,6 +92,10 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
     taxEnabled: quote.taxEnabled,
     taxRate: Number(quote.taxRate),
     paymentMethod: quote.paymentMethod ?? null,
+    paymentAccountNumber:
+      ("paymentAccountNumber" in quote
+        ? ((quote as { paymentAccountNumber?: string | null }).paymentAccountNumber ?? null)
+        : null),
     convertedToInvoice: "convertedToInvoice" in quote
       ? (quote.convertedToInvoice as { id: string; invoiceNumber: string | null } | null)
       : null,
@@ -261,7 +265,7 @@ export const quoteService = {
       const normalizedPayment = normalizeQuotePaymentDetails(paymentDetails);
       if (normalizedPayment) {
         updateData.paymentMethod = normalizedPayment.paymentMethod;
-        updateData.accountNumber = normalizedPayment.accountNumber ?? "";
+        updateData.paymentAccountNumber = normalizedPayment.paymentAccountNumber;
       }
     }
     await quoteRepository.update(quote.id, updateData);
@@ -560,6 +564,11 @@ export const quoteService = {
           contactId: (quote as { contactId?: string | null }).contactId ?? undefined,
           accountCode: quote.accountCode,
           accountNumber: quote.accountNumber,
+          paymentMethod: quote.paymentMethod,
+          paymentAccountNumber:
+            ("paymentAccountNumber" in quote
+              ? ((quote as { paymentAccountNumber?: string | null }).paymentAccountNumber ?? null)
+              : null),
           approvalChain: quote.approvalChain ?? [],
           notes: quote.notes,
           totalAmount: quote.totalAmount,

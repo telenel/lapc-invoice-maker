@@ -60,6 +60,8 @@ function makeQuote(overrides: Record<string, unknown> = {}) {
     category: "SUPPLIES",
     accountCode: "AC1",
     accountNumber: "12345",
+    paymentMethod: null,
+    paymentAccountNumber: null,
     approvalChain: ["Bob"],
     notes: "Test notes",
     totalAmount: "150.00",
@@ -471,6 +473,15 @@ describe("quoteService", () => {
       const result = await quoteService.convertToInvoice("q1", "u1");
 
       expect(mockPrisma.$transaction).toHaveBeenCalledOnce();
+      expect(mockPrisma.invoice.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            accountNumber: "12345",
+            paymentMethod: null,
+            paymentAccountNumber: null,
+          }),
+        }),
+      );
       expect(result).toEqual(newInvoice);
     });
 
@@ -498,6 +509,34 @@ describe("quoteService", () => {
       await expect(quoteService.convertToInvoice("q1", "u1")).rejects.toMatchObject({
         code: "FORBIDDEN",
       });
+    });
+
+    it("preserves payment details separately from the quote charge account", async () => {
+      const { prisma } = await import("@/lib/prisma");
+      const mockPrisma = vi.mocked(prisma, true);
+
+      const newInvoice = { id: "inv1", invoiceNumber: "INV-2026-0001" };
+      mockPrisma.$transaction.mockResolvedValue([newInvoice, {}] as never);
+      mockRepo.findById.mockResolvedValue(
+        makeQuote({
+          quoteStatus: "ACCEPTED",
+          accountNumber: "INTERNAL-001",
+          paymentMethod: "ACCOUNT_NUMBER",
+          paymentAccountNumber: "SAP-12345",
+        }) as never,
+      );
+
+      await quoteService.convertToInvoice("q1", "u1");
+
+      expect(mockPrisma.invoice.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            accountNumber: "INTERNAL-001",
+            paymentMethod: "ACCOUNT_NUMBER",
+            paymentAccountNumber: "SAP-12345",
+          }),
+        }),
+      );
     });
   });
 

@@ -73,6 +73,7 @@ export interface QuoteResponse {
   taxEnabled: boolean;
   taxRate: number;
   paymentMethod: string | null;
+  paymentAccountNumber: string | null;
   convertedToInvoice?: { id: string; invoiceNumber: string | null } | null;
   revisedFromQuote?: { id: string; quoteNumber: string | null } | null;
   revisedToQuote?: { id: string; quoteNumber: string | null } | null;
@@ -166,7 +167,7 @@ export interface QuoteFollowUpResponse {
 
 export interface QuotePaymentDetailsSubmission {
   paymentMethod: string;
-  accountNumber: string | null;
+  paymentAccountNumber: string | null;
 }
 
 export interface QuoteViewResponse {

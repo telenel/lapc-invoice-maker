@@ -102,6 +102,7 @@ interface Quote {
   taxEnabled: boolean;
   taxRate: number;
   paymentMethod: string | null;
+  paymentAccountNumber: string | null;
   convertedToInvoice: {
     id: string;
     invoiceNumber: string | null;
@@ -900,8 +901,8 @@ export function QuoteDetailView({ id }: { id: string }) {
             <div className="flex items-center gap-2 text-sm">
               <span className="text-green-600 font-medium">Payment method:</span>
               <span>{quote.paymentMethod.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}</span>
-              {quote.accountNumber && (
-                <span className="text-muted-foreground">• Account: {quote.accountNumber}</span>
+              {quote.paymentAccountNumber && (
+                <span className="text-muted-foreground">• Account: {quote.paymentAccountNumber}</span>
               )}
             </div>
           </CardContent>

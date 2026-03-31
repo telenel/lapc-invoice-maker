@@ -15,7 +15,7 @@ describe("normalizeQuotePaymentDetails", () => {
       }),
     ).toEqual({
       paymentMethod: "CREDIT_CARD",
-      accountNumber: null,
+      paymentAccountNumber: null,
     });
   });
 
@@ -36,7 +36,7 @@ describe("normalizeQuotePaymentDetails", () => {
       }),
     ).toEqual({
       paymentMethod: "ACCOUNT_NUMBER",
-      accountNumber: "SAP-12345",
+      paymentAccountNumber: "SAP-12345",
     });
   });
 

@@ -127,6 +127,7 @@ model Invoice {
   taxEnabled           Boolean       @default(false) @map("tax_enabled")
   taxRate              Decimal       @default(0.0975) @map("tax_rate") @db.Decimal(5, 4)
   paymentMethod        String?       @map("payment_method")
+  paymentAccountNumber String?       @map("payment_account_number")
   createdAt            DateTime      @default(now()) @map("created_at")
   updatedAt            DateTime      @updatedAt @map("updated_at")
 
