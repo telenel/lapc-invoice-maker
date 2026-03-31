@@ -4,7 +4,10 @@ import { adminService } from "@/domains/admin/service";
 const ALLOWED_KEYS = ["quote_contact_catering", "quote_contact_default"];
 
 export async function GET(req: NextRequest) {
-  const keys = req.nextUrl.searchParams.get("keys")?.split(",").filter(Boolean) ?? ALLOWED_KEYS;
+  const requestedKeys = req.nextUrl.searchParams.get("keys");
+  const keys = requestedKeys
+    ? [...new Set(requestedKeys.split(",").map((key) => key.trim()).filter(Boolean))]
+    : ALLOWED_KEYS;
   const filtered = keys.filter((k) => ALLOWED_KEYS.includes(k));
 
   if (filtered.length === 0) {

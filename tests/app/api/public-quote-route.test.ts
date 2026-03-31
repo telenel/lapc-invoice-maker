@@ -80,6 +80,8 @@ describe("GET /api/quotes/public/[token]", () => {
     expect(body.contact?.id).toBeUndefined();
     expect(body.contact?.notes).toBeUndefined();
     expect(body.contact?.createdAt).toBeUndefined();
+    expect(body.creatorId).toBeUndefined();
+    expect(body.marginEnabled).toBeUndefined();
   });
 
   it("marks converted quotes as closed for public payment links", async () => {

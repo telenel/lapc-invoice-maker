@@ -10,12 +10,13 @@ export const GET = withAdmin(async () => {
 
 export const PUT = withAdmin(async (req: NextRequest) => {
   const body = await req.json().catch(() => null);
-  if (!body?.key || body.value === undefined) {
+  const key = typeof body?.key === "string" ? body.key.trim() : "";
+  if (!key || body?.value === undefined) {
     return NextResponse.json({ error: "key and value are required" }, { status: 400 });
   }
 
   const setting = await adminService.saveSetting(
-    String(body.key),
+    key,
     body.value as Prisma.InputJsonValue,
   );
 

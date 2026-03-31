@@ -28,7 +28,7 @@ export function QuoteContactSettings() {
     quote_contact_default: { ...EMPTY },
     quote_contact_catering: { ...EMPTY },
   });
-  const [saving, setSaving] = useState(false);
+  const [savingByKey, setSavingByKey] = useState<Record<string, boolean>>({});
 
   const load = useCallback(async () => {
     try {
@@ -47,14 +47,14 @@ export function QuoteContactSettings() {
   useEffect(() => { load(); }, [load]);
 
   async function save(key: string) {
-    setSaving(true);
+    setSavingByKey((prev) => ({ ...prev, [key]: true }));
     try {
       await adminApi.saveSetting(key, blocks[key]);
       toast.success("Contact info saved");
     } catch {
       toast.error("Failed to save contact info");
     } finally {
-      setSaving(false);
+      setSavingByKey((prev) => ({ ...prev, [key]: false }));
     }
   }
 
@@ -117,8 +117,8 @@ export function QuoteContactSettings() {
                 rows={2}
               />
             </div>
-            <Button onClick={() => save(key)} disabled={saving} size="sm">
-              {saving ? "Saving..." : "Save"}
+            <Button onClick={() => save(key)} disabled={Boolean(savingByKey[key])} size="sm">
+              {savingByKey[key] ? "Saving..." : "Save"}
             </Button>
           </CardContent>
         </Card>

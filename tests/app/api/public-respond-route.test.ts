@@ -233,12 +233,17 @@ describe("POST /api/quotes/public/[token]/respond", () => {
       undefined,
       {
         paymentMethod: "CHECK",
-        accountNumber: undefined,
+        accountNumber: null,
       },
       expect.objectContaining({
+        eventDate: "2026-04-15",
+        startTime: "10:00",
+        endTime: "12:00",
         location: "Campus",
         contactName: "Jane",
         contactPhone: "555-1111",
+        setupRequired: false,
+        takedownRequired: false,
       }),
     );
   });
@@ -294,12 +299,17 @@ describe("POST /api/quotes/public/[token]/respond", () => {
       undefined,
       {
         paymentMethod: "CHECK",
-        accountNumber: undefined,
+        accountNumber: null,
       },
       expect.objectContaining({
+        eventDate: "2026-04-15",
+        startTime: "10:00",
+        endTime: "12:00",
         location: "Campus",
         contactName: "Jane",
         contactPhone: "555-1111",
+        setupRequired: false,
+        takedownRequired: false,
       }),
     );
     const cateringDetails = vi.mocked(quoteService.respondToQuote).mock.calls[0]?.[4] as Record<string, unknown> | undefined;
@@ -339,6 +349,38 @@ describe("POST /api/quotes/public/[token]/respond", () => {
       {
         paymentMethod: "ACCOUNT_NUMBER",
         accountNumber: "SAP-12345",
+      },
+      undefined,
+    );
+  });
+
+  it("trims payment details before passing them to the quote service", async () => {
+    vi.mocked(quoteService.respondToQuote).mockResolvedValue({
+      id: "q1",
+      quoteStatus: "ACCEPTED",
+    } as never);
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/respond", {
+        method: "POST",
+        body: JSON.stringify({
+          response: "ACCEPTED",
+          paymentMethod: " check ",
+          accountNumber: "  SAP-12345  ",
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(quoteService.respondToQuote).toHaveBeenCalledWith(
+      "token",
+      "ACCEPTED",
+      undefined,
+      {
+        paymentMethod: "CHECK",
+        accountNumber: null,
       },
       undefined,
     );

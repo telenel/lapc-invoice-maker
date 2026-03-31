@@ -1,47 +1,47 @@
 import { NextRequest, NextResponse } from "next/server";
 import { quoteService } from "@/domains/quote/service";
-import type { QuoteResponse } from "@/domains/quote/types";
+import type { PublicQuoteResponse, QuoteResponse } from "@/domains/quote/types";
 
 type RouteContext = { params: Promise<{ token: string }> };
 
 /** Strip internal-only fields before returning to public consumers. */
-function sanitizeForPublic(quote: QuoteResponse) {
-  const items = quote.items.map((item) => {
-    const safeItem: Record<string, unknown> = { ...item };
-    delete safeItem.costPrice;
-    delete safeItem.marginOverride;
-    return safeItem;
-  });
-  const contact = quote.contact
-    ? {
-        name: quote.contact.name,
-        email: quote.contact.email,
-        phone: quote.contact.phone,
-        org: quote.contact.org,
-        department: quote.contact.department,
-        title: quote.contact.title,
-      }
-    : null;
-  const safe: Record<string, unknown> = { ...quote };
-  delete safe.marginEnabled;
-  delete safe.marginPercent;
-  delete safe.accountCode;
-  delete safe.accountNumber;
-  delete safe.approvalChain;
-  delete safe.pdfPath;
-  delete safe.shareToken;
-  delete safe.creatorId;
-  delete safe.creatorName;
-  delete safe.paymentMethod;
-  delete safe.paymentAccountNumber;
-  delete safe.convertedToInvoice;
-  delete safe.revisedFromQuote;
-  delete safe.revisedToQuote;
-
+function sanitizeForPublic(quote: QuoteResponse): Omit<PublicQuoteResponse, "paymentLinkAvailable"> {
   return {
-    ...safe,
-    contact,
-    items,
+    id: quote.id,
+    quoteNumber: quote.quoteNumber,
+    quoteStatus: quote.quoteStatus,
+    date: quote.date,
+    expirationDate: quote.expirationDate,
+    department: quote.department,
+    category: quote.category,
+    notes: quote.notes,
+    totalAmount: quote.totalAmount,
+    recipientName: quote.recipientName,
+    recipientEmail: quote.recipientEmail,
+    recipientOrg: quote.recipientOrg,
+    staff: quote.staff,
+    contact: quote.contact
+      ? {
+          name: quote.contact.name,
+          email: quote.contact.email,
+          phone: quote.contact.phone,
+          org: quote.contact.org,
+          department: quote.contact.department,
+          title: quote.contact.title,
+        }
+      : null,
+    items: quote.items.map((item) => ({
+      id: item.id,
+      description: item.description,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      extendedPrice: item.extendedPrice,
+      sortOrder: item.sortOrder,
+      isTaxable: item.isTaxable,
+    })),
+    isCateringEvent: quote.isCateringEvent,
+    cateringDetails: quote.cateringDetails,
+    paymentDetailsResolved: quote.paymentDetailsResolved,
   };
 }
 

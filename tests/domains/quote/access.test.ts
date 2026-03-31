@@ -117,8 +117,8 @@ describe("canViewQuoteDetails", () => {
     expect(redacted.taxEnabled).toBe(false);
     expect(redacted.taxRate).toBe(0);
     expect(redacted.shareToken).toBeNull();
-    expect(redacted.recipientEmail).toBeNull();
-    expect(redacted.recipientOrg).toBeNull();
+    expect(redacted.recipientEmail).toBe("");
+    expect(redacted.recipientOrg).toBe("");
     expect(redacted.paymentMethod).toBeNull();
     expect(redacted.paymentAccountNumber).toBeNull();
     expect(redacted.contact).toEqual({

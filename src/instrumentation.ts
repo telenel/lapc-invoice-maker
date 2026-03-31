@@ -10,7 +10,6 @@ export async function register() {
     const cron = await import("node-cron");
     const { checkAndSendReminders } = await import("@/domains/event/reminders");
     const { checkAndSendPaymentFollowUps } = await import("@/domains/quote/follow-ups");
-    state.__laportalCronRegistered = true;
 
     // Event reminders — every 15 minutes
     cron.schedule("*/15 * * * *", () => {
@@ -30,6 +29,7 @@ export async function register() {
       { timezone: "America/Los_Angeles" },
     );
 
+    state.__laportalCronRegistered = true;
     console.log("[instrumentation] cron jobs registered");
   }
 }

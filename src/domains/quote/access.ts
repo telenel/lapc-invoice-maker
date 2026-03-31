@@ -76,8 +76,8 @@ export function redactQuoteForViewer<T extends QuoteResponse>(
     taxEnabled: false,
     taxRate: 0,
     shareToken: null,
-    recipientEmail: null,
-    recipientOrg: null,
+    recipientEmail: "",
+    recipientOrg: "",
     paymentMethod: null,
     paymentAccountNumber: null,
     contact: quote.contact

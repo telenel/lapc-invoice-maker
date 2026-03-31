@@ -1,4 +1,6 @@
 export const LOS_ANGELES_TIME_ZONE = "America/Los_Angeles";
+const DATE_KEY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_PATTERN = /^\d{2}:\d{2}$/;
 
 function pad(value: number): string {
   return String(value).padStart(2, "0");
@@ -73,8 +75,36 @@ export function addBusinessDays(date: Date, days: number): Date {
 
 /** Convert a local date/time in a specific time zone to a UTC Date. */
 export function zonedDateTimeToUtc(dateKey: string, time: string, timeZone = LOS_ANGELES_TIME_ZONE): Date {
+  if (!DATE_KEY_PATTERN.test(dateKey)) {
+    throw new Error(`Invalid date key: ${dateKey}`);
+  }
+  if (!TIME_PATTERN.test(time)) {
+    throw new Error(`Invalid time: ${time}`);
+  }
   const [year, month, day] = dateKey.split("-").map(Number);
   const [hour, minute] = time.split(":").map(Number);
+  if (
+    !Number.isInteger(year) ||
+    !Number.isInteger(month) ||
+    !Number.isInteger(day) ||
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > 31
+  ) {
+    throw new Error(`Invalid date key: ${dateKey}`);
+  }
+  if (!Number.isInteger(hour) || !Number.isInteger(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+    throw new Error(`Invalid time: ${time}`);
+  }
+  const candidate = new Date(Date.UTC(year, month - 1, day));
+  if (
+    candidate.getUTCFullYear() !== year ||
+    candidate.getUTCMonth() !== month - 1 ||
+    candidate.getUTCDate() !== day
+  ) {
+    throw new Error(`Invalid date key: ${dateKey}`);
+  }
   const localWallClockUtc = Date.UTC(year, month - 1, day, hour, minute, 0, 0);
   let utcMillis = localWallClockUtc;
 

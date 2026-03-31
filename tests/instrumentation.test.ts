@@ -48,4 +48,20 @@ describe("register", () => {
 
     expect(schedule).not.toHaveBeenCalled();
   });
+
+  it("does not mark cron registration complete when scheduling throws", async () => {
+    schedule.mockImplementationOnce(() => {
+      throw new Error("boom");
+    });
+    const { register } = await import("@/instrumentation");
+
+    await expect(register()).rejects.toThrow("boom");
+    expect(
+      (
+        globalThis as typeof globalThis & {
+          __laportalCronRegistered?: boolean;
+        }
+      ).__laportalCronRegistered,
+    ).toBeUndefined();
+  });
 });

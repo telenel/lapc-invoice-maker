@@ -514,6 +514,86 @@ describe("quoteService", () => {
       });
     });
 
+    it("preserves setup and takedown instructions from the locked quote records", async () => {
+      mockRepo.findByShareToken.mockResolvedValue(
+        makeQuote({
+          quoteStatus: "SENT",
+          expirationDate: new Date("2099-02-15"),
+          isCateringEvent: true,
+          cateringDetails: {
+            setupInstructions: "stale quote setup",
+            takedownInstructions: "stale quote takedown",
+          },
+          convertedToInvoice: { id: "inv1", invoiceNumber: "INV-2026-0001" },
+        }) as never,
+      );
+      const tx = {
+        $queryRaw: vi.fn()
+          .mockResolvedValueOnce([{
+            id: "q1",
+            quoteStatus: "SENT",
+            paymentMethod: null,
+            cateringDetails: {
+              setupInstructions: "locked quote setup",
+              takedownInstructions: "locked quote takedown",
+            },
+          }])
+          .mockResolvedValueOnce([{
+            id: "inv1",
+            status: "DRAFT",
+            paymentMethod: null,
+            cateringDetails: {
+              setupInstructions: "locked invoice setup",
+              takedownInstructions: "locked invoice takedown",
+            },
+          }]),
+        invoice: {
+          update: vi.fn(),
+        },
+        quoteView: {
+          findFirst: vi.fn(),
+          update: vi.fn(),
+        },
+      };
+      vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => callback(tx as never) as never);
+
+      await quoteService.respondToQuote(
+        "token",
+        "ACCEPTED",
+        undefined,
+        { paymentMethod: "CHECK" },
+        {
+          eventDate: "2026-03-31",
+          startTime: "10:00",
+          endTime: "11:00",
+          location: "Campus",
+          contactName: "Jane",
+          contactPhone: "555-1111",
+          setupRequired: false,
+          takedownRequired: false,
+        },
+      );
+
+      expect(tx.invoice.update).toHaveBeenNthCalledWith(1, {
+        where: { id: "inv1" },
+        data: expect.objectContaining({
+          cateringDetails: expect.objectContaining({
+            setupInstructions: "locked invoice setup",
+            takedownInstructions: "locked invoice takedown",
+          }),
+        }),
+      });
+      expect(tx.invoice.update).toHaveBeenNthCalledWith(2, {
+        where: { id: "q1" },
+        data: expect.objectContaining({
+          cateringDetails: expect.objectContaining({
+            setupInstructions: "locked quote setup",
+            takedownInstructions: "locked quote takedown",
+          }),
+        }),
+      });
+    });
+
     it("rejects catering details for non-catering quotes", async () => {
       mockRepo.findByShareToken.mockResolvedValue(
         makeQuote({

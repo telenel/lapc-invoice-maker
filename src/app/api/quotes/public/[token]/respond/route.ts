@@ -116,12 +116,16 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     const paymentDetailsInput =
       response === "ACCEPTED"
         ? (() => {
-            const normalized = {
+            const normalized = normalizeQuotePaymentDetails({
               paymentMethod: body.paymentMethod,
               accountNumber: body.accountNumber,
-            };
-            normalizeQuotePaymentDetails(normalized);
-            return normalized;
+            });
+            return normalized
+              ? {
+                  paymentMethod: normalized.paymentMethod,
+                  accountNumber: normalized.paymentAccountNumber,
+                }
+              : undefined;
           })()
         : undefined;
 

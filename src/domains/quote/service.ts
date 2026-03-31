@@ -401,7 +401,6 @@ export const quoteService = {
 
     let normalizedPayment: QuotePaymentDetailsSubmission | undefined;
     let normalizedCateringDetails: Prisma.InputJsonValue | undefined;
-    const existingCateringDetails = quote.cateringDetails as CateringDetails | null;
     const acceptedAt = response === "ACCEPTED" ? new Date() : undefined;
     if (response === "ACCEPTED") {
       normalizedPayment = normalizeQuotePaymentDetails(paymentDetails);
@@ -420,8 +419,9 @@ export const quoteService = {
         id: string;
         quoteStatus: string | null;
         paymentMethod: string | null;
+        cateringDetails: Prisma.JsonValue | null;
       }>>`
-        SELECT id, quote_status AS "quoteStatus", payment_method AS "paymentMethod"
+        SELECT id, quote_status AS "quoteStatus", payment_method AS "paymentMethod", catering_details AS "cateringDetails"
         FROM invoices
         WHERE id = ${quote.id}
         FOR UPDATE
@@ -435,6 +435,7 @@ export const quoteService = {
           code: "FORBIDDEN",
         });
       }
+      const lockedQuoteCateringDetails = lockedQuote.cateringDetails as CateringDetails | null;
 
       const quoteData: Prisma.InvoiceUpdateInput = {
         quoteStatus: response,
@@ -454,8 +455,8 @@ export const quoteService = {
         if (normalizedCateringDetails !== undefined) {
           quoteData.cateringDetails = {
             ...(normalizedCateringDetails as Record<string, unknown>),
-            setupInstructions: existingCateringDetails?.setupInstructions ?? undefined,
-            takedownInstructions: existingCateringDetails?.takedownInstructions ?? undefined,
+            setupInstructions: lockedQuoteCateringDetails?.setupInstructions ?? undefined,
+            takedownInstructions: lockedQuoteCateringDetails?.takedownInstructions ?? undefined,
           };
         }
       }
@@ -466,8 +467,9 @@ export const quoteService = {
           id: string;
           status: string | null;
           paymentMethod: string | null;
+          cateringDetails: Prisma.JsonValue | null;
         }>>`
-          SELECT id, status, payment_method AS "paymentMethod"
+          SELECT id, status, payment_method AS "paymentMethod", catering_details AS "cateringDetails"
           FROM invoices
           WHERE converted_from_quote_id = ${quote.id}
           FOR UPDATE
@@ -477,6 +479,7 @@ export const quoteService = {
           if (convertedInvoice.status === "FINAL") {
             throw Object.assign(new Error("Cannot update a finalized invoice"), { code: "FORBIDDEN" });
           }
+          const convertedInvoiceCateringDetails = convertedInvoice.cateringDetails as CateringDetails | null;
           const convertedInvoiceData: Prisma.InvoiceUpdateInput = {};
           if (normalizedPayment) {
             if (convertedInvoice.paymentMethod) {
@@ -490,8 +493,8 @@ export const quoteService = {
           if (normalizedCateringDetails !== undefined) {
             convertedInvoiceData.cateringDetails = {
               ...(normalizedCateringDetails as Record<string, unknown>),
-              setupInstructions: existingCateringDetails?.setupInstructions ?? undefined,
-              takedownInstructions: existingCateringDetails?.takedownInstructions ?? undefined,
+              setupInstructions: convertedInvoiceCateringDetails?.setupInstructions ?? undefined,
+              takedownInstructions: convertedInvoiceCateringDetails?.takedownInstructions ?? undefined,
             };
           }
           if (Object.keys(convertedInvoiceData).length > 0) {

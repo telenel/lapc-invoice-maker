@@ -13,4 +13,14 @@ describe("zonedDateTimeToUtc", () => {
       "2026-11-01T17:00:00.000Z",
     );
   });
+
+  it("rejects malformed date keys", () => {
+    expect(() => zonedDateTimeToUtc("2026-2-01", "09:00")).toThrow("Invalid date key");
+    expect(() => zonedDateTimeToUtc("2026-02-30", "09:00")).toThrow("Invalid date key");
+  });
+
+  it("rejects malformed time values", () => {
+    expect(() => zonedDateTimeToUtc("2026-03-08", "9:00")).toThrow("Invalid time");
+    expect(() => zonedDateTimeToUtc("2026-03-08", "24:00")).toThrow("Invalid time");
+  });
 });

@@ -132,13 +132,13 @@ export function PublicQuoteView({ token }: { token: string }) {
   }, [token]);
 
   async function handleRespond(response: "ACCEPTED" | "DECLINED") {
+    if (response === "ACCEPTED" && accountNumberRequired && !normalizedSapAccountNumber) {
+      toast.error("Please enter your SAP account number");
+      return;
+    }
+
     setResponding(true);
     try {
-      if (response === "ACCEPTED" && accountNumberRequired && !normalizedSapAccountNumber) {
-        toast.error("Please enter your SAP account number");
-        return;
-      }
-
       // Build catering details from form when approving a catering event
       const cateringDetails =
         quote?.isCateringEvent && response === "ACCEPTED"

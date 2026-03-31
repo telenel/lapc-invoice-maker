@@ -434,11 +434,14 @@ export function QuoteDetailView({ id }: { id: string }) {
 
   const status = quote.quoteStatus;
   const viewerAccess = quote.viewerAccess ?? {
-    canViewQuote: true,
-    canManageActions: true,
-    canViewActivity: true,
-    canViewSensitiveFields: true,
+    canViewQuote: false,
+    canManageActions: false,
+    canViewActivity: false,
+    canViewSensitiveFields: false,
   };
+  if (!viewerAccess.canViewQuote) {
+    return <p className="text-muted-foreground text-sm">You do not have access to this quote.</p>;
+  }
   const canManageActions = viewerAccess.canManageActions;
   const canViewActivity = viewerAccess.canViewActivity;
   const canViewPaymentDetails = viewerAccess.canViewSensitiveFields;
