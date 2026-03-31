@@ -68,7 +68,7 @@ NEXTAUTH_URL=http://localhost:3000
 
 Docker Compose behind Traefik on [montalvo.io](https://montalvo.io). CI/CD via GitHub Actions — push to main triggers lint, build, test, then webhook deploy.
 
-All changes go through PRs with squash merge. PRs are finalized once created — no further pushes except CodeRabbit fixes (`CR_FIX=1 git push`). Build version (git SHA) is displayed in the nav bar.
+All changes go through PRs with squash merge. PRs are finalized once created — no further pushes except review follow-up fixes (`CR_FIX=1 git push`). Build version (git SHA) is displayed in the nav bar.
 
 ## Project Documentation
 
