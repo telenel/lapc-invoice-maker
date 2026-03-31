@@ -135,13 +135,10 @@ describe("checkAndSendPaymentFollowUps", () => {
     const [referenceDate, comparisonDate] = vi.mocked(businessDaysBetween).mock.calls[0] ?? [];
     expect(referenceDate).toBeInstanceOf(Date);
     expect(comparisonDate).toBeInstanceOf(Date);
-    expect((referenceDate as Date).getHours()).toBe(0);
-    expect((comparisonDate as Date).getHours()).toBe(0);
-    expect((referenceDate as Date).getTime()).toBe(
-      new Date(acceptedAt).setHours(0, 0, 0, 0),
-    );
-    expect((referenceDate as Date).getTime()).not.toBe(
-      new Date(updatedAt).setHours(0, 0, 0, 0),
+    expect(referenceDate).toBe(acceptedAt);
+    expect(referenceDate).not.toBe(updatedAt);
+    expect((referenceDate as Date).toISOString().slice(0, 10)).toBe(
+      acceptedAt.toISOString().slice(0, 10),
     );
   });
 

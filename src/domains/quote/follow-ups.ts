@@ -9,12 +9,6 @@ const PAYMENT_FOLLOW_UP_LOCK_KEY = 318742;
 const PAYMENT_REMINDER_CLAIM = "PAYMENT_REMINDER_CLAIM";
 const PAYMENT_REMINDER_CLAIM_TTL_MINUTES = 30;
 
-function startOfDay(date: Date): Date {
-  const normalized = new Date(date);
-  normalized.setHours(0, 0, 0, 0);
-  return normalized;
-}
-
 async function claimPaymentFollowUp(quoteId: string, now: Date) {
   return prisma.$transaction(async (tx) => {
     const lockedQuotes = await tx.$queryRaw<Array<{
@@ -98,7 +92,7 @@ async function claimPaymentFollowUp(quoteId: string, now: Date) {
       orderBy: { sentAt: "desc" },
     });
     const referenceDate = lastFollowUp ? lastFollowUp.sentAt : quote.acceptedAt;
-    const daysSince = businessDaysBetween(startOfDay(referenceDate), startOfDay(now));
+    const daysSince = businessDaysBetween(referenceDate, now);
     if (daysSince < FOLLOW_UP_INTERVAL_BUSINESS_DAYS) {
       return null;
     }
@@ -172,7 +166,7 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
   for (const quote of candidates) {
     const lastFollowUp = quote.followUps[0];
     const referenceDate = lastFollowUp ? lastFollowUp.sentAt : quote.acceptedAt!;
-    const daysSince = businessDaysBetween(startOfDay(referenceDate), startOfDay(now));
+    const daysSince = businessDaysBetween(referenceDate, now);
 
     if (daysSince < FOLLOW_UP_INTERVAL_BUSINESS_DAYS || !quote.recipientEmail || !quote.shareToken) {
       continue;

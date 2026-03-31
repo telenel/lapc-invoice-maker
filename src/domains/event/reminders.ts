@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { publish } from "@/lib/sse";
+import { zonedDateTimeToUtc } from "@/lib/date-utils";
 
 const EVENT_REMINDER_LOCK_KEY = 914275;
 
@@ -38,18 +39,14 @@ export async function checkAndSendReminders(): Promise<void> {
         ? (event.reminderSentDates as string[])
         : [];
 
-      const eventDate = new Date(event.date);
-      const dateStr = `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, "0")}-${String(eventDate.getDate()).padStart(2, "0")}`;
+      const dateStr = event.date.toISOString().slice(0, 10);
 
       if (sentDates.includes(dateStr)) continue;
 
-      const reminderTime = new Date(eventDate);
-      if (event.startTime && /^\d{1,2}:\d{2}$/.test(event.startTime)) {
-        const [hours, minutes] = event.startTime.split(":").map(Number);
-        if (!isNaN(hours) && !isNaN(minutes)) {
-          reminderTime.setHours(hours, minutes, 0, 0);
-        }
-      }
+      const reminderTime = zonedDateTimeToUtc(
+        dateStr,
+        event.startTime && /^\d{1,2}:\d{2}$/.test(event.startTime) ? event.startTime : "00:00",
+      );
       reminderTime.setMinutes(reminderTime.getMinutes() - event.reminderMinutes);
 
       if (now < reminderTime) continue;
