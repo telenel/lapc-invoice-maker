@@ -15,6 +15,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { adminApi } from "@/domains/admin/api-client";
 import type {
   UserResponse,
@@ -55,6 +56,21 @@ export function UserManagement() {
   const [editEmail, setEditEmail] = useState("");
   const [editRole, setEditRole] = useState("user");
   const [temporaryCredentials, setTemporaryCredentials] = useState<TemporaryCredentials | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    confirmLabel: string;
+    variant: "destructive" | "default";
+    onConfirm: () => Promise<void>;
+  }>({
+    open: false,
+    title: "",
+    description: "",
+    confirmLabel: "Confirm",
+    variant: "default",
+    onConfirm: async () => {},
+  });
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -124,31 +140,47 @@ export function UserManagement() {
     } catch { /* ignore */ }
   }
 
-  async function handleResetPassword(user: User) {
-    if (!confirm(`Reset password for ${user.name}? They will need to complete account setup again.`)) return;
-    try {
-      const updated = await adminApi.resetUserPassword(user.id);
-      const safeUser = stripTemporaryPassword(updated);
-      setUsers((prev) => prev.map((u) => (u.id === safeUser.id ? safeUser : u)));
-      setTemporaryCredentials({
-        username: safeUser.username,
-        password: updated.temporaryPassword,
-        subjectName: user.name,
-        actionLabel: "reset",
-      });
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to reset password");
-    }
+  function handleResetPassword(user: User) {
+    setConfirmDialog({
+      open: true,
+      title: "Reset Password",
+      description: `Reset password for ${user.name}? They will need to complete account setup again.`,
+      confirmLabel: "Reset Password",
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          const updated = await adminApi.resetUserPassword(user.id);
+          const safeUser = stripTemporaryPassword(updated);
+          setUsers((prev) => prev.map((u) => (u.id === safeUser.id ? safeUser : u)));
+          setTemporaryCredentials({
+            username: safeUser.username,
+            password: updated.temporaryPassword,
+            subjectName: user.name,
+            actionLabel: "reset",
+          });
+        } catch (err) {
+          toast.error(err instanceof Error ? err.message : "Failed to reset password");
+        }
+      },
+    });
   }
 
-  async function handleDelete(id: string) {
-    if (!confirm("Are you sure you want to permanently delete this user? This cannot be undone.")) return;
-    try {
-      await adminApi.deleteUser(id);
-      setUsers((prev) => prev.filter((u) => u.id !== id));
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to delete user");
-    }
+  function handleDelete(id: string) {
+    setConfirmDialog({
+      open: true,
+      title: "Delete User",
+      description: "Are you sure you want to permanently delete this user? This cannot be undone.",
+      confirmLabel: "Delete",
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          await adminApi.deleteUser(id);
+          setUsers((prev) => prev.filter((u) => u.id !== id));
+        } catch (err) {
+          toast.error(err instanceof Error ? err.message : "Failed to delete user");
+        }
+      },
+    });
   }
 
   if (loading) return <p className="text-center py-8 text-muted-foreground">Loading users...</p>;
@@ -256,6 +288,11 @@ export function UserManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDialog
+        {...confirmDialog}
+        onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}
+      />
 
       <Dialog open={!!temporaryCredentials} onOpenChange={(open) => { if (!open) setTemporaryCredentials(null); }}>
         <DialogContent>
