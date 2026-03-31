@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { PlusIcon, PencilIcon, TrashIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { QuickPickForm } from "./quick-pick-form";
 import { quickPicksApi } from "@/domains/quick-picks/api-client";
 
@@ -27,6 +28,21 @@ interface QuickPickItem {
 export function QuickPickTable() {
   const [items, setItems] = useState<QuickPickItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    confirmLabel: string;
+    variant: "destructive" | "default";
+    onConfirm: () => Promise<void>;
+  }>({
+    open: false,
+    title: "",
+    description: "",
+    confirmLabel: "Confirm",
+    variant: "default",
+    onConfirm: async () => {},
+  });
 
   const fetchItems = useCallback(async () => {
     setLoading(true);
@@ -43,16 +59,23 @@ export function QuickPickTable() {
     fetchItems();
   }, [fetchItems]);
 
-  async function handleDelete(id: string) {
-    if (!confirm("Delete this quick-pick item?")) return;
-
-    try {
-      await quickPicksApi.delete(id);
-      toast.success("Item deleted");
-      fetchItems();
-    } catch {
-      toast.error("Failed to delete item");
-    }
+  function handleDelete(id: string) {
+    setConfirmDialog({
+      open: true,
+      title: "Delete Quick Pick",
+      description: "Delete this quick-pick item?",
+      confirmLabel: "Delete",
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          await quickPicksApi.delete(id);
+          toast.success("Item deleted");
+          fetchItems();
+        } catch {
+          toast.error("Failed to delete item");
+        }
+      },
+    });
   }
 
   return (
@@ -181,6 +204,11 @@ export function QuickPickTable() {
           </Table>
         </>
       )}
+
+      <ConfirmDialog
+        {...confirmDialog}
+        onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}
+      />
     </div>
   );
 }

@@ -15,6 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { StaffForm } from "./staff-form";
 import { staffApi } from "@/domains/staff/api-client";
 import type { StaffResponse } from "@/domains/staff/types";
@@ -30,6 +31,21 @@ export function StaffTable() {
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    open: boolean;
+    title: string;
+    description: string;
+    confirmLabel: string;
+    variant: "destructive" | "default";
+    onConfirm: () => Promise<void>;
+  }>({
+    open: false,
+    title: "",
+    description: "",
+    confirmLabel: "Confirm",
+    variant: "default",
+    onConfirm: async () => {},
+  });
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
@@ -61,17 +77,23 @@ export function StaffTable() {
     setPage(1);
   }
 
-  async function handleDeactivate(id: string, name: string) {
-    if (!confirm(`Deactivate ${name}? They will be removed from the directory.`))
-      return;
-
-    try {
-      await staffApi.delete(id);
-      toast.success("Staff member deactivated");
-      fetchStaff();
-    } catch {
-      toast.error("Failed to deactivate staff member");
-    }
+  function handleDeactivate(id: string, name: string) {
+    setConfirmDialog({
+      open: true,
+      title: "Deactivate Staff Member",
+      description: `Deactivate ${name}? They will be removed from the directory.`,
+      confirmLabel: "Deactivate",
+      variant: "destructive",
+      onConfirm: async () => {
+        try {
+          await staffApi.delete(id);
+          toast.success("Staff member deactivated");
+          fetchStaff();
+        } catch {
+          toast.error("Failed to deactivate staff member");
+        }
+      },
+    });
   }
 
   return (
@@ -250,6 +272,11 @@ export function StaffTable() {
           </div>
         </>
       )}
+
+      <ConfirmDialog
+        {...confirmDialog}
+        onOpenChange={(open) => setConfirmDialog((prev) => ({ ...prev, open }))}
+      />
     </div>
   );
 }

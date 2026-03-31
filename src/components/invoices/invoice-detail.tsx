@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useInvoice } from "@/domains/invoice/hooks";
@@ -20,6 +21,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
   const [duplicating, setDuplicating] = useState(false);
   const duplicatingRef = useRef(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [draftDeleteOpen, setDraftDeleteOpen] = useState(false);
 
   async function handleRegeneratePdf() {
     if (!invoice) return;
@@ -106,9 +108,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
   function handleDeleteClick() {
     if (!invoice) return;
     if (invoice.status === "DRAFT" || invoice.status === "PENDING_CHARGE") {
-      if (window.confirm("Are you sure you want to delete this draft invoice?")) {
-        handleDelete();
-      }
+      setDraftDeleteOpen(true);
     } else {
       setDeleteDialogOpen(true);
     }
@@ -151,6 +151,16 @@ export function InvoiceDetailView({ id }: { id: string }) {
         marginPercent={invoice.marginPercent}
         taxEnabled={invoice.taxEnabled}
         taxRate={invoice.taxRate}
+      />
+
+      <ConfirmDialog
+        open={draftDeleteOpen}
+        onOpenChange={setDraftDeleteOpen}
+        title="Delete Draft Invoice"
+        description="Are you sure you want to delete this draft invoice?"
+        confirmLabel="Delete"
+        variant="destructive"
+        onConfirm={handleDelete}
       />
     </div>
   );
