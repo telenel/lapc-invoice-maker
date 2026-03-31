@@ -233,7 +233,7 @@ export const quoteService = {
     token: string,
     response: "ACCEPTED" | "DECLINED",
     viewId?: string,
-    paymentDetails?: { paymentMethod?: string; accountNumber?: string }
+    paymentDetails?: { paymentMethod?: string; accountNumber?: string | null }
   ): Promise<{ success: boolean; status: string } | null> {
     const quote = await quoteRepository.findByShareToken(token);
     if (!quote || quote.type !== "QUOTE") return null;
