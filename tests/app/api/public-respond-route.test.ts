@@ -116,6 +116,65 @@ describe("POST /api/quotes/public/[token]/respond", () => {
     );
   });
 
+  it("preserves existing catering schedule fields when the public form omits them", async () => {
+    vi.mocked(quoteService.getByShareToken).mockResolvedValue({
+      id: "q1",
+      quoteStatus: "SENT",
+      isCateringEvent: true,
+      cateringDetails: {
+        eventDate: "2026-04-15",
+        startTime: "10:00",
+        endTime: "12:00",
+        location: "Bookstore",
+        contactName: "Jane",
+        contactPhone: "555-1111",
+        contactEmail: "jane@example.com",
+        setupRequired: true,
+        takedownRequired: false,
+      },
+    } as never);
+    vi.mocked(quoteService.respondToQuote).mockResolvedValue({
+      id: "q1",
+      quoteStatus: "ACCEPTED",
+    } as never);
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/respond", {
+        method: "POST",
+        body: JSON.stringify({
+          response: "ACCEPTED",
+          paymentMethod: "CHECK",
+          cateringDetails: {
+            location: "Campus",
+            contactName: "Jane",
+            contactPhone: "555-1111",
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(quoteService.respondToQuote).toHaveBeenCalledWith(
+      "token",
+      "ACCEPTED",
+      undefined,
+      {
+        paymentMethod: "CHECK",
+        accountNumber: undefined,
+      },
+      expect.objectContaining({
+        eventDate: "2026-04-15",
+        startTime: "10:00",
+        endTime: "12:00",
+        location: "Campus",
+        setupRequired: true,
+        takedownRequired: false,
+      }),
+    );
+  });
+
   it("passes the raw account number shape through to the quote service", async () => {
     vi.mocked(quoteService.respondToQuote).mockResolvedValue({
       id: "q1",

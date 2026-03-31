@@ -797,6 +797,7 @@ export const quoteService = {
           id: true,
           type: true,
           quoteStatus: true,
+          acceptedAt: true,
           date: true,
           category: true,
           department: true,
@@ -881,7 +882,11 @@ export const quoteService = {
 
       await tx.invoice.update({
         where: { id },
-        data: { quoteStatus: "ACCEPTED", convertedAt: now },
+        data: {
+          quoteStatus: "ACCEPTED",
+          acceptedAt: quote.acceptedAt ?? now,
+          convertedAt: now,
+        },
       });
 
       return createdInvoice;

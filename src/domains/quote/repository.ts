@@ -338,7 +338,7 @@ export async function getShareToken(id: string): Promise<string | null> {
 export async function markAccepted(id: string) {
   return prisma.invoice.update({
     where: { id },
-    data: { quoteStatus: "ACCEPTED", convertedAt: new Date() },
+    data: { quoteStatus: "ACCEPTED", acceptedAt: new Date(), convertedAt: new Date() },
   });
 }
 

@@ -822,6 +822,16 @@ describe("quoteService", () => {
           }),
         }),
       );
+      expect(tx.invoice.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "q1" },
+          data: expect.objectContaining({
+            quoteStatus: "ACCEPTED",
+            acceptedAt: expect.any(Date),
+            convertedAt: expect.any(Date),
+          }),
+        }),
+      );
       expect(result).toEqual(newInvoice);
     });
 
@@ -930,6 +940,42 @@ describe("quoteService", () => {
             paymentMethod: "CHECK",
             paymentAccountNumber: null,
             cateringDetails: { location: "Campus" },
+          }),
+        }),
+      );
+    });
+
+    it("preserves an existing acceptance timestamp when converting an already accepted quote", async () => {
+      const { prisma } = await import("@/lib/prisma");
+      const mockPrisma = vi.mocked(prisma, true);
+
+      const acceptedAt = new Date("2026-03-25T17:00:00.000Z");
+      const newInvoice = { id: "inv1", invoiceNumber: "INV-2026-0001" };
+      const tx = {
+        $queryRaw: vi.fn().mockResolvedValue([{ id: "q1" }]),
+        invoice: {
+          findFirst: vi.fn().mockResolvedValue(null),
+          findUnique: vi.fn().mockResolvedValue(
+            makeQuote({
+              quoteStatus: "ACCEPTED",
+              acceptedAt,
+            }),
+          ),
+          create: vi.fn().mockResolvedValue(newInvoice),
+          update: vi.fn().mockResolvedValue({}),
+        },
+      };
+      mockPrisma.$transaction.mockImplementationOnce(async (callback) => callback(tx as never) as never);
+
+      await quoteService.convertToInvoice("q1", "u1");
+
+      expect(tx.invoice.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "q1" },
+          data: expect.objectContaining({
+            quoteStatus: "ACCEPTED",
+            acceptedAt,
+            convertedAt: expect.any(Date),
           }),
         }),
       );
