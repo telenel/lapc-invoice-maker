@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth } from "@/domains/shared/auth";
+import { withAuth, forbiddenResponse } from "@/domains/shared/auth";
 import { sendEmail, type EmailAttachment } from "@/lib/email";
 import { escapeHtml } from "@/lib/html";
+import { quoteService } from "@/domains/quote/service";
 
 interface QuoteShareData {
   quoteNumber: string | null;
@@ -45,7 +46,7 @@ function buildQuoteResponseHtml(data: QuoteResponseData): string {
   return `<p>${quoteNum} was <strong>${response}</strong>${name}.</p><p><a href="${url}">View Quote</a></p>`;
 }
 
-export const POST = withAuth(async (req: NextRequest) => {
+export const POST = withAuth(async (req: NextRequest, session) => {
   let body: Record<string, unknown>;
   try {
     body = await req.json();
@@ -83,8 +84,15 @@ export const POST = withAuth(async (req: NextRequest) => {
 
       // Attach PDF if quoteId is provided
       if (shareData.quoteId) {
+        const quote = await quoteService.getById(shareData.quoteId);
+        if (!quote) {
+          return NextResponse.json({ error: "Quote not found" }, { status: 404 });
+        }
+        if (session.user.role !== "admin" && quote.creatorId !== session.user.id) {
+          return forbiddenResponse();
+        }
+
         try {
-          const { quoteService } = await import("@/domains/quote/service");
           const { buffer, filename } = await quoteService.generatePdf(shareData.quoteId);
           const safeName = (filename ?? "quote").replace(/[^a-zA-Z0-9\-]/g, "-");
           attachments = [{

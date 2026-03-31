@@ -37,6 +37,25 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
   }
 
   try {
+    const quote = await quoteService.getByShareToken(token);
+    if (!quote) {
+      return NextResponse.json({ error: "Quote not found" }, { status: 404 });
+    }
+    if (quote.quoteStatus === "EXPIRED") {
+      return NextResponse.json({ error: "This quote has expired" }, { status: 400 });
+    }
+    if (!["SENT", "SUBMITTED_EMAIL", "SUBMITTED_MANUAL"].includes(quote.quoteStatus)) {
+      return NextResponse.json(
+        {
+          error:
+            quote.quoteStatus === "ACCEPTED" || quote.quoteStatus === "DECLINED" || quote.quoteStatus === "REVISED"
+              ? "This quote has already been responded to"
+              : "This quote is no longer available",
+        },
+        { status: 400 },
+      );
+    }
+
     // If catering details were submitted, validate and persist them before processing the response
     let cateringDetails: CateringDetails | undefined;
     if (body.cateringDetails) {
@@ -50,20 +69,11 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       cateringDetails = parsed.data as CateringDetails;
     }
 
-    if (cateringDetails) {
-      // Look up the quote to get its id for the update
-      const quote = await prisma.invoice.findFirst({
-        where: { shareToken: token },
-        select: { id: true },
+    if (response === "ACCEPTED" && cateringDetails) {
+      await prisma.invoice.update({
+        where: { id: quote.id },
+        data: { cateringDetails: cateringDetails as unknown as Prisma.InputJsonValue },
       });
-      if (quote) {
-        await prisma.invoice.update({
-          where: { id: quote.id },
-          data: { cateringDetails: cateringDetails as unknown as Prisma.InputJsonValue },
-        });
-      } else {
-        console.error(`POST /api/quotes/public/${token}/respond: catering details provided but no quote found for token`);
-      }
     }
 
     // Extract payment details from the body
@@ -73,9 +83,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     });
 
     const result = await quoteService.respondToQuote(token, response, body.viewId, paymentDetails);
-    if (!result) {
-      return NextResponse.json({ error: "Quote not found" }, { status: 404 });
-    }
+    if (!result) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
     return NextResponse.json(result);
   } catch (err) {
     const code = (err as { code?: string }).code;
