@@ -114,7 +114,7 @@ describe("adminService", () => {
       );
     });
 
-    it("hashes the default password before creating", async () => {
+    it("hashes the generated temporary password before creating", async () => {
       mockRepo.findUserByUsername.mockResolvedValue(null);
       mockRepo.createUser.mockResolvedValue(makeUser() as never);
 
@@ -123,6 +123,16 @@ describe("adminService", () => {
       expect(mockRepo.createUser).toHaveBeenCalledWith(
         expect.objectContaining({ passwordHash: "hashed" })
       );
+    });
+
+    it("returns a generated temporary password for the admin panel", async () => {
+      mockRepo.findUserByUsername.mockResolvedValue(null);
+      mockRepo.createUser.mockResolvedValue(makeUser() as never);
+
+      const result = await adminService.createUser({ name: "Alice Smith" });
+
+      expect(result.temporaryPassword).toEqual(expect.any(String));
+      expect(result.temporaryPassword).not.toBe("password123");
     });
 
     it("trims whitespace from name before storing", async () => {
@@ -228,6 +238,17 @@ describe("adminService", () => {
         "u1",
         expect.objectContaining({ passwordHash: "hashed" })
       );
+    });
+
+    it("returns the reset temporary password for the admin UI", async () => {
+      mockRepo.findUserById.mockResolvedValue(makeUser() as never);
+      mockRepo.findUserByUsernameExcluding.mockResolvedValue(null);
+      mockRepo.resetUserPassword.mockResolvedValue(makeUser() as never);
+
+      const result = await adminService.resetPassword("u1");
+
+      expect(result.temporaryPassword).toEqual(expect.any(String));
+      expect(result.temporaryPassword).not.toBe("password123");
     });
 
     it("generates a new username from existing user's name", async () => {

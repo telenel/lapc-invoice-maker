@@ -219,6 +219,7 @@ export function QuoteDetailView({ id }: { id: string }) {
   }, [fetchQuote]);
 
   useSSE("quote-changed", fetchQuote);
+  const pdfUrl = `/api/quotes/${id}/pdf`;
 
   const handleDelete = useCallback(async () => {
     if (!quote) return;
@@ -404,6 +405,16 @@ export function QuoteDetailView({ id }: { id: string }) {
     }
   }, [quote, id, fetchQuote]);
 
+  const handleOpenPdf = useCallback(() => {
+    const link = document.createElement("a");
+    link.href = pdfUrl;
+    link.target = "_blank";
+    link.rel = "noreferrer";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }, [pdfUrl]);
+
   if (loading) {
     return <p className="text-muted-foreground text-sm">Loading...</p>;
   }
@@ -413,6 +424,12 @@ export function QuoteDetailView({ id }: { id: string }) {
   }
 
   const status = quote.quoteStatus;
+  const canEdit =
+    status === "DRAFT" ||
+    status === "SENT" ||
+    status === "SUBMITTED_EMAIL" ||
+    status === "SUBMITTED_MANUAL" ||
+    (status === "ACCEPTED" && !quote.convertedToInvoice);
 
   return (
     <div className="space-y-6">
@@ -447,6 +464,11 @@ export function QuoteDetailView({ id }: { id: string }) {
             {statusLabel[status]}
           </Badge>
 
+          <Button variant="outline" size="sm" onClick={handleOpenPdf}>
+            <PrinterIcon className="size-3.5 mr-1.5" />
+            Download / Regenerate PDF
+          </Button>
+
           {/* ── Primary actions ─────────────────────────────────────── */}
 
           {/* DRAFT: Mark as Sent + Edit */}
@@ -466,6 +488,24 @@ export function QuoteDetailView({ id }: { id: string }) {
               >
                 Edit
               </Link>
+            </>
+          )}
+
+          {status === "ACCEPTED" && !quote.convertedToInvoice && (
+            <>
+              <Link
+                href={`/quotes/${id}/edit`}
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                Edit
+              </Link>
+              <Button
+                size="sm"
+                onClick={handleConvertToInvoice}
+                disabled={actionState.converting}
+              >
+                {actionState.converting ? "Converting..." : "Convert to Invoice"}
+              </Button>
             </>
           )}
 
@@ -535,14 +575,14 @@ export function QuoteDetailView({ id }: { id: string }) {
             />
             <DropdownMenuContent align="end">
               {/* Edit (when not shown as primary) */}
-              {(status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
+              {(canEdit && status !== "DRAFT" && !(status === "ACCEPTED" && !quote.convertedToInvoice)) && (
                 <DropdownMenuItem onClick={() => router.push(`/quotes/${id}/edit`)}>
                   Edit
                 </DropdownMenuItem>
               )}
 
               {/* Download PDF: all statuses */}
-              <DropdownMenuItem onClick={() => window.open(`/api/quotes/${id}/pdf`, "_blank")}>
+              <DropdownMenuItem onClick={handleOpenPdf}>
                 Download PDF
               </DropdownMenuItem>
 

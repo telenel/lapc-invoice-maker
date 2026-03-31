@@ -296,12 +296,6 @@ describe("quoteService", () => {
       await expect(quoteService.update("q1", {})).rejects.toMatchObject({ code: "NOT_FOUND" });
     });
 
-    it("throws FORBIDDEN for ACCEPTED quotes", async () => {
-      mockRepo.findById.mockResolvedValue(makeQuote({ quoteStatus: "ACCEPTED" }) as never);
-
-      await expect(quoteService.update("q1", {})).rejects.toMatchObject({ code: "FORBIDDEN" });
-    });
-
     it("throws FORBIDDEN for DECLINED quotes", async () => {
       mockRepo.findById.mockResolvedValue(makeQuote({ quoteStatus: "DECLINED" }) as never);
 
@@ -348,6 +342,28 @@ describe("quoteService", () => {
       mockRepo.update.mockResolvedValue({ ...quote, notes: "x" } as never);
 
       await expect(quoteService.update("q1", { notes: "x" })).resolves.toBeDefined();
+    });
+
+    it("allows ACCEPTED quotes to update when they have not been converted", async () => {
+      const quote = makeQuote({ quoteStatus: "ACCEPTED", convertedToInvoice: null });
+      mockRepo.findById.mockResolvedValue(quote as never);
+      mockRepo.update.mockResolvedValue({ ...quote, notes: "Updated after approval" } as never);
+
+      await expect(quoteService.update("q1", { notes: "Updated after approval" })).resolves.toBeDefined();
+    });
+
+    it("throws FORBIDDEN when an accepted quote has already been converted", async () => {
+      mockRepo.findById.mockResolvedValue(
+        makeQuote({
+          quoteStatus: "ACCEPTED",
+          convertedToInvoice: { id: "inv1", invoiceNumber: "INV-2026-0001" },
+        }) as never,
+      );
+
+      await expect(quoteService.update("q1", { notes: "x" })).rejects.toMatchObject({
+        code: "FORBIDDEN",
+        message: "Cannot update a quote that has already been converted to an invoice",
+      });
     });
   });
 
@@ -427,14 +443,6 @@ describe("quoteService", () => {
       });
     });
 
-    it("throws FORBIDDEN when quote has already been ACCEPTED", async () => {
-      mockRepo.findById.mockResolvedValue(makeQuote({ quoteStatus: "ACCEPTED" }) as never);
-
-      await expect(quoteService.convertToInvoice("q1", "u1")).rejects.toMatchObject({
-        code: "FORBIDDEN",
-      });
-    });
-
     it("throws FORBIDDEN for DECLINED quotes", async () => {
       mockRepo.findById.mockResolvedValue(makeQuote({ quoteStatus: "DECLINED" }) as never);
 
@@ -463,6 +471,32 @@ describe("quoteService", () => {
 
       expect(mockPrisma.$transaction).toHaveBeenCalledOnce();
       expect(result).toEqual(newInvoice);
+    });
+
+    it("allows ACCEPTED quotes to convert when they have not been converted yet", async () => {
+      const { prisma } = await import("@/lib/prisma");
+      const mockPrisma = vi.mocked(prisma, true);
+
+      const newInvoice = { id: "inv1", invoiceNumber: "INV-2026-0001" };
+      mockPrisma.$transaction.mockResolvedValue([newInvoice, {}] as never);
+      mockRepo.findById.mockResolvedValue(
+        makeQuote({ quoteStatus: "ACCEPTED", convertedToInvoice: null }) as never,
+      );
+
+      await expect(quoteService.convertToInvoice("q1", "u1")).resolves.toEqual(newInvoice);
+    });
+
+    it("throws FORBIDDEN when quote has already been converted", async () => {
+      mockRepo.findById.mockResolvedValue(
+        makeQuote({
+          quoteStatus: "ACCEPTED",
+          convertedToInvoice: { id: "inv1", invoiceNumber: "INV-2026-0001" },
+        }) as never,
+      );
+
+      await expect(quoteService.convertToInvoice("q1", "u1")).rejects.toMatchObject({
+        code: "FORBIDDEN",
+      });
     });
   });
 

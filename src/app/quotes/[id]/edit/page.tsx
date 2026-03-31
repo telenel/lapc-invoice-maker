@@ -50,6 +50,10 @@ interface ApiQuote {
   recipientEmail: string | null;
   recipientOrg: string | null;
   quoteStatus: string;
+  convertedToInvoice?: {
+    id: string;
+    invoiceNumber: string | null;
+  } | null;
   marginEnabled?: boolean;
   marginPercent?: number;
   taxEnabled?: boolean;
@@ -162,7 +166,12 @@ export default function EditQuotePage() {
         return res.json();
       })
       .then((quote: ApiQuote) => {
-        if (quote.quoteStatus === "ACCEPTED" || quote.quoteStatus === "DECLINED" || quote.quoteStatus === "EXPIRED") {
+        if (
+          quote.quoteStatus === "DECLINED" ||
+          quote.quoteStatus === "EXPIRED" ||
+          quote.quoteStatus === "REVISED" ||
+          quote.convertedToInvoice
+        ) {
           throw new Error("This quote cannot be edited");
         }
         setInitialData(mapApiToFormData(quote));

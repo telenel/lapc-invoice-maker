@@ -7,9 +7,11 @@ export const GET = withAuth(async (_req: NextRequest, _session, ctx) => {
   try {
     const { buffer, filename } = await quoteService.generatePdf(id);
     return new NextResponse(new Uint8Array(buffer), {
+      status: 200,
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `inline; filename="${filename}.pdf"`,
+        "Content-Length": buffer.length.toString(),
       },
     });
   } catch (err) {

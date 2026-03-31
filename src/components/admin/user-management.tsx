@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,16 +16,31 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { adminApi } from "@/domains/admin/api-client";
+import type {
+  UserResponse,
+  UserWithTemporaryPasswordResponse,
+} from "@/domains/admin/types";
 
-interface User {
-  id: string;
+type User = UserResponse;
+type CreatedUser = UserWithTemporaryPasswordResponse;
+type TemporaryCredentials = {
   username: string;
-  name: string;
-  email: string | null;
-  role: string;
-  active: boolean;
-  setupComplete: boolean;
-  createdAt: string;
+  password: string;
+  subjectName: string;
+  actionLabel: "created" | "reset";
+};
+
+function stripTemporaryPassword(user: CreatedUser): User {
+  return {
+    id: user.id,
+    username: user.username,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    active: user.active,
+    setupComplete: user.setupComplete,
+    createdAt: user.createdAt,
+  };
 }
 
 export function UserManagement() {
@@ -33,10 +49,12 @@ export function UserManagement() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editUser, setEditUser] = useState<User | null>(null);
   const [newName, setNewName] = useState("");
-  const [createdUsername, setCreatedUsername] = useState<string | null>(null);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editRole, setEditRole] = useState("user");
+  const [temporaryCredentials, setTemporaryCredentials] = useState<TemporaryCredentials | null>(null);
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -48,17 +66,46 @@ export function UserManagement() {
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   async function handleCreate() {
+    if (isCreating) return;
     try {
+      setIsCreating(true);
+      setCreateError(null);
       const created = await adminApi.createUser({ name: newName });
-      setCreatedUsername(created.username);
-      setUsers((prev) => [created, ...prev]);
-    } catch { /* ignore */ }
+      const safeUser = stripTemporaryPassword(created);
+      setUsers((prev) => [safeUser, ...prev]);
+      handleCloseCreate();
+      setTemporaryCredentials({
+        username: safeUser.username,
+        password: created.temporaryPassword,
+        subjectName: safeUser.name,
+        actionLabel: "created",
+      });
+    } catch (err) {
+      setCreateError(err instanceof Error ? err.message : "Failed to create user");
+    } finally {
+      setIsCreating(false);
+    }
   }
 
   function handleCloseCreate() {
     setCreateOpen(false);
     setNewName("");
-    setCreatedUsername(null);
+    setCreateError(null);
+  }
+
+  async function copyCredentials(value: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success(`${label} copied`);
+    } catch {
+      toast.error(`Failed to copy ${label.toLowerCase()}`);
+    }
+  }
+
+  async function copyCredentialBundle() {
+    if (!temporaryCredentials) return;
+    const bundle = `Username: ${temporaryCredentials.username}\nPassword: ${temporaryCredentials.password}`;
+    await copyCredentials(bundle, "Credentials");
   }
 
   function openEdit(user: User) {
@@ -80,10 +127,18 @@ export function UserManagement() {
   async function handleResetPassword(user: User) {
     if (!confirm(`Reset password for ${user.name}? They will need to complete account setup again.`)) return;
     try {
-      const updated = await adminApi.updateUser(user.id, { resetPassword: true });
-      setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
-      alert(`Password reset. Tell ${user.name} to log in as "${updated.username}" with password "password123".`);
-    } catch { /* ignore */ }
+      const updated = await adminApi.resetUserPassword(user.id);
+      const safeUser = stripTemporaryPassword(updated);
+      setUsers((prev) => prev.map((u) => (u.id === safeUser.id ? safeUser : u)));
+      setTemporaryCredentials({
+        username: safeUser.username,
+        password: updated.temporaryPassword,
+        subjectName: user.name,
+        actionLabel: "reset",
+      });
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to reset password");
+    }
   }
 
   async function handleDelete(id: string) {
@@ -108,32 +163,20 @@ export function UserManagement() {
             <DialogHeader>
               <DialogTitle>Create New User</DialogTitle>
               <DialogDescription>
-                Enter the user&apos;s full name. They&apos;ll log in with a temporary username and default password.
+                Enter the user&apos;s full name. They&apos;ll log in with a temporary username and temporary password.
               </DialogDescription>
             </DialogHeader>
-            {createdUsername ? (
-              <div className="space-y-4 py-4">
-                <p className="text-sm text-muted-foreground">User created successfully. Share these credentials:</p>
-                <div className="rounded-lg bg-muted p-4 space-y-2">
-                  <p className="text-sm"><span className="text-muted-foreground">Username:</span> <strong className="font-mono">{createdUsername}</strong></p>
-                  <p className="text-sm"><span className="text-muted-foreground">Password:</span> <strong className="font-mono">password123</strong></p>
-                </div>
-                <p className="text-xs text-muted-foreground">They&apos;ll be prompted to set up their profile on first login.</p>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="user-create-name">Full Name</Label>
+                <Input id="user-create-name" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Jane Smith" />
               </div>
-            ) : (
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="user-create-name">Full Name</Label>
-                  <Input id="user-create-name" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g. Jane Smith" />
-                </div>
-              </div>
-            )}
-            <DialogFooter>
-              {createdUsername ? (
-                <Button onClick={handleCloseCreate}>Done</Button>
-              ) : (
-                <Button onClick={handleCreate} disabled={!newName.trim()}>Create User</Button>
+              {createError && (
+                <p className="text-sm text-destructive">{createError}</p>
               )}
+            </div>
+            <DialogFooter>
+              <Button onClick={handleCreate} disabled={!newName.trim() || isCreating}>Create User</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -210,6 +253,54 @@ export function UserManagement() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditUser(null)}>Cancel</Button>
             <Button onClick={handleEdit}>Save</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!temporaryCredentials} onOpenChange={(open) => { if (!open) setTemporaryCredentials(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Temporary Credentials</DialogTitle>
+            <DialogDescription>
+              {temporaryCredentials
+                ? `${temporaryCredentials.subjectName} was ${temporaryCredentials.actionLabel}. Share these credentials before closing this dialog.`
+                : "Share these credentials before closing this dialog."}
+            </DialogDescription>
+          </DialogHeader>
+          {temporaryCredentials && (
+            <div className="space-y-4 py-4">
+              <div className="rounded-lg bg-muted p-4 space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs text-muted-foreground">Username</p>
+                    <p className="font-mono text-sm break-all">{temporaryCredentials.username}</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => copyCredentials(temporaryCredentials.username, "Username")}>
+                    Copy
+                  </Button>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs text-muted-foreground">Temporary Password</p>
+                    <p className="font-mono text-sm break-all">{temporaryCredentials.password}</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => copyCredentials(temporaryCredentials.password, "Password")}>
+                    Copy
+                  </Button>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                The password is only shown now. Once the user signs in and completes setup, it will no longer be recoverable from the hashed value.
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={copyCredentialBundle} disabled={!temporaryCredentials}>
+              Copy Both
+            </Button>
+            <Button onClick={() => setTemporaryCredentials(null)}>
+              Done
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

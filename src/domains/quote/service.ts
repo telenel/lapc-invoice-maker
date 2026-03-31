@@ -344,7 +344,7 @@ export const quoteService = {
   },
 
   /**
-   * Update a quote. Blocks updates on ACCEPTED/DECLINED/EXPIRED quotes.
+   * Update a quote. Accepted quotes remain editable until they are converted.
    * Recalculates totals if items are provided.
    */
   async update(id: string, input: UpdateQuoteInput): Promise<QuoteResponse> {
@@ -353,13 +353,18 @@ export const quoteService = {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
     }
     if (
-      existing.quoteStatus === "ACCEPTED" ||
       existing.quoteStatus === "DECLINED" ||
       existing.quoteStatus === "EXPIRED" ||
       existing.quoteStatus === "REVISED"
     ) {
       throw Object.assign(
-        new Error("Cannot update a quote that is accepted, declined, expired, or revised"),
+        new Error("Cannot update a quote that is declined, expired, or revised"),
+        { code: "FORBIDDEN" }
+      );
+    }
+    if ("convertedToInvoice" in existing && existing.convertedToInvoice) {
+      throw Object.assign(
+        new Error("Cannot update a quote that has already been converted to an invoice"),
         { code: "FORBIDDEN" }
       );
     }
@@ -504,7 +509,7 @@ export const quoteService = {
     if (!quote || quote.type !== "QUOTE") {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
     }
-    if (quote.quoteStatus === "ACCEPTED") {
+    if ("convertedToInvoice" in quote && quote.convertedToInvoice) {
       throw Object.assign(new Error("Quote has already been converted"), { code: "FORBIDDEN" });
     }
     if (quote.quoteStatus === "DECLINED" || quote.quoteStatus === "EXPIRED" || quote.quoteStatus === "REVISED") {
@@ -827,7 +832,7 @@ export const quoteService = {
     });
 
     const buffer = await pdfService.readPdf(pdfPath);
-    const filename = quote.quoteNumber ?? "quote";
+    const filename = (quote.quoteNumber ?? "quote").replace(/[\r\n"]/g, "");
 
     return { buffer, filename };
   },
