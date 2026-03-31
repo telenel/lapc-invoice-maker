@@ -41,6 +41,16 @@ export interface QuoteItemResponse {
   costPrice: number | null;
 }
 
+export interface PublicQuoteItemResponse {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  extendedPrice: number;
+  sortOrder: number;
+  isTaxable: boolean;
+}
+
 export interface QuoteResponse {
   id: string;
   quoteNumber: string | null;
@@ -65,7 +75,7 @@ export interface QuoteResponse {
   contact: ContactResponse | null;
   creatorId: string;
   creatorName: string;
-  items: QuoteItemResponse[];
+  items: PublicQuoteItemResponse[];
   isCateringEvent: boolean;
   cateringDetails: CateringDetails | null;
   marginEnabled: boolean;

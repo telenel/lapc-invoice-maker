@@ -19,7 +19,15 @@ function sanitizeForPublic(quote: QuoteResponse): Omit<PublicQuoteResponse, "pay
     recipientName: quote.recipientName,
     recipientEmail: quote.recipientEmail,
     recipientOrg: quote.recipientOrg,
-    staff: quote.staff,
+    staff: quote.staff
+      ? {
+          name: quote.staff.name,
+          title: quote.staff.title,
+          department: quote.staff.department,
+          extension: null,
+          email: null,
+        }
+      : null,
     contact: quote.contact
       ? {
           name: quote.contact.name,
