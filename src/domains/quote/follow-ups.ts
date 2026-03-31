@@ -104,11 +104,7 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
         // PDF is non-critical for follow-up
       }
 
-      const sent = await sendEmail(recipientEmail, subject, html, attachments);
-      if (!sent) continue;
-
-      // Record the follow-up
-      await prisma.quoteFollowUp.create({
+      const followUp = await prisma.quoteFollowUp.create({
         data: {
           invoiceId: quote.id,
           type: "PAYMENT_REMINDER",
@@ -117,6 +113,12 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
           metadata: { attempt: attemptNumber },
         },
       });
+
+      const sent = await sendEmail(recipientEmail, subject, html, attachments);
+      if (!sent) {
+        await prisma.quoteFollowUp.delete({ where: { id: followUp.id } }).catch(() => {});
+        continue;
+      }
 
       // Notify the quote creator
       try {

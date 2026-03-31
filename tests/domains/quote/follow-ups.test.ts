@@ -9,6 +9,7 @@ vi.mock("@/lib/prisma", () => ({
     quoteFollowUp: {
       count: vi.fn(),
       create: vi.fn(),
+      delete: vi.fn(),
     },
   },
 }));
@@ -129,5 +130,36 @@ describe("checkAndSendPaymentFollowUps", () => {
         }),
       }),
     );
+  });
+
+  it("releases the reminder claim if the email send fails", async () => {
+    vi.mocked(prisma.$queryRaw)
+      .mockResolvedValueOnce([{ acquired: true }] as never)
+      .mockResolvedValueOnce([] as never);
+    vi.mocked(businessDaysBetween).mockReturnValue(7);
+    vi.mocked(prisma.invoice.findMany).mockResolvedValue([
+      {
+        id: "q1",
+        quoteNumber: "Q-1",
+        recipientName: "Jane",
+        recipientEmail: "jane@example.com",
+        shareToken: "token",
+        acceptedAt: new Date("2026-03-01T12:00:00.000Z"),
+        updatedAt: new Date("2026-03-01T12:00:00.000Z"),
+        followUps: [],
+        creator: { id: "u1", name: "Admin" },
+      },
+    ] as never);
+    vi.mocked(prisma.quoteFollowUp.count).mockResolvedValue(0 as never);
+    vi.mocked(prisma.quoteFollowUp.create).mockResolvedValue({ id: "fu1" } as never);
+    vi.mocked(prisma.quoteFollowUp.delete).mockResolvedValue({} as never);
+    vi.mocked(sendEmail).mockResolvedValue(false as never);
+
+    await checkAndSendPaymentFollowUps();
+
+    expect(prisma.quoteFollowUp.create).toHaveBeenCalledOnce();
+    expect(prisma.quoteFollowUp.delete).toHaveBeenCalledWith({
+      where: { id: "fu1" },
+    });
   });
 });

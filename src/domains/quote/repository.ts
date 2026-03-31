@@ -432,6 +432,54 @@ export async function syncPublicPaymentDetails(
   });
 }
 
+export async function applyPublicPaymentResolution(
+  quoteId: string,
+  paymentDetails: { paymentMethod: string; paymentAccountNumber: string | null },
+  followUp: {
+    recipientEmail: string;
+    subject: string;
+    metadata: Prisma.InputJsonValue;
+  },
+  convertedInvoiceId?: string,
+) {
+  return prisma.$transaction(async (tx) => {
+    await tx.invoice.update({
+      where: { id: quoteId },
+      data: paymentDetails,
+    });
+
+    if (convertedInvoiceId) {
+      const convertedInvoice = await tx.invoice.findUnique({
+        where: { id: convertedInvoiceId },
+        select: { status: true },
+      });
+
+      if (!convertedInvoice) {
+        throw Object.assign(new Error("Converted invoice not found"), { code: "NOT_FOUND" });
+      }
+
+      if (convertedInvoice.status === "FINAL") {
+        throw Object.assign(new Error("Cannot update a finalized invoice"), { code: "FORBIDDEN" });
+      }
+
+      await tx.invoice.update({
+        where: { id: convertedInvoiceId },
+        data: paymentDetails,
+      });
+    }
+
+    await tx.quoteFollowUp.create({
+      data: {
+        invoiceId: quoteId,
+        type: "PAYMENT_RESOLVED",
+        recipientEmail: followUp.recipientEmail,
+        subject: followUp.subject,
+        metadata: followUp.metadata,
+      },
+    });
+  });
+}
+
 export async function applyPublicQuoteResponse(
   quoteId: string,
   input: {

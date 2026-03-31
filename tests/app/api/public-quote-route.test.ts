@@ -33,7 +33,17 @@ describe("GET /api/quotes/public/[token]", () => {
       shareToken: "token",
       createdAt: "2026-03-01T00:00:00.000Z",
       staff: null,
-      contact: null,
+      contact: {
+        id: "c1",
+        name: "Vendor",
+        email: "vendor@example.com",
+        phone: "555-0000",
+        org: "ACME",
+        department: "Sales",
+        title: "Rep",
+        notes: "internal only",
+        createdAt: "2026-03-01T00:00:00.000Z",
+      },
       creatorId: "u1",
       creatorName: "Admin",
       items: [],
@@ -64,5 +74,7 @@ describe("GET /api/quotes/public/[token]", () => {
     expect(body.convertedToInvoice).toBeUndefined();
     expect(body.revisedFromQuote).toBeUndefined();
     expect(body.revisedToQuote).toBeUndefined();
+    expect(body.contact?.notes).toBeUndefined();
+    expect(body.contact?.createdAt).toBeUndefined();
   });
 });

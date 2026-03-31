@@ -18,6 +18,7 @@ vi.mock("@/domains/quote/repository", () => ({
   findFollowUpsByInvoiceId: vi.fn(),
   hasRecentView: vi.fn(),
   findByShareToken: vi.fn(),
+  applyPublicPaymentResolution: vi.fn(),
   applyPublicQuoteResponse: vi.fn(),
   syncPublicPaymentDetails: vi.fn(),
   createFollowUp: vi.fn(),
@@ -237,8 +238,7 @@ describe("quoteService", () => {
         paymentMethod: null,
         convertedToInvoice: { id: "inv1" },
       } as never);
-      mockRepo.syncPublicPaymentDetails.mockResolvedValue([] as never);
-      mockRepo.createFollowUp.mockResolvedValue({} as never);
+      mockRepo.applyPublicPaymentResolution.mockResolvedValue(undefined as never);
 
       const result = await quoteService.submitPublicPaymentDetails("token", {
         paymentMethod: "ACCOUNT_NUMBER",
@@ -246,19 +246,21 @@ describe("quoteService", () => {
       });
 
       expect(result?.id).toBe("q1");
-      expect(mockRepo.syncPublicPaymentDetails).toHaveBeenCalledWith(
+      expect(mockRepo.applyPublicPaymentResolution).toHaveBeenCalledWith(
         "q1",
         {
           paymentMethod: "ACCOUNT_NUMBER",
           paymentAccountNumber: "SAP-12345",
         },
+        {
+          recipientEmail: "jane@example.com",
+          subject: "Payment details provided for Q-1",
+          metadata: {
+            paymentMethod: "ACCOUNT_NUMBER",
+            paymentAccountNumber: "SAP-12345",
+          },
+        },
         "inv1",
-      );
-      expect(mockRepo.createFollowUp).toHaveBeenCalledWith(
-        expect.objectContaining({
-          invoiceId: "q1",
-          type: "PAYMENT_RESOLVED",
-        }),
       );
     });
 
@@ -281,8 +283,7 @@ describe("quoteService", () => {
         code: "PAYMENT_ALREADY_RESOLVED",
       });
 
-      expect(mockRepo.syncPublicPaymentDetails).not.toHaveBeenCalled();
-      expect(mockRepo.createFollowUp).not.toHaveBeenCalled();
+      expect(mockRepo.applyPublicPaymentResolution).not.toHaveBeenCalled();
     });
 
     it("blocks public payment updates when the converted invoice is finalized", async () => {
@@ -294,7 +295,7 @@ describe("quoteService", () => {
         paymentMethod: null,
         convertedToInvoice: { id: "inv1" },
       } as never);
-      mockRepo.syncPublicPaymentDetails.mockRejectedValue(
+      mockRepo.applyPublicPaymentResolution.mockRejectedValue(
         Object.assign(new Error("Cannot update a finalized invoice"), {
           code: "FORBIDDEN",
         }),

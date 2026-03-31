@@ -203,25 +203,23 @@ export const quoteService = {
       });
     }
 
-    await quoteRepository.syncPublicPaymentDetails(
+    const subject = `Payment details provided for ${quote.quoteNumber ?? "quote"}`;
+    await quoteRepository.applyPublicPaymentResolution(
       quote.id,
       {
         paymentMethod: normalizedPayment.paymentMethod,
         paymentAccountNumber: normalizedPayment.paymentAccountNumber,
       },
+      {
+        recipientEmail: quote.recipientEmail ?? "",
+        subject,
+        metadata: {
+          paymentMethod: normalizedPayment.paymentMethod,
+          paymentAccountNumber: normalizedPayment.paymentAccountNumber,
+        } as Prisma.InputJsonValue,
+      },
       quote.convertedToInvoice?.id,
     );
-
-    await quoteRepository.createFollowUp({
-      invoiceId: quote.id,
-      type: "PAYMENT_RESOLVED",
-      recipientEmail: quote.recipientEmail ?? "",
-      subject: `Payment details provided for ${quote.quoteNumber ?? "quote"}`,
-      metadata: {
-        paymentMethod: normalizedPayment.paymentMethod,
-        paymentAccountNumber: normalizedPayment.paymentAccountNumber,
-      } as Prisma.InputJsonValue,
-    });
 
     try {
       const { notificationService } = await import("@/domains/notification/service");

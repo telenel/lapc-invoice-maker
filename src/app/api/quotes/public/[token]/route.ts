@@ -12,6 +12,17 @@ function sanitizeForPublic(quote: QuoteResponse) {
     delete safeItem.marginOverride;
     return safeItem;
   });
+  const contact = quote.contact
+    ? {
+        id: quote.contact.id,
+        name: quote.contact.name,
+        email: quote.contact.email,
+        phone: quote.contact.phone,
+        org: quote.contact.org,
+        department: quote.contact.department,
+        title: quote.contact.title,
+      }
+    : null;
   const safe: Record<string, unknown> = { ...quote };
   delete safe.marginEnabled;
   delete safe.marginPercent;
@@ -30,6 +41,7 @@ function sanitizeForPublic(quote: QuoteResponse) {
 
   return {
     ...safe,
+    contact,
     items,
   };
 }
