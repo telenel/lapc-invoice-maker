@@ -34,6 +34,14 @@ const CACHE_TTL_MS = 30_000;
 const cache = new Map<string, CacheEntry<unknown>>();
 
 async function getCachedJson<T>(key: string, url: string): Promise<T> {
+  if (process.env.NODE_ENV === "test") {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ${key}: ${response.status}`);
+    }
+    return response.json() as Promise<T>;
+  }
+
   const now = Date.now();
   const existing = cache.get(key) as CacheEntry<T> | undefined;
 

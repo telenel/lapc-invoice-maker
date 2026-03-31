@@ -21,60 +21,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Detect changed paths
-        id: filter
-        uses: dorny/paths-filter@v3
-        with:
-          predicate-quantifier: every
-          filters: |
-            code:
-              - 'src/**'
-              - 'prisma/**'
-              - 'package.json'
-              - 'package-lock.json'
-              - 'tsconfig.json'
-              - 'next.config.*'
-              - '.github/workflows/**'
-
       - uses: actions/setup-node@v4
-        if: steps.filter.outputs.code == 'true'
         with:
           node-version: 22
           cache: npm
 
-      - name: Restore deps cache
-        id: cache
-        if: steps.filter.outputs.code == 'true'
-        uses: actions/cache@v4
-        with:
-          path: |
-            node_modules
-            src/generated/prisma
-          key: deps-${{ runner.os }}-${{ hashFiles('package-lock.json', 'prisma/schema.prisma') }}
-
-      - name: Restore Next.js build cache
-        if: steps.filter.outputs.code == 'true'
-        uses: actions/cache@v4
-        with:
-          path: .next/cache
-          key: nextjs-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/**', 'prisma/schema.prisma') }}
-          restore-keys: |
-            nextjs-${{ runner.os }}-${{ hashFiles('package-lock.json') }}-
-
       - name: Install dependencies
-        if: steps.filter.outputs.code == 'true' && steps.cache.outputs.cache-hit != 'true'
         run: npm ci && npx prisma generate
 
       - name: Lint
-        if: steps.filter.outputs.code == 'true'
         run: npm run lint
 
       - name: Test
-        if: steps.filter.outputs.code == 'true'
-        run: npx vitest run --dir tests --dir src/__tests__
+        run: npm test
 
       - name: Build
-        if: steps.filter.outputs.code == 'true'
         run: npm run build
 
   deploy:
@@ -100,16 +61,19 @@ jobs:
 
       - name: Health check
         run: |
-          echo "Waiting 60s for deploy to complete..."
-          sleep 60
-          for i in 1 2 3 4 5; do
-            status=$(curl -sfS --connect-timeout 10 --max-time 20 -o /dev/null -w "%{http_code}" https://laportal.montalvo.io/api/auth/session)
-            echo "Attempt $i: HTTP $status"
-            if [ "$status" = "200" ]; then
-              echo "Health check passed"
+          expected_sha="${GITHUB_SHA::7}"
+          echo "Waiting for deployed build SHA $expected_sha..."
+          sleep 30
+          for i in 1 2 3 4 5 6 7 8 9 10 11 12; do
+            body=$(curl -fsS --connect-timeout 10 --max-time 20 https://laportal.montalvo.io/api/version || true)
+            status=$(printf '%s' "$body" | grep -oE '"status":"[^"]+"' | cut -d'"' -f4)
+            deployed_sha=$(printf '%s' "$body" | grep -oE '"buildSha":"[a-f0-9]+"' | cut -d'"' -f4)
+            echo "Attempt $i: status=${status:-unknown} buildSha=${deployed_sha:-missing}"
+            if [ "$status" = "ok" ] && [ "$deployed_sha" = "$expected_sha" ]; then
+              echo "Deploy verification passed"
               exit 0
             fi
-            sleep 10
+            sleep 15
           done
-          echo "Health check failed after 5 attempts"
+          echo "Deploy verification failed: live build SHA did not match $expected_sha"
           exit 1

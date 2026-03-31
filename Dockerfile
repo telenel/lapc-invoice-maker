@@ -29,6 +29,7 @@ WORKDIR /app
 # Dependencies stage
 FROM base AS deps
 COPY package.json package-lock.json ./
+COPY scripts/postinstall.js ./scripts/postinstall.js
 RUN npm ci
 
 # Build stage
