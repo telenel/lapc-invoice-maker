@@ -158,7 +158,7 @@ export async function findAcceptedPublicPaymentCandidate(token: string) {
       recipientEmail: true,
       createdBy: true,
       paymentMethod: true,
-      convertedToInvoice: { select: { id: true } },
+      convertedToInvoice: { select: { id: true, createdBy: true } },
     },
   });
 }
@@ -443,8 +443,12 @@ export async function applyPublicPaymentResolution(
   convertedInvoiceId?: string,
 ) {
   return prisma.$transaction(async (tx) => {
-    const lockedQuote = await tx.$queryRaw<Array<{ id: string; paymentMethod: string | null }>>`
-      SELECT id, payment_method AS "paymentMethod"
+    const lockedQuote = await tx.$queryRaw<Array<{
+      id: string;
+      paymentMethod: string | null;
+      quoteStatus: string | null;
+    }>>`
+      SELECT id, payment_method AS "paymentMethod", quote_status AS "quoteStatus"
       FROM invoices
       WHERE id = ${quoteId}
       FOR UPDATE
@@ -457,6 +461,12 @@ export async function applyPublicPaymentResolution(
     if (lockedQuote[0]?.paymentMethod) {
       throw Object.assign(new Error("Payment details have already been provided"), {
         code: "PAYMENT_ALREADY_RESOLVED",
+      });
+    }
+
+    if (lockedQuote[0]?.quoteStatus !== "ACCEPTED") {
+      throw Object.assign(new Error("This quote is no longer awaiting payment details"), {
+        code: "FORBIDDEN",
       });
     }
 

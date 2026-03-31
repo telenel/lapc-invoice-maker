@@ -224,7 +224,7 @@ export const quoteService = {
     try {
       const { notificationService } = await import("@/domains/notification/service");
       await notificationService.createAndPublish({
-        userId: quote.createdBy,
+        userId: quote.convertedToInvoice?.createdBy ?? quote.createdBy,
         type: "PAYMENT_DETAILS_RECEIVED",
         title: `Payment details received for ${quote.quoteNumber ?? "Quote"}`,
         message: `Payment method: ${normalizedPayment.paymentMethod}${normalizedPayment.paymentAccountNumber ? ` (Account: ${normalizedPayment.paymentAccountNumber})` : ""}`,

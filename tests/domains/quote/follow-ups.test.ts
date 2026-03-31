@@ -19,6 +19,12 @@ vi.mock("@/domains/quote/service", () => ({
   },
 }));
 
+vi.mock("@/domains/notification/service", () => ({
+  notificationService: {
+    createAndPublish: vi.fn(),
+  },
+}));
+
 vi.mock("@/lib/date-utils", () => ({
   businessDaysBetween: vi.fn(() => 0),
 }));
@@ -26,6 +32,7 @@ vi.mock("@/lib/date-utils", () => ({
 import { prisma } from "@/lib/prisma";
 import { sendEmail } from "@/lib/email";
 import { businessDaysBetween } from "@/lib/date-utils";
+import { notificationService } from "@/domains/notification/service";
 import { checkAndSendPaymentFollowUps } from "@/domains/quote/follow-ups";
 
 function makeTx() {
@@ -100,6 +107,7 @@ describe("checkAndSendPaymentFollowUps", () => {
         recipientName: "Jane",
         recipientEmail: "jane@example.com",
         shareToken: "token",
+        quoteStatus: "ACCEPTED",
         acceptedAt,
         updatedAt,
         paymentMethod: null,
@@ -193,6 +201,7 @@ describe("checkAndSendPaymentFollowUps", () => {
         recipientName: "Jane",
         recipientEmail: "jane@example.com",
         shareToken: "token",
+        quoteStatus: "ACCEPTED",
         acceptedAt: new Date("2026-03-01T12:00:00.000Z"),
         updatedAt: new Date("2026-03-01T12:00:00.000Z"),
         paymentMethod: null,
@@ -215,5 +224,99 @@ describe("checkAndSendPaymentFollowUps", () => {
     expect(prisma.quoteFollowUp.delete).toHaveBeenCalledWith({
       where: { id: "fu1" },
     });
+  });
+
+  it("skips a reminder claim when the quote is no longer accepted at lock time", async () => {
+    const scanTx = makeTx();
+    const claimTx = makeTx();
+
+    scanTx.$queryRaw.mockResolvedValue([{ acquired: true }]);
+    vi.mocked(businessDaysBetween).mockReturnValue(7);
+    scanTx.invoice.findMany.mockResolvedValue([
+      {
+        id: "q1",
+        quoteNumber: "Q-1",
+        recipientName: "Jane",
+        recipientEmail: "jane@example.com",
+        shareToken: "token",
+        acceptedAt: new Date("2026-03-01T12:00:00.000Z"),
+        updatedAt: new Date("2026-03-01T12:00:00.000Z"),
+        followUps: [],
+        creator: { id: "u1", name: "Admin" },
+      },
+    ] as never);
+    claimTx.$queryRaw.mockResolvedValue([
+      {
+        id: "q1",
+        quoteNumber: "Q-1",
+        recipientName: "Jane",
+        recipientEmail: "jane@example.com",
+        shareToken: "token",
+        quoteStatus: "DECLINED",
+        acceptedAt: new Date("2026-03-01T12:00:00.000Z"),
+        updatedAt: new Date("2026-03-01T12:00:00.000Z"),
+        paymentMethod: null,
+        createdBy: "u1",
+      },
+    ] as never);
+    vi.mocked(prisma.$transaction)
+      .mockImplementationOnce(async (callback) => callback(scanTx as never) as never)
+      .mockImplementationOnce(async (callback) => callback(claimTx as never) as never);
+
+    await checkAndSendPaymentFollowUps();
+
+    expect(claimTx.quoteFollowUp.create).not.toHaveBeenCalled();
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it("notifies the converted invoice owner after a reminder send", async () => {
+    const scanTx = makeTx();
+    const claimTx = makeTx();
+
+    scanTx.$queryRaw.mockResolvedValue([{ acquired: true }]);
+    vi.mocked(businessDaysBetween).mockReturnValue(7);
+    scanTx.invoice.findMany.mockResolvedValue([
+      {
+        id: "q1",
+        quoteNumber: "Q-1",
+        recipientName: "Jane",
+        recipientEmail: "jane@example.com",
+        shareToken: "token",
+        acceptedAt: new Date("2026-03-01T12:00:00.000Z"),
+        updatedAt: new Date("2026-03-01T12:00:00.000Z"),
+        followUps: [],
+        creator: { id: "u1", name: "Original Owner" },
+      },
+    ] as never);
+    claimTx.$queryRaw.mockResolvedValue([
+      {
+        id: "q1",
+        quoteNumber: "Q-1",
+        recipientName: "Jane",
+        recipientEmail: "jane@example.com",
+        shareToken: "token",
+        quoteStatus: "ACCEPTED",
+        acceptedAt: new Date("2026-03-01T12:00:00.000Z"),
+        updatedAt: new Date("2026-03-01T12:00:00.000Z"),
+        paymentMethod: null,
+        createdBy: "u1",
+      },
+    ] as never);
+    claimTx.invoice.findFirst.mockResolvedValue({ status: "DRAFT", createdBy: "u2" } as never);
+    claimTx.quoteFollowUp.findFirst.mockResolvedValue(null as never);
+    claimTx.quoteFollowUp.count.mockResolvedValue(0 as never);
+    claimTx.quoteFollowUp.create.mockResolvedValue({ id: "fu1" } as never);
+    vi.mocked(sendEmail).mockResolvedValue(true as never);
+    vi.mocked(prisma.$transaction)
+      .mockImplementationOnce(async (callback) => callback(scanTx as never) as never)
+      .mockImplementationOnce(async (callback) => callback(claimTx as never) as never);
+
+    await checkAndSendPaymentFollowUps();
+
+    expect(vi.mocked(notificationService.createAndPublish)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: "u2",
+      }),
+    );
   });
 });

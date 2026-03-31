@@ -52,6 +52,7 @@ vi.mock("@/domains/notification/service", () => ({
 
 import * as quoteRepository from "@/domains/quote/repository";
 import { pdfService } from "@/domains/pdf/service";
+import { notificationService } from "@/domains/notification/service";
 import { quoteService } from "@/domains/quote/service";
 
 const mockRepo = vi.mocked(quoteRepository, true);
@@ -236,7 +237,7 @@ describe("quoteService", () => {
         recipientEmail: "jane@example.com",
         createdBy: "u1",
         paymentMethod: null,
-        convertedToInvoice: { id: "inv1" },
+        convertedToInvoice: { id: "inv1", createdBy: "u2" },
       } as never);
       mockRepo.applyPublicPaymentResolution.mockResolvedValue(undefined as never);
 
@@ -261,6 +262,11 @@ describe("quoteService", () => {
           },
         },
         "inv1",
+      );
+      expect(vi.mocked(notificationService.createAndPublish)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: "u2",
+        }),
       );
     });
 

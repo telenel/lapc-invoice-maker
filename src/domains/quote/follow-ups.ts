@@ -17,6 +17,7 @@ async function claimPaymentFollowUp(quoteId: string, now: Date) {
     const lockedQuotes = await tx.$queryRaw<Array<{
       id: string;
       quoteNumber: string | null;
+      quoteStatus: string | null;
       recipientName: string | null;
       recipientEmail: string | null;
       shareToken: string | null;
@@ -28,6 +29,7 @@ async function claimPaymentFollowUp(quoteId: string, now: Date) {
       SELECT
         id,
         quote_number AS "quoteNumber",
+        quote_status AS "quoteStatus",
         recipient_name AS "recipientName",
         recipient_email AS "recipientEmail",
         share_token AS "shareToken",
@@ -41,13 +43,19 @@ async function claimPaymentFollowUp(quoteId: string, now: Date) {
     `;
 
     const quote = lockedQuotes[0];
-    if (!quote || quote.paymentMethod || !quote.recipientEmail || !quote.shareToken) {
+    if (
+      !quote ||
+      quote.quoteStatus !== "ACCEPTED" ||
+      quote.paymentMethod ||
+      !quote.recipientEmail ||
+      !quote.shareToken
+    ) {
       return null;
     }
 
     const convertedInvoice = await tx.invoice.findFirst({
       where: { convertedFromQuoteId: quoteId },
-      select: { status: true },
+      select: { status: true, createdBy: true },
     });
     if (convertedInvoice?.status === "FINAL") {
       return null;
@@ -79,7 +87,7 @@ async function claimPaymentFollowUp(quoteId: string, now: Date) {
     });
 
     return {
-      creatorId: quote.createdBy,
+      creatorId: convertedInvoice?.createdBy ?? quote.createdBy,
       followUpId: followUp.id,
       quoteId: quote.id,
       quoteNum,
