@@ -27,11 +27,10 @@ import { useSSE } from "@/lib/use-sse";
 import { useUrlFilters } from "@/lib/use-url-filters";
 import {
   getInvoiceExportFilters,
-  type InvoiceUrlFilters,
 } from "./url-filter-utils";
 import { cn } from "@/lib/utils";
 
-const URL_FILTER_DEFAULTS: InvoiceUrlFilters = {
+const URL_FILTER_DEFAULTS = {
   search: "",
   status: "",
   category: "",
@@ -44,7 +43,7 @@ const URL_FILTER_DEFAULTS: InvoiceUrlFilters = {
   page: "1",
   sortBy: "date",
   sortOrder: "desc",
-};
+} satisfies Record<string, string>;
 
 const SAVED_VIEWS = [
   { label: "My Drafts", params: { status: "DRAFT" } },
