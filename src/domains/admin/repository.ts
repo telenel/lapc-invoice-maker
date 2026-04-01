@@ -204,9 +204,28 @@ export const adminRepository = {
   },
 
   async batchUpdateQuoteStatus(ids: string[], status: string) {
+    const where = { id: { in: ids }, type: "QUOTE" as const };
+
+    if (status === "ACCEPTED") {
+      const acceptedAt = new Date();
+
+      const existingAccepted = await prisma.invoice.updateMany({
+        where: { ...where, acceptedAt: { not: null } },
+        data: { quoteStatus: "ACCEPTED" },
+      });
+      const newlyAccepted = await prisma.invoice.updateMany({
+        where: { ...where, acceptedAt: null },
+        data: { quoteStatus: "ACCEPTED", acceptedAt },
+      });
+
+      return { count: existingAccepted.count + newlyAccepted.count };
+    }
+
     return prisma.invoice.updateMany({
-      where: { id: { in: ids }, type: "QUOTE" },
-      data: { quoteStatus: status as "DRAFT" | "SENT" | "SUBMITTED_EMAIL" | "SUBMITTED_MANUAL" | "ACCEPTED" | "DECLINED" | "REVISED" | "EXPIRED" },
+      where,
+      data: {
+        quoteStatus: status as "DRAFT" | "SENT" | "SUBMITTED_EMAIL" | "SUBMITTED_MANUAL" | "ACCEPTED" | "DECLINED" | "REVISED" | "EXPIRED",
+      },
     });
   },
 
