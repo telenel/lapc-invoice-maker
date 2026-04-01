@@ -287,23 +287,25 @@ function writeSummary(session, payload) {
 export function formatEventLine(event) {
   switch (event.type) {
     case "session-start":
-      return `AUTOPILOT session started: ${event.sessionId}`;
+      return `AUTOPILOT session started: ${event.sessionId} | branch=${event.branch} | head=${event.headSha}`;
     case "producer-start":
-      return `AUTOPILOT review started for ${event.headSha}`;
+      return `AUTOPILOT review started: head=${event.headSha} | producer_log=${event.producerLogPath}`;
+    case "review-result":
+      return `AUTOPILOT review result: ${event.result} | findings=${event.findingCount} | summary=${event.summary}`;
     case "batch-launch":
-      return `AUTOPILOT launched ${event.role} ${event.batchId} in ${event.worktreePath}`;
+      return `AUTOPILOT launched ${event.role} ${event.batchId} | findings=${event.findingCount} | worktree=${event.worktreePath}`;
     case "task-failed":
       return `AUTOPILOT ${event.batchId} failed: ${event.error}`;
     case "task-integrating":
-      return `AUTOPILOT integrating ${event.batchId}`;
+      return `AUTOPILOT integrating ${event.batchId} into ${event.targetBranch}`;
     case "task-integrated":
-      return `AUTOPILOT integrated ${event.batchId} (${event.commits?.length ?? 0} commit${event.commits?.length === 1 ? "" : "s"})`;
+      return `AUTOPILOT integrated ${event.batchId} into ${event.targetBranch} (${event.commits?.length ?? 0} commit${event.commits?.length === 1 ? "" : "s"})`;
     case "task-cleanup":
       return `AUTOPILOT cleaned ${event.batchId}: worktree=${event.worktreeRemoved ? "yes" : "no"} branch=${event.branchDeleted ? "yes" : "no"}`;
     case "producer-complete":
       return `AUTOPILOT review completed with exit ${event.exitCode}`;
     case "session-complete":
-      return `AUTOPILOT session complete: tasks=${event.taskCount} failed=${event.failedTaskCount}`;
+      return `AUTOPILOT session complete: tasks=${event.taskCount} failed=${event.failedTaskCount} pushes=0`;
     default:
       return `AUTOPILOT ${event.type}`;
   }
@@ -571,7 +573,6 @@ async function main() {
   const session = createSession(context);
   const producerLogWrite = (chunk) => {
     appendFileSync(session.producerLogPath, chunk.toString());
-    process.stdout.write(chunk.toString());
   };
 
   const producer = spawn(
@@ -620,6 +621,7 @@ async function main() {
   emitEvent(session, summary, "producer-start", {
     headSha: context.headSha,
     liveStatePath: context.liveStatePath,
+    producerLogPath: session.producerLogPath,
   });
 
   let producerExited = false;
@@ -675,6 +677,7 @@ async function main() {
         worktreePath: task.worktreePath,
         branchName: task.branchName,
         files: batch.files,
+        findingCount: Array.isArray(batch.findings) ? batch.findings.length : 0,
       });
     }
   };
@@ -696,6 +699,12 @@ async function main() {
           if (finalArtifact) {
             registerBatches(context.finalArtifactPath, finalArtifact, false);
             summary.finalArtifactPath = context.finalArtifactPath;
+            emitEvent(session, summary, "review-result", {
+              result: finalArtifact.result ?? "UNKNOWN",
+              findingCount: Array.isArray(finalArtifact.findings) ? finalArtifact.findings.length : 0,
+              summary: finalArtifact.summary ?? "No summary provided",
+              artifactPath: context.finalArtifactPath,
+            });
           }
         }
         summary.finalArtifactDispatched = true;
@@ -746,6 +755,7 @@ async function main() {
           batchId: task.batchId,
           role: task.role,
           worktreePath: task.worktreePath,
+          targetBranch: context.branch,
         });
 
         try {
@@ -759,6 +769,7 @@ async function main() {
             batchId: task.batchId,
             role: task.role,
             commits,
+            targetBranch: context.branch,
           });
         } catch (integrationError) {
           task.status = "failed";

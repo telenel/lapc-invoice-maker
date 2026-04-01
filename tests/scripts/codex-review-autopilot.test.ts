@@ -174,10 +174,65 @@ describe("codex review autopilot helper", () => {
   it("formats readable event lines", () => {
     expect(
       formatEventLine({
+        type: "session-start",
+        sessionId: "session-1",
+        branch: "feature",
+        headSha: "abc123",
+      }),
+    ).toBe("AUTOPILOT session started: session-1 | branch=feature | head=abc123");
+
+    expect(
+      formatEventLine({
+        type: "producer-start",
+        headSha: "abc123",
+        producerLogPath: "/repo/.git/laportal/autopilot/session-1/producer.log",
+      }),
+    ).toBe(
+      "AUTOPILOT review started: head=abc123 | producer_log=/repo/.git/laportal/autopilot/session-1/producer.log",
+    );
+
+    expect(
+      formatEventLine({
+        type: "review-result",
+        result: "FAIL",
+        findingCount: 2,
+        summary: "Two issues remain",
+      }),
+    ).toBe("AUTOPILOT review result: FAIL | findings=2 | summary=Two issues remain");
+
+    expect(
+      formatEventLine({
+        type: "batch-launch",
+        role: "worker",
+        batchId: "B1",
+        findingCount: 2,
+        worktreePath: "/tmp/coordinator-b1",
+      }),
+    ).toBe("AUTOPILOT launched worker B1 | findings=2 | worktree=/tmp/coordinator-b1");
+
+    expect(
+      formatEventLine({
+        type: "task-integrating",
+        batchId: "B1",
+        targetBranch: "feature",
+      }),
+    ).toBe("AUTOPILOT integrating B1 into feature");
+
+    expect(
+      formatEventLine({
         type: "task-integrated",
         batchId: "B1",
+        targetBranch: "feature",
         commits: ["deadbeef", "cafebabe"],
       }),
-    ).toBe("AUTOPILOT integrated B1 (2 commits)");
+    ).toBe("AUTOPILOT integrated B1 into feature (2 commits)");
+
+    expect(
+      formatEventLine({
+        type: "session-complete",
+        taskCount: 2,
+        failedTaskCount: 1,
+      }),
+    ).toBe("AUTOPILOT session complete: tasks=2 failed=1 pushes=0");
   });
 });

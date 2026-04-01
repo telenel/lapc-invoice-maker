@@ -93,9 +93,9 @@ Local AI workflow is hard-coded through tracked scripts and hooks:
 
 `npm run laportal:review` always keeps the latest text report at `.git/laportal/codex-review.txt`, the latest structured artifact at `.git/laportal/codex-review.json`, and a rolling history of the last 20 review runs in `.git/laportal/review-history/`.
 
-`npm run laportal:review:autopilot` is the one-command workflow. It starts the live review producer, watches the live queue, and launches deterministic remediation workers into separate temporary worktrees as safe batches become available. It keeps the producer checkout read-only, falls back to the final review artifact if no live hints are emitted, and writes a session summary under `.git/laportal/autopilot/`.
+`npm run laportal:review:autopilot` is the one-command workflow. It starts the live review producer internally, watches the live queue, and launches deterministic remediation workers into separate temporary worktrees as safe batches become available. It keeps the producer checkout read-only, falls back to the final review artifact if no live hints are emitted, and writes a session summary under `.git/laportal/autopilot/`.
 
-While it runs, the wrapper now emits explicit lifecycle lines such as worker launch, integration, and cleanup. Each run also writes:
+While it runs, the terminal shows only explicit autopilot lifecycle lines such as review result, worker launch, integration, and cleanup. The raw review stream is written to the session `producer.log` file instead of being mirrored to stdout. Each run also writes:
 
 - `.git/laportal/autopilot/<session-id>/events.jsonl`
 - `.git/laportal/autopilot/<session-id>/summary.json`

@@ -125,7 +125,8 @@ These are the hard-coded workflow entrypoints. Do not replace them with ad hoc c
 - Starts the live producer, polls the live snapshot, and launches remediation workers directly from the wrapper.
 - Delegates only non-overlapping batches into temporary worktrees; the producer checkout stays untouched during review.
 - Falls back to the final `.git/laportal/codex-review.json` artifact if no live findings are available.
-- Prints explicit lifecycle updates for worker launch, integration, cherry-pick completion, and cleanup.
+- Prints explicit lifecycle updates for review result, worker launch, integration, cherry-pick completion, and cleanup.
+- Keeps the raw review stream in the session `producer.log` file instead of mirroring it to stdout.
 - Writes session logs and both machine-readable and human-readable summaries under `.git/laportal/autopilot/<session-id>/`.
 - Overwrites stable pointers at `.git/laportal/autopilot/latest-session.json`, `.git/laportal/autopilot/latest-events.jsonl`, `.git/laportal/autopilot/latest-summary.json`, and `.git/laportal/autopilot/latest-summary.txt`.
 - Prunes older autopilot session directories automatically.
