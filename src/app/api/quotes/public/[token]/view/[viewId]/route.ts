@@ -16,10 +16,13 @@ async function updateDuration(req: NextRequest, ctx: RouteContext) {
     return NextResponse.json({ success: true });
   } catch (err) {
     const code = (err as { code?: string }).code;
-    if (code === "NOT_FOUND" || code === "INVALID_INPUT") {
+    if (code === "NOT_FOUND") {
       return NextResponse.json({ error: (err as Error).message }, { status: 404 });
     }
-    console.error("POST /api/quotes/public/[token]/view/[viewId] failed:", err);
+    if (code === "INVALID_INPUT") {
+      return NextResponse.json({ error: (err as Error).message }, { status: 400 });
+    }
+    console.error(`${req.method} /api/quotes/public/[token]/view/[viewId] failed:`, err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -339,8 +339,8 @@ export const quoteService = {
         message: `Payment method: ${normalizedPayment.paymentMethod}`,
         quoteId: quote.id,
       });
-    } catch {
-      // Non-critical
+    } catch (err) {
+      console.error("Failed to publish PAYMENT_DETAILS_RECEIVED notification:", err);
     }
 
     return {

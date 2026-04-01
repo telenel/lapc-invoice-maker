@@ -11,6 +11,7 @@ import {
   staffAccountNumberSchema,
   adminUserCreateSchema,
   adminUserUpdateSchema,
+  quoteUpdateSchema,
 } from "@/lib/validators";
 
 // ---------------------------------------------------------------------------
@@ -539,6 +540,35 @@ describe("adminUserUpdateSchema", () => {
 
   it("rejects invalid role", () => {
     const result = adminUserUpdateSchema.safeParse({ role: "superadmin" });
+    expect(result.success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// quoteUpdateSchema
+// ---------------------------------------------------------------------------
+describe("quoteUpdateSchema", () => {
+  it("accepts payment-backfill fields for accepted quote repair flows", () => {
+    const result = quoteUpdateSchema.safeParse({
+      paymentMethod: "ACCOUNT_NUMBER",
+      paymentAccountNumber: "SAP-12345",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects invalid payment methods", () => {
+    const result = quoteUpdateSchema.safeParse({
+      paymentMethod: "WIRE_TRANSFER",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("requires an account number when the payment method is ACCOUNT_NUMBER", () => {
+    const result = quoteUpdateSchema.safeParse({
+      paymentMethod: "ACCOUNT_NUMBER",
+      paymentAccountNumber: "   ",
+    });
+
     expect(result.success).toBe(false);
   });
 });

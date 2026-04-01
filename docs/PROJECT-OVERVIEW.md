@@ -19,7 +19,7 @@ Operations portal for Los Angeles Pierce College. Handles invoice drafting, fina
 | Calendar | FullCalendar (catering + manual events + birthdays) |
 | Email | Power Automate webhook (shared mailbox) |
 | CI/CD | GitHub Actions (setup → lint/build/test parallel → deploy) |
-| Code Review | Hard-coded local AI review + GitHub PR review |
+| Checks | GitHub Actions CI |
 
 ---
 
@@ -331,7 +331,7 @@ Quotes can be shared with external recipients via token-based public links.
 
 1. User clicks "Mark as Sent" on a DRAFT quote → backend generates a UUID `shareToken`, sets status to SENT
 2. A dialog appears with the share URL, a "Copy Link" button, and an "Email Link" button (opens `mailto:`)
-3. Recipient opens the link → public review page at `/quotes/review/[token]` (no auth required)
+3. Recipient opens the link → public quote page (no auth required)
 4. Page visit is recorded as a `QuoteView` (IP, user-agent, referrer, viewport, duration via `sendBeacon`)
 5. Recipient clicks "Approve" or "Decline" → quote status updates, notification pushed to creator
 
@@ -348,7 +348,7 @@ Real-time notifications via Server-Sent Events:
 
 | Route | Method | Purpose |
 |-------|--------|---------|
-| `/quotes/review/[token]` | Page | Public quote review page |
+| Quote sharing page | Page | Public quote page |
 | `/api/quotes/public/[token]` | GET | Fetch quote by share token |
 | `/api/quotes/public/[token]/view` | POST | Register page view |
 | `/api/quotes/public/[token]/view/[viewId]` | PATCH | Update view duration (beacon) |
@@ -518,29 +518,6 @@ env: {
 ```
 
 In production, `NEXT_PUBLIC_BUILD_SHA` reflects the exact commit deployed. Falls back to `"dev"` when git is unavailable.
-
-### PR Workflow
-
-All changes go through pull requests targeting `main`. PRs are squash-merged after CI passes. Direct pushes to `main` are not used for feature work.
-
-**PRs are finalized once created** — no further pushes to a branch with an open PR, except to fix review follow-up issues (`CR_FIX=1 git push`). Enforced by a tracked pre-push hook in `hooks/pre-push` (auto-configured via `npm install` postinstall script).
-
-**Branch protection on `main`:**
-- Required checks: Lint, Build, Tests (all must pass)
-- Required reviews: 1 approval
-- Stale review dismissal is OFF
-- Conversation resolution required — all review threads must be resolved before merge
-- Admin bypass allowed (`gh pr merge --admin` when needed)
-
-CodeRabbit may comment on PRs, but it is advisory only. Local AI review is performed before PR creation, and the only required repository check remains the standard CI workflow.
-
-Required local workflow commands:
-
-- `npm run ship-check`
-- `npm run review:codex`
-- `./scripts/publish-pr.sh`
-
-Hard-coded workflow controls are intentionally stronger than agent memory or plain-text prompts. Hooks, scripts, CI, and permission limits are the primary enforcement layers for this repo.
 
 ### CI/CD Pipeline
 

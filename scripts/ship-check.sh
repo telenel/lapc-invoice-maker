@@ -8,8 +8,8 @@ stamp_file="$stamp_dir/ship-check.env"
 
 cd "$repo_root"
 
-if ! git diff --quiet || ! git diff --cached --quiet; then
-  echo "BLOCKED: ship-check requires a clean working tree."
+if [ -n "$(git status --porcelain=v1 --untracked-files=all)" ]; then
+  echo "BLOCKED: ship-check requires a clean working tree with no staged, unstaged, or untracked changes."
   echo "Commit or stash changes first so lint, tests, and build run against the exact HEAD you plan to push."
   echo ""
   git status --short --branch
@@ -19,6 +19,7 @@ fi
 head_sha=$(git rev-parse HEAD)
 timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
+echo "==> Validating HEAD $head_sha"
 echo "==> git status"
 git status --short --branch
 

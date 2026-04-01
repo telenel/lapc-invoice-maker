@@ -1,18 +1,23 @@
-# LAPortal Codex Guide
-
-Codex should use `docs/AI-WORKFLOW.md` as the shared workflow authority for this repo.
+# LAPortal Guide
 
 ## Read First
 
 1. `README.md`
 2. `docs/PROJECT-OVERVIEW.md`
-3. `docs/AI-WORKFLOW.md`
-4. `prisma/schema.prisma` for data model changes
+3. `prisma/schema.prisma` for data model changes
 
-## Codex Notes
+## Notes
 
-- Codex is supported on this repo alongside Claude Code.
-- Follow the shared rules in `docs/AI-WORKFLOW.md` for setup, validation, git workflow, and architecture boundaries.
-- Do not use worktree-based isolation modes on this repo.
-- Use the repo validation commands from `docs/AI-WORKFLOW.md`: `npm run ship-check` and `npm run review:codex`.
-- Codex may publish a reviewed branch with `./scripts/publish-pr.sh`.
+- Worktrees are allowed and may be used when they are convenient for isolating or organizing work.
+- Use the repo validation command before handing changes back.
+
+## Branching And PRs
+
+- Start each feature from a fresh `main`: `git checkout main && git pull`.
+- Create one focused branch per concern: `git checkout -b feat/thing`.
+- Keep branches short-lived and do not stack branches.
+- Commit often, but keep each commit scoped to the branch's one concern.
+- Run `npm run ship-check` before pushing.
+- Push the branch when the work is ready for PR review.
+- Let CodeRabbit and CI review the PR.
+- Merge before starting the next feature.
