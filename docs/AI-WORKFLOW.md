@@ -125,8 +125,15 @@ These are the hard-coded workflow entrypoints. Do not replace them with ad hoc c
 - Starts the live producer, polls the live snapshot, and launches remediation workers directly from the wrapper.
 - Delegates only non-overlapping batches into temporary worktrees; the producer checkout stays untouched during review.
 - Falls back to the final `.git/laportal/codex-review.json` artifact if no live findings are available.
-- Writes session logs and a machine-readable summary under `.git/laportal/autopilot/<session-id>/`.
+- Prints explicit lifecycle updates for worker launch, integration, cherry-pick completion, and cleanup.
+- Writes session logs and both machine-readable and human-readable summaries under `.git/laportal/autopilot/<session-id>/`.
 - Use this when you want the full pipeline, not just a review artifact.
+
+### `npm run laportal:review:watch`
+
+- Reads the latest autopilot session under `.git/laportal/autopilot/`.
+- Prints the latest `summary.txt`.
+- Supports `--follow` to stream the latest `events.jsonl` file in a second terminal while autopilot is running.
 
 ### `npm run laportal:review:triage`
 
@@ -154,7 +161,7 @@ These are the hard-coded workflow entrypoints. Do not replace them with ad hoc c
 4. It creates separate temporary worktrees for delegated batches and runs worker Codex sessions there.
 5. If the review emits no live findings, the wrapper waits for the final `.git/laportal/codex-review.json` artifact and dispatches from that instead.
 6. It cherry-picks completed worker commits back onto the current branch and removes the temporary worktrees.
-7. It writes the final session summary under `.git/laportal/autopilot/<session-id>/summary.json`.
+7. It writes the final session summary under `.git/laportal/autopilot/<session-id>/summary.json` and `.git/laportal/autopilot/<session-id>/summary.txt`, plus an event log at `.git/laportal/autopilot/<session-id>/events.jsonl`.
 
 ### `hooks/pre-push`
 

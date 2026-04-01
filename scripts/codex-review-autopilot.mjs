@@ -180,13 +180,102 @@ function createSession(context) {
     sessionDir,
     worktreeRoot,
     startedAt,
+    eventsPath: path.join(sessionDir, "events.jsonl"),
     producerLogPath: path.join(sessionDir, "producer.log"),
     summaryPath: path.join(sessionDir, "summary.json"),
+    summaryTextPath: path.join(sessionDir, "summary.txt"),
   };
+}
+
+function formatTaskSummaryLine(task) {
+  const details = [
+    `${task.batchId} [${task.role}] ${task.status}`,
+    task.branchName ? `branch=${task.branchName}` : null,
+    task.exitCode != null ? `exit=${task.exitCode}` : null,
+    Array.isArray(task.integratedCommits) && task.integratedCommits.length > 0
+      ? `integrated=${task.integratedCommits.length}`
+      : null,
+  ].filter(Boolean);
+  return `- ${details.join(" | ")}`;
+}
+
+export function buildSummaryText(summary) {
+  const lines = [
+    "LAPortal review autopilot summary",
+    `session: ${summary.sessionId}`,
+    `started: ${summary.startedAt ?? "unknown"}`,
+    `repo: ${summary.repoRoot}`,
+    `branch: ${summary.branch}`,
+    `head: ${summary.headSha}`,
+    `producer exit: ${summary.producerExitCode ?? "running"}`,
+    `live snapshot: ${summary.liveStatePath ?? "missing"}`,
+    `final artifact: ${summary.finalArtifactPath ?? "pending"}`,
+    `events: ${summary.eventsPath ?? "missing"}`,
+    `producer log: ${summary.producerLogPath ?? "missing"}`,
+    "",
+    "Tasks:",
+  ];
+
+  if (!summary.tasks || summary.tasks.length === 0) {
+    lines.push("- none");
+  } else {
+    for (const task of summary.tasks) {
+      lines.push(formatTaskSummaryLine(task));
+      if (task.logPath) {
+        lines.push(`  log: ${task.logPath}`);
+      }
+      if (task.error) {
+        lines.push(`  error: ${task.error}`);
+      }
+      if (task.cleanup?.errors?.length) {
+        lines.push(`  cleanup errors: ${task.cleanup.errors.join(" ; ")}`);
+      }
+    }
+  }
+
+  return `${lines.join("\n")}\n`;
 }
 
 function writeSummary(session, payload) {
   writeFileSync(session.summaryPath, `${JSON.stringify(payload, null, 2)}\n`);
+  writeFileSync(session.summaryTextPath, buildSummaryText(payload));
+}
+
+export function formatEventLine(event) {
+  switch (event.type) {
+    case "session-start":
+      return `AUTOPILOT session started: ${event.sessionId}`;
+    case "producer-start":
+      return `AUTOPILOT review started for ${event.headSha}`;
+    case "batch-launch":
+      return `AUTOPILOT launched ${event.role} ${event.batchId} in ${event.worktreePath}`;
+    case "task-failed":
+      return `AUTOPILOT ${event.batchId} failed: ${event.error}`;
+    case "task-integrating":
+      return `AUTOPILOT integrating ${event.batchId}`;
+    case "task-integrated":
+      return `AUTOPILOT integrated ${event.batchId} (${event.commits?.length ?? 0} commit${event.commits?.length === 1 ? "" : "s"})`;
+    case "task-cleanup":
+      return `AUTOPILOT cleaned ${event.batchId}: worktree=${event.worktreeRemoved ? "yes" : "no"} branch=${event.branchDeleted ? "yes" : "no"}`;
+    case "producer-complete":
+      return `AUTOPILOT review completed with exit ${event.exitCode}`;
+    case "session-complete":
+      return `AUTOPILOT session complete: tasks=${event.taskCount} failed=${event.failedTaskCount}`;
+    default:
+      return `AUTOPILOT ${event.type}`;
+  }
+}
+
+function emitEvent(session, summary, type, fields = {}) {
+  const event = {
+    type,
+    createdAt: new Date().toISOString(),
+    sessionId: summary.sessionId,
+    ...fields,
+  };
+  appendFileSync(session.eventsPath, `${JSON.stringify(event)}\n`);
+  process.stdout.write(`${formatEventLine(event)}\n`);
+  return event;
 }
 
 function createWorktree(context, session, batch, role) {
@@ -429,8 +518,10 @@ async function main() {
     branch: context.branch,
     repoRoot: context.repoRoot,
     worktreeRoot: session.worktreeRoot,
+    eventsPath: session.eventsPath,
     producerLogPath: session.producerLogPath,
     summaryPath: session.summaryPath,
+    summaryTextPath: session.summaryTextPath,
     liveStatePath: context.liveStatePath,
     finalArtifactPath: null,
     producerExitCode: null,
@@ -438,6 +529,16 @@ async function main() {
     tasks: [],
   };
   writeSummary(session, summary);
+  emitEvent(session, summary, "session-start", {
+    repoRoot: context.repoRoot,
+    branch: context.branch,
+    headSha: context.headSha,
+    worktreeRoot: session.worktreeRoot,
+  });
+  emitEvent(session, summary, "producer-start", {
+    headSha: context.headSha,
+    liveStatePath: context.liveStatePath,
+  });
 
   let producerExited = false;
   let producerExitCode = null;
@@ -485,6 +586,14 @@ async function main() {
         findingIds: batch.findingIds,
       });
       writeSummary(session, summary);
+      emitEvent(session, summary, "batch-launch", {
+        batchId: batch.id,
+        role,
+        artifactPath,
+        worktreePath: task.worktreePath,
+        branchName: task.branchName,
+        files: batch.files,
+      });
     }
   };
 
@@ -528,6 +637,19 @@ async function main() {
           const cleanup = cleanupTaskWorktree(context, task);
           updateSummaryTask(summary, task, { cleanup });
           writeSummary(session, summary);
+          emitEvent(session, summary, "task-failed", {
+            batchId: task.batchId,
+            role: task.role,
+            exitCode: code,
+            signal,
+            error: error ?? `Worker exited with code ${code}`,
+          });
+          emitEvent(session, summary, "task-cleanup", {
+            batchId: task.batchId,
+            worktreeRemoved: cleanup.worktreeRemoved,
+            branchDeleted: cleanup.branchDeleted,
+            errors: cleanup.errors,
+          });
           continue;
         }
 
@@ -538,6 +660,11 @@ async function main() {
           signal,
         });
         writeSummary(session, summary);
+        emitEvent(session, summary, "task-integrating", {
+          batchId: task.batchId,
+          role: task.role,
+          worktreePath: task.worktreePath,
+        });
 
         try {
           const commits = integrateTask(context, task);
@@ -545,6 +672,11 @@ async function main() {
           updateSummaryTask(summary, task, {
             status: "completed",
             integratedCommits: commits,
+          });
+          emitEvent(session, summary, "task-integrated", {
+            batchId: task.batchId,
+            role: task.role,
+            commits,
           });
         } catch (integrationError) {
           task.status = "failed";
@@ -555,11 +687,27 @@ async function main() {
                 ? integrationError.message
                 : String(integrationError),
           });
+          emitEvent(session, summary, "task-failed", {
+            batchId: task.batchId,
+            role: task.role,
+            exitCode: code,
+            signal,
+            error:
+              integrationError instanceof Error
+                ? integrationError.message
+                : String(integrationError),
+          });
         }
 
         const cleanup = cleanupTaskWorktree(context, task);
         updateSummaryTask(summary, task, { cleanup });
         writeSummary(session, summary);
+        emitEvent(session, summary, "task-cleanup", {
+          batchId: task.batchId,
+          worktreeRemoved: cleanup.worktreeRemoved,
+          branchDeleted: cleanup.branchDeleted,
+          errors: cleanup.errors,
+        });
       }
 
       const runningTasks = tasks.some((task) => task.status === "running");
@@ -576,10 +724,20 @@ async function main() {
       : summary.finalArtifactPath;
     summary.liveStatePath = existsSync(context.liveStatePath) ? context.liveStatePath : null;
     writeSummary(session, summary);
+    emitEvent(session, summary, "producer-complete", {
+      exitCode: producerExitCode,
+      finalArtifactPath: summary.finalArtifactPath,
+    });
   }
 
+  emitEvent(session, summary, "session-complete", {
+    taskCount: summary.tasks.length,
+    failedTaskCount: summary.tasks.filter((task) => task.status === "failed").length,
+  });
   process.stdout.write("\n==> Autopilot summary\n");
   process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);
+  process.stdout.write(`Summary text: ${session.summaryTextPath}\n`);
+  process.stdout.write(`Events log: ${session.eventsPath}\n`);
 
   const hasFailedTasks = summary.tasks.some((task) => task.status === "failed");
   process.exitCode =

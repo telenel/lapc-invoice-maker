@@ -1,6 +1,8 @@
 import {
   batchSignature,
+  buildSummaryText,
   buildAutopilotPrompt,
+  formatEventLine,
   parseAutopilotArgs,
   selectDispatchableBatches,
 } from "../../scripts/codex-review-autopilot.mjs";
@@ -129,5 +131,45 @@ describe("codex review autopilot helper", () => {
     expect(prompt).toContain(
       "Commit all completed changes in this worktree before exiting using exactly: autopilot(B1): remediate codex findings",
     );
+  });
+
+  it("formats a human-readable session summary", () => {
+    const summary = buildSummaryText({
+      sessionId: "session-1",
+      startedAt: "2026-03-31T21:00:00Z",
+      repoRoot: "/repo",
+      branch: "feature",
+      headSha: "abc123",
+      producerExitCode: 0,
+      liveStatePath: "/repo/.git/laportal/codex-review.live.json",
+      finalArtifactPath: "/repo/.git/laportal/codex-review.json",
+      eventsPath: "/repo/.git/laportal/autopilot/session-1/events.jsonl",
+      producerLogPath: "/repo/.git/laportal/autopilot/session-1/producer.log",
+      tasks: [
+        {
+          batchId: "B1",
+          role: "worker",
+          status: "completed",
+          branchName: "autopilot/abc123/worker-b1",
+          exitCode: 0,
+          integratedCommits: ["deadbeef"],
+          logPath: "/tmp/B1.log",
+        },
+      ],
+    });
+
+    expect(summary).toContain("LAPortal review autopilot summary");
+    expect(summary).toContain("session: session-1");
+    expect(summary).toContain("- B1 [worker] completed | branch=autopilot/abc123/worker-b1 | exit=0 | integrated=1");
+  });
+
+  it("formats readable event lines", () => {
+    expect(
+      formatEventLine({
+        type: "task-integrated",
+        batchId: "B1",
+        commits: ["deadbeef", "cafebabe"],
+      }),
+    ).toBe("AUTOPILOT integrated B1 (2 commits)");
   });
 });

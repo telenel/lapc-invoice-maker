@@ -46,6 +46,7 @@ npm run dev              # Start dev server (localhost:3000)
 npm run ship-check       # git status + lint + test + build + stamp current HEAD
 npm run laportal:review     # Local Codex review against main; writes text + JSON artifacts and stamps current HEAD
 npm run laportal:review:autopilot  # One-command live review + orchestrator + delegated remediation
+npm run laportal:review:watch -- --follow  # Watch the latest autopilot session summary and event log
 npm run laportal:review:live  # Stream the review and publish live finding events into .git/laportal/codex-review.live.jsonl
 npm run laportal:review:live:triage  # Batch the current live findings from .git/laportal/codex-review.live.json
 npm run laportal:review:loop  # Run review, then print remediation batches when the result is FAIL
@@ -93,6 +94,14 @@ Local AI workflow is hard-coded through tracked scripts and hooks:
 `npm run laportal:review` always keeps the latest text report at `.git/laportal/codex-review.txt`, the latest structured artifact at `.git/laportal/codex-review.json`, and a rolling history of the last 20 review runs in `.git/laportal/review-history/`.
 
 `npm run laportal:review:autopilot` is the one-command workflow. It starts the live review producer, watches the live queue, and launches deterministic remediation workers into separate temporary worktrees as safe batches become available. It keeps the producer checkout read-only, falls back to the final review artifact if no live hints are emitted, and writes a session summary under `.git/laportal/autopilot/`.
+
+While it runs, the wrapper now emits explicit lifecycle lines such as worker launch, integration, and cleanup. Each run also writes:
+
+- `.git/laportal/autopilot/<session-id>/events.jsonl`
+- `.git/laportal/autopilot/<session-id>/summary.json`
+- `.git/laportal/autopilot/<session-id>/summary.txt`
+
+Use `npm run laportal:review:watch -- --follow` in a second terminal if you want a live view of the latest session without reading raw worker logs.
 
 `npm run laportal:review:live` streams the review output, records any `LIVE-FINDING:` lines emitted by the review prompt hook, and appends live queue events to `.git/laportal/codex-review.live.jsonl` plus a snapshot at `.git/laportal/codex-review.live.json`. Live hints are opportunistic; the final `.git/laportal/codex-review.json` artifact remains the canonical fallback.
 
