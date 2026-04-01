@@ -33,7 +33,7 @@ function publicResponseErrorMessage(status: string | null | undefined): string {
 }
 
 function mergeCateringDetails(
-  existing: Prisma.JsonValue | null | undefined,
+  existing: CateringDetails | Prisma.JsonValue | null | undefined,
   next: CateringDetails | Prisma.InputJsonValue | null | undefined
 ): Prisma.NullableJsonNullValueInput | Prisma.InputJsonValue | undefined {
   if (next === undefined) {
