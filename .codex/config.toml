@@ -1,5 +1,0 @@
-# LAPortal project-level Codex defaults.
-# Used by local Codex sessions and by Claude's Codex plugin when the project is trusted.
-
-model = "gpt-5.4-mini"
-model_reasoning_effort = "xhigh"

@@ -1,15 +1,7 @@
 import { spawnSync } from "node:child_process";
-import {
-  copyFileSync,
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { ensureCleanRepoWorktree } from "../../scripts/codex-review-autopilot.mjs";
 
 const repoRoot = process.cwd();
 const tempDirs: string[] = [];
@@ -57,19 +49,6 @@ function createRepoFixture(trackedPaths: string[]) {
   return repoDir;
 }
 
-function createFakeCli(repoDir: string, name: string) {
-  const binDir = path.join(repoDir, "bin");
-  mkdirSync(binDir, { recursive: true });
-  const invocationLog = path.join(repoDir, `${name}.invoked`);
-  const script = `#!/bin/sh
-printf '%s %s\n' ${JSON.stringify(name)} "$*" >> ${JSON.stringify(invocationLog)}
-exit 99
-`;
-  const cliPath = path.join(binDir, name);
-  writeFileSync(cliPath, script, { mode: 0o755 });
-  return { binDir, invocationLog };
-}
-
 function runScript(repoDir: string, scriptPath: string, env: NodeJS.ProcessEnv = {}) {
   return spawnSync("/bin/bash", [scriptPath], {
     cwd: repoDir,
@@ -78,7 +57,7 @@ function runScript(repoDir: string, scriptPath: string, env: NodeJS.ProcessEnv =
   });
 }
 
-describe("workflow dirty-tree gates", () => {
+describe("ship-check dirty-tree gate", () => {
   afterEach(() => {
     while (tempDirs.length > 0) {
       const dir = tempDirs.pop();
@@ -99,63 +78,5 @@ describe("workflow dirty-tree gates", () => {
     expect(output).toContain("BLOCKED: ship-check requires a clean working tree with no staged, unstaged, or untracked changes.");
     expect(output).toContain("?? stray-new-file.txt");
     expect(output).not.toContain("npm run lint");
-  });
-
-  it("blocks local Codex review when an untracked file is present", () => {
-    const repoDir = createRepoFixture([
-      "scripts/codex-review-local.sh",
-      "scripts/codex-review-artifact.mjs",
-      ".codex/prompts/local-review.md",
-    ]);
-    const { binDir, invocationLog } = createFakeCli(repoDir, "codex");
-    writeFileSync(path.join(repoDir, "stray-new-file.txt"), "untracked\n");
-
-    const result = runScript(repoDir, "scripts/codex-review-local.sh", {
-      PATH: `${binDir}:${process.env.PATH ?? ""}`,
-    });
-    const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
-
-    expect(result.status).toBe(1);
-    expect(output).toContain(
-      "BLOCKED: local Codex review requires a clean working tree with no staged, unstaged, or untracked changes.",
-    );
-    expect(output).toContain("?? stray-new-file.txt");
-    expect(existsSync(invocationLog)).toBe(false);
-  });
-
-  it("blocks autopilot when an untracked file is present", () => {
-    const repoDir = createRepoFixture(["scripts/codex-review-autopilot.mjs"]);
-    writeFileSync(path.join(repoDir, "stray-new-file.txt"), "untracked\n");
-
-    let error: unknown;
-    try {
-      ensureCleanRepoWorktree(repoDir);
-    } catch (thrown) {
-      error = thrown;
-    }
-
-    expect(error).toBeInstanceOf(Error);
-    expect(error instanceof Error ? error.message : String(error)).toContain(
-      "Autopilot requires a clean working tree before it can integrate worker commits.",
-    );
-    expect(error instanceof Error ? error.message : String(error)).toContain("?? stray-new-file.txt");
-  });
-
-  it("blocks publish-pr when an untracked file is present", () => {
-    const repoDir = createRepoFixture(["scripts/publish-pr.sh"]);
-    const { binDir, invocationLog } = createFakeCli(repoDir, "gh");
-    writeFileSync(path.join(repoDir, "stray-new-file.txt"), "untracked\n");
-
-    const result = runScript(repoDir, "scripts/publish-pr.sh", {
-      PATH: `${binDir}:${process.env.PATH ?? ""}`,
-    });
-    const output = `${result.stdout ?? ""}${result.stderr ?? ""}`;
-
-    expect(result.status).toBe(1);
-    expect(output).toContain(
-      "BLOCKED: publish-pr requires a clean working tree with no staged, unstaged, or untracked changes.",
-    );
-    expect(output).toContain("?? stray-new-file.txt");
-    expect(existsSync(invocationLog)).toBe(false);
   });
 });

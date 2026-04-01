@@ -10,16 +10,6 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "ship-check": "./scripts/ship-check.sh",
-    "laportal:review": "./scripts/codex-review-local.sh",
-    "laportal:review:live": "node ./scripts/codex-review-live.mjs",
-    "laportal:review:live:triage": "node ./scripts/codex-review-remediation.mjs triage --artifact .git/laportal/codex-review.live.json",
-    "laportal:review:autopilot": "./scripts/codex-review-autopilot.sh",
-    "laportal:review:watch": "node ./scripts/codex-review-watch.mjs",
-    "laportal:review:loop": "./scripts/codex-review-loop.sh",
-    "laportal:review:json": "./scripts/codex-review-local.sh --json",
-    "laportal:review:findings": "node ./scripts/codex-review-artifact.mjs print-findings",
-    "laportal:review:triage": "node ./scripts/codex-review-remediation.mjs triage",
-    "laportal:review:prompt": "node ./scripts/codex-review-remediation.mjs prompt",
     "postinstall": "node ./scripts/postinstall.js"
   },
   "dependencies": {

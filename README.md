@@ -44,17 +44,6 @@ npm install              # Install dependencies + configure git hooks
 npx prisma generate      # Generate Prisma client
 npm run dev              # Start dev server (localhost:3000)
 npm run ship-check       # git status + lint + test + build + stamp current HEAD
-npm run laportal:review     # Local Codex review against main; writes text + JSON artifacts and stamps current HEAD
-npm run laportal:review:autopilot  # One-command live review + orchestrator + delegated remediation
-npm run laportal:review:watch -- --follow  # Watch the latest autopilot session summary and event log
-npm run laportal:review:live  # Stream the review and publish live finding events into .git/laportal/codex-review.live.jsonl
-npm run laportal:review:live:triage  # Batch the current live findings from .git/laportal/codex-review.live.json
-npm run laportal:review:loop  # Run review, then print remediation batches when the result is FAIL
-npm run laportal:review:json  # Same review, but prints the structured JSON artifact to stdout
-npm run laportal:review -- --focus src/domains/quote/service.ts  # Review only matching changed paths
-npm run laportal:review:findings  # Print unresolved findings from the latest Codex artifact
-npm run laportal:review:triage  # Group the latest unresolved findings into remediation batches
-npm run laportal:review:prompt -- --batch B1  # Print a bounded worker prompt for a single remediation batch
 npm test                 # Run tests (350 tests)
 npm run build            # Production build
 ```
@@ -85,41 +74,9 @@ Docker Compose behind Traefik on [montalvo.io](https://montalvo.io). CI/CD via G
 
 All changes go through PRs with squash merge. PRs are finalized once created — no further pushes except review follow-up fixes (`CR_FIX=1 git push`). Build version (git SHA) is displayed in the nav bar.
 
-Local AI workflow is hard-coded through tracked scripts and hooks:
-
-- `npm run ship-check`
-- `npm run laportal:review`
-
-`npm run laportal:review` always keeps the latest text report at `.git/laportal/codex-review.txt`, the latest structured artifact at `.git/laportal/codex-review.json`, and a rolling history of the last 20 review runs in `.git/laportal/review-history/`.
-
-`npm run laportal:review:autopilot` is the one-command workflow. It starts the live review producer internally, watches the live queue, and launches deterministic remediation workers into separate temporary worktrees as safe batches become available. It keeps the producer checkout read-only, falls back to the final review artifact if no live hints are emitted, and writes a session summary under `.git/laportal/autopilot/`.
-
-The repo currently pins Codex to `gpt-5.4-mini` with `xhigh` reasoning effort in [`.codex/config.toml`](.codex/config.toml). The review scripts also pass those values explicitly, and you can override them for a run with `LAPORTAL_CODEX_MODEL` and `LAPORTAL_CODEX_REASONING_EFFORT`.
-
-While it runs, the terminal shows only explicit autopilot lifecycle lines such as review start, periodic review heartbeats, task start, task finish, integration, cleanup, and a short plain-text summary of successful fixes with touched paths. The raw review stream is written to the session `producer.log` file instead of being mirrored to stdout. Each run also writes:
-
-- `.git/laportal/autopilot/<session-id>/events.jsonl`
-- `.git/laportal/autopilot/<session-id>/summary.json`
-- `.git/laportal/autopilot/<session-id>/summary.txt`
-- `.git/laportal/autopilot/latest-session.json`
-- `.git/laportal/autopilot/latest-events.jsonl`
-- `.git/laportal/autopilot/latest-summary.json`
-- `.git/laportal/autopilot/latest-summary.txt`
-
-The per-run `<session-id>/` directory is preserved for history. The `latest-*` files are overwritten on each autopilot run so follow-up tooling always has one stable target. Older session directories are pruned automatically.
-Temporary worker worktrees and their temp branches are removed automatically after integration or failure cleanup. The parent temp worktree root is also removed when it is empty. Worker sessions never push; autopilot only cherry-picks their local commits onto the current branch.
-If the final structured review artifact is slow to appear, autopilot waits for it and only falls back to the live finding snapshot after a grace period. A review `FAIL` with unresolved findings and no launched remediation is treated as an autopilot failure, not a success.
-
-Use `npm run laportal:review:watch -- --follow` in a second terminal if you want a live view of the latest session without reading raw worker logs.
-
-`npm run laportal:review:live` streams the review output, records any `LIVE-FINDING:` lines emitted by the review prompt hook, and appends live queue events to `.git/laportal/codex-review.live.jsonl` plus a snapshot at `.git/laportal/codex-review.live.json`. Live hints are opportunistic; the final `.git/laportal/codex-review.json` artifact remains the canonical fallback.
-
-`npm run laportal:review:triage` reads the latest structured artifact and groups unresolved findings by overlapping file ownership so an agent can keep coupled fixes local and delegate only bounded batches. `npm run laportal:review:prompt -- --batch B1` prints a worker-ready prompt for one batch.
-
 ## Project Documentation
 
 - [docs/PROJECT-OVERVIEW.md](docs/PROJECT-OVERVIEW.md) — Comprehensive architecture, workflows, API reference
-- [docs/AI-WORKFLOW.md](docs/AI-WORKFLOW.md) — Hard-coded local agent workflow and enforcement rules
 - [docs/superpowers/specs/](docs/superpowers/specs/) — Design specifications
 - [docs/superpowers/plans/](docs/superpowers/plans/) — Implementation plans
 

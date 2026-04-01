@@ -532,13 +532,11 @@ All changes go through pull requests targeting `main`. PRs are squash-merged aft
 - Conversation resolution required — all review threads must be resolved before merge
 - Admin bypass allowed (`gh pr merge --admin` when needed)
 
-CodeRabbit may comment on PRs, but it is advisory only. Local AI review is performed before PR creation, and the only required repository check remains the standard CI workflow.
+CodeRabbit may comment on PRs, but it is advisory only. The only required repository check remains the standard CI workflow.
 
-Required local workflow commands:
+Required local validation command:
 
 - `npm run ship-check`
-- `npm run review:codex`
-- `./scripts/publish-pr.sh`
 
 Hard-coded workflow controls are intentionally stronger than agent memory or plain-text prompts. Hooks, scripts, CI, and permission limits are the primary enforcement layers for this repo.
 
