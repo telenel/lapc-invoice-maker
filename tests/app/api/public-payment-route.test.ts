@@ -126,11 +126,19 @@ describe("POST /api/quotes/public/[token]/payment", () => {
     expect(safePublishAll).not.toHaveBeenCalled();
   });
 
-  it("blocks public payment updates once a quote has been converted", async () => {
+  it("still submits payment details for converted accepted quotes that remain unresolved", async () => {
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",
       quoteStatus: "ACCEPTED",
       convertedToInvoice: { id: "inv1" },
+    } as never);
+    vi.mocked(quoteService.submitPublicPaymentDetails).mockResolvedValue({
+      id: "q1",
+      quoteNumber: "Q-1",
+      recipientEmail: "jane@example.com",
+      paymentMethod: null,
+      convertedToInvoice: null,
+      updatedConvertedInvoice: true,
     } as never);
 
     const response = await POST(
@@ -144,8 +152,12 @@ describe("POST /api/quotes/public/[token]/payment", () => {
       { params: Promise.resolve({ token: "token" }) },
     );
 
-    expect(response.status).toBe(409);
-    expect(quoteService.submitPublicPaymentDetails).not.toHaveBeenCalled();
-    expect(safePublishAll).not.toHaveBeenCalled();
+    expect(response.status).toBe(200);
+    expect(quoteService.submitPublicPaymentDetails).toHaveBeenCalledWith("token", {
+      paymentMethod: "CHECK",
+      accountNumber: undefined,
+    });
+    expect(safePublishAll).toHaveBeenCalledWith({ type: "quote-changed" });
+    expect(safePublishAll).toHaveBeenCalledWith({ type: "invoice-changed" });
   });
 });

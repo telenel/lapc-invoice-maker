@@ -32,6 +32,24 @@ function publicResponseErrorMessage(status: string | null | undefined): string {
     : "This quote is no longer available";
 }
 
+export function isPublicPaymentLinkAvailable(
+  quote: Pick<QuoteResponse, "quoteStatus" | "convertedToInvoice">
+): boolean {
+  if (quote.quoteStatus === "ACCEPTED") {
+    return true;
+  }
+
+  if (
+    quote.quoteStatus === "SENT" ||
+    quote.quoteStatus === "SUBMITTED_EMAIL" ||
+    quote.quoteStatus === "SUBMITTED_MANUAL"
+  ) {
+    return !quote.convertedToInvoice;
+  }
+
+  return false;
+}
+
 function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse {
   const staff: StaffSummary | null = quote.staff
     ? {
@@ -117,7 +135,7 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
       ("paymentAccountNumber" in quote
         ? ((quote as { paymentAccountNumber?: string | null }).paymentAccountNumber ?? null)
         : null),
-    paymentDetailsResolved: Boolean(quote.paymentMethod || convertedToInvoice?.paymentMethod || convertedToInvoice?.status === "FINAL"),
+    paymentDetailsResolved: Boolean(quote.paymentMethod || convertedToInvoice?.paymentMethod),
     convertedToInvoice: convertedInvoiceResponse,
     revisedFromQuote: "revisedFromQuote" in quote && (quote as { revisedFromQuote?: { id: string; quoteNumber: string | null } | null }).revisedFromQuote
       ? { id: (quote as { revisedFromQuote: { id: string; quoteNumber: string | null } }).revisedFromQuote.id, quoteNumber: (quote as { revisedFromQuote: { id: string; quoteNumber: string | null } }).revisedFromQuote.quoteNumber }

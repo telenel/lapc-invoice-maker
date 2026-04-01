@@ -233,7 +233,7 @@ describe("quoteService", () => {
       });
     });
 
-    it("marks finalized converted invoices as payment resolved", async () => {
+    it("does not mark finalized converted invoices as payment resolved without a payment method", async () => {
       const quote = makeQuote({
         quoteStatus: "ACCEPTED",
         convertedToInvoice: {
@@ -247,7 +247,7 @@ describe("quoteService", () => {
 
       const result = await quoteService.getById("q1");
 
-      expect(result?.paymentDetailsResolved).toBe(true);
+      expect(result?.paymentDetailsResolved).toBe(false);
     });
 
     it("auto-expires a DRAFT quote past its expiration date", async () => {

@@ -1,5 +1,5 @@
 import { PaymentDetailsForm } from "@/components/quotes/payment-details-form";
-import { quoteService } from "@/domains/quote/service";
+import { isPublicPaymentLinkAvailable, quoteService } from "@/domains/quote/service";
 
 export default async function PaymentPage(
   props: { params: Promise<{ token: string }> }
@@ -15,7 +15,7 @@ export default async function PaymentPage(
           ? {
               quoteStatus: quote.quoteStatus,
               paymentDetailsResolved: quote.paymentDetailsResolved,
-              paymentLinkAvailable: !quote.convertedToInvoice,
+              paymentLinkAvailable: isPublicPaymentLinkAvailable(quote),
               quoteNumber: quote.quoteNumber,
             }
           : null

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { quoteService } from "@/domains/quote/service";
+import { isPublicPaymentLinkAvailable, quoteService } from "@/domains/quote/service";
 import type { PublicQuoteResponse, QuoteResponse } from "@/domains/quote/types";
 
 type RouteContext = { params: Promise<{ token: string }> };
@@ -80,6 +80,6 @@ export async function GET(_req: NextRequest, ctx: RouteContext) {
 
   return NextResponse.json({
     ...sanitizeForPublic(quote),
-    paymentLinkAvailable: !quote.convertedToInvoice,
+    paymentLinkAvailable: isPublicPaymentLinkAvailable(quote),
   });
 }

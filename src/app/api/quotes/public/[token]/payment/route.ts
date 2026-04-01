@@ -13,9 +13,6 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     if (!existing) {
       return NextResponse.json({ error: "Quote not found or not accepted" }, { status: 404 });
     }
-    if (existing.convertedToInvoice) {
-      return NextResponse.json({ error: "This quote is no longer available" }, { status: 409 });
-    }
 
     const quote = await quoteService.submitPublicPaymentDetails(token, {
       paymentMethod: body.paymentMethod,
