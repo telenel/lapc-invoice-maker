@@ -48,6 +48,17 @@ npm test                 # Run tests (350 tests)
 npm run build            # Production build
 ```
 
+### Branching
+
+- Start from a fresh `main` branch: `git checkout main && git pull`
+- Create one focused branch per change: `git checkout -b feat/thing`
+- Keep the branch small and avoid stacking branches
+- Commit often, but keep each commit scoped to the one concern
+- Run `npm run ship-check` before pushing
+- Push the branch when it is ready for PR review
+- Let CodeRabbit and CI review the PR
+- Merge before starting the next feature
+
 > `npm install` automatically sets `git config core.hooksPath hooks`, which enables the tracked pre-push hook that blocks pushes to branches with open PRs.
 
 ### Database
