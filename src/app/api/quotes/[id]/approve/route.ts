@@ -17,6 +17,9 @@ export const POST = withAuth(async (_req: NextRequest, session, ctx) => {
     const code = (err as { code?: string }).code;
     if (code === "NOT_FOUND") return NextResponse.json({ error: "Quote not found" }, { status: 404 });
     if (code === "INVALID_INPUT") return NextResponse.json({ error: (err as Error).message }, { status: 400 });
+    if (code === "PAYMENT_ALREADY_RESOLVED") {
+      return NextResponse.json({ error: (err as Error).message }, { status: 409 });
+    }
     if (code === "FORBIDDEN") return NextResponse.json({ error: (err as Error).message }, { status: 400 });
     console.error("POST /api/quotes/[id]/approve failed:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

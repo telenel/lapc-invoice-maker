@@ -76,4 +76,28 @@ describe("POST /api/quotes/[id]/approve", () => {
       error: "Invalid payment method",
     });
   });
+
+  it("returns a 409 when manual approval payment details are already resolved", async () => {
+    vi.mocked(quoteService.approveManually).mockRejectedValue(
+      Object.assign(new Error("Payment details have already been provided"), {
+        code: "PAYMENT_ALREADY_RESOLVED",
+      }),
+    );
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/q1/approve", {
+        method: "POST",
+        body: JSON.stringify({
+          paymentMethod: "CHECK",
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ id: "q1" }) },
+    );
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toEqual({
+      error: "Payment details have already been provided",
+    });
+  });
 });
