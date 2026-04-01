@@ -118,6 +118,13 @@ These are the hard-coded workflow entrypoints. Do not replace them with ad hoc c
 - Batches the current unresolved live findings with the same overlap rules as the final triage step.
 - Intended for the orchestrator agent that is watching the live queue.
 
+### `npm run review:codex:autopilot`
+
+- One-command entrypoint for the live review-to-remediation workflow.
+- Starts the live producer and the orchestrator together.
+- The orchestrator is responsible for batching findings and delegating worker worktrees as they appear.
+- Use this when you want the full pipeline, not just a review artifact.
+
 ### `npm run review:codex:triage`
 
 - Reads the latest structured artifact from `.git/laportal/codex-review.json`.
@@ -138,12 +145,13 @@ These are the hard-coded workflow entrypoints. Do not replace them with ad hoc c
 
 ### Live Orchestration Pattern
 
-1. Start the review with `npm run review:codex:live`.
-2. Have the orchestrator poll `.git/laportal/codex-review.live.jsonl` and `.git/laportal/codex-review.live.json` for new findings.
-3. Use the same batching rules from `npm run review:codex:triage` for any findings that already have stable file ownership.
-4. Generate a worker prompt from the live snapshot with `npm run review:codex:prompt -- --artifact .git/laportal/codex-review.live.json --batch <BATCH_ID>`.
-5. Delegate only non-overlapping batches to worker agents.
-6. Keep coupled workflow surfaces on the coordinating agent until the review completes and the final artifact is written.
+1. Start the pipeline with `npm run review:codex:autopilot`.
+2. The wrapper starts the live producer and orchestrator automatically.
+3. The orchestrator polls `.git/laportal/codex-review.live.jsonl` and `.git/laportal/codex-review.live.json` for new findings.
+4. It uses the same batching rules from `npm run review:codex:triage`.
+5. It generates worker prompts from the live snapshot with `npm run review:codex:prompt -- --artifact .git/laportal/codex-review.live.json --batch <BATCH_ID>`.
+6. It creates separate worktrees for delegated batches.
+7. It keeps polling until the final artifact is written, then reconciles the final report.
 
 ### `hooks/pre-push`
 

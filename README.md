@@ -45,6 +45,7 @@ npx prisma generate      # Generate Prisma client
 npm run dev              # Start dev server (localhost:3000)
 npm run ship-check       # git status + lint + test + build + stamp current HEAD
 npm run review:codex     # Local Codex review against main; writes text + JSON artifacts and stamps current HEAD
+npm run review:codex:autopilot  # One-command live review + orchestrator + delegated remediation
 npm run review:codex:live  # Stream the review and publish live finding events into .git/laportal/codex-review.live.jsonl
 npm run review:codex:live:triage  # Batch the current live findings from .git/laportal/codex-review.live.json
 npm run review:codex:loop  # Run review, then print remediation batches when the result is FAIL
@@ -90,6 +91,8 @@ Local AI workflow is hard-coded through tracked scripts and hooks:
 - `./scripts/publish-pr.sh`
 
 `npm run review:codex` always keeps the latest text report at `.git/laportal/codex-review.txt`, the latest structured artifact at `.git/laportal/codex-review.json`, and a rolling history of the last 20 review runs in `.git/laportal/review-history/`.
+
+`npm run review:codex:autopilot` is the one-command workflow. It starts the live review producer, launches the orchestrator, and lets the orchestrator delegate batches into separate worktrees as findings appear.
 
 `npm run review:codex:live` streams the review output, looks for `LIVE-FINDING:` lines in the prompt hook, and appends live queue events to `.git/laportal/codex-review.live.jsonl` plus a snapshot at `.git/laportal/codex-review.live.json`.
 

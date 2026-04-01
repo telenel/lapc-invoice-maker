@@ -13,6 +13,7 @@
     "review:codex": "./scripts/codex-review-local.sh",
     "review:codex:live": "node ./scripts/codex-review-live.mjs",
     "review:codex:live:triage": "node ./scripts/codex-review-remediation.mjs triage --artifact .git/laportal/codex-review.live.json",
+    "review:codex:autopilot": "./scripts/codex-review-autopilot.sh",
     "review:codex:loop": "./scripts/codex-review-loop.sh",
     "review:codex:json": "./scripts/codex-review-local.sh --json",
     "review:codex:findings": "node ./scripts/codex-review-artifact.mjs print-findings",
