@@ -248,6 +248,54 @@ describe("POST /api/quotes/public/[token]/respond", () => {
     );
   });
 
+  it("drops staff-only catering metadata from the public payload", async () => {
+    vi.mocked(quoteService.getByShareToken).mockResolvedValue({
+      id: "q1",
+      quoteStatus: "SENT",
+      isCateringEvent: true,
+      cateringDetails: {
+        eventName: "Internal Event Name",
+        contactEmail: "hidden@example.com",
+        setupInstructions: "Internal setup note",
+        takedownInstructions: "Internal takedown note",
+      },
+    } as never);
+    vi.mocked(quoteService.respondToQuote).mockResolvedValue({
+      id: "q1",
+      quoteStatus: "ACCEPTED",
+    } as never);
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/respond", {
+        method: "POST",
+        body: JSON.stringify({
+          response: "ACCEPTED",
+          paymentMethod: "CHECK",
+          cateringDetails: {
+            eventDate: "2026-04-15",
+            startTime: "10:00",
+            endTime: "12:00",
+            location: "Campus",
+            contactName: "Jane",
+            contactPhone: "555-1111",
+            eventName: "Attacker override",
+            contactEmail: "attacker@example.com",
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    expect(response.status).toBe(200);
+    const cateringDetails = vi.mocked(quoteService.respondToQuote).mock.calls[0]?.[4] as Record<string, unknown> | undefined;
+    expect(cateringDetails).toBeDefined();
+    expect(cateringDetails).not.toHaveProperty("eventName");
+    expect(cateringDetails).not.toHaveProperty("contactEmail");
+    expect(cateringDetails).toHaveProperty("setupInstructions", "Internal setup note");
+    expect(cateringDetails).toHaveProperty("takedownInstructions", "Internal takedown note");
+  });
+
   it("does not preserve omitted optional catering fields from the existing quote", async () => {
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",

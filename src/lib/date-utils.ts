@@ -137,5 +137,5 @@ export function isBusinessDay(date: Date): boolean {
 }
 
 export function startOfDayInTimeZone(date: Date, timeZone = LOS_ANGELES_TIME_ZONE): Date {
-  return fromDateKey(getDateKeyInTimeZone(date, timeZone));
+  return zonedDateTimeToUtc(getDateKeyInTimeZone(date, timeZone), "00:00", timeZone);
 }

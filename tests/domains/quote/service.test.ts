@@ -594,6 +594,74 @@ describe("quoteService", () => {
       });
     });
 
+    it("rejects late declines after the quote has been converted", async () => {
+      mockRepo.findByShareToken.mockResolvedValue(
+        makeQuote({
+          quoteStatus: "SENT",
+          expirationDate: new Date("2099-02-15"),
+        }) as never,
+      );
+      const tx = {
+        $queryRaw: vi.fn()
+          .mockResolvedValueOnce([{ id: "q1", quoteStatus: "SENT", paymentMethod: null, cateringDetails: null }])
+          .mockResolvedValueOnce([{ id: "inv1", status: "DRAFT", paymentMethod: null, cateringDetails: null }]),
+        invoice: {
+          update: vi.fn(),
+        },
+        quoteView: {
+          findFirst: vi.fn(),
+          update: vi.fn(),
+        },
+      };
+      vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => callback(tx as never) as never);
+
+      await expect(
+        quoteService.respondToQuote(
+          "token",
+          "DECLINED",
+        ),
+      ).rejects.toMatchObject({
+        code: "FORBIDDEN",
+        message: "This quote is no longer available",
+      });
+
+      expect(tx.invoice.update).not.toHaveBeenCalled();
+    });
+
+    it("rejects late plain approvals after the quote has been converted", async () => {
+      mockRepo.findByShareToken.mockResolvedValue(
+        makeQuote({
+          quoteStatus: "SENT",
+          expirationDate: new Date("2099-02-15"),
+        }) as never,
+      );
+      const tx = {
+        $queryRaw: vi.fn()
+          .mockResolvedValueOnce([{ id: "q1", quoteStatus: "SENT", paymentMethod: null, cateringDetails: null }])
+          .mockResolvedValueOnce([{ id: "inv1", status: "DRAFT", paymentMethod: null, cateringDetails: null }]),
+        invoice: {
+          update: vi.fn(),
+        },
+        quoteView: {
+          findFirst: vi.fn(),
+          update: vi.fn(),
+        },
+      };
+      vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => callback(tx as never) as never);
+
+      await expect(
+        quoteService.respondToQuote(
+          "token",
+          "ACCEPTED",
+        ),
+      ).rejects.toMatchObject({
+        code: "FORBIDDEN",
+        message: "This quote is no longer available",
+      });
+
+      expect(tx.invoice.update).not.toHaveBeenCalled();
+    });
+
     it("rejects catering details for non-catering quotes", async () => {
       mockRepo.findByShareToken.mockResolvedValue(
         makeQuote({

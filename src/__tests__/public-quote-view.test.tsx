@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PublicQuoteView } from "@/components/quotes/public-quote-view";
+import { ApiError } from "@/domains/shared/types";
 
 const pushMock = vi.fn();
 
@@ -152,6 +153,24 @@ describe("PublicQuoteView", () => {
     });
 
     expect(screen.queryByText("Quote Not Found")).not.toBeInTheDocument();
+  });
+
+  it("shows a transient load error for non-404 quote failures", async () => {
+    vi.mocked(quoteApi.getPublicQuote).mockRejectedValueOnce(new ApiError(500, "boom"));
+
+    render(<PublicQuoteView token="token" />);
+
+    await screen.findByText("Unable to Load Quote");
+    expect(screen.getByText("We couldn't load this quote right now. Please try again.")).toBeInTheDocument();
+    expect(screen.queryByText("Quote Not Found")).not.toBeInTheDocument();
+  });
+
+  it("still shows quote not found for actual 404 failures", async () => {
+    vi.mocked(quoteApi.getPublicQuote).mockRejectedValueOnce(new ApiError(404, "missing"));
+
+    render(<PublicQuoteView token="token" />);
+
+    await screen.findByText("Quote Not Found");
   });
 
   it("routes accepted quotes without payment details to the payment page", async () => {

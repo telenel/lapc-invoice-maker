@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { quoteApi } from "@/domains/quote/api-client";
+import { ApiError } from "@/domains/shared/types";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
 import type { CateringDetails, PublicQuoteResponse, QuotePublicSettingsResponse } from "@/domains/quote/types";
 import { QUOTE_PAYMENT_METHODS } from "@/domains/quote/payment";
@@ -79,6 +80,7 @@ export function PublicQuoteView({ token }: { token: string }) {
   const [quote, setQuote] = useState<PublicQuoteResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [responding, setResponding] = useState(false);
   const [responded, setResponded] = useState(false);
   const [cateringForm, setCateringForm] = useState<PublicCateringForm>(makeCateringForm(null));
@@ -95,6 +97,8 @@ export function PublicQuoteView({ token }: { token: string }) {
   useEffect(() => {
     async function init() {
       try {
+        setNotFound(false);
+        setLoadError(null);
         const quoteData = await quoteApi.getPublicQuote(token);
         setQuote(quoteData);
         if (quoteData.isCateringEvent) {
@@ -110,8 +114,12 @@ export function PublicQuoteView({ token }: { token: string }) {
           .catch((err) => {
             console.warn("Failed to register quote view:", err);
           });
-      } catch {
-        setNotFound(true);
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 404) {
+          setNotFound(true);
+        } else {
+          setLoadError("We couldn't load this quote right now. Please try again.");
+        }
         return;
       } finally {
         setLoading(false);
@@ -146,10 +154,8 @@ export function PublicQuoteView({ token }: { token: string }) {
               eventDate: cateringForm.eventDate.trim(),
               startTime: cateringForm.startTime.trim(),
               endTime: cateringForm.endTime.trim(),
-              eventName: quote.cateringDetails?.eventName ?? "",
               contactName: cateringForm.contactName,
               contactPhone: cateringForm.contactPhone,
-              contactEmail: quote.cateringDetails?.contactEmail ?? "",
               location: cateringForm.location,
               headcount: cateringForm.headcount ? Number(cateringForm.headcount) : undefined,
               setupRequired: cateringForm.setupRequired,
@@ -197,6 +203,18 @@ export function PublicQuoteView({ token }: { token: string }) {
   }
 
   if (notFound || !quote) {
+    if (loadError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <Card className="max-w-md w-full">
+            <CardContent className="pt-6 text-center">
+              <h2 className="text-lg font-semibold mb-2">Unable to Load Quote</h2>
+              <p className="text-muted-foreground">{loadError}</p>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="max-w-md w-full">

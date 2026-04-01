@@ -18,6 +18,14 @@ interface ContactBlock {
 
 const EMPTY: ContactBlock = { name: "", phone: "", email: "", note: "" };
 
+function isPartialContactBlock(value: unknown): value is Partial<ContactBlock> {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Record<string, unknown>;
+  return ["name", "phone", "email", "note"].every(
+    (key) => candidate[key] === undefined || typeof candidate[key] === "string",
+  );
+}
+
 const KEYS = [
   { key: "quote_contact_default", title: "Default Contact", description: "Shown on non-catering quote approval pages" },
   { key: "quote_contact_catering", title: "Catering Contact", description: "Shown on catering quote approval pages" },
@@ -35,8 +43,8 @@ export function QuoteContactSettings() {
       const data = await adminApi.listSettings();
       const next: Record<string, ContactBlock> = { ...blocks };
       for (const item of data) {
-        if (item.key in next) {
-          next[item.key] = { ...EMPTY, ...(item.value as ContactBlock) };
+        if (item.key in next && isPartialContactBlock(item.value)) {
+          next[item.key] = { ...EMPTY, ...item.value };
         }
       }
       setBlocks(next);

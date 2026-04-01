@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { zonedDateTimeToUtc } from "@/lib/date-utils";
+import { startOfDayInTimeZone, zonedDateTimeToUtc } from "@/lib/date-utils";
 
 describe("zonedDateTimeToUtc", () => {
   it("resolves Los Angeles spring DST transition correctly", () => {
@@ -22,5 +22,13 @@ describe("zonedDateTimeToUtc", () => {
   it("rejects malformed time values", () => {
     expect(() => zonedDateTimeToUtc("2026-03-08", "9:00")).toThrow("Invalid time");
     expect(() => zonedDateTimeToUtc("2026-03-08", "24:00")).toThrow("Invalid time");
+  });
+});
+
+describe("startOfDayInTimeZone", () => {
+  it("returns midnight in the target timezone as a UTC instant", () => {
+    expect(
+      startOfDayInTimeZone(new Date("2026-03-08T15:30:00.000Z")).toISOString(),
+    ).toBe("2026-03-08T08:00:00.000Z");
   });
 });

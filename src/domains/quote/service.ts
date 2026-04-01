@@ -436,6 +436,18 @@ export const quoteService = {
         });
       }
       const lockedQuoteCateringDetails = lockedQuote.cateringDetails as CateringDetails | null;
+      const convertedInvoices = await tx.$queryRaw<Array<{
+        id: string;
+        status: string | null;
+        paymentMethod: string | null;
+        cateringDetails: Prisma.JsonValue | null;
+      }>>`
+        SELECT id, status, payment_method AS "paymentMethod", catering_details AS "cateringDetails"
+        FROM invoices
+        WHERE converted_from_quote_id = ${quote.id}
+        FOR UPDATE
+      `;
+      const convertedInvoice = convertedInvoices[0];
 
       const quoteData: Prisma.InvoiceUpdateInput = {
         quoteStatus: response,
@@ -462,23 +474,17 @@ export const quoteService = {
       }
 
       let updatedConvertedInvoice = false;
-      if (response === "ACCEPTED" && (normalizedPayment || normalizedCateringDetails)) {
-        const convertedInvoices = await tx.$queryRaw<Array<{
-          id: string;
-          status: string | null;
-          paymentMethod: string | null;
-          cateringDetails: Prisma.JsonValue | null;
-        }>>`
-          SELECT id, status, payment_method AS "paymentMethod", catering_details AS "cateringDetails"
-          FROM invoices
-          WHERE converted_from_quote_id = ${quote.id}
-          FOR UPDATE
-        `;
-        const convertedInvoice = convertedInvoices[0];
-        if (convertedInvoice) {
-          if (convertedInvoice.status === "FINAL") {
-            throw Object.assign(new Error("Cannot update a finalized invoice"), { code: "FORBIDDEN" });
-          }
+      if (convertedInvoice) {
+        if (convertedInvoice.status === "FINAL") {
+          throw Object.assign(new Error("Cannot update a finalized invoice"), { code: "FORBIDDEN" });
+        }
+        if (response !== "ACCEPTED") {
+          throw Object.assign(new Error("This quote is no longer available"), { code: "FORBIDDEN" });
+        }
+        if (!normalizedPayment && normalizedCateringDetails === undefined) {
+          throw Object.assign(new Error("This quote is no longer available"), { code: "FORBIDDEN" });
+        }
+        if (response === "ACCEPTED" && (normalizedPayment || normalizedCateringDetails)) {
           const convertedInvoiceCateringDetails = convertedInvoice.cateringDetails as CateringDetails | null;
           const convertedInvoiceData: Prisma.InvoiceUpdateInput = {};
           if (normalizedPayment) {
