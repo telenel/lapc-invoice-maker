@@ -169,6 +169,9 @@ describe("codex review autopilot helper", () => {
           exitCode: 0,
           integratedCommits: ["deadbeef"],
           logPath: "/tmp/B1.log",
+          resultPath: "/tmp/B1.result.txt",
+          resultSummary: "Adjusted quote acceptance flow",
+          integratedFiles: ["src/domains/quote/service.ts", "tests/domains/quote/service.test.ts"],
         },
       ],
     });
@@ -177,6 +180,8 @@ describe("codex review autopilot helper", () => {
     expect(summary).toContain("session: session-1");
     expect(summary).toContain("session temp root: /tmp/laportal-codex-autopilot-abc123");
     expect(summary).toContain("- B1 [worker] completed | branch=autopilot/abc123/worker-b1 | exit=0 | integrated=1");
+    expect(summary).toContain("summary: Adjusted quote acceptance flow");
+    expect(summary).toContain("files: src/domains/quote/service.ts, tests/domains/quote/service.test.ts");
     expect(summary).toContain("Session cleanup: removed=yes | path=/tmp/laportal-codex-autopilot-abc123");
   });
 
@@ -202,6 +207,15 @@ describe("codex review autopilot helper", () => {
 
     expect(
       formatEventLine({
+        type: "review-progress",
+        elapsed: "01:45",
+        liveFindingCount: 1,
+        activeTaskCount: 0,
+      }),
+    ).toBe("AUTOPILOT review running: elapsed=01:45 live_findings=1 active_tasks=0");
+
+    expect(
+      formatEventLine({
         type: "review-result",
         result: "FAIL",
         findingCount: 2,
@@ -217,7 +231,15 @@ describe("codex review autopilot helper", () => {
         findingCount: 2,
         worktreePath: "/tmp/coordinator-b1",
       }),
-    ).toBe("AUTOPILOT launched worker B1 | findings=2 | worktree=/tmp/coordinator-b1");
+    ).toBe("AUTOPILOT task started: worker B1 | findings=2 | worktree=/tmp/coordinator-b1");
+
+    expect(
+      formatEventLine({
+        type: "task-exited",
+        batchId: "B1",
+        exitCode: 0,
+      }),
+    ).toBe("AUTOPILOT task finished in worktree: B1 | exit=0");
 
     expect(
       formatEventLine({
@@ -245,6 +267,26 @@ describe("codex review autopilot helper", () => {
     ).toBe(
       "AUTOPILOT cleaned session temp root: removed=yes path=/tmp/laportal-codex-autopilot-abc123",
     );
+
+    expect(
+      formatEventLine({
+        type: "task-summary",
+        batchId: "B1",
+        summary: "Adjusted quote acceptance flow",
+        files: ["src/domains/quote/service.ts", "tests/domains/quote/service.test.ts"],
+      }),
+    ).toBe(
+      "AUTOPILOT task summary: B1 | Adjusted quote acceptance flow | files=src/domains/quote/service.ts, tests/domains/quote/service.test.ts",
+    );
+
+    expect(
+      formatEventLine({
+        type: "task-complete",
+        batchId: "B1",
+        status: "completed",
+        integratedCount: 2,
+      }),
+    ).toBe("AUTOPILOT task complete: B1 | status=completed | integrated=2");
 
     expect(
       formatEventLine({

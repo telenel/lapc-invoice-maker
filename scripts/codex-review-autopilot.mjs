@@ -7,6 +7,7 @@ import {
   readdirSync,
   readFileSync,
   rmSync,
+  rmdirSync,
   statSync,
   writeFileSync,
 } from "node:fs";
@@ -20,6 +21,7 @@ import {
 const POLL_INTERVAL_MS = 2000;
 const LIVE_BATCH_QUIET_MS = 5000;
 const AUTOPILOT_HISTORY_LIMIT = 20;
+const REVIEW_HEARTBEAT_MS = 15000;
 
 function git(args, options = {}) {
   return execFileSync("git", args, {
@@ -73,6 +75,13 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function formatDuration(ms) {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
 function safeJsonRead(filePath) {
   if (!existsSync(filePath)) {
     return null;
@@ -80,6 +89,18 @@ function safeJsonRead(filePath) {
 
   try {
     return JSON.parse(readFileSync(filePath, "utf8"));
+  } catch {
+    return null;
+  }
+}
+
+function safeTextRead(filePath) {
+  if (!existsSync(filePath)) {
+    return null;
+  }
+
+  try {
+    return readFileSync(filePath, "utf8");
   } catch {
     return null;
   }
@@ -238,6 +259,15 @@ export function buildSummaryText(summary) {
       if (task.logPath) {
         lines.push(`  log: ${task.logPath}`);
       }
+      if (task.resultPath) {
+        lines.push(`  result: ${task.resultPath}`);
+      }
+      if (task.resultSummary) {
+        lines.push(`  summary: ${task.resultSummary}`);
+      }
+      if (task.integratedFiles?.length) {
+        lines.push(`  files: ${task.integratedFiles.join(", ")}`);
+      }
       if (task.error) {
         lines.push(`  error: ${task.error}`);
       }
@@ -304,10 +334,14 @@ export function formatEventLine(event) {
       return `AUTOPILOT session started: ${event.sessionId} | branch=${event.branch} | head=${event.headSha}`;
     case "producer-start":
       return `AUTOPILOT review started: head=${event.headSha} | producer_log=${event.producerLogPath}`;
+    case "review-progress":
+      return `AUTOPILOT review running: elapsed=${event.elapsed} live_findings=${event.liveFindingCount} active_tasks=${event.activeTaskCount}`;
     case "review-result":
       return `AUTOPILOT review result: ${event.result} | findings=${event.findingCount} | summary=${event.summary}`;
     case "batch-launch":
-      return `AUTOPILOT launched ${event.role} ${event.batchId} | findings=${event.findingCount} | worktree=${event.worktreePath}`;
+      return `AUTOPILOT task started: ${event.role} ${event.batchId} | findings=${event.findingCount} | worktree=${event.worktreePath}`;
+    case "task-exited":
+      return `AUTOPILOT task finished in worktree: ${event.batchId} | exit=${event.exitCode}`;
     case "task-failed":
       return `AUTOPILOT ${event.batchId} failed: ${event.error}`;
     case "task-integrating":
@@ -316,6 +350,10 @@ export function formatEventLine(event) {
       return `AUTOPILOT integrated ${event.batchId} into ${event.targetBranch} (${event.commits?.length ?? 0} commit${event.commits?.length === 1 ? "" : "s"})`;
     case "task-cleanup":
       return `AUTOPILOT cleaned ${event.batchId}: worktree=${event.worktreeRemoved ? "yes" : "no"} branch=${event.branchDeleted ? "yes" : "no"}`;
+    case "task-summary":
+      return `AUTOPILOT task summary: ${event.batchId} | ${event.summary} | files=${event.files?.join(", ") ?? "none"}`;
+    case "task-complete":
+      return `AUTOPILOT task complete: ${event.batchId} | status=${event.status} | integrated=${event.integratedCount}`;
     case "session-cleanup":
       return `AUTOPILOT cleaned session temp root: removed=${event.worktreeRootRemoved ? "yes" : "no"} path=${event.worktreeRoot}`;
     case "producer-complete":
@@ -406,6 +444,42 @@ function createTaskExitTracker(task) {
   });
 }
 
+function extractTaskResultSummary(resultText) {
+  if (!resultText) {
+    return null;
+  }
+
+  const lines = resultText
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  const whatChangedIndex = lines.findIndex((line) => line === "What changed:");
+  if (whatChangedIndex >= 0) {
+    const bulletLines = [];
+    for (const line of lines.slice(whatChangedIndex + 1)) {
+      if (line.endsWith(":") && !line.startsWith("- ")) {
+        break;
+      }
+      if (line.startsWith("- ")) {
+        bulletLines.push(line.slice(2).trim());
+      }
+    }
+    if (bulletLines.length > 0) {
+      return bulletLines.slice(0, 2).join(" | ");
+    }
+  }
+
+  const usefulLine = lines.find(
+    (line) =>
+      !line.startsWith("Status brief:") &&
+      !line.startsWith("Changed files:") &&
+      !line.startsWith("Validation:") &&
+      !line.startsWith("Remaining risk:"),
+  );
+  return usefulLine ?? null;
+}
+
 function launchBatchTask(context, session, artifact, artifactPath, batch, role) {
   const { branchName, worktreePath } = createWorktree(context, session, batch, role);
   const commitMessage = `autopilot(${batch.id}): remediate codex findings`;
@@ -418,11 +492,12 @@ function launchBatchTask(context, session, artifact, artifactPath, batch, role) 
     role,
   });
   const logPath = path.join(session.sessionDir, `${sanitizeName(batch.id)}.log`);
+  const resultPath = path.join(session.sessionDir, `${sanitizeName(batch.id)}.result.txt`);
   const logStreamWrite = (chunk) => appendFileSync(logPath, chunk.toString());
 
   const child = spawn(
     "codex",
-    ["exec", "--full-auto", "--cd", worktreePath, "-"],
+    ["exec", "--full-auto", "--cd", worktreePath, "--output-last-message", resultPath, "-"],
     {
       cwd: context.repoRoot,
       stdio: ["pipe", "pipe", "pipe"],
@@ -443,6 +518,7 @@ function launchBatchTask(context, session, artifact, artifactPath, batch, role) 
     baseHeadSha: context.headSha,
     commitMessage,
     logPath,
+    resultPath,
     child,
     status: "running",
     exitState: null,
@@ -467,6 +543,19 @@ function worktreeCommits(worktreePath, baseHeadSha) {
     return [];
   }
   return output.split("\n").filter(Boolean);
+}
+
+function commitChangedFiles(repoRoot, commits) {
+  const files = new Set();
+  for (const commit of commits) {
+    const output = git(["show", "--name-only", "--format=", commit], {
+      cwd: repoRoot,
+    });
+    for (const filePath of output.split("\n").filter(Boolean)) {
+      files.add(filePath);
+    }
+  }
+  return Array.from(files).sort();
 }
 
 function integrateTask(context, task) {
@@ -580,7 +669,7 @@ function cleanupSessionWorktreeRoot(session) {
   }
 
   try {
-    rmSync(session.worktreeRoot, { recursive: false, force: true });
+    rmdirSync(session.worktreeRoot);
     cleanup.worktreeRootRemoved = true;
   } catch (error) {
     cleanup.error = error instanceof Error ? error.message : String(error);
@@ -623,6 +712,7 @@ async function main() {
 
   const context = repoContext();
   const session = createSession(context);
+  const sessionStartedMs = Date.now();
   const producerLogWrite = (chunk) => {
     appendFileSync(session.producerLogPath, chunk.toString());
   };
@@ -678,6 +768,7 @@ async function main() {
 
   let producerExited = false;
   let producerExitCode = null;
+  let lastReviewHeartbeatAt = Date.now();
   producer.on("close", (code) => {
     producerExited = true;
     producerExitCode = typeof code === "number" ? code : 1;
@@ -716,6 +807,7 @@ async function main() {
         branchName: task.branchName,
         worktreePath: task.worktreePath,
         logPath: task.logPath,
+        resultPath: task.resultPath,
         artifactPath,
         status: "running",
         files: batch.files,
@@ -740,6 +832,17 @@ async function main() {
     while (true) {
       const liveSnapshot = safeJsonRead(context.liveStatePath);
       const liveState = snapshotState(liveSnapshot);
+      const activeTaskCount = tasks.filter(
+        (task) => task.status === "running" || task.status === "integrating",
+      ).length;
+      if (!producerExited && Date.now() - lastReviewHeartbeatAt >= REVIEW_HEARTBEAT_MS) {
+        emitEvent(session, summary, "review-progress", {
+          elapsed: formatDuration(Date.now() - sessionStartedMs),
+          liveFindingCount: Array.isArray(liveSnapshot?.findings) ? liveSnapshot.findings.length : 0,
+          activeTaskCount,
+        });
+        lastReviewHeartbeatAt = Date.now();
+      }
       if (liveState === "running" || liveState === "completing") {
         registerBatches(context.liveStatePath, liveSnapshot, true);
       }
@@ -769,6 +872,12 @@ async function main() {
         }
 
         const { code, signal, error } = task.exitState;
+        emitEvent(session, summary, "task-exited", {
+          batchId: task.batchId,
+          role: task.role,
+          exitCode: code,
+          signal,
+        });
         if (code !== 0) {
           task.status = "failed";
           updateSummaryTask(summary, task, {
@@ -793,6 +902,11 @@ async function main() {
             branchDeleted: cleanup.branchDeleted,
             errors: cleanup.errors,
           });
+          emitEvent(session, summary, "task-complete", {
+            batchId: task.batchId,
+            status: "failed",
+            integratedCount: 0,
+          });
           continue;
         }
 
@@ -810,12 +924,19 @@ async function main() {
           targetBranch: context.branch,
         });
 
+        let integratedCount = 0;
+        let integratedFiles = [];
         try {
           const commits = integrateTask(context, task);
+          integratedCount = commits.length;
+          integratedFiles = commitChangedFiles(context.repoRoot, commits);
+          const resultSummary = extractTaskResultSummary(safeTextRead(task.resultPath));
           task.status = "completed";
           updateSummaryTask(summary, task, {
             status: "completed",
             integratedCommits: commits,
+            resultSummary,
+            integratedFiles,
           });
           emitEvent(session, summary, "task-integrated", {
             batchId: task.batchId,
@@ -823,6 +944,13 @@ async function main() {
             commits,
             targetBranch: context.branch,
           });
+          if (resultSummary) {
+            emitEvent(session, summary, "task-summary", {
+              batchId: task.batchId,
+              summary: resultSummary,
+              files: integratedFiles,
+            });
+          }
         } catch (integrationError) {
           task.status = "failed";
           updateSummaryTask(summary, task, {
@@ -852,6 +980,11 @@ async function main() {
           worktreeRemoved: cleanup.worktreeRemoved,
           branchDeleted: cleanup.branchDeleted,
           errors: cleanup.errors,
+        });
+        emitEvent(session, summary, "task-complete", {
+          batchId: task.batchId,
+          status: task.status,
+          integratedCount,
         });
       }
 
