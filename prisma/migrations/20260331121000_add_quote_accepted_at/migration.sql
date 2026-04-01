@@ -5,7 +5,10 @@ ADD COLUMN "accepted_at" TIMESTAMP(3);
 UPDATE "invoices" AS i
 SET "accepted_at" = accepted_views."accepted_at"
 FROM (
-  SELECT q."id", COALESCE(approval_notifications."accepted_at", q."converted_at") AS "accepted_at"
+  -- Fall back to the quote row's last update so legacy accepted quotes still
+  -- enter the payment follow-up flow even when the notification and conversion
+  -- signals are both missing.
+  SELECT q."id", COALESCE(approval_notifications."accepted_at", q."converted_at", q."updated_at") AS "accepted_at"
   FROM "invoices" AS q
   LEFT JOIN (
     SELECT "quote_id", MIN("created_at") AS "accepted_at"

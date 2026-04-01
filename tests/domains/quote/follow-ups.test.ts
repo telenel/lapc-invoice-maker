@@ -180,22 +180,110 @@ describe("checkAndSendPaymentFollowUps", () => {
     );
   });
 
-  it("keeps converted accepted quotes in the reminder scan until payment details are resolved", async () => {
+  it("scans legacy accepted quotes even when acceptedAt is still missing", async () => {
     const scanTx = makeTx();
+    const claimTx = makeTx();
+    const refreshTx = makeTx();
+    const confirmTx = makeTx();
+    const acceptedAt = null;
+    const updatedAt = new Date("2026-03-01T12:00:00.000Z");
+    const createdAt = new Date("2026-02-20T12:00:00.000Z");
+
     scanTx.$queryRaw.mockResolvedValue([{ acquired: true }]);
-    scanTx.invoice.findMany.mockResolvedValue([] as never);
-    vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => callback(scanTx as never) as never);
+    vi.mocked(businessDaysBetween).mockReturnValue(7);
+    scanTx.invoice.findMany.mockResolvedValue([
+      {
+        id: "q1",
+        quoteNumber: "Q-1",
+        recipientName: "Jane",
+        recipientEmail: "jane@example.com",
+        shareToken: "token",
+        acceptedAt,
+        updatedAt,
+        createdAt,
+        followUps: [],
+        creator: { id: "u1", name: "Admin" },
+      },
+    ] as never);
+    claimTx.$queryRaw
+      .mockResolvedValueOnce([
+        {
+          id: "q1",
+          quoteNumber: "Q-1",
+          recipientName: "Jane",
+          recipientEmail: "jane@example.com",
+          shareToken: "token",
+          quoteStatus: "ACCEPTED",
+          acceptedAt,
+          updatedAt,
+          createdAt,
+          paymentMethod: null,
+          createdBy: "u1",
+        },
+      ] as never)
+      .mockResolvedValueOnce([] as never);
+    claimTx.quoteFollowUp.findFirst.mockResolvedValue(null as never);
+    claimTx.quoteFollowUp.count.mockResolvedValue(0 as never);
+    claimTx.quoteFollowUp.create.mockResolvedValue({ id: "fu1" } as never);
+    refreshTx.$queryRaw
+      .mockResolvedValueOnce([
+        {
+          id: "q1",
+          quoteNumber: "Q-1",
+          recipientName: "Jane",
+          recipientEmail: "jane@example.com",
+          shareToken: "token",
+          quoteStatus: "ACCEPTED",
+          acceptedAt,
+          updatedAt,
+          createdAt,
+          paymentMethod: null,
+          createdBy: "u1",
+        },
+      ] as never)
+      .mockResolvedValueOnce([] as never);
+    confirmTx.$queryRaw
+      .mockResolvedValueOnce([
+        {
+          id: "q1",
+          quoteNumber: "Q-1",
+          recipientName: "Jane",
+          recipientEmail: "jane@example.com",
+          shareToken: "token",
+          quoteStatus: "ACCEPTED",
+          acceptedAt,
+          updatedAt,
+          createdAt,
+          paymentMethod: null,
+          createdBy: "u1",
+        },
+      ] as never)
+      .mockResolvedValueOnce([] as never);
+    vi.mocked(sendEmail).mockResolvedValue(true as never);
+    mockTransactions(scanTx, claimTx, refreshTx, confirmTx);
 
     await checkAndSendPaymentFollowUps();
 
+    const [referenceDate, comparisonDate] = vi.mocked(businessDaysBetween).mock.calls[0] ?? [];
+    expect(referenceDate).toBe(updatedAt);
+    expect(comparisonDate).toBeInstanceOf(Date);
     expect(scanTx.invoice.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           quoteStatus: "ACCEPTED",
-          acceptedAt: { not: null },
+          paymentMethod: null,
+          shareToken: { not: null },
         }),
       }),
     );
+    const scanQuery = scanTx.invoice.findMany.mock.calls[0]![0]!;
+    expect(scanQuery.where).not.toHaveProperty("acceptedAt");
+    expect(claimTx.quoteFollowUp.create).toHaveBeenCalledOnce();
+    expect(sendEmail).toHaveBeenCalledOnce();
+    expect(vi.mocked(prisma.quoteFollowUp.update)).toHaveBeenCalledWith({
+      where: { id: "fu1" },
+      data: { type: "PAYMENT_REMINDER" },
+    });
   });
 
   it("still claims reminders when a converted invoice exists but payment details remain unresolved", async () => {
