@@ -1,6 +1,7 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     if (process.env.NODE_ENV !== "production") return;
+    if (process.env.LAPORTAL_ENABLE_APP_CRON !== "1") return;
 
     const state = globalThis as typeof globalThis & {
       __laportalCronRegistered?: boolean;

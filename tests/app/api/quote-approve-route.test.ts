@@ -52,4 +52,28 @@ describe("POST /api/quotes/[id]/approve", () => {
       accountNumber: "SAP-12345",
     });
   });
+
+  it("returns a 400 for invalid manual approval payment payloads", async () => {
+    vi.mocked(quoteService.approveManually).mockRejectedValue(
+      Object.assign(new Error("Invalid payment method"), {
+        code: "INVALID_INPUT",
+      }),
+    );
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/q1/approve", {
+        method: "POST",
+        body: JSON.stringify({
+          paymentMethod: "WIRE_TRANSFER",
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ id: "q1" }) },
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "Invalid payment method",
+    });
+  });
 });

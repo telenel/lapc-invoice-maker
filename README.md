@@ -67,7 +67,10 @@ npx prisma db seed                     # Seed database
 DATABASE_URL=postgresql://user:pass@localhost:5432/invoicemaker
 NEXTAUTH_SECRET=<secret>
 NEXTAUTH_URL=http://localhost:3000
+LAPORTAL_ENABLE_APP_CRON=0
 ```
+
+Set `LAPORTAL_ENABLE_APP_CRON=1` only on a single long-lived app instance if you want the in-process reminder jobs enabled. Leave it unset or `0` on multi-replica or serverless-style deployments.
 
 ## Deployment
 
