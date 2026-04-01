@@ -162,7 +162,7 @@ const statusLabel: Record<QuoteStatus, string> = {
   EXPIRED: "Expired",
 };
 
-const MANUAL_APPROVAL_PAYMENT_OPTIONS = QUOTE_PAYMENT_METHODS.map((value) => ({
+const PAYMENT_OPTIONS = QUOTE_PAYMENT_METHODS.map((value) => ({
   value,
   label:
     value === "ACCOUNT_NUMBER"
@@ -210,12 +210,16 @@ export function QuoteDetailView({ id }: { id: string }) {
     markingSubmitted: false,
     duplicating: false,
     approving: false,
+    resolvingPayment: false,
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [approvePaymentMethod, setApprovePaymentMethod] = useState("");
   const [approveAccountNumber, setApproveAccountNumber] = useState("");
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentAccountNumber, setPaymentAccountNumber] = useState("");
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
 
@@ -449,6 +453,58 @@ export function QuoteDetailView({ id }: { id: string }) {
     }
   }, []);
 
+  const handlePaymentDialogOpenChange = useCallback((open: boolean) => {
+    setPaymentDialogOpen(open);
+    if (!open) {
+      setPaymentMethod("");
+      setPaymentAccountNumber("");
+    }
+  }, []);
+
+  const handleResolvePaymentDetails = useCallback(async () => {
+    if (!quote) return;
+    if (!paymentMethod) {
+      toast.error("Please select a payment method");
+      return;
+    }
+    if (paymentMethod === "ACCOUNT_NUMBER" && !paymentAccountNumber.trim()) {
+      toast.error("Please enter the SAP account number");
+      return;
+    }
+
+    setActionState((prev) => ({ ...prev, resolvingPayment: true }));
+    try {
+      const res = await fetch(`/api/quotes/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          paymentMethod,
+          paymentAccountNumber: paymentMethod === "ACCOUNT_NUMBER" ? paymentAccountNumber.trim() : null,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        const fieldErrors = (data?.error?.fieldErrors ?? {}) as Record<string, string[]>;
+        const firstFieldError = Object.values(fieldErrors)[0]?.[0];
+        toast.error(
+          data?.error?.formErrors?.[0] ??
+            firstFieldError ??
+            data?.error ??
+            "Failed to save payment details",
+        );
+      } else {
+        toast.success("Payment details saved");
+        await fetchQuote();
+      }
+    } catch {
+      toast.error("Failed to save payment details");
+    } finally {
+      setActionState((prev) => ({ ...prev, resolvingPayment: false }));
+      setPaymentDialogOpen(false);
+    }
+  }, [quote, paymentMethod, paymentAccountNumber, id, fetchQuote]);
+
   const handleOpenPdf = useCallback(() => {
     const link = document.createElement("a");
     link.href = pdfUrl;
@@ -563,13 +619,22 @@ export function QuoteDetailView({ id }: { id: string }) {
                   >
                     Edit
                   </Link>
-                  {quote.paymentDetailsResolved && (
+                  {quote.paymentDetailsResolved ? (
                     <Button
                       size="sm"
                       onClick={handleConvertToInvoice}
                       disabled={actionState.converting}
                     >
                       {actionState.converting ? "Converting..." : "Convert to Invoice"}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPaymentDialogOpen(true)}
+                      disabled={actionState.resolvingPayment}
+                    >
+                      {actionState.resolvingPayment ? "Saving..." : "Resolve Payment Details"}
                     </Button>
                   )}
                 </>
@@ -716,7 +781,7 @@ export function QuoteDetailView({ id }: { id: string }) {
                   Payment Method
                 </Label>
                 <div className="grid grid-cols-2 gap-2">
-                  {MANUAL_APPROVAL_PAYMENT_OPTIONS.map((opt) => (
+                  {PAYMENT_OPTIONS.map((opt) => (
                     <button
                       key={opt.value}
                       type="button"
@@ -762,6 +827,63 @@ export function QuoteDetailView({ id }: { id: string }) {
                 disabled={actionState.approving}
               >
                 {actionState.approving ? "Approving..." : "Approve Quote"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={paymentDialogOpen} onOpenChange={handlePaymentDialogOpenChange}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Resolve Payment Details</DialogTitle>
+              <DialogDescription>
+                Save the payment method for this accepted quote so it can be converted to an invoice.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Payment Method
+                </Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {PAYMENT_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        setPaymentMethod(opt.value);
+                        if (opt.value !== "ACCOUNT_NUMBER") setPaymentAccountNumber("");
+                      }}
+                      className={`rounded-md border px-3 py-2 text-sm transition-colors ${
+                        paymentMethod === opt.value
+                          ? "border-primary bg-primary/10 font-medium text-primary"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {paymentMethod === "ACCOUNT_NUMBER" && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="resolve-payment-account-number">SAP Account Number</Label>
+                  <Input
+                    id="resolve-payment-account-number"
+                    value={paymentAccountNumber}
+                    onChange={(e) => setPaymentAccountNumber(e.target.value)}
+                    placeholder="Enter SAP account number"
+                  />
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleResolvePaymentDetails} disabled={actionState.resolvingPayment}>
+                {actionState.resolvingPayment ? "Saving..." : "Save Payment Details"}
               </Button>
             </DialogFooter>
           </DialogContent>

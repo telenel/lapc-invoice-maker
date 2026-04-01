@@ -921,6 +921,60 @@ describe("quoteService", () => {
       await expect(quoteService.update("q1", { notes: "Updated after approval" })).resolves.toBeDefined();
     });
 
+    it("allows accepted unresolved quotes to backfill payment details before conversion", async () => {
+      const quote = makeQuote({ quoteStatus: "ACCEPTED", convertedToInvoice: null, paymentMethod: null });
+      mockRepo.findById.mockResolvedValue(quote as never);
+      mockRepo.update.mockResolvedValue({
+        ...quote,
+        paymentMethod: "ACCOUNT_NUMBER",
+        paymentAccountNumber: "SAP-12345",
+      } as never);
+
+      const result = await quoteService.update("q1", {
+        paymentMethod: "ACCOUNT_NUMBER",
+        paymentAccountNumber: "SAP-12345",
+      });
+
+      expect(mockRepo.update).toHaveBeenCalledWith("q1", {
+        paymentMethod: "ACCOUNT_NUMBER",
+        paymentAccountNumber: "SAP-12345",
+      });
+      expect(result.paymentMethod).toBe("ACCOUNT_NUMBER");
+      expect(result.paymentAccountNumber).toBe("SAP-12345");
+      expect(result.paymentDetailsResolved).toBe(true);
+    });
+
+    it("rejects payment-detail backfill before a quote is accepted", async () => {
+      const quote = makeQuote({ quoteStatus: "SENT", convertedToInvoice: null, paymentMethod: null });
+      mockRepo.findById.mockResolvedValue(quote as never);
+
+      await expect(
+        quoteService.update("q1", {
+          paymentMethod: "CHECK",
+        }),
+      ).rejects.toMatchObject({
+        code: "FORBIDDEN",
+        message: "Payment details can only be updated after a quote is accepted",
+      });
+
+      expect(mockRepo.update).not.toHaveBeenCalled();
+    });
+
+    it("rejects overwriting accepted payment details through the update flow", async () => {
+      const quote = makeQuote({ quoteStatus: "ACCEPTED", convertedToInvoice: null, paymentMethod: "CHECK" });
+      mockRepo.findById.mockResolvedValue(quote as never);
+
+      await expect(
+        quoteService.update("q1", {
+          paymentMethod: "ACCOUNT_NUMBER",
+          paymentAccountNumber: "SAP-12345",
+        }),
+      ).rejects.toMatchObject({
+        code: "PAYMENT_ALREADY_RESOLVED",
+        message: "Payment details have already been provided",
+      });
+    });
+
     it("throws FORBIDDEN when an accepted quote has already been converted", async () => {
       mockRepo.findById.mockResolvedValue(
         makeQuote({

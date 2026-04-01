@@ -160,4 +160,26 @@ describe("POST /api/quotes/public/[token]/payment", () => {
     expect(safePublishAll).toHaveBeenCalledWith({ type: "quote-changed" });
     expect(safePublishAll).toHaveBeenCalledWith({ type: "invoice-changed" });
   });
+
+  it("returns 404 when the quote disappears during the locked payment update", async () => {
+    vi.mocked(quoteService.submitPublicPaymentDetails).mockRejectedValue(
+      Object.assign(new Error("Quote not found"), {
+        code: "NOT_FOUND",
+      }),
+    );
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/payment", {
+        method: "POST",
+        body: JSON.stringify({
+          paymentMethod: "CHECK",
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    expect(response.status).toBe(404);
+    expect(safePublishAll).not.toHaveBeenCalled();
+  });
 });

@@ -136,7 +136,7 @@ async function claimPaymentFollowUp(quoteId: string, now: Date) {
     });
 
     return {
-      creatorId: quote.createdBy,
+      ownerUserId: state.convertedInvoice?.createdBy ?? quote.createdBy,
       followUpId: followUp.id,
       quoteId: quote.id,
       quoteNum,
@@ -245,7 +245,7 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
     try {
       const { notificationService } = await import("@/domains/notification/service");
       await notificationService.createAndPublish({
-        userId: claim.creatorId,
+        userId: claim.ownerUserId,
         type: "PAYMENT_FOLLOWUP_SENT",
         title: `Payment reminder sent for ${claim.quoteNum}`,
         message: `Reminder #${claim.attemptNumber} sent to ${claim.recipientEmail}`,

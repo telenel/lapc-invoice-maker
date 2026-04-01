@@ -300,6 +300,11 @@ describe("checkAndSendPaymentFollowUps", () => {
       where: { id: "fu1" },
       data: { type: "PAYMENT_REMINDER" },
     });
+    expect(vi.mocked(notificationService.createAndPublish)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: "u2",
+      }),
+    );
   });
 
   it("requires a share token before emailing payment reminders", async () => {

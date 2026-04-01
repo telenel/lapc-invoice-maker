@@ -29,6 +29,9 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     return NextResponse.json({ success: true });
   } catch (err) {
     const code = (err as { code?: string }).code;
+    if (code === "NOT_FOUND") {
+      return NextResponse.json({ error: "Quote not found or not accepted" }, { status: 404 });
+    }
     if (code === "INVALID_INPUT") {
       return NextResponse.json({ error: (err as Error).message }, { status: 400 });
     }

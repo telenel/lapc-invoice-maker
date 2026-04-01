@@ -539,4 +539,26 @@ describe("POST /api/quotes/public/[token]/respond", () => {
 
     expect(response.status).toBe(409);
   });
+
+  it("returns 404 when the quote disappears during the locked response write", async () => {
+    vi.mocked(quoteService.respondToQuote).mockRejectedValue(
+      Object.assign(new Error("Quote not found"), {
+        code: "NOT_FOUND",
+      }),
+    );
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/respond", {
+        method: "POST",
+        body: JSON.stringify({
+          response: "ACCEPTED",
+          paymentMethod: "CHECK",
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    expect(response.status).toBe(404);
+  });
 });

@@ -192,6 +192,8 @@ export interface UpdateQuoteInput {
   marginPercent?: number;
   taxEnabled?: boolean;
   taxRate?: number;
+  paymentMethod?: string;
+  paymentAccountNumber?: string | null;
 }
 
 export interface QuoteFilters {

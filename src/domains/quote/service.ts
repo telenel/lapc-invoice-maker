@@ -731,7 +731,37 @@ export const quoteService = {
       );
     }
 
-    const { items, ...quoteData } = input;
+    const { items, paymentMethod, paymentAccountNumber, ...rest } = input;
+    const quoteData: UpdateQuoteInput = { ...rest };
+    const paymentFieldsProvided = paymentMethod !== undefined || paymentAccountNumber !== undefined;
+
+    if (paymentFieldsProvided) {
+      if (existing.quoteStatus !== "ACCEPTED") {
+        throw Object.assign(
+          new Error("Payment details can only be updated after a quote is accepted"),
+          { code: "FORBIDDEN" }
+        );
+      }
+      if (paymentMethod === undefined) {
+        throw Object.assign(new Error("paymentMethod is required"), { code: "INVALID_INPUT" });
+      }
+      if (existing.paymentMethod) {
+        throw Object.assign(new Error("Payment details have already been provided"), {
+          code: "PAYMENT_ALREADY_RESOLVED",
+        });
+      }
+
+      const normalizedPayment = normalizeQuotePaymentDetails({
+        paymentMethod,
+        accountNumber: paymentAccountNumber,
+      });
+      if (!normalizedPayment) {
+        throw Object.assign(new Error("paymentMethod is required"), { code: "INVALID_INPUT" });
+      }
+
+      quoteData.paymentMethod = normalizedPayment.paymentMethod;
+      quoteData.paymentAccountNumber = normalizedPayment.paymentAccountNumber;
+    }
 
     const mEnabled = Boolean(quoteData.marginEnabled ?? existing.marginEnabled);
     const mPercent = quoteData.marginPercent != null ? Number(quoteData.marginPercent) : (existing.marginPercent != null ? Number(existing.marginPercent) : undefined);
