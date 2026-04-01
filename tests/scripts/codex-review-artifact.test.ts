@@ -53,6 +53,7 @@ describe("codex review artifact helper", () => {
   it("parses the structured review report sections", () => {
     const parsed = parseReviewOutput(`RESULT: FAIL
 SUMMARY: Two workflow regressions need fixes
+LIVE-FINDING: src/domains/quote/service.ts blocks legacy conversion.
 SCOPE:
 - scripts/codex-review-local.sh focused-mode argument parsing
 - scripts/ship-check.sh stamp freshness reporting

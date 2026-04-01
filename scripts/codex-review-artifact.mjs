@@ -214,6 +214,10 @@ export function parseReviewOutput(text) {
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index];
 
+    if (line.startsWith("LIVE-FINDING:")) {
+      continue;
+    }
+
     if (line.startsWith("RESULT:")) {
       result = line.slice("RESULT:".length).trim();
       continue;

@@ -45,9 +45,14 @@ npx prisma generate      # Generate Prisma client
 npm run dev              # Start dev server (localhost:3000)
 npm run ship-check       # git status + lint + test + build + stamp current HEAD
 npm run review:codex     # Local Codex review against main; writes text + JSON artifacts and stamps current HEAD
+npm run review:codex:live  # Stream the review and publish live finding events into .git/laportal/codex-review.live.jsonl
+npm run review:codex:live:triage  # Batch the current live findings from .git/laportal/codex-review.live.json
+npm run review:codex:loop  # Run review, then print remediation batches when the result is FAIL
 npm run review:codex:json  # Same review, but prints the structured JSON artifact to stdout
 npm run review:codex -- --focus src/domains/quote/service.ts  # Review only matching changed paths
 npm run review:codex:findings  # Print unresolved findings from the latest Codex artifact
+npm run review:codex:triage  # Group the latest unresolved findings into remediation batches
+npm run review:codex:prompt -- --batch B1  # Print a bounded worker prompt for a single remediation batch
 npm test                 # Run tests (350 tests)
 npm run build            # Production build
 ```
@@ -85,6 +90,10 @@ Local AI workflow is hard-coded through tracked scripts and hooks:
 - `./scripts/publish-pr.sh`
 
 `npm run review:codex` always keeps the latest text report at `.git/laportal/codex-review.txt`, the latest structured artifact at `.git/laportal/codex-review.json`, and a rolling history of the last 20 review runs in `.git/laportal/review-history/`.
+
+`npm run review:codex:live` streams the review output, looks for `LIVE-FINDING:` lines in the prompt hook, and appends live queue events to `.git/laportal/codex-review.live.jsonl` plus a snapshot at `.git/laportal/codex-review.live.json`.
+
+`npm run review:codex:triage` reads the latest structured artifact and groups unresolved findings by overlapping file ownership so an agent can keep coupled fixes local and delegate only bounded batches. `npm run review:codex:prompt -- --batch B1` prints a worker-ready prompt for one batch.
 
 ## Project Documentation
 

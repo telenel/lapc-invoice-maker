@@ -11,8 +11,13 @@
     "test:watch": "vitest",
     "ship-check": "./scripts/ship-check.sh",
     "review:codex": "./scripts/codex-review-local.sh",
+    "review:codex:live": "node ./scripts/codex-review-live.mjs",
+    "review:codex:live:triage": "node ./scripts/codex-review-remediation.mjs triage --artifact .git/laportal/codex-review.live.json",
+    "review:codex:loop": "./scripts/codex-review-loop.sh",
     "review:codex:json": "./scripts/codex-review-local.sh --json",
     "review:codex:findings": "node ./scripts/codex-review-artifact.mjs print-findings",
+    "review:codex:triage": "node ./scripts/codex-review-remediation.mjs triage",
+    "review:codex:prompt": "node ./scripts/codex-review-remediation.mjs prompt",
     "publish:pr": "./scripts/publish-pr.sh",
     "postinstall": "node ./scripts/postinstall.js"
   },

@@ -105,6 +105,46 @@ These are the hard-coded workflow entrypoints. Do not replace them with ad hoc c
 - Reads the latest structured artifact from `.git/laportal/codex-review.json`.
 - Prints only the latest unresolved actionable findings for quick follow-up work.
 
+### `npm run review:codex:live`
+
+- Runs the normal local Codex review while streaming output.
+- Looks for `LIVE-FINDING:` lines emitted by the review prompt hook.
+- Appends each live finding to `.git/laportal/codex-review.live.jsonl`.
+- Maintains a snapshot in `.git/laportal/codex-review.live.json` so an orchestrator can poll the live queue while the review is still running.
+
+### `npm run review:codex:live:triage`
+
+- Reads the live snapshot from `.git/laportal/codex-review.live.json`.
+- Batches the current unresolved live findings with the same overlap rules as the final triage step.
+- Intended for the orchestrator agent that is watching the live queue.
+
+### `npm run review:codex:triage`
+
+- Reads the latest structured artifact from `.git/laportal/codex-review.json`.
+- Groups unresolved findings into remediation batches by overlapping repo file ownership.
+- Labels each batch as `worker-candidate` or `main-agent` so agents can avoid overlapping edits.
+- Supports `npm run review:codex:triage -- --json` for machine-readable orchestration.
+
+### `npm run review:codex:prompt`
+
+- Prints a bounded worker prompt for one remediation batch from the latest artifact.
+- Requires `--batch <BATCH_ID>`.
+
+### `npm run review:codex:loop`
+
+- Runs the normal local Codex review.
+- If the result is `FAIL`, immediately prints the remediation triage output from the latest artifact.
+- Keeps the existing review stamp and artifact contract intact.
+
+### Live Orchestration Pattern
+
+1. Start the review with `npm run review:codex:live`.
+2. Have the orchestrator poll `.git/laportal/codex-review.live.jsonl` and `.git/laportal/codex-review.live.json` for new findings.
+3. Use the same batching rules from `npm run review:codex:triage` for any findings that already have stable file ownership.
+4. Generate a worker prompt from the live snapshot with `npm run review:codex:prompt -- --artifact .git/laportal/codex-review.live.json --batch <BATCH_ID>`.
+5. Delegate only non-overlapping batches to worker agents.
+6. Keep coupled workflow surfaces on the coordinating agent until the review completes and the final artifact is written.
+
 ### `hooks/pre-push`
 
 - Refuses pushes when the current `HEAD` does not have a fresh `ship-check` stamp.

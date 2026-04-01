@@ -18,6 +18,11 @@ Prioritize:
 - lead with the strongest blocker, then list any secondary issues
 - do not stop after the first issue
 
+Live review hook:
+- If you identify a concrete issue before the final response is complete, emit a single line that starts with `LIVE-FINDING:` and then the concise issue text.
+- Keep those live lines short and specific.
+- The final response must still use the exact `RESULT` / `SUMMARY` / `SCOPE` / `FINDINGS` format below.
+
 Repo-specific rules:
 - Route handlers should call domain services, not repositories directly.
 - Components should use domain api-clients and hooks rather than introducing new raw fetch usage, unless the touched area already intentionally follows a different local pattern.

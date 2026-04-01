@@ -184,6 +184,16 @@ if [ ! -s "$output_file" ]; then
   exit 1
 fi
 
+clean_output_file=$(mktemp "${TMPDIR:-/tmp}/codex-review-output.XXXXXX")
+cleanup_clean_output() {
+  rm -f "$clean_output_file"
+}
+trap cleanup_clean_output EXIT
+
+awk '!/^LIVE-FINDING:/' "$output_file" > "$clean_output_file"
+mv "$clean_output_file" "$output_file"
+trap - EXIT
+
 result=$(awk -F': ' '/^RESULT:/ {print $2; exit}' "$output_file")
 summary=$(awk -F': ' '/^SUMMARY:/ {print $2; exit}' "$output_file")
 
