@@ -118,9 +118,16 @@ cleanup() {
 }
 trap cleanup EXIT
 
-mapfile -t changed_files < <(git diff --name-only "$base_ref...HEAD")
+changed_files=()
+while IFS= read -r changed_file; do
+  changed_files+=("$changed_file")
+done < <(git diff --name-only "$base_ref...HEAD")
+
 if [ "${#focus_paths[@]}" -gt 0 ]; then
-  mapfile -t reviewed_files < <(git diff --name-only "$base_ref...HEAD" -- "${focus_paths[@]}")
+  reviewed_files=()
+  while IFS= read -r reviewed_file; do
+    reviewed_files+=("$reviewed_file")
+  done < <(git diff --name-only "$base_ref...HEAD" -- "${focus_paths[@]}")
   if [ "${#reviewed_files[@]}" -eq 0 ]; then
     echo "BLOCKED: none of the focused paths match files changed relative to $base_ref."
     exit 1
