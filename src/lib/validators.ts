@@ -149,6 +149,14 @@ export const quoteUpdateSchema = quoteCreateSchema.partial().extend({
   quoteStatus: z.enum(["DRAFT", "SENT", "SUBMITTED_EMAIL", "SUBMITTED_MANUAL", "ACCEPTED", "DECLINED", "EXPIRED"]).optional(),
   paymentMethod: z.enum(["ACCOUNT_NUMBER", "CHECK", "CASH", "CREDIT_CARD"]).optional(),
   paymentAccountNumber: z.string().nullable().optional(),
+}).superRefine((data, ctx) => {
+  if (data.paymentMethod === "ACCOUNT_NUMBER" && !data.paymentAccountNumber?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["paymentAccountNumber"],
+      message: "Payment account number is required when payment method is ACCOUNT_NUMBER",
+    });
+  }
 });
 
 export const eventSchema = z.object({

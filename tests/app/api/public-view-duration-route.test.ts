@@ -43,7 +43,7 @@ describe("public view duration route", () => {
     expect(quoteService.updateViewDurationForToken).toHaveBeenCalledWith("token", "view-1", 21);
   });
 
-  it("returns 404 when the view does not belong to the quote token", async () => {
+  it("returns 400 when the view does not belong to the quote token", async () => {
     vi.mocked(quoteService.updateViewDurationForToken).mockRejectedValueOnce(
       Object.assign(new Error("Quote activity session not found"), { code: "INVALID_INPUT" }),
     );
@@ -57,7 +57,8 @@ describe("public view duration route", () => {
       { params: Promise.resolve({ token: "token", viewId: "view-1" }) },
     );
 
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "Quote activity session not found" });
     expect(quoteService.updateViewDurationForToken).toHaveBeenCalledWith("token", "view-1", 12);
   });
 });

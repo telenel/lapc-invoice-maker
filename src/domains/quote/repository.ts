@@ -431,6 +431,7 @@ export async function syncPublicPaymentDetails(
       SELECT id, status
       FROM invoices
       WHERE id = ${convertedInvoiceId}
+        AND converted_from_quote_id = ${quoteId}
       FOR UPDATE
     `;
     const convertedInvoice = convertedInvoices[0];

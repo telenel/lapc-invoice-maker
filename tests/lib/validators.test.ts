@@ -562,4 +562,13 @@ describe("quoteUpdateSchema", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it("requires an account number when the payment method is ACCOUNT_NUMBER", () => {
+    const result = quoteUpdateSchema.safeParse({
+      paymentMethod: "ACCOUNT_NUMBER",
+      paymentAccountNumber: "   ",
+    });
+
+    expect(result.success).toBe(false);
+  });
 });

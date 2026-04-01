@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -66,18 +66,24 @@ export function QuoteActivity({ quoteId }: { quoteId: string }) {
   const [followUps, setFollowUps] = useState<QuoteFollowUpResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const activitySeqRef = useRef(0);
 
   const loadActivity = useCallback(() => {
+    const seq = ++activitySeqRef.current;
     setError(null);
     Promise.all([quoteApi.getViews(quoteId), quoteApi.getFollowUps(quoteId)])
       .then(([v, f]) => {
+        if (seq !== activitySeqRef.current) return;
         setViews(v);
         setFollowUps(f);
       })
       .catch((err) => {
+        if (seq !== activitySeqRef.current) return;
         setError(err instanceof Error ? err.message : "Failed to load activity");
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (seq === activitySeqRef.current) setLoading(false);
+      });
   }, [quoteId]);
 
   useEffect(() => {

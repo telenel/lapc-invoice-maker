@@ -6,8 +6,8 @@ type RouteContext = { params: Promise<{ token: string }> };
 
 export async function POST(req: NextRequest, ctx: RouteContext) {
   const { token } = await ctx.params;
-  const body = await req.json().catch(() => ({}));
-  if (body === null) {
+  const body = await req.json().catch(() => null);
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
@@ -18,8 +18,8 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     }
 
     const quote = await quoteService.submitPublicPaymentDetails(token, {
-      paymentMethod: body.paymentMethod,
-      accountNumber: body.accountNumber,
+      paymentMethod: (body as { paymentMethod?: string }).paymentMethod,
+      accountNumber: (body as { accountNumber?: string | null }).accountNumber,
     });
     if (!quote) {
       return NextResponse.json({ error: "Quote not found or not accepted" }, { status: 404 });

@@ -255,7 +255,7 @@ export interface QuotePublicSettingsResponse {
 
 export interface QuotePublicResponseSubmission {
   response: "ACCEPTED" | "DECLINED";
-  viewId?: string | null;
+  viewId?: string;
   cateringDetails?: CateringDetails;
   paymentMethod?: string;
   accountNumber?: string | null;

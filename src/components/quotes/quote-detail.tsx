@@ -496,12 +496,12 @@ export function QuoteDetailView({ id }: { id: string }) {
       } else {
         toast.success("Payment details saved");
         await fetchQuote();
+        setPaymentDialogOpen(false);
       }
     } catch {
       toast.error("Failed to save payment details");
     } finally {
       setActionState((prev) => ({ ...prev, resolvingPayment: false }));
-      setPaymentDialogOpen(false);
     }
   }, [quote, paymentMethod, paymentAccountNumber, id, fetchQuote]);
 

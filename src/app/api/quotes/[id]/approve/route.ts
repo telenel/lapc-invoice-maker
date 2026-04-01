@@ -10,10 +10,15 @@ const approveBodySchema = z.object({
 
 export const POST = withAuth(async (req: NextRequest, session, ctx) => {
   const { id } = await ctx!.params;
-  let body: unknown;
+  let body: unknown = {};
   try {
-    body = await req.json();
+    const rawBody = await req.text();
+    body = rawBody.trim() ? JSON.parse(rawBody) : {};
   } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
+  if (typeof body !== "object" || body === null || Array.isArray(body)) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 

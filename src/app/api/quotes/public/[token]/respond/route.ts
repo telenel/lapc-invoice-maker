@@ -110,9 +110,17 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         contactName: parsed.data.contactName,
         contactPhone: parsed.data.contactPhone,
         setupRequired: parsed.data.setupRequired ?? existingCateringDetails?.setupRequired ?? false,
-        setupInstructions: existingCateringDetails?.setupInstructions,
+        ...(parsed.data.setupInstructions !== undefined
+          ? { setupInstructions: parsed.data.setupInstructions }
+          : existingCateringDetails?.setupInstructions !== undefined
+            ? { setupInstructions: existingCateringDetails.setupInstructions }
+            : {}),
         takedownRequired: parsed.data.takedownRequired ?? existingCateringDetails?.takedownRequired ?? false,
-        takedownInstructions: existingCateringDetails?.takedownInstructions,
+        ...(parsed.data.takedownInstructions !== undefined
+          ? { takedownInstructions: parsed.data.takedownInstructions }
+          : existingCateringDetails?.takedownInstructions !== undefined
+            ? { takedownInstructions: existingCateringDetails.takedownInstructions }
+            : {}),
         ...(parsed.data.headcount !== undefined
           ? { headcount: parsed.data.headcount }
           : existingCateringDetails?.headcount !== undefined

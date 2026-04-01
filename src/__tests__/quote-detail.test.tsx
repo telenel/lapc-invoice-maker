@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { QuoteDetailView } from "@/components/quotes/quote-detail";
+import { toast } from "sonner";
 
 const pushMock = vi.fn();
 
@@ -192,5 +193,78 @@ describe("QuoteDetailView", () => {
     expect(screen.getByRole("button", { name: "Resolve Payment Details" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /View Invoice INV-1/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Convert to Invoice" })).not.toBeInTheDocument();
+  });
+
+  it("keeps the payment dialog open when saving payment details fails", async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        if (String(input) === "/api/quotes/q1" && !init) {
+          return {
+            ok: true,
+            json: async () =>
+              makeQuote({
+                quoteStatus: "ACCEPTED",
+                convertedToInvoice: null,
+                paymentDetailsResolved: false,
+              }),
+          } satisfies Partial<Response>;
+        }
+
+        if (String(input) === "/api/quotes/q1" && init?.method === "PUT") {
+          return {
+            ok: false,
+            json: async () => ({ error: "Failed to save payment details" }),
+          } satisfies Partial<Response>;
+        }
+
+        throw new Error(`Unexpected fetch: ${String(input)}`);
+      }),
+    );
+
+    render(<QuoteDetailView id="q1" />);
+
+    await screen.findByText("Q-1");
+    await user.click(screen.getByRole("button", { name: "Resolve Payment Details" }));
+    await user.click(screen.getByRole("button", { name: "CHECK" }));
+    await user.click(screen.getByRole("button", { name: "Save Payment Details" }));
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith("Failed to save payment details");
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Save Payment Details" })).toBeInTheDocument();
+    });
+  });
+
+  it("does not enter a saving state when validation fails before submit", async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        if (String(input) === "/api/quotes/q1") {
+          return {
+            ok: true,
+            json: async () =>
+              makeQuote({
+                quoteStatus: "ACCEPTED",
+                convertedToInvoice: null,
+                paymentDetailsResolved: false,
+              }),
+          } satisfies Partial<Response>;
+        }
+
+        throw new Error(`Unexpected fetch: ${String(input)}`);
+      }),
+    );
+
+    render(<QuoteDetailView id="q1" />);
+
+    await screen.findByText("Q-1");
+    await user.click(screen.getByRole("button", { name: "Resolve Payment Details" }));
+    await user.click(screen.getByRole("button", { name: "Save Payment Details" }));
+
+    expect(screen.getByRole("button", { name: "Save Payment Details" })).toBeEnabled();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
 });

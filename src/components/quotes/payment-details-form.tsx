@@ -61,7 +61,18 @@ export function PaymentDetailsForm({
       setSubmitted(true);
       toast.success("Payment details submitted — thank you!");
     } catch (err) {
-      toast.error((err as Error).message ?? "Something went wrong");
+      if (typeof err === "string") {
+        toast.error(err);
+      } else if (err && typeof err === "object" && typeof (err as { message?: unknown }).message === "string") {
+        toast.error((err as { message: string }).message);
+      } else {
+        try {
+          const stringified = JSON.stringify(err);
+          toast.error(typeof stringified === "string" ? stringified : "Something went wrong");
+        } catch {
+          toast.error("Something went wrong");
+        }
+      }
     } finally {
       setSubmitting(false);
     }

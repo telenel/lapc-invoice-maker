@@ -99,6 +99,13 @@ export function PublicQuoteView({ token }: { token: string }) {
   useEffect(() => {
     async function init() {
       try {
+        setLoading(true);
+        setQuote(null);
+        setResponded(false);
+        setPaymentMethod("");
+        setSapAccountNumber("");
+        setContactInfo({});
+        setCateringForm(makeCateringForm(null));
         viewIdRef.current = null;
         publicViewRegistrationRef.current = null;
         pendingUnloadDurationRef.current = null;

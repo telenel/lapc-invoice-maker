@@ -1,9 +1,30 @@
 import "@testing-library/jest-dom/vitest";
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PaymentDetailsForm } from "@/components/quotes/payment-details-form";
 
+vi.mock("sonner", () => ({
+  toast: {
+    error: vi.fn(),
+    success: vi.fn(),
+  },
+}));
+
+vi.mock("@/domains/quote/api-client", () => ({
+  quoteApi: {
+    submitPublicPaymentDetails: vi.fn(),
+  },
+}));
+
+import { toast } from "sonner";
+import { quoteApi } from "@/domains/quote/api-client";
+
 describe("PaymentDetailsForm", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("shows a not found state for missing quotes", () => {
     render(<PaymentDetailsForm token="token" initialQuote={null} />);
 
@@ -90,5 +111,29 @@ describe("PaymentDetailsForm", () => {
     );
 
     expect(screen.getByText("Payment Link Not Ready")).toBeInTheDocument();
+  });
+
+  it("surfaces string throwables in the error toast", async () => {
+    vi.mocked(quoteApi.submitPublicPaymentDetails).mockRejectedValueOnce("Gateway unavailable");
+    const user = userEvent.setup();
+
+    render(
+      <PaymentDetailsForm
+        token="token"
+        initialQuote={{
+          quoteStatus: "ACCEPTED",
+          paymentDetailsResolved: false,
+          quoteNumber: "Q-1",
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Account Number" }));
+    await user.type(screen.getByPlaceholderText("Enter your SAP account number"), "SAP-12345");
+    await user.click(screen.getByRole("button", { name: "Submit Payment Details" }));
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith("Gateway unavailable");
+    });
   });
 });
