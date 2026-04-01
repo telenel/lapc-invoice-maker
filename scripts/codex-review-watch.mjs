@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 function gitDir() {
@@ -14,29 +14,18 @@ function parseArgs(argv) {
   };
 }
 
-function latestSessionDir(rootDir) {
-  if (!existsSync(rootDir)) {
+function latestSession(rootDir) {
+  const latestSessionPath = path.join(rootDir, "latest-session.json");
+  if (!existsSync(latestSessionPath)) {
     return null;
   }
 
-  const sessions = readdirSync(rootDir)
-    .map((entry) => path.join(rootDir, entry))
-    .filter((entry) => {
-      try {
-        return statSync(entry).isDirectory();
-      } catch {
-        return false;
-      }
-    })
-    .sort()
-    .reverse();
-
-  return sessions[0] ?? null;
+  return JSON.parse(readFileSync(latestSessionPath, "utf8"));
 }
 
-function printCurrentState(sessionDir) {
-  const summaryTextPath = path.join(sessionDir, "summary.txt");
-  const eventsPath = path.join(sessionDir, "events.jsonl");
+function printCurrentState(session) {
+  const summaryTextPath = session.latestSummaryTextPath ?? session.summaryTextPath;
+  const eventsPath = session.latestEventsPath ?? session.eventsPath;
 
   if (existsSync(summaryTextPath)) {
     process.stdout.write(`${readFileSync(summaryTextPath, "utf8")}\n`);
@@ -49,8 +38,8 @@ function printCurrentState(sessionDir) {
   }
 }
 
-async function followEvents(sessionDir) {
-  const eventsPath = path.join(sessionDir, "events.jsonl");
+async function followEvents(session) {
+  const eventsPath = session.latestEventsPath ?? session.eventsPath;
   let offset = 0;
 
   process.stdout.write(`Watching ${eventsPath}\n`);
@@ -69,18 +58,18 @@ async function followEvents(sessionDir) {
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const rootDir = path.resolve(gitDir(), "laportal", "autopilot");
-  const sessionDir = latestSessionDir(rootDir);
+  const session = latestSession(rootDir);
 
-  if (!sessionDir) {
+  if (!session) {
     throw new Error(`No autopilot session found under ${rootDir}`);
   }
 
-  process.stdout.write(`Latest autopilot session: ${sessionDir}\n\n`);
-  printCurrentState(sessionDir);
+  process.stdout.write(`Latest autopilot session: ${session.sessionDir}\n\n`);
+  printCurrentState(session);
 
   if (args.follow) {
     process.stdout.write("\n");
-    await followEvents(sessionDir);
+    await followEvents(session);
   }
 }
 

@@ -4,7 +4,10 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
+  rmSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import os from "node:os";
@@ -16,6 +19,7 @@ import {
 
 const POLL_INTERVAL_MS = 2000;
 const LIVE_BATCH_QUIET_MS = 5000;
+const AUTOPILOT_HISTORY_LIMIT = 20;
 
 function git(args, options = {}) {
   return execFileSync("git", args, {
@@ -169,13 +173,15 @@ function sanitizeName(value) {
 function createSession(context) {
   const startedAt = new Date().toISOString().replace(/[:.]/g, "-");
   const sessionId = `${startedAt}-${context.headSha.slice(0, 12)}`;
-  const sessionDir = path.join(context.gitDir, "laportal", "autopilot", sessionId);
+  const autopilotRoot = path.join(context.gitDir, "laportal", "autopilot");
+  const sessionDir = path.join(autopilotRoot, sessionId);
   mkdirSync(sessionDir, { recursive: true });
   const worktreeRoot = mkdtempSync(
     path.join(os.tmpdir(), `laportal-codex-autopilot-${context.headSha.slice(0, 7)}-`),
   );
 
   return {
+    autopilotRoot,
     sessionId,
     sessionDir,
     worktreeRoot,
@@ -184,6 +190,10 @@ function createSession(context) {
     producerLogPath: path.join(sessionDir, "producer.log"),
     summaryPath: path.join(sessionDir, "summary.json"),
     summaryTextPath: path.join(sessionDir, "summary.txt"),
+    latestEventsPath: path.join(autopilotRoot, "latest-events.jsonl"),
+    latestSessionPath: path.join(autopilotRoot, "latest-session.json"),
+    latestSummaryPath: path.join(autopilotRoot, "latest-summary.json"),
+    latestSummaryTextPath: path.join(autopilotRoot, "latest-summary.txt"),
   };
 }
 
@@ -211,7 +221,10 @@ export function buildSummaryText(summary) {
     `live snapshot: ${summary.liveStatePath ?? "missing"}`,
     `final artifact: ${summary.finalArtifactPath ?? "pending"}`,
     `events: ${summary.eventsPath ?? "missing"}`,
+    `latest events: ${summary.latestEventsPath ?? "missing"}`,
     `producer log: ${summary.producerLogPath ?? "missing"}`,
+    `latest summary: ${summary.latestSummaryPath ?? "missing"}`,
+    `latest text summary: ${summary.latestSummaryTextPath ?? "missing"}`,
     "",
     "Tasks:",
   ];
@@ -236,9 +249,39 @@ export function buildSummaryText(summary) {
   return `${lines.join("\n")}\n`;
 }
 
+function buildLatestSessionState(session, summary) {
+  return {
+    sessionId: session.sessionId,
+    sessionDir: session.sessionDir,
+    startedAt: session.startedAt,
+    updatedAt: new Date().toISOString(),
+    branch: summary.branch,
+    headSha: summary.headSha,
+    status: summary.finalArtifactDispatched
+      ? summary.tasks.some((task) => task.status === "running" || task.status === "integrating")
+        ? "running"
+        : "completed"
+      : "starting",
+    summaryPath: session.summaryPath,
+    summaryTextPath: session.summaryTextPath,
+    eventsPath: session.eventsPath,
+    producerLogPath: session.producerLogPath,
+    latestSummaryPath: session.latestSummaryPath,
+    latestSummaryTextPath: session.latestSummaryTextPath,
+    latestEventsPath: session.latestEventsPath,
+  };
+}
+
 function writeSummary(session, payload) {
+  const summaryText = buildSummaryText(payload);
   writeFileSync(session.summaryPath, `${JSON.stringify(payload, null, 2)}\n`);
-  writeFileSync(session.summaryTextPath, buildSummaryText(payload));
+  writeFileSync(session.summaryTextPath, summaryText);
+  writeFileSync(session.latestSummaryPath, `${JSON.stringify(payload, null, 2)}\n`);
+  writeFileSync(session.latestSummaryTextPath, summaryText);
+  writeFileSync(
+    session.latestSessionPath,
+    `${JSON.stringify(buildLatestSessionState(session, payload), null, 2)}\n`,
+  );
 }
 
 export function formatEventLine(event) {
@@ -274,8 +317,41 @@ function emitEvent(session, summary, type, fields = {}) {
     ...fields,
   };
   appendFileSync(session.eventsPath, `${JSON.stringify(event)}\n`);
+  appendFileSync(session.latestEventsPath, `${JSON.stringify(event)}\n`);
   process.stdout.write(`${formatEventLine(event)}\n`);
   return event;
+}
+
+function resetLatestArtifacts(session) {
+  writeFileSync(session.latestEventsPath, "");
+}
+
+function pruneAutopilotSessions(autopilotRoot, keepSessionId) {
+  if (!existsSync(autopilotRoot)) {
+    return;
+  }
+
+  const directories = readdirSync(autopilotRoot)
+    .map((entry) => path.join(autopilotRoot, entry))
+    .filter((entry) => {
+      try {
+        return statSync(entry).isDirectory();
+      } catch {
+        return false;
+      }
+    })
+    .sort()
+    .reverse();
+
+  const kept = [];
+  for (const directory of directories) {
+    const name = path.basename(directory);
+    if (name === keepSessionId || kept.length < AUTOPILOT_HISTORY_LIMIT) {
+      kept.push(name);
+      continue;
+    }
+    rmSync(directory, { recursive: true, force: true });
+  }
 }
 
 function createWorktree(context, session, batch, role) {
@@ -518,16 +594,22 @@ async function main() {
     branch: context.branch,
     repoRoot: context.repoRoot,
     worktreeRoot: session.worktreeRoot,
+    autopilotRoot: session.autopilotRoot,
     eventsPath: session.eventsPath,
+    latestSessionPath: session.latestSessionPath,
+    latestEventsPath: session.latestEventsPath,
     producerLogPath: session.producerLogPath,
     summaryPath: session.summaryPath,
     summaryTextPath: session.summaryTextPath,
+    latestSummaryPath: session.latestSummaryPath,
+    latestSummaryTextPath: session.latestSummaryTextPath,
     liveStatePath: context.liveStatePath,
     finalArtifactPath: null,
     producerExitCode: null,
     finalArtifactDispatched: false,
     tasks: [],
   };
+  resetLatestArtifacts(session);
   writeSummary(session, summary);
   emitEvent(session, summary, "session-start", {
     repoRoot: context.repoRoot,
@@ -734,10 +816,15 @@ async function main() {
     taskCount: summary.tasks.length,
     failedTaskCount: summary.tasks.filter((task) => task.status === "failed").length,
   });
+  pruneAutopilotSessions(session.autopilotRoot, session.sessionId);
+  writeSummary(session, summary);
   process.stdout.write("\n==> Autopilot summary\n");
   process.stdout.write(`${JSON.stringify(summary, null, 2)}\n`);
   process.stdout.write(`Summary text: ${session.summaryTextPath}\n`);
   process.stdout.write(`Events log: ${session.eventsPath}\n`);
+  process.stdout.write(`Latest summary: ${session.latestSummaryPath}\n`);
+  process.stdout.write(`Latest text summary: ${session.latestSummaryTextPath}\n`);
+  process.stdout.write(`Latest events: ${session.latestEventsPath}\n`);
 
   const hasFailedTasks = summary.tasks.some((task) => task.status === "failed");
   process.exitCode =

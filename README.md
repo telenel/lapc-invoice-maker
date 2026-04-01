@@ -100,6 +100,12 @@ While it runs, the wrapper now emits explicit lifecycle lines such as worker lau
 - `.git/laportal/autopilot/<session-id>/events.jsonl`
 - `.git/laportal/autopilot/<session-id>/summary.json`
 - `.git/laportal/autopilot/<session-id>/summary.txt`
+- `.git/laportal/autopilot/latest-session.json`
+- `.git/laportal/autopilot/latest-events.jsonl`
+- `.git/laportal/autopilot/latest-summary.json`
+- `.git/laportal/autopilot/latest-summary.txt`
+
+The per-run `<session-id>/` directory is preserved for history. The `latest-*` files are overwritten on each autopilot run so follow-up tooling always has one stable target. Older session directories are pruned automatically.
 
 Use `npm run laportal:review:watch -- --follow` in a second terminal if you want a live view of the latest session without reading raw worker logs.
 
