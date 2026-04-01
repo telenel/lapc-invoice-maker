@@ -72,44 +72,44 @@ done < <(git diff --name-only "$base_ref...HEAD")
   cat "$prompt_file"
   printf '\n\n'
   printf 'Review context prepared by the wrapper:\n'
-  printf '- HEAD: %s\n' "$head_sha"
-  printf '- Base ref: %s\n' "$base_ref"
-  printf '- Review model: %s\n' "$review_model"
-  printf '- Review reasoning effort: %s\n' "$review_reasoning"
+  printf -- '- HEAD: %s\n' "$head_sha"
+  printf -- '- Base ref: %s\n' "$base_ref"
+  printf -- '- Review model: %s\n' "$review_model"
+  printf -- '- Review reasoning effort: %s\n' "$review_reasoning"
   printf '\n'
   printf 'Changed runtime files:\n'
   if [ "${#runtime_files[@]}" -eq 0 ]; then
-    printf '- none\n'
+    printf -- '- none\n'
   else
     printf '%s\n' "${runtime_files[@]}" | sed 's/^/- /'
   fi
   printf '\n'
   printf 'Changed test files:\n'
   if [ "${#test_files[@]}" -eq 0 ]; then
-    printf '- none\n'
+    printf -- '- none\n'
   else
     printf '%s\n' "${test_files[@]}" | sed 's/^/- /'
   fi
   printf '\n'
   printf 'Changed docs and prompt files:\n'
   if [ "${#docs_files[@]}" -eq 0 ]; then
-    printf '- none\n'
+    printf -- '- none\n'
   else
     printf '%s\n' "${docs_files[@]}" | sed 's/^/- /'
   fi
   printf '\n'
   printf 'Other changed files:\n'
   if [ "${#other_files[@]}" -eq 0 ]; then
-    printf '- none\n'
+    printf -- '- none\n'
   else
     printf '%s\n' "${other_files[@]}" | sed 's/^/- /'
   fi
   printf '\n'
   printf 'Wrapper instructions:\n'
-  printf '- Start with changed runtime files, then changed tests.\n'
-  printf '- Open docs and prompt files only if needed to resolve runtime behavior or workflow meaning.\n'
-  printf '- Planning files under docs/superpowers are low-priority context, not primary review targets.\n'
-  printf '- Use targeted per-file diffs before reopening the full branch diff.\n'
+  printf -- '- Start with changed runtime files, then changed tests.\n'
+  printf -- '- Open docs and prompt files only if needed to resolve runtime behavior or workflow meaning.\n'
+  printf -- '- Planning files under docs/superpowers are low-priority context, not primary review targets.\n'
+  printf -- '- Use targeted per-file diffs before reopening the full branch diff.\n'
 } > "$tmp_prompt"
 
 echo "==> Reviewing branch diff relative to $base_ref"
