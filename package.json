@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "ship-check": "./scripts/ship-check.sh",
+    "review:codex": "./scripts/codex-review-local.sh",
     "postinstall": "node ./scripts/postinstall.js"
   },
   "dependencies": {
