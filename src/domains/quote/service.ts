@@ -5,7 +5,7 @@ import { formatDateFromDate } from "@/domains/shared/formatters";
 import { calculateTotal } from "@/domains/invoice/calculations";
 import { prisma } from "@/lib/prisma";
 import { safePublishAll } from "@/lib/sse";
-import type { Prisma } from "@/generated/prisma/client";
+import { Prisma } from "@/generated/prisma/client";
 import type {
   QuoteResponse,
   QuoteItemResponse,
