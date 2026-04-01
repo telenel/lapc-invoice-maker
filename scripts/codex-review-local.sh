@@ -104,8 +104,8 @@ if ! git rev-parse --verify "$base_ref^{commit}" >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! git diff --quiet || ! git diff --cached --quiet; then
-  echo "BLOCKED: local Codex review requires a clean working tree."
+if [ -n "$(git status --porcelain=v1 --untracked-files=all)" ]; then
+  echo "BLOCKED: local Codex review requires a clean working tree with no staged, unstaged, or untracked changes."
   echo "Commit or stash changes first so Codex reviews the exact HEAD that will be published."
   echo ""
   git status --short --branch

@@ -14,8 +14,8 @@ if ! command -v gh >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! git diff --quiet || ! git diff --cached --quiet; then
-  echo "BLOCKED: publish-pr requires a clean working tree."
+if [ -n "$(git status --porcelain=v1 --untracked-files=all)" ]; then
+  echo "BLOCKED: publish-pr requires a clean working tree with no staged, unstaged, or untracked changes."
   echo "Commit or stash changes first."
   echo ""
   git status --short --branch

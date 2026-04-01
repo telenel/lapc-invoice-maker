@@ -9,8 +9,8 @@ codex_review_file="$stamp_dir/codex-review.env"
 
 cd "$repo_root"
 
-if ! git diff --quiet || ! git diff --cached --quiet; then
-  echo "BLOCKED: ship-check requires a clean working tree."
+if [ -n "$(git status --porcelain=v1 --untracked-files=all)" ]; then
+  echo "BLOCKED: ship-check requires a clean working tree with no staged, unstaged, or untracked changes."
   echo "Commit or stash changes first so lint, tests, and build run against the exact HEAD you plan to push."
   echo ""
   git status --short --branch
