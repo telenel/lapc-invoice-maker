@@ -296,7 +296,7 @@ describe("POST /api/quotes/public/[token]/respond", () => {
     expect(cateringDetails).toHaveProperty("takedownInstructions", "Internal takedown note");
   });
 
-  it("does not preserve omitted optional catering fields from the existing quote", async () => {
+  it("preserves omitted optional catering fields from the existing quote", async () => {
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",
       quoteStatus: "SENT",
@@ -308,11 +308,15 @@ describe("POST /api/quotes/public/[token]/respond", () => {
         location: "Bookstore",
         contactName: "Jane",
         contactPhone: "555-1111",
+        headcount: 120,
         contactEmail: "jane@example.com",
         setupRequired: true,
+        setupTime: "08:00",
         setupInstructions: "Keep the prep table against the north wall.",
         takedownRequired: false,
+        takedownTime: "14:00",
         takedownInstructions: "Leave equipment by the loading dock.",
+        specialInstructions: "Use the east entrance.",
       },
     } as never);
     vi.mocked(quoteService.respondToQuote).mockResolvedValue({
@@ -356,16 +360,16 @@ describe("POST /api/quotes/public/[token]/respond", () => {
         location: "Campus",
         contactName: "Jane",
         contactPhone: "555-1111",
-        setupRequired: false,
+        setupRequired: true,
         takedownRequired: false,
       }),
     );
     const cateringDetails = vi.mocked(quoteService.respondToQuote).mock.calls[0]?.[4] as Record<string, unknown> | undefined;
     expect(cateringDetails).toBeDefined();
-    expect(cateringDetails).not.toHaveProperty("headcount");
-    expect(cateringDetails).not.toHaveProperty("setupTime");
-    expect(cateringDetails).not.toHaveProperty("takedownTime");
-    expect(cateringDetails).not.toHaveProperty("specialInstructions");
+    expect(cateringDetails).toHaveProperty("headcount", 120);
+    expect(cateringDetails).toHaveProperty("setupTime", "08:00");
+    expect(cateringDetails).toHaveProperty("takedownTime", "14:00");
+    expect(cateringDetails).toHaveProperty("specialInstructions", "Use the east entrance.");
     expect(cateringDetails).toHaveProperty("setupInstructions", "Keep the prep table against the north wall.");
     expect(cateringDetails).toHaveProperty("takedownInstructions", "Leave equipment by the loading dock.");
   });

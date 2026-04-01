@@ -97,21 +97,6 @@ export function PaymentDetailsForm({
     );
   }
 
-  if (!isAccepted) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <Card className="max-w-md w-full">
-          <CardContent className="pt-6 text-center space-y-2">
-            <h2 className="text-lg font-semibold">Payment Link Not Ready</h2>
-            <p className="text-sm text-muted-foreground">
-              Payment details can only be submitted after the quote is approved.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   if (isPaymentLinkClosed) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
@@ -120,6 +105,21 @@ export function PaymentDetailsForm({
             <h2 className="text-lg font-semibold">Payment Link Closed</h2>
             <p className="text-sm text-muted-foreground">
               Payment details can no longer be submitted through this quote link.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!isAccepted) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-6 text-center space-y-2">
+            <h2 className="text-lg font-semibold">Payment Link Not Ready</h2>
+            <p className="text-sm text-muted-foreground">
+              Payment details can only be submitted after the quote is approved.
             </p>
           </CardContent>
         </Card>

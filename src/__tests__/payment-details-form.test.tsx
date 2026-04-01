@@ -47,7 +47,7 @@ describe("PaymentDetailsForm", () => {
       <PaymentDetailsForm
         token="token"
         initialQuote={{
-          quoteStatus: "ACCEPTED",
+          quoteStatus: "SENT",
           paymentDetailsResolved: false,
           paymentLinkAvailable: false,
           quoteNumber: "Q-1",
@@ -56,5 +56,22 @@ describe("PaymentDetailsForm", () => {
     );
 
     expect(screen.getByText("Payment Link Closed")).toBeInTheDocument();
+    expect(screen.queryByText("Payment Link Not Ready")).not.toBeInTheDocument();
+  });
+
+  it("shows a not ready state when the quote has not been approved yet but the payment link is still unavailable for approval", () => {
+    render(
+      <PaymentDetailsForm
+        token="token"
+        initialQuote={{
+          quoteStatus: "SENT",
+          paymentDetailsResolved: false,
+          paymentLinkAvailable: true,
+          quoteNumber: "Q-1",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Payment Link Not Ready")).toBeInTheDocument();
   });
 });

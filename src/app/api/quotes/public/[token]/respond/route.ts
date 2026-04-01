@@ -98,14 +98,34 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         location: parsed.data.location,
         contactName: parsed.data.contactName,
         contactPhone: parsed.data.contactPhone,
-        setupRequired: parsed.data.setupRequired ?? false,
+        setupRequired: parsed.data.setupRequired ?? existingCateringDetails?.setupRequired ?? false,
         setupInstructions: existingCateringDetails?.setupInstructions,
-        takedownRequired: parsed.data.takedownRequired ?? false,
+        takedownRequired: parsed.data.takedownRequired ?? existingCateringDetails?.takedownRequired ?? false,
         takedownInstructions: existingCateringDetails?.takedownInstructions,
-        ...(parsed.data.headcount !== undefined ? { headcount: parsed.data.headcount } : {}),
-        ...(parsed.data.setupTime !== undefined ? { setupTime: parsed.data.setupTime } : {}),
-        ...(parsed.data.takedownTime !== undefined ? { takedownTime: parsed.data.takedownTime } : {}),
-        ...(parsed.data.specialInstructions !== undefined ? { specialInstructions: parsed.data.specialInstructions } : {}),
+        ...(parsed.data.headcount !== undefined
+          ? { headcount: parsed.data.headcount }
+          : existingCateringDetails?.headcount !== undefined
+            ? { headcount: existingCateringDetails.headcount }
+            : {}),
+        ...(parsed.data.setupRequired === false
+          ? {}
+          : parsed.data.setupTime !== undefined
+            ? { setupTime: parsed.data.setupTime }
+            : existingCateringDetails?.setupTime !== undefined
+              ? { setupTime: existingCateringDetails.setupTime }
+              : {}),
+        ...(parsed.data.takedownRequired === false
+          ? {}
+          : parsed.data.takedownTime !== undefined
+            ? { takedownTime: parsed.data.takedownTime }
+            : existingCateringDetails?.takedownTime !== undefined
+              ? { takedownTime: existingCateringDetails.takedownTime }
+              : {}),
+        ...(parsed.data.specialInstructions !== undefined
+          ? { specialInstructions: parsed.data.specialInstructions }
+          : existingCateringDetails?.specialInstructions !== undefined
+            ? { specialInstructions: existingCateringDetails.specialInstructions }
+            : {}),
         ...(existingCateringDetails?.eventName !== undefined ? { eventName: existingCateringDetails.eventName } : {}),
         ...(existingCateringDetails?.contactEmail !== undefined ? { contactEmail: existingCateringDetails.contactEmail } : {}),
       } as CateringDetails;
