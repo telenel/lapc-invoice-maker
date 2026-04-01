@@ -5,8 +5,8 @@ vi.mock("@/domains/quote/service", () => ({
   quoteService: {
     getByShareToken: vi.fn(),
   },
-  isPublicPaymentLinkAvailable: vi.fn((quote: { quoteStatus?: string; convertedToInvoice?: unknown }) => {
-    if (quote.quoteStatus === "ACCEPTED") return true;
+  isPublicPaymentLinkAvailable: vi.fn((quote: { quoteStatus?: string; convertedToInvoice?: { status?: string | null } | null }) => {
+    if (quote.quoteStatus === "ACCEPTED") return quote.convertedToInvoice?.status !== "FINAL";
     return !(quote.quoteStatus === "SENT" || quote.quoteStatus === "SUBMITTED_EMAIL" || quote.quoteStatus === "SUBMITTED_MANUAL")
       ? false
       : !quote.convertedToInvoice;
@@ -175,7 +175,7 @@ describe("GET /api/quotes/public/[token]", () => {
       taxRate: 0,
       paymentMethod: null,
       paymentAccountNumber: null,
-      convertedToInvoice: { id: "inv1", invoiceNumber: "INV-1" },
+      convertedToInvoice: { id: "inv1", invoiceNumber: "INV-1", status: "DRAFT" },
       revisedFromQuote: null,
       revisedToQuote: null,
     } as never);
@@ -188,6 +188,56 @@ describe("GET /api/quotes/public/[token]", () => {
     const body = await response.json();
     expect(response.status).toBe(200);
     expect(body.paymentLinkAvailable).toBe(true);
+  });
+
+  it("closes the public payment link for accepted quotes whose converted invoice is final", async () => {
+    vi.mocked(quoteService.getByShareToken).mockResolvedValue({
+      id: "q1",
+      quoteNumber: "Q-1",
+      quoteStatus: "ACCEPTED",
+      date: "2026-03-01T00:00:00.000Z",
+      expirationDate: null,
+      type: "QUOTE",
+      department: "IT",
+      category: "SUPPLIES",
+      accountCode: "AC1",
+      accountNumber: "INTERNAL-001",
+      approvalChain: [],
+      notes: "",
+      totalAmount: 10,
+      recipientName: "Jane",
+      recipientEmail: "jane@example.com",
+      recipientOrg: "",
+      pdfPath: null,
+      shareToken: "token",
+      createdAt: "2026-03-01T00:00:00.000Z",
+      staff: null,
+      contact: null,
+      creatorId: "u1",
+      creatorName: "Admin",
+      items: [],
+      isCateringEvent: false,
+      cateringDetails: null,
+      paymentDetailsResolved: false,
+      marginEnabled: false,
+      marginPercent: null,
+      taxEnabled: false,
+      taxRate: 0,
+      paymentMethod: null,
+      paymentAccountNumber: null,
+      convertedToInvoice: { id: "inv1", invoiceNumber: "INV-1", status: "FINAL" },
+      revisedFromQuote: null,
+      revisedToQuote: null,
+    } as never);
+
+    const response = await GET(
+      new NextRequest("http://localhost/api/quotes/public/token"),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    const body = await response.json();
+    expect(response.status).toBe(200);
+    expect(body.paymentLinkAvailable).toBe(false);
   });
 
   it("redacts staff-only catering fields from the public payload", async () => {

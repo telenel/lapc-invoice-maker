@@ -76,7 +76,7 @@ import { pdfService } from "@/domains/pdf/service";
 import { prisma } from "@/lib/prisma";
 import { notificationService } from "@/domains/notification/service";
 import { safePublishAll } from "@/lib/sse";
-import { quoteService } from "@/domains/quote/service";
+import { isPublicPaymentLinkAvailable, quoteService } from "@/domains/quote/service";
 
 const mockRepo = vi.mocked(quoteRepository, true);
 const mockPdfService = vi.mocked(pdfService, true);
@@ -295,6 +295,26 @@ describe("quoteService", () => {
       await quoteService.getById("q1");
 
       expect(mockRepo.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("isPublicPaymentLinkAvailable", () => {
+    it("keeps accepted quotes open when an unresolved converted invoice is not final", () => {
+      expect(
+        isPublicPaymentLinkAvailable({
+          quoteStatus: "ACCEPTED",
+          convertedToInvoice: { id: "inv1", invoiceNumber: "INV-2026-0001", status: "DRAFT" },
+        }),
+      ).toBe(true);
+    });
+
+    it("closes accepted quotes when the converted invoice is final", () => {
+      expect(
+        isPublicPaymentLinkAvailable({
+          quoteStatus: "ACCEPTED",
+          convertedToInvoice: { id: "inv1", invoiceNumber: "INV-2026-0001", status: "FINAL" },
+        }),
+      ).toBe(false);
     });
   });
 

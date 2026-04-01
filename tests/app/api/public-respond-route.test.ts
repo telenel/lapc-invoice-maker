@@ -147,27 +147,41 @@ describe("POST /api/quotes/public/[token]/respond", () => {
     expect(quoteService.respondToQuote).not.toHaveBeenCalled();
   });
 
-  it("blocks responses for quotes that have already been converted to invoices", async () => {
+  it("allows converted quotes to reach the reconciliation path when approval data is supplied", async () => {
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",
       quoteStatus: "SENT",
       isCateringEvent: false,
       convertedToInvoice: { id: "inv1" },
     } as never);
+    vi.mocked(quoteService.respondToQuote).mockResolvedValue({
+      success: true,
+      status: "ACCEPTED",
+    } as never);
 
     const response = await POST(
       new NextRequest("http://localhost/api/quotes/public/token/respond", {
         method: "POST",
         body: JSON.stringify({
-          response: "DECLINED",
+          response: "ACCEPTED",
+          paymentMethod: "CHECK",
         }),
         headers: { "Content-Type": "application/json" },
       }),
       { params: Promise.resolve({ token: "token" }) },
     );
 
-    expect(response.status).toBe(400);
-    expect(quoteService.respondToQuote).not.toHaveBeenCalled();
+    expect(response.status).toBe(200);
+    expect(quoteService.respondToQuote).toHaveBeenCalledWith(
+      "token",
+      "ACCEPTED",
+      undefined,
+      {
+        paymentMethod: "CHECK",
+        accountNumber: null,
+      },
+      undefined,
+    );
   });
 
   it("rejects catering details for non-catering quotes", async () => {

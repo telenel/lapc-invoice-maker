@@ -36,7 +36,7 @@ export function isPublicPaymentLinkAvailable(
   quote: Pick<QuoteResponse, "quoteStatus" | "convertedToInvoice">
 ): boolean {
   if (quote.quoteStatus === "ACCEPTED") {
-    return true;
+    return quote.convertedToInvoice?.status !== "FINAL";
   }
 
   if (
