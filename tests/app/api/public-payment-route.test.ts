@@ -33,7 +33,8 @@ describe("POST /api/quotes/public/[token]/payment", () => {
       recipientEmail: "jane@example.com",
       createdBy: "u1",
       paymentMethod: null,
-      convertedToInvoice: { id: "inv1" },
+      convertedToInvoice: null,
+      updatedConvertedInvoice: true,
     } as never);
 
     const response = await POST(
@@ -53,6 +54,32 @@ describe("POST /api/quotes/public/[token]/payment", () => {
       paymentMethod: "ACCOUNT_NUMBER",
       accountNumber: "SAP-12345",
     });
+    expect(safePublishAll).toHaveBeenCalledWith({ type: "invoice-changed" });
+  });
+
+  it("emits invoice SSE when conversion appears during payment submission", async () => {
+    vi.mocked(quoteService.submitPublicPaymentDetails).mockResolvedValue({
+      id: "q1",
+      quoteNumber: "Q-1",
+      recipientEmail: "jane@example.com",
+      createdBy: "u1",
+      paymentMethod: null,
+      convertedToInvoice: null,
+      updatedConvertedInvoice: true,
+    } as never);
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/payment", {
+        method: "POST",
+        body: JSON.stringify({
+          paymentMethod: "CHECK",
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    expect(response.status).toBe(200);
     expect(safePublishAll).toHaveBeenCalledWith({ type: "invoice-changed" });
   });
 

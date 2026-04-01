@@ -223,7 +223,7 @@ export const quoteService = {
     }
 
     const subject = `Payment details provided for ${quote.quoteNumber ?? "quote"}`;
-    const paymentOwnerUserId = await prisma.$transaction(async (tx) => {
+    const paymentResult = await prisma.$transaction(async (tx) => {
       const lockedQuotes = await tx.$queryRaw<Array<{
         id: string;
         paymentMethod: string | null;
@@ -273,6 +273,7 @@ export const quoteService = {
       if (convertedInvoice) {
         ownerUserId = convertedInvoice.createdBy;
       }
+      let updatedConvertedInvoice = false;
 
       if (convertedInvoice) {
         if (convertedInvoice.status === "FINAL") {
@@ -290,6 +291,7 @@ export const quoteService = {
             paymentAccountNumber: normalizedPayment.paymentAccountNumber,
           },
         });
+        updatedConvertedInvoice = true;
       }
 
       await tx.quoteFollowUp.create({
@@ -304,13 +306,16 @@ export const quoteService = {
         },
       });
 
-      return ownerUserId;
+      return {
+        ownerUserId,
+        updatedConvertedInvoice,
+      };
     });
 
     try {
       const { notificationService } = await import("@/domains/notification/service");
       await notificationService.createAndPublish({
-        userId: paymentOwnerUserId,
+        userId: paymentResult.ownerUserId,
         type: "PAYMENT_DETAILS_RECEIVED",
         title: `Payment details received for ${quote.quoteNumber ?? "Quote"}`,
         message: `Payment method: ${normalizedPayment.paymentMethod}`,
@@ -320,7 +325,10 @@ export const quoteService = {
       // Non-critical
     }
 
-    return quote;
+    return {
+      ...quote,
+      updatedConvertedInvoice: paymentResult.updatedConvertedInvoice,
+    };
   },
 
   /**

@@ -26,7 +26,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     }
 
     safePublishAll({ type: "quote-changed" });
-    if (quote.convertedToInvoice) {
+    if (quote.updatedConvertedInvoice) {
       safePublishAll({ type: "invoice-changed" });
     }
     return NextResponse.json({ success: true });

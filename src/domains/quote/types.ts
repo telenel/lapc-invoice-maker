@@ -229,6 +229,7 @@ export interface QuotePublicPaymentCandidate {
   createdBy: string;
   paymentMethod: string | null;
   convertedToInvoice: { id: string; createdBy?: string } | null;
+  updatedConvertedInvoice?: boolean;
 }
 
 export interface QuoteViewResponse {

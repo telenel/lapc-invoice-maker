@@ -305,6 +305,7 @@ describe("quoteService", () => {
       });
 
       expect(result?.id).toBe("q1");
+      expect(result?.updatedConvertedInvoice).toBe(true);
       expect(tx.invoice.update).toHaveBeenNthCalledWith(1, {
         where: { id: "q1" },
         data: {
