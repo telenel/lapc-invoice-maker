@@ -218,6 +218,7 @@ export function buildSummaryText(summary) {
     `branch: ${summary.branch}`,
     `head: ${summary.headSha}`,
     `producer exit: ${summary.producerExitCode ?? "running"}`,
+    `session temp root: ${summary.worktreeRoot ?? "missing"}`,
     `live snapshot: ${summary.liveStatePath ?? "missing"}`,
     `final artifact: ${summary.finalArtifactPath ?? "pending"}`,
     `events: ${summary.eventsPath ?? "missing"}`,
@@ -243,6 +244,19 @@ export function buildSummaryText(summary) {
       if (task.cleanup?.errors?.length) {
         lines.push(`  cleanup errors: ${task.cleanup.errors.join(" ; ")}`);
       }
+    }
+  }
+
+  if (summary.sessionCleanup) {
+    lines.push("");
+    lines.push(
+      `Session cleanup: removed=${summary.sessionCleanup.worktreeRootRemoved ? "yes" : "no"} | path=${summary.sessionCleanup.worktreeRoot}`,
+    );
+    if (summary.sessionCleanup.reason) {
+      lines.push(`  reason: ${summary.sessionCleanup.reason}`);
+    }
+    if (summary.sessionCleanup.error) {
+      lines.push(`  error: ${summary.sessionCleanup.error}`);
     }
   }
 
@@ -302,6 +316,8 @@ export function formatEventLine(event) {
       return `AUTOPILOT integrated ${event.batchId} into ${event.targetBranch} (${event.commits?.length ?? 0} commit${event.commits?.length === 1 ? "" : "s"})`;
     case "task-cleanup":
       return `AUTOPILOT cleaned ${event.batchId}: worktree=${event.worktreeRemoved ? "yes" : "no"} branch=${event.branchDeleted ? "yes" : "no"}`;
+    case "session-cleanup":
+      return `AUTOPILOT cleaned session temp root: removed=${event.worktreeRootRemoved ? "yes" : "no"} path=${event.worktreeRoot}`;
     case "producer-complete":
       return `AUTOPILOT review completed with exit ${event.exitCode}`;
     case "session-complete":
@@ -532,6 +548,42 @@ function cleanupTaskWorktree(context, task) {
         }`,
       );
     }
+  }
+
+  return cleanup;
+}
+
+function cleanupSessionWorktreeRoot(session) {
+  const cleanup = {
+    worktreeRoot: session.worktreeRoot,
+    worktreeRootRemoved: false,
+    reason: null,
+    error: null,
+  };
+
+  if (!existsSync(session.worktreeRoot)) {
+    cleanup.reason = "missing";
+    return cleanup;
+  }
+
+  let remainingEntries;
+  try {
+    remainingEntries = readdirSync(session.worktreeRoot);
+  } catch (error) {
+    cleanup.error = error instanceof Error ? error.message : String(error);
+    return cleanup;
+  }
+
+  if (remainingEntries.length > 0) {
+    cleanup.reason = `not-empty:${remainingEntries.length}`;
+    return cleanup;
+  }
+
+  try {
+    rmSync(session.worktreeRoot, { recursive: false, force: true });
+    cleanup.worktreeRootRemoved = true;
+  } catch (error) {
+    cleanup.error = error instanceof Error ? error.message : String(error);
   }
 
   return cleanup;
@@ -827,6 +879,8 @@ async function main() {
     taskCount: summary.tasks.length,
     failedTaskCount: summary.tasks.filter((task) => task.status === "failed").length,
   });
+  summary.sessionCleanup = cleanupSessionWorktreeRoot(session);
+  emitEvent(session, summary, "session-cleanup", summary.sessionCleanup);
   pruneAutopilotSessions(session.autopilotRoot, session.sessionId);
   writeSummary(session, summary);
   process.stdout.write("\n==> Autopilot summary\n");

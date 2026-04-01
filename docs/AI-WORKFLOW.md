@@ -130,6 +130,8 @@ These are the hard-coded workflow entrypoints. Do not replace them with ad hoc c
 - Writes session logs and both machine-readable and human-readable summaries under `.git/laportal/autopilot/<session-id>/`.
 - Overwrites stable pointers at `.git/laportal/autopilot/latest-session.json`, `.git/laportal/autopilot/latest-events.jsonl`, `.git/laportal/autopilot/latest-summary.json`, and `.git/laportal/autopilot/latest-summary.txt`.
 - Prunes older autopilot session directories automatically.
+- Removes temporary worker worktrees and temp branches after integration or failure cleanup, and removes the parent temp worktree root when it is empty.
+- Does not push worker commits; it only cherry-picks them onto the current branch.
 - Use this when you want the full pipeline, not just a review artifact.
 
 ### `npm run laportal:review:watch`

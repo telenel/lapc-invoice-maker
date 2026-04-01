@@ -148,11 +148,18 @@ describe("codex review autopilot helper", () => {
       repoRoot: "/repo",
       branch: "feature",
       headSha: "abc123",
+      worktreeRoot: "/tmp/laportal-codex-autopilot-abc123",
       producerExitCode: 0,
       liveStatePath: "/repo/.git/laportal/codex-review.live.json",
       finalArtifactPath: "/repo/.git/laportal/codex-review.json",
       eventsPath: "/repo/.git/laportal/autopilot/session-1/events.jsonl",
       producerLogPath: "/repo/.git/laportal/autopilot/session-1/producer.log",
+      sessionCleanup: {
+        worktreeRoot: "/tmp/laportal-codex-autopilot-abc123",
+        worktreeRootRemoved: true,
+        reason: null,
+        error: null,
+      },
       tasks: [
         {
           batchId: "B1",
@@ -168,7 +175,9 @@ describe("codex review autopilot helper", () => {
 
     expect(summary).toContain("LAPortal review autopilot summary");
     expect(summary).toContain("session: session-1");
+    expect(summary).toContain("session temp root: /tmp/laportal-codex-autopilot-abc123");
     expect(summary).toContain("- B1 [worker] completed | branch=autopilot/abc123/worker-b1 | exit=0 | integrated=1");
+    expect(summary).toContain("Session cleanup: removed=yes | path=/tmp/laportal-codex-autopilot-abc123");
   });
 
   it("formats readable event lines", () => {
@@ -226,6 +235,16 @@ describe("codex review autopilot helper", () => {
         commits: ["deadbeef", "cafebabe"],
       }),
     ).toBe("AUTOPILOT integrated B1 into feature (2 commits)");
+
+    expect(
+      formatEventLine({
+        type: "session-cleanup",
+        worktreeRootRemoved: true,
+        worktreeRoot: "/tmp/laportal-codex-autopilot-abc123",
+      }),
+    ).toBe(
+      "AUTOPILOT cleaned session temp root: removed=yes path=/tmp/laportal-codex-autopilot-abc123",
+    );
 
     expect(
       formatEventLine({

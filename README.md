@@ -106,6 +106,7 @@ While it runs, the terminal shows only explicit autopilot lifecycle lines such a
 - `.git/laportal/autopilot/latest-summary.txt`
 
 The per-run `<session-id>/` directory is preserved for history. The `latest-*` files are overwritten on each autopilot run so follow-up tooling always has one stable target. Older session directories are pruned automatically.
+Temporary worker worktrees and their temp branches are removed automatically after integration or failure cleanup. The parent temp worktree root is also removed when it is empty. Worker sessions never push; autopilot only cherry-picks their local commits onto the current branch.
 
 Use `npm run laportal:review:watch -- --follow` in a second terminal if you want a live view of the latest session without reading raw worker logs.
 
