@@ -61,18 +61,7 @@ export function PaymentDetailsForm({
       setSubmitted(true);
       toast.success("Payment details submitted — thank you!");
     } catch (err) {
-      if (typeof err === "string") {
-        toast.error(err);
-      } else if (err && typeof err === "object" && typeof (err as { message?: unknown }).message === "string") {
-        toast.error((err as { message: string }).message);
-      } else {
-        try {
-          const stringified = JSON.stringify(err);
-          toast.error(typeof stringified === "string" ? stringified : "Something went wrong");
-        } catch {
-          toast.error("Something went wrong");
-        }
-      }
+      toast.error((err as Error).message ?? "Something went wrong");
     } finally {
       setSubmitting(false);
     }
@@ -108,14 +97,14 @@ export function PaymentDetailsForm({
     );
   }
 
-  if (isResolved) {
+  if (!isAccepted) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
         <Card className="max-w-md w-full">
           <CardContent className="pt-6 text-center space-y-2">
-            <h2 className="text-lg font-semibold">Payment Details Already On File</h2>
+            <h2 className="text-lg font-semibold">Payment Link Not Ready</h2>
             <p className="text-sm text-muted-foreground">
-              We already have payment details for {quote.quoteNumber ?? "this quote"}.
+              Payment details can only be submitted after the quote is approved.
             </p>
           </CardContent>
         </Card>
@@ -138,14 +127,14 @@ export function PaymentDetailsForm({
     );
   }
 
-  if (!isAccepted) {
+  if (isResolved) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
         <Card className="max-w-md w-full">
           <CardContent className="pt-6 text-center space-y-2">
-            <h2 className="text-lg font-semibold">Payment Link Not Ready</h2>
+            <h2 className="text-lg font-semibold">Payment Details Already On File</h2>
             <p className="text-sm text-muted-foreground">
-              Payment details can only be submitted after the quote is approved.
+              We already have payment details for {quote.quoteNumber ?? "this quote"}.
             </p>
           </CardContent>
         </Card>

@@ -47,30 +47,19 @@ function buildQuoteResponseHtml(data: QuoteResponseData): string {
 }
 
 export const POST = withAuth(async (req: NextRequest, session) => {
-  let body: unknown;
+  let body: Record<string, unknown>;
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
-
-  if (!body || typeof body !== "object" || Array.isArray(body)) {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-
   const { type, to, data } = body as {
-    type?: unknown;
-    to?: unknown;
-    data?: unknown;
+    type: string;
+    to: string;
+    data: Record<string, unknown>;
   };
 
-  if (
-    typeof type !== "string" ||
-    typeof to !== "string" ||
-    !data ||
-    typeof data !== "object" ||
-    Array.isArray(data)
-  ) {
+  if (!type || !to || !data) {
     return NextResponse.json(
       { error: "type, to, and data are required" },
       { status: 400 }

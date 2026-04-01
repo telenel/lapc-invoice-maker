@@ -1,30 +1,9 @@
 import "@testing-library/jest-dom/vitest";
-import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
 import { PaymentDetailsForm } from "@/components/quotes/payment-details-form";
 
-vi.mock("sonner", () => ({
-  toast: {
-    error: vi.fn(),
-    success: vi.fn(),
-  },
-}));
-
-vi.mock("@/domains/quote/api-client", () => ({
-  quoteApi: {
-    submitPublicPaymentDetails: vi.fn(),
-  },
-}));
-
-import { toast } from "sonner";
-import { quoteApi } from "@/domains/quote/api-client";
-
 describe("PaymentDetailsForm", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("shows a not found state for missing quotes", () => {
     render(<PaymentDetailsForm token="token" initialQuote={null} />);
 
@@ -45,23 +24,6 @@ describe("PaymentDetailsForm", () => {
 
     expect(screen.getByText("Payment Details Already On File")).toBeInTheDocument();
     expect(screen.getByText(/Q-1/)).toBeInTheDocument();
-  });
-
-  it("shows the resolved state even when the payment link is closed", () => {
-    render(
-      <PaymentDetailsForm
-        token="token"
-        initialQuote={{
-          quoteStatus: "ACCEPTED",
-          paymentDetailsResolved: true,
-          paymentLinkAvailable: false,
-          quoteNumber: "Q-1",
-        }}
-      />,
-    );
-
-    expect(screen.getByText("Payment Details Already On File")).toBeInTheDocument();
-    expect(screen.queryByText("Payment Link Closed")).not.toBeInTheDocument();
   });
 
   it("shows the payment form for accepted quotes that still need payment details", () => {
@@ -85,7 +47,7 @@ describe("PaymentDetailsForm", () => {
       <PaymentDetailsForm
         token="token"
         initialQuote={{
-          quoteStatus: "SENT",
+          quoteStatus: "ACCEPTED",
           paymentDetailsResolved: false,
           paymentLinkAvailable: false,
           quoteNumber: "Q-1",
@@ -94,46 +56,5 @@ describe("PaymentDetailsForm", () => {
     );
 
     expect(screen.getByText("Payment Link Closed")).toBeInTheDocument();
-    expect(screen.queryByText("Payment Link Not Ready")).not.toBeInTheDocument();
-  });
-
-  it("shows a not ready state when the quote has not been approved yet but the payment link is still unavailable for approval", () => {
-    render(
-      <PaymentDetailsForm
-        token="token"
-        initialQuote={{
-          quoteStatus: "SENT",
-          paymentDetailsResolved: false,
-          paymentLinkAvailable: true,
-          quoteNumber: "Q-1",
-        }}
-      />,
-    );
-
-    expect(screen.getByText("Payment Link Not Ready")).toBeInTheDocument();
-  });
-
-  it("surfaces string throwables in the error toast", async () => {
-    vi.mocked(quoteApi.submitPublicPaymentDetails).mockRejectedValueOnce("Gateway unavailable");
-    const user = userEvent.setup();
-
-    render(
-      <PaymentDetailsForm
-        token="token"
-        initialQuote={{
-          quoteStatus: "ACCEPTED",
-          paymentDetailsResolved: false,
-          quoteNumber: "Q-1",
-        }}
-      />,
-    );
-
-    await user.click(screen.getByRole("button", { name: "Account Number" }));
-    await user.type(screen.getByPlaceholderText("Enter your SAP account number"), "SAP-12345");
-    await user.click(screen.getByRole("button", { name: "Submit Payment Details" }));
-
-    await waitFor(() => {
-      expect(toast.error).toHaveBeenCalledWith("Gateway unavailable");
-    });
   });
 });

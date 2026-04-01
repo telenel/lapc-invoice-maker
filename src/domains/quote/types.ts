@@ -192,8 +192,6 @@ export interface UpdateQuoteInput {
   marginPercent?: number;
   taxEnabled?: boolean;
   taxRate?: number;
-  paymentMethod?: string;
-  paymentAccountNumber?: string | null;
 }
 
 export interface QuoteFilters {
@@ -255,7 +253,7 @@ export interface QuotePublicSettingsResponse {
 
 export interface QuotePublicResponseSubmission {
   response: "ACCEPTED" | "DECLINED";
-  viewId?: string;
+  viewId?: string | null;
   cateringDetails?: CateringDetails;
   paymentMethod?: string;
   accountNumber?: string | null;

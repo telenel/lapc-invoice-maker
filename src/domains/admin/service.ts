@@ -166,11 +166,7 @@ export const adminService = {
   },
 
   async saveSetting(key: string, value: Prisma.InputJsonValue): Promise<AppSettingResponse> {
-    const normalizedKey = key.trim();
-    if (!normalizedKey) {
-      throw Object.assign(new Error("Setting key is required"), { statusCode: 400 });
-    }
-    return adminRepository.upsertSetting(normalizedKey, value);
+    return adminRepository.upsertSetting(key.trim(), value);
   },
 
   // ── Batch operations ──

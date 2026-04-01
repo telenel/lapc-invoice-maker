@@ -21,35 +21,24 @@ const cateringDetailsSchema = z.object({
   specialInstructions: z.string().optional(),
 });
 
-const viewIdSchema = z.string().trim().min(1, "Invalid view ID");
-
 type RouteContext = { params: Promise<{ token: string }> };
 
 export async function POST(req: NextRequest, ctx: RouteContext) {
   const { token } = await ctx.params;
   const body = await req.json().catch(() => ({}));
-  if (body === null) {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
-  }
 
   const response = body.response;
   if (response !== "ACCEPTED" && response !== "DECLINED") {
     return NextResponse.json({ error: "Invalid response. Must be ACCEPTED or DECLINED" }, { status: 400 });
   }
 
-  let viewId: string | undefined;
-  if (body.viewId !== undefined) {
-    const parsedViewId = viewIdSchema.safeParse(body.viewId);
-    if (!parsedViewId.success) {
-      return NextResponse.json({ error: "Invalid view ID" }, { status: 400 });
-    }
-    viewId = parsedViewId.data;
-  }
-
   try {
     const quote = await quoteService.getByShareToken(token);
     if (!quote) {
       return NextResponse.json({ error: "Quote not found" }, { status: 404 });
+    }
+    if (quote.convertedToInvoice) {
+      return NextResponse.json({ error: "This quote is no longer available" }, { status: 400 });
     }
     if (quote.quoteStatus === "EXPIRED") {
       return NextResponse.json({ error: "This quote has expired" }, { status: 400 });
@@ -109,42 +98,14 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         location: parsed.data.location,
         contactName: parsed.data.contactName,
         contactPhone: parsed.data.contactPhone,
-        setupRequired: parsed.data.setupRequired ?? existingCateringDetails?.setupRequired ?? false,
-        ...(parsed.data.setupInstructions !== undefined
-          ? { setupInstructions: parsed.data.setupInstructions }
-          : existingCateringDetails?.setupInstructions !== undefined
-            ? { setupInstructions: existingCateringDetails.setupInstructions }
-            : {}),
-        takedownRequired: parsed.data.takedownRequired ?? existingCateringDetails?.takedownRequired ?? false,
-        ...(parsed.data.takedownInstructions !== undefined
-          ? { takedownInstructions: parsed.data.takedownInstructions }
-          : existingCateringDetails?.takedownInstructions !== undefined
-            ? { takedownInstructions: existingCateringDetails.takedownInstructions }
-            : {}),
-        ...(parsed.data.headcount !== undefined
-          ? { headcount: parsed.data.headcount }
-          : existingCateringDetails?.headcount !== undefined
-            ? { headcount: existingCateringDetails.headcount }
-            : {}),
-        ...(parsed.data.setupRequired === false
-          ? { setupTime: null }
-          : parsed.data.setupTime !== undefined
-            ? { setupTime: parsed.data.setupTime }
-            : existingCateringDetails?.setupTime !== undefined
-              ? { setupTime: existingCateringDetails.setupTime }
-              : {}),
-        ...(parsed.data.takedownRequired === false
-          ? { takedownTime: null }
-          : parsed.data.takedownTime !== undefined
-            ? { takedownTime: parsed.data.takedownTime }
-            : existingCateringDetails?.takedownTime !== undefined
-              ? { takedownTime: existingCateringDetails.takedownTime }
-              : {}),
-        ...(parsed.data.specialInstructions !== undefined
-          ? { specialInstructions: parsed.data.specialInstructions }
-          : existingCateringDetails?.specialInstructions !== undefined
-            ? { specialInstructions: existingCateringDetails.specialInstructions }
-            : {}),
+        setupRequired: parsed.data.setupRequired ?? false,
+        setupInstructions: existingCateringDetails?.setupInstructions,
+        takedownRequired: parsed.data.takedownRequired ?? false,
+        takedownInstructions: existingCateringDetails?.takedownInstructions,
+        ...(parsed.data.headcount !== undefined ? { headcount: parsed.data.headcount } : {}),
+        ...(parsed.data.setupTime !== undefined ? { setupTime: parsed.data.setupTime } : {}),
+        ...(parsed.data.takedownTime !== undefined ? { takedownTime: parsed.data.takedownTime } : {}),
+        ...(parsed.data.specialInstructions !== undefined ? { specialInstructions: parsed.data.specialInstructions } : {}),
         ...(existingCateringDetails?.eventName !== undefined ? { eventName: existingCateringDetails.eventName } : {}),
         ...(existingCateringDetails?.contactEmail !== undefined ? { contactEmail: existingCateringDetails.contactEmail } : {}),
       } as CateringDetails;
@@ -169,7 +130,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     const result = await quoteService.respondToQuote(
       token,
       response,
-      viewId,
+      body.viewId,
       paymentDetailsInput,
       cateringDetails,
     );
@@ -178,9 +139,6 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     return NextResponse.json(result);
   } catch (err) {
     const code = (err as { code?: string }).code;
-    if (code === "NOT_FOUND") {
-      return NextResponse.json({ error: "Quote not found" }, { status: 404 });
-    }
     if (code === "INVALID_INPUT") {
       return NextResponse.json({ error: (err as Error).message }, { status: 400 });
     }

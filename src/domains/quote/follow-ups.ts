@@ -17,9 +17,7 @@ type PaymentFollowUpQuoteRow = {
   recipientName: string | null;
   recipientEmail: string;
   shareToken: string;
-  acceptedAt: Date | null;
-  updatedAt: Date;
-  createdAt: Date;
+  acceptedAt: Date;
   paymentMethod: string | null;
   createdBy: string;
 };
@@ -34,12 +32,7 @@ type PaymentFollowUpConvertedInvoiceRow = {
 type PaymentFollowUpState = {
   quote: PaymentFollowUpQuoteRow;
   convertedInvoice: PaymentFollowUpConvertedInvoiceRow | null;
-  followUpAnchorAt: Date;
 };
-
-function getPaymentFollowUpAnchorAt(quote: Pick<PaymentFollowUpQuoteRow, "acceptedAt" | "updatedAt" | "createdAt">): Date {
-  return quote.acceptedAt ?? quote.updatedAt ?? quote.createdAt;
-}
 
 async function readPaymentFollowUpState(
   tx: Prisma.TransactionClient,
@@ -54,8 +47,6 @@ async function readPaymentFollowUpState(
       recipient_email AS "recipientEmail",
       share_token AS "shareToken",
       accepted_at AS "acceptedAt",
-      updated_at AS "updatedAt",
-      created_at AS "createdAt",
       payment_method AS "paymentMethod",
       created_by AS "createdBy"
     FROM invoices
@@ -67,13 +58,13 @@ async function readPaymentFollowUpState(
   if (
     !quote ||
     quote.quoteStatus !== "ACCEPTED" ||
+    !quote.acceptedAt ||
     quote.paymentMethod ||
     !quote.recipientEmail ||
     !quote.shareToken
   ) {
     return null;
   }
-  const followUpAnchorAt = getPaymentFollowUpAnchorAt(quote);
 
   const convertedInvoices = await tx.$queryRaw<PaymentFollowUpConvertedInvoiceRow[]>`
     SELECT id, status, payment_method AS "paymentMethod", created_by AS "createdBy"
@@ -82,11 +73,11 @@ async function readPaymentFollowUpState(
     FOR UPDATE
   `;
   const convertedInvoice = convertedInvoices[0];
-  if (convertedInvoice?.status === "FINAL" || convertedInvoice?.paymentMethod) {
+  if (convertedInvoice) {
     return null;
   }
 
-  return { quote, convertedInvoice: convertedInvoice ?? null, followUpAnchorAt };
+  return { quote, convertedInvoice: convertedInvoice ?? null };
 }
 
 async function claimPaymentFollowUp(quoteId: string, now: Date) {
@@ -123,7 +114,7 @@ async function claimPaymentFollowUp(quoteId: string, now: Date) {
       where: { invoiceId: quoteId, type: "PAYMENT_REMINDER" },
       orderBy: { sentAt: "desc" },
     });
-    const referenceDate = lastFollowUp ? lastFollowUp.sentAt : state.followUpAnchorAt;
+    const referenceDate = lastFollowUp ? lastFollowUp.sentAt : quote.acceptedAt;
     const daysSince = businessDaysBetween(referenceDate, now);
     if (daysSince < FOLLOW_UP_INTERVAL_BUSINESS_DAYS) {
       return null;
@@ -145,7 +136,7 @@ async function claimPaymentFollowUp(quoteId: string, now: Date) {
     });
 
     return {
-      ownerUserId: state.convertedInvoice?.createdBy ?? quote.createdBy,
+      creatorId: quote.createdBy,
       followUpId: followUp.id,
       quoteId: quote.id,
       quoteNum,
@@ -170,13 +161,15 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
     `;
     if (result[0]?.acquired !== true) return [];
 
-    // Include legacy accepted quotes that were never backfilled with accepted_at.
+    // Find quotes that are ACCEPTED, have type QUOTE, and no paymentMethod
     return tx.invoice.findMany({
-      where: {
-        type: "QUOTE",
-        quoteStatus: "ACCEPTED",
-        paymentMethod: null,
-        shareToken: { not: null },
+        where: {
+          type: "QUOTE",
+          quoteStatus: "ACCEPTED",
+          acceptedAt: { not: null },
+          paymentMethod: null,
+          shareToken: { not: null },
+          convertedToInvoice: null,
       },
       include: {
         followUps: {
@@ -192,7 +185,7 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
 
   for (const quote of candidates) {
     const lastFollowUp = quote.followUps[0];
-    const referenceDate = lastFollowUp ? lastFollowUp.sentAt : getPaymentFollowUpAnchorAt(quote);
+    const referenceDate = lastFollowUp ? lastFollowUp.sentAt : quote.acceptedAt!;
     const daysSince = businessDaysBetween(referenceDate, now);
 
     if (daysSince < FOLLOW_UP_INTERVAL_BUSINESS_DAYS || !quote.recipientEmail || !quote.shareToken) {
@@ -253,7 +246,7 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
     try {
       const { notificationService } = await import("@/domains/notification/service");
       await notificationService.createAndPublish({
-        userId: claim.ownerUserId,
+        userId: claim.creatorId,
         type: "PAYMENT_FOLLOWUP_SENT",
         title: `Payment reminder sent for ${claim.quoteNum}`,
         message: `Reminder #${claim.attemptNumber} sent to ${claim.recipientEmail}`,

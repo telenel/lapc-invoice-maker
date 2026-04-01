@@ -76,7 +76,7 @@ import { pdfService } from "@/domains/pdf/service";
 import { prisma } from "@/lib/prisma";
 import { notificationService } from "@/domains/notification/service";
 import { safePublishAll } from "@/lib/sse";
-import { isPublicPaymentLinkAvailable, quoteService } from "@/domains/quote/service";
+import { quoteService } from "@/domains/quote/service";
 
 const mockRepo = vi.mocked(quoteRepository, true);
 const mockPdfService = vi.mocked(pdfService, true);
@@ -273,20 +273,6 @@ describe("quoteService", () => {
       expect(mockRepo.update).toHaveBeenCalledWith("q1", { quoteStatus: "EXPIRED" });
     });
 
-    it("does not expire a converted quote even if its original status was sent", async () => {
-      const pastDate = new Date("2020-01-01");
-      const quote = makeQuote({
-        expirationDate: pastDate,
-        quoteStatus: "SENT",
-        convertedToInvoice: { id: "inv1", invoiceNumber: "INV-2026-0001" },
-      });
-      mockRepo.findById.mockResolvedValue(quote as never);
-
-      await quoteService.getById("q1");
-
-      expect(mockRepo.update).not.toHaveBeenCalled();
-    });
-
     it("does not expire an ACCEPTED quote even if past date", async () => {
       const pastDate = new Date("2020-01-01");
       const quote = makeQuote({ expirationDate: pastDate, quoteStatus: "ACCEPTED" });
@@ -295,26 +281,6 @@ describe("quoteService", () => {
       await quoteService.getById("q1");
 
       expect(mockRepo.update).not.toHaveBeenCalled();
-    });
-  });
-
-  describe("isPublicPaymentLinkAvailable", () => {
-    it("keeps accepted quotes open when an unresolved converted invoice is not final", () => {
-      expect(
-        isPublicPaymentLinkAvailable({
-          quoteStatus: "ACCEPTED",
-          convertedToInvoice: { id: "inv1", invoiceNumber: "INV-2026-0001", status: "DRAFT" },
-        }),
-      ).toBe(true);
-    });
-
-    it("closes accepted quotes when the converted invoice is final", () => {
-      expect(
-        isPublicPaymentLinkAvailable({
-          quoteStatus: "ACCEPTED",
-          convertedToInvoice: { id: "inv1", invoiceNumber: "INV-2026-0001", status: "FINAL" },
-        }),
-      ).toBe(false);
     });
   });
 
@@ -441,42 +407,6 @@ describe("quoteService", () => {
     });
   });
 
-  describe("recordView", () => {
-    it("broadcasts quote-changed after persisting a public quote view", async () => {
-      mockRepo.findByShareToken.mockResolvedValue(
-        makeQuote({ createdBy: "u1" }) as never,
-      );
-      mockRepo.createView.mockResolvedValue({ id: "view-1" } as never);
-      mockRepo.hasRecentView.mockResolvedValue(false);
-      vi.mocked(notificationService.createAndPublish).mockResolvedValue(undefined as never);
-
-      const result = await quoteService.recordView("token", {
-        ipAddress: "1.2.3.4",
-        userAgent: "Chrome/123",
-        referrer: "https://example.com",
-        viewport: "1440x900",
-      });
-
-      expect(result).toEqual({ viewId: "view-1" });
-      expect(mockRepo.createView).toHaveBeenCalledWith({
-        invoiceId: "q1",
-        ipAddress: "1.2.3.4",
-        userAgent: "Chrome/123",
-        referrer: "https://example.com",
-        viewport: "1440x900",
-      });
-      expect(mockRepo.hasRecentView).toHaveBeenCalledWith("q1", 10);
-      expect(safePublishAll).toHaveBeenCalledWith({ type: "quote-changed" });
-      expect(notificationService.createAndPublish).toHaveBeenCalledWith(
-        expect.objectContaining({
-          userId: "u1",
-          type: "QUOTE_VIEWED",
-          quoteId: "q1",
-        }),
-      );
-    });
-  });
-
   describe("respondToQuote", () => {
     it("applies approval-time payment details atomically for a pre-converted invoice", async () => {
       mockRepo.findByShareToken.mockResolvedValue(
@@ -492,9 +422,6 @@ describe("quoteService", () => {
           .mockResolvedValueOnce([{ id: "inv1", status: "DRAFT", paymentMethod: null }]),
         invoice: {
           update: vi.fn(),
-        },
-        quoteFollowUp: {
-          create: vi.fn(),
         },
         quoteView: {
           findFirst: vi.fn().mockResolvedValue({ id: "view-1" }),
@@ -530,17 +457,6 @@ describe("quoteService", () => {
         where: { id: "view-1" },
         data: { respondedWith: "ACCEPTED" },
       });
-      expect(tx.quoteFollowUp.create).toHaveBeenCalledWith({
-        data: {
-          invoiceId: "q1",
-          type: "PAYMENT_RESOLVED",
-          recipientEmail: "jane@test.com",
-          subject: "Payment details provided for Q-2026-0001",
-          metadata: {
-            paymentMethod: "ACCOUNT_NUMBER",
-          },
-        },
-      });
       expect(mockRepo.update).not.toHaveBeenCalled();
       expect(mockRepo.updateViewResponse).not.toHaveBeenCalled();
       expect(vi.mocked(safePublishAll)).toHaveBeenCalledWith({ type: "quote-changed" });
@@ -562,9 +478,6 @@ describe("quoteService", () => {
           .mockResolvedValueOnce([{ id: "inv1", status: "DRAFT", paymentMethod: null }]),
         invoice: {
           update: vi.fn(),
-        },
-        quoteFollowUp: {
-          create: vi.fn(),
         },
         quoteView: {
           findFirst: vi.fn(),
@@ -622,8 +535,6 @@ describe("quoteService", () => {
           cateringDetails: {
             setupInstructions: "stale quote setup",
             takedownInstructions: "stale quote takedown",
-            setupTime: "stale quote setup time",
-            takedownTime: "stale quote takedown time",
           },
           convertedToInvoice: { id: "inv1", invoiceNumber: "INV-2026-0001" },
         }) as never,
@@ -637,8 +548,6 @@ describe("quoteService", () => {
             cateringDetails: {
               setupInstructions: "locked quote setup",
               takedownInstructions: "locked quote takedown",
-              setupTime: "locked quote setup time",
-              takedownTime: "locked quote takedown time",
             },
           }])
           .mockResolvedValueOnce([{
@@ -648,15 +557,10 @@ describe("quoteService", () => {
             cateringDetails: {
               setupInstructions: "locked invoice setup",
               takedownInstructions: "locked invoice takedown",
-              setupTime: "locked invoice setup time",
-              takedownTime: "locked invoice takedown time",
             },
           }]),
         invoice: {
           update: vi.fn(),
-        },
-        quoteFollowUp: {
-          create: vi.fn(),
         },
         quoteView: {
           findFirst: vi.fn(),
@@ -678,10 +582,8 @@ describe("quoteService", () => {
           contactName: "Jane",
           contactPhone: "555-1111",
           setupRequired: false,
-          setupTime: null,
           takedownRequired: false,
-          takedownTime: null,
-        } as never,
+        },
       );
 
       expect(tx.invoice.update).toHaveBeenNthCalledWith(1, {
@@ -699,122 +601,6 @@ describe("quoteService", () => {
           cateringDetails: expect.objectContaining({
             setupInstructions: "locked quote setup",
             takedownInstructions: "locked quote takedown",
-          }),
-        }),
-      });
-      const firstUpdate = tx.invoice.update.mock.calls[0]?.[0] as { data?: { cateringDetails?: Record<string, unknown> } } | undefined;
-      const secondUpdate = tx.invoice.update.mock.calls[1]?.[0] as { data?: { cateringDetails?: Record<string, unknown> } } | undefined;
-      expect(firstUpdate?.data?.cateringDetails).not.toHaveProperty("setupTime");
-      expect(firstUpdate?.data?.cateringDetails).not.toHaveProperty("takedownTime");
-      expect(secondUpdate?.data?.cateringDetails).not.toHaveProperty("setupTime");
-      expect(secondUpdate?.data?.cateringDetails).not.toHaveProperty("takedownTime");
-    });
-
-    it("preserves existing catering metadata when accepting a catering quote with a converted invoice", async () => {
-      mockRepo.findByShareToken.mockResolvedValue(
-        makeQuote({
-          quoteStatus: "SENT",
-          expirationDate: new Date("2099-02-15"),
-          isCateringEvent: true,
-          cateringDetails: {
-            eventName: "Quote Event",
-            contactEmail: "quote@example.com",
-            headcount: 80,
-            setupInstructions: "Quote setup",
-            takedownInstructions: "Quote takedown",
-          },
-          convertedToInvoice: { id: "inv1", invoiceNumber: "INV-2026-0001" },
-        }) as never,
-      );
-      const tx = {
-        $queryRaw: vi.fn()
-          .mockResolvedValueOnce([
-            {
-              id: "q1",
-              quoteStatus: "SENT",
-              paymentMethod: null,
-              cateringDetails: {
-                eventName: "Quote Event",
-                contactEmail: "quote@example.com",
-                headcount: 80,
-                setupInstructions: "Quote setup",
-                takedownInstructions: "Quote takedown",
-              },
-            },
-          ])
-          .mockResolvedValueOnce([
-            {
-              id: "inv1",
-              status: "DRAFT",
-              paymentMethod: null,
-              cateringDetails: {
-                eventName: "Invoice Event",
-                contactEmail: "invoice@example.com",
-                headcount: 120,
-                setupInstructions: "Invoice setup",
-                takedownInstructions: "Invoice takedown",
-              },
-            },
-          ]),
-        invoice: {
-          update: vi.fn(),
-        },
-        quoteFollowUp: {
-          create: vi.fn(),
-        },
-        quoteView: {
-          findFirst: vi.fn(),
-          update: vi.fn(),
-        },
-      };
-      vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => callback(tx as never) as never);
-
-      await quoteService.respondToQuote(
-        "token",
-        "ACCEPTED",
-        undefined,
-        { paymentMethod: "CHECK" },
-        {
-          eventDate: "2026-03-31",
-          startTime: "10:00",
-          endTime: "11:00",
-          location: "Campus",
-          contactName: "Jane",
-          contactPhone: "555-1111",
-          setupRequired: false,
-          takedownRequired: false,
-        },
-      );
-
-      expect(tx.invoice.update).toHaveBeenNthCalledWith(1, {
-        where: { id: "inv1" },
-        data: expect.objectContaining({
-          paymentMethod: "CHECK",
-          cateringDetails: expect.objectContaining({
-            eventName: "Invoice Event",
-            contactEmail: "invoice@example.com",
-            headcount: 120,
-            setupInstructions: "Invoice setup",
-            takedownInstructions: "Invoice takedown",
-            location: "Campus",
-            contactName: "Jane",
-          }),
-        }),
-      });
-      expect(tx.invoice.update).toHaveBeenNthCalledWith(2, {
-        where: { id: "q1" },
-        data: expect.objectContaining({
-          quoteStatus: "ACCEPTED",
-          acceptedAt: expect.any(Date),
-          paymentMethod: "CHECK",
-          cateringDetails: expect.objectContaining({
-            eventName: "Quote Event",
-            contactEmail: "quote@example.com",
-            headcount: 80,
-            setupInstructions: "Quote setup",
-            takedownInstructions: "Quote takedown",
-            location: "Campus",
-            contactName: "Jane",
           }),
         }),
       });
@@ -925,12 +711,8 @@ describe("quoteService", () => {
         message: "This quote has expired",
       });
 
-      expect(tx.invoice.update).toHaveBeenCalledWith({
-        where: { id: "q1" },
-        data: { quoteStatus: "EXPIRED" },
-      });
-      expect(mockRepo.update).not.toHaveBeenCalled();
-      expect(safePublishAll).toHaveBeenCalledWith({ type: "quote-changed" });
+      expect(mockRepo.update).toHaveBeenCalledWith("q1", { quoteStatus: "EXPIRED" });
+      expect(tx.invoice.update).not.toHaveBeenCalled();
     });
 
     it("rejects catering details for non-catering quotes", async () => {
@@ -1097,161 +879,12 @@ describe("quoteService", () => {
       await expect(quoteService.update("q1", { notes: "x" })).resolves.toBeDefined();
     });
 
-    it("stamps acceptedAt when quoteStatus is set to ACCEPTED through the generic update path", async () => {
-      const quote = makeQuote({ quoteStatus: "SENT" });
-      mockRepo.findById.mockResolvedValue(quote as never);
-      mockRepo.update.mockResolvedValue({ ...quote, quoteStatus: "ACCEPTED" } as never);
-
-      await quoteService.update("q1", { quoteStatus: "ACCEPTED" });
-
-      expect(mockRepo.update).toHaveBeenCalledWith(
-        "q1",
-        expect.objectContaining({
-          quoteStatus: "ACCEPTED",
-          acceptedAt: expect.any(Date),
-        }),
-      );
-    });
-
     it("allows ACCEPTED quotes to update when they have not been converted", async () => {
       const quote = makeQuote({ quoteStatus: "ACCEPTED", convertedToInvoice: null });
       mockRepo.findById.mockResolvedValue(quote as never);
       mockRepo.update.mockResolvedValue({ ...quote, notes: "Updated after approval" } as never);
 
       await expect(quoteService.update("q1", { notes: "Updated after approval" })).resolves.toBeDefined();
-    });
-
-    it("allows accepted unresolved quotes to backfill payment details before conversion", async () => {
-      const quote = makeQuote({ quoteStatus: "ACCEPTED", convertedToInvoice: null, paymentMethod: null });
-      mockRepo.findById.mockResolvedValue(quote as never);
-      mockRepo.update.mockResolvedValue({
-        ...quote,
-        paymentMethod: "ACCOUNT_NUMBER",
-        paymentAccountNumber: "SAP-12345",
-      } as never);
-
-      const result = await quoteService.update("q1", {
-        paymentMethod: "ACCOUNT_NUMBER",
-        paymentAccountNumber: "SAP-12345",
-      });
-
-      expect(mockRepo.update).toHaveBeenCalledWith("q1", {
-        paymentMethod: "ACCOUNT_NUMBER",
-        paymentAccountNumber: "SAP-12345",
-      });
-      expect(result.paymentMethod).toBe("ACCOUNT_NUMBER");
-      expect(result.paymentAccountNumber).toBe("SAP-12345");
-      expect(result.paymentDetailsResolved).toBe(true);
-      expect(mockRepo.createFollowUp).toHaveBeenCalledWith({
-        invoiceId: "q1",
-        type: "PAYMENT_RESOLVED",
-        recipientEmail: "jane@test.com",
-        subject: "Payment details provided for Q-2026-0001",
-        metadata: {
-          paymentMethod: "ACCOUNT_NUMBER",
-        },
-      });
-    });
-
-    it("backfills payment details on a converted accepted quote without changing other fields", async () => {
-      const quote = makeQuote({
-        quoteStatus: "ACCEPTED",
-        convertedToInvoice: {
-          id: "inv1",
-          invoiceNumber: "INV-2026-0001",
-          status: "DRAFT",
-          paymentMethod: null,
-        },
-        paymentMethod: null,
-      });
-      mockRepo.findById.mockResolvedValue(quote as never);
-      const mockPrisma = vi.mocked(prisma, true);
-      const tx = {
-        $queryRaw: vi.fn()
-          .mockResolvedValueOnce([{ id: "q1", quoteStatus: "ACCEPTED", paymentMethod: null }])
-          .mockResolvedValueOnce([{ id: "inv1", status: "DRAFT", paymentMethod: null }]),
-        invoice: {
-          update: vi.fn().mockResolvedValue({}),
-        },
-        quoteFollowUp: {
-          create: vi.fn(),
-        },
-      };
-      mockPrisma.$transaction.mockImplementationOnce(async (callback) => callback(tx as never) as never);
-
-      const result = await quoteService.update("q1", {
-        paymentMethod: "CHECK",
-      });
-
-      expect(tx.$queryRaw).toHaveBeenCalledTimes(2);
-      expect(tx.invoice.update).toHaveBeenNthCalledWith(
-        1,
-        expect.objectContaining({
-          where: { id: "q1" },
-          data: expect.objectContaining({
-            paymentMethod: "CHECK",
-            paymentAccountNumber: null,
-          }),
-        }),
-      );
-      expect(tx.invoice.update).toHaveBeenNthCalledWith(
-        2,
-        expect.objectContaining({
-          where: { id: "inv1" },
-          data: expect.objectContaining({
-            paymentMethod: "CHECK",
-            paymentAccountNumber: null,
-          }),
-        }),
-      );
-      expect(tx.quoteFollowUp.create).toHaveBeenCalledWith({
-        data: {
-          invoiceId: "q1",
-          type: "PAYMENT_RESOLVED",
-          recipientEmail: "jane@test.com",
-          subject: "Payment details provided for Q-2026-0001",
-          metadata: {
-            paymentMethod: "CHECK",
-          },
-        },
-      });
-      expect(result.paymentMethod).toBe("CHECK");
-      expect(result.paymentAccountNumber).toBeNull();
-      expect(result.paymentDetailsResolved).toBe(true);
-      expect(safePublishAll).toHaveBeenCalledWith({ type: "quote-changed" });
-      expect(safePublishAll).toHaveBeenCalledWith({ type: "invoice-changed" });
-      expect(mockRepo.update).not.toHaveBeenCalled();
-    });
-
-    it("rejects payment-detail backfill before a quote is accepted", async () => {
-      const quote = makeQuote({ quoteStatus: "SENT", convertedToInvoice: null, paymentMethod: null });
-      mockRepo.findById.mockResolvedValue(quote as never);
-
-      await expect(
-        quoteService.update("q1", {
-          paymentMethod: "CHECK",
-        }),
-      ).rejects.toMatchObject({
-        code: "FORBIDDEN",
-        message: "Payment details can only be updated after a quote is accepted",
-      });
-
-      expect(mockRepo.update).not.toHaveBeenCalled();
-    });
-
-    it("rejects overwriting accepted payment details through the update flow", async () => {
-      const quote = makeQuote({ quoteStatus: "ACCEPTED", convertedToInvoice: null, paymentMethod: "CHECK" });
-      mockRepo.findById.mockResolvedValue(quote as never);
-
-      await expect(
-        quoteService.update("q1", {
-          paymentMethod: "ACCOUNT_NUMBER",
-          paymentAccountNumber: "SAP-12345",
-        }),
-      ).rejects.toMatchObject({
-        code: "PAYMENT_ALREADY_RESOLVED",
-        message: "Payment details have already been provided",
-      });
     });
 
     it("throws FORBIDDEN when an accepted quote has already been converted", async () => {
@@ -1347,100 +980,24 @@ describe("quoteService", () => {
         expirationDate: new Date("2099-02-15"),
       });
       mockRepo.findById.mockResolvedValue(quote as never);
-      const mockPrisma = vi.mocked(prisma, true);
-      const tx = {
-        $queryRaw: vi.fn().mockResolvedValueOnce([
-          {
-            id: "q1",
-            quoteStatus: "SENT",
-            paymentMethod: null,
-            expirationDate: new Date("2099-02-15"),
-          },
-        ]),
-        invoice: {
-          update: vi.fn().mockResolvedValue({}),
-        },
-        quoteFollowUp: {
-          create: vi.fn(),
-        },
-      };
-      mockPrisma.$transaction.mockImplementationOnce(async (callback) => callback(tx as never) as never);
+      mockRepo.update.mockResolvedValue({ ...quote, quoteStatus: "ACCEPTED" } as never);
 
       await quoteService.approveManually("q1", {
         paymentMethod: "CHECK",
       });
 
-      expect(tx.$queryRaw).toHaveBeenCalledTimes(1);
-      expect(tx.invoice.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: "q1" },
-          data: expect.objectContaining({
-            quoteStatus: "ACCEPTED",
-            acceptedAt: expect.any(Date),
-            paymentMethod: "CHECK",
-            paymentAccountNumber: null,
-          }),
-        }),
-      );
-      expect(tx.quoteFollowUp.create).toHaveBeenCalledWith({
-        data: {
-          invoiceId: "q1",
-          type: "PAYMENT_RESOLVED",
-          recipientEmail: "jane@test.com",
-          subject: "Payment details provided for Q-2026-0001",
-          metadata: {
-            paymentMethod: "CHECK",
-          },
-        },
+      expect(mockRepo.update).toHaveBeenCalledWith("q1", {
+        quoteStatus: "ACCEPTED",
+        acceptedAt: expect.any(Date),
+        paymentMethod: "CHECK",
+        paymentAccountNumber: null,
       });
-      expect(mockRepo.update).not.toHaveBeenCalled();
-      expect(safePublishAll).toHaveBeenCalledWith({ type: "quote-changed" });
       expect(notificationService.createAndPublish).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "QUOTE_APPROVED",
           quoteId: "q1",
         }),
       );
-    });
-
-    it("marks an expired quote as expired inside the approval transaction", async () => {
-      const quote = makeQuote({
-        quoteStatus: "SENT",
-        expirationDate: new Date("2099-02-15"),
-      });
-      mockRepo.findById.mockResolvedValue(quote as never);
-      const mockPrisma = vi.mocked(prisma, true);
-      const tx = {
-        $queryRaw: vi.fn().mockResolvedValueOnce([
-          {
-            id: "q1",
-            quoteStatus: "SENT",
-            paymentMethod: null,
-            expirationDate: new Date("2026-03-01"),
-          },
-        ]),
-        invoice: {
-          update: vi.fn().mockResolvedValue({}),
-        },
-      };
-      mockPrisma.$transaction.mockImplementationOnce(async (callback) => callback(tx as never) as never);
-
-      await expect(
-        quoteService.approveManually("q1", {
-          paymentMethod: "CHECK",
-        }),
-      ).rejects.toMatchObject({
-        code: "FORBIDDEN",
-        message: "This quote has expired",
-      });
-
-      expect(tx.invoice.update).toHaveBeenCalledWith({
-        where: { id: "q1" },
-        data: { quoteStatus: "EXPIRED" },
-      });
-      expect(mockRepo.update).not.toHaveBeenCalled();
-      expect(safePublishAll).toHaveBeenCalledWith({ type: "quote-changed" });
-      expect(notificationService.createAndPublish).not.toHaveBeenCalled();
     });
 
     it("syncs payment details to a converted invoice when approving a quote manually", async () => {
@@ -1452,21 +1009,11 @@ describe("quoteService", () => {
       mockRepo.findById.mockResolvedValue(quote as never);
       const mockPrisma = vi.mocked(prisma, true);
       const tx = {
-        $queryRaw: vi.fn()
-          .mockResolvedValueOnce([
-            {
-              id: "q1",
-              quoteStatus: "SENT",
-              paymentMethod: null,
-              expirationDate: new Date("2099-02-15"),
-            },
-          ])
-          .mockResolvedValueOnce([{ id: "inv1", status: "DRAFT", paymentMethod: null }]),
+        $queryRaw: vi.fn().mockResolvedValue([
+          { id: "inv1", status: "DRAFT", paymentMethod: null },
+        ]),
         invoice: {
           update: vi.fn().mockResolvedValue({}),
-        },
-        quoteFollowUp: {
-          create: vi.fn(),
         },
       };
       mockPrisma.$transaction.mockImplementationOnce(async (callback) => callback(tx as never) as never);
@@ -1476,11 +1023,6 @@ describe("quoteService", () => {
         accountNumber: "SAP-12345",
       });
 
-      expect(tx.$queryRaw).toHaveBeenCalledTimes(2);
-      expect((tx.$queryRaw.mock.calls[0]?.[0] as TemplateStringsArray).join(" ")).toContain("WHERE id =");
-      expect((tx.$queryRaw.mock.calls[1]?.[0] as TemplateStringsArray).join(" ")).toContain(
-        "converted_from_quote_id",
-      );
       expect(tx.invoice.update).toHaveBeenNthCalledWith(
         1,
         expect.objectContaining({
@@ -1502,71 +1044,6 @@ describe("quoteService", () => {
             paymentAccountNumber: "SAP-12345",
           }),
         }),
-      );
-      expect(tx.quoteFollowUp.create).toHaveBeenCalledWith({
-        data: {
-          invoiceId: "q1",
-          type: "PAYMENT_RESOLVED",
-          recipientEmail: "jane@test.com",
-          subject: "Payment details provided for Q-2026-0001",
-          metadata: {
-            paymentMethod: "ACCOUNT_NUMBER",
-          },
-        },
-      });
-      expect(safePublishAll).toHaveBeenCalledWith({ type: "quote-changed" });
-      expect(safePublishAll).toHaveBeenCalledWith({ type: "invoice-changed" });
-    });
-
-    it("does not fail manual approval when notification publishing is unavailable", async () => {
-      const quote = makeQuote({
-        quoteStatus: "SENT",
-        expirationDate: new Date("2099-02-15"),
-      });
-      mockRepo.findById.mockResolvedValue(quote as never);
-      const mockPrisma = vi.mocked(prisma, true);
-      const tx = {
-        $queryRaw: vi.fn().mockResolvedValueOnce([
-          {
-            id: "q1",
-            quoteStatus: "SENT",
-            paymentMethod: null,
-            expirationDate: new Date("2099-02-15"),
-          },
-        ]),
-        invoice: {
-          update: vi.fn().mockResolvedValue({}),
-        },
-        quoteFollowUp: {
-          create: vi.fn(),
-        },
-      };
-      mockPrisma.$transaction.mockImplementationOnce(async (callback) => callback(tx as never) as never);
-      vi.mocked(notificationService.createAndPublish).mockRejectedValueOnce(new Error("notification down"));
-      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
-
-      await expect(
-        quoteService.approveManually("q1", {
-          paymentMethod: "CHECK",
-        }),
-      ).resolves.toEqual({ success: true, status: "ACCEPTED" });
-
-      expect(tx.invoice.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: "q1" },
-          data: expect.objectContaining({
-            quoteStatus: "ACCEPTED",
-            acceptedAt: expect.any(Date),
-            paymentMethod: "CHECK",
-            paymentAccountNumber: null,
-          }),
-        }),
-      );
-      expect(mockRepo.update).not.toHaveBeenCalled();
-      expect(safePublishAll).toHaveBeenCalledWith({ type: "quote-changed" });
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "[approveManually] notification failed:",
-        expect.any(Error),
       );
     });
   });
@@ -1657,26 +1134,45 @@ describe("quoteService", () => {
       });
     });
 
-    it("throws FORBIDDEN for sent quotes so pending quotes cannot bypass payment resolution", async () => {
+    it("preserves the quote response state when converting a sent quote", async () => {
       const { prisma } = await import("@/lib/prisma");
       const mockPrisma = vi.mocked(prisma, true);
+
+      const newInvoice = { id: "inv1", invoiceNumber: "INV-2026-0001" };
       const tx = {
         $queryRaw: vi.fn().mockResolvedValue([{ id: "q1" }]),
         invoice: {
           findFirst: vi.fn().mockResolvedValue(null),
           findUnique: vi.fn().mockResolvedValue(makeQuote({ quoteStatus: "SENT" })),
-          create: vi.fn(),
-          update: vi.fn(),
+          create: vi.fn().mockResolvedValue(newInvoice),
+          update: vi.fn().mockResolvedValue({}),
         },
       };
       mockPrisma.$transaction.mockImplementationOnce(async (callback) => callback(tx as never) as never);
 
-      await expect(quoteService.convertToInvoice("q1", "u1")).rejects.toMatchObject({
-        code: "FORBIDDEN",
-        message: "Only accepted quotes can be converted to invoices",
-      });
-      expect(tx.invoice.create).not.toHaveBeenCalled();
-      expect(tx.invoice.update).not.toHaveBeenCalled();
+      const result = await quoteService.convertToInvoice("q1", "u1");
+
+      expect(mockPrisma.$transaction).toHaveBeenCalledOnce();
+      expect(tx.invoice.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            accountNumber: "12345",
+            paymentMethod: null,
+            paymentAccountNumber: null,
+          }),
+        }),
+      );
+      expect(tx.invoice.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "q1" },
+          data: expect.objectContaining({
+            quoteStatus: "SENT",
+            acceptedAt: null,
+            convertedAt: expect.any(Date),
+          }),
+        }),
+      );
+      expect(result).toEqual(newInvoice);
     });
 
     it("allows ACCEPTED quotes to convert when payment details are resolved", async () => {

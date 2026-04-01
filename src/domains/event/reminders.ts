@@ -4,14 +4,6 @@ import { zonedDateTimeToUtc } from "@/lib/date-utils";
 
 const EVENT_REMINDER_LOCK_KEY = 914275;
 
-function normalizeReminderTime(time: string | null | undefined): string {
-  const match = time?.match(/^(\d{1,2}):(\d{2})$/);
-  if (!match) return "00:00";
-
-  const [, hours, minutes] = match;
-  return `${hours.padStart(2, "0")}:${minutes}`;
-}
-
 export async function checkAndSendReminders(): Promise<void> {
   const now = new Date();
   const pendingPublishes = await prisma.$transaction(async (tx) => {
@@ -53,7 +45,7 @@ export async function checkAndSendReminders(): Promise<void> {
 
       const reminderTime = zonedDateTimeToUtc(
         dateStr,
-        normalizeReminderTime(event.startTime),
+        event.startTime && /^\d{1,2}:\d{2}$/.test(event.startTime) ? event.startTime : "00:00",
       );
       reminderTime.setMinutes(reminderTime.getMinutes() - event.reminderMinutes);
 

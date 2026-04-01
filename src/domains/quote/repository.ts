@@ -33,12 +33,6 @@ const detailInclude = {
   revisedToQuote: { select: { id: true, quoteNumber: true } },
 } as const;
 
-const AWAITING_RESPONSE_STATUSES = new Set([
-  "SENT",
-  "SUBMITTED_EMAIL",
-  "SUBMITTED_MANUAL",
-]);
-
 // ── Where builder ──────────────────────────────────────────────────────────
 
 function buildWhere(filters: QuoteFilters): Prisma.InvoiceWhereInput {
@@ -46,9 +40,6 @@ function buildWhere(filters: QuoteFilters): Prisma.InvoiceWhereInput {
 
   if (filters.quoteStatus && filters.quoteStatus !== "all") {
     where.quoteStatus = filters.quoteStatus as Prisma.InvoiceWhereInput["quoteStatus"];
-    if (AWAITING_RESPONSE_STATUSES.has(filters.quoteStatus)) {
-      where.convertedToInvoice = null;
-    }
   }
   if (filters.department) {
     where.department = { contains: filters.department, mode: "insensitive" };
@@ -105,7 +96,6 @@ export async function expireOverdue(): Promise<void> {
     where: {
       type: "QUOTE",
       quoteStatus: { in: ["DRAFT", "SENT", "SUBMITTED_EMAIL", "SUBMITTED_MANUAL"] },
-      convertedToInvoice: null,
       expirationDate: { lt: new Date() },
     },
     data: { quoteStatus: "EXPIRED" },
@@ -431,7 +421,6 @@ export async function syncPublicPaymentDetails(
       SELECT id, status
       FROM invoices
       WHERE id = ${convertedInvoiceId}
-        AND converted_from_quote_id = ${quoteId}
       FOR UPDATE
     `;
     const convertedInvoice = convertedInvoices[0];

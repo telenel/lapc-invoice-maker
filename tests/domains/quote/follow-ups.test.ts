@@ -180,117 +180,28 @@ describe("checkAndSendPaymentFollowUps", () => {
     );
   });
 
-  it("scans legacy accepted quotes even when acceptedAt is still missing", async () => {
+  it("skips reminders for quotes that already have a converted invoice", async () => {
     const scanTx = makeTx();
-    const claimTx = makeTx();
-    const refreshTx = makeTx();
-    const confirmTx = makeTx();
-    const acceptedAt = null;
-    const updatedAt = new Date("2026-03-01T12:00:00.000Z");
-    const createdAt = new Date("2026-02-20T12:00:00.000Z");
-
     scanTx.$queryRaw.mockResolvedValue([{ acquired: true }]);
-    vi.mocked(businessDaysBetween).mockReturnValue(7);
-    scanTx.invoice.findMany.mockResolvedValue([
-      {
-        id: "q1",
-        quoteNumber: "Q-1",
-        recipientName: "Jane",
-        recipientEmail: "jane@example.com",
-        shareToken: "token",
-        acceptedAt,
-        updatedAt,
-        createdAt,
-        followUps: [],
-        creator: { id: "u1", name: "Admin" },
-      },
-    ] as never);
-    claimTx.$queryRaw
-      .mockResolvedValueOnce([
-        {
-          id: "q1",
-          quoteNumber: "Q-1",
-          recipientName: "Jane",
-          recipientEmail: "jane@example.com",
-          shareToken: "token",
-          quoteStatus: "ACCEPTED",
-          acceptedAt,
-          updatedAt,
-          createdAt,
-          paymentMethod: null,
-          createdBy: "u1",
-        },
-      ] as never)
-      .mockResolvedValueOnce([] as never);
-    claimTx.quoteFollowUp.findFirst.mockResolvedValue(null as never);
-    claimTx.quoteFollowUp.count.mockResolvedValue(0 as never);
-    claimTx.quoteFollowUp.create.mockResolvedValue({ id: "fu1" } as never);
-    refreshTx.$queryRaw
-      .mockResolvedValueOnce([
-        {
-          id: "q1",
-          quoteNumber: "Q-1",
-          recipientName: "Jane",
-          recipientEmail: "jane@example.com",
-          shareToken: "token",
-          quoteStatus: "ACCEPTED",
-          acceptedAt,
-          updatedAt,
-          createdAt,
-          paymentMethod: null,
-          createdBy: "u1",
-        },
-      ] as never)
-      .mockResolvedValueOnce([] as never);
-    confirmTx.$queryRaw
-      .mockResolvedValueOnce([
-        {
-          id: "q1",
-          quoteNumber: "Q-1",
-          recipientName: "Jane",
-          recipientEmail: "jane@example.com",
-          shareToken: "token",
-          quoteStatus: "ACCEPTED",
-          acceptedAt,
-          updatedAt,
-          createdAt,
-          paymentMethod: null,
-          createdBy: "u1",
-        },
-      ] as never)
-      .mockResolvedValueOnce([] as never);
-    vi.mocked(sendEmail).mockResolvedValue(true as never);
-    mockTransactions(scanTx, claimTx, refreshTx, confirmTx);
+    scanTx.invoice.findMany.mockResolvedValue([] as never);
+    vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => callback(scanTx as never) as never);
 
     await checkAndSendPaymentFollowUps();
 
-    const [referenceDate, comparisonDate] = vi.mocked(businessDaysBetween).mock.calls[0] ?? [];
-    expect(referenceDate).toBe(updatedAt);
-    expect(comparisonDate).toBeInstanceOf(Date);
     expect(scanTx.invoice.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
           quoteStatus: "ACCEPTED",
-          paymentMethod: null,
-          shareToken: { not: null },
+          acceptedAt: { not: null },
+          convertedToInvoice: null,
         }),
       }),
     );
-    const scanQuery = scanTx.invoice.findMany.mock.calls[0]![0]!;
-    expect(scanQuery.where).not.toHaveProperty("acceptedAt");
-    expect(claimTx.quoteFollowUp.create).toHaveBeenCalledOnce();
-    expect(sendEmail).toHaveBeenCalledOnce();
-    expect(vi.mocked(prisma.quoteFollowUp.update)).toHaveBeenCalledWith({
-      where: { id: "fu1" },
-      data: { type: "PAYMENT_REMINDER" },
-    });
   });
 
-  it("still claims reminders when a converted invoice exists but payment details remain unresolved", async () => {
+  it("skips reminder claims when a converted invoice already exists at lock time", async () => {
     const scanTx = makeTx();
     const claimTx = makeTx();
-    const refreshTx = makeTx();
-    const confirmTx = makeTx();
 
     scanTx.$queryRaw.mockResolvedValue([{ acquired: true }]);
     vi.mocked(businessDaysBetween).mockReturnValue(7);
@@ -326,73 +237,20 @@ describe("checkAndSendPaymentFollowUps", () => {
         {
           id: "inv1",
           status: "DRAFT",
-          paymentMethod: null,
+          paymentMethod: "ACCOUNT_NUMBER",
           createdBy: "u2",
         },
       ] as never);
     claimTx.quoteFollowUp.findFirst.mockResolvedValue(null as never);
-    claimTx.quoteFollowUp.count.mockResolvedValue(0 as never);
-    claimTx.quoteFollowUp.create.mockResolvedValue({ id: "fu1" } as never);
-    refreshTx.$queryRaw
-      .mockResolvedValueOnce([
-        {
-          id: "q1",
-          quoteNumber: "Q-1",
-          recipientName: "Jane",
-          recipientEmail: "jane@example.com",
-          shareToken: "token",
-          quoteStatus: "ACCEPTED",
-          acceptedAt: new Date("2026-03-01T12:00:00.000Z"),
-          paymentMethod: null,
-          createdBy: "u1",
-        },
-      ] as never)
-      .mockResolvedValueOnce([
-        {
-          id: "inv1",
-          status: "DRAFT",
-          paymentMethod: null,
-          createdBy: "u2",
-        },
-      ] as never);
-    confirmTx.$queryRaw
-      .mockResolvedValueOnce([
-        {
-          id: "q1",
-          quoteNumber: "Q-1",
-          recipientName: "Jane",
-          recipientEmail: "jane@example.com",
-          shareToken: "token",
-          quoteStatus: "ACCEPTED",
-          acceptedAt: new Date("2026-03-01T12:00:00.000Z"),
-          paymentMethod: null,
-          createdBy: "u1",
-        },
-      ] as never)
-      .mockResolvedValueOnce([
-        {
-          id: "inv1",
-          status: "DRAFT",
-          paymentMethod: null,
-          createdBy: "u2",
-        },
-      ] as never);
-    mockTransactions(scanTx, claimTx, refreshTx, confirmTx);
-    vi.mocked(sendEmail).mockResolvedValue(true as never);
+    vi.mocked(prisma.$transaction)
+      .mockImplementationOnce(async (callback) => callback(scanTx as never) as never)
+      .mockImplementationOnce(async (callback) => callback(claimTx as never) as never);
 
     await checkAndSendPaymentFollowUps();
 
-    expect(claimTx.quoteFollowUp.create).toHaveBeenCalledOnce();
-    expect(sendEmail).toHaveBeenCalledOnce();
-    expect(vi.mocked(prisma.quoteFollowUp.update)).toHaveBeenCalledWith({
-      where: { id: "fu1" },
-      data: { type: "PAYMENT_REMINDER" },
-    });
-    expect(vi.mocked(notificationService.createAndPublish)).toHaveBeenCalledWith(
-      expect.objectContaining({
-        userId: "u2",
-      }),
-    );
+    expect(claimTx.quoteFollowUp.create).not.toHaveBeenCalled();
+    expect(sendEmail).not.toHaveBeenCalled();
+    expect(claimTx.quoteFollowUp.update).not.toHaveBeenCalled();
   });
 
   it("requires a share token before emailing payment reminders", async () => {
@@ -609,7 +467,7 @@ describe("checkAndSendPaymentFollowUps", () => {
     expect(vi.mocked(safePublishAll)).toHaveBeenCalledWith({ type: "quote-changed" });
   });
 
-  it("skips reminder claims when the converted invoice already has payment details", async () => {
+  it("skips reminder claims when a converted invoice appears before the claim commits", async () => {
     const scanTx = makeTx();
     const claimTx = makeTx();
 
@@ -643,14 +501,7 @@ describe("checkAndSendPaymentFollowUps", () => {
           createdBy: "u1",
         },
       ] as never)
-      .mockResolvedValueOnce([
-        {
-          id: "inv1",
-          status: "DRAFT",
-          paymentMethod: "CHECK",
-          createdBy: "u2",
-        },
-      ] as never);
+      .mockResolvedValueOnce([{ id: "inv1", status: "DRAFT", createdBy: "u2" }] as never);
     vi.mocked(prisma.$transaction)
       .mockImplementationOnce(async (callback) => callback(scanTx as never) as never)
       .mockImplementationOnce(async (callback) => callback(claimTx as never) as never);

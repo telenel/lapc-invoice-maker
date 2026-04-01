@@ -21,41 +21,6 @@ describe("POST /api/quotes/public/[token]/respond", () => {
     } as never);
   });
 
-  it("returns 400 when the JSON body is null", async () => {
-    const response = await POST(
-      new NextRequest("http://localhost/api/quotes/public/token/respond", {
-        method: "POST",
-        body: "null",
-        headers: { "Content-Type": "application/json" },
-      }),
-      { params: Promise.resolve({ token: "token" }) },
-    );
-
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({ error: "Invalid request body" });
-    expect(quoteService.getByShareToken).not.toHaveBeenCalled();
-    expect(quoteService.respondToQuote).not.toHaveBeenCalled();
-  });
-
-  it("returns 400 when viewId is not a string", async () => {
-    const response = await POST(
-      new NextRequest("http://localhost/api/quotes/public/token/respond", {
-        method: "POST",
-        body: JSON.stringify({
-          response: "DECLINED",
-          viewId: 123,
-        }),
-        headers: { "Content-Type": "application/json" },
-      }),
-      { params: Promise.resolve({ token: "token" }) },
-    );
-
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({ error: "Invalid view ID" });
-    expect(quoteService.getByShareToken).not.toHaveBeenCalled();
-    expect(quoteService.respondToQuote).not.toHaveBeenCalled();
-  });
-
   it("does not persist catering details when payment validation fails", async () => {
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",
@@ -182,41 +147,27 @@ describe("POST /api/quotes/public/[token]/respond", () => {
     expect(quoteService.respondToQuote).not.toHaveBeenCalled();
   });
 
-  it("allows converted quotes to reach the reconciliation path when approval data is supplied", async () => {
+  it("blocks responses for quotes that have already been converted to invoices", async () => {
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",
       quoteStatus: "SENT",
       isCateringEvent: false,
       convertedToInvoice: { id: "inv1" },
     } as never);
-    vi.mocked(quoteService.respondToQuote).mockResolvedValue({
-      success: true,
-      status: "ACCEPTED",
-    } as never);
 
     const response = await POST(
       new NextRequest("http://localhost/api/quotes/public/token/respond", {
         method: "POST",
         body: JSON.stringify({
-          response: "ACCEPTED",
-          paymentMethod: "CHECK",
+          response: "DECLINED",
         }),
         headers: { "Content-Type": "application/json" },
       }),
       { params: Promise.resolve({ token: "token" }) },
     );
 
-    expect(response.status).toBe(200);
-    expect(quoteService.respondToQuote).toHaveBeenCalledWith(
-      "token",
-      "ACCEPTED",
-      undefined,
-      {
-        paymentMethod: "CHECK",
-        accountNumber: null,
-      },
-      undefined,
-    );
+    expect(response.status).toBe(400);
+    expect(quoteService.respondToQuote).not.toHaveBeenCalled();
   });
 
   it("rejects catering details for non-catering quotes", async () => {
@@ -345,7 +296,7 @@ describe("POST /api/quotes/public/[token]/respond", () => {
     expect(cateringDetails).toHaveProperty("takedownInstructions", "Internal takedown note");
   });
 
-  it("preserves omitted optional catering fields from the existing quote", async () => {
+  it("does not preserve omitted optional catering fields from the existing quote", async () => {
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",
       quoteStatus: "SENT",
@@ -357,15 +308,11 @@ describe("POST /api/quotes/public/[token]/respond", () => {
         location: "Bookstore",
         contactName: "Jane",
         contactPhone: "555-1111",
-        headcount: 120,
         contactEmail: "jane@example.com",
         setupRequired: true,
-        setupTime: "08:00",
         setupInstructions: "Keep the prep table against the north wall.",
         takedownRequired: false,
-        takedownTime: "14:00",
         takedownInstructions: "Leave equipment by the loading dock.",
-        specialInstructions: "Use the east entrance.",
       },
     } as never);
     vi.mocked(quoteService.respondToQuote).mockResolvedValue({
@@ -409,130 +356,18 @@ describe("POST /api/quotes/public/[token]/respond", () => {
         location: "Campus",
         contactName: "Jane",
         contactPhone: "555-1111",
-        setupRequired: true,
+        setupRequired: false,
         takedownRequired: false,
       }),
     );
     const cateringDetails = vi.mocked(quoteService.respondToQuote).mock.calls[0]?.[4] as Record<string, unknown> | undefined;
     expect(cateringDetails).toBeDefined();
-    expect(cateringDetails).toHaveProperty("headcount", 120);
-    expect(cateringDetails).toHaveProperty("setupTime", "08:00");
-    expect(cateringDetails).toHaveProperty("takedownTime", "14:00");
-    expect(cateringDetails).toHaveProperty("specialInstructions", "Use the east entrance.");
+    expect(cateringDetails).not.toHaveProperty("headcount");
+    expect(cateringDetails).not.toHaveProperty("setupTime");
+    expect(cateringDetails).not.toHaveProperty("takedownTime");
+    expect(cateringDetails).not.toHaveProperty("specialInstructions");
     expect(cateringDetails).toHaveProperty("setupInstructions", "Keep the prep table against the north wall.");
     expect(cateringDetails).toHaveProperty("takedownInstructions", "Leave equipment by the loading dock.");
-  });
-
-  it("persists submitted setup and takedown instructions when they are provided publicly", async () => {
-    vi.mocked(quoteService.getByShareToken).mockResolvedValue({
-      id: "q1",
-      quoteStatus: "SENT",
-      isCateringEvent: true,
-      cateringDetails: {
-        eventDate: "2026-04-15",
-        startTime: "10:00",
-        endTime: "12:00",
-        location: "Bookstore",
-        contactName: "Jane",
-        contactPhone: "555-1111",
-        setupRequired: true,
-        setupTime: "08:00",
-        setupInstructions: "Old setup note",
-        takedownRequired: true,
-        takedownTime: "14:00",
-        takedownInstructions: "Old takedown note",
-      },
-    } as never);
-    vi.mocked(quoteService.respondToQuote).mockResolvedValue({
-      id: "q1",
-      quoteStatus: "ACCEPTED",
-    } as never);
-
-    const response = await POST(
-      new NextRequest("http://localhost/api/quotes/public/token/respond", {
-        method: "POST",
-        body: JSON.stringify({
-          response: "ACCEPTED",
-          paymentMethod: "CHECK",
-          cateringDetails: {
-            eventDate: "2026-04-15",
-            startTime: "10:00",
-            endTime: "12:00",
-            location: "Campus",
-            contactName: "Jane",
-            contactPhone: "555-1111",
-            setupRequired: true,
-            setupTime: "08:00",
-            setupInstructions: "New setup note",
-            takedownRequired: true,
-            takedownTime: "14:00",
-            takedownInstructions: "New takedown note",
-          },
-        }),
-        headers: { "Content-Type": "application/json" },
-      }),
-      { params: Promise.resolve({ token: "token" }) },
-    );
-
-    expect(response.status).toBe(200);
-    const cateringDetails = vi.mocked(quoteService.respondToQuote).mock.calls[0]?.[4] as Record<string, unknown> | undefined;
-    expect(cateringDetails).toBeDefined();
-    expect(cateringDetails).toHaveProperty("setupInstructions", "New setup note");
-    expect(cateringDetails).toHaveProperty("takedownInstructions", "New takedown note");
-  });
-
-  it("clears setup and takedown times when those requirements are unchecked", async () => {
-    vi.mocked(quoteService.getByShareToken).mockResolvedValue({
-      id: "q1",
-      quoteStatus: "SENT",
-      isCateringEvent: true,
-      cateringDetails: {
-        eventDate: "2026-04-15",
-        startTime: "10:00",
-        endTime: "12:00",
-        location: "Bookstore",
-        contactName: "Jane",
-        contactPhone: "555-1111",
-        setupRequired: true,
-        setupTime: "08:00",
-        takedownRequired: true,
-        takedownTime: "14:00",
-      },
-    } as never);
-    vi.mocked(quoteService.respondToQuote).mockResolvedValue({
-      id: "q1",
-      quoteStatus: "ACCEPTED",
-    } as never);
-
-    const response = await POST(
-      new NextRequest("http://localhost/api/quotes/public/token/respond", {
-        method: "POST",
-        body: JSON.stringify({
-          response: "ACCEPTED",
-          paymentMethod: "CHECK",
-          cateringDetails: {
-            eventDate: "2026-04-15",
-            startTime: "10:00",
-            endTime: "12:00",
-            location: "Campus",
-            contactName: "Jane",
-            contactPhone: "555-1111",
-            setupRequired: false,
-            takedownRequired: false,
-          },
-        }),
-        headers: { "Content-Type": "application/json" },
-      }),
-      { params: Promise.resolve({ token: "token" }) },
-    );
-
-    expect(response.status).toBe(200);
-    const cateringDetails = vi.mocked(quoteService.respondToQuote).mock.calls[0]?.[4] as Record<string, unknown> | undefined;
-    expect(cateringDetails).toBeDefined();
-    expect(cateringDetails).toHaveProperty("setupRequired", false);
-    expect(cateringDetails).toHaveProperty("takedownRequired", false);
-    expect(cateringDetails).toHaveProperty("setupTime", null);
-    expect(cateringDetails).toHaveProperty("takedownTime", null);
   });
 
   it("passes the raw account number shape through to the quote service", async () => {
@@ -685,27 +520,5 @@ describe("POST /api/quotes/public/[token]/respond", () => {
     );
 
     expect(response.status).toBe(409);
-  });
-
-  it("returns 404 when the quote disappears during the locked response write", async () => {
-    vi.mocked(quoteService.respondToQuote).mockRejectedValue(
-      Object.assign(new Error("Quote not found"), {
-        code: "NOT_FOUND",
-      }),
-    );
-
-    const response = await POST(
-      new NextRequest("http://localhost/api/quotes/public/token/respond", {
-        method: "POST",
-        body: JSON.stringify({
-          response: "ACCEPTED",
-          paymentMethod: "CHECK",
-        }),
-        headers: { "Content-Type": "application/json" },
-      }),
-      { params: Promise.resolve({ token: "token" }) },
-    );
-
-    expect(response.status).toBe(404);
   });
 });
