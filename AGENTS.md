@@ -15,4 +15,3 @@ Codex should use `docs/AI-WORKFLOW.md` as the shared workflow authority for this
 - Follow the shared rules in `docs/AI-WORKFLOW.md` for setup, validation, git workflow, and architecture boundaries.
 - Worktrees are allowed and may be used when they are convenient for isolating or organizing work.
 - Use the repo validation commands from `docs/AI-WORKFLOW.md`: `npm run ship-check` and `npm run laportal:review`.
-- Codex may publish a reviewed branch with `./scripts/publish-pr.sh`.

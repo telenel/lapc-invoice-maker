@@ -89,7 +89,6 @@ Local AI workflow is hard-coded through tracked scripts and hooks:
 
 - `npm run ship-check`
 - `npm run laportal:review`
-- `./scripts/publish-pr.sh`
 
 `npm run laportal:review` always keeps the latest text report at `.git/laportal/codex-review.txt`, the latest structured artifact at `.git/laportal/codex-review.json`, and a rolling history of the last 20 review runs in `.git/laportal/review-history/`.
 

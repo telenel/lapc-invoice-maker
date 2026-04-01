@@ -29,15 +29,13 @@ When two workflow rules disagree, follow this order:
 3. Before committing, summarize the intent of the commit and include checkout or branch details only if they are relevant.
 4. Run `npm run ship-check`.
 5. Run `npm run laportal:review`.
-6. Before pushing, summarize the branch, validation state, and reason for the push when useful.
-7. Use `./scripts/publish-pr.sh` to push and open or update the PR.
-8. After the PR is created, summarize the PR and any follow-up needed.
+6. If Codex finds issues, fix them locally and rerun the validation loop until the branch is clean.
+7. Hand the branch back for human review or merge decisions once the validation loop is clean.
 
 ## Required Local Commands
 
 - `npm run ship-check`
 - `npm run laportal:review`
-- `./scripts/publish-pr.sh`
 
 These are the hard-coded workflow entrypoints. Do not replace them with ad hoc command sequences when preparing work for review.
 
@@ -48,8 +46,8 @@ These are the hard-coded workflow entrypoints. Do not replace them with ad hoc c
 3. Before anything is pushed, run `npm run ship-check`.
 4. Run `npm run laportal:review` from the same repo folder and branch.
 5. If Codex finds issues, fix them locally and rerun `npm run ship-check` and `npm run laportal:review`.
-6. After both pass, use `./scripts/publish-pr.sh` to push the branch and open the PR.
-7. User reviews the PR and decides when to merge.
+6. After both pass, hand the branch back for PR review or merge decisions.
+7. User reviews the branch or PR and decides when to merge.
 
 ## Agent Boundaries
 
@@ -64,7 +62,6 @@ These are the hard-coded workflow entrypoints. Do not replace them with ad hoc c
 - Must run from the same repo folder and branch as Claude Code.
 - Performs the local review step via `npm run laportal:review`.
 - May make local fixes, commit them, and rerun the validation chain.
-- May publish the branch and open the PR via `./scripts/publish-pr.sh`.
 
 ## Hard-Coded Enforcement
 
@@ -164,13 +161,6 @@ These are the hard-coded workflow entrypoints. Do not replace them with ad hoc c
 
 - Refuses pushes when the current `HEAD` does not have a fresh `ship-check` stamp.
 - Refuses pushes to branches that already have an open PR unless `CR_FIX=1` is set.
-
-### `./scripts/publish-pr.sh`
-
-- Requires a clean working tree.
-- Requires a fresh `ship-check` stamp for the current `HEAD`.
-- Requires a fresh PASS `laportal:review` stamp for the current `HEAD`.
-- Pushes the branch and opens the PR with GitHub CLI.
 
 ## GitHub Policy
 

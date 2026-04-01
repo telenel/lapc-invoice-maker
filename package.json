@@ -20,7 +20,6 @@
     "laportal:review:findings": "node ./scripts/codex-review-artifact.mjs print-findings",
     "laportal:review:triage": "node ./scripts/codex-review-remediation.mjs triage",
     "laportal:review:prompt": "node ./scripts/codex-review-remediation.mjs prompt",
-    "publish:pr": "./scripts/publish-pr.sh",
     "postinstall": "node ./scripts/postinstall.js"
   },
   "dependencies": {
