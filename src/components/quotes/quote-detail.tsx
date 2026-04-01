@@ -481,8 +481,10 @@ export function QuoteDetailView({ id }: { id: string }) {
   const canViewActivity = viewerAccess.canViewActivity;
   const canViewPaymentDetails = viewerAccess.canViewSensitiveFields;
   const showInternalFields = canViewPaymentDetails;
+  const isConverted = Boolean(quote.convertedToInvoice);
   const canEdit =
     canManageActions &&
+    !isConverted &&
     (
       status === "DRAFT" ||
       status === "SENT" ||
@@ -553,7 +555,7 @@ export function QuoteDetailView({ id }: { id: string }) {
                 </>
               )}
 
-              {status === "ACCEPTED" && !quote.convertedToInvoice && (
+              {status === "ACCEPTED" && !isConverted && (
                 <>
                   <Link
                     href={`/quotes/${id}/edit`}
@@ -574,7 +576,7 @@ export function QuoteDetailView({ id }: { id: string }) {
               )}
 
               {/* SENT / SUBMITTED: Approve Manually + Convert to Invoice */}
-              {(status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
+              {!isConverted && (status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
                 <>
                   <Button
                     size="sm"
@@ -597,7 +599,7 @@ export function QuoteDetailView({ id }: { id: string }) {
           )}
 
           {/* ACCEPTED: link to converted invoice */}
-          {status === "ACCEPTED" && quote.convertedToInvoice && (
+          {quote.convertedToInvoice && (
             <Link
               href={`/invoices/${quote.convertedToInvoice.id}`}
               className={buttonVariants({ variant: "outline", size: "sm" })}
@@ -621,7 +623,7 @@ export function QuoteDetailView({ id }: { id: string }) {
           {/* ── Secondary actions ──────────────────────────────────── */}
 
           {/* Share Link: visible for SENT/SUBMITTED statuses */}
-          {canManageActions && (status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && quote.shareToken && (
+          {canManageActions && !isConverted && (status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && quote.shareToken && (
             <Button variant="outline" size="sm" onClick={handleShareLink}>
               <LinkIcon className="size-3.5 mr-1.5" />
               Share Link

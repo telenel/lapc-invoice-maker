@@ -233,4 +233,35 @@ describe("PublicQuoteView", () => {
     await screen.findByText(/Payment collection for this quote is now closed/i);
     expect(screen.queryByRole("button", { name: "Provide Payment Details" })).not.toBeInTheDocument();
   });
+
+  it("hides public response actions when the quote is no longer open online", async () => {
+    vi.mocked(quoteApi.getPublicQuote).mockResolvedValueOnce({
+      id: "q1",
+      quoteNumber: "Q-1",
+      quoteStatus: "SENT",
+      paymentLinkAvailable: false,
+      date: "2026-03-31T00:00:00.000Z",
+      expirationDate: null,
+      department: "IT",
+      category: "SUPPLIES",
+      notes: "",
+      totalAmount: 10,
+      recipientName: "Jane",
+      recipientEmail: "jane@example.com",
+      recipientOrg: "",
+      staff: null,
+      contact: null,
+      items: [],
+      isCateringEvent: false,
+      cateringDetails: null,
+      paymentDetailsResolved: false,
+    } as never);
+
+    render(<PublicQuoteView token="token" />);
+
+    await screen.findByText("This quote is no longer open for online approval or payment submission.");
+    expect(screen.queryByRole("button", { name: "Approve Quote" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Decline Quote" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Provide Payment Details" })).not.toBeInTheDocument();
+  });
 });

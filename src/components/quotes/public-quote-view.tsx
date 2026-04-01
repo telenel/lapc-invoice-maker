@@ -229,8 +229,12 @@ export function PublicQuoteView({ token }: { token: string }) {
 
   const isExpired = quote.quoteStatus === "EXPIRED";
   const alreadyResponded = quote.quoteStatus === "ACCEPTED" || quote.quoteStatus === "DECLINED" || quote.quoteStatus === "REVISED";
-  const canRespond = (quote.quoteStatus === "SENT" || quote.quoteStatus === "SUBMITTED_EMAIL" || quote.quoteStatus === "SUBMITTED_MANUAL") && !responded;
   const paymentLinkAvailable = quote.paymentLinkAvailable !== false;
+  const canRespond =
+    paymentLinkAvailable &&
+    (quote.quoteStatus === "SENT" || quote.quoteStatus === "SUBMITTED_EMAIL" || quote.quoteStatus === "SUBMITTED_MANUAL") &&
+    !responded;
+  const publicActionsClosed = !paymentLinkAvailable && !alreadyResponded && !isExpired;
   const isCatering = quote.isCateringEvent;
   const cateringRequiredMissing =
     isCatering &&
@@ -720,6 +724,16 @@ export function PublicQuoteView({ token }: { token: string }) {
             </Card>
           );
         })()}
+
+        {publicActionsClosed && (
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <p className="text-sm text-muted-foreground">
+                This quote is no longer open for online approval or payment submission.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Response section */}
         {canRespond && (
