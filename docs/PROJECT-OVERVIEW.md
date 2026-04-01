@@ -331,7 +331,7 @@ Quotes can be shared with external recipients via token-based public links.
 
 1. User clicks "Mark as Sent" on a DRAFT quote → backend generates a UUID `shareToken`, sets status to SENT
 2. A dialog appears with the share URL, a "Copy Link" button, and an "Email Link" button (opens `mailto:`)
-3. Recipient opens the link → public quote page at `/quotes/review/[token]` (no auth required)
+3. Recipient opens the link → public quote page (no auth required)
 4. Page visit is recorded as a `QuoteView` (IP, user-agent, referrer, viewport, duration via `sendBeacon`)
 5. Recipient clicks "Approve" or "Decline" → quote status updates, notification pushed to creator
 
@@ -348,7 +348,7 @@ Real-time notifications via Server-Sent Events:
 
 | Route | Method | Purpose |
 |-------|--------|---------|
-| `/quotes/review/[token]` | Page | Public quote page |
+| Quote sharing page | Page | Public quote page |
 | `/api/quotes/public/[token]` | GET | Fetch quote by share token |
 | `/api/quotes/public/[token]/view` | POST | Register page view |
 | `/api/quotes/public/[token]/view/[viewId]` | PATCH | Update view duration (beacon) |
