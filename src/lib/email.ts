@@ -15,9 +15,9 @@ export async function sendEmail(
     console.warn("POWER_AUTOMATE_EMAIL_URL not set — email not sent");
     return false;
   }
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15_000);
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15_000);
     const payload: Record<string, unknown> = { to, subject, body };
     if (attachments?.length) payload.attachments = attachments;
     const res = await fetch(WEBHOOK_URL, {
@@ -26,11 +26,12 @@ export async function sendEmail(
       body: JSON.stringify(payload),
       signal: controller.signal,
     });
-    clearTimeout(timeoutId);
     return res.status === 202;
   } catch (err) {
     console.error("Failed to send email:", err);
     return false;
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
 

@@ -88,6 +88,8 @@ export function PublicQuoteView({ token }: { token: string }) {
   const [sapAccountNumber, setSapAccountNumber] = useState("");
   const [contactInfo, setContactInfo] = useState<QuotePublicSettingsResponse>({});
   const viewIdRef = useRef<string | null>(null);
+  const publicViewRegistrationRef = useRef<Promise<string | null> | null>(null);
+  const pendingUnloadDurationRef = useRef<number | null>(null);
   const loadTimeRef = useRef<number>(Date.now());
   const accountNumberRequired = paymentMethod === "ACCOUNT_NUMBER";
   const normalizedSapAccountNumber = sapAccountNumber.trim();
@@ -97,6 +99,17 @@ export function PublicQuoteView({ token }: { token: string }) {
   useEffect(() => {
     async function init() {
       try {
+        setLoading(true);
+        setQuote(null);
+        setResponded(false);
+        setPaymentMethod("");
+        setSapAccountNumber("");
+        setContactInfo({});
+        setCateringForm(makeCateringForm(null));
+        viewIdRef.current = null;
+        publicViewRegistrationRef.current = null;
+        pendingUnloadDurationRef.current = null;
+        loadTimeRef.current = Date.now();
         setNotFound(false);
         setLoadError(null);
         const quoteData = await quoteApi.getPublicQuote(token);
@@ -107,13 +120,21 @@ export function PublicQuoteView({ token }: { token: string }) {
         quoteApi.getPublicSettings().then(setContactInfo).catch(() => {
           /* non-critical */
         });
-        quoteApi.registerPublicView(token, `${window.innerWidth}x${window.innerHeight}`)
+        const registrationPromise = quoteApi
+          .registerPublicView(token, `${window.innerWidth}x${window.innerHeight}`)
           .then(({ viewId }) => {
             viewIdRef.current = viewId;
+            if (pendingUnloadDurationRef.current != null) {
+              quoteApi.recordPublicViewDuration(token, viewId, pendingUnloadDurationRef.current);
+              pendingUnloadDurationRef.current = null;
+            }
+            return viewId;
           })
           .catch((err) => {
             console.warn("Failed to register quote view:", err);
+            return null;
           });
+        publicViewRegistrationRef.current = registrationPromise;
       } catch (err) {
         if (err instanceof ApiError && err.status === 404) {
           setNotFound(true);
@@ -128,12 +149,21 @@ export function PublicQuoteView({ token }: { token: string }) {
     init();
   }, [token]);
 
+  async function getRegisteredViewId(): Promise<string | null> {
+    if (viewIdRef.current) return viewIdRef.current;
+    return publicViewRegistrationRef.current ? await publicViewRegistrationRef.current : null;
+  }
+
   // Send duration on page unload
   useEffect(() => {
     function handleUnload() {
-      if (!viewIdRef.current) return;
       const duration = Math.round((Date.now() - loadTimeRef.current) / 1000);
-      quoteApi.recordPublicViewDuration(token, viewIdRef.current, duration);
+      const viewId = viewIdRef.current;
+      if (viewId) {
+        quoteApi.recordPublicViewDuration(token, viewId, duration);
+        return;
+      }
+      pendingUnloadDurationRef.current = duration;
     }
     window.addEventListener("beforeunload", handleUnload);
     return () => window.removeEventListener("beforeunload", handleUnload);
@@ -147,6 +177,8 @@ export function PublicQuoteView({ token }: { token: string }) {
 
     setResponding(true);
     try {
+      const viewId = await getRegisteredViewId();
+
       // Build catering details from form when approving a catering event
       const cateringDetails =
         quote?.isCateringEvent && response === "ACCEPTED"
@@ -168,7 +200,7 @@ export function PublicQuoteView({ token }: { token: string }) {
 
       const data = await quoteApi.respondToPublicQuote(token, {
         response,
-        viewId: viewIdRef.current,
+        viewId: viewId ?? undefined,
         cateringDetails,
         paymentMethod: response === "ACCEPTED" && paymentMethod ? paymentMethod : undefined,
         accountNumber: response === "ACCEPTED" && accountNumberRequired ? normalizedSapAccountNumber : undefined,

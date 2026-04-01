@@ -210,12 +210,16 @@ export function QuoteDetailView({ id }: { id: string }) {
     markingSubmitted: false,
     duplicating: false,
     approving: false,
+    resolvingPayment: false,
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [approvePaymentMethod, setApprovePaymentMethod] = useState("");
   const [approveAccountNumber, setApproveAccountNumber] = useState("");
+  const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentAccountNumber, setPaymentAccountNumber] = useState("");
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
 
@@ -449,6 +453,57 @@ export function QuoteDetailView({ id }: { id: string }) {
     }
   }, []);
 
+  const handlePaymentDialogOpenChange = useCallback((open: boolean) => {
+    setPaymentDialogOpen(open);
+    if (!open) {
+      setPaymentMethod("");
+      setPaymentAccountNumber("");
+    }
+  }, []);
+
+  const handleResolvePaymentDetails = useCallback(async () => {
+    if (!quote) return;
+    if (!paymentMethod) {
+      toast.error("Please select a payment method");
+      return;
+    }
+    if (paymentMethod === "ACCOUNT_NUMBER" && !paymentAccountNumber.trim()) {
+      toast.error("Please enter the SAP account number");
+      return;
+    }
+
+    setActionState((prev) => ({ ...prev, resolvingPayment: true }));
+    try {
+      const res = await fetch(`/api/quotes/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          paymentMethod,
+          paymentAccountNumber: paymentMethod === "ACCOUNT_NUMBER" ? paymentAccountNumber.trim() : null,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        const fieldErrors = (data?.error?.fieldErrors ?? {}) as Record<string, string[]>;
+        const firstFieldError = Object.values(fieldErrors)[0]?.[0];
+        toast.error(
+          data?.error?.formErrors?.[0] ??
+            firstFieldError ??
+            data?.error ??
+            "Failed to save payment details",
+        );
+      } else {
+        toast.success("Payment details saved");
+        await fetchQuote();
+        setPaymentDialogOpen(false);
+      }
+    } catch {
+      toast.error("Failed to save payment details");
+    } finally {
+      setActionState((prev) => ({ ...prev, resolvingPayment: false }));
+    }
+  }, [quote, paymentMethod, paymentAccountNumber, id, fetchQuote]);
   const handleOpenPdf = useCallback(() => {
     const link = document.createElement("a");
     link.href = pdfUrl;

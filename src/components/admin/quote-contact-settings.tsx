@@ -41,15 +41,19 @@ export function QuoteContactSettings() {
   const load = useCallback(async () => {
     try {
       const data = await adminApi.listSettings();
-      const next: Record<string, ContactBlock> = { ...blocks };
-      for (const item of data) {
-        if (item.key in next && isPartialContactBlock(item.value)) {
-          next[item.key] = { ...EMPTY, ...item.value };
+      setBlocks((prev) => {
+        const next: Record<string, ContactBlock> = { ...prev };
+        for (const item of data) {
+          if (item.key in next && isPartialContactBlock(item.value)) {
+            next[item.key] = { ...EMPTY, ...item.value };
+          }
         }
-      }
-      setBlocks(next);
-    } catch { /* ignore */ }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+        return next;
+      });
+    } catch (err) {
+      console.error("Failed to load quote contact settings:", err);
+      toast.error("Failed to load contact info");
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);

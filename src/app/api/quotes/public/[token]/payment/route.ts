@@ -6,7 +6,10 @@ type RouteContext = { params: Promise<{ token: string }> };
 
 export async function POST(req: NextRequest, ctx: RouteContext) {
   const { token } = await ctx.params;
-  const body = await req.json().catch(() => ({}));
+  const body = await req.json().catch(() => null);
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
 
   try {
     const existing = await quoteService.getByShareToken(token);
@@ -15,8 +18,8 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     }
 
     const quote = await quoteService.submitPublicPaymentDetails(token, {
-      paymentMethod: body.paymentMethod,
-      accountNumber: body.accountNumber,
+      paymentMethod: (body as { paymentMethod?: string }).paymentMethod,
+      accountNumber: (body as { accountNumber?: string | null }).accountNumber,
     });
     if (!quote) {
       return NextResponse.json({ error: "Quote not found or not accepted" }, { status: 404 });
@@ -29,6 +32,9 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     return NextResponse.json({ success: true });
   } catch (err) {
     const code = (err as { code?: string }).code;
+    if (code === "NOT_FOUND") {
+      return NextResponse.json({ error: "Quote not found or not accepted" }, { status: 404 });
+    }
     if (code === "INVALID_INPUT") {
       return NextResponse.json({ error: (err as Error).message }, { status: 400 });
     }
