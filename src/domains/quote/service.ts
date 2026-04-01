@@ -64,6 +64,31 @@ function mergeCateringDetails(
   return merged as Prisma.InputJsonValue;
 }
 
+function buildPaymentResolvedFollowUpData(
+  quote: {
+    id: string;
+    quoteNumber: string | null;
+    recipientEmail: string | null;
+  },
+  paymentMethod: string
+): {
+  invoiceId: string;
+  type: "PAYMENT_RESOLVED";
+  recipientEmail: string;
+  subject: string;
+  metadata: Prisma.InputJsonValue;
+} {
+  return {
+    invoiceId: quote.id,
+    type: "PAYMENT_RESOLVED",
+    recipientEmail: quote.recipientEmail ?? "",
+    subject: `Payment details provided for ${quote.quoteNumber ?? "quote"}`,
+    metadata: {
+      paymentMethod,
+    } as Prisma.InputJsonValue,
+  };
+}
+
 export function isPublicPaymentLinkAvailable(
   quote: Pick<QuoteResponse, "quoteStatus" | "convertedToInvoice">
 ): boolean {
@@ -274,7 +299,6 @@ export const quoteService = {
       });
     }
 
-    const subject = `Payment details provided for ${quote.quoteNumber ?? "quote"}`;
     const paymentResult = await prisma.$transaction(async (tx) => {
       const lockedQuotes = await tx.$queryRaw<Array<{
         id: string;
@@ -347,15 +371,7 @@ export const quoteService = {
       }
 
       await tx.quoteFollowUp.create({
-        data: {
-          invoiceId: quote.id,
-          type: "PAYMENT_RESOLVED",
-          recipientEmail: quote.recipientEmail ?? "",
-          subject,
-          metadata: {
-            paymentMethod: normalizedPayment.paymentMethod,
-          } as Prisma.InputJsonValue,
-        },
+        data: buildPaymentResolvedFollowUpData(quote, normalizedPayment.paymentMethod),
       });
 
       return {
@@ -606,6 +622,12 @@ export const quoteService = {
         data: quoteData,
       });
 
+      if (normalizedPayment) {
+        await tx.quoteFollowUp.create({
+          data: buildPaymentResolvedFollowUpData(quote, normalizedPayment.paymentMethod),
+        });
+      }
+
       if (viewId) {
         const view = await tx.quoteView.findFirst({
           where: { id: viewId, invoiceId: quote.id },
@@ -761,6 +783,7 @@ export const quoteService = {
     const { items, paymentMethod, paymentAccountNumber, ...rest } = input;
     const quoteData: UpdateQuoteInput & { acceptedAt?: Date } = { ...rest };
     const paymentFieldsProvided = paymentMethod !== undefined || paymentAccountNumber !== undefined;
+    let normalizedPayment: QuotePaymentDetailsSubmission | undefined;
 
     if (quoteData.quoteStatus === "ACCEPTED" && existing.acceptedAt == null) {
       quoteData.acceptedAt = new Date();
@@ -782,7 +805,7 @@ export const quoteService = {
         });
       }
 
-      const normalizedPayment = normalizeQuotePaymentDetails({
+      normalizedPayment = normalizeQuotePaymentDetails({
         paymentMethod,
         accountNumber: paymentAccountNumber,
       });
@@ -824,11 +847,35 @@ export const quoteService = {
       const calculatedItems = calculateLineItems(sourceItems);
       const totalAmount = calculateTotal(calculatedItems, mEnabled, mPercent, tEnabled, tRate);
       const updated = await quoteRepository.update(id, updateInput, calculatedItems, totalAmount);
+      if (normalizedPayment) {
+        await quoteRepository.createFollowUp(
+          buildPaymentResolvedFollowUpData(
+            updated as unknown as {
+              id: string;
+              quoteNumber: string | null;
+              recipientEmail: string | null;
+            },
+            normalizedPayment.paymentMethod
+          )
+        );
+      }
       safePublishAll({ type: "quote-changed" });
       return toQuoteResponse(updated as unknown as NonNullable<QuoteWithRelations>);
     }
 
     const updated = await quoteRepository.update(id, updateInput);
+    if (normalizedPayment) {
+      await quoteRepository.createFollowUp(
+        buildPaymentResolvedFollowUpData(
+          updated as unknown as {
+            id: string;
+            quoteNumber: string | null;
+            recipientEmail: string | null;
+          },
+          normalizedPayment.paymentMethod
+        )
+      );
+    }
     safePublishAll({ type: "quote-changed" });
     return toQuoteResponse(updated as unknown as NonNullable<QuoteWithRelations>);
   },
@@ -956,6 +1003,9 @@ export const quoteService = {
             paymentAccountNumber: normalizedPayment.paymentAccountNumber,
           },
         });
+        await tx.quoteFollowUp.create({
+          data: buildPaymentResolvedFollowUpData(quote, normalizedPayment.paymentMethod),
+        });
         updatedConvertedInvoice = true;
       });
     } else {
@@ -974,6 +1024,11 @@ export const quoteService = {
       }
 
       await quoteRepository.update(quote.id, updateData);
+      if (normalizedPayment) {
+        await quoteRepository.createFollowUp(
+          buildPaymentResolvedFollowUpData(quote, normalizedPayment.paymentMethod)
+        );
+      }
     }
 
     // Notification is non-critical — don't fail the response if it cannot be delivered.

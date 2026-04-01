@@ -457,6 +457,9 @@ describe("quoteService", () => {
         invoice: {
           update: vi.fn(),
         },
+        quoteFollowUp: {
+          create: vi.fn(),
+        },
         quoteView: {
           findFirst: vi.fn().mockResolvedValue({ id: "view-1" }),
           update: vi.fn(),
@@ -490,6 +493,17 @@ describe("quoteService", () => {
       expect(tx.quoteView.update).toHaveBeenCalledWith({
         where: { id: "view-1" },
         data: { respondedWith: "ACCEPTED" },
+      });
+      expect(tx.quoteFollowUp.create).toHaveBeenCalledWith({
+        data: {
+          invoiceId: "q1",
+          type: "PAYMENT_RESOLVED",
+          recipientEmail: "jane@test.com",
+          subject: "Payment details provided for Q-2026-0001",
+          metadata: {
+            paymentMethod: "ACCOUNT_NUMBER",
+          },
+        },
       });
       expect(mockRepo.update).not.toHaveBeenCalled();
       expect(mockRepo.updateViewResponse).not.toHaveBeenCalled();
@@ -1079,6 +1093,15 @@ describe("quoteService", () => {
       expect(result.paymentMethod).toBe("ACCOUNT_NUMBER");
       expect(result.paymentAccountNumber).toBe("SAP-12345");
       expect(result.paymentDetailsResolved).toBe(true);
+      expect(mockRepo.createFollowUp).toHaveBeenCalledWith({
+        invoiceId: "q1",
+        type: "PAYMENT_RESOLVED",
+        recipientEmail: "jane@test.com",
+        subject: "Payment details provided for Q-2026-0001",
+        metadata: {
+          paymentMethod: "ACCOUNT_NUMBER",
+        },
+      });
     });
 
     it("rejects payment-detail backfill before a quote is accepted", async () => {
@@ -1217,6 +1240,15 @@ describe("quoteService", () => {
         paymentMethod: "CHECK",
         paymentAccountNumber: null,
       });
+      expect(mockRepo.createFollowUp).toHaveBeenCalledWith({
+        invoiceId: "q1",
+        type: "PAYMENT_RESOLVED",
+        recipientEmail: "jane@test.com",
+        subject: "Payment details provided for Q-2026-0001",
+        metadata: {
+          paymentMethod: "CHECK",
+        },
+      });
       expect(notificationService.createAndPublish).toHaveBeenCalledWith(
         expect.objectContaining({
           type: "QUOTE_APPROVED",
@@ -1239,6 +1271,9 @@ describe("quoteService", () => {
           .mockResolvedValueOnce([{ id: "inv1", status: "DRAFT", paymentMethod: null }]),
         invoice: {
           update: vi.fn().mockResolvedValue({}),
+        },
+        quoteFollowUp: {
+          create: vi.fn(),
         },
       };
       mockPrisma.$transaction.mockImplementationOnce(async (callback) => callback(tx as never) as never);
@@ -1275,6 +1310,17 @@ describe("quoteService", () => {
           }),
         }),
       );
+      expect(tx.quoteFollowUp.create).toHaveBeenCalledWith({
+        data: {
+          invoiceId: "q1",
+          type: "PAYMENT_RESOLVED",
+          recipientEmail: "jane@test.com",
+          subject: "Payment details provided for Q-2026-0001",
+          metadata: {
+            paymentMethod: "ACCOUNT_NUMBER",
+          },
+        },
+      });
       expect(safePublishAll).toHaveBeenCalledWith({ type: "quote-changed" });
       expect(safePublishAll).toHaveBeenCalledWith({ type: "invoice-changed" });
     });
