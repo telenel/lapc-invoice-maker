@@ -12,6 +12,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +43,7 @@ import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
 import { useSSE } from "@/lib/use-sse";
 import { ShareLinkDialog } from "@/components/quotes/share-link-dialog";
 import { QuoteActivity } from "@/components/quotes/quote-activity";
+import { QUOTE_PAYMENT_METHODS } from "@/domains/quote/payment";
 import type { CateringDetails } from "@/domains/quote/types";
 
 // ---------------------------------------------------------------------------
@@ -159,6 +162,14 @@ const statusLabel: Record<QuoteStatus, string> = {
   EXPIRED: "Expired",
 };
 
+const MANUAL_APPROVAL_PAYMENT_OPTIONS = QUOTE_PAYMENT_METHODS.map((value) => ({
+  value,
+  label:
+    value === "ACCOUNT_NUMBER"
+      ? "Account Number"
+      : value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()),
+}));
+
 function formatCateringDateTime(catering: CateringDetails): string | null {
   if (!catering.eventDate) return null;
 
@@ -203,6 +214,8 @@ export function QuoteDetailView({ id }: { id: string }) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+  const [approvePaymentMethod, setApprovePaymentMethod] = useState("");
+  const [approveAccountNumber, setApproveAccountNumber] = useState("");
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
 
@@ -396,9 +409,23 @@ export function QuoteDetailView({ id }: { id: string }) {
 
   const handleApproveManually = useCallback(async () => {
     if (!quote) return;
+    if (approvePaymentMethod === "ACCOUNT_NUMBER" && !approveAccountNumber.trim()) {
+      toast.error("Please enter the SAP account number");
+      return;
+    }
     setActionState((prev) => ({ ...prev, approving: true }));
     try {
-      const res = await fetch(`/api/quotes/${id}/approve`, { method: "POST" });
+      const res = await fetch(`/api/quotes/${id}/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          paymentMethod: approvePaymentMethod || undefined,
+          accountNumber:
+            approvePaymentMethod === "ACCOUNT_NUMBER"
+              ? approveAccountNumber.trim()
+              : undefined,
+        }),
+      });
       if (!res.ok) {
         const data = await res.json();
         toast.error(data.error ?? "Failed to approve quote");
@@ -412,7 +439,15 @@ export function QuoteDetailView({ id }: { id: string }) {
       setActionState((prev) => ({ ...prev, approving: false }));
       setApproveDialogOpen(false);
     }
-  }, [quote, id, fetchQuote]);
+  }, [quote, id, fetchQuote, approvePaymentMethod, approveAccountNumber]);
+
+  const handleApproveDialogOpenChange = useCallback((open: boolean) => {
+    setApproveDialogOpen(open);
+    if (!open) {
+      setApprovePaymentMethod("");
+      setApproveAccountNumber("");
+    }
+  }, []);
 
   const handleOpenPdf = useCallback(() => {
     const link = document.createElement("a");
@@ -670,7 +705,7 @@ export function QuoteDetailView({ id }: { id: string }) {
         {/* ── Confirmation dialogs (rendered outside dropdown tree) ── */}
 
         {/* Approve manually dialog */}
-        <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+        <Dialog open={approveDialogOpen} onOpenChange={handleApproveDialogOpenChange}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Approve Quote Manually</DialogTitle>
@@ -680,6 +715,48 @@ export function QuoteDetailView({ id }: { id: string }) {
                 outside the system.
               </DialogDescription>
             </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Payment Method
+                </Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {MANUAL_APPROVAL_PAYMENT_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        setApprovePaymentMethod(opt.value);
+                        if (opt.value !== "ACCOUNT_NUMBER") setApproveAccountNumber("");
+                      }}
+                      className={`rounded-md border px-3 py-2 text-sm transition-colors ${
+                        approvePaymentMethod === opt.value
+                          ? "border-primary bg-primary/10 font-medium text-primary"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {approvePaymentMethod === "ACCOUNT_NUMBER" && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="manual-approve-account-number">SAP Account Number</Label>
+                  <Input
+                    id="manual-approve-account-number"
+                    value={approveAccountNumber}
+                    onChange={(e) => setApproveAccountNumber(e.target.value)}
+                    placeholder="Enter SAP account number"
+                  />
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground">
+                Optional. Capture payment details here if you want to convert this quote right away after approval.
+              </p>
+            </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setApproveDialogOpen(false)}>
                 Cancel

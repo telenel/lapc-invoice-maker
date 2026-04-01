@@ -6,6 +6,23 @@ type RouteContext = { params: Promise<{ token: string }> };
 
 /** Strip internal-only fields before returning to public consumers. */
 function sanitizeForPublic(quote: QuoteResponse): Omit<PublicQuoteResponse, "paymentLinkAvailable"> {
+  const cateringDetails = quote.cateringDetails
+    ? {
+        eventDate: quote.cateringDetails.eventDate,
+        startTime: quote.cateringDetails.startTime,
+        endTime: quote.cateringDetails.endTime,
+        location: quote.cateringDetails.location,
+        contactName: quote.cateringDetails.contactName,
+        contactPhone: quote.cateringDetails.contactPhone,
+        ...(quote.cateringDetails.headcount !== undefined ? { headcount: quote.cateringDetails.headcount } : {}),
+        setupRequired: quote.cateringDetails.setupRequired ?? false,
+        ...(quote.cateringDetails.setupTime !== undefined ? { setupTime: quote.cateringDetails.setupTime } : {}),
+        takedownRequired: quote.cateringDetails.takedownRequired ?? false,
+        ...(quote.cateringDetails.takedownTime !== undefined ? { takedownTime: quote.cateringDetails.takedownTime } : {}),
+        ...(quote.cateringDetails.specialInstructions !== undefined ? { specialInstructions: quote.cateringDetails.specialInstructions } : {}),
+      }
+    : null;
+
   return {
     id: quote.id,
     quoteNumber: quote.quoteNumber,
@@ -48,7 +65,7 @@ function sanitizeForPublic(quote: QuoteResponse): Omit<PublicQuoteResponse, "pay
       isTaxable: item.isTaxable,
     })),
     isCateringEvent: quote.isCateringEvent,
-    cateringDetails: quote.cateringDetails,
+    cateringDetails,
     paymentDetailsResolved: quote.paymentDetailsResolved,
   };
 }

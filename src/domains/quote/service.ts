@@ -727,7 +727,10 @@ export const quoteService = {
   /**
    * Manually approve a quote (admin override when client can't use email/public link).
    */
-  async approveManually(id: string): Promise<{ success: boolean; status: string }> {
+  async approveManually(
+    id: string,
+    paymentDetails?: { paymentMethod?: string; accountNumber?: string | null }
+  ): Promise<{ success: boolean; status: string }> {
     const quote = await quoteRepository.findById(id);
     if (!quote || quote.type !== "QUOTE") {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
@@ -750,7 +753,22 @@ export const quoteService = {
       throw Object.assign(new Error("This quote has expired"), { code: "FORBIDDEN" });
     }
 
-    await quoteRepository.update(quote.id, { quoteStatus: "ACCEPTED", acceptedAt: new Date() });
+    const normalizedPayment = normalizeQuotePaymentDetails(paymentDetails);
+    const updateData: {
+      quoteStatus: "ACCEPTED";
+      acceptedAt: Date;
+      paymentMethod?: string;
+      paymentAccountNumber?: string | null;
+    } = {
+      quoteStatus: "ACCEPTED",
+      acceptedAt: new Date(),
+    };
+    if (normalizedPayment) {
+      updateData.paymentMethod = normalizedPayment.paymentMethod;
+      updateData.paymentAccountNumber = normalizedPayment.paymentAccountNumber;
+    }
+
+    await quoteRepository.update(quote.id, updateData);
 
     const { notificationService } = await import("@/domains/notification/service");
     await notificationService.createAndPublish({

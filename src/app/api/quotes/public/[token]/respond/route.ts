@@ -106,6 +106,8 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
         ...(parsed.data.setupTime !== undefined ? { setupTime: parsed.data.setupTime } : {}),
         ...(parsed.data.takedownTime !== undefined ? { takedownTime: parsed.data.takedownTime } : {}),
         ...(parsed.data.specialInstructions !== undefined ? { specialInstructions: parsed.data.specialInstructions } : {}),
+        ...(existingCateringDetails?.eventName !== undefined ? { eventName: existingCateringDetails.eventName } : {}),
+        ...(existingCateringDetails?.contactEmail !== undefined ? { contactEmail: existingCateringDetails.contactEmail } : {}),
       } as CateringDetails;
     }
 

@@ -248,7 +248,7 @@ describe("POST /api/quotes/public/[token]/respond", () => {
     );
   });
 
-  it("drops staff-only catering metadata from the public payload", async () => {
+  it("preserves staff-only catering metadata from the existing quote", async () => {
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",
       quoteStatus: "SENT",
@@ -290,8 +290,8 @@ describe("POST /api/quotes/public/[token]/respond", () => {
     expect(response.status).toBe(200);
     const cateringDetails = vi.mocked(quoteService.respondToQuote).mock.calls[0]?.[4] as Record<string, unknown> | undefined;
     expect(cateringDetails).toBeDefined();
-    expect(cateringDetails).not.toHaveProperty("eventName");
-    expect(cateringDetails).not.toHaveProperty("contactEmail");
+    expect(cateringDetails).toHaveProperty("eventName", "Internal Event Name");
+    expect(cateringDetails).toHaveProperty("contactEmail", "hidden@example.com");
     expect(cateringDetails).toHaveProperty("setupInstructions", "Internal setup note");
     expect(cateringDetails).toHaveProperty("takedownInstructions", "Internal takedown note");
   });

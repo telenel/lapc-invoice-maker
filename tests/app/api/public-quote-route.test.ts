@@ -133,4 +133,89 @@ describe("GET /api/quotes/public/[token]", () => {
     expect(response.status).toBe(200);
     expect(body.paymentLinkAvailable).toBe(false);
   });
+
+  it("redacts staff-only catering fields from the public payload", async () => {
+    vi.mocked(quoteService.getByShareToken).mockResolvedValue({
+      id: "q1",
+      quoteNumber: "Q-1",
+      quoteStatus: "SENT",
+      date: "2026-03-01T00:00:00.000Z",
+      expirationDate: null,
+      type: "QUOTE",
+      department: "IT",
+      category: "SUPPLIES",
+      accountCode: "AC1",
+      accountNumber: "INTERNAL-001",
+      approvalChain: [],
+      notes: "",
+      totalAmount: 10,
+      recipientName: "Jane",
+      recipientEmail: "jane@example.com",
+      recipientOrg: "",
+      pdfPath: null,
+      shareToken: "token",
+      createdAt: "2026-03-01T00:00:00.000Z",
+      staff: null,
+      contact: null,
+      creatorId: "u1",
+      creatorName: "Admin",
+      items: [],
+      isCateringEvent: true,
+      cateringDetails: {
+        eventDate: "2026-03-31",
+        startTime: "10:00",
+        endTime: "11:00",
+        location: "Campus",
+        contactName: "Jane",
+        contactPhone: "555-1111",
+        headcount: 42,
+        eventName: "Internal event",
+        contactEmail: "hidden@example.com",
+        setupRequired: true,
+        setupTime: "09:00",
+        setupInstructions: "Hidden setup note",
+        takedownRequired: true,
+        takedownTime: "12:00",
+        takedownInstructions: "Hidden takedown note",
+        specialInstructions: "Public note",
+      },
+      paymentDetailsResolved: false,
+      marginEnabled: false,
+      marginPercent: null,
+      taxEnabled: false,
+      taxRate: 0,
+      paymentMethod: null,
+      paymentAccountNumber: null,
+      convertedToInvoice: null,
+      revisedFromQuote: null,
+      revisedToQuote: null,
+    } as never);
+
+    const response = await GET(
+      new NextRequest("http://localhost/api/quotes/public/token"),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    const body = await response.json();
+    expect(body.cateringDetails).toEqual(
+      expect.objectContaining({
+        eventDate: "2026-03-31",
+        startTime: "10:00",
+        endTime: "11:00",
+        location: "Campus",
+        contactName: "Jane",
+        contactPhone: "555-1111",
+        headcount: 42,
+        setupRequired: true,
+        setupTime: "09:00",
+        takedownRequired: true,
+        takedownTime: "12:00",
+        specialInstructions: "Public note",
+      }),
+    );
+    expect(body.cateringDetails).not.toHaveProperty("eventName");
+    expect(body.cateringDetails).not.toHaveProperty("contactEmail");
+    expect(body.cateringDetails).not.toHaveProperty("setupInstructions");
+    expect(body.cateringDetails).not.toHaveProperty("takedownInstructions");
+  });
 });

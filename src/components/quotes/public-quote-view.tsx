@@ -160,10 +160,8 @@ export function PublicQuoteView({ token }: { token: string }) {
               headcount: cateringForm.headcount ? Number(cateringForm.headcount) : undefined,
               setupRequired: cateringForm.setupRequired,
               setupTime: cateringForm.setupRequired ? cateringForm.setupTime : undefined,
-              setupInstructions: quote.cateringDetails?.setupInstructions,
               takedownRequired: cateringForm.takedownRequired,
               takedownTime: cateringForm.takedownRequired ? cateringForm.takedownTime : undefined,
-              takedownInstructions: quote.cateringDetails?.takedownInstructions,
               specialInstructions: cateringForm.specialInstructions || undefined,
             }
           : undefined;

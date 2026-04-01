@@ -59,6 +59,14 @@ vi.mock("@/domains/notification/service", () => ({
   },
 }));
 
+vi.mock("@/lib/email", () => ({
+  sendEmail: vi.fn(),
+}));
+
+vi.mock("@/lib/html", () => ({
+  escapeHtml: (value: string) => value,
+}));
+
 vi.mock("@/lib/sse", () => ({
   safePublishAll: vi.fn(),
 }));
@@ -886,6 +894,36 @@ describe("quoteService", () => {
       await quoteService.delete("q1");
 
       expect(mockPdfService.deletePdfFiles).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── approveManually ────────────────────────────────────────────────────
+
+  describe("approveManually", () => {
+    it("stores payment details when approving a quote manually", async () => {
+      const quote = makeQuote({
+        quoteStatus: "SENT",
+        expirationDate: new Date("2099-02-15"),
+      });
+      mockRepo.findById.mockResolvedValue(quote as never);
+      mockRepo.update.mockResolvedValue({ ...quote, quoteStatus: "ACCEPTED" } as never);
+
+      await quoteService.approveManually("q1", {
+        paymentMethod: "CHECK",
+      });
+
+      expect(mockRepo.update).toHaveBeenCalledWith("q1", {
+        quoteStatus: "ACCEPTED",
+        acceptedAt: expect.any(Date),
+        paymentMethod: "CHECK",
+        paymentAccountNumber: null,
+      });
+      expect(notificationService.createAndPublish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: "QUOTE_APPROVED",
+          quoteId: "q1",
+        }),
+      );
     });
   });
 

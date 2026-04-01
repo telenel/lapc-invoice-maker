@@ -1,9 +1,9 @@
 // src/domains/quote/repository.ts
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/generated/prisma/client";
+import type { QuoteFilters } from "./types";
 
 const PAYMENT_REMINDER_CLAIM = "PAYMENT_REMINDER_CLAIM";
-import type { QuoteFilters } from "./types";
 
 // ── Shared include shapes ──────────────────────────────────────────────────
 
