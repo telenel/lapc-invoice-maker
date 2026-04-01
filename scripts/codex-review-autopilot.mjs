@@ -22,6 +22,9 @@ const POLL_INTERVAL_MS = 2000;
 const LIVE_BATCH_QUIET_MS = 5000;
 const AUTOPILOT_HISTORY_LIMIT = 20;
 const REVIEW_HEARTBEAT_MS = 15000;
+const FINAL_ARTIFACT_GRACE_MS = 15000;
+const DEFAULT_CODEX_MODEL = "gpt-5.4-mini";
+const DEFAULT_CODEX_REASONING_EFFORT = "xhigh";
 
 function git(args, options = {}) {
   return execFileSync("git", args, {
@@ -44,6 +47,9 @@ function repoContext() {
     gitDir,
     branch,
     headSha,
+    codexModel: process.env.LAPORTAL_CODEX_MODEL || DEFAULT_CODEX_MODEL,
+    codexReasoningEffort:
+      process.env.LAPORTAL_CODEX_REASONING_EFFORT || DEFAULT_CODEX_REASONING_EFFORT,
     liveStatePath: path.join(gitDir, "laportal", "codex-review.live.json"),
     finalArtifactPath: path.join(gitDir, "laportal", "codex-review.json"),
   };
@@ -238,6 +244,11 @@ export function buildSummaryText(summary) {
     `repo: ${summary.repoRoot}`,
     `branch: ${summary.branch}`,
     `head: ${summary.headSha}`,
+    `model: ${summary.codexModel ?? "unknown"}`,
+    `reasoning effort: ${summary.codexReasoningEffort ?? "unknown"}`,
+    `review result: ${summary.reviewResult ?? "pending"}`,
+    `unresolved findings: ${summary.unresolvedFindingCount ?? 0}`,
+    `dispatch source: ${summary.dispatchSource ?? "pending"}`,
     `producer exit: ${summary.producerExitCode ?? "running"}`,
     `session temp root: ${summary.worktreeRoot ?? "missing"}`,
     `live snapshot: ${summary.liveStatePath ?? "missing"}`,
@@ -293,6 +304,30 @@ export function buildSummaryText(summary) {
   return `${lines.join("\n")}\n`;
 }
 
+export function shouldFailSession(summary) {
+  if ((summary.producerExitCode ?? 0) !== 0) {
+    return true;
+  }
+
+  if (summary.tasks?.some((task) => task.status === "failed")) {
+    return true;
+  }
+
+  if (summary.dispatchError) {
+    return true;
+  }
+
+  if (
+    summary.reviewResult === "FAIL" &&
+    (summary.unresolvedFindingCount ?? 0) > 0 &&
+    (summary.tasks?.length ?? 0) === 0
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 function buildLatestSessionState(session, summary) {
   return {
     sessionId: session.sessionId,
@@ -331,13 +366,17 @@ function writeSummary(session, payload) {
 export function formatEventLine(event) {
   switch (event.type) {
     case "session-start":
-      return `AUTOPILOT session started: ${event.sessionId} | branch=${event.branch} | head=${event.headSha}`;
+      return `AUTOPILOT session started: ${event.sessionId} | branch=${event.branch} | head=${event.headSha} | model=${event.model} | effort=${event.reasoningEffort}`;
     case "producer-start":
-      return `AUTOPILOT review started: head=${event.headSha} | producer_log=${event.producerLogPath}`;
+      return `AUTOPILOT review started: head=${event.headSha} | model=${event.model} | effort=${event.reasoningEffort} | producer_log=${event.producerLogPath}`;
     case "review-progress":
       return `AUTOPILOT review running: elapsed=${event.elapsed} live_findings=${event.liveFindingCount} active_tasks=${event.activeTaskCount}`;
+    case "review-dispatch-pending":
+      return `AUTOPILOT waiting for final artifact: elapsed=${event.elapsed}`;
     case "review-result":
       return `AUTOPILOT review result: ${event.result} | findings=${event.findingCount} | summary=${event.summary}`;
+    case "review-dispatch-fallback":
+      return `AUTOPILOT using live snapshot fallback: findings=${event.findingCount} | wait=${event.elapsed}`;
     case "batch-launch":
       return `AUTOPILOT task started: ${event.role} ${event.batchId} | findings=${event.findingCount} | worktree=${event.worktreePath}`;
     case "task-exited":
@@ -354,6 +393,8 @@ export function formatEventLine(event) {
       return `AUTOPILOT task summary: ${event.batchId} | ${event.summary} | files=${event.files?.join(", ") ?? "none"}`;
     case "task-complete":
       return `AUTOPILOT task complete: ${event.batchId} | status=${event.status} | integrated=${event.integratedCount}`;
+    case "session-failed":
+      return `AUTOPILOT session failed: ${event.reason}`;
     case "session-cleanup":
       return `AUTOPILOT cleaned session temp root: removed=${event.worktreeRootRemoved ? "yes" : "no"} path=${event.worktreeRoot}`;
     case "producer-complete":
@@ -497,7 +538,19 @@ function launchBatchTask(context, session, artifact, artifactPath, batch, role) 
 
   const child = spawn(
     "codex",
-    ["exec", "--full-auto", "--cd", worktreePath, "--output-last-message", resultPath, "-"],
+    [
+      "exec",
+      "--full-auto",
+      "--cd",
+      worktreePath,
+      "--model",
+      context.codexModel,
+      "-c",
+      `model_reasoning_effort="${context.codexReasoningEffort}"`,
+      "--output-last-message",
+      resultPath,
+      "-",
+    ],
     {
       cwd: context.repoRoot,
       stdio: ["pipe", "pipe", "pipe"],
@@ -734,6 +787,8 @@ async function main() {
     sessionId: session.sessionId,
     startedAt: session.startedAt,
     headSha: context.headSha,
+    codexModel: context.codexModel,
+    codexReasoningEffort: context.codexReasoningEffort,
     branch: context.branch,
     repoRoot: context.repoRoot,
     worktreeRoot: session.worktreeRoot,
@@ -750,6 +805,10 @@ async function main() {
     finalArtifactPath: null,
     producerExitCode: null,
     finalArtifactDispatched: false,
+    reviewResult: null,
+    unresolvedFindingCount: 0,
+    dispatchSource: null,
+    dispatchError: null,
     tasks: [],
   };
   resetLatestArtifacts(session);
@@ -758,20 +817,27 @@ async function main() {
     repoRoot: context.repoRoot,
     branch: context.branch,
     headSha: context.headSha,
+    model: context.codexModel,
+    reasoningEffort: context.codexReasoningEffort,
     worktreeRoot: session.worktreeRoot,
   });
   emitEvent(session, summary, "producer-start", {
     headSha: context.headSha,
+    model: context.codexModel,
+    reasoningEffort: context.codexReasoningEffort,
     liveStatePath: context.liveStatePath,
     producerLogPath: session.producerLogPath,
   });
 
   let producerExited = false;
   let producerExitCode = null;
+  let producerExitedAtMs = null;
   let lastReviewHeartbeatAt = Date.now();
+  let lastDispatchPendingAt = 0;
   producer.on("close", (code) => {
     producerExited = true;
     producerExitCode = typeof code === "number" ? code : 1;
+    producerExitedAtMs = Date.now();
   });
   producer.on("error", (error) => {
     producerExited = true;
@@ -826,7 +892,29 @@ async function main() {
     }
   };
 
-  let finalArtifactChecked = false;
+  const dispatchArtifact = (artifactPath, artifact, source) => {
+    registerBatches(artifactPath, artifact, false);
+    summary.finalArtifactPath =
+      source === "final-artifact" ? artifactPath : summary.finalArtifactPath;
+    summary.reviewResult = artifact.result ?? "UNKNOWN";
+    summary.unresolvedFindingCount = Array.isArray(artifact.findings) ? artifact.findings.length : 0;
+    summary.dispatchSource = source;
+    summary.finalArtifactDispatched = true;
+    emitEvent(session, summary, "review-result", {
+      result: summary.reviewResult,
+      findingCount: summary.unresolvedFindingCount,
+      summary: artifact.summary ?? "No summary provided",
+      artifactPath,
+    });
+    if (source === "live-fallback") {
+      emitEvent(session, summary, "review-dispatch-fallback", {
+        findingCount: summary.unresolvedFindingCount,
+        elapsed: formatDuration(Date.now() - producerExitedAtMs),
+        artifactPath,
+      });
+    }
+    writeSummary(session, summary);
+  };
 
   try {
     while (true) {
@@ -847,23 +935,43 @@ async function main() {
         registerBatches(context.liveStatePath, liveSnapshot, true);
       }
 
-      if (!finalArtifactChecked && producerExited) {
-        finalArtifactChecked = true;
-        if (existsSync(context.finalArtifactPath)) {
-          const finalArtifact = safeJsonRead(context.finalArtifactPath);
-          if (finalArtifact) {
-            registerBatches(context.finalArtifactPath, finalArtifact, false);
-            summary.finalArtifactPath = context.finalArtifactPath;
-            emitEvent(session, summary, "review-result", {
-              result: finalArtifact.result ?? "UNKNOWN",
-              findingCount: Array.isArray(finalArtifact.findings) ? finalArtifact.findings.length : 0,
-              summary: finalArtifact.summary ?? "No summary provided",
-              artifactPath: context.finalArtifactPath,
+      if (!summary.finalArtifactDispatched && producerExited) {
+        const finalArtifact =
+          existsSync(context.finalArtifactPath) ? safeJsonRead(context.finalArtifactPath) : null;
+        if (finalArtifact) {
+          dispatchArtifact(context.finalArtifactPath, finalArtifact, "final-artifact");
+        } else {
+          const waitMs = producerExitedAtMs == null ? 0 : Date.now() - producerExitedAtMs;
+          if (Date.now() - lastDispatchPendingAt >= REVIEW_HEARTBEAT_MS) {
+            emitEvent(session, summary, "review-dispatch-pending", {
+              elapsed: formatDuration(waitMs),
             });
+            lastDispatchPendingAt = Date.now();
+          }
+
+          if (waitMs >= FINAL_ARTIFACT_GRACE_MS) {
+            if (Array.isArray(liveSnapshot?.findings) && liveSnapshot.findings.length > 0) {
+              dispatchArtifact(
+                context.liveStatePath,
+                {
+                  ...liveSnapshot,
+                  result: liveSnapshot.result ?? "FAIL",
+                  summary: `Final artifact unavailable after ${formatDuration(waitMs)}; using live finding snapshot.`,
+                },
+                "live-fallback",
+              );
+            } else {
+              summary.reviewResult = liveSnapshot?.result ?? "UNKNOWN";
+              summary.unresolvedFindingCount = Array.isArray(liveSnapshot?.findings)
+                ? liveSnapshot.findings.length
+                : 0;
+              summary.dispatchSource = "none";
+              summary.dispatchError = `Final artifact was not readable after ${formatDuration(waitMs)}`;
+              summary.finalArtifactDispatched = true;
+              writeSummary(session, summary);
+            }
           }
         }
-        summary.finalArtifactDispatched = true;
-        writeSummary(session, summary);
       }
 
       for (const task of tasks.filter((entry) => entry.status === "running")) {
@@ -989,7 +1097,7 @@ async function main() {
       }
 
       const runningTasks = tasks.some((task) => task.status === "running");
-      if (producerExited && finalArtifactChecked && !runningTasks) {
+      if (producerExited && summary.finalArtifactDispatched && !runningTasks) {
         break;
       }
 
@@ -1012,6 +1120,15 @@ async function main() {
     taskCount: summary.tasks.length,
     failedTaskCount: summary.tasks.filter((task) => task.status === "failed").length,
   });
+  if (summary.dispatchError) {
+    emitEvent(session, summary, "session-failed", {
+      reason: summary.dispatchError,
+    });
+  } else if (shouldFailSession(summary)) {
+    emitEvent(session, summary, "session-failed", {
+      reason: `Review reported ${summary.unresolvedFindingCount} unresolved finding(s) but no remediation task completed.`,
+    });
+  }
   summary.sessionCleanup = cleanupSessionWorktreeRoot(session);
   emitEvent(session, summary, "session-cleanup", summary.sessionCleanup);
   pruneAutopilotSessions(session.autopilotRoot, session.sessionId);
@@ -1024,13 +1141,7 @@ async function main() {
   process.stdout.write(`Latest text summary: ${session.latestSummaryTextPath}\n`);
   process.stdout.write(`Latest events: ${session.latestEventsPath}\n`);
 
-  const hasFailedTasks = summary.tasks.some((task) => task.status === "failed");
-  process.exitCode =
-    producerExitCode && producerExitCode !== 0
-      ? producerExitCode
-      : hasFailedTasks
-        ? 1
-        : 0;
+  process.exitCode = shouldFailSession(summary) ? 1 : 0;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

@@ -132,6 +132,8 @@ These are the hard-coded workflow entrypoints. Do not replace them with ad hoc c
 - Prunes older autopilot session directories automatically.
 - Removes temporary worker worktrees and temp branches after integration or failure cleanup, and removes the parent temp worktree root when it is empty.
 - Does not push worker commits; it only cherry-picks them onto the current branch.
+- Waits for the final structured review artifact before dispatching coupled remediation, and only falls back to the live finding snapshot after a grace period if the final artifact is still unavailable.
+- Treats `FAIL` reviews with unresolved findings and no launched remediation as autopilot failures.
 - Use this when you want the full pipeline, not just a review artifact.
 
 ### `npm run laportal:review:watch`
@@ -192,6 +194,8 @@ These are the hard-coded workflow entrypoints. Do not replace them with ad hoc c
 - `gh` must be installed and authenticated
 - `codex` must be installed locally and available on `PATH`
 - `npm install` configures tracked hooks with `git config core.hooksPath hooks`
+- The repo default Codex model is `gpt-5.4-mini` with `xhigh` reasoning effort, defined in `.codex/config.toml`
+- `laportal:review` and `laportal:review:autopilot` pass that model and effort explicitly; override them per run with `LAPORTAL_CODEX_MODEL` and `LAPORTAL_CODEX_REASONING_EFFORT` if needed
 
 ## Notes
 

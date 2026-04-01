@@ -14,6 +14,8 @@ base_ref="main"
 json_mode=0
 base_ref_explicit=0
 focus_paths=()
+codex_model="${LAPORTAL_CODEX_MODEL:-gpt-5.4-mini}"
+codex_reasoning_effort="${LAPORTAL_CODEX_REASONING_EFFORT:-xhigh}"
 
 cd "$repo_root"
 
@@ -172,6 +174,7 @@ fi
 "${build_prompt_cmd[@]}"
 
 log "==> Reviewing branch diff relative to $base_ref"
+log "==> Codex model: $codex_model | reasoning effort: $codex_reasoning_effort"
 if [ "${#focus_paths[@]}" -gt 0 ]; then
   log "==> Focused review paths: ${focus_paths[*]}"
 fi
@@ -180,6 +183,8 @@ CODEX_REVIEW_HEAD="$head_sha" \
 codex exec \
   --skip-git-repo-check \
   --cd "$repo_root" \
+  --model "$codex_model" \
+  -c "model_reasoning_effort=\"$codex_reasoning_effort\"" \
   --output-last-message "$output_file" \
   --sandbox read-only < "$runtime_prompt" >&2
 

@@ -95,6 +95,8 @@ Local AI workflow is hard-coded through tracked scripts and hooks:
 
 `npm run laportal:review:autopilot` is the one-command workflow. It starts the live review producer internally, watches the live queue, and launches deterministic remediation workers into separate temporary worktrees as safe batches become available. It keeps the producer checkout read-only, falls back to the final review artifact if no live hints are emitted, and writes a session summary under `.git/laportal/autopilot/`.
 
+The repo currently pins Codex to `gpt-5.4-mini` with `xhigh` reasoning effort in [`.codex/config.toml`](.codex/config.toml). The review scripts also pass those values explicitly, and you can override them for a run with `LAPORTAL_CODEX_MODEL` and `LAPORTAL_CODEX_REASONING_EFFORT`.
+
 While it runs, the terminal shows only explicit autopilot lifecycle lines such as review start, periodic review heartbeats, task start, task finish, integration, cleanup, and a short plain-text summary of successful fixes with touched paths. The raw review stream is written to the session `producer.log` file instead of being mirrored to stdout. Each run also writes:
 
 - `.git/laportal/autopilot/<session-id>/events.jsonl`
@@ -107,6 +109,7 @@ While it runs, the terminal shows only explicit autopilot lifecycle lines such a
 
 The per-run `<session-id>/` directory is preserved for history. The `latest-*` files are overwritten on each autopilot run so follow-up tooling always has one stable target. Older session directories are pruned automatically.
 Temporary worker worktrees and their temp branches are removed automatically after integration or failure cleanup. The parent temp worktree root is also removed when it is empty. Worker sessions never push; autopilot only cherry-picks their local commits onto the current branch.
+If the final structured review artifact is slow to appear, autopilot waits for it and only falls back to the live finding snapshot after a grace period. A review `FAIL` with unresolved findings and no launched remediation is treated as an autopilot failure, not a success.
 
 Use `npm run laportal:review:watch -- --follow` in a second terminal if you want a live view of the latest session without reading raw worker logs.
 

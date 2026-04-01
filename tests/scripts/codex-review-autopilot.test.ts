@@ -5,6 +5,7 @@ import {
   formatEventLine,
   parseAutopilotArgs,
   selectDispatchableBatches,
+  shouldFailSession,
 } from "../../scripts/codex-review-autopilot.mjs";
 
 describe("codex review autopilot helper", () => {
@@ -148,7 +149,12 @@ describe("codex review autopilot helper", () => {
       repoRoot: "/repo",
       branch: "feature",
       headSha: "abc123",
+      codexModel: "gpt-5.4-mini",
+      codexReasoningEffort: "xhigh",
       worktreeRoot: "/tmp/laportal-codex-autopilot-abc123",
+      reviewResult: "PASS",
+      unresolvedFindingCount: 0,
+      dispatchSource: "final-artifact",
       producerExitCode: 0,
       liveStatePath: "/repo/.git/laportal/codex-review.live.json",
       finalArtifactPath: "/repo/.git/laportal/codex-review.json",
@@ -179,6 +185,11 @@ describe("codex review autopilot helper", () => {
     expect(summary).toContain("LAPortal review autopilot summary");
     expect(summary).toContain("session: session-1");
     expect(summary).toContain("session temp root: /tmp/laportal-codex-autopilot-abc123");
+    expect(summary).toContain("model: gpt-5.4-mini");
+    expect(summary).toContain("reasoning effort: xhigh");
+    expect(summary).toContain("review result: PASS");
+    expect(summary).toContain("unresolved findings: 0");
+    expect(summary).toContain("dispatch source: final-artifact");
     expect(summary).toContain("- B1 [worker] completed | branch=autopilot/abc123/worker-b1 | exit=0 | integrated=1");
     expect(summary).toContain("summary: Adjusted quote acceptance flow");
     expect(summary).toContain("files: src/domains/quote/service.ts, tests/domains/quote/service.test.ts");
@@ -192,17 +203,23 @@ describe("codex review autopilot helper", () => {
         sessionId: "session-1",
         branch: "feature",
         headSha: "abc123",
+        model: "gpt-5.4-mini",
+        reasoningEffort: "xhigh",
       }),
-    ).toBe("AUTOPILOT session started: session-1 | branch=feature | head=abc123");
+    ).toBe(
+      "AUTOPILOT session started: session-1 | branch=feature | head=abc123 | model=gpt-5.4-mini | effort=xhigh",
+    );
 
     expect(
       formatEventLine({
         type: "producer-start",
         headSha: "abc123",
+        model: "gpt-5.4-mini",
+        reasoningEffort: "xhigh",
         producerLogPath: "/repo/.git/laportal/autopilot/session-1/producer.log",
       }),
     ).toBe(
-      "AUTOPILOT review started: head=abc123 | producer_log=/repo/.git/laportal/autopilot/session-1/producer.log",
+      "AUTOPILOT review started: head=abc123 | model=gpt-5.4-mini | effort=xhigh | producer_log=/repo/.git/laportal/autopilot/session-1/producer.log",
     );
 
     expect(
@@ -213,6 +230,13 @@ describe("codex review autopilot helper", () => {
         activeTaskCount: 0,
       }),
     ).toBe("AUTOPILOT review running: elapsed=01:45 live_findings=1 active_tasks=0");
+
+    expect(
+      formatEventLine({
+        type: "review-dispatch-pending",
+        elapsed: "00:15",
+      }),
+    ).toBe("AUTOPILOT waiting for final artifact: elapsed=00:15");
 
     expect(
       formatEventLine({
@@ -281,6 +305,14 @@ describe("codex review autopilot helper", () => {
 
     expect(
       formatEventLine({
+        type: "review-dispatch-fallback",
+        findingCount: 2,
+        elapsed: "00:15",
+      }),
+    ).toBe("AUTOPILOT using live snapshot fallback: findings=2 | wait=00:15");
+
+    expect(
+      formatEventLine({
         type: "task-complete",
         batchId: "B1",
         status: "completed",
@@ -290,10 +322,39 @@ describe("codex review autopilot helper", () => {
 
     expect(
       formatEventLine({
+        type: "session-failed",
+        reason: "Final artifact was not readable after 00:15",
+      }),
+    ).toBe("AUTOPILOT session failed: Final artifact was not readable after 00:15");
+
+    expect(
+      formatEventLine({
         type: "session-complete",
         taskCount: 2,
         failedTaskCount: 1,
       }),
     ).toBe("AUTOPILOT session complete: tasks=2 failed=1 pushes=0");
+  });
+
+  it("fails the session when review findings remain unresolved and no task launched", () => {
+    expect(
+      shouldFailSession({
+        producerExitCode: 0,
+        reviewResult: "FAIL",
+        unresolvedFindingCount: 2,
+        tasks: [],
+        dispatchError: null,
+      }),
+    ).toBe(true);
+
+    expect(
+      shouldFailSession({
+        producerExitCode: 0,
+        reviewResult: "PASS",
+        unresolvedFindingCount: 0,
+        tasks: [],
+        dispatchError: null,
+      }),
+    ).toBe(false);
   });
 });
