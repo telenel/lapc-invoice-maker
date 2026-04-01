@@ -147,17 +147,23 @@ build_prompt_cmd=(
   --head-sha "$head_sha"
 )
 
-for focus_path in "${focus_paths[@]}"; do
-  build_prompt_cmd+=(--focus "$focus_path")
-done
+if [ "${#focus_paths[@]}" -gt 0 ]; then
+  for focus_path in "${focus_paths[@]}"; do
+    build_prompt_cmd+=(--focus "$focus_path")
+  done
+fi
 
-for changed_file in "${changed_files[@]}"; do
-  build_prompt_cmd+=(--changed-file "$changed_file")
-done
+if [ "${#changed_files[@]}" -gt 0 ]; then
+  for changed_file in "${changed_files[@]}"; do
+    build_prompt_cmd+=(--changed-file "$changed_file")
+  done
+fi
 
-for reviewed_file in "${reviewed_files[@]}"; do
-  build_prompt_cmd+=(--reviewed-file "$reviewed_file")
-done
+if [ "${#reviewed_files[@]}" -gt 0 ]; then
+  for reviewed_file in "${reviewed_files[@]}"; do
+    build_prompt_cmd+=(--reviewed-file "$reviewed_file")
+  done
+fi
 
 "${build_prompt_cmd[@]}"
 
@@ -200,17 +206,23 @@ record_cmd=(
   --created-at "$timestamp"
 )
 
-for focus_path in "${focus_paths[@]}"; do
-  record_cmd+=(--focus "$focus_path")
-done
+if [ "${#focus_paths[@]}" -gt 0 ]; then
+  for focus_path in "${focus_paths[@]}"; do
+    record_cmd+=(--focus "$focus_path")
+  done
+fi
 
-for changed_file in "${changed_files[@]}"; do
-  record_cmd+=(--changed-file "$changed_file")
-done
+if [ "${#changed_files[@]}" -gt 0 ]; then
+  for changed_file in "${changed_files[@]}"; do
+    record_cmd+=(--changed-file "$changed_file")
+  done
+fi
 
-for reviewed_file in "${reviewed_files[@]}"; do
-  record_cmd+=(--reviewed-file "$reviewed_file")
-done
+if [ "${#reviewed_files[@]}" -gt 0 ]; then
+  for reviewed_file in "${reviewed_files[@]}"; do
+    record_cmd+=(--reviewed-file "$reviewed_file")
+  done
+fi
 
 "${record_cmd[@]}"
 
