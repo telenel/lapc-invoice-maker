@@ -13,6 +13,7 @@ Prioritize:
 - risky auth, data, PDF, calendar, email, and deployment changes
 - missing validation and error handling
 - missing or weak test coverage for changed behavior
+- review the entire diff before deciding, and include every concrete issue you find in one response
 
 Repo-specific rules:
 - Route handlers should call domain services, not repositories directly.
@@ -32,7 +33,8 @@ FINDINGS:
 
 Rules for output:
 - Use `RESULT: PASS` only if you found no meaningful issues.
-- Use `RESULT: FAIL` if you found one or more concrete issues worth blocking on.
+- Use `RESULT: FAIL` if you found one or more concrete issues worth reporting.
+- Do not stop after the first issue; finish reviewing the whole diff and report all concrete issues together.
 - Keep findings concise and specific.
 - Reference files and functions when possible.
 - If PASS, the findings list must be exactly `- none`.

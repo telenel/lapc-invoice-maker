@@ -75,13 +75,10 @@ esac
   printf 'CODEX_REVIEW_CREATED_AT=%q\n' "$timestamp"
 } > "$stamp_file"
 
-if [ "$result" != "PASS" ]; then
-  echo ""
-  echo "BLOCKED: Codex review returned FAIL for HEAD $head_sha"
-  echo "Stamp file: $stamp_file"
-  exit 1
-fi
-
 echo ""
-echo "Recorded Codex PASS stamp for HEAD $head_sha"
+if [ "$result" = "PASS" ]; then
+  echo "Recorded Codex PASS stamp for HEAD $head_sha"
+else
+  echo "Recorded Codex FAIL stamp for HEAD $head_sha"
+fi
 echo "Stamp file: $stamp_file"

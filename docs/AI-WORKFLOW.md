@@ -60,6 +60,7 @@ These are the hard-coded workflow entrypoints. Do not replace them with ad hoc c
 - Requires a clean working tree.
 - Runs local Codex review against the current branch diff relative to `main` by default.
 - Records a PASS/FAIL stamp for the exact `HEAD` commit inside `.git/laportal/`.
+- Always completes the review and writes the stamp; a FAIL result does not abort the command.
 
 ### `hooks/pre-push`
 

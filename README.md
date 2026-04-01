@@ -44,7 +44,7 @@ npm install              # Install dependencies + configure git hooks
 npx prisma generate      # Generate Prisma client
 npm run dev              # Start dev server (localhost:3000)
 npm run ship-check       # git status + lint + test + build + stamp current HEAD
-npm run review:codex     # Local Codex review against main with a fixed prompt
+npm run review:codex     # Local Codex review against main with a fixed prompt; always returns the full report
 npm test                 # Run tests (350 tests)
 npm run build            # Production build
 ```
