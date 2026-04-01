@@ -273,6 +273,20 @@ describe("quoteService", () => {
       expect(mockRepo.update).toHaveBeenCalledWith("q1", { quoteStatus: "EXPIRED" });
     });
 
+    it("does not expire a converted quote even if its original status was sent", async () => {
+      const pastDate = new Date("2020-01-01");
+      const quote = makeQuote({
+        expirationDate: pastDate,
+        quoteStatus: "SENT",
+        convertedToInvoice: { id: "inv1", invoiceNumber: "INV-2026-0001" },
+      });
+      mockRepo.findById.mockResolvedValue(quote as never);
+
+      await quoteService.getById("q1");
+
+      expect(mockRepo.update).not.toHaveBeenCalled();
+    });
+
     it("does not expire an ACCEPTED quote even if past date", async () => {
       const pastDate = new Date("2020-01-01");
       const quote = makeQuote({ expirationDate: pastDate, quoteStatus: "ACCEPTED" });
@@ -1134,7 +1148,7 @@ describe("quoteService", () => {
       });
     });
 
-    it("preserves the quote response state when converting a sent quote", async () => {
+    it("marks a converted sent quote as accepted so it leaves the response queue", async () => {
       const { prisma } = await import("@/lib/prisma");
       const mockPrisma = vi.mocked(prisma, true);
 
@@ -1166,8 +1180,8 @@ describe("quoteService", () => {
         expect.objectContaining({
           where: { id: "q1" },
           data: expect.objectContaining({
-            quoteStatus: "SENT",
-            acceptedAt: null,
+            quoteStatus: "ACCEPTED",
+            acceptedAt: expect.any(Date),
             convertedAt: expect.any(Date),
           }),
         }),

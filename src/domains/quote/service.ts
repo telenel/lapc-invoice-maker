@@ -194,6 +194,7 @@ export const quoteService = {
     if (
       quote.expirationDate &&
       new Date(quote.expirationDate) < new Date() &&
+      !quote.convertedToInvoice &&
       (quote.quoteStatus === "DRAFT" || quote.quoteStatus === "SENT" || quote.quoteStatus === "SUBMITTED_EMAIL" || quote.quoteStatus === "SUBMITTED_MANUAL")
     ) {
       await quoteRepository.update(id, { quoteStatus: "EXPIRED" });
@@ -214,6 +215,7 @@ export const quoteService = {
     if (
       quote.expirationDate &&
       new Date(quote.expirationDate) < new Date() &&
+      !quote.convertedToInvoice &&
       (quote.quoteStatus === "DRAFT" || quote.quoteStatus === "SENT" || quote.quoteStatus === "SUBMITTED_EMAIL" || quote.quoteStatus === "SUBMITTED_MANUAL")
     ) {
       await quoteRepository.update(quote.id, { quoteStatus: "EXPIRED" });
@@ -1046,8 +1048,8 @@ export const quoteService = {
       await tx.invoice.update({
         where: { id },
         data: {
-          quoteStatus: quote.quoteStatus,
-          acceptedAt: quote.acceptedAt ?? null,
+          quoteStatus: "ACCEPTED",
+          acceptedAt: quote.acceptedAt ?? now,
           convertedAt: now,
         },
       });

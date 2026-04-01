@@ -73,7 +73,7 @@ async function readPaymentFollowUpState(
     FOR UPDATE
   `;
   const convertedInvoice = convertedInvoices[0];
-  if (convertedInvoice) {
+  if (convertedInvoice?.status === "FINAL" || convertedInvoice?.paymentMethod) {
     return null;
   }
 
@@ -161,15 +161,14 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
     `;
     if (result[0]?.acquired !== true) return [];
 
-    // Find quotes that are ACCEPTED, have type QUOTE, and no paymentMethod
+    // Find ACCEPTED quotes that still need payment details.
     return tx.invoice.findMany({
-        where: {
-          type: "QUOTE",
-          quoteStatus: "ACCEPTED",
-          acceptedAt: { not: null },
-          paymentMethod: null,
-          shareToken: { not: null },
-          convertedToInvoice: null,
+      where: {
+        type: "QUOTE",
+        quoteStatus: "ACCEPTED",
+        acceptedAt: { not: null },
+        paymentMethod: null,
+        shareToken: { not: null },
       },
       include: {
         followUps: {
