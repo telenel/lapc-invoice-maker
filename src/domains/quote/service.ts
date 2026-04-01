@@ -50,7 +50,7 @@ function mergeCateringDetails(
   return {
     ...existingObject,
     ...(next as Record<string, unknown>),
-  };
+  } as Prisma.InputJsonValue;
 }
 
 export function isPublicPaymentLinkAvailable(
