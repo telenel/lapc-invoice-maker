@@ -441,6 +441,42 @@ describe("quoteService", () => {
     });
   });
 
+  describe("recordView", () => {
+    it("broadcasts quote-changed after persisting a public quote view", async () => {
+      mockRepo.findByShareToken.mockResolvedValue(
+        makeQuote({ createdBy: "u1" }) as never,
+      );
+      mockRepo.createView.mockResolvedValue({ id: "view-1" } as never);
+      mockRepo.hasRecentView.mockResolvedValue(false);
+      vi.mocked(notificationService.createAndPublish).mockResolvedValue(undefined as never);
+
+      const result = await quoteService.recordView("token", {
+        ipAddress: "1.2.3.4",
+        userAgent: "Chrome/123",
+        referrer: "https://example.com",
+        viewport: "1440x900",
+      });
+
+      expect(result).toEqual({ viewId: "view-1" });
+      expect(mockRepo.createView).toHaveBeenCalledWith({
+        invoiceId: "q1",
+        ipAddress: "1.2.3.4",
+        userAgent: "Chrome/123",
+        referrer: "https://example.com",
+        viewport: "1440x900",
+      });
+      expect(mockRepo.hasRecentView).toHaveBeenCalledWith("q1", 10);
+      expect(safePublishAll).toHaveBeenCalledWith({ type: "quote-changed" });
+      expect(notificationService.createAndPublish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          userId: "u1",
+          type: "QUOTE_VIEWED",
+          quoteId: "q1",
+        }),
+      );
+    });
+  });
+
   describe("respondToQuote", () => {
     it("applies approval-time payment details atomically for a pre-converted invoice", async () => {
       mockRepo.findByShareToken.mockResolvedValue(

@@ -411,7 +411,7 @@ export const quoteService = {
   },
 
   /**
-   * Record a quote page view and optionally trigger a notification.
+   * Record a quote page view, broadcast a timeline refresh, and optionally trigger a notification.
    */
   async recordView(
     token: string,
@@ -424,6 +424,8 @@ export const quoteService = {
       invoiceId: quote.id,
       ...data,
     });
+
+    safePublishAll({ type: "quote-changed" });
 
     // Debounce: only notify if no view in last 10 minutes
     const hasRecent = await quoteRepository.hasRecentView(quote.id, 10);
