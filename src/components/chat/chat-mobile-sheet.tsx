@@ -38,6 +38,8 @@ export function ChatMobileSheet({ onClose }: ChatMobileSheetProps) {
   });
 
   const isLoading = status === "submitted" || status === "streaming";
+  const shouldLockBodyScroll =
+    sessionStatus === "authenticated" && Boolean(session?.user);
 
   // Handle navigate tool results
   const processedNavs = useRef(new Set<string>());
@@ -76,12 +78,16 @@ export function ChatMobileSheet({ onClose }: ChatMobileSheetProps) {
 
   // Lock body scroll while sheet is open
   useEffect(() => {
+    if (!shouldLockBodyScroll) {
+      return;
+    }
+
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = prev;
     };
-  }, []);
+  }, [shouldLockBodyScroll]);
 
   const handleSend = useCallback(
     (text: string) => {
