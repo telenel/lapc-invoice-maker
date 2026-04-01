@@ -240,9 +240,19 @@ function formatTaskSummaryLine(task) {
   return `- ${details.join(" | ")}`;
 }
 
+function successfulTaskCount(summary) {
+  return summary.tasks?.filter((task) => task.status === "completed").length ?? 0;
+}
+
 export function buildSummaryText(summary) {
+  const successCount = successfulTaskCount(summary);
+  const failedCount = summary.tasks?.filter((task) => task.status === "failed").length ?? 0;
+  const outcome = shouldFailSession(summary)
+    ? "AUTOPILOT FAILED"
+    : `AUTOPILOT COMPLETE: ${successCount} successful fix${successCount === 1 ? "" : "es"}, ${failedCount} failed task${failedCount === 1 ? "" : "s"}, nothing was pushed.`;
   const lines = [
     "LAPortal review autopilot summary",
+    `outcome: ${outcome}`,
     `session: ${summary.sessionId}`,
     `started: ${summary.startedAt ?? "unknown"}`,
     `repo: ${summary.repoRoot}`,
@@ -378,7 +388,10 @@ export function formatEventLine(event) {
     case "review-dispatch-pending":
       return `AUTOPILOT waiting for final artifact: elapsed=${event.elapsed}`;
     case "review-result":
-      return `AUTOPILOT review result: ${event.result} | findings=${event.findingCount} | summary=${event.summary}`;
+      if (event.result === "PASS") {
+        return "AUTOPILOT REVIEW PASSED. NO ISSUES FOUND.";
+      }
+      return `AUTOPILOT REVIEW FOUND ${event.findingCount} ISSUE${event.findingCount === 1 ? "" : "S"}. ${event.summary}`;
     case "review-dispatch-fallback":
       return `AUTOPILOT using live snapshot fallback: findings=${event.findingCount} | wait=${event.elapsed}`;
     case "batch-launch":
@@ -386,25 +399,31 @@ export function formatEventLine(event) {
     case "task-exited":
       return `AUTOPILOT task finished in worktree: ${event.batchId} | exit=${event.exitCode}`;
     case "task-failed":
-      return `AUTOPILOT ${event.batchId} failed: ${event.error}`;
+      if (event.stage === "integration") {
+        return `AUTOPILOT FAILURE: ${event.batchId} produced a fix, but it was not integrated. ${event.error}`;
+      }
+      return `AUTOPILOT FAILURE: ${event.batchId} did not finish successfully. ${event.error}`;
     case "task-integrating":
       return `AUTOPILOT integrating ${event.batchId} into ${event.targetBranch}`;
     case "task-integrated":
-      return `AUTOPILOT integrated ${event.batchId} into ${event.targetBranch} (${event.commits?.length ?? 0} commit${event.commits?.length === 1 ? "" : "s"})`;
+      return `AUTOPILOT SUCCESS: ${event.batchId} fixed ${event.findingCount} finding${event.findingCount === 1 ? "" : "s"} and was integrated into ${event.targetBranch} (${event.commits?.length ?? 0} commit${event.commits?.length === 1 ? "" : "s"}).`;
     case "task-cleanup":
       return `AUTOPILOT cleaned ${event.batchId}: worktree=${event.worktreeRemoved ? "yes" : "no"} branch=${event.branchDeleted ? "yes" : "no"}`;
     case "task-summary":
-      return `AUTOPILOT task summary: ${event.batchId} | ${event.summary} | files=${event.files?.join(", ") ?? "none"}`;
+      return `AUTOPILOT SUMMARY: ${event.batchId} | ${event.summary} | files=${event.files?.join(", ") ?? "none"}`;
     case "task-complete":
-      return `AUTOPILOT task complete: ${event.batchId} | status=${event.status} | integrated=${event.integratedCount}`;
+      if (event.status === "completed") {
+        return `AUTOPILOT SUCCESS: ${event.batchId} is complete. ${event.integratedCount} integrated commit${event.integratedCount === 1 ? "" : "s"}.`;
+      }
+      return `AUTOPILOT FAILURE: ${event.batchId} is complete, but it did not integrate successfully.`;
     case "session-failed":
-      return `AUTOPILOT session failed: ${event.reason}`;
+      return `AUTOPILOT FAILED: ${event.reason}`;
     case "session-cleanup":
       return `AUTOPILOT cleaned session temp root: removed=${event.worktreeRootRemoved ? "yes" : "no"} path=${event.worktreeRoot}`;
     case "producer-complete":
       return `AUTOPILOT review completed with exit ${event.exitCode}`;
     case "session-complete":
-      return `AUTOPILOT session complete: tasks=${event.taskCount} failed=${event.failedTaskCount} pushes=0`;
+      return `AUTOPILOT COMPLETE: ${event.successfulTaskCount} successful fix${event.successfulTaskCount === 1 ? "" : "es"}, ${event.failedTaskCount} failed task${event.failedTaskCount === 1 ? "" : "s"}, nothing was pushed.`;
     default:
       return `AUTOPILOT ${event.type}`;
   }
@@ -499,6 +518,13 @@ function extractTaskResultSummary(resultText) {
     .map((line) => line.trim())
     .filter(Boolean);
 
+  const preferredLine = lines.find((line) =>
+    /^(Fixed|Resolved|Implemented|Prevented|Added|Updated|Aligned|Handled|Corrected|Made)\b/i.test(line),
+  );
+  if (preferredLine) {
+    return preferredLine;
+  }
+
   const whatChangedIndex = lines.findIndex((line) => line === "What changed:");
   if (whatChangedIndex >= 0) {
     const bulletLines = [];
@@ -517,6 +543,9 @@ function extractTaskResultSummary(resultText) {
 
   const usefulLine = lines.find(
     (line) =>
+      !line.startsWith("Using `") &&
+      !line.startsWith("Committed `") &&
+      !line.startsWith("Committed as `") &&
       !line.startsWith("Status brief:") &&
       !line.startsWith("Changed files:") &&
       !line.startsWith("Validation:") &&
@@ -1025,6 +1054,7 @@ async function main() {
             role: task.role,
             exitCode: code,
             signal,
+            stage: "execution",
             error: error ?? `Worker exited with code ${code}`,
           });
           emitEvent(session, summary, "task-cleanup", {
@@ -1072,6 +1102,7 @@ async function main() {
           emitEvent(session, summary, "task-integrated", {
             batchId: task.batchId,
             role: task.role,
+            findingCount: task.batch.findingIds?.length ?? task.batch.findings?.length ?? 0,
             commits,
             targetBranch: context.branch,
           });
@@ -1096,6 +1127,7 @@ async function main() {
             role: task.role,
             exitCode: code,
             signal,
+            stage: "integration",
             error:
               integrationError instanceof Error
                 ? integrationError.message
@@ -1141,6 +1173,7 @@ async function main() {
 
   emitEvent(session, summary, "session-complete", {
     taskCount: summary.tasks.length,
+    successfulTaskCount: successfulTaskCount(summary),
     failedTaskCount: summary.tasks.filter((task) => task.status === "failed").length,
   });
   if (summary.dispatchError) {

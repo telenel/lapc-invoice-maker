@@ -187,6 +187,7 @@ describe("codex review autopilot helper", () => {
     });
 
     expect(summary).toContain("LAPortal review autopilot summary");
+    expect(summary).toContain("outcome: AUTOPILOT COMPLETE: 1 successful fix, 0 failed tasks, nothing was pushed.");
     expect(summary).toContain("session: session-1");
     expect(summary).toContain("session temp root: /tmp/laportal-codex-autopilot-abc123");
     expect(summary).toContain("model: gpt-5.4-mini");
@@ -249,7 +250,16 @@ describe("codex review autopilot helper", () => {
         findingCount: 2,
         summary: "Two issues remain",
       }),
-    ).toBe("AUTOPILOT review result: FAIL | findings=2 | summary=Two issues remain");
+    ).toBe("AUTOPILOT REVIEW FOUND 2 ISSUES. Two issues remain");
+
+    expect(
+      formatEventLine({
+        type: "review-result",
+        result: "PASS",
+        findingCount: 0,
+        summary: "No issues",
+      }),
+    ).toBe("AUTOPILOT REVIEW PASSED. NO ISSUES FOUND.");
 
     expect(
       formatEventLine({
@@ -281,10 +291,11 @@ describe("codex review autopilot helper", () => {
       formatEventLine({
         type: "task-integrated",
         batchId: "B1",
+        findingCount: 2,
         targetBranch: "feature",
         commits: ["deadbeef", "cafebabe"],
       }),
-    ).toBe("AUTOPILOT integrated B1 into feature (2 commits)");
+    ).toBe("AUTOPILOT SUCCESS: B1 fixed 2 findings and was integrated into feature (2 commits).");
 
     expect(
       formatEventLine({
@@ -304,7 +315,7 @@ describe("codex review autopilot helper", () => {
         files: ["src/domains/quote/service.ts", "tests/domains/quote/service.test.ts"],
       }),
     ).toBe(
-      "AUTOPILOT task summary: B1 | Adjusted quote acceptance flow | files=src/domains/quote/service.ts, tests/domains/quote/service.test.ts",
+      "AUTOPILOT SUMMARY: B1 | Adjusted quote acceptance flow | files=src/domains/quote/service.ts, tests/domains/quote/service.test.ts",
     );
 
     expect(
@@ -322,22 +333,32 @@ describe("codex review autopilot helper", () => {
         status: "completed",
         integratedCount: 2,
       }),
-    ).toBe("AUTOPILOT task complete: B1 | status=completed | integrated=2");
+    ).toBe("AUTOPILOT SUCCESS: B1 is complete. 2 integrated commits.");
+
+    expect(
+      formatEventLine({
+        type: "task-failed",
+        batchId: "B1",
+        stage: "integration",
+        error: "branch was dirty",
+      }),
+    ).toBe("AUTOPILOT FAILURE: B1 produced a fix, but it was not integrated. branch was dirty");
 
     expect(
       formatEventLine({
         type: "session-failed",
         reason: "Final artifact was not readable after 00:15",
       }),
-    ).toBe("AUTOPILOT session failed: Final artifact was not readable after 00:15");
+    ).toBe("AUTOPILOT FAILED: Final artifact was not readable after 00:15");
 
     expect(
       formatEventLine({
         type: "session-complete",
         taskCount: 2,
+        successfulTaskCount: 1,
         failedTaskCount: 1,
       }),
-    ).toBe("AUTOPILOT session complete: tasks=2 failed=1 pushes=0");
+    ).toBe("AUTOPILOT COMPLETE: 1 successful fix, 1 failed task, nothing was pushed.");
   });
 
   it("fails the session when review findings remain unresolved and no task launched", () => {
