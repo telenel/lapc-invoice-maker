@@ -182,6 +182,10 @@ export function buildAutopilotPrompt({
     `- Worktree branch: ${branchName}`,
     `- Commit all completed changes in this worktree before exiting using exactly: ${commitMessage}`,
     "- Do not push.",
+    "- Do not run any `npm run laportal:review*` command, including `laportal:review`, `laportal:review:autopilot`, `laportal:review:live`, `laportal:review:loop`, `laportal:review:triage`, `laportal:review:prompt`, or `laportal:review:watch`.",
+    "- Do not run GitHub/PR commands such as `gh pr *`, `gh run *`, or `./scripts/publish-pr.sh`.",
+    "- Do not run integration/history commands such as `git push`, `git cherry-pick`, `git merge`, `git rebase`, `git reset`, `git checkout`, or `git switch`.",
+    "- Do not create or remove worktrees; the autopilot wrapper owns all worktree setup and cleanup.",
     "- Run focused validation relevant to the touched files if feasible.",
     "- Leave the worktree clean when you exit.",
   ];

@@ -140,6 +140,10 @@ describe("codex review autopilot helper", () => {
     expect(prompt).toContain(
       "Commit all completed changes in this worktree before exiting using exactly: autopilot(B1): remediate codex findings",
     );
+    expect(prompt).toContain("Do not run any `npm run laportal:review*` command");
+    expect(prompt).toContain("Do not run GitHub/PR commands such as `gh pr *`, `gh run *`, or `./scripts/publish-pr.sh`.");
+    expect(prompt).toContain("Do not run integration/history commands such as `git push`, `git cherry-pick`, `git merge`, `git rebase`, `git reset`, `git checkout`, or `git switch`.");
+    expect(prompt).toContain("Do not create or remove worktrees; the autopilot wrapper owns all worktree setup and cleanup.");
   });
 
   it("formats a human-readable session summary", () => {
