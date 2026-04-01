@@ -21,6 +21,8 @@ const cateringDetailsSchema = z.object({
   specialInstructions: z.string().optional(),
 });
 
+const viewIdSchema = z.string().trim().min(1, "Invalid view ID");
+
 type RouteContext = { params: Promise<{ token: string }> };
 
 export async function POST(req: NextRequest, ctx: RouteContext) {
@@ -33,6 +35,15 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
   const response = body.response;
   if (response !== "ACCEPTED" && response !== "DECLINED") {
     return NextResponse.json({ error: "Invalid response. Must be ACCEPTED or DECLINED" }, { status: 400 });
+  }
+
+  let viewId: string | undefined;
+  if (body.viewId !== undefined) {
+    const parsedViewId = viewIdSchema.safeParse(body.viewId);
+    if (!parsedViewId.success) {
+      return NextResponse.json({ error: "Invalid view ID" }, { status: 400 });
+    }
+    viewId = parsedViewId.data;
   }
 
   try {
@@ -150,7 +161,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     const result = await quoteService.respondToQuote(
       token,
       response,
-      body.viewId,
+      viewId,
       paymentDetailsInput,
       cateringDetails,
     );
