@@ -875,6 +875,12 @@ export const quoteService = {
           { code: "FORBIDDEN" }
         );
       }
+      if (quote.quoteStatus === "ACCEPTED" && !quote.paymentMethod) {
+        throw Object.assign(
+          new Error("Cannot convert an accepted quote until payment details are resolved"),
+          { code: "FORBIDDEN" }
+        );
+      }
 
       const createdInvoice = await tx.invoice.create({
         data: {

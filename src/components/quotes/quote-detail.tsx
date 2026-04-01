@@ -526,13 +526,15 @@ export function QuoteDetailView({ id }: { id: string }) {
                   >
                     Edit
                   </Link>
-                  <Button
-                    size="sm"
-                    onClick={handleConvertToInvoice}
-                    disabled={actionState.converting}
-                  >
-                    {actionState.converting ? "Converting..." : "Convert to Invoice"}
-                  </Button>
+                  {quote.paymentDetailsResolved && (
+                    <Button
+                      size="sm"
+                      onClick={handleConvertToInvoice}
+                      disabled={actionState.converting}
+                    >
+                      {actionState.converting ? "Converting..." : "Convert to Invoice"}
+                    </Button>
+                  )}
                 </>
               )}
 

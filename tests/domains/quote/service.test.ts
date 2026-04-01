@@ -1016,7 +1016,7 @@ describe("quoteService", () => {
       expect(result).toEqual(newInvoice);
     });
 
-    it("allows ACCEPTED quotes to convert when they have not been converted yet", async () => {
+    it("allows ACCEPTED quotes to convert when payment details are resolved", async () => {
       const { prisma } = await import("@/lib/prisma");
       const mockPrisma = vi.mocked(prisma, true);
 
@@ -1025,7 +1025,13 @@ describe("quoteService", () => {
         $queryRaw: vi.fn().mockResolvedValue([{ id: "q1" }]),
         invoice: {
           findFirst: vi.fn().mockResolvedValue(null),
-          findUnique: vi.fn().mockResolvedValue(makeQuote({ quoteStatus: "ACCEPTED", convertedToInvoice: null })),
+          findUnique: vi.fn().mockResolvedValue(
+            makeQuote({
+              quoteStatus: "ACCEPTED",
+              convertedToInvoice: null,
+              paymentMethod: "CHECK",
+            }),
+          ),
           create: vi.fn().mockResolvedValue(newInvoice),
           update: vi.fn().mockResolvedValue({}),
         },
@@ -1033,6 +1039,33 @@ describe("quoteService", () => {
       mockPrisma.$transaction.mockImplementationOnce(async (callback) => callback(tx as never) as never);
 
       await expect(quoteService.convertToInvoice("q1", "u1")).resolves.toEqual(newInvoice);
+    });
+
+    it("throws FORBIDDEN for ACCEPTED quotes without resolved payment details", async () => {
+      const { prisma } = await import("@/lib/prisma");
+      const mockPrisma = vi.mocked(prisma, true);
+      const tx = {
+        $queryRaw: vi.fn().mockResolvedValue([{ id: "q1" }]),
+        invoice: {
+          findFirst: vi.fn().mockResolvedValue(null),
+          findUnique: vi.fn().mockResolvedValue(
+            makeQuote({
+              quoteStatus: "ACCEPTED",
+              convertedToInvoice: null,
+              paymentMethod: null,
+            }),
+          ),
+          create: vi.fn(),
+          update: vi.fn(),
+        },
+      };
+      mockPrisma.$transaction.mockImplementationOnce(async (callback) => callback(tx as never) as never);
+
+      await expect(quoteService.convertToInvoice("q1", "u1")).rejects.toMatchObject({
+        code: "FORBIDDEN",
+        message: "Cannot convert an accepted quote until payment details are resolved",
+      });
+      expect(tx.invoice.create).not.toHaveBeenCalled();
     });
 
     it("throws FORBIDDEN when quote has already been converted", async () => {
@@ -1140,6 +1173,7 @@ describe("quoteService", () => {
             makeQuote({
               quoteStatus: "ACCEPTED",
               acceptedAt,
+              paymentMethod: "CHECK",
             }),
           ),
           create: vi.fn().mockResolvedValue(newInvoice),
