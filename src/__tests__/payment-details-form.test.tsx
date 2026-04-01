@@ -26,6 +26,23 @@ describe("PaymentDetailsForm", () => {
     expect(screen.getByText(/Q-1/)).toBeInTheDocument();
   });
 
+  it("shows the resolved state even when the payment link is closed", () => {
+    render(
+      <PaymentDetailsForm
+        token="token"
+        initialQuote={{
+          quoteStatus: "ACCEPTED",
+          paymentDetailsResolved: true,
+          paymentLinkAvailable: false,
+          quoteNumber: "Q-1",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Payment Details Already On File")).toBeInTheDocument();
+    expect(screen.queryByText("Payment Link Closed")).not.toBeInTheDocument();
+  });
+
   it("shows the payment form for accepted quotes that still need payment details", () => {
     render(
       <PaymentDetailsForm
