@@ -313,6 +313,9 @@ describe("quoteService", () => {
       });
 
       expect(result?.id).toBe("q1");
+      expect(result?.paymentMethod).toBe("ACCOUNT_NUMBER");
+      expect(result?.convertedToInvoice).toEqual({ id: "inv1" });
+      expect(result).not.toHaveProperty("createdBy");
       expect(result?.updatedConvertedInvoice).toBe(true);
       expect(tx.invoice.update).toHaveBeenNthCalledWith(1, {
         where: { id: "q1" },

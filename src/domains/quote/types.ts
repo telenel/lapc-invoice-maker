@@ -226,9 +226,8 @@ export interface QuotePublicPaymentCandidate {
   id: string;
   quoteNumber: string | null;
   recipientEmail: string | null;
-  createdBy: string;
   paymentMethod: string | null;
-  convertedToInvoice: { id: string; createdBy?: string } | null;
+  convertedToInvoice: { id: string } | null;
   updatedConvertedInvoice?: boolean;
 }
 

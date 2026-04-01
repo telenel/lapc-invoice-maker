@@ -326,7 +326,11 @@ export const quoteService = {
     }
 
     return {
-      ...quote,
+      id: quote.id,
+      quoteNumber: quote.quoteNumber,
+      recipientEmail: quote.recipientEmail,
+      paymentMethod: normalizedPayment.paymentMethod,
+      convertedToInvoice: quote.convertedToInvoice ? { id: quote.convertedToInvoice.id } : null,
       updatedConvertedInvoice: paymentResult.updatedConvertedInvoice,
     };
   },
