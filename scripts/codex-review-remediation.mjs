@@ -135,6 +135,7 @@ function buildFindingRecords(artifact, rootDir) {
       id: finding.id,
       status: finding.status,
       text: finding.text,
+      createdAt: finding.createdAt ?? artifact.createdAt ?? null,
       files: extractFileReferences(finding.text, rootDir),
     }));
 }
@@ -226,10 +227,20 @@ export function buildRemediationPlan(artifact, rootDir) {
         id: finding.id,
         text: finding.text,
         summary: summarizeFinding(finding.text),
+        createdAt: finding.createdAt,
         files: finding.files,
       })),
     };
   });
+}
+
+export function buildWorkerPromptCommand(artifactPath) {
+  const normalized = artifactPath.replace(/\\/g, "/");
+  if (normalized.endsWith("codex-review.live.json")) {
+    return `npm run review:codex:prompt -- --artifact ${artifactPath} --batch <BATCH_ID>`;
+  }
+
+  return "npm run review:codex:prompt -- --batch <BATCH_ID>";
 }
 
 export function formatRemediationPlan(artifact, plan, artifactPath) {
@@ -263,7 +274,7 @@ export function formatRemediationPlan(artifact, plan, artifactPath) {
 
   lines.push("");
   lines.push("Worker prompt command:");
-  lines.push("npm run review:codex:prompt -- --batch <BATCH_ID>");
+  lines.push(buildWorkerPromptCommand(artifactPath));
 
   return lines.join("\n");
 }

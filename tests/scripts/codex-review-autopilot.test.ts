@@ -1,0 +1,133 @@
+import {
+  batchSignature,
+  buildAutopilotPrompt,
+  parseAutopilotArgs,
+  selectDispatchableBatches,
+} from "../../scripts/codex-review-autopilot.mjs";
+
+describe("codex review autopilot helper", () => {
+  it("keeps passthrough args and recognizes help", () => {
+    expect(
+      parseAutopilotArgs(["--base-ref", "release", "--focus", "src/domains/quote/service.ts"]),
+    ).toEqual({
+      help: false,
+      passthrough: ["--base-ref", "release", "--focus", "src/domains/quote/service.ts"],
+    });
+
+    expect(parseAutopilotArgs(["--help"])).toEqual({
+      help: true,
+      passthrough: [],
+    });
+  });
+
+  it("uses finding text as the batch signature", () => {
+    expect(
+      batchSignature({
+        findings: [{ text: "b" }, { text: "a" }],
+      }),
+    ).toBe("a\n---\nb");
+  });
+
+  it("defers live worker batches until they have gone quiet", () => {
+    const recentBatch = {
+      id: "B1",
+      mode: "worker-candidate",
+      files: ["src/domains/quote/follow-ups.ts"],
+      findings: [
+        {
+          id: "L1",
+          text: "src/domains/quote/follow-ups.ts still notifies the wrong owner.",
+          createdAt: "2026-03-31T22:00:03Z",
+        },
+      ],
+    };
+    const staleBatch = {
+      ...recentBatch,
+      id: "B2",
+      findings: [
+        {
+          id: "L2",
+          text: "src/domains/quote/follow-ups.ts needs retry backoff.",
+          createdAt: "2026-03-31T21:59:40Z",
+        },
+      ],
+    };
+
+    expect(
+      selectDispatchableBatches({
+        plan: [recentBatch, staleBatch],
+        launchedSignatures: new Set(),
+        activeFiles: new Set(),
+        nowMs: Date.parse("2026-03-31T22:00:05Z"),
+        liveMode: true,
+      }).map((batch) => batch.id),
+    ).toEqual(["B2"]);
+  });
+
+  it("skips overlapping live batches and keeps final dispatch unconstrained by quiet time", () => {
+    const batch = {
+      id: "B1",
+      mode: "main-agent",
+      files: ["src/domains/quote/service.ts"],
+      findings: [
+        {
+          id: "F1",
+          text: "src/domains/quote/service.ts still strands converted quotes.",
+          createdAt: "2026-03-31T22:00:03Z",
+        },
+      ],
+    };
+
+    expect(
+      selectDispatchableBatches({
+        plan: [batch],
+        launchedSignatures: new Set(),
+        activeFiles: new Set(["src/domains/quote/service.ts"]),
+        nowMs: Date.parse("2026-03-31T22:00:20Z"),
+        liveMode: false,
+      }),
+    ).toEqual([]);
+
+    expect(
+      selectDispatchableBatches({
+        plan: [batch],
+        launchedSignatures: new Set(),
+        activeFiles: new Set(),
+        nowMs: Date.parse("2026-03-31T22:00:04Z"),
+        liveMode: false,
+      }).map((entry) => entry.id),
+    ).toEqual(["B1"]);
+  });
+
+  it("builds an autopilot prompt with explicit branch and commit requirements", () => {
+    const prompt = buildAutopilotPrompt({
+      artifact: {
+        headSha: "abc123",
+        baseRef: "main",
+        result: "FAIL",
+        summary: "One issue remains",
+      },
+      batch: {
+        id: "B1",
+        files: ["src/domains/quote/service.ts"],
+        findings: [
+          {
+            id: "F1",
+            text: "src/domains/quote/service.ts still strands converted quotes.",
+          },
+        ],
+      },
+      worktreePath: "/tmp/laportal-autopilot/B1",
+      branchName: "autopilot/abc123/worker-b1",
+      commitMessage: "autopilot(B1): remediate codex findings",
+      role: "worker",
+    });
+
+    expect(prompt).toContain("Autopilot requirements:");
+    expect(prompt).toContain("Role: worker");
+    expect(prompt).toContain("Worktree branch: autopilot/abc123/worker-b1");
+    expect(prompt).toContain(
+      "Commit all completed changes in this worktree before exiting using exactly: autopilot(B1): remediate codex findings",
+    );
+  });
+});

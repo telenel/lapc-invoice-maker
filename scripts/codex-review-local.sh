@@ -113,8 +113,12 @@ fi
 head_sha=$(git rev-parse HEAD)
 timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 runtime_prompt=$(mktemp "${TMPDIR:-/tmp}/codex-review-prompt.XXXXXX")
+clean_output_file=""
 cleanup() {
   rm -f "$runtime_prompt"
+  if [ -n "$clean_output_file" ]; then
+    rm -f "$clean_output_file"
+  fi
 }
 trap cleanup EXIT
 
@@ -185,14 +189,9 @@ if [ ! -s "$output_file" ]; then
 fi
 
 clean_output_file=$(mktemp "${TMPDIR:-/tmp}/codex-review-output.XXXXXX")
-cleanup_clean_output() {
-  rm -f "$clean_output_file"
-}
-trap cleanup_clean_output EXIT
-
 awk '!/^LIVE-FINDING:/' "$output_file" > "$clean_output_file"
 mv "$clean_output_file" "$output_file"
-trap - EXIT
+clean_output_file=""
 
 result=$(awk -F': ' '/^RESULT:/ {print $2; exit}' "$output_file")
 summary=$(awk -F': ' '/^SUMMARY:/ {print $2; exit}' "$output_file")

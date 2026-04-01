@@ -92,9 +92,9 @@ Local AI workflow is hard-coded through tracked scripts and hooks:
 
 `npm run review:codex` always keeps the latest text report at `.git/laportal/codex-review.txt`, the latest structured artifact at `.git/laportal/codex-review.json`, and a rolling history of the last 20 review runs in `.git/laportal/review-history/`.
 
-`npm run review:codex:autopilot` is the one-command workflow. It starts the live review producer, launches the orchestrator, and lets the orchestrator delegate batches into separate worktrees as findings appear.
+`npm run review:codex:autopilot` is the one-command workflow. It starts the live review producer, watches the live queue, and launches deterministic remediation workers into separate temporary worktrees as safe batches become available. It keeps the producer checkout read-only, falls back to the final review artifact if no live hints are emitted, and writes a session summary under `.git/laportal/autopilot/`.
 
-`npm run review:codex:live` streams the review output, looks for `LIVE-FINDING:` lines in the prompt hook, and appends live queue events to `.git/laportal/codex-review.live.jsonl` plus a snapshot at `.git/laportal/codex-review.live.json`.
+`npm run review:codex:live` streams the review output, records any `LIVE-FINDING:` lines emitted by the review prompt hook, and appends live queue events to `.git/laportal/codex-review.live.jsonl` plus a snapshot at `.git/laportal/codex-review.live.json`. Live hints are opportunistic; the final `.git/laportal/codex-review.json` artifact remains the canonical fallback.
 
 `npm run review:codex:triage` reads the latest structured artifact and groups unresolved findings by overlapping file ownership so an agent can keep coupled fixes local and delegate only bounded batches. `npm run review:codex:prompt -- --batch B1` prints a worker-ready prompt for one batch.
 

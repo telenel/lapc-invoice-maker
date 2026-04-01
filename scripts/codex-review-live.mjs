@@ -116,10 +116,6 @@ export function normalizeFindingText(text) {
     .trim();
 }
 
-function isFinalFindingLine(line) {
-  return line.startsWith("- ");
-}
-
 async function main() {
   const { repoRoot, liveDir, liveLogPath, liveQueuePath, liveStatePath, finalTextPath, finalJsonPath } =
     repoPaths();
@@ -153,6 +149,7 @@ async function main() {
           createdAt: startedAt,
           startedAt,
           updatedAt: new Date().toISOString(),
+          state: extra.state ?? "running",
           findings: liveFindings,
           liveFindings,
           result: extra.result ?? null,
@@ -193,10 +190,12 @@ async function main() {
           continue;
         }
         seenFindings.add(findingText);
+        const findingCreatedAt = new Date().toISOString();
         liveFindings.push({
           id: `L${liveFindings.length + 1}`,
           status: "unresolved",
           text: findingText,
+          createdAt: findingCreatedAt,
           source,
         });
         writeLiveSnapshot();
@@ -204,7 +203,7 @@ async function main() {
           type: "live-finding",
           source,
           headSha: headShaValue,
-          createdAt: new Date().toISOString(),
+          createdAt: findingCreatedAt,
           text: findingText,
         });
       }
@@ -225,20 +224,22 @@ async function main() {
     for (const line of streamBuffer.split(/\r?\n/)) {
       if (line.startsWith("LIVE-FINDING:")) {
         const findingText = normalizeFindingText(line);
-      if (findingText && !seenFindings.has(findingText)) {
-        seenFindings.add(findingText);
-        liveFindings.push({
-          id: `L${liveFindings.length + 1}`,
-          status: "unresolved",
-          text: findingText,
-          source: "tail",
-        });
-        writeLiveSnapshot();
-        appendJsonLine(liveQueuePath, {
-          type: "live-finding",
-          source: "tail",
+        if (findingText && !seenFindings.has(findingText)) {
+          seenFindings.add(findingText);
+          const findingCreatedAt = new Date().toISOString();
+          liveFindings.push({
+            id: `L${liveFindings.length + 1}`,
+            status: "unresolved",
+            text: findingText,
+            createdAt: findingCreatedAt,
+            source: "tail",
+          });
+          writeLiveSnapshot();
+          appendJsonLine(liveQueuePath, {
+            type: "live-finding",
+            source: "tail",
             headSha: headShaValue,
-            createdAt: new Date().toISOString(),
+            createdAt: findingCreatedAt,
             text: findingText,
           });
         }
@@ -262,17 +263,19 @@ async function main() {
         continue;
       }
       seenFindings.add(text);
+      const findingCreatedAt = new Date().toISOString();
       liveFindings.push({
         id: finding.id,
         status: finding.status ?? "unresolved",
         text,
+        createdAt: findingCreatedAt,
         source: "final",
       });
-      writeLiveSnapshot({ result: finalParsed.result, exitCode });
+      writeLiveSnapshot({ result: finalParsed.result, exitCode, state: "completing" });
       appendJsonLine(liveQueuePath, {
         type: "final-finding",
         headSha: headShaValue,
-        createdAt: new Date().toISOString(),
+        createdAt: findingCreatedAt,
         id: finding.id,
         text,
       });
@@ -289,7 +292,18 @@ async function main() {
     finalJsonPath: existsSync(finalJsonPath) ? finalJsonPath : null,
   });
 
+  if (existsSync(finalJsonPath)) {
+    appendJsonLine(liveQueuePath, {
+      type: "final-artifact-ready",
+      headSha: headShaValue,
+      createdAt: new Date().toISOString(),
+      finalJsonPath,
+      finalTextPath: existsSync(finalTextPath) ? finalTextPath : null,
+    });
+  }
+
   writeLiveSnapshot({
+    state: "completed",
     result: finalParsed?.result ?? null,
     exitCode,
     finalTextPath: existsSync(finalTextPath) ? finalTextPath : null,

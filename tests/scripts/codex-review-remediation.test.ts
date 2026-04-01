@@ -1,5 +1,6 @@
 import {
   buildRemediationPlan,
+  buildWorkerPromptCommand,
   buildWorkerPrompt,
   formatRemediationPlan,
 } from "../../scripts/codex-review-remediation.mjs";
@@ -76,6 +77,9 @@ describe("codex review remediation helper", () => {
 
     expect(output).toContain("Latest Codex review: IN_PROGRESS for abc123");
     expect(output).toContain("Live review snapshot in progress");
+    expect(output).toContain(
+      "npm run review:codex:prompt -- --artifact .git/laportal/codex-review.live.json --batch <BATCH_ID>",
+    );
   });
 
   it("builds a worker prompt with explicit ownership", () => {
@@ -99,5 +103,13 @@ describe("codex review remediation helper", () => {
     expect(prompt).toContain("Batch: B1");
     expect(prompt).toContain("src/domains/quote/follow-ups.ts");
     expect(prompt).toContain("Do not revert others' changes.");
+  });
+
+  it("formats the correct worker prompt command for live artifacts", () => {
+    expect(
+      buildWorkerPromptCommand(".git/laportal/codex-review.live.json"),
+    ).toBe(
+      "npm run review:codex:prompt -- --artifact .git/laportal/codex-review.live.json --batch <BATCH_ID>",
+    );
   });
 });

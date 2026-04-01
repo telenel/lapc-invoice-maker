@@ -108,9 +108,10 @@ These are the hard-coded workflow entrypoints. Do not replace them with ad hoc c
 ### `npm run review:codex:live`
 
 - Runs the normal local Codex review while streaming output.
-- Looks for `LIVE-FINDING:` lines emitted by the review prompt hook.
+- Records `LIVE-FINDING:` lines emitted by the review prompt hook when they appear.
 - Appends each live finding to `.git/laportal/codex-review.live.jsonl`.
 - Maintains a snapshot in `.git/laportal/codex-review.live.json` so an orchestrator can poll the live queue while the review is still running.
+- Live hints are best-effort only; the final `.git/laportal/codex-review.json` artifact remains the canonical fallback if the reviewer emits nothing live.
 
 ### `npm run review:codex:live:triage`
 
@@ -121,8 +122,10 @@ These are the hard-coded workflow entrypoints. Do not replace them with ad hoc c
 ### `npm run review:codex:autopilot`
 
 - One-command entrypoint for the live review-to-remediation workflow.
-- Starts the live producer and the orchestrator together.
-- The orchestrator is responsible for batching findings and delegating worker worktrees as they appear.
+- Starts the live producer, polls the live snapshot, and launches remediation workers directly from the wrapper.
+- Delegates only non-overlapping batches into temporary worktrees; the producer checkout stays untouched during review.
+- Falls back to the final `.git/laportal/codex-review.json` artifact if no live findings are available.
+- Writes session logs and a machine-readable summary under `.git/laportal/autopilot/<session-id>/`.
 - Use this when you want the full pipeline, not just a review artifact.
 
 ### `npm run review:codex:triage`
@@ -146,12 +149,12 @@ These are the hard-coded workflow entrypoints. Do not replace them with ad hoc c
 ### Live Orchestration Pattern
 
 1. Start the pipeline with `npm run review:codex:autopilot`.
-2. The wrapper starts the live producer and orchestrator automatically.
-3. The orchestrator polls `.git/laportal/codex-review.live.jsonl` and `.git/laportal/codex-review.live.json` for new findings.
-4. It uses the same batching rules from `npm run review:codex:triage`.
-5. It generates worker prompts from the live snapshot with `npm run review:codex:prompt -- --artifact .git/laportal/codex-review.live.json --batch <BATCH_ID>`.
-6. It creates separate worktrees for delegated batches.
-7. It keeps polling until the final artifact is written, then reconciles the final report.
+2. The wrapper starts the live producer and polls `.git/laportal/codex-review.live.json` for new findings while the review is running.
+3. It uses the same batching rules from `npm run review:codex:triage`.
+4. It creates separate temporary worktrees for delegated batches and runs worker Codex sessions there.
+5. If the review emits no live findings, the wrapper waits for the final `.git/laportal/codex-review.json` artifact and dispatches from that instead.
+6. It cherry-picks completed worker commits back onto the current branch and removes the temporary worktrees.
+7. It writes the final session summary under `.git/laportal/autopilot/<session-id>/summary.json`.
 
 ### `hooks/pre-push`
 
