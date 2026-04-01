@@ -1,4 +1,4 @@
-import { execFileSync, spawn, spawnSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import {
   appendFileSync,
   existsSync,
@@ -621,20 +621,15 @@ function worktreeStatus(worktreePath) {
   return git(["-C", worktreePath, "status", "--short"], { cwd: worktreePath });
 }
 
-function ensureCleanRepoWorktree(repoRoot) {
-  const unstaged = spawnSync("git", ["diff", "--quiet"], {
+export function ensureCleanRepoWorktree(repoRoot) {
+  const status = git(["status", "--porcelain=v1", "--untracked-files=all"], {
     cwd: repoRoot,
-    stdio: "ignore",
-  });
-  const staged = spawnSync("git", ["diff", "--cached", "--quiet"], {
-    cwd: repoRoot,
-    stdio: "ignore",
   });
 
-  if ((unstaged.status ?? 1) !== 0 || (staged.status ?? 1) !== 0) {
-    const status = git(["status", "--short", "--branch"], { cwd: repoRoot });
+  if (status) {
+    const branchStatus = git(["status", "--short", "--branch"], { cwd: repoRoot });
     throw new Error(
-      `Autopilot requires a clean working tree before it can integrate worker commits.\nCommit or stash changes first.\n\n${status}`,
+      `Autopilot requires a clean working tree before it can integrate worker commits.\nCommit or stash changes first.\n\n${branchStatus}`,
     );
   }
 }

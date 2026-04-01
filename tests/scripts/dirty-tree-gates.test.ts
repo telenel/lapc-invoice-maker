@@ -9,6 +9,7 @@ import {
 } from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { ensureCleanRepoWorktree } from "../../scripts/codex-review-autopilot.mjs";
 
 const repoRoot = process.cwd();
 const tempDirs: string[] = [];
@@ -120,6 +121,24 @@ describe("workflow dirty-tree gates", () => {
     );
     expect(output).toContain("?? stray-new-file.txt");
     expect(existsSync(invocationLog)).toBe(false);
+  });
+
+  it("blocks autopilot when an untracked file is present", () => {
+    const repoDir = createRepoFixture(["scripts/codex-review-autopilot.mjs"]);
+    writeFileSync(path.join(repoDir, "stray-new-file.txt"), "untracked\n");
+
+    let error: unknown;
+    try {
+      ensureCleanRepoWorktree(repoDir);
+    } catch (thrown) {
+      error = thrown;
+    }
+
+    expect(error).toBeInstanceOf(Error);
+    expect(error instanceof Error ? error.message : String(error)).toContain(
+      "Autopilot requires a clean working tree before it can integrate worker commits.",
+    );
+    expect(error instanceof Error ? error.message : String(error)).toContain("?? stray-new-file.txt");
   });
 
   it("blocks publish-pr when an untracked file is present", () => {
