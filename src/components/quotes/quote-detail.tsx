@@ -610,27 +610,40 @@ export function QuoteDetailView({ id }: { id: string }) {
                 </>
               )}
 
-              {status === "ACCEPTED" && !isConverted && (
+              {status === "ACCEPTED" && (
                 <>
-                  <Link
-                    href={`/quotes/${id}/edit`}
-                    className={buttonVariants({ variant: "outline", size: "sm" })}
-                  >
-                    Edit
-                  </Link>
-                  {quote.paymentDetailsResolved && (
-                    <Button
-                      size="sm"
-                      onClick={handleConvertToInvoice}
-                      disabled={actionState.converting}
+                  {!isConverted && (
+                    <Link
+                      href={`/quotes/${id}/edit`}
+                      className={buttonVariants({ variant: "outline", size: "sm" })}
                     >
-                      {actionState.converting ? "Converting..." : "Convert to Invoice"}
+                      Edit
+                    </Link>
+                  )}
+                  {quote.paymentDetailsResolved ? (
+                    !isConverted && (
+                      <Button
+                        size="sm"
+                        onClick={handleConvertToInvoice}
+                        disabled={actionState.converting}
+                      >
+                        {actionState.converting ? "Converting..." : "Convert to Invoice"}
+                      </Button>
+                    )
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPaymentDialogOpen(true)}
+                      disabled={actionState.resolvingPayment}
+                    >
+                      {actionState.resolvingPayment ? "Saving..." : "Resolve Payment Details"}
                     </Button>
                   )}
                 </>
               )}
 
-              {/* SENT / SUBMITTED: Approve Manually + Convert to Invoice */}
+              {/* SENT / SUBMITTED: approve first; conversion is gated on accepted + payment resolved */}
               {!isConverted && (status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
                 <>
                   <Button
@@ -640,13 +653,6 @@ export function QuoteDetailView({ id }: { id: string }) {
                     disabled={actionState.approving}
                   >
                     {actionState.approving ? "Approving..." : "Approve Manually"}
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={handleConvertToInvoice}
-                    disabled={actionState.converting}
-                  >
-                    {actionState.converting ? "Converting..." : "Convert to Invoice"}
                   </Button>
                 </>
               )}
@@ -824,6 +830,65 @@ export function QuoteDetailView({ id }: { id: string }) {
                 disabled={actionState.approving}
               >
                 {actionState.approving ? "Approving..." : "Approve Quote"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={paymentDialogOpen} onOpenChange={handlePaymentDialogOpenChange}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Resolve Payment Details</DialogTitle>
+              <DialogDescription>
+                {isConverted
+                  ? "Save the payment method for this accepted quote. The linked invoice will be updated too."
+                  : "Save the payment method for this accepted quote so it can be converted to an invoice."}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Payment Method
+                </Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {MANUAL_APPROVAL_PAYMENT_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        setPaymentMethod(opt.value);
+                        if (opt.value !== "ACCOUNT_NUMBER") setPaymentAccountNumber("");
+                      }}
+                      className={`rounded-md border px-3 py-2 text-sm transition-colors ${
+                        paymentMethod === opt.value
+                          ? "border-primary bg-primary/10 font-medium text-primary"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {paymentMethod === "ACCOUNT_NUMBER" && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="resolve-payment-account-number">SAP Account Number</Label>
+                  <Input
+                    id="resolve-payment-account-number"
+                    value={paymentAccountNumber}
+                    onChange={(e) => setPaymentAccountNumber(e.target.value)}
+                    placeholder="Enter SAP account number"
+                  />
+                </div>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleResolvePaymentDetails} disabled={actionState.resolvingPayment}>
+                {actionState.resolvingPayment ? "Saving..." : "Save Payment Details"}
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -356,7 +356,7 @@ describe("POST /api/quotes/public/[token]/respond", () => {
         location: "Campus",
         contactName: "Jane",
         contactPhone: "555-1111",
-        setupRequired: false,
+        setupRequired: true,
         takedownRequired: false,
       }),
     );
