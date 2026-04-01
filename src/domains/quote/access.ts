@@ -88,6 +88,12 @@ export function redactQuoteForViewer<T extends QuoteResponse>(
           createdAt: "",
         }
       : null,
+    convertedToInvoice: quote.convertedToInvoice
+      ? {
+          id: quote.convertedToInvoice.id,
+          invoiceNumber: quote.convertedToInvoice.invoiceNumber,
+        }
+      : null,
     items: quote.items.map((item) => ({
       ...item,
       costPrice: null,

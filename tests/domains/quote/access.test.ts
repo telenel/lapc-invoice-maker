@@ -75,6 +75,12 @@ describe("canViewQuoteDetails", () => {
       paymentMethod: "ACCOUNT_NUMBER",
       paymentAccountNumber: "12345",
       pdfPath: "/tmp/q1.pdf",
+      convertedToInvoice: {
+        id: "inv-1",
+        invoiceNumber: "INV-1",
+        status: "DRAFT",
+        createdBy: "owner-2",
+      },
       contact: {
         id: "c1",
         name: "Vendor",
@@ -121,6 +127,10 @@ describe("canViewQuoteDetails", () => {
     expect(redacted.recipientOrg).toBe("");
     expect(redacted.paymentMethod).toBeNull();
     expect(redacted.paymentAccountNumber).toBeNull();
+    expect(redacted.convertedToInvoice).toEqual({
+      id: "inv-1",
+      invoiceNumber: "INV-1",
+    });
     expect(redacted.contact).toEqual({
       id: "",
       name: "Vendor",
