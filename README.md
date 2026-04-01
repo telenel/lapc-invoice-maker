@@ -6,9 +6,9 @@ Operations portal for **Los Angeles Pierce College**. Handles the full lifecycle
 
 ## Features
 
-- **Invoice creation** with keyboard-first workflow, staff autofill, line items, tax calculation, and approval chains
+- **Invoice creation** with keyboard-first entry, staff autofill, line items, tax calculation, and approval chains
 - **PDF generation** — cover sheets (Puppeteer), IDP forms (pdf-lib), PrismCore merge
-- **Quote management** — create, send, auto-expire, convert to invoice, online sharing with approve/decline workflow
+- **Quote management** — create, send, auto-expire, convert to invoice, online sharing with approve/decline flow
 - **Online quote sharing** — shareable public links, recipient approve/decline, view tracking (IP, browser, duration), real-time SSE notifications
 - **Staff directory** — CRUD with account numbers, signer history tracking
 - **Admin panel** — user management, account codes, invoice manager with inline editing, saved line items catalog, analytics dashboard
@@ -72,11 +72,9 @@ Set `LAPORTAL_ENABLE_APP_CRON=1` only on a single long-lived app instance if you
 
 Docker Compose behind Traefik on [montalvo.io](https://montalvo.io). CI/CD via GitHub Actions — push to main triggers lint, build, test, then webhook deploy.
 
-All changes go through PRs with squash merge. PRs are finalized once created — no further pushes except review follow-up fixes (`CR_FIX=1 git push`). Build version (git SHA) is displayed in the nav bar.
-
 ## Project Documentation
 
-- [docs/PROJECT-OVERVIEW.md](docs/PROJECT-OVERVIEW.md) — Comprehensive architecture, workflows, API reference
+- [docs/PROJECT-OVERVIEW.md](docs/PROJECT-OVERVIEW.md) — Comprehensive architecture and API reference
 - [docs/superpowers/specs/](docs/superpowers/specs/) — Design specifications
 - [docs/superpowers/plans/](docs/superpowers/plans/) — Implementation plans
 
