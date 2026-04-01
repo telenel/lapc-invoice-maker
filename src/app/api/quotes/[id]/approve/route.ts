@@ -1,17 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { withAuth, forbiddenResponse } from "@/domains/shared/auth";
 import { quoteService } from "@/domains/quote/service";
 
-export const POST = withAuth(async (_req: NextRequest, session, ctx) => {
+const approveBodySchema = z.object({
+  paymentMethod: z.string().optional(),
+  accountNumber: z.string().nullable().optional(),
+});
+
+export const POST = withAuth(async (req: NextRequest, session, ctx) => {
   const { id } = await ctx!.params;
+  let body: unknown;
   try {
-    const body = await _req.json().catch(() => ({}));
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
+  const parsedBody = approveBodySchema.safeParse(body);
+  if (!parsedBody.success) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
+  try {
     const existing = await quoteService.getById(id);
     if (!existing) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
     if (session.user.role !== "admin" && existing.creatorId !== session.user.id) {
       return forbiddenResponse();
     }
-    const result = await quoteService.approveManually(id, body);
+    const result = await quoteService.approveManually(id, parsedBody.data);
     return NextResponse.json(result);
   } catch (err) {
     const code = (err as { code?: string }).code;

@@ -53,6 +53,42 @@ describe("POST /api/quotes/[id]/approve", () => {
     });
   });
 
+  it("returns a 400 for malformed manual approval JSON", async () => {
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/q1/approve", {
+        method: "POST",
+        body: "{invalid json",
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ id: "q1" }) },
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "Invalid request body",
+    });
+    expect(quoteService.getById).not.toHaveBeenCalled();
+    expect(quoteService.approveManually).not.toHaveBeenCalled();
+  });
+
+  it("returns a 400 when the manual approval body is not an object", async () => {
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/q1/approve", {
+        method: "POST",
+        body: "null",
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ id: "q1" }) },
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "Invalid request body",
+    });
+    expect(quoteService.getById).not.toHaveBeenCalled();
+    expect(quoteService.approveManually).not.toHaveBeenCalled();
+  });
+
   it("returns a 400 for invalid manual approval payment payloads", async () => {
     vi.mocked(quoteService.approveManually).mockRejectedValue(
       Object.assign(new Error("Invalid payment method"), {
