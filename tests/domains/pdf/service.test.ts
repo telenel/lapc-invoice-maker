@@ -110,7 +110,7 @@ describe("pdfService", () => {
         department: "IT",
         category: "AV",
         accountCode: "AC1",
-        notes: "Please review",
+        notes: "Please check",
         totalAmount: 750,
         marginEnabled: false,
         taxEnabled: false,
