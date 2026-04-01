@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 
 vi.mock("@/domains/quote/service", () => ({
   quoteService: {
-    updateViewDuration: vi.fn(),
+    updateViewDurationForToken: vi.fn(),
   },
 }));
 
@@ -26,7 +26,7 @@ describe("public view duration route", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(quoteService.updateViewDuration).toHaveBeenCalledWith("view-1", 38);
+    expect(quoteService.updateViewDurationForToken).toHaveBeenCalledWith("token", "view-1", 38);
   });
 
   it("continues to accept PATCH requests for compatibility", async () => {
@@ -40,6 +40,24 @@ describe("public view duration route", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(quoteService.updateViewDuration).toHaveBeenCalledWith("view-1", 21);
+    expect(quoteService.updateViewDurationForToken).toHaveBeenCalledWith("token", "view-1", 21);
+  });
+
+  it("returns 404 when the view does not belong to the quote token", async () => {
+    vi.mocked(quoteService.updateViewDurationForToken).mockRejectedValueOnce(
+      Object.assign(new Error("Quote activity session not found"), { code: "INVALID_INPUT" }),
+    );
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/view/view-1", {
+        method: "POST",
+        body: JSON.stringify({ durationSeconds: 12 }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "token", viewId: "view-1" }) },
+    );
+
+    expect(response.status).toBe(404);
+    expect(quoteService.updateViewDurationForToken).toHaveBeenCalledWith("token", "view-1", 12);
   });
 });

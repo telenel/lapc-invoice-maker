@@ -899,6 +899,36 @@ describe("quoteService", () => {
 
   // ── approveManually ────────────────────────────────────────────────────
 
+  describe("updateViewDurationForToken", () => {
+    it("only updates a view when it belongs to the provided quote token", async () => {
+      mockRepo.findByShareToken.mockResolvedValue(makeQuote({ id: "q1", type: "QUOTE" }) as never);
+      const mockPrisma = vi.mocked(prisma, true);
+      mockPrisma.quoteView.findFirst.mockResolvedValue({ id: "view-1" } as never);
+      mockRepo.updateViewDuration.mockResolvedValue(undefined as never);
+
+      await quoteService.updateViewDurationForToken("token", "view-1", 38);
+
+      expect(mockRepo.findByShareToken).toHaveBeenCalledWith("token");
+      expect(mockPrisma.quoteView.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "view-1", invoiceId: "q1" },
+        }),
+      );
+      expect(mockRepo.updateViewDuration).toHaveBeenCalledWith("view-1", 38);
+    });
+
+    it("throws when the view does not belong to the quote token", async () => {
+      mockRepo.findByShareToken.mockResolvedValue(makeQuote({ id: "q1", type: "QUOTE" }) as never);
+      const mockPrisma = vi.mocked(prisma, true);
+      mockPrisma.quoteView.findFirst.mockResolvedValue(null);
+
+      await expect(quoteService.updateViewDurationForToken("token", "view-1", 38)).rejects.toMatchObject({
+        code: "INVALID_INPUT",
+      });
+      expect(mockRepo.updateViewDuration).not.toHaveBeenCalled();
+    });
+  });
+
   describe("approveManually", () => {
     it("stores payment details when approving a quote manually", async () => {
       const quote = makeQuote({
@@ -922,6 +952,53 @@ describe("quoteService", () => {
         expect.objectContaining({
           type: "QUOTE_APPROVED",
           quoteId: "q1",
+        }),
+      );
+    });
+
+    it("syncs payment details to a converted invoice when approving a quote manually", async () => {
+      const quote = makeQuote({
+        quoteStatus: "SENT",
+        expirationDate: new Date("2099-02-15"),
+        convertedToInvoice: { id: "inv1", invoiceNumber: "INV-2026-0001", status: "DRAFT", createdBy: "u1", paymentMethod: null },
+      });
+      mockRepo.findById.mockResolvedValue(quote as never);
+      const mockPrisma = vi.mocked(prisma, true);
+      const tx = {
+        $queryRaw: vi.fn().mockResolvedValue([
+          { id: "inv1", status: "DRAFT", paymentMethod: null },
+        ]),
+        invoice: {
+          update: vi.fn().mockResolvedValue({}),
+        },
+      };
+      mockPrisma.$transaction.mockImplementationOnce(async (callback) => callback(tx as never) as never);
+
+      await quoteService.approveManually("q1", {
+        paymentMethod: "ACCOUNT_NUMBER",
+        accountNumber: "SAP-12345",
+      });
+
+      expect(tx.invoice.update).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          where: { id: "q1" },
+          data: expect.objectContaining({
+            quoteStatus: "ACCEPTED",
+            acceptedAt: expect.any(Date),
+            paymentMethod: "ACCOUNT_NUMBER",
+            paymentAccountNumber: "SAP-12345",
+          }),
+        }),
+      );
+      expect(tx.invoice.update).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          where: { id: "inv1" },
+          data: expect.objectContaining({
+            paymentMethod: "ACCOUNT_NUMBER",
+            paymentAccountNumber: "SAP-12345",
+          }),
         }),
       );
     });

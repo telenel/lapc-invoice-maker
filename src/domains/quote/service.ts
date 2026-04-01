@@ -377,6 +377,26 @@ export const quoteService = {
   },
 
   /**
+   * Update the duration of a page view only when it belongs to the supplied quote token.
+   */
+  async updateViewDurationForToken(token: string, viewId: string, durationSeconds: number): Promise<void> {
+    const quote = await quoteRepository.findByShareToken(token);
+    if (!quote || quote.type !== "QUOTE") {
+      throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
+    }
+
+    const view = await prisma.quoteView.findFirst({
+      where: { id: viewId, invoiceId: quote.id },
+      select: { id: true },
+    });
+    if (!view) {
+      throw Object.assign(new Error("Quote activity session not found"), { code: "INVALID_INPUT" });
+    }
+
+    await quoteRepository.updateViewDuration(viewId, durationSeconds);
+  },
+
+  /**
    * Handle a recipient's response (approve/decline) to a quote.
    */
   async respondToQuote(
@@ -754,21 +774,67 @@ export const quoteService = {
     }
 
     const normalizedPayment = normalizeQuotePaymentDetails(paymentDetails);
-    const updateData: {
-      quoteStatus: "ACCEPTED";
-      acceptedAt: Date;
-      paymentMethod?: string;
-      paymentAccountNumber?: string | null;
-    } = {
-      quoteStatus: "ACCEPTED",
-      acceptedAt: new Date(),
-    };
-    if (normalizedPayment) {
-      updateData.paymentMethod = normalizedPayment.paymentMethod;
-      updateData.paymentAccountNumber = normalizedPayment.paymentAccountNumber;
-    }
+    const acceptedAt = new Date();
+    if (normalizedPayment && quote.convertedToInvoice?.id) {
+      await prisma.$transaction(async (tx) => {
+        const convertedInvoices = await tx.$queryRaw<Array<{
+          id: string;
+          status: string | null;
+          paymentMethod: string | null;
+        }>>`
+          SELECT id, status, payment_method AS "paymentMethod"
+          FROM invoices
+          WHERE converted_from_quote_id = ${quote.id}
+          FOR UPDATE
+        `;
+        const convertedInvoice = convertedInvoices[0];
+        if (!convertedInvoice) {
+          throw Object.assign(new Error("Converted invoice not found"), { code: "NOT_FOUND" });
+        }
+        if (convertedInvoice.status === "FINAL") {
+          throw Object.assign(new Error("Cannot update a finalized invoice"), { code: "FORBIDDEN" });
+        }
+        if (convertedInvoice.paymentMethod) {
+          throw Object.assign(new Error("Payment details have already been provided"), {
+            code: "PAYMENT_ALREADY_RESOLVED",
+          });
+        }
 
-    await quoteRepository.update(quote.id, updateData);
+        await tx.invoice.update({
+          where: { id: quote.id },
+          data: {
+            quoteStatus: "ACCEPTED",
+            acceptedAt,
+            paymentMethod: normalizedPayment.paymentMethod,
+            paymentAccountNumber: normalizedPayment.paymentAccountNumber,
+          },
+        });
+
+        await tx.invoice.update({
+          where: { id: convertedInvoice.id },
+          data: {
+            paymentMethod: normalizedPayment.paymentMethod,
+            paymentAccountNumber: normalizedPayment.paymentAccountNumber,
+          },
+        });
+      });
+    } else {
+      const updateData: {
+        quoteStatus: "ACCEPTED";
+        acceptedAt: Date;
+        paymentMethod?: string;
+        paymentAccountNumber?: string | null;
+      } = {
+        quoteStatus: "ACCEPTED",
+        acceptedAt,
+      };
+      if (normalizedPayment) {
+        updateData.paymentMethod = normalizedPayment.paymentMethod;
+        updateData.paymentAccountNumber = normalizedPayment.paymentAccountNumber;
+      }
+
+      await quoteRepository.update(quote.id, updateData);
+    }
 
     const { notificationService } = await import("@/domains/notification/service");
     await notificationService.createAndPublish({
