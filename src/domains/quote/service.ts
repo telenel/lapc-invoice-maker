@@ -35,12 +35,16 @@ function publicResponseErrorMessage(status: string | null | undefined): string {
 function mergeCateringDetails(
   existing: Prisma.JsonValue | null | undefined,
   next: CateringDetails | Prisma.InputJsonValue | null | undefined
-): Prisma.InputJsonValue | undefined {
+): Prisma.NullableJsonNullValueInput | Prisma.InputJsonValue | undefined {
   if (next === undefined) {
     return existing === null || existing === undefined ? undefined : (existing as Prisma.InputJsonValue);
   }
 
-  if (next === null || typeof next !== "object" || Array.isArray(next)) {
+  if (next === null) {
+    return Prisma.DbNull;
+  }
+
+  if (typeof next !== "object" || Array.isArray(next)) {
     return next;
   }
 
