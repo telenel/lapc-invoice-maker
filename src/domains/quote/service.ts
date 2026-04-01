@@ -787,6 +787,11 @@ export const quoteService = {
       quoteData.paymentAccountNumber = normalizedPayment.paymentAccountNumber;
     }
 
+    const updateInput = quoteData as {
+      date?: string;
+      expirationDate?: string;
+      [key: string]: unknown;
+    };
     const mEnabled = Boolean(quoteData.marginEnabled ?? existing.marginEnabled);
     const mPercent = quoteData.marginPercent != null ? Number(quoteData.marginPercent) : (existing.marginPercent != null ? Number(existing.marginPercent) : undefined);
     const tEnabled = Boolean(quoteData.taxEnabled ?? existing.taxEnabled);
@@ -811,12 +816,12 @@ export const quoteService = {
           }));
       const calculatedItems = calculateLineItems(sourceItems);
       const totalAmount = calculateTotal(calculatedItems, mEnabled, mPercent, tEnabled, tRate);
-      const updated = await quoteRepository.update(id, quoteData, calculatedItems, totalAmount);
+      const updated = await quoteRepository.update(id, updateInput, calculatedItems, totalAmount);
       safePublishAll({ type: "quote-changed" });
       return toQuoteResponse(updated as unknown as NonNullable<QuoteWithRelations>);
     }
 
-    const updated = await quoteRepository.update(id, quoteData);
+    const updated = await quoteRepository.update(id, updateInput);
     safePublishAll({ type: "quote-changed" });
     return toQuoteResponse(updated as unknown as NonNullable<QuoteWithRelations>);
   },
