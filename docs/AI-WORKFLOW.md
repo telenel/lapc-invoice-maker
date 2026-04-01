@@ -14,6 +14,36 @@ When two workflow rules disagree, follow this order:
 4. Fixed prompt files and review wrappers
 5. Plain-text docs, memory, and conversational instructions
 
+## Worktree And Session Briefs
+
+- Worktrees are allowed and may be used when they help isolate changes, reduce churn, or make parallel work easier to manage.
+- Always state which checkout is active: the absolute worktree path, the branch name, and the upstream tracking branch if one exists.
+- If the checkout is a worktree, say so explicitly.
+- Address the primary user as Marcos when giving workflow summaries.
+- Include a short status brief at the start of any session or agent run.
+- Include the same brief before committing, before pushing, and when opening or updating a PR.
+- Include the same brief at the end of the session, plus the result and any next step.
+
+### Required Status Brief
+
+- Active worktree path
+- Current branch
+- Upstream tracking branch or `none`
+- Current PR number, state, and URL or `none`
+- Current workflow step
+- What is about to happen next
+
+### GitHub Workflow At A Glance
+
+1. Start with a status brief.
+2. Make changes in the active checkout or worktree.
+3. Before committing, summarize the checkout, branch, and the intent of the commit.
+4. Run `npm run ship-check`.
+5. Run `npm run review:codex`.
+6. Before pushing, summarize the branch, stamps, and the reason the push is happening.
+7. Use `./scripts/publish-pr.sh` to push and open or update the PR.
+8. After the PR is created, summarize the PR number, state, URL, and any follow-up needed.
+
 ## Required Local Commands
 
 - `npm run ship-check`
