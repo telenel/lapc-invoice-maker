@@ -611,22 +611,26 @@ export function QuoteDetailView({ id }: { id: string }) {
                 </>
               )}
 
-              {status === "ACCEPTED" && !isConverted && (
+              {status === "ACCEPTED" && (
                 <>
-                  <Link
-                    href={`/quotes/${id}/edit`}
-                    className={buttonVariants({ variant: "outline", size: "sm" })}
-                  >
-                    Edit
-                  </Link>
-                  {quote.paymentDetailsResolved ? (
-                    <Button
-                      size="sm"
-                      onClick={handleConvertToInvoice}
-                      disabled={actionState.converting}
+                  {!isConverted && (
+                    <Link
+                      href={`/quotes/${id}/edit`}
+                      className={buttonVariants({ variant: "outline", size: "sm" })}
                     >
-                      {actionState.converting ? "Converting..." : "Convert to Invoice"}
-                    </Button>
+                      Edit
+                    </Link>
+                  )}
+                  {quote.paymentDetailsResolved ? (
+                    !isConverted && (
+                      <Button
+                        size="sm"
+                        onClick={handleConvertToInvoice}
+                        disabled={actionState.converting}
+                      >
+                        {actionState.converting ? "Converting..." : "Convert to Invoice"}
+                      </Button>
+                    )
                   ) : (
                     <Button
                       variant="outline"
@@ -837,7 +841,9 @@ export function QuoteDetailView({ id }: { id: string }) {
             <DialogHeader>
               <DialogTitle>Resolve Payment Details</DialogTitle>
               <DialogDescription>
-                Save the payment method for this accepted quote so it can be converted to an invoice.
+                {isConverted
+                  ? "Save the payment method for this accepted quote. The linked invoice will be updated too."
+                  : "Save the payment method for this accepted quote so it can be converted to an invoice."}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-2">

@@ -162,4 +162,35 @@ describe("QuoteDetailView", () => {
     expect(screen.getByRole("button", { name: "Resolve Payment Details" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Convert to Invoice" })).not.toBeInTheDocument();
   });
+
+  it("still offers payment resolution after a quote has already been converted", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        if (String(input) === "/api/quotes/q1") {
+          return {
+            ok: true,
+            json: async () =>
+              makeQuote({
+                quoteStatus: "ACCEPTED",
+                convertedToInvoice: {
+                  id: "inv1",
+                  invoiceNumber: "INV-1",
+                },
+                paymentDetailsResolved: false,
+              }),
+          } satisfies Partial<Response>;
+        }
+
+        throw new Error(`Unexpected fetch: ${String(input)}`);
+      }),
+    );
+
+    render(<QuoteDetailView id="q1" />);
+
+    await screen.findByText("Q-1");
+    expect(screen.getByRole("button", { name: "Resolve Payment Details" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /View Invoice INV-1/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Convert to Invoice" })).not.toBeInTheDocument();
+  });
 });
