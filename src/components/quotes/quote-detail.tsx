@@ -575,7 +575,7 @@ export function QuoteDetailView({ id }: { id: string }) {
                 </>
               )}
 
-              {/* SENT / SUBMITTED: Approve Manually + Convert to Invoice */}
+              {/* SENT / SUBMITTED: approve first; conversion is gated on accepted + payment resolved */}
               {!isConverted && (status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
                 <>
                   <Button
@@ -585,13 +585,6 @@ export function QuoteDetailView({ id }: { id: string }) {
                     disabled={actionState.approving}
                   >
                     {actionState.approving ? "Approving..." : "Approve Manually"}
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={handleConvertToInvoice}
-                    disabled={actionState.converting}
-                  >
-                    {actionState.converting ? "Converting..." : "Convert to Invoice"}
                   </Button>
                 </>
               )}

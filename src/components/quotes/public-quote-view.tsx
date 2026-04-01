@@ -401,7 +401,7 @@ export function PublicQuoteView({ token }: { token: string }) {
               <TableBody>
                 {quote.items.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell>{item.description}</TableCell>
+                    <TableCell className="uppercase">{item.description}</TableCell>
                     <TableCell className="text-center tabular-nums">{item.quantity}</TableCell>
                     <TableCell className="text-right tabular-nums">{formatAmount(item.unitPrice)}</TableCell>
                     <TableCell className="text-right tabular-nums">{formatAmount(item.extendedPrice)}</TableCell>

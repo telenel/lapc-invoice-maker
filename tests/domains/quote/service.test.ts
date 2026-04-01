@@ -1148,45 +1148,26 @@ describe("quoteService", () => {
       });
     });
 
-    it("marks a converted sent quote as accepted so it leaves the response queue", async () => {
+    it("throws FORBIDDEN for sent quotes so pending quotes cannot bypass payment resolution", async () => {
       const { prisma } = await import("@/lib/prisma");
       const mockPrisma = vi.mocked(prisma, true);
-
-      const newInvoice = { id: "inv1", invoiceNumber: "INV-2026-0001" };
       const tx = {
         $queryRaw: vi.fn().mockResolvedValue([{ id: "q1" }]),
         invoice: {
           findFirst: vi.fn().mockResolvedValue(null),
           findUnique: vi.fn().mockResolvedValue(makeQuote({ quoteStatus: "SENT" })),
-          create: vi.fn().mockResolvedValue(newInvoice),
-          update: vi.fn().mockResolvedValue({}),
+          create: vi.fn(),
+          update: vi.fn(),
         },
       };
       mockPrisma.$transaction.mockImplementationOnce(async (callback) => callback(tx as never) as never);
 
-      const result = await quoteService.convertToInvoice("q1", "u1");
-
-      expect(mockPrisma.$transaction).toHaveBeenCalledOnce();
-      expect(tx.invoice.create).toHaveBeenCalledWith(
-        expect.objectContaining({
-          data: expect.objectContaining({
-            accountNumber: "12345",
-            paymentMethod: null,
-            paymentAccountNumber: null,
-          }),
-        }),
-      );
-      expect(tx.invoice.update).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: { id: "q1" },
-          data: expect.objectContaining({
-            quoteStatus: "ACCEPTED",
-            acceptedAt: expect.any(Date),
-            convertedAt: expect.any(Date),
-          }),
-        }),
-      );
-      expect(result).toEqual(newInvoice);
+      await expect(quoteService.convertToInvoice("q1", "u1")).rejects.toMatchObject({
+        code: "FORBIDDEN",
+        message: "Only accepted quotes can be converted to invoices",
+      });
+      expect(tx.invoice.create).not.toHaveBeenCalled();
+      expect(tx.invoice.update).not.toHaveBeenCalled();
     });
 
     it("allows ACCEPTED quotes to convert when payment details are resolved", async () => {

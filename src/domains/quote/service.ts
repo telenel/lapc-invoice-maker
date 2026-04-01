@@ -998,7 +998,13 @@ export const quoteService = {
           { code: "FORBIDDEN" }
         );
       }
-      if (quote.quoteStatus === "ACCEPTED" && !quote.paymentMethod) {
+      if (quote.quoteStatus !== "ACCEPTED") {
+        throw Object.assign(
+          new Error("Only accepted quotes can be converted to invoices"),
+          { code: "FORBIDDEN" }
+        );
+      }
+      if (!quote.paymentMethod) {
         throw Object.assign(
           new Error("Cannot convert an accepted quote until payment details are resolved"),
           { code: "FORBIDDEN" }

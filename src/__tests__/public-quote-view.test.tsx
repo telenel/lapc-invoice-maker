@@ -205,6 +205,45 @@ describe("PublicQuoteView", () => {
     expect(pushMock).toHaveBeenCalledWith("/quotes/payment/token");
   });
 
+  it("renders public line items with the same uppercase casing treatment as other quote surfaces", async () => {
+    vi.mocked(quoteApi.getPublicQuote).mockResolvedValueOnce({
+      id: "q1",
+      quoteNumber: "Q-1",
+      quoteStatus: "SENT",
+      paymentLinkAvailable: true,
+      date: "2026-03-31T00:00:00.000Z",
+      expirationDate: null,
+      department: "IT",
+      category: "SUPPLIES",
+      notes: "",
+      totalAmount: 10,
+      recipientName: "Jane",
+      recipientEmail: "jane@example.com",
+      recipientOrg: "",
+      staff: null,
+      contact: null,
+      items: [
+        {
+          id: "i1",
+          description: "Mixed Case Widget",
+          quantity: 1,
+          unitPrice: 10,
+          extendedPrice: 10,
+          sortOrder: 0,
+          isTaxable: true,
+        },
+      ],
+      isCateringEvent: false,
+      cateringDetails: null,
+      paymentDetailsResolved: false,
+    } as never);
+
+    render(<PublicQuoteView token="token" />);
+
+    const cell = await screen.findByText("Mixed Case Widget");
+    expect(cell).toHaveClass("uppercase");
+  });
+
   it("does not show the payment CTA when public payment collection is closed", async () => {
     vi.mocked(quoteApi.getPublicQuote).mockResolvedValueOnce({
       id: "q1",
