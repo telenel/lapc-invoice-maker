@@ -563,6 +563,9 @@ describe("quoteService", () => {
         invoice: {
           update: vi.fn(),
         },
+        quoteFollowUp: {
+          create: vi.fn(),
+        },
         quoteView: {
           findFirst: vi.fn(),
           update: vi.fn(),
@@ -651,6 +654,9 @@ describe("quoteService", () => {
           }]),
         invoice: {
           update: vi.fn(),
+        },
+        quoteFollowUp: {
+          create: vi.fn(),
         },
         quoteView: {
           findFirst: vi.fn(),
@@ -1527,6 +1533,9 @@ describe("quoteService", () => {
         ]),
         invoice: {
           update: vi.fn().mockResolvedValue({}),
+        },
+        quoteFollowUp: {
+          create: vi.fn(),
         },
       };
       mockPrisma.$transaction.mockImplementationOnce(async (callback) => callback(tx as never) as never);
