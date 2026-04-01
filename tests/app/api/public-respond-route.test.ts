@@ -21,6 +21,22 @@ describe("POST /api/quotes/public/[token]/respond", () => {
     } as never);
   });
 
+  it("returns 400 when the JSON body is null", async () => {
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/respond", {
+        method: "POST",
+        body: "null",
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "Invalid request body" });
+    expect(quoteService.getByShareToken).not.toHaveBeenCalled();
+    expect(quoteService.respondToQuote).not.toHaveBeenCalled();
+  });
+
   it("does not persist catering details when payment validation fails", async () => {
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",

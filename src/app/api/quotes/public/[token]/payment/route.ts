@@ -7,6 +7,9 @@ type RouteContext = { params: Promise<{ token: string }> };
 export async function POST(req: NextRequest, ctx: RouteContext) {
   const { token } = await ctx.params;
   const body = await req.json().catch(() => ({}));
+  if (body === null) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
 
   try {
     const existing = await quoteService.getByShareToken(token);
