@@ -569,6 +569,8 @@ describe("quoteService", () => {
           cateringDetails: {
             setupInstructions: "stale quote setup",
             takedownInstructions: "stale quote takedown",
+            setupTime: "stale quote setup time",
+            takedownTime: "stale quote takedown time",
           },
           convertedToInvoice: { id: "inv1", invoiceNumber: "INV-2026-0001" },
         }) as never,
@@ -582,6 +584,8 @@ describe("quoteService", () => {
             cateringDetails: {
               setupInstructions: "locked quote setup",
               takedownInstructions: "locked quote takedown",
+              setupTime: "locked quote setup time",
+              takedownTime: "locked quote takedown time",
             },
           }])
           .mockResolvedValueOnce([{
@@ -591,6 +595,8 @@ describe("quoteService", () => {
             cateringDetails: {
               setupInstructions: "locked invoice setup",
               takedownInstructions: "locked invoice takedown",
+              setupTime: "locked invoice setup time",
+              takedownTime: "locked invoice takedown time",
             },
           }]),
         invoice: {
@@ -616,8 +622,10 @@ describe("quoteService", () => {
           contactName: "Jane",
           contactPhone: "555-1111",
           setupRequired: false,
+          setupTime: null,
           takedownRequired: false,
-        },
+          takedownTime: null,
+        } as never,
       );
 
       expect(tx.invoice.update).toHaveBeenNthCalledWith(1, {
@@ -638,6 +646,12 @@ describe("quoteService", () => {
           }),
         }),
       });
+      const firstUpdate = tx.invoice.update.mock.calls[0]?.[0] as { data?: { cateringDetails?: Record<string, unknown> } } | undefined;
+      const secondUpdate = tx.invoice.update.mock.calls[1]?.[0] as { data?: { cateringDetails?: Record<string, unknown> } } | undefined;
+      expect(firstUpdate?.data?.cateringDetails).not.toHaveProperty("setupTime");
+      expect(firstUpdate?.data?.cateringDetails).not.toHaveProperty("takedownTime");
+      expect(secondUpdate?.data?.cateringDetails).not.toHaveProperty("setupTime");
+      expect(secondUpdate?.data?.cateringDetails).not.toHaveProperty("takedownTime");
     });
 
     it("preserves existing catering metadata when accepting a catering quote with a converted invoice", async () => {
@@ -1220,9 +1234,9 @@ describe("quoteService", () => {
       mockRepo.findById.mockResolvedValue(quote as never);
       const mockPrisma = vi.mocked(prisma, true);
       const tx = {
-        $queryRaw: vi.fn().mockResolvedValue([
-          { id: "inv1", status: "DRAFT", paymentMethod: null },
-        ]),
+        $queryRaw: vi.fn()
+          .mockResolvedValueOnce([{ id: "q1", quoteStatus: "SENT", paymentMethod: null }])
+          .mockResolvedValueOnce([{ id: "inv1", status: "DRAFT", paymentMethod: null }]),
         invoice: {
           update: vi.fn().mockResolvedValue({}),
         },
@@ -1234,6 +1248,11 @@ describe("quoteService", () => {
         accountNumber: "SAP-12345",
       });
 
+      expect(tx.$queryRaw).toHaveBeenCalledTimes(2);
+      expect((tx.$queryRaw.mock.calls[0]?.[0] as TemplateStringsArray).join(" ")).toContain("WHERE id =");
+      expect((tx.$queryRaw.mock.calls[1]?.[0] as TemplateStringsArray).join(" ")).toContain(
+        "converted_from_quote_id",
+      );
       expect(tx.invoice.update).toHaveBeenNthCalledWith(
         1,
         expect.objectContaining({

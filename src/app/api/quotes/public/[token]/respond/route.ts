@@ -119,14 +119,14 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
             ? { headcount: existingCateringDetails.headcount }
             : {}),
         ...(parsed.data.setupRequired === false
-          ? {}
+          ? { setupTime: null }
           : parsed.data.setupTime !== undefined
             ? { setupTime: parsed.data.setupTime }
             : existingCateringDetails?.setupTime !== undefined
               ? { setupTime: existingCateringDetails.setupTime }
               : {}),
         ...(parsed.data.takedownRequired === false
-          ? {}
+          ? { takedownTime: null }
           : parsed.data.takedownTime !== undefined
             ? { takedownTime: parsed.data.takedownTime }
             : existingCateringDetails?.takedownTime !== undefined

@@ -50,11 +50,18 @@ function mergeCateringDetails(
 
   const existingObject =
     existing && typeof existing === "object" && !Array.isArray(existing) ? (existing as Record<string, unknown>) : {};
+  const merged = { ...existingObject };
 
-  return {
-    ...existingObject,
-    ...(next as Record<string, unknown>),
-  } as Prisma.InputJsonValue;
+  for (const [key, value] of Object.entries(next as Record<string, unknown>)) {
+    if (value === null) {
+      delete merged[key];
+      continue;
+    }
+
+    merged[key] = value;
+  }
+
+  return merged as Prisma.InputJsonValue;
 }
 
 export function isPublicPaymentLinkAvailable(
@@ -876,6 +883,39 @@ export const quoteService = {
     let updatedConvertedInvoice = false;
     if (normalizedPayment && quote.convertedToInvoice?.id) {
       await prisma.$transaction(async (tx) => {
+        const lockedQuotes = await tx.$queryRaw<Array<{
+          id: string;
+          quoteStatus: string | null;
+          paymentMethod: string | null;
+        }>>`
+          SELECT
+            id,
+            quote_status AS "quoteStatus",
+            payment_method AS "paymentMethod"
+          FROM invoices
+          WHERE id = ${quote.id}
+          FOR UPDATE
+        `;
+        const lockedQuote = lockedQuotes[0];
+        if (!lockedQuote) {
+          throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
+        }
+        if (!["SENT", "SUBMITTED_EMAIL", "SUBMITTED_MANUAL"].includes(lockedQuote.quoteStatus ?? "")) {
+          throw Object.assign(
+            new Error(
+              lockedQuote.quoteStatus === "ACCEPTED" || lockedQuote.quoteStatus === "DECLINED" || lockedQuote.quoteStatus === "REVISED"
+                ? "This quote has already been responded to"
+                : "This quote is not in a state that can be approved"
+            ),
+            { code: "FORBIDDEN" }
+          );
+        }
+        if (lockedQuote.paymentMethod) {
+          throw Object.assign(new Error("Payment details have already been provided"), {
+            code: "PAYMENT_ALREADY_RESOLVED",
+          });
+        }
+
         const convertedInvoices = await tx.$queryRaw<Array<{
           id: string;
           status: string | null;
@@ -902,8 +942,8 @@ export const quoteService = {
         await tx.invoice.update({
           where: { id: quote.id },
           data: {
-            quoteStatus: "ACCEPTED",
             acceptedAt,
+            quoteStatus: "ACCEPTED",
             paymentMethod: normalizedPayment.paymentMethod,
             paymentAccountNumber: normalizedPayment.paymentAccountNumber,
           },
