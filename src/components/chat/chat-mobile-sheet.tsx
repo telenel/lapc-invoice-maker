@@ -3,7 +3,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useChat, Chat, type UIMessage } from "@ai-sdk/react";
+import { useChat } from "@ai-sdk/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MessageSquareIcon,
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ChatMessage } from "./chat-message";
 import { ChatInput } from "./chat-input";
+import { clearChatInstance, getChatInstance } from "./chat-instance";
 
 const QUICK_ACTIONS = [
   { label: "Show pending invoices", text: "Show my pending invoices" },
@@ -21,23 +22,12 @@ const QUICK_ACTIONS = [
   { label: "Create a quote", text: "Help me create a new quote" },
 ] as const;
 
-// Per-user Chat instances — shared with desktop sidebar via same key pattern
-const chatInstances = new Map<string, Chat<UIMessage>>();
-function getChatInstance(userId: string): Chat<UIMessage> {
-  let instance = chatInstances.get(userId);
-  if (!instance) {
-    instance = new Chat<UIMessage>({ id: `laportal-chat-${userId}` });
-    chatInstances.set(userId, instance);
-  }
-  return instance;
-}
-
 interface ChatMobileSheetProps {
   onClose: () => void;
 }
 
 export function ChatMobileSheet({ onClose }: ChatMobileSheetProps) {
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -101,9 +91,13 @@ export function ChatMobileSheet({ onClose }: ChatMobileSheetProps) {
   );
 
   const handleClear = useCallback(() => {
-    chatInstances.delete(sessionUserId);
+    clearChatInstance(sessionUserId);
     setMessages([]);
   }, [setMessages, sessionUserId]);
+
+  if (sessionStatus !== "authenticated" || !session?.user) {
+    return null;
+  }
 
   return (
     <AnimatePresence>

@@ -1,12 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { MessageCircleIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { ChatMobileSheet } from "./chat-mobile-sheet";
 
 export function ChatMobileLauncher() {
+  const { data: session, status } = useSession();
   const [open, setOpen] = useState(false);
+
+  if (status !== "authenticated" || !session?.user) {
+    return null;
+  }
 
   return (
     <>
