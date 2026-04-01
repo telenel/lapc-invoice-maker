@@ -759,6 +759,9 @@ describe("quoteService", () => {
         invoice: {
           update: vi.fn(),
         },
+        quoteFollowUp: {
+          create: vi.fn(),
+        },
         quoteView: {
           findFirst: vi.fn(),
           update: vi.fn(),
