@@ -107,6 +107,56 @@ describe("PublicQuoteView", () => {
     });
   });
 
+  it("waits for public view registration before submitting an approval", async () => {
+    vi.mocked(quoteApi.getPublicQuote).mockResolvedValueOnce({
+      id: "q1",
+      quoteNumber: "Q-1",
+      quoteStatus: "SENT",
+      paymentLinkAvailable: true,
+      date: "2026-03-31T00:00:00.000Z",
+      expirationDate: null,
+      department: "IT",
+      category: "SUPPLIES",
+      notes: "",
+      totalAmount: 10,
+      recipientName: "Jane",
+      recipientEmail: "jane@example.com",
+      recipientOrg: "",
+      staff: null,
+      contact: null,
+      items: [],
+      isCateringEvent: false,
+      cateringDetails: null,
+      paymentDetailsResolved: false,
+    } as never);
+
+    let resolveRegistration!: (value: { viewId: string }) => void;
+    const registrationPromise = new Promise<{ viewId: string }>((resolve) => {
+      resolveRegistration = resolve;
+    });
+    vi.mocked(quoteApi.registerPublicView).mockReturnValue(registrationPromise as never);
+
+    const user = userEvent.setup();
+    render(<PublicQuoteView token="token" />);
+
+    await screen.findByText("Approve Quote");
+    await user.click(screen.getByRole("button", { name: "Approve Quote" }));
+
+    expect(quoteApi.respondToPublicQuote).not.toHaveBeenCalled();
+
+    resolveRegistration({ viewId: "view-1" });
+
+    await waitFor(() => {
+      expect(quoteApi.respondToPublicQuote).toHaveBeenCalledWith(
+        "token",
+        expect.objectContaining({
+          response: "ACCEPTED",
+          viewId: "view-1",
+        }),
+      );
+    });
+  });
+
   it("disables approval when setup is requested without a setup time", async () => {
     const user = userEvent.setup();
     render(<PublicQuoteView token="token" />);
