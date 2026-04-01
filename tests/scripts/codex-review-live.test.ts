@@ -2,6 +2,7 @@ import {
   normalizeFindingText,
   parseReviewArgs,
 } from "../../scripts/codex-review-live.mjs";
+import { parseReviewOutput } from "../../scripts/codex-review-artifact.mjs";
 
 describe("codex review live helper", () => {
   it("normalizes live finding lines into queue payload text", () => {
@@ -33,5 +34,18 @@ describe("codex review live helper", () => {
       focusPaths: ["src/domains/quote/service.ts"],
       json: true,
     });
+  });
+
+  it("treats final parsed findings as plain strings", () => {
+    const parsed = parseReviewOutput(`RESULT: FAIL
+SUMMARY: one issue
+SCOPE:
+- src/domains/quote/service.ts
+FINDINGS:
+- src/domains/quote/service.ts still breaks approval.`);
+
+    expect(parsed.findings).toEqual([
+      "src/domains/quote/service.ts still breaks approval.",
+    ]);
   });
 });

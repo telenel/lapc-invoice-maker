@@ -30,6 +30,14 @@ describe("codex review autopilot helper", () => {
     ).toBe("a\n---\nb");
   });
 
+  it("tolerates malformed findings when building a batch signature", () => {
+    expect(
+      batchSignature({
+        findings: [{}, { text: "a" }],
+      }),
+    ).toBe("\n---\na");
+  });
+
   it("defers live worker batches until they have gone quiet", () => {
     const recentBatch = {
       id: "B1",

@@ -257,16 +257,16 @@ async function main() {
   }
 
   if (finalParsed?.findings?.length) {
-    for (const finding of finalParsed.findings) {
-      const text = finding.text.trim();
+    for (const [index, finding] of finalParsed.findings.entries()) {
+      const text = String(finding ?? "").trim();
       if (!text || seenFindings.has(text)) {
         continue;
       }
       seenFindings.add(text);
       const findingCreatedAt = new Date().toISOString();
       liveFindings.push({
-        id: finding.id,
-        status: finding.status ?? "unresolved",
+        id: `F${index + 1}`,
+        status: "unresolved",
         text,
         createdAt: findingCreatedAt,
         source: "final",
@@ -276,7 +276,7 @@ async function main() {
         type: "final-finding",
         headSha: headShaValue,
         createdAt: findingCreatedAt,
-        id: finding.id,
+        id: `F${index + 1}`,
         text,
       });
     }

@@ -87,7 +87,7 @@ function safeJsonRead(filePath) {
 
 export function batchSignature(batch) {
   return batch.findings
-    .map((finding) => finding.text.trim())
+    .map((finding) => String(finding.text ?? "").trim())
     .sort()
     .join("\n---\n");
 }
