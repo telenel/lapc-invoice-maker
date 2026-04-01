@@ -671,6 +671,47 @@ describe("quoteService", () => {
       expect(tx.invoice.update).not.toHaveBeenCalled();
     });
 
+    it("rejects a quote that expires after the initial guard but before the locked check", async () => {
+      mockRepo.findByShareToken.mockResolvedValue(
+        makeQuote({
+          quoteStatus: "SENT",
+          expirationDate: new Date("2099-02-15"),
+        }) as never,
+      );
+      const tx = {
+        $queryRaw: vi.fn().mockResolvedValueOnce([
+          {
+            id: "q1",
+            quoteStatus: "SENT",
+            paymentMethod: null,
+            expirationDate: new Date("2026-03-01"),
+            cateringDetails: null,
+          },
+        ]),
+        invoice: {
+          update: vi.fn(),
+        },
+        quoteView: {
+          findFirst: vi.fn(),
+          update: vi.fn(),
+        },
+      };
+      vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => callback(tx as never) as never);
+
+      await expect(
+        quoteService.respondToQuote(
+          "token",
+          "ACCEPTED",
+        ),
+      ).rejects.toMatchObject({
+        code: "FORBIDDEN",
+        message: "This quote has expired",
+      });
+
+      expect(mockRepo.update).toHaveBeenCalledWith("q1", { quoteStatus: "EXPIRED" });
+      expect(tx.invoice.update).not.toHaveBeenCalled();
+    });
+
     it("rejects catering details for non-catering quotes", async () => {
       mockRepo.findByShareToken.mockResolvedValue(
         makeQuote({

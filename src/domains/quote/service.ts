@@ -442,14 +442,20 @@ export const quoteService = {
       }
     }
 
-    const responseResult = await prisma.$transaction(async (tx) => {
+    const responseResult = await prisma.$transaction(async (tx): Promise<{ expired: boolean; updatedConvertedInvoice: boolean }> => {
       const lockedQuotes = await tx.$queryRaw<Array<{
         id: string;
         quoteStatus: string | null;
         paymentMethod: string | null;
+        expirationDate: Date | null;
         cateringDetails: Prisma.JsonValue | null;
       }>>`
-        SELECT id, quote_status AS "quoteStatus", payment_method AS "paymentMethod", catering_details AS "cateringDetails"
+        SELECT
+          id,
+          quote_status AS "quoteStatus",
+          payment_method AS "paymentMethod",
+          expiration_date AS "expirationDate",
+          catering_details AS "cateringDetails"
         FROM invoices
         WHERE id = ${quote.id}
         FOR UPDATE
@@ -462,6 +468,9 @@ export const quoteService = {
         throw Object.assign(new Error(publicResponseErrorMessage(lockedQuote.quoteStatus)), {
           code: "FORBIDDEN",
         });
+      }
+      if (lockedQuote.expirationDate && new Date(lockedQuote.expirationDate) < new Date()) {
+        return { expired: true, updatedConvertedInvoice: false };
       }
       const lockedQuoteCateringDetails = lockedQuote.cateringDetails as CateringDetails | null;
       const convertedInvoices = await tx.$queryRaw<Array<{
@@ -560,8 +569,14 @@ export const quoteService = {
         });
       }
 
-      return { updatedConvertedInvoice };
+      return { expired: false, updatedConvertedInvoice };
     });
+
+    if (responseResult.expired) {
+      await quoteRepository.update(quote.id, { quoteStatus: "EXPIRED" });
+      safePublishAll({ type: "quote-changed" });
+      throw Object.assign(new Error("This quote has expired"), { code: "FORBIDDEN" });
+    }
 
     const notifType = response === "ACCEPTED" ? "QUOTE_APPROVED" : "QUOTE_DECLINED";
     const verb = response === "ACCEPTED" ? "approved" : "declined";
