@@ -5,6 +5,7 @@ repo_root=$(git rev-parse --show-toplevel)
 git_dir=$(git rev-parse --git-dir)
 stamp_dir="$git_dir/laportal"
 stamp_file="$stamp_dir/ship-check.env"
+codex_review_file="$stamp_dir/codex-review.env"
 
 cd "$repo_root"
 
@@ -18,6 +19,20 @@ fi
 
 head_sha=$(git rev-parse HEAD)
 timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+echo "==> Validating HEAD $head_sha"
+if [ -f "$codex_review_file" ]; then
+  # shellcheck disable=SC1090
+  . "$codex_review_file"
+
+  if [ "${CODEX_REVIEW_HEAD:-}" = "$head_sha" ]; then
+    echo "==> Codex review stamp: fresh ${CODEX_REVIEW_RESULT:-UNKNOWN} (${CODEX_REVIEW_CREATED_AT:-unknown})"
+  else
+    echo "==> Codex review stamp: stale ${CODEX_REVIEW_RESULT:-UNKNOWN} for ${CODEX_REVIEW_HEAD:-unknown} (${CODEX_REVIEW_CREATED_AT:-unknown})"
+  fi
+else
+  echo "==> Codex review stamp: none"
+fi
 
 echo "==> git status"
 git status --short --branch

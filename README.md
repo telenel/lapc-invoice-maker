@@ -44,7 +44,10 @@ npm install              # Install dependencies + configure git hooks
 npx prisma generate      # Generate Prisma client
 npm run dev              # Start dev server (localhost:3000)
 npm run ship-check       # git status + lint + test + build + stamp current HEAD
-npm run review:codex     # Local Codex review against main with a fixed prompt; always returns the full report
+npm run review:codex     # Local Codex review against main; writes text + JSON artifacts and stamps current HEAD
+npm run review:codex:json  # Same review, but prints the structured JSON artifact to stdout
+npm run review:codex -- --focus src/domains/quote/service.ts  # Review only matching changed paths
+npm run review:codex:findings  # Print unresolved findings from the latest Codex artifact
 npm test                 # Run tests (350 tests)
 npm run build            # Production build
 ```
@@ -77,6 +80,8 @@ Local AI workflow is hard-coded through tracked scripts and hooks:
 - `npm run ship-check`
 - `npm run review:codex`
 - `./scripts/publish-pr.sh`
+
+`npm run review:codex` always keeps the latest text report at `.git/laportal/codex-review.txt`, the latest structured artifact at `.git/laportal/codex-review.json`, and a rolling history of the last 20 review runs in `.git/laportal/review-history/`.
 
 ## Project Documentation
 

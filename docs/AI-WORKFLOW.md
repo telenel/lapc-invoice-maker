@@ -52,6 +52,8 @@ These are the hard-coded workflow entrypoints. Do not replace them with ad hoc c
 ### `npm run ship-check`
 
 - Requires a clean working tree.
+- Prints the exact `HEAD` commit being validated before lint, test, and build.
+- Prints whether a fresh local Codex review stamp already exists for that `HEAD`.
 - Runs `git status`, `npm run lint`, `npm test`, and `npm run build`.
 - Records a stamp for the exact `HEAD` commit inside `.git/laportal/`.
 
@@ -59,8 +61,19 @@ These are the hard-coded workflow entrypoints. Do not replace them with ad hoc c
 
 - Requires a clean working tree.
 - Runs local Codex review against the current branch diff relative to `main` by default.
+- Supports `--base-ref <ref>` and `--focus <path>` to narrow the in-scope diff without leaving diff-relative review mode.
+- Supports `npm run review:codex:json` or `npm run review:codex -- --json` to print the structured artifact.
 - Records a PASS/FAIL stamp for the exact `HEAD` commit inside `.git/laportal/`.
+- Writes the latest text report to `.git/laportal/codex-review.txt`.
+- Writes the latest structured artifact to `.git/laportal/codex-review.json`.
+- Keeps a rolling history of the last 20 review runs in `.git/laportal/review-history/`, plus `latest.txt` and `latest.json` pointers there.
 - Always completes the review and writes the stamp; a FAIL result does not abort the command.
+- The review output includes a scope summary of files/functions/areas inspected, and the prompt is expected to review the entire in-scope diff before deciding.
+
+### `npm run review:codex:findings`
+
+- Reads the latest structured artifact from `.git/laportal/codex-review.json`.
+- Prints only the latest unresolved actionable findings for quick follow-up work.
 
 ### `hooks/pre-push`
 

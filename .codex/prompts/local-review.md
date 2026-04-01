@@ -13,7 +13,10 @@ Prioritize:
 - risky auth, data, PDF, calendar, email, and deployment changes
 - missing validation and error handling
 - missing or weak test coverage for changed behavior
-- review the entire diff before deciding, and include every concrete issue you find in one response
+- review the entire in-scope diff before deciding
+- collect every concrete issue you find and report them in one response
+- lead with the strongest blocker, then list any secondary issues
+- do not stop after the first issue
 
 Repo-specific rules:
 - Route handlers should call domain services, not repositories directly.
@@ -28,13 +31,17 @@ Return EXACTLY this format:
 
 RESULT: PASS|FAIL
 SUMMARY: one short sentence
+SCOPE:
+- concise bullet naming the concrete files/functions/areas you actually inspected
 FINDINGS:
 - none
 
 Rules for output:
 - Use `RESULT: PASS` only if you found no meaningful issues.
 - Use `RESULT: FAIL` if you found one or more concrete issues worth reporting.
-- Do not stop after the first issue; finish reviewing the whole diff and report all concrete issues together.
+- Finish reviewing the whole in-scope diff before writing the response.
+- Report every concrete issue you find in one response, strongest blocker first.
 - Keep findings concise and specific.
 - Reference files and functions when possible.
+- The `SCOPE` section must reflect what you actually inspected for this run.
 - If PASS, the findings list must be exactly `- none`.

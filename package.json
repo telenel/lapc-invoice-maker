@@ -11,6 +11,8 @@
     "test:watch": "vitest",
     "ship-check": "./scripts/ship-check.sh",
     "review:codex": "./scripts/codex-review-local.sh",
+    "review:codex:json": "./scripts/codex-review-local.sh --json",
+    "review:codex:findings": "node ./scripts/codex-review-artifact.mjs print-findings",
     "publish:pr": "./scripts/publish-pr.sh",
     "postinstall": "node ./scripts/postinstall.js"
   },
