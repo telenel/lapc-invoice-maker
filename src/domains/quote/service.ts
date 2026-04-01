@@ -844,6 +844,7 @@ export const quoteService = {
 
     const normalizedPayment = normalizeQuotePaymentDetails(paymentDetails);
     const acceptedAt = new Date();
+    let updatedConvertedInvoice = false;
     if (normalizedPayment && quote.convertedToInvoice?.id) {
       await prisma.$transaction(async (tx) => {
         const convertedInvoices = await tx.$queryRaw<Array<{
@@ -886,6 +887,7 @@ export const quoteService = {
             paymentAccountNumber: normalizedPayment.paymentAccountNumber,
           },
         });
+        updatedConvertedInvoice = true;
       });
     } else {
       const updateData: {
@@ -905,14 +907,19 @@ export const quoteService = {
       await quoteRepository.update(quote.id, updateData);
     }
 
-    const { notificationService } = await import("@/domains/notification/service");
-    await notificationService.createAndPublish({
-      userId: quote.createdBy,
-      type: "QUOTE_APPROVED",
-      title: `${quote.quoteNumber ?? "Quote"} was manually approved`,
-      message: "Approved manually by staff",
-      quoteId: quote.id,
-    });
+    // Notification is non-critical — don't fail the response if it cannot be delivered.
+    try {
+      const { notificationService } = await import("@/domains/notification/service");
+      await notificationService.createAndPublish({
+        userId: quote.createdBy,
+        type: "QUOTE_APPROVED",
+        title: `${quote.quoteNumber ?? "Quote"} was manually approved`,
+        message: "Approved manually by staff",
+        quoteId: quote.id,
+      });
+    } catch (err) {
+      console.error("[approveManually] notification failed:", err);
+    }
 
     // Send email notification to bookstore (non-critical)
     try {
@@ -929,6 +936,9 @@ export const quoteService = {
     }
 
     safePublishAll({ type: "quote-changed" });
+    if (updatedConvertedInvoice) {
+      safePublishAll({ type: "invoice-changed" });
+    }
 
     return { success: true, status: "ACCEPTED" };
   },

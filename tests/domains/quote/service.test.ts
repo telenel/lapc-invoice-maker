@@ -1133,6 +1133,37 @@ describe("quoteService", () => {
           }),
         }),
       );
+      expect(safePublishAll).toHaveBeenCalledWith({ type: "quote-changed" });
+      expect(safePublishAll).toHaveBeenCalledWith({ type: "invoice-changed" });
+    });
+
+    it("does not fail manual approval when notification publishing is unavailable", async () => {
+      const quote = makeQuote({
+        quoteStatus: "SENT",
+        expirationDate: new Date("2099-02-15"),
+      });
+      mockRepo.findById.mockResolvedValue(quote as never);
+      mockRepo.update.mockResolvedValue({ ...quote, quoteStatus: "ACCEPTED" } as never);
+      vi.mocked(notificationService.createAndPublish).mockRejectedValueOnce(new Error("notification down"));
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+      await expect(
+        quoteService.approveManually("q1", {
+          paymentMethod: "CHECK",
+        }),
+      ).resolves.toEqual({ success: true, status: "ACCEPTED" });
+
+      expect(mockRepo.update).toHaveBeenCalledWith("q1", {
+        quoteStatus: "ACCEPTED",
+        acceptedAt: expect.any(Date),
+        paymentMethod: "CHECK",
+        paymentAccountNumber: null,
+      });
+      expect(safePublishAll).toHaveBeenCalledWith({ type: "quote-changed" });
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "[approveManually] notification failed:",
+        expect.any(Error),
+      );
     });
   });
 
