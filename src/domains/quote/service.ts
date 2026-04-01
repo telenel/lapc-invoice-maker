@@ -32,6 +32,27 @@ function publicResponseErrorMessage(status: string | null | undefined): string {
     : "This quote is no longer available";
 }
 
+function mergeCateringDetails(
+  existing: Prisma.JsonValue | null | undefined,
+  next: Prisma.InputJsonValue | undefined
+): Prisma.InputJsonValue | undefined {
+  if (next === undefined) {
+    return existing === null || existing === undefined ? undefined : (existing as Prisma.InputJsonValue);
+  }
+
+  if (next === null || typeof next !== "object" || Array.isArray(next)) {
+    return next;
+  }
+
+  const existingObject =
+    existing && typeof existing === "object" && !Array.isArray(existing) ? (existing as Record<string, unknown>) : {};
+
+  return {
+    ...existingObject,
+    ...(next as Record<string, unknown>),
+  };
+}
+
 export function isPublicPaymentLinkAvailable(
   quote: Pick<QuoteResponse, "quoteStatus" | "convertedToInvoice">
 ): boolean {
@@ -526,11 +547,7 @@ export const quoteService = {
           quoteData.paymentAccountNumber = normalizedPayment.paymentAccountNumber;
         }
         if (normalizedCateringDetails !== undefined) {
-          quoteData.cateringDetails = {
-            ...(normalizedCateringDetails as Record<string, unknown>),
-            setupInstructions: lockedQuoteCateringDetails?.setupInstructions ?? undefined,
-            takedownInstructions: lockedQuoteCateringDetails?.takedownInstructions ?? undefined,
-          };
+          quoteData.cateringDetails = mergeCateringDetails(lockedQuoteCateringDetails, normalizedCateringDetails);
         }
       }
 
@@ -558,11 +575,10 @@ export const quoteService = {
             convertedInvoiceData.paymentAccountNumber = normalizedPayment.paymentAccountNumber;
           }
           if (normalizedCateringDetails !== undefined) {
-            convertedInvoiceData.cateringDetails = {
-              ...(normalizedCateringDetails as Record<string, unknown>),
-              setupInstructions: convertedInvoiceCateringDetails?.setupInstructions ?? undefined,
-              takedownInstructions: convertedInvoiceCateringDetails?.takedownInstructions ?? undefined,
-            };
+            convertedInvoiceData.cateringDetails = mergeCateringDetails(
+              convertedInvoiceCateringDetails,
+              normalizedCateringDetails
+            );
           }
           if (Object.keys(convertedInvoiceData).length > 0) {
             await tx.invoice.update({
@@ -732,8 +748,12 @@ export const quoteService = {
     }
 
     const { items, paymentMethod, paymentAccountNumber, ...rest } = input;
-    const quoteData: UpdateQuoteInput = { ...rest };
+    const quoteData: UpdateQuoteInput & { acceptedAt?: Date } = { ...rest };
     const paymentFieldsProvided = paymentMethod !== undefined || paymentAccountNumber !== undefined;
+
+    if (quoteData.quoteStatus === "ACCEPTED" && existing.acceptedAt == null) {
+      quoteData.acceptedAt = new Date();
+    }
 
     if (paymentFieldsProvided) {
       if (existing.quoteStatus !== "ACCEPTED") {

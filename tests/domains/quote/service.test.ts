@@ -640,6 +640,113 @@ describe("quoteService", () => {
       });
     });
 
+    it("preserves existing catering metadata when accepting a catering quote with a converted invoice", async () => {
+      mockRepo.findByShareToken.mockResolvedValue(
+        makeQuote({
+          quoteStatus: "SENT",
+          expirationDate: new Date("2099-02-15"),
+          isCateringEvent: true,
+          cateringDetails: {
+            eventName: "Quote Event",
+            contactEmail: "quote@example.com",
+            headcount: 80,
+            setupInstructions: "Quote setup",
+            takedownInstructions: "Quote takedown",
+          },
+          convertedToInvoice: { id: "inv1", invoiceNumber: "INV-2026-0001" },
+        }) as never,
+      );
+      const tx = {
+        $queryRaw: vi.fn()
+          .mockResolvedValueOnce([
+            {
+              id: "q1",
+              quoteStatus: "SENT",
+              paymentMethod: null,
+              cateringDetails: {
+                eventName: "Quote Event",
+                contactEmail: "quote@example.com",
+                headcount: 80,
+                setupInstructions: "Quote setup",
+                takedownInstructions: "Quote takedown",
+              },
+            },
+          ])
+          .mockResolvedValueOnce([
+            {
+              id: "inv1",
+              status: "DRAFT",
+              paymentMethod: null,
+              cateringDetails: {
+                eventName: "Invoice Event",
+                contactEmail: "invoice@example.com",
+                headcount: 120,
+                setupInstructions: "Invoice setup",
+                takedownInstructions: "Invoice takedown",
+              },
+            },
+          ]),
+        invoice: {
+          update: vi.fn(),
+        },
+        quoteView: {
+          findFirst: vi.fn(),
+          update: vi.fn(),
+        },
+      };
+      vi.mocked(prisma.$transaction).mockImplementationOnce(async (callback) => callback(tx as never) as never);
+
+      await quoteService.respondToQuote(
+        "token",
+        "ACCEPTED",
+        undefined,
+        { paymentMethod: "CHECK" },
+        {
+          eventDate: "2026-03-31",
+          startTime: "10:00",
+          endTime: "11:00",
+          location: "Campus",
+          contactName: "Jane",
+          contactPhone: "555-1111",
+          setupRequired: false,
+          takedownRequired: false,
+        },
+      );
+
+      expect(tx.invoice.update).toHaveBeenNthCalledWith(1, {
+        where: { id: "inv1" },
+        data: expect.objectContaining({
+          paymentMethod: "CHECK",
+          cateringDetails: expect.objectContaining({
+            eventName: "Invoice Event",
+            contactEmail: "invoice@example.com",
+            headcount: 120,
+            setupInstructions: "Invoice setup",
+            takedownInstructions: "Invoice takedown",
+            location: "Campus",
+            contactName: "Jane",
+          }),
+        }),
+      });
+      expect(tx.invoice.update).toHaveBeenNthCalledWith(2, {
+        where: { id: "q1" },
+        data: expect.objectContaining({
+          quoteStatus: "ACCEPTED",
+          acceptedAt: expect.any(Date),
+          paymentMethod: "CHECK",
+          cateringDetails: expect.objectContaining({
+            eventName: "Quote Event",
+            contactEmail: "quote@example.com",
+            headcount: 80,
+            setupInstructions: "Quote setup",
+            takedownInstructions: "Quote takedown",
+            location: "Campus",
+            contactName: "Jane",
+          }),
+        }),
+      });
+    });
+
     it("rejects late declines after the quote has been converted", async () => {
       mockRepo.findByShareToken.mockResolvedValue(
         makeQuote({
@@ -911,6 +1018,22 @@ describe("quoteService", () => {
       mockRepo.update.mockResolvedValue({ ...quote, notes: "x" } as never);
 
       await expect(quoteService.update("q1", { notes: "x" })).resolves.toBeDefined();
+    });
+
+    it("stamps acceptedAt when quoteStatus is set to ACCEPTED through the generic update path", async () => {
+      const quote = makeQuote({ quoteStatus: "SENT" });
+      mockRepo.findById.mockResolvedValue(quote as never);
+      mockRepo.update.mockResolvedValue({ ...quote, quoteStatus: "ACCEPTED" } as never);
+
+      await quoteService.update("q1", { quoteStatus: "ACCEPTED" });
+
+      expect(mockRepo.update).toHaveBeenCalledWith(
+        "q1",
+        expect.objectContaining({
+          quoteStatus: "ACCEPTED",
+          acceptedAt: expect.any(Date),
+        }),
+      );
     });
 
     it("allows ACCEPTED quotes to update when they have not been converted", async () => {
