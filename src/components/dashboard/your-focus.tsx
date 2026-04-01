@@ -118,7 +118,7 @@ export function YourFocus() {
 
     try {
       const [sentQuotes, drafts, running, pendingCharge] = await Promise.all([
-        quoteApi.list({ quoteStatus: "SENT", pageSize: 10 }),
+        quoteApi.list({ quoteStatus: "SENT", creatorId: userId, pageSize: 10 }),
         invoiceApi.list({ status: "DRAFT", creatorId: userId, pageSize: 10 }),
         invoiceApi.list({ status: "DRAFT", isRunning: true, creatorId: userId, pageSize: 5 }),
         invoiceApi.list({ status: "PENDING_CHARGE", creatorId: userId, pageSize: 5 }),

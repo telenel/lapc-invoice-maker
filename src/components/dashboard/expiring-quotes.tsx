@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -30,12 +31,20 @@ function getDaysLabel(days: number): string {
 }
 
 export function ExpiringQuotes() {
+  const { data: session } = useSession();
   const [quotes, setQuotes] = useState<QuoteResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const userId = (session?.user as { id?: string } | undefined)?.id;
 
   const fetchExpiring = useCallback(() => {
+    if (!userId) {
+      setQuotes([]);
+      setLoading(false);
+      return;
+    }
+
     quoteApi
-      .list({ quoteStatus: "SENT", pageSize: 20 })
+      .list({ quoteStatus: "SENT", creatorId: userId, pageSize: 20 })
       .then((data) => {
         const expiring = data.quotes
           .filter((q) => {
@@ -48,7 +57,7 @@ export function ExpiringQuotes() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     fetchExpiring();

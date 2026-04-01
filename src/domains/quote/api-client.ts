@@ -26,6 +26,7 @@ function buildFilterParams(filters: QuoteFilters): URLSearchParams {
   if (filters.quoteStatus) params.set("quoteStatus", filters.quoteStatus);
   if (filters.department) params.set("department", filters.department);
   if (filters.category) params.set("category", filters.category);
+  if (filters.creatorId) params.set("creatorId", filters.creatorId);
   if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
   if (filters.dateTo) params.set("dateTo", filters.dateTo);
   if (filters.page) params.set("page", String(filters.page));
