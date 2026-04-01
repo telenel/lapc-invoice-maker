@@ -1,56 +1,29 @@
-name: CI & Deploy
+name: Deploy to VPS
 
 on:
-  push:
-    branches: [main]
-    paths-ignore:
-      - "*.md"
-      - "**/*.md"
-      - "docs/**"
-      - ".superpowers/**"
-  pull_request:
-    branches: [main]
-    paths-ignore:
-      - "*.md"
-      - "**/*.md"
-      - "docs/**"
-      - ".superpowers/**"
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: deploy-main
+  cancel-in-progress: false
 
 jobs:
-  ci:
-    name: Lint, Build & Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci && npx prisma generate
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Test
-        run: npm test
-
-      - name: Build
-        run: npm run build
-
   deploy:
-    name: Deploy to VPS
-    needs: ci
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
     runs-on: ubuntu-latest
+    env:
+      DEPLOY_VERIFY_ATTEMPTS: 28
+      DEPLOY_VERIFY_SLEEP: 15
+      DEPLOY_VERIFY_INITIAL_SLEEP: 60
     steps:
       - name: Trigger deploy webhook
+        env:
+          EXPECTED_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           response=$(curl -sfS --connect-timeout 10 --max-time 30 -X POST \
             https://montalvo.io/hooks/deploy-laportal \
@@ -66,23 +39,28 @@ jobs:
           echo "Deploy triggered successfully"
 
       - name: Health check
+        env:
+          EXPECTED_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
-          expected_sha="${GITHUB_SHA::7}"
+          expected_sha="${EXPECTED_SHA::7}"
           echo "Waiting for deployed build SHA $expected_sha..."
-          sleep 45
-          for i in $(seq 1 20); do
+          sleep "$DEPLOY_VERIFY_INITIAL_SLEEP"
+          last_body=""
+          for i in $(seq 1 "$DEPLOY_VERIFY_ATTEMPTS"); do
             body=""
             if ! body=$(curl -fsS --connect-timeout 10 --max-time 20 https://laportal.montalvo.io/api/version 2>/dev/null); then
               body=""
             fi
+            last_body="$body"
             status=$(printf '%s' "$body" | grep -oE '"status":"[^"]+"' | cut -d'"' -f4 || true)
             deployed_sha=$(printf '%s' "$body" | grep -oE '"buildSha":"[a-f0-9]+"' | cut -d'"' -f4 || true)
-            echo "Attempt $i: status=${status:-unknown} buildSha=${deployed_sha:-missing}"
+            echo "Attempt $i/$DEPLOY_VERIFY_ATTEMPTS: status=${status:-unknown} buildSha=${deployed_sha:-missing}"
             if [ "$status" = "ok" ] && [ "$deployed_sha" = "$expected_sha" ]; then
               echo "Deploy verification passed"
               exit 0
             fi
-            sleep 15
+            sleep "$DEPLOY_VERIFY_SLEEP"
           done
+          echo "Last /api/version response: ${last_body:-<empty>}"
           echo "Deploy verification failed: live build SHA did not match $expected_sha"
           exit 1
