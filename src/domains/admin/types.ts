@@ -60,6 +60,11 @@ export interface DbHealthErrorResponse {
   message: string;
 }
 
+export interface AppSettingResponse {
+  key: string;
+  value: unknown;
+}
+
 // ── Input types ──
 export interface CreateUserInput {
   name: string;

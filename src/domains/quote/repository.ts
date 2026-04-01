@@ -3,6 +3,8 @@ import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/generated/prisma/client";
 import type { QuoteFilters } from "./types";
 
+const PAYMENT_REMINDER_CLAIM = "PAYMENT_REMINDER_CLAIM";
+
 // ── Shared include shapes ──────────────────────────────────────────────────
 
 const listInclude = {
@@ -26,7 +28,7 @@ const detailInclude = {
   contact: { select: { id: true, name: true, email: true, phone: true, org: true, department: true, title: true, notes: true, createdAt: true } },
   creator: { select: { id: true, name: true, username: true } },
   items: { orderBy: { sortOrder: "asc" as const } },
-  convertedToInvoice: { select: { id: true, invoiceNumber: true } },
+  convertedToInvoice: { select: { id: true, invoiceNumber: true, status: true, paymentMethod: true, createdBy: true } },
   revisedFromQuote: { select: { id: true, quoteNumber: true } },
   revisedToQuote: { select: { id: true, quoteNumber: true } },
 } as const;
@@ -146,6 +148,20 @@ export async function findByShareToken(token: string) {
   return prisma.invoice.findUnique({
     where: { shareToken: token },
     include: detailInclude,
+  });
+}
+
+export async function findAcceptedPublicPaymentCandidate(token: string) {
+  return prisma.invoice.findFirst({
+    where: { shareToken: token, type: "QUOTE", quoteStatus: "ACCEPTED" },
+    select: {
+      id: true,
+      quoteNumber: true,
+      recipientEmail: true,
+      createdBy: true,
+      paymentMethod: true,
+      convertedToInvoice: { select: { id: true, createdBy: true } },
+    },
   });
 }
 
@@ -317,12 +333,12 @@ export async function getShareToken(id: string): Promise<string | null> {
 }
 
 /**
- * Mark a quote as ACCEPTED and record conversion timestamp.
+ * Mark a quote as ACCEPTED.
  */
 export async function markAccepted(id: string) {
   return prisma.invoice.update({
     where: { id },
-    data: { quoteStatus: "ACCEPTED", convertedAt: new Date() },
+    data: { quoteStatus: "ACCEPTED", acceptedAt: new Date() },
   });
 }
 
@@ -385,6 +401,55 @@ export async function updateViewResponse(viewId: string, respondedWith: string) 
   });
 }
 
+export async function syncPublicPaymentDetails(
+  quoteId: string,
+  paymentDetails: { paymentMethod: string; paymentAccountNumber: string | null },
+  convertedInvoiceId?: string
+) {
+  return prisma.$transaction(async (tx) => {
+    await tx.invoice.update({
+      where: { id: quoteId },
+      data: paymentDetails,
+    });
+
+    if (!convertedInvoiceId) return;
+
+    const convertedInvoices = await tx.$queryRaw<Array<{
+      id: string;
+      status: string | null;
+    }>>`
+      SELECT id, status
+      FROM invoices
+      WHERE id = ${convertedInvoiceId}
+      FOR UPDATE
+    `;
+    const convertedInvoice = convertedInvoices[0];
+
+    if (!convertedInvoice) {
+      throw Object.assign(new Error("Converted invoice not found"), { code: "NOT_FOUND" });
+    }
+
+    if (convertedInvoice.status === "FINAL") {
+      throw Object.assign(new Error("Cannot update a finalized invoice"), { code: "FORBIDDEN" });
+    }
+
+    await tx.invoice.update({
+      where: { id: convertedInvoiceId },
+      data: paymentDetails,
+    });
+  });
+}
+
+export async function createFollowUp(data: {
+  invoiceId: string;
+  type: string;
+  recipientEmail: string;
+  subject: string;
+  metadata?: Prisma.InputJsonValue;
+}) {
+  return prisma.quoteFollowUp.create({ data });
+}
+
 /**
  * Find all views for a quote (for activity display).
  */
@@ -392,6 +457,19 @@ export async function findViewsByInvoiceId(invoiceId: string) {
   return prisma.quoteView.findMany({
     where: { invoiceId },
     orderBy: { viewedAt: "desc" },
+  });
+}
+
+/**
+ * Find all follow-up events for a quote (for activity display).
+ */
+export async function findFollowUpsByInvoiceId(invoiceId: string) {
+  return prisma.quoteFollowUp.findMany({
+    where: {
+      invoiceId,
+      type: { not: PAYMENT_REMINDER_CLAIM },
+    },
+    orderBy: { sentAt: "desc" },
   });
 }
 

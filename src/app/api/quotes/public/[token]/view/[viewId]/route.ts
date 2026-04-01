@@ -3,14 +3,31 @@ import { quoteService } from "@/domains/quote/service";
 
 type RouteContext = { params: Promise<{ token: string; viewId: string }> };
 
-export async function PATCH(req: NextRequest, ctx: RouteContext) {
-  const { viewId } = await ctx.params;
+async function updateDuration(req: NextRequest, ctx: RouteContext) {
+  const { token, viewId } = await ctx.params;
   const body = await req.json().catch(() => ({}));
   const duration = Number(body.durationSeconds);
 
-  if (!isNaN(duration) && duration > 0) {
-    await quoteService.updateViewDuration(viewId, Math.round(duration));
-  }
+  try {
+    if (!isNaN(duration) && duration > 0) {
+      await quoteService.updateViewDurationForToken(token, viewId, Math.round(duration));
+    }
 
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    const code = (err as { code?: string }).code;
+    if (code === "NOT_FOUND" || code === "INVALID_INPUT") {
+      return NextResponse.json({ error: (err as Error).message }, { status: 404 });
+    }
+    console.error("POST /api/quotes/public/[token]/view/[viewId] failed:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function PATCH(req: NextRequest, ctx: RouteContext) {
+  return updateDuration(req, ctx);
+}
+
+export async function POST(req: NextRequest, ctx: RouteContext) {
+  return updateDuration(req, ctx);
 }

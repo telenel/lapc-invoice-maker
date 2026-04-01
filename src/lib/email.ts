@@ -1,9 +1,15 @@
 const WEBHOOK_URL = process.env.POWER_AUTOMATE_EMAIL_URL;
 
+export interface EmailAttachment {
+  Name: string;
+  ContentBytes: string;
+}
+
 export async function sendEmail(
   to: string,
   subject: string,
-  body: string
+  body: string,
+  attachments?: EmailAttachment[]
 ): Promise<boolean> {
   if (!WEBHOOK_URL) {
     console.warn("POWER_AUTOMATE_EMAIL_URL not set — email not sent");
@@ -11,11 +17,13 @@ export async function sendEmail(
   }
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10_000);
+    const timeoutId = setTimeout(() => controller.abort(), 15_000);
+    const payload: Record<string, unknown> = { to, subject, body };
+    if (attachments?.length) payload.attachments = attachments;
     const res = await fetch(WEBHOOK_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ to, subject, body }),
+      body: JSON.stringify(payload),
       signal: controller.signal,
     });
     clearTimeout(timeoutId);

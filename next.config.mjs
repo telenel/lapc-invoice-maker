@@ -16,6 +16,9 @@ function gitSha() {
 const nextConfig = {
   reactStrictMode: false,
   output: "standalone",
+  experimental: {
+    instrumentationHook: true,
+  },
   env: {
     NEXT_PUBLIC_BUILD_SHA: gitSha(),
     NEXT_PUBLIC_BUILD_TIME: new Date().toISOString(),

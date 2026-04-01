@@ -1,5 +1,6 @@
 // src/domains/admin/repository.ts
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@/generated/prisma/client";
 import type { UpdateUserInput, CreateAccountCodeInput } from "./types";
 
 const userSelect = {
@@ -110,6 +111,29 @@ export const adminRepository = {
 
   async deleteAccountCode(id: string) {
     return prisma.staffAccountNumber.delete({ where: { id } });
+  },
+
+  // ── App settings ──
+
+  async findAllSettings() {
+    return prisma.appSetting.findMany({
+      orderBy: { key: "asc" },
+    });
+  },
+
+  async findSettingsByKeys(keys: string[]) {
+    return prisma.appSetting.findMany({
+      where: { key: { in: keys } },
+      orderBy: { key: "asc" },
+    });
+  },
+
+  async upsertSetting(key: string, value: Prisma.InputJsonValue) {
+    return prisma.appSetting.upsert({
+      where: { key },
+      update: { value },
+      create: { key, value },
+    });
   },
 
   // ── DB health queries ──

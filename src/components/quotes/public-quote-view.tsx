@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,50 +23,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { quoteApi } from "@/domains/quote/api-client";
+import { ApiError } from "@/domains/shared/types";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
-import type { CateringDetails } from "@/domains/quote/types";
-
-interface QuoteItem {
-  id: string;
-  description: string;
-  quantity: number;
-  unitPrice: number;
-  extendedPrice: number;
-  sortOrder: number;
-}
-
-interface PublicQuote {
-  id: string;
-  quoteNumber: string | null;
-  quoteStatus: "DRAFT" | "SENT" | "SUBMITTED_EMAIL" | "SUBMITTED_MANUAL" | "ACCEPTED" | "DECLINED" | "REVISED" | "EXPIRED";
-  date: string;
-  expirationDate: string | null;
-  department: string;
-  category: string;
-  notes: string;
-  totalAmount: number;
-  recipientName: string;
-  recipientEmail: string;
-  recipientOrg: string;
-  staff: {
-    name: string;
-    title: string;
-    department: string;
-    extension: string | null;
-    email: string | null;
-  } | null;
-  contact: {
-    name: string;
-    title: string;
-    org: string;
-    department: string;
-    email: string;
-    phone: string;
-  } | null;
-  items: QuoteItem[];
-  isCateringEvent: boolean;
-  cateringDetails: CateringDetails | null;
-}
+import type { CateringDetails, PublicQuoteResponse, QuotePublicSettingsResponse } from "@/domains/quote/types";
+import { QUOTE_PAYMENT_METHODS } from "@/domains/quote/payment";
 
 function expirationText(dateStr: string): string {
   const exp = new Date(dateStr);
@@ -80,6 +42,9 @@ function expirationText(dateStr: string): string {
 // ── Catering form state (public-facing subset) ────────────────────────────
 
 interface PublicCateringForm {
+  eventDate: string;
+  startTime: string;
+  endTime: string;
   contactName: string;
   contactPhone: string;
   location: string;
@@ -93,6 +58,9 @@ interface PublicCateringForm {
 
 function makeCateringForm(existing: CateringDetails | null): PublicCateringForm {
   return {
+    eventDate: existing?.eventDate ?? "",
+    startTime: existing?.startTime ?? "",
+    endTime: existing?.endTime ?? "",
     contactName: existing?.contactName ?? "",
     contactPhone: existing?.contactPhone ?? "",
     location: existing?.location ?? "",
@@ -108,45 +76,51 @@ function makeCateringForm(existing: CateringDetails | null): PublicCateringForm 
 const labelClass = "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
 
 export function PublicQuoteView({ token }: { token: string }) {
-  const [quote, setQuote] = useState<PublicQuote | null>(null);
+  const router = useRouter();
+  const [quote, setQuote] = useState<PublicQuoteResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [responding, setResponding] = useState(false);
   const [responded, setResponded] = useState(false);
   const [cateringForm, setCateringForm] = useState<PublicCateringForm>(makeCateringForm(null));
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [sapAccountNumber, setSapAccountNumber] = useState("");
+  const [contactInfo, setContactInfo] = useState<QuotePublicSettingsResponse>({});
   const viewIdRef = useRef<string | null>(null);
   const loadTimeRef = useRef<number>(Date.now());
+  const accountNumberRequired = paymentMethod === "ACCOUNT_NUMBER";
+  const normalizedSapAccountNumber = sapAccountNumber.trim();
+  const paymentDetailsResolved = quote?.paymentDetailsResolved ?? false;
 
   // Fetch quote data and register view
   useEffect(() => {
     async function init() {
       try {
-        // Fetch quote data
-        const quoteRes = await fetch(`/api/quotes/public/${token}`);
-        if (!quoteRes.ok) {
-          setNotFound(true);
-          return;
-        }
-        const quoteData: PublicQuote = await quoteRes.json();
+        setNotFound(false);
+        setLoadError(null);
+        const quoteData = await quoteApi.getPublicQuote(token);
         setQuote(quoteData);
         if (quoteData.isCateringEvent) {
           setCateringForm(makeCateringForm(quoteData.cateringDetails));
         }
-
-        // Register view
-        const viewRes = await fetch(`/api/quotes/public/${token}/view`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            viewport: `${window.innerWidth}x${window.innerHeight}`,
-          }),
+        quoteApi.getPublicSettings().then(setContactInfo).catch(() => {
+          /* non-critical */
         });
-        if (viewRes.ok) {
-          const { viewId } = await viewRes.json();
-          viewIdRef.current = viewId;
+        quoteApi.registerPublicView(token, `${window.innerWidth}x${window.innerHeight}`)
+          .then(({ viewId }) => {
+            viewIdRef.current = viewId;
+          })
+          .catch((err) => {
+            console.warn("Failed to register quote view:", err);
+          });
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 404) {
+          setNotFound(true);
+        } else {
+          setLoadError("We couldn't load this quote right now. Please try again.");
         }
-      } catch {
-        setNotFound(true);
+        return;
       } finally {
         setLoading(false);
       }
@@ -159,33 +133,29 @@ export function PublicQuoteView({ token }: { token: string }) {
     function handleUnload() {
       if (!viewIdRef.current) return;
       const duration = Math.round((Date.now() - loadTimeRef.current) / 1000);
-      const blob = new Blob(
-        [JSON.stringify({ durationSeconds: duration })],
-        { type: "application/json" }
-      );
-      navigator.sendBeacon(
-        `/api/quotes/public/${token}/view/${viewIdRef.current}`,
-        blob
-      );
+      quoteApi.recordPublicViewDuration(token, viewIdRef.current, duration);
     }
     window.addEventListener("beforeunload", handleUnload);
     return () => window.removeEventListener("beforeunload", handleUnload);
   }, [token]);
 
   async function handleRespond(response: "ACCEPTED" | "DECLINED") {
+    if (response === "ACCEPTED" && accountNumberRequired && !normalizedSapAccountNumber) {
+      toast.error("Please enter your SAP account number");
+      return;
+    }
+
     setResponding(true);
     try {
       // Build catering details from form when approving a catering event
       const cateringDetails =
         quote?.isCateringEvent && response === "ACCEPTED"
           ? {
-              eventDate: quote.cateringDetails?.eventDate ?? "",
-              startTime: quote.cateringDetails?.startTime ?? "",
-              endTime: quote.cateringDetails?.endTime ?? "",
-              eventName: quote.cateringDetails?.eventName ?? "",
+              eventDate: cateringForm.eventDate.trim(),
+              startTime: cateringForm.startTime.trim(),
+              endTime: cateringForm.endTime.trim(),
               contactName: cateringForm.contactName,
               contactPhone: cateringForm.contactPhone,
-              contactEmail: quote.cateringDetails?.contactEmail ?? "",
               location: cateringForm.location,
               headcount: cateringForm.headcount ? Number(cateringForm.headcount) : undefined,
               setupRequired: cateringForm.setupRequired,
@@ -196,22 +166,27 @@ export function PublicQuoteView({ token }: { token: string }) {
             }
           : undefined;
 
-      const res = await fetch(`/api/quotes/public/${token}/respond`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ response, viewId: viewIdRef.current, cateringDetails }),
+      const data = await quoteApi.respondToPublicQuote(token, {
+        response,
+        viewId: viewIdRef.current,
+        cateringDetails,
+        paymentMethod: response === "ACCEPTED" && paymentMethod ? paymentMethod : undefined,
+        accountNumber: response === "ACCEPTED" && accountNumberRequired ? normalizedSapAccountNumber : undefined,
       });
-      if (!res.ok) {
-        const data = await res.json();
-        toast.error(data.error ?? "Failed to submit response");
-        return;
-      }
-      const data = await res.json();
       setResponded(true);
-      setQuote((prev) => prev ? { ...prev, quoteStatus: data.status } : prev);
+      setQuote((prev) =>
+        prev
+          ? {
+              ...prev,
+              quoteStatus: data.status,
+              paymentDetailsResolved:
+                response === "ACCEPTED" && Boolean(paymentMethod) ? true : prev.paymentDetailsResolved,
+            }
+          : prev,
+      );
       toast.success(response === "ACCEPTED" ? "Quote approved!" : "Quote declined");
-    } catch {
-      toast.error("Failed to submit response");
+    } catch (err) {
+      toast.error((err as Error).message ?? "Failed to submit response");
     } finally {
       setResponding(false);
     }
@@ -226,6 +201,18 @@ export function PublicQuoteView({ token }: { token: string }) {
   }
 
   if (notFound || !quote) {
+    if (loadError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <Card className="max-w-md w-full">
+            <CardContent className="pt-6 text-center">
+              <h2 className="text-lg font-semibold mb-2">Unable to Load Quote</h2>
+              <p className="text-muted-foreground">{loadError}</p>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="max-w-md w-full">
@@ -242,13 +229,23 @@ export function PublicQuoteView({ token }: { token: string }) {
 
   const isExpired = quote.quoteStatus === "EXPIRED";
   const alreadyResponded = quote.quoteStatus === "ACCEPTED" || quote.quoteStatus === "DECLINED" || quote.quoteStatus === "REVISED";
-  const canRespond = (quote.quoteStatus === "SENT" || quote.quoteStatus === "SUBMITTED_EMAIL" || quote.quoteStatus === "SUBMITTED_MANUAL") && !responded;
+  const paymentLinkAvailable = quote.paymentLinkAvailable !== false;
+  const canRespond =
+    paymentLinkAvailable &&
+    (quote.quoteStatus === "SENT" || quote.quoteStatus === "SUBMITTED_EMAIL" || quote.quoteStatus === "SUBMITTED_MANUAL") &&
+    !responded;
+  const publicActionsClosed = !paymentLinkAvailable && !alreadyResponded && !isExpired;
   const isCatering = quote.isCateringEvent;
   const cateringRequiredMissing =
     isCatering &&
-    (!cateringForm.contactName.trim() ||
+    (!cateringForm.eventDate.trim() ||
+      !cateringForm.startTime.trim() ||
+      !cateringForm.endTime.trim() ||
+      !cateringForm.contactName.trim() ||
       !cateringForm.contactPhone.trim() ||
-      !cateringForm.location.trim());
+      !cateringForm.location.trim() ||
+      (cateringForm.setupRequired && !cateringForm.setupTime.trim()) ||
+      (cateringForm.takedownRequired && !cateringForm.takedownTime.trim()));
 
   return (
     <div className="min-h-screen bg-background">
@@ -432,6 +429,49 @@ export function PublicQuoteView({ token }: { token: string }) {
             </CardHeader>
 
             <CardContent className="space-y-5">
+              {/* Event schedule */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="pub-event-date" className={labelClass}>
+                    Event Date <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="pub-event-date"
+                    type="date"
+                    value={cateringForm.eventDate}
+                    onChange={(e) =>
+                      setCateringForm((prev) => ({ ...prev, eventDate: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="pub-start-time" className={labelClass}>
+                    Start Time <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="pub-start-time"
+                    type="time"
+                    value={cateringForm.startTime}
+                    onChange={(e) =>
+                      setCateringForm((prev) => ({ ...prev, startTime: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="pub-end-time" className={labelClass}>
+                    End Time <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="pub-end-time"
+                    type="time"
+                    value={cateringForm.endTime}
+                    onChange={(e) =>
+                      setCateringForm((prev) => ({ ...prev, endTime: e.target.value }))
+                    }
+                  />
+                </div>
+              </div>
+
               {/* Contact Name, Contact Number, Location (required) */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
@@ -587,6 +627,114 @@ export function PublicQuoteView({ token }: { token: string }) {
           </Card>
         )}
 
+        {/* Payment details */}
+        {canRespond && !paymentDetailsResolved && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment Details</CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                How would you like to pay for this order? These details help us process your order faster.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label className={labelClass}>Payment Method</Label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                  {QUOTE_PAYMENT_METHODS.map((value) => {
+                    const label = value === "ACCOUNT_NUMBER"
+                      ? "Account Number"
+                      : value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+
+                    return (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => {
+                          setPaymentMethod(value);
+                          if (value !== "ACCOUNT_NUMBER") setSapAccountNumber("");
+                        }}
+                        className={`rounded-md border px-3 py-2 text-sm transition-colors ${
+                          paymentMethod === value
+                            ? "border-primary bg-primary/10 font-medium text-primary"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {paymentMethod === "ACCOUNT_NUMBER" && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="pub-sap-account" className={labelClass}>
+                    SAP Account Number
+                  </Label>
+                  <Input
+                    id="pub-sap-account"
+                    type="text"
+                    placeholder="Enter your SAP account number"
+                    value={sapAccountNumber}
+                    onChange={(e) => setSapAccountNumber(e.target.value)}
+                  />
+                </div>
+              )}
+
+              {!paymentMethod && (
+                <p className="text-xs text-amber-600">
+                  If you don&apos;t have payment details right now, you can still approve the quote.
+                  We&apos;ll follow up with you to collect this information.
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {canRespond && paymentDetailsResolved && (
+          <Card>
+            <CardContent className="pt-6">
+              <p className="text-sm text-muted-foreground">
+                Payment details are already on file for this quote. You can approve it without entering new payment information.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Contact information */}
+        {canRespond && (() => {
+          const key = quote.isCateringEvent ? "quote_contact_catering" : "quote_contact_default";
+          const info = contactInfo[key] as { name?: string; phone?: string; email?: string; note?: string } | undefined;
+          if (!info) return null;
+          return (
+            <Card>
+              <CardHeader>
+                <CardTitle>Questions?</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1 text-sm">
+                {info.name && <p className="font-medium">{info.name}</p>}
+                {info.phone && <p className="text-muted-foreground">{info.phone}</p>}
+                {info.email && (
+                  <p>
+                    <a href={`mailto:${info.email}`} className="text-primary underline">{info.email}</a>
+                  </p>
+                )}
+                {info.note && <p className="text-muted-foreground mt-2">{info.note}</p>}
+              </CardContent>
+            </Card>
+          );
+        })()}
+
+        {publicActionsClosed && (
+          <Card>
+            <CardContent className="pt-6 text-center">
+              <p className="text-sm text-muted-foreground">
+                This quote is no longer open for online approval or payment submission.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Response section */}
         {canRespond && (
           <Card>
@@ -619,15 +767,34 @@ export function PublicQuoteView({ token }: { token: string }) {
         )}
 
         {alreadyResponded && (
-          <Card>
-            <CardContent className="pt-6 text-center">
-              <p className="text-sm text-muted-foreground">
-                {quote.quoteStatus === "ACCEPTED"
-                  ? "This quote has been approved."
-                  : quote.quoteStatus === "REVISED"
-                  ? "This quote has been revised. A new version has been issued."
-                  : "This quote has been declined."}
-              </p>
+      <Card>
+        <CardContent className="pt-6 text-center">
+              {quote.quoteStatus === "ACCEPTED" && !paymentDetailsResolved && paymentLinkAvailable ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Your approval was received. Payment details are still needed to finish processing this quote.
+                  </p>
+                  <Button
+                    type="button"
+                    onClick={() => router.push(`/quotes/payment/${token}`)}
+                    className="min-w-[220px]"
+                  >
+                    Provide Payment Details
+                  </Button>
+                </div>
+              ) : quote.quoteStatus === "ACCEPTED" && !paymentDetailsResolved ? (
+                <p className="text-sm text-muted-foreground">
+                  Your approval was received. Payment collection for this quote is now closed.
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  {quote.quoteStatus === "ACCEPTED"
+                    ? "This quote has been approved."
+                    : quote.quoteStatus === "REVISED"
+                    ? "This quote has been revised. A new version has been issued."
+                    : "This quote has been declined."}
+                </p>
+              )}
             </CardContent>
           </Card>
         )}

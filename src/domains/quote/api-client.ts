@@ -5,9 +5,14 @@ import type {
   CreateQuoteInput,
   UpdateQuoteInput,
   QuoteFilters,
+  PublicQuoteResponse,
+  QuotePublicSettingsResponse,
+  QuotePublicPaymentSubmission,
+  QuotePublicResponseSubmission,
 } from "./types";
 
 const BASE = "/api/quotes";
+const PUBLIC_BASE = "/api/quotes/public";
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, init);
@@ -94,5 +99,61 @@ export const quoteApi = {
 
   async getViews(id: string): Promise<import("./types").QuoteViewResponse[]> {
     return request<import("./types").QuoteViewResponse[]>(`${BASE}/${id}/views`);
+  },
+
+  async getFollowUps(id: string): Promise<import("./types").QuoteFollowUpResponse[]> {
+    return request<import("./types").QuoteFollowUpResponse[]>(`${BASE}/${id}/follow-ups`);
+  },
+
+  async getPublicQuote(token: string): Promise<PublicQuoteResponse> {
+    return request<PublicQuoteResponse>(`${PUBLIC_BASE}/${token}`);
+  },
+
+  async getPublicSettings(keys?: string[]): Promise<QuotePublicSettingsResponse> {
+    const params = new URLSearchParams();
+    if (keys?.length) params.set("keys", keys.join(","));
+    const query = params.toString();
+    return request<QuotePublicSettingsResponse>(`${PUBLIC_BASE}/settings${query ? `?${query}` : ""}`);
+  },
+
+  async registerPublicView(token: string, viewport?: string): Promise<{ viewId: string }> {
+    return request<{ viewId: string }>(`${PUBLIC_BASE}/${token}/view`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ viewport }),
+    });
+  },
+
+  recordPublicViewDuration(token: string, viewId: string, durationSeconds: number): void {
+    const body = JSON.stringify({ durationSeconds });
+    const url = `${PUBLIC_BASE}/${token}/view/${viewId}`;
+
+    if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
+      navigator.sendBeacon(url, new Blob([body], { type: "application/json" }));
+      return;
+    }
+
+    void fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body,
+      keepalive: true,
+    });
+  },
+
+  async respondToPublicQuote(token: string, input: QuotePublicResponseSubmission): Promise<{ success: boolean; status: "ACCEPTED" | "DECLINED" }> {
+    return request<{ success: boolean; status: "ACCEPTED" | "DECLINED" }>(`${PUBLIC_BASE}/${token}/respond`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
+  },
+
+  async submitPublicPaymentDetails(token: string, input: QuotePublicPaymentSubmission): Promise<{ success: boolean }> {
+    return request<{ success: boolean }>(`${PUBLIC_BASE}/${token}/payment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(input),
+    });
   },
 };

@@ -12,6 +12,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -41,6 +43,7 @@ import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
 import { useSSE } from "@/lib/use-sse";
 import { ShareLinkDialog } from "@/components/quotes/share-link-dialog";
 import { QuoteActivity } from "@/components/quotes/quote-activity";
+import { QUOTE_PAYMENT_METHODS } from "@/domains/quote/payment";
 import type { CateringDetails } from "@/domains/quote/types";
 
 // ---------------------------------------------------------------------------
@@ -101,6 +104,15 @@ interface Quote {
   marginPercent: number | null;
   taxEnabled: boolean;
   taxRate: number;
+  paymentMethod: string | null;
+  paymentAccountNumber: string | null;
+  paymentDetailsResolved: boolean;
+  viewerAccess?: {
+    canViewQuote: boolean;
+    canManageActions: boolean;
+    canViewActivity: boolean;
+    canViewSensitiveFields: boolean;
+  };
   convertedToInvoice: {
     id: string;
     invoiceNumber: string | null;
@@ -150,6 +162,14 @@ const statusLabel: Record<QuoteStatus, string> = {
   EXPIRED: "Expired",
 };
 
+const MANUAL_APPROVAL_PAYMENT_OPTIONS = QUOTE_PAYMENT_METHODS.map((value) => ({
+  value,
+  label:
+    value === "ACCOUNT_NUMBER"
+      ? "Account Number"
+      : value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()),
+}));
+
 function formatCateringDateTime(catering: CateringDetails): string | null {
   if (!catering.eventDate) return null;
 
@@ -194,6 +214,8 @@ export function QuoteDetailView({ id }: { id: string }) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+  const [approvePaymentMethod, setApprovePaymentMethod] = useState("");
+  const [approveAccountNumber, setApproveAccountNumber] = useState("");
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
 
@@ -387,9 +409,23 @@ export function QuoteDetailView({ id }: { id: string }) {
 
   const handleApproveManually = useCallback(async () => {
     if (!quote) return;
+    if (approvePaymentMethod === "ACCOUNT_NUMBER" && !approveAccountNumber.trim()) {
+      toast.error("Please enter the SAP account number");
+      return;
+    }
     setActionState((prev) => ({ ...prev, approving: true }));
     try {
-      const res = await fetch(`/api/quotes/${id}/approve`, { method: "POST" });
+      const res = await fetch(`/api/quotes/${id}/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          paymentMethod: approvePaymentMethod || undefined,
+          accountNumber:
+            approvePaymentMethod === "ACCOUNT_NUMBER"
+              ? approveAccountNumber.trim()
+              : undefined,
+        }),
+      });
       if (!res.ok) {
         const data = await res.json();
         toast.error(data.error ?? "Failed to approve quote");
@@ -403,7 +439,15 @@ export function QuoteDetailView({ id }: { id: string }) {
       setActionState((prev) => ({ ...prev, approving: false }));
       setApproveDialogOpen(false);
     }
-  }, [quote, id, fetchQuote]);
+  }, [quote, id, fetchQuote, approvePaymentMethod, approveAccountNumber]);
+
+  const handleApproveDialogOpenChange = useCallback((open: boolean) => {
+    setApproveDialogOpen(open);
+    if (!open) {
+      setApprovePaymentMethod("");
+      setApproveAccountNumber("");
+    }
+  }, []);
 
   const handleOpenPdf = useCallback(() => {
     const link = document.createElement("a");
@@ -424,12 +468,30 @@ export function QuoteDetailView({ id }: { id: string }) {
   }
 
   const status = quote.quoteStatus;
+  const viewerAccess = quote.viewerAccess ?? {
+    canViewQuote: false,
+    canManageActions: false,
+    canViewActivity: false,
+    canViewSensitiveFields: false,
+  };
+  if (!viewerAccess.canViewQuote) {
+    return <p className="text-muted-foreground text-sm">You do not have access to this quote.</p>;
+  }
+  const canManageActions = viewerAccess.canManageActions;
+  const canViewActivity = viewerAccess.canViewActivity;
+  const canViewPaymentDetails = viewerAccess.canViewSensitiveFields;
+  const showInternalFields = canViewPaymentDetails;
+  const isConverted = Boolean(quote.convertedToInvoice);
   const canEdit =
-    status === "DRAFT" ||
-    status === "SENT" ||
-    status === "SUBMITTED_EMAIL" ||
-    status === "SUBMITTED_MANUAL" ||
-    (status === "ACCEPTED" && !quote.convertedToInvoice);
+    canManageActions &&
+    !isConverted &&
+    (
+      status === "DRAFT" ||
+      status === "SENT" ||
+      status === "SUBMITTED_EMAIL" ||
+      status === "SUBMITTED_MANUAL" ||
+      (status === "ACCEPTED" && !quote.convertedToInvoice)
+    );
 
   return (
     <div className="space-y-6">
@@ -471,67 +533,73 @@ export function QuoteDetailView({ id }: { id: string }) {
 
           {/* ── Primary actions ─────────────────────────────────────── */}
 
-          {/* DRAFT: Mark as Sent + Edit */}
-          {status === "DRAFT" && (
+          {canManageActions && (
             <>
-              <Button
-                size="sm"
-                className="bg-green-600 hover:bg-green-700 text-white"
-                onClick={handleMarkAsSent}
-                disabled={actionState.sending}
-              >
-                {actionState.sending ? "Sending..." : "Mark as Sent"}
-              </Button>
-              <Link
-                href={`/quotes/${id}/edit`}
-                className={buttonVariants({ variant: "outline", size: "sm" })}
-              >
-                Edit
-              </Link>
-            </>
-          )}
+              {/* DRAFT: Mark as Sent + Edit */}
+              {status === "DRAFT" && (
+                <>
+                  <Button
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    onClick={handleMarkAsSent}
+                    disabled={actionState.sending}
+                  >
+                    {actionState.sending ? "Sending..." : "Mark as Sent"}
+                  </Button>
+                  <Link
+                    href={`/quotes/${id}/edit`}
+                    className={buttonVariants({ variant: "outline", size: "sm" })}
+                  >
+                    Edit
+                  </Link>
+                </>
+              )}
 
-          {status === "ACCEPTED" && !quote.convertedToInvoice && (
-            <>
-              <Link
-                href={`/quotes/${id}/edit`}
-                className={buttonVariants({ variant: "outline", size: "sm" })}
-              >
-                Edit
-              </Link>
-              <Button
-                size="sm"
-                onClick={handleConvertToInvoice}
-                disabled={actionState.converting}
-              >
-                {actionState.converting ? "Converting..." : "Convert to Invoice"}
-              </Button>
-            </>
-          )}
+              {status === "ACCEPTED" && !isConverted && (
+                <>
+                  <Link
+                    href={`/quotes/${id}/edit`}
+                    className={buttonVariants({ variant: "outline", size: "sm" })}
+                  >
+                    Edit
+                  </Link>
+                  {quote.paymentDetailsResolved && (
+                    <Button
+                      size="sm"
+                      onClick={handleConvertToInvoice}
+                      disabled={actionState.converting}
+                    >
+                      {actionState.converting ? "Converting..." : "Convert to Invoice"}
+                    </Button>
+                  )}
+                </>
+              )}
 
-          {/* SENT / SUBMITTED: Approve Manually + Convert to Invoice */}
-          {(status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
-            <>
-              <Button
-                size="sm"
-                className="bg-green-600 hover:bg-green-700 text-white"
-                onClick={() => setApproveDialogOpen(true)}
-                disabled={actionState.approving}
-              >
-                {actionState.approving ? "Approving..." : "Approve Manually"}
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleConvertToInvoice}
-                disabled={actionState.converting}
-              >
-                {actionState.converting ? "Converting..." : "Convert to Invoice"}
-              </Button>
+              {/* SENT / SUBMITTED: Approve Manually + Convert to Invoice */}
+              {!isConverted && (status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
+                <>
+                  <Button
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                    onClick={() => setApproveDialogOpen(true)}
+                    disabled={actionState.approving}
+                  >
+                    {actionState.approving ? "Approving..." : "Approve Manually"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleConvertToInvoice}
+                    disabled={actionState.converting}
+                  >
+                    {actionState.converting ? "Converting..." : "Convert to Invoice"}
+                  </Button>
+                </>
+              )}
             </>
           )}
 
           {/* ACCEPTED: link to converted invoice */}
-          {status === "ACCEPTED" && quote.convertedToInvoice && (
+          {quote.convertedToInvoice && (
             <Link
               href={`/invoices/${quote.convertedToInvoice.id}`}
               className={buttonVariants({ variant: "outline", size: "sm" })}
@@ -541,7 +609,7 @@ export function QuoteDetailView({ id }: { id: string }) {
           )}
 
           {/* DECLINED: Revise & Resubmit */}
-          {status === "DECLINED" && (
+          {canManageActions && status === "DECLINED" && (
             <Button
               size="sm"
               className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -555,7 +623,7 @@ export function QuoteDetailView({ id }: { id: string }) {
           {/* ── Secondary actions ──────────────────────────────────── */}
 
           {/* Share Link: visible for SENT/SUBMITTED statuses */}
-          {(status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && quote.shareToken && (
+          {canManageActions && !isConverted && (status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && quote.shareToken && (
             <Button variant="outline" size="sm" onClick={handleShareLink}>
               <LinkIcon className="size-3.5 mr-1.5" />
               Share Link
@@ -575,7 +643,7 @@ export function QuoteDetailView({ id }: { id: string }) {
             />
             <DropdownMenuContent align="end">
               {/* Edit (when not shown as primary) */}
-              {(canEdit && status !== "DRAFT" && !(status === "ACCEPTED" && !quote.convertedToInvoice)) && (
+              {canManageActions && canEdit && status !== "DRAFT" && !(status === "ACCEPTED" && !quote.convertedToInvoice) && (
                 <DropdownMenuItem onClick={() => router.push(`/quotes/${id}/edit`)}>
                   Edit
                 </DropdownMenuItem>
@@ -587,32 +655,34 @@ export function QuoteDetailView({ id }: { id: string }) {
               </DropdownMenuItem>
 
               {/* Duplicate: all statuses */}
-              <DropdownMenuItem onClick={handleDuplicate} disabled={actionState.duplicating}>
-                {actionState.duplicating ? "Duplicating..." : "Duplicate"}
-              </DropdownMenuItem>
+              {canManageActions && (
+                <DropdownMenuItem onClick={handleDuplicate} disabled={actionState.duplicating}>
+                  {actionState.duplicating ? "Duplicating..." : "Duplicate"}
+                </DropdownMenuItem>
+              )}
 
               {/* Share Link: in dropdown for ACCEPTED, DECLINED, REVISED, EXPIRED */}
-              {status !== "DRAFT" && status !== "SENT" && status !== "SUBMITTED_EMAIL" && status !== "SUBMITTED_MANUAL" && quote.shareToken && (
+              {canManageActions && status !== "DRAFT" && status !== "SENT" && status !== "SUBMITTED_EMAIL" && status !== "SUBMITTED_MANUAL" && quote.shareToken && (
                 <DropdownMenuItem onClick={handleShareLink}>
                   Share Link
                 </DropdownMenuItem>
               )}
 
               {/* Mark as Delivered: SENT only */}
-              {status === "SENT" && (
+              {canManageActions && status === "SENT" && (
                 <DropdownMenuItem onClick={() => handleMarkSubmitted("manual")} disabled={actionState.markingSubmitted}>
                   {actionState.markingSubmitted ? "Updating..." : "Mark as Delivered"}
                 </DropdownMenuItem>
               )}
 
               {/* Destructive actions separator */}
-              {(status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL" ||
+              {canManageActions && (status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL" ||
                 status === "DRAFT" || status === "DECLINED" || status === "EXPIRED") && (
                 <DropdownMenuSeparator />
               )}
 
               {/* Decline: SENT, SUBMITTED_EMAIL, SUBMITTED_MANUAL */}
-              {(status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
+              {canManageActions && (status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
                 <DropdownMenuItem
                   variant="destructive"
                   onClick={() => setDeclineDialogOpen(true)}
@@ -622,7 +692,7 @@ export function QuoteDetailView({ id }: { id: string }) {
               )}
 
               {/* Delete: DRAFT, SENT, DECLINED, EXPIRED */}
-              {(status === "DRAFT" || status === "SENT" || status === "DECLINED" || status === "EXPIRED") && (
+              {canManageActions && (status === "DRAFT" || status === "SENT" || status === "DECLINED" || status === "EXPIRED") && (
                 <DropdownMenuItem
                   variant="destructive"
                   onClick={() => setDeleteDialogOpen(true)}
@@ -637,7 +707,7 @@ export function QuoteDetailView({ id }: { id: string }) {
         {/* ── Confirmation dialogs (rendered outside dropdown tree) ── */}
 
         {/* Approve manually dialog */}
-        <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+        <Dialog open={approveDialogOpen} onOpenChange={handleApproveDialogOpenChange}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Approve Quote Manually</DialogTitle>
@@ -647,6 +717,48 @@ export function QuoteDetailView({ id }: { id: string }) {
                 outside the system.
               </DialogDescription>
             </DialogHeader>
+            <div className="space-y-4 py-2">
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Payment Method
+                </Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {MANUAL_APPROVAL_PAYMENT_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      onClick={() => {
+                        setApprovePaymentMethod(opt.value);
+                        if (opt.value !== "ACCOUNT_NUMBER") setApproveAccountNumber("");
+                      }}
+                      className={`rounded-md border px-3 py-2 text-sm transition-colors ${
+                        approvePaymentMethod === opt.value
+                          ? "border-primary bg-primary/10 font-medium text-primary"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {approvePaymentMethod === "ACCOUNT_NUMBER" && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="manual-approve-account-number">SAP Account Number</Label>
+                  <Input
+                    id="manual-approve-account-number"
+                    value={approveAccountNumber}
+                    onChange={(e) => setApproveAccountNumber(e.target.value)}
+                    placeholder="Enter SAP account number"
+                  />
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground">
+                Optional. Capture payment details here if you want to convert this quote right away after approval.
+              </p>
+            </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setApproveDialogOpen(false)}>
                 Cancel
@@ -743,20 +855,24 @@ export function QuoteDetailView({ id }: { id: string }) {
                   : "\u2014"}
               </Badge>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Account Number</span>
-              <span>{quote.accountNumber || "\u2014"}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Account Code</span>
-              <span>{quote.accountCode || "\u2014"}</span>
-            </div>
+            {showInternalFields && (
+              <>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Account Number</span>
+                  <span>{quote.accountNumber || "\u2014"}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Account Code</span>
+                  <span>{quote.accountCode || "\u2014"}</span>
+                </div>
+              </>
+            )}
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Total Amount</span>
               <span className="font-bold">{formatAmount(quote.totalAmount)}</span>
             </div>
 
-            {(quote.marginEnabled || quote.taxEnabled) && (
+            {showInternalFields && (quote.marginEnabled || quote.taxEnabled) && (
               <div className="flex flex-wrap gap-2 pt-1">
                 {quote.marginEnabled && quote.marginPercent != null && (
                   <span className="inline-flex items-center gap-1 rounded-md bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-xs font-medium text-blue-600 dark:text-blue-400">
@@ -880,9 +996,45 @@ export function QuoteDetailView({ id }: { id: string }) {
         </div>
       </div>
 
+      {/* Payment status banner */}
+      {canViewPaymentDetails && quote.quoteStatus === "ACCEPTED" && !quote.paymentDetailsResolved && (
+        <Card className="border-amber-500/30 bg-amber-50 dark:bg-amber-950/20">
+          <CardContent className="py-4">
+            <div className="flex items-center gap-2">
+              <span className="text-amber-600 text-sm font-medium">
+                Payment details incomplete
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {canViewPaymentDetails && quote.quoteStatus === "ACCEPTED" && quote.paymentDetailsResolved && (
+        <Card className="border-green-500/30 bg-green-50 dark:bg-green-950/20">
+          <CardContent className="py-4">
+            <div className="flex items-center gap-2 text-sm">
+              {quote.paymentMethod ? (
+                <>
+                  <span className="text-green-600 font-medium">Payment method:</span>
+                  <span>{quote.paymentMethod.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}</span>
+                  {quote.paymentAccountNumber && (
+                    <span className="text-muted-foreground">• Account: {quote.paymentAccountNumber}</span>
+                  )}
+                </>
+              ) : (
+                <span className="text-green-600 font-medium">
+                  Payment details are already on file for this quote.
+                </span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Line Items */}
       {(() => {
-        const colCount = quote.marginEnabled ? 5 : 4;
+        const showInternalPricing = showInternalFields && quote.marginEnabled;
+        const colCount = showInternalPricing ? 6 : 4;
 
         // Cost subtotal (before margin)
         const costSubtotal = quote.items.reduce((sum, item) => {
@@ -915,8 +1067,13 @@ export function QuoteDetailView({ id }: { id: string }) {
 
         return (
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center gap-3">
               <CardTitle>Line Items</CardTitle>
+              {showInternalPricing && (
+                <span className="rounded-md bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                  Internal Only
+                </span>
+              )}
             </CardHeader>
             <CardContent>
               <Table>
@@ -924,9 +1081,10 @@ export function QuoteDetailView({ id }: { id: string }) {
                   <TableRow>
                     <TableHead>Description</TableHead>
                     <TableHead className="text-center">Qty</TableHead>
-                    {quote.marginEnabled ? (
+                    {showInternalPricing ? (
                       <>
                         <TableHead className="text-right">Cost</TableHead>
+                        <TableHead className="text-right">Margin</TableHead>
                         <TableHead className="text-right">Charged</TableHead>
                       </>
                     ) : (
@@ -942,15 +1100,27 @@ export function QuoteDetailView({ id }: { id: string }) {
                       <TableCell className="text-center tabular-nums">
                         {Number(item.quantity)}
                       </TableCell>
-                      {quote.marginEnabled ? (
-                        <>
-                          <TableCell className="text-right tabular-nums">
-                            {formatAmount(item.costPrice != null ? Number(item.costPrice) : Number(item.unitPrice))}
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums">
-                            {formatAmount(item.unitPrice)}
-                          </TableCell>
-                        </>
+                      {showInternalPricing ? (
+                        (() => {
+                          const cost = item.costPrice != null ? Number(item.costPrice) : Number(item.unitPrice);
+                          const effectiveMargin = item.marginOverride != null
+                            ? Number(item.marginOverride)
+                            : globalMargin;
+                          const marginDollars = cost * Number(item.quantity) * (effectiveMargin / 100);
+                          return (
+                            <>
+                              <TableCell className="text-right tabular-nums">
+                                {formatAmount(cost)}
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums text-amber-700">
+                                {effectiveMargin}% ({formatAmount(marginDollars)})
+                              </TableCell>
+                              <TableCell className="text-right tabular-nums">
+                                {formatAmount(item.unitPrice)}
+                              </TableCell>
+                            </>
+                          );
+                        })()
                       ) : (
                         <TableCell className="text-right tabular-nums">
                           {formatAmount(item.unitPrice)}
@@ -963,7 +1133,7 @@ export function QuoteDetailView({ id }: { id: string }) {
                   ))}
 
                   {/* Breakdown rows */}
-                  {quote.marginEnabled && (
+                  {showInternalPricing && (
                     <TableRow>
                       <TableCell
                         colSpan={colCount - 1}
@@ -976,7 +1146,7 @@ export function QuoteDetailView({ id }: { id: string }) {
                       </TableCell>
                     </TableRow>
                   )}
-                  {quote.marginEnabled && (
+                  {showInternalPricing && (
                     <TableRow>
                       <TableCell
                         colSpan={colCount - 1}
@@ -1217,7 +1387,7 @@ export function QuoteDetailView({ id }: { id: string }) {
       })()}
 
       {/* Activity tracking */}
-      {(status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL" || status === "ACCEPTED" || status === "DECLINED") && (
+      {canViewActivity && (status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL" || status === "ACCEPTED" || status === "DECLINED") && (
         <QuoteActivity quoteId={id} />
       )}
 

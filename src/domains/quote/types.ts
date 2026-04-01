@@ -41,6 +41,16 @@ export interface QuoteItemResponse {
   costPrice: number | null;
 }
 
+export interface PublicQuoteItemResponse {
+  id: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  extendedPrice: number;
+  sortOrder: number;
+  isTaxable: boolean;
+}
+
 export interface QuoteResponse {
   id: string;
   quoteNumber: string | null;
@@ -72,9 +82,53 @@ export interface QuoteResponse {
   marginPercent: number | null;
   taxEnabled: boolean;
   taxRate: number;
-  convertedToInvoice?: { id: string; invoiceNumber: string | null } | null;
+  paymentMethod: string | null;
+  paymentAccountNumber: string | null;
+  paymentDetailsResolved: boolean;
+  viewerAccess?: {
+    canViewQuote: boolean;
+    canManageActions: boolean;
+    canViewActivity: boolean;
+    canViewSensitiveFields: boolean;
+  };
+  convertedToInvoice?: { id: string; invoiceNumber: string | null; status?: string | null; createdBy?: string | null } | null;
   revisedFromQuote?: { id: string; quoteNumber: string | null } | null;
   revisedToQuote?: { id: string; quoteNumber: string | null } | null;
+}
+
+export interface PublicQuoteResponse {
+  id: string;
+  quoteNumber: string | null;
+  quoteStatus: QuoteStatus;
+  paymentLinkAvailable: boolean;
+  date: string;
+  expirationDate: string | null;
+  department: string;
+  category: string;
+  notes: string;
+  totalAmount: number;
+  recipientName: string;
+  recipientEmail: string;
+  recipientOrg: string;
+  staff: {
+    name: string;
+    title: string;
+    department: string;
+    extension: string | null;
+    email: string | null;
+  } | null;
+  contact: {
+    name: string;
+    title: string;
+    org: string;
+    department: string;
+    email: string;
+    phone: string;
+  } | null;
+  items: PublicQuoteItemResponse[];
+  isCateringEvent: boolean;
+  cateringDetails: CateringDetails | null;
+  paymentDetailsResolved: boolean;
 }
 
 // ── Inputs ─────────────────────────────────────────────────────────────────
@@ -154,6 +208,29 @@ export interface QuoteFilters {
   sortOrder?: "asc" | "desc";
 }
 
+export interface QuoteFollowUpResponse {
+  id: string;
+  type: string;
+  recipientEmail: string;
+  subject: string;
+  sentAt: string;
+  metadata: Record<string, unknown> | null;
+}
+
+export interface QuotePaymentDetailsSubmission {
+  paymentMethod: string;
+  paymentAccountNumber: string | null;
+}
+
+export interface QuotePublicPaymentCandidate {
+  id: string;
+  quoteNumber: string | null;
+  recipientEmail: string | null;
+  paymentMethod: string | null;
+  convertedToInvoice: { id: string } | null;
+  updatedConvertedInvoice?: boolean;
+}
+
 export interface QuoteViewResponse {
   id: string;
   viewedAt: string;
@@ -163,4 +240,26 @@ export interface QuoteViewResponse {
   viewport: string | null;
   durationSeconds: number | null;
   respondedWith: string | null;
+}
+
+export interface QuotePublicSettingsResponse {
+  [key: string]: {
+    name?: string;
+    phone?: string;
+    email?: string;
+    note?: string;
+  } | undefined;
+}
+
+export interface QuotePublicResponseSubmission {
+  response: "ACCEPTED" | "DECLINED";
+  viewId?: string | null;
+  cateringDetails?: CateringDetails;
+  paymentMethod?: string;
+  accountNumber?: string | null;
+}
+
+export interface QuotePublicPaymentSubmission {
+  paymentMethod: string;
+  accountNumber?: string | null;
 }

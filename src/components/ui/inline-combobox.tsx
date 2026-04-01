@@ -182,6 +182,8 @@ export function InlineCombobox({
         ref={inputRef}
         role="combobox"
         aria-expanded={open}
+        aria-controls={`${instanceId}-listbox`}
+        aria-haspopup="listbox"
         aria-autocomplete="list"
         aria-activedescendant={
           open && suggestions[highlightIndex]
@@ -202,6 +204,7 @@ export function InlineCombobox({
       {open && !loading && (
         <ul
           ref={listRef}
+          id={`${instanceId}-listbox`}
           role="listbox"
           className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-popover shadow-lg max-h-60 overflow-y-auto"
         >
