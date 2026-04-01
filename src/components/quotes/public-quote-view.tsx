@@ -89,6 +89,7 @@ export function PublicQuoteView({ token }: { token: string }) {
   const [contactInfo, setContactInfo] = useState<QuotePublicSettingsResponse>({});
   const viewIdRef = useRef<string | null>(null);
   const publicViewRegistrationRef = useRef<Promise<string | null> | null>(null);
+  const pendingUnloadDurationRef = useRef<number | null>(null);
   const loadTimeRef = useRef<number>(Date.now());
   const accountNumberRequired = paymentMethod === "ACCOUNT_NUMBER";
   const normalizedSapAccountNumber = sapAccountNumber.trim();
@@ -100,6 +101,7 @@ export function PublicQuoteView({ token }: { token: string }) {
       try {
         viewIdRef.current = null;
         publicViewRegistrationRef.current = null;
+        pendingUnloadDurationRef.current = null;
         loadTimeRef.current = Date.now();
         setNotFound(false);
         setLoadError(null);
@@ -115,6 +117,10 @@ export function PublicQuoteView({ token }: { token: string }) {
           .registerPublicView(token, `${window.innerWidth}x${window.innerHeight}`)
           .then(({ viewId }) => {
             viewIdRef.current = viewId;
+            if (pendingUnloadDurationRef.current != null) {
+              quoteApi.recordPublicViewDuration(token, viewId, pendingUnloadDurationRef.current);
+              pendingUnloadDurationRef.current = null;
+            }
             return viewId;
           })
           .catch((err) => {
@@ -144,9 +150,13 @@ export function PublicQuoteView({ token }: { token: string }) {
   // Send duration on page unload
   useEffect(() => {
     function handleUnload() {
-      if (!viewIdRef.current) return;
       const duration = Math.round((Date.now() - loadTimeRef.current) / 1000);
-      quoteApi.recordPublicViewDuration(token, viewIdRef.current, duration);
+      const viewId = viewIdRef.current;
+      if (viewId) {
+        quoteApi.recordPublicViewDuration(token, viewId, duration);
+        return;
+      }
+      pendingUnloadDurationRef.current = duration;
     }
     window.addEventListener("beforeunload", handleUnload);
     return () => window.removeEventListener("beforeunload", handleUnload);

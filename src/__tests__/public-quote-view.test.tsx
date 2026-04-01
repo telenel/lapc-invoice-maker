@@ -157,6 +157,59 @@ describe("PublicQuoteView", () => {
     });
   });
 
+  it("records the unload duration after a fast navigation once the view registration resolves", async () => {
+    vi.mocked(quoteApi.getPublicQuote).mockResolvedValueOnce({
+      id: "q1",
+      quoteNumber: "Q-1",
+      quoteStatus: "SENT",
+      paymentLinkAvailable: true,
+      date: "2026-03-31T00:00:00.000Z",
+      expirationDate: null,
+      department: "IT",
+      category: "SUPPLIES",
+      notes: "",
+      totalAmount: 10,
+      recipientName: "Jane",
+      recipientEmail: "jane@example.com",
+      recipientOrg: "",
+      staff: null,
+      contact: null,
+      items: [],
+      isCateringEvent: false,
+      cateringDetails: null,
+      paymentDetailsResolved: false,
+    } as never);
+
+    let resolveRegistration!: (value: { viewId: string }) => void;
+    const registrationPromise = new Promise<{ viewId: string }>((resolve) => {
+      resolveRegistration = resolve;
+    });
+    vi.mocked(quoteApi.registerPublicView).mockReturnValue(registrationPromise as never);
+
+    let now = 1_000;
+    const dateNowSpy = vi.spyOn(Date, "now").mockImplementation(() => now);
+    try {
+      render(<PublicQuoteView token="token" />);
+
+      await screen.findByText("Approve Quote");
+
+      now = 4_000;
+      window.dispatchEvent(new Event("beforeunload"));
+
+      expect(quoteApi.recordPublicViewDuration).not.toHaveBeenCalled();
+
+      resolveRegistration({ viewId: "view-1" });
+
+      await waitFor(() => {
+        expect(quoteApi.recordPublicViewDuration).toHaveBeenCalledWith("token", "view-1", 3);
+      });
+
+      expect(quoteApi.recordPublicViewDuration).toHaveBeenCalledTimes(1);
+    } finally {
+      dateNowSpy.mockRestore();
+    }
+  });
+
   it("disables approval when setup is requested without a setup time", async () => {
     const user = userEvent.setup();
     render(<PublicQuoteView token="token" />);
