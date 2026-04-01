@@ -59,10 +59,10 @@ export function parseAutopilotArgs(argv) {
 }
 
 function usage() {
-  return `Usage: ./scripts/codex-review-autopilot.sh [review:codex:live options]
+  return `Usage: ./scripts/codex-review-autopilot.sh [laportal:review:live options]
 
 Starts the live Codex review producer and launches deterministic remediation workers in separate worktrees.
-Pass the same base-ref or focus options you would pass to npm run review:codex:live.`;
+Pass the same base-ref or focus options you would pass to npm run laportal:review:live.`;
 }
 
 function sleep(ms) {

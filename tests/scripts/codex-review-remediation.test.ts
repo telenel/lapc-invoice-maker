@@ -60,7 +60,7 @@ describe("codex review remediation helper", () => {
 
     expect(output).toContain("Latest Codex review: FAIL for abc123");
     expect(output).toContain("Remediation batches:");
-    expect(output).toContain("npm run review:codex:prompt -- --batch <BATCH_ID>");
+    expect(output).toContain("npm run laportal:review:prompt -- --batch <BATCH_ID>");
   });
 
   it("formats an in-progress live snapshot cleanly", () => {
@@ -78,7 +78,7 @@ describe("codex review remediation helper", () => {
     expect(output).toContain("Latest Codex review: IN_PROGRESS for abc123");
     expect(output).toContain("Live review snapshot in progress");
     expect(output).toContain(
-      "npm run review:codex:prompt -- --artifact .git/laportal/codex-review.live.json --batch <BATCH_ID>",
+      "npm run laportal:review:prompt -- --artifact .git/laportal/codex-review.live.json --batch <BATCH_ID>",
     );
   });
 
@@ -109,7 +109,7 @@ describe("codex review remediation helper", () => {
     expect(
       buildWorkerPromptCommand(".git/laportal/codex-review.live.json"),
     ).toBe(
-      "npm run review:codex:prompt -- --artifact .git/laportal/codex-review.live.json --batch <BATCH_ID>",
+      "npm run laportal:review:prompt -- --artifact .git/laportal/codex-review.live.json --batch <BATCH_ID>",
     );
   });
 });

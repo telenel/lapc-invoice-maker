@@ -44,7 +44,7 @@ if [ "${SHIP_CHECK_HEAD:-}" != "$head_sha" ]; then
 fi
 
 if [ ! -f "$codex_review_file" ]; then
-  echo "BLOCKED: missing Codex review stamp. Run: npm run review:codex"
+  echo "BLOCKED: missing Codex review stamp. Run: npm run laportal:review"
   exit 1
 fi
 
@@ -52,13 +52,13 @@ fi
 . "$codex_review_file"
 if [ "${CODEX_REVIEW_HEAD:-}" != "$head_sha" ]; then
   echo "BLOCKED: Codex review stamp does not match HEAD $head_sha"
-  echo "Run: npm run review:codex"
+  echo "Run: npm run laportal:review"
   exit 1
 fi
 
 if [ "${CODEX_REVIEW_RESULT:-}" != "PASS" ]; then
   echo "BLOCKED: Codex review must return PASS before opening a PR."
-  echo "Run: npm run review:codex"
+  echo "Run: npm run laportal:review"
   exit 1
 fi
 

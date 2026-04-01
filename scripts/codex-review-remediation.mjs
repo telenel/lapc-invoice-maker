@@ -237,10 +237,10 @@ export function buildRemediationPlan(artifact, rootDir) {
 export function buildWorkerPromptCommand(artifactPath) {
   const normalized = artifactPath.replace(/\\/g, "/");
   if (normalized.endsWith("codex-review.live.json")) {
-    return `npm run review:codex:prompt -- --artifact ${artifactPath} --batch <BATCH_ID>`;
+    return `npm run laportal:review:prompt -- --artifact ${artifactPath} --batch <BATCH_ID>`;
   }
 
-  return "npm run review:codex:prompt -- --batch <BATCH_ID>";
+  return "npm run laportal:review:prompt -- --batch <BATCH_ID>";
 }
 
 export function formatRemediationPlan(artifact, plan, artifactPath) {
@@ -303,7 +303,7 @@ export function buildWorkerPrompt(artifact, batch, rootDir) {
     "- Resolve the findings completely within the owned file set.",
     "- If you must touch an additional file, explain why before doing so.",
     "- In your final response, list every file changed and any remaining risks.",
-    "- The coordinating agent will run npm run ship-check and npm run review:codex after integration.",
+    "- The coordinating agent will run npm run ship-check and npm run laportal:review after integration.",
   ];
 
   return `${lines.join("\n")}\n`;
