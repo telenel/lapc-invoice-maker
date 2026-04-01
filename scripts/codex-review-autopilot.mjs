@@ -592,6 +592,24 @@ function worktreeStatus(worktreePath) {
   return git(["-C", worktreePath, "status", "--short"], { cwd: worktreePath });
 }
 
+function ensureCleanRepoWorktree(repoRoot) {
+  const unstaged = spawnSync("git", ["diff", "--quiet"], {
+    cwd: repoRoot,
+    stdio: "ignore",
+  });
+  const staged = spawnSync("git", ["diff", "--cached", "--quiet"], {
+    cwd: repoRoot,
+    stdio: "ignore",
+  });
+
+  if ((unstaged.status ?? 1) !== 0 || (staged.status ?? 1) !== 0) {
+    const status = git(["status", "--short", "--branch"], { cwd: repoRoot });
+    throw new Error(
+      `Autopilot requires a clean working tree before it can integrate worker commits.\nCommit or stash changes first.\n\n${status}`,
+    );
+  }
+}
+
 function worktreeCommits(worktreePath, baseHeadSha) {
   const output = git(["-C", worktreePath, "rev-list", "--reverse", `${baseHeadSha}..HEAD`], {
     cwd: worktreePath,
@@ -768,6 +786,7 @@ async function main() {
   }
 
   const context = repoContext();
+  ensureCleanRepoWorktree(context.repoRoot);
   const session = createSession(context);
   const sessionStartedMs = Date.now();
   const producerLogWrite = (chunk) => {
