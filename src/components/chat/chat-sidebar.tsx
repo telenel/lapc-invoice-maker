@@ -3,7 +3,7 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useChat, Chat, type UIMessage } from "@ai-sdk/react";
+import { useChat } from "@ai-sdk/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   MessageSquareIcon,
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ChatMessage } from "./chat-message";
 import { ChatInput } from "./chat-input";
+import { clearChatInstance, getChatInstance } from "./chat-instance";
 
 const STORAGE_KEY = "laportal-chat-open";
 const SIDEBAR_WIDTH = 320;
@@ -23,17 +24,6 @@ const QUICK_ACTIONS = [
   { label: "Today's events", text: "What events are happening today?" },
   { label: "Create a quote", text: "Help me create a new quote" },
 ];
-
-// Per-user Chat instances — keyed by user ID to prevent cross-session leakage
-const chatInstances = new Map<string, Chat<UIMessage>>();
-function getChatInstance(userId: string): Chat<UIMessage> {
-  let instance = chatInstances.get(userId);
-  if (!instance) {
-    instance = new Chat<UIMessage>({ id: `laportal-chat-${userId}` });
-    chatInstances.set(userId, instance);
-  }
-  return instance;
-}
 
 const sidebarSpring = { type: "spring" as const, stiffness: 300, damping: 30 };
 
@@ -106,7 +96,7 @@ export function ChatSidebar() {
   );
 
   const handleClear = useCallback(() => {
-    chatInstances.delete(sessionUserId);
+    clearChatInstance(sessionUserId);
     setMessages([]);
   }, [setMessages, sessionUserId]);
 
