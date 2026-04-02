@@ -1,9 +1,12 @@
 name: Deploy to VPS
 
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types: [completed]
+  push:
+    branches: [main]
+
+permissions:
+  actions: read
+  contents: read
 
 concurrency:
   group: deploy-main
@@ -11,19 +14,75 @@ concurrency:
 
 jobs:
   deploy:
-    if: >
-      github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push' &&
-      github.event.workflow_run.head_branch == 'main'
     runs-on: ubuntu-latest
     env:
+      CI_WAIT_ATTEMPTS: 30
+      CI_WAIT_SLEEP: 10
       DEPLOY_VERIFY_ATTEMPTS: 28
       DEPLOY_VERIFY_SLEEP: 15
       DEPLOY_VERIFY_INITIAL_SLEEP: 60
     steps:
+      - name: Wait for matching CI run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          echo "Waiting for CI to succeed for $EXPECTED_SHA..."
+          api_url="https://api.github.com/repos/$REPO/actions/runs?event=push&branch=main&per_page=20"
+          for i in $(seq 1 "$CI_WAIT_ATTEMPTS"); do
+            response=$(curl -fsSL \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "$api_url")
+            ci_line=$(EXPECTED_SHA="$EXPECTED_SHA" python3 -c '
+import json
+import os
+import sys
+
+expected_sha = os.environ["EXPECTED_SHA"]
+payload = json.load(sys.stdin)
+
+for run in payload.get("workflow_runs", []):
+    if run.get("name") == "CI" and run.get("head_sha") == expected_sha:
+        print(json.dumps({
+            "status": run.get("status", ""),
+            "conclusion": run.get("conclusion", ""),
+            "url": run.get("html_url", ""),
+        }))
+        break
+' <<<"$response")
+
+            if [ -z "$ci_line" ]; then
+              echo "Attempt $i/$CI_WAIT_ATTEMPTS: waiting for CI run to appear"
+              sleep "$CI_WAIT_SLEEP"
+              continue
+            fi
+
+            status=$(printf '%s' "$ci_line" | python3 -c 'import json,sys; print(json.load(sys.stdin)["status"])')
+            conclusion=$(printf '%s' "$ci_line" | python3 -c 'import json,sys; print(json.load(sys.stdin)["conclusion"])')
+            ci_url=$(printf '%s' "$ci_line" | python3 -c 'import json,sys; print(json.load(sys.stdin)["url"])')
+
+            echo "Attempt $i/$CI_WAIT_ATTEMPTS: CI status=$status conclusion=${conclusion:-none}"
+            if [ "$status" = "completed" ] && [ "$conclusion" = "success" ]; then
+              echo "Matched successful CI run: $ci_url"
+              exit 0
+            fi
+
+            if [ "$status" = "completed" ] && [ "$conclusion" != "success" ]; then
+              echo "CI did not succeed for $EXPECTED_SHA: $ci_url"
+              exit 1
+            fi
+
+            sleep "$CI_WAIT_SLEEP"
+          done
+
+          echo "Timed out waiting for CI to succeed for $EXPECTED_SHA"
+          exit 1
+
       - name: Trigger deploy webhook
         env:
-          EXPECTED_SHA: ${{ github.event.workflow_run.head_sha }}
+          EXPECTED_SHA: ${{ github.sha }}
         run: |
           response=$(curl -sfS --connect-timeout 10 --max-time 30 -X POST \
             https://montalvo.io/hooks/deploy-laportal \
@@ -40,7 +99,7 @@ jobs:
 
       - name: Health check
         env:
-          EXPECTED_SHA: ${{ github.event.workflow_run.head_sha }}
+          EXPECTED_SHA: ${{ github.sha }}
         run: |
           expected_sha="${EXPECTED_SHA::7}"
           echo "Waiting for deployed build SHA $expected_sha..."
