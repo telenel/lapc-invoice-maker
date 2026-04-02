@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.7
+
 FROM node:22-slim AS base
 
 # Install Chromium dependencies for server-side PDF rendering
@@ -30,7 +32,7 @@ WORKDIR /app
 FROM base AS deps
 COPY package.json package-lock.json ./
 COPY scripts/postinstall.js ./scripts/postinstall.js
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci
 
 # Build stage
 FROM base AS builder
@@ -39,7 +41,7 @@ ENV NEXT_PUBLIC_BUILD_SHA=${BUILD_SHA}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate
-RUN npm run build
+RUN --mount=type=cache,target=/app/.next/cache npm run build
 
 # Production stage
 FROM base AS runner

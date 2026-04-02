@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
+
 PROJECT_DIR="/opt/lapc-invoice-maker"
 DEFAULT_BRANCH="main"
 APP_URL="https://laportal.montalvo.io/api/version"
