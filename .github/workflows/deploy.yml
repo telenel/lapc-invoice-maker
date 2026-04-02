@@ -3,6 +3,7 @@ name: Deploy to VPS
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   actions: read
@@ -23,62 +24,53 @@ jobs:
       DEPLOY_VERIFY_INITIAL_SLEEP: 60
     steps:
       - name: Wait for matching CI run
+        uses: actions/github-script@v7
         env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
           EXPECTED_SHA: ${{ github.sha }}
-        run: |
-          echo "Waiting for CI to succeed for $EXPECTED_SHA..."
-          api_url="https://api.github.com/repos/$REPO/actions/runs?event=push&branch=main&per_page=20"
-          for i in $(seq 1 "$CI_WAIT_ATTEMPTS"); do
-            response=$(curl -fsSL \
-              -H "Authorization: Bearer $GH_TOKEN" \
-              -H "Accept: application/vnd.github+json" \
-              "$api_url")
-            ci_line=$(EXPECTED_SHA="$EXPECTED_SHA" python3 -c '
-import json
-import os
-import sys
+        with:
+          script: |
+            const expectedSha = process.env.EXPECTED_SHA;
+            const maxAttempts = Number(process.env.CI_WAIT_ATTEMPTS);
+            const waitMs = Number(process.env.CI_WAIT_SLEEP) * 1000;
 
-expected_sha = os.environ["EXPECTED_SHA"]
-payload = json.load(sys.stdin)
+            core.info(`Waiting for CI to succeed for ${expectedSha}...`);
 
-for run in payload.get("workflow_runs", []):
-    if run.get("name") == "CI" and run.get("head_sha") == expected_sha:
-        print(json.dumps({
-            "status": run.get("status", ""),
-            "conclusion": run.get("conclusion", ""),
-            "url": run.get("html_url", ""),
-        }))
-        break
-' <<<"$response")
+            for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+              const { data } = await github.rest.actions.listWorkflowRunsForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                branch: "main",
+                event: "push",
+                per_page: 20,
+              });
 
-            if [ -z "$ci_line" ]; then
-              echo "Attempt $i/$CI_WAIT_ATTEMPTS: waiting for CI run to appear"
-              sleep "$CI_WAIT_SLEEP"
-              continue
-            fi
+              const ciRun = data.workflow_runs.find(
+                (run) => run.name === "CI" && run.head_sha === expectedSha,
+              );
 
-            status=$(printf '%s' "$ci_line" | python3 -c 'import json,sys; print(json.load(sys.stdin)["status"])')
-            conclusion=$(printf '%s' "$ci_line" | python3 -c 'import json,sys; print(json.load(sys.stdin)["conclusion"])')
-            ci_url=$(printf '%s' "$ci_line" | python3 -c 'import json,sys; print(json.load(sys.stdin)["url"])')
+              if (!ciRun) {
+                core.info(`Attempt ${attempt}/${maxAttempts}: waiting for CI run to appear`);
+                await new Promise((resolve) => setTimeout(resolve, waitMs));
+                continue;
+              }
 
-            echo "Attempt $i/$CI_WAIT_ATTEMPTS: CI status=$status conclusion=${conclusion:-none}"
-            if [ "$status" = "completed" ] && [ "$conclusion" = "success" ]; then
-              echo "Matched successful CI run: $ci_url"
-              exit 0
-            fi
+              core.info(
+                `Attempt ${attempt}/${maxAttempts}: CI status=${ciRun.status} conclusion=${ciRun.conclusion ?? "none"}`,
+              );
 
-            if [ "$status" = "completed" ] && [ "$conclusion" != "success" ]; then
-              echo "CI did not succeed for $EXPECTED_SHA: $ci_url"
-              exit 1
-            fi
+              if (ciRun.status === "completed" && ciRun.conclusion === "success") {
+                core.info(`Matched successful CI run: ${ciRun.html_url}`);
+                return;
+              }
 
-            sleep "$CI_WAIT_SLEEP"
-          done
+              if (ciRun.status === "completed") {
+                throw new Error(`CI did not succeed for ${expectedSha}: ${ciRun.html_url}`);
+              }
 
-          echo "Timed out waiting for CI to succeed for $EXPECTED_SHA"
-          exit 1
+              await new Promise((resolve) => setTimeout(resolve, waitMs));
+            }
+
+            throw new Error(`Timed out waiting for CI to succeed for ${expectedSha}`);
 
       - name: Trigger deploy webhook
         env:
