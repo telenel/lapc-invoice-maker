@@ -4,9 +4,9 @@ set -euo pipefail
 PROJECT_DIR="/opt/lapc-invoice-maker"
 DEFAULT_BRANCH="main"
 APP_URL="https://laportal.montalvo.io/api/version"
-VERIFY_ATTEMPTS=18
+VERIFY_ATTEMPTS=36
 VERIFY_SLEEP=10
-VERIFY_INITIAL_SLEEP=5
+VERIFY_INITIAL_SLEEP=15
 
 cd "$PROJECT_DIR"
 
@@ -61,11 +61,13 @@ fi
 
 echo "[deploy] Verifying deployed build SHA..."
 sleep "$VERIFY_INITIAL_SLEEP"
+last_body=""
 for i in $(seq 1 "$VERIFY_ATTEMPTS"); do
   body=""
   if ! body=$(curl -fsS --connect-timeout 10 --max-time 20 "$APP_URL" 2>/dev/null); then
     body=""
   fi
+  last_body="$body"
   deployed_sha=$(printf '%s' "$body" | grep -oE '"buildSha":"[a-f0-9]+"' | cut -d'"' -f4 || true)
   status=$(printf '%s' "$body" | grep -oE '"status":"[^"]+"' | cut -d'"' -f4 || true)
   echo "[deploy] Attempt $i/$VERIFY_ATTEMPTS: status=${status:-unknown} buildSha=${deployed_sha:-missing}"
@@ -77,6 +79,7 @@ for i in $(seq 1 "$VERIFY_ATTEMPTS"); do
   sleep "$VERIFY_SLEEP"
 done
 
+echo "[deploy] Last /api/version response: ${last_body:-<empty>}"
 echo "[deploy] ERROR: live site never reported build SHA $BUILD_SHA"
 rollback_deploy "$ROLLBACK_COMMIT" || true
 docker compose ps
