@@ -26,6 +26,7 @@ describe("register", () => {
     ).__laportalCronRegistered;
     process.env.NEXT_RUNTIME = "nodejs";
     process.env.NODE_ENV = "production";
+    process.env.JOB_SCHEDULER = "app";
   });
 
   it("registers payment follow-ups in Los Angeles time", async () => {
@@ -42,6 +43,15 @@ describe("register", () => {
 
   it("does not register cron jobs outside production", async () => {
     process.env.NODE_ENV = "development";
+    const { register } = await import("@/instrumentation");
+
+    await register();
+
+    expect(schedule).not.toHaveBeenCalled();
+  });
+
+  it("skips app cron registration when Supabase scheduling is enabled", async () => {
+    process.env.JOB_SCHEDULER = "supabase";
     const { register } = await import("@/instrumentation");
 
     await register();

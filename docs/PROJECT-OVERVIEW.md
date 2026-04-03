@@ -95,9 +95,9 @@ prisma/
 ├── migrations/
 └── seed.ts
 
-src/__tests__/             # Component and integration tests (7 files, 47 tests)
+src/__tests__/             # Component and integration tests
 
-tests/                     # Domain and lib tests (19 files, 303 tests)
+tests/                     # Domain and lib tests
 ├── components/
 ├── domains/
 └── lib/
@@ -312,11 +312,11 @@ The home page (`src/app/page.tsx`) features a personalized dashboard:
 
 - **Personalized header** — time-based greeting (Good Morning/Afternoon/Evening) with username
 - **YourFocus widget** — prioritized action items for the current user
-- **Drag-and-drop layout** — widgets can be reordered, persisted to `localStorage` (key: `laportal-dashboard-order`)
+- **Drag-and-drop layout** — widgets can be reordered and persisted via the authenticated user preferences API
 - **Stats cards** — invoice/quote counts filtered by `createdAt` (not invoice date)
 - **Recent activity** — shows both invoices and quotes (not just invoices)
 - **Running invoices, pending charges, team activity** — all role-aware
-- **Real-time updates** — all dashboard widgets update in real-time via SSE
+- **Real-time updates** — all dashboard widgets update in real-time via Supabase Realtime invalidation
 - **Help modal** — accessible from nav bar, covers invoice creation, line items, signatures, PDF generation, invoice management, and analytics
 
 Components in `src/components/dashboard/`.
@@ -413,7 +413,7 @@ A Claude Haiku-powered chatbot in a collapsible right sidebar. Staff can ask abo
 - **Tools:** List/view invoices and quotes, search staff, create staff, list/create calendar events, view analytics, navigate user to pages. `searchPeople` searches both Staff and Contact tables. `createInvoice`/`createQuote` accept `contactName` for auto-creating contacts
 - **Safeguards:** Ownership enforcement (users can only modify their own records, admins bypass), destructive action confirmation, rate limiting
 - **Conversations:** Ephemeral (no persistence, resets on page refresh)
-- **UI:** Right sidebar (320px), minimize to icon strip, state persisted in localStorage
+- **UI:** Right sidebar (320px), minimize to icon strip, state persisted via authenticated user preferences
 - **Security:** Username escaped in system prompt to prevent injection; link URLs sanitized (http/https/relative only)
 
 ---
@@ -429,14 +429,14 @@ FullCalendar page at `/calendar` merging three event sources:
 - **API:** `GET /api/calendar/events` merges all sources; `GET /api/events` (list), `POST /api/events` (create), `GET/PUT/PATCH/DELETE /api/events/:id` (read/update/delete)
 - **Reminders:** `src/domains/event/reminders.ts` checks due reminders via scheduled trigger, sends `EVENT_REMINDER` notifications to all users
 - **UI:** `AddEventModal` for create/edit, `EventLegend` for color key, click-to-edit for manual events
-- **Real-time:** Updates via `calendar-changed` SSE event — events created from chatbot or modal appear instantly without refresh
+- **Real-time:** Updates via `calendar-changed` realtime event — events created from chatbot or modal appear instantly without refresh
 
 ---
 
 ## Login
 
 - **Email label** — field shows "Email" with `you@piercecollege.edu` placeholder
-- **Remember Me** — checkbox (default: on). Checked = 90-day session, unchecked = 24-hour session. Preference persisted in localStorage
+- **Remember Me** — checkbox (default: on). Checked = 90-day session, unchecked = 24-hour session
 - **Show/hide password** — eye icon toggle with `aria-pressed` for accessibility
 - **Caps Lock warning** — amber text with `aria-live` region when Caps Lock is detected
 - **Session enforcement** — `session.maxAge` set to 90 days (max), per-session expiration enforced via `token.iat` check in JWT callback
@@ -445,9 +445,9 @@ FullCalendar page at `/calendar` merging three event sources:
 
 ## Testing
 
-**Total: 350 tests** across 26 test files in two directories.
+Vitest covers both domain/lib tests in `tests/` and component/integration tests in `src/__tests__/`.
 
-### Test Files — `tests/` (303 tests)
+### Test Files — `tests/`
 
 | File | Domain/Layer |
 |---|---|
@@ -471,7 +471,7 @@ FullCalendar page at `/calendar` merging three event sources:
 | `tests/lib/themes.test.ts` | Themes lib |
 | `tests/lib/validators.test.ts` | Validators lib |
 
-### Test Files — `src/__tests__/` (47 tests)
+### Test Files — `src/__tests__/`
 
 | File | Area |
 |---|---|

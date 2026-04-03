@@ -313,20 +313,16 @@ Target behavior:
 Target behavior:
 
 - move draft autosave to server-backed storage first
-- keep purely cosmetic local state local unless cross-device sync is desired
+- persist authenticated user preferences through the same server-backed model so they sync across tabs and devices
 
 Server-backed candidates:
 
 - invoice draft autosave
 - quote draft autosave
-- dashboard order if cross-device consistency matters
-
-Local-only candidates:
-
 - UI scale
 - field hint dismissal
 - assistant open/closed state
-- remember-me checkbox
+- dashboard order
 
 ---
 
@@ -334,47 +330,48 @@ Local-only candidates:
 
 ## Phase 1: Foundation
 
-- [ ] Add Supabase dependencies
-- [ ] Add environment variable schema and documentation
-- [ ] Add server/admin/browser Supabase clients
-- [ ] Add a Realtime JWT mint route
-- [ ] Add a shared Realtime abstraction that preserves current `publish`, `publishAll`, and `useSSE` call sites
-- [ ] Add Supabase SQL bootstrap for:
+- [x] Add Supabase dependencies
+- [x] Add environment variable schema and documentation
+- [x] Add server/admin/browser Supabase clients
+- [x] Add a Realtime JWT mint route
+- [x] Add a shared Realtime abstraction that preserves current `publish`, `publishAll`, and `useSSE` call sites
+- [x] Add Supabase SQL bootstrap for:
   - private Realtime policies
   - Storage bucket creation
-  - optional helper indexes / extensions where needed
+  - optional helper indexes / scheduler extensions where needed
 
 ## Phase 2: Storage Migration
 
-- [ ] Refactor PDF generators to produce `Buffer`, not local files
-- [ ] Write Storage upload/download/delete helpers
-- [ ] Update invoice finalize flow to store PDFs in Storage
-- [ ] Update quote PDF generation to store/read from Storage
-- [ ] Update print quote PDF generation to store/read from Storage
-- [ ] Update upload route to store PrismCore PDFs in Storage
-- [ ] Replace local-path assumptions in API responses and UI badges
+- [x] Refactor PDF generators to produce `Buffer`, not local files
+- [x] Write Storage upload/download/delete helpers
+- [x] Update invoice finalize flow to store PDFs in Storage
+- [x] Update quote PDF generation to store/read from Storage
+- [x] Update print quote PDF generation to store/read from Storage
+- [x] Update upload route to store PrismCore PDFs in Storage
+- [x] Replace local-path assumptions in API responses and UI badges
+- [x] Add a legacy document migration script and fallback reader for staged cutovers
 
 ## Phase 3: Realtime Migration
 
-- [ ] Replace `src/lib/sse.ts` implementation with Supabase publish helpers
-- [ ] Replace `src/lib/use-sse.ts` transport with Supabase subscriptions
-- [ ] Remove notification polling
-- [ ] Broadcast notification mutation events on read/delete/all-read
-- [ ] Ensure quote activity refreshes on public page views
-- [ ] Keep current refetch pattern for invoice/quote/dashboard/staff/calendar
+- [x] Replace `src/lib/sse.ts` implementation with Supabase publish helpers
+- [x] Replace `src/lib/use-sse.ts` transport with Supabase subscriptions
+- [x] Remove notification polling
+- [x] Broadcast notification mutation events on read/delete/all-read
+- [x] Ensure quote activity refreshes on public page views
+- [x] Keep current refetch pattern for invoice/quote/dashboard/staff/calendar
 
 ## Phase 4: Data And Workflow Hardening
 
-- [ ] Add draft persistence table and API if server-backed drafts are adopted now
-- [ ] Add optional user-preference persistence if cross-device sync is desired now
-- [ ] Review every API route for assumptions tied to filesystem or SSE
-- [ ] Review tests and add coverage for storage/realtime transitions
+- [x] Add draft persistence table and API if server-backed drafts are adopted now
+- [x] Add user-preference persistence for authenticated UI state
+- [x] Review every API route for assumptions tied to filesystem or SSE
+- [x] Review tests and add coverage for storage/realtime transitions
 
 ## Phase 5: Auth And Runtime Consolidation
 
 - [ ] Decide whether to stay on NextAuth + JWT bridge or move fully to Supabase Auth
 - [ ] If migrating auth, replace middleware/session helpers only after behavior parity
-- [ ] Move reminder/follow-up scheduling off `node-cron`
+- [x] Move reminder/follow-up scheduling behind Supabase-manageable cron routes and SQL assets
 
 ---
 

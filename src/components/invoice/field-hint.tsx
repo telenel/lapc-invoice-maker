@@ -1,19 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useUserPreference } from "@/domains/user-preference/hooks";
 
 export const HINTS_KEY = "laportal-hints-dismissed";
 
-export function useHintsDismissed() {
-  const [dismissed, setDismissed] = useState(true); // default true to avoid SSR flash
+function parseHintsDismissed(value: unknown): boolean {
+  return value === true;
+}
 
-  useEffect(() => {
-    const stored = localStorage.getItem(HINTS_KEY);
-    setDismissed(stored === "true");
-  }, []);
+export function useHintsDismissed() {
+  const {
+    value: dismissed,
+    setValue: setDismissed,
+  } = useUserPreference<boolean>({
+    key: HINTS_KEY,
+    defaultValue: true,
+    deserialize: parseHintsDismissed,
+  });
 
   function dismiss() {
-    localStorage.setItem(HINTS_KEY, "true");
     setDismissed(true);
   }
 

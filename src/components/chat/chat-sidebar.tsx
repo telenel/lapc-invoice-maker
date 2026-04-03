@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useChat } from "@ai-sdk/react";
@@ -11,6 +11,7 @@ import {
   Trash2Icon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useUserPreference } from "@/domains/user-preference/hooks";
 import { cn } from "@/lib/utils";
 import { ChatMessage } from "./chat-message";
 import { ChatInput } from "./chat-input";
@@ -27,17 +28,23 @@ const QUICK_ACTIONS = [
 
 const sidebarSpring = { type: "spring" as const, stiffness: 300, damping: 30 };
 
+function parseSidebarOpen(value: unknown): boolean {
+  return typeof value === "boolean" ? value : true;
+}
+
 export function ChatSidebar() {
   const { data: session, status: sessionStatus } = useSession();
   const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [isOpen, setIsOpen] = useState<boolean | null>(null);
-
-  // Read initial open state from localStorage after mount
-  useEffect(() => {
-    const stored = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
-    setIsOpen(stored === null ? true : stored === "true");
-  }, []);
+  const {
+    value: isOpen,
+    setValue: setIsOpen,
+    loaded: isOpenLoaded,
+  } = useUserPreference<boolean>({
+    key: STORAGE_KEY,
+    defaultValue: true,
+    deserialize: parseSidebarOpen,
+  });
 
   const sessionUserId = (session?.user as { id?: string } | undefined)?.id ?? "anonymous";
   const { messages, sendMessage, setMessages, status } = useChat({
@@ -81,12 +88,8 @@ export function ChatSidebar() {
   }, [messages, isLoading]);
 
   const toggleOpen = useCallback(() => {
-    setIsOpen((prev) => {
-      const next = !prev;
-      localStorage.setItem(STORAGE_KEY, String(next));
-      return next;
-    });
-  }, []);
+    setIsOpen(!isOpen);
+  }, [isOpen, setIsOpen]);
 
   const handleSend = useCallback(
     (text: string) => {
@@ -101,7 +104,7 @@ export function ChatSidebar() {
   }, [setMessages, sessionUserId]);
 
   // Don't render until session is loaded and we know open state
-  if (sessionStatus !== "authenticated" || !session?.user || isOpen === null) {
+  if (sessionStatus !== "authenticated" || !session?.user || !isOpenLoaded) {
     return null;
   }
 

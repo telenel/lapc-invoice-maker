@@ -46,6 +46,14 @@ export function publishAll(data: unknown): void {
   void broadcast(GLOBAL_REALTIME_TOPIC, data);
 }
 
+export function safePublish(userId: string, data: unknown): void {
+  try {
+    publish(userId, data);
+  } catch {
+    /* Realtime broadcast failure is non-critical */
+  }
+}
+
 export function safePublishAll(data: unknown): void {
   try {
     publishAll(data);

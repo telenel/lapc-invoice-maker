@@ -25,6 +25,8 @@ model User {
   contacts       Contact[]       @relation("ContactCreator")
   templates      Template[]
   printQuotes    PrintQuote[]
+  drafts         UserDraft[]
+  preferences    UserPreference[]
 
   @@map("users")
 }
@@ -287,6 +289,38 @@ model UserQuickPick {
 
   @@unique([userId, department, description])
   @@map("user_quick_picks")
+}
+
+model UserDraft {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  routeKey  String   @map("route_key")
+  data      Json
+  savedAt   DateTime @default(now()) @map("saved_at")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, routeKey])
+  @@index([userId, expiresAt])
+  @@map("user_drafts")
+}
+
+model UserPreference {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  key       String
+  value     Json
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+  @@index([userId])
+  @@map("user_preferences")
 }
 
 model QuoteView {

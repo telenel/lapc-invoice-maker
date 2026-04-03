@@ -1,12 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
+import { userDraftApi } from "@/domains/user-draft/api-client";
 
 const SAVE_INTERVAL = 30_000; // 30 seconds
-const EXPIRY_DAYS = 7;
 
-function getDraftKey(userId: string, routeKey: string): string {
-  return `draft:${userId}:${routeKey}`;
+function getStableUserId(userId: string | null | undefined): string | null {
+  if (!userId || userId === "anonymous") {
+    return null;
+  }
+
+  return userId;
 }
 
 export function useAutoSave<T>(formState: T, routeKey: string, userId: string | null) {
@@ -14,6 +18,7 @@ export function useAutoSave<T>(formState: T, routeKey: string, userId: string | 
   const formStateRef = useRef(formState);
   const initialStateRef = useRef(formState);
   const isDirtyRef = useRef(false);
+  const saveInFlightRef = useRef(false);
   formStateRef.current = formState;
 
   // Detect dirty state by comparing current to initial
@@ -21,45 +26,59 @@ export function useAutoSave<T>(formState: T, routeKey: string, userId: string | 
     isDirtyRef.current = true;
   }
 
-  const stableUserId = userId && userId !== "anonymous" ? userId : null;
-  const key = stableUserId ? getDraftKey(stableUserId, routeKey) : null;
+  const stableUserId = getStableUserId(userId);
 
   useEffect(() => {
-    if (!key) return;
+    if (!stableUserId) return;
+
     timerRef.current = setInterval(() => {
-      if (!isDirtyRef.current) return; // Don't save until user actually edits
-      try {
-        const entry = { data: formStateRef.current, savedAt: Date.now() };
-        localStorage.setItem(key, JSON.stringify(entry));
-      } catch {
-        // localStorage full or unavailable
-      }
+      if (!isDirtyRef.current || saveInFlightRef.current) return;
+
+      saveInFlightRef.current = true;
+      void userDraftApi.save(routeKey, formStateRef.current).finally(() => {
+        saveInFlightRef.current = false;
+      });
     }, SAVE_INTERVAL);
 
-    return () => clearInterval(timerRef.current);
-  }, [key]);
+    return () => {
+      clearInterval(timerRef.current);
+      saveInFlightRef.current = false;
+    };
+  }, [routeKey, stableUserId]);
 
   const clearDraft = useCallback(() => {
-    if (key) localStorage.removeItem(key);
+    initialStateRef.current = formStateRef.current;
     isDirtyRef.current = false;
-  }, [key]);
+    if (!stableUserId) {
+      return;
+    }
+
+    void userDraftApi.clear(routeKey).catch(() => {
+      // Draft clearing is non-critical after a successful save/discard.
+    });
+  }, [routeKey, stableUserId]);
 
   return { clearDraft };
 }
 
-export function loadDraft<T>(
+export async function loadDraft<T>(
   routeKey: string,
   userId: string,
-): { data: T; savedAt: number } | null {
+): Promise<{ data: T; savedAt: number } | null> {
+  if (!getStableUserId(userId)) {
+    return null;
+  }
+
   try {
-    const raw = localStorage.getItem(getDraftKey(userId, routeKey));
-    if (!raw) return null;
-    const entry = JSON.parse(raw) as { data: T; savedAt: number };
-    if (Date.now() - entry.savedAt > EXPIRY_DAYS * 24 * 60 * 60 * 1000) {
-      localStorage.removeItem(getDraftKey(userId, routeKey));
+    const entry = await userDraftApi.get<T>(routeKey);
+    if (!entry) {
       return null;
     }
-    return entry;
+
+    return {
+      data: entry.data,
+      savedAt: new Date(entry.savedAt).getTime(),
+    };
   } catch {
     return null;
   }
