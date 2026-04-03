@@ -41,6 +41,8 @@ ENV NEXT_PUBLIC_BUILD_SHA=${BUILD_SHA}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate
+# Dummy DATABASE_URL so Next.js build can collect page data without a live DB
+ENV DATABASE_URL="postgresql://build:build@localhost:5432/build"
 RUN --mount=type=cache,target=/app/.next/cache npm run build
 
 # Production stage
