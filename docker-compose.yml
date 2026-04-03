@@ -1,38 +1,13 @@
 services:
-  db:
-    image: postgres:16
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: invoicemaker
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-invoicemaker}
-      POSTGRES_DB: invoicemaker
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U invoicemaker"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   app:
     build: .
     restart: unless-stopped
     expose:
       - "3000"
+    env_file: .env
     environment:
-      DATABASE_URL: "postgresql://invoicemaker:${DB_PASSWORD:-invoicemaker}@db:5432/invoicemaker"
-      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
-      NEXTAUTH_URL: ${NEXTAUTH_URL:-https://laportal.montalvo.io}
-      PDF_STORAGE_PATH: ./data/pdfs
-      UPLOAD_PATH: ./public/uploads
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-      POWER_AUTOMATE_EMAIL_URL: ${POWER_AUTOMATE_EMAIL_URL}
-    volumes:
-      - pdf-data:/app/data/pdfs
-      - uploads:/app/public/uploads
-    depends_on:
-      db:
-        condition: service_healthy
+      # Override DIRECT_URL for Docker (no IPv6) — use pooler like DATABASE_URL
+      DIRECT_URL: ${DATABASE_URL}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.laportal.rule=Host(`laportal.montalvo.io`)"
@@ -42,11 +17,6 @@ services:
     networks:
       - default
       - traefik-net
-
-volumes:
-  pgdata:
-  pdf-data:
-  uploads:
 
 networks:
   traefik-net:
