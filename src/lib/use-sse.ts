@@ -1,51 +1,104 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-
-// ---------------------------------------------------------------------------
-// Shared singleton EventSource — all useSSE callers share one connection
-// ---------------------------------------------------------------------------
-
-const RECONNECT_DELAY_MS = 3000;
+import type { RealtimeChannel } from "@supabase/supabase-js";
+import { getSupabaseRealtimeContext, invalidateSupabaseRealtimeToken } from "./supabase/browser";
+import {
+  GLOBAL_REALTIME_TOPIC,
+  REALTIME_BROADCAST_EVENT,
+  getUserRealtimeTopic,
+} from "./realtime-topics";
 
 type Listener = (data: unknown) => void;
 type ConnectionListener = (connected: boolean) => void;
 
-let sharedES: EventSource | null = null;
 const listeners = new Set<Listener>();
 const connectionListeners = new Set<ConnectionListener>();
-let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+let setupPromise: Promise<void> | null = null;
+let activeCleanup: (() => Promise<void>) | null = null;
+let isConnected = false;
 
-function ensureConnection() {
-  if (sharedES) return;
+function notifyConnection(connected: boolean) {
+  isConnected = connected;
+  connectionListeners.forEach((fn) => fn(connected));
+}
 
-  const es = new EventSource("/api/notifications/stream");
+function dispatch(data: unknown) {
+  listeners.forEach((fn) => fn(data));
+}
 
-  es.onopen = () => {
-    connectionListeners.forEach((fn) => fn(true));
-  };
+function attachPayloadHandler(channel: RealtimeChannel): RealtimeChannel {
+  return channel.on(
+    "broadcast",
+    { event: REALTIME_BROADCAST_EVENT },
+    ({ payload }) => {
+      dispatch(payload);
+    }
+  );
+}
 
-  es.onmessage = (event) => {
+async function ensureConnection() {
+  if (activeCleanup) return;
+  if (setupPromise) {
+    await setupPromise;
+    return;
+  }
+
+  setupPromise = (async () => {
     try {
-      const data = JSON.parse(event.data);
-      listeners.forEach((fn) => fn(data));
+      const { client, userId } = await getSupabaseRealtimeContext();
+      if (listeners.size === 0) return;
+
+      const channels = [
+        attachPayloadHandler(
+          client.channel(GLOBAL_REALTIME_TOPIC, { config: { private: true } })
+        ),
+        attachPayloadHandler(
+          client.channel(getUserRealtimeTopic(userId), {
+            config: { private: true },
+          })
+        ),
+      ];
+
+      const subscribedTopics = new Set<string>();
+
+      channels.forEach((channel) => {
+        channel.subscribe((status) => {
+          if (status === "SUBSCRIBED") {
+            subscribedTopics.add(channel.topic);
+            notifyConnection(true);
+            return;
+          }
+
+          if (
+            status === "TIMED_OUT" ||
+            status === "CHANNEL_ERROR" ||
+            status === "CLOSED"
+          ) {
+            if (status === "CHANNEL_ERROR") {
+              invalidateSupabaseRealtimeToken();
+            }
+            subscribedTopics.delete(channel.topic);
+            if (subscribedTopics.size === 0) {
+              notifyConnection(false);
+            }
+          }
+        });
+      });
+
+      activeCleanup = async () => {
+        await Promise.all(channels.map((channel) => client.removeChannel(channel)));
+        activeCleanup = null;
+        notifyConnection(false);
+      };
     } catch {
-      // Ignore parse errors
+      notifyConnection(false);
+    } finally {
+      setupPromise = null;
     }
-  };
+  })();
 
-  es.onerror = () => {
-    es.close();
-    sharedES = null;
-    connectionListeners.forEach((fn) => fn(false));
-    // Reconnect only if there are still active listeners
-    if (listeners.size > 0) {
-      clearTimeout(reconnectTimer);
-      reconnectTimer = setTimeout(ensureConnection, RECONNECT_DELAY_MS);
-    }
-  };
-
-  sharedES = es;
+  await setupPromise;
 }
 
 function subscribe(
@@ -55,22 +108,26 @@ function subscribe(
   listeners.add(listener);
   if (options?.onConnectionChange) {
     connectionListeners.add(options.onConnectionChange);
-    if (sharedES?.readyState === EventSource.OPEN) {
+    if (isConnected) {
       options.onConnectionChange(true);
     }
   }
-  ensureConnection();
+  void ensureConnection();
 
   return () => {
     listeners.delete(listener);
     if (options?.onConnectionChange) {
       connectionListeners.delete(options.onConnectionChange);
     }
-    // Close connection when no listeners remain
+
     if (listeners.size === 0) {
-      clearTimeout(reconnectTimer);
-      sharedES?.close();
-      sharedES = null;
+      const cleanup = activeCleanup;
+      activeCleanup = null;
+      if (cleanup) {
+        void cleanup();
+      } else {
+        notifyConnection(false);
+      }
     }
   };
 }

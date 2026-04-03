@@ -83,8 +83,8 @@ src/
     ├── prisma.ts
     ├── quote-number.ts
     ├── rate-limit.ts      # Sliding window rate limiter (login protection)
-    ├── sse.ts             # In-memory SSE pub/sub for real-time notifications
-    ├── use-sse.ts         # Generic SSE hook for real-time updates
+    ├── sse.ts             # Supabase Realtime server publish shim
+    ├── use-sse.ts         # Generic realtime hook backed by Supabase channels
     ├── themes.ts
     ├── utils.ts
     ├── validators.ts
@@ -290,7 +290,7 @@ External people (vendors, customers, catering contacts) who are not Pierce Colle
 - **XSS prevention** — `escapeHtml()` in `src/lib/html.ts` wraps all user input in PDF templates
 - **Rate limiting** — sliding window limiter in `src/lib/rate-limit.ts`: 5 login attempts per 15min per IP+username
 - **Puppeteer sandboxing** — request interception blocks all external URLs; only `data:` and `file:` protocols allowed
-- **Path traversal protection** — `prismcorePath` must resolve within `public/uploads/`
+- **Storage key validation** — uploaded document object keys are normalized and reject traversal patterns such as `..` and `\`
 - **CSV injection** — `escapeCsv()` prefixes formula triggers (`=+-@`) with `'`
 - **Ownership verification** — all single-resource endpoints verify `resource.createdBy === session.user.id` (admins bypass)
 - **Auth wrappers** — `withAuth()` / `withAdmin()` centralize session checks in route handlers
@@ -335,12 +335,12 @@ Quotes can be shared with external recipients via token-based public links.
 4. Page visit is recorded as a `QuoteView` (IP, user-agent, referrer, viewport, duration via `sendBeacon`)
 5. Recipient clicks "Approve" or "Decline" → quote status updates, notification pushed to creator
 
-### SSE Notifications
+### Realtime Notifications
 
-Real-time notifications via Server-Sent Events:
+Real-time notifications via Supabase Realtime:
 
-- **Endpoint:** `GET /api/notifications/stream` (authenticated)
-- **Pub/sub:** In-memory `Map<userId, Set<controller>>` in `src/lib/sse.ts`
+- **Token bridge:** `GET /api/realtime/token` (authenticated)
+- **Pub/sub:** private Supabase Realtime channels via `src/lib/sse.ts`
 - **Events:** `QUOTE_VIEWED` (10-min debounce), `QUOTE_APPROVED`, `QUOTE_DECLINED`
 - **UI:** Bell icon in navbar with unread count badge and dropdown
 
@@ -366,13 +366,13 @@ These routes are excluded from auth middleware in `src/middleware.ts`.
 
 ---
 
-## Real-Time SSE Architecture
+## Real-Time Architecture
 
-Real-time updates are powered by Server-Sent Events with a generic hook and singleton connection.
+Real-time updates are powered by Supabase Realtime with a generic hook and shared browser client.
 
 - **Generic hook:** `useSSE(eventType, callback, debounceMs)` in `src/lib/use-sse.ts`
-- **Singleton EventSource:** shared across all consumers — one connection per browser tab
-- **Server broadcast:** `safePublishAll()` in `src/lib/sse.ts` — non-throwing broadcast wrapper that silently handles disconnected clients
+- **Shared client:** one Supabase client and channel set per browser tab
+- **Server broadcast:** `safePublishAll()` in `src/lib/sse.ts` publishes to `app:global`; `publish(userId, ...)` targets `user:<id>`
 - **Event types:** `calendar-changed`, `quote-changed`, `invoice-changed`, `staff-changed`
 - **Emission:** Services emit after every mutation (create, update, delete, status change)
 - **Consumers:** quote table, invoice table, staff table, dashboard stats, recent activity, pending charges, calendar

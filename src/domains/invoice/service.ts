@@ -2,6 +2,7 @@
 import * as invoiceRepository from "./repository";
 import { calculateLineItems, calculateTotal } from "./calculations";
 import { pdfService } from "@/domains/pdf/service";
+import { pdfStorage } from "@/domains/pdf/storage";
 import { staffService } from "@/domains/staff/service";
 import { formatCurrency, formatDateFromDate } from "@/domains/shared/formatters";
 import { safePublishAll } from "@/lib/sse";
@@ -379,7 +380,7 @@ export const invoiceService = {
         })),
         totalAmount: totalStr,
       },
-    });
+    }, pdfStorage.invoiceKey(id, invoice.invoiceNumber));
 
     // Optionally merge PrismCore PDF
     if (prismcorePath) {

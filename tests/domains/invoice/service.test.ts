@@ -377,7 +377,8 @@ describe("invoiceService", () => {
               { name: "John Smith", title: "Director of Finance" },
             ]),
           }),
-        })
+        }),
+        "invoices/inv1/AG-001.pdf"
       );
     });
 
@@ -395,7 +396,8 @@ describe("invoiceService", () => {
           coverSheet: expect.objectContaining({
             signatures: expect.arrayContaining([{ name: "John Smith" }]),
           }),
-        })
+        }),
+        "invoices/inv1/AG-001.pdf"
       );
     });
 
@@ -422,7 +424,8 @@ describe("invoiceService", () => {
             contactPhone: "x200",
             documentNumber: "AG-001",
           }),
-        })
+        }),
+        "invoices/inv1/AG-001.pdf"
       );
       expect(result).toEqual({ pdfPath: "/pdfs/inv1.pdf" });
     });
@@ -468,7 +471,8 @@ describe("invoiceService", () => {
       expect(mockPdfService.generateInvoice).toHaveBeenCalledWith(
         expect.objectContaining({
           idp: expect.objectContaining({ contactName: "Alice" }),
-        })
+        }),
+        "invoices/inv1/AG-001.pdf"
       );
     });
   });

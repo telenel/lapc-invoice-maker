@@ -9,7 +9,7 @@ Operations portal for **Los Angeles Pierce College**. Handles the full lifecycle
 - **Invoice creation** with keyboard-first entry, staff autofill, line items, tax calculation, and approval chains
 - **PDF generation** — cover sheets (Puppeteer), IDP forms (pdf-lib), PrismCore merge
 - **Quote management** — create, send, auto-expire, convert to invoice, online sharing with approve/decline flow
-- **Online quote sharing** — shareable public links, recipient approve/decline, view tracking (IP, browser, duration), real-time SSE notifications
+- **Online quote sharing** — shareable public links, recipient approve/decline, view tracking (IP, browser, duration), real-time Supabase notifications
 - **Staff directory** — CRUD with account numbers, signer history tracking
 - **Admin panel** — user management, account codes, invoice manager with inline editing, saved line items catalog, analytics dashboard
 - **Dark/light theme** with UI scale controls
@@ -19,7 +19,8 @@ Operations portal for **Los Angeles Pierce College**. Handles the full lifecycle
 | Layer | Technology |
 |-------|-----------|
 | Framework | Next.js 15 (App Router) |
-| Database | PostgreSQL + Prisma 7 |
+| Database | Supabase Postgres + Prisma 7 |
+| Storage / Realtime | Supabase Storage + Realtime |
 | Styling | Tailwind CSS 4 + shadcn/ui v4 |
 | Auth | NextAuth (JWT + Credentials) |
 | PDF | Puppeteer + pdf-lib |
@@ -74,6 +75,10 @@ npx prisma db seed                     # Seed database
 DATABASE_URL=postgresql://user:pass@localhost:5432/invoicemaker
 NEXTAUTH_SECRET=<secret>
 NEXTAUTH_URL=http://localhost:3000
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
+SUPABASE_JWT_SECRET=<jwt-secret>
 LAPORTAL_ENABLE_APP_CRON=0
 ```
 

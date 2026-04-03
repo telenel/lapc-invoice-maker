@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 import { randomUUID } from "crypto";
+import { pdfStorage } from "@/domains/pdf/storage";
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -26,15 +25,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "File size exceeds 10MB limit" }, { status: 400 });
     }
 
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-    await mkdir(uploadDir, { recursive: true });
-
     const filename = `${randomUUID()}.pdf`;
-    const filepath = path.join(uploadDir, filename);
     const bytes = await file.arrayBuffer();
-    await writeFile(filepath, Buffer.from(bytes));
+    const objectKey = pdfStorage.uploadKey(filename);
+    await pdfStorage.write(objectKey, Buffer.from(bytes));
 
-    return NextResponse.json({ path: `/uploads/${filename}`, filename });
+    return NextResponse.json({ path: objectKey, filename });
   } catch (err) {
     console.error("POST /api/upload failed:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

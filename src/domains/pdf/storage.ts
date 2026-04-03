@@ -1,45 +1,47 @@
-import { readFile, writeFile, unlink, mkdir } from "fs/promises";
-import { join, resolve } from "path";
-
-const PDF_DIR = join(process.cwd(), "data", "pdfs");
+import {
+  downloadDocument,
+  invoicePdfObjectKey,
+  printQuotePdfObjectKey,
+  quotePdfObjectKey,
+  removeDocument,
+  uploadDocument,
+  uploadPdfObjectKey,
+} from "@/lib/document-storage";
 
 export const pdfStorage = {
-  async ensureDir(): Promise<string> {
-    await mkdir(PDF_DIR, { recursive: true });
-    return PDF_DIR;
+  quoteKey(quoteId: string, quoteNumber: string): string {
+    return quotePdfObjectKey(quoteId, quoteNumber);
   },
 
-  pathFor(filename: string): string {
-    return join(PDF_DIR, filename);
+  invoiceKey(invoiceId: string, invoiceNumber: string): string {
+    return invoicePdfObjectKey(invoiceId, invoiceNumber);
   },
 
-  async read(absolutePath: string): Promise<Buffer> {
-    return readFile(absolutePath);
+  printQuoteKey(quoteId: string, quoteNumber: string): string {
+    return printQuotePdfObjectKey(quoteId, quoteNumber);
   },
 
-  async write(absolutePath: string, data: Buffer): Promise<void> {
-    const dir = absolutePath.substring(0, absolutePath.lastIndexOf("/"));
-    await mkdir(dir, { recursive: true });
-    await writeFile(absolutePath, data);
+  uploadKey(filename: string): string {
+    return uploadPdfObjectKey(filename);
   },
 
-  async delete(absolutePath: string): Promise<void> {
-    await unlink(absolutePath);
+  async read(objectKey: string): Promise<Buffer> {
+    return downloadDocument(objectKey);
   },
 
-  async safeDelete(absolutePath: string): Promise<void> {
+  async write(objectKey: string, data: Buffer): Promise<string> {
+    return uploadDocument(objectKey, data);
+  },
+
+  async delete(objectKey: string): Promise<void> {
+    await removeDocument(objectKey);
+  },
+
+  async safeDelete(objectKey: string): Promise<void> {
     try {
-      await unlink(absolutePath);
+      await removeDocument(objectKey);
     } catch {
       // File may not exist
     }
-  },
-
-  resolvePublicPath(relativePath: string): string {
-    const resolved = resolve(process.cwd(), "public", relativePath);
-    if (!resolved.startsWith(resolve(process.cwd(), "public"))) {
-      throw new Error("Path traversal detected");
-    }
-    return resolved;
   },
 };

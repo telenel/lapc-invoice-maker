@@ -44,12 +44,21 @@ export const notificationService = {
     };
   },
 
-  async markRead(id: string): Promise<void> {
+  async markRead(
+    id: string,
+    userId: string,
+    isAdmin: boolean
+  ): Promise<void | "forbidden"> {
+    const notification = await notificationRepository.findById(id);
+    if (!notification) return;
+    if (!isAdmin && notification.userId !== userId) return "forbidden";
     await notificationRepository.markRead(id);
+    publish(notification.userId, { type: "notification-changed" });
   },
 
   async markAllRead(userId: string): Promise<void> {
     await notificationRepository.markAllRead(userId);
+    publish(userId, { type: "notification-changed" });
   },
 
   async delete(id: string, userId: string, isAdmin: boolean): Promise<void | "forbidden"> {
@@ -57,5 +66,6 @@ export const notificationService = {
     if (!notification) return;
     if (!isAdmin && notification.userId !== userId) return "forbidden";
     await notificationRepository.deleteById(id);
+    publish(notification.userId, { type: "notification-changed" });
   },
 };

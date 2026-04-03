@@ -16,8 +16,8 @@ vi.mock("@/lib/pdf/merge", () => ({
 vi.mock("@/domains/pdf/storage", () => ({
   pdfStorage: {
     read: vi.fn(),
+    write: vi.fn(),
     safeDelete: vi.fn(),
-    resolvePublicPath: vi.fn(),
   },
 }));
 
@@ -40,7 +40,8 @@ describe("pdfService", () => {
 
   describe("generateInvoice", () => {
     it("calls generateInvoicePDF with quantity converted to string", async () => {
-      mockGenerateInvoicePDF.mockResolvedValue("/data/pdfs/invoice.pdf" as never);
+      mockGenerateInvoicePDF.mockResolvedValue(Buffer.from("invoice-pdf") as never);
+      mockStorage.write.mockResolvedValue("invoices/inv1/INV-001.pdf" as never);
 
       const input: GenerateInvoicePDFInput = {
         coverSheet: {
@@ -74,31 +75,49 @@ describe("pdfService", () => {
         },
       };
 
-      const result = await pdfService.generateInvoice(input);
+      const result = await pdfService.generateInvoice(
+        input,
+        "invoices/inv1/INV-001.pdf"
+      );
 
       expect(mockGenerateInvoicePDF).toHaveBeenCalledOnce();
       const calledWith = mockGenerateInvoicePDF.mock.calls[0][0];
       expect(calledWith.idp.items[0].quantity).toBe("2");
-      expect(result).toBe("/data/pdfs/invoice.pdf");
+      expect(mockStorage.write).toHaveBeenCalledWith(
+        "invoices/inv1/INV-001.pdf",
+        Buffer.from("invoice-pdf")
+      );
+      expect(result).toBe("invoices/inv1/INV-001.pdf");
     });
   });
 
   describe("mergePrismCore", () => {
-    it("delegates to mergePrismCorePDF with the provided paths", async () => {
-      mockMergePrismCorePDF.mockResolvedValue(undefined as never);
+    it("reads both documents, merges them, and writes the merged invoice", async () => {
+      mockStorage.read
+        .mockResolvedValueOnce(Buffer.from("invoice-bytes") as never)
+        .mockResolvedValueOnce(Buffer.from("prismcore-bytes") as never);
+      mockMergePrismCorePDF.mockResolvedValue(Buffer.from("merged-bytes") as never);
+      mockStorage.write.mockResolvedValue("/data/pdfs/invoice.pdf" as never);
 
       await pdfService.mergePrismCore("/data/pdfs/invoice.pdf", "uploads/prismcore.pdf");
 
+      expect(mockStorage.read).toHaveBeenNthCalledWith(1, "/data/pdfs/invoice.pdf");
+      expect(mockStorage.read).toHaveBeenNthCalledWith(2, "uploads/prismcore.pdf");
       expect(mockMergePrismCorePDF).toHaveBeenCalledWith(
+        Buffer.from("invoice-bytes"),
+        Buffer.from("prismcore-bytes")
+      );
+      expect(mockStorage.write).toHaveBeenCalledWith(
         "/data/pdfs/invoice.pdf",
-        "uploads/prismcore.pdf"
+        Buffer.from("merged-bytes")
       );
     });
   });
 
   describe("generateQuote", () => {
     it("calls generateQuotePDF with unitPrice and extendedPrice converted to numbers", async () => {
-      mockGenerateQuotePDF.mockResolvedValue("/data/pdfs/quote.pdf" as never);
+      mockGenerateQuotePDF.mockResolvedValue(Buffer.from("quote-pdf") as never);
+      mockStorage.write.mockResolvedValue("quotes/q1/Q-001.pdf" as never);
 
       const data: QuotePDFData = {
         quoteNumber: "Q-001",
@@ -129,13 +148,17 @@ describe("pdfService", () => {
         ],
       };
 
-      const result = await pdfService.generateQuote(data);
+      const result = await pdfService.generateQuote(data, "quotes/q1/Q-001.pdf");
 
       expect(mockGenerateQuotePDF).toHaveBeenCalledOnce();
       const calledWith = mockGenerateQuotePDF.mock.calls[0][0];
       expect(calledWith.items[0].unitPrice).toBe(250);
       expect(calledWith.items[0].extendedPrice).toBe(750);
-      expect(result).toBe("/data/pdfs/quote.pdf");
+      expect(mockStorage.write).toHaveBeenCalledWith(
+        "quotes/q1/Q-001.pdf",
+        Buffer.from("quote-pdf")
+      );
+      expect(result).toBe("quotes/q1/Q-001.pdf");
     });
   });
 
@@ -158,24 +181,20 @@ describe("pdfService", () => {
       await pdfService.deletePdfFiles("/data/pdfs/invoice.pdf", null);
 
       expect(mockStorage.safeDelete).toHaveBeenCalledWith("/data/pdfs/invoice.pdf");
-      expect(mockStorage.resolvePublicPath).not.toHaveBeenCalled();
     });
 
-    it("resolves the public path and deletes for prismcorePath when provided", async () => {
+    it("deletes the stored PrismCore object key when provided", async () => {
       mockStorage.safeDelete.mockResolvedValue(undefined as never);
-      mockStorage.resolvePublicPath.mockReturnValue("/app/public/uploads/prismcore.pdf" as never);
 
       await pdfService.deletePdfFiles(null, "uploads/prismcore.pdf");
 
-      expect(mockStorage.resolvePublicPath).toHaveBeenCalledWith("uploads/prismcore.pdf");
-      expect(mockStorage.safeDelete).toHaveBeenCalledWith("/app/public/uploads/prismcore.pdf");
+      expect(mockStorage.safeDelete).toHaveBeenCalledWith("uploads/prismcore.pdf");
     });
 
     it("handles null paths gracefully without calling safeDelete", async () => {
       await pdfService.deletePdfFiles(null, null);
 
       expect(mockStorage.safeDelete).not.toHaveBeenCalled();
-      expect(mockStorage.resolvePublicPath).not.toHaveBeenCalled();
     });
   });
 });

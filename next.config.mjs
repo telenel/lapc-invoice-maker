@@ -12,6 +12,25 @@ function gitSha() {
   }
 }
 
+function buildConnectSrc() {
+  const sources = new Set(["'self'"]);
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+  if (supabaseUrl) {
+    try {
+      const parsed = new URL(supabaseUrl);
+      sources.add(parsed.origin);
+      sources.add(`${parsed.protocol === "https:" ? "wss" : "ws"}://${parsed.host}`);
+    } catch {
+      // Ignore malformed env during build-time config generation.
+    }
+  }
+
+  return Array.from(sources).join(" ");
+}
+
+const connectSrc = buildConnectSrc();
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false,
@@ -38,7 +57,7 @@ const nextConfig = {
           {
             key: "Content-Security-Policy",
             value:
-              "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-ancestors 'none'",
+              `default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src ${connectSrc}; frame-ancestors 'none'`,
           },
           {
             key: "Permissions-Policy",

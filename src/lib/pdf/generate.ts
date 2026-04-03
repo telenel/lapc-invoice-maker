@@ -1,5 +1,5 @@
 import { PDFDocument } from "pdf-lib";
-import { mkdir, writeFile, readFile } from "fs/promises";
+import { readFile } from "fs/promises";
 import path from "path";
 import { renderCoverSheet, type CoverSheetData } from "./templates/cover-sheet";
 import { generateIDPPage, type IDPOverlayData } from "./generate-idp";
@@ -19,11 +19,11 @@ async function htmlToPdf(html: string): Promise<Buffer> {
 
 /**
  * Generates a combined PDF with CoverSheet (page 1) and IDP (page 2).
- * Returns the absolute file path to the saved PDF.
+ * Returns the generated PDF buffer.
  */
 export async function generateInvoicePDF(
   data: GenerateInvoicePDFData
-): Promise<string> {
+): Promise<Buffer> {
   // Read logo and convert to base64 data URI
   const logoPath = path.join(process.cwd(), "public", "lapc-logo.png");
   const logoBuffer = await readFile(logoPath);
@@ -58,13 +58,5 @@ export async function generateInvoicePDF(
 
   const mergedBytes = await mergedDoc.save();
 
-  // Save to data/pdfs directory
-  const pdfDir = path.join(process.cwd(), "data", "pdfs");
-  await mkdir(pdfDir, { recursive: true });
-
-  const filename = `${data.coverSheet.invoiceNumber}.pdf`;
-  const filePath = path.join(pdfDir, filename);
-  await writeFile(filePath, mergedBytes);
-
-  return filePath;
+  return Buffer.from(mergedBytes);
 }
