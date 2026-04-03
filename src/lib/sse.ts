@@ -1,5 +1,4 @@
-import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import { hasSupabaseAdminEnv } from "@/lib/supabase/env";
+import { hasSupabaseAdminEnv, getSupabaseAdminEnv } from "@/lib/supabase/env";
 import {
   GLOBAL_REALTIME_TOPIC,
   REALTIME_BROADCAST_EVENT,
@@ -9,22 +8,26 @@ import {
 async function broadcast(topic: string, data: unknown): Promise<void> {
   try {
     if (!hasSupabaseAdminEnv()) return;
-    const supabase = getSupabaseAdminClient();
-    const channel = supabase.channel(topic, {
-      config: { private: true },
+    const { url, serviceRoleKey } = getSupabaseAdminEnv();
+
+    const response = await fetch(`${url}/rest/v1/rpc/broadcast`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${serviceRoleKey}`,
+        apikey: serviceRoleKey,
+      },
+      body: JSON.stringify({
+        topic,
+        event: REALTIME_BROADCAST_EVENT,
+        payload: data,
+        private: true,
+      }),
     });
 
-    const result = await channel.send({
-      type: "broadcast",
-      event: REALTIME_BROADCAST_EVENT,
-      payload: data,
-    });
-
-    if (result !== "ok") {
-      console.warn(`[realtime] broadcast to ${topic} returned ${result}`);
+    if (!response.ok) {
+      console.warn(`[realtime] broadcast to ${topic} returned ${response.status}`);
     }
-
-    await supabase.removeChannel(channel);
   } catch (error) {
     console.error(`[realtime] broadcast to ${topic} failed:`, error);
   }
