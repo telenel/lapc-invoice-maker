@@ -1,0 +1,138 @@
+name: CodeRabbit Finishing Touches
+
+on:
+  pull_request_target:
+    types:
+      - labeled
+  pull_request_review:
+    types:
+      - submitted
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  trigger:
+    if: >-
+      ${{
+        github.event_name == 'pull_request_target' &&
+        contains(
+          fromJson('["cr-autofix","cr-autofix-direct","cr-unit-tests","cr-tighten-types","cr-remove-dead-code","cr-add-focused-tests"]'),
+          github.event.label.name
+        )
+      }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post CodeRabbit command
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const label = context.payload.label.name;
+            const commands = {
+              "cr-autofix": "@coderabbitai autofix stacked pr",
+              "cr-autofix-direct": "@coderabbitai autofix",
+              "cr-unit-tests": "@coderabbitai generate unit tests",
+              "cr-tighten-types": "@coderabbitai run tighten types",
+              "cr-remove-dead-code": "@coderabbitai run remove dead code",
+              "cr-add-focused-tests": "@coderabbitai run add focused tests",
+            };
+
+            const body = commands[label];
+            if (!body) {
+              core.setFailed(`Unsupported label: ${label}`);
+              return;
+            }
+
+            const issue_number = context.payload.pull_request.number;
+
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number,
+              body,
+            });
+
+            await github.rest.issues.removeLabel({
+              ...context.repo,
+              issue_number,
+              name: label,
+            });
+
+  auto_autofix:
+    if: >-
+      ${{
+        github.event_name == 'pull_request_review' &&
+        github.event.action == 'submitted' &&
+        (
+          github.event.review.user.login == 'coderabbitai' ||
+          github.event.review.user.login == 'coderabbitai[bot]'
+        )
+      }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post autofix command after CodeRabbit review
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const reviewBody = context.payload.review.body || "";
+            const hasAutofixSection =
+              reviewBody.includes("🪄 Autofix (Beta)") ||
+              reviewBody.includes("Fix all unresolved CodeRabbit comments on this PR");
+
+            if (!hasAutofixSection) {
+              core.info("CodeRabbit review did not advertise Autofix; skipping.");
+              return;
+            }
+
+            const labels = (context.payload.pull_request.labels || []).map((label) => label.name);
+            if (labels.includes("no-autofix") || labels.includes("cr-no-autofix")) {
+              core.info("PR is labeled to skip automatic autofix.");
+              return;
+            }
+
+            const { data: headCommit } = await github.rest.repos.getCommit({
+              ...context.repo,
+              ref: context.payload.pull_request.head.sha,
+            });
+
+            const actorLogins = [
+              headCommit.author?.login,
+              headCommit.committer?.login,
+            ]
+              .filter(Boolean)
+              .map((value) => value.toLowerCase());
+            const actorNames = [
+              headCommit.commit.author?.name,
+              headCommit.commit.committer?.name,
+            ]
+              .filter(Boolean)
+              .map((value) => value.toLowerCase());
+
+            const isCodeRabbitCommit =
+              actorLogins.some((value) => value.includes("coderabbit")) ||
+              actorNames.some((value) => value.includes("coderabbit"));
+
+            if (isCodeRabbitCommit) {
+              core.info("Latest PR commit appears to be from CodeRabbit; skipping to avoid loops.");
+              return;
+            }
+
+            const issue_number = context.payload.pull_request.number;
+            const marker = `<!-- coderabbit-autofix-review:${context.payload.review.id} -->`;
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              ...context.repo,
+              issue_number,
+              per_page: 100,
+            });
+
+            if (comments.some((comment) => (comment.body || "").includes(marker))) {
+              core.info("Autofix command already posted for this review.");
+              return;
+            }
+
+            await github.rest.issues.createComment({
+              ...context.repo,
+              issue_number,
+              body: `${marker}\n@coderabbitai autofix`,
+            });
