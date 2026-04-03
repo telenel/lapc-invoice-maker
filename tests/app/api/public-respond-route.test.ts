@@ -213,12 +213,14 @@ describe("POST /api/quotes/public/[token]/respond", () => {
           response: "ACCEPTED",
           paymentMethod: "CHECK",
           cateringDetails: {
+            eventName: "Faculty Luncheon",
             eventDate: "2026-04-15",
             startTime: "10:00",
             endTime: "12:00",
             location: "Campus",
             contactName: "Jane",
             contactPhone: "555-1111",
+            headcount: 50,
           },
         }),
         headers: { "Content-Type": "application/json" },
@@ -236,12 +238,14 @@ describe("POST /api/quotes/public/[token]/respond", () => {
         accountNumber: null,
       },
       expect.objectContaining({
+        eventName: "Faculty Luncheon",
         eventDate: "2026-04-15",
         startTime: "10:00",
         endTime: "12:00",
         location: "Campus",
         contactName: "Jane",
         contactPhone: "555-1111",
+        headcount: 50,
         setupRequired: false,
         takedownRequired: false,
       }),
@@ -272,14 +276,15 @@ describe("POST /api/quotes/public/[token]/respond", () => {
           response: "ACCEPTED",
           paymentMethod: "CHECK",
           cateringDetails: {
+            eventName: "Public Event Name",
             eventDate: "2026-04-15",
             startTime: "10:00",
             endTime: "12:00",
             location: "Campus",
             contactName: "Jane",
             contactPhone: "555-1111",
-            eventName: "Attacker override",
-            contactEmail: "attacker@example.com",
+            contactEmail: "public@example.com",
+            headcount: 50,
           },
         }),
         headers: { "Content-Type": "application/json" },
@@ -290,8 +295,10 @@ describe("POST /api/quotes/public/[token]/respond", () => {
     expect(response.status).toBe(200);
     const cateringDetails = vi.mocked(quoteService.respondToQuote).mock.calls[0]?.[4] as Record<string, unknown> | undefined;
     expect(cateringDetails).toBeDefined();
-    expect(cateringDetails).toHaveProperty("eventName", "Internal Event Name");
-    expect(cateringDetails).toHaveProperty("contactEmail", "hidden@example.com");
+    // eventName and contactEmail now come from the public form
+    expect(cateringDetails).toHaveProperty("eventName", "Public Event Name");
+    expect(cateringDetails).toHaveProperty("contactEmail", "public@example.com");
+    // setup/takedown instructions are still preserved from existing staff data
     expect(cateringDetails).toHaveProperty("setupInstructions", "Internal setup note");
     expect(cateringDetails).toHaveProperty("takedownInstructions", "Internal takedown note");
   });
@@ -327,12 +334,14 @@ describe("POST /api/quotes/public/[token]/respond", () => {
           response: "ACCEPTED",
           paymentMethod: "CHECK",
           cateringDetails: {
+            eventName: "Faculty Luncheon",
             eventDate: "2026-04-15",
             startTime: "10:00",
             endTime: "12:00",
             location: "Campus",
             contactName: "Jane",
             contactPhone: "555-1111",
+            headcount: 25,
           },
         }),
         headers: { "Content-Type": "application/json" },
@@ -350,22 +359,25 @@ describe("POST /api/quotes/public/[token]/respond", () => {
         accountNumber: null,
       },
       expect.objectContaining({
+        eventName: "Faculty Luncheon",
         eventDate: "2026-04-15",
         startTime: "10:00",
         endTime: "12:00",
         location: "Campus",
         contactName: "Jane",
         contactPhone: "555-1111",
+        headcount: 25,
         setupRequired: true,
         takedownRequired: false,
       }),
     );
     const cateringDetails = vi.mocked(quoteService.respondToQuote).mock.calls[0]?.[4] as Record<string, unknown> | undefined;
     expect(cateringDetails).toBeDefined();
-    expect(cateringDetails).not.toHaveProperty("headcount");
     expect(cateringDetails).not.toHaveProperty("setupTime");
     expect(cateringDetails).not.toHaveProperty("takedownTime");
     expect(cateringDetails).not.toHaveProperty("specialInstructions");
+    // contactEmail falls back to existing when not provided
+    expect(cateringDetails).toHaveProperty("contactEmail", "jane@example.com");
     expect(cateringDetails).toHaveProperty("setupInstructions", "Keep the prep table against the north wall.");
     expect(cateringDetails).toHaveProperty("takedownInstructions", "Leave equipment by the loading dock.");
   });
@@ -402,12 +414,14 @@ describe("POST /api/quotes/public/[token]/respond", () => {
           response: "ACCEPTED",
           paymentMethod: "CHECK",
           cateringDetails: {
+            eventName: "Faculty Luncheon",
             eventDate: "2026-04-15",
             startTime: "10:00",
             endTime: "12:00",
             location: "Campus",
             contactName: "Jane",
             contactPhone: "555-1111",
+            headcount: 50,
             setupRequired: true,
             setupTime: "08:00",
             setupInstructions: "New setup note",
@@ -458,12 +472,14 @@ describe("POST /api/quotes/public/[token]/respond", () => {
           response: "ACCEPTED",
           paymentMethod: "CHECK",
           cateringDetails: {
+            eventName: "Faculty Luncheon",
             eventDate: "2026-04-15",
             startTime: "10:00",
             endTime: "12:00",
             location: "Campus",
             contactName: "Jane",
             contactPhone: "555-1111",
+            headcount: 50,
             setupRequired: false,
             takedownRequired: false,
           },
