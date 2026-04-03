@@ -42,11 +42,13 @@ function expirationText(dateStr: string): string {
 // ── Catering form state (public-facing subset) ────────────────────────────
 
 interface PublicCateringForm {
+  eventName: string;
   eventDate: string;
   startTime: string;
   endTime: string;
   contactName: string;
   contactPhone: string;
+  contactEmail: string;
   location: string;
   headcount: string;
   setupRequired: boolean;
@@ -58,11 +60,13 @@ interface PublicCateringForm {
 
 function makeCateringForm(existing: CateringDetails | null): PublicCateringForm {
   return {
+    eventName: existing?.eventName ?? "",
     eventDate: existing?.eventDate ?? "",
     startTime: existing?.startTime ?? "",
     endTime: existing?.endTime ?? "",
     contactName: existing?.contactName ?? "",
     contactPhone: existing?.contactPhone ?? "",
+    contactEmail: existing?.contactEmail ?? "",
     location: existing?.location ?? "",
     headcount: existing?.headcount != null ? String(existing.headcount) : "",
     setupRequired: existing?.setupRequired ?? false,
@@ -183,13 +187,15 @@ export function PublicQuoteView({ token }: { token: string }) {
       const cateringDetails =
         quote?.isCateringEvent && response === "ACCEPTED"
           ? {
+              eventName: cateringForm.eventName.trim(),
               eventDate: cateringForm.eventDate.trim(),
               startTime: cateringForm.startTime.trim(),
               endTime: cateringForm.endTime.trim(),
               contactName: cateringForm.contactName,
               contactPhone: cateringForm.contactPhone,
+              contactEmail: cateringForm.contactEmail.trim() || undefined,
               location: cateringForm.location,
-              headcount: cateringForm.headcount ? Number(cateringForm.headcount) : undefined,
+              headcount: Number(cateringForm.headcount),
               setupRequired: cateringForm.setupRequired,
               setupTime: cateringForm.setupRequired ? cateringForm.setupTime : undefined,
               takedownRequired: cateringForm.takedownRequired,
@@ -270,12 +276,14 @@ export function PublicQuoteView({ token }: { token: string }) {
   const isCatering = quote.isCateringEvent;
   const cateringRequiredMissing =
     isCatering &&
-    (!cateringForm.eventDate.trim() ||
+    (!cateringForm.eventName.trim() ||
+      !cateringForm.eventDate.trim() ||
       !cateringForm.startTime.trim() ||
       !cateringForm.endTime.trim() ||
       !cateringForm.contactName.trim() ||
       !cateringForm.contactPhone.trim() ||
       !cateringForm.location.trim() ||
+      (!cateringForm.headcount.trim() || Number(cateringForm.headcount) < 1) ||
       (cateringForm.setupRequired && !cateringForm.setupTime.trim()) ||
       (cateringForm.takedownRequired && !cateringForm.takedownTime.trim()));
 
@@ -461,6 +469,22 @@ export function PublicQuoteView({ token }: { token: string }) {
             </CardHeader>
 
             <CardContent className="space-y-5">
+              {/* Event name */}
+              <div className="space-y-1.5">
+                <Label htmlFor="pub-event-name" className={labelClass}>
+                  Event Name <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="pub-event-name"
+                  type="text"
+                  placeholder="e.g. Faculty Luncheon, Student Club Meeting"
+                  value={cateringForm.eventName}
+                  onChange={(e) =>
+                    setCateringForm((prev) => ({ ...prev, eventName: e.target.value }))
+                  }
+                />
+              </div>
+
               {/* Event schedule */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
@@ -504,8 +528,8 @@ export function PublicQuoteView({ token }: { token: string }) {
                 </div>
               </div>
 
-              {/* Contact Name, Contact Number, Location (required) */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Contact Name, Contact Number, Email, Location */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="pub-contact-name" className={labelClass}>
                     Contact Name <span className="text-red-500">*</span>
@@ -535,6 +559,20 @@ export function PublicQuoteView({ token }: { token: string }) {
                   />
                 </div>
                 <div className="space-y-1.5">
+                  <Label htmlFor="pub-contact-email" className={labelClass}>
+                    Contact Email
+                  </Label>
+                  <Input
+                    id="pub-contact-email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={cateringForm.contactEmail}
+                    onChange={(e) =>
+                      setCateringForm((prev) => ({ ...prev, contactEmail: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-1.5">
                   <Label htmlFor="pub-location" className={labelClass}>
                     Event Location <span className="text-red-500">*</span>
                   </Label>
@@ -550,15 +588,15 @@ export function PublicQuoteView({ token }: { token: string }) {
                 </div>
               </div>
 
-              {/* Headcount (optional) */}
+              {/* Headcount (required) */}
               <div className="w-[180px] space-y-1.5">
                 <Label htmlFor="pub-headcount" className={labelClass}>
-                  Expected Headcount
+                  Expected Headcount <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="pub-headcount"
                   type="number"
-                  min={0}
+                  min={1}
                   placeholder="e.g. 50"
                   value={cateringForm.headcount}
                   onChange={(e) =>

@@ -74,18 +74,21 @@ describe("PublicQuoteView", () => {
     } as never);
   });
 
-  it("lets catering recipients supply the required schedule fields before approving", async () => {
+  it("lets catering recipients supply the required fields before approving", async () => {
     const user = userEvent.setup();
     render(<PublicQuoteView token="token" />);
 
     await screen.findByText("Event Details Required");
 
+    await user.type(screen.getByLabelText(/Event Name/i), "Faculty Luncheon");
     await user.type(screen.getByLabelText(/Event Date/i), "2026-04-15");
     await user.type(screen.getByLabelText(/Start Time/i), "10:00");
     await user.type(screen.getByLabelText(/End Time/i), "12:00");
     await user.type(screen.getByLabelText(/Contact Name/i), "Jane");
     await user.type(screen.getByLabelText(/Contact Number/i), "555-1111");
+    await user.type(screen.getByLabelText(/Contact Email/i), "jane@example.com");
     await user.type(screen.getByLabelText(/Event Location/i), "Campus");
+    await user.type(screen.getByLabelText(/Expected Headcount/i), "50");
 
     await user.click(screen.getByRole("button", { name: "Approve Quote" }));
 
@@ -95,12 +98,15 @@ describe("PublicQuoteView", () => {
         expect.objectContaining({
           response: "ACCEPTED",
           cateringDetails: expect.objectContaining({
+            eventName: "Faculty Luncheon",
             eventDate: "2026-04-15",
             startTime: "10:00",
             endTime: "12:00",
             contactName: "Jane",
             contactPhone: "555-1111",
+            contactEmail: "jane@example.com",
             location: "Campus",
+            headcount: 50,
           }),
         }),
       );
@@ -256,12 +262,14 @@ describe("PublicQuoteView", () => {
 
     await screen.findByText("Event Details Required");
 
+    await user.type(screen.getByLabelText(/Event Name/i), "Faculty Luncheon");
     await user.type(screen.getByLabelText(/Event Date/i), "2026-04-15");
     await user.type(screen.getByLabelText(/Start Time/i), "10:00");
     await user.type(screen.getByLabelText(/End Time/i), "12:00");
     await user.type(screen.getByLabelText(/Contact Name/i), "Jane");
     await user.type(screen.getByLabelText(/Contact Number/i), "555-1111");
     await user.type(screen.getByLabelText(/Event Location/i), "Campus");
+    await user.type(screen.getByLabelText(/Expected Headcount/i), "50");
     await user.click(screen.getByRole("checkbox", { name: /Setup Needed/i }));
 
     expect(screen.getByRole("button", { name: "Approve Quote" })).toBeDisabled();
@@ -274,12 +282,14 @@ describe("PublicQuoteView", () => {
 
     await screen.findByText("Event Details Required");
 
+    await user.type(screen.getByLabelText(/Event Name/i), "Faculty Luncheon");
     await user.type(screen.getByLabelText(/Event Date/i), "2026-04-15");
     await user.type(screen.getByLabelText(/Start Time/i), "10:00");
     await user.type(screen.getByLabelText(/End Time/i), "12:00");
     await user.type(screen.getByLabelText(/Contact Name/i), "Jane");
     await user.type(screen.getByLabelText(/Contact Number/i), "555-1111");
     await user.type(screen.getByLabelText(/Event Location/i), "Campus");
+    await user.type(screen.getByLabelText(/Expected Headcount/i), "50");
     await user.click(screen.getByRole("checkbox", { name: /Takedown Needed/i }));
 
     expect(screen.getByRole("button", { name: "Approve Quote" })).toBeDisabled();

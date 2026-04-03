@@ -1,23 +1,26 @@
-# LAPortal Guide
+# LAPortal Agent Guide
 
 ## Read First
 
 1. `README.md`
 2. `docs/PROJECT-OVERVIEW.md`
-3. `prisma/schema.prisma` for data model changes
+3. `docs/ai/PROJECT-CONTEXT.md`
+4. `docs/ai/WORKFLOW.md`
+5. `docs/ai/SESSION-LOG.md`
+6. `prisma/schema.prisma` for data model changes
 
-## Notes
+## Shared Rules
 
-- Worktrees are allowed and may be used when they are convenient for isolating or organizing work.
+- `AGENTS.md` is the shared repo contract for Codex, Claude, and other coding agents.
+- Start scoped work with `./scripts/ai/start-work.sh <agent> "<task>"`.
+- Finish scoped work with `./scripts/ai/finish-work.sh <agent> "<summary>"`.
+- Completed coding tasks should end with a git commit unless the user explicitly says not to commit.
+- The `hooks/commit-msg` hook appends commit activity to `docs/ai/SESSION-LOG.md`.
+
+## Repo Guardrails
+
+- Claude Code and Codex are both supported on this repo.
+- Do not use git worktrees on this repo.
 - Use the repo validation command before handing changes back.
-
-## Branching And PRs
-
-- Start each feature from a fresh `main`: `git checkout main && git pull`.
-- Create one focused branch per concern: `git checkout -b feat/thing`.
-- Keep branches short-lived and do not stack branches.
-- Commit often, but keep each commit scoped to the branch's one concern.
-- Run `npm run ship-check` before pushing.
-- Push the branch when the work is ready for PR review.
-- Let CodeRabbit and CI review the PR.
-- Merge before starting the next feature.
+- Never push or deploy without explicit user approval.
+- Once a PR exists, do not keep pushing new feature work to that branch except explicit CodeRabbit follow-up fixes.

@@ -5,13 +5,15 @@ import { normalizeQuotePaymentDetails } from "@/domains/quote/payment";
 import type { CateringDetails } from "@/domains/quote/types";
 
 const cateringDetailsSchema = z.object({
+  eventName: z.string().trim().min(1, "Event name is required"),
   eventDate: z.string().trim().min(1, "Event date is required"),
   startTime: z.string().trim().min(1, "Start time is required"),
   endTime: z.string().trim().min(1, "End time is required"),
   location: z.string().trim().min(1, "Location is required"),
   contactName: z.string().trim().min(1, "Contact name is required"),
   contactPhone: z.string().trim().min(1, "Contact phone is required"),
-  headcount: z.coerce.number().optional(),
+  contactEmail: z.string().trim().optional(),
+  headcount: z.coerce.number().min(1, "Headcount is required"),
   setupRequired: z.boolean().optional(),
   setupTime: z.string().optional(),
   setupInstructions: z.string().optional(),
@@ -92,12 +94,19 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       }
       const existingCateringDetails = quote.cateringDetails as CateringDetails | null;
       cateringDetails = {
+        eventName: parsed.data.eventName,
         eventDate: parsed.data.eventDate ?? "",
         startTime: parsed.data.startTime ?? "",
         endTime: parsed.data.endTime ?? "",
         location: parsed.data.location,
         contactName: parsed.data.contactName,
         contactPhone: parsed.data.contactPhone,
+        ...(parsed.data.contactEmail
+          ? { contactEmail: parsed.data.contactEmail }
+          : existingCateringDetails?.contactEmail
+            ? { contactEmail: existingCateringDetails.contactEmail }
+            : {}),
+        headcount: parsed.data.headcount,
         setupRequired: parsed.data.setupRequired ?? existingCateringDetails?.setupRequired ?? false,
         ...(parsed.data.setupInstructions !== undefined
           ? { setupInstructions: parsed.data.setupInstructions }
@@ -109,11 +118,6 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
           ? { takedownInstructions: parsed.data.takedownInstructions }
           : existingCateringDetails?.takedownInstructions !== undefined
             ? { takedownInstructions: existingCateringDetails.takedownInstructions }
-            : {}),
-        ...(parsed.data.headcount !== undefined
-          ? { headcount: parsed.data.headcount }
-          : existingCateringDetails?.headcount !== undefined
-            ? { headcount: existingCateringDetails.headcount }
             : {}),
         ...(parsed.data.setupRequired === false
           ? { setupTime: null }
@@ -134,8 +138,6 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
           : existingCateringDetails?.specialInstructions !== undefined
             ? { specialInstructions: existingCateringDetails.specialInstructions }
             : {}),
-        ...(existingCateringDetails?.eventName !== undefined ? { eventName: existingCateringDetails.eventName } : {}),
-        ...(existingCateringDetails?.contactEmail !== undefined ? { contactEmail: existingCateringDetails.contactEmail } : {}),
       } as CateringDetails;
     }
 
