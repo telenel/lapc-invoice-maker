@@ -5,9 +5,6 @@ services:
     expose:
       - "3000"
     env_file: .env
-    environment:
-      # Override DIRECT_URL for Docker (no IPv6) — use pooler like DATABASE_URL
-      DIRECT_URL: ${DATABASE_URL}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.laportal.rule=Host(`laportal.montalvo.io`)"
@@ -19,5 +16,7 @@ services:
       - traefik-net
 
 networks:
+  default:
+    enable_ipv6: true
   traefik-net:
     external: true
