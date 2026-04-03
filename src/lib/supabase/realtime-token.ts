@@ -26,6 +26,7 @@ export async function mintSupabaseRealtimeToken(
     app_role: input.role,
   })
     .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+    .setIssuer("supabase")
     .setIssuedAt()
     .setExpirationTime(expiresAtUnix)
     .setSubject(input.userId)
