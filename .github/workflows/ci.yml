@@ -50,4 +50,6 @@ jobs:
         run: npm test
 
       - name: Build
+        env:
+          DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci"
         run: npm run build

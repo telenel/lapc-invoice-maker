@@ -22,6 +22,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, RotateCcw } from "lucide-react";
+import { useUserPreference } from "@/domains/user-preference/hooks";
 import { cn } from "@/lib/utils";
 
 const STORAGE_KEY = "laportal-dashboard-order";
@@ -71,23 +72,25 @@ const SORTABLE_WIDGETS: WidgetConfig[] = [
 
 const DEFAULT_ORDER = SORTABLE_WIDGETS.map((w) => w.id);
 
-function getStoredOrder(): string[] {
-  if (typeof window === "undefined") return DEFAULT_ORDER;
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return DEFAULT_ORDER;
-    const parsed = JSON.parse(stored) as string[];
-    const defaultSet = new Set(DEFAULT_ORDER);
-    const storedSet = new Set(parsed);
-    if (parsed.length !== DEFAULT_ORDER.length || !parsed.every((id) => defaultSet.has(id))) {
-      const valid = parsed.filter((id) => defaultSet.has(id));
-      const missing = DEFAULT_ORDER.filter((id) => !storedSet.has(id));
-      return [...valid, ...missing];
-    }
-    return parsed;
-  } catch {
+function parseStoredOrder(value: unknown): string[] {
+  if (!Array.isArray(value)) {
     return DEFAULT_ORDER;
   }
+
+  const parsed = value.filter((item): item is string => typeof item === "string");
+  const defaultSet = new Set(DEFAULT_ORDER);
+  const storedSet = new Set(parsed);
+
+  if (
+    parsed.length !== DEFAULT_ORDER.length ||
+    !parsed.every((id) => defaultSet.has(id))
+  ) {
+    const valid = parsed.filter((id) => defaultSet.has(id));
+    const missing = DEFAULT_ORDER.filter((id) => !storedSet.has(id));
+    return [...valid, ...missing];
+  }
+
+  return parsed;
 }
 
 function SortableWidget({
@@ -140,14 +143,22 @@ function SortableWidget({
 }
 
 export function DraggableDashboard() {
+  const {
+    value: storedOrder,
+    setValue: setStoredOrder,
+    clear: clearStoredOrder,
+    loaded,
+  } = useUserPreference<string[]>({
+    key: STORAGE_KEY,
+    defaultValue: DEFAULT_ORDER,
+    deserialize: parseStoredOrder,
+  });
   const [order, setOrder] = useState<string[]>(DEFAULT_ORDER);
   const [activeId, setActiveId] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setOrder(getStoredOrder());
-    setMounted(true);
-  }, []);
+    setOrder(storedOrder);
+  }, [storedOrder]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -171,17 +182,17 @@ export function DraggableDashboard() {
       const oldIndex = prev.indexOf(String(active.id));
       const newIndex = prev.indexOf(String(over.id));
       const newOrder = arrayMove(prev, oldIndex, newIndex);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newOrder));
+      setStoredOrder(newOrder);
       return newOrder;
     });
-  }, []);
+  }, [setStoredOrder]);
 
   const handleReset = useCallback(() => {
     setOrder(DEFAULT_ORDER);
-    localStorage.removeItem(STORAGE_KEY);
-  }, []);
+    clearStoredOrder();
+  }, [clearStoredOrder]);
 
-  const isCustomOrder = mounted && JSON.stringify(order) !== JSON.stringify(DEFAULT_ORDER);
+  const isCustomOrder = loaded && JSON.stringify(order) !== JSON.stringify(DEFAULT_ORDER);
 
   const widgetMap = new Map(SORTABLE_WIDGETS.map((w) => [w.id, w]));
   const orderedWidgets = order.map((id) => widgetMap.get(id)).filter(Boolean) as WidgetConfig[];

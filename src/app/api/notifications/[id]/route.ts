@@ -7,9 +7,14 @@ type RouteContext = { params: Promise<{ id: string }> };
 
 const ParamsSchema = z.object({ id: z.string().min(1) });
 
-export const PATCH = withAuth(async (_req: NextRequest, _session, ctx) => {
+export const PATCH = withAuth(async (_req: NextRequest, session, ctx) => {
   const { id } = await (ctx as RouteContext).params;
-  await notificationService.markRead(id);
+  const result = await notificationService.markRead(
+    id,
+    session.user.id,
+    session.user.role === "admin"
+  );
+  if (result === "forbidden") return forbiddenResponse();
   return NextResponse.json({ success: true });
 });
 

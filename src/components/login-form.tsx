@@ -33,8 +33,6 @@ export function LoginForm() {
   const usernameRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem("laportal-remember-me");
-    if (stored !== null) setRememberMe(stored === "true");
     // Auto-focus username on desktop only (avoid forcing keyboard on mobile)
     if (window.matchMedia("(pointer: fine)").matches) {
       usernameRef.current?.focus();
@@ -134,11 +132,7 @@ export function LoginForm() {
               id="remember-me"
               type="checkbox"
               checked={rememberMe}
-              onChange={(e) => {
-                const checked = e.target.checked;
-                setRememberMe(checked);
-                localStorage.setItem("laportal-remember-me", String(checked));
-              }}
+              onChange={(e) => setRememberMe(e.target.checked)}
               className="h-4 w-4 rounded border-border"
             />
             <Label htmlFor="remember-me" className="text-sm font-normal cursor-pointer">

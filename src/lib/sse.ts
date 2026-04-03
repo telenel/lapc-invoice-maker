@@ -1,55 +1,63 @@
-// src/lib/sse.ts
+import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import { hasSupabaseAdminEnv } from "@/lib/supabase/env";
+import {
+  GLOBAL_REALTIME_TOPIC,
+  REALTIME_BROADCAST_EVENT,
+  getUserRealtimeTopic,
+} from "./realtime-topics";
 
-type SSEWriter = ReadableStreamDefaultController<Uint8Array>;
+async function broadcast(topic: string, data: unknown): Promise<void> {
+  try {
+    if (!hasSupabaseAdminEnv()) return;
+    const supabase = getSupabaseAdminClient();
+    const channel = supabase.channel(topic, {
+      config: { private: true },
+    });
 
-const connections = new Map<string, Set<SSEWriter>>();
+    const result = await channel.send({
+      type: "broadcast",
+      event: REALTIME_BROADCAST_EVENT,
+      payload: data,
+    });
 
-export function subscribe(userId: string, controller: SSEWriter): void {
-  if (!connections.has(userId)) {
-    connections.set(userId, new Set());
+    if (result !== "ok") {
+      console.warn(`[realtime] broadcast to ${topic} returned ${result}`);
+    }
+
+    await supabase.removeChannel(channel);
+  } catch (error) {
+    console.error(`[realtime] broadcast to ${topic} failed:`, error);
   }
-  connections.get(userId)!.add(controller);
 }
 
-export function unsubscribe(userId: string, controller: SSEWriter): void {
-  const set = connections.get(userId);
-  if (!set) return;
-  set.delete(controller);
-  if (set.size === 0) connections.delete(userId);
+export function subscribe(): void {
+  // Deprecated transport shim kept for the retired SSE endpoint.
+}
+
+export function unsubscribe(): void {
+  // Deprecated transport shim kept for the retired SSE endpoint.
 }
 
 export function publish(userId: string, data: unknown): void {
-  const set = connections.get(userId);
-  if (!set) return;
-  const encoded = new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`);
-  Array.from(set).forEach((controller) => {
-    try {
-      controller.enqueue(encoded);
-    } catch {
-      // Connection closed — clean up
-      set.delete(controller);
-    }
-  });
+  void broadcast(getUserRealtimeTopic(userId), data);
 }
 
 export function publishAll(data: unknown): void {
-  const encoded = new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`);
-  connections.forEach((set) => {
-    Array.from(set).forEach((controller) => {
-      try {
-        controller.enqueue(encoded);
-      } catch {
-        set.delete(controller);
-      }
-    });
-  });
+  void broadcast(GLOBAL_REALTIME_TOPIC, data);
 }
 
-/** Fire-and-forget wrapper — SSE broadcast failures are non-critical */
+export function safePublish(userId: string, data: unknown): void {
+  try {
+    publish(userId, data);
+  } catch {
+    /* Realtime broadcast failure is non-critical */
+  }
+}
+
 export function safePublishAll(data: unknown): void {
   try {
     publishAll(data);
   } catch {
-    /* SSE broadcast failure is non-critical */
+    /* Realtime broadcast failure is non-critical */
   }
 }

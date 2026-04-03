@@ -5,7 +5,10 @@ import { pdfStorage } from "./storage";
 import type { GenerateInvoicePDFInput, QuotePDFData } from "./types";
 
 export const pdfService = {
-  async generateInvoice(input: GenerateInvoicePDFInput): Promise<string> {
+  async generateInvoice(
+    input: GenerateInvoicePDFInput,
+    objectKey: string
+  ): Promise<string> {
     // Bridge: domain IDPOverlayData has quantity: number, but lib expects quantity: string
     const adapted: GenerateInvoicePDFData = {
       coverSheet: input.coverSheet,
@@ -17,14 +20,20 @@ export const pdfService = {
         })),
       },
     };
-    return generateInvoicePDF(adapted);
+    const pdfBuffer = await generateInvoicePDF(adapted);
+    return pdfStorage.write(objectKey, pdfBuffer);
   },
 
-  async mergePrismCore(invoicePdfPath: string, prismcoreRelativePath: string): Promise<void> {
-    return mergePrismCorePDF(invoicePdfPath, prismcoreRelativePath);
+  async mergePrismCore(invoicePdfPath: string, prismcorePath: string): Promise<void> {
+    const [invoiceBytes, prismcoreBytes] = await Promise.all([
+      pdfStorage.read(invoicePdfPath),
+      pdfStorage.read(prismcorePath),
+    ]);
+    const mergedPdf = await mergePrismCorePDF(invoiceBytes, prismcoreBytes);
+    await pdfStorage.write(invoicePdfPath, mergedPdf);
   },
 
-  async generateQuote(data: QuotePDFData): Promise<string> {
+  async generateQuote(data: QuotePDFData, objectKey: string): Promise<string> {
     // Bridge: domain QuotePDFData has unitPrice/extendedPrice as strings,
     // but the quote template expects numbers. Convert here.
     const adapted = {
@@ -36,18 +45,16 @@ export const pdfService = {
         costPrice: item.costPrice != null ? Number(item.costPrice) : null,
       })),
     };
-    return generateQuotePDF(adapted);
+    const pdfBuffer = await generateQuotePDF(adapted);
+    return pdfStorage.write(objectKey, pdfBuffer);
   },
 
-  async readPdf(absolutePath: string): Promise<Buffer> {
-    return pdfStorage.read(absolutePath);
+  async readPdf(objectKey: string): Promise<Buffer> {
+    return pdfStorage.read(objectKey);
   },
 
   async deletePdfFiles(pdfPath: string | null, prismcorePath: string | null): Promise<void> {
     if (pdfPath) await pdfStorage.safeDelete(pdfPath);
-    if (prismcorePath) {
-      const absPath = pdfStorage.resolvePublicPath(prismcorePath);
-      await pdfStorage.safeDelete(absPath);
-    }
+    if (prismcorePath) await pdfStorage.safeDelete(prismcorePath);
   },
 };

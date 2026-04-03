@@ -83,8 +83,8 @@ src/
     ├── prisma.ts
     ├── quote-number.ts
     ├── rate-limit.ts      # Sliding window rate limiter (login protection)
-    ├── sse.ts             # In-memory SSE pub/sub for real-time notifications
-    ├── use-sse.ts         # Generic SSE hook for real-time updates
+    ├── sse.ts             # Supabase Realtime server publish shim
+    ├── use-sse.ts         # Generic realtime hook backed by Supabase channels
     ├── themes.ts
     ├── utils.ts
     ├── validators.ts
@@ -95,9 +95,9 @@ prisma/
 ├── migrations/
 └── seed.ts
 
-src/__tests__/             # Component and integration tests (7 files, 47 tests)
+src/__tests__/             # Component and integration tests
 
-tests/                     # Domain and lib tests (19 files, 303 tests)
+tests/                     # Domain and lib tests
 ├── components/
 ├── domains/
 └── lib/
@@ -290,7 +290,7 @@ External people (vendors, customers, catering contacts) who are not Pierce Colle
 - **XSS prevention** — `escapeHtml()` in `src/lib/html.ts` wraps all user input in PDF templates
 - **Rate limiting** — sliding window limiter in `src/lib/rate-limit.ts`: 5 login attempts per 15min per IP+username
 - **Puppeteer sandboxing** — request interception blocks all external URLs; only `data:` and `file:` protocols allowed
-- **Path traversal protection** — `prismcorePath` must resolve within `public/uploads/`
+- **Storage key validation** — uploaded document object keys are normalized and reject traversal patterns such as `..` and `\`
 - **CSV injection** — `escapeCsv()` prefixes formula triggers (`=+-@`) with `'`
 - **Ownership verification** — all single-resource endpoints verify `resource.createdBy === session.user.id` (admins bypass)
 - **Auth wrappers** — `withAuth()` / `withAdmin()` centralize session checks in route handlers
@@ -312,11 +312,11 @@ The home page (`src/app/page.tsx`) features a personalized dashboard:
 
 - **Personalized header** — time-based greeting (Good Morning/Afternoon/Evening) with username
 - **YourFocus widget** — prioritized action items for the current user
-- **Drag-and-drop layout** — widgets can be reordered, persisted to `localStorage` (key: `laportal-dashboard-order`)
+- **Drag-and-drop layout** — widgets can be reordered and persisted via the authenticated user preferences API
 - **Stats cards** — invoice/quote counts filtered by `createdAt` (not invoice date)
 - **Recent activity** — shows both invoices and quotes (not just invoices)
 - **Running invoices, pending charges, team activity** — all role-aware
-- **Real-time updates** — all dashboard widgets update in real-time via SSE
+- **Real-time updates** — all dashboard widgets update in real-time via Supabase Realtime invalidation
 - **Help modal** — accessible from nav bar, covers invoice creation, line items, signatures, PDF generation, invoice management, and analytics
 
 Components in `src/components/dashboard/`.
@@ -335,12 +335,12 @@ Quotes can be shared with external recipients via token-based public links.
 4. Page visit is recorded as a `QuoteView` (IP, user-agent, referrer, viewport, duration via `sendBeacon`)
 5. Recipient clicks "Approve" or "Decline" → quote status updates, notification pushed to creator
 
-### SSE Notifications
+### Realtime Notifications
 
-Real-time notifications via Server-Sent Events:
+Real-time notifications via Supabase Realtime:
 
-- **Endpoint:** `GET /api/notifications/stream` (authenticated)
-- **Pub/sub:** In-memory `Map<userId, Set<controller>>` in `src/lib/sse.ts`
+- **Token bridge:** `GET /api/realtime/token` (authenticated)
+- **Pub/sub:** private Supabase Realtime channels via `src/lib/sse.ts`
 - **Events:** `QUOTE_VIEWED` (10-min debounce), `QUOTE_APPROVED`, `QUOTE_DECLINED`
 - **UI:** Bell icon in navbar with unread count badge and dropdown
 
@@ -366,13 +366,13 @@ These routes are excluded from auth middleware in `src/middleware.ts`.
 
 ---
 
-## Real-Time SSE Architecture
+## Real-Time Architecture
 
-Real-time updates are powered by Server-Sent Events with a generic hook and singleton connection.
+Real-time updates are powered by Supabase Realtime with a generic hook and shared browser client.
 
 - **Generic hook:** `useSSE(eventType, callback, debounceMs)` in `src/lib/use-sse.ts`
-- **Singleton EventSource:** shared across all consumers — one connection per browser tab
-- **Server broadcast:** `safePublishAll()` in `src/lib/sse.ts` — non-throwing broadcast wrapper that silently handles disconnected clients
+- **Shared client:** one Supabase client and channel set per browser tab
+- **Server broadcast:** `safePublishAll()` in `src/lib/sse.ts` publishes to `app:global`; `publish(userId, ...)` targets `user:<id>`
 - **Event types:** `calendar-changed`, `quote-changed`, `invoice-changed`, `staff-changed`
 - **Emission:** Services emit after every mutation (create, update, delete, status change)
 - **Consumers:** quote table, invoice table, staff table, dashboard stats, recent activity, pending charges, calendar
@@ -413,7 +413,7 @@ A Claude Haiku-powered chatbot in a collapsible right sidebar. Staff can ask abo
 - **Tools:** List/view invoices and quotes, search staff, create staff, list/create calendar events, view analytics, navigate user to pages. `searchPeople` searches both Staff and Contact tables. `createInvoice`/`createQuote` accept `contactName` for auto-creating contacts
 - **Safeguards:** Ownership enforcement (users can only modify their own records, admins bypass), destructive action confirmation, rate limiting
 - **Conversations:** Ephemeral (no persistence, resets on page refresh)
-- **UI:** Right sidebar (320px), minimize to icon strip, state persisted in localStorage
+- **UI:** Right sidebar (320px), minimize to icon strip, state persisted via authenticated user preferences
 - **Security:** Username escaped in system prompt to prevent injection; link URLs sanitized (http/https/relative only)
 
 ---
@@ -429,14 +429,14 @@ FullCalendar page at `/calendar` merging three event sources:
 - **API:** `GET /api/calendar/events` merges all sources; `GET /api/events` (list), `POST /api/events` (create), `GET/PUT/PATCH/DELETE /api/events/:id` (read/update/delete)
 - **Reminders:** `src/domains/event/reminders.ts` checks due reminders via scheduled trigger, sends `EVENT_REMINDER` notifications to all users
 - **UI:** `AddEventModal` for create/edit, `EventLegend` for color key, click-to-edit for manual events
-- **Real-time:** Updates via `calendar-changed` SSE event — events created from chatbot or modal appear instantly without refresh
+- **Real-time:** Updates via `calendar-changed` realtime event — events created from chatbot or modal appear instantly without refresh
 
 ---
 
 ## Login
 
 - **Email label** — field shows "Email" with `you@piercecollege.edu` placeholder
-- **Remember Me** — checkbox (default: on). Checked = 90-day session, unchecked = 24-hour session. Preference persisted in localStorage
+- **Remember Me** — checkbox (default: on). Checked = 90-day session, unchecked = 24-hour session
 - **Show/hide password** — eye icon toggle with `aria-pressed` for accessibility
 - **Caps Lock warning** — amber text with `aria-live` region when Caps Lock is detected
 - **Session enforcement** — `session.maxAge` set to 90 days (max), per-session expiration enforced via `token.iat` check in JWT callback
@@ -445,9 +445,9 @@ FullCalendar page at `/calendar` merging three event sources:
 
 ## Testing
 
-**Total: 350 tests** across 26 test files in two directories.
+Vitest covers both domain/lib tests in `tests/` and component/integration tests in `src/__tests__/`.
 
-### Test Files — `tests/` (303 tests)
+### Test Files — `tests/`
 
 | File | Domain/Layer |
 |---|---|
@@ -471,7 +471,7 @@ FullCalendar page at `/calendar` merging three event sources:
 | `tests/lib/themes.test.ts` | Themes lib |
 | `tests/lib/validators.test.ts` | Validators lib |
 
-### Test Files — `src/__tests__/` (47 tests)
+### Test Files — `src/__tests__/`
 
 | File | Area |
 |---|---|

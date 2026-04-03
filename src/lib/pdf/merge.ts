@@ -1,6 +1,4 @@
 import { PDFDocument } from "pdf-lib";
-import { readFile, writeFile } from "fs/promises";
-import path from "path";
 
 /**
  * Merges PrismCore PDF pages into the invoice PDF, inserting them
@@ -10,28 +8,14 @@ import path from "path";
  *   N+1. IDP
  */
 export async function mergePrismCorePDF(
-  invoicePdfPath: string,
-  prismcoreRelativePath: string
-): Promise<void> {
-  const prismcoreAbsPath = path.join(process.cwd(), "public", prismcoreRelativePath);
-
-  // Validate path to prevent directory traversal
-  const uploadsDir = path.resolve(process.cwd(), "public", "uploads");
-  const resolved = path.resolve(process.cwd(), "public", prismcoreRelativePath);
-  if (!resolved.startsWith(uploadsDir)) {
-    throw new Error("Invalid prismcore path");
-  }
-
-  const [invoiceBytes, prismcoreBytes] = await Promise.all([
-    readFile(invoicePdfPath),
-    readFile(prismcoreAbsPath),
-  ]);
-
+  invoiceBytes: Buffer,
+  prismcoreBytes: Buffer
+): Promise<Buffer> {
   const invoiceDoc = await PDFDocument.load(invoiceBytes);
   const prismcoreDoc = await PDFDocument.load(prismcoreBytes);
 
   const prismcorePageCount = prismcoreDoc.getPageCount();
-  if (prismcorePageCount === 0) return;
+  if (prismcorePageCount === 0) return invoiceBytes;
 
   const copiedPages = await invoiceDoc.copyPages(
     prismcoreDoc,
@@ -44,5 +28,5 @@ export async function mergePrismCorePDF(
   }
 
   const mergedBytes = await invoiceDoc.save();
-  await writeFile(invoicePdfPath, mergedBytes);
+  return Buffer.from(mergedBytes);
 }

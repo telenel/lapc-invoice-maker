@@ -92,6 +92,7 @@ export function QuoteActivity({ quoteId }: { quoteId: string }) {
   }, [loadActivity]);
 
   useSSE("quote-changed", loadActivity);
+  useSSE("quote-activity-changed", loadActivity);
 
   if (loading) return null;
   if (error) {

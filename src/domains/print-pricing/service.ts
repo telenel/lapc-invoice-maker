@@ -227,7 +227,7 @@ export const printPricingService = {
       timeStyle: "short",
     });
 
-    const pdfPath = await generatePrintQuotePdf({
+    const pdfBuffer = await generatePrintQuotePdf({
       shopTitle: pricing.shopTitle,
       quoteNumber,
       createdAt: createdAtLabel,
@@ -248,6 +248,11 @@ export const printPricingService = {
         lineTotal: centsToNumber(item.lineTotalCents),
       })),
     });
+
+    const pdfPath = await pdfStorage.write(
+      pdfStorage.printQuoteKey(quote.id, quoteNumber),
+      pdfBuffer
+    );
 
     await printPricingRepository.updateQuotePdfPath(quote.id, pdfPath);
 

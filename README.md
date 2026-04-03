@@ -9,7 +9,7 @@ Operations portal for **Los Angeles Pierce College**. Handles the full lifecycle
 - **Invoice creation** with keyboard-first entry, staff autofill, line items, tax calculation, and approval chains
 - **PDF generation** — cover sheets (Puppeteer), IDP forms (pdf-lib), PrismCore merge
 - **Quote management** — create, send, auto-expire, convert to invoice, online sharing with approve/decline flow
-- **Online quote sharing** — shareable public links, recipient approve/decline, view tracking (IP, browser, duration), real-time SSE notifications
+- **Online quote sharing** — shareable public links, recipient approve/decline, view tracking (IP, browser, duration), real-time Supabase notifications
 - **Staff directory** — CRUD with account numbers, signer history tracking
 - **Admin panel** — user management, account codes, invoice manager with inline editing, saved line items catalog, analytics dashboard
 - **Dark/light theme** with UI scale controls
@@ -19,7 +19,8 @@ Operations portal for **Los Angeles Pierce College**. Handles the full lifecycle
 | Layer | Technology |
 |-------|-----------|
 | Framework | Next.js 15 (App Router) |
-| Database | PostgreSQL + Prisma 7 |
+| Database | Supabase Postgres + Prisma 7 |
+| Storage / Realtime | Supabase Storage + Realtime |
 | Styling | Tailwind CSS 4 + shadcn/ui v4 |
 | Auth | NextAuth (JWT + Credentials) |
 | PDF | Puppeteer + pdf-lib |
@@ -44,7 +45,7 @@ npm install              # Install dependencies + configure git hooks
 npx prisma generate      # Generate Prisma client
 npm run dev              # Start dev server (localhost:3000)
 npm run ship-check       # git status + lint + test + build + stamp current HEAD
-npm test                 # Run tests (350 tests)
+npm test                 # Run the full Vitest suite
 npm run build            # Production build
 ```
 
@@ -65,19 +66,27 @@ npm run build            # Production build
 
 ```bash
 npx prisma migrate dev --name <name>   # Create migration
+npx prisma migrate deploy              # Apply migrations to Supabase/production
 npx prisma db seed                     # Seed database
+npx tsx scripts/supabase/migrate-legacy-documents.ts --dry-run
 ```
 
 ### Environment Variables
 
 ```
-DATABASE_URL=postgresql://user:pass@localhost:5432/invoicemaker
+DATABASE_URL=postgresql://user:pass@host:5432/postgres
+DIRECT_URL=postgresql://user:pass@host:5432/postgres
 NEXTAUTH_SECRET=<secret>
 NEXTAUTH_URL=http://localhost:3000
-LAPORTAL_ENABLE_APP_CRON=0
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
+SUPABASE_JWT_SECRET=<jwt-secret>
+JOB_SCHEDULER=app
+CRON_SECRET=<shared-secret-for-internal-job-routes>
 ```
 
-Set `LAPORTAL_ENABLE_APP_CRON=1` only on a single long-lived app instance if you want the in-process reminder jobs enabled. Leave it unset or `0` on multi-replica or serverless-style deployments.
+Set `JOB_SCHEDULER=supabase` after you have configured Supabase pg_cron with [`supabase/sql/003_laportal_scheduler.sql`](/Users/montalvo/lapc-invoice-maker/supabase/sql/003_laportal_scheduler.sql). Keep `JOB_SCHEDULER=app` if the Next.js process should continue owning reminder scheduling.
 
 ## Deployment
 
@@ -86,6 +95,7 @@ Docker Compose behind Traefik on [montalvo.io](https://montalvo.io). CI/CD via G
 ## Project Documentation
 
 - [docs/PROJECT-OVERVIEW.md](docs/PROJECT-OVERVIEW.md) — Comprehensive architecture and API reference
+- [docs/operations/supabase-cutover.md](docs/operations/supabase-cutover.md) — Supabase Postgres/Storage/Realtime cutover runbook
 - [docs/superpowers/specs/](docs/superpowers/specs/) — Design specifications
 - [docs/superpowers/plans/](docs/superpowers/plans/) — Implementation plans
 

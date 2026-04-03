@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { useUserPreference } from "@/domains/user-preference/hooks";
 
 const SCALE_KEY = "ui-scale";
 const DEFAULT_SCALE = "1.1";
@@ -12,6 +13,14 @@ const SCALES = [
 
 type ScaleValue = (typeof SCALES)[number]["value"];
 
+function parseScalePreference(value: unknown): ScaleValue {
+  if (typeof value === "string" && SCALES.some((scale) => scale.value === value)) {
+    return value as ScaleValue;
+  }
+
+  return DEFAULT_SCALE;
+}
+
 const ScaleContext = createContext<{
   scale: ScaleValue;
   setScale: (s: ScaleValue) => void;
@@ -19,24 +28,23 @@ const ScaleContext = createContext<{
 }>({ scale: DEFAULT_SCALE, setScale: () => {}, scales: SCALES });
 
 export function UIScaleProvider({ children }: { children: React.ReactNode }) {
-  const [scale, setScaleState] = useState<ScaleValue>(DEFAULT_SCALE);
   const [mounted, setMounted] = useState(false);
+  const {
+    value: scale,
+    setValue: setScalePreference,
+  } = useUserPreference<ScaleValue>({
+    key: SCALE_KEY,
+    defaultValue: DEFAULT_SCALE,
+    deserialize: parseScalePreference,
+  });
 
   useEffect(() => {
-    const saved = localStorage.getItem(SCALE_KEY) as ScaleValue | null;
-    if (saved && SCALES.some((s) => s.value === saved)) {
-      setScaleState(saved);
-      document.documentElement.style.setProperty("--ui-zoom", saved);
-    } else {
-      document.documentElement.style.setProperty("--ui-zoom", DEFAULT_SCALE);
-    }
+    document.documentElement.style.setProperty("--ui-zoom", scale);
     setMounted(true);
-  }, []);
+  }, [scale]);
 
-  function setScale(s: ScaleValue) {
-    setScaleState(s);
-    localStorage.setItem(SCALE_KEY, s);
-    document.documentElement.style.setProperty("--ui-zoom", s);
+  function setScale(nextScale: ScaleValue) {
+    setScalePreference(nextScale);
   }
 
   // Suppress hydration by not rendering until mounted — the CSS variable

@@ -146,16 +146,24 @@ export function KeyboardMode({
   // ---- Auto-save + draft recovery ----
   const routeKey = existingId ? `/invoices/${existingId}/edit` : "/invoices/new";
   const { clearDraft } = useAutoSave(form, routeKey, userId);
-  const [draftEntry, setDraftEntry] = useState(() => {
-    if (typeof window === "undefined" || !userId) return null;
-    return loadDraft<InvoiceFormData>(routeKey, userId);
-  });
+  const [draftEntry, setDraftEntry] = useState<{ data: InvoiceFormData; savedAt: number } | null>(null);
 
-  // Reload draft when userId resolves from null to the real user id
   useEffect(() => {
-    if (typeof window === "undefined" || !userId) return;
-    const entry = loadDraft<InvoiceFormData>(routeKey, userId);
-    setDraftEntry(entry);
+    if (!userId) {
+      setDraftEntry(null);
+      return;
+    }
+
+    let cancelled = false;
+    void loadDraft<InvoiceFormData>(routeKey, userId).then((entry) => {
+      if (!cancelled) {
+        setDraftEntry(entry);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [userId, routeKey]);
 
   // ---- Save wrappers that clear the draft on success ----

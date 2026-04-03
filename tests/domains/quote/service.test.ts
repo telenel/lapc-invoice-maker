@@ -1410,7 +1410,8 @@ describe("quoteService", () => {
               extendedPrice: "75",
             }),
           ],
-        })
+        }),
+        "quotes/q1/Q-2026-0001.pdf"
       );
 
       expect(mockPdfService.readPdf).toHaveBeenCalledWith("/pdf/q1.pdf");
@@ -1430,7 +1431,8 @@ describe("quoteService", () => {
         expect.objectContaining({
           shareToken: "share-token",
           appUrl: expect.any(String),
-        })
+        }),
+        "quotes/q1/Q-2026-0001.pdf"
       );
     });
 
@@ -1443,7 +1445,8 @@ describe("quoteService", () => {
       const result = await quoteService.generatePdf("q1");
 
       expect(mockPdfService.generateQuote).toHaveBeenCalledWith(
-        expect.objectContaining({ quoteNumber: "DRAFT" })
+        expect.objectContaining({ quoteNumber: "DRAFT" }),
+        "quotes/q1/quote.pdf"
       );
       expect(result.filename).toBe("quote");
     });

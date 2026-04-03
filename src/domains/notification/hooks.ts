@@ -5,9 +5,6 @@ import { notificationApi } from "./api-client";
 import type { NotificationResponse } from "./types";
 import { subscribeToSSE } from "@/lib/use-sse";
 
-const FALLBACK_POLL_DELAY_MS = 5_000;
-const FALLBACK_POLL_INTERVAL_MS = 30_000;
-
 function isNotificationPayload(data: unknown): data is NotificationResponse {
   if (typeof data !== "object" || data === null) {
     return false;
@@ -49,32 +46,9 @@ export function useNotifications() {
 
   useEffect(() => {
     fetchNotifications();
-    let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
-    let pollingTimer: ReturnType<typeof setInterval> | undefined;
-
-    const stopPolling = () => {
-      clearTimeout(fallbackTimer);
-      clearInterval(pollingTimer);
-      fallbackTimer = undefined;
-      pollingTimer = undefined;
-    };
-
-    const startPolling = () => {
-      if (pollingTimer) return;
-      fetchNotifications();
-      pollingTimer = setInterval(() => {
-        fetchNotifications();
-      }, FALLBACK_POLL_INTERVAL_MS);
-    };
-
-    fallbackTimer = setTimeout(() => {
-      startPolling();
-    }, FALLBACK_POLL_DELAY_MS);
 
     const unsubscribe = subscribeToSSE(
       (data) => {
-        stopPolling();
-
         if (isNotificationPayload(data)) {
           if (notificationsRef.current.some((item) => item.id === data.id)) {
             return;
@@ -95,17 +69,13 @@ export function useNotifications() {
       {
         onConnectionChange(connected) {
           if (connected) {
-            stopPolling();
-            return;
+            void fetchNotifications();
           }
-
-          startPolling();
         },
       },
     );
 
     return () => {
-      stopPolling();
       unsubscribe();
     };
   }, [fetchNotifications]);

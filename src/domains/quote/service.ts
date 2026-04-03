@@ -1,6 +1,7 @@
 // src/domains/quote/service.ts
 import * as quoteRepository from "./repository";
 import { pdfService } from "@/domains/pdf/service";
+import { pdfStorage } from "@/domains/pdf/storage";
 import { formatDateFromDate } from "@/domains/shared/formatters";
 import { calculateTotal } from "@/domains/invoice/calculations";
 import { prisma } from "@/lib/prisma";
@@ -388,6 +389,7 @@ export const quoteService = {
       });
     }
 
+    safePublishAll({ type: "quote-activity-changed" });
     return { viewId: view.id };
   },
 
@@ -396,6 +398,7 @@ export const quoteService = {
    */
   async updateViewDuration(viewId: string, durationSeconds: number): Promise<void> {
     await quoteRepository.updateViewDuration(viewId, durationSeconds);
+    safePublishAll({ type: "quote-activity-changed" });
   },
 
   /**
@@ -416,6 +419,7 @@ export const quoteService = {
     }
 
     await quoteRepository.updateViewDuration(viewId, durationSeconds);
+    safePublishAll({ type: "quote-activity-changed" });
   },
 
   /**
@@ -1327,7 +1331,7 @@ export const quoteService = {
         : null,
       shareToken: includePublicShareLink ? quote.shareToken : null,
       appUrl: includePublicShareLink ? appUrl : undefined,
-    });
+    }, pdfStorage.quoteKey(id, quote.quoteNumber ?? "quote"));
 
     const buffer = await pdfService.readPdf(pdfPath);
     const filename = (quote.quoteNumber ?? "quote").replace(/[\r\n"]/g, "");
