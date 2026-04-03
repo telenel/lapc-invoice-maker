@@ -10,18 +10,21 @@ async function broadcast(topic: string, data: unknown): Promise<void> {
     if (!hasSupabaseAdminEnv()) return;
     const { url, serviceRoleKey } = getSupabaseAdminEnv();
 
-    const response = await fetch(`${url}/rest/v1/rpc/broadcast`, {
+    const response = await fetch(`${url}/realtime/v1/api/broadcast`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${serviceRoleKey}`,
         apikey: serviceRoleKey,
       },
       body: JSON.stringify({
-        topic,
-        event: REALTIME_BROADCAST_EVENT,
-        payload: data,
-        private: true,
+        messages: [
+          {
+            topic,
+            event: REALTIME_BROADCAST_EVENT,
+            payload: data,
+            private: true,
+          },
+        ],
       }),
     });
 
