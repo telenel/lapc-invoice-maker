@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /pricing-calculator
+Allow: /login
+Disallow: /api/
+Disallow: /admin/
+Disallow: /invoices/
+Disallow: /quotes/
+Disallow: /staff/
+Disallow: /calendar
+Disallow: /analytics
+Disallow: /quick-picks
+Disallow: /setup
+
+Sitemap: https://laportal.montalvo.io/sitemap.xml

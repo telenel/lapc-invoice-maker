@@ -90,7 +90,7 @@ export default function SetupPage() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-background to-secondary/30">
       <div className="mb-6">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/lapc-logo.png" alt="Los Angeles Pierce College" style={{ height: 80, width: "auto" }} />
+        <img src="/lapc-logo.png" alt="Los Angeles Pierce College" width={80} height={80} />
       </div>
       <Card className="w-full max-w-md shadow-lg border-border/40">
         <CardHeader className="pb-2">
