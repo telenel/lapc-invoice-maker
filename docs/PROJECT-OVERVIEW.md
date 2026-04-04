@@ -517,15 +517,16 @@ env: {
 }
 ```
 
-In production, `NEXT_PUBLIC_BUILD_SHA` reflects the exact commit deployed. Falls back to `"dev"` when git is unavailable.
+In production, the app also ships a `.build-meta.json` stamp created during deploy/build so `/api/version` can report the deployed commit even when git metadata is unavailable inside the image.
 
 ### CI/CD Pipeline
 
 GitHub Actions runs on every push to `main` and every PR targeting `main`:
 
-1. **Setup** — `npm ci` + `npx prisma generate`, caches `node_modules` and `src/generated/prisma`
-2. **Lint** / **Build** / **Tests** — run in parallel after Setup (Node 22)
-3. **Deploy** (push to `main` only) — triggers HTTPS webhook at `montalvo.io/hooks/deploy-laportal`, then polls health check at `laportal.montalvo.io`
+1. **`actionlint`** — validates GitHub Actions workflow syntax and common mistakes
+2. **`ship-check`** — runs the repo validation command (`npm run ship-check`) on Node 22 after `npm ci` and `npx prisma generate`
+3. **Auto-merge** (PRs to `main`) — after a 15-minute quiet period, merges the latest green PR head SHA once CodeRabbit has reviewed it or produced the latest commit; add `no-automerge` or `hold` to opt out
+4. **Deploy** (push to `main` only) — waits for the `CI` workflow to pass, triggers the HTTPS webhook at `montalvo.io/hooks/deploy-laportal`, then polls `laportal.montalvo.io/api/version`
 
 Deployment is Docker Compose on montalvo.io behind Traefik. The deploy webhook triggers a build-first strategy (no docker-down before build).
 

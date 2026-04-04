@@ -37,25 +37,33 @@ RUN --mount=type=cache,target=/root/.npm npm ci
 # Build stage
 FROM base AS builder
 ARG BUILD_SHA=dev
+ARG BUILD_TIME=unknown
 ENV NEXT_PUBLIC_BUILD_SHA=${BUILD_SHA}
+ENV NEXT_PUBLIC_BUILD_TIME=${BUILD_TIME}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate
+RUN node -e 'const fs=require("fs"); const path=".build-meta.json"; if (!fs.existsSync(path)) { fs.writeFileSync(path, JSON.stringify({ buildSha: process.env.NEXT_PUBLIC_BUILD_SHA || "dev", buildTime: process.env.NEXT_PUBLIC_BUILD_TIME || new Date().toISOString() })); }'
 # Dummy DATABASE_URL so Next.js build can collect page data without a live DB
 ENV DATABASE_URL="postgresql://build:build@localhost:5432/build"
 RUN --mount=type=cache,target=/app/.next/cache npm run build
 
 # Production stage
 FROM base AS runner
+ARG BUILD_SHA=dev
+ARG BUILD_TIME=unknown
 ENV NODE_ENV=production
 ENV HOME=/tmp
 ENV XDG_CONFIG_HOME=/tmp/.chromium/config
 ENV XDG_CACHE_HOME=/tmp/.chromium/cache
+ENV NEXT_PUBLIC_BUILD_SHA=${BUILD_SHA}
+ENV NEXT_PUBLIC_BUILD_TIME=${BUILD_TIME}
 WORKDIR /app
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/.build-meta.json ./.build-meta.json
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh

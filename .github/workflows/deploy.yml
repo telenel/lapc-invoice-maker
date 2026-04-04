@@ -121,7 +121,7 @@ jobs:
             fi
             last_body="$body"
             status=$(printf '%s' "$body" | grep -oE '"status":"[^"]+"' | cut -d'"' -f4 || true)
-            deployed_sha=$(printf '%s' "$body" | grep -oE '"buildSha":"[a-f0-9]+"' | cut -d'"' -f4 || true)
+            deployed_sha=$(printf '%s' "$body" | grep -oE '"buildSha":"[^"]*"' | cut -d'"' -f4 || true)
             echo "Attempt $i/$DEPLOY_VERIFY_ATTEMPTS: status=${status:-unknown} buildSha=${deployed_sha:-missing}"
             if [ "$status" = "ok" ] && [ "$deployed_sha" = "$expected_sha" ]; then
               echo "Deploy verification passed"

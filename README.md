@@ -90,7 +90,7 @@ Set `JOB_SCHEDULER=supabase` after you have configured Supabase pg_cron with [`s
 
 ## Deployment
 
-Docker Compose behind Traefik on [montalvo.io](https://montalvo.io). CI/CD via GitHub Actions — push to main triggers lint, build, test, then webhook deploy.
+Docker Compose behind Traefik on [montalvo.io](https://montalvo.io). GitHub Actions runs formal `ship-check` and `actionlint` checks on PRs and pushes, auto-merges PRs by default after a 15-minute quiet period once the latest head SHA has green CI and CodeRabbit has reviewed it or produced the latest commit, and deploys `main` via webhook after CI passes. Add `no-automerge` or `hold` to opt out. Production images also carry a `.build-meta.json` stamp so `/api/version` can report the deployed commit reliably.
 
 ## Project Documentation
 
