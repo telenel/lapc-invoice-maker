@@ -3,27 +3,38 @@ name: CI
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - "*.md"
-      - "**/*.md"
-      - "docs/**"
-      - ".superpowers/**"
   pull_request:
     branches: [main]
-    paths-ignore:
-      - "*.md"
-      - "**/*.md"
-      - "docs/**"
-      - ".superpowers/**"
+
+permissions:
+  contents: read
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  ci:
-    name: Lint, Build & Test
+  actionlint:
+    name: actionlint
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: Install actionlint
+        run: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.8
+
+      - name: Run actionlint
+        run: '"$(go env GOPATH)/bin/actionlint" -color'
+
+  ship_check:
+    name: ship-check
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci"
     steps:
       - uses: actions/checkout@v4
 
@@ -43,13 +54,5 @@ jobs:
       - name: Install dependencies
         run: npm ci && npx prisma generate
 
-      - name: Lint
-        run: npm run lint
-
-      - name: Test
-        run: npm test
-
-      - name: Build
-        env:
-          DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci"
-        run: npm run build
+      - name: Run ship-check
+        run: npm run ship-check

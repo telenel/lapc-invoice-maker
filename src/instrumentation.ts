@@ -2,12 +2,6 @@ export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     if (process.env.NODE_ENV !== "production") return;
 
-    const { getJobSchedulerMode } = await import("@/lib/job-scheduler");
-    if (getJobSchedulerMode() === "supabase") {
-      console.log("[instrumentation] skipping app cron registration; JOB_SCHEDULER=supabase");
-      return;
-    }
-
     const state = globalThis as typeof globalThis & {
       __laportalCronRegistered?: boolean;
     };

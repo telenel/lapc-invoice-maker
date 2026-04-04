@@ -10,6 +10,7 @@ APP_URL="https://laportal.montalvo.io/api/version"
 VERIFY_ATTEMPTS=36
 VERIFY_SLEEP=10
 VERIFY_INITIAL_SLEEP=15
+BUILD_META_FILE=".build-meta.json"
 
 cd "$PROJECT_DIR"
 
@@ -29,8 +30,11 @@ rollback_deploy() {
   echo "[deploy] Rolling back to $target_commit"
   git reset --hard "$target_commit"
   local rollback_sha
+  local rollback_time
   rollback_sha=$(git rev-parse --short HEAD)
-  docker compose build --build-arg BUILD_SHA="$rollback_sha" app
+  rollback_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+  printf '{"buildSha":"%s","buildTime":"%s"}\n' "$rollback_sha" "$rollback_time" > "$BUILD_META_FILE"
+  docker compose build --build-arg BUILD_SHA="$rollback_sha" --build-arg BUILD_TIME="$rollback_time" app
   docker compose up -d --remove-orphans
 }
 
@@ -42,6 +46,7 @@ git reset --hard "origin/$DEFAULT_BRANCH"
 
 NEW_COMMIT=$(git rev-parse HEAD)
 BUILD_SHA=$(git rev-parse --short HEAD)
+BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 echo "[deploy] New commit: $NEW_COMMIT"
 
 if [ "$PREV_COMMIT" = "$NEW_COMMIT" ]; then
@@ -49,7 +54,9 @@ if [ "$PREV_COMMIT" = "$NEW_COMMIT" ]; then
   exit 0
 fi
 
-if ! docker compose build --build-arg BUILD_SHA="$BUILD_SHA" app; then
+printf '{"buildSha":"%s","buildTime":"%s"}\n' "$BUILD_SHA" "$BUILD_TIME" > "$BUILD_META_FILE"
+
+if ! docker compose build --build-arg BUILD_SHA="$BUILD_SHA" --build-arg BUILD_TIME="$BUILD_TIME" app; then
   echo "[deploy] ERROR: Docker build failed — rolling repo checkout back to $PREV_COMMIT"
   git reset --hard "$PREV_COMMIT"
   exit 1
@@ -71,7 +78,7 @@ for i in $(seq 1 "$VERIFY_ATTEMPTS"); do
     body=""
   fi
   last_body="$body"
-  deployed_sha=$(printf '%s' "$body" | grep -oE '"buildSha":"[a-f0-9]+"' | cut -d'"' -f4 || true)
+  deployed_sha=$(printf '%s' "$body" | grep -oE '"buildSha":"[^"]*"' | cut -d'"' -f4 || true)
   status=$(printf '%s' "$body" | grep -oE '"status":"[^"]+"' | cut -d'"' -f4 || true)
   echo "[deploy] Attempt $i/$VERIFY_ATTEMPTS: status=${status:-unknown} buildSha=${deployed_sha:-missing}"
   if [ "$status" = "ok" ] && [ "$deployed_sha" = "$BUILD_SHA" ]; then

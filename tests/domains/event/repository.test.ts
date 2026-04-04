@@ -15,7 +15,16 @@ vi.mock("@/lib/prisma", () => ({
 import { prisma } from "@/lib/prisma";
 import * as eventRepository from "@/domains/event/repository";
 
-const mockPrisma = vi.mocked(prisma);
+// eslint-disable-next-line @typescript-eslint/no-explicit-unknown -- Prisma generic overloads prevent vi.mocked from resolving mock methods
+const mockPrisma = prisma as unknown as {
+  event: {
+    create: ReturnType<typeof vi.fn>;
+    findMany: ReturnType<typeof vi.fn>;
+    findUnique: ReturnType<typeof vi.fn>;
+    update: ReturnType<typeof vi.fn>;
+    delete: ReturnType<typeof vi.fn>;
+  };
+};
 
 describe("eventRepository", () => {
   beforeEach(() => {

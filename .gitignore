@@ -28,6 +28,7 @@ yarn-error.log*
 # local env files
 .env
 .env*.local
+.build-meta.json
 
 # claude code (keep local, not in public repo)
 CLAUDE.md
@@ -49,3 +50,5 @@ public/uploads/
 .superpowers/
 .worktrees/
 everything-claude-code/
+reviews/
+skills-lock.json

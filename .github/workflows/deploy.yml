@@ -110,6 +110,7 @@ jobs:
         env:
           EXPECTED_SHA: ${{ github.sha }}
         run: |
+          # shellcheck disable=SC2153
           expected_sha="${EXPECTED_SHA::7}"
           echo "Waiting for deployed build SHA $expected_sha..."
           sleep "$DEPLOY_VERIFY_INITIAL_SLEEP"
@@ -121,7 +122,7 @@ jobs:
             fi
             last_body="$body"
             status=$(printf '%s' "$body" | grep -oE '"status":"[^"]+"' | cut -d'"' -f4 || true)
-            deployed_sha=$(printf '%s' "$body" | grep -oE '"buildSha":"[a-f0-9]+"' | cut -d'"' -f4 || true)
+            deployed_sha=$(printf '%s' "$body" | grep -oE '"buildSha":"[^"]*"' | cut -d'"' -f4 || true)
             echo "Attempt $i/$DEPLOY_VERIFY_ATTEMPTS: status=${status:-unknown} buildSha=${deployed_sha:-missing}"
             if [ "$status" = "ok" ] && [ "$deployed_sha" = "$expected_sha" ]; then
               echo "Deploy verification passed"
