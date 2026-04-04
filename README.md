@@ -68,7 +68,6 @@ npm run build            # Production build
 npx prisma migrate dev --name <name>   # Create migration
 npx prisma migrate deploy              # Apply migrations to Supabase/production
 npx prisma db seed                     # Seed database
-npx tsx scripts/supabase/migrate-legacy-documents.ts --dry-run
 ```
 
 ### Environment Variables
@@ -82,11 +81,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
 SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
 SUPABASE_JWT_SECRET=<jwt-secret>
-JOB_SCHEDULER=app
-CRON_SECRET=<shared-secret-for-internal-job-routes>
 ```
-
-Set `JOB_SCHEDULER=supabase` after you have configured Supabase pg_cron with [`supabase/sql/003_laportal_scheduler.sql`](/Users/montalvo/lapc-invoice-maker/supabase/sql/003_laportal_scheduler.sql). Keep `JOB_SCHEDULER=app` if the Next.js process should continue owning reminder scheduling.
 
 ## Deployment
 
@@ -95,7 +90,6 @@ Docker Compose behind Traefik on [montalvo.io](https://montalvo.io). GitHub Acti
 ## Project Documentation
 
 - [docs/PROJECT-OVERVIEW.md](docs/PROJECT-OVERVIEW.md) — Comprehensive architecture and API reference
-- [docs/operations/supabase-cutover.md](docs/operations/supabase-cutover.md) — Supabase Postgres/Storage/Realtime cutover runbook
 - [docs/superpowers/specs/](docs/superpowers/specs/) — Design specifications
 - [docs/superpowers/plans/](docs/superpowers/plans/) — Implementation plans
 
