@@ -110,6 +110,7 @@ jobs:
         env:
           EXPECTED_SHA: ${{ github.sha }}
         run: |
+          # shellcheck disable=SC2153
           expected_sha="${EXPECTED_SHA::7}"
           echo "Waiting for deployed build SHA $expected_sha..."
           sleep "$DEPLOY_VERIFY_INITIAL_SLEEP"
