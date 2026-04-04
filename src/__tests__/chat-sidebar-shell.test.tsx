@@ -8,16 +8,16 @@ type MatchMediaChangeListener = (event: MediaQueryListEvent) => void;
 
 function installMatchMedia(initialMatches: boolean) {
   const listeners = new Set<MatchMediaChangeListener>();
-  const mediaQueryList = {
+  const mediaQueryList: { -readonly [K in keyof MediaQueryList]: MediaQueryList[K] } = {
     matches: initialMatches,
     media: "(min-width: 1024px)",
     onchange: null,
-    addEventListener: (_type: string, listener: MatchMediaChangeListener) => {
+    addEventListener: ((_type: string, listener: MatchMediaChangeListener) => {
       listeners.add(listener);
-    },
-    removeEventListener: (_type: string, listener: MatchMediaChangeListener) => {
+    }) as MediaQueryList["addEventListener"],
+    removeEventListener: ((_type: string, listener: MatchMediaChangeListener) => {
       listeners.delete(listener);
-    },
+    }) as MediaQueryList["removeEventListener"],
     addListener: (listener: MatchMediaChangeListener) => {
       listeners.add(listener);
     },
@@ -25,7 +25,7 @@ function installMatchMedia(initialMatches: boolean) {
       listeners.delete(listener);
     },
     dispatchEvent: () => true,
-  } satisfies MediaQueryList;
+  };
 
   vi.stubGlobal("matchMedia", vi.fn(() => mediaQueryList));
 
@@ -38,9 +38,9 @@ function installMatchMedia(initialMatches: boolean) {
       } as MediaQueryListEvent;
 
       act(() => {
-        for (const listener of listeners) {
+        Array.from(listeners).forEach((listener) => {
           listener(event);
-        }
+        });
       });
     },
   };

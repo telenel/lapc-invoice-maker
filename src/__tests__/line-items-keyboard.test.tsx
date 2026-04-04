@@ -24,7 +24,7 @@ vi.mock("@/components/ui/inline-combobox", () => ({
       placeholder={placeholder as string}
       onChange={() => {}}
       aria-label={props["aria-label"] as string || "combobox"}
-      {...(props.className ? { className: props.className } : {})}
+      {...(props.className ? { className: props.className as string } : {})}
     />
   ),
 }));
@@ -32,6 +32,7 @@ vi.mock("@/components/ui/inline-combobox", () => ({
 const defaultProps = {
   items: [
     {
+      _key: "key-0",
       description: "Test",
       quantity: 1,
       unitPrice: 10,
@@ -55,9 +56,9 @@ const defaultProps = {
 describe("LineItems", () => {
   it("renders the correct number of rows based on items prop", () => {
     const items = [
-      { description: "Item A", quantity: 2, unitPrice: 5, extendedPrice: 10, sortOrder: 0, isTaxable: true, marginOverride: null, costPrice: null },
-      { description: "Item B", quantity: 1, unitPrice: 20, extendedPrice: 20, sortOrder: 1, isTaxable: true, marginOverride: null, costPrice: null },
-      { description: "Item C", quantity: 3, unitPrice: 7, extendedPrice: 21, sortOrder: 2, isTaxable: true, marginOverride: null, costPrice: null },
+      { _key: "key-0", description: "Item A", quantity: 2, unitPrice: 5, extendedPrice: 10, sortOrder: 0, isTaxable: true, marginOverride: null, costPrice: null },
+      { _key: "key-1", description: "Item B", quantity: 1, unitPrice: 20, extendedPrice: 20, sortOrder: 1, isTaxable: true, marginOverride: null, costPrice: null },
+      { _key: "key-2", description: "Item C", quantity: 3, unitPrice: 7, extendedPrice: 21, sortOrder: 2, isTaxable: true, marginOverride: null, costPrice: null },
     ];
 
     render(<LineItems {...defaultProps} items={items} total={51} />);
@@ -91,8 +92,8 @@ describe("LineItems", () => {
     const user = userEvent.setup();
     const onRemove = vi.fn();
     const items = [
-      { description: "Item A", quantity: 1, unitPrice: 10, extendedPrice: 10, sortOrder: 0, isTaxable: true, marginOverride: null, costPrice: null },
-      { description: "Item B", quantity: 1, unitPrice: 20, extendedPrice: 20, sortOrder: 1, isTaxable: true, marginOverride: null, costPrice: null },
+      { _key: "key-0", description: "Item A", quantity: 1, unitPrice: 10, extendedPrice: 10, sortOrder: 0, isTaxable: true, marginOverride: null, costPrice: null },
+      { _key: "key-1", description: "Item B", quantity: 1, unitPrice: 20, extendedPrice: 20, sortOrder: 1, isTaxable: true, marginOverride: null, costPrice: null },
     ];
 
     render(

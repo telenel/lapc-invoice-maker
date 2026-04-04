@@ -5,6 +5,7 @@ import {
   getQuoteViewerAccess,
   redactQuoteForViewer,
 } from "@/domains/quote/access";
+import type { QuoteResponse } from "@/domains/quote/types";
 
 describe("canViewQuoteDetails", () => {
   const baseQuote = {
@@ -58,10 +59,28 @@ describe("canViewQuoteDetails", () => {
   });
 
   it("redacts sensitive fields for limited viewers", () => {
-    const quote = {
+    const quote: QuoteResponse = {
       id: "q1",
       quoteNumber: "Q-1",
+      quoteStatus: "DRAFT",
+      date: "2026-03-31",
+      expirationDate: null,
+      type: "STANDARD",
+      department: "Test",
+      category: "SUPPLIES",
+      notes: "",
+      totalAmount: 20,
+      recipientName: "Jane",
+      createdAt: "2026-03-31T00:00:00.000Z",
+      staff: null,
       creatorId: "creator-1",
+      creatorName: "Admin",
+      isCateringEvent: false,
+      cateringDetails: null,
+      paymentDetailsResolved: false,
+      convertedToInvoice: null,
+      revisedFromQuote: null,
+      revisedToQuote: null,
       accountCode: "AC1",
       accountNumber: "12345",
       approvalChain: ["Boss"],
@@ -99,9 +118,9 @@ describe("canViewQuoteDetails", () => {
           costPrice: 8,
         },
       ],
-    } as const;
+    };
 
-    const redacted = redactQuoteForViewer(quote as never, {
+    const redacted = redactQuoteForViewer(quote, {
       canViewQuote: true,
       canManageActions: false,
       canViewActivity: false,

@@ -2,11 +2,12 @@ import { spawnSync } from "node:child_process";
 import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { afterEach, describe, expect, it } from "vitest";
 
 const repoRoot = process.cwd();
 const tempDirs: string[] = [];
 
-function run(command: string, args: string[], cwd: string, env: NodeJS.ProcessEnv = {}) {
+function run(command: string, args: string[], cwd: string, env: Record<string, string | undefined> = {}) {
   return spawnSync(command, args, {
     cwd,
     env: { ...process.env, ...env },
@@ -49,7 +50,7 @@ function createRepoFixture(trackedPaths: string[]) {
   return repoDir;
 }
 
-function runScript(repoDir: string, scriptPath: string, env: NodeJS.ProcessEnv = {}) {
+function runScript(repoDir: string, scriptPath: string, env: Record<string, string | undefined> = {}) {
   return spawnSync("/bin/bash", [scriptPath], {
     cwd: repoDir,
     env: { ...process.env, ...env },
