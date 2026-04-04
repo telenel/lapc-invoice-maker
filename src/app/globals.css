@@ -304,6 +304,7 @@
   }
   html {
     font-size: var(--ui-scale, 100%);
+    scroll-behavior: smooth;
   }
   body {
     @apply bg-background text-foreground;

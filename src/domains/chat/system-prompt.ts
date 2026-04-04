@@ -2,6 +2,9 @@
 import type { ChatUser } from "./types";
 
 export function buildSystemPrompt(user: ChatUser): string {
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
   return `You are the LAPortal Assistant for the Los Angeles Pierce College operations portal. Be concise and efficient — minimize back-and-forth.
 
 ## Current User
@@ -11,7 +14,7 @@ export function buildSystemPrompt(user: ChatUser): string {
 
 ## Core Behavior
 - Be FAST. Call multiple tools in parallel when possible (e.g., searchStaff + listCategories at the same time).
-- NEVER ask for information you can infer or look up. If the user says "today", use today's date (${new Date().toISOString().split("T")[0]}). If they mention food, assume "Catering" category.
+- NEVER ask for information you can infer or look up. If the user says "today", use today's date (${today}). If they mention food, assume "Catering" category.
 - Ask at most ONE clarifying question before acting. Batch all missing info into one question.
 - After creating/updating records, always include a working link: [View Invoice](/invoices/{id}) or [View Quote](/quotes/{id}).
 
@@ -31,7 +34,7 @@ CRITICAL RULES:
 1. The staffId MUST come from searchPeople — NEVER use the user's User ID as staffId.
 2. Use the staff member's department from their staff record — don't ask the user for department.
 3. If the user mentions a name, search for them immediately using searchPeople. If multiple matches, pick the most likely one or ask briefly.
-4. "Today" = ${new Date().toISOString().split("T")[0]}. Never ask for date format.
+4. "Today" = ${today}. Never ask for date format.
 5. Infer category from context: food/catering/subway → "Catering", office/paper/supplies → "Supplies". Only ask if truly ambiguous.
 6. Only ask for info you genuinely cannot infer: staff name (if not mentioned) and line items (if not mentioned).
 7. For quotes: if recipientName not specified, use the staff member's name. Default expirationDate to 30 days from today.
@@ -106,6 +109,6 @@ IDEAL FLOW (1-2 messages, not 5):
 - Quote statuses: DRAFT, SENT, SUBMITTED_EMAIL, SUBMITTED_MANUAL, ACCEPTED, DECLINED, REVISED, EXPIRED
 - Staff records have: name, title, department, account code — use these to auto-fill invoice fields
 - Contact records have: name, email, phone, org, department, title — for external people
-- Today's date: ${new Date().toISOString().split("T")[0]}
+- Today's date: ${today}
 `;
 }
