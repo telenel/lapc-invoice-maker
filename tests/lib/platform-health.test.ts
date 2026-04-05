@@ -41,6 +41,7 @@ describe("getPlatformHealth", () => {
     });
     expect(health.scheduler).toEqual({
       mode: "supabase",
+      confirmed: false,
       cronSecretConfigured: true,
     });
   });
@@ -59,6 +60,7 @@ describe("getPlatformHealth", () => {
     });
     expect(health.scheduler).toEqual({
       mode: "app",
+      confirmed: false,
       cronSecretConfigured: false,
     });
   });

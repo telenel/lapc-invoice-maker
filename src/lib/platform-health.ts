@@ -1,6 +1,9 @@
 import { readBuildMeta } from "@/lib/build-meta";
 import { hasSupabaseAdminEnv, hasSupabasePublicEnv } from "@/lib/supabase/env";
-import { getJobSchedulerMode } from "@/lib/job-scheduler";
+import {
+  getJobSchedulerMode,
+  isSupabaseSchedulerConfirmed,
+} from "@/lib/job-scheduler";
 
 export type PlatformHealth = {
   supabase: {
@@ -13,6 +16,7 @@ export type PlatformHealth = {
   };
   scheduler: {
     mode: "app" | "supabase";
+    confirmed: boolean;
     cronSecretConfigured: boolean;
   };
 };
@@ -31,6 +35,7 @@ export async function getPlatformHealth(): Promise<PlatformHealth> {
     },
     scheduler: {
       mode: getJobSchedulerMode(),
+      confirmed: isSupabaseSchedulerConfirmed(),
       cronSecretConfigured: Boolean(process.env.CRON_SECRET?.trim()),
     },
   };

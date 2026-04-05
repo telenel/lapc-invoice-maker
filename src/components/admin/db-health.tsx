@@ -22,6 +22,7 @@ interface DbHealthData {
     };
     scheduler: {
       mode: "app" | "supabase";
+      confirmed: boolean;
       cronSecretConfigured: boolean;
     };
   };
@@ -154,6 +155,12 @@ export function DbHealth() {
                 <span className="text-muted-foreground">Mode</span>
                 <span className="font-medium uppercase">
                   {data.platform.scheduler.mode}
+                </span>
+              </p>
+              <p className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Confirmed</span>
+                <span className="font-medium">
+                  {data.platform.scheduler.confirmed ? "Yes" : "No"}
                 </span>
               </p>
               <p className="flex items-center justify-between gap-3">

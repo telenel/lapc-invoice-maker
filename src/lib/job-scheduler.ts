@@ -9,3 +9,7 @@ export function getJobSchedulerMode(): "app" | "supabase" {
 export function getCronSecret(): string | null {
   return process.env.CRON_SECRET?.trim() || null;
 }
+
+export function isSupabaseSchedulerConfirmed(): boolean {
+  return process.env.SUPABASE_SCHEDULER_CONFIRMED === "true";
+}

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { getCronSecret, getJobSchedulerMode } from "@/lib/job-scheduler";
+import {
+  getCronSecret,
+  getJobSchedulerMode,
+  isSupabaseSchedulerConfirmed,
+} from "@/lib/job-scheduler";
 
 describe("job scheduler config", () => {
   it("defaults to app scheduler", () => {
@@ -18,5 +22,11 @@ describe("job scheduler config", () => {
     process.env.CRON_SECRET = "   ";
 
     expect(getCronSecret()).toBeNull();
+  });
+
+  it("requires an explicit confirmation flag for Supabase scheduler", () => {
+    process.env.SUPABASE_SCHEDULER_CONFIRMED = "true";
+
+    expect(isSupabaseSchedulerConfirmed()).toBe(true);
   });
 });

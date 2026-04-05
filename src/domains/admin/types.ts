@@ -63,6 +63,7 @@ export interface DbHealthResponse {
     };
     scheduler: {
       mode: "app" | "supabase";
+      confirmed: boolean;
       cronSecretConfigured: boolean;
     };
   };

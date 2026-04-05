@@ -2,9 +2,12 @@ export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
     if (process.env.NODE_ENV !== "production") return;
 
-    const { getJobSchedulerMode } = await import("@/lib/job-scheduler");
-    if (getJobSchedulerMode() === "supabase") {
-      console.log("[instrumentation] skipping app cron registration; JOB_SCHEDULER=supabase");
+    const {
+      getJobSchedulerMode,
+      isSupabaseSchedulerConfirmed,
+    } = await import("@/lib/job-scheduler");
+    if (getJobSchedulerMode() === "supabase" && isSupabaseSchedulerConfirmed()) {
+      console.log("[instrumentation] skipping app cron registration; confirmed Supabase scheduler is active");
       return;
     }
 
@@ -36,6 +39,10 @@ export async function register() {
     );
 
     state.__laportalCronRegistered = true;
-    console.log("[instrumentation] cron jobs registered");
+    if (getJobSchedulerMode() === "supabase") {
+      console.warn("[instrumentation] JOB_SCHEDULER=supabase but scheduler is not confirmed; keeping app cron active");
+    } else {
+      console.log("[instrumentation] cron jobs registered");
+    }
   }
 }
