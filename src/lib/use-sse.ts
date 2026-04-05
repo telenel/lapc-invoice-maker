@@ -17,6 +17,8 @@ const connectionListeners = new Set<ConnectionListener>();
 let setupPromise: Promise<void> | null = null;
 let activeCleanup: (() => Promise<void>) | null = null;
 let isConnected = false;
+let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+let reconnectAttempt = 0;
 
 function notifyConnection(connected: boolean) {
   isConnected = connected;
@@ -25,6 +27,14 @@ function notifyConnection(connected: boolean) {
 
 function dispatch(data: unknown) {
   listeners.forEach((fn) => fn(data));
+}
+
+function resetReconnectState() {
+  reconnectAttempt = 0;
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = null;
+  }
 }
 
 function attachPayloadHandler(channel: RealtimeChannel): RealtimeChannel {
@@ -66,6 +76,7 @@ async function ensureConnection() {
         channel.subscribe((status) => {
           if (status === "SUBSCRIBED") {
             subscribedTopics.add(channel.topic);
+            resetReconnectState();
             notifyConnection(true);
             return;
           }
@@ -79,9 +90,8 @@ async function ensureConnection() {
               invalidateSupabaseRealtimeToken();
             }
             subscribedTopics.delete(channel.topic);
-            if (subscribedTopics.size === 0) {
-              notifyConnection(false);
-            }
+            notifyConnection(subscribedTopics.size > 0);
+            scheduleReconnect();
           }
         });
       });
@@ -99,6 +109,30 @@ async function ensureConnection() {
   })();
 
   await setupPromise;
+}
+
+function scheduleReconnect() {
+  if (listeners.size === 0 || reconnectTimer || setupPromise) return;
+
+  const delayMs = Math.min(1000 * 2 ** reconnectAttempt, 10_000);
+  reconnectAttempt += 1;
+
+  reconnectTimer = setTimeout(() => {
+    reconnectTimer = null;
+
+    void (async () => {
+      const cleanup = activeCleanup;
+      activeCleanup = null;
+      if (cleanup) {
+        await cleanup().catch(() => {});
+      } else {
+        notifyConnection(false);
+      }
+
+      if (listeners.size === 0) return;
+      await ensureConnection();
+    })();
+  }, delayMs);
 }
 
 function subscribe(
@@ -121,6 +155,7 @@ function subscribe(
     }
 
     if (listeners.size === 0) {
+      resetReconnectState();
       const cleanup = activeCleanup;
       activeCleanup = null;
       if (cleanup) {
