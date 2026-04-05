@@ -6,6 +6,12 @@ export function getJobSchedulerMode(): "app" | "supabase" {
     : DEFAULT_JOB_SCHEDULER;
 }
 
+export function getActiveJobSchedulerMode(): "app" | "supabase" {
+  return getJobSchedulerMode() === "supabase" && isSupabaseSchedulerConfirmed()
+    ? "supabase"
+    : "app";
+}
+
 export function getCronSecret(): string | null {
   return process.env.CRON_SECRET?.trim() || null;
 }

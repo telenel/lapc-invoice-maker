@@ -84,6 +84,7 @@ SUPABASE_JWT_SECRET=<jwt-secret>
 JOB_SCHEDULER=app
 SUPABASE_SCHEDULER_CONFIRMED=false
 CRON_SECRET=<cron-secret-for-internal-job-routes>
+ALLOW_LEGACY_FILESYSTEM_FALLBACK=true
 ```
 
 ## Deployment
@@ -94,9 +95,24 @@ Important: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` must b
 
 If `JOB_SCHEDULER=supabase`, only set `SUPABASE_SCHEDULER_CONFIRMED=true` after the Supabase `pg_cron` jobs are verified. Until then, LAPortal keeps app-side cron active as a safe fallback.
 
+Rate limiting is now database-backed through Postgres so login and chat throttles are shared across app instances. Job runs are also tracked in the database, and the admin Database Health page now shows recent job execution state plus a legacy document storage audit.
+
+Use `npm run audit:legacy-documents` to inspect any remaining database references to old filesystem-backed PDF paths before disabling `ALLOW_LEGACY_FILESYSTEM_FALLBACK`.
+
+If local DB connectivity is unavailable, the deployed app also exposes a protected storage audit route at `GET /api/internal/platform/storage-audit` guarded by `CRON_SECRET`.
+
+Current migration status:
+
+- Supabase Postgres, Storage, and Realtime are live.
+- Production build-time public env wiring is fixed.
+- Shared rate limiting, job-run observability, and legacy storage audit tooling are in place.
+- Supabase scheduler ownership is still optional and not fully complete until the app role can verify `cron` schema access and the jobs from `supabase/sql/003_laportal_scheduler.sql`.
+- See [docs/SUPABASE-MIGRATION-STATUS.md](docs/SUPABASE-MIGRATION-STATUS.md) for the full status and remaining work.
+
 ## Project Documentation
 
 - [docs/PROJECT-OVERVIEW.md](docs/PROJECT-OVERVIEW.md) — Comprehensive architecture and API reference
+- [docs/SUPABASE-MIGRATION-STATUS.md](docs/SUPABASE-MIGRATION-STATUS.md) — Live migration status, deployed fixes, and remaining platform work
 - [docs/superpowers/specs/](docs/superpowers/specs/) — Design specifications
 - [docs/superpowers/plans/](docs/superpowers/plans/) — Implementation plans
 

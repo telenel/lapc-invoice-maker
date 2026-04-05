@@ -149,6 +149,8 @@ export const adminRepository = {
       staffAccountNumbers,
       staffSignerHistory,
       savedLineItems,
+      rateLimitEvents,
+      jobRuns,
     ] = await Promise.all([
       prisma.user.count(),
       prisma.staff.count(),
@@ -159,6 +161,8 @@ export const adminRepository = {
       prisma.staffAccountNumber.count(),
       prisma.staffSignerHistory.count(),
       prisma.savedLineItem.count(),
+      prisma.rateLimitEvent.count(),
+      prisma.jobRun.count(),
     ]);
     return {
       users,
@@ -170,6 +174,8 @@ export const adminRepository = {
       staffAccountNumbers,
       staffSignerHistory,
       savedLineItems,
+      rateLimitEvents,
+      jobRuns,
     };
   },
 

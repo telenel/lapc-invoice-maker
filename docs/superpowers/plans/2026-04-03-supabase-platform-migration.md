@@ -1,5 +1,7 @@
 # Supabase Platform Migration — Implementation Blueprint
 
+Status note: this file is the original implementation blueprint. For the live migration state, deployed fixes, and remaining blockers, see [docs/SUPABASE-MIGRATION-STATUS.md](../../SUPABASE-MIGRATION-STATUS.md).
+
 > Goal: move LAPortal onto Supabase-managed infrastructure for database, storage, realtime, and supporting platform services without breaking invoice, quote, staff, calendar, or admin workflows.
 
 ## Summary

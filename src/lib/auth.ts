@@ -20,7 +20,7 @@ export const authOptions: NextAuthOptions = {
           req?.headers?.["x-forwarded-for"]?.toString().split(",")[0].trim() ??
           "unknown";
         const rateLimitKey = `login:${ip}:${credentials.username.trim().toLowerCase()}`;
-        const { allowed } = checkRateLimit(rateLimitKey);
+        const { allowed } = await checkRateLimit(rateLimitKey);
         if (!allowed) {
           throw new Error("Too many login attempts. Please try again later.");
         }

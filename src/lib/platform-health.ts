@@ -1,6 +1,8 @@
 import { readBuildMeta } from "@/lib/build-meta";
+import { getLegacyStorageAudit } from "@/lib/storage-audit";
 import { hasSupabaseAdminEnv, hasSupabasePublicEnv } from "@/lib/supabase/env";
 import {
+  getActiveJobSchedulerMode,
   getJobSchedulerMode,
   isSupabaseSchedulerConfirmed,
 } from "@/lib/job-scheduler";
@@ -15,14 +17,25 @@ export type PlatformHealth = {
     };
   };
   scheduler: {
-    mode: "app" | "supabase";
+    configuredMode: "app" | "supabase";
+    activeMode: "app" | "supabase";
     confirmed: boolean;
     cronSecretConfigured: boolean;
+  };
+  storage: {
+    legacyFilesystemFallbackEnabled: boolean;
+    invoicePdfPaths: number;
+    prismcorePaths: number;
+    printQuotePdfPaths: number;
+    totalLegacyReferences: number;
   };
 };
 
 export async function getPlatformHealth(): Promise<PlatformHealth> {
-  const buildMeta = await readBuildMeta();
+  const [buildMeta, storage] = await Promise.all([
+    readBuildMeta(),
+    getLegacyStorageAudit(),
+  ]);
 
   return {
     supabase: {
@@ -34,9 +47,11 @@ export async function getPlatformHealth(): Promise<PlatformHealth> {
       },
     },
     scheduler: {
-      mode: getJobSchedulerMode(),
+      configuredMode: getJobSchedulerMode(),
+      activeMode: getActiveJobSchedulerMode(),
       confirmed: isSupabaseSchedulerConfirmed(),
       cronSecretConfigured: Boolean(process.env.CRON_SECRET?.trim()),
     },
+    storage,
   };
 }

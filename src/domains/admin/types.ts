@@ -45,6 +45,8 @@ export interface DbHealthTables {
   staffAccountNumbers: number;
   staffSignerHistory: number;
   savedLineItems: number;
+  rateLimitEvents: number;
+  jobRuns: number;
 }
 
 export interface DbHealthResponse {
@@ -62,10 +64,41 @@ export interface DbHealthResponse {
       };
     };
     scheduler: {
-      mode: "app" | "supabase";
+      configuredMode: "app" | "supabase";
+      activeMode: "app" | "supabase";
       confirmed: boolean;
       cronSecretConfigured: boolean;
     };
+    storage: {
+      legacyFilesystemFallbackEnabled: boolean;
+      invoicePdfPaths: number;
+      prismcorePaths: number;
+      printQuotePdfPaths: number;
+      totalLegacyReferences: number;
+    };
+  };
+  jobs: {
+    summaries: Array<{
+      jobKey: string;
+      activeSchedulerMode: "app" | "supabase";
+      configuredSchedulerMode: "app" | "supabase";
+      lastStatus: string | null;
+      lastStartedAt: string | null;
+      lastFinishedAt: string | null;
+      lastDurationMs: number | null;
+      lastRunner: string | null;
+    }>;
+    recentRuns: Array<{
+      id: string;
+      jobKey: string;
+      schedulerMode: string;
+      runner: string | null;
+      status: string;
+      startedAt: string;
+      finishedAt: string | null;
+      durationMs: number | null;
+      details: unknown;
+    }>;
   };
 }
 

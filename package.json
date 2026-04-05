@@ -9,6 +9,7 @@
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "audit:legacy-documents": "npx tsx scripts/supabase/audit-legacy-documents.ts",
     "ship-check": "./scripts/ship-check.sh",
     "postinstall": "node ./scripts/postinstall.js"
   },

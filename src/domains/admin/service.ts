@@ -2,6 +2,7 @@
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import type { Prisma } from "@/generated/prisma/client";
+import { getJobRunHealth } from "@/lib/job-runs";
 import { getPlatformHealth } from "@/lib/platform-health";
 import { adminRepository } from "./repository";
 import type {
@@ -223,10 +224,11 @@ export const adminService = {
   // ── DB health ──
 
   async getDbHealth(): Promise<DbHealthResponse> {
-    const [tables, dbSize, platform] = await Promise.all([
+    const [tables, dbSize, platform, jobs] = await Promise.all([
       adminRepository.getTableCounts(),
       adminRepository.getDatabaseSize(),
       getPlatformHealth(),
+      getJobRunHealth(),
     ]);
     return {
       status: "connected",
@@ -234,6 +236,7 @@ export const adminService = {
       dbSize,
       tables,
       platform,
+      jobs,
     };
   },
 };

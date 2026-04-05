@@ -1,6 +1,7 @@
 import { readFile, unlink } from "node:fs/promises";
 import path from "node:path";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import { isLegacyFilesystemFallbackEnabled } from "@/lib/storage-audit";
 
 const DOCUMENTS_BUCKET = "laportal-documents";
 const LEGACY_PDFS_DIR = path.resolve(process.cwd(), "data/pdfs");
@@ -96,6 +97,12 @@ export async function downloadDocument(objectKey: string): Promise<Buffer> {
     .download(key);
 
   if (error || !data) {
+    if (!isLegacyFilesystemFallbackEnabled()) {
+      throw new Error(
+        `Supabase download failed for ${key}: ${error?.message ?? "not found"}`
+      );
+    }
+
     const legacyLocalPath = resolveLegacyLocalPath(objectKey);
     if (legacyLocalPath) {
       try {
@@ -123,6 +130,10 @@ export async function removeDocument(objectKey: string): Promise<void> {
 
   if (error) {
     throw new Error(`Supabase delete failed for ${key}: ${error.message}`);
+  }
+
+  if (!isLegacyFilesystemFallbackEnabled()) {
+    return;
   }
 
   const legacyLocalPath = resolveLegacyLocalPath(objectKey);

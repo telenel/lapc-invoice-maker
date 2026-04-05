@@ -21,10 +21,41 @@ interface DbHealthData {
       };
     };
     scheduler: {
-      mode: "app" | "supabase";
+      configuredMode: "app" | "supabase";
+      activeMode: "app" | "supabase";
       confirmed: boolean;
       cronSecretConfigured: boolean;
     };
+    storage: {
+      legacyFilesystemFallbackEnabled: boolean;
+      invoicePdfPaths: number;
+      prismcorePaths: number;
+      printQuotePdfPaths: number;
+      totalLegacyReferences: number;
+    };
+  };
+  jobs?: {
+    summaries: Array<{
+      jobKey: string;
+      activeSchedulerMode: "app" | "supabase";
+      configuredSchedulerMode: "app" | "supabase";
+      lastStatus: string | null;
+      lastStartedAt: string | null;
+      lastFinishedAt: string | null;
+      lastDurationMs: number | null;
+      lastRunner: string | null;
+    }>;
+    recentRuns: Array<{
+      id: string;
+      jobKey: string;
+      schedulerMode: string;
+      runner: string | null;
+      status: string;
+      startedAt: string;
+      finishedAt: string | null;
+      durationMs: number | null;
+      details: unknown;
+    }>;
   };
 }
 
@@ -38,6 +69,8 @@ const TABLE_LABELS: Record<string, string> = {
   staffAccountNumbers: "Account Numbers",
   staffSignerHistory: "Signer History",
   savedLineItems: "Saved Line Items",
+  rateLimitEvents: "Rate Limit Events",
+  jobRuns: "Job Runs",
 };
 
 export function DbHealth() {
@@ -152,9 +185,15 @@ export function DbHealth() {
             <h4 className="text-sm font-semibold">Scheduler</h4>
             <div className="mt-3 space-y-2 text-sm">
               <p className="flex items-center justify-between gap-3">
-                <span className="text-muted-foreground">Mode</span>
+                <span className="text-muted-foreground">Configured mode</span>
                 <span className="font-medium uppercase">
-                  {data.platform.scheduler.mode}
+                  {data.platform.scheduler.configuredMode}
+                </span>
+              </p>
+              <p className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Active mode</span>
+                <span className="font-medium uppercase">
+                  {data.platform.scheduler.activeMode}
                 </span>
               </p>
               <p className="flex items-center justify-between gap-3">
@@ -169,6 +208,99 @@ export function DbHealth() {
                   {data.platform.scheduler.cronSecretConfigured ? "Configured" : "Missing"}
                 </span>
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {data?.platform?.storage && (
+        <div className="rounded-lg border p-4">
+          <h4 className="text-sm font-semibold">Storage Audit</h4>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <div>
+              <p className="text-xs text-muted-foreground">Legacy refs</p>
+              <p className="text-lg font-semibold tabular-nums">
+                {data.platform.storage.totalLegacyReferences.toLocaleString("en-US")}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Invoice PDFs</p>
+              <p className="text-lg font-semibold tabular-nums">
+                {data.platform.storage.invoicePdfPaths.toLocaleString("en-US")}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">PrismCore uploads</p>
+              <p className="text-lg font-semibold tabular-nums">
+                {data.platform.storage.prismcorePaths.toLocaleString("en-US")}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Print quote PDFs</p>
+              <p className="text-lg font-semibold tabular-nums">
+                {data.platform.storage.printQuotePdfPaths.toLocaleString("en-US")}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Legacy fallback</p>
+              <p className="text-sm font-semibold">
+                {data.platform.storage.legacyFilesystemFallbackEnabled ? "Enabled" : "Disabled"}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {data?.jobs && (
+        <div className="grid gap-3 lg:grid-cols-2">
+          <div className="rounded-lg border p-4">
+            <h4 className="text-sm font-semibold">Job Health</h4>
+            <div className="mt-3 space-y-3">
+              {data.jobs.summaries.map((job) => (
+                <div key={job.jobKey} className="rounded-md border p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-medium">{job.jobKey}</p>
+                    <p className="text-xs uppercase text-muted-foreground">
+                      {job.lastStatus ?? "never"}
+                    </p>
+                  </div>
+                  <div className="mt-2 grid gap-1 text-xs text-muted-foreground">
+                    <p>Configured: {job.configuredSchedulerMode}</p>
+                    <p>Active: {job.activeSchedulerMode}</p>
+                    <p>Runner: {job.lastRunner ?? "n/a"}</p>
+                    <p>
+                      Last started: {job.lastStartedAt ? new Date(job.lastStartedAt).toLocaleString("en-US") : "never"}
+                    </p>
+                    <p>
+                      Duration: {job.lastDurationMs !== null ? `${job.lastDurationMs} ms` : "n/a"}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-lg border p-4">
+            <h4 className="text-sm font-semibold">Recent Job Runs</h4>
+            <div className="mt-3 space-y-2">
+              {data.jobs.recentRuns.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No tracked runs yet.</p>
+              ) : (
+                data.jobs.recentRuns.map((run) => (
+                  <div key={run.id} className="rounded-md border p-3 text-xs">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-medium">{run.jobKey}</p>
+                      <p className="uppercase text-muted-foreground">{run.status}</p>
+                    </div>
+                    <div className="mt-1 space-y-1 text-muted-foreground">
+                      <p>Runner: {run.runner ?? "n/a"}</p>
+                      <p>Scheduler: {run.schedulerMode}</p>
+                      <p>Started: {new Date(run.startedAt).toLocaleString("en-US")}</p>
+                      <p>Duration: {run.durationMs !== null ? `${run.durationMs} ms` : "n/a"}</p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

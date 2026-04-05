@@ -1,70 +1,87 @@
-// In-memory sliding window rate limiter for login attempts and other endpoints.
-// Keyed by IP or username. Entries auto-expire.
+import crypto from "node:crypto";
+import type { Prisma } from "@/generated/prisma/client";
+import { prisma } from "@/lib/prisma";
 
-interface RateLimitEntry {
-  timestamps: number[];
-  maxWindowMs: number;
-}
-
-const store = new Map<string, RateLimitEntry>();
-
-const DEFAULT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const DEFAULT_WINDOW_MS = 15 * 60 * 1000;
 const DEFAULT_MAX_ATTEMPTS = 5;
 
-/**
- * Check if the key has exceeded the rate limit.
- * Returns { allowed: true } or { allowed: false, retryAfterMs }.
- */
-export function checkRateLimit(
-  key: string,
-  options?: { maxAttempts?: number; windowMs?: number }
-): {
+export type RateLimitResult = {
   allowed: boolean;
   retryAfterMs?: number;
-} {
-  const maxAttempts = options?.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
-  const windowMs = options?.windowMs ?? DEFAULT_WINDOW_MS;
+};
+
+function normalizeScope(key: string): string {
+  const separatorIndex = key.indexOf(":");
+  if (separatorIndex <= 0) return "default";
+  return key.slice(0, separatorIndex);
+}
+
+function hashKey(key: string): string {
+  return crypto.createHash("sha256").update(key).digest("hex");
+}
+
+function assertRateLimitOptions(maxAttempts: number, windowMs: number) {
   if (!Number.isInteger(maxAttempts) || maxAttempts <= 0) {
     throw new Error("checkRateLimit: maxAttempts must be a positive integer");
   }
   if (!Number.isFinite(windowMs) || windowMs <= 0) {
     throw new Error("checkRateLimit: windowMs must be a positive number");
   }
-  const now = Date.now();
-  const entry = store.get(key);
-
-  if (!entry) {
-    store.set(key, { timestamps: [now], maxWindowMs: windowMs });
-    return { allowed: true };
-  }
-
-  const valid = entry.timestamps.filter((t) => now - t < windowMs);
-
-  if (valid.length >= maxAttempts) {
-    const oldest = valid[0];
-    const retryAfterMs = windowMs - (now - oldest);
-    store.set(key, { timestamps: valid, maxWindowMs: Math.max(entry.maxWindowMs, windowMs) });
-    return { allowed: false, retryAfterMs };
-  }
-
-  store.set(key, {
-    timestamps: [...valid, now],
-    maxWindowMs: Math.max(entry.maxWindowMs, windowMs),
-  });
-  return { allowed: true };
 }
 
-/** Periodically clean up entries older than the longest supported window to prevent memory leaks. */
-const CLEANUP_WINDOW_MS = 60 * 60 * 1000; // 1 hour — covers all rate limit windows
-setInterval(() => {
-  const now = Date.now();
-  store.forEach((entry, key) => {
-    const cleanupWindowMs = Math.max(CLEANUP_WINDOW_MS, entry.maxWindowMs);
-    const valid = entry.timestamps.filter((t) => now - t < cleanupWindowMs);
-    if (valid.length === 0) {
-      store.delete(key);
-    } else {
-      store.set(key, { ...entry, timestamps: valid });
+export async function checkRateLimit(
+  key: string,
+  options?: { maxAttempts?: number; windowMs?: number }
+): Promise<RateLimitResult> {
+  const maxAttempts = options?.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
+  const windowMs = options?.windowMs ?? DEFAULT_WINDOW_MS;
+  assertRateLimitOptions(maxAttempts, windowMs);
+
+  const now = new Date();
+  const windowStart = new Date(now.getTime() - windowMs);
+  const expiresAt = new Date(now.getTime() + windowMs);
+  const scope = normalizeScope(key);
+  const keyHash = hashKey(key);
+
+  return prisma.$transaction(async (tx) => {
+    await tx.rateLimitEvent.deleteMany({
+      where: {
+        scope,
+        keyHash,
+        expiresAt: { lte: now },
+      },
+    });
+
+    const where: Prisma.RateLimitEventWhereInput = {
+      scope,
+      keyHash,
+      createdAt: { gte: windowStart },
+    };
+    const [attemptCount, oldestAttempt] = await Promise.all([
+      tx.rateLimitEvent.count({ where }),
+      tx.rateLimitEvent.findFirst({
+        where,
+        orderBy: { createdAt: "asc" },
+        select: { createdAt: true },
+      }),
+    ]);
+
+    if (attemptCount >= maxAttempts && oldestAttempt) {
+      const retryAfterMs = Math.max(
+        0,
+        windowMs - (now.getTime() - oldestAttempt.createdAt.getTime()),
+      );
+      return { allowed: false, retryAfterMs };
     }
+
+    await tx.rateLimitEvent.create({
+      data: {
+        scope,
+        keyHash,
+        expiresAt,
+      },
+    });
+
+    return { allowed: true };
   });
-}, 60 * 1000);
+}

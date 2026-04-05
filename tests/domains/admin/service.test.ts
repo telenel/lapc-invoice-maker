@@ -20,6 +20,39 @@ vi.mock("@/domains/admin/repository", () => ({
   },
 }));
 
+vi.mock("@/lib/platform-health", () => ({
+  getPlatformHealth: vi.fn().mockResolvedValue({
+    supabase: {
+      runtimePublicEnv: true,
+      runtimeAdminEnv: true,
+      buildPublicEnv: {
+        supabaseUrlConfigured: true,
+        supabaseAnonKeyConfigured: true,
+      },
+    },
+    scheduler: {
+      configuredMode: "app",
+      activeMode: "app",
+      confirmed: false,
+      cronSecretConfigured: true,
+    },
+    storage: {
+      legacyFilesystemFallbackEnabled: true,
+      invoicePdfPaths: 0,
+      prismcorePaths: 0,
+      printQuotePdfPaths: 0,
+      totalLegacyReferences: 0,
+    },
+  }),
+}));
+
+vi.mock("@/lib/job-runs", () => ({
+  getJobRunHealth: vi.fn().mockResolvedValue({
+    summaries: [],
+    recentRuns: [],
+  }),
+}));
+
 vi.mock("bcryptjs", () => ({
   default: {
     hash: vi.fn().mockResolvedValue("hashed"),
@@ -391,6 +424,8 @@ describe("adminService", () => {
         staffAccountNumbers: 15,
         staffSignerHistory: 8,
         savedLineItems: 12,
+        rateLimitEvents: 2,
+        jobRuns: 4,
       };
       mockRepo.getTableCounts.mockResolvedValue(tableCounts as never);
       mockRepo.getDatabaseSize.mockResolvedValue("42 MB" as never);
@@ -406,7 +441,10 @@ describe("adminService", () => {
     });
 
     it("calls getTableCounts and getDatabaseSize in parallel", async () => {
-      mockRepo.getTableCounts.mockResolvedValue({} as never);
+      mockRepo.getTableCounts.mockResolvedValue({
+        rateLimitEvents: 0,
+        jobRuns: 0,
+      } as never);
       mockRepo.getDatabaseSize.mockResolvedValue(null as never);
 
       await adminService.getDbHealth();
@@ -416,7 +454,10 @@ describe("adminService", () => {
     });
 
     it("handles null dbSize from getDatabaseSize", async () => {
-      mockRepo.getTableCounts.mockResolvedValue({} as never);
+      mockRepo.getTableCounts.mockResolvedValue({
+        rateLimitEvents: 0,
+        jobRuns: 0,
+      } as never);
       mockRepo.getDatabaseSize.mockResolvedValue(null as never);
 
       const result = await adminService.getDbHealth();

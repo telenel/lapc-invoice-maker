@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   }
 
   const userId = (session.user as { id: string }).id;
-  const { allowed, retryAfterMs } = checkRateLimit(`chat:${userId}`, CHAT_RATE_LIMIT);
+  const { allowed, retryAfterMs } = await checkRateLimit(`chat:${userId}`, CHAT_RATE_LIMIT);
   if (!allowed) {
     return new Response("Too Many Requests", {
       status: 429,

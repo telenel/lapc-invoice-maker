@@ -9,7 +9,7 @@ Operations portal for Los Angeles Pierce College. Handles invoice drafting, fina
 | Layer | Technology |
 |---|---|
 | Framework | Next.js 15 (App Router) |
-| Database ORM | Prisma 7 + PostgreSQL |
+| Database ORM | Prisma 7 + Supabase Postgres |
 | Styling | Tailwind CSS 4 + shadcn/ui v4 (base-ui) |
 | Auth | NextAuth.js (credentials provider) |
 | PDF | Puppeteer (render) + pdf-lib (merge) |
@@ -20,7 +20,22 @@ Operations portal for Los Angeles Pierce College. Handles invoice drafting, fina
 | Email | Power Automate webhook (shared mailbox) |
 | CI/CD | GitHub Actions (setup → lint/build/test parallel → deploy) |
 | Checks | GitHub Actions CI |
-| Scheduler | `node-cron` by default, optional Supabase `pg_cron` via authenticated internal job routes |
+| Scheduler | App cron with DB-backed job ledger, plus optional Supabase `pg_cron` via authenticated internal job routes |
+
+---
+
+## Supabase Migration Status
+
+LAPortal's Supabase migration is mostly complete at the infrastructure layer:
+
+- Prisma is running against Supabase Postgres.
+- PDFs and uploads are stored in Supabase Storage.
+- Realtime updates use Supabase Realtime with a short-lived token bridge.
+- Production now verifies build-time public Supabase env through `/api/version` and platform diagnostics.
+
+The remaining migration blocker is scheduler ownership. The live app can target Supabase cron mode, but production still returns `permission denied for schema cron` when the protected scheduler inspection route tries to access `pg_cron` through the app role. Because of that, app-side cron remains active unless `SUPABASE_SCHEDULER_CONFIRMED=true` is set after explicit verification.
+
+See [docs/SUPABASE-MIGRATION-STATUS.md](SUPABASE-MIGRATION-STATUS.md) for the durable status record.
 
 ---
 
@@ -83,7 +98,9 @@ src/
     ├── html.ts            # escapeHtml() for XSS prevention in PDF templates
     ├── prisma.ts
     ├── quote-number.ts
-    ├── rate-limit.ts      # Sliding window rate limiter (login protection)
+    ├── rate-limit.ts      # Postgres-backed sliding window rate limiter
+    ├── job-runs.ts        # DB-backed job execution tracking + summaries
+    ├── storage-audit.ts   # Legacy filesystem reference audit + fallback state
     ├── sse.ts             # Supabase Realtime server publish shim
     ├── use-sse.ts         # Generic realtime hook backed by Supabase channels
     ├── themes.ts
@@ -289,7 +306,7 @@ External people (vendors, customers, catering contacts) who are not Pierce Colle
 ## Security
 
 - **XSS prevention** — `escapeHtml()` in `src/lib/html.ts` wraps all user input in PDF templates
-- **Rate limiting** — sliding window limiter in `src/lib/rate-limit.ts`: 5 login attempts per 15min per IP+username
+- **Rate limiting** — sliding window limiter in `src/lib/rate-limit.ts`: 5 login attempts per 15min per IP+username, now persisted in Postgres and shared across replicas
 - **Puppeteer sandboxing** — request interception blocks all external URLs; only `data:` and `file:` protocols allowed
 - **Storage key validation** — uploaded document object keys are normalized and reject traversal patterns such as `..` and `\`
 - **CSV injection** — `escapeCsv()` prefixes formula triggers (`=+-@`) with `'`
@@ -304,6 +321,7 @@ External people (vendors, customers, catering contacts) who are not Pierce Colle
 - Roles: `admin` and `user`. First user to complete setup is automatically admin.
 - `withAuth()` / `withAdmin()` route wrappers in `shared/auth.ts` centralize session checks.
 - Setup flow redirects unauthenticated users to `/setup` or `/login` via middleware.
+- Supabase is not the session authority today. Browser Realtime access is bridged through `GET /api/realtime/token`, while login/session management remains on NextAuth by design.
 
 ---
 
@@ -318,6 +336,7 @@ The home page (`src/app/page.tsx`) features a personalized dashboard:
 - **Recent activity** — shows both invoices and quotes (not just invoices)
 - **Running invoices, pending charges, team activity** — all role-aware
 - **Real-time updates** — all dashboard widgets update in real-time via Supabase Realtime invalidation
+- **Operational visibility** — admin Database Health now includes scheduler mode, storage audit counts, and recent tracked background job runs
 - **Help modal** — accessible from nav bar, covers invoice creation, line items, signatures, PDF generation, invoice management, and analytics
 
 Components in `src/components/dashboard/`.
@@ -377,6 +396,8 @@ Real-time updates are powered by Supabase Realtime with a generic hook and share
 - **Event types:** `calendar-changed`, `quote-changed`, `invoice-changed`, `staff-changed`
 - **Emission:** Services emit after every mutation (create, update, delete, status change)
 - **Consumers:** quote table, invoice table, staff table, dashboard stats, recent activity, pending charges, calendar
+
+The old SSE naming remains in `useSSE()` for compatibility, but the transport is Supabase Realtime rather than browser `EventSource`.
 
 ---
 
