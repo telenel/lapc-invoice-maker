@@ -5,7 +5,8 @@
 1. [README.md](../../README.md)
 2. [docs/PROJECT-OVERVIEW.md](../PROJECT-OVERVIEW.md)
 3. [docs/SUPABASE-MIGRATION-STATUS.md](../SUPABASE-MIGRATION-STATUS.md) for infrastructure work
-4. [prisma/schema.prisma](../../prisma/schema.prisma) for model changes
+4. [docs/ai/SUPABASE-HANDOFF.md](SUPABASE-HANDOFF.md) for Claude-facing Supabase context
+5. [prisma/schema.prisma](../../prisma/schema.prisma) for model changes
 
 ## Validation
 
@@ -18,6 +19,7 @@
 - Do not set `SUPABASE_SCHEDULER_CONFIRMED=true` until Supabase cron jobs are explicitly verified.
 - Do not migrate auth off NextAuth as a side effect of unrelated Supabase work.
 - Do not disable `ALLOW_LEGACY_FILESYSTEM_FALLBACK` until `npm run audit:legacy-documents` is clean.
+- Treat Supabase scheduler ownership as optional infrastructure work, not a required migration step.
 
 ## Documentation
 
@@ -26,3 +28,4 @@ When infrastructure behavior changes, update the durable docs:
 - [README.md](../../README.md)
 - [docs/PROJECT-OVERVIEW.md](../PROJECT-OVERVIEW.md)
 - [docs/SUPABASE-MIGRATION-STATUS.md](../SUPABASE-MIGRATION-STATUS.md)
+- [docs/ai/SUPABASE-HANDOFF.md](SUPABASE-HANDOFF.md)

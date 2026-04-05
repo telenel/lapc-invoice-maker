@@ -20,13 +20,21 @@ describe("supabase scheduler", () => {
     queryRawUnsafe
       .mockResolvedValueOnce([{ extname: "pg_cron" }, { extname: "pg_net" }])
       .mockResolvedValueOnce([
-        { jobid: 1, jobname: "laportal-event-reminders", schedule: "*/15 * * * *", active: true },
+        { jobid: 1n, jobname: "laportal-event-reminders", schedule: "*/15 * * * *", active: true },
       ]);
 
     const { getSupabaseSchedulerStatus } = await import("@/lib/supabase-scheduler");
     const status = await getSupabaseSchedulerStatus();
 
     expect(status.extensions).toEqual({ pgCron: true, pgNet: true });
+    expect(status.jobs).toEqual([
+      {
+        jobid: "1",
+        jobname: "laportal-event-reminders",
+        schedule: "*/15 * * * *",
+        active: true,
+      },
+    ]);
     expect(status.expectedJobs).toEqual({
       eventReminders: true,
       paymentFollowUps: false,

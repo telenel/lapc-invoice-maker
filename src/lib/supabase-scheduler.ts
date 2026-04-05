@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 
 type ExtensionRow = { extname: string };
-type CronJobRow = { jobid: number; jobname: string; schedule: string; active: boolean };
+type CronJobRow = { jobid: bigint | number | string; jobname: string; schedule: string; active: boolean };
 
 const EVENT_REMINDERS_JOB = "laportal-event-reminders";
 const PAYMENT_FOLLOW_UPS_JOB = "laportal-payment-follow-ups";
@@ -12,7 +12,7 @@ export type SupabaseSchedulerStatus = {
     pgNet: boolean;
   };
   jobs: Array<{
-    jobid: number;
+    jobid: string;
     jobname: string;
     schedule: string;
     active: boolean;
@@ -59,17 +59,25 @@ async function readJobs(): Promise<CronJobRow[]> {
   );
 }
 
+function serializeJobId(value: bigint | number | string): string {
+  return typeof value === "bigint" ? value.toString() : String(value);
+}
+
 export async function getSupabaseSchedulerStatus(): Promise<SupabaseSchedulerStatus> {
   const [extensions, jobs] = await Promise.all([readExtensions(), readJobs()]);
+  const serializedJobs = jobs.map((job) => ({
+    ...job,
+    jobid: serializeJobId(job.jobid),
+  }));
   const extensionSet = new Set(extensions.map((row) => row.extname));
-  const jobNameSet = new Set(jobs.map((job) => job.jobname));
+  const jobNameSet = new Set(serializedJobs.map((job) => job.jobname));
 
   return {
     extensions: {
       pgCron: extensionSet.has("pg_cron"),
       pgNet: extensionSet.has("pg_net"),
     },
-    jobs,
+    jobs: serializedJobs,
     expectedJobs: {
       eventReminders: jobNameSet.has(EVENT_REMINDERS_JOB),
       paymentFollowUps: jobNameSet.has(PAYMENT_FOLLOW_UPS_JOB),

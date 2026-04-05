@@ -29,8 +29,8 @@ Completed:
 
 Still open:
 
-- production app role cannot inspect `cron` schema yet
-- Supabase scheduler ownership is not fully confirmed
-- legacy filesystem compatibility can only be removed after the storage audit is clean
+- Supabase scheduler jobs exist and the app role can now read `cron.job`
+- Supabase scheduler ownership is not fully confirmed until the protected route is redeployed with the serializer fix and `SUPABASE_SCHEDULER_CONFIRMED=true` is set
+- no urgent Supabase-side work is required unless the team wants Supabase to own scheduler execution
 
-Read [docs/SUPABASE-MIGRATION-STATUS.md](../SUPABASE-MIGRATION-STATUS.md) before making infrastructure or deployment changes.
+Read [docs/SUPABASE-MIGRATION-STATUS.md](../SUPABASE-MIGRATION-STATUS.md) and [docs/ai/SUPABASE-HANDOFF.md](SUPABASE-HANDOFF.md) before making infrastructure or deployment changes.

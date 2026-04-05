@@ -1,8 +1,8 @@
 # Supabase Migration Status
 
-Last updated: 2026-04-04
+Last updated: 2026-04-05
 
-This file is the durable status record for LAPortal's Supabase migration. It reflects the production fixes deployed on April 4, 2026 and the remaining work required to call the platform migration complete.
+This file is the durable status record for LAPortal's Supabase migration. It reflects the production fixes deployed on April 4-5, 2026 and the remaining work required to call the platform migration complete.
 
 ## Current State
 
@@ -21,31 +21,43 @@ These fixes are already deployed to production:
 - `062d56f` — restored Docker build-time Supabase public env wiring, platform diagnostics, and scheduler assets.
 - `84fbefc` — added the protected scheduler inspection/reconcile endpoint.
 - `e665c93` — kept app-side cron active unless Supabase scheduling is explicitly confirmed.
+- `74b0e0c` — added shared Postgres-backed rate limiting, job-run tracking, storage audit tooling, and the protected storage audit route.
+- `595be98` — disabled legacy filesystem fallback by default after production verified zero remaining legacy references.
 
-Live production verification after `e665c93`:
+Live production verification after `595be98`:
 
-- `/api/version` reports `buildSha: "e665c93"`
+- `/api/version` reports `buildSha: "595be98"`
 - `publicEnv.supabaseUrlConfigured: true`
 - `publicEnv.supabaseAnonKeyConfigured: true`
+- protected storage audit reports:
+  - `legacyFilesystemFallbackEnabled: false`
+  - `totalLegacyReferences: 0`
 
 ## What Is Still Not Fully Migrated
 
-### 1. Supabase-managed scheduling is not fully activated
+### 1. Supabase-managed scheduling is provisioned but not yet confirmed active
 
-The app can target Supabase scheduler mode, but production cannot yet verify or manage `pg_cron` using the application role.
+The Supabase scheduler infrastructure is now in place:
+
+- the `prisma` role has read access to `cron.job` and `cron.job_run_details`
+- `pg_cron`, `pg_net`, and `vault` are installed
+- the expected jobs exist and are active:
+  - `laportal-event-reminders`
+  - `laportal-payment-follow-ups`
 
 Current blocker:
 
-- `GET /api/internal/platform/supabase-scheduler` returns `permission denied for schema cron`
+- production still needs the scheduler serializer fix for `GET /api/internal/platform/supabase-scheduler`
+- before that fix is deployed, the route fails with `Do not know how to serialize a BigInt`
 
 What still needs to happen:
 
-1. Use Supabase SQL Editor or a higher-privilege Postgres role to grant the app role the required `cron` schema access, or run the scheduler SQL outside the app role.
-2. Verify the scheduler jobs created by [`supabase/sql/003_laportal_scheduler.sql`](../supabase/sql/003_laportal_scheduler.sql).
-3. Re-run the protected scheduler diagnostic route until it returns actual job state instead of `42501`.
-4. Only then set `SUPABASE_SCHEDULER_CONFIRMED=true`.
+1. Deploy the scheduler serializer fix so the protected scheduler route can return live job state.
+2. Re-run `GET /api/internal/platform/supabase-scheduler` until it returns `200` with the expected jobs.
+3. Set `SUPABASE_SCHEDULER_CONFIRMED=true`.
+4. Redeploy so app-side cron stops registering and Supabase becomes the active scheduler owner.
 
-Until that happens, keeping `JOB_SCHEDULER=supabase` without confirmation would be unsafe. The app now intentionally keeps its own cron registrations active as a fallback.
+Until that happens, keeping `JOB_SCHEDULER=supabase` without confirmation is still intentionally fallback-safe. The app continues registering its own cron jobs until confirmation is explicit.
 
 ### 2. Authentication is still on NextAuth
 
@@ -73,22 +85,22 @@ What still remains in this area:
 
 - Retention/cleanup of old rate-limit rows is currently demand-driven by active keys rather than a dedicated cleanup job.
 
-### 4. Legacy filesystem references still need cleanup verification
+### 4. Legacy filesystem migration is operationally complete
 
-The runtime source of truth is Supabase Storage, and the repo now includes an explicit audit path for old disk-backed references:
+The runtime source of truth is Supabase Storage, and production has now verified zero remaining legacy references.
+
+The repo still retains audit and migration tooling for safety:
 
 - `data/pdfs/`
 - `public/uploads/`
 - [`scripts/supabase/migrate-legacy-documents.ts`](../scripts/supabase/migrate-legacy-documents.ts)
 - [`scripts/supabase/audit-legacy-documents.ts`](../scripts/supabase/audit-legacy-documents.ts)
 
-What still needs to happen:
+Current state:
 
-1. Run `npm run audit:legacy-documents` and inspect the remaining references.
-2. Run the legacy document migration if any old files still matter.
-3. Confirm there are no remaining database records pointing at legacy filesystem paths.
-4. `ALLOW_LEGACY_FILESYSTEM_FALLBACK` now defaults to `false`; only re-enable it if an audit reveals real legacy references that still need compatibility reads.
-5. Remove compatibility handling only after the fallback has been safely disabled for a full deploy cycle.
+1. production audit is clean
+2. `ALLOW_LEGACY_FILESYSTEM_FALLBACK` now defaults to `false`
+3. the fallback should only be re-enabled if a future audit proves it is actually needed
 
 ### 5. Operational runbooks should assume build-time env requirements
 
@@ -120,7 +132,6 @@ Treat the Supabase migration as complete only when all of the following are true
 
 In order:
 
-1. Finish the scheduler privilege fix and verify `pg_cron` jobs live.
-2. Audit and migrate any remaining legacy filesystem document references.
-3. Disable legacy filesystem fallback once the audit is clean.
-4. Leave auth on NextAuth unless there is a strong reason to absorb the cost of a full auth migration.
+1. Deploy the scheduler serializer fix, verify the protected scheduler route, and set `SUPABASE_SCHEDULER_CONFIRMED=true` if the team wants Supabase to own scheduling.
+2. Add a dedicated retention/cleanup policy for stale `rate_limit_events` rows if that becomes operationally useful.
+3. Leave auth on NextAuth unless there is a strong reason to absorb the cost of a full auth migration.
