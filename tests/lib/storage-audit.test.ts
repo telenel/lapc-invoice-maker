@@ -30,7 +30,7 @@ describe("storage audit", () => {
     const result = await getLegacyStorageAudit();
 
     expect(result).toEqual({
-      legacyFilesystemFallbackEnabled: true,
+      legacyFilesystemFallbackEnabled: false,
       invoicePdfPaths: 2,
       prismcorePaths: 1,
       printQuotePdfPaths: 3,

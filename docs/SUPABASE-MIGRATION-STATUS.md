@@ -87,8 +87,8 @@ What still needs to happen:
 1. Run `npm run audit:legacy-documents` and inspect the remaining references.
 2. Run the legacy document migration if any old files still matter.
 3. Confirm there are no remaining database records pointing at legacy filesystem paths.
-4. Set `ALLOW_LEGACY_FILESYSTEM_FALLBACK=false` only after that audit is clean.
-5. Remove compatibility handling only after the fallback has been safely disabled.
+4. `ALLOW_LEGACY_FILESYSTEM_FALLBACK` now defaults to `false`; only re-enable it if an audit reveals real legacy references that still need compatibility reads.
+5. Remove compatibility handling only after the fallback has been safely disabled for a full deploy cycle.
 
 ### 5. Operational runbooks should assume build-time env requirements
 

@@ -18,7 +18,7 @@ export type LegacyStorageAudit = {
 };
 
 export function isLegacyFilesystemFallbackEnabled(): boolean {
-  return process.env.ALLOW_LEGACY_FILESYSTEM_FALLBACK !== "false";
+  return process.env.ALLOW_LEGACY_FILESYSTEM_FALLBACK === "true";
 }
 
 export function isLegacyStoragePath(value: string | null | undefined): boolean {

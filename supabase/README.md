@@ -29,7 +29,7 @@ NEXTAUTH_URL=https://laportal.example.com
 JOB_SCHEDULER=supabase
 SUPABASE_SCHEDULER_CONFIRMED=false
 CRON_SECRET=<shared-secret-for-internal-job-routes>
-ALLOW_LEGACY_FILESYSTEM_FALLBACK=true
+ALLOW_LEGACY_FILESYSTEM_FALLBACK=false
 ```
 
 Important: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` must exist at image build time for production builds. Runtime-only injection is not sufficient for Next.js client bundles.
@@ -75,5 +75,5 @@ Important: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` must e
   - `JOB_SCHEDULER=app` keeps the existing Node process cron registration
   - `JOB_SCHEDULER=supabase` prepares for Supabase pg_cron + pg_net, but the app still keeps its own cron active until confirmation
 - The local filesystem is no longer the document source of truth.
-- `ALLOW_LEGACY_FILESYSTEM_FALLBACK` keeps temporary compatibility reads for old filesystem-backed document paths; disable it only after `npm run audit:legacy-documents` is clean.
+- `ALLOW_LEGACY_FILESYSTEM_FALLBACK` is now opt-in only. Re-enable it temporarily only if `npm run audit:legacy-documents` or the protected storage audit route shows real legacy references that still need compatibility reads.
 - If the protected scheduler route returns `permission denied for schema cron`, the app role still lacks the required privileges and the scheduler migration is not complete.

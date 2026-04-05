@@ -84,7 +84,7 @@ SUPABASE_JWT_SECRET=<jwt-secret>
 JOB_SCHEDULER=app
 SUPABASE_SCHEDULER_CONFIRMED=false
 CRON_SECRET=<cron-secret-for-internal-job-routes>
-ALLOW_LEGACY_FILESYSTEM_FALLBACK=true
+ALLOW_LEGACY_FILESYSTEM_FALLBACK=false
 ```
 
 ## Deployment
@@ -97,7 +97,7 @@ If `JOB_SCHEDULER=supabase`, only set `SUPABASE_SCHEDULER_CONFIRMED=true` after 
 
 Rate limiting is now database-backed through Postgres so login and chat throttles are shared across app instances. Job runs are also tracked in the database, and the admin Database Health page now shows recent job execution state plus a legacy document storage audit.
 
-Use `npm run audit:legacy-documents` to inspect any remaining database references to old filesystem-backed PDF paths before disabling `ALLOW_LEGACY_FILESYSTEM_FALLBACK`.
+Use `npm run audit:legacy-documents` to inspect any remaining database references to old filesystem-backed PDF paths before enabling `ALLOW_LEGACY_FILESYSTEM_FALLBACK` again for emergency compatibility.
 
 If local DB connectivity is unavailable, the deployed app also exposes a protected storage audit route at `GET /api/internal/platform/storage-audit` guarded by `CRON_SECRET`.
 
