@@ -4,6 +4,14 @@ import { invoiceService } from "@/domains/invoice/service";
 import { invoiceCreateSchema } from "@/lib/validators";
 import { Prisma } from "@/generated/prisma/client";
 
+export const dynamic = "force-dynamic";
+
+function jsonNoStore(data: unknown, init?: ResponseInit) {
+  const headers = new Headers(init?.headers);
+  headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+  return NextResponse.json(data, { ...init, headers });
+}
+
 export const GET = withAuth(async (req: NextRequest, session) => {
   try {
     const sp = req.nextUrl.searchParams;
@@ -13,7 +21,7 @@ export const GET = withAuth(async (req: NextRequest, session) => {
 
     if (statsOnly && groupBy === "creator") {
       const status = sp.get("status") as "DRAFT" | "FINAL" | "PENDING_CHARGE" | undefined ?? undefined;
-      return NextResponse.json(await invoiceService.getCreatorStats(status));
+      return jsonNoStore(await invoiceService.getCreatorStats(status));
     }
 
     let filters = {
@@ -42,10 +50,10 @@ export const GET = withAuth(async (req: NextRequest, session) => {
     }
 
     if (statsOnly) {
-      return NextResponse.json(await invoiceService.getStats(filters));
+      return jsonNoStore(await invoiceService.getStats(filters));
     }
 
-    return NextResponse.json(await invoiceService.list(filters));
+    return jsonNoStore(await invoiceService.list(filters));
   } catch (err) {
     console.error("GET /api/invoices failed:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -62,7 +70,7 @@ export const POST = withAuth(async (req: NextRequest, session) => {
 
   try {
     const invoice = await invoiceService.create(parsed.data, session.user.id);
-    return NextResponse.json(invoice, { status: 201 });
+    return jsonNoStore(invoice, { status: 201 });
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
       return NextResponse.json(

@@ -5,6 +5,14 @@ import { quoteCreateSchema } from "@/lib/validators";
 import { Prisma } from "@/generated/prisma/client";
 import type { QuoteFilters } from "@/domains/quote/types";
 
+export const dynamic = "force-dynamic";
+
+function jsonNoStore(data: unknown, init?: ResponseInit) {
+  const headers = new Headers(init?.headers);
+  headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+  return NextResponse.json(data, { ...init, headers });
+}
+
 export const GET = withAuth(async (req: NextRequest, session) => {
   try {
     const sp = req.nextUrl.searchParams;
@@ -37,7 +45,7 @@ export const GET = withAuth(async (req: NextRequest, session) => {
       filters = { ...filters, creatorId: session.user.id };
     }
 
-    return NextResponse.json(await quoteService.list(filters));
+    return jsonNoStore(await quoteService.list(filters));
   } catch (err) {
     console.error("GET /api/quotes failed:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -54,7 +62,7 @@ export const POST = withAuth(async (req: NextRequest, session) => {
 
   try {
     const quote = await quoteService.create(parsed.data, session.user.id);
-    return NextResponse.json(quote, { status: 201 });
+    return jsonNoStore(quote, { status: 201 });
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
       return NextResponse.json(

@@ -15,7 +15,8 @@ const BASE = "/api/quotes";
 const PUBLIC_BASE = "/api/quotes/public";
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, init);
+  const method = init?.method?.toUpperCase() ?? "GET";
+  const res = await fetch(url, method === "GET" ? { ...init, cache: "no-store" } : init);
   if (!res.ok) throw await ApiError.fromResponse(res);
   return res.json();
 }
