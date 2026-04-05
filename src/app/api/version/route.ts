@@ -11,6 +11,10 @@ export async function GET() {
       status: "ok",
       buildSha: buildMeta?.buildSha ?? process.env.NEXT_PUBLIC_BUILD_SHA ?? "dev",
       buildTime: buildMeta?.buildTime ?? process.env.NEXT_PUBLIC_BUILD_TIME ?? null,
+      publicEnv: {
+        supabaseUrlConfigured: Boolean(buildMeta?.publicEnv?.supabaseUrlConfigured),
+        supabaseAnonKeyConfigured: Boolean(buildMeta?.publicEnv?.supabaseAnonKeyConfigured),
+      },
     },
     {
       headers: {

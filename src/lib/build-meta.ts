@@ -4,6 +4,10 @@ import path from "path";
 type BuildMeta = {
   buildSha?: string | null;
   buildTime?: string | null;
+  publicEnv?: {
+    supabaseUrlConfigured?: boolean;
+    supabaseAnonKeyConfigured?: boolean;
+  } | null;
 };
 
 export async function readBuildMeta(): Promise<BuildMeta | null> {

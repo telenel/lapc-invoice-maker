@@ -11,6 +11,20 @@ interface DbHealthData {
   timestamp: string;
   dbSize?: string | null;
   tables?: Record<string, number>;
+  platform?: {
+    supabase: {
+      runtimePublicEnv: boolean;
+      runtimeAdminEnv: boolean;
+      buildPublicEnv: {
+        supabaseUrlConfigured: boolean;
+        supabaseAnonKeyConfigured: boolean;
+      };
+    };
+    scheduler: {
+      mode: "app" | "supabase";
+      cronSecretConfigured: boolean;
+    };
+  };
 }
 
 const TABLE_LABELS: Record<string, string> = {
@@ -104,6 +118,55 @@ export function DbHealth() {
       </div>
 
       {/* Table Row Counts */}
+      {data?.platform && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="rounded-lg border p-4">
+            <h4 className="text-sm font-semibold">Supabase Platform</h4>
+            <div className="mt-3 space-y-2 text-sm">
+              <p className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Build public env</span>
+                <span className="font-medium">
+                  {data.platform.supabase.buildPublicEnv.supabaseUrlConfigured &&
+                  data.platform.supabase.buildPublicEnv.supabaseAnonKeyConfigured
+                    ? "Configured"
+                    : "Missing"}
+                </span>
+              </p>
+              <p className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Runtime public env</span>
+                <span className="font-medium">
+                  {data.platform.supabase.runtimePublicEnv ? "Configured" : "Missing"}
+                </span>
+              </p>
+              <p className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Runtime admin env</span>
+                <span className="font-medium">
+                  {data.platform.supabase.runtimeAdminEnv ? "Configured" : "Missing"}
+                </span>
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-lg border p-4">
+            <h4 className="text-sm font-semibold">Scheduler</h4>
+            <div className="mt-3 space-y-2 text-sm">
+              <p className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">Mode</span>
+                <span className="font-medium uppercase">
+                  {data.platform.scheduler.mode}
+                </span>
+              </p>
+              <p className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">CRON_SECRET</span>
+                <span className="font-medium">
+                  {data.platform.scheduler.cronSecretConfigured ? "Configured" : "Missing"}
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {data?.tables && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {Object.entries(data.tables).map(([key, count]) => (

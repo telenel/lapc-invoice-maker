@@ -38,12 +38,16 @@ RUN --mount=type=cache,target=/root/.npm npm ci
 FROM base AS builder
 ARG BUILD_SHA=dev
 ARG BUILD_TIME=unknown
+ARG NEXT_PUBLIC_SUPABASE_URL=""
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY=""
 ENV NEXT_PUBLIC_BUILD_SHA=${BUILD_SHA}
 ENV NEXT_PUBLIC_BUILD_TIME=${BUILD_TIME}
+ENV NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npx prisma generate
-RUN node -e 'const fs=require("fs"); const path=".build-meta.json"; if (!fs.existsSync(path)) { fs.writeFileSync(path, JSON.stringify({ buildSha: process.env.NEXT_PUBLIC_BUILD_SHA || "dev", buildTime: process.env.NEXT_PUBLIC_BUILD_TIME || new Date().toISOString() })); }'
+RUN node -e 'const fs=require("fs"); const path=".build-meta.json"; fs.writeFileSync(path, JSON.stringify({ buildSha: process.env.NEXT_PUBLIC_BUILD_SHA || "dev", buildTime: process.env.NEXT_PUBLIC_BUILD_TIME || new Date().toISOString(), publicEnv: { supabaseUrlConfigured: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL), supabaseAnonKeyConfigured: Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) } }));'
 # Dummy DATABASE_URL so Next.js build can collect page data without a live DB
 ENV DATABASE_URL="postgresql://build:build@localhost:5432/build"
 RUN --mount=type=cache,target=/app/.next/cache npm run build
@@ -52,12 +56,16 @@ RUN --mount=type=cache,target=/app/.next/cache npm run build
 FROM base AS runner
 ARG BUILD_SHA=dev
 ARG BUILD_TIME=unknown
+ARG NEXT_PUBLIC_SUPABASE_URL=""
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY=""
 ENV NODE_ENV=production
 ENV HOME=/tmp
 ENV XDG_CONFIG_HOME=/tmp/.chromium/config
 ENV XDG_CACHE_HOME=/tmp/.chromium/cache
 ENV NEXT_PUBLIC_BUILD_SHA=${BUILD_SHA}
 ENV NEXT_PUBLIC_BUILD_TIME=${BUILD_TIME}
+ENV NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
 WORKDIR /app
 
 COPY --from=builder /app/public ./public

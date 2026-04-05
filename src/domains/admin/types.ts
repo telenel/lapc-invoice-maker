@@ -52,6 +52,20 @@ export interface DbHealthResponse {
   timestamp: string;
   dbSize: string | null;
   tables: DbHealthTables;
+  platform: {
+    supabase: {
+      runtimePublicEnv: boolean;
+      runtimeAdminEnv: boolean;
+      buildPublicEnv: {
+        supabaseUrlConfigured: boolean;
+        supabaseAnonKeyConfigured: boolean;
+      };
+    };
+    scheduler: {
+      mode: "app" | "supabase";
+      cronSecretConfigured: boolean;
+    };
+  };
 }
 
 export interface DbHealthErrorResponse {

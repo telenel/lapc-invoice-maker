@@ -1,6 +1,12 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      args:
+        BUILD_SHA: ${BUILD_SHA:-dev}
+        BUILD_TIME: ${BUILD_TIME:-unknown}
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
     restart: unless-stopped
     expose:
       - "3000"

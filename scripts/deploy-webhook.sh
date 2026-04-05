@@ -14,6 +14,15 @@ BUILD_META_FILE=".build-meta.json"
 
 cd "$PROJECT_DIR"
 
+set -a
+source ./.env
+set +a
+
+if [ -z "${NEXT_PUBLIC_SUPABASE_URL:-}" ] || [ -z "${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}" ]; then
+  echo "[deploy] ERROR: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set before building"
+  exit 1
+fi
+
 PREV_COMMIT=$(git rev-parse HEAD)
 echo "[deploy] Previous commit: $PREV_COMMIT"
 
@@ -34,7 +43,12 @@ rollback_deploy() {
   rollback_sha=$(git rev-parse --short HEAD)
   rollback_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
   printf '{"buildSha":"%s","buildTime":"%s"}\n' "$rollback_sha" "$rollback_time" > "$BUILD_META_FILE"
-  docker compose build --build-arg BUILD_SHA="$rollback_sha" --build-arg BUILD_TIME="$rollback_time" app
+  docker compose build \
+    --build-arg BUILD_SHA="$rollback_sha" \
+    --build-arg BUILD_TIME="$rollback_time" \
+    --build-arg NEXT_PUBLIC_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL" \
+    --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY" \
+    app
   docker compose up -d --remove-orphans
 }
 
@@ -56,7 +70,12 @@ fi
 
 printf '{"buildSha":"%s","buildTime":"%s"}\n' "$BUILD_SHA" "$BUILD_TIME" > "$BUILD_META_FILE"
 
-if ! docker compose build --build-arg BUILD_SHA="$BUILD_SHA" --build-arg BUILD_TIME="$BUILD_TIME" app; then
+if ! docker compose build \
+  --build-arg BUILD_SHA="$BUILD_SHA" \
+  --build-arg BUILD_TIME="$BUILD_TIME" \
+  --build-arg NEXT_PUBLIC_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL" \
+  --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY" \
+  app; then
   echo "[deploy] ERROR: Docker build failed — rolling repo checkout back to $PREV_COMMIT"
   git reset --hard "$PREV_COMMIT"
   exit 1

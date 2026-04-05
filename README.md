@@ -81,11 +81,15 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
 SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
 SUPABASE_JWT_SECRET=<jwt-secret>
+JOB_SCHEDULER=app
+CRON_SECRET=<cron-secret-for-internal-job-routes>
 ```
 
 ## Deployment
 
 Docker Compose behind Traefik on [montalvo.io](https://montalvo.io). GitHub Actions runs formal `ship-check` and `actionlint` checks on PRs and pushes, auto-merges PRs by default after a 15-minute quiet period once the latest head SHA has green CI and CodeRabbit has reviewed it or produced the latest commit, and deploys `main` via webhook after CI passes. Add `no-automerge` or `hold` to opt out. Production images also carry a `.build-meta.json` stamp so `/api/version` can report the deployed commit reliably.
+
+Important: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` must be present at image build time, not only container runtime. The Docker build now bakes those public values into the client bundle and records whether they were present in `.build-meta.json`.
 
 ## Project Documentation
 

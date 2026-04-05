@@ -20,6 +20,7 @@ Operations portal for Los Angeles Pierce College. Handles invoice drafting, fina
 | Email | Power Automate webhook (shared mailbox) |
 | CI/CD | GitHub Actions (setup → lint/build/test parallel → deploy) |
 | Checks | GitHub Actions CI |
+| Scheduler | `node-cron` by default, optional Supabase `pg_cron` via authenticated internal job routes |
 
 ---
 
