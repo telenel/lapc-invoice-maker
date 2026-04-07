@@ -57,14 +57,14 @@ export function SignatureSection({
       {(["line1", "line2", "line3"] as const).map((line, idx) => (
         <div key={line} className="space-y-1">
           <label className="text-sm font-medium">
-            Signature {idx + 1}
+            Approver {idx + 1}
           </label>
           <InlineCombobox
             items={signatureItems}
             value={form.signatureStaffIds[line]}
             displayValue={form.signatures[line]}
             onSelect={(item) => handleSignatureSelect(line, item)}
-            placeholder={`Signature line ${idx + 1}…`}
+            placeholder={`Select approver ${idx + 1}…`}
             loading={staffLoading}
           />
         </div>

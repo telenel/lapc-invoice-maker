@@ -469,12 +469,12 @@ export function KeyboardMode({
         </div>
       )}
 
-      {/* ============ STAFF ============ */}
-      <SectionDivider label="STAFF" />
+      {/* ============ REQUESTOR ============ */}
+      <SectionDivider label="REQUESTOR" />
 
       <div className="space-y-3">
         <div className="space-y-1">
-          <label className="text-sm font-medium">Staff Member</label>
+          <label className="text-sm font-medium">Requesting Staff Member</label>
           <InlineCombobox
             items={staffItems}
             value={form.staffId}
@@ -483,6 +483,9 @@ export function KeyboardMode({
             placeholder="Search staff…"
             loading={staffLoading}
           />
+          <p className="text-xs text-muted-foreground">
+            This person is the requestor and appears as the Department Contact on the IDP.
+          </p>
         </div>
 
         {/* Auto-filled summary row */}
@@ -696,8 +699,8 @@ export function KeyboardMode({
         </div>
       </div>
 
-      {/* ============ SIGNATURES ============ */}
-      <SectionDivider label="SIGNATURES" />
+      {/* ============ APPROVERS ============ */}
+      <SectionDivider label="APPROVERS" />
 
       <SignatureSection
         form={form}

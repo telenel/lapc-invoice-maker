@@ -430,6 +430,32 @@ describe("invoiceService", () => {
       expect(result).toEqual({ pdfPath: "/pdfs/inv1.pdf" });
     });
 
+    it("keeps the selected requestor separate from the department approver", async () => {
+      mockRepo.findById.mockResolvedValue(invoiceWithNumber as never);
+      mockPdfService.generateInvoice.mockResolvedValue("/pdfs/inv1.pdf");
+      mockRepo.finalize.mockResolvedValue(invoiceWithNumber as never);
+
+      await invoiceService.finalize("inv1", {
+        signatures: {
+          line1: "Alice Approver, Dean",
+          line2: "Brian Backup, Director",
+        },
+        contactName: "Riley Requestor",
+        contactExtension: "x321",
+      });
+
+      expect(mockPdfService.generateInvoice).toHaveBeenCalledWith(
+        expect.objectContaining({
+          idp: expect.objectContaining({
+            approverName: "Alice Approver",
+            contactName: "Riley Requestor",
+            contactPhone: "x321",
+          }),
+        }),
+        "invoices/inv1/AG-001.pdf"
+      );
+    });
+
     it("calls pdfService.mergePrismCore when prismcorePath is provided", async () => {
       mockRepo.findById.mockResolvedValue(invoiceWithNumber as never);
       mockPdfService.generateInvoice.mockResolvedValue("/pdfs/inv1.pdf");

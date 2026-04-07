@@ -15,15 +15,15 @@ import {
 const sections = [
   {
     title: "Creating an Invoice",
-    body: "Click New Invoice. Select a staff member — their info auto-fills. Choose a category, enter the invoice and account numbers.",
+    body: "Click New Invoice. Select the requesting staff member — their info auto-fills and becomes the Department Contact on the IDP. Then choose a category and enter the account number and account code.",
   },
   {
     title: "Adding Items",
     body: "Type items manually or use Quick Picks (pre-configured items for each department). Save frequently used items with the bookmark icon.",
   },
   {
-    title: "Signatures",
-    body: "Select up to 3 approvers from the staff directory. The system remembers who approved for each person.",
+    title: "Approvers",
+    body: "Select up to 3 approvers from the staff directory for the signature lines at the bottom of the forms. The system remembers who approved for each requestor.",
   },
   {
     title: "Generating the PDF",

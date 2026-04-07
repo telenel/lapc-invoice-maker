@@ -13,7 +13,7 @@ import type { InvoiceFormData, StaffAccountNumber } from "./invoice-form";
 // ---------------------------------------------------------------------------
 
 interface AccountNumberSelectProps {
-  form: Pick<InvoiceFormData, "staffId" | "accountNumber" | "accountCode">;
+  form: Pick<InvoiceFormData, "staffId" | "accountNumber">;
   updateField: <K extends keyof InvoiceFormData>(
     key: K,
     value: InvoiceFormData[K]
@@ -32,7 +32,7 @@ export function AccountNumberSelect({
 }: AccountNumberSelectProps) {
   const [newAccountDescription, setNewAccountDescription] = useState("");
   const [showAccountDescInput, setShowAccountDescInput] = useState(false);
-  const [pendingAccountCode, setPendingAccountCode] = useState("");
+  const [pendingAccountNumber, setPendingAccountNumber] = useState("");
 
   const accountNumberItems: ComboboxItem[] = staffAccountNumbers.map((an) => ({
     id: an.id,
@@ -43,22 +43,22 @@ export function AccountNumberSelect({
   function handleAccountNumberSelect(item: ComboboxItem) {
     if (item.isCustom) {
       if (!form.staffId) {
-        toast.error("Select a staff member before adding a custom account code");
+        toast.error("Select a requestor before adding a custom account number");
         return;
       }
       const raw = item.label.replace(/^Add new:\s*/, "");
-      setPendingAccountCode(raw);
+      setPendingAccountNumber(raw);
       setNewAccountDescription("");
       setShowAccountDescInput(true);
-      // Don't update form.accountCode yet — wait until POST succeeds
+      // Don't update form.accountNumber yet — wait until POST succeeds
     } else {
-      updateField("accountCode", item.label);
+      updateField("accountNumber", item.label);
       setShowAccountDescInput(false);
     }
   }
 
   async function handleSaveNewAccountNumber() {
-    if (!form.staffId || !pendingAccountCode) return;
+    if (!form.staffId || !pendingAccountNumber) return;
     try {
       const res = await fetch(
         `/api/staff/${form.staffId}/account-numbers`,
@@ -66,17 +66,17 @@ export function AccountNumberSelect({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            accountCode: pendingAccountCode,
+            accountCode: pendingAccountNumber,
             description: newAccountDescription,
           }),
         }
       );
       if (!res.ok) throw new Error("Failed to save");
       // POST succeeded — now safe to update the form
-      updateField("accountCode", pendingAccountCode);
+      updateField("accountNumber", pendingAccountNumber);
       toast.success("Account number saved");
       setShowAccountDescInput(false);
-      setPendingAccountCode("");
+      setPendingAccountNumber("");
       setNewAccountDescription("");
     } catch {
       toast.error("Failed to save account number");
@@ -85,13 +85,13 @@ export function AccountNumberSelect({
 
   return (
     <div className="space-y-1">
-      <label className="text-sm font-medium">Account Code</label>
+      <label className="text-sm font-medium">Account Number</label>
       <InlineCombobox
         items={accountNumberItems}
-        value={form.accountCode}
-        displayValue={form.accountCode}
+        value={form.accountNumber}
+        displayValue={form.accountNumber}
         onSelect={handleAccountNumberSelect}
-        placeholder="Search or add account code…"
+        placeholder="Search or add account number…"
         allowCustom={Boolean(form.staffId)}
         customPrefix="Add new:"
       />
