@@ -27,6 +27,9 @@ model User {
   printQuotes    PrintQuote[]
   drafts         UserDraft[]
   preferences    UserPreference[]
+  requisitionsCreated          TextbookRequisition[]        @relation("RequisitionCreator")
+  requisitionsStatusChanged    TextbookRequisition[]        @relation("RequisitionStatusChanger")
+  requisitionNotificationsSent RequisitionNotification[]    @relation("RequisitionNotificationSender")
 
   @@map("users")
 }
@@ -537,4 +540,101 @@ model AppSetting {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("app_settings")
+}
+
+enum RequisitionStatus {
+  PENDING
+  ORDERED
+  ON_SHELF
+}
+
+enum RequisitionSource {
+  FACULTY_FORM
+  STAFF_CREATED
+}
+
+enum BookBinding {
+  HARDCOVER
+  PAPERBACK
+  LOOSE_LEAF
+  DIGITAL
+}
+
+enum BookType {
+  PHYSICAL
+  OER
+}
+
+model TextbookRequisition {
+  id                    String              @id @default(uuid())
+  instructorName        String              @map("instructor_name")
+  phone                 String
+  email                 String
+  department            String
+  course                String
+  sections              String
+  enrollment            Int
+  term                  String
+  reqYear               Int                 @map("req_year")
+  additionalInfo        String?             @map("additional_info")
+  staffNotes            String?             @map("staff_notes")
+  status                RequisitionStatus   @default(PENDING)
+  source                RequisitionSource   @default(FACULTY_FORM)
+  createdBy             String?             @map("created_by")
+  lastStatusChangedAt   DateTime?           @map("last_status_changed_at")
+  lastStatusChangedBy   String?             @map("last_status_changed_by")
+  submittedAt           DateTime            @default(now()) @map("submitted_at")
+  updatedAt             DateTime            @updatedAt @map("updated_at")
+  archivedAt            DateTime?           @map("archived_at")
+  archivedBy            String?             @map("archived_by")
+
+  creator               User?               @relation("RequisitionCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  statusChanger         User?               @relation("RequisitionStatusChanger", fields: [lastStatusChangedBy], references: [id], onDelete: SetNull)
+  books                 RequisitionBook[]
+  notifications         RequisitionNotification[]
+
+  @@index([status])
+  @@index([term, reqYear])
+  @@index([submittedAt])
+  @@map("textbook_requisitions")
+}
+
+model RequisitionBook {
+  id             String        @id @default(uuid())
+  requisitionId  String        @map("requisition_id")
+  bookNumber     Int           @map("book_number")
+  author         String
+  title          String
+  isbn           String
+  edition        String?
+  copyrightYear  String?       @map("copyright_year")
+  volume         String?
+  publisher      String?
+  binding        BookBinding?
+  bookType       BookType      @default(PHYSICAL) @map("book_type")
+  oerLink        String?       @map("oer_link")
+
+  requisition TextbookRequisition @relation(fields: [requisitionId], references: [id], onDelete: Cascade)
+
+  @@unique([requisitionId, bookNumber])
+  @@map("requisition_books")
+}
+
+model RequisitionNotification {
+  id              String   @id @default(uuid())
+  requisitionId   String   @map("requisition_id")
+  type            String
+  recipientEmail  String   @map("recipient_email")
+  subject         String
+  success         Boolean
+  sentBy          String?  @map("sent_by")
+  sentAt          DateTime @default(now()) @map("sent_at")
+  errorMessage    String?  @map("error_message")
+
+  requisition TextbookRequisition @relation(fields: [requisitionId], references: [id], onDelete: Cascade)
+  sender      User?               @relation("RequisitionNotificationSender", fields: [sentBy], references: [id], onDelete: SetNull)
+
+  @@index([requisitionId, type])
+  @@index([requisitionId, sentAt])
+  @@map("requisition_notifications")
 }
