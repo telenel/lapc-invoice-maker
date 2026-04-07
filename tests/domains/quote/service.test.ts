@@ -811,6 +811,47 @@ describe("quoteService", () => {
         "Q-2026-0001"
       );
     });
+
+    it("retries quote creation when the generated quote number collides", async () => {
+      mockRepo.generateNumber
+        .mockResolvedValueOnce("Q-2026-0001" as never)
+        .mockResolvedValueOnce("Q-2026-0002" as never);
+      mockRepo.create
+        .mockRejectedValueOnce({ code: "P2002" } as never)
+        .mockResolvedValueOnce(makeQuote({ quoteNumber: "Q-2026-0002" }) as never);
+
+      const result = await quoteService.create(
+        {
+          date: "2026-01-15",
+          expirationDate: "2026-02-15",
+          staffId: "s1",
+          department: "IT",
+          category: "SUPPLIES",
+          recipientName: "Jane",
+          items: [{ description: "Item", quantity: 1, unitPrice: 10 }],
+        },
+        "u1",
+      );
+
+      expect(mockRepo.generateNumber).toHaveBeenCalledTimes(2);
+      expect(mockRepo.create).toHaveBeenNthCalledWith(
+        1,
+        expect.any(Object),
+        expect.any(Array),
+        10,
+        "u1",
+        "Q-2026-0001",
+      );
+      expect(mockRepo.create).toHaveBeenNthCalledWith(
+        2,
+        expect.any(Object),
+        expect.any(Array),
+        10,
+        "u1",
+        "Q-2026-0002",
+      );
+      expect(result.quoteNumber).toBe("Q-2026-0002");
+    });
   });
 
   // ── update ──────────────────────────────────────────────────────────────

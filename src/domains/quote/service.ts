@@ -26,6 +26,7 @@ import { normalizeQuotePaymentDetails } from "./payment";
 // ── DTO mapper ─────────────────────────────────────────────────────────────
 
 type QuoteWithRelations = Awaited<ReturnType<typeof quoteRepository.findById>>;
+const MAX_QUOTE_NUMBER_ATTEMPTS = 3;
 
 function publicResponseErrorMessage(status: string | null | undefined): string {
   return status === "ACCEPTED" || status === "DECLINED" || status === "REVISED"
@@ -49,6 +50,29 @@ export function isPublicPaymentLinkAvailable(
   }
 
   return false;
+}
+
+function isUniqueConstraintViolation(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
+}
+
+async function withGeneratedQuoteNumber<T>(operation: (quoteNumber: string) => Promise<T>): Promise<T> {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < MAX_QUOTE_NUMBER_ATTEMPTS; attempt += 1) {
+    const quoteNumber = await quoteRepository.generateNumber();
+    try {
+      return await operation(quoteNumber);
+    } catch (error) {
+      lastError = error;
+      if (isUniqueConstraintViolation(error) && attempt < MAX_QUOTE_NUMBER_ATTEMPTS - 1) {
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error("Failed to generate a unique quote number");
 }
 
 function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse {
@@ -759,9 +783,7 @@ export const quoteService = {
       quoteData.taxEnabled,
       quoteData.taxRate != null ? Number(quoteData.taxRate) : undefined
     );
-    const quoteNumber = await quoteRepository.generateNumber();
-
-    const quote = await quoteRepository.create(
+    const quote = await withGeneratedQuoteNumber((quoteNumber) => quoteRepository.create(
       {
         ...quoteData,
         accountCode: quoteData.accountCode ?? "",
@@ -771,7 +793,7 @@ export const quoteService = {
       totalAmount,
       creatorId,
       quoteNumber
-    );
+    ));
 
     safePublishAll({ type: "quote-changed" });
 
@@ -1170,9 +1192,7 @@ export const quoteService = {
     const expirationDate = new Date(now);
     expirationDate.setDate(expirationDate.getDate() + 30);
 
-    const quoteNumber = await quoteRepository.generateNumber();
-
-    const [newQuote] = await prisma.$transaction([
+    const [newQuote] = await withGeneratedQuoteNumber((quoteNumber) => prisma.$transaction([
       prisma.invoice.create({
         data: {
           type: "QUOTE",
@@ -1220,7 +1240,7 @@ export const quoteService = {
         where: { id },
         data: { quoteStatus: "REVISED" },
       }),
-    ]);
+    ]));
 
     // Fetch the full quote with all relations for the response
     const created = await quoteRepository.findById(newQuote.id);
@@ -1249,8 +1269,6 @@ export const quoteService = {
     const expirationDate = new Date(now);
     expirationDate.setDate(expirationDate.getDate() + 30);
 
-    const quoteNumber = await quoteRepository.generateNumber();
-
     const calculatedItems = calculateLineItems(
       quote.items.map((item) => ({
         description: item.description,
@@ -1271,7 +1289,7 @@ export const quoteService = {
       quote.taxRate != null ? Number(quote.taxRate) : undefined,
     );
 
-    const newQuote = await prisma.invoice.create({
+    const newQuote = await withGeneratedQuoteNumber((quoteNumber) => prisma.invoice.create({
       data: {
         type: "QUOTE",
         status: "DRAFT",
@@ -1312,7 +1330,7 @@ export const quoteService = {
         },
       },
       select: { id: true, quoteNumber: true },
-    });
+    }));
 
     safePublishAll({ type: "quote-changed" });
     return { id: newQuote.id, quoteNumber: newQuote.quoteNumber };
