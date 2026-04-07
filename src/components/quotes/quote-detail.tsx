@@ -171,6 +171,36 @@ const MANUAL_APPROVAL_PAYMENT_OPTIONS = QUOTE_PAYMENT_METHODS.map((value) => ({
       : value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()),
 }));
 
+type ManualApprovalCateringForm = {
+  eventDate: string;
+  startTime: string;
+  endTime: string;
+  contactName: string;
+  contactPhone: string;
+  location: string;
+  setupRequired: boolean;
+  setupTime: string;
+  takedownRequired: boolean;
+  takedownTime: string;
+  specialInstructions: string;
+};
+
+function makeManualApprovalCateringForm(existing: CateringDetails | null): ManualApprovalCateringForm {
+  return {
+    eventDate: existing?.eventDate ?? "",
+    startTime: existing?.startTime ?? "",
+    endTime: existing?.endTime ?? "",
+    contactName: existing?.contactName ?? "",
+    contactPhone: existing?.contactPhone ?? "",
+    location: existing?.location ?? "",
+    setupRequired: existing?.setupRequired ?? false,
+    setupTime: existing?.setupTime ?? "",
+    takedownRequired: existing?.takedownRequired ?? false,
+    takedownTime: existing?.takedownTime ?? "",
+    specialInstructions: existing?.specialInstructions ?? "",
+  };
+}
+
 function formatCateringDateTime(catering: CateringDetails): string | null {
   if (!catering.eventDate) return null;
 
@@ -218,6 +248,9 @@ export function QuoteDetailView({ id }: { id: string }) {
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [approvePaymentMethod, setApprovePaymentMethod] = useState("");
   const [approveAccountNumber, setApproveAccountNumber] = useState("");
+  const [approveCateringForm, setApproveCateringForm] = useState<ManualApprovalCateringForm>(
+    makeManualApprovalCateringForm(null),
+  );
   const [paymentDialogOpen, setPaymentDialogOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentAccountNumber, setPaymentAccountNumber] = useState("");
@@ -425,6 +458,21 @@ export function QuoteDetailView({ id }: { id: string }) {
             approvePaymentMethod === "ACCOUNT_NUMBER"
               ? approveAccountNumber.trim()
               : undefined,
+          cateringDetails: quote.isCateringEvent
+            ? {
+                eventDate: approveCateringForm.eventDate.trim(),
+                startTime: approveCateringForm.startTime.trim(),
+                endTime: approveCateringForm.endTime.trim(),
+                contactName: approveCateringForm.contactName.trim(),
+                contactPhone: approveCateringForm.contactPhone.trim(),
+                location: approveCateringForm.location.trim(),
+                setupRequired: approveCateringForm.setupRequired,
+                setupTime: approveCateringForm.setupRequired ? approveCateringForm.setupTime.trim() : undefined,
+                takedownRequired: approveCateringForm.takedownRequired,
+                takedownTime: approveCateringForm.takedownRequired ? approveCateringForm.takedownTime.trim() : undefined,
+                specialInstructions: approveCateringForm.specialInstructions.trim() || undefined,
+              }
+            : undefined,
         }),
       });
       if (!res.ok) {
@@ -440,15 +488,18 @@ export function QuoteDetailView({ id }: { id: string }) {
       setActionState((prev) => ({ ...prev, approving: false }));
       setApproveDialogOpen(false);
     }
-  }, [quote, id, fetchQuote, approvePaymentMethod, approveAccountNumber]);
+  }, [quote, id, fetchQuote, approvePaymentMethod, approveAccountNumber, approveCateringForm]);
 
   const handleApproveDialogOpenChange = useCallback((open: boolean) => {
     setApproveDialogOpen(open);
-    if (!open) {
+    if (open) {
+      setApproveCateringForm(makeManualApprovalCateringForm((quote?.cateringDetails as CateringDetails | null) ?? null));
+    } else {
       setApprovePaymentMethod("");
       setApproveAccountNumber("");
+      setApproveCateringForm(makeManualApprovalCateringForm(null));
     }
-  }, []);
+  }, [quote]);
 
   const handlePaymentDialogOpenChange = useCallback((open: boolean) => {
     setPaymentDialogOpen(open);
@@ -533,10 +584,16 @@ export function QuoteDetailView({ id }: { id: string }) {
   const canViewActivity = viewerAccess.canViewActivity;
   const canViewPaymentDetails = viewerAccess.canViewSensitiveFields;
   const showInternalFields = canViewPaymentDetails;
+  const currentQuoteCateringDetails = (quote.cateringDetails as CateringDetails | null) ?? null;
+  const manualApprovalCateringSource = approveDialogOpen
+    ? approveCateringForm
+    : makeManualApprovalCateringForm(currentQuoteCateringDetails);
   const missingManualApprovalCateringRequirements = quote.isCateringEvent
-    ? getMissingCustomerCateringRequirements((quote.cateringDetails as CateringDetails | null) ?? null)
+    ? getMissingCustomerCateringRequirements(manualApprovalCateringSource)
     : [];
   const manualApprovalBlockedByCatering = missingManualApprovalCateringRequirements.length > 0;
+  const hasMissingManualApprovalRequirement = (requirement: string) =>
+    missingManualApprovalCateringRequirements.includes(requirement);
   const isConverted = Boolean(quote.convertedToInvoice);
   const canEdit =
     canManageActions &&
@@ -781,10 +838,123 @@ export function QuoteDetailView({ id }: { id: string }) {
             </DialogHeader>
             <div className="space-y-4 py-2">
               {manualApprovalBlockedByCatering && (
-                <p className="text-sm text-amber-700">
-                  Manual approval is blocked until these catering event details are filled in:{" "}
-                  {missingManualApprovalCateringRequirements.join(", ")}.
-                </p>
+                <div className="space-y-3 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+                  <p className="font-medium">
+                    This catering quote is missing event details required for manual approval.
+                  </p>
+                  <p>
+                    Fill in: {missingManualApprovalCateringRequirements.join(", ")}.
+                  </p>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {hasMissingManualApprovalRequirement("event date") && (
+                      <div className="space-y-1.5">
+                        <Label htmlFor="manual-approve-event-date">Event Date</Label>
+                        <Input
+                          id="manual-approve-event-date"
+                          type="date"
+                          value={approveCateringForm.eventDate}
+                          onChange={(e) =>
+                            setApproveCateringForm((prev) => ({ ...prev, eventDate: e.target.value }))
+                          }
+                        />
+                      </div>
+                    )}
+                    {hasMissingManualApprovalRequirement("start time") && (
+                      <div className="space-y-1.5">
+                        <Label htmlFor="manual-approve-start-time">Start Time</Label>
+                        <Input
+                          id="manual-approve-start-time"
+                          placeholder="13:30"
+                          value={approveCateringForm.startTime}
+                          onChange={(e) =>
+                            setApproveCateringForm((prev) => ({ ...prev, startTime: e.target.value }))
+                          }
+                        />
+                      </div>
+                    )}
+                    {hasMissingManualApprovalRequirement("end time") && (
+                      <div className="space-y-1.5">
+                        <Label htmlFor="manual-approve-end-time">End Time</Label>
+                        <Input
+                          id="manual-approve-end-time"
+                          placeholder="15:00"
+                          value={approveCateringForm.endTime}
+                          onChange={(e) =>
+                            setApproveCateringForm((prev) => ({ ...prev, endTime: e.target.value }))
+                          }
+                        />
+                      </div>
+                    )}
+                    {hasMissingManualApprovalRequirement("contact name") && (
+                      <div className="space-y-1.5">
+                        <Label htmlFor="manual-approve-contact-name">Contact Name</Label>
+                        <Input
+                          id="manual-approve-contact-name"
+                          value={approveCateringForm.contactName}
+                          onChange={(e) =>
+                            setApproveCateringForm((prev) => ({ ...prev, contactName: e.target.value }))
+                          }
+                        />
+                      </div>
+                    )}
+                    {hasMissingManualApprovalRequirement("contact number") && (
+                      <div className="space-y-1.5">
+                        <Label htmlFor="manual-approve-contact-number">Contact Number</Label>
+                        <Input
+                          id="manual-approve-contact-number"
+                          value={approveCateringForm.contactPhone}
+                          onChange={(e) =>
+                            setApproveCateringForm((prev) => ({ ...prev, contactPhone: e.target.value }))
+                          }
+                        />
+                      </div>
+                    )}
+                    {hasMissingManualApprovalRequirement("event location") && (
+                      <div className="space-y-1.5 sm:col-span-2">
+                        <Label htmlFor="manual-approve-location">Event Location</Label>
+                        <Input
+                          id="manual-approve-location"
+                          placeholder="Building, Room, Area"
+                          value={approveCateringForm.location}
+                          onChange={(e) =>
+                            setApproveCateringForm((prev) => ({ ...prev, location: e.target.value }))
+                          }
+                        />
+                      </div>
+                    )}
+                    {hasMissingManualApprovalRequirement("setup time") && (
+                      <div className="space-y-1.5">
+                        <Label htmlFor="manual-approve-setup-time">Setup Time</Label>
+                        <Input
+                          id="manual-approve-setup-time"
+                          placeholder="13:30"
+                          value={approveCateringForm.setupTime}
+                          onChange={(e) =>
+                            setApproveCateringForm((prev) => ({ ...prev, setupTime: e.target.value }))
+                          }
+                        />
+                      </div>
+                    )}
+                    {hasMissingManualApprovalRequirement("takedown time") && (
+                      <div className="space-y-1.5">
+                        <Label htmlFor="manual-approve-takedown-time">Takedown Time</Label>
+                        <Input
+                          id="manual-approve-takedown-time"
+                          placeholder="15:00"
+                          value={approveCateringForm.takedownTime}
+                          onChange={(e) =>
+                            setApproveCateringForm((prev) => ({ ...prev, takedownTime: e.target.value }))
+                          }
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-amber-800">
+                    Times can be entered as `13:30` or `1:30pm`.
+                  </p>
+                </div>
               )}
               <div className="space-y-2">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">

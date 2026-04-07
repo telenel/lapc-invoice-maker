@@ -53,6 +53,35 @@ describe("POST /api/quotes/[id]/approve", () => {
     });
   });
 
+  it("forwards manual approval catering details to the quote service", async () => {
+    vi.mocked(quoteService.approveManually).mockResolvedValue({
+      success: true,
+      status: "ACCEPTED",
+    } as never);
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/q1/approve", {
+        method: "POST",
+        body: JSON.stringify({
+          cateringDetails: {
+            location: "Library 101",
+            startTime: "13:30",
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ id: "q1" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(quoteService.approveManually).toHaveBeenCalledWith("q1", {
+      cateringDetails: {
+        location: "Library 101",
+        startTime: "13:30",
+      },
+    });
+  });
+
   it("returns a 400 for malformed manual approval JSON", async () => {
     const response = await POST(
       new NextRequest("http://localhost/api/quotes/q1/approve", {

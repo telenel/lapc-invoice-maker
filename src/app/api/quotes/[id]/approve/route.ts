@@ -6,6 +6,19 @@ import { quoteService } from "@/domains/quote/service";
 const approveBodySchema = z.object({
   paymentMethod: z.string().optional(),
   accountNumber: z.string().nullable().optional(),
+  cateringDetails: z.object({
+    eventDate: z.string().optional(),
+    startTime: z.string().optional(),
+    endTime: z.string().optional(),
+    contactName: z.string().optional(),
+    contactPhone: z.string().optional(),
+    location: z.string().optional(),
+    setupRequired: z.boolean().optional(),
+    setupTime: z.string().optional(),
+    takedownRequired: z.boolean().optional(),
+    takedownTime: z.string().optional(),
+    specialInstructions: z.string().optional(),
+  }).optional(),
 });
 
 export const POST = withAuth(async (req: NextRequest, session, ctx) => {

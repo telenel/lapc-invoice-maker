@@ -1114,6 +1114,42 @@ describe("quoteService", () => {
       expect(mockRepo.update).not.toHaveBeenCalled();
       expect(notificationService.createAndPublish).not.toHaveBeenCalled();
     });
+
+    it("allows staff to provide missing catering details during manual approval", async () => {
+      const quote = makeQuote({
+        quoteStatus: "SENT",
+        expirationDate: new Date("2099-02-15"),
+        isCateringEvent: true,
+        cateringDetails: {
+          eventDate: "2026-04-07",
+          startTime: "13:00",
+          endTime: "14:00",
+          location: "",
+          contactName: "Jane Doe",
+          contactPhone: "555-1111",
+          setupRequired: false,
+          takedownRequired: false,
+        },
+      });
+      mockRepo.findById.mockResolvedValue(quote as never);
+      mockRepo.update.mockResolvedValue({ ...quote, quoteStatus: "ACCEPTED" } as never);
+
+      await quoteService.approveManually("q1", {
+        cateringDetails: {
+          location: "Library 101",
+        },
+      });
+
+      expect(mockRepo.update).toHaveBeenCalledWith("q1", expect.objectContaining({
+        quoteStatus: "ACCEPTED",
+        cateringDetails: expect.objectContaining({
+          location: "Library 101",
+          startTime: "13:00",
+          endTime: "14:00",
+          contactName: "Jane Doe",
+        }),
+      }));
+    });
   });
 
   // ── markSent ─────────────────────────────────────────────────────────────

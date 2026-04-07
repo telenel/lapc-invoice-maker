@@ -21,7 +21,7 @@ import type {
 } from "./types";
 import type { StaffSummary } from "@/domains/staff/types";
 import type { ContactResponse } from "@/domains/contact/types";
-import { getMissingCustomerCateringRequirements } from "./catering";
+import { getMissingCustomerCateringRequirements, normalizeQuoteTimeInput } from "./catering";
 import { normalizeQuotePaymentDetails } from "./payment";
 
 // ── DTO mapper ─────────────────────────────────────────────────────────────
@@ -901,7 +901,11 @@ export const quoteService = {
    */
   async approveManually(
     id: string,
-    paymentDetails?: { paymentMethod?: string; accountNumber?: string | null }
+    input?: {
+      paymentMethod?: string;
+      accountNumber?: string | null;
+      cateringDetails?: Partial<CateringDetails>;
+    }
   ): Promise<{ success: boolean; status: string }> {
     const quote = await quoteRepository.findById(id);
     if (!quote || quote.type !== "QUOTE") {
@@ -925,10 +929,44 @@ export const quoteService = {
       throw Object.assign(new Error("This quote has expired"), { code: "FORBIDDEN" });
     }
 
+    const existingCateringDetails = (quote.cateringDetails as CateringDetails | null) ?? null;
+    const mergedCateringDetails = quote.isCateringEvent
+      ? {
+          ...(existingCateringDetails ?? {}),
+          ...(input?.cateringDetails ?? {}),
+          eventDate: input?.cateringDetails?.eventDate?.trim() ?? existingCateringDetails?.eventDate ?? "",
+          startTime:
+            input?.cateringDetails?.startTime !== undefined
+              ? normalizeQuoteTimeInput(input.cateringDetails.startTime) ?? input.cateringDetails.startTime.trim()
+              : existingCateringDetails?.startTime ?? "",
+          endTime:
+            input?.cateringDetails?.endTime !== undefined
+              ? normalizeQuoteTimeInput(input.cateringDetails.endTime) ?? input.cateringDetails.endTime.trim()
+              : existingCateringDetails?.endTime ?? "",
+          contactName: input?.cateringDetails?.contactName?.trim() ?? existingCateringDetails?.contactName ?? "",
+          contactPhone: input?.cateringDetails?.contactPhone?.trim() ?? existingCateringDetails?.contactPhone ?? "",
+          location: input?.cateringDetails?.location?.trim() ?? existingCateringDetails?.location ?? "",
+          setupRequired: input?.cateringDetails?.setupRequired ?? existingCateringDetails?.setupRequired ?? false,
+          setupTime:
+            input?.cateringDetails?.setupRequired === false
+              ? ""
+              : input?.cateringDetails?.setupTime !== undefined
+                ? normalizeQuoteTimeInput(input.cateringDetails.setupTime) ?? input.cateringDetails.setupTime.trim()
+                : existingCateringDetails?.setupTime ?? "",
+          takedownRequired: input?.cateringDetails?.takedownRequired ?? existingCateringDetails?.takedownRequired ?? false,
+          takedownTime:
+            input?.cateringDetails?.takedownRequired === false
+              ? ""
+              : input?.cateringDetails?.takedownTime !== undefined
+                ? normalizeQuoteTimeInput(input.cateringDetails.takedownTime) ?? input.cateringDetails.takedownTime.trim()
+                : existingCateringDetails?.takedownTime ?? "",
+          specialInstructions:
+            input?.cateringDetails?.specialInstructions ?? existingCateringDetails?.specialInstructions ?? "",
+        } satisfies CateringDetails
+      : undefined;
+
     if (quote.isCateringEvent) {
-      const missingRequirements = getMissingCustomerCateringRequirements(
-        (quote.cateringDetails as CateringDetails | null) ?? null,
-      );
+      const missingRequirements = getMissingCustomerCateringRequirements(mergedCateringDetails);
       if (missingRequirements.length > 0) {
         throw Object.assign(
           new Error(
@@ -939,16 +977,17 @@ export const quoteService = {
       }
     }
 
-    const normalizedPayment = normalizeQuotePaymentDetails(paymentDetails);
+    const normalizedPayment = normalizeQuotePaymentDetails(input);
     const acceptedAt = new Date();
-    if (normalizedPayment && quote.convertedToInvoice?.id) {
+    if ((normalizedPayment || mergedCateringDetails) && quote.convertedToInvoice?.id) {
       await prisma.$transaction(async (tx) => {
         const convertedInvoices = await tx.$queryRaw<Array<{
           id: string;
           status: string | null;
           paymentMethod: string | null;
+          cateringDetails: Prisma.JsonValue | null;
         }>>`
-          SELECT id, status, payment_method AS "paymentMethod"
+          SELECT id, status, payment_method AS "paymentMethod", catering_details AS "cateringDetails"
           FROM invoices
           WHERE converted_from_quote_id = ${quote.id}
           FOR UPDATE
@@ -960,29 +999,49 @@ export const quoteService = {
         if (convertedInvoice.status === "FINAL") {
           throw Object.assign(new Error("Cannot update a finalized invoice"), { code: "FORBIDDEN" });
         }
-        if (convertedInvoice.paymentMethod) {
+        if (normalizedPayment && convertedInvoice.paymentMethod) {
           throw Object.assign(new Error("Payment details have already been provided"), {
             code: "PAYMENT_ALREADY_RESOLVED",
           });
         }
 
-        await tx.invoice.update({
-          where: { id: quote.id },
-          data: {
-            quoteStatus: "ACCEPTED",
-            acceptedAt,
-            paymentMethod: normalizedPayment.paymentMethod,
-            paymentAccountNumber: normalizedPayment.paymentAccountNumber,
-          },
-        });
+        const quoteUpdateData: Prisma.InvoiceUpdateInput = {
+          quoteStatus: "ACCEPTED",
+          acceptedAt,
+        };
+        if (normalizedPayment) {
+          quoteUpdateData.paymentMethod = normalizedPayment.paymentMethod;
+          quoteUpdateData.paymentAccountNumber = normalizedPayment.paymentAccountNumber;
+        }
+        if (mergedCateringDetails) {
+          quoteUpdateData.cateringDetails = mergedCateringDetails as unknown as Prisma.InputJsonValue;
+        }
 
         await tx.invoice.update({
-          where: { id: convertedInvoice.id },
-          data: {
-            paymentMethod: normalizedPayment.paymentMethod,
-            paymentAccountNumber: normalizedPayment.paymentAccountNumber,
-          },
+          where: { id: quote.id },
+          data: quoteUpdateData,
         });
+
+        const convertedInvoiceData: Prisma.InvoiceUpdateInput = {};
+        if (normalizedPayment) {
+          convertedInvoiceData.paymentMethod = normalizedPayment.paymentMethod;
+          convertedInvoiceData.paymentAccountNumber = normalizedPayment.paymentAccountNumber;
+        }
+        if (mergedCateringDetails) {
+          const convertedInvoiceCateringDetails = convertedInvoice.cateringDetails as CateringDetails | null;
+          convertedInvoiceData.cateringDetails = {
+            ...mergedCateringDetails,
+            setupInstructions: convertedInvoiceCateringDetails?.setupInstructions ?? mergedCateringDetails.setupInstructions,
+            takedownInstructions: convertedInvoiceCateringDetails?.takedownInstructions ?? mergedCateringDetails.takedownInstructions,
+          };
+        }
+
+        if (Object.keys(convertedInvoiceData).length > 0) {
+          await tx.invoice.update({
+            where: { id: convertedInvoice.id },
+            data: convertedInvoiceData,
+          });
+        }
       });
     } else {
       const updateData: {
@@ -990,6 +1049,7 @@ export const quoteService = {
         acceptedAt: Date;
         paymentMethod?: string;
         paymentAccountNumber?: string | null;
+        cateringDetails?: Prisma.InputJsonValue;
       } = {
         quoteStatus: "ACCEPTED",
         acceptedAt,
@@ -997,6 +1057,9 @@ export const quoteService = {
       if (normalizedPayment) {
         updateData.paymentMethod = normalizedPayment.paymentMethod;
         updateData.paymentAccountNumber = normalizedPayment.paymentAccountNumber;
+      }
+      if (mergedCateringDetails) {
+        updateData.cateringDetails = mergedCateringDetails as unknown as Prisma.InputJsonValue;
       }
 
       await quoteRepository.update(quote.id, updateData);
