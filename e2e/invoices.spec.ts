@@ -90,15 +90,20 @@ test.describe("Invoice Detail", () => {
     await page.goto("/invoices");
     await expect(page.getByRole("table")).toBeVisible({ timeout: 15_000 });
 
-    // Click first row if available
-    const firstRow = page.locator("tbody tr").first();
-    if (await firstRow.isVisible()) {
-      await firstRow.click();
-
-      // Should navigate to a detail page
-      await expect(page).toHaveURL(/\/invoices\/[a-zA-Z0-9-]+/, {
-        timeout: 10_000,
-      });
+    // Check if there are any rows, skip if empty
+    const rowCount = await page.locator("tbody tr").count();
+    if (rowCount === 0) {
+      test.skip(true, "No invoice rows available to test navigation");
     }
+
+    // Click first row
+    const firstRow = page.locator("tbody tr").first();
+    await expect(firstRow).toBeVisible();
+    await firstRow.click();
+
+    // Should navigate to a detail page
+    await expect(page).toHaveURL(/\/invoices\/[a-zA-Z0-9-]+/, {
+      timeout: 10_000,
+    });
   });
 });

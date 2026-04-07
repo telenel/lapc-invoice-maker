@@ -134,8 +134,12 @@ test.describe.serial("Requisition API — Public Submit", () => {
 test.describe("Requisition API — Authenticated Endpoints", () => {
   test("GET /api/textbook-requisitions — authenticated request succeeds", async ({ request }) => {
     const response = await request.get("/api/textbook-requisitions");
-    // With shared auth state, should return 200 or redirect
-    expect([200, 302, 307]).toContain(response.status());
+    // With shared auth state via withAuth, should return 200
+    // Redirects indicate auth setup failed
+    if (response.status() === 302 || response.status() === 307) {
+      test.skip(true, "Received redirect instead of 200 — auth fixture may have failed");
+    }
+    expect(response.status()).toBe(200);
   });
 
   test("GET /api/textbook-requisitions/submit — POST only", async ({ request }) => {

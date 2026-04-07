@@ -47,12 +47,13 @@ test.describe("Analytics", () => {
   test("multiple chart sections render", async ({ page }) => {
     await page.goto("/analytics");
 
-    // Wait for cards to load (each chart is in a Card)
-    await page.waitForTimeout(3000);
-
     // The analytics dashboard has multiple Card components
     // (CategoryChart, MonthlyTotalsChart, DepartmentSpendChart, InvoiceTrendChart, UserChart)
     const cards = page.locator("[class*='CardHeader'], [class*='card-header']");
+
+    // Wait for the first card to be visible before counting
+    await expect(cards.first()).toBeVisible({ timeout: 20_000 });
+
     const count = await cards.count();
     expect(count).toBeGreaterThanOrEqual(1);
   });

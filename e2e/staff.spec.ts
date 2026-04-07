@@ -43,8 +43,9 @@ test.describe("Staff Directory", () => {
     await page.goto("/staff");
 
     // Find and click the add button (PlusIcon button)
+    // Scope the fallback to header/toolbar to avoid clicking unrelated icon buttons
     const addButton = page.getByRole("button", { name: /Add|New|Create/i }).or(
-      page.locator("button").filter({ has: page.locator("svg") }).first(),
+      page.locator("header, [role='toolbar']").locator("button").filter({ has: page.locator("svg") }).first(),
     );
     await addButton.click();
 

@@ -43,7 +43,7 @@ test.describe("Quotes", () => {
     ).toBeVisible();
   });
 
-  test("create a new quote with line items", async ({ page }) => {
+  test("create a new quote", async ({ page }) => {
     await page.goto("/quotes/new");
 
     await expect(
@@ -73,13 +73,18 @@ test.describe("Quotes", () => {
     await page.goto("/quotes");
     await expect(page.getByRole("table")).toBeVisible({ timeout: 15_000 });
 
-    const firstRow = page.locator("tbody tr").first();
-    if (await firstRow.isVisible()) {
-      await firstRow.click();
-      await expect(page).toHaveURL(/\/quotes\/[a-zA-Z0-9-]+/, {
-        timeout: 10_000,
-      });
+    // Check if there are any rows, skip if empty
+    const rowCount = await page.locator("tbody tr").count();
+    if (rowCount === 0) {
+      test.skip(true, "No quote rows available to test navigation");
     }
+
+    const firstRow = page.locator("tbody tr").first();
+    await expect(firstRow).toBeVisible();
+    await firstRow.click();
+    await expect(page).toHaveURL(/\/quotes\/[a-zA-Z0-9-]+/, {
+      timeout: 10_000,
+    });
   });
 });
 

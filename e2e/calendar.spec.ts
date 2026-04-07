@@ -38,14 +38,13 @@ test.describe("Calendar", () => {
 
     // Click the add event button
     const addBtn = page.getByRole("button", { name: /Add Event|New Event/i });
-    if (await addBtn.isVisible()) {
-      await addBtn.click();
+    await expect(addBtn).toBeVisible({ timeout: 10_000 });
+    await addBtn.click();
 
-      // The AddEventModal should appear
-      await expect(
-        page.getByRole("dialog").or(page.locator("[role='dialog']")),
-      ).toBeVisible({ timeout: 5_000 });
-    }
+    // The AddEventModal should appear
+    await expect(
+      page.getByRole("dialog").or(page.locator("[role='dialog']")),
+    ).toBeVisible({ timeout: 5_000 });
   });
 
   test("calendar navigation works", async ({ page }) => {

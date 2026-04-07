@@ -124,15 +124,20 @@ test.describe("Textbook Requisitions — Authenticated", () => {
     await page.goto("/textbook-requisitions");
     await expect(page.getByRole("table")).toBeVisible({ timeout: 15_000 });
 
-    const firstRow = page.locator("tbody tr").first();
-    if (await firstRow.isVisible()) {
-      await firstRow.click();
-
-      // Should navigate to detail page
-      await expect(page).toHaveURL(
-        /\/textbook-requisitions\/[a-zA-Z0-9-]+/,
-        { timeout: 10_000 },
-      );
+    // Check if there are any rows, skip if empty
+    const rowCount = await page.locator("tbody tr").count();
+    if (rowCount === 0) {
+      test.skip(true, "No requisition rows available to test navigation");
     }
+
+    const firstRow = page.locator("tbody tr").first();
+    await expect(firstRow).toBeVisible();
+    await firstRow.click();
+
+    // Should navigate to detail page
+    await expect(page).toHaveURL(
+      /\/textbook-requisitions\/[a-zA-Z0-9-]+/,
+      { timeout: 10_000 },
+    );
   });
 });
