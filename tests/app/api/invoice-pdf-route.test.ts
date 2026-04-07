@@ -30,20 +30,21 @@ describe("GET /api/invoices/[id]/pdf", () => {
     } as never);
   });
 
-  it("returns 403 when a non-admin requests another user's invoice PDF", async () => {
+  it("allows authenticated users to open another user's invoice PDF", async () => {
     vi.mocked(invoiceService.getById).mockResolvedValue({
       id: "inv-1",
       creatorId: "owner-1",
       pdfPath: "/pdfs/inv-1.pdf",
       invoiceNumber: "INV-1",
     } as never);
+    vi.mocked(pdfService.readPdf).mockResolvedValue(Buffer.from("pdf") as never);
 
     const response = await GET(
       new NextRequest("http://localhost/api/invoices/inv-1/pdf"),
       { params: Promise.resolve({ id: "inv-1" }) },
     );
 
-    expect(response.status).toBe(403);
-    expect(pdfService.readPdf).not.toHaveBeenCalled();
+    expect(response.status).toBe(200);
+    expect(pdfService.readPdf).toHaveBeenCalledWith("/pdfs/inv-1.pdf");
   });
 });

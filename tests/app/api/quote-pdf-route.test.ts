@@ -24,10 +24,14 @@ describe("GET /api/quotes/[id]/pdf", () => {
     } as never);
   });
 
-  it("returns 403 when a non-admin requests another user's quote PDF", async () => {
+  it("allows authenticated users to open another user's quote PDF", async () => {
     vi.mocked(quoteService.getById).mockResolvedValue({
       id: "quote-1",
       creatorId: "owner-1",
+    } as never);
+    vi.mocked(quoteService.generatePdf).mockResolvedValue({
+      buffer: Buffer.from("pdf"),
+      filename: "quote-1",
     } as never);
 
     const response = await GET(
@@ -35,7 +39,7 @@ describe("GET /api/quotes/[id]/pdf", () => {
       { params: Promise.resolve({ id: "quote-1" }) },
     );
 
-    expect(response.status).toBe(403);
-    expect(quoteService.generatePdf).not.toHaveBeenCalled();
+    expect(response.status).toBe(200);
+    expect(quoteService.generatePdf).toHaveBeenCalledWith("quote-1");
   });
 });
