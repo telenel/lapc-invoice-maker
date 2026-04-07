@@ -570,6 +570,7 @@ model TextbookRequisition {
   instructorName        String              @map("instructor_name")
   phone                 String
   email                 String
+  employeeId            String?             @map("employee_id")
   department            String
   course                String
   sections              String
@@ -596,6 +597,7 @@ model TextbookRequisition {
   @@index([status])
   @@index([term, reqYear])
   @@index([submittedAt])
+  @@index([employeeId])
   @@map("textbook_requisitions")
 }
 
