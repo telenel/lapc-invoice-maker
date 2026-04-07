@@ -11,6 +11,14 @@ export interface InvoiceStaffDetail extends StaffSummary {
   email: string | null;
 }
 
+export interface InvoicePdfMetadata {
+  signatures?: { line1?: string; line2?: string; line3?: string };
+  signatureStaffIds?: { line1?: string; line2?: string; line3?: string };
+  semesterYearDept?: string;
+  contactName?: string;
+  contactExtension?: string;
+}
+
 export interface InvoiceResponse {
   id: string;
   invoiceNumber: string | null;
@@ -30,6 +38,7 @@ export interface InvoiceResponse {
   isRunning: boolean;
   runningTitle: string | null;
   pdfPath: string | null;
+  pdfMetadata: InvoicePdfMetadata | null;
   prismcorePath: string | null;
   marginEnabled: boolean;
   marginPercent: number | null;
@@ -91,6 +100,8 @@ export interface CreateInvoiceInput {
   taxRate?: number;
   isCateringEvent?: boolean;
   cateringDetails?: unknown;
+  prismcorePath?: string | null;
+  pdfMetadata?: InvoicePdfMetadata;
 }
 
 export interface InvoiceFilters {

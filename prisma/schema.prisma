@@ -108,6 +108,7 @@ model Invoice {
   totalAmount          Decimal       @default(0) @map("total_amount") @db.Decimal(10, 2)
   notes                String?
   pdfPath              String?       @map("pdf_path")
+  pdfMetadata          Json?         @map("pdf_metadata")
   prismcorePath        String?       @map("prismcore_path")
   isRecurring          Boolean       @default(false) @map("is_recurring")
   isRunning            Boolean       @default(false) @map("is_running")

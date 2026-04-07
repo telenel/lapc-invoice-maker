@@ -3,6 +3,7 @@ import { z } from "zod";
 import { quoteService } from "@/domains/quote/service";
 import { normalizeQuotePaymentDetails } from "@/domains/quote/payment";
 import type { CateringDetails } from "@/domains/quote/types";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const cateringDetailsSchema = z.object({
   eventDate: z.string().trim().min(1, "Event date is required"),
@@ -25,6 +26,23 @@ type RouteContext = { params: Promise<{ token: string }> };
 
 export async function POST(req: NextRequest, ctx: RouteContext) {
   const { token } = await ctx.params;
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+    || req.headers.get("x-real-ip")?.trim()
+    || "anonymous";
+  const rateResult = await checkRateLimit(`quote-public-respond:${token}:${ip}`, {
+    maxAttempts: ip === "anonymous" ? 3 : 8,
+    windowMs: 15 * 60 * 1000,
+  });
+  if (!rateResult.allowed) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again later." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(Math.ceil((rateResult.retryAfterMs ?? 0) / 1000)) },
+      }
+    );
+  }
   const body = await req.json().catch(() => ({}));
 
   const response = body.response;

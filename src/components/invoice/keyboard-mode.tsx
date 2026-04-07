@@ -363,6 +363,7 @@ export function KeyboardMode({
         marginEnabled: form.marginEnabled,
         marginPercent: form.marginPercent ? Number(form.marginPercent) : undefined,
         taxEnabled: form.taxEnabled,
+        taxRate: form.taxEnabled ? Number(form.taxRate) : undefined,
         notes: form.notes || undefined,
         items: form.items.filter((i) => i.description.trim()).map((item, idx) => ({
           description: item.description,
@@ -434,6 +435,7 @@ export function KeyboardMode({
               updateField("marginEnabled", t.marginEnabled);
               if (t.marginPercent != null) updateField("marginPercent", t.marginPercent);
               updateField("taxEnabled", t.taxEnabled);
+              updateField("taxRate", t.taxRate ?? 0);
               if (t.notes) updateField("notes", t.notes);
               const newItems = t.items.map((item, idx) => ({
                 _key: crypto.randomUUID(),
@@ -737,9 +739,16 @@ export function KeyboardMode({
               Save Running Invoice
             </Button>
           ) : existingId ? (
-            <Button onClick={handleSaveDraft} disabled={saving} className="w-full sm:w-auto">
-              {saving ? "Updating..." : "Update"}
-            </Button>
+            <>
+              <Button onClick={handleSaveDraft} disabled={saving} className="w-full sm:w-auto">
+                {saving ? "Updating..." : "Update"}
+              </Button>
+              <Button onClick={handleGenerate} disabled={saving} className="w-full sm:w-auto">
+                {isPendingCharge
+                  ? "Complete POS Charge"
+                  : `Generate PDF ${isMac ? "\u2318\u21B5" : "Ctrl\u21B5"}`}
+              </Button>
+            </>
           ) : (
             <Button onClick={handleGenerate} disabled={saving} className="w-full sm:w-auto">
               Generate PDF {isMac ? "\u2318\u21B5" : "Ctrl\u21B5"}

@@ -5,7 +5,7 @@ import { requisitionCreateSchema } from "@/lib/validators";
 import type { AuthSession } from "@/domains/shared/types";
 import type { RequisitionFilters } from "@/domains/textbook-requisition/types";
 
-export const GET = withAuth(async (req: NextRequest) => {
+export const GET = withAuth(async (req: NextRequest, session) => {
   const params = req.nextUrl.searchParams;
 
   if (params.get("statsOnly") === "true") {
@@ -34,6 +34,7 @@ export const GET = withAuth(async (req: NextRequest) => {
     status: VALID_STATUSES.has(rawStatus) ? (rawStatus as RequisitionFilters["status"]) : undefined,
     term: params.get("term") ?? undefined,
     year: safeInt(params.get("year")),
+    createdBy: session.user.role === "admin" ? undefined : session.user.id,
     page: safeInt(params.get("page")),
     pageSize: safeInt(params.get("pageSize")),
     sortBy: params.get("sortBy") ?? undefined,

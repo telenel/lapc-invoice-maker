@@ -811,6 +811,47 @@ describe("quoteService", () => {
         "Q-2026-0001"
       );
     });
+
+    it("retries quote creation when the generated quote number collides", async () => {
+      mockRepo.generateNumber
+        .mockResolvedValueOnce("Q-2026-0001" as never)
+        .mockResolvedValueOnce("Q-2026-0002" as never);
+      mockRepo.create
+        .mockRejectedValueOnce({ code: "P2002" } as never)
+        .mockResolvedValueOnce(makeQuote({ quoteNumber: "Q-2026-0002" }) as never);
+
+      const result = await quoteService.create(
+        {
+          date: "2026-01-15",
+          expirationDate: "2026-02-15",
+          staffId: "s1",
+          department: "IT",
+          category: "SUPPLIES",
+          recipientName: "Jane",
+          items: [{ description: "Item", quantity: 1, unitPrice: 10 }],
+        },
+        "u1",
+      );
+
+      expect(mockRepo.generateNumber).toHaveBeenCalledTimes(2);
+      expect(mockRepo.create).toHaveBeenNthCalledWith(
+        1,
+        expect.any(Object),
+        expect.any(Array),
+        10,
+        "u1",
+        "Q-2026-0001",
+      );
+      expect(mockRepo.create).toHaveBeenNthCalledWith(
+        2,
+        expect.any(Object),
+        expect.any(Array),
+        10,
+        "u1",
+        "Q-2026-0002",
+      );
+      expect(result.quoteNumber).toBe("Q-2026-0002");
+    });
   });
 
   // ── update ──────────────────────────────────────────────────────────────
@@ -1134,16 +1175,21 @@ describe("quoteService", () => {
       });
     });
 
-    it("preserves the quote response state when converting a sent quote", async () => {
+    it("preserves the accepted response state when converting an accepted quote", async () => {
       const { prisma } = await import("@/lib/prisma");
       const mockPrisma = vi.mocked(prisma, true);
+      const acceptedAt = new Date("2026-03-01T10:00:00.000Z");
 
       const newInvoice = { id: "inv1", invoiceNumber: "INV-2026-0001" };
       const tx = {
         $queryRaw: vi.fn().mockResolvedValue([{ id: "q1" }]),
         invoice: {
           findFirst: vi.fn().mockResolvedValue(null),
-          findUnique: vi.fn().mockResolvedValue(makeQuote({ quoteStatus: "SENT" })),
+          findUnique: vi.fn().mockResolvedValue(makeQuote({
+            quoteStatus: "ACCEPTED",
+            acceptedAt,
+            paymentMethod: "CHECK",
+          })),
           create: vi.fn().mockResolvedValue(newInvoice),
           update: vi.fn().mockResolvedValue({}),
         },
@@ -1157,7 +1203,7 @@ describe("quoteService", () => {
         expect.objectContaining({
           data: expect.objectContaining({
             accountNumber: "12345",
-            paymentMethod: null,
+            paymentMethod: "CHECK",
             paymentAccountNumber: null,
           }),
         }),
@@ -1166,8 +1212,8 @@ describe("quoteService", () => {
         expect.objectContaining({
           where: { id: "q1" },
           data: expect.objectContaining({
-            quoteStatus: "SENT",
-            acceptedAt: null,
+            quoteStatus: "ACCEPTED",
+            acceptedAt,
             convertedAt: expect.any(Date),
           }),
         }),

@@ -9,6 +9,7 @@ interface QuoteShareData {
   recipientName: string | null;
   shareUrl: string;
   quoteId?: string;
+  quoteStatus?: string;
 }
 
 interface QuoteResponseData {
@@ -18,18 +19,26 @@ interface QuoteResponseData {
   quoteDetailUrl: string;
 }
 
-function buildQuoteShareHtml(data: QuoteShareData): string {
+function buildQuoteShareHtml(data: QuoteShareData, quoteStatus: string | null | undefined): string {
   const name = data.recipientName ? ` ${escapeHtml(data.recipientName)}` : "";
   const quoteNum = escapeHtml(data.quoteNumber ?? "your quote");
   const url = escapeHtml(data.shareUrl);
+  const isOpen =
+    quoteStatus === "SENT"
+    || quoteStatus === "SUBMITTED_EMAIL"
+    || quoteStatus === "SUBMITTED_MANUAL";
+  const actionText = isOpen
+    ? "Please review and respond to the quote using the link below:"
+    : "You can view the quote using the link below:";
+  const buttonText = isOpen ? "Review Quote" : "View Quote";
 
   return `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
   <h2 style="color: #1a1a1a;">Quote from Los Angeles Pierce College</h2>
   <p>Hello${name},</p>
   <p>You have received a quote (<strong>${quoteNum}</strong>) from the Los Angeles Pierce College Bookstore.</p>
-  <p>Please review and respond to the quote using the link below:</p>
+  <p>${actionText}</p>
   <p style="margin: 24px 0;">
-    <a href="${url}" style="background-color: #16a34a; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">Review Quote</a>
+    <a href="${url}" style="background-color: #16a34a; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">${buttonText}</a>
   </p>
   <p style="color: #666; font-size: 14px;">Or copy this link: ${url}</p>
   <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 24px 0;" />
@@ -84,38 +93,52 @@ export const POST = withAuth(async (req: NextRequest, session) => {
   switch (type) {
     case "quote-share": {
       const shareData = data as unknown as QuoteShareData;
-      if (!shareData.shareUrl) {
+      if (!shareData.shareUrl || !shareData.quoteId) {
         return NextResponse.json(
-          { error: "data.shareUrl is required for quote-share" },
+          { error: "data.shareUrl and data.quoteId are required for quote-share" },
           { status: 400 }
         );
       }
-      subject = `Quote ${shareData.quoteNumber ?? ""} from Los Angeles Pierce College`.trim();
-      html = buildQuoteShareHtml(shareData);
+      const quote = await quoteService.getById(shareData.quoteId);
+      if (!quote) {
+        return NextResponse.json({ error: "Quote not found" }, { status: 404 });
+      }
+      if (session.user.role !== "admin" && quote.creatorId !== session.user.id) {
+        return forbiddenResponse();
+      }
+      if (
+        quote.recipientEmail?.trim()
+        && quote.recipientEmail.trim().toLowerCase() !== to.trim().toLowerCase()
+      ) {
+        return NextResponse.json(
+          { error: "Recipient email must match the quote recipient" },
+          { status: 400 }
+        );
+      }
 
-      // Attach PDF if quoteId is provided
-      if (shareData.quoteId) {
-        const quote = await quoteService.getById(shareData.quoteId);
-        if (!quote) {
-          return NextResponse.json({ error: "Quote not found" }, { status: 404 });
-        }
-        if (session.user.role !== "admin" && quote.creatorId !== session.user.id) {
-          return forbiddenResponse();
-        }
+      subject = `Quote ${quote.quoteNumber ?? ""} from Los Angeles Pierce College`.trim();
+      html = buildQuoteShareHtml(
+        {
+          quoteId: quote.id,
+          quoteNumber: quote.quoteNumber,
+          recipientName: quote.recipientName,
+          shareUrl: shareData.shareUrl,
+        },
+        quote.quoteStatus,
+      );
 
-        try {
-          const { buffer, filename } = await quoteService.generatePdf(shareData.quoteId, {
-            includePublicShareLink: true,
-          });
-          const safeName = (filename ?? "quote").replace(/[^a-zA-Z0-9\-]/g, "-");
-          attachments = [{
-            Name: `Quote-${safeName}.pdf`,
-            ContentBytes: buffer.toString("base64"),
-          }];
-        } catch (err) {
-          console.warn("Failed to generate PDF for email attachment:", err);
-          // Continue without attachment — email is more important
-        }
+      try {
+        const { buffer, filename } = await quoteService.generatePdf(shareData.quoteId, {
+          includePublicShareLink: true,
+        });
+        const safeName = (filename ?? "quote").replace(/[^a-zA-Z0-9\-]/g, "-");
+        attachments = [{
+          Name: `Quote-${safeName}.pdf`,
+          ContentBytes: buffer.toString("base64"),
+        }];
+      } catch (err) {
+        console.warn("Failed to generate PDF for email attachment:", err);
+        // Continue without attachment — email is more important
       }
       break;
     }

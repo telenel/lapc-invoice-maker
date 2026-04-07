@@ -1,6 +1,6 @@
 // src/app/api/staff/route.ts
 import { NextResponse } from "next/server";
-import { withAuth } from "@/domains/shared/auth";
+import { withAdmin, withAuth } from "@/domains/shared/auth";
 import { staffService } from "@/domains/staff/service";
 import { staffSchema } from "@/lib/validators";
 
@@ -20,7 +20,7 @@ export const GET = withAuth(async (req) => {
   return NextResponse.json(staff);
 });
 
-export const POST = withAuth(async (req) => {
+export const POST = withAdmin(async (req) => {
   const body = staffSchema.parse(await req.json());
   const staff = await staffService.create(body);
   return NextResponse.json(staff, { status: 201 });

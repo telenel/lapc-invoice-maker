@@ -55,6 +55,11 @@ function buildWhere(filters: QuoteFilters): Prisma.InvoiceWhereInput {
     if (filters.dateFrom) where.date.gte = new Date(filters.dateFrom);
     if (filters.dateTo) where.date.lte = new Date(filters.dateTo);
   }
+  if (filters.amountMin !== undefined || filters.amountMax !== undefined) {
+    where.totalAmount = {};
+    if (filters.amountMin !== undefined) where.totalAmount.gte = filters.amountMin;
+    if (filters.amountMax !== undefined) where.totalAmount.lte = filters.amountMax;
+  }
   if (filters.search) {
     where.OR = [
       { quoteNumber: { contains: filters.search, mode: "insensitive" } },
@@ -199,6 +204,7 @@ export async function create(
     marginEnabled?: boolean;
     marginPercent?: number;
     taxEnabled?: boolean;
+    taxRate?: number;
   },
   calculatedItems: CalculatedLineItem[],
   totalAmount: number,
@@ -223,6 +229,7 @@ export async function create(
       marginEnabled: marginEnabled ?? false,
       marginPercent: marginPercent ?? undefined,
       taxEnabled: taxEnabled ?? false,
+      taxRate: input.taxRate ?? undefined,
       items: {
         create: calculatedItems.map((item) => ({
           description: item.description,

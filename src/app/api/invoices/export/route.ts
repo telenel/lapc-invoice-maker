@@ -3,24 +3,32 @@ import { withAuth } from "@/domains/shared/auth";
 import { invoiceService } from "@/domains/invoice/service";
 import { escapeCsv } from "@/lib/csv";
 
-export const GET = withAuth(async (req: NextRequest) => {
+export const GET = withAuth(async (req: NextRequest, session) => {
   try {
     const sp = req.nextUrl.searchParams;
 
     const filters = {
       search: sp.get("search") ?? undefined,
       status: (sp.get("status") ?? undefined) as "DRAFT" | "FINAL" | "PENDING_CHARGE" | undefined,
+      staffId: sp.get("staffId") ?? undefined,
       category: sp.get("category") ?? undefined,
       department: sp.get("department") ?? undefined,
       dateFrom: sp.get("dateFrom") ?? undefined,
       dateTo: sp.get("dateTo") ?? undefined,
+      createdFrom: sp.get("createdFrom") ?? undefined,
+      createdTo: sp.get("createdTo") ?? undefined,
       amountMin: sp.get("amountMin") ? Number(sp.get("amountMin")) : undefined,
       amountMax: sp.get("amountMax") ? Number(sp.get("amountMax")) : undefined,
+      creatorId:
+        session.user.role === "admin"
+          ? (sp.get("creatorId") ?? undefined)
+          : session.user.id,
+      isRunning: sp.get("isRunning") === "true" ? true : undefined,
       // Fetch all records for export (no pagination)
       page: 1,
       pageSize: 100_000,
-      sortBy: "createdAt",
-      sortOrder: "desc" as const,
+      sortBy: sp.get("sortBy") ?? "createdAt",
+      sortOrder: (sp.get("sortOrder") ?? sp.get("sortDir") ?? "desc") as "asc" | "desc",
     };
 
     const { invoices } = await invoiceService.list(filters);

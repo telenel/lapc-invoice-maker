@@ -36,7 +36,6 @@ import { LineItems } from "@/components/invoice/line-items";
 import { QuickPickPanel } from "@/components/invoice/quick-pick-panel";
 import { CateringDetailsCard } from "@/components/quote/catering-details-card";
 import { useTaxCalculation } from "@/components/invoice/hooks/use-tax-calculation";
-import { TAX_RATE } from "@/domains/invoice/constants";
 import { cn } from "@/lib/utils";
 import { categoryApi } from "@/domains/category/api-client";
 import { templateApi } from "@/domains/template/api-client";
@@ -158,7 +157,7 @@ export function QuoteMode({
   const { subtotal, taxAmount, total: grandTotal } = useTaxCalculation(
     taxItems,
     form.taxEnabled,
-    TAX_RATE
+    form.taxRate
   );
 
   // Inline editing for staff summary fields
@@ -268,6 +267,7 @@ export function QuoteMode({
         marginEnabled: form.marginEnabled,
         marginPercent: form.marginPercent !== undefined ? Number(form.marginPercent) : undefined,
         taxEnabled: form.taxEnabled,
+        taxRate: form.taxEnabled ? Number(form.taxRate) : undefined,
         notes: form.notes || undefined,
         isCateringEvent: form.isCateringEvent,
         cateringDetails: form.isCateringEvent ? form.cateringDetails : undefined,
@@ -338,6 +338,7 @@ export function QuoteMode({
               updateField("marginEnabled", t.marginEnabled);
               updateField("marginPercent", t.marginPercent ?? 0);
               updateField("taxEnabled", t.taxEnabled);
+              updateField("taxRate", t.taxRate ?? 0);
               updateField("notes", t.notes ?? "");
               updateField("isCateringEvent", t.isCateringEvent);
               if (t.cateringDetails) {
@@ -704,10 +705,26 @@ export function QuoteMode({
             >
               Apply Sales Tax{" "}
               <span className="text-muted-foreground font-normal">
-                (9.75%)
+                ({(form.taxRate * 100).toFixed(2)}%)
               </span>
             </Label>
           </div>
+
+          {form.taxEnabled && (
+            <div className="flex items-center gap-1">
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                step={0.01}
+                value={Number((form.taxRate * 100).toFixed(2))}
+                onChange={(e) => updateField("taxRate", Number(e.target.value || "0") / 100)}
+                className="w-24 h-7 text-sm"
+                aria-label="Sales tax percentage"
+              />
+              <span className="text-sm text-muted-foreground">%</span>
+            </div>
+          )}
 
           {/* CA Tax Rules info */}
           <Popover>
@@ -815,7 +832,7 @@ export function QuoteMode({
           {form.taxEnabled && (
             <div className="flex justify-between">
               <span className="text-muted-foreground">
-                CA Sales Tax (9.75% on taxable items)
+                CA Sales Tax ({(form.taxRate * 100).toFixed(2)}% on taxable items)
               </span>
               <span>
                 ${taxAmount.toLocaleString("en-US", {

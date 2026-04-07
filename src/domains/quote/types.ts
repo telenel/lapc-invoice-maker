@@ -202,6 +202,8 @@ export interface QuoteFilters {
   creatorId?: string;
   dateFrom?: string;
   dateTo?: string;
+  amountMin?: number;
+  amountMax?: number;
   page?: number;
   pageSize?: number;
   sortBy?: string;

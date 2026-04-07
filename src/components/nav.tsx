@@ -42,8 +42,6 @@ const links: NavLink[] = [
   { href: "/textbook-requisitions", label: "Requisitions", matchPrefix: "/textbook-requisitions" },
   { href: "/calendar", label: "Calendar" },
   { href: "/staff", label: "Staff" },
-  { href: "/quick-picks", label: "Quick Picks" },
-  { href: "/analytics", label: "Analytics" },
 ];
 
 const themeOptions = [
@@ -84,7 +82,12 @@ export function Nav() {
   const role = (session?.user as { role?: string } | undefined)?.role;
   const adminLink: NavLink = { href: "/admin/settings", label: "Admin", matchPrefix: "/admin" };
   const allLinks = role === "admin"
-    ? [...links, adminLink]
+    ? [
+        ...links,
+        { href: "/quick-picks", label: "Quick Picks" },
+        { href: "/analytics", label: "Analytics" },
+        adminLink,
+      ]
     : links;
 
   function isLinkActive(link: NavLink) {
@@ -106,7 +109,7 @@ export function Nav() {
           )}
         </Link>
         <div className="hidden gap-0.5 md:flex">
-          {links.map((link) => {
+          {allLinks.map((link) => {
             const isActive = isLinkActive(link);
             return (
               <Link
@@ -123,19 +126,6 @@ export function Nav() {
               </Link>
             );
           })}
-          {role === "admin" && (
-            <Link
-              href={adminLink.href}
-              className={cn(
-                "relative rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
-                isLinkActive(adminLink)
-                  ? "bg-muted text-foreground"
-                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-              )}
-            >
-              {adminLink.label}
-            </Link>
-          )}
         </div>
         <div ref={menuRef} className="ml-auto flex items-center gap-1">
           <HelpModal />

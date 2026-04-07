@@ -27,8 +27,11 @@ function buildFilterParams(filters: QuoteFilters): URLSearchParams {
   if (filters.quoteStatus) params.set("quoteStatus", filters.quoteStatus);
   if (filters.department) params.set("department", filters.department);
   if (filters.category) params.set("category", filters.category);
+  if (filters.creatorId) params.set("creatorId", filters.creatorId);
   if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
   if (filters.dateTo) params.set("dateTo", filters.dateTo);
+  if (filters.amountMin !== undefined) params.set("amountMin", String(filters.amountMin));
+  if (filters.amountMax !== undefined) params.set("amountMax", String(filters.amountMax));
   if (filters.page) params.set("page", String(filters.page));
   if (filters.pageSize) params.set("pageSize", String(filters.pageSize));
   if (filters.sortBy) params.set("sortBy", filters.sortBy);

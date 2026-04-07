@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { withAdmin } from "@/domains/shared/auth";
 import { prisma } from "@/lib/prisma";
 import { quickPickSchema } from "@/lib/validators";
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+type RouteContext = { params: Promise<{ id: string }> };
 
+export const PUT = withAdmin(async (request: NextRequest, _session, ctx?: RouteContext) => {
+  const { id } = await ctx!.params;
   const body = await request.json();
   const parsed = quickPickSchema.safeParse(body);
 
@@ -20,7 +16,7 @@ export async function PUT(
 
   try {
     const quickPick = await prisma.quickPickItem.update({
-      where: { id: params.id },
+      where: { id },
       data: parsed.data,
     });
 
@@ -29,21 +25,16 @@ export async function PUT(
     console.error("PUT /api/quick-picks/[id] failed:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
+export const DELETE = withAdmin(async (_request: NextRequest, _session, ctx?: RouteContext) => {
+  const { id } = await ctx!.params;
   try {
-    await prisma.quickPickItem.delete({ where: { id: params.id } });
+    await prisma.quickPickItem.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("DELETE /api/quick-picks/[id] failed:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-}
+});

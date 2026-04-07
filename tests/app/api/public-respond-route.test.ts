@@ -8,12 +8,21 @@ vi.mock("@/domains/quote/service", () => ({
   },
 }));
 
+vi.mock("@/lib/rate-limit", () => ({
+  checkRateLimit: vi.fn(),
+}));
+
 import { quoteService } from "@/domains/quote/service";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { POST } from "@/app/api/quotes/public/[token]/respond/route";
 
 describe("POST /api/quotes/public/[token]/respond", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(checkRateLimit).mockResolvedValue({
+      allowed: true,
+      retryAfterMs: 0,
+    } as never);
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",
       quoteStatus: "SENT",

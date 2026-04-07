@@ -326,11 +326,7 @@ export function QuoteDetailView({ id }: { id: string }) {
     if (!quote) return;
     setActionState((prev) => ({ ...prev, declining: true }));
     try {
-      const res = await fetch(`/api/quotes/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quoteStatus: "DECLINED" }),
-      });
+      const res = await fetch(`/api/quotes/${id}/decline`, { method: "POST" });
       if (!res.ok) {
         const data = await res.json();
         toast.error(data.error ?? "Failed to decline quote");
@@ -474,12 +470,12 @@ export function QuoteDetailView({ id }: { id: string }) {
 
     setActionState((prev) => ({ ...prev, resolvingPayment: true }));
     try {
-      const res = await fetch(`/api/quotes/${id}`, {
-        method: "PUT",
+      const res = await fetch(`/api/quotes/${id}/payment-details`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           paymentMethod,
-          paymentAccountNumber: paymentMethod === "ACCOUNT_NUMBER" ? paymentAccountNumber.trim() : null,
+          accountNumber: paymentMethod === "ACCOUNT_NUMBER" ? paymentAccountNumber.trim() : null,
         }),
       });
 
@@ -669,8 +665,8 @@ export function QuoteDetailView({ id }: { id: string }) {
             </Link>
           )}
 
-          {/* DECLINED: Revise & Resubmit */}
-          {canManageActions && status === "DECLINED" && (
+          {/* DECLINED / EXPIRED: Revise & Resubmit */}
+          {canManageActions && (status === "DECLINED" || status === "EXPIRED") && (
             <Button
               size="sm"
               className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -1521,6 +1517,7 @@ export function QuoteDetailView({ id }: { id: string }) {
           recipientEmail={quote.recipientEmail}
           recipientName={quote.recipientName}
           quoteId={id}
+          quoteStatus={quote.quoteStatus}
         />
       )}
     </div>

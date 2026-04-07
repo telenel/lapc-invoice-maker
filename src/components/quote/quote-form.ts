@@ -47,6 +47,7 @@ export interface QuoteFormData {
   marginEnabled: boolean;
   marginPercent: number;
   taxEnabled: boolean;
+  taxRate: number;
   // Catering
   isCateringEvent: boolean;
   cateringDetails: CateringDetails;
@@ -108,6 +109,7 @@ function defaultForm(): QuoteFormData {
     marginEnabled: false,
     marginPercent: 0,
     taxEnabled: false,
+    taxRate: 0.0975,
     isCateringEvent: false,
     cateringDetails: {
       eventDate: todayISO(),
@@ -386,6 +388,7 @@ export function useQuoteForm(
       marginEnabled: form.marginEnabled,
       marginPercent: form.marginEnabled ? form.marginPercent : undefined,
       taxEnabled: form.taxEnabled,
+      taxRate: form.taxRate,
       isCateringEvent: form.isCateringEvent,
       cateringDetails: form.isCateringEvent ? form.cateringDetails : undefined,
       items: form.items.map((item, i) => {

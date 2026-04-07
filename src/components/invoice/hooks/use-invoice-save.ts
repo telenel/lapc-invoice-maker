@@ -19,6 +19,14 @@ function buildPayload(form: InvoiceFormData) {
     accountNumber: form.accountNumber,
     approvalChain: form.approvalChain,
     notes: form.notes,
+    prismcorePath: form.prismcorePath,
+    pdfMetadata: {
+      signatures: form.signatures,
+      signatureStaffIds: form.signatureStaffIds,
+      semesterYearDept: form.semesterYearDept,
+      contactName: form.contactName,
+      contactExtension: form.contactExtension,
+    },
     isRecurring: form.isRecurring,
     recurringInterval: form.recurringInterval || undefined,
     recurringEmail: form.recurringEmail || undefined,
@@ -130,7 +138,9 @@ export function useInvoiceSave(form: InvoiceFormData, existingId?: string) {
     setSaving(true);
     setGenerationStep("saving");
     try {
-      const id = await postDraft(form);
+      const id = existingId
+        ? await putDraft(form, existingId)
+        : await postDraft(form);
 
       setGenerationStep("generating");
 
@@ -158,7 +168,7 @@ export function useInvoiceSave(form: InvoiceFormData, existingId?: string) {
     } finally {
       setSaving(false);
     }
-  }, [form, router]);
+  }, [existingId, form, router]);
 
   // Raw fetch here for the same reason as postDraft/putDraft: Zod field error parsing.
   const savePendingCharge = useCallback(async () => {

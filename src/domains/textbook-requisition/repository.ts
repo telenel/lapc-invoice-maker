@@ -36,6 +36,9 @@ function buildWhere(
   if (filters.year) {
     where.reqYear = filters.year;
   }
+  if (filters.createdBy) {
+    where.createdBy = filters.createdBy;
+  }
   if (filters.search) {
     where.OR = [
       {

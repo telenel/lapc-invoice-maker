@@ -29,6 +29,7 @@ interface ShareLinkDialogProps {
   recipientEmail: string | null;
   recipientName: string | null;
   quoteId: string;
+  quoteStatus: string;
 }
 
 function ts(): string {
@@ -43,6 +44,7 @@ export function ShareLinkDialog({
   recipientEmail,
   recipientName,
   quoteId,
+  quoteStatus,
 }: ShareLinkDialogProps) {
   const linkInputRef = useRef<HTMLInputElement>(null);
   const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
@@ -127,7 +129,7 @@ export function ShareLinkDialog({
         body: JSON.stringify({
           type: "quote-share",
           to: email,
-          data: { quoteNumber, recipientName, shareUrl, quoteId },
+          data: { quoteNumber, recipientName, shareUrl, quoteId, quoteStatus },
         }),
       });
 
@@ -146,18 +148,19 @@ export function ShareLinkDialog({
       addLog(`Email queued for delivery to ${data.recipient}`, "ok");
 
       // Upgrade status to SUBMITTED_EMAIL (best-effort — email was already sent)
-      try {
-        const markRes = await fetch(`/api/quotes/${quoteId}/mark-submitted`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ method: "email" }),
-        });
-        if (!markRes.ok) {
-          // Log but don't block — email was already sent successfully
-          console.warn("Failed to update quote status to SUBMITTED_EMAIL");
+      if (quoteStatus === "SENT") {
+        try {
+          const markRes = await fetch(`/api/quotes/${quoteId}/mark-submitted`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ method: "email" }),
+          });
+          if (!markRes.ok) {
+            console.warn("Failed to update quote status to SUBMITTED_EMAIL");
+          }
+        } catch {
+          // Non-critical — status upgrade is best-effort
         }
-      } catch {
-        // Non-critical — status upgrade is best-effort
       }
 
       // Step 4: Done — stays visible until user clicks "Done"
