@@ -1,6 +1,7 @@
 node_modules
 .next
 .env
+.build-meta.json
 data
 public/uploads
 .git

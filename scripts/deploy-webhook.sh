@@ -48,7 +48,6 @@ rollback_deploy() {
   local rollback_time
   rollback_sha=$(git rev-parse --short HEAD)
   rollback_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-  printf '{"buildSha":"%s","buildTime":"%s"}\n' "$rollback_sha" "$rollback_time" > "$BUILD_META_FILE"
   docker compose build \
     --build-arg BUILD_SHA="$rollback_sha" \
     --build-arg BUILD_TIME="$rollback_time" \
@@ -84,8 +83,6 @@ if [ "$PREV_COMMIT" = "$NEW_COMMIT" ]; then
   echo "[deploy] No changes detected, skipping deploy"
   exit 0
 fi
-
-printf '{"buildSha":"%s","buildTime":"%s"}\n' "$BUILD_SHA" "$BUILD_TIME" > "$BUILD_META_FILE"
 
 if ! docker compose build \
   --build-arg BUILD_SHA="$BUILD_SHA" \

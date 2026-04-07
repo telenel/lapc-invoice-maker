@@ -58,6 +58,7 @@ export function Nav() {
   const [menuOpen, setMenuOpen] = useState<"theme" | "scale" | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const [buildInfo, setBuildInfo] = useState<{ buildSha: string | null; buildTime: string | null } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close any open menu on outside click
@@ -76,6 +77,29 @@ export function Nav() {
     setMobileNavOpen(false);
     setMenuOpen(null);
   }, [pathname]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch("/api/version", { cache: "no-store" })
+      .then(async (res) => {
+        if (!res.ok) return null;
+        return res.json() as Promise<{ buildSha?: string | null; buildTime?: string | null }>;
+      })
+      .then((data) => {
+        if (!cancelled && data) {
+          setBuildInfo({
+            buildSha: data.buildSha ?? null,
+            buildTime: data.buildTime ?? null,
+          });
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   if (status !== "authenticated") return null;
 
@@ -102,9 +126,9 @@ export function Nav() {
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:gap-6">
         <Link href="/" className="flex min-w-0 items-center gap-2 shrink-0">
           <span className="font-bold tracking-tight text-lg"><span className="text-red-600">LA</span>Portal</span>
-          {process.env.NEXT_PUBLIC_BUILD_SHA && (
-            <span className="mt-1.5 hidden select-all font-mono text-[10px] text-muted-foreground/50 sm:inline-block" title={`Built ${process.env.NEXT_PUBLIC_BUILD_TIME ?? ""}`}>
-              {process.env.NEXT_PUBLIC_BUILD_SHA}
+          {buildInfo?.buildSha && (
+            <span className="mt-1.5 hidden select-all font-mono text-[10px] text-muted-foreground/50 sm:inline-block" title={`Built ${buildInfo.buildTime ?? ""}`}>
+              {buildInfo.buildSha}
             </span>
           )}
         </Link>
