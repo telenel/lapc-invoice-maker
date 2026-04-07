@@ -322,12 +322,58 @@ describe("PublicQuoteView", () => {
 
     render(<PublicQuoteView token="token" />);
 
-    const guidance = await screen.findByText(/Complete the required event details to approve/i);
+    const guidance = await screen.findByRole("alert");
+    expect(guidance).toHaveTextContent("Approval is blocked until these required event details are completed.");
     expect(guidance).toHaveTextContent("start time");
     expect(guidance).toHaveTextContent("end time");
     expect(guidance).toHaveTextContent("event location");
     expect(guidance).toHaveTextContent("takedown time");
     expect(screen.getByRole("button", { name: "Approve Quote" })).toBeDisabled();
+  });
+
+  it("marks missing required catering inputs as invalid", async () => {
+    vi.mocked(quoteApi.getPublicQuote).mockResolvedValueOnce({
+      id: "q1",
+      quoteNumber: "Q-1",
+      quoteStatus: "SUBMITTED_EMAIL",
+      paymentLinkAvailable: true,
+      date: "2026-03-31T00:00:00.000Z",
+      expirationDate: null,
+      department: "IT",
+      category: "SUPPLIES",
+      notes: "",
+      totalAmount: 10,
+      recipientName: "Jane",
+      recipientEmail: "jane@example.com",
+      recipientOrg: "",
+      staff: null,
+      contact: null,
+      items: [],
+      isCateringEvent: true,
+      cateringDetails: {
+        eventDate: "2026-04-07",
+        startTime: "",
+        endTime: "",
+        location: "",
+        contactName: "Jane",
+        contactPhone: "555-1111",
+        setupRequired: false,
+        takedownRequired: true,
+        takedownTime: "",
+      },
+      paymentDetailsResolved: false,
+    } as never);
+
+    render(<PublicQuoteView token="token" />);
+
+    expect(await screen.findByLabelText(/Start Time/i)).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText(/End Time/i)).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText(/Event Location/i)).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByLabelText(/When should we return\?/i)).toHaveAttribute("aria-invalid", "true");
+    expect(screen.getByText("Start time is required before approval.")).toBeInTheDocument();
+    expect(screen.getByText("End time is required before approval.")).toBeInTheDocument();
+    expect(screen.getByText("Event location is required before approval.")).toBeInTheDocument();
+    expect(screen.getByText("Takedown time is required when takedown is needed.")).toBeInTheDocument();
   });
 
   it("keeps the quote visible if analytics registration fails", async () => {

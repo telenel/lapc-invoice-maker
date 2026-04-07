@@ -27,6 +27,7 @@ import { quoteApi } from "@/domains/quote/api-client";
 import { getMissingCustomerCateringRequirements, normalizeQuoteTimeInput } from "@/domains/quote/catering";
 import { ApiError } from "@/domains/shared/types";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
+import { cn } from "@/lib/utils";
 import type { CateringDetails, PublicQuoteResponse, QuotePublicSettingsResponse } from "@/domains/quote/types";
 import { QUOTE_PAYMENT_METHODS } from "@/domains/quote/payment";
 
@@ -285,6 +286,8 @@ export function PublicQuoteView({ token }: { token: string }) {
   const isCatering = quote.isCateringEvent;
   const missingCateringRequirements = isCatering ? getMissingCustomerCateringRequirements(cateringForm) : [];
   const cateringRequiredMissing = missingCateringRequirements.length > 0;
+  const missingCateringRequirementSet = new Set(missingCateringRequirements);
+  const hasMissingCateringRequirement = (requirement: string): boolean => missingCateringRequirementSet.has(requirement);
 
   return (
     <div className="min-h-screen bg-background">
@@ -468,6 +471,24 @@ export function PublicQuoteView({ token }: { token: string }) {
             </CardHeader>
 
             <CardContent className="space-y-5">
+              {cateringRequiredMissing && (
+                <div
+                  role="alert"
+                  className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm"
+                >
+                  <p className="font-medium text-destructive">
+                    Approval is blocked until these required event details are completed.
+                  </p>
+                  <ul className="mt-2 list-disc space-y-1 pl-5 text-destructive/90">
+                    {missingCateringRequirements.map((requirement) => (
+                      <li key={requirement} className="capitalize">
+                        {requirement}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               {/* Event schedule */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
@@ -478,10 +499,17 @@ export function PublicQuoteView({ token }: { token: string }) {
                     id="pub-event-date"
                     type="date"
                     value={cateringForm.eventDate}
+                    aria-invalid={hasMissingCateringRequirement("event date")}
+                    className={cn(
+                      hasMissingCateringRequirement("event date") && "border-destructive focus-visible:ring-destructive/30",
+                    )}
                     onChange={(e) =>
                       setCateringForm((prev) => ({ ...prev, eventDate: e.target.value }))
                     }
                   />
+                  {hasMissingCateringRequirement("event date") && (
+                    <p className="text-xs text-destructive">Event date is required before approval.</p>
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="pub-start-time" className={labelClass}>
@@ -493,6 +521,10 @@ export function PublicQuoteView({ token }: { token: string }) {
                     inputMode="text"
                     placeholder="13:30"
                     value={cateringForm.startTime}
+                    aria-invalid={hasMissingCateringRequirement("start time")}
+                    className={cn(
+                      hasMissingCateringRequirement("start time") && "border-destructive focus-visible:ring-destructive/30",
+                    )}
                     onChange={(e) =>
                       setCateringForm((prev) => ({ ...prev, startTime: e.target.value }))
                     }
@@ -500,6 +532,9 @@ export function PublicQuoteView({ token }: { token: string }) {
                       setCateringForm((prev) => normalizePublicTimeField(prev, "startTime"))
                     }
                   />
+                  {hasMissingCateringRequirement("start time") && (
+                    <p className="text-xs text-destructive">Start time is required before approval.</p>
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="pub-end-time" className={labelClass}>
@@ -511,6 +546,10 @@ export function PublicQuoteView({ token }: { token: string }) {
                     inputMode="text"
                     placeholder="15:00"
                     value={cateringForm.endTime}
+                    aria-invalid={hasMissingCateringRequirement("end time")}
+                    className={cn(
+                      hasMissingCateringRequirement("end time") && "border-destructive focus-visible:ring-destructive/30",
+                    )}
                     onChange={(e) =>
                       setCateringForm((prev) => ({ ...prev, endTime: e.target.value }))
                     }
@@ -518,6 +557,9 @@ export function PublicQuoteView({ token }: { token: string }) {
                       setCateringForm((prev) => normalizePublicTimeField(prev, "endTime"))
                     }
                   />
+                  {hasMissingCateringRequirement("end time") && (
+                    <p className="text-xs text-destructive">End time is required before approval.</p>
+                  )}
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
@@ -535,10 +577,17 @@ export function PublicQuoteView({ token }: { token: string }) {
                     type="text"
                     placeholder="Your full name"
                     value={cateringForm.contactName}
+                    aria-invalid={hasMissingCateringRequirement("contact name")}
+                    className={cn(
+                      hasMissingCateringRequirement("contact name") && "border-destructive focus-visible:ring-destructive/30",
+                    )}
                     onChange={(e) =>
                       setCateringForm((prev) => ({ ...prev, contactName: e.target.value }))
                     }
                   />
+                  {hasMissingCateringRequirement("contact name") && (
+                    <p className="text-xs text-destructive">Contact name is required before approval.</p>
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="pub-contact-number" className={labelClass}>
@@ -549,10 +598,17 @@ export function PublicQuoteView({ token }: { token: string }) {
                     type="text"
                     placeholder="(555) 123-4567"
                     value={cateringForm.contactPhone}
+                    aria-invalid={hasMissingCateringRequirement("contact number")}
+                    className={cn(
+                      hasMissingCateringRequirement("contact number") && "border-destructive focus-visible:ring-destructive/30",
+                    )}
                     onChange={(e) =>
                       setCateringForm((prev) => ({ ...prev, contactPhone: e.target.value }))
                     }
                   />
+                  {hasMissingCateringRequirement("contact number") && (
+                    <p className="text-xs text-destructive">Contact number is required before approval.</p>
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="pub-location" className={labelClass}>
@@ -563,10 +619,17 @@ export function PublicQuoteView({ token }: { token: string }) {
                     type="text"
                     placeholder="Building, Room, Area"
                     value={cateringForm.location}
+                    aria-invalid={hasMissingCateringRequirement("event location")}
+                    className={cn(
+                      hasMissingCateringRequirement("event location") && "border-destructive focus-visible:ring-destructive/30",
+                    )}
                     onChange={(e) =>
                       setCateringForm((prev) => ({ ...prev, location: e.target.value }))
                     }
                   />
+                  {hasMissingCateringRequirement("event location") && (
+                    <p className="text-xs text-destructive">Event location is required before approval.</p>
+                  )}
                 </div>
               </div>
 
@@ -617,6 +680,10 @@ export function PublicQuoteView({ token }: { token: string }) {
                         inputMode="text"
                         placeholder="13:30"
                         value={cateringForm.setupTime}
+                        aria-invalid={hasMissingCateringRequirement("setup time")}
+                        className={cn(
+                          hasMissingCateringRequirement("setup time") && "border-destructive focus-visible:ring-destructive/30",
+                        )}
                         onChange={(e) =>
                           setCateringForm((prev) => ({ ...prev, setupTime: e.target.value }))
                         }
@@ -624,6 +691,9 @@ export function PublicQuoteView({ token }: { token: string }) {
                           setCateringForm((prev) => normalizePublicTimeField(prev, "setupTime"))
                         }
                       />
+                      {hasMissingCateringRequirement("setup time") && (
+                        <p className="text-xs text-destructive">Setup time is required when setup is needed.</p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -656,6 +726,10 @@ export function PublicQuoteView({ token }: { token: string }) {
                         inputMode="text"
                         placeholder="15:00"
                         value={cateringForm.takedownTime}
+                        aria-invalid={hasMissingCateringRequirement("takedown time")}
+                        className={cn(
+                          hasMissingCateringRequirement("takedown time") && "border-destructive focus-visible:ring-destructive/30",
+                        )}
                         onChange={(e) =>
                           setCateringForm((prev) => ({ ...prev, takedownTime: e.target.value }))
                         }
@@ -663,6 +737,9 @@ export function PublicQuoteView({ token }: { token: string }) {
                           setCateringForm((prev) => normalizePublicTimeField(prev, "takedownTime"))
                         }
                       />
+                      {hasMissingCateringRequirement("takedown time") && (
+                        <p className="text-xs text-destructive">Takedown time is required when takedown is needed.</p>
+                      )}
                     </div>
                   )}
                 </div>
