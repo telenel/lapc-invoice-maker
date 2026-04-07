@@ -15,6 +15,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -77,14 +84,34 @@ function makeCateringForm(existing: CateringDetails | null): PublicCateringForm 
 
 const labelClass = "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
 
-type PublicTimeFieldKey = "startTime" | "endTime" | "setupTime" | "takedownTime";
+function formatQuoteTimeLabel(value: string): string {
+  const [hourPart, minutePart] = value.split(":");
+  const hour = Number(hourPart);
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+  return `${displayHour}:${minutePart} ${suffix}`;
+}
 
-function normalizePublicTimeField(
-  form: PublicCateringForm,
-  key: PublicTimeFieldKey,
-): PublicCateringForm {
-  const normalized = normalizeQuoteTimeInput(form[key]);
-  return normalized ? { ...form, [key]: normalized } : form;
+function buildTimeOptions(values: string[]): Array<{ value: string; label: string }> {
+  const optionValues = new Set<string>();
+
+  for (let hour = 0; hour < 24; hour += 1) {
+    for (let minute = 0; minute < 60; minute += 15) {
+      optionValues.add(`${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`);
+    }
+  }
+
+  for (const value of values) {
+    const normalized = normalizeQuoteTimeInput(value);
+    if (normalized) optionValues.add(normalized);
+  }
+
+  return Array.from(optionValues)
+    .sort((a, b) => a.localeCompare(b))
+    .map((value) => ({
+      value,
+      label: formatQuoteTimeLabel(value),
+    }));
 }
 
 export function PublicQuoteView({ token }: { token: string }) {
@@ -288,6 +315,12 @@ export function PublicQuoteView({ token }: { token: string }) {
   const cateringRequiredMissing = missingCateringRequirements.length > 0;
   const missingCateringRequirementSet = new Set(missingCateringRequirements);
   const hasMissingCateringRequirement = (requirement: string): boolean => missingCateringRequirementSet.has(requirement);
+  const timeOptions = buildTimeOptions([
+    cateringForm.startTime,
+    cateringForm.endTime,
+    cateringForm.setupTime,
+    cateringForm.takedownTime,
+  ]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -515,23 +548,30 @@ export function PublicQuoteView({ token }: { token: string }) {
                   <Label htmlFor="pub-start-time" className={labelClass}>
                     Start Time <span className="text-red-500">*</span>
                   </Label>
-                  <Input
-                    id="pub-start-time"
-                    type="text"
-                    inputMode="text"
-                    placeholder="13:30"
-                    value={cateringForm.startTime}
-                    aria-invalid={hasMissingCateringRequirement("start time")}
-                    className={cn(
-                      hasMissingCateringRequirement("start time") && "border-destructive focus-visible:ring-destructive/30",
-                    )}
-                    onChange={(e) =>
-                      setCateringForm((prev) => ({ ...prev, startTime: e.target.value }))
+                  <Select
+                    value={normalizeQuoteTimeInput(cateringForm.startTime) ?? ""}
+                    onValueChange={(value) =>
+                      setCateringForm((prev) => ({ ...prev, startTime: value ?? "" }))
                     }
-                    onBlur={() =>
-                      setCateringForm((prev) => normalizePublicTimeField(prev, "startTime"))
-                    }
-                  />
+                  >
+                    <SelectTrigger
+                      id="pub-start-time"
+                      aria-invalid={hasMissingCateringRequirement("start time")}
+                      className={cn(
+                        "w-full",
+                        hasMissingCateringRequirement("start time") && "border-destructive focus-visible:ring-destructive/30",
+                      )}
+                    >
+                      <SelectValue placeholder="Select start time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {timeOptions.map((option) => (
+                        <SelectItem key={`start-${option.value}`} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   {hasMissingCateringRequirement("start time") && (
                     <p className="text-xs text-destructive">Start time is required before approval.</p>
                   )}
@@ -540,30 +580,37 @@ export function PublicQuoteView({ token }: { token: string }) {
                   <Label htmlFor="pub-end-time" className={labelClass}>
                     End Time <span className="text-red-500">*</span>
                   </Label>
-                  <Input
-                    id="pub-end-time"
-                    type="text"
-                    inputMode="text"
-                    placeholder="15:00"
-                    value={cateringForm.endTime}
-                    aria-invalid={hasMissingCateringRequirement("end time")}
-                    className={cn(
-                      hasMissingCateringRequirement("end time") && "border-destructive focus-visible:ring-destructive/30",
-                    )}
-                    onChange={(e) =>
-                      setCateringForm((prev) => ({ ...prev, endTime: e.target.value }))
+                  <Select
+                    value={normalizeQuoteTimeInput(cateringForm.endTime) ?? ""}
+                    onValueChange={(value) =>
+                      setCateringForm((prev) => ({ ...prev, endTime: value ?? "" }))
                     }
-                    onBlur={() =>
-                      setCateringForm((prev) => normalizePublicTimeField(prev, "endTime"))
-                    }
-                  />
+                  >
+                    <SelectTrigger
+                      id="pub-end-time"
+                      aria-invalid={hasMissingCateringRequirement("end time")}
+                      className={cn(
+                        "w-full",
+                        hasMissingCateringRequirement("end time") && "border-destructive focus-visible:ring-destructive/30",
+                      )}
+                    >
+                      <SelectValue placeholder="Select end time" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {timeOptions.map((option) => (
+                        <SelectItem key={`end-${option.value}`} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   {hasMissingCateringRequirement("end time") && (
                     <p className="text-xs text-destructive">End time is required before approval.</p>
                   )}
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                Enter time in 24-hour format like 13:30. If you prefer, entries like 1:30pm also work.
+                Choose the event times from the dropdowns. Times are shown in standard AM/PM format.
               </p>
 
               {/* Contact Name, Contact Number, Location (required) */}
@@ -674,23 +721,30 @@ export function PublicQuoteView({ token }: { token: string }) {
                       <Label htmlFor="pub-setup-time" className={labelClass}>
                         When should we arrive?
                       </Label>
-                      <Input
-                        id="pub-setup-time"
-                        type="text"
-                        inputMode="text"
-                        placeholder="13:30"
-                        value={cateringForm.setupTime}
-                        aria-invalid={hasMissingCateringRequirement("setup time")}
-                        className={cn(
-                          hasMissingCateringRequirement("setup time") && "border-destructive focus-visible:ring-destructive/30",
-                        )}
-                        onChange={(e) =>
-                          setCateringForm((prev) => ({ ...prev, setupTime: e.target.value }))
+                      <Select
+                        value={normalizeQuoteTimeInput(cateringForm.setupTime) ?? ""}
+                        onValueChange={(value) =>
+                          setCateringForm((prev) => ({ ...prev, setupTime: value ?? "" }))
                         }
-                        onBlur={() =>
-                          setCateringForm((prev) => normalizePublicTimeField(prev, "setupTime"))
-                        }
-                      />
+                      >
+                        <SelectTrigger
+                          id="pub-setup-time"
+                          aria-invalid={hasMissingCateringRequirement("setup time")}
+                          className={cn(
+                            "w-full",
+                            hasMissingCateringRequirement("setup time") && "border-destructive focus-visible:ring-destructive/30",
+                          )}
+                        >
+                          <SelectValue placeholder="Select setup time" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {timeOptions.map((option) => (
+                            <SelectItem key={`setup-${option.value}`} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       {hasMissingCateringRequirement("setup time") && (
                         <p className="text-xs text-destructive">Setup time is required when setup is needed.</p>
                       )}
@@ -720,23 +774,30 @@ export function PublicQuoteView({ token }: { token: string }) {
                       <Label htmlFor="pub-takedown-time" className={labelClass}>
                         When should we return?
                       </Label>
-                      <Input
-                        id="pub-takedown-time"
-                        type="text"
-                        inputMode="text"
-                        placeholder="15:00"
-                        value={cateringForm.takedownTime}
-                        aria-invalid={hasMissingCateringRequirement("takedown time")}
-                        className={cn(
-                          hasMissingCateringRequirement("takedown time") && "border-destructive focus-visible:ring-destructive/30",
-                        )}
-                        onChange={(e) =>
-                          setCateringForm((prev) => ({ ...prev, takedownTime: e.target.value }))
+                      <Select
+                        value={normalizeQuoteTimeInput(cateringForm.takedownTime) ?? ""}
+                        onValueChange={(value) =>
+                          setCateringForm((prev) => ({ ...prev, takedownTime: value ?? "" }))
                         }
-                        onBlur={() =>
-                          setCateringForm((prev) => normalizePublicTimeField(prev, "takedownTime"))
-                        }
-                      />
+                      >
+                        <SelectTrigger
+                          id="pub-takedown-time"
+                          aria-invalid={hasMissingCateringRequirement("takedown time")}
+                          className={cn(
+                            "w-full",
+                            hasMissingCateringRequirement("takedown time") && "border-destructive focus-visible:ring-destructive/30",
+                          )}
+                        >
+                          <SelectValue placeholder="Select takedown time" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {timeOptions.map((option) => (
+                            <SelectItem key={`takedown-${option.value}`} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       {hasMissingCateringRequirement("takedown time") && (
                         <p className="text-xs text-destructive">Takedown time is required when takedown is needed.</p>
                       )}

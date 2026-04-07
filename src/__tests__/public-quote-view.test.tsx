@@ -32,6 +32,15 @@ vi.mock("sonner", () => ({
 
 import { quoteApi } from "@/domains/quote/api-client";
 
+async function chooseSelectOption(
+  user: ReturnType<typeof userEvent.setup>,
+  label: RegExp,
+  optionText: string,
+) {
+  await user.click(screen.getByLabelText(label));
+  await user.click(await screen.findByRole("option", { name: optionText }));
+}
+
 describe("PublicQuoteView", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -81,8 +90,8 @@ describe("PublicQuoteView", () => {
     await screen.findByText("Event Details Required");
 
     await user.type(screen.getByLabelText(/Event Date/i), "2026-04-15");
-    await user.type(screen.getByLabelText(/Start Time/i), "10:00");
-    await user.type(screen.getByLabelText(/End Time/i), "12:00");
+    await chooseSelectOption(user, /Start Time/i, "10:00 AM");
+    await chooseSelectOption(user, /End Time/i, "12:00 PM");
     await user.type(screen.getByLabelText(/Contact Name/i), "Jane");
     await user.type(screen.getByLabelText(/Contact Number/i), "555-1111");
     await user.type(screen.getByLabelText(/Event Location/i), "Campus");
@@ -257,8 +266,8 @@ describe("PublicQuoteView", () => {
     await screen.findByText("Event Details Required");
 
     await user.type(screen.getByLabelText(/Event Date/i), "2026-04-15");
-    await user.type(screen.getByLabelText(/Start Time/i), "10:00");
-    await user.type(screen.getByLabelText(/End Time/i), "12:00");
+    await chooseSelectOption(user, /Start Time/i, "10:00 AM");
+    await chooseSelectOption(user, /End Time/i, "12:00 PM");
     await user.type(screen.getByLabelText(/Contact Name/i), "Jane");
     await user.type(screen.getByLabelText(/Contact Number/i), "555-1111");
     await user.type(screen.getByLabelText(/Event Location/i), "Campus");
@@ -275,8 +284,8 @@ describe("PublicQuoteView", () => {
     await screen.findByText("Event Details Required");
 
     await user.type(screen.getByLabelText(/Event Date/i), "2026-04-15");
-    await user.type(screen.getByLabelText(/Start Time/i), "10:00");
-    await user.type(screen.getByLabelText(/End Time/i), "12:00");
+    await chooseSelectOption(user, /Start Time/i, "10:00 AM");
+    await chooseSelectOption(user, /End Time/i, "12:00 PM");
     await user.type(screen.getByLabelText(/Contact Name/i), "Jane");
     await user.type(screen.getByLabelText(/Contact Number/i), "555-1111");
     await user.type(screen.getByLabelText(/Event Location/i), "Campus");
