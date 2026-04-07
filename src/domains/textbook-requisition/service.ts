@@ -116,6 +116,7 @@ function toResponse(req: RequisitionWithRelations): RequisitionResponse {
     instructorName: req.instructorName,
     phone: req.phone,
     email: req.email,
+    employeeId: req.employeeId,
     department: req.department,
     course: req.course,
     sections: req.sections,
