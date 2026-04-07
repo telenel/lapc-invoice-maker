@@ -7,6 +7,7 @@ import type {
   UpdateRequisitionInput,
   RequisitionStats,
   RequisitionSubmitAck,
+  RequisitionLookupItem,
   NotificationResult,
 } from "./types";
 
@@ -58,6 +59,11 @@ export const requisitionApi = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(input),
     });
+  },
+
+  async lookup(employeeId: string): Promise<RequisitionLookupItem[]> {
+    const params = new URLSearchParams({ employeeId });
+    return request<RequisitionLookupItem[]>(`${BASE}/lookup?${params}`);
   },
 
   async update(id: string, input: UpdateRequisitionInput): Promise<RequisitionResponse> {
