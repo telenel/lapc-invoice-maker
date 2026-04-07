@@ -35,6 +35,7 @@ export interface RequisitionResponse {
   instructorName: string;
   phone: string;
   email: string;
+  employeeId: string | null;
   department: string;
   course: string;
   sections: string;
@@ -75,6 +76,22 @@ export interface RequisitionSubmitAck {
   bookCount: number;
 }
 
+export interface RequisitionLookupItem {
+  id: string;
+  instructorName: string;
+  phone: string;
+  email: string;
+  department: string;
+  course: string;
+  sections: string;
+  enrollment: number;
+  term: string;
+  reqYear: number;
+  submittedAt: string;
+  bookCount: number;
+  books: Omit<RequisitionBookResponse, "id">[];
+}
+
 // ── Input types ──
 
 export interface CreateBookInput {
@@ -95,6 +112,7 @@ export interface CreateRequisitionInput {
   instructorName: string;
   phone: string;
   email: string;
+  employeeId?: string;
   department: string;
   course: string;
   sections: string;
