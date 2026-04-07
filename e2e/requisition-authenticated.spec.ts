@@ -1,34 +1,11 @@
 import { test, expect } from "@playwright/test";
 
 /**
- * Authenticated tests require a running dev server with a seeded database
- * and valid session cookies. These tests verify the authenticated requisition
- * management flows.
- *
- * To run with auth, set up a .auth state file or use the login helper.
- * For CI, these tests may need to be run against a test environment.
+ * Authenticated tests for the requisition management panel.
+ * Uses shared auth state from auth.setup.ts (storageState).
  */
 
 test.describe("Authenticated Requisition Panel", () => {
-  // Skip if no auth session is available — these need a logged-in user
-  test.skip(
-    () => !process.env.E2E_AUTH_COOKIE,
-    "Skipped: E2E_AUTH_COOKIE not set. Run with authenticated session for full coverage.",
-  );
-
-  test.beforeEach(async ({ page }) => {
-    // Set auth cookie if provided
-    if (process.env.E2E_AUTH_COOKIE) {
-      await page.context().addCookies([
-        {
-          name: "next-auth.session-token",
-          value: process.env.E2E_AUTH_COOKIE,
-          domain: "localhost",
-          path: "/",
-        },
-      ]);
-    }
-  });
 
   test("list page shows stats and table", async ({ page }) => {
     await page.goto("/textbook-requisitions");

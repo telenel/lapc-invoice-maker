@@ -54,3 +54,5 @@ reviews/
 skills-lock.json
 .bg-shell/
 test-results/
+e2e/.auth/
+playwright-report/
