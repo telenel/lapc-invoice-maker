@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth } from "@/domains/shared/auth";
+import { forbiddenResponse, withAuth } from "@/domains/shared/auth";
 import { requisitionService } from "@/domains/textbook-requisition/service";
 
 export const POST = withAuth(async (req: NextRequest, session, ctx) => {
@@ -12,6 +12,13 @@ export const POST = withAuth(async (req: NextRequest, session, ctx) => {
   }
 
   try {
+    const existing = await requisitionService.getById(id);
+    if (!existing) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    if (session.user.role !== "admin" && existing.createdBy !== session.user.id) {
+      return forbiddenResponse();
+    }
     const result = await requisitionService.sendNotification(id, emailType, session.user.id);
     if (!result) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });

@@ -4,11 +4,16 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import type { AuthSession } from "./types";
 
-type RouteContext = { params: Promise<Record<string, string>> };
-type AuthHandler = (req: NextRequest, session: AuthSession, ctx?: RouteContext) => Promise<NextResponse>;
+type RouteParams = Record<string, string>;
+type RouteContext<TParams extends RouteParams = RouteParams> = { params: Promise<TParams> };
+type AuthHandler<TParams extends RouteParams = RouteParams> = (
+  req: NextRequest,
+  session: AuthSession,
+  ctx?: RouteContext<TParams>
+) => Promise<NextResponse>;
 
-export function withAuth(handler: AuthHandler) {
-  return async (req: NextRequest, ctx?: RouteContext): Promise<NextResponse> => {
+export function withAuth<TParams extends RouteParams = RouteParams>(handler: AuthHandler<TParams>) {
+  return async (req: NextRequest, ctx?: RouteContext<TParams>): Promise<NextResponse> => {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -21,8 +26,8 @@ export function forbiddenResponse() {
   return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 }
 
-export function withAdmin(handler: AuthHandler) {
-  return async (req: NextRequest, ctx?: RouteContext): Promise<NextResponse> => {
+export function withAdmin<TParams extends RouteParams = RouteParams>(handler: AuthHandler<TParams>) {
+  return async (req: NextRequest, ctx?: RouteContext<TParams>): Promise<NextResponse> => {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

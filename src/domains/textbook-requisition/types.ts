@@ -154,6 +154,7 @@ export interface RequisitionFilters {
   status?: RequisitionStatus;
   term?: string;
   year?: number;
+  createdBy?: string;
   page?: number;
   pageSize?: number;
   sortBy?: string;

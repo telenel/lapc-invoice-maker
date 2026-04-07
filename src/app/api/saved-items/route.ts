@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { withAdmin, withAuth } from "@/domains/shared/auth";
 import { prisma } from "@/lib/prisma";
 import { savedLineItemSchema } from "@/lib/validators";
 
-export async function GET(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
+export const GET = withAuth(async (request: NextRequest) => {
   try {
     const { searchParams } = new URL(request.url);
     const department = searchParams.get("department");
@@ -27,12 +23,9 @@ export async function GET(request: NextRequest) {
     console.error("GET /api/saved-items failed:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
+export const POST = withAdmin(async (request: NextRequest) => {
   const body = await request.json();
   const parsed = savedLineItemSchema.safeParse(body);
 
@@ -54,4 +47,4 @@ export async function POST(request: NextRequest) {
     console.error("POST /api/saved-items failed:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
-}
+});

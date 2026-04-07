@@ -31,6 +31,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
         toast.error(data.error ?? "Failed to regenerate PDF");
       } else {
         toast.success("PDF regenerated successfully");
+        await refetch();
       }
     } catch {
       toast.error("Failed to regenerate PDF");

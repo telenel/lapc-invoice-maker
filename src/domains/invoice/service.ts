@@ -13,6 +13,7 @@ import type {
   CreateInvoiceInput,
   FinalizeInput,
   InvoiceStatsResponse,
+  InvoicePdfMetadata,
 } from "./types";
 import type { InvoiceStaffDetail } from "./types";
 import type { ContactResponse } from "@/domains/contact/types";
@@ -100,6 +101,7 @@ function toInvoiceResponse(invoice: NonNullable<InvoiceWithRelations>): InvoiceR
     isRunning: invoice.isRunning,
     runningTitle: invoice.runningTitle,
     pdfPath: invoice.pdfPath,
+    pdfMetadata: (invoice.pdfMetadata as InvoicePdfMetadata | null) ?? null,
     prismcorePath: invoice.prismcorePath,
     marginEnabled: invoice.marginEnabled,
     marginPercent: invoice.marginPercent != null ? Number(invoice.marginPercent) : null,
@@ -137,7 +139,7 @@ export const invoiceService = {
    */
   async getById(id: string): Promise<InvoiceResponse | null> {
     const invoice = await invoiceRepository.findById(id);
-    if (!invoice) return null;
+    if (!invoice || invoice.type !== "INVOICE") return null;
     return toInvoiceResponse(invoice);
   },
 
@@ -154,7 +156,7 @@ export const invoiceService = {
       invoiceData.marginEnabled,
       invoiceData.marginPercent ? Number(invoiceData.marginPercent) : undefined,
       invoiceData.taxEnabled,
-      invoiceData.taxRate ? Number(invoiceData.taxRate) : undefined
+      invoiceData.taxRate != null ? Number(invoiceData.taxRate) : undefined
     );
 
     const { cateringDetails, ...restInvoiceData } = invoiceData;
@@ -162,6 +164,8 @@ export const invoiceService = {
       {
         ...restInvoiceData,
         accountCode: restInvoiceData.accountCode ?? "",
+        prismcorePath: restInvoiceData.prismcorePath ?? null,
+        pdfMetadata: restInvoiceData.pdfMetadata as Prisma.InputJsonValue | undefined,
         cateringDetails: cateringDetails as Prisma.InputJsonValue | undefined,
       },
       calculatedItems,
@@ -190,7 +194,7 @@ export const invoiceService = {
    */
   async duplicate(id: string, creatorId: string): Promise<InvoiceResponse> {
     const source = await invoiceRepository.findById(id);
-    if (!source) {
+    if (!source || source.type !== "INVOICE") {
       throw Object.assign(new Error("Invoice not found"), { code: "NOT_FOUND" });
     }
 
@@ -223,6 +227,8 @@ export const invoiceService = {
         accountNumber: source.accountNumber ?? undefined,
         approvalChain: (source.approvalChain as string[]) ?? [],
         notes: source.notes ?? undefined,
+        prismcorePath: source.prismcorePath ?? null,
+        pdfMetadata: source.pdfMetadata as Prisma.InputJsonValue | undefined,
         marginEnabled: source.marginEnabled,
         marginPercent: source.marginPercent != null ? Number(source.marginPercent) : undefined,
         taxEnabled: source.taxEnabled,
@@ -254,7 +260,7 @@ export const invoiceService = {
     input: { items?: CreateInvoiceInput["items"]; [key: string]: unknown }
   ): Promise<InvoiceResponse> {
     const existing = await invoiceRepository.findById(id);
-    if (!existing) {
+    if (!existing || existing.type !== "INVOICE") {
       throw Object.assign(new Error("Invoice not found"), { code: "NOT_FOUND" });
     }
     if (existing.status === "FINAL") {
@@ -302,7 +308,7 @@ export const invoiceService = {
    */
   async delete(id: string): Promise<void> {
     const invoice = await invoiceRepository.findById(id);
-    if (!invoice) {
+    if (!invoice || invoice.type !== "INVOICE") {
       throw Object.assign(new Error("Invoice not found"), { code: "NOT_FOUND" });
     }
 
@@ -320,7 +326,7 @@ export const invoiceService = {
    */
   async finalize(id: string, input: FinalizeInput): Promise<{ pdfPath: string }> {
     const invoice = await invoiceRepository.findById(id);
-    if (!invoice) {
+    if (!invoice || invoice.type !== "INVOICE") {
       throw Object.assign(new Error("Invoice not found"), { code: "NOT_FOUND" });
     }
 
@@ -331,21 +337,30 @@ export const invoiceService = {
       );
     }
 
-    const {
-      prismcorePath,
-      signatures,
-      signatureStaffIds,
-      semesterYearDept,
-      contactName,
-      contactExtension,
-    } = input;
+    const storedPdfMetadata = (invoice.pdfMetadata as InvoicePdfMetadata | null) ?? null;
+    const mergedPdfMetadata: InvoicePdfMetadata = {
+      signatures: {
+        line1: input.signatures?.line1 ?? storedPdfMetadata?.signatures?.line1,
+        line2: input.signatures?.line2 ?? storedPdfMetadata?.signatures?.line2,
+        line3: input.signatures?.line3 ?? storedPdfMetadata?.signatures?.line3,
+      },
+      signatureStaffIds: {
+        line1: input.signatureStaffIds?.line1 ?? storedPdfMetadata?.signatureStaffIds?.line1,
+        line2: input.signatureStaffIds?.line2 ?? storedPdfMetadata?.signatureStaffIds?.line2,
+        line3: input.signatureStaffIds?.line3 ?? storedPdfMetadata?.signatureStaffIds?.line3,
+      },
+      semesterYearDept: input.semesterYearDept ?? storedPdfMetadata?.semesterYearDept,
+      contactName: input.contactName ?? storedPdfMetadata?.contactName,
+      contactExtension: input.contactExtension ?? storedPdfMetadata?.contactExtension,
+    };
+    const prismcorePath = input.prismcorePath ?? invoice.prismcorePath ?? null;
 
     // Parse signature strings ("Name, Title") into structured objects
     const resolvedSignatures: { name: string; title?: string }[] = [];
-    if (signatures) {
-      if (signatures.line1) resolvedSignatures.push(parseSignature(signatures.line1));
-      if (signatures.line2) resolvedSignatures.push(parseSignature(signatures.line2));
-      if (signatures.line3) resolvedSignatures.push(parseSignature(signatures.line3));
+    if (mergedPdfMetadata.signatures) {
+      if (mergedPdfMetadata.signatures.line1) resolvedSignatures.push(parseSignature(mergedPdfMetadata.signatures.line1));
+      if (mergedPdfMetadata.signatures.line2) resolvedSignatures.push(parseSignature(mergedPdfMetadata.signatures.line2));
+      if (mergedPdfMetadata.signatures.line3) resolvedSignatures.push(parseSignature(mergedPdfMetadata.signatures.line3));
     }
 
     const dateStr = formatDateFromDate(new Date(invoice.date));
@@ -355,7 +370,7 @@ export const invoiceService = {
     const pdfPath = await pdfService.generateInvoice({
       coverSheet: {
         date: dateStr,
-        semesterYearDept: semesterYearDept ?? invoice.department,
+        semesterYearDept: mergedPdfMetadata.semesterYearDept ?? invoice.department,
         invoiceNumber: invoice.invoiceNumber ?? "",
         chargeAccountNumber: invoice.accountNumber ?? invoice.accountCode,
         accountCode: invoice.accountCode,
@@ -370,8 +385,8 @@ export const invoiceService = {
         sapAccount: invoice.accountNumber ?? invoice.accountCode,
         estimatedCost: totalStr,
         approverName: resolvedSignatures.length > 0 ? resolvedSignatures[0].name : "",
-        contactName: contactName ?? invoice.staff?.name ?? (invoice as { contact?: { name: string } | null }).contact?.name ?? "",
-        contactPhone: contactExtension ?? (invoice.staff as { extension?: string } | null)?.extension ?? (invoice as { contact?: { phone?: string } | null }).contact?.phone ?? "",
+        contactName: mergedPdfMetadata.contactName ?? invoice.staff?.name ?? (invoice as { contact?: { name: string } | null }).contact?.name ?? "",
+        contactPhone: mergedPdfMetadata.contactExtension ?? (invoice.staff as { extension?: string } | null)?.extension ?? (invoice as { contact?: { phone?: string } | null }).contact?.phone ?? "",
         items: invoice.items.map((item) => ({
           description: item.description,
           quantity: Number(item.quantity),
@@ -388,17 +403,22 @@ export const invoiceService = {
     }
 
     // Finalize in DB
-    await invoiceRepository.finalize(id, pdfPath, prismcorePath);
+    await invoiceRepository.finalize(
+      id,
+      pdfPath,
+      prismcorePath,
+      mergedPdfMetadata as Prisma.InputJsonValue
+    );
 
     // Post-finalize: non-critical operations
     const postUpdates: Promise<unknown>[] = [];
 
     // Record signer history
-    if (signatureStaffIds && invoice.staffId) {
+    if (mergedPdfMetadata.signatureStaffIds && invoice.staffId) {
       const signerLines = [
-        { line: signatureStaffIds.line1, position: 0 },
-        { line: signatureStaffIds.line2, position: 1 },
-        { line: signatureStaffIds.line3, position: 2 },
+        { line: mergedPdfMetadata.signatureStaffIds.line1, position: 0 },
+        { line: mergedPdfMetadata.signatureStaffIds.line2, position: 1 },
+        { line: mergedPdfMetadata.signatureStaffIds.line3, position: 2 },
       ];
       for (const { line, position } of signerLines) {
         if (line) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth } from "@/domains/shared/auth";
+import { forbiddenResponse, withAuth } from "@/domains/shared/auth";
 import { invoiceService } from "@/domains/invoice/service";
 import { invoiceCreateSchema } from "@/lib/validators";
 import { Prisma } from "@/generated/prisma/client";
@@ -20,6 +20,9 @@ export const GET = withAuth(async (req: NextRequest, session) => {
     const groupBy = sp.get("groupBy");
 
     if (statsOnly && groupBy === "creator") {
+      if (session.user.role !== "admin") {
+        return forbiddenResponse();
+      }
       const status = sp.get("status") as "DRAFT" | "FINAL" | "PENDING_CHARGE" | undefined ?? undefined;
       return jsonNoStore(await invoiceService.getCreatorStats(status));
     }
@@ -41,7 +44,7 @@ export const GET = withAuth(async (req: NextRequest, session) => {
       page: Math.max(1, parseInt(sp.get("page") ?? "1", 10)),
       pageSize: Math.max(1, parseInt(sp.get("pageSize") ?? "20", 10)),
       sortBy: sp.get("sortBy") ?? "createdAt",
-      sortOrder: (sp.get("sortDir") ?? "desc") as "asc" | "desc",
+      sortOrder: (sp.get("sortOrder") ?? sp.get("sortDir") ?? "desc") as "asc" | "desc",
     };
 
     // Non-admin users can only see their own invoices

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAuth, forbiddenResponse } from "@/domains/shared/auth";
 import { quoteService } from "@/domains/quote/service";
 
-export const POST = withAuth(async (req: NextRequest, session, ctx) => {
+export const POST = withAuth(async (_req: NextRequest, session, ctx) => {
   const { id } = await ctx!.params;
   try {
     const existing = await quoteService.getById(id);
@@ -10,15 +10,13 @@ export const POST = withAuth(async (req: NextRequest, session, ctx) => {
     if (session.user.role !== "admin" && existing.creatorId !== session.user.id) {
       return forbiddenResponse();
     }
-    const { shareToken } = await quoteService.markSent(id);
-    const appOrigin = process.env.NEXTAUTH_URL ?? req.nextUrl.origin;
-    const shareUrl = `${appOrigin.replace(/\/$/, "")}/quotes/review/${shareToken}`;
-    return NextResponse.json({ success: true, shareUrl });
+    const result = await quoteService.declineManually(id);
+    return NextResponse.json(result);
   } catch (err) {
     const code = (err as { code?: string }).code;
     if (code === "NOT_FOUND") return NextResponse.json({ error: "Quote not found" }, { status: 404 });
     if (code === "FORBIDDEN") return NextResponse.json({ error: (err as Error).message }, { status: 400 });
-    console.error("POST /api/quotes/[id]/send failed:", err);
+    console.error("POST /api/quotes/[id]/decline failed:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 });

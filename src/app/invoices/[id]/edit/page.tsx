@@ -27,24 +27,25 @@ interface ApiInvoice {
   accountCode: string;
   accountNumber: string;
   approvalChain: string[];
-  contactName: string | null;
-  contactExtension: string | null;
-  contactEmail: string | null;
-  contactPhone: string | null;
-  semesterYearDept: string | null;
   notes: string | null;
   status: string;
   marginEnabled?: boolean;
   marginPercent?: number;
   taxEnabled?: boolean;
   taxRate?: number;
+  pdfMetadata?: {
+    signatures?: { line1?: string; line2?: string; line3?: string };
+    signatureStaffIds?: { line1?: string; line2?: string; line3?: string };
+    semesterYearDept?: string;
+    contactName?: string;
+    contactExtension?: string;
+  } | null;
   prismcorePath: string | null;
   isRunning: boolean;
   runningTitle: string | null;
   isRecurring: boolean;
   recurringInterval: string | null;
   recurringEmail: string | null;
-  signatures: { line1: string; line2: string; line3: string } | null;
   staff: { id: string; name: string; title: string; department: string; extension: string; email: string } | null;
   items: ApiInvoiceItem[];
 }
@@ -60,11 +61,11 @@ function mapApiToFormData(invoice: ApiInvoice): InvoiceFormData {
     accountCode: invoice.accountCode ?? "",
     accountNumber: invoice.accountNumber ?? "",
     approvalChain: invoice.approvalChain ?? [],
-    contactName: invoice.contactName || invoice.staff?.name || "",
-    contactExtension: invoice.contactExtension || invoice.staff?.extension || "",
-    contactEmail: invoice.contactEmail || invoice.staff?.email || "",
-    contactPhone: invoice.contactPhone ?? "",
-    semesterYearDept: invoice.semesterYearDept ?? "",
+    contactName: invoice.pdfMetadata?.contactName || invoice.staff?.name || "",
+    contactExtension: invoice.pdfMetadata?.contactExtension || invoice.staff?.extension || "",
+    contactEmail: invoice.staff?.email || "",
+    contactPhone: "",
+    semesterYearDept: invoice.pdfMetadata?.semesterYearDept ?? "",
     notes: invoice.notes ?? "",
     isRunning: invoice.isRunning ?? false,
     runningTitle: invoice.runningTitle ?? "",
@@ -76,8 +77,16 @@ function mapApiToFormData(invoice: ApiInvoice): InvoiceFormData {
     recurringInterval: invoice.recurringInterval ?? "",
     recurringEmail: invoice.recurringEmail ?? "",
     prismcorePath: invoice.prismcorePath ?? null,
-    signatures: invoice.signatures ?? { line1: "", line2: "", line3: "" },
-    signatureStaffIds: { line1: "", line2: "", line3: "" },
+    signatures: {
+      line1: invoice.pdfMetadata?.signatures?.line1 ?? "",
+      line2: invoice.pdfMetadata?.signatures?.line2 ?? "",
+      line3: invoice.pdfMetadata?.signatures?.line3 ?? "",
+    },
+    signatureStaffIds: {
+      line1: invoice.pdfMetadata?.signatureStaffIds?.line1 ?? "",
+      line2: invoice.pdfMetadata?.signatureStaffIds?.line2 ?? "",
+      line3: invoice.pdfMetadata?.signatureStaffIds?.line3 ?? "",
+    },
     items: invoice.items.map((item) => {
       const dbUnitPrice = Number(item.unitPrice);
       const dbCostPrice = item.costPrice != null ? Number(item.costPrice) : null;
@@ -125,6 +134,9 @@ export default function EditInvoicePage() {
         return res.json();
       })
       .then((invoice: ApiInvoice) => {
+        if (invoice.status === "FINAL") {
+          throw new Error("Finalized invoices cannot be edited");
+        }
         setInitialData(mapApiToFormData(invoice));
         setIsPendingCharge(invoice.status === "PENDING_CHARGE");
       })

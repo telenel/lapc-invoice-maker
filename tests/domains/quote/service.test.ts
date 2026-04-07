@@ -1134,16 +1134,21 @@ describe("quoteService", () => {
       });
     });
 
-    it("preserves the quote response state when converting a sent quote", async () => {
+    it("preserves the accepted response state when converting an accepted quote", async () => {
       const { prisma } = await import("@/lib/prisma");
       const mockPrisma = vi.mocked(prisma, true);
+      const acceptedAt = new Date("2026-03-01T10:00:00.000Z");
 
       const newInvoice = { id: "inv1", invoiceNumber: "INV-2026-0001" };
       const tx = {
         $queryRaw: vi.fn().mockResolvedValue([{ id: "q1" }]),
         invoice: {
           findFirst: vi.fn().mockResolvedValue(null),
-          findUnique: vi.fn().mockResolvedValue(makeQuote({ quoteStatus: "SENT" })),
+          findUnique: vi.fn().mockResolvedValue(makeQuote({
+            quoteStatus: "ACCEPTED",
+            acceptedAt,
+            paymentMethod: "CHECK",
+          })),
           create: vi.fn().mockResolvedValue(newInvoice),
           update: vi.fn().mockResolvedValue({}),
         },
@@ -1157,7 +1162,7 @@ describe("quoteService", () => {
         expect.objectContaining({
           data: expect.objectContaining({
             accountNumber: "12345",
-            paymentMethod: null,
+            paymentMethod: "CHECK",
             paymentAccountNumber: null,
           }),
         }),
@@ -1166,8 +1171,8 @@ describe("quoteService", () => {
         expect.objectContaining({
           where: { id: "q1" },
           data: expect.objectContaining({
-            quoteStatus: "SENT",
-            acceptedAt: null,
+            quoteStatus: "ACCEPTED",
+            acceptedAt,
             convertedAt: expect.any(Date),
           }),
         }),

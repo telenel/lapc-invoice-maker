@@ -48,6 +48,7 @@ export function InvoiceDetailHeader({
   const isDraft = invoice.status === "DRAFT";
   const isFinal = invoice.status === "FINAL";
   const isPendingCharge = invoice.status === "PENDING_CHARGE";
+  const hasPdf = Boolean(invoice.pdfPath);
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -97,13 +98,15 @@ export function InvoiceDetailHeader({
           </Link>
         )}
 
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onDownloadPdf}
-        >
-          Download PDF
-        </Button>
+        {hasPdf && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onDownloadPdf}
+          >
+            Download PDF
+          </Button>
+        )}
 
         <Button variant="outline" size="sm" onClick={onDuplicate} disabled={duplicating}>
           <CopyIcon className="size-3.5 mr-1.5" />
@@ -120,14 +123,16 @@ export function InvoiceDetailHeader({
             >
               {regenerating ? "Regenerating…" : "Regenerate PDF"}
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onEmail}
-            >
-              <MailIcon className="h-4 w-4 mr-1" aria-hidden="true" />
-              Email
-            </Button>
+            {hasPdf && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onEmail}
+              >
+                <MailIcon className="h-4 w-4 mr-1" aria-hidden="true" />
+                Email
+              </Button>
+            )}
           </>
         )}
 

@@ -12,13 +12,22 @@ vi.mock("@/lib/sse", () => ({
   safePublishAll: vi.fn(),
 }));
 
+vi.mock("@/lib/rate-limit", () => ({
+  checkRateLimit: vi.fn(),
+}));
+
 import { quoteService } from "@/domains/quote/service";
 import { safePublishAll } from "@/lib/sse";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { POST } from "@/app/api/quotes/public/[token]/payment/route";
 
 describe("POST /api/quotes/public/[token]/payment", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(checkRateLimit).mockResolvedValue({
+      allowed: true,
+      retryAfterMs: 0,
+    } as never);
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",
       quoteStatus: "ACCEPTED",

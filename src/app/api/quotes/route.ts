@@ -32,12 +32,15 @@ export const GET = withAuth(async (req: NextRequest, session) => {
         | undefined,
       department: sp.get("department") ?? undefined,
       category: sp.get("category") ?? undefined,
+      creatorId: sp.get("creatorId") ?? undefined,
       dateFrom: sp.get("dateFrom") ?? undefined,
       dateTo: sp.get("dateTo") ?? undefined,
+      amountMin: sp.get("amountMin") ? Number(sp.get("amountMin")) : undefined,
+      amountMax: sp.get("amountMax") ? Number(sp.get("amountMax")) : undefined,
       page: Math.max(1, parseInt(sp.get("page") ?? "1", 10)),
       pageSize: Math.max(1, parseInt(sp.get("pageSize") ?? "20", 10)),
       sortBy: sp.get("sortBy") ?? "createdAt",
-      sortOrder: (sp.get("sortDir") ?? "desc") as "asc" | "desc",
+      sortOrder: (sp.get("sortOrder") ?? sp.get("sortDir") ?? "desc") as "asc" | "desc",
     };
 
     // Non-admin users can only see their own quotes

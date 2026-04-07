@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { withAdmin } from "@/domains/shared/auth";
 import { prisma } from "@/lib/prisma";
 import { savedLineItemSchema } from "@/lib/validators";
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+type RouteContext = { params: Promise<{ id: string }> };
 
+export const PUT = withAdmin(async (request: NextRequest, _session, ctx?: RouteContext) => {
+  const { id } = await ctx!.params;
   const body = await request.json();
   const parsed = savedLineItemSchema.safeParse(body);
   if (!parsed.success) {
@@ -19,28 +15,21 @@ export async function PUT(
 
   try {
     const item = await prisma.savedLineItem.update({
-      where: { id: params.id },
+      where: { id },
       data: parsed.data,
     });
     return NextResponse.json({ ...item, unitPrice: Number(item.unitPrice) });
   } catch {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-}
+});
 
-export async function DELETE(
-  _request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const { id } = params;
-
+export const DELETE = withAdmin(async (_request: NextRequest, _session, ctx?: RouteContext) => {
+  const { id } = await ctx!.params;
   try {
     await prisma.savedLineItem.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
-}
+});

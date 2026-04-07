@@ -458,7 +458,26 @@ describe("invoiceService", () => {
 
       await invoiceService.finalize("inv1", { prismcorePath: "/uploads/pc.pdf" });
 
-      expect(mockRepo.finalize).toHaveBeenCalledWith("inv1", "/pdfs/inv1.pdf", "/uploads/pc.pdf");
+      expect(mockRepo.finalize).toHaveBeenCalledWith(
+        "inv1",
+        "/pdfs/inv1.pdf",
+        "/uploads/pc.pdf",
+        expect.objectContaining({
+          signatures: {
+            line1: undefined,
+            line2: undefined,
+            line3: undefined,
+          },
+          signatureStaffIds: {
+            line1: undefined,
+            line2: undefined,
+            line3: undefined,
+          },
+          semesterYearDept: undefined,
+          contactName: undefined,
+          contactExtension: undefined,
+        }),
+      );
     });
 
     it("uses invoice.staff.name as contactName when not provided", async () => {

@@ -10,6 +10,7 @@ import { prisma } from "@/lib/prisma";
 import { safePublishAll } from "@/lib/sse";
 import type { ChatUser } from "./types";
 import type { InvoiceFilters } from "@/domains/invoice/types";
+import type { QuoteFilters } from "@/domains/quote/types";
 import type { EventType, UpdateEventInput } from "@/domains/event/types";
 
 export function buildTools(user: ChatUser) {
@@ -59,7 +60,7 @@ export function buildTools(user: ChatUser) {
         "List quotes with optional status filter. Quotes are invoices with type QUOTE.",
       inputSchema: z.object({
         status: z
-          .enum(["DRAFT", "FINAL", "PENDING_CHARGE"])
+          .enum(["DRAFT", "SENT", "SUBMITTED_EMAIL", "SUBMITTED_MANUAL", "ACCEPTED", "DECLINED", "REVISED", "EXPIRED"])
           .optional()
           .describe("Filter by quote status"),
         search: z.string().optional().describe("Search term"),
@@ -67,24 +68,23 @@ export function buildTools(user: ChatUser) {
         pageSize: z.number().optional().describe("Results per page (default 10)"),
       }),
       execute: async ({ status, search, page, pageSize }) => {
-        const filters: InvoiceFilters = {
-          status,
+        const filters: QuoteFilters = {
+          quoteStatus: status,
           search,
           page: page ?? 1,
           pageSize: pageSize ?? 10,
         };
-        // Quotes are stored as invoices; the quote system uses the same list method
-        const result = await invoiceService.list(filters);
+        const result = await quoteService.list(filters);
         return {
-          quotes: result.invoices.map((inv) => ({
-            id: inv.id,
-            invoiceNumber: inv.invoiceNumber,
-            status: inv.status,
-            department: inv.department,
-            totalAmount: inv.totalAmount,
-            date: inv.date,
-            staffName: inv.staff?.name ?? inv.contact?.name ?? "Unknown",
-            creatorName: inv.creatorName,
+          quotes: result.quotes.map((quote) => ({
+            id: quote.id,
+            quoteNumber: quote.quoteNumber,
+            quoteStatus: quote.quoteStatus,
+            department: quote.department,
+            totalAmount: quote.totalAmount,
+            date: quote.date,
+            recipientName: quote.recipientName || quote.recipientOrg || "Unknown",
+            creatorName: quote.creatorName,
           })),
           total: result.total,
           page: result.page,
@@ -100,23 +100,49 @@ export function buildTools(user: ChatUser) {
       }),
       execute: async ({ id }) => {
         const invoice = await invoiceService.getById(id);
-        if (!invoice) {
-          return { error: "Invoice not found" };
+        if (invoice) {
+          return {
+            id: invoice.id,
+            invoiceNumber: invoice.invoiceNumber,
+            status: invoice.status,
+            type: invoice.type,
+            department: invoice.department,
+            category: invoice.category,
+            totalAmount: invoice.totalAmount,
+            date: invoice.date,
+            notes: invoice.notes,
+            staffName: invoice.staff?.name ?? invoice.contact?.name ?? "Unknown",
+            creatorId: invoice.creatorId,
+            creatorName: invoice.creatorName,
+            items: invoice.items.map((item) => ({
+              description: item.description,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              extendedPrice: item.extendedPrice,
+            })),
+          };
+        }
+        const quote = await quoteService.getById(id);
+        if (!quote) {
+          return { error: "Invoice or quote not found" };
         }
         return {
-          id: invoice.id,
-          invoiceNumber: invoice.invoiceNumber,
-          status: invoice.status,
-          type: invoice.type,
-          department: invoice.department,
-          category: invoice.category,
-          totalAmount: invoice.totalAmount,
-          date: invoice.date,
-          notes: invoice.notes,
-          staffName: invoice.staff?.name ?? invoice.contact?.name ?? "Unknown",
-          creatorId: invoice.creatorId,
-          creatorName: invoice.creatorName,
-          items: invoice.items.map((item) => ({
+          id: quote.id,
+          quoteNumber: quote.quoteNumber,
+          quoteStatus: quote.quoteStatus,
+          type: quote.type,
+          department: quote.department,
+          category: quote.category,
+          totalAmount: quote.totalAmount,
+          date: quote.date,
+          expirationDate: quote.expirationDate,
+          recipientName: quote.recipientName,
+          recipientEmail: quote.recipientEmail,
+          recipientOrg: quote.recipientOrg,
+          notes: quote.notes,
+          creatorId: quote.creatorId,
+          creatorName: quote.creatorName,
+          items: quote.items.map((item) => ({
             description: item.description,
             quantity: item.quantity,
             unitPrice: item.unitPrice,
@@ -242,6 +268,9 @@ export function buildTools(user: ChatUser) {
           .describe("End date filter in YYYY-MM-DD format"),
       }),
       execute: async ({ dateFrom, dateTo }) => {
+        if (user.role !== "admin") {
+          return { error: "You do not have permission to view analytics" };
+        }
         const { analyticsService } = await import("@/domains/analytics/service");
         const data = await analyticsService.getAnalytics({ dateFrom, dateTo });
         return {
@@ -787,6 +816,7 @@ export function buildTools(user: ChatUser) {
               marginEnabled: template.marginEnabled,
               marginPercent: template.marginPercent ?? undefined,
               taxEnabled: template.taxEnabled,
+              taxRate: template.taxRate,
               items,
             },
             user.id
@@ -811,6 +841,7 @@ export function buildTools(user: ChatUser) {
               marginEnabled: template.marginEnabled,
               marginPercent: template.marginPercent ?? undefined,
               taxEnabled: template.taxEnabled,
+              taxRate: template.taxRate,
               isCateringEvent: template.isCateringEvent,
               items,
               recipientName: "",
@@ -910,7 +941,7 @@ export function buildTools(user: ChatUser) {
 
     convertQuoteToInvoice: tool({
       description:
-        "Convert a sent or submitted quote to a draft invoice. Copies all fields from the quote.",
+        "Convert an accepted quote with resolved payment details to a draft invoice. Copies all fields from the quote.",
       inputSchema: z.object({
         id: z.string().describe("Quote ID"),
       }),
@@ -920,9 +951,11 @@ export function buildTools(user: ChatUser) {
         if (user.role !== "admin" && existing.creatorId !== user.id) {
           return { error: "You don't have permission to convert this quote" };
         }
-        const allowedStatuses = ["SENT", "SUBMITTED_EMAIL", "SUBMITTED_MANUAL"];
-        if (!allowedStatuses.includes(existing.quoteStatus)) {
-          return { error: "Quote must be sent or submitted before conversion" };
+        if (existing.quoteStatus !== "ACCEPTED") {
+          return { error: "Quote must be accepted before conversion" };
+        }
+        if (!existing.paymentDetailsResolved) {
+          return { error: "Quote payment details must be resolved before conversion" };
         }
         try {
           const result = await quoteService.convertToInvoice(id, user.id);

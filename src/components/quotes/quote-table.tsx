@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useDeferredValue, useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,12 +22,13 @@ import { cn } from "@/lib/utils";
 import { ClipboardListIcon } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useSSE } from "@/lib/use-sse";
+import { quoteApi } from "@/domains/quote/api-client";
 
 type QuoteStatus = "DRAFT" | "SENT" | "SUBMITTED_EMAIL" | "SUBMITTED_MANUAL" | "ACCEPTED" | "DECLINED" | "REVISED" | "EXPIRED";
 
 interface Quote {
   id: string;
-  quoteNumber: string;
+  quoteNumber: string | null;
   date: string;
   recipientName: string | null;
   recipientOrg: string | null;
@@ -36,13 +37,6 @@ interface Quote {
   totalAmount: string | number;
   expirationDate: string | null;
   quoteStatus: QuoteStatus;
-}
-
-interface QuotesResponse {
-  quotes: Quote[];
-  total: number;
-  page: number;
-  pageSize: number;
 }
 
 const EMPTY_FILTERS: QuoteFilters = {
@@ -86,6 +80,36 @@ const STATUS_LABEL: Record<QuoteStatus, string> = {
 interface QuoteTableProps {
   departments: string[];
   categories: { name: string; label: string }[];
+}
+
+function parseInitialFilters(searchParams: ReturnType<typeof useSearchParams>): QuoteFilters {
+  return {
+    search: searchParams.get("search") ?? "",
+    quoteStatus: searchParams.get("quoteStatus") ?? "",
+    category: searchParams.get("category") ?? "",
+    department: searchParams.get("department") ?? "",
+    dateFrom: searchParams.get("dateFrom") ?? "",
+    dateTo: searchParams.get("dateTo") ?? "",
+    amountMin: searchParams.get("amountMin") ?? "",
+    amountMax: searchParams.get("amountMax") ?? "",
+  };
+}
+
+function parsePage(searchParams: ReturnType<typeof useSearchParams>): number {
+  const parsed = Number(searchParams.get("page") ?? "1");
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+}
+
+function parseSortField(searchParams: ReturnType<typeof useSearchParams>): SortField {
+  const raw = searchParams.get("sortBy");
+  return raw === "quoteNumber" || raw === "date" || raw === "createdAt" || raw === "totalAmount" || raw === "expirationDate"
+    ? raw
+    : "createdAt";
+}
+
+function parseSortDir(searchParams: ReturnType<typeof useSearchParams>): SortDir {
+  const raw = searchParams.get("sortOrder") ?? searchParams.get("sortDir");
+  return raw === "asc" ? "asc" : "desc";
 }
 
 interface QuoteRowProps {
@@ -146,58 +170,65 @@ const QuoteRow = React.memo(function QuoteRow({ quote, onClick }: QuoteRowProps)
 
 export function QuoteTable({ departments, categories }: QuoteTableProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleRowClick = useCallback((id: string) => {
     router.push(`/quotes/${id}`);
   }, [router]);
 
-  const [filters, setFilters] = useState<QuoteFilters>(EMPTY_FILTERS);
+  const [filters, setFilters] = useState<QuoteFilters>(() => parseInitialFilters(searchParams));
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(() => parsePage(searchParams));
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<SortField>("createdAt");
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [sortBy, setSortBy] = useState<SortField>(() => parseSortField(searchParams));
+  const [sortDir, setSortDir] = useState<SortDir>(() => parseSortDir(searchParams));
+  const [creatorId, setCreatorId] = useState<string | undefined>(() => searchParams.get("creatorId") ?? undefined);
   const deferredSearch = useDeferredValue(filters.search);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const fetchQuotes = useCallback(async () => {
     setLoading(true);
-
-    const params = new URLSearchParams();
-    if (deferredSearch) params.set("search", deferredSearch);
-    if (filters.quoteStatus && filters.quoteStatus !== "all")
-      params.set("quoteStatus", filters.quoteStatus);
-    if (filters.category && filters.category !== "all")
-      params.set("category", filters.category);
-    if (filters.department && filters.department !== "all")
-      params.set("department", filters.department);
-    if (filters.dateFrom) params.set("dateFrom", filters.dateFrom);
-    if (filters.dateTo) params.set("dateTo", filters.dateTo);
-    if (filters.amountMin) params.set("amountMin", filters.amountMin);
-    if (filters.amountMax) params.set("amountMax", filters.amountMax);
-    params.set("page", String(page));
-    params.set("pageSize", String(PAGE_SIZE));
-    params.set("sortBy", sortBy);
-    params.set("sortDir", sortDir);
-
-    const res = await fetch(`/api/quotes?${params.toString()}`);
-    if (res.ok) {
-      const data: QuotesResponse = await res.json();
+    try {
+      const data = await quoteApi.list({
+        search: deferredSearch || undefined,
+        quoteStatus: filters.quoteStatus && filters.quoteStatus !== "all"
+          ? filters.quoteStatus as import("@/domains/quote/types").QuoteFilters["quoteStatus"]
+          : undefined,
+        category: filters.category && filters.category !== "all" ? filters.category : undefined,
+        department: filters.department && filters.department !== "all" ? filters.department : undefined,
+        creatorId,
+        dateFrom: filters.dateFrom || undefined,
+        dateTo: filters.dateTo || undefined,
+        amountMin: filters.amountMin ? Number(filters.amountMin) : undefined,
+        amountMax: filters.amountMax ? Number(filters.amountMax) : undefined,
+        page,
+        pageSize: PAGE_SIZE,
+        sortBy,
+        sortOrder: sortDir,
+      });
       setQuotes(data.quotes);
       setTotal(data.total);
-    } else {
+    } catch {
       toast.error("Failed to load quotes");
     }
     setLoading(false);
-  }, [deferredSearch, filters.quoteStatus, filters.category, filters.department, filters.dateFrom, filters.dateTo, filters.amountMin, filters.amountMax, page, sortBy, sortDir]);
+  }, [creatorId, deferredSearch, filters.quoteStatus, filters.category, filters.department, filters.dateFrom, filters.dateTo, filters.amountMin, filters.amountMax, page, sortBy, sortDir]);
 
   useEffect(() => {
     fetchQuotes();
   }, [fetchQuotes]);
 
   useSSE("quote-changed", fetchQuotes);
+
+  useEffect(() => {
+    setFilters(parseInitialFilters(searchParams));
+    setPage(parsePage(searchParams));
+    setSortBy(parseSortField(searchParams));
+    setSortDir(parseSortDir(searchParams));
+    setCreatorId(searchParams.get("creatorId") ?? undefined);
+  }, [searchParams]);
 
   // Reset to page 1 when filters or sort changes
   function handleFiltersChange(next: QuoteFilters) {

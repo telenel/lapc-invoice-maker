@@ -42,6 +42,26 @@ export const invoiceCreateSchema = z.object({
   isRunning: z.boolean().default(false),
   runningTitle: z.string().optional(),
   status: z.enum(["DRAFT", "PENDING_CHARGE"]).optional(),
+  prismcorePath: z.string().optional().nullable(),
+  pdfMetadata: z.object({
+    signatures: z
+      .object({
+        line1: z.string().optional(),
+        line2: z.string().optional(),
+        line3: z.string().optional(),
+      })
+      .optional(),
+    signatureStaffIds: z
+      .object({
+        line1: z.string().optional(),
+        line2: z.string().optional(),
+        line3: z.string().optional(),
+      })
+      .optional(),
+    semesterYearDept: z.string().optional(),
+    contactName: z.string().optional(),
+    contactExtension: z.string().optional(),
+  }).optional(),
   marginEnabled: z.boolean().default(false),
   marginPercent: z.number().min(0).optional(),
   taxEnabled: z.boolean().default(false),
@@ -122,6 +142,7 @@ export const quoteCreateSchema = z.object({
   marginEnabled: z.boolean().default(false),
   marginPercent: z.number().min(0).optional(),
   taxEnabled: z.boolean().default(false),
+  taxRate: z.number().min(0).max(1).optional(),
   isCateringEvent: z.boolean().default(false),
   cateringDetails: z.object({
     eventDate: z.string(),

@@ -1,6 +1,7 @@
 import { pdfStorage } from "@/domains/pdf/storage";
 import { defaultPrintPricingConfig } from "@/domains/print-pricing/defaults";
 import { printPricingRepository } from "@/domains/print-pricing/repository";
+import { Prisma } from "@/generated/prisma/client";
 import type {
   GeneratePrintQuoteResponse,
   PrintPricingSnapshot,
@@ -193,34 +194,50 @@ export const printPricingService = {
     const parsed = printEstimateRequestSchema.parse(input);
     const pricing = await this.getPricingSnapshot();
     const calculated = calculatePrintShopQuote(parsed.items, pricing);
-    const quoteNumber = await generateQuoteNumber(pricing.quotePrefix);
-
-    const quote = await printPricingRepository.createQuote({
-      quoteNumber,
-      createdBy,
-      requesterName: parsed.requesterName,
-      requesterEmail: parsed.requesterEmail,
-      requesterOrganization: parsed.requesterOrganization,
-      subtotalCents: calculated.subtotalCents,
-      taxCents: calculated.taxCents,
-      totalCents: calculated.totalCents,
-      taxEnabled: calculated.taxEnabled,
-      taxRateBasisPoints: calculated.taxRateBasisPoints,
-      disclaimer: pricing.quoteDisclaimer,
-      shopTitle: pricing.shopTitle,
-      pdfPath: null,
-      lineItems: calculated.lineItems.map((item, index) => ({
-        service: item.service,
-        variant: item.variant,
-        description: item.description,
-        details: item.details,
-        quantity: item.quantity,
-        unitPriceCents: item.effectiveUnitPriceCents,
-        lineTotalCents: item.lineTotalCents,
-        metadata: item.metadata,
-        sortOrder: index,
-      })),
-    });
+    let quote: Awaited<ReturnType<typeof printPricingRepository.createQuote>> | null = null;
+    let quoteNumber = "";
+    for (let attempt = 0; attempt < 3; attempt++) {
+      quoteNumber = await generateQuoteNumber(pricing.quotePrefix);
+      try {
+        quote = await printPricingRepository.createQuote({
+          quoteNumber,
+          createdBy,
+          requesterName: parsed.requesterName,
+          requesterEmail: parsed.requesterEmail,
+          requesterOrganization: parsed.requesterOrganization,
+          subtotalCents: calculated.subtotalCents,
+          taxCents: calculated.taxCents,
+          totalCents: calculated.totalCents,
+          taxEnabled: calculated.taxEnabled,
+          taxRateBasisPoints: calculated.taxRateBasisPoints,
+          disclaimer: pricing.quoteDisclaimer,
+          shopTitle: pricing.shopTitle,
+          pdfPath: null,
+          lineItems: calculated.lineItems.map((item, index) => ({
+            service: item.service,
+            variant: item.variant,
+            description: item.description,
+            details: item.details,
+            quantity: item.quantity,
+            unitPriceCents: item.effectiveUnitPriceCents,
+            lineTotalCents: item.lineTotalCents,
+            metadata: item.metadata,
+            sortOrder: index,
+          })),
+        });
+        break;
+      } catch (error) {
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError
+          && error.code === "P2002"
+          && attempt < 2
+        ) {
+          continue;
+        }
+        throw error;
+      }
+    }
+    invariant(quote, "Failed to create print quote");
 
     const createdAtLabel = new Date(quote.createdAt).toLocaleString("en-US", {
       dateStyle: "medium",

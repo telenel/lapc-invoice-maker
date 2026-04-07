@@ -57,6 +57,7 @@ interface ApiQuote {
   marginEnabled?: boolean;
   marginPercent?: number;
   taxEnabled?: boolean;
+  taxRate?: number;
   isCateringEvent?: boolean;
   cateringDetails?: ApiCateringDetails | null;
   items: ApiQuoteItem[];
@@ -83,6 +84,7 @@ function mapApiToFormData(quote: ApiQuote): QuoteFormData {
     marginEnabled: quote.marginEnabled ?? false,
     marginPercent: quote.marginPercent ?? 0,
     taxEnabled: quote.taxEnabled ?? false,
+    taxRate: quote.taxRate ?? 0.0975,
     isCateringEvent: quote.isCateringEvent ?? false,
     cateringDetails: quote.cateringDetails
       ? {

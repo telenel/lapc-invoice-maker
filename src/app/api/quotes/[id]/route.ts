@@ -29,6 +29,17 @@ export const PUT = withAuth(async (req: NextRequest, session, ctx) => {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
+  if (
+    parsed.data.quoteStatus !== undefined
+    || parsed.data.paymentMethod !== undefined
+    || parsed.data.paymentAccountNumber !== undefined
+  ) {
+    return NextResponse.json(
+      { error: "Use the dedicated quote workflow actions for status or payment changes" },
+      { status: 400 }
+    );
+  }
+
   try {
     const existing = await quoteService.getById(id);
     if (!existing) return NextResponse.json({ error: "Quote not found" }, { status: 404 });

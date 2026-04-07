@@ -1,6 +1,6 @@
 // src/app/api/staff/[id]/route.ts
 import { NextResponse } from "next/server";
-import { withAuth } from "@/domains/shared/auth";
+import { withAdmin, withAuth } from "@/domains/shared/auth";
 import { staffService } from "@/domains/staff/service";
 import { staffSchema } from "@/lib/validators";
 
@@ -11,7 +11,7 @@ export const GET = withAuth(async (req, session, ctx) => {
   return NextResponse.json(staff);
 });
 
-export const PUT = withAuth(async (req, session, ctx) => {
+export const PUT = withAdmin(async (req, session, ctx) => {
   const { id } = await ctx!.params;
   const body = staffSchema.parse(await req.json());
   const staff = await staffService.update(id, body);
@@ -19,7 +19,7 @@ export const PUT = withAuth(async (req, session, ctx) => {
   return NextResponse.json(staff);
 });
 
-export const PATCH = withAuth(async (req, session, ctx) => {
+export const PATCH = withAdmin(async (req, session, ctx) => {
   const { id } = await ctx!.params;
   const body = staffSchema.partial().parse(await req.json());
   const staff = await staffService.partialUpdate(id, body);
@@ -27,7 +27,7 @@ export const PATCH = withAuth(async (req, session, ctx) => {
   return NextResponse.json(staff);
 });
 
-export const DELETE = withAuth(async (req, session, ctx) => {
+export const DELETE = withAdmin(async (req, session, ctx) => {
   const { id } = await ctx!.params;
   await staffService.softDelete(id);
   return NextResponse.json({ success: true });

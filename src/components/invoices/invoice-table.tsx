@@ -1,7 +1,7 @@
 "use client";
 
 import { useDeferredValue, useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { FileTextIcon, RefreshCwIcon } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -45,16 +45,48 @@ interface InvoiceTableProps {
   categories: { name: string; label: string }[];
 }
 
+function parseInitialFilters(searchParams: ReturnType<typeof useSearchParams>): FilterBarFilters {
+  return {
+    search: searchParams.get("search") ?? "",
+    status: searchParams.get("status") ?? "",
+    category: searchParams.get("category") ?? "",
+    department: searchParams.get("department") ?? "",
+    dateFrom: searchParams.get("dateFrom") ?? "",
+    dateTo: searchParams.get("dateTo") ?? "",
+    amountMin: searchParams.get("amountMin") ?? "",
+    amountMax: searchParams.get("amountMax") ?? "",
+  };
+}
+
+function parsePage(searchParams: ReturnType<typeof useSearchParams>): number {
+  const parsed = Number(searchParams.get("page") ?? "1");
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+}
+
+function parseSortField(searchParams: ReturnType<typeof useSearchParams>): SortField {
+  const raw = searchParams.get("sortBy");
+  return raw === "invoiceNumber" || raw === "date" || raw === "totalAmount"
+    ? raw
+    : "date";
+}
+
+function parseSortDir(searchParams: ReturnType<typeof useSearchParams>): SortDir {
+  const raw = searchParams.get("sortOrder") ?? searchParams.get("sortDir");
+  return raw === "asc" ? "asc" : "desc";
+}
+
 export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
-  const [filters, setFilters] = useState<FilterBarFilters>(EMPTY_FILTERS);
+  const [filters, setFilters] = useState<FilterBarFilters>(() => parseInitialFilters(searchParams));
   const [invoices, setInvoices] = useState<InvoiceResponse[]>([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(() => parsePage(searchParams));
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState<SortField>("date");
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [sortBy, setSortBy] = useState<SortField>(() => parseSortField(searchParams));
+  const [sortDir, setSortDir] = useState<SortDir>(() => parseSortDir(searchParams));
+  const [creatorId, setCreatorId] = useState<string | undefined>(() => searchParams.get("creatorId") ?? undefined);
   const deferredSearch = useDeferredValue(filters.search);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -71,6 +103,7 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
         dateTo: filters.dateTo || undefined,
         amountMin: filters.amountMin ? Number(filters.amountMin) : undefined,
         amountMax: filters.amountMax ? Number(filters.amountMax) : undefined,
+        creatorId,
         page,
         pageSize: PAGE_SIZE,
         sortBy,
@@ -82,13 +115,21 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
       toast.error("Failed to load invoices");
     }
     setLoading(false);
-  }, [deferredSearch, filters.status, filters.category, filters.department, filters.dateFrom, filters.dateTo, filters.amountMin, filters.amountMax, page, sortBy, sortDir]);
+  }, [creatorId, deferredSearch, filters.status, filters.category, filters.department, filters.dateFrom, filters.dateTo, filters.amountMin, filters.amountMax, page, sortBy, sortDir]);
 
   useEffect(() => {
     fetchInvoices();
   }, [fetchInvoices]);
 
   useSSE("invoice-changed", fetchInvoices);
+
+  useEffect(() => {
+    setFilters(parseInitialFilters(searchParams));
+    setPage(parsePage(searchParams));
+    setSortBy(parseSortField(searchParams));
+    setSortDir(parseSortDir(searchParams));
+    setCreatorId(searchParams.get("creatorId") ?? undefined);
+  }, [searchParams]);
 
   // Reset to page 1 when filters or sort changes
   function handleFiltersChange(next: FilterBarFilters) {
@@ -142,6 +183,7 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
       dateTo: filters.dateTo || undefined,
       amountMin: filters.amountMin ? Number(filters.amountMin) : undefined,
       amountMax: filters.amountMax ? Number(filters.amountMax) : undefined,
+      creatorId,
     }).then((blob) => {
       const url = URL.createObjectURL(blob);
       window.open(url, "_blank");

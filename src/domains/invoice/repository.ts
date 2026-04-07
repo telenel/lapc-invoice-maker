@@ -152,6 +152,8 @@ export async function create(
     accountNumber?: string;
     approvalChain?: string[];
     notes?: string;
+    prismcorePath?: string | null;
+    pdfMetadata?: Prisma.InputJsonValue;
     isRecurring?: boolean;
     recurringInterval?: string;
     recurringEmail?: string;
@@ -264,7 +266,8 @@ export async function deleteById(id: string) {
 export async function finalize(
   id: string,
   pdfPath: string,
-  prismcorePath?: string
+  prismcorePath?: string | null,
+  pdfMetadata?: Prisma.InputJsonValue
 ) {
   return prisma.invoice.update({
     where: { id },
@@ -272,6 +275,7 @@ export async function finalize(
       status: "FINAL",
       pdfPath,
       prismcorePath: prismcorePath ?? null,
+      pdfMetadata: pdfMetadata ?? undefined,
     },
   });
 }
