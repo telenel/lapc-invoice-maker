@@ -24,6 +24,6 @@ export default withAuth(
 
 export const config = {
   matcher: [
-    "/((?!login|pricing-calculator|api/auth|api/internal|api/setup|api/print-pricing|api/quotes/public|api/version|quotes/review/[^/]+$|quotes/payment/[^/]+$|_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.ico$|.*\\.svg$).*)",
+    "/((?!login|pricing-calculator|textbook-requisitions/submit|api/auth|api/internal|api/setup|api/print-pricing|api/quotes/public|api/textbook-requisitions/submit|api/version|quotes/review/[^/]+$|quotes/payment/[^/]+$|_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.ico$|.*\\.svg$).*)",
   ],
 };

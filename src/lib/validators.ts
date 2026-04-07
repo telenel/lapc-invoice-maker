@@ -176,3 +176,76 @@ export const eventSchema = z.object({
     .optional(),
   reminderMinutes: z.number().int().min(0).max(10080).nullable().optional(),
 });
+
+// ── Textbook Requisitions ─────────────────────────────────────────────────
+
+const isbnRegex = /^[0-9Xx]{10}$|^[0-9]{13}$/;
+
+function normalizeIsbn(raw: string): string {
+  return raw.replace(/[^0-9Xx]/g, "");
+}
+
+export const requisitionBookSchema = z.object({
+  bookNumber: z.number().int().min(1).max(5),
+  author: z.string().trim().min(1, "Author is required"),
+  title: z.string().trim().min(1, "Title is required"),
+  isbn: z
+    .string()
+    .trim()
+    .min(1, "ISBN is required")
+    .transform(normalizeIsbn)
+    .pipe(z.string().regex(isbnRegex, "ISBN must be 10 or 13 digits")),
+  edition: z.string().trim().optional(),
+  copyrightYear: z.string().trim().optional(),
+  volume: z.string().trim().optional(),
+  publisher: z.string().trim().optional(),
+  binding: z.enum(["HARDCOVER", "PAPERBACK", "LOOSE_LEAF", "DIGITAL"]).nullable().optional(),
+  bookType: z.enum(["PHYSICAL", "OER"]).default("PHYSICAL"),
+  oerLink: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+}).superRefine((data, ctx) => {
+  if (data.bookType === "OER" && !data.oerLink?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["oerLink"],
+      message: "OER link is required when book type is OER",
+    });
+  }
+});
+
+export const requisitionCreateSchema = z.object({
+  instructorName: z.string().trim().min(1, "Instructor name is required"),
+  phone: z.string().trim().min(1, "Phone is required"),
+  email: z.string().trim().email("Valid email is required"),
+  department: z.string().trim().min(1, "Department is required"),
+  course: z.string().trim().min(1, "Course is required"),
+  sections: z.string().trim().min(1, "Section(s) is required"),
+  enrollment: z.number().int().positive("Enrollment must be a positive number"),
+  term: z.enum(["Winter", "Spring", "Summer", "Fall"], {
+    message: "Term must be Winter, Spring, Summer, or Fall",
+  }),
+  reqYear: z.number().int().min(2020).max(2099),
+  additionalInfo: z.string().trim().optional(),
+  staffNotes: z.string().trim().optional(),
+  status: z.enum(["PENDING", "ORDERED", "ON_SHELF"]).optional(),
+  source: z.enum(["FACULTY_FORM", "STAFF_CREATED"]).optional(),
+  books: z.array(requisitionBookSchema).min(1, "At least one book is required").max(5),
+});
+
+export const requisitionUpdateSchema = requisitionCreateSchema.omit({
+  source: true,
+}).partial().extend({
+  additionalInfo: z.string().nullable().optional(),
+  staffNotes: z.string().nullable().optional(),
+  books: z.array(requisitionBookSchema).min(1).max(5).optional(),
+});
+
+export const requisitionStatusUpdateSchema = z.object({
+  status: z.enum(["PENDING", "ORDERED", "ON_SHELF"]),
+});
+
+/** Public form: strips fields that only authenticated users should set */
+export const publicRequisitionSubmitSchema = requisitionCreateSchema.omit({
+  status: true,
+  source: true,
+  staffNotes: true,
+});
