@@ -7,6 +7,7 @@ import type {
   RequisitionBookResponse,
   RequisitionNotificationResponse,
   RequisitionSubmitAck,
+  RequisitionLookupItem,
   RequisitionFilters,
   CreateRequisitionInput,
   UpdateRequisitionInput,
@@ -152,6 +153,38 @@ function toSubmitAck(req: RequisitionWithRelations): RequisitionSubmitAck {
   };
 }
 
+function toLookupItem(
+  req: Awaited<ReturnType<typeof repository.findByEmployeeId>>[number],
+): RequisitionLookupItem {
+  return {
+    id: req.id,
+    instructorName: req.instructorName,
+    phone: req.phone,
+    email: req.email,
+    department: req.department,
+    course: req.course,
+    sections: req.sections,
+    enrollment: req.enrollment,
+    term: req.term,
+    reqYear: req.reqYear,
+    submittedAt: req.submittedAt.toISOString(),
+    bookCount: req.books.length,
+    books: req.books.map((b) => ({
+      bookNumber: b.bookNumber,
+      author: b.author,
+      title: b.title,
+      isbn: b.isbn,
+      edition: b.edition,
+      copyrightYear: b.copyrightYear,
+      volume: b.volume,
+      publisher: b.publisher,
+      binding: b.binding,
+      bookType: b.bookType,
+      oerLink: b.oerLink,
+    })),
+  };
+}
+
 // ── Realtime broadcast ────────────────────────────────────────────────────
 
 function broadcastChange(): void {
@@ -279,6 +312,16 @@ export const requisitionService = {
     });
     broadcastChange();
     return toSubmitAck(req);
+  },
+
+  /**
+   * Public lookup by employee ID. Returns past submissions with books.
+   */
+  async lookupByEmployeeId(
+    employeeId: string,
+  ): Promise<RequisitionLookupItem[]> {
+    const results = await repository.findByEmployeeId(employeeId);
+    return results.map(toLookupItem);
   },
 
   /**
