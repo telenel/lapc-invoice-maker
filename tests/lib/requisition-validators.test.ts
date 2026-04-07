@@ -138,6 +138,7 @@ describe("publicRequisitionSubmitSchema", () => {
     instructorName: "Dr. Smith",
     phone: "(818) 555-1234",
     email: "smith@piercecollege.edu",
+    employeeId: "123456",
     department: "Computer Science",
     course: "CS 101",
     sections: "01, 02",

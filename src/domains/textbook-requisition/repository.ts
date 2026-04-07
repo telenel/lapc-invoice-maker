@@ -187,6 +187,20 @@ export async function create(input: CreateRequisitionInput) {
   });
 }
 
+export async function findByEmployeeId(employeeId: string, limit = 20) {
+  return prisma.textbookRequisition.findMany({
+    where: {
+      employeeId,
+      archivedAt: null,
+    },
+    orderBy: { submittedAt: "desc" },
+    take: limit,
+    include: {
+      books: { orderBy: { bookNumber: "asc" } },
+    },
+  });
+}
+
 /**
  * Update a requisition, optionally replacing all books in a transaction.
  */

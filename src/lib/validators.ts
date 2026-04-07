@@ -216,6 +216,7 @@ export const requisitionCreateSchema = z.object({
   instructorName: z.string().trim().min(1, "Instructor name is required"),
   phone: z.string().trim().min(1, "Phone is required"),
   email: z.string().trim().email("Valid email is required"),
+  employeeId: z.string().trim().regex(/^\d{4,10}$/, "Employee ID must be 4-10 digits").optional(),
   department: z.string().trim().min(1, "Department is required"),
   course: z.string().trim().min(1, "Course is required"),
   sections: z.string().trim().min(1, "Section(s) is required"),
@@ -244,8 +245,10 @@ export const requisitionStatusUpdateSchema = z.object({
 });
 
 /** Public form: strips fields that only authenticated users should set */
-export const publicRequisitionSubmitSchema = requisitionCreateSchema.omit({
-  status: true,
-  source: true,
-  staffNotes: true,
+export const publicRequisitionSubmitSchema = requisitionCreateSchema
+  .omit({ status: true, source: true, staffNotes: true })
+  .extend({ employeeId: z.string().trim().regex(/^\d{4,10}$/, "Employee ID must be 4-10 digits") });
+
+export const requisitionLookupSchema = z.object({
+  employeeId: z.string().trim().regex(/^\d{4,10}$/, "Employee ID must be 4-10 digits"),
 });

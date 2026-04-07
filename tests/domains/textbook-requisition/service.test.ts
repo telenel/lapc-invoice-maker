@@ -38,6 +38,7 @@ const mockRequisition = {
   instructorName: "Dr. Smith",
   phone: "(818) 555-1234",
   email: "smith@piercecollege.edu",
+  employeeId: null,
   department: "Computer Science",
   course: "CS 101",
   sections: "01",
@@ -53,6 +54,8 @@ const mockRequisition = {
   lastStatusChangedBy: null,
   submittedAt: new Date("2026-04-06T10:00:00Z"),
   updatedAt: new Date("2026-04-06T10:00:00Z"),
+  archivedAt: null,
+  archivedBy: null,
   creator: { id: "user-1", name: "Admin User" },
   statusChanger: null,
   books: [
