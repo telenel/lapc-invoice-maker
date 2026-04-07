@@ -14,6 +14,47 @@ VERIFY_SLEEP=10
 VERIFY_INITIAL_SLEEP=15
 BUILD_META_FILE=".build-meta.json"
 
+runtime_build_meta_json() {
+  local sha="$1"
+  local time="$2"
+  local supabase_url_configured=false
+  local supabase_anon_key_configured=false
+
+  if [ -n "${NEXT_PUBLIC_SUPABASE_URL:-}" ]; then
+    supabase_url_configured=true
+  fi
+
+  if [ -n "${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}" ]; then
+    supabase_anon_key_configured=true
+  fi
+
+  printf '{"buildSha":"%s","buildTime":"%s","publicEnv":{"supabaseUrlConfigured":%s,"supabaseAnonKeyConfigured":%s}}\n' \
+    "$sha" \
+    "$time" \
+    "$supabase_url_configured" \
+    "$supabase_anon_key_configured"
+}
+
+sync_runtime_build_meta() {
+  local sha="$1"
+  local time="$2"
+  local payload
+  local attempt
+
+  payload=$(runtime_build_meta_json "$sha" "$time")
+
+  for attempt in $(seq 1 15); do
+    if printf '%s\n' "$payload" | docker compose exec -T app sh -lc "cat > /app/$BUILD_META_FILE"; then
+      echo "[deploy] Synced runtime build metadata for $sha"
+      return 0
+    fi
+    sleep 2
+  done
+
+  echo "[deploy] ERROR: failed to sync runtime build metadata for $sha"
+  return 1
+}
+
 cd "$PROJECT_DIR"
 
 set -a
@@ -55,6 +96,7 @@ rollback_deploy() {
     --build-arg NEXT_PUBLIC_SUPABASE_ANON_KEY="$NEXT_PUBLIC_SUPABASE_ANON_KEY" \
     app
   docker compose up -d --remove-orphans
+  sync_runtime_build_meta "$rollback_sha" "$rollback_time"
 }
 
 echo "[deploy] Fetching latest code for $TARGET_REF..."
@@ -98,6 +140,11 @@ fi
 echo "[deploy] Replacing containers with new image..."
 if ! docker compose up -d --remove-orphans; then
   echo "[deploy] ERROR: docker compose up failed"
+  rollback_deploy "$ROLLBACK_COMMIT" || true
+  exit 1
+fi
+
+if ! sync_runtime_build_meta "$BUILD_SHA" "$BUILD_TIME"; then
   rollback_deploy "$ROLLBACK_COMMIT" || true
   exit 1
 fi
