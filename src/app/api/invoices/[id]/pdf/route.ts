@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAuth, forbiddenResponse } from "@/domains/shared/auth";
+import { withAuth } from "@/domains/shared/auth";
 import { invoiceService } from "@/domains/invoice/service";
 import { pdfService } from "@/domains/pdf/service";
 
-export const GET = withAuth(async (_req: NextRequest, session, ctx) => {
+export const GET = withAuth(async (_req: NextRequest, _session, ctx) => {
   const { id } = await ctx!.params;
 
   const invoice = await invoiceService.getById(id);
   if (!invoice) return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
-  if (session.user.role !== "admin" && invoice.creatorId !== session.user.id) {
-    return forbiddenResponse();
-  }
 
   if (!invoice.pdfPath) {
     return NextResponse.json(

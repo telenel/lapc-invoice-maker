@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { forbiddenResponse, withAuth } from "@/domains/shared/auth";
+import { withAuth } from "@/domains/shared/auth";
 import { invoiceService } from "@/domains/invoice/service";
 import { invoiceCreateSchema } from "@/lib/validators";
 import { Prisma } from "@/generated/prisma/client";
@@ -12,7 +12,7 @@ function jsonNoStore(data: unknown, init?: ResponseInit) {
   return NextResponse.json(data, { ...init, headers });
 }
 
-export const GET = withAuth(async (req: NextRequest, session) => {
+export const GET = withAuth(async (req: NextRequest) => {
   try {
     const sp = req.nextUrl.searchParams;
 
@@ -20,9 +20,6 @@ export const GET = withAuth(async (req: NextRequest, session) => {
     const groupBy = sp.get("groupBy");
 
     if (statsOnly && groupBy === "creator") {
-      if (session.user.role !== "admin") {
-        return forbiddenResponse();
-      }
       const status = sp.get("status") as "DRAFT" | "FINAL" | "PENDING_CHARGE" | undefined ?? undefined;
       return jsonNoStore(await invoiceService.getCreatorStats(status));
     }
@@ -31,7 +28,7 @@ export const GET = withAuth(async (req: NextRequest, session) => {
     const sortOrder: "asc" | "desc" =
       rawSortOrder === "asc" || rawSortOrder === "desc" ? rawSortOrder : "desc";
 
-    let filters = {
+    const filters = {
       search: sp.get("search") ?? undefined,
       status: (sp.get("status") ?? undefined) as "DRAFT" | "FINAL" | "PENDING_CHARGE" | undefined,
       isRunning: sp.get("isRunning") === "true" ? true : undefined,
@@ -50,11 +47,6 @@ export const GET = withAuth(async (req: NextRequest, session) => {
       sortBy: sp.get("sortBy") ?? "createdAt",
       sortOrder,
     };
-
-    // Non-admin users can only see their own invoices
-    if (session.user.role !== "admin") {
-      filters = { ...filters, creatorId: session.user.id };
-    }
 
     if (statsOnly) {
       return jsonNoStore(await invoiceService.getStats(filters));

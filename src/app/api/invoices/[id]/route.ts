@@ -3,14 +3,11 @@ import { withAuth, forbiddenResponse } from "@/domains/shared/auth";
 import { invoiceService } from "@/domains/invoice/service";
 import { invoiceUpdateSchema } from "@/lib/validators";
 
-export const GET = withAuth(async (_req: NextRequest, session, ctx) => {
+export const GET = withAuth(async (_req: NextRequest, _session, ctx) => {
   const { id } = await ctx!.params;
   try {
     const invoice = await invoiceService.getById(id);
     if (!invoice) return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
-    if (session.user.role !== "admin" && invoice.creatorId !== session.user.id) {
-      return forbiddenResponse();
-    }
     return NextResponse.json(invoice);
   } catch (err) {
     console.error("GET /api/invoices/[id] failed:", err);

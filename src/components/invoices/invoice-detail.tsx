@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { useInvoice } from "@/domains/invoice/hooks";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
@@ -13,6 +14,7 @@ import { InvoiceDetailItems } from "./invoice-detail-items";
 
 export function InvoiceDetailView({ id }: { id: string }) {
   const router = useRouter();
+  const { data: session } = useSession();
   const { data: invoice, loading, refetch } = useInvoice(id);
   useSSE("invoice-changed", refetch);
   const [regenerating, setRegenerating] = useState(false);
@@ -128,10 +130,15 @@ export function InvoiceDetailView({ id }: { id: string }) {
     return <p className="text-muted-foreground text-sm">Invoice not found.</p>;
   }
 
+  const sessionUser = session?.user as { id?: string; role?: string } | undefined;
+  const canManageActions =
+    sessionUser?.role === "admin" || (sessionUser?.id != null && sessionUser.id === invoice.creatorId);
+
   return (
     <div className="space-y-6">
       <InvoiceDetailHeader
         invoice={invoice}
+        canManageActions={canManageActions}
         regenerating={regenerating}
         deleting={deleting}
         duplicating={duplicating}

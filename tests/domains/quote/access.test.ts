@@ -17,45 +17,30 @@ describe("canViewQuoteDetails", () => {
     expect(canViewQuoteDetails(baseQuote, "creator-1", false)).toBe(true);
   });
 
-  it("allows the converted invoice owner", () => {
+  it("allows unrelated authenticated users", () => {
     expect(
       canViewQuoteDetails(
-        {
-          ...baseQuote,
-          convertedToInvoice: { id: "inv-1", invoiceNumber: "INV-1", createdBy: "owner-2" },
-        },
-        "owner-2",
+        baseQuote,
+        "other-user",
         false,
       ),
     ).toBe(true);
   });
 
-  it("limits converted invoice owners to read-only quote-page access", () => {
+  it("gives non-owners read-only access with full visibility", () => {
     const access = getQuoteViewerAccess(
-      {
-        ...baseQuote,
-        convertedToInvoice: { id: "inv-1", invoiceNumber: "INV-1", createdBy: "owner-2" },
-      },
-      "owner-2",
+      baseQuote,
+      "other-user",
       false,
     );
 
     expect(access).toEqual({
       canViewQuote: true,
       canManageActions: false,
-      canViewActivity: false,
-      canViewSensitiveFields: false,
+      canViewActivity: true,
+      canViewSensitiveFields: true,
     });
-    expect(
-      canViewQuoteActivity(
-        {
-          ...baseQuote,
-          convertedToInvoice: { id: "inv-1", invoiceNumber: "INV-1", createdBy: "owner-2" },
-        },
-        "owner-2",
-        false,
-      ),
-    ).toBe(false);
+    expect(canViewQuoteActivity(baseQuote, "other-user", false)).toBe(true);
   });
 
   it("redacts sensitive fields for limited viewers", () => {
@@ -161,8 +146,11 @@ describe("canViewQuoteDetails", () => {
     });
   });
 
-  it("blocks unrelated users", () => {
-    expect(canViewQuoteDetails(baseQuote, "other-user", false)).toBe(false);
+  it("still preserves read-only access for unrelated users", () => {
+    const access = getQuoteViewerAccess(baseQuote, "other-user", false);
+
+    expect(canViewQuoteDetails(baseQuote, "other-user", false)).toBe(true);
+    expect(access.canManageActions).toBe(false);
   });
 
   it("allows admins", () => {

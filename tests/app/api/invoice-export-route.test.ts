@@ -29,7 +29,7 @@ describe("GET /api/invoices/export", () => {
     } as never);
   });
 
-  it("forwards the full invoice filter contract and scopes non-admin exports to the current user", async () => {
+  it("forwards the full invoice filter contract for authenticated exports", async () => {
     const response = await GET(
       new NextRequest(
         "http://localhost/api/invoices/export?search=laptop&status=FINAL&staffId=staff-1&department=IT&category=SUPPLIES&dateFrom=2026-04-01&dateTo=2026-04-30&createdFrom=2026-04-01&createdTo=2026-04-30&amountMin=10&amountMax=500&creatorId=other-user&isRunning=true&sortBy=totalAmount&sortOrder=asc"
@@ -49,7 +49,7 @@ describe("GET /api/invoices/export", () => {
       createdTo: "2026-04-30",
       amountMin: 10,
       amountMax: 500,
-      creatorId: "u1",
+      creatorId: "other-user",
       isRunning: true,
       page: 1,
       pageSize: 100000,

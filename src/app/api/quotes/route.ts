@@ -13,7 +13,7 @@ function jsonNoStore(data: unknown, init?: ResponseInit) {
   return NextResponse.json(data, { ...init, headers });
 }
 
-export const GET = withAuth(async (req: NextRequest, session) => {
+export const GET = withAuth(async (req: NextRequest) => {
   try {
     const sp = req.nextUrl.searchParams;
 
@@ -49,7 +49,7 @@ export const GET = withAuth(async (req: NextRequest, session) => {
     const sortOrder: "asc" | "desc" =
       rawSortOrder === "asc" || rawSortOrder === "desc" ? rawSortOrder : "desc";
 
-    let filters: QuoteFilters & { sortBy?: string; sortOrder?: "asc" | "desc" } = {
+    const filters: QuoteFilters & { sortBy?: string; sortOrder?: "asc" | "desc" } = {
       search: sp.get("search") ?? undefined,
       quoteStatus: (sp.get("quoteStatus") ?? undefined) as
         | "DRAFT"
@@ -74,11 +74,6 @@ export const GET = withAuth(async (req: NextRequest, session) => {
       sortBy: sp.get("sortBy") ?? "createdAt",
       sortOrder,
     };
-
-    // Non-admin users can only see their own quotes
-    if (session.user.role !== "admin") {
-      filters = { ...filters, creatorId: session.user.id };
-    }
 
     return jsonNoStore(await quoteService.list(filters));
   } catch (err) {

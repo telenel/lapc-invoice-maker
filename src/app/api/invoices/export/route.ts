@@ -3,7 +3,7 @@ import { withAuth } from "@/domains/shared/auth";
 import { invoiceService } from "@/domains/invoice/service";
 import { escapeCsv } from "@/lib/csv";
 
-export const GET = withAuth(async (req: NextRequest, session) => {
+export const GET = withAuth(async (req: NextRequest) => {
   try {
     const sp = req.nextUrl.searchParams;
 
@@ -19,10 +19,7 @@ export const GET = withAuth(async (req: NextRequest, session) => {
       createdTo: sp.get("createdTo") ?? undefined,
       amountMin: sp.get("amountMin") ? Number(sp.get("amountMin")) : undefined,
       amountMax: sp.get("amountMax") ? Number(sp.get("amountMax")) : undefined,
-      creatorId:
-        session.user.role === "admin"
-          ? (sp.get("creatorId") ?? undefined)
-          : session.user.id,
+      creatorId: sp.get("creatorId") ?? undefined,
       isRunning: sp.get("isRunning") === "true" ? true : undefined,
       // Fetch all records for export (no pagination)
       page: 1,

@@ -18,6 +18,7 @@ import type { InvoiceResponse } from "@/domains/invoice/types";
 
 interface InvoiceDetailHeaderProps {
   invoice: InvoiceResponse;
+  canManageActions: boolean;
   regenerating: boolean;
   deleting: boolean;
   duplicating: boolean;
@@ -33,6 +34,7 @@ interface InvoiceDetailHeaderProps {
 
 export function InvoiceDetailHeader({
   invoice,
+  canManageActions,
   regenerating,
   deleting,
   duplicating,
@@ -89,7 +91,7 @@ export function InvoiceDetailHeader({
           </Badge>
         )}
 
-        {(isDraft || isPendingCharge) && (
+        {canManageActions && (isDraft || isPendingCharge) && (
           <Link
             href={`/invoices/${invoice.id}/edit`}
             className={buttonVariants({ variant: "outline", size: "sm" })}
@@ -108,12 +110,14 @@ export function InvoiceDetailHeader({
           </Button>
         )}
 
-        <Button variant="outline" size="sm" onClick={onDuplicate} disabled={duplicating}>
-          <CopyIcon className="size-3.5 mr-1.5" />
-          {duplicating ? "Duplicating…" : "Duplicate"}
-        </Button>
+        {canManageActions && (
+          <Button variant="outline" size="sm" onClick={onDuplicate} disabled={duplicating}>
+            <CopyIcon className="size-3.5 mr-1.5" />
+            {duplicating ? "Duplicating…" : "Duplicate"}
+          </Button>
+        )}
 
-        {isFinal && (
+        {canManageActions && isFinal && (
           <>
             <Button
               variant="outline"
@@ -136,7 +140,7 @@ export function InvoiceDetailHeader({
           </>
         )}
 
-        {(isDraft || isPendingCharge) ? (
+        {canManageActions && ((isDraft || isPendingCharge) ? (
           <Button
             variant="destructive"
             size="sm"
@@ -178,7 +182,7 @@ export function InvoiceDetailHeader({
               </DialogFooter>
             </DialogContent>
           </Dialog>
-        )}
+        ))}
       </div>
     </div>
   );

@@ -21,20 +21,11 @@ export function getQuoteViewerAccess(
     };
   }
 
-  if (quote.convertedToInvoice?.createdBy === userId) {
-    return {
-      canViewQuote: true,
-      canManageActions: false,
-      canViewActivity: false,
-      canViewSensitiveFields: false,
-    };
-  }
-
   return {
-    canViewQuote: false,
+    canViewQuote: true,
     canManageActions: false,
-    canViewActivity: false,
-    canViewSensitiveFields: false,
+    canViewActivity: true,
+    canViewSensitiveFields: true,
   };
 }
 
