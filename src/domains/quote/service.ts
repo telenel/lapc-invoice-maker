@@ -21,6 +21,7 @@ import type {
 } from "./types";
 import type { StaffSummary } from "@/domains/staff/types";
 import type { ContactResponse } from "@/domains/contact/types";
+import { getMissingCustomerCateringRequirements } from "./catering";
 import { normalizeQuotePaymentDetails } from "./payment";
 
 // ── DTO mapper ─────────────────────────────────────────────────────────────
@@ -922,6 +923,20 @@ export const quoteService = {
     if (quote.expirationDate && new Date(quote.expirationDate) < new Date()) {
       await quoteRepository.update(quote.id, { quoteStatus: "EXPIRED" });
       throw Object.assign(new Error("This quote has expired"), { code: "FORBIDDEN" });
+    }
+
+    if (quote.isCateringEvent) {
+      const missingRequirements = getMissingCustomerCateringRequirements(
+        (quote.cateringDetails as CateringDetails | null) ?? null,
+      );
+      if (missingRequirements.length > 0) {
+        throw Object.assign(
+          new Error(
+            `Cannot manually approve this catering quote until these event details are filled in: ${missingRequirements.join(", ")}`
+          ),
+          { code: "INVALID_INPUT" },
+        );
+      }
     }
 
     const normalizedPayment = normalizeQuotePaymentDetails(paymentDetails);

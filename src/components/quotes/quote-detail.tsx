@@ -43,6 +43,7 @@ import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
 import { useSSE } from "@/lib/use-sse";
 import { ShareLinkDialog } from "@/components/quotes/share-link-dialog";
 import { QuoteActivity } from "@/components/quotes/quote-activity";
+import { getMissingCustomerCateringRequirements } from "@/domains/quote/catering";
 import { QUOTE_PAYMENT_METHODS } from "@/domains/quote/payment";
 import type { CateringDetails } from "@/domains/quote/types";
 
@@ -532,6 +533,10 @@ export function QuoteDetailView({ id }: { id: string }) {
   const canViewActivity = viewerAccess.canViewActivity;
   const canViewPaymentDetails = viewerAccess.canViewSensitiveFields;
   const showInternalFields = canViewPaymentDetails;
+  const missingManualApprovalCateringRequirements = quote.isCateringEvent
+    ? getMissingCustomerCateringRequirements((quote.cateringDetails as CateringDetails | null) ?? null)
+    : [];
+  const manualApprovalBlockedByCatering = missingManualApprovalCateringRequirements.length > 0;
   const isConverted = Boolean(quote.convertedToInvoice);
   const canEdit =
     canManageActions &&
@@ -775,6 +780,12 @@ export function QuoteDetailView({ id }: { id: string }) {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-2">
+              {manualApprovalBlockedByCatering && (
+                <p className="text-sm text-amber-700">
+                  Manual approval is blocked until these catering event details are filled in:{" "}
+                  {missingManualApprovalCateringRequirements.join(", ")}.
+                </p>
+              )}
               <div className="space-y-2">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Payment Method
@@ -823,7 +834,7 @@ export function QuoteDetailView({ id }: { id: string }) {
               <Button
                 className="bg-green-600 hover:bg-green-700 text-white"
                 onClick={handleApproveManually}
-                disabled={actionState.approving}
+                disabled={actionState.approving || manualApprovalBlockedByCatering}
               >
                 {actionState.approving ? "Approving..." : "Approve Quote"}
               </Button>

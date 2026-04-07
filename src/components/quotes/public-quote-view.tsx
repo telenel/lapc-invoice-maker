@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { quoteApi } from "@/domains/quote/api-client";
-import { normalizeQuoteTimeInput } from "@/domains/quote/catering";
+import { getMissingCustomerCateringRequirements, normalizeQuoteTimeInput } from "@/domains/quote/catering";
 import { ApiError } from "@/domains/shared/types";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
 import type { CateringDetails, PublicQuoteResponse, QuotePublicSettingsResponse } from "@/domains/quote/types";
@@ -84,21 +84,6 @@ function normalizePublicTimeField(
 ): PublicCateringForm {
   const normalized = normalizeQuoteTimeInput(form[key]);
   return normalized ? { ...form, [key]: normalized } : form;
-}
-
-function getMissingCateringRequirements(form: PublicCateringForm): string[] {
-  const missing: string[] = [];
-
-  if (!form.eventDate.trim()) missing.push("event date");
-  if (!normalizeQuoteTimeInput(form.startTime)) missing.push("start time");
-  if (!normalizeQuoteTimeInput(form.endTime)) missing.push("end time");
-  if (!form.contactName.trim()) missing.push("contact name");
-  if (!form.contactPhone.trim()) missing.push("contact number");
-  if (!form.location.trim()) missing.push("event location");
-  if (form.setupRequired && !normalizeQuoteTimeInput(form.setupTime)) missing.push("setup time");
-  if (form.takedownRequired && !normalizeQuoteTimeInput(form.takedownTime)) missing.push("takedown time");
-
-  return missing;
 }
 
 export function PublicQuoteView({ token }: { token: string }) {
@@ -298,7 +283,7 @@ export function PublicQuoteView({ token }: { token: string }) {
     !responded;
   const publicActionsClosed = !paymentLinkAvailable && !alreadyResponded && !isExpired;
   const isCatering = quote.isCateringEvent;
-  const missingCateringRequirements = isCatering ? getMissingCateringRequirements(cateringForm) : [];
+  const missingCateringRequirements = isCatering ? getMissingCustomerCateringRequirements(cateringForm) : [];
   const cateringRequiredMissing = missingCateringRequirements.length > 0;
 
   return (

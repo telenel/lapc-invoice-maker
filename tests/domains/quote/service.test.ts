@@ -1087,6 +1087,33 @@ describe("quoteService", () => {
         }),
       );
     });
+
+    it("rejects manual approval for catering quotes missing required customer event details", async () => {
+      const quote = makeQuote({
+        quoteStatus: "SENT",
+        expirationDate: new Date("2099-02-15"),
+        isCateringEvent: true,
+        cateringDetails: {
+          eventDate: "2026-04-07",
+          startTime: "",
+          endTime: "",
+          location: "",
+          contactName: "Jane Doe",
+          contactPhone: "555-1111",
+          setupRequired: true,
+          setupTime: "13:30",
+          takedownRequired: true,
+          takedownTime: "",
+        },
+      });
+      mockRepo.findById.mockResolvedValue(quote as never);
+
+      await expect(quoteService.approveManually("q1")).rejects.toMatchObject({
+        code: "INVALID_INPUT",
+      });
+      expect(mockRepo.update).not.toHaveBeenCalled();
+      expect(notificationService.createAndPublish).not.toHaveBeenCalled();
+    });
   });
 
   // ── markSent ─────────────────────────────────────────────────────────────
