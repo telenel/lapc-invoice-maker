@@ -5,12 +5,40 @@ import { printPricingService } from "@/domains/print-pricing/service";
 import { authOptions } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 
+function isValidIP(ip: string): boolean {
+  // IPv4 pattern
+  const ipv4Pattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+  // IPv6 pattern (simplified)
+  const ipv6Pattern = /^([0-9a-f]{0,4}:){2,7}[0-9a-f]{0,4}$/i;
+
+  if (ipv4Pattern.test(ip)) {
+    const parts = ip.split(".").map(Number);
+    return parts.every(part => part >= 0 && part <= 255);
+  }
+  return ipv6Pattern.test(ip);
+}
+
+function getClientIP(req: Request): string {
+  // In production behind a trusted proxy, parse X-Forwarded-For
+  const forwardedFor = req.headers.get("x-forwarded-for");
+  if (forwardedFor) {
+    const firstIP = forwardedFor.split(",")[0]?.trim();
+    if (firstIP && isValidIP(firstIP)) {
+      return firstIP;
+    }
+  }
+
+  const realIP = req.headers.get("x-real-ip")?.trim();
+  if (realIP && isValidIP(realIP)) {
+    return realIP;
+  }
+
+  return "anonymous";
+}
+
 export async function POST(req: Request) {
   try {
-    const ip =
-      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-      || req.headers.get("x-real-ip")?.trim()
-      || "anonymous";
+    const ip = getClientIP(req);
     const rateResult = await checkRateLimit(`print-pricing-quote:${ip}`, {
       maxAttempts: ip === "anonymous" ? 3 : 10,
       windowMs: 15 * 60 * 1000,

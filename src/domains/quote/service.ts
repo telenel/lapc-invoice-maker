@@ -1352,7 +1352,7 @@ export const quoteService = {
   },
 
   /**
-   * Mark a DRAFT or SENT quote as submitted manually.
+   * Mark a SENT quote as submitted manually.
    * Generates a share token if one does not exist.
    */
   async markSubmittedManual(id: string): Promise<void> {

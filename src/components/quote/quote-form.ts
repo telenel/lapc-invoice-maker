@@ -388,7 +388,7 @@ export function useQuoteForm(
       marginEnabled: form.marginEnabled,
       marginPercent: form.marginEnabled ? form.marginPercent : undefined,
       taxEnabled: form.taxEnabled,
-      taxRate: form.taxEnabled ? form.taxRate : undefined,
+      taxRate: form.taxRate,
       isCateringEvent: form.isCateringEvent,
       cateringDetails: form.isCateringEvent ? form.cateringDetails : undefined,
       items: form.items.map((item, i) => {

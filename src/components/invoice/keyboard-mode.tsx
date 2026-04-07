@@ -435,7 +435,7 @@ export function KeyboardMode({
               updateField("marginEnabled", t.marginEnabled);
               if (t.marginPercent != null) updateField("marginPercent", t.marginPercent);
               updateField("taxEnabled", t.taxEnabled);
-              updateField("taxRate", t.taxRate);
+              updateField("taxRate", t.taxRate ?? 0);
               if (t.notes) updateField("notes", t.notes);
               const newItems = t.items.map((item, idx) => ({
                 _key: crypto.randomUUID(),

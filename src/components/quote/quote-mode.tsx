@@ -338,7 +338,7 @@ export function QuoteMode({
               updateField("marginEnabled", t.marginEnabled);
               updateField("marginPercent", t.marginPercent ?? 0);
               updateField("taxEnabled", t.taxEnabled);
-              updateField("taxRate", t.taxRate);
+              updateField("taxRate", t.taxRate ?? 0);
               updateField("notes", t.notes ?? "");
               updateField("isCateringEvent", t.isCateringEvent);
               if (t.cateringDetails) {

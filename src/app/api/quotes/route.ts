@@ -17,6 +17,38 @@ export const GET = withAuth(async (req: NextRequest, session) => {
   try {
     const sp = req.nextUrl.searchParams;
 
+    // Validate amountMin
+    let amountMin: number | undefined = undefined;
+    const amountMinStr = sp.get("amountMin");
+    if (amountMinStr) {
+      const parsed = Number(amountMinStr);
+      if (!Number.isFinite(parsed)) {
+        return NextResponse.json({ error: "Invalid amountMin value" }, { status: 400 });
+      }
+      amountMin = parsed;
+    }
+
+    // Validate amountMax
+    let amountMax: number | undefined = undefined;
+    const amountMaxStr = sp.get("amountMax");
+    if (amountMaxStr) {
+      const parsed = Number(amountMaxStr);
+      if (!Number.isFinite(parsed)) {
+        return NextResponse.json({ error: "Invalid amountMax value" }, { status: 400 });
+      }
+      amountMax = parsed;
+    }
+
+    // Validate amountMin <= amountMax
+    if (amountMin !== undefined && amountMax !== undefined && amountMin > amountMax) {
+      return NextResponse.json({ error: "amountMin must be less than or equal to amountMax" }, { status: 400 });
+    }
+
+    // Validate sortOrder
+    const rawSortOrder = sp.get("sortOrder") ?? sp.get("sortDir");
+    const sortOrder: "asc" | "desc" =
+      rawSortOrder === "asc" || rawSortOrder === "desc" ? rawSortOrder : "desc";
+
     let filters: QuoteFilters & { sortBy?: string; sortOrder?: "asc" | "desc" } = {
       search: sp.get("search") ?? undefined,
       quoteStatus: (sp.get("quoteStatus") ?? undefined) as
@@ -35,12 +67,12 @@ export const GET = withAuth(async (req: NextRequest, session) => {
       creatorId: sp.get("creatorId") ?? undefined,
       dateFrom: sp.get("dateFrom") ?? undefined,
       dateTo: sp.get("dateTo") ?? undefined,
-      amountMin: sp.get("amountMin") ? Number(sp.get("amountMin")) : undefined,
-      amountMax: sp.get("amountMax") ? Number(sp.get("amountMax")) : undefined,
+      amountMin,
+      amountMax,
       page: Math.max(1, parseInt(sp.get("page") ?? "1", 10)),
       pageSize: Math.max(1, parseInt(sp.get("pageSize") ?? "20", 10)),
       sortBy: sp.get("sortBy") ?? "createdAt",
-      sortOrder: (sp.get("sortOrder") ?? sp.get("sortDir") ?? "desc") as "asc" | "desc",
+      sortOrder,
     };
 
     // Non-admin users can only see their own quotes

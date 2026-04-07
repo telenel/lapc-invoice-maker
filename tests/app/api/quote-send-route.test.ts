@@ -17,8 +17,11 @@ import { quoteService } from "@/domains/quote/service";
 import { POST } from "@/app/api/quotes/[id]/send/route";
 
 describe("POST /api/quotes/[id]/send", () => {
+  let originalNextAuthUrl: string | undefined;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    originalNextAuthUrl = process.env.NEXTAUTH_URL;
     process.env.NEXTAUTH_URL = "https://laportal.example.com";
     vi.mocked(getServerSession).mockResolvedValue({
       user: { id: "u1", role: "admin" },
@@ -30,6 +33,14 @@ describe("POST /api/quotes/[id]/send", () => {
     vi.mocked(quoteService.markSent).mockResolvedValue({
       shareToken: "share-token",
     } as never);
+  });
+
+  afterEach(() => {
+    if (originalNextAuthUrl === undefined) {
+      delete process.env.NEXTAUTH_URL;
+    } else {
+      process.env.NEXTAUTH_URL = originalNextAuthUrl;
+    }
   });
 
   it("builds the share URL from NEXTAUTH_URL instead of request headers", async () => {
