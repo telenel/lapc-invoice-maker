@@ -32,6 +32,7 @@ const MAX_BOOKS = 5;
 // ── Types ──
 
 interface FormErrors {
+  employeeId?: string;
   instructorName?: string;
   phone?: string;
   email?: string;
@@ -48,6 +49,7 @@ interface FormErrors {
 
 function validateForm(
   fields: {
+    employeeId: string;
     instructorName: string;
     phone: string;
     email: string;
@@ -61,6 +63,10 @@ function validateForm(
   books: BookFormData[],
 ): FormErrors {
   const errors: FormErrors = {};
+
+  if (!fields.employeeId.trim()) errors.employeeId = "Employee ID is required";
+  else if (!/^\d{4,10}$/.test(fields.employeeId.trim()))
+    errors.employeeId = "Employee ID must be 4-10 digits";
 
   if (!fields.instructorName.trim()) errors.instructorName = "Name is required";
   if (!fields.phone.trim()) errors.phone = "Phone is required";
@@ -115,6 +121,14 @@ export function FacultySubmitForm() {
   const [additionalInfo, setAdditionalInfo] = useState("");
   const [books, setBooks] = useState<BookFormData[]>(initBooks);
 
+  const [employeeId, setEmployeeId] = useState("");
+  const [lookingUp, setLookingUp] = useState(false);
+  const [previousSubmissions, setPreviousSubmissions] = useState<
+    import("@/domains/textbook-requisition/types").RequisitionLookupItem[]
+  >([]);
+  const [lookupDone, setLookupDone] = useState(false);
+  const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null);
+
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
   const [ack, setAck] = useState<RequisitionSubmitAck | null>(null);
@@ -125,7 +139,88 @@ export function FacultySubmitForm() {
     setBooks(updated);
   }, []);
 
+  async function handleLookup() {
+    const trimmed = employeeId.trim();
+    if (!/^\d{4,10}$/.test(trimmed)) return;
+
+    setLookingUp(true);
+    setLookupDone(false);
+    setPreviousSubmissions([]);
+    setSelectedSubmissionId(null);
+
+    try {
+      const results = await requisitionApi.lookup(trimmed);
+      setPreviousSubmissions(results);
+    } catch {
+      toast.error("Failed to look up previous submissions");
+    } finally {
+      setLookingUp(false);
+      setLookupDone(true);
+    }
+  }
+
+  function handleSelectSubmission(item: (typeof previousSubmissions)[number]) {
+    setSelectedSubmissionId(item.id);
+
+    // Auto-fill instructor info
+    setInstructorName(item.instructorName);
+    setPhone(item.phone);
+    setEmail(item.email);
+    setDepartment(item.department);
+
+    // Auto-fill books
+    const filledBooks: BookFormData[] = item.books.map((b) => ({
+      ...createEmptyBook(),
+      author: b.author,
+      title: b.title,
+      isbn: b.isbn,
+      edition: b.edition ?? "",
+      copyrightYear: b.copyrightYear ?? "",
+      volume: b.volume ?? "",
+      publisher: b.publisher ?? "",
+      binding: (b.binding ?? "") as BookFormData["binding"],
+      bookType: (b.bookType ?? "PHYSICAL") as BookFormData["bookType"],
+      oerLink: b.oerLink ?? "",
+    }));
+
+    // Pad to MAX_BOOKS
+    while (filledBooks.length < MAX_BOOKS) {
+      filledBooks.push(createEmptyBook());
+    }
+
+    setBooks(filledBooks);
+
+    // Clear course/term/year fields (fresh each submission)
+    setCourse("");
+    setSections("");
+    setEnrollment("");
+    setTerm("");
+    setReqYear(String(CURRENT_YEAR));
+    setAdditionalInfo("");
+  }
+
+  function handleStartFresh() {
+    setSelectedSubmissionId(null);
+    // Reset form fields but keep employee ID and lookup results
+    setInstructorName("");
+    setPhone("");
+    setEmail("");
+    setDepartment("");
+    setCourse("");
+    setSections("");
+    setEnrollment("");
+    setTerm("");
+    setReqYear(String(CURRENT_YEAR));
+    setAdditionalInfo("");
+    setBooks(initBooks());
+    setErrors({});
+  }
+
   function resetForm() {
+    setEmployeeId("");
+    setLookupDone(false);
+    setPreviousSubmissions([]);
+    setSelectedSubmissionId(null);
     setInstructorName("");
     setPhone("");
     setEmail("");
@@ -148,6 +243,7 @@ export function FacultySubmitForm() {
     if (submitLockRef.current) return;
 
     const fields = {
+      employeeId,
       instructorName,
       phone,
       email,
@@ -169,6 +265,7 @@ export function FacultySubmitForm() {
 
     try {
       const payload: Omit<CreateRequisitionInput, "status" | "source" | "staffNotes"> = {
+        employeeId: employeeId.trim(),
         instructorName: instructorName.trim(),
         phone: phone.trim(),
         email: email.trim(),
@@ -254,6 +351,98 @@ export function FacultySubmitForm() {
 
   return (
     <form onSubmit={handleSubmit} className="mt-8 space-y-8">
+      {/* Employee ID */}
+      <section>
+        <h2 className="text-base font-semibold mb-4">Employee Identification</h2>
+        <div className="flex gap-3 items-end">
+          <div className="flex-1">
+            <FormField
+              label="Employee ID"
+              htmlFor="pub-employeeId"
+              error={errors.employeeId}
+              required
+            >
+              <Input
+                id="pub-employeeId"
+                inputMode="numeric"
+                pattern="\d*"
+                value={employeeId}
+                onChange={(e) => {
+                  setEmployeeId(e.target.value.replace(/\D/g, ""));
+                  setLookupDone(false);
+                  setPreviousSubmissions([]);
+                  setSelectedSubmissionId(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleLookup();
+                  }
+                }}
+                placeholder="e.g. 123456"
+                maxLength={10}
+                aria-invalid={errors.employeeId ? true : undefined}
+                aria-describedby={errors.employeeId ? "pub-employeeId-err" : undefined}
+              />
+            </FormField>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleLookup}
+            disabled={lookingUp || !/^\d{4,10}$/.test(employeeId.trim())}
+            className="h-8 shrink-0"
+          >
+            {lookingUp ? "Looking up..." : "Look Up"}
+          </Button>
+        </div>
+
+        {/* Previous Submissions */}
+        {lookupDone && previousSubmissions.length > 0 && (
+          <Card className="mt-4">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">
+                Previous Submissions ({previousSubmissions.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-1 p-3 pt-0">
+              {previousSubmissions.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => handleSelectSubmission(item)}
+                  className={`w-full rounded-md px-3 py-2 text-left text-sm transition-colors ${
+                    selectedSubmissionId === item.id
+                      ? "bg-primary/10 border border-primary/30 font-medium"
+                      : "hover:bg-muted/50"
+                  }`}
+                >
+                  <span className="font-medium">{item.course}</span>
+                  <span className="text-muted-foreground">
+                    {" "}· {item.term} {item.reqYear} · {item.bookCount} book
+                    {item.bookCount !== 1 ? "s" : ""} ·{" "}
+                    {new Date(item.submittedAt).toLocaleDateString()}
+                  </span>
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={handleStartFresh}
+                className="w-full rounded-md px-3 py-2 text-left text-sm text-muted-foreground hover:bg-muted/50"
+              >
+                Start fresh (empty form)
+              </button>
+            </CardContent>
+          </Card>
+        )}
+
+        {lookupDone && previousSubmissions.length === 0 && (
+          <p className="mt-3 text-sm text-muted-foreground">
+            No previous submissions found for this ID. Fill out the form below.
+          </p>
+        )}
+      </section>
+
       {/* Instructor Information */}
       <section>
         <h2 className="text-base font-semibold mb-4">Instructor Information</h2>
