@@ -45,6 +45,8 @@ npm install              # Install dependencies + configure git hooks
 npx prisma generate      # Generate Prisma client
 npm run dev              # Start dev server (localhost:3000)
 npm run ship-check       # git status + lint + test + build + stamp current HEAD
+npm run hotfix:preflight # Reduced local validation for production hotfixes
+npm run hotfix:deploy -- <ref> # SSH deploy a pushed branch/tag through the VPS build-first flow
 npm test                 # Run the full Vitest suite
 npm run build            # Production build
 ```
@@ -113,6 +115,7 @@ Current migration status:
 
 - [docs/PROJECT-OVERVIEW.md](docs/PROJECT-OVERVIEW.md) — Comprehensive architecture and API reference
 - [docs/SUPABASE-MIGRATION-STATUS.md](docs/SUPABASE-MIGRATION-STATUS.md) — Live migration status, deployed fixes, and remaining platform work
+- [docs/HOTFIX-WORKFLOW.md](docs/HOTFIX-WORKFLOW.md) — Fast SSH deploy lane for small production fixes
 - [docs/superpowers/specs/](docs/superpowers/specs/) — Design specifications
 - [docs/superpowers/plans/](docs/superpowers/plans/) — Implementation plans
 

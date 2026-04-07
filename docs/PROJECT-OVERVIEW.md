@@ -552,6 +552,13 @@ GitHub Actions runs on every push to `main` and every PR targeting `main`:
 
 Deployment is Docker Compose on montalvo.io behind Traefik. The deploy webhook triggers a build-first strategy (no docker-down before build).
 
+For urgent low-risk production fixes, the repo also includes a separate hotfix lane:
+
+- `npm run hotfix:preflight` — reduced local validation
+- `npm run hotfix:deploy -- <ref>` — direct SSH deploy of a pushed branch/tag through the same remote build/verify/rollback script
+
+See [docs/HOTFIX-WORKFLOW.md](HOTFIX-WORKFLOW.md) for the operator workflow and guardrails.
+
 ### Stack Gotchas
 
 **Prisma 7**

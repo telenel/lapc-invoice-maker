@@ -371,31 +371,33 @@ export function useQuoteForm(
 
   // ---------- Save helpers ----------
 
-  function buildPayload() {
+  function buildPayload(overrides?: Partial<QuoteFormData>) {
+    const currentForm = { ...form, ...overrides };
+
     return {
-      date: form.date,
-      staffId: existingId ? (form.staffId || null) : (form.staffId || undefined),
-      department: form.department,
-      category: form.category,
-      accountCode: form.accountCode,
-      accountNumber: form.accountNumber,
-      approvalChain: form.approvalChain,
-      notes: form.notes,
-      expirationDate: form.expirationDate,
-      recipientName: form.recipientName,
-      recipientEmail: form.recipientEmail || undefined,
-      recipientOrg: form.recipientOrg,
-      marginEnabled: form.marginEnabled,
-      marginPercent: form.marginEnabled ? form.marginPercent : undefined,
-      taxEnabled: form.taxEnabled,
-      taxRate: form.taxRate,
-      isCateringEvent: form.isCateringEvent,
-      cateringDetails: form.isCateringEvent ? form.cateringDetails : undefined,
-      items: form.items.map((item, i) => {
+      date: currentForm.date,
+      staffId: existingId ? (currentForm.staffId || null) : (currentForm.staffId || undefined),
+      department: currentForm.department,
+      category: currentForm.category,
+      accountCode: currentForm.accountCode,
+      accountNumber: currentForm.accountNumber,
+      approvalChain: currentForm.approvalChain,
+      notes: currentForm.notes,
+      expirationDate: currentForm.expirationDate,
+      recipientName: currentForm.recipientName,
+      recipientEmail: currentForm.recipientEmail || undefined,
+      recipientOrg: currentForm.recipientOrg,
+      marginEnabled: currentForm.marginEnabled,
+      marginPercent: currentForm.marginEnabled ? currentForm.marginPercent : undefined,
+      taxEnabled: currentForm.taxEnabled,
+      taxRate: currentForm.taxRate,
+      isCateringEvent: currentForm.isCateringEvent,
+      cateringDetails: currentForm.isCateringEvent ? currentForm.cateringDetails : undefined,
+      items: currentForm.items.map((item, i) => {
         const cost = Number(item.costPrice ?? item.unitPrice);
-        const effectiveMargin = item.marginOverride ?? form.marginPercent;
+        const effectiveMargin = item.marginOverride ?? currentForm.marginPercent;
         const charged =
-          form.marginEnabled && effectiveMargin > 0
+          currentForm.marginEnabled && effectiveMargin > 0
             ? Math.round(cost * (1 + effectiveMargin / 100) * 100) / 100
             : cost;
         return {
@@ -405,7 +407,7 @@ export function useQuoteForm(
           sortOrder: item.sortOrder ?? i,
           isTaxable: item.isTaxable,
           marginOverride: item.marginOverride ?? undefined,
-          costPrice: form.marginEnabled ? cost : undefined,
+          costPrice: currentForm.marginEnabled ? cost : undefined,
         };
       }),
     };
@@ -415,11 +417,11 @@ export function useQuoteForm(
   // structured Zod field errors ({ error: { fieldErrors, formErrors } }) that
   // ApiError.fromResponse() cannot preserve — it only extracts a plain string.
   // Keeping raw fetch lets us surface the first field-level message to the user.
-  async function postQuote(): Promise<string> {
+  async function postQuote(overrides?: Partial<QuoteFormData>): Promise<string> {
     const res = await fetch("/api/quotes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(buildPayload()),
+      body: JSON.stringify(buildPayload(overrides)),
     });
 
     if (!res.ok) {
@@ -437,11 +439,11 @@ export function useQuoteForm(
     return quote.id as string;
   }
 
-  async function putQuote(id: string): Promise<string> {
+  async function putQuote(id: string, overrides?: Partial<QuoteFormData>): Promise<string> {
     const res = await fetch(`/api/quotes/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(buildPayload()),
+      body: JSON.stringify(buildPayload(overrides)),
     });
 
     if (!res.ok) {
@@ -460,10 +462,10 @@ export function useQuoteForm(
     return quote.id as string;
   }
 
-  const saveQuote = useCallback(async () => {
+  const saveQuote = useCallback(async (overrides?: Partial<QuoteFormData>) => {
     setSaving(true);
     try {
-      const id = existingId ? await putQuote(existingId) : await postQuote();
+      const id = existingId ? await putQuote(existingId, overrides) : await postQuote(overrides);
       toast.success("Quote saved");
       router.push(`/quotes/${id}`);
     } catch (err) {

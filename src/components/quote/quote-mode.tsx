@@ -40,6 +40,7 @@ import { cn } from "@/lib/utils";
 import { categoryApi } from "@/domains/category/api-client";
 import { templateApi } from "@/domains/template/api-client";
 import type { TemplateResponse } from "@/domains/template/types";
+import { sanitizeCustomerProvidedCateringDetails } from "@/domains/quote/catering";
 import type {
   QuoteFormData,
   QuoteItem,
@@ -72,7 +73,7 @@ interface QuoteModeProps {
   handleStaffSelect: (staff: StaffMember) => void;
   clearStaffSelection: () => void;
   staffAccountNumbers: StaffAccountNumber[];
-  saveQuote: () => Promise<void>;
+  saveQuote: (overrides?: Partial<QuoteFormData>) => Promise<void>;
   saving: boolean;
   existingId?: string;
 }
@@ -146,11 +147,18 @@ export function QuoteMode({
     };
   }, [userId, routeKey]);
 
+  const getSaveOverrides = useCallback((): Partial<QuoteFormData> | undefined => {
+    if (!form.isCateringEvent || cateringOverride) return undefined;
+    return {
+      cateringDetails: sanitizeCustomerProvidedCateringDetails(form.cateringDetails),
+    };
+  }, [cateringOverride, form.cateringDetails, form.isCateringEvent]);
+
   // ---- Save wrapper that clears the draft on success ----
   const handleSaveQuote = useCallback(async () => {
-    await saveQuote();
+    await saveQuote(getSaveOverrides());
     clearDraft();
-  }, [saveQuote, clearDraft]);
+  }, [saveQuote, getSaveOverrides, clearDraft]);
 
   // ---- Tax calculation ----
   const taxItems = form.marginEnabled ? itemsWithMargin : form.items;
@@ -256,6 +264,12 @@ export function QuoteMode({
   async function handleSaveAsTemplate() {
     const name = prompt("Template name:");
     if (!name?.trim()) return;
+    const templateCateringDetails =
+      form.isCateringEvent
+        ? cateringOverride
+          ? form.cateringDetails
+          : sanitizeCustomerProvidedCateringDetails(form.cateringDetails)
+        : undefined;
     try {
       await templateApi.create({
         name: name.trim(),
@@ -270,7 +284,7 @@ export function QuoteMode({
         taxRate: form.taxEnabled ? Number(form.taxRate) : undefined,
         notes: form.notes || undefined,
         isCateringEvent: form.isCateringEvent,
-        cateringDetails: form.isCateringEvent ? form.cateringDetails : undefined,
+        cateringDetails: templateCateringDetails,
         items: form.items.filter((i) => i.description.trim()).map((item, idx) => ({
           description: item.description,
           quantity: Number(item.quantity),

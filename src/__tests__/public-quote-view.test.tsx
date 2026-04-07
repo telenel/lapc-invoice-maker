@@ -286,6 +286,50 @@ describe("PublicQuoteView", () => {
     expect(quoteApi.respondToPublicQuote).not.toHaveBeenCalled();
   });
 
+  it("shows which required catering fields are still blocking approval", async () => {
+    vi.mocked(quoteApi.getPublicQuote).mockResolvedValueOnce({
+      id: "q1",
+      quoteNumber: "Q-1",
+      quoteStatus: "SUBMITTED_EMAIL",
+      paymentLinkAvailable: true,
+      date: "2026-03-31T00:00:00.000Z",
+      expirationDate: null,
+      department: "IT",
+      category: "SUPPLIES",
+      notes: "",
+      totalAmount: 10,
+      recipientName: "Jane",
+      recipientEmail: "jane@example.com",
+      recipientOrg: "",
+      staff: null,
+      contact: null,
+      items: [],
+      isCateringEvent: true,
+      cateringDetails: {
+        eventDate: "2026-04-07",
+        startTime: "",
+        endTime: "",
+        location: "",
+        contactName: "Jane",
+        contactPhone: "555-1111",
+        setupRequired: true,
+        setupTime: "13:30",
+        takedownRequired: true,
+        takedownTime: "",
+      },
+      paymentDetailsResolved: false,
+    } as never);
+
+    render(<PublicQuoteView token="token" />);
+
+    const guidance = await screen.findByText(/Complete the required event details to approve/i);
+    expect(guidance).toHaveTextContent("start time");
+    expect(guidance).toHaveTextContent("end time");
+    expect(guidance).toHaveTextContent("event location");
+    expect(guidance).toHaveTextContent("takedown time");
+    expect(screen.getByRole("button", { name: "Approve Quote" })).toBeDisabled();
+  });
+
   it("keeps the quote visible if analytics registration fails", async () => {
     vi.mocked(quoteApi.registerPublicView).mockRejectedValueOnce(new Error("boom"));
 

@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { quoteApi } from "@/domains/quote/api-client";
+import { normalizeQuoteTimeInput } from "@/domains/quote/catering";
 import { ApiError } from "@/domains/shared/types";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
 import type { CateringDetails, PublicQuoteResponse, QuotePublicSettingsResponse } from "@/domains/quote/types";
@@ -74,6 +75,31 @@ function makeCateringForm(existing: CateringDetails | null): PublicCateringForm 
 }
 
 const labelClass = "text-xs font-semibold uppercase tracking-wider text-muted-foreground";
+
+type PublicTimeFieldKey = "startTime" | "endTime" | "setupTime" | "takedownTime";
+
+function normalizePublicTimeField(
+  form: PublicCateringForm,
+  key: PublicTimeFieldKey,
+): PublicCateringForm {
+  const normalized = normalizeQuoteTimeInput(form[key]);
+  return normalized ? { ...form, [key]: normalized } : form;
+}
+
+function getMissingCateringRequirements(form: PublicCateringForm): string[] {
+  const missing: string[] = [];
+
+  if (!form.eventDate.trim()) missing.push("event date");
+  if (!normalizeQuoteTimeInput(form.startTime)) missing.push("start time");
+  if (!normalizeQuoteTimeInput(form.endTime)) missing.push("end time");
+  if (!form.contactName.trim()) missing.push("contact name");
+  if (!form.contactPhone.trim()) missing.push("contact number");
+  if (!form.location.trim()) missing.push("event location");
+  if (form.setupRequired && !normalizeQuoteTimeInput(form.setupTime)) missing.push("setup time");
+  if (form.takedownRequired && !normalizeQuoteTimeInput(form.takedownTime)) missing.push("takedown time");
+
+  return missing;
+}
 
 export function PublicQuoteView({ token }: { token: string }) {
   const router = useRouter();
@@ -180,20 +206,24 @@ export function PublicQuoteView({ token }: { token: string }) {
       const viewId = await getRegisteredViewId();
 
       // Build catering details from form when approving a catering event
+      const normalizedStartTime = normalizeQuoteTimeInput(cateringForm.startTime);
+      const normalizedEndTime = normalizeQuoteTimeInput(cateringForm.endTime);
+      const normalizedSetupTime = normalizeQuoteTimeInput(cateringForm.setupTime);
+      const normalizedTakedownTime = normalizeQuoteTimeInput(cateringForm.takedownTime);
       const cateringDetails =
         quote?.isCateringEvent && response === "ACCEPTED"
           ? {
               eventDate: cateringForm.eventDate.trim(),
-              startTime: cateringForm.startTime.trim(),
-              endTime: cateringForm.endTime.trim(),
+              startTime: normalizedStartTime ?? cateringForm.startTime.trim(),
+              endTime: normalizedEndTime ?? cateringForm.endTime.trim(),
               contactName: cateringForm.contactName,
               contactPhone: cateringForm.contactPhone,
               location: cateringForm.location,
               headcount: cateringForm.headcount ? Number(cateringForm.headcount) : undefined,
               setupRequired: cateringForm.setupRequired,
-              setupTime: cateringForm.setupRequired ? cateringForm.setupTime : undefined,
+              setupTime: cateringForm.setupRequired ? normalizedSetupTime ?? cateringForm.setupTime.trim() : undefined,
               takedownRequired: cateringForm.takedownRequired,
-              takedownTime: cateringForm.takedownRequired ? cateringForm.takedownTime : undefined,
+              takedownTime: cateringForm.takedownRequired ? normalizedTakedownTime ?? cateringForm.takedownTime.trim() : undefined,
               specialInstructions: cateringForm.specialInstructions || undefined,
             }
           : undefined;
@@ -268,16 +298,8 @@ export function PublicQuoteView({ token }: { token: string }) {
     !responded;
   const publicActionsClosed = !paymentLinkAvailable && !alreadyResponded && !isExpired;
   const isCatering = quote.isCateringEvent;
-  const cateringRequiredMissing =
-    isCatering &&
-    (!cateringForm.eventDate.trim() ||
-      !cateringForm.startTime.trim() ||
-      !cateringForm.endTime.trim() ||
-      !cateringForm.contactName.trim() ||
-      !cateringForm.contactPhone.trim() ||
-      !cateringForm.location.trim() ||
-      (cateringForm.setupRequired && !cateringForm.setupTime.trim()) ||
-      (cateringForm.takedownRequired && !cateringForm.takedownTime.trim()));
+  const missingCateringRequirements = isCatering ? getMissingCateringRequirements(cateringForm) : [];
+  const cateringRequiredMissing = missingCateringRequirements.length > 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -482,10 +504,15 @@ export function PublicQuoteView({ token }: { token: string }) {
                   </Label>
                   <Input
                     id="pub-start-time"
-                    type="time"
+                    type="text"
+                    inputMode="text"
+                    placeholder="13:30"
                     value={cateringForm.startTime}
                     onChange={(e) =>
                       setCateringForm((prev) => ({ ...prev, startTime: e.target.value }))
+                    }
+                    onBlur={() =>
+                      setCateringForm((prev) => normalizePublicTimeField(prev, "startTime"))
                     }
                   />
                 </div>
@@ -495,14 +522,22 @@ export function PublicQuoteView({ token }: { token: string }) {
                   </Label>
                   <Input
                     id="pub-end-time"
-                    type="time"
+                    type="text"
+                    inputMode="text"
+                    placeholder="15:00"
                     value={cateringForm.endTime}
                     onChange={(e) =>
                       setCateringForm((prev) => ({ ...prev, endTime: e.target.value }))
                     }
+                    onBlur={() =>
+                      setCateringForm((prev) => normalizePublicTimeField(prev, "endTime"))
+                    }
                   />
                 </div>
               </div>
+              <p className="text-xs text-muted-foreground">
+                Enter time in 24-hour format like 13:30. If you prefer, entries like 1:30pm also work.
+              </p>
 
               {/* Contact Name, Contact Number, Location (required) */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -593,10 +628,15 @@ export function PublicQuoteView({ token }: { token: string }) {
                       </Label>
                       <Input
                         id="pub-setup-time"
-                        type="time"
+                        type="text"
+                        inputMode="text"
+                        placeholder="13:30"
                         value={cateringForm.setupTime}
                         onChange={(e) =>
                           setCateringForm((prev) => ({ ...prev, setupTime: e.target.value }))
+                        }
+                        onBlur={() =>
+                          setCateringForm((prev) => normalizePublicTimeField(prev, "setupTime"))
                         }
                       />
                     </div>
@@ -627,10 +667,15 @@ export function PublicQuoteView({ token }: { token: string }) {
                       </Label>
                       <Input
                         id="pub-takedown-time"
-                        type="time"
+                        type="text"
+                        inputMode="text"
+                        placeholder="15:00"
                         value={cateringForm.takedownTime}
                         onChange={(e) =>
                           setCateringForm((prev) => ({ ...prev, takedownTime: e.target.value }))
+                        }
+                        onBlur={() =>
+                          setCateringForm((prev) => normalizePublicTimeField(prev, "takedownTime"))
                         }
                       />
                     </div>
@@ -774,6 +819,11 @@ export function PublicQuoteView({ token }: { token: string }) {
               <p className="text-center text-sm text-muted-foreground mb-4">
                 Would you like to approve or decline this quote?
               </p>
+              {cateringRequiredMissing && (
+                <p className="mb-4 text-center text-sm text-amber-700">
+                  Complete the required event details to approve: {missingCateringRequirements.join(", ")}.
+                </p>
+              )}
               <div className="flex justify-center gap-4">
                 <Button
                   size="lg"

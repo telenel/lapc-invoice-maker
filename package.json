@@ -9,6 +9,8 @@
     "lint": "next lint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "hotfix:preflight": "./scripts/hotfix-preflight.sh",
+    "hotfix:deploy": "./scripts/hotfix-deploy.sh",
     "audit:legacy-documents": "npx tsx scripts/supabase/audit-legacy-documents.ts",
     "ship-check": "./scripts/ship-check.sh",
     "postinstall": "node ./scripts/postinstall.js"

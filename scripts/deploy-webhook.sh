@@ -6,6 +6,8 @@ export COMPOSE_DOCKER_CLI_BUILD=1
 
 PROJECT_DIR="/opt/lapc-invoice-maker"
 DEFAULT_BRANCH="main"
+TARGET_REF="${1:-${DEPLOY_REF:-$DEFAULT_BRANCH}}"
+EXPECTED_SHA="${DEPLOY_EXPECTED_SHA:-}"
 APP_URL="https://laportal.montalvo.io/api/version"
 VERIFY_ATTEMPTS=36
 VERIFY_SLEEP=10
@@ -25,6 +27,10 @@ fi
 
 PREV_COMMIT=$(git rev-parse HEAD)
 echo "[deploy] Previous commit: $PREV_COMMIT"
+echo "[deploy] Target ref: $TARGET_REF"
+if [ -n "$EXPECTED_SHA" ]; then
+  echo "[deploy] Expected commit: $EXPECTED_SHA"
+fi
 
 ROLLBACK_COMMIT="$PREV_COMMIT"
 if [ -f .last-good-commit ]; then
@@ -52,11 +58,22 @@ rollback_deploy() {
   docker compose up -d --remove-orphans
 }
 
-echo "[deploy] Fetching latest code..."
-git fetch origin "$DEFAULT_BRANCH"
+echo "[deploy] Fetching latest code for $TARGET_REF..."
+if ! git fetch origin "$TARGET_REF"; then
+  echo "[deploy] ERROR: failed to fetch ref '$TARGET_REF' from origin"
+  exit 1
+fi
 
-echo "[deploy] Resetting to origin/$DEFAULT_BRANCH..."
-git reset --hard "origin/$DEFAULT_BRANCH"
+TARGET_COMMIT=$(git rev-parse FETCH_HEAD)
+echo "[deploy] Resolved target commit: $TARGET_COMMIT"
+
+if [ -n "$EXPECTED_SHA" ] && [ "$TARGET_COMMIT" != "$EXPECTED_SHA" ]; then
+  echo "[deploy] ERROR: fetched ref '$TARGET_REF' resolved to $TARGET_COMMIT, expected $EXPECTED_SHA"
+  exit 1
+fi
+
+echo "[deploy] Resetting worktree to $TARGET_COMMIT..."
+git reset --hard "$TARGET_COMMIT"
 
 NEW_COMMIT=$(git rev-parse HEAD)
 BUILD_SHA=$(git rev-parse --short HEAD)
