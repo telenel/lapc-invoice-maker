@@ -1,3 +1,4 @@
+process.env.NEXTAUTH_URL = "http://localhost:3000";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("@/lib/prisma", () => ({
@@ -131,6 +132,42 @@ describe("followUpService", () => {
       const result = await followUpService.initiateSingle(mockInvoice, "user-1", false);
       expect(result.status).toBe("success");
       expect(result.seriesId).toBe("series-1");
+    });
+
+    it("retries when a matching claim exists but is stale", async () => {
+      const { prisma } = await import("@/lib/prisma");
+      const staleClaim = { id: "claim-1", type: "ACCOUNT_FOLLOWUP_CLAIM", sentAt: new Date(Date.now() - 31 * 60 * 1000) };
+      const tx = {
+        $queryRaw: vi.fn().mockResolvedValue([{ acquired: true }]),
+        invoice: {
+          findUnique: vi.fn().mockResolvedValue({ accountNumber: "" }),
+        },
+        followUp: {
+          findFirst: vi.fn().mockResolvedValue(staleClaim),
+          delete: vi.fn().mockResolvedValue({}),
+          create: vi.fn().mockResolvedValue({ id: "claim-2" }),
+        },
+      };
+
+      (prisma.$transaction as ReturnType<typeof vi.fn>).mockImplementation(async (callback: (arg: unknown) => unknown) =>
+        callback(tx as never),
+      );
+      (sendEmail as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+      (prisma.followUp.update as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "claim-2" });
+      (prisma.followUp.delete as ReturnType<typeof vi.fn>).mockResolvedValue({});
+
+      const result = await followUpService.initiateSingle(mockInvoice, "user-1", false);
+
+      expect(result.status).toBe("success");
+      expect((tx.followUp.delete as ReturnType<typeof vi.fn>)).toHaveBeenCalledWith({ where: { id: "claim-1" } });
+      expect((tx.followUp.create as ReturnType<typeof vi.fn>)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            sentAt: expect.any(Date),
+            type: "ACCOUNT_FOLLOWUP_CLAIM",
+          }),
+        }),
+      );
     });
   });
 

@@ -1,4 +1,5 @@
 // tests/domains/follow-up/account-follow-ups.test.ts
+process.env.NEXTAUTH_URL = "http://localhost:3000";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("@/lib/prisma", () => ({
@@ -102,6 +103,10 @@ describe("checkAndSendAccountFollowUps", () => {
     (followUpRepository.findFreshClaimForSeries as ReturnType<typeof vi.fn>).mockResolvedValue(null);
     (followUpRepository.createClaimRow as ReturnType<typeof vi.fn>).mockResolvedValue({ id: "claim-1" });
     (sendEmail as ReturnType<typeof vi.fn>).mockResolvedValue(true);
+
+    // Mock prisma.followUp.findFirst to return the initiator's shareToken
+    const { prisma } = await import("@/lib/prisma");
+    (prisma.followUp.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({ shareToken: "tok-1" });
 
     await checkAndSendAccountFollowUps();
     expect(sendEmail).toHaveBeenCalled();

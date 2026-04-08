@@ -66,7 +66,10 @@ export function PendingAccountsWidget() {
             <div
               key={item.invoiceId}
               className={`flex cursor-pointer items-center justify-between rounded-md p-2 text-sm transition-colors hover:bg-muted ${isOwn ? "bg-amber-50 dark:bg-amber-950/20" : ""}`}
+              role="button"
+              tabIndex={0}
               onClick={() => router.push(href)}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") router.push(href); }}
             >
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">

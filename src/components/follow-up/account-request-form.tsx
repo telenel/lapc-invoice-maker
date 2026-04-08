@@ -53,14 +53,14 @@ export function AccountRequestForm({ token }: AccountRequestFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ accountNumber: accountNumber.trim() }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       if (data.alreadyResolved) {
         setAlreadyResolved(true);
         return;
       }
       if (!res.ok) {
-        setError(data.error ?? "Submission failed");
+        setError(data.error || "Submission failed");
         return;
       }
       setSubmitted(true);

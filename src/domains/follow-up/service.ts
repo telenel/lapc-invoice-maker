@@ -15,7 +15,11 @@ const DEFAULT_MAX_ATTEMPTS = 5;
 const CLAIM_TTL_MINUTES = 30;
 
 function getAppUrl(): string {
-  return process.env.NEXTAUTH_URL ?? "https://laportal.montalvo.io";
+  const appUrl = process.env.NEXTAUTH_URL;
+  if (!appUrl) {
+    throw new Error("NEXTAUTH_URL is required to generate follow-up links");
+  }
+  return appUrl;
 }
 
 function uuidToLockKey(uuid: string): bigint {
@@ -88,12 +92,13 @@ export const followUpService = {
           seriesStatus: "ACTIVE",
           type: { in: ["ACCOUNT_FOLLOWUP", "ACCOUNT_FOLLOWUP_CLAIM"] },
         },
+        orderBy: { sentAt: "desc" },
       });
 
       // Handle stale claims
       if (existing && existing.type === "ACCOUNT_FOLLOWUP_CLAIM") {
         const staleThreshold = new Date(Date.now() - CLAIM_TTL_MINUTES * 60 * 1000);
-        if (existing.sentAt < staleThreshold) {
+        if ((existing.sentAt ?? new Date(0)) < staleThreshold) {
           // Stale claim — delete and proceed
           await tx.followUp.delete({ where: { id: existing.id } });
         } else {
@@ -141,6 +146,7 @@ export const followUpService = {
           shareToken,
           seriesStatus: "ACTIVE",
           maxAttempts: DEFAULT_MAX_ATTEMPTS,
+          sentAt: new Date(),
           metadata: { attempt: 1 },
         },
       });
@@ -282,17 +288,35 @@ export const followUpService = {
       return { success: false, error: "Please provide a valid account number" };
     }
 
+    if (!row.seriesId) {
+      return { success: false, error: "Invalid follow-up series" };
+    }
+
     const { prisma } = await import("@/lib/prisma");
-    await prisma.$transaction([
-      prisma.invoice.update({
-        where: { id: row.invoice.id },
+    const txResult = await prisma.$transaction(async (tx) => {
+      const updated = await tx.invoice.updateMany({
+        where: {
+          id: row.invoice.id,
+          accountNumber: "",
+        },
         data: { accountNumber: trimmed },
-      }),
-      prisma.followUp.updateMany({
-        where: { seriesId: row.seriesId! },
+      });
+
+      if (updated.count === 0) {
+        return { alreadyResolved: true as const };
+      }
+
+      await tx.followUp.updateMany({
+        where: { seriesId: row.seriesId!, seriesStatus: "ACTIVE" },
         data: { seriesStatus: "COMPLETED" },
-      }),
-    ]);
+      });
+
+      return { alreadyResolved: false as const };
+    });
+
+    if (txResult.alreadyResolved) {
+      return { success: true, alreadyResolved: true };
+    }
 
     try {
       const { notificationService } = await import("@/domains/notification/service");

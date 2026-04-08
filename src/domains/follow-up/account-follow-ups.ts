@@ -72,7 +72,11 @@ export async function checkAndSendAccountFollowUps(): Promise<void> {
       where: { seriesId: row.seriesId!, shareToken: { not: null } },
       select: { shareToken: true },
     });
-    const shareToken = initiator?.shareToken ?? "";
+    if (!initiator?.shareToken) {
+      console.warn(`No share token found for series ${row.seriesId}, skipping`);
+      continue;
+    }
+    const shareToken = initiator.shareToken;
     const formUrl = `${appUrl}/account-request/${shareToken}`;
     const totalAmount = Number(inv.totalAmount);
 
@@ -89,19 +93,25 @@ export async function checkAndSendAccountFollowUps(): Promise<void> {
       maxAttempts,
     });
 
+    const recipientEmail = inv.staff?.email;
+    if (!recipientEmail) {
+      console.warn(`No staff email for invoice ${inv.id}, skipping series ${row.seriesId}`);
+      continue;
+    }
+
     // Create claim
     const claim = await followUpRepository.createClaimRow({
       invoiceId: inv.id,
       seriesId: row.seriesId!,
       shareToken: "", // Only initiator row has the shareToken
-      recipientEmail: inv.staff?.email ?? "",
+      recipientEmail,
       subject,
       maxAttempts,
       attempt: recountedNext,
     });
 
     // Send email
-    const sent = await sendEmail(inv.staff?.email ?? "", subject, html);
+    const sent = await sendEmail(recipientEmail, subject, html);
     if (!sent) {
       await followUpRepository.deleteClaimRow(claim.id);
       continue;
@@ -123,7 +133,11 @@ export async function checkAndSendAccountFollowUps(): Promise<void> {
 }
 
 function getAppUrl(): string {
-  return process.env.NEXTAUTH_URL ?? "https://laportal.montalvo.io";
+  const appUrl = process.env.NEXTAUTH_URL;
+  if (!appUrl) {
+    throw new Error("NEXTAUTH_URL is required to generate follow-up links");
+  }
+  return appUrl;
 }
 
 type InvoiceInfo = {
