@@ -33,7 +33,12 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     );
   }
 
-  const body = await req.json().catch(() => ({}));
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Malformed JSON" }, { status: 400 });
+  }
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }

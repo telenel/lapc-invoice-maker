@@ -69,7 +69,7 @@ export function PendingAccountsWidget() {
               role="button"
               tabIndex={0}
               onClick={() => router.push(href)}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") router.push(href); }}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); router.push(href); } }}
             >
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">

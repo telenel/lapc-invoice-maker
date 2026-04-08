@@ -1527,6 +1527,13 @@ export const quoteService = {
         throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
       }
       if (lockedQuote.quoteStatus === "SUBMITTED_MANUAL") {
+        if (!lockedQuote.shareToken) {
+          await tx.invoice.update({
+            where: { id },
+            data: { shareToken: crypto.randomUUID() },
+          });
+          shouldPublish = true;
+        }
         return;
       }
       if (lockedQuote.quoteStatus !== "SENT") {

@@ -294,6 +294,14 @@ export const followUpService = {
 
     const { prisma } = await import("@/lib/prisma");
     const txResult = await prisma.$transaction(async (tx) => {
+      const activeSeries = await tx.followUp.findFirst({
+        where: { seriesId: row.seriesId!, seriesStatus: "ACTIVE" },
+      });
+
+      if (!activeSeries) {
+        return { alreadyResolved: true as const };
+      }
+
       const updated = await tx.invoice.updateMany({
         where: {
           id: row.invoice.id,

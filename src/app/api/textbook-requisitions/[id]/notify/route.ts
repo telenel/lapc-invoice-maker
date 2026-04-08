@@ -3,8 +3,16 @@ import { forbiddenResponse, withAuth } from "@/domains/shared/auth";
 import { requisitionService } from "@/domains/textbook-requisition/service";
 
 export const POST = withAuth(async (req: NextRequest, session, ctx) => {
-  const rawId = (ctx && ctx.params ? (await ctx.params).id : "").trim();
-  if (!rawId) {
+  if (!ctx || !ctx.params) {
+    return NextResponse.json({ error: "Invalid requisition id" }, { status: 400 });
+  }
+  const params = await ctx.params;
+  const rawId = params.id;
+  if (typeof rawId !== "string") {
+    return NextResponse.json({ error: "Invalid requisition id" }, { status: 400 });
+  }
+  const id = rawId.trim();
+  if (!id) {
     return NextResponse.json({ error: "Invalid requisition id" }, { status: 400 });
   }
 
@@ -19,14 +27,14 @@ export const POST = withAuth(async (req: NextRequest, session, ctx) => {
   }
 
   try {
-    const existing = await requisitionService.getById(rawId);
+    const existing = await requisitionService.getById(id);
     if (!existing) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     if (session.user.role !== "admin" && existing.createdBy !== session.user.id) {
       return forbiddenResponse();
     }
-    const result = await requisitionService.sendNotification(rawId, emailType, session.user.id);
+    const result = await requisitionService.sendNotification(id, emailType, session.user.id);
     if (!result) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }

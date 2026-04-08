@@ -9,7 +9,13 @@ const paymentDetailsSchema = z.object({
 });
 
 export const POST = withAuth(async (req: NextRequest, session, ctx) => {
-  const { id: rawId } = await ctx!.params;
+  if (!ctx || !ctx.params) {
+    return NextResponse.json({ error: "Missing params" }, { status: 400 });
+  }
+  const { id: rawId } = await ctx.params;
+  if (typeof rawId !== "string") {
+    return NextResponse.json({ error: "Invalid quote id" }, { status: 400 });
+  }
   const id = rawId.trim();
   if (!id) {
     return NextResponse.json({ error: "Invalid quote id" }, { status: 400 });

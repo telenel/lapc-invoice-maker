@@ -4,6 +4,7 @@ import { notificationService } from "@/domains/notification/service";
 
 function parseNonNegativeInt(value: string | null, fallback: number): number | "error" {
   if (value == null) return fallback;
+  if (value === "") return "error";
   const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed < 0) return "error";
   return parsed;

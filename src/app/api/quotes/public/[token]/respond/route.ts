@@ -52,12 +52,17 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       }
     );
   }
-  const body = await req.json().catch(() => ({}));
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const response = body.response;
+  const response = (body as Record<string, unknown>).response;
   if (response !== "ACCEPTED" && response !== "DECLINED") {
     return NextResponse.json({ error: "Invalid response. Must be ACCEPTED or DECLINED" }, { status: 400 });
   }

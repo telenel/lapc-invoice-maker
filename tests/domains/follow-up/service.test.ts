@@ -1,5 +1,6 @@
-process.env.NEXTAUTH_URL = "http://localhost:3000";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from "vitest";
+
+const originalNextAuthUrl = process.env.NEXTAUTH_URL;
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -56,6 +57,18 @@ import { followUpRepository } from "@/domains/follow-up/repository";
 import { sendEmail } from "@/lib/email";
 
 describe("followUpService", () => {
+  beforeAll(() => {
+    process.env.NEXTAUTH_URL = "http://localhost:3000";
+  });
+
+  afterAll(() => {
+    if (originalNextAuthUrl !== undefined) {
+      process.env.NEXTAUTH_URL = originalNextAuthUrl;
+    } else {
+      delete process.env.NEXTAUTH_URL;
+    }
+  });
+
   beforeEach(() => vi.clearAllMocks());
 
   describe("initiateSingle", () => {

@@ -15,6 +15,8 @@ function parseStatus(
 
 function parseAmount(value: string | null): number | undefined | "error" {
   if (value == null) return undefined;
+  if (value.trim() === "") return "error";
+  if (!/^\d+(\.\d+)?$/.test(value)) return "error";
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return "error";
   return parsed;

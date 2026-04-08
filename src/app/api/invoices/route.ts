@@ -25,6 +25,7 @@ function parsePositiveInt(value: string | null, fallback: number): number | "err
 
 function parseAmount(value: string | null): number | undefined | "error" {
   if (value == null) return undefined;
+  if (value.trim() === "") return "error";
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return "error";
   return parsed;

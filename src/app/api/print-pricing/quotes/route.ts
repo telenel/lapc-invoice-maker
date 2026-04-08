@@ -5,6 +5,13 @@ import { printPricingService } from "@/domains/print-pricing/service";
 import { authOptions } from "@/lib/auth";
 import { checkRateLimit } from "@/lib/rate-limit";
 
+class InvalidJsonError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "InvalidJsonError";
+  }
+}
+
 function isValidIP(ip: string): boolean {
   // IPv4 pattern
   const ipv4Pattern = /^(\d{1,3}\.){3}\d{1,3}$/;
@@ -53,14 +60,14 @@ export async function POST(req: Request) {
       );
     }
     const body = await req.json().catch(() => {
-      throw new SyntaxError("INVALID_JSON");
+      throw new InvalidJsonError("Invalid request body");
     });
     const session = await getServerSession(authOptions);
     const createdBy = (session?.user as { id?: string } | undefined)?.id ?? null;
     const quote = await printPricingService.generateQuote(body, createdBy);
     return NextResponse.json(quote, { status: 201 });
   } catch (error) {
-    if (error instanceof SyntaxError && error.message === "INVALID_JSON") {
+    if (error instanceof InvalidJsonError) {
       return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
     }
     if (error instanceof ZodError) {

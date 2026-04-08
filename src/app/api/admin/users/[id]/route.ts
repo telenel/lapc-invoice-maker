@@ -3,7 +3,8 @@ import { withAdmin } from "@/domains/shared/auth";
 import { adminService } from "@/domains/admin/service";
 import { adminUserUpdateSchema } from "@/lib/validators";
 
-function parseId(rawId: string) {
+function parseId(rawId: string | undefined) {
+  if (rawId == null) return null;
   const id = rawId.trim();
   if (!id) return null;
   return id;

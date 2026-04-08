@@ -41,15 +41,22 @@ export const POST = withAdmin(async (req, session, ctx) => {
   if (!isObjectBody(body)) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
-  const parsed = staffAccountNumberSchema.safeParse(body);
+
+  const normalizedBody = {
+    ...body,
+    accountCode: typeof body.accountCode === "string" ? body.accountCode.trim() : body.accountCode,
+    description: typeof body.description === "string" ? body.description.trim() : body.description,
+  };
+
+  const parsed = staffAccountNumberSchema.safeParse(normalizedBody);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
   await staffService.upsertAccountNumber({
     staffId: id,
-    accountCode: parsed.data.accountCode.trim(),
-    description: parsed.data.description?.trim(),
+    accountCode: parsed.data.accountCode,
+    description: parsed.data.description,
   });
   return NextResponse.json({ success: true }, { status: 201 });
 });

@@ -26,7 +26,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 
 describe("GET /api/textbook-requisitions", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     vi.mocked(getServerSession).mockResolvedValue({
       user: { id: "staff-user", role: "user" },
     } as never);
@@ -90,7 +90,7 @@ describe("GET /api/textbook-requisitions", () => {
 
 describe("POST /api/textbook-requisitions", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     vi.mocked(getServerSession).mockResolvedValue({
       user: { id: "staff-user", role: "admin" },
     } as never);
@@ -116,7 +116,7 @@ describe("POST /api/textbook-requisitions", () => {
 
 describe("POST /api/textbook-requisitions/submit", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     vi.mocked(requisitionService.submitPublic).mockResolvedValue({
       id: "r1",
       submittedAt: "2026-03-01T00:00:00.000Z",
@@ -149,7 +149,7 @@ describe("POST /api/textbook-requisitions/submit", () => {
 
 describe("GET /api/textbook-requisitions/lookup", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     vi.mocked(checkRateLimit).mockResolvedValue({
       allowed: true,
       retryAfterMs: 0,
