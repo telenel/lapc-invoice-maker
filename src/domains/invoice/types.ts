@@ -118,6 +118,7 @@ export interface InvoiceFilters {
   amountMax?: number;
   creatorId?: string;
   isRunning?: boolean;
+  needsAccountNumber?: boolean;
   page?: number;
   pageSize?: number;
   sortBy?: string;

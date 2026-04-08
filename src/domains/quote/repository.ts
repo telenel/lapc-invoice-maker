@@ -50,6 +50,14 @@ function buildWhere(filters: QuoteFilters): Prisma.InvoiceWhereInput {
   if (filters.creatorId) {
     where.createdBy = filters.creatorId;
   }
+  if (filters.needsAccountNumber) {
+    where.followUps = {
+      some: {
+        type: { in: ["ACCOUNT_FOLLOWUP", "ACCOUNT_FOLLOWUP_CLAIM"] },
+        seriesStatus: { in: ["ACTIVE", "EXHAUSTED"] },
+      },
+    };
+  }
   if (filters.dateFrom || filters.dateTo) {
     where.date = {};
     if (filters.dateFrom) where.date.gte = new Date(filters.dateFrom);

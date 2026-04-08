@@ -204,6 +204,7 @@ export interface QuoteFilters {
   dateTo?: string;
   amountMin?: number;
   amountMax?: number;
+  needsAccountNumber?: boolean;
   page?: number;
   pageSize?: number;
   sortBy?: string;
