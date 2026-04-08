@@ -19,10 +19,10 @@ function getAppUrl(): string {
 }
 
 function uuidToLockKey(uuid: string): bigint {
-  // Use the first 15 hex chars of the UUID (60 bits) as a bigint lock key.
-  // pg_try_advisory_xact_lock accepts bigint. UUIDs are unique, so the first
-  // 60 bits are collision-resistant enough for advisory locks.
-  const hex = uuid.replace(/-/g, "").slice(0, 15);
+  // Convert UUID hex chars to a bigint advisory lock key.
+  // Strip non-hex characters, take first 15 hex chars (60 bits).
+  const hex = uuid.replace(/[^0-9a-fA-F]/g, "").slice(0, 15);
+  if (!hex) return BigInt(0);
   return BigInt(`0x${hex}`);
 }
 
