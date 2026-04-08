@@ -11,6 +11,9 @@ services:
     expose:
       - "3000"
     env_file: .env
+    environment:
+      BUILD_SHA: ${BUILD_SHA:-dev}
+      BUILD_TIME: ${BUILD_TIME:-unknown}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.laportal.rule=Host(`laportal.montalvo.io`)"

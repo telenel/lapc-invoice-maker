@@ -6,19 +6,20 @@ Operations portal for **Los Angeles Pierce College**. Handles the full lifecycle
 
 ## Features
 
-- **Invoice creation** with keyboard-first entry, staff autofill, line items, tax calculation, and approval chains
+- **Invoice creation** with keyboard-first entry, requestor autofill, distinct account number/account code fields, line items, tax calculation, and approver chains
 - **PDF generation** — cover sheets (Puppeteer), IDP forms (pdf-lib), PrismCore merge
 - **Quote management** — create, send, auto-expire, convert to invoice, online sharing with approve/decline flow
 - **Online quote sharing** — shareable public links, recipient approve/decline, view tracking (IP, browser, duration), real-time Supabase notifications
 - **Staff directory** — CRUD with account numbers, signer history tracking
-- **Admin panel** — user management, account codes, invoice manager with inline editing, saved line items catalog, analytics dashboard
+- **Team visibility** — shared quote/invoice lists, dashboard activity, and read-only fiscal context across authenticated staff
+- **Admin panel** — user management, account number management, invoice manager with inline editing, saved line items catalog, analytics dashboard
 - **Dark/light theme** with UI scale controls
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | Next.js 15 (App Router) |
+| Framework | Next.js 14 (App Router) |
 | Database | Supabase Postgres + Prisma 7 |
 | Storage / Realtime | Supabase Storage + Realtime |
 | Styling | Tailwind CSS 4 + shadcn/ui v4 |
@@ -91,9 +92,11 @@ ALLOW_LEGACY_FILESYSTEM_FALLBACK=false
 
 ## Deployment
 
-Docker Compose behind Traefik on [montalvo.io](https://montalvo.io). GitHub Actions runs formal `ship-check` and `actionlint` checks on PRs and pushes, auto-merges PRs by default after a 15-minute quiet period once the latest head SHA has green CI and CodeRabbit has reviewed it or produced the latest commit, and deploys `main` via webhook after CI passes. Add `no-automerge` or `hold` to opt out. Production images also carry a `.build-meta.json` stamp so `/api/version` can report the deployed commit reliably.
+Docker Compose behind Traefik on [montalvo.io](https://montalvo.io). GitHub Actions runs formal `ship-check` and `actionlint` checks on PRs and pushes, auto-merges PRs by default after a 15-minute quiet period once the latest head SHA has green CI and CodeRabbit has reviewed it or produced the latest commit, and deploys `main` after CI passes. When deploy SSH secrets are configured, GitHub now prefers an exact-SHA SSH deploy to the VPS. If those secrets are absent, it falls back to the legacy webhook path. Add `no-automerge` or `hold` to opt out.
 
-Important: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` must be present at image build time, not only container runtime. The Docker build now bakes those public values into the client bundle and records whether they were present in `.build-meta.json`.
+Production build identity now comes from immutable runtime metadata baked into the image (`BUILD_SHA` / `BUILD_TIME`). The container rewrites `.build-meta.json` from those values on startup as a fallback, but `/api/version` prefers the immutable runtime values first so repo SHA, image SHA, and live app SHA do not drift. Remote deploys now verify both the live SHA and a lightweight route smoke-check set before they declare success or skip a rebuild.
+
+Important: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` must be present at image build time, not only container runtime. The Docker build bakes those public values into the client bundle and the runtime version endpoint reports whether they were present.
 
 If `JOB_SCHEDULER=supabase`, only set `SUPABASE_SCHEDULER_CONFIRMED=true` after the Supabase `pg_cron` jobs are verified. Until then, LAPortal keeps app-side cron active as a safe fallback.
 
@@ -113,9 +116,12 @@ Current migration status:
 
 ## Project Documentation
 
+- [docs/README.md](docs/README.md) — Documentation index and navigation
 - [docs/PROJECT-OVERVIEW.md](docs/PROJECT-OVERVIEW.md) — Comprehensive architecture and API reference
 - [docs/SUPABASE-MIGRATION-STATUS.md](docs/SUPABASE-MIGRATION-STATUS.md) — Live migration status, deployed fixes, and remaining platform work
 - [docs/HOTFIX-WORKFLOW.md](docs/HOTFIX-WORKFLOW.md) — Fast SSH deploy lane for small production fixes
+- [docs/DEPLOYMENT-STANDARD.md](docs/DEPLOYMENT-STANDARD.md) — Repeatable SHA-pinned deploy standard and reusable templates
+- [docs/templates/deploy-smoke-check.sh.example](docs/templates/deploy-smoke-check.sh.example) — Reusable route smoke-check template
 - [docs/superpowers/specs/](docs/superpowers/specs/) — Design specifications
 - [docs/superpowers/plans/](docs/superpowers/plans/) — Implementation plans
 

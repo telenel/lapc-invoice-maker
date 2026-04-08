@@ -54,10 +54,14 @@ ARG BUILD_SHA=dev
 ARG BUILD_TIME=unknown
 ARG NEXT_PUBLIC_SUPABASE_URL=""
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY=""
+LABEL org.opencontainers.image.revision=$BUILD_SHA
+LABEL org.opencontainers.image.created=$BUILD_TIME
 ENV NODE_ENV=production
 ENV HOME=/tmp
 ENV XDG_CONFIG_HOME=/tmp/.chromium/config
 ENV XDG_CACHE_HOME=/tmp/.chromium/cache
+ENV BUILD_SHA=${BUILD_SHA}
+ENV BUILD_TIME=${BUILD_TIME}
 ENV NEXT_PUBLIC_BUILD_SHA=${BUILD_SHA}
 ENV NEXT_PUBLIC_BUILD_TIME=${BUILD_TIME}
 ENV NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
@@ -72,8 +76,6 @@ COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
 # Prisma v7 generates client to src/generated/prisma (not node_modules/.prisma)
 COPY --from=builder /app/src/generated/prisma ./src/generated/prisma
-
-RUN node -e 'const fs=require("fs"); fs.writeFileSync(".build-meta.json", JSON.stringify({ buildSha: process.env.NEXT_PUBLIC_BUILD_SHA || "dev", buildTime: process.env.NEXT_PUBLIC_BUILD_TIME || new Date().toISOString(), publicEnv: { supabaseUrlConfigured: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL), supabaseAnonKeyConfigured: Boolean(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) } }));'
 
 # Install prisma CLI for migrations at runtime, then copy dotenv on top
 # (prisma's npm install creates nested node_modules that swallows dotenv if installed together)

@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PROJECT_DIR="/opt/your-app"
+TARGET_REF="${1:-main}"
+EXPECTED_SHA="${DEPLOY_EXPECTED_SHA:-}"
+APP_URL="https://your-app.example.com/api/version"
+SMOKE_BASE_URL="${DEPLOY_SMOKE_BASE_URL:-https://your-app.example.com}"
+VERIFY_ATTEMPTS=24
+VERIFY_SLEEP=10
+VERIFY_INITIAL_SLEEP=20
+DEPLOY_LOG_FILE=".deploy-history.log"
+
+extract_json_string_field() {
+  local body="$1"
+  local field="$2"
+  printf '%s' "$body" | grep -oE "\"$field\":\"[^\"]*\"" | cut -d'"' -f4 || true
+}
+
+fetch_live_version() {
+  curl -fsS --connect-timeout 10 --max-time 20 "$APP_URL" 2>/dev/null || true
+}
+
+append_deploy_log() {
+  local outcome="$1"
+  local message="$2"
+  printf '%s\toutcome=%s\tref=%s\texpected=%s\tcommit=%s\tbuild_sha=%s\tmessage=%s\n' \
+    "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+    "$outcome" \
+    "$TARGET_REF" \
+    "${EXPECTED_SHA:-none}" \
+    "${NEW_COMMIT:-unknown}" \
+    "${BUILD_SHA:-unknown}" \
+    "$message" >> "$DEPLOY_LOG_FILE"
+}
+
+run_smoke_checks() {
+  if [ ! -x ./scripts/deploy-smoke-check.sh ]; then
+    echo "No executable smoke check script found; skipping smoke checks"
+    return 0
+  fi
+
+  DEPLOY_SMOKE_BASE_URL="$SMOKE_BASE_URL" ./scripts/deploy-smoke-check.sh
+}
+
+cd "$PROJECT_DIR"
+
+PREV_COMMIT=$(git rev-parse HEAD)
+ROLLBACK_COMMIT="$PREV_COMMIT"
+if [ -f .last-good-commit ]; then
+  LAST_GOOD_COMMIT=$(cat .last-good-commit)
+  if [ -n "$LAST_GOOD_COMMIT" ]; then
+    ROLLBACK_COMMIT="$LAST_GOOD_COMMIT"
+  fi
+fi
+
+rollback_deploy() {
+  local target_commit="$1"
+  git reset --hard "$target_commit"
+  BUILD_SHA=$(git rev-parse --short HEAD)
+  BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+  export BUILD_SHA BUILD_TIME
+  docker compose build app
+  docker compose up -d --remove-orphans
+  append_deploy_log "rollback" "rollback to ${target_commit}"
+}
+
+git fetch origin "$TARGET_REF"
+TARGET_COMMIT=$(git rev-parse FETCH_HEAD)
+
+if [ -n "$EXPECTED_SHA" ] && [ "$TARGET_COMMIT" != "$EXPECTED_SHA" ]; then
+  echo "Fetched $TARGET_COMMIT, expected $EXPECTED_SHA"
+  exit 1
+fi
+
+git reset --hard "$TARGET_COMMIT"
+
+NEW_COMMIT=$(git rev-parse HEAD)
+BUILD_SHA=$(git rev-parse --short HEAD)
+BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+export BUILD_SHA BUILD_TIME
+
+live_before_sha=$(extract_json_string_field "$(fetch_live_version)" "buildSha")
+if [ "$live_before_sha" = "$BUILD_SHA" ]; then
+  if run_smoke_checks; then
+    echo "$NEW_COMMIT" > .last-good-commit
+    append_deploy_log "skip" "live app already serving $BUILD_SHA and smoke checks passed"
+    exit 0
+  fi
+fi
+
+docker compose build app
+docker compose up -d --remove-orphans
+
+sleep "$VERIFY_INITIAL_SLEEP"
+for i in $(seq 1 "$VERIFY_ATTEMPTS"); do
+  body=$(fetch_live_version)
+  status=$(extract_json_string_field "$body" "status")
+  deployed_sha=$(extract_json_string_field "$body" "buildSha")
+  if [ "$status" = "ok" ] && [ "$deployed_sha" = "$BUILD_SHA" ]; then
+    run_smoke_checks
+    echo "$NEW_COMMIT" > .last-good-commit
+    append_deploy_log "success" "live app is serving $BUILD_SHA and smoke checks passed"
+    exit 0
+  fi
+  sleep "$VERIFY_SLEEP"
+done
+
+append_deploy_log "verify_failed" "live site never reported $BUILD_SHA"
+rollback_deploy "$ROLLBACK_COMMIT" || true
+exit 1

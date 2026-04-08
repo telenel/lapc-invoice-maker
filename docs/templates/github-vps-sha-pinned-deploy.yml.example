@@ -17,17 +17,12 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      CI_WAIT_ATTEMPTS: 30
-      CI_WAIT_SLEEP: 10
-      WEBHOOK_READY_ATTEMPTS: 6
-      WEBHOOK_READY_SLEEP: 10
-      WEBHOOK_CONNECT_TIMEOUT: 20
-      WEBHOOK_MAX_TIME: 45
       DEPLOY_SSH_PORT: ${{ secrets.DEPLOY_SSH_PORT || '22' }}
-      DEPLOY_REMOTE_PROJECT_DIR: ${{ secrets.DEPLOY_REMOTE_PROJECT_DIR || '/opt/lapc-invoice-maker' }}
+      DEPLOY_REMOTE_PROJECT_DIR: ${{ secrets.DEPLOY_REMOTE_PROJECT_DIR || '/opt/your-app' }}
       DEPLOY_VERIFY_ATTEMPTS: 28
       DEPLOY_VERIFY_SLEEP: 15
       DEPLOY_VERIFY_INITIAL_SLEEP: 60
+      APP_VERSION_URL: https://your-app.example.com/api/version
     steps:
       - name: Wait for matching CI run
         uses: actions/github-script@v7
@@ -36,10 +31,8 @@ jobs:
         with:
           script: |
             const expectedSha = process.env.EXPECTED_SHA;
-            const maxAttempts = Number(process.env.CI_WAIT_ATTEMPTS);
-            const waitMs = Number(process.env.CI_WAIT_SLEEP) * 1000;
-
-            core.info(`Waiting for CI to succeed for ${expectedSha}...`);
+            const maxAttempts = 30;
+            const waitMs = 10_000;
 
             for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
               const { data } = await github.rest.actions.listWorkflowRunsForRepo({
@@ -55,31 +48,25 @@ jobs:
               );
 
               if (!ciRun) {
-                core.info(`Attempt ${attempt}/${maxAttempts}: waiting for CI run to appear`);
+                core.info(`Attempt ${attempt}/${maxAttempts}: waiting for CI run`);
                 await new Promise((resolve) => setTimeout(resolve, waitMs));
                 continue;
               }
 
-              core.info(
-                `Attempt ${attempt}/${maxAttempts}: CI status=${ciRun.status} conclusion=${ciRun.conclusion ?? "none"}`,
-              );
-
               if (ciRun.status === "completed" && ciRun.conclusion === "success") {
-                core.info(`Matched successful CI run: ${ciRun.html_url}`);
                 return;
               }
 
               if (ciRun.status === "completed") {
-                throw new Error(`CI did not succeed for ${expectedSha}: ${ciRun.html_url}`);
+                throw new Error(`CI failed for ${expectedSha}: ${ciRun.html_url}`);
               }
 
               await new Promise((resolve) => setTimeout(resolve, waitMs));
             }
 
-            throw new Error(`Timed out waiting for CI to succeed for ${expectedSha}`);
+            throw new Error(`Timed out waiting for CI on ${expectedSha}`);
 
       - name: Configure SSH
-        if: ${{ secrets.DEPLOY_SSH_HOST != '' && secrets.DEPLOY_SSH_KEY != '' }}
         env:
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
         run: |
@@ -88,22 +75,7 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -p "$DEPLOY_SSH_PORT" "${{ secrets.DEPLOY_SSH_HOST }}" >> ~/.ssh/known_hosts
 
-      - name: Wait for deploy webhook ingress
-        if: ${{ secrets.DEPLOY_SSH_HOST == '' || secrets.DEPLOY_SSH_KEY == '' }}
-        run: |
-          for i in $(seq 1 "$WEBHOOK_READY_ATTEMPTS"); do
-            if curl -fsSI --connect-timeout "$WEBHOOK_CONNECT_TIMEOUT" --max-time "$WEBHOOK_CONNECT_TIMEOUT" https://montalvo.io/hooks/deploy-laportal >/dev/null; then
-              echo "Webhook ingress reachable"
-              exit 0
-            fi
-            echo "Attempt $i/$WEBHOOK_READY_ATTEMPTS: webhook ingress not reachable yet"
-            sleep "$WEBHOOK_READY_SLEEP"
-          done
-          echo "Timed out waiting for webhook ingress to become reachable"
-          exit 1
-
-      - name: Deploy over SSH
-        if: ${{ secrets.DEPLOY_SSH_HOST != '' && secrets.DEPLOY_SSH_KEY != '' }}
+      - name: Deploy exact SHA
         env:
           EXPECTED_SHA: ${{ github.sha }}
           DEPLOY_SSH_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
@@ -117,38 +89,16 @@ jobs:
           fi
           ssh -p "$DEPLOY_SSH_PORT" -o BatchMode=yes "$ssh_target" "$remote_cmd"
 
-      - name: Trigger legacy deploy webhook
-        if: ${{ secrets.DEPLOY_SSH_HOST == '' || secrets.DEPLOY_SSH_KEY == '' }}
+      - name: Verify live SHA
         env:
           EXPECTED_SHA: ${{ github.sha }}
         run: |
-          echo "WARNING: falling back to legacy webhook deploy because DEPLOY_SSH_HOST / DEPLOY_SSH_KEY secrets are not configured."
-          response=$(curl -sfS --connect-timeout "$WEBHOOK_CONNECT_TIMEOUT" --max-time "$WEBHOOK_MAX_TIME" -X POST \
-            https://montalvo.io/hooks/deploy-laportal \
-            -H "X-Deploy-Secret: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}" \
-            -H "X-Deploy-Expected-Sha: $EXPECTED_SHA" \
-            -w "\n%{http_code}")
-          body=$(printf '%s\n' "$response" | sed '$d')
-          code=$(printf '%s\n' "$response" | tail -1)
-          echo "Webhook response: HTTP $code — $body"
-          if [ "$code" != "200" ] || ! printf '%s' "$body" | grep -Fq "Deploy triggered"; then
-            echo "Deploy webhook failed: HTTP $code — $body"
-            exit 1
-          fi
-          echo "Deploy triggered successfully"
-
-      - name: Health check
-        env:
-          EXPECTED_SHA: ${{ github.sha }}
-        run: |
-          # shellcheck disable=SC2153
           expected_sha="${EXPECTED_SHA::7}"
-          echo "Waiting for deployed build SHA $expected_sha..."
           sleep "$DEPLOY_VERIFY_INITIAL_SLEEP"
           last_body=""
           for i in $(seq 1 "$DEPLOY_VERIFY_ATTEMPTS"); do
             body=""
-            if ! body=$(curl -fsS --connect-timeout 10 --max-time 20 https://laportal.montalvo.io/api/version 2>/dev/null); then
+            if ! body=$(curl -fsS --connect-timeout 10 --max-time 20 "$APP_VERSION_URL" 2>/dev/null); then
               body=""
             fi
             last_body="$body"
@@ -156,11 +106,9 @@ jobs:
             deployed_sha=$(printf '%s' "$body" | grep -oE '"buildSha":"[^"]*"' | cut -d'"' -f4 || true)
             echo "Attempt $i/$DEPLOY_VERIFY_ATTEMPTS: status=${status:-unknown} buildSha=${deployed_sha:-missing}"
             if [ "$status" = "ok" ] && [ "$deployed_sha" = "$expected_sha" ]; then
-              echo "Deploy verification passed"
               exit 0
             fi
             sleep "$DEPLOY_VERIFY_SLEEP"
           done
           echo "Last /api/version response: ${last_body:-<empty>}"
-          echo "Deploy verification failed: live build SHA did not match $expected_sha"
           exit 1

@@ -131,7 +131,8 @@ fi
 quoted_project_dir=$(printf '%q' "$remote_project_dir")
 quoted_ref=$(printf '%q' "$deploy_ref")
 quoted_expected_sha=$(printf '%q' "$expected_sha")
-remote_cmd="cd $quoted_project_dir && DEPLOY_EXPECTED_SHA=$quoted_expected_sha ./scripts/deploy-webhook.sh $quoted_ref"
+deploy_actor=$(printf '%q' "${USER:-unknown}")
+remote_cmd="cd $quoted_project_dir && DEPLOY_CHANNEL=hotfix DEPLOY_ACTOR=$deploy_actor DEPLOY_EXPECTED_SHA=$quoted_expected_sha ./scripts/deploy-webhook.sh $quoted_ref"
 
 echo "==> Hotfix deploy target"
 echo "SSH target: $ssh_target"

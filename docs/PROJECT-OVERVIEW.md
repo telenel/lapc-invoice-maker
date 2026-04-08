@@ -8,7 +8,7 @@ Operations portal for Los Angeles Pierce College. Handles invoice drafting, fina
 
 | Layer | Technology |
 |---|---|
-| Framework | Next.js 15 (App Router) |
+| Framework | Next.js 14 (App Router) |
 | Database ORM | Prisma 7 + Supabase Postgres |
 | Styling | Tailwind CSS 4 + shadcn/ui v4 (base-ui) |
 | Auth | NextAuth.js (credentials provider) |
@@ -283,7 +283,6 @@ External people (vendors, customers, catering contacts) who are not Pierce Colle
 | `QuoteView` | Tracks public quote page views (IP, user-agent, referrer, viewport, duration, response) |
 | `Event` | Calendar events with type (Meeting/Seminar/Vendor/Other), recurrence, reminders |
 | `Notification` | Real-time notifications for quote events and event reminders |
-| `AccountCode` | Admin-managed account code catalog |
 | `SavedLineItem` | Admin-managed saved line items catalog |
 | `QuickPick` | Admin-managed quick pick items |
 | `UserQuickPick` | Per-user quick pick selections |
@@ -310,7 +309,7 @@ External people (vendors, customers, catering contacts) who are not Pierce Colle
 - **Puppeteer sandboxing** — request interception blocks all external URLs; only `data:` and `file:` protocols allowed
 - **Storage key validation** — uploaded document object keys are normalized and reject traversal patterns such as `..` and `\`
 - **CSV injection** — `escapeCsv()` prefixes formula triggers (`=+-@`) with `'`
-- **Ownership verification** — all single-resource endpoints verify `resource.createdBy === session.user.id` (admins bypass)
+- **Shared read / restricted write** — authenticated users can read shared fiscal data for invoices and quotes, but mutating actions remain owner/admin only unless a route is explicitly public by token
 - **Auth wrappers** — `withAuth()` / `withAdmin()` centralize session checks in route handlers
 
 ---
@@ -333,13 +332,37 @@ The home page (`src/app/page.tsx`) features a personalized dashboard:
 - **YourFocus widget** — prioritized action items for the current user
 - **Drag-and-drop layout** — widgets can be reordered and persisted via the authenticated user preferences API
 - **Stats cards** — invoice/quote counts filtered by `createdAt` (not invoice date)
-- **Recent activity** — shows both invoices and quotes (not just invoices)
-- **Running invoices, pending charges, team activity** — all role-aware
+- **Recent activity** — merges the latest invoices and quotes across the team and highlights the current user's items
+- **Running invoices, pending charges, team activity** — team-visible with per-user emphasis where useful
 - **Real-time updates** — all dashboard widgets update in real-time via Supabase Realtime invalidation
 - **Operational visibility** — admin Database Health now includes scheduler mode, storage audit counts, and recent tracked background job runs
 - **Help modal** — accessible from nav bar, covers invoice creation, line items, signatures, PDF generation, invoice management, and analytics
 
 Components in `src/components/dashboard/`.
+
+---
+
+## Access Model
+
+- **Invoices and quotes** — authenticated users can read team-wide lists, dashboard activity, detail pages, and generated PDFs
+- **Mutations** — create is authenticated; update/delete/finalize/duplicate and other destructive or state-changing actions remain owner/admin scoped unless a route is intentionally public
+- **Quotes** — public recipient review stays token-based and unauthenticated; internal staff review is authenticated and team-visible
+- **Contacts** — remain owner-scoped because they are user-managed address-book data rather than shared fiscal records
+- **Staff and admin data** — governed separately by route-level auth wrappers and admin checks
+
+This split is deliberate: fiscal visibility is shared across the team, while authorship and write authority remain constrained.
+
+---
+
+## Invoice Workflow Semantics
+
+- **Requestor** — the selected staff member on invoice creation is the requestor
+- **Department Contact** — the IDP Department Contact is derived from that requestor selection
+- **Approvers** — the three signature lines at the bottom of the invoice are approvers, not requestors
+- **Account Number vs Account Code** — these are separate fields and separate data concepts throughout the form, PDF output, and exports
+- **Signer history** — approver suggestions are remembered per requestor through `StaffSignerHistory`
+
+These semantics are reflected in the invoice form, help modal, and generated PDF workflow.
 
 ---
 
@@ -530,7 +553,7 @@ npx prisma generate   # Regenerate client after schema changes
 
 ### Build Version Indicator
 
-The navigation bar displays the current git short SHA as a build version indicator. It is injected at build time via `next.config.mjs`:
+The navigation bar displays the current git short SHA as a build version indicator. Build metadata is still injected at build time via `next.config.mjs`:
 
 ```js
 env: {
@@ -539,7 +562,7 @@ env: {
 }
 ```
 
-In production, the app also ships a `.build-meta.json` stamp created during deploy/build so `/api/version` can report the deployed commit even when git metadata is unavailable inside the image.
+In production, the nav badge reads from `/api/version`, and `/api/version` prefers immutable runtime metadata from the running image (`BUILD_SHA` / `BUILD_TIME`). The container also rewrites `.build-meta.json` on startup from the same values as a fallback so the reported version cannot drift from the actual image just because a file was edited after deploy.
 
 ### CI/CD Pipeline
 
@@ -548,16 +571,25 @@ GitHub Actions runs on every push to `main` and every PR targeting `main`:
 1. **`actionlint`** — validates GitHub Actions workflow syntax and common mistakes
 2. **`ship-check`** — runs the repo validation command (`npm run ship-check`) on Node 22 after `npm ci` and `npx prisma generate`
 3. **Auto-merge** (PRs to `main`) — after a 15-minute quiet period, merges the latest green PR head SHA once CodeRabbit has reviewed it or produced the latest commit; add `no-automerge` or `hold` to opt out
-4. **Deploy** (push to `main` only) — waits for the `CI` workflow to pass, triggers the HTTPS webhook at `montalvo.io/hooks/deploy-laportal`, then polls `laportal.montalvo.io/api/version`
+4. **Deploy** (push to `main` only) — waits for the `CI` workflow to pass, then prefers an exact-SHA SSH deploy if deploy SSH secrets are configured; otherwise it falls back to the legacy HTTPS webhook path and polls `laportal.montalvo.io/api/version`
 
-Deployment is Docker Compose on montalvo.io behind Traefik. The deploy webhook triggers a build-first strategy (no docker-down before build).
+Deployment is Docker Compose on montalvo.io behind Traefik. The VPS deploy script now:
+
+- fetches the target ref
+- verifies the expected SHA when one is provided
+- exports `BUILD_SHA` / `BUILD_TIME` for both build and runtime identity
+- skips only when the live app already reports the target SHA and smoke checks pass
+- rebuilds and recreates the container otherwise
+- runs lightweight route smoke checks before declaring success
+- appends an audit record for skip / success / rollback / failure outcomes
+- rolls back to `.last-good-commit` if live verification fails
 
 For urgent low-risk production fixes, the repo also includes a separate hotfix lane:
 
 - `npm run hotfix:preflight` — reduced local validation
 - `npm run hotfix:deploy -- <ref>` — direct SSH deploy of a pushed branch/tag through the same remote build/verify/rollback script
 
-See [docs/HOTFIX-WORKFLOW.md](HOTFIX-WORKFLOW.md) for the operator workflow and guardrails.
+See [docs/HOTFIX-WORKFLOW.md](HOTFIX-WORKFLOW.md) for the operator workflow and guardrails, and [docs/DEPLOYMENT-STANDARD.md](DEPLOYMENT-STANDARD.md) for the reusable cross-repo deployment template.
 
 ### Stack Gotchas
 
