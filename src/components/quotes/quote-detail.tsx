@@ -43,6 +43,9 @@ import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
 import { useSSE } from "@/lib/use-sse";
 import { ShareLinkDialog } from "@/components/quotes/share-link-dialog";
 import { QuoteActivity } from "@/components/quotes/quote-activity";
+import { FollowUpBadge } from "@/components/follow-up/follow-up-badge";
+import { RequestAccountDialog } from "@/components/follow-up/request-account-dialog";
+import { useFollowUpBadge } from "@/domains/follow-up/hooks";
 import { getMissingCustomerCateringRequirements } from "@/domains/quote/catering";
 import { QUOTE_PAYMENT_METHODS } from "@/domains/quote/payment";
 import type { CateringDetails } from "@/domains/quote/types";
@@ -256,6 +259,8 @@ export function QuoteDetailView({ id }: { id: string }) {
   const [paymentAccountNumber, setPaymentAccountNumber] = useState("");
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [requestDialogOpen, setRequestDialogOpen] = useState(false);
+  const { badge: followUpBadge, refresh: refreshBadge } = useFollowUpBadge(id);
 
   const fetchQuote = useCallback(async () => {
     try {
@@ -1156,8 +1161,23 @@ export function QuoteDetailView({ id }: { id: string }) {
               <>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Account Number</span>
-                  <span>{quote.accountNumber || "\u2014"}</span>
+                  <span className="flex items-center gap-2">
+                    {quote.accountNumber || "\u2014"}
+                    <FollowUpBadge state={followUpBadge} />
+                  </span>
                 </div>
+                {canManageActions && !quote.accountNumber && quote.staff?.email && (
+                  !followUpBadge || followUpBadge.seriesStatus === "EXHAUSTED"
+                ) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setRequestDialogOpen(true)}
+                  >
+                    Request Account Number
+                  </Button>
+                )}
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Account Code</span>
                   <span>{quote.accountCode || "\u2014"}</span>
@@ -1699,6 +1719,21 @@ export function QuoteDetailView({ id }: { id: string }) {
           recipientName={quote.recipientName}
           quoteId={id}
           quoteStatus={quote.quoteStatus}
+        />
+      )}
+
+      {/* Request Account Number Dialog */}
+      {quote.staff?.email && (
+        <RequestAccountDialog
+          open={requestDialogOpen}
+          onOpenChange={setRequestDialogOpen}
+          invoiceId={id}
+          recipientName={quote.staff.name}
+          recipientEmail={quote.staff.email}
+          onSuccess={() => {
+            refreshBadge();
+            fetchQuote();
+          }}
         />
       )}
     </div>
