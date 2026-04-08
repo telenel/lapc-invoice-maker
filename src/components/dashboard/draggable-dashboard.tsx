@@ -55,6 +55,10 @@ const TodaysEvents = dynamic(
   () => import("./todays-events").then((m) => m.TodaysEvents),
   { ssr: false, loading: () => <WidgetSkeleton /> },
 );
+const PendingAccounts = dynamic(
+  () => import("./pending-accounts").then((m) => m.PendingAccountsWidget),
+  { ssr: false, loading: () => <WidgetSkeleton /> },
+);
 
 interface WidgetConfig {
   id: string;
@@ -65,6 +69,7 @@ interface WidgetConfig {
 const SORTABLE_WIDGETS: WidgetConfig[] = [
   { id: "todays-events", label: "Today's Events", component: () => <TodaysEvents /> },
   { id: "your-focus", label: "Your Focus", component: () => <YourFocus /> },
+  { id: "pending-accounts", label: "Pending Account Numbers", component: () => <PendingAccounts /> },
   { id: "stats", label: "Stats", component: () => <StatsCards /> },
   { id: "pending-charges", label: "Pending Charges", component: () => <PendingCharges /> },
   { id: "running-invoices", label: "Running Invoices", component: () => <RunningInvoices /> },
