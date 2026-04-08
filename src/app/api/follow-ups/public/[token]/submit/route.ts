@@ -4,8 +4,17 @@ import { checkRateLimit } from "@/lib/rate-limit";
 
 type RouteContext = { params: Promise<{ token: string }> };
 
+function normalizePublicToken(token: string): string {
+  return token.trim();
+}
+
 export async function POST(req: NextRequest, ctx: RouteContext) {
-  const { token } = await ctx.params;
+  const { token: rawToken } = await ctx.params;
+  const token = normalizePublicToken(rawToken);
+  if (!token) {
+    return NextResponse.json({ error: "Invalid token" }, { status: 400 });
+  }
+
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     req.headers.get("x-real-ip") ||
@@ -23,22 +32,35 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
   }
 
   const body = await req.json().catch(() => null);
-  if (!body || typeof body.accountNumber !== "string") {
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
+  const accountNumber = typeof body.accountNumber === "string" ? body.accountNumber.trim() : "";
+  if (!accountNumber) {
     return NextResponse.json(
       { error: "accountNumber is required" },
       { status: 400 },
     );
   }
-
-  const result = await followUpService.submitAccountNumber(token, body.accountNumber);
-
-  if (!result.success) {
-    return NextResponse.json({ error: result.error }, { status: 400 });
+  if (accountNumber.length > 100) {
+    return NextResponse.json({ error: "accountNumber is too long" }, { status: 400 });
   }
 
-  if (result.alreadyResolved) {
-    return NextResponse.json({ alreadyResolved: true });
-  }
+  try {
+    const result = await followUpService.submitAccountNumber(token, accountNumber);
 
-  return NextResponse.json({ success: true });
+    if (!result.success) {
+      return NextResponse.json({ error: result.error }, { status: 400 });
+    }
+
+    if (result.alreadyResolved) {
+      return NextResponse.json({ alreadyResolved: true });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("POST /api/follow-ups/public/[token]/submit failed:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

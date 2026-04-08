@@ -22,7 +22,12 @@ const approveBodySchema = z.object({
 });
 
 export const POST = withAuth(async (req: NextRequest, session, ctx) => {
-  const { id } = await ctx!.params;
+  const { id: rawId } = await ctx!.params;
+  const id = rawId.trim();
+  if (!id) {
+    return NextResponse.json({ error: "Invalid quote id" }, { status: 400 });
+  }
+
   let body: unknown = {};
   try {
     const rawBody = await req.text();

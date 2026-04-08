@@ -43,6 +43,35 @@ describe("public view duration route", () => {
     expect(quoteService.updateViewDurationForToken).toHaveBeenCalledWith("token", "view-1", 21);
   });
 
+  it("normalizes token and viewId before updating duration", async () => {
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/view/view-1", {
+        method: "POST",
+        body: JSON.stringify({ durationSeconds: 9.2 }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "  token  ", viewId: "  view-1  " }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(quoteService.updateViewDurationForToken).toHaveBeenCalledWith("token", "view-1", 9);
+  });
+
+  it("rejects non-object duration payloads", async () => {
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/view/view-1", {
+        method: "POST",
+        body: JSON.stringify([1, 2, 3]),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "token", viewId: "view-1" }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({ error: "Invalid request body" });
+    expect(quoteService.updateViewDurationForToken).not.toHaveBeenCalled();
+  });
+
   it("returns 400 when the view does not belong to the quote token", async () => {
     vi.mocked(quoteService.updateViewDurationForToken).mockRejectedValueOnce(
       Object.assign(new Error("Quote activity session not found"), { code: "INVALID_INPUT" }),

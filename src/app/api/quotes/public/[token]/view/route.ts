@@ -4,8 +4,17 @@ import { checkRateLimit } from "@/lib/rate-limit";
 
 type RouteContext = { params: Promise<{ token: string }> };
 
+function normalizePublicToken(token: string): string {
+  return token.trim();
+}
+
 export async function POST(req: NextRequest, ctx: RouteContext) {
-  const { token } = await ctx.params;
+  const { token: rawToken } = await ctx.params;
+  const token = normalizePublicToken(rawToken);
+  if (!token) {
+    return NextResponse.json({ error: "Invalid token" }, { status: 400 });
+  }
+
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
     || req.headers.get("x-real-ip")?.trim()
@@ -23,7 +32,11 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       }
     );
   }
+
   const body = await req.json().catch(() => ({}));
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
 
   const result = await quoteService.recordView(token, {
     ipAddress: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? req.headers.get("x-real-ip") ?? undefined,

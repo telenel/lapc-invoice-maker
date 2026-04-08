@@ -4,9 +4,23 @@ import { quoteService } from "@/domains/quote/service";
 type RouteContext = { params: Promise<{ token: string; viewId: string }> };
 
 async function updateDuration(req: NextRequest, ctx: RouteContext) {
-  const { token, viewId } = await ctx.params;
+  const { token: rawToken, viewId: rawViewId } = await ctx.params;
+  const token = rawToken.trim();
+  const viewId = rawViewId.trim();
+
+  if (!token || !viewId) {
+    return NextResponse.json({ error: "Invalid token or view identifier" }, { status: 400 });
+  }
+
   const body = await req.json().catch(() => ({}));
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
   const duration = Number(body.durationSeconds);
+  if (!Number.isFinite(duration)) {
+    return NextResponse.json({ error: "durationSeconds must be a finite number" }, { status: 400 });
+  }
 
   try {
     if (!isNaN(duration) && duration > 0) {

@@ -82,4 +82,25 @@ describe("GET /api/quotes", () => {
     const body = await response.json();
     expect(body).toEqual({ error: "amountMin must be less than or equal to amountMax" });
   });
+
+  it("returns 400 for invalid dateFrom value", async () => {
+    const response = await GET(new NextRequest("http://localhost/api/quotes?dateFrom=bad-date"));
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body).toEqual({ error: "Invalid dateFrom value" });
+  });
+
+  it("returns 400 for invalid dateTo value", async () => {
+    const response = await GET(new NextRequest("http://localhost/api/quotes?dateTo=not-a-date"));
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body).toEqual({ error: "Invalid dateTo value" });
+  });
+
+  it("returns 400 when dateFrom is greater than dateTo", async () => {
+    const response = await GET(new NextRequest("http://localhost/api/quotes?dateFrom=2026-04-09&dateTo=2026-04-08"));
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body).toEqual({ error: "dateFrom must be less than or equal to dateTo" });
+  });
 });

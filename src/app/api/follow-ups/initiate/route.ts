@@ -11,18 +11,37 @@ export const POST = withAuth(async (req: NextRequest, session) => {
     );
   }
 
-  if (body.invoiceIds.length > 20) {
+  const invoiceIds = body.invoiceIds
+    .map((id: unknown) => (typeof id === "string" ? id.trim() : ""))
+    .filter((id: string) => id.length > 0);
+
+  if (invoiceIds.length !== body.invoiceIds.length) {
+    return NextResponse.json(
+      { error: "invoiceIds must contain valid IDs" },
+      { status: 400 },
+    );
+  }
+
+  if (invoiceIds.length > 20) {
     return NextResponse.json(
       { error: "Maximum 20 items per request" },
       { status: 400 },
     );
   }
 
-  const result = await followUpService.initiateMultiple(
-    body.invoiceIds,
-    session.user.id,
-    session.user.role === "admin",
-  );
+  try {
+    const result = await followUpService.initiateMultiple(
+      invoiceIds,
+      session.user.id,
+      session.user.role === "admin",
+    );
 
-  return NextResponse.json(result);
+    return NextResponse.json(result);
+  } catch (error) {
+    console.error("POST /api/follow-ups/initiate failed:", error);
+    return NextResponse.json(
+      { error: "Failed to initiate follow-up requests" },
+      { status: 500 },
+    );
+  }
 });

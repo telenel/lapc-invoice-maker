@@ -63,6 +63,23 @@ describe("PaymentDetailsForm", () => {
     expect(screen.getByText("Submit Payment Details")).toBeInTheDocument();
   });
 
+  it("does not show the payment form when status is sent even if paymentLinkAvailable is true", () => {
+    render(
+      <PaymentDetailsForm
+        token="token"
+        initialQuote={{
+          quoteStatus: "SENT",
+          paymentDetailsResolved: false,
+          paymentLinkAvailable: true,
+          quoteNumber: "Q-1",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Payment Link Not Ready")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Submit Payment Details" })).not.toBeInTheDocument();
+  });
+
   it("shows a closed state when public payment collection is no longer available", () => {
     render(
       <PaymentDetailsForm

@@ -75,4 +75,44 @@ describe("GET /api/invoices/export", () => {
     const body = await response.json();
     expect(body).toEqual({ error: "amountMin must be less than or equal to amountMax" });
   });
+
+  it("returns 400 for invalid dateFrom value", async () => {
+    const response = await GET(
+      new NextRequest("http://localhost/api/invoices/export?dateFrom=bad"),
+    );
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body).toEqual({ error: "Invalid dateFrom value" });
+  });
+
+  it("returns 400 for invalid createdTo value", async () => {
+    const response = await GET(
+      new NextRequest("http://localhost/api/invoices/export?createdTo=not-a-date"),
+    );
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body).toEqual({ error: "Invalid createdTo value" });
+  });
+
+  it("returns 400 when dateFrom is greater than dateTo", async () => {
+    const response = await GET(
+      new NextRequest(
+        "http://localhost/api/invoices/export?dateFrom=2026-04-09&dateTo=2026-04-08",
+      ),
+    );
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body).toEqual({ error: "dateFrom must be less than or equal to dateTo" });
+  });
+
+  it("returns 400 when createdFrom is greater than createdTo", async () => {
+    const response = await GET(
+      new NextRequest(
+        "http://localhost/api/invoices/export?createdFrom=2026-04-09&createdTo=2026-04-08",
+      ),
+    );
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body).toEqual({ error: "createdFrom must be less than or equal to createdTo" });
+  });
 });

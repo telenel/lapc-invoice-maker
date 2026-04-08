@@ -3,7 +3,12 @@ import { withAuth } from "@/domains/shared/auth";
 import { templateService } from "@/domains/template/service";
 
 export const DELETE = withAuth(async (_req: NextRequest, session, ctx) => {
-  const { id } = await ctx!.params;
+  const { id: rawId } = await ctx!.params;
+  const id = rawId.trim();
+  if (!id) {
+    return NextResponse.json({ error: "Invalid template id" }, { status: 400 });
+  }
+
   try {
     const existing = await templateService.getById(id, session.user.id);
     if (!existing) {

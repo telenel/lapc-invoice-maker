@@ -4,14 +4,31 @@ import { withAdmin, withAuth } from "@/domains/shared/auth";
 import { staffService } from "@/domains/staff/service";
 import { staffSchema } from "@/lib/validators";
 
+function parsePositiveInt(value: string | null, fallback: number): number | null {
+  if (value === null) return fallback;
+  if (!/^\d+$/.test(value)) return null;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 1) return null;
+  return parsed;
+}
+
 export const GET = withAuth(async (req) => {
   const params = req.nextUrl.searchParams;
   const search = params.get("search") ?? undefined;
   const paginated = params.get("paginated") === "true";
 
   if (paginated) {
-    const page = Math.max(1, Number(params.get("page")) || 1);
-    const pageSize = Math.min(100, Math.max(1, Number(params.get("pageSize")) || 20));
+    const page = parsePositiveInt(params.get("page"), 1);
+    if (page === null) {
+      return NextResponse.json({ error: "Invalid page value" }, { status: 400 });
+    }
+
+    const pageSizeParsed = parsePositiveInt(params.get("pageSize"), 20);
+    if (pageSizeParsed === null) {
+      return NextResponse.json({ error: "Invalid pageSize value" }, { status: 400 });
+    }
+
+    const pageSize = Math.min(100, pageSizeParsed);
     const result = await staffService.listPaginated({ search, page, pageSize });
     return NextResponse.json(result);
   }

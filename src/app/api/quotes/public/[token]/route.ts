@@ -70,16 +70,29 @@ function sanitizeForPublic(quote: QuoteResponse): Omit<PublicQuoteResponse, "pay
   };
 }
 
-export async function GET(_req: NextRequest, ctx: RouteContext) {
-  const { token } = await ctx.params;
-  const quote = await quoteService.getByShareToken(token);
+function normalizePublicToken(token: string): string {
+  return token.trim();
+}
 
-  if (!quote) {
-    return NextResponse.json({ error: "Quote not found" }, { status: 404 });
+export async function GET(_req: NextRequest, ctx: RouteContext) {
+  const { token: rawToken } = await ctx.params;
+  const token = normalizePublicToken(rawToken);
+  if (!token) {
+    return NextResponse.json({ error: "Invalid token" }, { status: 400 });
   }
 
-  return NextResponse.json({
-    ...sanitizeForPublic(quote),
-    paymentLinkAvailable: isPublicPaymentLinkAvailable(quote),
-  });
+  try {
+    const quote = await quoteService.getByShareToken(token);
+    if (!quote) {
+      return NextResponse.json({ error: "Quote not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      ...sanitizeForPublic(quote),
+      paymentLinkAvailable: isPublicPaymentLinkAvailable(quote),
+    });
+  } catch (err) {
+    console.error("/api/quotes/public/[token] failed:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

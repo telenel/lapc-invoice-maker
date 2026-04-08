@@ -3,6 +3,24 @@ import { forbiddenResponse, withAuth } from "@/domains/shared/auth";
 import { requisitionService } from "@/domains/textbook-requisition/service";
 import { requisitionUpdateSchema, requisitionStatusUpdateSchema } from "@/lib/validators";
 
+async function parseId(
+  ctx?: { params: Promise<{ [key: string]: string | undefined }> } | { params?: Promise<Record<string, string | undefined>> }
+): Promise<string | null> {
+  if (!ctx || !ctx.params) {
+    return null;
+  }
+  const params = await ctx.params;
+  const rawId = params.id;
+  if (typeof rawId !== "string") {
+    return null;
+  }
+  const id = rawId.trim();
+  if (!id) {
+    return null;
+  }
+  return id;
+}
+
 async function getAccessibleRequisition(id: string, userId: string, isAdmin: boolean) {
   const result = await requisitionService.getById(id);
   if (!result) {
@@ -15,7 +33,10 @@ async function getAccessibleRequisition(id: string, userId: string, isAdmin: boo
 }
 
 export const GET = withAuth(async (_req: NextRequest, session, ctx) => {
-  const { id } = await ctx!.params;
+  const id = await parseId(ctx);
+  if (!id) {
+    return NextResponse.json({ error: "Invalid requisition id" }, { status: 400 });
+  }
   try {
     const access = await getAccessibleRequisition(id, session.user.id, session.user.role === "admin");
     if (access.response) {
@@ -28,9 +49,12 @@ export const GET = withAuth(async (_req: NextRequest, session, ctx) => {
 });
 
 export const PUT = withAuth(async (req: NextRequest, session, ctx) => {
-  const { id } = await ctx!.params;
+  const id = await parseId(ctx);
+  if (!id) {
+    return NextResponse.json({ error: "Invalid requisition id" }, { status: 400 });
+  }
   const body = await req.json().catch(() => null);
-  if (body === null) {
+  if (body === null || typeof body !== "object" || Array.isArray(body)) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
   const parsed = requisitionUpdateSchema.safeParse(body);
@@ -59,9 +83,12 @@ export const PUT = withAuth(async (req: NextRequest, session, ctx) => {
 });
 
 export const PATCH = withAuth(async (req: NextRequest, session, ctx) => {
-  const { id } = await ctx!.params;
+  const id = await parseId(ctx);
+  if (!id) {
+    return NextResponse.json({ error: "Invalid requisition id" }, { status: 400 });
+  }
   const body = await req.json().catch(() => null);
-  if (body === null) {
+  if (body === null || typeof body !== "object" || Array.isArray(body)) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
   const parsed = requisitionStatusUpdateSchema.safeParse(body);
@@ -88,7 +115,10 @@ export const PATCH = withAuth(async (req: NextRequest, session, ctx) => {
 });
 
 export const DELETE = withAuth(async (_req: NextRequest, session, ctx) => {
-  const { id } = await ctx!.params;
+  const id = await parseId(ctx);
+  if (!id) {
+    return NextResponse.json({ error: "Invalid requisition id" }, { status: 400 });
+  }
   try {
     const access = await getAccessibleRequisition(id, session.user.id, session.user.role === "admin");
     if (access.response) {

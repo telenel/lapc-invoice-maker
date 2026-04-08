@@ -20,6 +20,12 @@ function parseAmount(value: string | null): number | undefined | "error" {
   return parsed;
 }
 
+function parseDate(value: string | null): string | undefined | "error" {
+  if (value == null) return undefined;
+  if (Number.isNaN(new Date(value).getTime())) return "error";
+  return value;
+}
+
 export const GET = withAuth(async (req: NextRequest) => {
   try {
     const sp = req.nextUrl.searchParams;
@@ -46,16 +52,50 @@ export const GET = withAuth(async (req: NextRequest) => {
       );
     }
 
+    const dateFrom = parseDate(sp.get("dateFrom"));
+    if (dateFrom === "error") {
+      return NextResponse.json({ error: "Invalid dateFrom value" }, { status: 400 });
+    }
+
+    const dateTo = parseDate(sp.get("dateTo"));
+    if (dateTo === "error") {
+      return NextResponse.json({ error: "Invalid dateTo value" }, { status: 400 });
+    }
+
+    if (dateFrom && dateTo && new Date(dateFrom) > new Date(dateTo)) {
+      return NextResponse.json(
+        { error: "dateFrom must be less than or equal to dateTo" },
+        { status: 400 },
+      );
+    }
+
+    const createdFrom = parseDate(sp.get("createdFrom"));
+    if (createdFrom === "error") {
+      return NextResponse.json({ error: "Invalid createdFrom value" }, { status: 400 });
+    }
+
+    const createdTo = parseDate(sp.get("createdTo"));
+    if (createdTo === "error") {
+      return NextResponse.json({ error: "Invalid createdTo value" }, { status: 400 });
+    }
+
+    if (createdFrom && createdTo && new Date(createdFrom) > new Date(createdTo)) {
+      return NextResponse.json(
+        { error: "createdFrom must be less than or equal to createdTo" },
+        { status: 400 },
+      );
+    }
+
     const filters = {
       search: sp.get("search") ?? undefined,
       status,
       staffId: sp.get("staffId") ?? undefined,
       category: sp.get("category") ?? undefined,
       department: sp.get("department") ?? undefined,
-      dateFrom: sp.get("dateFrom") ?? undefined,
-      dateTo: sp.get("dateTo") ?? undefined,
-      createdFrom: sp.get("createdFrom") ?? undefined,
-      createdTo: sp.get("createdTo") ?? undefined,
+      dateFrom,
+      dateTo,
+      createdFrom,
+      createdTo,
       amountMin,
       amountMax,
       creatorId: sp.get("creatorId") ?? undefined,

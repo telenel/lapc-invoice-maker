@@ -32,6 +32,12 @@ function parsePositiveInt(value: string | null, fallback: number): number | "err
   return parsed;
 }
 
+function parseDate(value: string | null): string | undefined | "error" {
+  if (value == null) return undefined;
+  if (Number.isNaN(new Date(value).getTime())) return "error";
+  return value;
+}
+
 function jsonNoStore(data: unknown, init?: ResponseInit) {
   const headers = new Headers(init?.headers);
   headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
@@ -69,6 +75,23 @@ export const GET = withAuth(async (req: NextRequest) => {
       return NextResponse.json({ error: "amountMin must be less than or equal to amountMax" }, { status: 400 });
     }
 
+    const dateFrom = parseDate(sp.get("dateFrom"));
+    if (dateFrom === "error") {
+      return NextResponse.json({ error: "Invalid dateFrom value" }, { status: 400 });
+    }
+
+    const dateTo = parseDate(sp.get("dateTo"));
+    if (dateTo === "error") {
+      return NextResponse.json({ error: "Invalid dateTo value" }, { status: 400 });
+    }
+
+    if (dateFrom && dateTo && new Date(dateFrom) > new Date(dateTo)) {
+      return NextResponse.json(
+        { error: "dateFrom must be less than or equal to dateTo" },
+        { status: 400 },
+      );
+    }
+
     const page = parsePositiveInt(sp.get("page"), 1);
     if (page === "error") {
       return NextResponse.json({ error: "Invalid page value" }, { status: 400 });
@@ -96,8 +119,8 @@ export const GET = withAuth(async (req: NextRequest) => {
       category: sp.get("category") ?? undefined,
       creatorId: sp.get("creatorId") ?? undefined,
       needsAccountNumber: sp.get("needsAccountNumber") === "true" ? true : undefined,
-      dateFrom: sp.get("dateFrom") ?? undefined,
-      dateTo: sp.get("dateTo") ?? undefined,
+      dateFrom,
+      dateTo,
       amountMin,
       amountMax,
       page,

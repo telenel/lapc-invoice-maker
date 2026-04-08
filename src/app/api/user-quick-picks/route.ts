@@ -33,19 +33,48 @@ export async function POST(request: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const userId = (session.user as { id: string }).id;
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
+  if (body === null || body === undefined || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
   const { description, unitPrice, department } = body;
 
-  if (!description || unitPrice == null || !department) {
+  const normalizedDescription = typeof description === "string" ? description.trim() : "";
+  const normalizedDepartment = typeof department === "string" ? department.trim() : "";
+  const normalizedUnitPrice =
+    typeof unitPrice === "number"
+      ? unitPrice
+      : typeof unitPrice === "string"
+        ? unitPrice.trim() === ""
+          ? Number.NaN
+          : Number(unitPrice)
+        : Number.NaN;
+
+  if (
+    normalizedDescription.length === 0 ||
+    !Number.isFinite(normalizedUnitPrice) ||
+    normalizedUnitPrice < 0 ||
+    normalizedDepartment.length === 0
+  ) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
   const pick = await prisma.userQuickPick.upsert({
     where: {
-      userId_department_description: { userId, department, description },
+      userId_department_description: {
+        userId,
+        department: normalizedDepartment,
+        description: normalizedDescription,
+      },
     },
-    update: { unitPrice },
-    create: { userId, description, unitPrice, department },
+    update: { unitPrice: normalizedUnitPrice },
+    create: {
+      userId,
+      description: normalizedDescription,
+      unitPrice: normalizedUnitPrice,
+      department: normalizedDepartment,
+    },
   });
 
   return NextResponse.json({
