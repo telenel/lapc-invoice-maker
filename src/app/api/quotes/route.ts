@@ -65,6 +65,7 @@ export const GET = withAuth(async (req: NextRequest) => {
       department: sp.get("department") ?? undefined,
       category: sp.get("category") ?? undefined,
       creatorId: sp.get("creatorId") ?? undefined,
+      needsAccountNumber: sp.get("needsAccountNumber") === "true" ? true : undefined,
       dateFrom: sp.get("dateFrom") ?? undefined,
       dateTo: sp.get("dateTo") ?? undefined,
       amountMin,

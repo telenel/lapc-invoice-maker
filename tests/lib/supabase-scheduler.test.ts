@@ -20,7 +20,7 @@ describe("supabase scheduler", () => {
     queryRawUnsafe
       .mockResolvedValueOnce([{ extname: "pg_cron" }, { extname: "pg_net" }])
       .mockResolvedValueOnce([
-        { jobid: 1n, jobname: "laportal-event-reminders", schedule: "*/15 * * * *", active: true },
+        { jobid: BigInt(1), jobname: "laportal-event-reminders", schedule: "*/15 * * * *", active: true },
       ]);
 
     const { getSupabaseSchedulerStatus } = await import("@/lib/supabase-scheduler");
@@ -38,6 +38,7 @@ describe("supabase scheduler", () => {
     expect(status.expectedJobs).toEqual({
       eventReminders: true,
       paymentFollowUps: false,
+      accountFollowUps: false,
     });
   });
 
@@ -48,6 +49,7 @@ describe("supabase scheduler", () => {
       .mockResolvedValueOnce([
         { jobid: 1, jobname: "laportal-event-reminders", schedule: "*/15 * * * *", active: true },
         { jobid: 2, jobname: "laportal-payment-follow-ups", schedule: "0 16 * * 1-5", active: true },
+        { jobid: 3, jobname: "laportal-account-follow-ups", schedule: "0 16 * * 1", active: true },
       ]);
 
     const { reconcileSupabaseScheduler } = await import("@/lib/supabase-scheduler");
@@ -58,10 +60,12 @@ describe("supabase scheduler", () => {
 
     expect(executeRawUnsafe).toHaveBeenCalledWith("create extension if not exists pg_cron");
     expect(executeRawUnsafe).toHaveBeenCalledWith("create extension if not exists pg_net");
-    expect(executeRawUnsafe).toHaveBeenCalledTimes(4);
+    // 2 extension creates + 3 job schedules = 5
+    expect(executeRawUnsafe).toHaveBeenCalledTimes(5);
     expect(status.expectedJobs).toEqual({
       eventReminders: true,
       paymentFollowUps: true,
+      accountFollowUps: true,
     });
   });
 });

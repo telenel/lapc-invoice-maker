@@ -43,7 +43,7 @@ vi.mock("@/lib/prisma", () => ({
       findUnique: vi.fn(),
       findFirst: vi.fn(),
     },
-    quoteFollowUp: {
+    followUp: {
       create: vi.fn(),
     },
     quoteView: {
@@ -301,7 +301,7 @@ describe("quoteService", () => {
         invoice: {
           update: vi.fn(),
         },
-        quoteFollowUp: {
+        followUp: {
           create: vi.fn(),
         },
       };
@@ -331,7 +331,7 @@ describe("quoteService", () => {
           paymentAccountNumber: "SAP-12345",
         },
       });
-      expect(tx.quoteFollowUp.create).toHaveBeenCalledWith({
+      expect(tx.followUp.create).toHaveBeenCalledWith({
         data: {
           invoiceId: "q1",
           type: "PAYMENT_RESOLVED",
@@ -388,7 +388,7 @@ describe("quoteService", () => {
         invoice: {
           update: vi.fn(),
         },
-        quoteFollowUp: {
+        followUp: {
           create: vi.fn(),
         },
       };
@@ -402,7 +402,7 @@ describe("quoteService", () => {
         code: "FORBIDDEN",
       });
 
-      expect(tx.quoteFollowUp.create).not.toHaveBeenCalled();
+      expect(tx.followUp.create).not.toHaveBeenCalled();
       expect(mockRepo.createFollowUp).not.toHaveBeenCalled();
     });
   });

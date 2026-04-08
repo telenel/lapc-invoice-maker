@@ -10,7 +10,10 @@ import { cn } from "@/lib/utils";
 import { formatAmount, formatDate, getInitials } from "@/lib/formatters";
 import { invoiceApi } from "@/domains/invoice/api-client";
 import { quoteApi } from "@/domains/quote/api-client";
+import { followUpApi } from "@/domains/follow-up/api-client";
 import type { InvoiceResponse } from "@/domains/invoice/types";
+import type { FollowUpBadgeState } from "@/domains/follow-up/types";
+import { FollowUpBadge } from "@/components/follow-up/follow-up-badge";
 import { useSSE } from "@/lib/use-sse";
 
 type QuoteStatus = "DRAFT" | "SENT" | "SUBMITTED_EMAIL" | "SUBMITTED_MANUAL" | "ACCEPTED" | "DECLINED" | "REVISED" | "EXPIRED";
@@ -60,6 +63,7 @@ function invoiceBadge(status: string) {
 export function RecentActivity() {
   const { data: session } = useSession();
   const [items, setItems] = useState<ActivityItem[]>([]);
+  const [badgeStates, setBadgeStates] = useState<Record<string, FollowUpBadgeState>>({});
   const [loading, setLoading] = useState(true);
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
 
@@ -103,6 +107,16 @@ export function RecentActivity() {
         .slice(0, 10);
 
       setItems(merged);
+
+      const invoiceIds = merged
+        .filter((item) => item.type === "invoice")
+        .map((item) => item.id);
+      if (invoiceIds.length > 0) {
+        followUpApi
+          .getBadgeStatesForInvoices(invoiceIds)
+          .then(setBadgeStates)
+          .catch(() => {});
+      }
     } catch (err) {
       console.error("Failed to fetch recent activity:", err);
       toast.error("Failed to load recent activity");
@@ -208,6 +222,9 @@ export function RecentActivity() {
                       >
                         {QUOTE_STATUS_LABEL[item.status as QuoteStatus] ?? item.status}
                       </Badge>
+                    )}
+                    {item.type === "invoice" && (
+                      <FollowUpBadge state={badgeStates[item.id] ?? null} />
                     )}
                   </div>
                 </Link>

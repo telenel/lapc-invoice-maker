@@ -1,4 +1,8 @@
+"use client";
+
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -6,6 +10,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { FollowUpBadge } from "@/components/follow-up/follow-up-badge";
+import { RequestAccountDialog } from "@/components/follow-up/request-account-dialog";
+import { useFollowUpBadge } from "@/domains/follow-up/hooks";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
 import type { InvoiceResponse } from "@/domains/invoice/types";
 
@@ -14,6 +21,9 @@ interface InvoiceDetailInfoProps {
 }
 
 export function InvoiceDetailInfo({ invoice }: InvoiceDetailInfoProps) {
+  const [requestDialogOpen, setRequestDialogOpen] = useState(false);
+  const { badge: followUpBadge, refresh: refreshBadge } = useFollowUpBadge(invoice.id);
+
   return (
     <Card>
       <CardHeader>
@@ -38,8 +48,21 @@ export function InvoiceDetailInfo({ invoice }: InvoiceDetailInfoProps) {
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-[11px] font-medium text-muted-foreground">Account Number</span>
-          <span>{invoice.accountNumber || "—"}</span>
+          <div className="flex items-center gap-2">
+            <span>{invoice.accountNumber || "—"}</span>
+            <FollowUpBadge state={followUpBadge} />
+          </div>
         </div>
+        {!invoice.accountNumber && (!followUpBadge || followUpBadge.seriesStatus === "EXHAUSTED") && invoice.staff && (
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-1 w-full text-xs"
+            onClick={() => setRequestDialogOpen(true)}
+          >
+            Request Account Number
+          </Button>
+        )}
         <div className="flex justify-between text-sm">
           <span className="text-[11px] font-medium text-muted-foreground">Account Code</span>
           <span>{invoice.accountCode || "—"}</span>
@@ -85,6 +108,17 @@ export function InvoiceDetailInfo({ invoice }: InvoiceDetailInfoProps) {
           </>
         )}
       </CardContent>
+
+      {requestDialogOpen && invoice.staff && (
+        <RequestAccountDialog
+          open={requestDialogOpen}
+          onOpenChange={setRequestDialogOpen}
+          invoiceId={invoice.id}
+          recipientName={invoice.staff.name}
+          recipientEmail={invoice.staff.email ?? ""}
+          onSuccess={refreshBadge}
+        />
+      )}
     </Card>
   );
 }

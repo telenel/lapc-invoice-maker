@@ -61,15 +61,7 @@ jobs:
             });
 
   auto_autofix:
-    if: >-
-      ${{
-        github.event_name == 'pull_request_review' &&
-        github.event.action == 'submitted' &&
-        (
-          github.event.review.user.login == 'coderabbitai' ||
-          github.event.review.user.login == 'coderabbitai[bot]'
-        )
-      }}
+    if: false  # Disabled — autofix has too much potential to break working code
     runs-on: ubuntu-latest
     env:
       REQUIRED_CHECK_NAME: ship-check

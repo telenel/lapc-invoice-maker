@@ -50,6 +50,14 @@ function buildWhere(filters: QuoteFilters): Prisma.InvoiceWhereInput {
   if (filters.creatorId) {
     where.createdBy = filters.creatorId;
   }
+  if (filters.needsAccountNumber) {
+    where.followUps = {
+      some: {
+        type: { in: ["ACCOUNT_FOLLOWUP", "ACCOUNT_FOLLOWUP_CLAIM"] },
+        seriesStatus: { in: ["ACTIVE", "EXHAUSTED"] },
+      },
+    };
+  }
   if (filters.dateFrom || filters.dateTo) {
     where.date = {};
     if (filters.dateFrom) where.date.gte = new Date(filters.dateFrom);
@@ -455,7 +463,7 @@ export async function createFollowUp(data: {
   subject: string;
   metadata?: Prisma.InputJsonValue;
 }) {
-  return prisma.quoteFollowUp.create({ data });
+  return prisma.followUp.create({ data });
 }
 
 /**
@@ -472,7 +480,7 @@ export async function findViewsByInvoiceId(invoiceId: string) {
  * Find all follow-up events for a quote (for activity display).
  */
 export async function findFollowUpsByInvoiceId(invoiceId: string) {
-  return prisma.quoteFollowUp.findMany({
+  return prisma.followUp.findMany({
     where: {
       invoiceId,
       type: { not: PAYMENT_REMINDER_CLAIM },

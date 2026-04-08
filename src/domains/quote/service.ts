@@ -409,7 +409,7 @@ export const quoteService = {
         updatedConvertedInvoice = true;
       }
 
-      await tx.quoteFollowUp.create({
+      await tx.followUp.create({
         data: {
           invoiceId: quote.id,
           type: "PAYMENT_RESOLVED",
@@ -866,11 +866,17 @@ export const quoteService = {
       const calculatedItems = calculateLineItems(sourceItems);
       const totalAmount = calculateTotal(calculatedItems, mEnabled, mPercent, tEnabled, tRate);
       const updated = await quoteRepository.update(id, writableQuoteData, calculatedItems, totalAmount);
+      if (writableQuoteData.accountNumber && !existing.accountNumber) {
+        closeFollowUpSeriesOnAccountNumber(id).catch(() => {});
+      }
       safePublishAll({ type: "quote-changed" });
       return toQuoteResponse(updated as unknown as NonNullable<QuoteWithRelations>);
     }
 
     const updated = await quoteRepository.update(id, writableQuoteData);
+    if (writableQuoteData.accountNumber && !existing.accountNumber) {
+      closeFollowUpSeriesOnAccountNumber(id).catch(() => {});
+    }
     safePublishAll({ type: "quote-changed" });
     return toQuoteResponse(updated as unknown as NonNullable<QuoteWithRelations>);
   },
@@ -1556,7 +1562,7 @@ export const quoteService = {
         updatedConvertedInvoice = true;
       }
 
-      await tx.quoteFollowUp.create({
+      await tx.followUp.create({
         data: {
           invoiceId: id,
           type: "PAYMENT_RESOLVED",
@@ -1666,3 +1672,15 @@ export const quoteService = {
     return { buffer, filename };
   },
 };
+
+async function closeFollowUpSeriesOnAccountNumber(invoiceId: string): Promise<void> {
+  const { prisma } = await import("@/lib/prisma");
+  await prisma.followUp.updateMany({
+    where: {
+      invoiceId,
+      seriesStatus: "ACTIVE",
+      type: { in: ["ACCOUNT_FOLLOWUP", "ACCOUNT_FOLLOWUP_CLAIM"] },
+    },
+    data: { seriesStatus: "COMPLETED" },
+  });
+}

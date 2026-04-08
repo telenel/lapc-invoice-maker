@@ -83,6 +83,7 @@ src/
 │   ├── event/
 │   ├── chat/
 │   ├── contact/           # types, repository, service (external people)
+│   ├── follow-up/         # account number follow-up series
 │   ├── calendar/
 │   ├── quick-picks/
 │   ├── saved-items/
@@ -196,6 +197,15 @@ src/domains/
 │   ├── repository.ts
 │   └── service.ts
 │
+├── follow-up/
+│   ├── types.ts
+│   ├── repository.ts
+│   ├── service.ts
+│   ├── api-client.ts
+│   ├── hooks.ts
+│   ├── account-follow-ups.ts    # Cron job logic
+│   └── email-templates.ts
+│
 ├── category/
 │   └── api-client.ts
 │
@@ -241,6 +251,7 @@ src/domains/
 | notification | yes | yes | yes | yes |
 | event | yes | yes | yes | yes |
 | contact | yes | yes | — | — |
+| follow-up | yes | yes | yes | yes |
 | chat | — | — | — | yes |
 | calendar | — | — | yes | — |
 | pdf | — | yes | — | — |
@@ -406,6 +417,36 @@ These routes are excluded from auth middleware in `src/middleware.ts`.
 - Original quote is marked REVISED with a link to the new quote
 - New quote has a link back to the original for traceability
 - New statuses: `SUBMITTED_EMAIL` (auto-set when email sent via Power Automate webhook), `SUBMITTED_MANUAL` (user marks manually), `REVISED` (original of a revision)
+
+---
+
+## Account Number Follow-Up
+
+Invoices and quotes missing account numbers can be followed up with recurring email requests to the assigned staff member.
+
+### Flow
+
+1. User clicks "Request Account Number" on an invoice/quote detail page (or uses bulk action from the list)
+2. Backend persists a follow-up series and sends the first email immediately via Power Automate webhook
+3. Email contains a token-based link to a public form where the recipient enters the account number
+4. Up to 4 additional weekly reminders are sent by the Monday cron job, with escalating tone
+5. Series completes early if the account number is provided (via public form or manual entry)
+6. After 5 attempts with no response, the series is marked EXHAUSTED and the creator is notified
+
+### Display
+
+- `FollowUpBadge` component shows "Follow Up 2/5" (amber) or "No Response" (red) alongside existing status badges
+- List page filter: "Needs Account Number" shows items with active or exhausted series
+- Dashboard widget: "Pending Account Numbers" shows team-wide active/exhausted series
+- Recent Activity: badge overlays on existing invoice/quote rows
+
+### Public Routes (no auth)
+
+| Route | Method | Purpose |
+|-------|--------|---------|
+| `/account-request/[token]` | Page | Public account number form |
+| `/api/follow-ups/public/[token]` | GET | Fetch invoice/quote summary |
+| `/api/follow-ups/public/[token]/submit` | POST | Submit account number |
 
 ---
 

@@ -32,6 +32,7 @@ export const GET = withAuth(async (req: NextRequest) => {
       search: sp.get("search") ?? undefined,
       status: (sp.get("status") ?? undefined) as "DRAFT" | "FINAL" | "PENDING_CHARGE" | undefined,
       isRunning: sp.get("isRunning") === "true" ? true : undefined,
+      needsAccountNumber: sp.get("needsAccountNumber") === "true" ? true : undefined,
       staffId: sp.get("staffId") ?? undefined,
       department: sp.get("department") ?? undefined,
       dateFrom: sp.get("dateFrom") ?? undefined,

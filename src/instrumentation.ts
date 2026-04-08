@@ -19,6 +19,7 @@ export async function register() {
     const cron = await import("node-cron");
     const { checkAndSendReminders } = await import("@/domains/event/reminders");
     const { checkAndSendPaymentFollowUps } = await import("@/domains/quote/follow-ups");
+    const { checkAndSendAccountFollowUps } = await import("@/domains/follow-up/account-follow-ups");
     const { runTrackedJob } = await import("@/lib/job-runs");
 
     // Event reminders — every 15 minutes
@@ -34,6 +35,17 @@ export async function register() {
       () => {
         runTrackedJob("payment-follow-ups", { runner: "node-cron" }, () => checkAndSendPaymentFollowUps()).catch((err) =>
           console.error("[cron] payment follow-ups failed:", err)
+        );
+      },
+      { timezone: "America/Los_Angeles" },
+    );
+
+    // Account follow-ups — Mondays at 9 AM Los Angeles time
+    cron.schedule(
+      "0 9 * * 1",
+      () => {
+        runTrackedJob("account-follow-ups", { runner: "node-cron" }, () => checkAndSendAccountFollowUps()).catch((err) =>
+          console.error("[cron] account follow-ups failed:", err)
         );
       },
       { timezone: "America/Los_Angeles" },

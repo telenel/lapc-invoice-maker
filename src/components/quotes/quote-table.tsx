@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useDeferredValue, useEffect, useState, useCallback } from "react";
+import React, { useDeferredValue, useEffect, useMemo, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -19,10 +19,15 @@ import {
 } from "./quote-filters";
 import { formatAmount, formatDate, getInitials } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
-import { ClipboardListIcon } from "lucide-react";
+import { ClipboardListIcon, SendIcon } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { EmptyState } from "@/components/ui/empty-state";
+import { FollowUpBadge } from "@/components/follow-up/follow-up-badge";
+import { BulkRequestDialog } from "@/components/follow-up/bulk-request-dialog";
 import { useSSE } from "@/lib/use-sse";
 import { quoteApi } from "@/domains/quote/api-client";
+import { followUpApi } from "@/domains/follow-up/api-client";
+import type { FollowUpBadgeState } from "@/domains/follow-up/types";
 
 type QuoteStatus = "DRAFT" | "SENT" | "SUBMITTED_EMAIL" | "SUBMITTED_MANUAL" | "ACCEPTED" | "DECLINED" | "REVISED" | "EXPIRED";
 
@@ -37,6 +42,7 @@ interface Quote {
   totalAmount: string | number;
   expirationDate: string | null;
   quoteStatus: QuoteStatus;
+  accountNumber?: string | null;
 }
 
 const EMPTY_FILTERS: QuoteFilters = {
@@ -48,6 +54,7 @@ const EMPTY_FILTERS: QuoteFilters = {
   dateTo: "",
   amountMin: "",
   amountMax: "",
+  needsAccountNumber: false,
 };
 
 type SortField = "quoteNumber" | "date" | "createdAt" | "totalAmount" | "expirationDate";
@@ -92,6 +99,7 @@ function parseInitialFilters(searchParams: ReturnType<typeof useSearchParams>): 
     dateTo: searchParams.get("dateTo") ?? "",
     amountMin: searchParams.get("amountMin") ?? "",
     amountMax: searchParams.get("amountMax") ?? "",
+    needsAccountNumber: searchParams.get("needsAccountNumber") === "true",
   };
 }
 
@@ -115,6 +123,10 @@ function parseSortDir(searchParams: ReturnType<typeof useSearchParams>): SortDir
 interface QuoteRowProps {
   quote: Quote;
   onClick: (id: string) => void;
+  badgeState: FollowUpBadgeState | null;
+  selected: boolean;
+  selectable: boolean;
+  onSelect: (id: string, checked: boolean) => void;
 }
 
 function isExpired(dateStr: string | null): boolean {
@@ -126,7 +138,7 @@ function isExpired(dateStr: string | null): boolean {
   return expiry < today;
 }
 
-const QuoteRow = React.memo(function QuoteRow({ quote, onClick }: QuoteRowProps) {
+const QuoteRow = React.memo(function QuoteRow({ quote, onClick, badgeState, selected, selectable, onSelect }: QuoteRowProps) {
   return (
     <TableRow
       key={quote.id}
@@ -138,6 +150,14 @@ const QuoteRow = React.memo(function QuoteRow({ quote, onClick }: QuoteRowProps)
     >
       <TableCell>
         <div className="flex items-center gap-3">
+          <Checkbox
+            checked={selected}
+            disabled={!selectable}
+            onCheckedChange={(checked) => onSelect(quote.id, !!checked)}
+            onClick={(e) => e.stopPropagation()}
+            aria-label={`Select ${quote.quoteNumber ?? "quote"}`}
+            className="shrink-0"
+          />
           <div className="flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-muted text-[11px] font-bold text-muted-foreground shrink-0">
             {getInitials(quote.recipientName || quote.recipientOrg || "??")}
           </div>
@@ -160,9 +180,12 @@ const QuoteRow = React.memo(function QuoteRow({ quote, onClick }: QuoteRowProps)
         <p className="text-[13px] font-bold tabular-nums">
           {formatAmount(quote.totalAmount)}
         </p>
-        <Badge variant={STATUS_BADGE_VARIANT[quote.quoteStatus]} className="mt-0.5">
-          {STATUS_LABEL[quote.quoteStatus]}
-        </Badge>
+        <div className="flex items-center gap-1 justify-end mt-0.5">
+          <FollowUpBadge state={badgeState} />
+          <Badge variant={STATUS_BADGE_VARIANT[quote.quoteStatus]}>
+            {STATUS_LABEL[quote.quoteStatus]}
+          </Badge>
+        </div>
       </TableCell>
     </TableRow>
   );
@@ -185,6 +208,9 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
   const [sortDir, setSortDir] = useState<SortDir>(() => parseSortDir(searchParams));
   const [creatorId, setCreatorId] = useState<string | undefined>(() => searchParams.get("creatorId") ?? undefined);
   const deferredSearch = useDeferredValue(filters.search);
+  const [badgeStates, setBadgeStates] = useState<Record<string, FollowUpBadgeState>>({});
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -203,6 +229,7 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
         dateTo: filters.dateTo || undefined,
         amountMin: filters.amountMin ? Number(filters.amountMin) : undefined,
         amountMax: filters.amountMax ? Number(filters.amountMax) : undefined,
+        needsAccountNumber: filters.needsAccountNumber || undefined,
         page,
         pageSize: PAGE_SIZE,
         sortBy,
@@ -210,11 +237,22 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
       });
       setQuotes(data.quotes);
       setTotal(data.total);
+      setSelectedIds(new Set());
+
+      // Fetch badge states for loaded quotes
+      const ids = data.quotes.map((q) => q.id);
+      if (ids.length > 0) {
+        followUpApi.getBadgeStatesForInvoices(ids).then(setBadgeStates).catch(() => {
+          /* badge fetch is best-effort */
+        });
+      } else {
+        setBadgeStates({});
+      }
     } catch {
       toast.error("Failed to load quotes");
     }
     setLoading(false);
-  }, [creatorId, deferredSearch, filters.quoteStatus, filters.category, filters.department, filters.dateFrom, filters.dateTo, filters.amountMin, filters.amountMax, page, sortBy, sortDir]);
+  }, [creatorId, deferredSearch, filters.quoteStatus, filters.category, filters.department, filters.dateFrom, filters.dateTo, filters.amountMin, filters.amountMax, filters.needsAccountNumber, page, sortBy, sortDir]);
 
   useEffect(() => {
     fetchQuotes();
@@ -256,6 +294,31 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
     return sortDir === "asc" ? " \u2191" : " \u2193";
   }
 
+  const selectableIds = useMemo(
+    () => quotes.filter((q) => {
+      if (q.accountNumber) return false;
+      const badge = badgeStates[q.id];
+      if (badge && badge.seriesStatus === "ACTIVE") return false;
+      return true;
+    }).map((q) => q.id),
+    [quotes, badgeStates],
+  );
+
+  function handleSelect(id: string, checked: boolean) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  }
+
+  function handleSelectAll(checked: boolean) {
+    setSelectedIds(checked ? new Set(selectableIds) : new Set());
+  }
+
+  const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selectedIds.has(id));
+
   return (
     <div className="space-y-4">
       <div className="flex-1">
@@ -268,6 +331,25 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
         />
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-lg border border-border/50 bg-muted/30 px-3 py-2">
+          <span className="text-sm font-medium">
+            {selectedIds.size} selected
+          </span>
+          <Button size="sm" className="gap-1.5" onClick={() => setBulkOpen(true)}>
+            <SendIcon className="size-3.5" />
+            Request Account Numbers
+          </Button>
+        </div>
+      )}
+
+      <BulkRequestDialog
+        open={bulkOpen}
+        onOpenChange={setBulkOpen}
+        invoiceIds={Array.from(selectedIds).filter((id) => selectableIds.includes(id))}
+        onSuccess={fetchQuotes}
+      />
+
       {loading ? (
         <p className="text-muted-foreground text-sm">Loading...</p>
       ) : quotes.length === 0 ? (
@@ -275,12 +357,12 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
           icon={<ClipboardListIcon className="size-7" />}
           title="No quotes found"
           description={
-            Object.values(filters).some((v) => v !== "")
+            Object.values(filters).some((v) => v !== "" && v !== false)
               ? "Try adjusting your filters to find what you're looking for."
               : "Create your first quote to get started."
           }
           action={
-            Object.values(filters).some((v) => v !== "")
+            Object.values(filters).some((v) => v !== "" && v !== false)
               ? { label: "Clear Filters", onClick: handleClear, variant: "outline" as const }
               : undefined
           }
@@ -307,6 +389,7 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
                       <p className="min-w-0 flex-1 text-sm font-semibold leading-tight">
                         {quote.quoteNumber}
                       </p>
+                      <FollowUpBadge state={badgeStates[quote.id] ?? null} />
                       <Badge variant={STATUS_BADGE_VARIANT[quote.quoteStatus]}>
                         {STATUS_LABEL[quote.quoteStatus]}
                       </Badge>
@@ -335,7 +418,13 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
             <TableHeader>
               <TableRow>
                 <TableHead>
-                  <div className="flex gap-4">
+                  <div className="flex items-center gap-4">
+                    <Checkbox
+                      checked={allSelected}
+                      onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                      aria-label="Select all quotes"
+                      className="shrink-0"
+                    />
                     <button
                       className="cursor-pointer select-none text-xs font-medium hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
                       onClick={() => handleSort("quoteNumber")}
@@ -368,7 +457,15 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
             </TableHeader>
             <TableBody>
               {quotes.map((quote) => (
-                <QuoteRow key={quote.id} quote={quote} onClick={handleRowClick} />
+                <QuoteRow
+                  key={quote.id}
+                  quote={quote}
+                  onClick={handleRowClick}
+                  badgeState={badgeStates[quote.id] ?? null}
+                  selected={selectedIds.has(quote.id)}
+                  selectable={selectableIds.includes(quote.id)}
+                  onSelect={handleSelect}
+                />
               ))}
             </TableBody>
           </Table>

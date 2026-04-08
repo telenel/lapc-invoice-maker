@@ -9,6 +9,7 @@ function toResponse(n: {
   title: string;
   message: string | null;
   quoteId: string | null;
+  invoiceId: string | null;
   read: boolean;
   createdAt: Date;
 }): NotificationResponse {
@@ -18,6 +19,7 @@ function toResponse(n: {
     title: n.title,
     message: n.message,
     quoteId: n.quoteId,
+    invoiceId: n.invoiceId,
     read: n.read,
     createdAt: n.createdAt.toISOString(),
   };

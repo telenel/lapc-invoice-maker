@@ -294,11 +294,17 @@ export const invoiceService = {
       const calculatedItems = calculateLineItems(sourceItems);
       const totalAmount = calculateTotal(calculatedItems, mEnabled, mPercent, tEnabled, tRate);
       const updated = await invoiceRepository.update(id, invoiceData, calculatedItems, totalAmount);
+      if (invoiceData.accountNumber && !existing.accountNumber) {
+        closeFollowUpSeriesOnAccountNumber(id).catch(() => {});
+      }
       safePublishAll({ type: "invoice-changed" });
       return toInvoiceResponse(updated as unknown as NonNullable<InvoiceWithRelations>);
     }
 
     const updated = await invoiceRepository.update(id, invoiceData);
+    if (invoiceData.accountNumber && !existing.accountNumber) {
+      closeFollowUpSeriesOnAccountNumber(id).catch(() => {});
+    }
     safePublishAll({ type: "invoice-changed" });
     return toInvoiceResponse(updated as unknown as NonNullable<InvoiceWithRelations>);
   },
@@ -460,3 +466,15 @@ export const invoiceService = {
     return invoiceRepository.countByCreator(status);
   },
 };
+
+async function closeFollowUpSeriesOnAccountNumber(invoiceId: string): Promise<void> {
+  const { prisma } = await import("@/lib/prisma");
+  await prisma.followUp.updateMany({
+    where: {
+      invoiceId,
+      seriesStatus: "ACTIVE",
+      type: { in: ["ACCOUNT_FOLLOWUP", "ACCOUNT_FOLLOWUP_CLAIM"] },
+    },
+    data: { seriesStatus: "COMPLETED" },
+  });
+}

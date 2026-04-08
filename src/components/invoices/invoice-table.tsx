@@ -3,10 +3,11 @@
 import { useDeferredValue, useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import { FileTextIcon, RefreshCwIcon } from "lucide-react";
+import { FileTextIcon, RefreshCwIcon, MailIcon } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
@@ -23,6 +24,10 @@ import { formatAmount, formatDate, getInitials } from "@/lib/formatters";
 import { invoiceApi } from "@/domains/invoice/api-client";
 import type { InvoiceResponse } from "@/domains/invoice/types";
 import { useSSE } from "@/lib/use-sse";
+import { FollowUpBadge } from "@/components/follow-up/follow-up-badge";
+import { followUpApi } from "@/domains/follow-up/api-client";
+import type { FollowUpBadgeState } from "@/domains/follow-up/types";
+import { BulkRequestDialog } from "@/components/follow-up/bulk-request-dialog";
 
 const EMPTY_FILTERS: FilterBarFilters = {
   search: "",
@@ -33,6 +38,7 @@ const EMPTY_FILTERS: FilterBarFilters = {
   dateTo: "",
   amountMin: "",
   amountMax: "",
+  needsAccountNumber: false,
 };
 
 type SortField = "invoiceNumber" | "date" | "totalAmount";
@@ -55,6 +61,7 @@ function parseInitialFilters(searchParams: ReturnType<typeof useSearchParams>): 
     dateTo: searchParams.get("dateTo") ?? "",
     amountMin: searchParams.get("amountMin") ?? "",
     amountMax: searchParams.get("amountMax") ?? "",
+    needsAccountNumber: searchParams.get("needsAccountNumber") === "true",
   };
 }
 
@@ -88,6 +95,9 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
   const [sortDir, setSortDir] = useState<SortDir>(() => parseSortDir(searchParams));
   const [creatorId, setCreatorId] = useState<string | undefined>(() => searchParams.get("creatorId") ?? undefined);
   const deferredSearch = useDeferredValue(filters.search);
+  const [badgeStates, setBadgeStates] = useState<Record<string, FollowUpBadgeState>>({});
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -103,6 +113,7 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
         dateTo: filters.dateTo || undefined,
         amountMin: filters.amountMin ? Number(filters.amountMin) : undefined,
         amountMax: filters.amountMax ? Number(filters.amountMax) : undefined,
+        needsAccountNumber: filters.needsAccountNumber || undefined,
         creatorId,
         page,
         pageSize: PAGE_SIZE,
@@ -115,13 +126,28 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
       toast.error("Failed to load invoices");
     }
     setLoading(false);
-  }, [creatorId, deferredSearch, filters.status, filters.category, filters.department, filters.dateFrom, filters.dateTo, filters.amountMin, filters.amountMax, page, sortBy, sortDir]);
+  }, [creatorId, deferredSearch, filters.status, filters.category, filters.department, filters.dateFrom, filters.dateTo, filters.amountMin, filters.amountMax, filters.needsAccountNumber, page, sortBy, sortDir]);
 
   useEffect(() => {
     fetchInvoices();
   }, [fetchInvoices]);
 
   useSSE("invoice-changed", fetchInvoices);
+
+  // Fetch follow-up badge states whenever the invoice list changes
+  useEffect(() => {
+    const ids = invoices.map((inv) => inv.id);
+    if (ids.length === 0) {
+      setBadgeStates({});
+      return;
+    }
+    followUpApi.getBadgeStatesForInvoices(ids).then(setBadgeStates).catch(() => setBadgeStates({}));
+  }, [invoices]);
+
+  // Clear selection when page or filters change
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [page, filters]);
 
   useEffect(() => {
     setFilters(parseInitialFilters(searchParams));
@@ -173,6 +199,40 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
         : "warning";
   }
 
+  function toggleSelected(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === invoices.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(invoices.map((inv) => inv.id)));
+    }
+  }
+
+  // Eligible for bulk request: selected, no account number, and no active follow-up series
+  const bulkEligibleIds = Array.from(selectedIds).filter((id) => {
+    const inv = invoices.find((i) => i.id === id);
+    if (!inv || inv.accountNumber) return false;
+    const badge = badgeStates[id];
+    if (badge && badge.seriesStatus === "ACTIVE") return false;
+    return true;
+  });
+
+  function handleBulkSuccess() {
+    setSelectedIds(new Set());
+    fetchInvoices();
+  }
+
   function handleExportCsv() {
     invoiceApi.exportCsv({
       search: filters.search || undefined,
@@ -183,6 +243,7 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
       dateTo: filters.dateTo || undefined,
       amountMin: filters.amountMin ? Number(filters.amountMin) : undefined,
       amountMax: filters.amountMax ? Number(filters.amountMax) : undefined,
+      needsAccountNumber: filters.needsAccountNumber || undefined,
       creatorId,
     }).then((blob) => {
       const url = URL.createObjectURL(blob);
@@ -202,6 +263,40 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
         onExportCsv={handleExportCsv}
       />
 
+      {/* Bulk action bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-lg border border-border/50 bg-muted/30 px-3 py-2 animate-in fade-in-0 slide-in-from-top-1 duration-200">
+          <p className="text-sm text-muted-foreground">
+            {selectedIds.size} selected
+          </p>
+          {bulkEligibleIds.length > 0 && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1.5"
+              onClick={() => setBulkDialogOpen(true)}
+            >
+              <MailIcon className="size-3.5" />
+              Request Account Numbers ({bulkEligibleIds.length})
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setSelectedIds(new Set())}
+          >
+            Clear
+          </Button>
+        </div>
+      )}
+
+      <BulkRequestDialog
+        open={bulkDialogOpen}
+        onOpenChange={setBulkDialogOpen}
+        invoiceIds={bulkEligibleIds}
+        onSuccess={handleBulkSuccess}
+      />
+
       {loading ? (
         <p className="text-muted-foreground text-sm">Loading…</p>
       ) : invoices.length === 0 ? (
@@ -209,12 +304,12 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
           icon={<FileTextIcon className="size-7" />}
           title="No invoices found"
           description={
-            Object.values(filters).some((v) => v !== "")
+            Object.values(filters).some((v) => v !== "" && v !== false)
               ? "Try adjusting your filters to find what you're looking for."
               : "Create your first invoice to get started."
           }
           action={
-            Object.values(filters).some((v) => v !== "")
+            Object.values(filters).some((v) => v !== "" && v !== false)
               ? { label: "Clear Filters", onClick: handleClear, variant: "outline" as const }
               : undefined
           }
@@ -223,26 +318,35 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
         <>
           <div className="space-y-3 md:hidden">
             {invoices.map((invoice) => (
-              <button
-                key={invoice.id}
-                type="button"
-                className="w-full rounded-xl border border-border/60 bg-card p-4 text-left shadow-sm transition-colors hover:bg-muted/20"
-                onClick={() => router.push(`/invoices/${invoice.id}`)}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-lg bg-muted text-[11px] font-bold text-muted-foreground">
-                    {getInitials(invoice.staff?.name ?? invoice.contact?.name ?? "?")}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <p className="min-w-0 flex-1 text-sm font-semibold leading-tight">
-                        {invoice.isRunning && invoice.runningTitle
-                          ? invoice.runningTitle
-                          : (invoice.invoiceNumber ?? "—")}
-                      </p>
-                      {invoice.isRunning && <Badge variant="info" className="text-[9px]">Running</Badge>}
-                      <Badge variant={statusVariant(invoice.status)}>{statusLabel(invoice.status)}</Badge>
+              <div key={invoice.id} className="flex items-start gap-2">
+                <div className="pt-4">
+                  <Checkbox
+                    checked={selectedIds.has(invoice.id)}
+                    onCheckedChange={() => toggleSelected(invoice.id)}
+                    aria-label={`Select invoice ${invoice.invoiceNumber ?? invoice.id}`}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="w-full rounded-xl border border-border/60 bg-card p-4 text-left shadow-sm transition-colors hover:bg-muted/20"
+                  onClick={() => router.push(`/invoices/${invoice.id}`)}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-lg bg-muted text-[11px] font-bold text-muted-foreground">
+                      {getInitials(invoice.staff?.name ?? invoice.contact?.name ?? "?")}
                     </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <p className="min-w-0 flex-1 text-sm font-semibold leading-tight">
+                          {invoice.isRunning && invoice.runningTitle
+                            ? invoice.runningTitle
+                            : (invoice.invoiceNumber ?? "—")}
+                        </p>
+                        {invoice.isRunning && <Badge variant="info" className="text-[9px]">Running</Badge>}
+                        <FollowUpBadge state={badgeStates[invoice.id] ?? null} />
+                        <Badge variant={statusVariant(invoice.status)}>{statusLabel(invoice.status)}</Badge>
+                      </div>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {invoice.staff?.name ?? invoice.contact?.name ?? "Unknown"} · {formatDate(invoice.date)}
                     </p>
@@ -260,12 +364,20 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
                   </div>
                 </div>
               </button>
+              </div>
             ))}
           </div>
 
           <Table className="hidden md:table">
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[40px]">
+                  <Checkbox
+                    checked={invoices.length > 0 && selectedIds.size === invoices.length}
+                    onCheckedChange={toggleSelectAll}
+                    aria-label="Select all invoices"
+                  />
+                </TableHead>
                 <TableHead>
                   <div className="flex gap-4">
                     <button
@@ -302,6 +414,13 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
                   tabIndex={0}
                   onKeyDown={(e) => { if (e.key === "Enter") router.push(`/invoices/${invoice.id}`); }}
                 >
+                  <TableCell className="w-[40px]" onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={selectedIds.has(invoice.id)}
+                      onCheckedChange={() => toggleSelected(invoice.id)}
+                      aria-label={`Select invoice ${invoice.invoiceNumber ?? invoice.id}`}
+                    />
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <div className="flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-muted text-[11px] font-bold text-muted-foreground shrink-0">
@@ -338,6 +457,7 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
                       {invoice.isRunning && (
                         <Badge variant="info" className="text-[9px]">Running</Badge>
                       )}
+                      <FollowUpBadge state={badgeStates[invoice.id] ?? null} />
                       <Badge variant={statusVariant(invoice.status)}>
                         {statusLabel(invoice.status)}
                       </Badge>
