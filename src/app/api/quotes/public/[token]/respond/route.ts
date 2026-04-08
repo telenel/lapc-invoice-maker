@@ -62,7 +62,8 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  const response = (body as Record<string, unknown>).response;
+  const payload = body as Record<string, unknown>;
+  const response = payload.response;
   if (response !== "ACCEPTED" && response !== "DECLINED") {
     return NextResponse.json({ error: "Invalid response. Must be ACCEPTED or DECLINED" }, { status: 400 });
   }
@@ -92,21 +93,21 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
 
     let cateringDetails: CateringDetails | undefined;
     if (response === "ACCEPTED") {
-      if (quote.isCateringEvent && !body.cateringDetails) {
+      if (quote.isCateringEvent && !payload.cateringDetails) {
         return NextResponse.json(
           { error: "Catering details are required to approve this quote" },
           { status: 400 },
         );
       }
-      if (!quote.isCateringEvent && body.cateringDetails) {
+      if (!quote.isCateringEvent && payload.cateringDetails) {
         return NextResponse.json(
           { error: "Catering details are only allowed for catering quotes" },
           { status: 400 },
         );
       }
     }
-    if (response === "ACCEPTED" && body.cateringDetails) {
-      const parsed = cateringDetailsSchema.safeParse(body.cateringDetails);
+    if (response === "ACCEPTED" && payload.cateringDetails) {
+      const parsed = cateringDetailsSchema.safeParse(payload.cateringDetails);
       if (!parsed.success) {
         return NextResponse.json(
           { error: "Invalid catering details", details: parsed.error.flatten().fieldErrors },
