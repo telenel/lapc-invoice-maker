@@ -11,6 +11,7 @@ vi.mock("@/domains/quote/service", () => ({
     approveManually: vi.fn(),
     declineManually: vi.fn(),
     convertToInvoice: vi.fn(),
+    delete: vi.fn(),
   },
 }));
 
@@ -19,6 +20,7 @@ import { quoteService } from "@/domains/quote/service";
 import { POST as approveQuote } from "@/app/api/quotes/[id]/approve/route";
 import { POST as declineQuote } from "@/app/api/quotes/[id]/decline/route";
 import { POST as convertQuote } from "@/app/api/quotes/[id]/convert/route";
+import { DELETE as deleteQuote } from "@/app/api/quotes/[id]/route";
 
 describe("quote transition routes", () => {
   beforeEach(() => {
@@ -108,5 +110,39 @@ describe("quote transition routes", () => {
 
     expect(response.status).toBe(201);
     expect(quoteService.convertToInvoice).toHaveBeenCalledWith("q1", "u1");
+  });
+
+  it("normalizes quote ids for delete", async () => {
+    vi.mocked(quoteService.delete).mockResolvedValue(undefined as never);
+
+    const response = await deleteQuote(
+      new NextRequest("http://localhost/api/quotes/q1", {
+        method: "DELETE",
+      }),
+      { params: Promise.resolve({ id: "  q1  " }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(quoteService.delete).toHaveBeenCalledWith("q1");
+  });
+
+  it("returns 400 when quote deletion is rejected by workflow rules", async () => {
+    vi.mocked(quoteService.delete).mockRejectedValue(
+      Object.assign(new Error("Only draft, sent, declined, or expired quotes can be deleted"), {
+        code: "FORBIDDEN",
+      }),
+    );
+
+    const response = await deleteQuote(
+      new NextRequest("http://localhost/api/quotes/q1", {
+        method: "DELETE",
+      }),
+      { params: Promise.resolve({ id: "q1" }) },
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "Only draft, sent, declined, or expired quotes can be deleted",
+    });
   });
 });

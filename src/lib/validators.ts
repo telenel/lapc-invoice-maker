@@ -167,7 +167,7 @@ export const quoteCreateSchema = z.object({
 export const quoteUpdateSchema = quoteCreateSchema.partial().extend({
   staffId: z.string().nullable().optional(),
   items: z.array(quoteItemSchema).min(1).optional(),
-  quoteStatus: z.enum(["DRAFT", "SENT", "SUBMITTED_EMAIL", "SUBMITTED_MANUAL", "ACCEPTED", "DECLINED", "EXPIRED"]).optional(),
+  quoteStatus: z.enum(["DRAFT", "SENT", "SUBMITTED_EMAIL", "SUBMITTED_MANUAL", "ACCEPTED", "DECLINED", "REVISED", "EXPIRED"]).optional(),
   paymentMethod: z.enum(["ACCOUNT_NUMBER", "CHECK", "CASH", "CREDIT_CARD"]).optional(),
   paymentAccountNumber: z.string().nullable().optional(),
 }).superRefine((data, ctx) => {

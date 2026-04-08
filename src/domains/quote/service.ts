@@ -1,7 +1,6 @@
 // src/domains/quote/service.ts
 import * as quoteRepository from "./repository";
 import { pdfService } from "@/domains/pdf/service";
-import { pdfStorage } from "@/domains/pdf/storage";
 import { formatDateFromDate } from "@/domains/shared/formatters";
 import { calculateTotal } from "@/domains/invoice/calculations";
 import { prisma } from "@/lib/prisma";
@@ -1715,7 +1714,7 @@ export const quoteService = {
     const appUrl = process.env.NEXTAUTH_URL ?? "https://laportal.montalvo.io";
     const includePublicShareLink = options?.includePublicShareLink === true;
 
-    const pdfPath = await pdfService.generateQuote({
+    const buffer = await pdfService.generateQuoteBuffer({
       quoteNumber: quote.quoteNumber ?? "DRAFT",
       date: formatDateFromDate(new Date(quote.date)),
       expirationDate: quote.expirationDate
@@ -1763,9 +1762,7 @@ export const quoteService = {
         : null,
       shareToken: includePublicShareLink ? quote.shareToken : null,
       appUrl: includePublicShareLink ? appUrl : undefined,
-    }, pdfStorage.quoteKey(id, quote.quoteNumber ?? "quote"));
-
-    const buffer = await pdfService.readPdf(pdfPath);
+    });
     const filename = (quote.quoteNumber ?? "quote").replace(/[\r\n"]/g, "");
 
     return { buffer, filename };

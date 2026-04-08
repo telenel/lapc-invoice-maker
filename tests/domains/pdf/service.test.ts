@@ -160,6 +160,45 @@ describe("pdfService", () => {
       );
       expect(result).toBe("quotes/q1/Q-001.pdf");
     });
+
+    it("can render a quote buffer without writing to storage", async () => {
+      mockGenerateQuotePDF.mockResolvedValue(Buffer.from("quote-pdf") as never);
+
+      const data: QuotePDFData = {
+        quoteNumber: "Q-001",
+        date: "2026-03-01",
+        expirationDate: "2026-04-01",
+        recipientName: "Dave",
+        recipientEmail: "dave@test.com",
+        recipientOrg: "LAPC",
+        department: "IT",
+        category: "AV",
+        accountCode: "AC1",
+        notes: "Please check",
+        totalAmount: 750,
+        marginEnabled: false,
+        taxEnabled: false,
+        taxRate: 0.0975,
+        isCateringEvent: false,
+        cateringDetails: null,
+        items: [
+          {
+            description: "Camera rental",
+            quantity: 3,
+            unitPrice: "250.00",
+            extendedPrice: "750.00",
+            isTaxable: true,
+            costPrice: null,
+          },
+        ],
+      };
+
+      const result = await pdfService.generateQuoteBuffer(data);
+
+      expect(mockGenerateQuotePDF).toHaveBeenCalledOnce();
+      expect(result).toEqual(Buffer.from("quote-pdf"));
+      expect(mockStorage.write).not.toHaveBeenCalled();
+    });
   });
 
   describe("readPdf", () => {

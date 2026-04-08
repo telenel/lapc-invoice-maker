@@ -137,6 +137,36 @@ describe("QuoteDetailView", () => {
     expect(screen.queryByRole("button", { name: "Convert to Invoice" })).not.toBeInTheDocument();
   });
 
+  it("shows draft-specific actions for editable drafts", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        if (String(input) === "/api/quotes/q1") {
+          return {
+            ok: true,
+            json: async () =>
+              makeQuote({
+                quoteStatus: "DRAFT",
+                convertedToInvoice: null,
+                shareToken: null,
+              }),
+          } satisfies Partial<Response>;
+        }
+
+        throw new Error(`Unexpected fetch: ${String(input)}`);
+      }),
+    );
+
+    render(<QuoteDetailView id="q1" />);
+
+    await screen.findByText("Q-1");
+    expect(screen.getByRole("button", { name: "Mark as Sent" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Edit" })).toHaveAttribute("href", "/quotes/q1/edit");
+    expect(screen.getByRole("button", { name: "Download / Regenerate PDF" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Approve Manually" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Revise & Resubmit" })).not.toBeInTheDocument();
+  });
+
   it("offers a payment-resolution action for accepted quotes that still need payment details", async () => {
     vi.stubGlobal(
       "fetch",
@@ -195,6 +225,64 @@ describe("QuoteDetailView", () => {
     expect(screen.queryByRole("button", { name: "Convert to Invoice" })).not.toBeInTheDocument();
   });
 
+  it("shows edit and conversion actions for accepted quotes with resolved payment details", async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        if (String(input) === "/api/quotes/q1") {
+          return {
+            ok: true,
+            json: async () =>
+              makeQuote({
+                quoteStatus: "ACCEPTED",
+                convertedToInvoice: null,
+                paymentDetailsResolved: true,
+                paymentMethod: "CHECK",
+              }),
+          } satisfies Partial<Response>;
+        }
+
+        throw new Error(`Unexpected fetch: ${String(input)}`);
+      }),
+    );
+
+    render(<QuoteDetailView id="q1" />);
+
+    await screen.findByText("Q-1");
+    expect(screen.getByRole("link", { name: "Edit" })).toHaveAttribute("href", "/quotes/q1/edit");
+    expect(screen.getByRole("button", { name: "Convert to Invoice" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /More/i }));
+    expect(screen.queryByRole("menuitem", { name: "Edit" })).not.toBeInTheDocument();
+  });
+
+  it("offers revise and resubmit for declined quotes", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        if (String(input) === "/api/quotes/q1") {
+          return {
+            ok: true,
+            json: async () =>
+              makeQuote({
+                quoteStatus: "DECLINED",
+                convertedToInvoice: null,
+              }),
+          } satisfies Partial<Response>;
+        }
+
+        throw new Error(`Unexpected fetch: ${String(input)}`);
+      }),
+    );
+
+    render(<QuoteDetailView id="q1" />);
+
+    await screen.findByText("Q-1");
+    expect(screen.getByRole("button", { name: "Revise & Resubmit" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Approve Manually" })).not.toBeInTheDocument();
+  });
+
   it("keeps the payment dialog open when saving payment details fails", async () => {
     const user = userEvent.setup();
     vi.stubGlobal(
@@ -212,7 +300,7 @@ describe("QuoteDetailView", () => {
           } satisfies Partial<Response>;
         }
 
-        if (String(input) === "/api/quotes/q1" && init?.method === "PUT") {
+        if (String(input) === "/api/quotes/q1/payment-details" && init?.method === "POST") {
           return {
             ok: false,
             json: async () => ({ error: "Failed to save payment details" }),

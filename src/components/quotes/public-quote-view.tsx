@@ -306,10 +306,9 @@ export function PublicQuoteView({ token }: { token: string }) {
   const alreadyResponded = quote.quoteStatus === "ACCEPTED" || quote.quoteStatus === "DECLINED" || quote.quoteStatus === "REVISED";
   const paymentLinkAvailable = quote.paymentLinkAvailable !== false;
   const canRespond =
-    paymentLinkAvailable &&
     (quote.quoteStatus === "SENT" || quote.quoteStatus === "SUBMITTED_EMAIL" || quote.quoteStatus === "SUBMITTED_MANUAL") &&
     !responded;
-  const publicActionsClosed = !paymentLinkAvailable && !alreadyResponded && !isExpired;
+  const publicActionsClosed = !canRespond && !alreadyResponded && !isExpired;
   const isCatering = quote.isCateringEvent;
   const missingCateringRequirements = isCatering ? getMissingCustomerCateringRequirements(cateringForm) : [];
   const cateringRequiredMissing = missingCateringRequirements.length > 0;
