@@ -52,7 +52,10 @@ export const GET = withAuth(async (req: NextRequest, session) => {
 
 export const POST = withAuth(async (req: NextRequest, session: AuthSession) => {
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (body === null || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
     const parsed = requisitionCreateSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(

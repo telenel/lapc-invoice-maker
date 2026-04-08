@@ -21,7 +21,11 @@ export const GET = withAuth(async (request: NextRequest) => {
 });
 
 export const POST = withAdmin(async (request: NextRequest) => {
-  const body = await request.json();
+  const body = await request.json().catch(() => null);
+  if (body === null) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
   const parsed = categoryCreateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });

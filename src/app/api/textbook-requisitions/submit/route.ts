@@ -28,7 +28,10 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (body === null || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
 
     // Honeypot: if the hidden field has a value, it's a bot
     if (body._hp && typeof body._hp === "string" && body._hp.trim().length > 0) {

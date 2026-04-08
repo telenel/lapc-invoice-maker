@@ -9,7 +9,11 @@ export const GET = withAdmin(async () => {
 });
 
 export const POST = withAdmin(async (req: NextRequest) => {
-  const body = await req.json();
+  const body = await req.json().catch(() => null);
+  if (body === null) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
   const parsed = adminUserCreateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });

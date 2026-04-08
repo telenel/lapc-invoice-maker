@@ -5,7 +5,10 @@ import { adminUserUpdateSchema } from "@/lib/validators";
 
 export const PUT = withAdmin(async (req: NextRequest, _session, ctx) => {
   const { id } = await ctx!.params;
-  const body = await req.json();
+  const body = await req.json().catch(() => null);
+  if (body === null) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
 
   if (body.resetPassword) {
     const user = await adminService.resetPassword(id);

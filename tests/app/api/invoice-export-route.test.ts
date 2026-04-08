@@ -57,4 +57,22 @@ describe("GET /api/invoices/export", () => {
       sortOrder: "asc",
     });
   });
+
+  it("returns 400 for invalid amount filters", async () => {
+    const response = await GET(
+      new NextRequest("http://localhost/api/invoices/export?amountMin=abc&amountMax=10"),
+    );
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body).toEqual({ error: "Invalid amountMin value" });
+  });
+
+  it("returns 400 when amountMin is greater than amountMax", async () => {
+    const response = await GET(
+      new NextRequest("http://localhost/api/invoices/export?amountMin=100&amountMax=10"),
+    );
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body).toEqual({ error: "amountMin must be less than or equal to amountMax" });
+  });
 });

@@ -13,16 +13,30 @@ export const GET = withAuth(async (req, session, ctx) => {
 
 export const PUT = withAdmin(async (req, session, ctx) => {
   const { id } = await ctx!.params;
-  const body = staffSchema.parse(await req.json());
-  const staff = await staffService.update(id, body);
+  const body = await req.json().catch(() => null);
+  if (body === null) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+  const parsed = staffSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+  const staff = await staffService.update(id, parsed.data);
   if (!staff) return NextResponse.json({ error: "Staff not found" }, { status: 404 });
   return NextResponse.json(staff);
 });
 
 export const PATCH = withAdmin(async (req, session, ctx) => {
   const { id } = await ctx!.params;
-  const body = staffSchema.partial().parse(await req.json());
-  const staff = await staffService.partialUpdate(id, body);
+  const body = await req.json().catch(() => null);
+  if (body === null) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+  const parsed = staffSchema.partial().safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+  const staff = await staffService.partialUpdate(id, parsed.data);
   if (!staff) return NextResponse.json({ error: "Staff not found" }, { status: 404 });
   return NextResponse.json(staff);
 });

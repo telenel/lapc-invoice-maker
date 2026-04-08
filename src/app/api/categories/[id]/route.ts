@@ -8,7 +8,10 @@ type RouteContext = { params: Promise<{ id: string }> };
 export const PUT = withAdmin(async (request: NextRequest, _session, ctx?: RouteContext) => {
   const { id } = await ctx!.params;
   try {
-    const body = await request.json();
+    const body = await request.json().catch(() => null);
+    if (body === null) {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
     const parsed = categoryUpdateSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });

@@ -7,6 +7,31 @@ import type { QuoteFilters } from "@/domains/quote/types";
 
 export const dynamic = "force-dynamic";
 
+const VALID_STATUSES = new Set([
+  "DRAFT",
+  "SENT",
+  "SUBMITTED_EMAIL",
+  "SUBMITTED_MANUAL",
+  "ACCEPTED",
+  "DECLINED",
+  "REVISED",
+  "EXPIRED",
+  "all",
+]);
+
+function parseStatus(value: string | null): QuoteFilters["quoteStatus"] | "error" {
+  if (value == null) return undefined;
+  if (!VALID_STATUSES.has(value)) return "error";
+  return value as QuoteFilters["quoteStatus"];
+}
+
+function parsePositiveInt(value: string | null, fallback: number): number | "error" {
+  if (value == null) return fallback;
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1) return "error";
+  return parsed;
+}
+
 function jsonNoStore(data: unknown, init?: ResponseInit) {
   const headers = new Headers(init?.headers);
   headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
@@ -44,6 +69,21 @@ export const GET = withAuth(async (req: NextRequest) => {
       return NextResponse.json({ error: "amountMin must be less than or equal to amountMax" }, { status: 400 });
     }
 
+    const page = parsePositiveInt(sp.get("page"), 1);
+    if (page === "error") {
+      return NextResponse.json({ error: "Invalid page value" }, { status: 400 });
+    }
+
+    const pageSize = parsePositiveInt(sp.get("pageSize"), 20);
+    if (pageSize === "error") {
+      return NextResponse.json({ error: "Invalid pageSize value" }, { status: 400 });
+    }
+
+    const quoteStatus = parseStatus(sp.get("quoteStatus"));
+    if (quoteStatus === "error") {
+      return NextResponse.json({ error: "Invalid quoteStatus value" }, { status: 400 });
+    }
+
     // Validate sortOrder
     const rawSortOrder = sp.get("sortOrder") ?? sp.get("sortDir");
     const sortOrder: "asc" | "desc" =
@@ -51,17 +91,7 @@ export const GET = withAuth(async (req: NextRequest) => {
 
     const filters: QuoteFilters & { sortBy?: string; sortOrder?: "asc" | "desc" } = {
       search: sp.get("search") ?? undefined,
-      quoteStatus: (sp.get("quoteStatus") ?? undefined) as
-        | "DRAFT"
-        | "SENT"
-        | "SUBMITTED_EMAIL"
-        | "SUBMITTED_MANUAL"
-        | "ACCEPTED"
-        | "DECLINED"
-        | "REVISED"
-        | "EXPIRED"
-        | "all"
-        | undefined,
+      quoteStatus,
       department: sp.get("department") ?? undefined,
       category: sp.get("category") ?? undefined,
       creatorId: sp.get("creatorId") ?? undefined,
@@ -70,8 +100,8 @@ export const GET = withAuth(async (req: NextRequest) => {
       dateTo: sp.get("dateTo") ?? undefined,
       amountMin,
       amountMax,
-      page: Math.max(1, parseInt(sp.get("page") ?? "1", 10)),
-      pageSize: Math.max(1, parseInt(sp.get("pageSize") ?? "20", 10)),
+      page,
+      pageSize,
       sortBy: sp.get("sortBy") ?? "createdAt",
       sortOrder,
     };
@@ -84,7 +114,11 @@ export const GET = withAuth(async (req: NextRequest) => {
 });
 
 export const POST = withAuth(async (req: NextRequest, session) => {
-  const body = await req.json();
+  const body = await req.json().catch(() => null);
+  if (body === null) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
   const parsed = quoteCreateSchema.safeParse(body);
 
   if (!parsed.success) {

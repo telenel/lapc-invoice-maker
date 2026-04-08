@@ -65,8 +65,8 @@ function buildWhere(filters: QuoteFilters): Prisma.InvoiceWhereInput {
   }
   if (filters.amountMin !== undefined || filters.amountMax !== undefined) {
     where.totalAmount = {};
-    if (filters.amountMin !== undefined) where.totalAmount.gte = filters.amountMin;
-    if (filters.amountMax !== undefined) where.totalAmount.lte = filters.amountMax;
+    if (filters.amountMin !== undefined) where.totalAmount.gte = String(filters.amountMin);
+    if (filters.amountMax !== undefined) where.totalAmount.lte = String(filters.amountMax);
   }
   if (filters.search) {
     where.OR = [

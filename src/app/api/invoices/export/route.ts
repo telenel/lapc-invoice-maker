@@ -3,13 +3,52 @@ import { withAuth } from "@/domains/shared/auth";
 import { invoiceService } from "@/domains/invoice/service";
 import { escapeCsv } from "@/lib/csv";
 
+const VALID_STATUSES = new Set(["DRAFT", "FINAL", "PENDING_CHARGE"]);
+
+function parseStatus(
+  value: string | null,
+): "DRAFT" | "FINAL" | "PENDING_CHARGE" | undefined | "error" {
+  if (value == null) return undefined;
+  if (!VALID_STATUSES.has(value)) return "error";
+  return value as "DRAFT" | "FINAL" | "PENDING_CHARGE";
+}
+
+function parseAmount(value: string | null): number | undefined | "error" {
+  if (value == null) return undefined;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return "error";
+  return parsed;
+}
+
 export const GET = withAuth(async (req: NextRequest) => {
   try {
     const sp = req.nextUrl.searchParams;
 
+    const status = parseStatus(sp.get("status"));
+    if (status === "error") {
+      return NextResponse.json({ error: "Invalid status value" }, { status: 400 });
+    }
+
+    const amountMin = parseAmount(sp.get("amountMin"));
+    if (amountMin === "error") {
+      return NextResponse.json({ error: "Invalid amountMin value" }, { status: 400 });
+    }
+
+    const amountMax = parseAmount(sp.get("amountMax"));
+    if (amountMax === "error") {
+      return NextResponse.json({ error: "Invalid amountMax value" }, { status: 400 });
+    }
+
+    if (amountMin !== undefined && amountMax !== undefined && amountMin > amountMax) {
+      return NextResponse.json(
+        { error: "amountMin must be less than or equal to amountMax" },
+        { status: 400 },
+      );
+    }
+
     const filters = {
       search: sp.get("search") ?? undefined,
-      status: (sp.get("status") ?? undefined) as "DRAFT" | "FINAL" | "PENDING_CHARGE" | undefined,
+      status,
       staffId: sp.get("staffId") ?? undefined,
       category: sp.get("category") ?? undefined,
       department: sp.get("department") ?? undefined,
@@ -17,8 +56,8 @@ export const GET = withAuth(async (req: NextRequest) => {
       dateTo: sp.get("dateTo") ?? undefined,
       createdFrom: sp.get("createdFrom") ?? undefined,
       createdTo: sp.get("createdTo") ?? undefined,
-      amountMin: sp.get("amountMin") ? Number(sp.get("amountMin")) : undefined,
-      amountMax: sp.get("amountMax") ? Number(sp.get("amountMax")) : undefined,
+      amountMin,
+      amountMax,
       creatorId: sp.get("creatorId") ?? undefined,
       isRunning: sp.get("isRunning") === "true" ? true : undefined,
       // Fetch all records for export (no pagination)

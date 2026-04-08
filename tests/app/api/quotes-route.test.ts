@@ -54,4 +54,32 @@ describe("GET /api/quotes", () => {
       sortOrder: "asc",
     });
   });
+
+  it("returns 400 for invalid quote status", async () => {
+    const response = await GET(new NextRequest("http://localhost/api/quotes?quoteStatus=INVALID"));
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body).toEqual({ error: "Invalid quoteStatus value" });
+  });
+
+  it("returns 400 for invalid pagination values", async () => {
+    const response = await GET(new NextRequest("http://localhost/api/quotes?page=abc&pageSize=0"));
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body).toEqual({ error: "Invalid page value" });
+  });
+
+  it("returns 400 for invalid numeric amount filter", async () => {
+    const response = await GET(new NextRequest("http://localhost/api/quotes?amountMin=abc&amountMax=10"));
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body).toEqual({ error: "Invalid amountMin value" });
+  });
+
+  it("returns 400 when amountMin is greater than amountMax", async () => {
+    const response = await GET(new NextRequest("http://localhost/api/quotes?amountMin=100&amountMax=10"));
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body).toEqual({ error: "amountMin must be less than or equal to amountMax" });
+  });
 });

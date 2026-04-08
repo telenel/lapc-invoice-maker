@@ -14,16 +14,30 @@ export const GET = withAuth(async (_req: NextRequest, _session, ctx) => {
 
 export const PUT = withAuth(async (req: NextRequest, _session, ctx) => {
   const { id } = await (ctx as RouteContext).params;
-  const body = eventSchema.parse(await req.json());
-  const event = await eventService.update(id, body);
+  const body = await req.json().catch(() => null);
+  if (body === null) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+  const parsed = eventSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+  const event = await eventService.update(id, parsed.data);
   if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 });
   return NextResponse.json(event);
 });
 
 export const PATCH = withAuth(async (req: NextRequest, _session, ctx) => {
   const { id } = await (ctx as RouteContext).params;
-  const body = eventSchema.partial().parse(await req.json());
-  const event = await eventService.update(id, body);
+  const body = await req.json().catch(() => null);
+  if (body === null) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+  const parsed = eventSchema.partial().safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+  const event = await eventService.update(id, parsed.data);
   if (!event) return NextResponse.json({ error: "Event not found" }, { status: 404 });
   return NextResponse.json(event);
 });

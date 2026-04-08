@@ -67,6 +67,56 @@ describe("GET /api/invoices", () => {
     });
   });
 
+  it("returns 400 for invalid status", async () => {
+    const response = await GET(
+      new NextRequest("http://localhost/api/invoices?status=BROKEN"),
+    );
+
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body).toEqual({ error: "Invalid status value" });
+  });
+
+  it("returns 400 for invalid pagination values", async () => {
+    const response = await GET(
+      new NextRequest("http://localhost/api/invoices?page=abc&pageSize=-3"),
+    );
+
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body).toEqual({ error: "Invalid page value" });
+  });
+
+  it("returns 400 for invalid numeric filter values", async () => {
+    const response = await GET(
+      new NextRequest("http://localhost/api/invoices?amountMin=abc&amountMax=10"),
+    );
+
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body).toEqual({ error: "Invalid amountMin value" });
+  });
+
+  it("returns 400 when amountMin is greater than amountMax", async () => {
+    const response = await GET(
+      new NextRequest("http://localhost/api/invoices?amountMin=100&amountMax=10"),
+    );
+
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body).toEqual({ error: "amountMin must be less than or equal to amountMax" });
+  });
+
+  it("returns 400 for invalid creator stats status", async () => {
+    const response = await GET(
+      new NextRequest("http://localhost/api/invoices?statsOnly=true&groupBy=creator&status=bad"),
+    );
+
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body).toEqual({ error: "Invalid status value" });
+  });
+
   it("allows authenticated users to load creator-grouped team stats", async () => {
     const response = await GET(
       new NextRequest("http://localhost/api/invoices?statsOnly=true&groupBy=creator&status=FINAL"),

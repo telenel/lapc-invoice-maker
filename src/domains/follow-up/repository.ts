@@ -92,6 +92,7 @@ export const followUpRepository = {
         recipientEmail: data.recipientEmail,
         subject: data.subject,
         seriesId: data.seriesId,
+        sentAt: new Date(),
         shareToken: data.attempt === 1 ? data.shareToken : undefined,
         seriesStatus: "ACTIVE",
         maxAttempts: data.maxAttempts,

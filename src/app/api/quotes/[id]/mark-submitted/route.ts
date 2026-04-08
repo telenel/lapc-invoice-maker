@@ -10,7 +10,14 @@ export const POST = withAuth(async (req: NextRequest, session, ctx) => {
     if (session.user.role !== "admin" && existing.creatorId !== session.user.id) {
       return forbiddenResponse();
     }
-    const { method } = await req.json() as { method: "email" | "manual" };
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
+    const { method } = body as { method?: string };
+    if (method !== "email" && method !== "manual") {
+      return NextResponse.json({ error: "Invalid method — must be 'email' or 'manual'" }, { status: 400 });
+    }
     if (method === "email") {
       await quoteService.markSubmittedEmail(id);
     } else {

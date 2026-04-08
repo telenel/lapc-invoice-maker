@@ -185,6 +185,7 @@ describe("followUpRepository", () => {
             shareToken: "tok-abc",
             seriesStatus: "ACTIVE",
             metadata: { attempt: 1 },
+            sentAt: expect.any(Date),
           }),
         }),
       );
