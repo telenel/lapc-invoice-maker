@@ -51,8 +51,16 @@ export function BulkRequestDialog({
     }
   }
 
+  function handleOpenChange(next: boolean) {
+    if (!next) {
+      setResults(null);
+      setSubmitting(false);
+    }
+    onOpenChange(next);
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Request Account Numbers</DialogTitle>
@@ -78,7 +86,7 @@ export function BulkRequestDialog({
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
+          <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={submitting}>
             {results ? "Close" : "Cancel"}
           </Button>
           {!results && (

@@ -18,12 +18,12 @@ function getAppUrl(): string {
   return process.env.NEXTAUTH_URL ?? "https://laportal.montalvo.io";
 }
 
-function hashInvoiceIdToLockKey(invoiceId: string): number {
-  let hash = 0;
-  for (let i = 0; i < invoiceId.length; i++) {
-    hash = ((hash << 5) - hash + invoiceId.charCodeAt(i)) | 0;
-  }
-  return Math.abs(hash);
+function uuidToLockKey(uuid: string): bigint {
+  // Use the first 15 hex chars of the UUID (60 bits) as a bigint lock key.
+  // pg_try_advisory_xact_lock accepts bigint. UUIDs are unique, so the first
+  // 60 bits are collision-resistant enough for advisory locks.
+  const hex = uuid.replace(/-/g, "").slice(0, 15);
+  return BigInt(`0x${hex}`);
 }
 
 type InvoiceForInitiation = {
@@ -61,7 +61,7 @@ export const followUpService = {
 
     // Acquire per-invoice advisory lock, re-check within lock, handle stale claims
     const { prisma } = await import("@/lib/prisma");
-    const lockKey = hashInvoiceIdToLockKey(invoice.id);
+    const lockKey = uuidToLockKey(invoice.id);
 
     const claimResult = await prisma.$transaction(async (tx) => {
       // Acquire advisory lock to prevent concurrent initiations for same invoice
@@ -283,12 +283,16 @@ export const followUpService = {
     }
 
     const { prisma } = await import("@/lib/prisma");
-    await prisma.invoice.update({
-      where: { id: row.invoice.id },
-      data: { accountNumber: trimmed },
-    });
-
-    await followUpRepository.markSeriesStatus(row.seriesId!, "COMPLETED");
+    await prisma.$transaction([
+      prisma.invoice.update({
+        where: { id: row.invoice.id },
+        data: { accountNumber: trimmed },
+      }),
+      prisma.followUp.updateMany({
+        where: { seriesId: row.seriesId! },
+        data: { seriesStatus: "COMPLETED" },
+      }),
+    ]);
 
     try {
       const { notificationService } = await import("@/domains/notification/service");
