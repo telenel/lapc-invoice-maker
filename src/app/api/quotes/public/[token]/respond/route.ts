@@ -64,6 +64,15 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
 
   const payload = body as Record<string, unknown>;
   const response = payload.response;
+  const paymentMethod =
+    typeof payload.paymentMethod === "string" ? payload.paymentMethod : undefined;
+  const accountNumber =
+    typeof payload.accountNumber === "string"
+      ? payload.accountNumber
+      : payload.accountNumber === null
+        ? null
+        : undefined;
+  const viewId = typeof payload.viewId === "string" ? payload.viewId : undefined;
   if (response !== "ACCEPTED" && response !== "DECLINED") {
     return NextResponse.json({ error: "Invalid response. Must be ACCEPTED or DECLINED" }, { status: 400 });
   }
@@ -179,8 +188,8 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       response === "ACCEPTED"
         ? (() => {
             const normalized = normalizeQuotePaymentDetails({
-              paymentMethod: body.paymentMethod,
-              accountNumber: body.accountNumber,
+              paymentMethod,
+              accountNumber,
             });
             return normalized
               ? {
@@ -194,7 +203,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     const result = await quoteService.respondToQuote(
       token,
       response,
-      body.viewId,
+      viewId,
       paymentDetailsInput,
       cateringDetails,
     );

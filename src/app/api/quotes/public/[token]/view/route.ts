@@ -42,12 +42,14 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
+  const payload = body as Record<string, unknown>;
+  const viewport = typeof payload.viewport === "string" ? payload.viewport : undefined;
 
   const result = await quoteService.recordView(token, {
     ipAddress: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? req.headers.get("x-real-ip") ?? undefined,
     userAgent: req.headers.get("user-agent") ?? undefined,
     referrer: req.headers.get("referer") ?? undefined,
-    viewport: body.viewport ?? undefined,
+    viewport,
   });
 
   if (!result) {

@@ -16,8 +16,9 @@ async function updateDuration(req: NextRequest, ctx: RouteContext) {
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
+  const payload = body as Record<string, unknown>;
 
-  const duration = Number(body.durationSeconds);
+  const duration = Number(payload.durationSeconds);
   if (!Number.isFinite(duration)) {
     return NextResponse.json({ error: "durationSeconds must be a finite number" }, { status: 400 });
   }
