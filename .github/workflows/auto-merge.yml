@@ -22,7 +22,7 @@ jobs:
       REQUIRED_CHECK_GROUPS: '[["actionlint","ship-check"],["Lint, Build & Test"]]'
     steps:
       - name: Merge eligible pull requests
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const quietMs = Number(process.env.QUIET_PERIOD_MINUTES) * 60 * 1000;

@@ -33,7 +33,7 @@ jobs:
       DEPLOY_VERIFY_INITIAL_SLEEP: 60
     steps:
       - name: Wait for matching CI run
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         env:
           EXPECTED_SHA: ${{ github.sha }}
         with:
