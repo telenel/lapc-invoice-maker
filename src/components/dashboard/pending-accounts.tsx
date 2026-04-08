@@ -47,7 +47,7 @@ export function PendingAccountsWidget() {
 
   if (loading || items.length === 0) return null;
 
-  const userId = session?.user?.id;
+  const userId = (session?.user as { id?: string } | undefined)?.id;
 
   return (
     <div className="rounded-lg border bg-card p-4">

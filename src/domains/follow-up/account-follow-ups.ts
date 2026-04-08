@@ -81,7 +81,7 @@ export async function checkAndSendAccountFollowUps(): Promise<void> {
       invoiceNumber: inv.invoiceNumber,
       quoteNumber: inv.quoteNumber,
       type: inv.type as "INVOICE" | "QUOTE",
-      description: inv.description ?? "",
+      description: inv.notes ?? "",
       totalAmount,
       creatorName: inv.creator?.name ?? "the bookstore",
       formUrl,

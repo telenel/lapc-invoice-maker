@@ -32,7 +32,7 @@ type InvoiceForInitiation = {
   quoteNumber: string | null;
   type: string;
   accountNumber: string;
-  description: string;
+  notes: string | null;
   totalAmount: { toNumber?: () => number } | number;
   staffId: string | null;
   createdBy: string;
@@ -63,15 +63,7 @@ export const followUpService = {
     const { prisma } = await import("@/lib/prisma");
     const lockKey = hashInvoiceIdToLockKey(invoice.id);
 
-    const claimResult = await prisma.$transaction(async (tx: {
-      $queryRaw: <T>(template: TemplateStringsArray, ...values: unknown[]) => Promise<T>;
-      invoice: { findUnique: (args: unknown) => Promise<{ accountNumber: string } | null> };
-      followUp: {
-        findFirst: (args: unknown) => Promise<{ id: string; type: string; sentAt: Date } | null>;
-        delete: (args: unknown) => Promise<unknown>;
-        create: (args: unknown) => Promise<{ id: string }>;
-      };
-    }) => {
+    const claimResult = await prisma.$transaction(async (tx) => {
       // Acquire advisory lock to prevent concurrent initiations for same invoice
       const lockResult = await tx.$queryRaw<Array<{ acquired: boolean }>>`
         SELECT pg_try_advisory_xact_lock(${lockKey}) AS acquired
@@ -131,7 +123,7 @@ export const followUpService = {
         invoiceNumber: invoice.invoiceNumber,
         quoteNumber: invoice.quoteNumber ?? undefined,
         type: invoice.type as "INVOICE" | "QUOTE",
-        description: invoice.description,
+        description: invoice.notes ?? "",
         totalAmount,
         creatorName: invoice.creator?.name ?? "the bookstore",
         formUrl,
@@ -259,7 +251,7 @@ export const followUpService = {
       invoiceNumber: inv.invoiceNumber,
       quoteNumber: inv.quoteNumber,
       type: inv.type as "INVOICE" | "QUOTE",
-      description: inv.description ?? "",
+      description: inv.notes ?? "",
       totalAmount: Number(inv.totalAmount),
       creatorName: inv.creator?.name ?? "the bookstore",
       currentAttempt: attempt,

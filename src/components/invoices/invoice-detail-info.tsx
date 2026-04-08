@@ -115,7 +115,7 @@ export function InvoiceDetailInfo({ invoice }: InvoiceDetailInfoProps) {
           onOpenChange={setRequestDialogOpen}
           invoiceId={invoice.id}
           recipientName={invoice.staff.name}
-          recipientEmail={invoice.staff.email}
+          recipientEmail={invoice.staff.email ?? ""}
           onSuccess={refreshBadge}
         />
       )}

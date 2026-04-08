@@ -20,7 +20,7 @@ describe("supabase scheduler", () => {
     queryRawUnsafe
       .mockResolvedValueOnce([{ extname: "pg_cron" }, { extname: "pg_net" }])
       .mockResolvedValueOnce([
-        { jobid: 1n, jobname: "laportal-event-reminders", schedule: "*/15 * * * *", active: true },
+        { jobid: BigInt(1), jobname: "laportal-event-reminders", schedule: "*/15 * * * *", active: true },
       ]);
 
     const { getSupabaseSchedulerStatus } = await import("@/lib/supabase-scheduler");

@@ -64,7 +64,7 @@ describe("followUpService", () => {
       quoteNumber: null,
       type: "INVOICE",
       accountNumber: "",
-      description: "Office Supplies",
+      notes: "Office Supplies",
       totalAmount: { toNumber: () => 250 },
       staffId: "staff-1",
       createdBy: "user-1",
