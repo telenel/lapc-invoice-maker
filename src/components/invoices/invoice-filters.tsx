@@ -23,6 +23,7 @@ export interface InvoiceFilters {
   dateTo: string;
   amountMin: string;
   amountMax: string;
+  needsAccountNumber: boolean;
 }
 
 interface InvoiceFiltersProps {
@@ -56,6 +57,7 @@ export function InvoiceFiltersBar({
     filters.dateTo,
     filters.amountMin,
     filters.amountMax,
+    filters.needsAccountNumber,
   ].filter(Boolean).length;
 
   return (
@@ -92,7 +94,7 @@ export function InvoiceFiltersBar({
       {/* Collapsible filter panel */}
       {open && (
         <div className="space-y-3 rounded-lg border border-border/50 bg-muted/20 p-3 animate-in fade-in-0 slide-in-from-top-1 duration-200">
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {/* Status */}
             <div className="grid gap-1.5">
               <Label>Status</Label>
@@ -152,6 +154,21 @@ export function InvoiceFiltersBar({
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            {/* Needs Account Number */}
+            <div className="grid gap-1.5">
+              <Label>&nbsp;</Label>
+              <Button
+                variant={filters.needsAccountNumber ? "default" : "outline"}
+                size="sm"
+                className="h-9 w-full"
+                onClick={() =>
+                  onChange({ ...filters, needsAccountNumber: !filters.needsAccountNumber })
+                }
+              >
+                Needs Account #
+              </Button>
             </div>
           </div>
 
