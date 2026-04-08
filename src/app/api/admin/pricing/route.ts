@@ -10,10 +10,15 @@ export const GET = withAdmin(async () => {
 
 export const PUT = withAdmin(async (req: NextRequest) => {
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => {
+      throw new SyntaxError("INVALID_JSON");
+    });
     const pricing = await printPricingService.updatePricingConfig(body);
     return NextResponse.json(pricing);
   } catch (error) {
+    if (error instanceof SyntaxError && error.message === "INVALID_JSON") {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
     if (error instanceof ZodError) {
       return NextResponse.json(
         { error: error.issues[0]?.message ?? "Invalid pricing configuration" },

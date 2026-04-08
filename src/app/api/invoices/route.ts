@@ -6,6 +6,30 @@ import { Prisma } from "@/generated/prisma/client";
 
 export const dynamic = "force-dynamic";
 
+const VALID_STATUSES = new Set(["DRAFT", "FINAL", "PENDING_CHARGE"]);
+
+function parseStatus(
+  value: string | null,
+): "DRAFT" | "FINAL" | "PENDING_CHARGE" | undefined | "error" {
+  if (value == null) return undefined;
+  if (!VALID_STATUSES.has(value)) return "error";
+  return value as "DRAFT" | "FINAL" | "PENDING_CHARGE";
+}
+
+function parsePositiveInt(value: string | null, fallback: number): number | "error" {
+  if (value == null) return fallback;
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1) return "error";
+  return parsed;
+}
+
+function parseAmount(value: string | null): number | undefined | "error" {
+  if (value == null) return undefined;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return "error";
+  return parsed;
+}
+
 function jsonNoStore(data: unknown, init?: ResponseInit) {
   const headers = new Headers(init?.headers);
   headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
@@ -20,7 +44,10 @@ export const GET = withAuth(async (req: NextRequest) => {
     const groupBy = sp.get("groupBy");
 
     if (statsOnly && groupBy === "creator") {
-      const status = sp.get("status") as "DRAFT" | "FINAL" | "PENDING_CHARGE" | undefined ?? undefined;
+      const status = parseStatus(sp.get("status"));
+      if (status === "error") {
+        return NextResponse.json({ error: "Invalid status value" }, { status: 400 });
+      }
       return jsonNoStore(await invoiceService.getCreatorStats(status));
     }
 
@@ -28,9 +55,41 @@ export const GET = withAuth(async (req: NextRequest) => {
     const sortOrder: "asc" | "desc" =
       rawSortOrder === "asc" || rawSortOrder === "desc" ? rawSortOrder : "desc";
 
+    const status = parseStatus(sp.get("status"));
+    if (status === "error") {
+      return NextResponse.json({ error: "Invalid status value" }, { status: 400 });
+    }
+
+    const page = parsePositiveInt(sp.get("page"), 1);
+    if (page === "error") {
+      return NextResponse.json({ error: "Invalid page value" }, { status: 400 });
+    }
+
+    const pageSize = parsePositiveInt(sp.get("pageSize"), 20);
+    if (pageSize === "error") {
+      return NextResponse.json({ error: "Invalid pageSize value" }, { status: 400 });
+    }
+
+    const amountMin = parseAmount(sp.get("amountMin"));
+    if (amountMin === "error") {
+      return NextResponse.json({ error: "Invalid amountMin value" }, { status: 400 });
+    }
+
+    const amountMax = parseAmount(sp.get("amountMax"));
+    if (amountMax === "error") {
+      return NextResponse.json({ error: "Invalid amountMax value" }, { status: 400 });
+    }
+
+    if (amountMin !== undefined && amountMax !== undefined && amountMin > amountMax) {
+      return NextResponse.json(
+        { error: "amountMin must be less than or equal to amountMax" },
+        { status: 400 },
+      );
+    }
+
     const filters = {
       search: sp.get("search") ?? undefined,
-      status: (sp.get("status") ?? undefined) as "DRAFT" | "FINAL" | "PENDING_CHARGE" | undefined,
+      status,
       isRunning: sp.get("isRunning") === "true" ? true : undefined,
       needsAccountNumber: sp.get("needsAccountNumber") === "true" ? true : undefined,
       staffId: sp.get("staffId") ?? undefined,
@@ -40,11 +99,11 @@ export const GET = withAuth(async (req: NextRequest) => {
       createdFrom: sp.get("createdFrom") ?? undefined,
       createdTo: sp.get("createdTo") ?? undefined,
       category: sp.get("category") ?? undefined,
-      amountMin: sp.get("amountMin") ? Number(sp.get("amountMin")) : undefined,
-      amountMax: sp.get("amountMax") ? Number(sp.get("amountMax")) : undefined,
+      amountMin,
+      amountMax,
       creatorId: sp.get("creatorId") ?? undefined,
-      page: Math.max(1, parseInt(sp.get("page") ?? "1", 10)),
-      pageSize: Math.max(1, parseInt(sp.get("pageSize") ?? "20", 10)),
+      page,
+      pageSize,
       sortBy: sp.get("sortBy") ?? "createdAt",
       sortOrder,
     };
@@ -61,7 +120,11 @@ export const GET = withAuth(async (req: NextRequest) => {
 });
 
 export const POST = withAuth(async (req: NextRequest, session) => {
-  const body = await req.json();
+  const body = await req.json().catch(() => null);
+  if (body === null) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
   const parsed = invoiceCreateSchema.safeParse(body);
 
   if (!parsed.success) {

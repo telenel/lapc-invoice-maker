@@ -21,7 +21,16 @@ export const GET = withAuth(async (req) => {
 });
 
 export const POST = withAdmin(async (req) => {
-  const body = staffSchema.parse(await req.json());
-  const staff = await staffService.create(body);
+  const body = await req.json().catch(() => null);
+  if (body === null) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
+  const parsed = staffSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  const staff = await staffService.create(parsed.data);
   return NextResponse.json(staff, { status: 201 });
 });

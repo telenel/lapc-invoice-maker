@@ -22,7 +22,11 @@ export const GET = withAuth(async (_req: NextRequest, session, ctx) => {
 
 export const PUT = withAuth(async (req: NextRequest, session, ctx) => {
   const { id } = await ctx!.params;
-  const body = await req.json();
+  const body = await req.json().catch(() => null);
+  if (body === null) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
   const parsed = quoteUpdateSchema.safeParse(body);
 
   if (!parsed.success) {

@@ -71,9 +71,15 @@ export function RequestAccountDialog({
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Email</span>
-            <span>{recipientEmail}</span>
+            <span>{recipientEmail || <span className="text-red-500">No email on file</span>}</span>
           </div>
         </div>
+
+        {!recipientEmail.trim() && (
+          <p className="text-sm text-red-600">
+            This staff member has no email address. Add one before requesting an account number.
+          </p>
+        )}
 
         <DialogFooter>
           <Button
@@ -83,7 +89,7 @@ export function RequestAccountDialog({
           >
             Cancel
           </Button>
-          <Button onClick={handleConfirm} disabled={submitting}>
+          <Button onClick={handleConfirm} disabled={submitting || !recipientEmail.trim()}>
             {submitting ? "Sending..." : "Send Request"}
           </Button>
         </DialogFooter>

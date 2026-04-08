@@ -23,7 +23,14 @@ export const GET = withAuth(async (req: NextRequest) => {
 });
 
 export const POST = withAuth(async (req: NextRequest, session) => {
-  const body = eventSchema.parse(await req.json());
-  const event = await eventService.create(body, session.user.id);
+  const body = await req.json().catch(() => null);
+  if (body === null) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+  const parsed = eventSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+  const event = await eventService.create(parsed.data, session.user.id);
   return NextResponse.json(event, { status: 201 });
 });

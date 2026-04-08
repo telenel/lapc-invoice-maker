@@ -22,7 +22,10 @@ export const GET = withAuth(async (req: NextRequest, session) => {
 
 export const POST = withAuth(async (req: NextRequest, session) => {
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (body === null || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
     if (!body.name || typeof body.name !== "string" || !body.name.trim()) {
       return NextResponse.json({ error: "name is required" }, { status: 400 });
     }

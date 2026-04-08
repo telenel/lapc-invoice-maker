@@ -4,7 +4,10 @@ import { requisitionService } from "@/domains/textbook-requisition/service";
 
 export const POST = withAuth(async (req: NextRequest, session, ctx) => {
   const { id } = await ctx!.params;
-  const body = await req.json();
+  const body = await req.json().catch(() => null);
+  if (body === null || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
   const emailType = body.emailType as "ordered" | "on-shelf";
 
   if (!["ordered", "on-shelf"].includes(emailType)) {

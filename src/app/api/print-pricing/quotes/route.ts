@@ -52,12 +52,17 @@ export async function POST(req: Request) {
         }
       );
     }
-    const body = await req.json();
+    const body = await req.json().catch(() => {
+      throw new SyntaxError("INVALID_JSON");
+    });
     const session = await getServerSession(authOptions);
     const createdBy = (session?.user as { id?: string } | undefined)?.id ?? null;
     const quote = await printPricingService.generateQuote(body, createdBy);
     return NextResponse.json(quote, { status: 201 });
   } catch (error) {
+    if (error instanceof SyntaxError && error.message === "INVALID_JSON") {
+      return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+    }
     if (error instanceof ZodError) {
       return NextResponse.json(
         { error: error.issues[0]?.message ?? "Invalid estimate request" },

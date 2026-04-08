@@ -12,11 +12,19 @@ export const GET = withAuth(async (req, session, ctx) => {
 
 export const POST = withAdmin(async (req, session, ctx) => {
   const { id } = await ctx!.params;
-  const body = staffAccountNumberSchema.parse(await req.json());
+  const body = await req.json().catch(() => null);
+  if (body === null) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+  const parsed = staffAccountNumberSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
   await staffService.upsertAccountNumber({
     staffId: id,
-    accountCode: body.accountCode.trim(),
-    description: body.description?.trim(),
+    accountCode: parsed.data.accountCode.trim(),
+    description: parsed.data.description?.trim(),
   });
   return NextResponse.json({ success: true }, { status: 201 });
 });
