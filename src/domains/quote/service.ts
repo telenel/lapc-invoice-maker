@@ -402,6 +402,7 @@ export const quoteService = {
         updatedConvertedInvoice,
       };
     });
+    const convertedToInvoice = quote.convertedToInvoice as { id: string } | null | undefined;
 
     try {
       const { notificationService } = await import("@/domains/notification/service");
@@ -421,7 +422,7 @@ export const quoteService = {
       quoteNumber: quote.quoteNumber,
       recipientEmail: quote.recipientEmail,
       paymentMethod: normalizedPayment.paymentMethod,
-      convertedToInvoice: quote.convertedToInvoice ? { id: quote.convertedToInvoice.id } : null,
+      convertedToInvoice: convertedToInvoice ? { id: convertedToInvoice.id } : null,
       updatedConvertedInvoice: paymentResult.updatedConvertedInvoice,
     };
   },
