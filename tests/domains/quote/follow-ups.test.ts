@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     $transaction: vi.fn(),
-    quoteFollowUp: {
+    followUp: {
       delete: vi.fn(),
       update: vi.fn(),
     },
@@ -47,7 +47,7 @@ function makeTx() {
     invoice: {
       findMany: vi.fn(),
     },
-    quoteFollowUp: {
+    followUp: {
       findFirst: vi.fn(),
       count: vi.fn(),
       create: vi.fn(),
@@ -132,9 +132,9 @@ describe("checkAndSendPaymentFollowUps", () => {
         },
       ] as never)
       .mockResolvedValueOnce([] as never);
-    claimTx.quoteFollowUp.findFirst.mockResolvedValue(null as never);
-    claimTx.quoteFollowUp.count.mockResolvedValue(0 as never);
-    claimTx.quoteFollowUp.create.mockResolvedValue({ id: "fu1" } as never);
+    claimTx.followUp.findFirst.mockResolvedValue(null as never);
+    claimTx.followUp.count.mockResolvedValue(0 as never);
+    claimTx.followUp.create.mockResolvedValue({ id: "fu1" } as never);
     refreshTx.$queryRaw
       .mockResolvedValueOnce([
         {
@@ -241,16 +241,16 @@ describe("checkAndSendPaymentFollowUps", () => {
           createdBy: "u2",
         },
       ] as never);
-    claimTx.quoteFollowUp.findFirst.mockResolvedValue(null as never);
+    claimTx.followUp.findFirst.mockResolvedValue(null as never);
     vi.mocked(prisma.$transaction)
       .mockImplementationOnce(async (callback) => callback(scanTx as never) as never)
       .mockImplementationOnce(async (callback) => callback(claimTx as never) as never);
 
     await checkAndSendPaymentFollowUps();
 
-    expect(claimTx.quoteFollowUp.create).not.toHaveBeenCalled();
+    expect(claimTx.followUp.create).not.toHaveBeenCalled();
     expect(sendEmail).not.toHaveBeenCalled();
-    expect(claimTx.quoteFollowUp.update).not.toHaveBeenCalled();
+    expect(claimTx.followUp.update).not.toHaveBeenCalled();
   });
 
   it("requires a share token before emailing payment reminders", async () => {
@@ -306,9 +306,9 @@ describe("checkAndSendPaymentFollowUps", () => {
         },
       ] as never)
       .mockResolvedValueOnce([] as never);
-    claimTx.quoteFollowUp.findFirst.mockResolvedValue(null as never);
-    claimTx.quoteFollowUp.count.mockResolvedValue(0 as never);
-    claimTx.quoteFollowUp.create.mockResolvedValue({ id: "fu1" } as never);
+    claimTx.followUp.findFirst.mockResolvedValue(null as never);
+    claimTx.followUp.count.mockResolvedValue(0 as never);
+    claimTx.followUp.create.mockResolvedValue({ id: "fu1" } as never);
     refreshTx.$queryRaw
       .mockResolvedValueOnce([
         {
@@ -325,16 +325,16 @@ describe("checkAndSendPaymentFollowUps", () => {
       ] as never)
       .mockResolvedValueOnce([] as never);
     vi.mocked(sendEmail).mockResolvedValue(false as never);
-    vi.mocked(prisma.quoteFollowUp.delete).mockResolvedValue({} as never);
+    vi.mocked(prisma.followUp.delete).mockResolvedValue({} as never);
     mockTransactions(scanTx, claimTx, refreshTx);
 
     await checkAndSendPaymentFollowUps();
 
-    expect(claimTx.quoteFollowUp.create).toHaveBeenCalledOnce();
-    expect(prisma.quoteFollowUp.delete).toHaveBeenCalledWith({
+    expect(claimTx.followUp.create).toHaveBeenCalledOnce();
+    expect(prisma.followUp.delete).toHaveBeenCalledWith({
       where: { id: "fu1" },
     });
-    expect(prisma.quoteFollowUp.update).not.toHaveBeenCalled();
+    expect(prisma.followUp.update).not.toHaveBeenCalled();
   });
 
   it("skips a reminder claim when the quote is no longer accepted at lock time", async () => {
@@ -376,7 +376,7 @@ describe("checkAndSendPaymentFollowUps", () => {
 
     await checkAndSendPaymentFollowUps();
 
-    expect(claimTx.quoteFollowUp.create).not.toHaveBeenCalled();
+    expect(claimTx.followUp.create).not.toHaveBeenCalled();
     expect(sendEmail).not.toHaveBeenCalled();
   });
 
@@ -417,9 +417,9 @@ describe("checkAndSendPaymentFollowUps", () => {
         },
       ] as never)
       .mockResolvedValueOnce([] as never);
-    claimTx.quoteFollowUp.findFirst.mockResolvedValue(null as never);
-    claimTx.quoteFollowUp.count.mockResolvedValue(0 as never);
-    claimTx.quoteFollowUp.create.mockResolvedValue({ id: "fu1" } as never);
+    claimTx.followUp.findFirst.mockResolvedValue(null as never);
+    claimTx.followUp.count.mockResolvedValue(0 as never);
+    claimTx.followUp.create.mockResolvedValue({ id: "fu1" } as never);
     refreshTx.$queryRaw
       .mockResolvedValueOnce([
         {
@@ -455,7 +455,7 @@ describe("checkAndSendPaymentFollowUps", () => {
 
     await checkAndSendPaymentFollowUps();
 
-    expect(vi.mocked(prisma.quoteFollowUp.update)).toHaveBeenCalledWith({
+    expect(vi.mocked(prisma.followUp.update)).toHaveBeenCalledWith({
       where: { id: "fu1" },
       data: { type: "PAYMENT_REMINDER" },
     });
@@ -508,7 +508,7 @@ describe("checkAndSendPaymentFollowUps", () => {
 
     await checkAndSendPaymentFollowUps();
 
-    expect(claimTx.quoteFollowUp.create).not.toHaveBeenCalled();
+    expect(claimTx.followUp.create).not.toHaveBeenCalled();
     expect(sendEmail).not.toHaveBeenCalled();
   });
 
@@ -548,9 +548,9 @@ describe("checkAndSendPaymentFollowUps", () => {
         },
       ] as never)
       .mockResolvedValueOnce([] as never);
-    claimTx.quoteFollowUp.findFirst.mockResolvedValue(null as never);
-    claimTx.quoteFollowUp.count.mockResolvedValue(0 as never);
-    claimTx.quoteFollowUp.create.mockResolvedValue({ id: "fu1" } as never);
+    claimTx.followUp.findFirst.mockResolvedValue(null as never);
+    claimTx.followUp.count.mockResolvedValue(0 as never);
+    claimTx.followUp.create.mockResolvedValue({ id: "fu1" } as never);
     refreshTx.$queryRaw
       .mockResolvedValueOnce([
         {
@@ -567,14 +567,14 @@ describe("checkAndSendPaymentFollowUps", () => {
       ] as never)
       .mockResolvedValueOnce([] as never);
     mockTransactions(scanTx, claimTx, refreshTx);
-    vi.mocked(prisma.quoteFollowUp.delete).mockResolvedValue({} as never);
+    vi.mocked(prisma.followUp.delete).mockResolvedValue({} as never);
 
     await checkAndSendPaymentFollowUps();
 
     expect(sendEmail).not.toHaveBeenCalled();
-    expect(prisma.quoteFollowUp.delete).toHaveBeenCalledWith({
+    expect(prisma.followUp.delete).toHaveBeenCalledWith({
       where: { id: "fu1" },
     });
-    expect(prisma.quoteFollowUp.update).not.toHaveBeenCalled();
+    expect(prisma.followUp.update).not.toHaveBeenCalled();
   });
 });

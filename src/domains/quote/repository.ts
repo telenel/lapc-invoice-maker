@@ -455,7 +455,7 @@ export async function createFollowUp(data: {
   subject: string;
   metadata?: Prisma.InputJsonValue;
 }) {
-  return prisma.quoteFollowUp.create({ data });
+  return prisma.followUp.create({ data });
 }
 
 /**
@@ -472,7 +472,7 @@ export async function findViewsByInvoiceId(invoiceId: string) {
  * Find all follow-up events for a quote (for activity display).
  */
 export async function findFollowUpsByInvoiceId(invoiceId: string) {
-  return prisma.quoteFollowUp.findMany({
+  return prisma.followUp.findMany({
     where: {
       invoiceId,
       type: { not: PAYMENT_REMINDER_CLAIM },

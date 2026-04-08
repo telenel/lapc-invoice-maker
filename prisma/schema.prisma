@@ -149,7 +149,7 @@ model Invoice {
   revisedFromQuote   Invoice?        @relation("QuoteRevision", fields: [revisedFromQuoteId], references: [id])
   revisedToQuote     Invoice?        @relation("QuoteRevision")
   quoteViews         QuoteView[]
-  followUps          QuoteFollowUp[]
+  followUps          FollowUp[]
 
   @@map("invoices")
 }
@@ -520,7 +520,7 @@ enum PrintPricingService {
   SCANNING
 }
 
-model QuoteFollowUp {
+model FollowUp {
   id             String   @id @default(uuid())
   invoiceId      String   @map("invoice_id")
   type           String
@@ -528,11 +528,17 @@ model QuoteFollowUp {
   subject        String
   sentAt         DateTime @default(now()) @map("sent_at")
   metadata       Json?
+  seriesId       String?  @map("series_id")
+  shareToken     String?  @unique @map("share_token")
+  seriesStatus   String?  @map("series_status")
+  maxAttempts    Int?     @map("max_attempts")
 
   invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
   @@index([invoiceId, sentAt])
-  @@map("quote_follow_ups")
+  @@index([seriesId])
+  @@index([seriesStatus, type])
+  @@map("follow_ups")
 }
 
 model AppSetting {

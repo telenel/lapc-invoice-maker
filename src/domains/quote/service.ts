@@ -409,7 +409,7 @@ export const quoteService = {
         updatedConvertedInvoice = true;
       }
 
-      await tx.quoteFollowUp.create({
+      await tx.followUp.create({
         data: {
           invoiceId: quote.id,
           type: "PAYMENT_RESOLVED",
@@ -1556,7 +1556,7 @@ export const quoteService = {
         updatedConvertedInvoice = true;
       }
 
-      await tx.quoteFollowUp.create({
+      await tx.followUp.create({
         data: {
           invoiceId: id,
           type: "PAYMENT_RESOLVED",

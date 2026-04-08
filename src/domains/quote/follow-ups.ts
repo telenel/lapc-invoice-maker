@@ -90,7 +90,7 @@ async function claimPaymentFollowUp(quoteId: string, now: Date) {
     const { quote } = state;
 
     const staleClaimThreshold = new Date(now.getTime() - PAYMENT_REMINDER_CLAIM_TTL_MINUTES * 60 * 1000);
-    const activeClaim = await tx.quoteFollowUp.findFirst({
+    const activeClaim = await tx.followUp.findFirst({
       where: {
         invoiceId: quoteId,
         type: PAYMENT_REMINDER_CLAIM,
@@ -102,7 +102,7 @@ async function claimPaymentFollowUp(quoteId: string, now: Date) {
       return null;
     }
 
-    await tx.quoteFollowUp.deleteMany({
+    await tx.followUp.deleteMany({
       where: {
         invoiceId: quoteId,
         type: PAYMENT_REMINDER_CLAIM,
@@ -110,7 +110,7 @@ async function claimPaymentFollowUp(quoteId: string, now: Date) {
       },
     });
 
-    const lastFollowUp = await tx.quoteFollowUp.findFirst({
+    const lastFollowUp = await tx.followUp.findFirst({
       where: { invoiceId: quoteId, type: "PAYMENT_REMINDER" },
       orderBy: { sentAt: "desc" },
     });
@@ -120,12 +120,12 @@ async function claimPaymentFollowUp(quoteId: string, now: Date) {
       return null;
     }
 
-    const attemptNumber = await tx.quoteFollowUp.count({
+    const attemptNumber = await tx.followUp.count({
       where: { invoiceId: quoteId, type: "PAYMENT_REMINDER" },
     }) + 1;
     const quoteNum = quote.quoteNumber ?? "your quote";
     const subject = `Payment details needed — ${quoteNum}`;
-    const followUp = await tx.quoteFollowUp.create({
+    const followUp = await tx.followUp.create({
       data: {
         invoiceId: quote.id,
         type: PAYMENT_REMINDER_CLAIM,
@@ -197,7 +197,7 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
 
     const freshState = await prisma.$transaction(async (tx) => readPaymentFollowUpState(tx, claim.quoteId));
     if (!freshState) {
-      await prisma.quoteFollowUp.delete({ where: { id: claim.followUpId } }).catch(() => {});
+      await prisma.followUp.delete({ where: { id: claim.followUpId } }).catch(() => {});
       continue;
     }
 
@@ -228,17 +228,17 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
 
     const sent = await sendEmail(claim.recipientEmail, claim.subject, html, attachments);
     if (!sent) {
-      await prisma.quoteFollowUp.delete({ where: { id: claim.followUpId } }).catch(() => {});
+      await prisma.followUp.delete({ where: { id: claim.followUpId } }).catch(() => {});
       continue;
     }
 
     const confirmedState = await prisma.$transaction(async (tx) => readPaymentFollowUpState(tx, claim.quoteId));
     if (!confirmedState) {
-      await prisma.quoteFollowUp.delete({ where: { id: claim.followUpId } }).catch(() => {});
+      await prisma.followUp.delete({ where: { id: claim.followUpId } }).catch(() => {});
       continue;
     }
 
-    await prisma.quoteFollowUp.update({
+    await prisma.followUp.update({
       where: { id: claim.followUpId },
       data: { type: "PAYMENT_REMINDER" },
     });
