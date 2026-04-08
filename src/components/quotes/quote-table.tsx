@@ -346,7 +346,7 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
       <BulkRequestDialog
         open={bulkOpen}
         onOpenChange={setBulkOpen}
-        invoiceIds={Array.from(selectedIds)}
+        invoiceIds={Array.from(selectedIds).filter((id) => selectableIds.includes(id))}
         onSuccess={fetchQuotes}
       />
 
