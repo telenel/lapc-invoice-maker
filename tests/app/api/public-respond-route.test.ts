@@ -30,6 +30,45 @@ describe("POST /api/quotes/public/[token]/respond", () => {
     } as never);
   });
 
+  it("rejects malformed non-object responses", async () => {
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/respond", {
+        method: "POST",
+        body: JSON.stringify([1, 2, 3]),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "Invalid request body",
+    });
+    expect(quoteService.respondToQuote).not.toHaveBeenCalled();
+  });
+
+  it("trims quote tokens before lookup and response handling", async () => {
+    vi.mocked(quoteService.respondToQuote).mockResolvedValue({
+      id: "q1",
+      status: "DECLINED",
+    } as never);
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/respond", {
+        method: "POST",
+        body: JSON.stringify({
+          response: "DECLINED",
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "  token  " }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(quoteService.getByShareToken).toHaveBeenCalledWith("token");
+    expect(quoteService.respondToQuote).toHaveBeenCalledWith("token", "DECLINED", undefined, undefined, undefined);
+  });
+
   it("does not persist catering details when payment validation fails", async () => {
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",

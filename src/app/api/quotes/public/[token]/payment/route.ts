@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { quoteService } from "@/domains/quote/service";
+import { isPublicPaymentLinkAvailable, quoteService } from "@/domains/quote/service";
 import { safePublishAll } from "@/lib/sse";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 type RouteContext = { params: Promise<{ token: string }> };
 
+function normalizePublicToken(token: string): string {
+  return token.trim();
+}
+
 export async function POST(req: NextRequest, ctx: RouteContext) {
-  const { token } = await ctx.params;
+  const { token: rawToken } = await ctx.params;
+  const token = normalizePublicToken(rawToken);
+  if (!token) {
+    return NextResponse.json({ error: "Invalid token" }, { status: 400 });
+  }
+
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
     || req.headers.get("x-real-ip")?.trim()
@@ -33,6 +42,9 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     const existing = await quoteService.getByShareToken(token);
     if (!existing) {
       return NextResponse.json({ error: "Quote not found or not accepted" }, { status: 404 });
+    }
+    if (!isPublicPaymentLinkAvailable(existing)) {
+      return NextResponse.json({ error: "Payment link is no longer available" }, { status: 409 });
     }
 
     const quote = await quoteService.submitPublicPaymentDetails(token, {

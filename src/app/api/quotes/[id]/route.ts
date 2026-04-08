@@ -4,8 +4,23 @@ import { getQuoteViewerAccess, canViewQuoteDetails, redactQuoteForViewer } from 
 import { quoteService } from "@/domains/quote/service";
 import { quoteUpdateSchema } from "@/lib/validators";
 
+function parseId(rawId: string) {
+  const id = rawId.trim();
+  if (!id) return null;
+  return id;
+}
+
+function isObjectBody(body: unknown) {
+  return typeof body === "object" && body !== null && !Array.isArray(body);
+}
+
 export const GET = withAuth(async (_req: NextRequest, session, ctx) => {
-  const { id } = await ctx!.params;
+  const { id: rawId } = await ctx!.params;
+  const id = parseId(rawId);
+  if (!id) {
+    return NextResponse.json({ error: "Invalid quote id" }, { status: 400 });
+  }
+
   try {
     const quote = await quoteService.getById(id);
     if (!quote) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
@@ -21,9 +36,14 @@ export const GET = withAuth(async (_req: NextRequest, session, ctx) => {
 });
 
 export const PUT = withAuth(async (req: NextRequest, session, ctx) => {
-  const { id } = await ctx!.params;
+  const { id: rawId } = await ctx!.params;
+  const id = parseId(rawId);
+  if (!id) {
+    return NextResponse.json({ error: "Invalid quote id" }, { status: 400 });
+  }
+
   const body = await req.json().catch(() => null);
-  if (body === null) {
+  if (!isObjectBody(body)) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
@@ -66,7 +86,12 @@ export const PUT = withAuth(async (req: NextRequest, session, ctx) => {
 });
 
 export const DELETE = withAuth(async (_req: NextRequest, session, ctx) => {
-  const { id } = await ctx!.params;
+  const { id: rawId } = await ctx!.params;
+  const id = parseId(rawId);
+  if (!id) {
+    return NextResponse.json({ error: "Invalid quote id" }, { status: 400 });
+  }
+
   try {
     const existing = await quoteService.getById(id);
     if (!existing) return NextResponse.json({ error: "Quote not found" }, { status: 404 });

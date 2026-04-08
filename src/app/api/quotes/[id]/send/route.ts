@@ -3,7 +3,18 @@ import { withAuth, forbiddenResponse } from "@/domains/shared/auth";
 import { quoteService } from "@/domains/quote/service";
 
 export const POST = withAuth(async (req: NextRequest, session, ctx) => {
-  const { id } = await ctx!.params;
+  if (!ctx || !ctx.params) {
+    return NextResponse.json({ error: "Invalid quote id" }, { status: 400 });
+  }
+  const { id: rawId } = await ctx.params;
+  if (typeof rawId !== "string" || !rawId) {
+    return NextResponse.json({ error: "Invalid quote id" }, { status: 400 });
+  }
+  const id = rawId.trim();
+  if (!id) {
+    return NextResponse.json({ error: "Invalid quote id" }, { status: 400 });
+  }
+
   try {
     const existing = await quoteService.getById(id);
     if (!existing) return NextResponse.json({ error: "Quote not found" }, { status: 404 });

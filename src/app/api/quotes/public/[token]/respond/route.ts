@@ -24,8 +24,17 @@ const cateringDetailsSchema = z.object({
 
 type RouteContext = { params: Promise<{ token: string }> };
 
+function normalizePublicToken(token: string): string {
+  return token.trim();
+}
+
 export async function POST(req: NextRequest, ctx: RouteContext) {
-  const { token } = await ctx.params;
+  const { token: rawToken } = await ctx.params;
+  const token = normalizePublicToken(rawToken);
+  if (!token) {
+    return NextResponse.json({ error: "Invalid token" }, { status: 400 });
+  }
+
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
     || req.headers.get("x-real-ip")?.trim()
@@ -43,9 +52,27 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       }
     );
   }
-  const body = await req.json().catch(() => ({}));
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
 
-  const response = body.response;
+  const payload = body as Record<string, unknown>;
+  const response = payload.response;
+  const paymentMethod =
+    typeof payload.paymentMethod === "string" ? payload.paymentMethod : undefined;
+  const accountNumber =
+    typeof payload.accountNumber === "string"
+      ? payload.accountNumber
+      : payload.accountNumber === null
+        ? null
+        : undefined;
+  const viewId = typeof payload.viewId === "string" ? payload.viewId : undefined;
   if (response !== "ACCEPTED" && response !== "DECLINED") {
     return NextResponse.json({ error: "Invalid response. Must be ACCEPTED or DECLINED" }, { status: 400 });
   }
@@ -75,21 +102,21 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
 
     let cateringDetails: CateringDetails | undefined;
     if (response === "ACCEPTED") {
-      if (quote.isCateringEvent && !body.cateringDetails) {
+      if (quote.isCateringEvent && !payload.cateringDetails) {
         return NextResponse.json(
           { error: "Catering details are required to approve this quote" },
           { status: 400 },
         );
       }
-      if (!quote.isCateringEvent && body.cateringDetails) {
+      if (!quote.isCateringEvent && payload.cateringDetails) {
         return NextResponse.json(
           { error: "Catering details are only allowed for catering quotes" },
           { status: 400 },
         );
       }
     }
-    if (response === "ACCEPTED" && body.cateringDetails) {
-      const parsed = cateringDetailsSchema.safeParse(body.cateringDetails);
+    if (response === "ACCEPTED" && payload.cateringDetails) {
+      const parsed = cateringDetailsSchema.safeParse(payload.cateringDetails);
       if (!parsed.success) {
         return NextResponse.json(
           { error: "Invalid catering details", details: parsed.error.flatten().fieldErrors },
@@ -161,8 +188,8 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
       response === "ACCEPTED"
         ? (() => {
             const normalized = normalizeQuotePaymentDetails({
-              paymentMethod: body.paymentMethod,
-              accountNumber: body.accountNumber,
+              paymentMethod,
+              accountNumber,
             });
             return normalized
               ? {
@@ -176,7 +203,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
     const result = await quoteService.respondToQuote(
       token,
       response,
-      body.viewId,
+      viewId,
       paymentDetailsInput,
       cateringDetails,
     );

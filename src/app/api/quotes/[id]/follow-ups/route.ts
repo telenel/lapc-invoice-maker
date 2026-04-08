@@ -3,8 +3,18 @@ import { withAuth, forbiddenResponse } from "@/domains/shared/auth";
 import { canViewQuoteActivity } from "@/domains/quote/access";
 import { quoteService } from "@/domains/quote/service";
 
+function parseId(rawId: string) {
+  const id = rawId.trim();
+  if (!id) return null;
+  return id;
+}
+
 export const GET = withAuth(async (_req: NextRequest, session, ctx) => {
-  const { id } = await ctx!.params;
+  const { id: rawId } = await ctx!.params;
+  const id = parseId(rawId);
+  if (!id) {
+    return NextResponse.json({ error: "Invalid quote id" }, { status: 400 });
+  }
 
   const quote = await quoteService.getById(id);
   if (!quote) {

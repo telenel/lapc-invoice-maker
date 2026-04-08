@@ -5,6 +5,24 @@ import { requisitionCreateSchema } from "@/lib/validators";
 import type { AuthSession } from "@/domains/shared/types";
 import type { RequisitionFilters } from "@/domains/textbook-requisition/types";
 
+function parsePositiveInt(param: string | null): number | "error" | undefined {
+  if (param == null) return undefined;
+  const trimmed = param.trim();
+  if (!/^\d+$/.test(trimmed)) return "error";
+  const parsed = Number.parseInt(trimmed, 10);
+  if (!Number.isInteger(parsed) || parsed <= 0) return "error";
+  return parsed;
+}
+
+function parseNonNegativeInt(param: string | null): number | "error" | undefined {
+  if (param == null) return undefined;
+  const trimmed = param.trim();
+  if (!/^\d+$/.test(trimmed)) return "error";
+  const parsed = Number.parseInt(trimmed, 10);
+  if (!Number.isInteger(parsed) || parsed < 0) return "error";
+  return parsed;
+}
+
 export const GET = withAuth(async (req: NextRequest, session) => {
   const params = req.nextUrl.searchParams;
 
@@ -18,26 +36,32 @@ export const GET = withAuth(async (req: NextRequest, session) => {
     return NextResponse.json(years);
   }
 
-  function safeInt(val: string | null): number | undefined {
-    if (!val) return undefined;
-    const n = Number(val);
-    return Number.isFinite(n) ? Math.floor(n) : undefined;
-  }
-
   const VALID_STATUSES = new Set(["PENDING", "ORDERED", "ON_SHELF"]);
   const VALID_SORT_ORDERS = new Set(["asc", "desc"]);
-  const rawStatus = params.get("status") ?? "";
-  const rawSortOrder = params.get("sortOrder") ?? "";
+  const rawStatus = params.get("status")?.trim() ?? "";
+  const rawSortOrder = params.get("sortOrder")?.trim() ?? "";
+  const page = parsePositiveInt(params.get("page"));
+  if (page === "error") {
+    return NextResponse.json({ error: "Invalid page value" }, { status: 400 });
+  }
+  const pageSize = parsePositiveInt(params.get("pageSize"));
+  if (pageSize === "error") {
+    return NextResponse.json({ error: "Invalid pageSize value" }, { status: 400 });
+  }
+  const year = parseNonNegativeInt(params.get("year"));
+  if (year === "error") {
+    return NextResponse.json({ error: "Invalid year value" }, { status: 400 });
+  }
 
   const filters: RequisitionFilters = {
-    search: params.get("search") ?? undefined,
+    search: params.get("search")?.trim() || undefined,
     status: VALID_STATUSES.has(rawStatus) ? (rawStatus as RequisitionFilters["status"]) : undefined,
-    term: params.get("term") ?? undefined,
-    year: safeInt(params.get("year")),
+    term: params.get("term")?.trim() || undefined,
+    year,
     createdBy: session.user.role === "admin" ? undefined : session.user.id,
-    page: safeInt(params.get("page")),
-    pageSize: safeInt(params.get("pageSize")),
-    sortBy: params.get("sortBy") ?? undefined,
+    page,
+    pageSize,
+    sortBy: params.get("sortBy")?.trim() || undefined,
     sortOrder: VALID_SORT_ORDERS.has(rawSortOrder) ? (rawSortOrder as "asc" | "desc") : undefined,
   };
 

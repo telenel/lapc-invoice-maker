@@ -15,12 +15,18 @@ export const POST = withAdmin(async (req: NextRequest) => {
   }
 
   const { staffId, ...rest } = body;
+  const normalizedStaffId = typeof staffId === "string" ? staffId.trim() : "";
 
-  if (!staffId) {
+  if (!normalizedStaffId) {
     return NextResponse.json({ error: "Staff member is required" }, { status: 400 });
   }
 
-  const parsed = staffAccountNumberSchema.safeParse(rest);
+  const normalizedPayload = {
+    ...rest,
+    accountCode: typeof rest.accountCode === "string" ? rest.accountCode.trim() : rest.accountCode,
+    description: typeof rest.description === "string" ? rest.description.trim() : rest.description,
+  };
+  const parsed = staffAccountNumberSchema.safeParse(normalizedPayload);
   if (!parsed.success) {
     return NextResponse.json(
       { error: parsed.error.issues[0].message },
@@ -30,9 +36,11 @@ export const POST = withAdmin(async (req: NextRequest) => {
 
   try {
     const code = await adminService.createAccountCode({
-      staffId,
-      accountCode: parsed.data.accountCode,
-      description: parsed.data.description,
+      staffId: normalizedStaffId,
+      accountCode: parsed.data.accountCode.trim(),
+      description: typeof parsed.data.description === "string"
+        ? parsed.data.description.trim()
+        : "",
     });
     return NextResponse.json(code, { status: 201 });
   } catch (err: unknown) {

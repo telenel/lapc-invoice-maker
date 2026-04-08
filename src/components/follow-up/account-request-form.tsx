@@ -55,12 +55,14 @@ export function AccountRequestForm({ token }: AccountRequestFormProps) {
       });
       const data = await res.json().catch(() => ({}));
 
-      if (data.alreadyResolved) {
+      const dataObj = (data && typeof data === "object" && !Array.isArray(data)) ? data : {};
+
+      if (dataObj.alreadyResolved) {
         setAlreadyResolved(true);
         return;
       }
       if (!res.ok) {
-        setError(data.error || "Submission failed");
+        setError(dataObj.error || "Submission failed");
         return;
       }
       setSubmitted(true);

@@ -294,10 +294,27 @@ export const followUpService = {
 
     const { prisma } = await import("@/lib/prisma");
     const txResult = await prisma.$transaction(async (tx) => {
+      const activeSeries = await tx.followUp.findFirst({
+        where: { seriesId: row.seriesId!, seriesStatus: "ACTIVE" },
+      });
+
+      if (!activeSeries) {
+        return { alreadyResolved: true as const };
+      }
+
+      const lockedInvoice = await tx.invoice.findUnique({
+        where: { id: row.invoice.id },
+        select: { accountNumber: true },
+      });
+
+      if (!lockedInvoice || lockedInvoice.accountNumber.trim() !== "") {
+        return { alreadyResolved: true as const };
+      }
+
       const updated = await tx.invoice.updateMany({
         where: {
           id: row.invoice.id,
-          accountNumber: "",
+          accountNumber: lockedInvoice.accountNumber,
         },
         data: { accountNumber: trimmed },
       });

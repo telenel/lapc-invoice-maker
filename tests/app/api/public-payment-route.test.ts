@@ -6,6 +6,7 @@ vi.mock("@/domains/quote/service", () => ({
     getByShareToken: vi.fn(),
     submitPublicPaymentDetails: vi.fn(),
   },
+  isPublicPaymentLinkAvailable: vi.fn(),
 }));
 
 vi.mock("@/lib/sse", () => ({
@@ -17,6 +18,7 @@ vi.mock("@/lib/rate-limit", () => ({
 }));
 
 import { quoteService } from "@/domains/quote/service";
+import { isPublicPaymentLinkAvailable } from "@/domains/quote/service";
 import { safePublishAll } from "@/lib/sse";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { POST } from "@/app/api/quotes/public/[token]/payment/route";
@@ -33,6 +35,7 @@ describe("POST /api/quotes/public/[token]/payment", () => {
       quoteStatus: "ACCEPTED",
       convertedToInvoice: null,
     } as never);
+    vi.mocked(isPublicPaymentLinkAvailable).mockReturnValue(true);
   });
 
   it("returns 400 when the JSON body is null", async () => {
@@ -68,6 +71,36 @@ describe("POST /api/quotes/public/[token]/payment", () => {
     expect(quoteService.submitPublicPaymentDetails).not.toHaveBeenCalled();
     expect(safePublishAll).not.toHaveBeenCalled();
   });
+
+  it("normalizes whitespace in the public token", async () => {
+    vi.mocked(quoteService.submitPublicPaymentDetails).mockResolvedValue({
+      id: "q1",
+      quoteNumber: "Q-1",
+      recipientEmail: "jane@example.com",
+      paymentMethod: null,
+      convertedToInvoice: null,
+      updatedConvertedInvoice: false,
+    } as never);
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/payment", {
+        method: "POST",
+        body: JSON.stringify({
+          paymentMethod: "CHECK",
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "  token  " }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(quoteService.getByShareToken).toHaveBeenCalledWith("token");
+    expect(quoteService.submitPublicPaymentDetails).toHaveBeenCalledWith("token", {
+      paymentMethod: "CHECK",
+      accountNumber: undefined,
+    });
+  });
+
   it("updates the converted invoice alongside the quote", async () => {
     vi.mocked(quoteService.submitPublicPaymentDetails).mockResolvedValue({
       id: "q1",
@@ -168,11 +201,36 @@ describe("POST /api/quotes/public/[token]/payment", () => {
     expect(safePublishAll).not.toHaveBeenCalled();
   });
 
-  it("still submits payment details for converted accepted quotes that remain unresolved", async () => {
+  it("blocks payment submissions when the payment link is not available", async () => {
+    vi.mocked(isPublicPaymentLinkAvailable).mockReturnValue(false);
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",
       quoteStatus: "ACCEPTED",
       convertedToInvoice: { id: "inv1" },
+    } as never);
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/payment", {
+        method: "POST",
+        body: JSON.stringify({
+          paymentMethod: "CHECK",
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({ error: "Payment link is no longer available" });
+    expect(quoteService.submitPublicPaymentDetails).not.toHaveBeenCalled();
+    expect(safePublishAll).not.toHaveBeenCalled();
+  });
+
+  it("still submits payment details for accepted quotes when the payment link is available", async () => {
+    vi.mocked(quoteService.getByShareToken).mockResolvedValue({
+      id: "q1",
+      quoteStatus: "ACCEPTED",
+      convertedToInvoice: null,
     } as never);
     vi.mocked(quoteService.submitPublicPaymentDetails).mockResolvedValue({
       id: "q1",

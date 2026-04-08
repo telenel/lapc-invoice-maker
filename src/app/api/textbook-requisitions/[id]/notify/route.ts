@@ -3,12 +3,24 @@ import { forbiddenResponse, withAuth } from "@/domains/shared/auth";
 import { requisitionService } from "@/domains/textbook-requisition/service";
 
 export const POST = withAuth(async (req: NextRequest, session, ctx) => {
-  const { id } = await ctx!.params;
+  if (!ctx || !ctx.params) {
+    return NextResponse.json({ error: "Invalid requisition id" }, { status: 400 });
+  }
+  const params = await ctx.params;
+  const rawId = params.id;
+  if (typeof rawId !== "string") {
+    return NextResponse.json({ error: "Invalid requisition id" }, { status: 400 });
+  }
+  const id = rawId.trim();
+  if (!id) {
+    return NextResponse.json({ error: "Invalid requisition id" }, { status: 400 });
+  }
+
   const body = await req.json().catch(() => null);
   if (body === null || typeof body !== "object" || Array.isArray(body)) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
-  const emailType = body.emailType as "ordered" | "on-shelf";
+  const emailType = typeof body.emailType === "string" ? body.emailType : "";
 
   if (!["ordered", "on-shelf"].includes(emailType)) {
     return NextResponse.json({ error: "Invalid email type" }, { status: 400 });
