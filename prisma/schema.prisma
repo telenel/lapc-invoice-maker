@@ -350,6 +350,7 @@ model Notification {
   title     String
   message   String?
   quoteId   String?  @map("quote_id")
+  invoiceId String?  @map("invoice_id")
   read      Boolean  @default(false)
   createdAt DateTime @default(now()) @map("created_at")
 

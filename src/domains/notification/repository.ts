@@ -10,6 +10,7 @@ export async function create(input: CreateNotificationInput) {
       title: input.title,
       message: input.message ?? null,
       quoteId: input.quoteId ?? null,
+      invoiceId: input.invoiceId ?? null,
     },
   });
 }

@@ -36,10 +36,14 @@ export function NotificationBell() {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
-  function handleNotificationClick(notificationId: string, quoteId: string | null) {
+  function handleNotificationClick(notificationId: string, quoteId: string | null, invoiceId: string | null) {
     markRead(notificationId);
     setOpen(false);
-    if (quoteId) router.push(`/quotes/${quoteId}`);
+    if (invoiceId) {
+      router.push(`/invoices/${invoiceId}`);
+    } else if (quoteId) {
+      router.push(`/quotes/${quoteId}`);
+    }
   }
 
   return (
@@ -100,7 +104,7 @@ export function NotificationBell() {
                     >
                       <button
                         className="flex-1 text-left px-3 py-2.5 hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        onClick={() => handleNotificationClick(n.id, n.quoteId)}
+                        onClick={() => handleNotificationClick(n.id, n.quoteId, n.invoiceId)}
                       >
                         <p className={cn("text-sm", !n.read && "font-medium")}>{n.title}</p>
                         {n.message && (
