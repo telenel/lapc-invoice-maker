@@ -14,7 +14,7 @@ function normalizeIds(value: string): string[] {
 export const GET = withAuth(async (req: NextRequest) => {
   // Batch mode: ?invoiceIds=id1,id2,id3
   const invoiceIdsParam = req.nextUrl.searchParams.get("invoiceIds");
-  if (invoiceIdsParam) {
+  if (invoiceIdsParam !== null) {
     const ids = normalizeIds(invoiceIdsParam).slice(0, 100);
 
     if (ids.length === 0) {

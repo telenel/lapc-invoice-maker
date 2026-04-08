@@ -41,6 +41,17 @@ describe("GET /api/follow-ups/badge", () => {
     expect(followUpService.getBadgeStatesForInvoices).not.toHaveBeenCalled();
   });
 
+  it("returns 400 when invoiceIds is explicitly provided but empty", async () => {
+    const response = await GET(new NextRequest("http://localhost/api/follow-ups/badge?invoiceIds="));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "invoiceIds cannot be empty",
+    });
+    expect(followUpService.getBadgeStatesForInvoices).not.toHaveBeenCalled();
+    expect(followUpService.getBadgeState).not.toHaveBeenCalled();
+  });
+
   it("normalizes and deduplicates invoiceIds before querying", async () => {
     const response = await GET(
       new NextRequest("http://localhost/api/follow-ups/badge?invoiceIds=inv1,%20inv2,inv1,,  "),

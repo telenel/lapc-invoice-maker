@@ -302,10 +302,19 @@ export const followUpService = {
         return { alreadyResolved: true as const };
       }
 
+      const lockedInvoice = await tx.invoice.findUnique({
+        where: { id: row.invoice.id },
+        select: { accountNumber: true },
+      });
+
+      if (!lockedInvoice || lockedInvoice.accountNumber.trim() !== "") {
+        return { alreadyResolved: true as const };
+      }
+
       const updated = await tx.invoice.updateMany({
         where: {
           id: row.invoice.id,
-          accountNumber: "",
+          accountNumber: lockedInvoice.accountNumber,
         },
         data: { accountNumber: trimmed },
       });

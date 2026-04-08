@@ -1319,11 +1319,31 @@ describe("quoteService", () => {
   });
 
   describe("markSubmittedManual", () => {
-    it("treats a repeated SUBMITTED_MANUAL transition as a no-op", async () => {
+    it("backfills a missing shareToken for repeated SUBMITTED_MANUAL transitions", async () => {
       const { prisma } = await import("@/lib/prisma");
       const mockPrisma = vi.mocked(prisma, true);
       const tx = {
         $queryRaw: vi.fn().mockResolvedValue([{ id: "q1", type: "QUOTE", quoteStatus: "SUBMITTED_MANUAL", shareToken: null }]),
+        invoice: {
+          update: vi.fn(),
+        },
+      };
+      mockPrisma.$transaction.mockImplementationOnce(async (callback) => callback(tx as never) as never);
+
+      await expect(quoteService.markSubmittedManual("q1")).resolves.toBeUndefined();
+
+      expect(tx.invoice.update).toHaveBeenCalledWith({
+        where: { id: "q1" },
+        data: { shareToken: expect.any(String) },
+      });
+      expect(safePublishAll).toHaveBeenCalledWith({ type: "quote-changed" });
+    });
+
+    it("treats a repeated SUBMITTED_MANUAL transition with an existing token as a no-op", async () => {
+      const { prisma } = await import("@/lib/prisma");
+      const mockPrisma = vi.mocked(prisma, true);
+      const tx = {
+        $queryRaw: vi.fn().mockResolvedValue([{ id: "q1", type: "QUOTE", quoteStatus: "SUBMITTED_MANUAL", shareToken: "manual-token" }]),
         invoice: {
           update: vi.fn(),
         },

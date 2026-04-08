@@ -213,6 +213,68 @@ describe("followUpService", () => {
       const result = await followUpService.submitAccountNumber("token", "   ");
       expect(result.success).toBe(false);
     });
+
+    it("returns alreadyResolved when the series is no longer active inside the transaction", async () => {
+      const { prisma } = await import("@/lib/prisma");
+      const mockPrisma = vi.mocked(prisma, true);
+
+      (followUpRepository.findByShareToken as ReturnType<typeof vi.fn>).mockResolvedValue({
+        seriesId: "s1",
+        seriesStatus: "ACTIVE",
+        metadata: { attempt: 1 },
+        invoice: { id: "inv-1", accountNumber: "", type: "INVOICE", createdBy: "u1", invoiceNumber: "INV-1", quoteNumber: null, creator: { name: "A" } },
+      });
+
+      mockPrisma.$transaction.mockImplementationOnce(async (callback) => callback({
+        followUp: {
+          findFirst: vi.fn().mockResolvedValue(null),
+          updateMany: vi.fn(),
+        },
+        invoice: {
+          findUnique: vi.fn(),
+          updateMany: vi.fn(),
+        },
+      } as never) as never);
+
+      const result = await followUpService.submitAccountNumber("token", "12345");
+
+      expect(result).toEqual({ success: true, alreadyResolved: true });
+    });
+
+    it("uses the current stored account number as the transaction guard when it is whitespace only", async () => {
+      const { prisma } = await import("@/lib/prisma");
+      const mockPrisma = vi.mocked(prisma, true);
+      const tx = {
+        followUp: {
+          findFirst: vi.fn().mockResolvedValue({ id: "fu-1" }),
+          updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+        },
+        invoice: {
+          findUnique: vi.fn().mockResolvedValue({ accountNumber: "   " }),
+          updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+        },
+      };
+
+      (followUpRepository.findByShareToken as ReturnType<typeof vi.fn>).mockResolvedValue({
+        seriesId: "s1",
+        seriesStatus: "ACTIVE",
+        metadata: { attempt: 1 },
+        invoice: { id: "inv-1", accountNumber: "", type: "INVOICE", createdBy: "u1", invoiceNumber: "INV-1", quoteNumber: null, creator: { name: "A" } },
+      });
+
+      mockPrisma.$transaction.mockImplementationOnce(async (callback) => callback(tx as never) as never);
+
+      const result = await followUpService.submitAccountNumber("token", "12345");
+
+      expect(result).toEqual({ success: true });
+      expect(tx.invoice.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: "inv-1",
+          accountNumber: "   ",
+        },
+        data: { accountNumber: "12345" },
+      });
+    });
   });
 
   describe("getBadgeState", () => {
