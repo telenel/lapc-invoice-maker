@@ -55,9 +55,10 @@ async function readExtensions(): Promise<ExtensionRow[]> {
 
 async function readJobs(): Promise<CronJobRow[]> {
   return prisma.$queryRawUnsafe<CronJobRow[]>(
-    "select jobid, jobname, schedule, active from cron.job where jobname in ($1, $2) order by jobname",
+    "select jobid, jobname, schedule, active from cron.job where jobname in ($1, $2, $3) order by jobname",
     EVENT_REMINDERS_JOB,
     PAYMENT_FOLLOW_UPS_JOB,
+    ACCOUNT_FOLLOW_UPS_JOB,
   );
 }
 

@@ -125,6 +125,7 @@ interface QuoteRowProps {
   onClick: (id: string) => void;
   badgeState: FollowUpBadgeState | null;
   selected: boolean;
+  selectable: boolean;
   onSelect: (id: string, checked: boolean) => void;
 }
 
@@ -137,7 +138,7 @@ function isExpired(dateStr: string | null): boolean {
   return expiry < today;
 }
 
-const QuoteRow = React.memo(function QuoteRow({ quote, onClick, badgeState, selected, onSelect }: QuoteRowProps) {
+const QuoteRow = React.memo(function QuoteRow({ quote, onClick, badgeState, selected, selectable, onSelect }: QuoteRowProps) {
   return (
     <TableRow
       key={quote.id}
@@ -151,6 +152,7 @@ const QuoteRow = React.memo(function QuoteRow({ quote, onClick, badgeState, sele
         <div className="flex items-center gap-3">
           <Checkbox
             checked={selected}
+            disabled={!selectable}
             onCheckedChange={(checked) => onSelect(quote.id, !!checked)}
             onClick={(e) => e.stopPropagation()}
             aria-label={`Select ${quote.quoteNumber ?? "quote"}`}
@@ -461,6 +463,7 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
                   onClick={handleRowClick}
                   badgeState={badgeStates[quote.id] ?? null}
                   selected={selectedIds.has(quote.id)}
+                  selectable={selectableIds.includes(quote.id)}
                   onSelect={handleSelect}
                 />
               ))}
