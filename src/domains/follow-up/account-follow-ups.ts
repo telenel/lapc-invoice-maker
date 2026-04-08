@@ -46,7 +46,7 @@ export async function checkAndSendAccountFollowUps(): Promise<void> {
     // Safety net: should not happen (exhaustion is immediate after final send)
     if (nextAttempt > maxAttempts) {
       await followUpRepository.markSeriesStatus(row.seriesId!, "EXHAUSTED");
-      await notifyExhausted(inv, row.seriesId!);
+      await notifyExhausted(inv);
       continue;
     }
 
@@ -63,7 +63,7 @@ export async function checkAndSendAccountFollowUps(): Promise<void> {
     const recountedNext = recountedAttempts + 1;
     if (recountedNext > maxAttempts) {
       await followUpRepository.markSeriesStatus(row.seriesId!, "EXHAUSTED");
-      await notifyExhausted(inv, row.seriesId!);
+      await notifyExhausted(inv);
       continue;
     }
 
@@ -113,9 +113,9 @@ export async function checkAndSendAccountFollowUps(): Promise<void> {
     // Check if this was the final attempt
     if (recountedNext === maxAttempts) {
       await followUpRepository.markSeriesStatus(row.seriesId!, "EXHAUSTED");
-      await notifyExhausted(inv, row.seriesId!);
+      await notifyExhausted(inv);
     } else {
-      await notifySent(inv, row.seriesId!, recountedNext, maxAttempts);
+      await notifySent(inv, recountedNext, maxAttempts);
     }
 
     safePublishAll({ type: inv.type === "QUOTE" ? "quote-changed" : "invoice-changed" });
@@ -140,7 +140,7 @@ function buildNotificationRef(inv: InvoiceInfo): { quoteId?: string; invoiceId?:
   return inv.type === "QUOTE" ? { quoteId: inv.id } : { invoiceId: inv.id };
 }
 
-async function notifySent(inv: InvoiceInfo, _seriesId: string, attempt: number, maxAttempts: number) {
+async function notifySent(inv: InvoiceInfo, attempt: number, maxAttempts: number) {
   try {
     const { notificationService } = await import("@/domains/notification/service");
     const docNum = inv.invoiceNumber ?? inv.quoteNumber ?? "item";
@@ -156,7 +156,7 @@ async function notifySent(inv: InvoiceInfo, _seriesId: string, attempt: number, 
   }
 }
 
-async function notifyExhausted(inv: InvoiceInfo, _seriesId: string) {
+async function notifyExhausted(inv: InvoiceInfo) {
   try {
     const { notificationService } = await import("@/domains/notification/service");
     const docNum = inv.invoiceNumber ?? inv.quoteNumber ?? "item";
