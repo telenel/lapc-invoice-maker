@@ -23,6 +23,9 @@ jobs:
       WEBHOOK_READY_SLEEP: 10
       WEBHOOK_CONNECT_TIMEOUT: 20
       WEBHOOK_MAX_TIME: 45
+      DEPLOY_SSH_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+      DEPLOY_SSH_USER: ${{ secrets.DEPLOY_SSH_USER }}
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
       DEPLOY_SSH_PORT: ${{ secrets.DEPLOY_SSH_PORT || '22' }}
       DEPLOY_REMOTE_PROJECT_DIR: ${{ secrets.DEPLOY_REMOTE_PROJECT_DIR || '/opt/lapc-invoice-maker' }}
       DEPLOY_VERIFY_ATTEMPTS: 28
@@ -79,17 +82,15 @@ jobs:
             throw new Error(`Timed out waiting for CI to succeed for ${expectedSha}`);
 
       - name: Configure SSH
-        if: ${{ secrets.DEPLOY_SSH_HOST != '' && secrets.DEPLOY_SSH_KEY != '' }}
-        env:
-          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        if: ${{ env.DEPLOY_SSH_HOST != '' && env.DEPLOY_SSH_KEY != '' }}
         run: |
           install -d -m 700 ~/.ssh
           printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p "$DEPLOY_SSH_PORT" "${{ secrets.DEPLOY_SSH_HOST }}" >> ~/.ssh/known_hosts
+          ssh-keyscan -p "$DEPLOY_SSH_PORT" "$DEPLOY_SSH_HOST" >> ~/.ssh/known_hosts
 
       - name: Wait for deploy webhook ingress
-        if: ${{ secrets.DEPLOY_SSH_HOST == '' || secrets.DEPLOY_SSH_KEY == '' }}
+        if: ${{ env.DEPLOY_SSH_HOST == '' || env.DEPLOY_SSH_KEY == '' }}
         run: |
           for i in $(seq 1 "$WEBHOOK_READY_ATTEMPTS"); do
             if curl -fsSI --connect-timeout "$WEBHOOK_CONNECT_TIMEOUT" --max-time "$WEBHOOK_CONNECT_TIMEOUT" https://montalvo.io/hooks/deploy-laportal >/dev/null; then
@@ -103,11 +104,9 @@ jobs:
           exit 1
 
       - name: Deploy over SSH
-        if: ${{ secrets.DEPLOY_SSH_HOST != '' && secrets.DEPLOY_SSH_KEY != '' }}
+        if: ${{ env.DEPLOY_SSH_HOST != '' && env.DEPLOY_SSH_KEY != '' }}
         env:
           EXPECTED_SHA: ${{ github.sha }}
-          DEPLOY_SSH_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
-          DEPLOY_SSH_USER: ${{ secrets.DEPLOY_SSH_USER }}
         run: |
           quoted_project_dir=$(printf '%q' "$DEPLOY_REMOTE_PROJECT_DIR")
           remote_cmd="cd $quoted_project_dir && DEPLOY_CHANNEL=github-main DEPLOY_ACTOR=github-actions DEPLOY_EXPECTED_SHA=$EXPECTED_SHA ./scripts/deploy-webhook.sh main"
@@ -118,7 +117,7 @@ jobs:
           ssh -p "$DEPLOY_SSH_PORT" -o BatchMode=yes "$ssh_target" "$remote_cmd"
 
       - name: Trigger legacy deploy webhook
-        if: ${{ secrets.DEPLOY_SSH_HOST == '' || secrets.DEPLOY_SSH_KEY == '' }}
+        if: ${{ env.DEPLOY_SSH_HOST == '' || env.DEPLOY_SSH_KEY == '' }}
         env:
           EXPECTED_SHA: ${{ github.sha }}
         run: |
