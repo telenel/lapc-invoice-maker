@@ -6,7 +6,10 @@ type RouteContext = { params: Promise<{ token: string }> };
 
 export async function POST(req: NextRequest, ctx: RouteContext) {
   const { token } = await ctx.params;
-  const ip = req.headers.get("x-forwarded-for") ?? "unknown";
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown";
 
   const rateLimitResult = await checkRateLimit(`account-submit:${ip}`, {
     maxAttempts: 10,

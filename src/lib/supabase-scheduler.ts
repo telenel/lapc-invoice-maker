@@ -5,6 +5,7 @@ type CronJobRow = { jobid: bigint | number | string; jobname: string; schedule: 
 
 const EVENT_REMINDERS_JOB = "laportal-event-reminders";
 const PAYMENT_FOLLOW_UPS_JOB = "laportal-payment-follow-ups";
+const ACCOUNT_FOLLOW_UPS_JOB = "laportal-account-follow-ups";
 
 export type SupabaseSchedulerStatus = {
   extensions: {
@@ -20,6 +21,7 @@ export type SupabaseSchedulerStatus = {
   expectedJobs: {
     eventReminders: boolean;
     paymentFollowUps: boolean;
+    accountFollowUps: boolean;
   };
 };
 
@@ -81,6 +83,7 @@ export async function getSupabaseSchedulerStatus(): Promise<SupabaseSchedulerSta
     expectedJobs: {
       eventReminders: jobNameSet.has(EVENT_REMINDERS_JOB),
       paymentFollowUps: jobNameSet.has(PAYMENT_FOLLOW_UPS_JOB),
+      accountFollowUps: jobNameSet.has(ACCOUNT_FOLLOW_UPS_JOB),
     },
   };
 }
@@ -110,6 +113,15 @@ export async function reconcileSupabaseScheduler(options: {
       PAYMENT_FOLLOW_UPS_JOB,
       "0 16 * * 1-5",
       buildCronCommand("/api/internal/jobs/payment-follow-ups", options.appUrl, options.cronSecret),
+    );
+  }
+
+  if (!existingJobNames.has(ACCOUNT_FOLLOW_UPS_JOB)) {
+    await prisma.$executeRawUnsafe(
+      "select cron.schedule($1, $2, $3)",
+      ACCOUNT_FOLLOW_UPS_JOB,
+      "0 16 * * 1",
+      buildCronCommand("/api/internal/jobs/account-follow-ups", options.appUrl, options.cronSecret),
     );
   }
 

@@ -293,8 +293,13 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
   }
 
   const selectableIds = useMemo(
-    () => quotes.filter((q) => !q.accountNumber).map((q) => q.id),
-    [quotes],
+    () => quotes.filter((q) => {
+      if (q.accountNumber) return false;
+      const badge = badgeStates[q.id];
+      if (badge && badge.seriesStatus === "ACTIVE") return false;
+      return true;
+    }).map((q) => q.id),
+    [quotes, badgeStates],
   );
 
   function handleSelect(id: string, checked: boolean) {
