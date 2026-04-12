@@ -1,19 +1,26 @@
-import dynamic from "next/dynamic";
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { DeferredDashboard } from "@/components/dashboard/deferred-dashboard";
 import { PersonalizedHeader } from "@/components/dashboard/personalized-header";
+import { authOptions } from "@/lib/auth";
 
-const DraggableDashboard = dynamic(
-  () => import("@/components/dashboard/draggable-dashboard").then((m) => m.DraggableDashboard),
-  { ssr: false },
-);
+export default async function DashboardPage() {
+  const session = await getServerSession(authOptions);
 
-export default function DashboardPage() {
+  if (!session?.user) {
+    redirect("/login");
+  }
+
+  const currentUserId =
+    (session.user as { id?: string } | undefined)?.id ?? null;
+
   return (
     <div className="flex flex-col gap-3 -mt-2 pb-0">
       <div className="dashboard-enter dashboard-enter-1">
-        <PersonalizedHeader />
+        <PersonalizedHeader name={session.user.name ?? ""} />
       </div>
       <div className="dashboard-enter dashboard-enter-2">
-        <DraggableDashboard />
+        <DeferredDashboard currentUserId={currentUserId} />
       </div>
     </div>
   );

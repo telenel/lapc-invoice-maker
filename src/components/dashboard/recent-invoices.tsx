@@ -1,22 +1,26 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { startTransition, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useSession } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { formatAmount, formatDate, getInitials } from "@/lib/formatters";
 import { invoiceApi } from "@/domains/invoice/api-client";
 import { quoteApi } from "@/domains/quote/api-client";
-import { followUpApi } from "@/domains/follow-up/api-client";
 import type { InvoiceResponse } from "@/domains/invoice/types";
 import type { FollowUpBadgeState } from "@/domains/follow-up/types";
-import { FollowUpBadge } from "@/components/follow-up/follow-up-badge";
-import { useSSE } from "@/lib/use-sse";
+import { useDeferredDashboardRealtime } from "./use-deferred-dashboard-realtime";
 
 type QuoteStatus = "DRAFT" | "SENT" | "SUBMITTED_EMAIL" | "SUBMITTED_MANUAL" | "ACCEPTED" | "DECLINED" | "REVISED" | "EXPIRED";
+
+type IdleCapableWindow = Window & {
+  requestIdleCallback?: (
+    callback: IdleRequestCallback,
+    options?: IdleRequestOptions,
+  ) => number;
+  cancelIdleCallback?: (handle: number) => void;
+};
 
 const QUOTE_BADGE_VARIANT: Record<QuoteStatus, "success" | "info" | "warning" | "destructive" | "outline"> = {
   DRAFT: "warning",
@@ -60,12 +64,39 @@ function invoiceBadge(status: string) {
   return { variant, label } as const;
 }
 
-export function RecentActivity() {
-  const { data: session } = useSession();
+function FollowUpBadgeChip({ state }: { state: FollowUpBadgeState | null }) {
+  if (!state) {
+    return null;
+  }
+
+  if (state.seriesStatus === "EXHAUSTED") {
+    return (
+      <Badge variant="destructive" className="text-[10px]">
+        No Response
+      </Badge>
+    );
+  }
+
+  if (state.seriesStatus === "ACTIVE") {
+    return (
+      <Badge className="bg-amber-500 text-[10px] text-white hover:bg-amber-600">
+        Follow Up {state.currentAttempt}/{state.maxAttempts}
+      </Badge>
+    );
+  }
+
+  return null;
+}
+
+export function RecentActivity({
+  currentUserId,
+}: {
+  currentUserId: string | null;
+}) {
   const [items, setItems] = useState<ActivityItem[]>([]);
   const [badgeStates, setBadgeStates] = useState<Record<string, FollowUpBadgeState>>({});
   const [loading, setLoading] = useState(true);
-  const currentUserId = (session?.user as { id?: string } | undefined)?.id;
+  const [detailsReady, setDetailsReady] = useState(false);
 
   const fetchActivity = useCallback(async () => {
     try {
@@ -106,31 +137,109 @@ export function RecentActivity() {
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, 10);
 
-      setItems(merged);
-
-      const invoiceIds = merged
-        .filter((item) => item.type === "invoice")
-        .map((item) => item.id);
-      if (invoiceIds.length > 0) {
-        followUpApi
-          .getBadgeStatesForInvoices(invoiceIds)
-          .then(setBadgeStates)
-          .catch(() => {});
-      }
+      startTransition(() => {
+        setItems(merged);
+      });
     } catch (err) {
       console.error("Failed to fetch recent activity:", err);
-      toast.error("Failed to load recent activity");
+      void import("sonner")
+        .then(({ toast }) => {
+          toast.error("Failed to load recent activity");
+        })
+        .catch(() => {});
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchActivity();
+    void fetchActivity();
   }, [fetchActivity]);
 
-  useSSE("invoice-changed", fetchActivity);
-  useSSE("quote-changed", fetchActivity);
+  const refreshActivity = useCallback(() => {
+    void fetchActivity();
+  }, [fetchActivity]);
+
+  useEffect(() => {
+    if (detailsReady) {
+      return;
+    }
+
+    const win = window as IdleCapableWindow;
+    let idleHandle: number | null = null;
+
+    function markReady() {
+      startTransition(() => {
+        setDetailsReady(true);
+      });
+    }
+
+    const fallbackTimer = window.setTimeout(markReady, 1500);
+
+    if (win.requestIdleCallback) {
+      idleHandle = win.requestIdleCallback(markReady, { timeout: 2000 });
+    } else {
+      idleHandle = window.setTimeout(markReady, 700);
+    }
+
+    window.addEventListener("pointerdown", markReady, { once: true, passive: true });
+    window.addEventListener("keydown", markReady, { once: true });
+    window.addEventListener("focusin", markReady, { once: true });
+
+    return () => {
+      window.clearTimeout(fallbackTimer);
+      if (idleHandle !== null) {
+        if (win.cancelIdleCallback) {
+          win.cancelIdleCallback(idleHandle);
+        } else {
+          window.clearTimeout(idleHandle);
+        }
+      }
+      window.removeEventListener("pointerdown", markReady);
+      window.removeEventListener("keydown", markReady);
+      window.removeEventListener("focusin", markReady);
+    };
+  }, [detailsReady]);
+
+  useEffect(() => {
+    if (!detailsReady) {
+      return;
+    }
+
+    const invoiceIds = items
+      .filter((item) => item.type === "invoice")
+      .map((item) => item.id);
+
+    if (invoiceIds.length === 0) {
+      setBadgeStates({});
+      return;
+    }
+
+    let cancelled = false;
+
+    void import("@/domains/follow-up/api-client")
+      .then(({ followUpApi }) => followUpApi.getBadgeStatesForInvoices(invoiceIds))
+      .then((states) => {
+        if (!cancelled) {
+          setBadgeStates(states);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setBadgeStates({});
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [detailsReady, items]);
+
+  useDeferredDashboardRealtime(
+    ["invoice-changed", "quote-changed"],
+    refreshActivity,
+    { enabled: detailsReady },
+  );
 
   return (
     <Card className="card-hover">
@@ -224,7 +333,7 @@ export function RecentActivity() {
                       </Badge>
                     )}
                     {item.type === "invoice" && (
-                      <FollowUpBadge state={badgeStates[item.id] ?? null} />
+                      <FollowUpBadgeChip state={badgeStates[item.id] ?? null} />
                     )}
                   </div>
                 </Link>

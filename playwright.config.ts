@@ -49,6 +49,7 @@ export default defineConfig({
               /analytics\.spec\.ts/,
               /calendar\.spec\.ts/,
               /dashboard\.spec\.ts/,
+              /dashboard-runtime-safety\.spec\.ts/,
               /invoices\.spec\.ts/,
               /logout\.spec\.ts/,
               /quotes\.spec\.ts/,

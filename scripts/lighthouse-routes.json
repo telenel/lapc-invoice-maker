@@ -1,0 +1,181 @@
+{
+  "routeSets": {
+    "public": [
+      {
+        "id": "login",
+        "path": "/login",
+        "auth": false,
+        "thresholds": {
+          "categories": {
+            "performance": 0.45,
+            "accessibility": 0.95,
+            "best-practices": 0.95
+          },
+          "metrics": {
+            "largest-contentful-paint": 6000,
+            "total-blocking-time": 5000,
+            "cumulative-layout-shift": 0.1,
+            "interactive": 30000,
+            "server-response-time": 1000
+          }
+        }
+      },
+      {
+        "id": "textbook-requisition-submit",
+        "path": "/textbook-requisitions/submit",
+        "auth": false,
+        "thresholds": {
+          "categories": {
+            "performance": 0.45,
+            "accessibility": 0.95,
+            "best-practices": 0.95
+          },
+          "metrics": {
+            "largest-contentful-paint": 7000,
+            "total-blocking-time": 5000,
+            "cumulative-layout-shift": 0.1,
+            "interactive": 30000,
+            "server-response-time": 1000
+          }
+        }
+      }
+    ],
+    "baseline": [
+      {
+        "id": "login",
+        "path": "/login",
+        "auth": false,
+        "thresholds": {
+          "categories": {
+            "performance": 0.45,
+            "accessibility": 0.95,
+            "best-practices": 0.95
+          },
+          "metrics": {
+            "largest-contentful-paint": 6000,
+            "total-blocking-time": 5000,
+            "cumulative-layout-shift": 0.1,
+            "interactive": 30000,
+            "server-response-time": 1000
+          }
+        }
+      },
+      {
+        "id": "dashboard",
+        "path": "/",
+        "auth": true,
+        "thresholds": {
+          "categories": {
+            "performance": 0.28,
+            "accessibility": 0.93,
+            "best-practices": 0.95
+          },
+          "metrics": {
+            "largest-contentful-paint": 25000,
+            "total-blocking-time": 2600,
+            "cumulative-layout-shift": 0.3,
+            "interactive": 34000,
+            "server-response-time": 100
+          }
+        }
+      },
+      {
+        "id": "admin-users",
+        "path": "/admin/users",
+        "auth": true,
+        "thresholds": {
+          "categories": {
+            "performance": 0.4,
+            "accessibility": 0.95,
+            "best-practices": 0.95
+          },
+          "metrics": {
+            "largest-contentful-paint": 25000,
+            "total-blocking-time": 2600,
+            "cumulative-layout-shift": 0.1,
+            "interactive": 32000,
+            "server-response-time": 100
+          }
+        }
+      }
+    ],
+    "admin-heavy": [
+      {
+        "id": "dashboard",
+        "path": "/",
+        "auth": true,
+        "thresholds": {
+          "categories": {
+            "performance": 0.28,
+            "accessibility": 0.93,
+            "best-practices": 0.95
+          },
+          "metrics": {
+            "largest-contentful-paint": 25000,
+            "total-blocking-time": 2600,
+            "cumulative-layout-shift": 0.3,
+            "interactive": 34000,
+            "server-response-time": 100
+          }
+        }
+      },
+      {
+        "id": "analytics",
+        "path": "/analytics",
+        "auth": true,
+        "thresholds": {
+          "categories": {
+            "performance": 0.32,
+            "accessibility": 0.95,
+            "best-practices": 0.95
+          },
+          "metrics": {
+            "largest-contentful-paint": 4000,
+            "total-blocking-time": 4000,
+            "cumulative-layout-shift": 0.35,
+            "interactive": 65000,
+            "server-response-time": 100
+          }
+        }
+      },
+      {
+        "id": "admin-users",
+        "path": "/admin/users",
+        "auth": true,
+        "thresholds": {
+          "categories": {
+            "performance": 0.4,
+            "accessibility": 0.95,
+            "best-practices": 0.95
+          },
+          "metrics": {
+            "largest-contentful-paint": 25000,
+            "total-blocking-time": 2600,
+            "cumulative-layout-shift": 0.1,
+            "interactive": 32000,
+            "server-response-time": 100
+          }
+        }
+      },
+      {
+        "id": "calendar",
+        "path": "/calendar",
+        "auth": true,
+        "thresholds": {
+          "categories": {
+            "performance": 0.22,
+            "accessibility": 0.96,
+            "best-practices": 0.95
+          },
+          "metrics": {
+            "largest-contentful-paint": 38000,
+            "total-blocking-time": 3000,
+            "cumulative-layout-shift": 0.5,
+            "interactive": 36000,
+            "server-response-time": 100
+          }
+        }
+      }
+    ]
+  }
+}

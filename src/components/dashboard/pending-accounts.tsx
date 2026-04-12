@@ -1,12 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import Link from "next/link";
+import { startTransition, useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { FollowUpBadge } from "@/components/follow-up/follow-up-badge";
-import { followUpApi } from "@/domains/follow-up/api-client";
-import { useSSE } from "@/lib/use-sse";
+import { useDeferredDashboardRealtime } from "./use-deferred-dashboard-realtime";
+
+type IdleCapableWindow = Window & {
+  requestIdleCallback?: (
+    callback: IdleRequestCallback,
+    options?: IdleRequestOptions,
+  ) => number;
+  cancelIdleCallback?: (handle: number) => void;
+};
 
 type PendingItem = {
   invoiceId: string;
@@ -21,16 +27,22 @@ type PendingItem = {
   seriesStatus: string;
 };
 
-export function PendingAccountsWidget() {
-  const router = useRouter();
-  const { data: session } = useSession();
+export function PendingAccountsWidget({
+  currentUserId,
+}: {
+  currentUserId: string | null;
+}) {
   const [items, setItems] = useState<PendingItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [detailsReady, setDetailsReady] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
+      const { followUpApi } = await import("@/domains/follow-up/api-client");
       const data = await followUpApi.getPendingAccounts();
-      setItems(data.items);
+      startTransition(() => {
+        setItems(data.items);
+      });
     } catch {
       // Non-critical widget — silently ignore fetch failures
     } finally {
@@ -39,15 +51,61 @@ export function PendingAccountsWidget() {
   }, []);
 
   useEffect(() => {
-    fetchData();
+    void fetchData();
   }, [fetchData]);
 
-  useSSE("invoice-changed", fetchData);
-  useSSE("quote-changed", fetchData);
+  const refreshPendingAccounts = useCallback(() => {
+    void fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    if (detailsReady) {
+      return;
+    }
+
+    const win = window as IdleCapableWindow;
+    let idleHandle: number | null = null;
+
+    function markReady() {
+      startTransition(() => {
+        setDetailsReady(true);
+      });
+    }
+
+    const fallbackTimer = window.setTimeout(markReady, 1500);
+
+    if (win.requestIdleCallback) {
+      idleHandle = win.requestIdleCallback(markReady, { timeout: 2000 });
+    } else {
+      idleHandle = window.setTimeout(markReady, 700);
+    }
+
+    window.addEventListener("pointerdown", markReady, { once: true, passive: true });
+    window.addEventListener("keydown", markReady, { once: true });
+    window.addEventListener("focusin", markReady, { once: true });
+
+    return () => {
+      window.clearTimeout(fallbackTimer);
+      if (idleHandle !== null) {
+        if (win.cancelIdleCallback) {
+          win.cancelIdleCallback(idleHandle);
+        } else {
+          window.clearTimeout(idleHandle);
+        }
+      }
+      window.removeEventListener("pointerdown", markReady);
+      window.removeEventListener("keydown", markReady);
+      window.removeEventListener("focusin", markReady);
+    };
+  }, [detailsReady]);
+
+  useDeferredDashboardRealtime(
+    ["invoice-changed", "quote-changed"],
+    refreshPendingAccounts,
+    { enabled: detailsReady },
+  );
 
   if (loading || items.length === 0) return null;
-
-  const userId = (session?.user as { id?: string } | undefined)?.id;
 
   return (
     <div className="rounded-lg border bg-card p-4">
@@ -60,16 +118,13 @@ export function PendingAccountsWidget() {
         {items.map((item) => {
           const docNum = item.type === "QUOTE" ? item.quoteNumber : item.invoiceNumber;
           const href = item.type === "QUOTE" ? `/quotes/${item.invoiceId}` : `/invoices/${item.invoiceId}`;
-          const isOwn = item.creatorId === userId;
+          const isOwn = item.creatorId === currentUserId;
 
           return (
-            <div
+            <Link
               key={item.invoiceId}
+              href={href}
               className={`flex cursor-pointer items-center justify-between rounded-md p-2 text-sm transition-colors hover:bg-muted ${isOwn ? "bg-amber-50 dark:bg-amber-950/20" : ""}`}
-              role="button"
-              tabIndex={0}
-              onClick={() => router.push(href)}
-              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); router.push(href); } }}
             >
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">
@@ -85,7 +140,7 @@ export function PendingAccountsWidget() {
                   maxAttempts: item.maxAttempts,
                 }}
               />
-            </div>
+            </Link>
           );
         })}
       </div>

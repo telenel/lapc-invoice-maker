@@ -1,26 +1,42 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatAmount, getInitials } from "@/lib/formatters";
-import { invoiceApi } from "@/domains/invoice/api-client";
 import type { InvoiceResponse } from "@/domains/invoice/types";
 
-export function RunningInvoices() {
-  const { data: session } = useSession();
+export function RunningInvoices({
+  currentUserId,
+}: {
+  currentUserId: string | null;
+}) {
   const [invoices, setInvoices] = useState<InvoiceResponse[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const currentUserId = (session?.user as { id?: string } | undefined)?.id;
-
   useEffect(() => {
-    invoiceApi.list({ status: "DRAFT", isRunning: true, pageSize: 50 })
-      .then((data) => setInvoices(data.invoices ?? []))
+    let cancelled = false;
+
+    void import("@/domains/invoice/api-client")
+      .then(({ invoiceApi }) =>
+        invoiceApi.list({ status: "DRAFT", isRunning: true, pageSize: 50 }),
+      )
+      .then((data) => {
+        if (!cancelled) {
+          setInvoices(data.invoices ?? []);
+        }
+      })
       .catch(() => {})
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (loading || invoices.length === 0) return null;

@@ -2,12 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { formatAmount } from "@/lib/formatters";
-import { invoiceApi } from "@/domains/invoice/api-client";
-import { quoteApi } from "@/domains/quote/api-client";
 
 interface FocusData {
   myDrafts: number;
@@ -46,18 +43,20 @@ function getNudge(data: FocusData): string | null {
   return "All clear — ready for a new invoice?";
 }
 
-export function YourFocus() {
-  const { data: session } = useSession();
+export function YourFocus({
+  currentUserId,
+}: {
+  currentUserId: string | null;
+}) {
   const [data, setData] = useState<FocusData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const userId = (session?.user as { id?: string } | undefined)?.id;
-
   useEffect(() => {
-    if (!userId) return;
+    if (!currentUserId) return;
 
     async function fetchFocus() {
       try {
+        const creatorId = currentUserId ?? undefined;
         const now = new Date();
         const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const firstOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
@@ -66,13 +65,17 @@ export function YourFocus() {
         const dateTo = now.toISOString().split("T")[0];
         const lastMonthFrom = firstOfLastMonth.toISOString().split("T")[0];
         const lastMonthTo = lastOfLastMonth.toISOString().split("T")[0];
+        const [{ invoiceApi }, { quoteApi }] = await Promise.all([
+          import("@/domains/invoice/api-client"),
+          import("@/domains/quote/api-client"),
+        ]);
 
         const [drafts, running, monthStats, lastMonthStats, sentQuotes] = await Promise.all([
-          invoiceApi.getStats({ status: "DRAFT", creatorId: userId }),
-          invoiceApi.list({ status: "DRAFT", isRunning: true, creatorId: userId, pageSize: 1 }),
-          invoiceApi.getStats({ status: "FINAL", creatorId: userId, dateFrom, dateTo }),
-          invoiceApi.getStats({ status: "FINAL", creatorId: userId, dateFrom: lastMonthFrom, dateTo: lastMonthTo }),
-          quoteApi.list({ quoteStatus: "SENT", creatorId: userId, pageSize: 1 }),
+          invoiceApi.getStats({ status: "DRAFT", creatorId }),
+          invoiceApi.list({ status: "DRAFT", isRunning: true, creatorId, pageSize: 1 }),
+          invoiceApi.getStats({ status: "FINAL", creatorId, dateFrom, dateTo }),
+          invoiceApi.getStats({ status: "FINAL", creatorId, dateFrom: lastMonthFrom, dateTo: lastMonthTo }),
+          quoteApi.list({ quoteStatus: "SENT", creatorId, pageSize: 1 }),
         ]);
 
         setData({
@@ -91,7 +94,7 @@ export function YourFocus() {
     }
 
     fetchFocus();
-  }, [userId]);
+  }, [currentUserId]);
 
   if (loading) {
     return (

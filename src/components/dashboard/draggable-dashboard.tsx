@@ -1,207 +1,114 @@
 "use client";
 
-import { useState, useEffect, useCallback, type ReactNode } from "react";
+import { useState, useEffect, useCallback, useRef, startTransition } from "react";
 import dynamic from "next/dynamic";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type DragStartEvent,
-  DragOverlay,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, RotateCcw } from "lucide-react";
-import { useUserPreference } from "@/domains/user-preference/hooks";
-import { cn } from "@/lib/utils";
+import { RotateCcw } from "lucide-react";
+import { DEFAULT_ORDER } from "./dashboard-widget-stack";
+import { useDashboardOrder } from "./use-dashboard-order";
 
-const STORAGE_KEY = "laportal-dashboard-order";
-
-function WidgetSkeleton() {
-  return <div className="h-32 rounded-xl border border-border/60 bg-muted/20" />;
-}
-
-const StatsCards = dynamic(
-  () => import("./stats-cards").then((m) => m.StatsCards),
-  { ssr: false, loading: () => <WidgetSkeleton /> },
+const SortableDashboard = dynamic(
+  () => import("./sortable-dashboard").then((m) => m.SortableDashboard),
+  { ssr: false },
 );
-const PendingCharges = dynamic(
-  () => import("./pending-charges").then((m) => m.PendingCharges),
-  { ssr: false, loading: () => <WidgetSkeleton /> },
-);
-const RunningInvoices = dynamic(
-  () => import("./running-invoices").then((m) => m.RunningInvoices),
-  { ssr: false, loading: () => <WidgetSkeleton /> },
-);
-const RecentActivity = dynamic(
-  () => import("./recent-invoices").then((m) => m.RecentActivity),
-  { ssr: false, loading: () => <WidgetSkeleton /> },
-);
-const YourFocus = dynamic(
-  () => import("./your-focus").then((m) => m.YourFocus),
-  { ssr: false, loading: () => <WidgetSkeleton /> },
-);
-const TodaysEvents = dynamic(
-  () => import("./todays-events").then((m) => m.TodaysEvents),
-  { ssr: false, loading: () => <WidgetSkeleton /> },
-);
-const PendingAccounts = dynamic(
-  () => import("./pending-accounts").then((m) => m.PendingAccountsWidget),
-  { ssr: false, loading: () => <WidgetSkeleton /> },
+const DashboardPreviewStack = dynamic(
+  () => import("./dashboard-preview-stack").then((m) => m.DashboardPreviewStack),
+  { ssr: false },
 );
 
-interface WidgetConfig {
-  id: string;
-  label: string;
-  component: () => ReactNode;
-}
+type IdleCapableWindow = Window & {
+  requestIdleCallback?: (
+    callback: IdleRequestCallback,
+    options?: IdleRequestOptions,
+  ) => number;
+  cancelIdleCallback?: (handle: number) => void;
+};
 
-const SORTABLE_WIDGETS: WidgetConfig[] = [
-  { id: "todays-events", label: "Today's Events", component: () => <TodaysEvents /> },
-  { id: "your-focus", label: "Your Focus", component: () => <YourFocus /> },
-  { id: "pending-accounts", label: "Pending Account Numbers", component: () => <PendingAccounts /> },
-  { id: "stats", label: "Stats", component: () => <StatsCards /> },
-  { id: "pending-charges", label: "Pending Charges", component: () => <PendingCharges /> },
-  { id: "running-invoices", label: "Running Invoices", component: () => <RunningInvoices /> },
-];
-
-const DEFAULT_ORDER = SORTABLE_WIDGETS.map((w) => w.id);
-
-function parseStoredOrder(value: unknown): string[] {
-  if (!Array.isArray(value)) {
-    return DEFAULT_ORDER;
-  }
-
-  const parsed = value.filter((item): item is string => typeof item === "string");
-  const defaultSet = new Set(DEFAULT_ORDER);
-  const storedSet = new Set(parsed);
-
-  if (
-    parsed.length !== DEFAULT_ORDER.length ||
-    !parsed.every((id) => defaultSet.has(id))
-  ) {
-    const valid = parsed.filter((id) => defaultSet.has(id));
-    const missing = DEFAULT_ORDER.filter((id) => !storedSet.has(id));
-    return [...valid, ...missing];
-  }
-
-  return parsed;
-}
-
-function SortableWidget({
-  widget,
-  isDraggingAny,
+export function DraggableDashboard({
+  currentUserId,
 }: {
-  widget: WidgetConfig;
-  isDraggingAny: boolean;
+  currentUserId: string | null;
 }) {
   const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: widget.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition: transition ?? undefined,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={cn(
-        "group relative",
-        isDragging && "z-50 opacity-50",
-      )}
-    >
-      <div
-        {...attributes}
-        {...listeners}
-        className={cn(
-          "absolute -left-7 top-1/2 -translate-y-1/2 flex items-center justify-center",
-          "w-5 h-7 rounded-md cursor-grab active:cursor-grabbing",
-          "text-muted-foreground/40 hover:text-muted-foreground hover:bg-muted/80",
-          "transition-opacity duration-150",
-          isDraggingAny ? "opacity-60" : "opacity-0 group-hover:opacity-100",
-        )}
-        aria-label={`Drag to reorder ${widget.label}`}
-      >
-        <GripVertical className="h-3.5 w-3.5" />
-      </div>
-      {widget.component()}
-    </div>
-  );
-}
-
-export function DraggableDashboard() {
-  const {
-    value: storedOrder,
-    setValue: setStoredOrder,
-    clear: clearStoredOrder,
+    order: storedOrder,
     loaded,
-  } = useUserPreference<string[]>({
-    key: STORAGE_KEY,
-    defaultValue: DEFAULT_ORDER,
-    deserialize: parseStoredOrder,
-  });
+    setPersistedOrder,
+    clearPersistedOrder,
+  } = useDashboardOrder(DEFAULT_ORDER);
   const [order, setOrder] = useState<string[]>(DEFAULT_ORDER);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [dragReady, setDragReady] = useState(false);
+  const handleRef = useRef<number | null>(null);
 
   useEffect(() => {
     setOrder(storedOrder);
   }, [storedOrder]);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
+  useEffect(() => {
+    if (dragReady) {
+      return;
+    }
 
-  const handleDragStart = useCallback((event: DragStartEvent) => {
-    setActiveId(String(event.active.id));
-  }, []);
+    const win = window as IdleCapableWindow;
 
-  const handleDragEnd = useCallback((event: DragEndEvent) => {
-    setActiveId(null);
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
+    function markDragReady() {
+      startTransition(() => {
+        setDragReady(true);
+      });
+    }
 
-    setOrder((prev) => {
-      const oldIndex = prev.indexOf(String(active.id));
-      const newIndex = prev.indexOf(String(over.id));
-      const newOrder = arrayMove(prev, oldIndex, newIndex);
-      setStoredOrder(newOrder);
-      return newOrder;
-    });
-  }, [setStoredOrder]);
+    function clearScheduledLoad() {
+      if (handleRef.current === null) {
+        return;
+      }
+
+      if (win.cancelIdleCallback) {
+        win.cancelIdleCallback(handleRef.current);
+      } else {
+        window.clearTimeout(handleRef.current);
+      }
+      handleRef.current = null;
+    }
+
+    const fallbackTimer = window.setTimeout(markDragReady, 2500);
+
+    if (win.requestIdleCallback) {
+      handleRef.current = win.requestIdleCallback(
+        () => {
+          markDragReady();
+          handleRef.current = null;
+        },
+        { timeout: 3500 },
+      );
+    } else {
+      handleRef.current = window.setTimeout(() => {
+        markDragReady();
+        handleRef.current = null;
+      }, 1200);
+    }
+
+    window.addEventListener("pointerdown", markDragReady, { once: true, passive: true });
+    window.addEventListener("keydown", markDragReady, { once: true });
+    window.addEventListener("focusin", markDragReady, { once: true });
+
+    return () => {
+      window.clearTimeout(fallbackTimer);
+      clearScheduledLoad();
+      window.removeEventListener("pointerdown", markDragReady);
+      window.removeEventListener("keydown", markDragReady);
+      window.removeEventListener("focusin", markDragReady);
+    };
+  }, [dragReady]);
+
+  const handleOrderChange = useCallback((nextOrder: string[]) => {
+    setOrder(nextOrder);
+    setPersistedOrder(nextOrder);
+  }, [setPersistedOrder]);
 
   const handleReset = useCallback(() => {
     setOrder(DEFAULT_ORDER);
-    clearStoredOrder();
-  }, [clearStoredOrder]);
+    clearPersistedOrder();
+  }, [clearPersistedOrder]);
 
   const isCustomOrder = loaded && JSON.stringify(order) !== JSON.stringify(DEFAULT_ORDER);
-
-  const widgetMap = new Map(SORTABLE_WIDGETS.map((w) => [w.id, w]));
-  const orderedWidgets = order.map((id) => widgetMap.get(id)).filter(Boolean) as WidgetConfig[];
-  const activeWidget = activeId ? widgetMap.get(activeId) : null;
 
   return (
     <div className="relative">
@@ -216,40 +123,18 @@ export function DraggableDashboard() {
           Reset layout
         </button>
       )}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <SortableContext items={order} strategy={verticalListSortingStrategy}>
-          <div className="flex flex-col gap-3">
-            {orderedWidgets.map((widget) => (
-              <SortableWidget
-                key={widget.id}
-                widget={widget}
-                isDraggingAny={activeId !== null}
-              />
-            ))}
-          </div>
-        </SortableContext>
-
-        <DragOverlay dropAnimation={{
-          duration: 250,
-          easing: "cubic-bezier(0.22, 1, 0.36, 1)",
-        }}>
-          {activeWidget ? (
-            <div className="opacity-90 scale-[1.02] shadow-xl rounded-xl ring-1 ring-primary/20 pointer-events-none">
-              {activeWidget.component()}
-            </div>
-          ) : null}
-        </DragOverlay>
-      </DndContext>
-
-      {/* Recent Invoices — always pinned to bottom */}
-      <div className="mt-3">
-        <RecentActivity />
-      </div>
+      {dragReady ? (
+        <SortableDashboard
+          currentUserId={currentUserId}
+          order={order}
+          onOrderChange={handleOrderChange}
+        />
+      ) : (
+        <DashboardPreviewStack
+          currentUserId={currentUserId}
+          order={order}
+        />
+      )}
     </div>
   );
 }
