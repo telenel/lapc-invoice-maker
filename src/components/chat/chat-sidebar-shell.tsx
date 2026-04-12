@@ -45,7 +45,27 @@ export function ResponsiveChatShell({
   const [shouldRenderDesktop, setShouldRenderDesktop] = useState(false);
   const [shouldRenderMobile, setShouldRenderMobile] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [desktopReady, setDesktopReady] = useState(false);
   const handleRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    function markDesktopReady() {
+      setDesktopReady(true);
+    }
+
+    const fallbackTimer = window.setTimeout(markDesktopReady, 5_000);
+
+    window.addEventListener("pointerdown", markDesktopReady, { once: true, passive: true });
+    window.addEventListener("keydown", markDesktopReady, { once: true });
+    window.addEventListener("focusin", markDesktopReady, { once: true });
+
+    return () => {
+      window.clearTimeout(fallbackTimer);
+      window.removeEventListener("pointerdown", markDesktopReady);
+      window.removeEventListener("keydown", markDesktopReady);
+      window.removeEventListener("focusin", markDesktopReady);
+    };
+  }, []);
 
   useEffect(() => {
     const win = window as IdleCapableWindow;
@@ -71,6 +91,7 @@ export function ResponsiveChatShell({
 
       if (nextIsDesktop && shouldRenderDesktop) return;
       if (!nextIsDesktop && shouldRenderMobile) return;
+      if (nextIsDesktop && !desktopReady) return;
 
       if (win.requestIdleCallback) {
         handleRef.current = win.requestIdleCallback(
@@ -84,7 +105,7 @@ export function ResponsiveChatShell({
             }
             handleRef.current = null;
           },
-          { timeout: 1500 },
+          { timeout: nextIsDesktop ? 4000 : 1500 },
         );
         return;
       }
@@ -98,7 +119,7 @@ export function ResponsiveChatShell({
           setShouldRenderMobile(true);
         }
         handleRef.current = null;
-      }, 300);
+      }, nextIsDesktop ? 1500 : 300);
     }
 
     scheduleLoad();
@@ -113,7 +134,7 @@ export function ResponsiveChatShell({
       media.removeEventListener("change", handleMediaChange);
       clearScheduledLoad();
     };
-  }, [shouldRenderDesktop, shouldRenderMobile]);
+  }, [desktopReady, shouldRenderDesktop, shouldRenderMobile]);
 
   return (
     isDesktop

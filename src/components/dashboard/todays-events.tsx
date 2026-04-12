@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
-import { calendarApi, type CalendarEvent } from "@/domains/calendar/api-client";
+import type { CalendarEvent } from "@/domains/calendar/api-client";
 
 function getEmoji(event: CalendarEvent): string {
   if (event.source === "catering") return "\u{1F37D}";
@@ -33,14 +32,33 @@ export function TodaysEvents() {
     const tomorrow = new Date(now);
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
-    calendarApi
-      .getEvents(today, tomorrowStr)
-      .then(setEvents)
+
+    let cancelled = false;
+
+    void import("@/domains/calendar/api-client")
+      .then(({ calendarApi }) => calendarApi.getEvents(today, tomorrowStr))
+      .then((data) => {
+        if (!cancelled) {
+          setEvents(data);
+        }
+      })
       .catch((err) => {
         console.error("Failed to fetch events:", err);
-        toast.error("Failed to load events");
+        void import("sonner")
+          .then(({ toast }) => {
+            toast.error("Failed to load events");
+          })
+          .catch(() => {});
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   if (loading) {

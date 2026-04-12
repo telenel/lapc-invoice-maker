@@ -1,14 +1,17 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
 import { Plus, FileText, Sun, Sunset, Moon } from "lucide-react";
 
 type TimeOfDay = "morning" | "afternoon" | "evening";
 
-function getTimeOfDay(): TimeOfDay {
-  const hour = new Date().getHours();
+const PORTAL_TIME_ZONE = "America/Los_Angeles";
+
+function getTimeOfDay(date: Date): TimeOfDay {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    hour12: false,
+    timeZone: PORTAL_TIME_ZONE,
+  });
+  const hour = Number(formatter.format(date));
   if (hour < 12) return "morning";
   if (hour < 17) return "afternoon";
   return "evening";
@@ -32,26 +35,21 @@ const iconColorMap: Record<TimeOfDay, string> = {
   evening: "text-muted-foreground",
 };
 
-function getFormattedDate(): string {
-  return new Date().toLocaleDateString("en-US", {
+function getFormattedDate(date: Date): string {
+  return new Intl.DateTimeFormat("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
     year: "numeric",
-  });
+    timeZone: PORTAL_TIME_ZONE,
+  }).format(date);
 }
 
-export function PersonalizedHeader() {
-  const { data: session } = useSession();
-  const [timeOfDay, setTimeOfDay] = useState<TimeOfDay>("morning");
-  const [date, setDate] = useState("");
-
-  useEffect(() => {
-    setTimeOfDay(getTimeOfDay());
-    setDate(getFormattedDate());
-  }, []);
-
-  const firstName = session?.user?.name?.split(" ")[0] ?? "";
+export function PersonalizedHeader({ name = "" }: { name?: string }) {
+  const now = new Date();
+  const timeOfDay = getTimeOfDay(now);
+  const date = getFormattedDate(now);
+  const firstName = name.split(" ")[0] ?? "";
   const Icon = iconMap[timeOfDay];
 
   return (
@@ -86,4 +84,3 @@ export function PersonalizedHeader() {
     </div>
   );
 }
-

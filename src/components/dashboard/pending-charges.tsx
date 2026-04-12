@@ -1,21 +1,34 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { startTransition, useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatAmount, getInitials } from "@/lib/formatters";
-import { invoiceApi } from "@/domains/invoice/api-client";
 import type { CreatorStatEntry } from "@/domains/invoice/types";
-import { useSSE } from "@/lib/use-sse";
+import { useDeferredDashboardRealtime } from "./use-deferred-dashboard-realtime";
+
+type IdleCapableWindow = Window & {
+  requestIdleCallback?: (
+    callback: IdleRequestCallback,
+    options?: IdleRequestOptions,
+  ) => number;
+  cancelIdleCallback?: (handle: number) => void;
+};
 
 export function PendingCharges() {
   const [users, setUsers] = useState<CreatorStatEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [detailsReady, setDetailsReady] = useState(false);
 
   const fetchPending = useCallback(() => {
-    invoiceApi.getCreatorStats("PENDING_CHARGE")
-      .then((data) => setUsers(data.users))
+    void import("@/domains/invoice/api-client")
+      .then(({ invoiceApi }) => invoiceApi.getCreatorStats("PENDING_CHARGE"))
+      .then((data) => {
+        startTransition(() => {
+          setUsers(data.users);
+        });
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -24,7 +37,56 @@ export function PendingCharges() {
     fetchPending();
   }, [fetchPending]);
 
-  useSSE("invoice-changed", fetchPending);
+  const refreshPending = useCallback(() => {
+    fetchPending();
+  }, [fetchPending]);
+
+  useEffect(() => {
+    if (detailsReady) {
+      return;
+    }
+
+    const win = window as IdleCapableWindow;
+    let idleHandle: number | null = null;
+
+    function markReady() {
+      startTransition(() => {
+        setDetailsReady(true);
+      });
+    }
+
+    const fallbackTimer = window.setTimeout(markReady, 1500);
+
+    if (win.requestIdleCallback) {
+      idleHandle = win.requestIdleCallback(markReady, { timeout: 2000 });
+    } else {
+      idleHandle = window.setTimeout(markReady, 700);
+    }
+
+    window.addEventListener("pointerdown", markReady, { once: true, passive: true });
+    window.addEventListener("keydown", markReady, { once: true });
+    window.addEventListener("focusin", markReady, { once: true });
+
+    return () => {
+      window.clearTimeout(fallbackTimer);
+      if (idleHandle !== null) {
+        if (win.cancelIdleCallback) {
+          win.cancelIdleCallback(idleHandle);
+        } else {
+          window.clearTimeout(idleHandle);
+        }
+      }
+      window.removeEventListener("pointerdown", markReady);
+      window.removeEventListener("keydown", markReady);
+      window.removeEventListener("focusin", markReady);
+    };
+  }, [detailsReady]);
+
+  useDeferredDashboardRealtime(
+    ["invoice-changed"],
+    refreshPending,
+    { enabled: detailsReady },
+  );
 
   const totalCount = users.reduce((sum, u) => sum + u.invoiceCount, 0);
 

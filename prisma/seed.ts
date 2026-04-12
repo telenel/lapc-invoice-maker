@@ -1,14 +1,25 @@
-import "dotenv/config";
+import path from "node:path";
+import dotenv from "dotenv";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 import { defaultPrintPricingConfig } from "../src/domains/print-pricing/defaults";
+
+for (const envFile of [".env.local", ".env"]) {
+  dotenv.config({
+    path: path.join(process.cwd(), envFile),
+    override: false,
+    quiet: true,
+  });
+}
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
   const passwordHash = await bcrypt.hash("admin", 10);
+  const e2eUsername = process.env.E2E_USERNAME?.trim().toLowerCase();
+  const e2ePassword = process.env.E2E_PASSWORD?.trim();
 
   await prisma.user.upsert({
     where: { username: "admin" },
@@ -21,6 +32,32 @@ async function main() {
       setupComplete: true,
     },
   });
+
+  if (e2eUsername && e2ePassword) {
+    const e2ePasswordHash = await bcrypt.hash(e2ePassword, 10);
+
+    await prisma.user.upsert({
+      where: { username: e2eUsername },
+      update: {
+        email: e2eUsername,
+        role: "admin",
+        active: true,
+        passwordHash: e2ePasswordHash,
+        setupComplete: true,
+      },
+      create: {
+        username: e2eUsername,
+        email: e2eUsername,
+        passwordHash: e2ePasswordHash,
+        name: "E2E Admin",
+        role: "admin",
+        active: true,
+        setupComplete: true,
+      },
+    });
+
+    console.log(`Seeded E2E admin user: ${e2eUsername}`);
+  }
 
   // Seed staff from original config
   const staffData = [

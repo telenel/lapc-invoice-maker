@@ -1,15 +1,12 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { toast } from "sonner";
-import { useSession } from "next-auth/react";
-import NumberFlow from "@number-flow/react";
+import { startTransition, useCallback, useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { formatAmount, getInitials } from "@/lib/formatters";
 import { invoiceApi } from "@/domains/invoice/api-client";
 import type { CreatorStatEntry } from "@/domains/invoice/types";
-import { useSSE } from "@/lib/use-sse";
+import { useDeferredDashboardRealtime } from "./use-deferred-dashboard-realtime";
 
 interface StatsData {
   invoicesThisMonth: number;
@@ -18,13 +15,31 @@ interface StatsData {
   totalLastMonth: number;
 }
 
-export function StatsCards() {
-  const { data: session } = useSession();
+type IdleCapableWindow = Window & {
+  requestIdleCallback?: (
+    callback: IdleRequestCallback,
+    options?: IdleRequestOptions,
+  ) => number;
+  cancelIdleCallback?: (handle: number) => void;
+};
+
+type NumberFlowComponentType = typeof import("@number-flow/react")["default"];
+
+function formatCount(value: number) {
+  return new Intl.NumberFormat("en-US").format(value);
+}
+
+export function StatsCards({
+  currentUserId,
+}: {
+  currentUserId: string | null;
+}) {
   const [stats, setStats] = useState<StatsData | null>(null);
   const [teamUsers, setTeamUsers] = useState<CreatorStatEntry[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const currentUserId = (session?.user as { id?: string } | undefined)?.id;
+  const [teamLoading, setTeamLoading] = useState(true);
+  const [detailsReady, setDetailsReady] = useState(false);
+  const [NumberFlowComponent, setNumberFlowComponent] = useState<NumberFlowComponentType | null>(null);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -40,33 +55,119 @@ export function StatsCards() {
       const lastMonthFrom = pad(firstOfLastMonth);
       const lastMonthTo = pad(lastOfLastMonth);
 
-      const [monthData, lastMonthData, creatorStats] = await Promise.all([
+      const [monthData, lastMonthData] = await Promise.all([
         invoiceApi.getStats({ status: "FINAL", dateFrom, dateTo }),
         invoiceApi.getStats({ status: "FINAL", dateFrom: lastMonthFrom, dateTo: lastMonthTo }),
-        invoiceApi.getCreatorStats(),
       ]);
 
-      setStats({
-        invoicesThisMonth: monthData.total,
-        totalThisMonth: monthData.sumTotalAmount,
-        invoicesLastMonth: lastMonthData.total,
-        totalLastMonth: lastMonthData.sumTotalAmount,
+      startTransition(() => {
+        setStats({
+          invoicesThisMonth: monthData.total,
+          totalThisMonth: monthData.sumTotalAmount,
+          invoicesLastMonth: lastMonthData.total,
+          totalLastMonth: lastMonthData.sumTotalAmount,
+        });
       });
-      setTeamUsers(creatorStats.users);
     } catch (err) {
       console.error("Failed to fetch stats:", err);
-      toast.error("Failed to load stats");
+      void import("sonner")
+        .then(({ toast }) => {
+          toast.error("Failed to load stats");
+        })
+        .catch(() => {});
     } finally {
       setLoading(false);
     }
   }, []);
 
+  const fetchTeamUsers = useCallback(async () => {
+    try {
+      const creatorStats = await invoiceApi.getCreatorStats();
+      startTransition(() => {
+        setTeamUsers(creatorStats.users);
+      });
+    } catch (err) {
+      console.error("Failed to fetch team activity:", err);
+    } finally {
+      setTeamLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    fetchStats();
+    void fetchStats();
   }, [fetchStats]);
 
-  useSSE("invoice-changed", fetchStats);
-  useSSE("quote-changed", fetchStats);
+  const refreshStats = useCallback(() => {
+    void fetchStats();
+    void fetchTeamUsers();
+  }, [fetchStats, fetchTeamUsers]);
+
+  useEffect(() => {
+    if (detailsReady) {
+      return;
+    }
+
+    const win = window as IdleCapableWindow;
+    let idleHandle: number | null = null;
+
+    function markReady() {
+      startTransition(() => {
+        setDetailsReady(true);
+      });
+    }
+
+    const fallbackTimer = window.setTimeout(markReady, 1500);
+
+    if (win.requestIdleCallback) {
+      idleHandle = win.requestIdleCallback(markReady, { timeout: 2000 });
+    } else {
+      idleHandle = window.setTimeout(markReady, 700);
+    }
+
+    window.addEventListener("pointerdown", markReady, { once: true, passive: true });
+    window.addEventListener("keydown", markReady, { once: true });
+    window.addEventListener("focusin", markReady, { once: true });
+
+    return () => {
+      window.clearTimeout(fallbackTimer);
+      if (idleHandle !== null) {
+        if (win.cancelIdleCallback) {
+          win.cancelIdleCallback(idleHandle);
+        } else {
+          window.clearTimeout(idleHandle);
+        }
+      }
+      window.removeEventListener("pointerdown", markReady);
+      window.removeEventListener("keydown", markReady);
+      window.removeEventListener("focusin", markReady);
+    };
+  }, [detailsReady]);
+
+  useEffect(() => {
+    if (!detailsReady) {
+      return;
+    }
+
+    void import("@number-flow/react")
+      .then((module) => {
+        setNumberFlowComponent(() => module.default);
+      })
+      .catch(() => {});
+  }, [detailsReady]);
+
+  useEffect(() => {
+    if (!detailsReady) {
+      return;
+    }
+
+    void fetchTeamUsers();
+  }, [detailsReady, fetchTeamUsers]);
+
+  useDeferredDashboardRealtime(
+    ["invoice-changed", "quote-changed"],
+    refreshStats,
+    { enabled: detailsReady },
+  );
 
   const invoiceDelta = (stats?.invoicesThisMonth ?? 0) - (stats?.invoicesLastMonth ?? 0);
   const totalPctChange = stats?.totalLastMonth
@@ -109,10 +210,14 @@ export function StatsCards() {
             )}
           </div>
           <p className="text-[26px] font-extrabold tracking-tight tabular-nums mt-1">
-            <NumberFlow
-              value={stats?.invoicesThisMonth ?? 0}
-              transformTiming={{ duration: 750, easing: "cubic-bezier(0.22, 1, 0.36, 1)" }}
-            />
+            {NumberFlowComponent ? (
+              <NumberFlowComponent
+                value={stats?.invoicesThisMonth ?? 0}
+                transformTiming={{ duration: 750, easing: "cubic-bezier(0.22, 1, 0.36, 1)" }}
+              />
+            ) : (
+              formatCount(stats?.invoicesThisMonth ?? 0)
+            )}
           </p>
           <div className="flex items-end gap-[3px] mt-3 h-6">
             {[30, 55, 40, 70, 50, 100].map((h, i, arr) => (
@@ -148,11 +253,15 @@ export function StatsCards() {
             )}
           </div>
           <p className="text-[26px] font-extrabold tracking-tight tabular-nums mt-1">
-            <NumberFlow
-              value={Number(stats?.totalThisMonth ?? 0)}
-              format={{ style: "currency", currency: "USD", minimumFractionDigits: 2 }}
-              transformTiming={{ duration: 750, easing: "cubic-bezier(0.22, 1, 0.36, 1)" }}
-            />
+            {NumberFlowComponent ? (
+              <NumberFlowComponent
+                value={Number(stats?.totalThisMonth ?? 0)}
+                format={{ style: "currency", currency: "USD", minimumFractionDigits: 2 }}
+                transformTiming={{ duration: 750, easing: "cubic-bezier(0.22, 1, 0.36, 1)" }}
+              />
+            ) : (
+              formatAmount(stats?.totalThisMonth ?? 0)
+            )}
           </p>
           <div className="mt-3.5 h-1 bg-muted rounded-full overflow-hidden">
             <div
@@ -172,7 +281,17 @@ export function StatsCards() {
             <p className="text-[11px] font-medium text-muted-foreground">Team Activity</p>
             <span className="text-[10px] text-muted-foreground">This month</span>
           </div>
-          {teamUsers.length === 0 ? (
+          {teamLoading ? (
+            <div className="space-y-1.5">
+              {[0, 1, 2].map((index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <div className="skeleton h-[22px] w-[22px] rounded-md shrink-0" />
+                  <div className="skeleton h-3 w-20 flex-1" />
+                  <div className="skeleton h-3 w-16 shrink-0" />
+                </div>
+              ))}
+            </div>
+          ) : teamUsers.length === 0 ? (
             <p className="text-[13px] text-muted-foreground">No activity yet</p>
           ) : (
             <div className="space-y-1.5 max-h-[88px] overflow-y-auto">
