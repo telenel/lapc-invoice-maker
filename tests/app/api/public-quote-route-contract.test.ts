@@ -58,6 +58,7 @@ describe("GET /api/quotes/public/[token] payment-link contract", () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body.paymentLinkAvailable).toBe(false);
+    expect(body.responseLinkAvailable).toBe(true);
   });
 
   it("returns paymentLinkAvailable=true for accepted, unconverted quotes", async () => {
@@ -108,6 +109,7 @@ describe("GET /api/quotes/public/[token] payment-link contract", () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body.paymentLinkAvailable).toBe(true);
+    expect(body.responseLinkAvailable).toBe(false);
   });
 
   it("returns paymentLinkAvailable=false for accepted quotes with converted invoices", async () => {
@@ -158,6 +160,7 @@ describe("GET /api/quotes/public/[token] payment-link contract", () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body.paymentLinkAvailable).toBe(false);
+    expect(body.responseLinkAvailable).toBe(false);
   });
 
   it("returns paymentLinkAvailable=false for accepted quotes with existing payment details", async () => {
@@ -208,6 +211,7 @@ describe("GET /api/quotes/public/[token] payment-link contract", () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body.paymentLinkAvailable).toBe(false);
+    expect(body.responseLinkAvailable).toBe(false);
   });
 
   it("returns paymentLinkAvailable=false for accepted quotes with non-final converted invoices", async () => {
@@ -258,5 +262,6 @@ describe("GET /api/quotes/public/[token] payment-link contract", () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body.paymentLinkAvailable).toBe(false);
+    expect(body.responseLinkAvailable).toBe(false);
   });
 });

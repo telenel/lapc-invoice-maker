@@ -46,6 +46,13 @@ export function isPublicPaymentLinkAvailable(
   return false;
 }
 
+export function isPublicQuoteResponseAvailable(
+  quote: Pick<QuoteResponse, "quoteStatus" | "convertedToInvoice">
+): boolean {
+  return !quote.convertedToInvoice
+    && ["SENT", "SUBMITTED_EMAIL", "SUBMITTED_MANUAL"].includes(quote.quoteStatus);
+}
+
 function isUniqueConstraintViolation(error: unknown): boolean {
   return typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
 }

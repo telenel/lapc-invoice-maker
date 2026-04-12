@@ -244,10 +244,7 @@ export function LineItems({
                 onKeyDown={(e) => handleUnitPriceKeyDown(e, index)}
                 name={`lineItem${index}UnitPrice`}
                 inputMode="decimal"
-                className={cn(
-                  "w-24 h-8 text-sm",
-                  marginEnabled && "text-muted-foreground line-through"
-                )}
+                className="w-24 h-8 text-sm"
                 aria-label={`Line item ${index + 1} unit price`}
               />
             </div>

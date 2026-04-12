@@ -112,4 +112,26 @@ describe("LineItems", () => {
     const removeBtn = screen.getByRole("button", { name: "Remove line item 1" });
     expect(removeBtn).toBeDisabled();
   });
+
+  it("keeps the cost input readable when margin pricing is enabled", () => {
+    render(
+      <LineItems
+        {...defaultProps}
+        marginEnabled
+        itemsWithMargin={[
+          {
+            ...defaultProps.items[0],
+            extendedPrice: 12.5,
+          },
+        ]}
+        total={12.5}
+      />,
+    );
+
+    const costInput = screen.getByLabelText("Line item 1 unit price");
+    expect(costInput).not.toHaveClass("line-through");
+    expect(costInput).not.toHaveClass("text-muted-foreground");
+    expect(screen.getByText("Cost")).toBeInTheDocument();
+    expect(screen.getByLabelText("Line item 1 charged price")).toHaveTextContent("$12.50");
+  });
 });

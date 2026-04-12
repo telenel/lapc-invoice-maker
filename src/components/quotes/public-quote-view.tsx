@@ -305,11 +305,12 @@ export function PublicQuoteView({ token }: { token: string }) {
   const isExpired = quote.quoteStatus === "EXPIRED";
   const alreadyResponded = quote.quoteStatus === "ACCEPTED" || quote.quoteStatus === "DECLINED" || quote.quoteStatus === "REVISED";
   const paymentLinkAvailable = quote.paymentLinkAvailable !== false;
+  const responseLinkAvailable = quote.responseLinkAvailable !== false;
   const canRespond =
-    paymentLinkAvailable &&
+    responseLinkAvailable &&
     (quote.quoteStatus === "SENT" || quote.quoteStatus === "SUBMITTED_EMAIL" || quote.quoteStatus === "SUBMITTED_MANUAL") &&
     !responded;
-  const publicActionsClosed = !paymentLinkAvailable && !alreadyResponded && !isExpired;
+  const publicActionsClosed = !responseLinkAvailable && !alreadyResponded && !isExpired;
   const isCatering = quote.isCateringEvent;
   const missingCateringRequirements = isCatering ? getMissingCustomerCateringRequirements(cateringForm) : [];
   const cateringRequiredMissing = missingCateringRequirements.length > 0;

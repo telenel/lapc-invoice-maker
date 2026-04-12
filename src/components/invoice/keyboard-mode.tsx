@@ -296,28 +296,20 @@ export function KeyboardMode({
 
   // ---- Quick pick handler ----
   function handleQuickPick(description: string, unitPrice: number) {
-    const emptyIndex = form.items.findIndex((item) => !item.description);
-    if (emptyIndex >= 0) {
-      updateItem(emptyIndex, {
+    updateField("items", [
+      ...form.items,
+      {
+        _key: crypto.randomUUID(),
         description,
-        unitPrice,
         quantity: 1,
+        unitPrice,
         extendedPrice: unitPrice,
-      });
-    } else {
-      addItem();
-      const newIndex = form.items.length;
-      setTimeout(
-        () =>
-          updateItem(newIndex, {
-            description,
-            unitPrice,
-            quantity: 1,
-            extendedPrice: unitPrice,
-          }),
-        0
-      );
-    }
+        sortOrder: form.items.length,
+        isTaxable: true,
+        marginOverride: null,
+        costPrice: null,
+      },
+    ]);
   }
 
   // ---- Star toggle handler ----

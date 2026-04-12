@@ -76,7 +76,11 @@ import { pdfService } from "@/domains/pdf/service";
 import { prisma } from "@/lib/prisma";
 import { notificationService } from "@/domains/notification/service";
 import { safePublishAll } from "@/lib/sse";
-import { isPublicPaymentLinkAvailable, quoteService } from "@/domains/quote/service";
+import {
+  isPublicPaymentLinkAvailable,
+  isPublicQuoteResponseAvailable,
+  quoteService,
+} from "@/domains/quote/service";
 
 const mockRepo = vi.mocked(quoteRepository, true);
 const mockPdfService = vi.mocked(pdfService, true);
@@ -472,6 +476,35 @@ describe("quoteService", () => {
         isPublicPaymentLinkAvailable({
           quoteStatus: "SUBMITTED_MANUAL",
           convertedToInvoice: null,
+        }),
+      ).toBe(false);
+    });
+  });
+
+  describe("isPublicQuoteResponseAvailable", () => {
+    it("is true for sent quotes that have not been converted", () => {
+      expect(
+        isPublicQuoteResponseAvailable({
+          quoteStatus: "SUBMITTED_EMAIL",
+          convertedToInvoice: null,
+        }),
+      ).toBe(true);
+    });
+
+    it("is false for accepted quotes", () => {
+      expect(
+        isPublicQuoteResponseAvailable({
+          quoteStatus: "ACCEPTED",
+          convertedToInvoice: null,
+        }),
+      ).toBe(false);
+    });
+
+    it("is false when the quote already has a converted invoice", () => {
+      expect(
+        isPublicQuoteResponseAvailable({
+          quoteStatus: "SENT",
+          convertedToInvoice: { id: "inv1", invoiceNumber: "INV-1", status: "DRAFT", createdBy: null },
         }),
       ).toBe(false);
     });

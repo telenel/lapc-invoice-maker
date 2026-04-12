@@ -101,6 +101,7 @@ export interface PublicQuoteResponse {
   quoteNumber: string | null;
   quoteStatus: QuoteStatus;
   paymentLinkAvailable: boolean;
+  responseLinkAvailable: boolean;
   date: string;
   expirationDate: string | null;
   department: string;

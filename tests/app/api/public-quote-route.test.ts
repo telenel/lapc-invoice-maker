@@ -6,9 +6,14 @@ vi.mock("@/domains/quote/service", () => ({
     getByShareToken: vi.fn(),
   },
   isPublicPaymentLinkAvailable: vi.fn(),
+  isPublicQuoteResponseAvailable: vi.fn(),
 }));
 
-import { isPublicPaymentLinkAvailable, quoteService } from "@/domains/quote/service";
+import {
+  isPublicPaymentLinkAvailable,
+  isPublicQuoteResponseAvailable,
+  quoteService,
+} from "@/domains/quote/service";
 import { GET } from "@/app/api/quotes/public/[token]/route";
 
 describe("GET /api/quotes/public/[token]", () => {
@@ -25,6 +30,7 @@ describe("GET /api/quotes/public/[token]", () => {
 
   it("strips payment details from the public payload", async () => {
     vi.mocked(isPublicPaymentLinkAvailable).mockReturnValue(true);
+    vi.mocked(isPublicQuoteResponseAvailable).mockReturnValue(false);
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",
       quoteNumber: "Q-1",
@@ -83,6 +89,7 @@ describe("GET /api/quotes/public/[token]", () => {
     expect(body.paymentMethod).toBeUndefined();
     expect(body.paymentAccountNumber).toBeUndefined();
     expect(body.paymentLinkAvailable).toBe(true);
+    expect(body.responseLinkAvailable).toBe(false);
     expect(body.paymentDetailsResolved).toBe(true);
     expect(body.accountNumber).toBeUndefined();
     expect(body.pdfPath).toBeUndefined();
@@ -99,6 +106,7 @@ describe("GET /api/quotes/public/[token]", () => {
 
   it("marks converted quotes as closed for public payment links", async () => {
     vi.mocked(isPublicPaymentLinkAvailable).mockReturnValue(false);
+    vi.mocked(isPublicQuoteResponseAvailable).mockReturnValue(false);
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",
       quoteNumber: "Q-1",
@@ -146,10 +154,12 @@ describe("GET /api/quotes/public/[token]", () => {
     const body = await response.json();
     expect(response.status).toBe(200);
     expect(body.paymentLinkAvailable).toBe(false);
+    expect(body.responseLinkAvailable).toBe(false);
   });
 
   it("closes the public payment link for accepted converted quotes", async () => {
     vi.mocked(isPublicPaymentLinkAvailable).mockReturnValue(false);
+    vi.mocked(isPublicQuoteResponseAvailable).mockReturnValue(false);
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",
       quoteNumber: "Q-1",
@@ -197,10 +207,12 @@ describe("GET /api/quotes/public/[token]", () => {
     const body = await response.json();
     expect(response.status).toBe(200);
     expect(body.paymentLinkAvailable).toBe(false);
+    expect(body.responseLinkAvailable).toBe(false);
   });
 
   it("closes the public payment link for accepted quotes whose converted invoice is final", async () => {
     vi.mocked(isPublicPaymentLinkAvailable).mockReturnValue(false);
+    vi.mocked(isPublicQuoteResponseAvailable).mockReturnValue(false);
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",
       quoteNumber: "Q-1",
@@ -248,9 +260,11 @@ describe("GET /api/quotes/public/[token]", () => {
     const body = await response.json();
     expect(response.status).toBe(200);
     expect(body.paymentLinkAvailable).toBe(false);
+    expect(body.responseLinkAvailable).toBe(false);
   });
   it("redacts staff-only catering fields from the public payload", async () => {
     vi.mocked(isPublicPaymentLinkAvailable).mockReturnValue(true);
+    vi.mocked(isPublicQuoteResponseAvailable).mockReturnValue(true);
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",
       quoteNumber: "Q-1",
@@ -333,5 +347,6 @@ describe("GET /api/quotes/public/[token]", () => {
     expect(body.cateringDetails).not.toHaveProperty("contactEmail");
     expect(body.cateringDetails).not.toHaveProperty("setupInstructions");
     expect(body.cateringDetails).not.toHaveProperty("takedownInstructions");
+    expect(body.responseLinkAvailable).toBe(true);
   });
 });

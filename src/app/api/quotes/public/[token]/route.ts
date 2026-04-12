@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isPublicPaymentLinkAvailable, quoteService } from "@/domains/quote/service";
+import {
+  isPublicPaymentLinkAvailable,
+  isPublicQuoteResponseAvailable,
+  quoteService,
+} from "@/domains/quote/service";
 import type { PublicQuoteResponse, QuoteResponse } from "@/domains/quote/types";
 
 type RouteContext = { params: Promise<{ token: string }> };
 
 /** Strip internal-only fields before returning to public consumers. */
-function sanitizeForPublic(quote: QuoteResponse): Omit<PublicQuoteResponse, "paymentLinkAvailable"> {
+function sanitizeForPublic(
+  quote: QuoteResponse
+): Omit<PublicQuoteResponse, "paymentLinkAvailable" | "responseLinkAvailable"> {
   const cateringDetails = quote.cateringDetails
     ? {
         eventDate: quote.cateringDetails.eventDate,
@@ -90,6 +96,7 @@ export async function GET(_req: NextRequest, ctx: RouteContext) {
     return NextResponse.json({
       ...sanitizeForPublic(quote),
       paymentLinkAvailable: isPublicPaymentLinkAvailable(quote),
+      responseLinkAvailable: isPublicQuoteResponseAvailable(quote),
     });
   } catch (err) {
     console.error("/api/quotes/public/[token] failed:", err);
