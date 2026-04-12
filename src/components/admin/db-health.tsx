@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { adminApi } from "@/domains/admin/api-client";
+import { formatLosAngelesDateTime } from "@/lib/time";
 
 interface DbHealthData {
   status: "connected" | "error";
@@ -139,7 +140,7 @@ export function DbHealth() {
           )}
           {data?.timestamp && (
             <p className="text-xs text-muted-foreground mt-0.5">
-              Last checked: {new Date(data.timestamp).toLocaleString("en-US")}
+              Last checked: {formatLosAngelesDateTime(data.timestamp)}
             </p>
           )}
         </div>
@@ -269,7 +270,7 @@ export function DbHealth() {
                     <p>Active: {job.activeSchedulerMode}</p>
                     <p>Runner: {job.lastRunner ?? "n/a"}</p>
                     <p>
-                      Last started: {job.lastStartedAt ? new Date(job.lastStartedAt).toLocaleString("en-US") : "never"}
+                      Last started: {job.lastStartedAt ? formatLosAngelesDateTime(job.lastStartedAt) : "never"}
                     </p>
                     <p>
                       Duration: {job.lastDurationMs !== null ? `${job.lastDurationMs} ms` : "n/a"}
@@ -295,7 +296,7 @@ export function DbHealth() {
                     <div className="mt-1 space-y-1 text-muted-foreground">
                       <p>Runner: {run.runner ?? "n/a"}</p>
                       <p>Scheduler: {run.schedulerMode}</p>
-                      <p>Started: {new Date(run.startedAt).toLocaleString("en-US")}</p>
+                      <p>Started: {formatLosAngelesDateTime(run.startedAt)}</p>
                       <p>Duration: {run.durationMs !== null ? `${run.durationMs} ms` : "n/a"}</p>
                     </div>
                   </div>

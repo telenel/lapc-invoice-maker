@@ -1,4 +1,5 @@
 import { escapeHtml } from "@/lib/html";
+import { formatLosAngelesDate, formatWallClockTime } from "@/lib/time";
 
 export interface CateringDetailsPDF {
   eventName?: string;
@@ -57,12 +58,18 @@ function formatCurrency(amount: number): string {
 
 function renderCateringSection(details: CateringDetailsPDF): string {
   const rows: string[] = [];
+  const eventDateLabel = formatLosAngelesDate(details.eventDate, {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+  const timeRangeLabel = `${formatWallClockTime(details.startTime)} – ${formatWallClockTime(details.endTime)}`;
 
   if (details.eventName) {
     rows.push(`<tr><td style="padding:4px 8px;font-weight:bold;width:160px;vertical-align:top;">Event Name</td><td style="padding:4px 8px;">${escapeHtml(details.eventName)}</td></tr>`);
   }
-  rows.push(`<tr><td style="padding:4px 8px;font-weight:bold;vertical-align:top;">Date</td><td style="padding:4px 8px;">${escapeHtml(details.eventDate)}</td></tr>`);
-  rows.push(`<tr><td style="padding:4px 8px;font-weight:bold;vertical-align:top;">Time</td><td style="padding:4px 8px;">${escapeHtml(details.startTime)} &ndash; ${escapeHtml(details.endTime)}</td></tr>`);
+  rows.push(`<tr><td style="padding:4px 8px;font-weight:bold;vertical-align:top;">Date</td><td style="padding:4px 8px;">${escapeHtml(eventDateLabel)}</td></tr>`);
+  rows.push(`<tr><td style="padding:4px 8px;font-weight:bold;vertical-align:top;">Time</td><td style="padding:4px 8px;">${escapeHtml(timeRangeLabel)}</td></tr>`);
   rows.push(`<tr><td style="padding:4px 8px;font-weight:bold;vertical-align:top;">Location</td><td style="padding:4px 8px;">${escapeHtml(details.location)}</td></tr>`);
   rows.push(`<tr><td style="padding:4px 8px;font-weight:bold;vertical-align:top;">Contact</td><td style="padding:4px 8px;">${escapeHtml(details.contactName)} &bull; ${escapeHtml(details.contactPhone)}${details.contactEmail ? ` &bull; ${escapeHtml(details.contactEmail)}` : ""}</td></tr>`);
 
@@ -72,14 +79,14 @@ function renderCateringSection(details: CateringDetailsPDF): string {
 
   if (details.setupRequired) {
     const setupParts: string[] = [];
-    if (details.setupTime) setupParts.push(escapeHtml(details.setupTime));
+    if (details.setupTime) setupParts.push(escapeHtml(formatWallClockTime(details.setupTime)));
     if (details.setupInstructions) setupParts.push(escapeHtml(details.setupInstructions));
     rows.push(`<tr><td style="padding:4px 8px;font-weight:bold;vertical-align:top;">Setup</td><td style="padding:4px 8px;">${setupParts.length > 0 ? setupParts.join(" &mdash; ") : "Yes"}</td></tr>`);
   }
 
   if (details.takedownRequired) {
     const takedownParts: string[] = [];
-    if (details.takedownTime) takedownParts.push(escapeHtml(details.takedownTime));
+    if (details.takedownTime) takedownParts.push(escapeHtml(formatWallClockTime(details.takedownTime)));
     if (details.takedownInstructions) takedownParts.push(escapeHtml(details.takedownInstructions));
     rows.push(`<tr><td style="padding:4px 8px;font-weight:bold;vertical-align:top;">Takedown</td><td style="padding:4px 8px;">${takedownParts.length > 0 ? takedownParts.join(" &mdash; ") : "Yes"}</td></tr>`);
   }

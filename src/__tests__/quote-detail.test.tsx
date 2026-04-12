@@ -102,7 +102,7 @@ describe("QuoteDetailView", () => {
     const user = userEvent.setup();
     render(<QuoteDetailView id="q1" />);
 
-    await screen.findByText("Q-1");
+    await screen.findByRole("heading", { level: 1, name: "Q-1" });
     await waitFor(() => {
       expect(screen.getByRole("link", { name: /View Invoice INV-1/i })).toBeInTheDocument();
     });
@@ -132,7 +132,7 @@ describe("QuoteDetailView", () => {
 
     render(<QuoteDetailView id="q1" />);
 
-    await screen.findByText("Q-1");
+    await screen.findByRole("heading", { level: 1, name: "Q-1" });
     expect(screen.getByRole("button", { name: "Approve Manually" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Convert to Invoice" })).not.toBeInTheDocument();
   });
@@ -159,7 +159,7 @@ describe("QuoteDetailView", () => {
 
     render(<QuoteDetailView id="q1" />);
 
-    await screen.findByText("Q-1");
+    await screen.findByRole("heading", { level: 1, name: "Q-1" });
     expect(screen.getByRole("button", { name: "Resolve Payment Details" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Convert to Invoice" })).not.toBeInTheDocument();
   });
@@ -266,5 +266,63 @@ describe("QuoteDetailView", () => {
 
     expect(screen.getByRole("button", { name: "Save Payment Details" })).toBeEnabled();
     expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("renders catering guide times in AM/PM format", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        if (String(input) === "/api/quotes/q1") {
+          return {
+            ok: true,
+            json: async () =>
+              makeQuote({
+                isCateringEvent: true,
+                cateringDetails: {
+                  eventDate: "2026-04-15",
+                  startTime: "13:30",
+                  endTime: "15:00",
+                  location: "Student Center",
+                  contactName: "Jane Doe",
+                  contactPhone: "555-1111",
+                  headcount: 40,
+                  setupRequired: true,
+                  setupTime: "12:45",
+                  setupInstructions: "Front entrance",
+                  takedownRequired: true,
+                  takedownTime: "15:15",
+                  takedownInstructions: "Cleanup after service",
+                  specialInstructions: "Vegetarian options",
+                },
+                items: [
+                  {
+                    id: "item-1",
+                    description: "Lunch Buffet",
+                    quantity: 1,
+                    unitPrice: 100,
+                    extendedPrice: 100,
+                    isTaxable: true,
+                    sortOrder: 0,
+                    costPrice: null,
+                    marginOverride: null,
+                  },
+                ],
+              }),
+          } satisfies Partial<Response>;
+        }
+
+        throw new Error(`Unexpected fetch: ${String(input)}`);
+      }),
+    );
+
+    render(<QuoteDetailView id="q1" />);
+
+    await screen.findByRole("heading", { level: 1, name: "Q-1" });
+    expect(screen.getByText(/Apr 15, 2026, 1:30 PM – 3:00 PM/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Time:/i)).toHaveLength(2);
+    expect(screen.getByText(/12:45 PM/i)).toBeInTheDocument();
+    expect(screen.getByText(/3:15 PM/i)).toBeInTheDocument();
+    expect(screen.queryByText("13:30")).not.toBeInTheDocument();
+    expect(screen.queryByText("15:15")).not.toBeInTheDocument();
   });
 });

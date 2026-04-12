@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { quoteApi } from "@/domains/quote/api-client";
 import type { QuoteViewResponse, QuoteFollowUpResponse } from "@/domains/quote/types";
+import { formatLosAngelesDateTime } from "@/lib/time";
 import { useSSE } from "@/lib/use-sse";
 
 type TimelineEntry =
@@ -28,12 +29,7 @@ function formatDuration(seconds: number | null): string {
 }
 
 function formatDateTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  return formatLosAngelesDateTime(dateStr);
 }
 
 function shortenUA(ua: string | null): string {

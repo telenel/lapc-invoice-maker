@@ -38,8 +38,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TimeSelect } from "@/components/ui/time-select";
 import { LinkIcon, MoreHorizontalIcon, PrinterIcon } from "lucide-react";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
+import { formatLosAngelesDate, formatWallClockTime } from "@/lib/time";
 import { useSSE } from "@/lib/use-sse";
 import { ShareLinkDialog } from "@/components/quotes/share-link-dialog";
 import { QuoteActivity } from "@/components/quotes/quote-activity";
@@ -207,8 +209,7 @@ function makeManualApprovalCateringForm(existing: CateringDetails | null): Manua
 function formatCateringDateTime(catering: CateringDetails): string | null {
   if (!catering.eventDate) return null;
 
-  const date = new Date(catering.eventDate + "T00:00:00");
-  const dateStr = date.toLocaleDateString("en-US", {
+  const dateStr = formatLosAngelesDate(catering.eventDate, {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -216,15 +217,7 @@ function formatCateringDateTime(catering: CateringDetails): string | null {
 
   if (!catering.startTime || !catering.endTime) return dateStr;
 
-  function formatTime(t: string): string {
-    const [h, m] = t.split(":");
-    const hour = Number(h);
-    const ampm = hour >= 12 ? "PM" : "AM";
-    const display = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-    return `${display}:${m} ${ampm}`;
-  }
-
-  return `${dateStr}, ${formatTime(catering.startTime)} \u2013 ${formatTime(catering.endTime)}`;
+  return `${dateStr}, ${formatWallClockTime(catering.startTime)} \u2013 ${formatWallClockTime(catering.endTime)}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -868,26 +861,26 @@ export function QuoteDetailView({ id }: { id: string }) {
                     {hasMissingManualApprovalRequirement("start time") && (
                       <div className="space-y-1.5">
                         <Label htmlFor="manual-approve-start-time">Start Time</Label>
-                        <Input
+                        <TimeSelect
                           id="manual-approve-start-time"
-                          placeholder="13:30"
                           value={approveCateringForm.startTime}
-                          onChange={(e) =>
-                            setApproveCateringForm((prev) => ({ ...prev, startTime: e.target.value }))
+                          onValueChange={(value) =>
+                            setApproveCateringForm((prev) => ({ ...prev, startTime: value }))
                           }
+                          placeholder="Select start time"
                         />
                       </div>
                     )}
                     {hasMissingManualApprovalRequirement("end time") && (
                       <div className="space-y-1.5">
                         <Label htmlFor="manual-approve-end-time">End Time</Label>
-                        <Input
+                        <TimeSelect
                           id="manual-approve-end-time"
-                          placeholder="15:00"
                           value={approveCateringForm.endTime}
-                          onChange={(e) =>
-                            setApproveCateringForm((prev) => ({ ...prev, endTime: e.target.value }))
+                          onValueChange={(value) =>
+                            setApproveCateringForm((prev) => ({ ...prev, endTime: value }))
                           }
+                          placeholder="Select end time"
                         />
                       </div>
                     )}
@@ -931,33 +924,33 @@ export function QuoteDetailView({ id }: { id: string }) {
                     {hasMissingManualApprovalRequirement("setup time") && (
                       <div className="space-y-1.5">
                         <Label htmlFor="manual-approve-setup-time">Setup Time</Label>
-                        <Input
+                        <TimeSelect
                           id="manual-approve-setup-time"
-                          placeholder="13:30"
                           value={approveCateringForm.setupTime}
-                          onChange={(e) =>
-                            setApproveCateringForm((prev) => ({ ...prev, setupTime: e.target.value }))
+                          onValueChange={(value) =>
+                            setApproveCateringForm((prev) => ({ ...prev, setupTime: value }))
                           }
+                          placeholder="Select setup time"
                         />
                       </div>
                     )}
                     {hasMissingManualApprovalRequirement("takedown time") && (
                       <div className="space-y-1.5">
                         <Label htmlFor="manual-approve-takedown-time">Takedown Time</Label>
-                        <Input
+                        <TimeSelect
                           id="manual-approve-takedown-time"
-                          placeholder="15:00"
                           value={approveCateringForm.takedownTime}
-                          onChange={(e) =>
-                            setApproveCateringForm((prev) => ({ ...prev, takedownTime: e.target.value }))
+                          onValueChange={(value) =>
+                            setApproveCateringForm((prev) => ({ ...prev, takedownTime: value }))
                           }
+                          placeholder="Select takedown time"
                         />
                       </div>
                     )}
                   </div>
 
                   <p className="text-xs text-amber-800">
-                    Times can be entered as `13:30` or `1:30pm`.
+                    Times are shown in Los Angeles time and standard AM/PM format.
                   </p>
                 </div>
               )}
@@ -1525,8 +1518,8 @@ export function QuoteDetailView({ id }: { id: string }) {
 
         return (
           <div className="catering-guide">
-            <Card className="border-orange-500/20 bg-orange-500/5">
-              <CardHeader className="flex flex-row items-center justify-between">
+            <Card className="border-orange-500/20 bg-orange-500/5 print:border-border print:bg-white">
+              <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <CardTitle className="text-orange-600 dark:text-orange-400">
                   🍽 Catering Guide
                 </CardTitle>
@@ -1542,20 +1535,20 @@ export function QuoteDetailView({ id }: { id: string }) {
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Quote header */}
-                <div className="flex justify-between text-sm">
-                  <div>
+                <div className="flex flex-col gap-3 text-sm sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
                     <h3 className="font-semibold text-base">
                       {quote.quoteNumber ?? "Quote"}
                     </h3>
-                    <p className="text-muted-foreground">
+                    <p className="text-muted-foreground break-words">
                       {formatDate(quote.date)} &middot; {quote.staff?.name ?? quote.contact?.name ?? "Unknown"}
                     </p>
                   </div>
                   {quote.recipientName && (
-                    <div className="text-right">
-                      <p className="font-medium">{quote.recipientName}</p>
+                    <div className="min-w-0 text-left sm:text-right">
+                      <p className="font-medium break-words">{quote.recipientName}</p>
                       {quote.recipientOrg && (
-                        <p className="text-muted-foreground">{quote.recipientOrg}</p>
+                        <p className="text-muted-foreground break-words">{quote.recipientOrg}</p>
                       )}
                     </div>
                   )}
@@ -1575,9 +1568,9 @@ export function QuoteDetailView({ id }: { id: string }) {
                 </div>
 
                 {/* Location */}
-                <div className="flex justify-between text-sm">
+                <div className="flex flex-col gap-1 text-sm sm:flex-row sm:items-start sm:justify-between">
                   <span className="text-muted-foreground">Location</span>
-                  <span className="font-medium">{catering.location}</span>
+                  <span className="font-medium break-words sm:text-right">{catering.location}</span>
                 </div>
 
                 {/* Contact */}
@@ -1661,7 +1654,7 @@ export function QuoteDetailView({ id }: { id: string }) {
                     <div className="text-sm space-y-0.5 pl-2">
                       {catering.setupTime && (
                         <p>
-                          <span className="text-muted-foreground">Time:</span> {catering.setupTime}
+                          <span className="text-muted-foreground">Time:</span> {formatWallClockTime(catering.setupTime)}
                         </p>
                       )}
                       {catering.setupInstructions && (
@@ -1678,7 +1671,7 @@ export function QuoteDetailView({ id }: { id: string }) {
                     <div className="text-sm space-y-0.5 pl-2">
                       {catering.takedownTime && (
                         <p>
-                          <span className="text-muted-foreground">Time:</span> {catering.takedownTime}
+                          <span className="text-muted-foreground">Time:</span> {formatWallClockTime(catering.takedownTime)}
                         </p>
                       )}
                       {catering.takedownInstructions && (

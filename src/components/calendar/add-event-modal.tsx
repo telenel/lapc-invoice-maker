@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { TimeSelect } from "@/components/ui/time-select";
 import { useCreateEvent, useUpdateEvent, useDeleteEvent } from "@/domains/event/hooks";
 import { EVENT_TYPE_COLORS } from "@/domains/event/types";
 import type {
@@ -263,20 +264,20 @@ export function AddEventModal({ event, onSave, onClose, trigger, defaultOpen = f
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-1.5">
                   <Label htmlFor="event-start-time">Start Time</Label>
-                  <Input
+                  <TimeSelect
                     id="event-start-time"
-                    type="time"
                     value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
+                    onValueChange={setStartTime}
+                    placeholder="Select start time"
                   />
                 </div>
                 <div className="grid gap-1.5">
                   <Label htmlFor="event-end-time">End Time</Label>
-                  <Input
+                  <TimeSelect
                     id="event-end-time"
-                    type="time"
                     value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
+                    onValueChange={setEndTime}
+                    placeholder="Select end time"
                   />
                 </div>
               </div>

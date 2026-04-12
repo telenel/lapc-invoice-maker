@@ -4,6 +4,7 @@ import { Pin } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { MiniMonth } from "@/components/calendar/mini-month";
+import { formatLosAngelesDateTimeRange, formatWallClockTime } from "@/lib/time";
 
 export interface CalendarEvent {
   id: string;
@@ -61,47 +62,12 @@ const QUOTE_STATUS_LABELS: Record<string, string> = {
   EXPIRED: "Expired",
 };
 
-function parseDateLocal(value: string): Date {
-  const dateOnlyPattern = /^\d{4}-\d{2}-\d{2}$/;
-  if (dateOnlyPattern.test(value)) {
-    const [year, month, day] = value.split("-").map(Number);
-    return new Date(year, month - 1, day);
-  }
-  return new Date(value);
-}
-
 function formatEventDateTime(
   start: string,
   end?: string | null,
   allDay?: boolean,
 ): string {
-  const startDate = parseDateLocal(start);
-  const dateStr = startDate.toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
-  if (allDay) return `${dateStr} · All Day`;
-  const startTime = startDate.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-  if (!end) return `${dateStr} · ${startTime}`;
-  const endDate = parseDateLocal(end);
-  const endTime = endDate.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
-  return `${dateStr} · ${startTime} – ${endTime}`;
-}
-
-function formatTime(time: string): string {
-  const [hourStr, minuteStr] = time.split(":");
-  const hour = parseInt(hourStr, 10);
-  const minute = minuteStr ?? "00";
-  const period = hour >= 12 ? "PM" : "AM";
-  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
-  return `${displayHour}:${minute} ${period}`;
+  return formatLosAngelesDateTimeRange(start, end, allDay);
 }
 
 function formatCurrency(amount: number): string {
@@ -157,10 +123,10 @@ function EventDetails({ event }: { event: CalendarEvent }) {
         </DetailRow>
       )}
       {event.setupTime && (
-        <DetailRow icon="🕐">Setup: {formatTime(event.setupTime)}</DetailRow>
+        <DetailRow icon="🕐">Setup: {formatWallClockTime(event.setupTime)}</DetailRow>
       )}
       {event.takedownTime && (
-        <DetailRow icon="🕐">Takedown: {formatTime(event.takedownTime)}</DetailRow>
+        <DetailRow icon="🕐">Takedown: {formatWallClockTime(event.takedownTime)}</DetailRow>
       )}
       {event.department && <DetailRow icon="🏢">{event.department}</DetailRow>}
       {event.description && (

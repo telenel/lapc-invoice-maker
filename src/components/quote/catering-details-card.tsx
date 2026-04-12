@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { TimeSelect } from "@/components/ui/time-select";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -112,22 +113,22 @@ export function CateringDetailsCard({
             <Label htmlFor="catering-start-time" className={labelClass}>
               Start Time
             </Label>
-            <Input
+            <TimeSelect
               id="catering-start-time"
-              type="time"
               value={details.startTime}
-              onChange={(e) => updateField("startTime", e.target.value)}
+              onValueChange={(value) => updateField("startTime", value)}
+              placeholder="Select start time"
             />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="catering-end-time" className={labelClass}>
               End Time
             </Label>
-            <Input
+            <TimeSelect
               id="catering-end-time"
-              type="time"
               value={details.endTime}
-              onChange={(e) => updateField("endTime", e.target.value)}
+              onValueChange={(value) => updateField("endTime", value)}
+              placeholder="Select end time"
             />
           </div>
         </div>
@@ -250,11 +251,11 @@ export function CateringDetailsCard({
                     <Label htmlFor="catering-setup-time" className={labelClass}>
                       Setup Time
                     </Label>
-                    <Input
+                    <TimeSelect
                       id="catering-setup-time"
-                      type="time"
                       value={details.setupTime ?? ""}
-                      onChange={(e) => updateField("setupTime", e.target.value)}
+                      onValueChange={(value) => updateField("setupTime", value)}
+                      placeholder="Select setup time"
                       disabled={isCustomerField("setupTime")}
                     />
                   </div>
@@ -302,11 +303,11 @@ export function CateringDetailsCard({
                     <Label htmlFor="catering-takedown-time" className={labelClass}>
                       Takedown Time
                     </Label>
-                    <Input
+                    <TimeSelect
                       id="catering-takedown-time"
-                      type="time"
                       value={details.takedownTime ?? ""}
-                      onChange={(e) => updateField("takedownTime", e.target.value)}
+                      onValueChange={(value) => updateField("takedownTime", value)}
+                      placeholder="Select takedown time"
                       disabled={isCustomerField("takedownTime")}
                     />
                   </div>

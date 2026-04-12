@@ -20,6 +20,7 @@ import type {
   RequisitionSubmitAck,
 } from "@/domains/textbook-requisition/types";
 import { ApiError } from "@/domains/shared/types";
+import { formatLosAngelesDateTime } from "@/lib/time";
 
 // ── Constants ──
 
@@ -333,7 +334,7 @@ export function FacultySubmitForm() {
               </dd>
 
               <dt className="text-muted-foreground">Submitted</dt>
-              <dd>{new Date(ack.submittedAt).toLocaleString()}</dd>
+              <dd>{formatLosAngelesDateTime(ack.submittedAt)}</dd>
             </dl>
 
             <div className="pt-4 text-center">

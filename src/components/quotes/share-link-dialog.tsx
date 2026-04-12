@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { formatLosAngelesTime } from "@/lib/time";
 import { EmailProgress, type EmailStep } from "./email-progress";
 
 interface LogEntry {
@@ -33,7 +34,7 @@ interface ShareLinkDialogProps {
 }
 
 function ts(): string {
-  return new Date().toLocaleTimeString("en-US", { hour12: false });
+  return formatLosAngelesTime(new Date());
 }
 
 export function ShareLinkDialog({

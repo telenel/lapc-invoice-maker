@@ -93,6 +93,8 @@ describe("PublicQuoteView", () => {
     await user.type(screen.getByLabelText(/Event Date/i), "2026-04-15");
     await chooseSelectOption(user, /Start Time/i, "10:00 AM");
     await chooseSelectOption(user, /End Time/i, "12:00 PM");
+    expect(screen.getByLabelText(/Start Time/i)).toHaveTextContent("10:00 AM");
+    expect(screen.getByLabelText(/End Time/i)).toHaveTextContent("12:00 PM");
     await user.type(screen.getByLabelText(/Contact Name/i), "Jane");
     await user.type(screen.getByLabelText(/Contact Number/i), "555-1111");
     await user.type(screen.getByLabelText(/Event Location/i), "Campus");

@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { formatLosAngelesTime } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import { useRealtimeConnectionStatus, type RealtimeConnectionState } from "@/lib/use-sse";
 
@@ -20,7 +21,7 @@ function formatTimestamp(value: number | null) {
     return "never";
   }
 
-  return new Date(value).toLocaleTimeString();
+  return formatLosAngelesTime(value);
 }
 
 export function RealtimeStatusIndicator() {

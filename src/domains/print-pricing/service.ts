@@ -22,6 +22,7 @@ import {
   printEstimateRequestSchema,
   type PricingConfigUpdateInput,
 } from "@/lib/pricing/validators";
+import { formatLosAngelesDateTime } from "@/lib/time";
 
 type ConfigRecord = NonNullable<Awaited<ReturnType<typeof printPricingRepository.findConfig>>>;
 type QuoteRecord = NonNullable<Awaited<ReturnType<typeof printPricingRepository.findQuoteById>>>;
@@ -239,7 +240,7 @@ export const printPricingService = {
     }
     invariant(quote, "Failed to create print quote");
 
-    const createdAtLabel = new Date(quote.createdAt).toLocaleString("en-US", {
+    const createdAtLabel = formatLosAngelesDateTime(quote.createdAt, {
       dateStyle: "medium",
       timeStyle: "short",
     });

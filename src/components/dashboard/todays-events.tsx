@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import type { CalendarEvent } from "@/domains/calendar/api-client";
+import { formatLosAngelesTime, formatWallClockTime } from "@/lib/time";
 
 function getEmoji(event: CalendarEvent): string {
   if (event.source === "catering") return "\u{1F37D}";
@@ -127,10 +128,7 @@ export function TodaysEvents() {
                       className="text-xs font-semibold"
                       style={{ color: event.borderColor }}
                     >
-                      {new Date(event.start).toLocaleTimeString([], {
-                        hour: "numeric",
-                        minute: "2-digit",
-                      })}
+                      {formatLosAngelesTime(event.start)}
                     </span>
                   )}
                 </div>
@@ -147,12 +145,12 @@ export function TodaysEvents() {
                     <div className="flex gap-1.5 mt-1.5">
                       {event.extendedProps.setupTime && (
                         <span className="text-[10px] bg-blue-500/15 text-blue-400 px-1.5 py-0.5 rounded">
-                          Setup {event.extendedProps.setupTime}
+                          Setup {formatWallClockTime(event.extendedProps.setupTime)}
                         </span>
                       )}
                       {event.extendedProps.takedownTime && (
                         <span className="text-[10px] bg-blue-500/15 text-blue-400 px-1.5 py-0.5 rounded">
-                          Takedown {event.extendedProps.takedownTime}
+                          Takedown {formatWallClockTime(event.extendedProps.takedownTime)}
                         </span>
                       )}
                     </div>
