@@ -110,4 +110,39 @@ describe("subscribeToSSE", () => {
 
     unsubscribe();
   });
+
+  it("publishes realtime status changes and retries after an initial setup failure", async () => {
+    const recovered = createMockRealtimeClient();
+    const snapshots: string[] = [];
+
+    getSupabaseRealtimeContext
+      .mockRejectedValueOnce(new Error("temporary failure"))
+      .mockResolvedValueOnce({ client: recovered.client, userId: "user-1" });
+
+    const {
+      subscribeToSSE,
+      subscribeToRealtimeConnectionStatus,
+    } = await import("@/lib/use-sse");
+    const unsubscribeStatus = subscribeToRealtimeConnectionStatus((snapshot) => {
+      snapshots.push(`${snapshot.state}:${snapshot.attempt}`);
+    });
+
+    const unsubscribe = subscribeToSSE(vi.fn());
+    await flushAsyncWork();
+
+    expect(snapshots).toContain("connecting:0");
+    expect(snapshots).toContain("reconnecting:1");
+
+    await vi.advanceTimersByTimeAsync(1000);
+    await flushAsyncWork();
+
+    recovered.channels[0].emitStatus("SUBSCRIBED");
+    recovered.channels[1].emitStatus("SUBSCRIBED");
+
+    expect(getSupabaseRealtimeContext).toHaveBeenCalledTimes(2);
+    expect(snapshots).toContain("connected:0");
+
+    unsubscribe();
+    unsubscribeStatus();
+  });
 });

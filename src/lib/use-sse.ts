@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 import { getSupabaseRealtimeContext, invalidateSupabaseRealtimeToken } from "./supabase/browser";
 import {
@@ -11,14 +11,80 @@ import {
 
 type Listener = (data: unknown) => void;
 type ConnectionListener = (connected: boolean) => void;
+type RealtimeStatusListener = (snapshot: RealtimeConnectionSnapshot) => void;
+
+export type RealtimeConnectionState =
+  | "idle"
+  | "connecting"
+  | "connected"
+  | "reconnecting"
+  | "disconnected";
+
+export interface RealtimeConnectionSnapshot {
+  state: RealtimeConnectionState;
+  attempt: number;
+  nextRetryAt: number | null;
+  lastConnectedAt: number | null;
+  lastDisconnectedAt: number | null;
+}
 
 const listeners = new Set<Listener>();
 const connectionListeners = new Set<ConnectionListener>();
+const realtimeStatusListeners = new Set<RealtimeStatusListener>();
 let setupPromise: Promise<void> | null = null;
 let activeCleanup: (() => Promise<void>) | null = null;
 let isConnected = false;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 let reconnectAttempt = 0;
+let connectionSnapshot: RealtimeConnectionSnapshot = {
+  state: "idle",
+  attempt: 0,
+  nextRetryAt: null,
+  lastConnectedAt: null,
+  lastDisconnectedAt: null,
+};
+
+function emitRealtimeStatus(nextSnapshot: RealtimeConnectionSnapshot) {
+  const prevSnapshot = connectionSnapshot;
+  const changed =
+    prevSnapshot.state !== nextSnapshot.state ||
+    prevSnapshot.attempt !== nextSnapshot.attempt ||
+    prevSnapshot.nextRetryAt !== nextSnapshot.nextRetryAt ||
+    prevSnapshot.lastConnectedAt !== nextSnapshot.lastConnectedAt ||
+    prevSnapshot.lastDisconnectedAt !== nextSnapshot.lastDisconnectedAt;
+
+  if (!changed) {
+    return;
+  }
+
+  connectionSnapshot = nextSnapshot;
+  realtimeStatusListeners.forEach((listener) => listener(connectionSnapshot));
+
+  if (nextSnapshot.state === "reconnecting") {
+    const delayMs = Math.max(0, (nextSnapshot.nextRetryAt ?? Date.now()) - Date.now());
+    console.warn(`[realtime] reconnecting in ${delayMs}ms (attempt ${nextSnapshot.attempt})`);
+    return;
+  }
+
+  if (prevSnapshot.state === nextSnapshot.state) {
+    return;
+  }
+
+  if (nextSnapshot.state === "connected") {
+    console.info("[realtime] connected");
+  } else if (nextSnapshot.state === "connecting") {
+    console.info("[realtime] connecting");
+  } else if (nextSnapshot.state === "disconnected") {
+    console.warn("[realtime] disconnected");
+  }
+}
+
+function updateRealtimeStatus(patch: Partial<RealtimeConnectionSnapshot>) {
+  emitRealtimeStatus({
+    ...connectionSnapshot,
+    ...patch,
+  });
+}
 
 function notifyConnection(connected: boolean) {
   isConnected = connected;
@@ -54,7 +120,15 @@ async function ensureConnection() {
     return;
   }
 
+  updateRealtimeStatus({
+    state: reconnectAttempt > 0 ? "reconnecting" : "connecting",
+    attempt: reconnectAttempt,
+    nextRetryAt: null,
+  });
+
   setupPromise = (async () => {
+    let shouldRetry = false;
+
     try {
       const { client, userId } = await getSupabaseRealtimeContext();
       if (listeners.size === 0) return;
@@ -78,6 +152,12 @@ async function ensureConnection() {
             subscribedTopics.add(channel.topic);
             resetReconnectState();
             notifyConnection(true);
+            updateRealtimeStatus({
+              state: "connected",
+              attempt: 0,
+              nextRetryAt: null,
+              lastConnectedAt: Date.now(),
+            });
             return;
           }
 
@@ -90,7 +170,15 @@ async function ensureConnection() {
               invalidateSupabaseRealtimeToken();
             }
             subscribedTopics.delete(channel.topic);
-            notifyConnection(subscribedTopics.size > 0);
+            const stillConnected = subscribedTopics.size > 0;
+            notifyConnection(stillConnected);
+            if (!stillConnected) {
+              updateRealtimeStatus({
+                state: "disconnected",
+                nextRetryAt: null,
+                lastDisconnectedAt: Date.now(),
+              });
+            }
             scheduleReconnect();
           }
         });
@@ -100,11 +188,33 @@ async function ensureConnection() {
         await Promise.all(channels.map((channel) => client.removeChannel(channel)));
         activeCleanup = null;
         notifyConnection(false);
+        if (listeners.size === 0) {
+          updateRealtimeStatus({
+            state: "idle",
+            attempt: 0,
+            nextRetryAt: null,
+          });
+        } else {
+          updateRealtimeStatus({
+            state: "disconnected",
+            nextRetryAt: null,
+            lastDisconnectedAt: Date.now(),
+          });
+        }
       };
     } catch {
       notifyConnection(false);
+      updateRealtimeStatus({
+        state: "disconnected",
+        nextRetryAt: null,
+        lastDisconnectedAt: Date.now(),
+      });
+      shouldRetry = listeners.size > 0;
     } finally {
       setupPromise = null;
+      if (shouldRetry) {
+        scheduleReconnect();
+      }
     }
   })();
 
@@ -115,7 +225,14 @@ function scheduleReconnect() {
   if (listeners.size === 0 || reconnectTimer || setupPromise) return;
 
   const delayMs = Math.min(1000 * 2 ** reconnectAttempt, 10_000);
-  reconnectAttempt += 1;
+  const nextAttempt = reconnectAttempt + 1;
+  reconnectAttempt = nextAttempt;
+  updateRealtimeStatus({
+    state: "reconnecting",
+    attempt: nextAttempt,
+    nextRetryAt: Date.now() + delayMs,
+    lastDisconnectedAt: connectionSnapshot.lastDisconnectedAt ?? Date.now(),
+  });
 
   reconnectTimer = setTimeout(() => {
     reconnectTimer = null;
@@ -146,6 +263,13 @@ function subscribe(
       options.onConnectionChange(true);
     }
   }
+  if (!isConnected && !reconnectTimer && !setupPromise) {
+    updateRealtimeStatus({
+      state: "connecting",
+      attempt: 0,
+      nextRetryAt: null,
+    });
+  }
   void ensureConnection();
 
   return () => {
@@ -162,8 +286,27 @@ function subscribe(
         void cleanup();
       } else {
         notifyConnection(false);
+        updateRealtimeStatus({
+          state: "idle",
+          attempt: 0,
+          nextRetryAt: null,
+        });
       }
     }
+  };
+}
+
+export function getRealtimeConnectionSnapshot(): RealtimeConnectionSnapshot {
+  return connectionSnapshot;
+}
+
+export function subscribeToRealtimeConnectionStatus(
+  listener: RealtimeStatusListener,
+): () => void {
+  realtimeStatusListeners.add(listener);
+
+  return () => {
+    realtimeStatusListeners.delete(listener);
   };
 }
 
@@ -172,6 +315,14 @@ export function subscribeToSSE(
   options?: { onConnectionChange?: ConnectionListener },
 ): () => void {
   return subscribe(listener, options);
+}
+
+export function useRealtimeConnectionStatus(): RealtimeConnectionSnapshot {
+  return useSyncExternalStore(
+    subscribeToRealtimeConnectionStatus,
+    getRealtimeConnectionSnapshot,
+    getRealtimeConnectionSnapshot,
+  );
 }
 
 // ---------------------------------------------------------------------------

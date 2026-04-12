@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useUIScale } from "@/components/ui-scale-provider";
+import { RealtimeStatusIndicator } from "@/components/realtime/realtime-status-indicator";
 
 const HelpModal = dynamic(
   () => import("@/components/help-modal").then((m) => m.HelpModal),
@@ -153,6 +154,7 @@ export function Nav() {
         </div>
         <div ref={menuRef} className="ml-auto flex items-center gap-1">
           <HelpModal />
+          <RealtimeStatusIndicator />
           <NotificationBell />
 
           {/* Theme picker */}
