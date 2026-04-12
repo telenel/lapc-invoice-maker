@@ -3,8 +3,110 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
-import type { CalendarEvent } from "@/domains/calendar/api-client";
+import { LOS_ANGELES_TIME_ZONE } from "@/lib/date-utils";
+import { calendarApi, type CalendarEvent } from "@/domains/calendar/api-client";
 import { formatLosAngelesTime, formatWallClockTime } from "@/lib/time";
+
+type TodaysEventsCacheEntry = {
+  startDateKey: string;
+  endDateKey: string;
+  events: CalendarEvent[] | null;
+  promise: Promise<CalendarEvent[]> | null;
+};
+
+// The dashboard preview swaps to the sortable stack after hydration, which would
+// otherwise remount this widget and replay its loading state.
+let todaysEventsCache: TodaysEventsCacheEntry | null = null;
+
+function getDateKeyInLosAngeles(date: Date): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: LOS_ANGELES_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const year = parts.find((part) => part.type === "year")?.value;
+  const month = parts.find((part) => part.type === "month")?.value;
+  const day = parts.find((part) => part.type === "day")?.value;
+
+  if (!year || !month || !day) {
+    throw new Error("Unable to derive Los Angeles date key");
+  }
+
+  return `${year}-${month}-${day}`;
+}
+
+function getTodaysEventsWindow(now = new Date()) {
+  return {
+    startDateKey: getDateKeyInLosAngeles(now),
+    endDateKey: getDateKeyInLosAngeles(
+      new Date(now.getTime() + 24 * 60 * 60 * 1000),
+    ),
+  };
+}
+
+function getCachedTodaysEvents(now = new Date()) {
+  const { startDateKey, endDateKey } = getTodaysEventsWindow(now);
+
+  if (
+    todaysEventsCache?.startDateKey === startDateKey &&
+    todaysEventsCache?.endDateKey === endDateKey
+  ) {
+    return todaysEventsCache;
+  }
+
+  return null;
+}
+
+async function loadTodaysEvents(now = new Date()) {
+  const cached = getCachedTodaysEvents(now);
+  if (cached?.events !== null && cached?.events !== undefined) {
+    return cached.events;
+  }
+  if (cached?.promise) {
+    return cached.promise;
+  }
+
+  const { startDateKey, endDateKey } = getTodaysEventsWindow(now);
+  const promise = calendarApi
+    .getEvents(startDateKey, endDateKey)
+    .then((events) => {
+      if (
+        todaysEventsCache?.startDateKey === startDateKey &&
+        todaysEventsCache?.endDateKey === endDateKey
+      ) {
+        todaysEventsCache = {
+          startDateKey,
+          endDateKey,
+          events,
+          promise: null,
+        };
+      }
+      return events;
+    })
+    .catch((error) => {
+      if (
+        todaysEventsCache?.startDateKey === startDateKey &&
+        todaysEventsCache?.endDateKey === endDateKey
+      ) {
+        todaysEventsCache = null;
+      }
+      throw error;
+    });
+
+  todaysEventsCache = {
+    startDateKey,
+    endDateKey,
+    events: null,
+    promise,
+  };
+
+  return promise;
+}
+
+export function __resetTodaysEventsCacheForTests() {
+  todaysEventsCache = null;
+}
 
 function getEmoji(event: CalendarEvent): string {
   if (event.source === "catering") return "\u{1F37D}";
@@ -24,20 +126,18 @@ function getLink(event: CalendarEvent): string {
 }
 
 export function TodaysEvents() {
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cachedEvents = getCachedTodaysEvents()?.events ?? null;
+  const [events, setEvents] = useState<CalendarEvent[]>(() => cachedEvents ?? []);
+  const [loading, setLoading] = useState(() => cachedEvents === null);
+  const [animateEntries] = useState(() => cachedEvents === null);
 
   useEffect(() => {
-    const now = new Date();
-    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
-
+    if (cachedEvents !== null) {
+      return;
+    }
     let cancelled = false;
 
-    void import("@/domains/calendar/api-client")
-      .then(({ calendarApi }) => calendarApi.getEvents(today, tomorrowStr))
+    void loadTodaysEvents()
       .then((data) => {
         if (!cancelled) {
           setEvents(data);
@@ -60,7 +160,7 @@ export function TodaysEvents() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [cachedEvents]);
 
   if (loading) {
     return (
@@ -107,55 +207,55 @@ export function TodaysEvents() {
             {events.map((event, i) => (
               <div
                 key={event.id}
-                className="event-slide-in"
+                className={animateEntries ? "event-slide-in" : undefined}
                 style={{ animationDelay: `${i * 50}ms` }}
               >
-              <Link
-                href={getLink(event)}
-                className="block rounded-lg p-2.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                style={{
-                  borderWidth: "1px",
-                  borderColor: `${event.borderColor}33`,
-                  backgroundColor: event.color,
-                }}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-semibold">
-                    {getEmoji(event)} {event.title}
-                  </span>
-                  {!event.allDay && (
-                    <span
-                      className="text-xs font-semibold"
-                      style={{ color: event.borderColor }}
-                    >
-                      {formatLosAngelesTime(event.start)}
+                <Link
+                  href={getLink(event)}
+                  className="block rounded-lg p-2.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  style={{
+                    borderWidth: "1px",
+                    borderColor: `${event.borderColor}33`,
+                    backgroundColor: event.color,
+                  }}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-semibold">
+                      {getEmoji(event)} {event.title}
                     </span>
-                  )}
-                </div>
-                <div className="flex gap-3 text-xs text-muted-foreground">
-                  {event.extendedProps.location && (
-                    <span>{"\u{1F4CD}"} {event.extendedProps.location}</span>
-                  )}
-                  {event.extendedProps.headcount && (
-                    <span>{"\u{1F465}"} {event.extendedProps.headcount}</span>
-                  )}
-                </div>
-                {event.source === "catering" &&
-                  (event.extendedProps.setupTime || event.extendedProps.takedownTime) && (
-                    <div className="flex gap-1.5 mt-1.5">
-                      {event.extendedProps.setupTime && (
-                        <span className="text-[10px] bg-blue-500/15 text-blue-400 px-1.5 py-0.5 rounded">
-                          Setup {formatWallClockTime(event.extendedProps.setupTime)}
-                        </span>
-                      )}
-                      {event.extendedProps.takedownTime && (
-                        <span className="text-[10px] bg-blue-500/15 text-blue-400 px-1.5 py-0.5 rounded">
-                          Takedown {formatWallClockTime(event.extendedProps.takedownTime)}
-                        </span>
-                      )}
-                    </div>
-                  )}
-              </Link>
+                    {!event.allDay && (
+                      <span
+                        className="text-xs font-semibold"
+                        style={{ color: event.borderColor }}
+                      >
+                        {formatLosAngelesTime(event.start)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex gap-3 text-xs text-muted-foreground">
+                    {event.extendedProps.location && (
+                      <span>{"\u{1F4CD}"} {event.extendedProps.location}</span>
+                    )}
+                    {event.extendedProps.headcount && (
+                      <span>{"\u{1F465}"} {event.extendedProps.headcount}</span>
+                    )}
+                  </div>
+                  {event.source === "catering" &&
+                    (event.extendedProps.setupTime || event.extendedProps.takedownTime) && (
+                      <div className="flex gap-1.5 mt-1.5">
+                        {event.extendedProps.setupTime && (
+                          <span className="text-[10px] bg-blue-500/15 text-blue-400 px-1.5 py-0.5 rounded">
+                            Setup {formatWallClockTime(event.extendedProps.setupTime)}
+                          </span>
+                        )}
+                        {event.extendedProps.takedownTime && (
+                          <span className="text-[10px] bg-blue-500/15 text-blue-400 px-1.5 py-0.5 rounded">
+                            Takedown {formatWallClockTime(event.extendedProps.takedownTime)}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                </Link>
               </div>
             ))}
           </div>

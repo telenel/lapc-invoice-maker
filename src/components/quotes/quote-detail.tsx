@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/table";
 import { TimeSelect } from "@/components/ui/time-select";
 import { LinkIcon, MoreHorizontalIcon, PrinterIcon } from "lucide-react";
+import { escapeHtml } from "@/lib/html";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
 import { formatLosAngelesDate, formatWallClockTime } from "@/lib/time";
 import { useSSE } from "@/lib/use-sse";
@@ -190,6 +191,16 @@ type ManualApprovalCateringForm = {
   specialInstructions: string;
 };
 
+type GuideField = {
+  label: string;
+  value: string;
+};
+
+type GuideSection = {
+  title: string;
+  fields: GuideField[];
+};
+
 function makeManualApprovalCateringForm(existing: CateringDetails | null): ManualApprovalCateringForm {
   return {
     eventDate: existing?.eventDate ?? "",
@@ -218,6 +229,296 @@ function formatCateringDateTime(catering: CateringDetails): string | null {
   if (!catering.startTime || !catering.endTime) return dateStr;
 
   return `${dateStr}, ${formatWallClockTime(catering.startTime)} \u2013 ${formatWallClockTime(catering.endTime)}`;
+}
+
+function addGuideField(fields: GuideField[], label: string, value: string | number | null | undefined) {
+  if (value == null) return;
+  const normalized = String(value).trim();
+  if (!normalized) return;
+  fields.push({ label, value: normalized });
+}
+
+function buildCateringGuideSections(
+  quote: Quote,
+  catering: CateringDetails,
+  showInternalFields: boolean,
+): GuideSection[] {
+  const quoteInfo: GuideField[] = [];
+  addGuideField(quoteInfo, "Quote number", quote.quoteNumber ?? "Quote");
+  addGuideField(quoteInfo, "Status", statusLabel[quote.quoteStatus]);
+  addGuideField(quoteInfo, "Quote date", formatDate(quote.date));
+  addGuideField(quoteInfo, "Expiration", quote.expirationDate ? formatDate(quote.expirationDate) : "");
+  addGuideField(quoteInfo, "Prepared by", quote.creatorName);
+  addGuideField(quoteInfo, "Department", quote.department);
+  addGuideField(quoteInfo, "Category", quote.category);
+  if (showInternalFields) {
+    addGuideField(quoteInfo, "Account code", quote.accountCode);
+    addGuideField(quoteInfo, "Account number", quote.accountNumber);
+  }
+
+  const recipient: GuideField[] = [];
+  addGuideField(recipient, "Recipient", quote.recipientName);
+  addGuideField(recipient, "Organization", quote.recipientOrg);
+  addGuideField(recipient, "Recipient email", quote.recipientEmail);
+  if (quote.staff?.name) {
+    addGuideField(
+      recipient,
+      "Assigned staff",
+      [quote.staff.name, quote.staff.title, quote.staff.email].filter(Boolean).join(" · "),
+    );
+  }
+
+  const eventDetails: GuideField[] = [];
+  addGuideField(eventDetails, "Event name", catering.eventName);
+  addGuideField(
+    eventDetails,
+    "Event date",
+    catering.eventDate
+      ? formatLosAngelesDate(catering.eventDate, {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        })
+      : "",
+  );
+  addGuideField(eventDetails, "Start time", formatWallClockTime(catering.startTime));
+  addGuideField(eventDetails, "End time", formatWallClockTime(catering.endTime));
+  addGuideField(eventDetails, "Location", catering.location);
+  addGuideField(
+    eventDetails,
+    "Headcount",
+    catering.headcount != null ? `${catering.headcount} attendees` : "",
+  );
+
+  const contactDetails: GuideField[] = [];
+  addGuideField(contactDetails, "Contact name", catering.contactName);
+  addGuideField(contactDetails, "Contact phone", catering.contactPhone);
+  addGuideField(contactDetails, "Contact email", catering.contactEmail);
+
+  const logistics: GuideField[] = [];
+  addGuideField(logistics, "Setup required", catering.setupRequired ? "Yes" : "No");
+  if (catering.setupRequired) {
+    addGuideField(logistics, "Setup time", formatWallClockTime(catering.setupTime));
+    addGuideField(logistics, "Setup instructions", catering.setupInstructions);
+  }
+  addGuideField(logistics, "Takedown required", catering.takedownRequired ? "Yes" : "No");
+  if (catering.takedownRequired) {
+    addGuideField(logistics, "Takedown time", formatWallClockTime(catering.takedownTime));
+    addGuideField(logistics, "Takedown instructions", catering.takedownInstructions);
+  }
+  addGuideField(logistics, "Special instructions", catering.specialInstructions);
+  addGuideField(logistics, "Quote notes", quote.notes);
+
+  return [
+    { title: "Quote Information", fields: quoteInfo },
+    { title: "Recipient", fields: recipient },
+    { title: "Event Details", fields: eventDetails },
+    { title: "Customer Contact", fields: contactDetails },
+    { title: "Operations Notes", fields: logistics },
+  ].filter((section) => section.fields.length > 0);
+}
+
+function buildCateringGuidePrintDocument(args: {
+  quote: Quote;
+  sections: GuideSection[];
+  itemSubtotal: number;
+  taxAmount: number;
+  grandTotal: number;
+}): string {
+  const { quote, sections, itemSubtotal, taxAmount, grandTotal } = args;
+  const sectionHtml = sections
+    .map(
+      (section) => `
+        <section class="guide-section">
+          <h2>${escapeHtml(section.title)}</h2>
+          <dl>
+            ${section.fields
+              .map(
+                (field) => `
+                  <div class="guide-row">
+                    <dt>${escapeHtml(field.label)}</dt>
+                    <dd>${escapeHtml(field.value).replace(/\n/g, "<br />")}</dd>
+                  </div>
+                `,
+              )
+              .join("")}
+          </dl>
+        </section>
+      `,
+    )
+    .join("");
+
+  const itemsHtml = quote.items
+    .map((item) => {
+      const parts = [
+        `Qty ${Number(item.quantity)}`,
+        `Unit ${formatAmount(item.unitPrice)}`,
+        `Line ${formatAmount(item.extendedPrice)}`,
+        item.isTaxable ? "Taxable" : "Non-taxable",
+      ];
+
+      return `
+        <li class="item-row">
+          <div class="item-title">${escapeHtml(item.description || "Line Item")}</div>
+          <div class="item-meta">${escapeHtml(parts.join(" · "))}</div>
+        </li>
+      `;
+    })
+    .join("");
+
+  const totalRows = [
+    { label: "Subtotal", value: formatAmount(itemSubtotal) },
+    ...(quote.taxEnabled
+      ? [{
+          label: `Tax (${(quote.taxRate * 100).toFixed(2)}%)`,
+          value: formatAmount(taxAmount),
+        }]
+      : []),
+    { label: "Total", value: formatAmount(grandTotal) },
+  ];
+
+  return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${escapeHtml(quote.quoteNumber ?? "Catering Guide")}</title>
+    <style>
+      @page { margin: 0.5in; }
+      :root {
+        color-scheme: light;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        color: #111827;
+        background: #ffffff;
+        line-height: 1.45;
+      }
+      main {
+        display: grid;
+        gap: 18px;
+      }
+      h1 {
+        margin: 0 0 6px;
+        font-size: 24px;
+      }
+      .subtitle {
+        color: #4b5563;
+        font-size: 12px;
+      }
+      .guide-section {
+        border: 1px solid #d1d5db;
+        padding: 14px 16px;
+      }
+      .guide-section h2 {
+        margin: 0 0 10px;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .guide-section dl {
+        margin: 0;
+        display: grid;
+        gap: 8px;
+      }
+      .guide-row {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 12px;
+        align-items: start;
+      }
+      .guide-row dt {
+        margin: 0;
+        font-weight: 700;
+      }
+      .guide-row dd {
+        margin: 0;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      .item-list,
+      .totals-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .item-list {
+        display: grid;
+        gap: 10px;
+      }
+      .item-row {
+        border-bottom: 1px solid #e5e7eb;
+        padding-bottom: 10px;
+      }
+      .item-title {
+        font-weight: 700;
+      }
+      .item-meta {
+        margin-top: 2px;
+        color: #4b5563;
+        font-size: 12px;
+      }
+      .totals-list {
+        display: grid;
+        gap: 6px;
+      }
+      .totals-list li {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .totals-list li:last-child {
+        margin-top: 6px;
+        padding-top: 8px;
+        border-top: 1px solid #111827;
+        font-weight: 700;
+      }
+      @media print {
+        .guide-section {
+          break-inside: avoid;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>${escapeHtml(quote.quoteNumber ?? "Catering Guide")}</h1>
+        <div class="subtitle">Generated from live LAPortal quote data. This guide reflects the latest customer and staff updates available at print time.</div>
+      </header>
+      ${sectionHtml}
+      <section class="guide-section">
+        <h2>Ordered Items</h2>
+        <ul class="item-list">${itemsHtml}</ul>
+      </section>
+      <section class="guide-section">
+        <h2>Pricing Summary</h2>
+        <ul class="totals-list">
+          ${totalRows
+            .map(
+              (row) => `
+                <li>
+                  <span>${escapeHtml(row.label)}</span>
+                  <span>${escapeHtml(row.value)}</span>
+                </li>
+              `,
+            )
+            .join("")}
+        </ul>
+      </section>
+    </main>
+    <script>
+      window.addEventListener("load", () => {
+        window.print();
+        setTimeout(() => window.close(), 150);
+      });
+    </script>
+  </body>
+</html>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -604,6 +905,22 @@ export function QuoteDetailView({ id }: { id: string }) {
       (status === "ACCEPTED" && !quote.convertedToInvoice)
     );
 
+  const cateringGuideSections = currentQuoteCateringDetails
+    ? buildCateringGuideSections(quote, currentQuoteCateringDetails, showInternalFields)
+    : [];
+
+  function handlePrintCateringGuide(printMarkup: string) {
+    const printWindow = window.open("", "_blank", "noopener,noreferrer");
+    if (!printWindow) {
+      toast.error("Unable to open the catering guide print preview");
+      return;
+    }
+
+    printWindow.document.open();
+    printWindow.document.write(printMarkup);
+    printWindow.document.close();
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -646,7 +963,7 @@ export function QuoteDetailView({ id }: { id: string }) {
 
           {canManageActions && (
             <>
-              {/* DRAFT: Mark as Sent + Edit */}
+              {/* DRAFT: Send Quote + Edit */}
               {status === "DRAFT" && (
                 <>
                   <Button
@@ -655,7 +972,7 @@ export function QuoteDetailView({ id }: { id: string }) {
                     onClick={handleMarkAsSent}
                     disabled={actionState.sending}
                   >
-                    {actionState.sending ? "Sending..." : "Mark as Sent"}
+                    {actionState.sending ? "Sending..." : "Send Quote"}
                   </Button>
                   <Link
                     href={`/quotes/${id}/edit`}
@@ -765,11 +1082,6 @@ export function QuoteDetailView({ id }: { id: string }) {
                   Edit
                 </DropdownMenuItem>
               )}
-
-              {/* Download PDF: all statuses */}
-              <DropdownMenuItem onClick={handleOpenPdf}>
-                Download PDF
-              </DropdownMenuItem>
 
               {/* Duplicate: all statuses */}
               {canManageActions && (
@@ -1515,6 +1827,13 @@ export function QuoteDetailView({ id }: { id: string }) {
           : 0;
         const taxAmount = quote.taxEnabled ? Math.round(taxableSubtotal * taxRate * 100) / 100 : 0;
         const grandTotal = itemSubtotal + taxAmount;
+        const cateringGuidePrintDocument = buildCateringGuidePrintDocument({
+          quote,
+          sections: cateringGuideSections,
+          itemSubtotal,
+          taxAmount,
+          grandTotal,
+        });
 
         return (
           <div className="catering-guide">
@@ -1527,35 +1846,14 @@ export function QuoteDetailView({ id }: { id: string }) {
                   variant="outline"
                   size="sm"
                   data-print-hide
-                  onClick={() => window.print()}
+                  onClick={() => handlePrintCateringGuide(cateringGuidePrintDocument)}
                 >
                   <PrinterIcon className="size-3.5 mr-1.5" />
                   Print Catering Guide
                 </Button>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* Quote header */}
-                <div className="flex flex-col gap-3 text-sm sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-base">
-                      {quote.quoteNumber ?? "Quote"}
-                    </h3>
-                    <p className="text-muted-foreground break-words">
-                      {formatDate(quote.date)} &middot; {quote.staff?.name ?? quote.contact?.name ?? "Unknown"}
-                    </p>
-                  </div>
-                  {quote.recipientName && (
-                    <div className="min-w-0 text-left sm:text-right">
-                      <p className="font-medium break-words">{quote.recipientName}</p>
-                      {quote.recipientOrg && (
-                        <p className="text-muted-foreground break-words">{quote.recipientOrg}</p>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Event name and date/time */}
-                <div>
+                <div className="space-y-1">
                   <p className="text-lg font-semibold">
                     {(() => {
                       const dateTime = formatCateringDateTime(catering);
@@ -1565,131 +1863,72 @@ export function QuoteDetailView({ id }: { id: string }) {
                       return "Catering Event";
                     })()}
                   </p>
+                  <p className="text-sm text-muted-foreground">
+                    This guide is generated from the current quote record and updates as staff or the customer add information.
+                  </p>
                 </div>
 
-                {/* Location */}
-                <div className="flex flex-col gap-1 text-sm sm:flex-row sm:items-start sm:justify-between">
-                  <span className="text-muted-foreground">Location</span>
-                  <span className="font-medium break-words sm:text-right">{catering.location}</span>
+                <div className="grid gap-4 lg:grid-cols-2">
+                  {cateringGuideSections.map((section) => (
+                    <section
+                      key={section.title}
+                      className="catering-guide-section rounded-lg border border-border/70 bg-background/90 p-4"
+                    >
+                      <h3 className="text-sm font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                        {section.title}
+                      </h3>
+                      <dl className="mt-3 space-y-3 text-sm">
+                        {section.fields.map((field) => (
+                          <div
+                            key={`${section.title}-${field.label}`}
+                            className="grid gap-1 sm:grid-cols-[140px_minmax(0,1fr)] sm:gap-3"
+                          >
+                            <dt className="font-medium text-muted-foreground">{field.label}</dt>
+                            <dd className="whitespace-pre-wrap break-words font-medium text-foreground">{field.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </section>
+                  ))}
                 </div>
 
-                {/* Contact */}
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Contact</p>
-                  <div className="text-sm space-y-0.5 pl-2">
-                    <p className="font-medium">{catering.contactName}</p>
-                    {catering.contactPhone && <p>{catering.contactPhone}</p>}
-                    {catering.contactEmail && <p>{catering.contactEmail}</p>}
-                  </div>
-                </div>
+                <section className="catering-guide-section rounded-lg border border-border/70 bg-background/90 p-4">
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                    Ordered Items
+                  </h3>
+                  <ul className="mt-3 space-y-3 text-sm">
+                    {quote.items.map((item) => (
+                      <li key={item.id} className="border-b border-border/70 pb-3 last:border-b-0 last:pb-0">
+                        <p className="font-semibold">{item.description || "Line Item"}</p>
+                        <p className="mt-1 break-words text-muted-foreground">
+                          Qty {Number(item.quantity)} · Unit {formatAmount(item.unitPrice)} · Line {formatAmount(item.extendedPrice)} · {item.isTaxable ? "Taxable" : "Non-taxable"}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
 
-                {/* Headcount */}
-                {catering.headcount != null && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Headcount</span>
-                    <span className="font-medium">{catering.headcount} attendees</span>
-                  </div>
-                )}
-
-                <Separator />
-
-                {/* Line Items table */}
-                <div>
-                  <h3 className="text-sm font-semibold mb-2">Line Items</h3>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Description</TableHead>
-                        <TableHead className="text-center">Qty</TableHead>
-                        <TableHead className="text-right">Unit Price</TableHead>
-                        <TableHead className="text-right">Extended</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {quote.items.map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell className="uppercase">{item.description}</TableCell>
-                          <TableCell className="text-center tabular-nums">
-                            {Number(item.quantity)}
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums">
-                            {formatAmount(item.unitPrice)}
-                          </TableCell>
-                          <TableCell className="text-right tabular-nums">
-                            {formatAmount(item.extendedPrice)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-
-                  {/* Totals */}
-                  <div className="mt-2 space-y-1 text-sm tabular-nums">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Subtotal</span>
-                      <span>{formatAmount(itemSubtotal)}</span>
+                <section className="catering-guide-section rounded-lg border border-border/70 bg-background/90 p-4">
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                    Pricing Summary
+                  </h3>
+                  <dl className="mt-3 space-y-3 text-sm tabular-nums">
+                    <div className="flex items-start justify-between gap-3">
+                      <dt className="font-medium text-muted-foreground">Subtotal</dt>
+                      <dd className="font-semibold">{formatAmount(itemSubtotal)}</dd>
                     </div>
                     {quote.taxEnabled && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">
-                          Tax ({(taxRate * 100).toFixed(2)}%)
-                        </span>
-                        <span>{formatAmount(taxAmount)}</span>
+                      <div className="flex items-start justify-between gap-3">
+                        <dt className="font-medium text-muted-foreground">Tax ({(taxRate * 100).toFixed(2)}%)</dt>
+                        <dd className="font-semibold">{formatAmount(taxAmount)}</dd>
                       </div>
                     )}
-                    <Separator />
-                    <div className="flex justify-between font-bold">
-                      <span>Total</span>
-                      <span>{formatAmount(grandTotal)}</span>
+                    <div className="flex items-start justify-between gap-3 border-t border-border pt-3 text-base">
+                      <dt className="font-semibold">Total</dt>
+                      <dd className="font-bold">{formatAmount(grandTotal)}</dd>
                     </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Setup */}
-                {catering.setupRequired && (
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">Setup</p>
-                    <div className="text-sm space-y-0.5 pl-2">
-                      {catering.setupTime && (
-                        <p>
-                          <span className="text-muted-foreground">Time:</span> {formatWallClockTime(catering.setupTime)}
-                        </p>
-                      )}
-                      {catering.setupInstructions && (
-                        <p className="whitespace-pre-wrap">{catering.setupInstructions}</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Takedown */}
-                {catering.takedownRequired && (
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">Takedown</p>
-                    <div className="text-sm space-y-0.5 pl-2">
-                      {catering.takedownTime && (
-                        <p>
-                          <span className="text-muted-foreground">Time:</span> {formatWallClockTime(catering.takedownTime)}
-                        </p>
-                      )}
-                      {catering.takedownInstructions && (
-                        <p className="whitespace-pre-wrap">{catering.takedownInstructions}</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Special Instructions */}
-                {catering.specialInstructions && (
-                  <div className="space-y-1">
-                    <p className="text-sm font-medium">Special Instructions</p>
-                    <p className="text-sm whitespace-pre-wrap pl-2">
-                      {catering.specialInstructions}
-                    </p>
-                  </div>
-                )}
+                  </dl>
+                </section>
               </CardContent>
             </Card>
           </div>

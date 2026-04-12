@@ -115,6 +115,36 @@ describe("QuoteDetailView", () => {
     expect(screen.queryByRole("menuitem", { name: "Edit" })).not.toBeInTheDocument();
   });
 
+  it("labels the draft primary action as send quote", async () => {
+    const user = userEvent.setup();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        if (String(input) === "/api/quotes/q1") {
+          return {
+            ok: true,
+            json: async () =>
+              makeQuote({
+                quoteStatus: "DRAFT",
+                convertedToInvoice: null,
+              }),
+          } satisfies Partial<Response>;
+        }
+
+        throw new Error(`Unexpected fetch: ${String(input)}`);
+      }),
+    );
+
+    render(<QuoteDetailView id="q1" />);
+
+    await screen.findByRole("heading", { level: 1, name: "Q-1" });
+    expect(screen.getByRole("button", { name: "Send Quote" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Mark as Sent" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /More/i }));
+    expect(screen.queryByRole("menuitem", { name: "Download PDF" })).not.toBeInTheDocument();
+  });
+
   it("does not offer invoice conversion while a quote is still awaiting approval/payment", async () => {
     vi.stubGlobal(
       "fetch",
@@ -277,14 +307,17 @@ describe("QuoteDetailView", () => {
             ok: true,
             json: async () =>
               makeQuote({
+                notes: "Bring campus signage",
                 isCateringEvent: true,
                 cateringDetails: {
+                  eventName: "Board Luncheon",
                   eventDate: "2026-04-15",
                   startTime: "13:30",
                   endTime: "15:00",
                   location: "Student Center",
                   contactName: "Jane Doe",
                   contactPhone: "555-1111",
+                  contactEmail: "jane@example.com",
                   headcount: 40,
                   setupRequired: true,
                   setupTime: "12:45",
@@ -318,11 +351,90 @@ describe("QuoteDetailView", () => {
     render(<QuoteDetailView id="q1" />);
 
     await screen.findByRole("heading", { level: 1, name: "Q-1" });
+    expect(screen.getAllByText("Quote Information").length).toBeGreaterThan(0);
+    expect(screen.getByText("Customer Contact")).toBeInTheDocument();
+    expect(screen.getByText("Operations Notes")).toBeInTheDocument();
+    expect(screen.getByText("Ordered Items")).toBeInTheDocument();
     expect(screen.getByText(/Apr 15, 2026, 1:30 PM – 3:00 PM/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/Time:/i)).toHaveLength(2);
     expect(screen.getByText(/12:45 PM/i)).toBeInTheDocument();
     expect(screen.getByText(/3:15 PM/i)).toBeInTheDocument();
+    expect(screen.getAllByText("Bring campus signage").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("jane@example.com").length).toBeGreaterThan(0);
     expect(screen.queryByText("13:30")).not.toBeInTheDocument();
     expect(screen.queryByText("15:15")).not.toBeInTheDocument();
+  });
+
+  it("prints a dedicated catering guide document from live quote data", async () => {
+    const user = userEvent.setup();
+    const documentOpen = vi.fn();
+    const documentWrite = vi.fn();
+    const documentClose = vi.fn();
+    const openSpy = vi.spyOn(window, "open").mockReturnValue({
+      document: {
+        open: documentOpen,
+        write: documentWrite,
+        close: documentClose,
+      },
+    } as unknown as Window);
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        if (String(input) === "/api/quotes/q1") {
+          return {
+            ok: true,
+            json: async () =>
+              makeQuote({
+                notes: "Customer requested compostable serviceware",
+                isCateringEvent: true,
+                cateringDetails: {
+                  eventDate: "2026-04-15",
+                  startTime: "13:30",
+                  endTime: "15:00",
+                  location: "Student Center",
+                  contactName: "Jane Doe",
+                  contactPhone: "555-1111",
+                  headcount: 40,
+                  setupRequired: true,
+                  setupTime: "12:45",
+                  setupInstructions: "Front entrance",
+                  takedownRequired: false,
+                  specialInstructions: "Vegetarian options",
+                },
+                items: [
+                  {
+                    id: "item-1",
+                    description: "Lunch Buffet",
+                    quantity: 1,
+                    unitPrice: 100,
+                    extendedPrice: 100,
+                    isTaxable: true,
+                    sortOrder: 0,
+                    costPrice: null,
+                    marginOverride: null,
+                  },
+                ],
+              }),
+          } satisfies Partial<Response>;
+        }
+
+        throw new Error(`Unexpected fetch: ${String(input)}`);
+      }),
+    );
+
+    try {
+      render(<QuoteDetailView id="q1" />);
+
+      await screen.findByRole("heading", { level: 1, name: "Q-1" });
+      await user.click(screen.getByRole("button", { name: "Print Catering Guide" }));
+
+      expect(documentOpen).toHaveBeenCalled();
+      expect(documentWrite).toHaveBeenCalledWith(expect.stringContaining("Generated from live LAPortal quote data"));
+      expect(documentWrite).toHaveBeenCalledWith(expect.stringContaining("Quote Information"));
+      expect(documentWrite).toHaveBeenCalledWith(expect.stringContaining("Customer requested compostable serviceware"));
+      expect(documentWrite).toHaveBeenCalledWith(expect.stringContaining("Ordered Items"));
+    } finally {
+      openSpy.mockRestore();
+    }
   });
 });
