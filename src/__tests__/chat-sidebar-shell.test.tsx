@@ -73,7 +73,7 @@ describe("ResponsiveChatShell", () => {
     vi.useRealTimers();
   });
 
-  it("unmounts the mobile surface and restores body scroll after switching to desktop", () => {
+  it("unmounts the mobile surface and restores body scroll after switching to desktop once desktop chat is ready", () => {
     const media = installMatchMedia(false);
 
     render(
@@ -93,7 +93,11 @@ describe("ResponsiveChatShell", () => {
     media.setMatches(true);
 
     act(() => {
-      vi.advanceTimersByTime(300);
+      window.dispatchEvent(new Event("pointerdown"));
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(1500);
     });
 
     expect(screen.getByTestId("desktop-sidebar")).toBeInTheDocument();
