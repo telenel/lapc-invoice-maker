@@ -428,11 +428,96 @@ describe("QuoteDetailView", () => {
       await screen.findByRole("heading", { level: 1, name: "Q-1" });
       await user.click(screen.getByRole("button", { name: "Print Catering Guide" }));
 
+      expect(openSpy).toHaveBeenCalledWith("about:blank", "_blank");
       expect(documentOpen).toHaveBeenCalled();
       expect(documentWrite).toHaveBeenCalledWith(expect.stringContaining("Generated from live LAPortal quote data"));
       expect(documentWrite).toHaveBeenCalledWith(expect.stringContaining("Quote Information"));
       expect(documentWrite).toHaveBeenCalledWith(expect.stringContaining("Customer requested compostable serviceware"));
       expect(documentWrite).toHaveBeenCalledWith(expect.stringContaining("Ordered Items"));
+    } finally {
+      openSpy.mockRestore();
+    }
+  });
+
+  it("prints draft catering guides even when customer timing details are still blank", async () => {
+    const user = userEvent.setup();
+    const documentOpen = vi.fn();
+    const documentWrite = vi.fn();
+    const documentClose = vi.fn();
+    const openSpy = vi.spyOn(window, "open").mockReturnValue({
+      document: {
+        open: documentOpen,
+        write: documentWrite,
+        close: documentClose,
+      },
+    } as unknown as Window);
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        if (String(input) === "/api/quotes/q1") {
+          return {
+            ok: true,
+            json: async () =>
+              makeQuote({
+                quoteStatus: "DRAFT",
+                notes: "Additional Notes Test",
+                isCateringEvent: true,
+                cateringDetails: {
+                  eventDate: "2026-04-12",
+                  startTime: "",
+                  endTime: "",
+                  location: "",
+                  eventName: "",
+                  contactName: "Marcos A Montalvo",
+                  contactPhone: "(818) 710-4236",
+                  contactEmail: "montalma2@piercecollege.edu",
+                  setupRequired: false,
+                  setupTime: "",
+                  setupInstructions: "",
+                  takedownRequired: false,
+                  takedownTime: "",
+                  takedownInstructions: "",
+                  specialInstructions: "",
+                },
+                recipientName: "Marcos A Montalvo",
+                recipientEmail: "montalma2@piercecollege.edu",
+                recipientOrg: "",
+                taxEnabled: true,
+                taxRate: 0.0975,
+                items: [
+                  {
+                    id: "item-1",
+                    description: "SUBWAY",
+                    quantity: 20,
+                    unitPrice: 16.2,
+                    extendedPrice: 324,
+                    isTaxable: true,
+                    sortOrder: 0,
+                    costPrice: null,
+                    marginOverride: null,
+                  },
+                ],
+              }),
+          } satisfies Partial<Response>;
+        }
+
+        throw new Error(`Unexpected fetch: ${String(input)}`);
+      }),
+    );
+
+    try {
+      render(<QuoteDetailView id="q1" />);
+
+      await screen.findByRole("heading", { level: 1, name: "Q-1" });
+      await user.click(screen.getByRole("button", { name: "Print Catering Guide" }));
+
+      expect(openSpy).toHaveBeenCalledWith("about:blank", "_blank");
+      expect(documentOpen).toHaveBeenCalled();
+      expect(documentWrite).toHaveBeenCalledWith(expect.stringContaining("Marcos A Montalvo"));
+      expect(documentWrite).toHaveBeenCalledWith(expect.stringContaining("montalma2@piercecollege.edu"));
+      expect(documentWrite).toHaveBeenCalledWith(expect.stringContaining("SUBWAY"));
+      expect(documentWrite).toHaveBeenCalledWith(expect.stringContaining("324.00"));
     } finally {
       openSpy.mockRestore();
     }

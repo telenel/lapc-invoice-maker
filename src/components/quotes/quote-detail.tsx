@@ -910,7 +910,9 @@ export function QuoteDetailView({ id }: { id: string }) {
     : [];
 
   function handlePrintCateringGuide(printMarkup: string) {
-    const printWindow = window.open("", "_blank", "noopener,noreferrer");
+    // `noopener`/`noreferrer` can cause some browsers to return a null handle,
+    // which prevents us from writing the generated guide into the new tab.
+    const printWindow = window.open("about:blank", "_blank");
     if (!printWindow) {
       toast.error("Unable to open the catering guide print preview");
       return;
