@@ -238,6 +238,68 @@ function addGuideField(fields: GuideField[], label: string, value: string | numb
   fields.push({ label, value: normalized });
 }
 
+function joinGuideValues(
+  values: Array<string | null | undefined>,
+  separator = " · ",
+): string {
+  return values
+    .map((value) => value?.trim() ?? "")
+    .filter(Boolean)
+    .join(separator);
+}
+
+function buildGuideMultilineValue(values: Array<string | null | undefined>): string {
+  return values
+    .map((value) => value?.trim() ?? "")
+    .filter(Boolean)
+    .join("\n");
+}
+
+function formatGuideServiceWindow(catering: CateringDetails): string {
+  if (catering.startTime && catering.endTime) {
+    return `${formatWallClockTime(catering.startTime)} – ${formatWallClockTime(catering.endTime)}`;
+  }
+  if (catering.startTime) {
+    return `Starts at ${formatWallClockTime(catering.startTime)}`;
+  }
+  if (catering.endTime) {
+    return `Ends at ${formatWallClockTime(catering.endTime)}`;
+  }
+  return "Pending customer confirmation";
+}
+
+function formatGuideOperationLine(args: {
+  enabled: boolean;
+  time?: string;
+  instructions?: string;
+}): string {
+  if (!args.enabled) {
+    return "Not required";
+  }
+
+  return joinGuideValues(
+    [
+      args.time ? `At ${formatWallClockTime(args.time)}` : "Time pending",
+      args.instructions,
+    ],
+    " · ",
+  );
+}
+
+function buildCateringGuidePendingItems(catering: CateringDetails): string[] {
+  const pending: string[] = [];
+
+  if (!catering.eventName?.trim()) pending.push("Event name");
+  if (!catering.startTime?.trim()) pending.push("Service start time");
+  if (!catering.endTime?.trim()) pending.push("Service end time");
+  if (!catering.location?.trim()) pending.push("Event location");
+  if (!catering.headcount) pending.push("Headcount");
+  if (catering.setupRequired && !catering.setupTime?.trim()) pending.push("Setup time");
+  if (catering.takedownRequired && !catering.takedownTime?.trim()) pending.push("Takedown time");
+
+  return pending;
+}
+
 function buildCateringGuideSections(
   quote: Quote,
   catering: CateringDetails,
@@ -326,6 +388,124 @@ function buildCateringGuidePrintDocument(args: {
   grandTotal: number;
 }): string {
   const { quote, sections, itemSubtotal, taxAmount, grandTotal } = args;
+  const catering = (quote.cateringDetails as CateringDetails | null) ?? null;
+  const pendingItems = catering ? buildCateringGuidePendingItems(catering) : [];
+  const headerTitle = catering?.eventName?.trim()
+    || quote.quoteNumber
+    || "Catering Guide";
+  const summaryCards = catering
+    ? [
+        {
+          label: "Event Date",
+          value: catering.eventDate
+            ? formatLosAngelesDate(catering.eventDate, {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })
+            : "Pending customer confirmation",
+        },
+        {
+          label: "Service Window",
+          value: formatGuideServiceWindow(catering),
+        },
+        {
+          label: "Location",
+          value: catering.location?.trim() || "Pending customer confirmation",
+        },
+        {
+          label: "Headcount",
+          value: catering.headcount
+            ? `${catering.headcount} attendees`
+            : "Pending customer confirmation",
+        },
+        {
+          label: "Day-of Contact",
+          value:
+            buildGuideMultilineValue([
+              catering.contactName,
+              catering.contactPhone,
+              catering.contactEmail,
+            ]) || "Pending customer confirmation",
+        },
+        {
+          label: "Campus Contact",
+          value:
+            buildGuideMultilineValue([
+              quote.staff?.name
+                ? joinGuideValues(
+                    [quote.staff.name, quote.staff.title, quote.staff.email],
+                    " · ",
+                  )
+                : quote.creatorName,
+              quote.recipientName,
+              quote.recipientEmail,
+            ]) || "LAPortal",
+        },
+      ]
+    : [];
+  const operationsCards = catering
+    ? [
+        {
+          label: "Setup",
+          value: formatGuideOperationLine({
+            enabled: catering.setupRequired,
+            time: catering.setupTime,
+            instructions: catering.setupInstructions,
+          }),
+        },
+        {
+          label: "Takedown",
+          value: formatGuideOperationLine({
+            enabled: catering.takedownRequired,
+            time: catering.takedownTime,
+            instructions: catering.takedownInstructions,
+          }),
+        },
+        {
+          label: "Special Instructions",
+          value: catering.specialInstructions?.trim() || "None provided",
+        },
+        {
+          label: "Quote Notes",
+          value: quote.notes?.trim() || "None provided",
+        },
+      ]
+    : [];
+  const summaryCardsHtml = summaryCards
+    .map(
+      (card) => `
+        <article class="summary-card">
+          <div class="summary-label">${escapeHtml(card.label)}</div>
+          <div class="summary-value">${escapeHtml(card.value).replace(/\n/g, "<br />")}</div>
+        </article>
+      `,
+    )
+    .join("");
+  const operationsCardsHtml = operationsCards
+    .map(
+      (card) => `
+        <article class="summary-card summary-card--compact">
+          <div class="summary-label">${escapeHtml(card.label)}</div>
+          <div class="summary-value">${escapeHtml(card.value).replace(/\n/g, "<br />")}</div>
+        </article>
+      `,
+    )
+    .join("");
+  const pendingItemsHtml = pendingItems.length > 0
+    ? `
+        <section class="guide-section attention-section">
+          <h2>Pending Confirmation</h2>
+          <p class="attention-copy">The following day-of details are still missing and should be confirmed before service:</p>
+          <ul class="attention-list">
+            ${pendingItems
+              .map((item) => `<li>${escapeHtml(item)}</li>`)
+              .join("")}
+          </ul>
+        </section>
+      `
+    : "";
   const sectionHtml = sections
     .map(
       (section) => `
@@ -350,18 +530,16 @@ function buildCateringGuidePrintDocument(args: {
 
   const itemsHtml = quote.items
     .map((item) => {
-      const parts = [
-        `Qty ${Number(item.quantity)}`,
-        `Unit ${formatAmount(item.unitPrice)}`,
-        `Line ${formatAmount(item.extendedPrice)}`,
-        item.isTaxable ? "Taxable" : "Non-taxable",
-      ];
-
       return `
-        <li class="item-row">
-          <div class="item-title">${escapeHtml(item.description || "Line Item")}</div>
-          <div class="item-meta">${escapeHtml(parts.join(" · "))}</div>
-        </li>
+        <tr class="item-row">
+          <td class="item-cell item-cell--description">
+            <div class="item-title">${escapeHtml(item.description || "Line Item")}</div>
+            <div class="item-meta">${escapeHtml(item.isTaxable ? "Taxable item" : "Non-taxable item")}</div>
+          </td>
+          <td class="item-cell item-cell--numeric">${escapeHtml(Number(item.quantity).toString())}</td>
+          <td class="item-cell item-cell--numeric">${escapeHtml(formatAmount(item.unitPrice))}</td>
+          <td class="item-cell item-cell--numeric">${escapeHtml(formatAmount(item.extendedPrice))}</td>
+        </tr>
       `;
     })
     .join("");
@@ -397,18 +575,66 @@ function buildCateringGuidePrintDocument(args: {
         color: #111827;
         background: #ffffff;
         line-height: 1.45;
+        orphans: 3;
+        widows: 3;
       }
       main {
         display: grid;
-        gap: 18px;
+        gap: 16px;
+      }
+      header,
+      .guide-section,
+      .summary-grid,
+      .operations-grid {
+        break-inside: avoid-page;
+        page-break-inside: avoid;
+      }
+      .page-header {
+        border-bottom: 2px solid #111827;
+        padding-bottom: 12px;
       }
       h1 {
-        margin: 0 0 6px;
+        margin: 0 0 4px;
         font-size: 24px;
       }
       .subtitle {
         color: #4b5563;
         font-size: 12px;
+      }
+      .eyebrow {
+        margin: 0 0 6px;
+        color: #6b7280;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .summary-grid,
+      .operations-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .summary-card {
+        border: 1px solid #d1d5db;
+        padding: 12px 14px;
+        min-height: 86px;
+      }
+      .summary-card--compact {
+        min-height: 0;
+      }
+      .summary-label {
+        color: #6b7280;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+      .summary-value {
+        margin-top: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
       }
       .guide-section {
         border: 1px solid #d1d5db;
@@ -440,36 +666,66 @@ function buildCateringGuidePrintDocument(args: {
         white-space: pre-wrap;
         overflow-wrap: anywhere;
       }
-      .item-list,
+      .attention-section {
+        border-color: #f59e0b;
+        background: #fffbeb;
+      }
+      .attention-copy {
+        margin: 0 0 8px;
+      }
+      .attention-list {
+        margin: 0;
+        padding-left: 18px;
+      }
+      .items-section {
+        break-inside: auto;
+        page-break-inside: auto;
+      }
+      .item-table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      .item-table thead {
+        display: table-header-group;
+      }
+      .item-table th,
+      .item-table td {
+        padding: 10px 8px;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: left;
+        vertical-align: top;
+      }
+      .item-table th {
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #6b7280;
+      }
+      .item-row {
+        break-inside: avoid-page;
+        page-break-inside: avoid;
+      }
+      .item-title {
+        font-weight: 700;
+        white-space: normal;
+        overflow-wrap: anywhere;
+      }
+      .item-meta {
+        margin-top: 4px;
+        color: #4b5563;
+        font-size: 12px;
+      }
+      .item-cell--numeric {
+        text-align: right;
+        white-space: nowrap;
+        width: 90px;
+      }
       .totals-list {
         list-style: none;
         margin: 0;
         padding: 0;
-      }
-      .item-list {
-        display: grid;
-        gap: 10px;
-      }
-      .item-row {
-        border-bottom: 1px solid #e5e7eb;
-        padding-bottom: 10px;
-      }
-      .item-title {
-        font-weight: 700;
-      }
-      .item-meta {
-        margin-top: 2px;
-        color: #4b5563;
-        font-size: 12px;
-      }
-      .totals-list {
         display: grid;
         gap: 6px;
-      }
-      .totals-list li {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
       }
       .totals-list li:last-child {
         margin-top: 6px;
@@ -477,23 +733,64 @@ function buildCateringGuidePrintDocument(args: {
         border-top: 1px solid #111827;
         font-weight: 700;
       }
+      .totals-list li {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+      }
       @media print {
         .guide-section {
-          break-inside: avoid;
+          break-inside: avoid-page;
+        }
+        .item-table tr {
+          break-inside: avoid-page;
+        }
+      }
+      @media (max-width: 720px) {
+        .summary-grid,
+        .operations-grid,
+        .guide-row {
+          grid-template-columns: 1fr;
         }
       }
     </style>
   </head>
   <body>
     <main>
-      <header>
-        <h1>${escapeHtml(quote.quoteNumber ?? "Catering Guide")}</h1>
+      <header class="page-header">
+        <div class="eyebrow">Day-of Catering Guide</div>
+        <h1>${escapeHtml(headerTitle)}</h1>
         <div class="subtitle">Generated from live LAPortal quote data. This guide reflects the latest customer and staff updates available at print time.</div>
       </header>
+      ${summaryCardsHtml
+        ? `
+          <section class="summary-grid" aria-label="Day-of summary">
+            ${summaryCardsHtml}
+          </section>
+        `
+        : ""}
+      ${operationsCardsHtml
+        ? `
+          <section class="operations-grid" aria-label="Operations plan">
+            ${operationsCardsHtml}
+          </section>
+        `
+        : ""}
+      ${pendingItemsHtml}
       ${sectionHtml}
-      <section class="guide-section">
+      <section class="guide-section items-section">
         <h2>Ordered Items</h2>
-        <ul class="item-list">${itemsHtml}</ul>
+        <table class="item-table" aria-label="Ordered items">
+          <thead>
+            <tr>
+              <th scope="col">Item</th>
+              <th scope="col">Qty</th>
+              <th scope="col">Unit</th>
+              <th scope="col">Line Total</th>
+            </tr>
+          </thead>
+          <tbody>${itemsHtml}</tbody>
+        </table>
       </section>
       <section class="guide-section">
         <h2>Pricing Summary</h2>

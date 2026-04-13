@@ -431,9 +431,12 @@ describe("QuoteDetailView", () => {
       expect(openSpy).toHaveBeenCalledWith("about:blank", "_blank");
       expect(documentOpen).toHaveBeenCalled();
       expect(documentWrite).toHaveBeenCalledWith(expect.stringContaining("Generated from live LAPortal quote data"));
+      expect(documentWrite).toHaveBeenCalledWith(expect.stringContaining("Day-of Catering Guide"));
+      expect(documentWrite).toHaveBeenCalledWith(expect.stringContaining("Service Window"));
       expect(documentWrite).toHaveBeenCalledWith(expect.stringContaining("Quote Information"));
       expect(documentWrite).toHaveBeenCalledWith(expect.stringContaining("Customer requested compostable serviceware"));
       expect(documentWrite).toHaveBeenCalledWith(expect.stringContaining("Ordered Items"));
+      expect(documentWrite).toHaveBeenCalledWith(expect.stringContaining("table-header-group"));
     } finally {
       openSpy.mockRestore();
     }
@@ -514,6 +517,7 @@ describe("QuoteDetailView", () => {
 
       expect(openSpy).toHaveBeenCalledWith("about:blank", "_blank");
       expect(documentOpen).toHaveBeenCalled();
+      expect(documentWrite).toHaveBeenCalledWith(expect.stringContaining("Pending Confirmation"));
       expect(documentWrite).toHaveBeenCalledWith(expect.stringContaining("Marcos A Montalvo"));
       expect(documentWrite).toHaveBeenCalledWith(expect.stringContaining("montalma2@piercecollege.edu"));
       expect(documentWrite).toHaveBeenCalledWith(expect.stringContaining("SUBWAY"));
