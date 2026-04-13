@@ -1,9 +1,15 @@
 "use client";
 
 import { startTransition, useEffect, useRef, useState } from "react";
-import dynamic from "next/dynamic";
 import type { ReactNode, HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
+import { PendingAccountsWidget } from "./pending-accounts";
+import { PendingCharges } from "./pending-charges";
+import { RecentActivity } from "./recent-invoices";
+import { RunningInvoices } from "./running-invoices";
+import { StatsCards } from "./stats-cards";
+import { TodaysEvents } from "./todays-events";
+import { YourFocus } from "./your-focus";
 
 function WidgetSkeleton({ className }: HTMLAttributes<HTMLDivElement>) {
   return (
@@ -15,35 +21,6 @@ function WidgetSkeleton({ className }: HTMLAttributes<HTMLDivElement>) {
     />
   );
 }
-
-const StatsCards = dynamic(
-  () => import("./stats-cards").then((m) => m.StatsCards),
-  { ssr: false, loading: () => <WidgetSkeleton className="h-[156px]" /> },
-);
-const PendingCharges = dynamic(
-  () => import("./pending-charges").then((m) => m.PendingCharges),
-  { ssr: false, loading: () => <WidgetSkeleton className="h-[148px]" /> },
-);
-const RunningInvoices = dynamic(
-  () => import("./running-invoices").then((m) => m.RunningInvoices),
-  { ssr: false, loading: () => <WidgetSkeleton className="h-[148px]" /> },
-);
-const RecentActivity = dynamic(
-  () => import("./recent-invoices").then((m) => m.RecentActivity),
-  { ssr: false, loading: () => <WidgetSkeleton className="h-[236px]" /> },
-);
-const YourFocus = dynamic(
-  () => import("./your-focus").then((m) => m.YourFocus),
-  { ssr: false, loading: () => <WidgetSkeleton className="h-[172px]" /> },
-);
-const TodaysEvents = dynamic(
-  () => import("./todays-events").then((m) => m.TodaysEvents),
-  { ssr: false, loading: () => <WidgetSkeleton className="h-[120px]" /> },
-);
-const PendingAccounts = dynamic(
-  () => import("./pending-accounts").then((m) => m.PendingAccountsWidget),
-  { ssr: false, loading: () => <WidgetSkeleton className="h-[172px]" /> },
-);
 
 export interface DashboardWidgetProps {
   currentUserId: string | null;
@@ -74,7 +51,7 @@ export const SORTABLE_WIDGETS: WidgetConfig[] = [
     label: "Pending Account Numbers",
     skeletonClassName: "h-[172px]",
     component: ({ currentUserId }) => (
-      <PendingAccounts currentUserId={currentUserId} />
+      <PendingAccountsWidget currentUserId={currentUserId} />
     ),
   },
   {

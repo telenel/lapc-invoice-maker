@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useCallback, useEffect, useState } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,8 @@ import { invoiceApi } from "@/domains/invoice/api-client";
 import { quoteApi } from "@/domains/quote/api-client";
 import type { InvoiceResponse } from "@/domains/invoice/types";
 import type { FollowUpBadgeState } from "@/domains/follow-up/types";
+import { useDashboardBootstrapData } from "./dashboard-bootstrap-provider";
+import type { DashboardActivityItem } from "@/domains/dashboard/types";
 import { useDeferredDashboardRealtime } from "./use-deferred-dashboard-realtime";
 
 type QuoteStatus = "DRAFT" | "SENT" | "SUBMITTED_EMAIL" | "SUBMITTED_MANUAL" | "ACCEPTED" | "DECLINED" | "REVISED" | "EXPIRED";
@@ -42,20 +44,6 @@ const QUOTE_STATUS_LABEL: Record<QuoteStatus, string> = {
   DECLINED: "Declined",
   REVISED: "Revised",
   EXPIRED: "Expired",
-};
-
-type ActivityItem = {
-  type: "invoice" | "quote";
-  id: string;
-  number: string | null;
-  name: string;
-  department: string;
-  date: string;
-  amount: number;
-  status: string;
-  creatorId: string;
-  creatorName: string;
-  createdAt: string;
 };
 
 function invoiceBadge(status: string) {
@@ -93,10 +81,17 @@ export function RecentActivity({
 }: {
   currentUserId: string | null;
 }) {
-  const [items, setItems] = useState<ActivityItem[]>([]);
-  const [badgeStates, setBadgeStates] = useState<Record<string, FollowUpBadgeState>>({});
-  const [loading, setLoading] = useState(true);
+  const dashboardBootstrap = useDashboardBootstrapData();
+  const initialRecentActivity = dashboardBootstrap?.recentActivity ?? null;
+  const [items, setItems] = useState<DashboardActivityItem[]>(
+    initialRecentActivity?.items ?? [],
+  );
+  const [badgeStates, setBadgeStates] = useState<Record<string, FollowUpBadgeState>>(
+    initialRecentActivity?.badgeStates ?? {},
+  );
+  const [loading, setLoading] = useState(() => initialRecentActivity === null);
   const [detailsReady, setDetailsReady] = useState(false);
+  const skipInitialBadgeRefreshRef = useRef(initialRecentActivity !== null);
 
   const fetchActivity = useCallback(async () => {
     try {
@@ -105,7 +100,7 @@ export function RecentActivity({
         quoteApi.list({ pageSize: 10, sortBy: "createdAt", sortOrder: "desc" }),
       ]);
 
-      const invoiceItems: ActivityItem[] = invoiceData.invoices.map((inv: InvoiceResponse) => ({
+      const invoiceItems: DashboardActivityItem[] = invoiceData.invoices.map((inv: InvoiceResponse) => ({
         type: "invoice" as const,
         id: inv.id,
         number: inv.invoiceNumber ?? null,
@@ -119,7 +114,7 @@ export function RecentActivity({
         createdAt: inv.createdAt,
       }));
 
-      const quoteItems: ActivityItem[] = quoteData.quotes.map((q) => ({
+      const quoteItems: DashboardActivityItem[] = quoteData.quotes.map((q) => ({
         type: "quote" as const,
         id: q.id,
         number: q.quoteNumber ?? null,
@@ -153,8 +148,12 @@ export function RecentActivity({
   }, []);
 
   useEffect(() => {
+    if (initialRecentActivity !== null) {
+      return;
+    }
+
     void fetchActivity();
-  }, [fetchActivity]);
+  }, [fetchActivity, initialRecentActivity]);
 
   const refreshActivity = useCallback(() => {
     void fetchActivity();
@@ -203,6 +202,11 @@ export function RecentActivity({
 
   useEffect(() => {
     if (!detailsReady) {
+      return;
+    }
+
+    if (skipInitialBadgeRefreshRef.current) {
+      skipInitialBadgeRefreshRef.current = false;
       return;
     }
 

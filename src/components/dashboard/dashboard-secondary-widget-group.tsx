@@ -1,23 +1,9 @@
 "use client";
 
-import dynamic from "next/dynamic";
-
-const StatsCards = dynamic(
-  () => import("./stats-cards").then((m) => m.StatsCards),
-  { ssr: false },
-);
-const PendingCharges = dynamic(
-  () => import("./pending-charges").then((m) => m.PendingCharges),
-  { ssr: false },
-);
-const RunningInvoices = dynamic(
-  () => import("./running-invoices").then((m) => m.RunningInvoices),
-  { ssr: false },
-);
-const RecentActivity = dynamic(
-  () => import("./recent-invoices").then((m) => m.RecentActivity),
-  { ssr: false },
-);
+import { PendingCharges } from "./pending-charges";
+import { RecentActivity } from "./recent-invoices";
+import { RunningInvoices } from "./running-invoices";
+import { StatsCards } from "./stats-cards";
 
 type SecondaryWidgetId =
   | "stats"

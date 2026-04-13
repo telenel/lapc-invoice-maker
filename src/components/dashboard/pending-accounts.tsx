@@ -4,6 +4,8 @@ import Link from "next/link";
 import { startTransition, useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { FollowUpBadge } from "@/components/follow-up/follow-up-badge";
+import { useDashboardBootstrapData } from "./dashboard-bootstrap-provider";
+import type { DashboardPendingAccountItem } from "@/domains/dashboard/types";
 import { useDeferredDashboardRealtime } from "./use-deferred-dashboard-realtime";
 
 type IdleCapableWindow = Window & {
@@ -14,26 +16,17 @@ type IdleCapableWindow = Window & {
   cancelIdleCallback?: (handle: number) => void;
 };
 
-type PendingItem = {
-  invoiceId: string;
-  invoiceNumber: string | null;
-  quoteNumber: string | null;
-  type: string;
-  staffName: string;
-  creatorName: string;
-  creatorId: string;
-  currentAttempt: number;
-  maxAttempts: number;
-  seriesStatus: string;
-};
-
 export function PendingAccountsWidget({
   currentUserId,
 }: {
   currentUserId: string | null;
 }) {
-  const [items, setItems] = useState<PendingItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const dashboardBootstrap = useDashboardBootstrapData();
+  const initialItems = dashboardBootstrap?.pendingAccounts ?? null;
+  const [items, setItems] = useState<DashboardPendingAccountItem[]>(
+    initialItems ?? [],
+  );
+  const [loading, setLoading] = useState(() => initialItems === null);
   const [detailsReady, setDetailsReady] = useState(false);
 
   const fetchData = useCallback(async () => {
@@ -51,8 +44,12 @@ export function PendingAccountsWidget({
   }, []);
 
   useEffect(() => {
+    if (initialItems !== null) {
+      return;
+    }
+
     void fetchData();
-  }, [fetchData]);
+  }, [fetchData, initialItems]);
 
   const refreshPendingAccounts = useCallback(() => {
     void fetchData();

@@ -6,14 +6,9 @@ import { cn } from "@/lib/utils";
 import { formatAmount, getInitials } from "@/lib/formatters";
 import { invoiceApi } from "@/domains/invoice/api-client";
 import type { CreatorStatEntry } from "@/domains/invoice/types";
+import { useDashboardBootstrapData } from "./dashboard-bootstrap-provider";
+import type { DashboardStatsSummary } from "@/domains/dashboard/types";
 import { useDeferredDashboardRealtime } from "./use-deferred-dashboard-realtime";
-
-interface StatsData {
-  invoicesThisMonth: number;
-  totalThisMonth: number;
-  invoicesLastMonth: number;
-  totalLastMonth: number;
-}
 
 type IdleCapableWindow = Window & {
   requestIdleCallback?: (
@@ -34,10 +29,16 @@ export function StatsCards({
 }: {
   currentUserId: string | null;
 }) {
-  const [stats, setStats] = useState<StatsData | null>(null);
-  const [teamUsers, setTeamUsers] = useState<CreatorStatEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [teamLoading, setTeamLoading] = useState(true);
+  const dashboardBootstrap = useDashboardBootstrapData();
+  const initialStats = dashboardBootstrap?.stats ?? null;
+  const [stats, setStats] = useState<DashboardStatsSummary | null>(
+    initialStats?.summary ?? null,
+  );
+  const [teamUsers, setTeamUsers] = useState<CreatorStatEntry[]>(
+    initialStats?.teamUsers ?? [],
+  );
+  const [loading, setLoading] = useState(() => initialStats === null);
+  const [teamLoading, setTeamLoading] = useState(() => initialStats === null);
   const [detailsReady, setDetailsReady] = useState(false);
   const [NumberFlowComponent, setNumberFlowComponent] = useState<NumberFlowComponentType | null>(null);
 
@@ -94,8 +95,12 @@ export function StatsCards({
   }, []);
 
   useEffect(() => {
+    if (initialStats !== null) {
+      return;
+    }
+
     void fetchStats();
-  }, [fetchStats]);
+  }, [fetchStats, initialStats]);
 
   const refreshStats = useCallback(() => {
     void fetchStats();
@@ -156,12 +161,12 @@ export function StatsCards({
   }, [detailsReady]);
 
   useEffect(() => {
-    if (!detailsReady) {
+    if (!detailsReady || initialStats !== null) {
       return;
     }
 
     void fetchTeamUsers();
-  }, [detailsReady, fetchTeamUsers]);
+  }, [detailsReady, fetchTeamUsers, initialStats]);
 
   useDeferredDashboardRealtime(
     ["invoice-changed", "quote-changed"],

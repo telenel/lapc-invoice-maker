@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatAmount, getInitials } from "@/lib/formatters";
+import { useDashboardBootstrapData } from "./dashboard-bootstrap-provider";
 import type { CreatorStatEntry } from "@/domains/invoice/types";
 import { useDeferredDashboardRealtime } from "./use-deferred-dashboard-realtime";
 
@@ -17,8 +18,10 @@ type IdleCapableWindow = Window & {
 };
 
 export function PendingCharges() {
-  const [users, setUsers] = useState<CreatorStatEntry[]>([]);
-  const [loading, setLoading] = useState(true);
+  const dashboardBootstrap = useDashboardBootstrapData();
+  const initialUsers = dashboardBootstrap?.pendingCharges ?? null;
+  const [users, setUsers] = useState<CreatorStatEntry[]>(initialUsers ?? []);
+  const [loading, setLoading] = useState(() => initialUsers === null);
   const [detailsReady, setDetailsReady] = useState(false);
 
   const fetchPending = useCallback(() => {
@@ -34,8 +37,12 @@ export function PendingCharges() {
   }, []);
 
   useEffect(() => {
+    if (initialUsers !== null) {
+      return;
+    }
+
     fetchPending();
-  }, [fetchPending]);
+  }, [fetchPending, initialUsers]);
 
   const refreshPending = useCallback(() => {
     fetchPending();

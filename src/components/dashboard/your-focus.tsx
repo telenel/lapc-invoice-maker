@@ -5,17 +5,10 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { formatAmount } from "@/lib/formatters";
+import { useDashboardBootstrapData } from "./dashboard-bootstrap-provider";
+import type { DashboardFocusData } from "@/domains/dashboard/types";
 
-interface FocusData {
-  myDrafts: number;
-  myRunning: number;
-  myFinalThisMonth: number;
-  myTotalThisMonth: number;
-  myFinalLastMonth: number;
-  myQuotesAwaitingResponse: number;
-}
-
-function getNudge(data: FocusData): string | null {
+function getNudge(data: DashboardFocusData): string | null {
   const { myDrafts, myRunning, myFinalThisMonth, myFinalLastMonth, myQuotesAwaitingResponse } = data;
 
   // Actionable nudges first
@@ -48,11 +41,13 @@ export function YourFocus({
 }: {
   currentUserId: string | null;
 }) {
-  const [data, setData] = useState<FocusData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const dashboardBootstrap = useDashboardBootstrapData();
+  const initialData = dashboardBootstrap?.yourFocus ?? null;
+  const [data, setData] = useState<DashboardFocusData | null>(initialData);
+  const [loading, setLoading] = useState(() => dashboardBootstrap === null && Boolean(currentUserId));
 
   useEffect(() => {
-    if (!currentUserId) return;
+    if (!currentUserId || dashboardBootstrap !== null) return;
 
     async function fetchFocus() {
       try {
@@ -94,7 +89,7 @@ export function YourFocus({
     }
 
     fetchFocus();
-  }, [currentUserId]);
+  }, [currentUserId, dashboardBootstrap]);
 
   if (loading) {
     return (

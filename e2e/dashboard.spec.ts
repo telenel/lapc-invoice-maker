@@ -62,9 +62,7 @@ test.describe("Dashboard", () => {
   test("notification bell is present", async ({ page }) => {
     // The notification bell is in the nav
     await expect(
-      page.getByRole("button", { name: /notification/i }).or(
-        page.locator("[aria-label*='notification' i]"),
-      ),
+      page.getByRole("button", { name: /notifications/i }),
     ).toBeVisible({ timeout: 10_000 });
   });
 });

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
+import { useDashboardBootstrapData } from "./dashboard-bootstrap-provider";
 import { LOS_ANGELES_TIME_ZONE } from "@/lib/date-utils";
 import { calendarApi, type CalendarEvent } from "@/domains/calendar/api-client";
 import { formatLosAngelesTime, formatWallClockTime } from "@/lib/time";
@@ -126,10 +127,26 @@ function getLink(event: CalendarEvent): string {
 }
 
 export function TodaysEvents() {
-  const cachedEvents = getCachedTodaysEvents()?.events ?? null;
+  const dashboardBootstrap = useDashboardBootstrapData();
+  const initialEvents = dashboardBootstrap?.todaysEvents ?? null;
+  const cachedEvents = initialEvents ?? getCachedTodaysEvents()?.events ?? null;
   const [events, setEvents] = useState<CalendarEvent[]>(() => cachedEvents ?? []);
   const [loading, setLoading] = useState(() => cachedEvents === null);
   const [animateEntries] = useState(() => cachedEvents === null);
+
+  useEffect(() => {
+    if (initialEvents === null) {
+      return;
+    }
+
+    const { startDateKey, endDateKey } = getTodaysEventsWindow();
+    todaysEventsCache = {
+      startDateKey,
+      endDateKey,
+      events: initialEvents,
+      promise: null,
+    };
+  }, [initialEvents]);
 
   useEffect(() => {
     if (cachedEvents !== null) {

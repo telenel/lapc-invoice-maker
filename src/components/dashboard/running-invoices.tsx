@@ -5,17 +5,26 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatAmount, getInitials } from "@/lib/formatters";
-import type { InvoiceResponse } from "@/domains/invoice/types";
+import { useDashboardBootstrapData } from "./dashboard-bootstrap-provider";
+import type { DashboardRunningInvoiceItem } from "@/domains/dashboard/types";
 
 export function RunningInvoices({
   currentUserId,
 }: {
   currentUserId: string | null;
 }) {
-  const [invoices, setInvoices] = useState<InvoiceResponse[]>([]);
-  const [loading, setLoading] = useState(true);
+  const dashboardBootstrap = useDashboardBootstrapData();
+  const initialInvoices = dashboardBootstrap?.runningInvoices ?? null;
+  const [invoices, setInvoices] = useState<DashboardRunningInvoiceItem[]>(
+    initialInvoices ?? [],
+  );
+  const [loading, setLoading] = useState(() => initialInvoices === null);
 
   useEffect(() => {
+    if (initialInvoices !== null) {
+      return;
+    }
+
     let cancelled = false;
 
     void import("@/domains/invoice/api-client")
@@ -24,7 +33,17 @@ export function RunningInvoices({
       )
       .then((data) => {
         if (!cancelled) {
-          setInvoices(data.invoices ?? []);
+          setInvoices(
+            (data.invoices ?? []).map((invoice) => ({
+              id: invoice.id,
+              creatorId: invoice.creatorId,
+              creatorName: invoice.creatorName,
+              department: invoice.department,
+              totalAmount: invoice.totalAmount,
+              runningTitle: invoice.runningTitle,
+              itemCount: invoice.items.length,
+            })),
+          );
         }
       })
       .catch(() => {})
@@ -37,7 +56,7 @@ export function RunningInvoices({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialInvoices]);
 
   if (loading || invoices.length === 0) return null;
 
@@ -75,7 +94,7 @@ export function RunningInvoices({
                     {isMine && <span className="text-[10px] text-primary font-medium ml-2">Yours</span>}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
-                    {inv.creatorName} · {inv.department} · {inv.items.length} item{inv.items.length !== 1 ? "s" : ""}
+                    {inv.creatorName} · {inv.department} · {inv.itemCount} item{inv.itemCount !== 1 ? "s" : ""}
                   </p>
                 </div>
                 <div className="text-right shrink-0">

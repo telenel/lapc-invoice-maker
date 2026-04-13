@@ -22,6 +22,7 @@ import {
   TodaysEvents,
   __resetTodaysEventsCacheForTests,
 } from "@/components/dashboard/todays-events";
+import { DashboardBootstrapProvider } from "@/components/dashboard/dashboard-bootstrap-provider";
 
 async function flushAsyncWork() {
   await Promise.resolve();
@@ -86,5 +87,53 @@ describe("TodaysEvents", () => {
 
     expect(screen.getByText(/Board Lunch/i)).toBeInTheDocument();
     expect(getEvents).toHaveBeenCalledTimes(1);
+  });
+
+  it("renders bootstrap events without fetching again", () => {
+    render(
+      <DashboardBootstrapProvider
+        value={{
+          todaysEvents: [
+            {
+              id: "evt-bootstrap",
+              title: "Bootstrap Lunch",
+              start: "2026-04-12T18:00:00.000Z",
+              end: "2026-04-12T19:00:00.000Z",
+              allDay: false,
+              color: "#fff7ed",
+              borderColor: "#f97316",
+              textColor: "#f97316",
+              source: "catering",
+              extendedProps: {
+                quoteId: "quote-bootstrap",
+                location: "Library",
+              },
+            },
+          ],
+          yourFocus: null,
+          stats: {
+            summary: {
+              invoicesThisMonth: 0,
+              totalThisMonth: 0,
+              invoicesLastMonth: 0,
+              totalLastMonth: 0,
+            },
+            teamUsers: [],
+          },
+          pendingAccounts: [],
+          pendingCharges: [],
+          runningInvoices: [],
+          recentActivity: {
+            items: [],
+            badgeStates: {},
+          },
+        }}
+      >
+        <TodaysEvents />
+      </DashboardBootstrapProvider>,
+    );
+
+    expect(screen.getByText(/Bootstrap Lunch/i)).toBeInTheDocument();
+    expect(getEvents).not.toHaveBeenCalled();
   });
 });
