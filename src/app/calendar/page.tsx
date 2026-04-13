@@ -1,6 +1,8 @@
 import dynamic from "next/dynamic";
 import { getCalendarBootstrapData } from "@/domains/calendar/service";
 
+export const dynamic = "force-dynamic";
+
 const CalendarView = dynamic(
   () => import("@/components/calendar/calendar-view").then((m) => m.CalendarView),
   { ssr: false },
