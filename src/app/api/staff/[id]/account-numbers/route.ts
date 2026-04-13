@@ -1,6 +1,6 @@
 // src/app/api/staff/[id]/account-numbers/route.ts
 import { NextResponse } from "next/server";
-import { withAdmin, withAuth } from "@/domains/shared/auth";
+import { withAuth } from "@/domains/shared/auth";
 import { staffService } from "@/domains/staff/service";
 import { staffAccountNumberSchema } from "@/lib/validators";
 
@@ -32,7 +32,7 @@ export const GET = withAuth(async (req, session, ctx) => {
   return NextResponse.json(accounts);
 });
 
-export const POST = withAdmin(async (req, session, ctx) => {
+export const POST = withAuth(async (req, session, ctx) => {
   const id = await parseId(ctx);
   if (!id) {
     return NextResponse.json({ error: "Invalid staff id" }, { status: 400 });

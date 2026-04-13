@@ -97,6 +97,42 @@ describe("PUT /api/staff/:id", () => {
     expect(await response.json()).toEqual({ error: "Invalid request body" });
     expect(staffService.update).not.toHaveBeenCalled();
   });
+
+  it("allows authenticated non-admin users to edit staff members", async () => {
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: "user-1", role: "user" },
+    } as never);
+
+    const response = await putStaff(
+      new NextRequest("http://localhost/api/staff/staff-1", {
+        method: "PUT",
+        body: JSON.stringify({
+          name: "Jane Doe",
+          title: "Manager",
+          department: "CopyTech",
+          accountCode: "1234",
+          extension: "4321",
+          email: "staff@example.com",
+          phone: "555-0100",
+          approvalChain: [],
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ id: " staff-1 " }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(staffService.update).toHaveBeenCalledWith("staff-1", {
+      name: "Jane Doe",
+      title: "Manager",
+      department: "CopyTech",
+      accountCode: "1234",
+      extension: "4321",
+      email: "staff@example.com",
+      phone: "555-0100",
+      approvalChain: [],
+    });
+  });
 });
 
 describe("PATCH /api/staff/:id", () => {
@@ -124,6 +160,35 @@ describe("PATCH /api/staff/:id", () => {
     expect(await response.json()).toEqual({ error: "Invalid request body" });
     expect(staffService.partialUpdate).not.toHaveBeenCalled();
   });
+
+  it("allows authenticated non-admin users to patch invoice and quote contact fields", async () => {
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: "user-1", role: "user" },
+    } as never);
+
+    const response = await patchStaff(
+      new NextRequest("http://localhost/api/staff/staff-1", {
+        method: "PATCH",
+        body: JSON.stringify({
+          extension: "4321",
+          email: "staff@example.com",
+          phone: "555-0100",
+          department: "CopyTech",
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ id: " staff-1 " }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(staffService.partialUpdate).toHaveBeenCalledWith("staff-1", {
+      extension: "4321",
+      email: "staff@example.com",
+      phone: "555-0100",
+      department: "CopyTech",
+    });
+  });
+
 });
 
 describe("DELETE /api/staff/:id", () => {
@@ -199,6 +264,32 @@ describe("POST /api/staff/:id/account-numbers", () => {
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({ error: "Invalid request body" });
     expect(staffService.upsertAccountNumber).not.toHaveBeenCalled();
+  });
+
+  it("allows authenticated non-admin users to save account numbers from the invoice form", async () => {
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: "user-1", role: "user" },
+    } as never);
+
+    const response = await createStaffAccount(
+      new NextRequest("http://localhost/api/staff/staff-1/account-numbers", {
+        method: "POST",
+        body: JSON.stringify({
+          accountCode: " ACCT-42 ",
+          description: " Catering ",
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ id: " staff-1 " }) },
+    );
+
+    expect(response.status).toBe(201);
+    expect(await response.json()).toEqual({ success: true });
+    expect(staffService.upsertAccountNumber).toHaveBeenCalledWith({
+      staffId: "staff-1",
+      accountCode: "ACCT-42",
+      description: "Catering",
+    });
   });
 });
 

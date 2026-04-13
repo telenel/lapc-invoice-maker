@@ -1,6 +1,6 @@
 // src/app/api/staff/route.ts
 import { NextResponse } from "next/server";
-import { withAdmin, withAuth } from "@/domains/shared/auth";
+import { withAuth } from "@/domains/shared/auth";
 import { staffService } from "@/domains/staff/service";
 import { staffSchema } from "@/lib/validators";
 
@@ -37,7 +37,7 @@ export const GET = withAuth(async (req) => {
   return NextResponse.json(staff);
 });
 
-export const POST = withAdmin(async (req) => {
+export const POST = withAuth(async (req) => {
   const body = await req.json().catch(() => null);
   if (body === null) {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });

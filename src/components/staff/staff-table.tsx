@@ -1,6 +1,7 @@
 "use client";
 
 import { useDeferredValue, useEffect, useRef, useState, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { PlusIcon, PencilIcon, UserMinus, SearchIcon, UsersIcon } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -29,6 +30,7 @@ export function StaffTable({
 }: {
   initialData?: PaginatedResponse<StaffResponse>;
 }) {
+  const { data: session } = useSession();
   const [staff, setStaff] = useState<StaffResponse[]>(initialData?.data ?? []);
   const [loading, setLoading] = useState(() => initialData === undefined);
   const [page, setPage] = useState(1);
@@ -38,6 +40,7 @@ export function StaffTable({
   const skippedInitialFetchRef = useRef(initialData !== undefined);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
+  const canDeactivateStaff = (session?.user as { role?: string } | undefined)?.role === "admin";
   const currentRequestKey = JSON.stringify({
     page,
     pageSize: PAGE_SIZE,
@@ -162,15 +165,17 @@ export function StaffTable({
                           </Button>
                         }
                       />
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => handleDeactivate(member.id, member.name)}
-                      >
-                        <UserMinus />
-                        Deactivate
-                      </Button>
+                      {canDeactivateStaff ? (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => handleDeactivate(member.id, member.name)}
+                        >
+                          <UserMinus />
+                          Deactivate
+                        </Button>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -223,16 +228,18 @@ export function StaffTable({
                           </Button>
                         }
                       />
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        title="Deactivate"
-                        aria-label="Deactivate staff member"
-                        onClick={() => handleDeactivate(member.id, member.name)}
-                      >
-                        <UserMinus className="text-destructive" />
-                        <span className="sr-only">Deactivate</span>
-                      </Button>
+                      {canDeactivateStaff ? (
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          title="Deactivate"
+                          aria-label="Deactivate staff member"
+                          onClick={() => handleDeactivate(member.id, member.name)}
+                        >
+                          <UserMinus className="text-destructive" />
+                          <span className="sr-only">Deactivate</span>
+                        </Button>
+                      ) : null}
                     </div>
                   </TableCell>
                 </TableRow>

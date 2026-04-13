@@ -30,6 +30,18 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => searchParamsMock,
 }));
 
+vi.mock("next-auth/react", () => ({
+  useSession: () => ({
+    status: "authenticated",
+    data: {
+      user: {
+        id: "admin-1",
+        role: "admin",
+      },
+    },
+  }),
+}));
+
 vi.mock("next/dynamic", () => ({
   default: () => () => <div data-testid="dynamic-chart" />,
 }));

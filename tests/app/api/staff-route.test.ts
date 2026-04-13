@@ -9,12 +9,13 @@ vi.mock("@/domains/staff/service", () => ({
   staffService: {
     list: vi.fn(),
     listPaginated: vi.fn(),
+    create: vi.fn(),
   },
 }));
 
 import { getServerSession } from "next-auth";
 import { staffService } from "@/domains/staff/service";
-import { GET } from "@/app/api/staff/route";
+import { GET, POST } from "@/app/api/staff/route";
 
 describe("GET /api/staff", () => {
   beforeEach(() => {
@@ -68,6 +69,57 @@ describe("GET /api/staff", () => {
       search: undefined,
       page: 3,
       pageSize: 100,
+    });
+  });
+});
+
+describe("POST /api/staff", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: "u1", role: "user" },
+    } as never);
+    vi.mocked(staffService.create).mockResolvedValue({
+      id: "staff-1",
+      name: "Jane Doe",
+      title: "Manager",
+      department: "CopyTech",
+      accountCode: "1234",
+      extension: "",
+      email: "",
+      phone: "",
+      birthMonth: null,
+      birthDay: null,
+      approvalChain: [],
+      active: true,
+    } as never);
+  });
+
+  it("allows authenticated non-admin users to create staff members", async () => {
+    const response = await POST(
+      new NextRequest("http://localhost/api/staff", {
+        method: "POST",
+        body: JSON.stringify({
+          name: "Jane Doe",
+          title: "Manager",
+          department: "CopyTech",
+          accountCode: "1234",
+          approvalChain: [],
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+
+    expect(response.status).toBe(201);
+    expect(staffService.create).toHaveBeenCalledWith({
+      name: "Jane Doe",
+      title: "Manager",
+      department: "CopyTech",
+      accountCode: "1234",
+      extension: "",
+      email: "",
+      phone: "",
+      approvalChain: [],
     });
   });
 });

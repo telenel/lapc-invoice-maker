@@ -33,7 +33,7 @@ export const GET = withAuth(async (req, session, ctx) => {
   return NextResponse.json(staff);
 });
 
-export const PUT = withAdmin(async (req, session, ctx) => {
+export const PUT = withAuth(async (req, session, ctx) => {
   const id = await parseId(ctx);
   if (!id) {
     return NextResponse.json({ error: "Invalid staff id" }, { status: 400 });
@@ -51,7 +51,7 @@ export const PUT = withAdmin(async (req, session, ctx) => {
   return NextResponse.json(staff);
 });
 
-export const PATCH = withAdmin(async (req, session, ctx) => {
+export const PATCH = withAuth(async (req, session, ctx) => {
   const id = await parseId(ctx);
   if (!id) {
     return NextResponse.json({ error: "Invalid staff id" }, { status: 400 });
@@ -64,7 +64,10 @@ export const PATCH = withAdmin(async (req, session, ctx) => {
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
-  const staff = await staffService.partialUpdate(id, parsed.data);
+  const patchData = Object.fromEntries(
+    Object.entries(parsed.data).filter(([key]) => Object.prototype.hasOwnProperty.call(body, key)),
+  );
+  const staff = await staffService.partialUpdate(id, patchData);
   if (!staff) return NextResponse.json({ error: "Staff not found" }, { status: 404 });
   return NextResponse.json(staff);
 });
