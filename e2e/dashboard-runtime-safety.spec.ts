@@ -155,6 +155,26 @@ async function getWidgetY(page: Page, label: string) {
   return box.y;
 }
 
+async function samplePresence(page: Page, selector: string, durationMs: number) {
+  return page.evaluate(
+    async ({ sampleSelector, sampleDurationMs }) => {
+      const samples: number[] = [];
+      const startedAt = performance.now();
+
+      while (performance.now() - startedAt < sampleDurationMs) {
+        samples.push(document.querySelectorAll(sampleSelector).length);
+        await new Promise((resolve) => window.setTimeout(resolve, 100));
+      }
+
+      return samples;
+    },
+    {
+      sampleSelector: selector,
+      sampleDurationMs: durationMs,
+    },
+  );
+}
+
 test.describe.serial("Dashboard Runtime Safety", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/");
@@ -184,6 +204,17 @@ test.describe.serial("Dashboard Runtime Safety", () => {
 
     await page.locator("body").click({ position: { x: 12, y: 12 } });
     await expect(page.getByText("Notifications", { exact: true })).toBeHidden();
+  });
+
+  test("todays events stays mounted after it first appears", async ({ page }) => {
+    const widget = page.locator('[data-widget-root="todays-events"]');
+    await expect(widget).toBeVisible({ timeout: 15_000 });
+
+    const samples = await samplePresence(page, '[data-widget-root="todays-events"]', 3500);
+    const firstVisibleIndex = samples.findIndex((count) => count > 0);
+
+    expect(firstVisibleIndex).toBeGreaterThanOrEqual(0);
+    expect(samples.slice(firstVisibleIndex).every((count) => count > 0)).toBe(true);
   });
 
   test("dashboard widgets still refetch after deferred realtime setup", async ({ page }) => {

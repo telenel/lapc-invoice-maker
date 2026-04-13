@@ -164,7 +164,7 @@ export function TodaysEvents() {
 
   if (loading) {
     return (
-      <Card className="card-hover">
+      <Card className="card-hover" data-widget-root="todays-events">
         <CardContent className="py-3 px-4">
           <div className="skeleton h-3 w-28 mb-3" />
           <div className="skeleton h-16 w-full" />
@@ -174,7 +174,7 @@ export function TodaysEvents() {
   }
 
   return (
-    <Card className="card-hover">
+    <Card className="card-hover" data-widget-root="todays-events">
       <CardContent className="py-3 px-4">
         <div className="flex items-center justify-between mb-2.5">
           <div className="flex items-center gap-1.5">

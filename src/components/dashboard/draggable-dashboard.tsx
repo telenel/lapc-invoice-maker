@@ -1,27 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, startTransition } from "react";
-import dynamic from "next/dynamic";
+import { useState, useEffect, useCallback } from "react";
 import { RotateCcw } from "lucide-react";
 import { DEFAULT_ORDER } from "./dashboard-widget-stack";
+import { SortableDashboard } from "./sortable-dashboard";
 import { useDashboardOrder } from "./use-dashboard-order";
-
-const SortableDashboard = dynamic(
-  () => import("./sortable-dashboard").then((m) => m.SortableDashboard),
-  { ssr: false },
-);
-const DashboardPreviewStack = dynamic(
-  () => import("./dashboard-preview-stack").then((m) => m.DashboardPreviewStack),
-  { ssr: false },
-);
-
-type IdleCapableWindow = Window & {
-  requestIdleCallback?: (
-    callback: IdleRequestCallback,
-    options?: IdleRequestOptions,
-  ) => number;
-  cancelIdleCallback?: (handle: number) => void;
-};
 
 export function DraggableDashboard({
   currentUserId,
@@ -35,68 +18,10 @@ export function DraggableDashboard({
     clearPersistedOrder,
   } = useDashboardOrder(DEFAULT_ORDER);
   const [order, setOrder] = useState<string[]>(DEFAULT_ORDER);
-  const [dragReady, setDragReady] = useState(false);
-  const handleRef = useRef<number | null>(null);
 
   useEffect(() => {
     setOrder(storedOrder);
   }, [storedOrder]);
-
-  useEffect(() => {
-    if (dragReady) {
-      return;
-    }
-
-    const win = window as IdleCapableWindow;
-
-    function markDragReady() {
-      startTransition(() => {
-        setDragReady(true);
-      });
-    }
-
-    function clearScheduledLoad() {
-      if (handleRef.current === null) {
-        return;
-      }
-
-      if (win.cancelIdleCallback) {
-        win.cancelIdleCallback(handleRef.current);
-      } else {
-        window.clearTimeout(handleRef.current);
-      }
-      handleRef.current = null;
-    }
-
-    const fallbackTimer = window.setTimeout(markDragReady, 2500);
-
-    if (win.requestIdleCallback) {
-      handleRef.current = win.requestIdleCallback(
-        () => {
-          markDragReady();
-          handleRef.current = null;
-        },
-        { timeout: 3500 },
-      );
-    } else {
-      handleRef.current = window.setTimeout(() => {
-        markDragReady();
-        handleRef.current = null;
-      }, 1200);
-    }
-
-    window.addEventListener("pointerdown", markDragReady, { once: true, passive: true });
-    window.addEventListener("keydown", markDragReady, { once: true });
-    window.addEventListener("focusin", markDragReady, { once: true });
-
-    return () => {
-      window.clearTimeout(fallbackTimer);
-      clearScheduledLoad();
-      window.removeEventListener("pointerdown", markDragReady);
-      window.removeEventListener("keydown", markDragReady);
-      window.removeEventListener("focusin", markDragReady);
-    };
-  }, [dragReady]);
 
   const handleOrderChange = useCallback((nextOrder: string[]) => {
     setOrder(nextOrder);
@@ -123,18 +48,11 @@ export function DraggableDashboard({
           Reset layout
         </button>
       )}
-      {dragReady ? (
-        <SortableDashboard
-          currentUserId={currentUserId}
-          order={order}
-          onOrderChange={handleOrderChange}
-        />
-      ) : (
-        <DashboardPreviewStack
-          currentUserId={currentUserId}
-          order={order}
-        />
-      )}
+      <SortableDashboard
+        currentUserId={currentUserId}
+        order={order}
+        onOrderChange={handleOrderChange}
+      />
     </div>
   );
 }

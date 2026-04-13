@@ -55,6 +55,7 @@ function SortableWidget({
     <div
       ref={setNodeRef}
       style={style}
+      data-dashboard-widget={widget.id}
       className={cn(
         "group relative",
         isDragging && "z-50 opacity-50",
