@@ -67,7 +67,7 @@ function mapApiToFormData(invoice: ApiInvoice): InvoiceFormData {
     contactPhone: "",
     semesterYearDept: invoice.pdfMetadata?.semesterYearDept ?? "",
     notes: invoice.notes ?? "",
-    isRunning: invoice.isRunning ?? false,
+    isRunning: invoice.isRunning,
     runningTitle: invoice.runningTitle ?? "",
     marginEnabled: invoice.marginEnabled ?? false,
     marginPercent: invoice.marginPercent ?? 0,
@@ -115,7 +115,6 @@ export default function EditInvoicePage() {
   const [initialData, setInitialData] = useState<InvoiceFormData | null>(null);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [isPendingCharge, setIsPendingCharge] = useState(false);
 
   // Fetch existing invoice data
   useEffect(() => {
@@ -138,7 +137,6 @@ export default function EditInvoicePage() {
           throw new Error("Finalized invoices cannot be edited");
         }
         setInitialData(mapApiToFormData(invoice));
-        setIsPendingCharge(invoice.status === "PENDING_CHARGE");
       })
       .catch((err: unknown) => {
         setFetchError(
@@ -171,9 +169,9 @@ export default function EditInvoicePage() {
   return (
     <div className="mx-auto max-w-5xl px-0 py-4 sm:px-4 sm:py-8">
       <h1 className="mb-4 text-2xl font-semibold sm:mb-6">
-        {isPendingCharge ? "Complete POS Charge" : "Edit Invoice"}
+        Edit Invoice
       </h1>
-      <KeyboardMode {...invoiceForm} isPendingCharge={isPendingCharge} />
+      <KeyboardMode {...invoiceForm} />
     </div>
   );
 }

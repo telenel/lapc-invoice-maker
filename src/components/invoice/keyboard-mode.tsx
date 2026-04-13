@@ -6,13 +6,6 @@ import { toast } from "sonner";
 import { useAutoSave, loadDraft } from "@/lib/use-auto-save";
 import { DraftRecoveryBanner } from "@/components/ui/draft-recovery-banner";
 import { InfoIcon } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,7 +26,6 @@ import { PdfProgress } from "./pdf-progress";
 import { StaffSummaryEditor } from "./staff-summary-editor";
 import { SignatureSection } from "./signature-section";
 import { InvoiceMetadata } from "./invoice-metadata";
-import { cn } from "@/lib/utils";
 import type {
   InvoiceFormData,
   InvoiceItem,
@@ -78,10 +70,8 @@ interface KeyboardModeProps {
   staffAccountNumbers: StaffAccountNumber[];
   saveDraft: () => Promise<void>;
   saveAndFinalize: () => Promise<void>;
-  savePendingCharge: () => Promise<void>;
   saving: boolean;
   generationStep: GenerationStep;
-  isPendingCharge?: boolean;
   existingId?: string;
 }
 
@@ -120,10 +110,8 @@ export function KeyboardMode({
   staffAccountNumbers,
   saveDraft,
   saveAndFinalize,
-  savePendingCharge,
   saving,
   generationStep,
-  isPendingCharge = false,
   existingId,
 }: KeyboardModeProps) {
   // ---- Session ----
@@ -140,8 +128,6 @@ export function KeyboardMode({
   const [userPickDescriptions, setUserPickDescriptions] = useState<Set<string>>(() => new Set());
   const [userPicks, setUserPicks] = useState<{ id: string; description: string; unitPrice: number; department: string }[]>([]);
   const [isMac, setIsMac] = useState(false);
-
-  const [showChargeLaterDialog, setShowChargeLaterDialog] = useState(false);
 
   // ---- Auto-save + draft recovery ----
   const routeKey = existingId ? `/invoices/${existingId}/edit` : "/invoices/new";
@@ -177,19 +163,8 @@ export function KeyboardMode({
     clearDraft();
   }, [saveAndFinalize, clearDraft]);
 
-  const handleSavePendingCharge = useCallback(async () => {
-    await savePendingCharge();
-    clearDraft();
-  }, [savePendingCharge, clearDraft]);
-
   const containerRef = useRef<HTMLDivElement>(null);
   const invoiceNumberRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (isPendingCharge && invoiceNumberRef.current) {
-      invoiceNumberRef.current.select();
-    }
-  }, [isPendingCharge]);
 
   // ---- Data fetching ----
   useEffect(() => {
@@ -453,14 +428,6 @@ export function KeyboardMode({
         </div>
       )}
 
-      {isPendingCharge && (
-        <div className="rounded-lg border-l-4 border-l-amber-500 bg-amber-50 dark:bg-amber-950/20 p-4 mb-4">
-          <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-            This invoice needs a POS charge. Enter the AG number and upload the PrismCore PDF to finalize.
-          </p>
-        </div>
-      )}
-
       {/* ============ REQUESTOR ============ */}
       <SectionDivider label="REQUESTOR" />
 
@@ -493,7 +460,6 @@ export function KeyboardMode({
         categories={categories}
         categoriesLoading={categoriesLoading}
         staffAccountNumbers={staffAccountNumbers}
-        isPendingCharge={isPendingCharge}
         invoiceNumberRef={invoiceNumberRef}
       />
 
@@ -703,10 +669,7 @@ export function KeyboardMode({
 
       {/* ============ PRISMCORE + ACTIONS ============ */}
       <div className="pt-6 space-y-4">
-        <div className={cn(
-          isPendingCharge && !form.prismcorePath &&
-            "rounded-lg border-l-4 border-l-primary bg-primary/5 p-2 -ml-2"
-        )}>
+        <div>
           <PrismcoreUpload
             value={form.prismcorePath}
             onChange={(path) => updateField("prismcorePath", path)}
@@ -724,11 +687,6 @@ export function KeyboardMode({
               </Button>
             </>
           )}
-          {!form.isRunning && !existingId && (
-            <Button variant="secondary" onClick={() => setShowChargeLaterDialog(true)} disabled={saving} className="w-full sm:w-auto">
-              Charge Later
-            </Button>
-          )}
           {form.isRunning ? (
             <Button onClick={handleSaveDraft} disabled={saving} className="w-full sm:w-auto">
               Save Running Invoice
@@ -739,9 +697,7 @@ export function KeyboardMode({
                 {saving ? "Updating..." : "Update"}
               </Button>
               <Button onClick={handleGenerate} disabled={saving} className="w-full sm:w-auto">
-                {isPendingCharge
-                  ? "Complete POS Charge"
-                  : `Generate PDF ${isMac ? "\u2318\u21B5" : "Ctrl\u21B5"}`}
+                {`Generate PDF ${isMac ? "\u2318\u21B5" : "Ctrl\u21B5"}`}
               </Button>
             </>
           ) : (
@@ -753,41 +709,6 @@ export function KeyboardMode({
       </div>
 
       <PdfProgress step={generationStep} />
-
-      <Dialog open={showChargeLaterDialog} onOpenChange={setShowChargeLaterDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Charge Later</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 text-sm text-muted-foreground">
-            <p>
-              This will save the invoice as a <strong className="text-foreground">Pending Charge</strong>. Here&apos;s what happens next:
-            </p>
-            <ol className="list-decimal list-inside space-y-2">
-              <li>The invoice is saved without an invoice number or final PDF.</li>
-              <li>It will appear in your <strong className="text-foreground">Pending POS Charges</strong> on the dashboard.</li>
-              <li>When you&apos;re ready, open the pending charge, enter the AG invoice number, upload the PrismCore PDF, and finalize.</li>
-            </ol>
-            <p>
-              Use this when you need to create the invoice now but charge at the register later.
-            </p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowChargeLaterDialog(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                setShowChargeLaterDialog(false);
-                handleSavePendingCharge();
-              }}
-              disabled={saving}
-            >
-              {saving ? "Saving..." : "Save as Pending Charge"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

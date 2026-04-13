@@ -3,7 +3,7 @@ import { withAdmin } from "@/domains/shared/auth";
 import { adminService } from "@/domains/admin/service";
 import type { BatchActionInput } from "@/domains/admin/types";
 
-const VALID_STATUSES = ["DRAFT", "FINAL", "PENDING_CHARGE"] as const;
+const VALID_STATUSES = ["DRAFT", "FINAL"] as const;
 
 export const PATCH = withAdmin(async (req: NextRequest) => {
   const body = await req.json().catch(() => null);

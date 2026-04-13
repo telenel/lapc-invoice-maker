@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 
-export type InvoiceStatus = "DRAFT" | "FINAL" | "PENDING_CHARGE";
+export type InvoiceStatus = "DRAFT" | "FINAL";
 
 export interface Invoice {
   id: string;

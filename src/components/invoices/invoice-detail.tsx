@@ -113,7 +113,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
 
   function handleDeleteClick() {
     if (!invoice) return;
-    if (invoice.status === "DRAFT" || invoice.status === "PENDING_CHARGE") {
+    if (invoice.status === "DRAFT") {
       if (window.confirm("Are you sure you want to delete this draft invoice?")) {
         handleDelete();
       }

@@ -186,6 +186,20 @@ describe("invoiceService", () => {
 
       expect(result!.accountNumber).toBe("");
     });
+
+    it("normalizes legacy pending-charge invoices into running drafts", async () => {
+      mockRepo.findById.mockResolvedValue({
+        ...mockInvoiceRow,
+        status: "PENDING_CHARGE",
+        isRunning: false,
+      } as never);
+
+      const result = await invoiceService.getById("inv1");
+
+      expect(result).not.toBeNull();
+      expect(result!.status).toBe("DRAFT");
+      expect(result!.isRunning).toBe(true);
+    });
   });
 
   // ── create ────────────────────────────────────────────────────────────────

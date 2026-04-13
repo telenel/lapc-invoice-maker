@@ -7,10 +7,10 @@ const VALID_STATUSES = new Set(["DRAFT", "FINAL", "PENDING_CHARGE"]);
 
 function parseStatus(
   value: string | null,
-): "DRAFT" | "FINAL" | "PENDING_CHARGE" | undefined | "error" {
+): "DRAFT" | "FINAL" | undefined | "error" {
   if (value == null) return undefined;
   if (!VALID_STATUSES.has(value)) return "error";
-  return value as "DRAFT" | "FINAL" | "PENDING_CHARGE";
+  return (value === "PENDING_CHARGE" ? "DRAFT" : value) as "DRAFT" | "FINAL";
 }
 
 function parseAmount(value: string | null): number | undefined | "error" {

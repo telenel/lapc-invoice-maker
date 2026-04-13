@@ -13,7 +13,6 @@ import type { UserResponse } from "@/domains/admin/types";
 const INVOICE_STATUSES = [
   { value: "DRAFT", label: "Draft" },
   { value: "FINAL", label: "Final" },
-  { value: "PENDING_CHARGE", label: "Pending Charge" },
 ];
 
 export function InvoiceManager() {

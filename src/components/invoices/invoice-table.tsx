@@ -244,17 +244,13 @@ export function InvoiceTable({
   function statusLabel(status: InvoiceResponse["status"]) {
     return status === "FINAL"
       ? "Final"
-      : status === "PENDING_CHARGE"
-        ? "Pending Charge"
-        : "Draft";
+      : "Draft";
   }
 
   function statusVariant(status: InvoiceResponse["status"]): "success" | "info" | "warning" {
     return status === "FINAL"
       ? "success"
-      : status === "PENDING_CHARGE"
-        ? "info"
-        : "warning";
+      : "warning";
   }
 
   function toggleSelected(id: string) {

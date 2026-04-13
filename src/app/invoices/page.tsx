@@ -44,8 +44,10 @@ function buildInitialInvoiceRequest(
 ): InvoiceFilters & { sortBy: string; sortOrder: "asc" | "desc" } {
   const rawStatus = getSearchParam(searchParams, "status");
   const status =
-    rawStatus === "DRAFT" || rawStatus === "FINAL" || rawStatus === "PENDING_CHARGE"
-      ? rawStatus
+    rawStatus === "FINAL"
+      ? "FINAL"
+      : rawStatus === "DRAFT" || rawStatus === "PENDING_CHARGE"
+        ? "DRAFT"
       : undefined;
   const rawSortOrder =
     getSearchParam(searchParams, "sortOrder") ?? getSearchParam(searchParams, "sortDir");

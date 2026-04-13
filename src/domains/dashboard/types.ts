@@ -42,7 +42,9 @@ export interface DashboardRunningInvoiceItem {
   id: string;
   creatorId: string;
   creatorName: string;
+  requestorName: string;
   department: string;
+  detail: string;
   totalAmount: number;
   runningTitle: string | null;
   itemCount: number;
@@ -73,7 +75,6 @@ export interface DashboardBootstrapData {
   yourFocus: DashboardFocusData | null;
   stats: DashboardStatsData;
   pendingAccounts: DashboardPendingAccountItem[];
-  pendingCharges: CreatorStatEntry[];
   runningInvoices: DashboardRunningInvoiceItem[];
   recentActivity: DashboardRecentActivityData;
 }

@@ -121,7 +121,6 @@ describe("TodaysEvents", () => {
             teamUsers: [],
           },
           pendingAccounts: [],
-          pendingCharges: [],
           runningInvoices: [],
           recentActivity: {
             items: [],

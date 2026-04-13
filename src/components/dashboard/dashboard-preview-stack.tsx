@@ -29,7 +29,6 @@ type WidgetId =
   | "your-focus"
   | "pending-accounts"
   | "stats"
-  | "pending-charges"
   | "running-invoices";
 
 type SecondaryWidgetId = Exclude<
@@ -42,7 +41,6 @@ const SKELETON_CLASS_BY_ID: Record<WidgetId | "recent-activity", string> = {
   "your-focus": "h-[172px]",
   "pending-accounts": "h-[172px]",
   stats: "h-[156px]",
-  "pending-charges": "h-[148px]",
   "running-invoices": "h-[148px]",
   "recent-activity": "h-[236px]",
 };
@@ -69,7 +67,6 @@ function WidgetSkeleton({ className }: HTMLAttributes<HTMLDivElement>) {
 function isSecondaryWidgetId(widgetId: WidgetId): widgetId is SecondaryWidgetId {
   return (
     widgetId === "stats" ||
-    widgetId === "pending-charges" ||
     widgetId === "running-invoices"
   );
 }
@@ -89,7 +86,6 @@ function ImmediatePreviewWidget({
     case "pending-accounts":
       return <PendingAccounts currentUserId={currentUserId} />;
     case "stats":
-    case "pending-charges":
     case "running-invoices":
       return (
         <DashboardSecondaryWidgetGroup

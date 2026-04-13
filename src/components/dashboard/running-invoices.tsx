@@ -38,7 +38,15 @@ export function RunningInvoices({
               id: invoice.id,
               creatorId: invoice.creatorId,
               creatorName: invoice.creatorName,
+              requestorName:
+                invoice.staff?.name ??
+                invoice.contact?.name ??
+                "Unknown Requestor",
               department: invoice.department,
+              detail:
+                invoice.runningTitle ||
+                invoice.items[0]?.description ||
+                "Untitled Running Invoice",
               totalAmount: invoice.totalAmount,
               runningTitle: invoice.runningTitle,
               itemCount: invoice.items.length,
@@ -86,20 +94,25 @@ export function RunningInvoices({
                 className={`flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors ${i < sorted.length - 1 ? "border-b border-border/30" : ""} ${isMine ? "bg-primary/[0.03]" : ""}`}
               >
                 <div className="flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-muted text-[11px] font-bold text-muted-foreground shrink-0">
-                  {getInitials(inv.creatorName)}
+                  {getInitials(inv.requestorName)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-semibold truncate">
-                    {inv.runningTitle || "Untitled Running Invoice"}
+                    {inv.detail}
                     {isMine && <span className="text-[10px] text-primary font-medium ml-2">Yours</span>}
                   </p>
                   <p className="text-[11px] text-muted-foreground">
-                    {inv.creatorName} · {inv.department} · {inv.itemCount} item{inv.itemCount !== 1 ? "s" : ""}
+                    {inv.requestorName} · {inv.department}
+                    {inv.creatorName !== inv.requestorName && (
+                      <> · by {inv.creatorName}</>
+                    )}
                   </p>
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-[13px] font-bold tabular-nums">{formatAmount(inv.totalAmount)}</p>
-                  <p className="text-[10px] text-primary font-medium">Add Items →</p>
+                  <p className="text-[10px] text-primary font-medium">
+                    {inv.itemCount} item{inv.itemCount !== 1 ? "s" : ""}
+                  </p>
                 </div>
               </Link>
             );

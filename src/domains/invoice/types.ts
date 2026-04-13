@@ -94,7 +94,7 @@ export interface CreateInvoiceInput {
   recurringEmail?: string;
   isRunning?: boolean;
   runningTitle?: string;
-  status?: "DRAFT" | "PENDING_CHARGE";
+  status?: "DRAFT";
   marginEnabled?: boolean;
   marginPercent?: number;
   taxEnabled?: boolean;

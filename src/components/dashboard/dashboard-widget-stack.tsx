@@ -4,7 +4,6 @@ import { startTransition, useEffect, useRef, useState } from "react";
 import type { ReactNode, HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
 import { PendingAccountsWidget } from "./pending-accounts";
-import { PendingCharges } from "./pending-charges";
 import { RecentActivity } from "./recent-invoices";
 import { RunningInvoices } from "./running-invoices";
 import { StatsCards } from "./stats-cards";
@@ -59,12 +58,6 @@ export const SORTABLE_WIDGETS: WidgetConfig[] = [
     label: "Stats",
     skeletonClassName: "h-[156px]",
     component: ({ currentUserId }) => <StatsCards currentUserId={currentUserId} />,
-  },
-  {
-    id: "pending-charges",
-    label: "Pending Charges",
-    skeletonClassName: "h-[148px]",
-    component: () => <PendingCharges />,
   },
   {
     id: "running-invoices",

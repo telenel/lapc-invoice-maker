@@ -41,7 +41,6 @@ export function InvoiceManagerFilters({
             <SelectItem value="ALL">All statuses</SelectItem>
             <SelectItem value="DRAFT">Draft</SelectItem>
             <SelectItem value="FINAL">Final</SelectItem>
-            <SelectItem value="PENDING_CHARGE">Pending Charge</SelectItem>
           </SelectContent>
         </Select>
       </div>

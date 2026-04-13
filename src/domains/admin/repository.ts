@@ -190,7 +190,7 @@ export const adminRepository = {
   async batchUpdateInvoiceStatus(ids: string[], status: string) {
     return prisma.invoice.updateMany({
       where: { id: { in: ids }, type: "INVOICE" },
-      data: { status: status as "DRAFT" | "FINAL" | "PENDING_CHARGE" },
+      data: { status: status as "DRAFT" | "FINAL" },
     });
   },
 

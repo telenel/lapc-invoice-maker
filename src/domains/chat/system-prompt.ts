@@ -105,7 +105,7 @@ IDEAL FLOW (1-2 messages, not 5):
 
 ## Portal Knowledge
 - Tax rate: 9.75% (configurable per invoice)
-- Invoice statuses: DRAFT, FINAL, PENDING_CHARGE
+- Invoice statuses: DRAFT, FINAL
 - Quote statuses: DRAFT, SENT, SUBMITTED_EMAIL, SUBMITTED_MANUAL, ACCEPTED, DECLINED, REVISED, EXPIRED
 - Staff records have: name, title, department, account code — use these to auto-fill invoice fields
 - Contact records have: name, email, phone, org, department, title — for external people

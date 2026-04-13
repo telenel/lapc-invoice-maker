@@ -1,13 +1,11 @@
 "use client";
 
-import { PendingCharges } from "./pending-charges";
 import { RecentActivity } from "./recent-invoices";
 import { RunningInvoices } from "./running-invoices";
 import { StatsCards } from "./stats-cards";
 
 type SecondaryWidgetId =
   | "stats"
-  | "pending-charges"
   | "running-invoices";
 
 function renderSecondaryWidget(
@@ -17,8 +15,6 @@ function renderSecondaryWidget(
   switch (widgetId) {
     case "stats":
       return <StatsCards currentUserId={currentUserId} />;
-    case "pending-charges":
-      return <PendingCharges />;
     case "running-invoices":
       return <RunningInvoices currentUserId={currentUserId} />;
     default:

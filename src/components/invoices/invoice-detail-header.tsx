@@ -49,18 +49,16 @@ export function InvoiceDetailHeader({
 }: InvoiceDetailHeaderProps) {
   const isDraft = invoice.status === "DRAFT";
   const isFinal = invoice.status === "FINAL";
-  const isPendingCharge = invoice.status === "PENDING_CHARGE";
   const hasPdf = Boolean(invoice.pdfPath);
+  const title = invoice.isRunning
+    ? invoice.runningTitle || "Untitled Running Invoice"
+    : invoice.invoiceNumber || "Draft Invoice";
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
         <h1 className="text-2xl font-bold text-balance">
-          {invoice.isRunning && invoice.runningTitle
-            ? invoice.runningTitle
-            : !invoice.invoiceNumber
-              ? "Pending POS Charge"
-              : invoice.invoiceNumber}
+          {title}
         </h1>
         {invoice.isRunning && invoice.invoiceNumber && (
           <p className="text-sm font-medium text-muted-foreground">{invoice.invoiceNumber}</p>
@@ -73,14 +71,12 @@ export function InvoiceDetailHeader({
       <div className="flex flex-wrap items-center gap-2 sm:justify-end">
         <Badge
           variant={
-            isFinal ? "success" : isPendingCharge ? "info" : "warning"
+            isFinal ? "success" : "warning"
           }
         >
           {isFinal
             ? "Final"
-            : isPendingCharge
-              ? "Pending Charge"
-              : "Draft"}
+            : "Draft"}
         </Badge>
         {invoice.isRunning && (
           <Badge variant="info">Running Invoice</Badge>
@@ -91,12 +87,12 @@ export function InvoiceDetailHeader({
           </Badge>
         )}
 
-        {canManageActions && (isDraft || isPendingCharge) && (
+        {canManageActions && isDraft && (
           <Link
             href={`/invoices/${invoice.id}/edit`}
             className={buttonVariants({ variant: "outline", size: "sm" })}
           >
-            {isPendingCharge ? "Complete POS Charge" : "Edit"}
+            Edit
           </Link>
         )}
 
@@ -140,7 +136,7 @@ export function InvoiceDetailHeader({
           </>
         )}
 
-        {canManageActions && ((isDraft || isPendingCharge) ? (
+        {canManageActions && (isDraft ? (
           <Button
             variant="destructive"
             size="sm"

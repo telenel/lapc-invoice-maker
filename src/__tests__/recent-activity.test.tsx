@@ -25,7 +25,6 @@ describe("RecentActivity", () => {
             teamUsers: [],
           },
           pendingAccounts: [],
-          pendingCharges: [],
           runningInvoices: [],
           recentActivity: {
             items: [

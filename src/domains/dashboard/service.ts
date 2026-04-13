@@ -18,6 +18,22 @@ import type {
   DashboardStatsData,
 } from "./types";
 
+function isLegacyPendingCharge(status: string | null | undefined): boolean {
+  return status === "PENDING_CHARGE";
+}
+
+function normalizeInvoiceActivityStatus(status: string | null | undefined): string {
+  return isLegacyPendingCharge(status) ? "DRAFT" : (status ?? "DRAFT");
+}
+
+function buildRunningInvoiceDetail(invoice: {
+  runningTitle: string | null;
+  items: { description: string }[];
+}): string {
+  const firstItemDescription = invoice.items[0]?.description?.trim();
+  return invoice.runningTitle?.trim() || firstItemDescription || "Untitled Running Invoice";
+}
+
 function getDateKeyInLosAngeles(date: Date): string {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: LOS_ANGELES_TIME_ZONE,
@@ -108,15 +124,17 @@ async function getDashboardFocusData(
     prisma.invoice.count({
       where: {
         type: "INVOICE",
-        status: "DRAFT",
+        status: { in: ["DRAFT", "PENDING_CHARGE"] },
         createdBy: currentUserId,
       },
     }),
     prisma.invoice.count({
       where: {
         type: "INVOICE",
-        status: "DRAFT",
-        isRunning: true,
+        OR: [
+          { status: "PENDING_CHARGE" },
+          { status: "DRAFT", isRunning: true },
+        ],
         createdBy: currentUserId,
       },
     }),
@@ -190,8 +208,10 @@ async function getRunningInvoices(): Promise<DashboardRunningInvoiceItem[]> {
   const invoices = await prisma.invoice.findMany({
     where: {
       type: "INVOICE",
-      status: "DRAFT",
-      isRunning: true,
+      OR: [
+        { status: "PENDING_CHARGE" },
+        { status: "DRAFT", isRunning: true },
+      ],
     },
     orderBy: { createdAt: "desc" },
     take: 50,
@@ -201,7 +221,15 @@ async function getRunningInvoices(): Promise<DashboardRunningInvoiceItem[]> {
       department: true,
       totalAmount: true,
       runningTitle: true,
+      status: true,
       creator: { select: { name: true } },
+      staff: { select: { name: true } },
+      contact: { select: { name: true } },
+      items: {
+        orderBy: { sortOrder: "asc" },
+        take: 1,
+        select: { description: true },
+      },
       _count: { select: { items: true } },
     },
   });
@@ -210,9 +238,11 @@ async function getRunningInvoices(): Promise<DashboardRunningInvoiceItem[]> {
     id: invoice.id,
     creatorId: invoice.createdBy,
     creatorName: invoice.creator.name,
+    requestorName: invoice.staff?.name ?? invoice.contact?.name ?? "Unknown Requestor",
     department: invoice.department,
+    detail: buildRunningInvoiceDetail(invoice),
     totalAmount: Number(invoice.totalAmount),
-    runningTitle: invoice.runningTitle,
+    runningTitle: invoice.runningTitle ?? (isLegacyPendingCharge(invoice.status) ? "Legacy POS Invoice" : null),
     itemCount: invoice._count.items,
   }));
 }
@@ -269,7 +299,9 @@ async function getRecentActivity(): Promise<DashboardRecentActivityData> {
     department: row.department,
     date: row.date.toISOString(),
     amount: Number(row.totalAmount),
-    status: row.type === "QUOTE" ? row.quoteStatus ?? "DRAFT" : row.status,
+    status: row.type === "QUOTE"
+      ? row.quoteStatus ?? "DRAFT"
+      : normalizeInvoiceActivityStatus(row.status),
     creatorId: row.createdBy,
     creatorName: row.creator.name,
     createdAt: row.createdAt.toISOString(),
@@ -310,7 +342,6 @@ export async function getDashboardBootstrapData(
     yourFocus,
     stats,
     pendingAccounts,
-    pendingCharges,
     runningInvoices,
     recentActivity,
   ] = await Promise.all([
@@ -318,7 +349,6 @@ export async function getDashboardBootstrapData(
     getDashboardFocusData(currentUserId),
     getDashboardStatsData(),
     getPendingAccounts(),
-    invoiceService.getCreatorStats("PENDING_CHARGE").then((result) => result.users),
     getRunningInvoices(),
     getRecentActivity(),
   ]);
@@ -328,7 +358,6 @@ export async function getDashboardBootstrapData(
     yourFocus,
     stats,
     pendingAccounts,
-    pendingCharges,
     runningInvoices,
     recentActivity,
   };

@@ -41,7 +41,7 @@ export const invoiceCreateSchema = z.object({
   recurringEmail: z.string().email().optional().or(z.literal("")),
   isRunning: z.boolean().default(false),
   runningTitle: z.string().optional(),
-  status: z.enum(["DRAFT", "PENDING_CHARGE"]).optional(),
+  status: z.enum(["DRAFT"]).optional(),
   prismcorePath: z.string().optional().nullable(),
   pdfMetadata: z.object({
     signatures: z

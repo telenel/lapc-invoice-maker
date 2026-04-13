@@ -39,7 +39,6 @@ interface InvoiceMetadataProps {
   categories: Category[];
   categoriesLoading: boolean;
   staffAccountNumbers: StaffAccountNumber[];
-  isPendingCharge: boolean;
   invoiceNumberRef: Ref<HTMLInputElement>;
 }
 
@@ -53,7 +52,6 @@ export function InvoiceMetadata({
   categories,
   categoriesLoading,
   staffAccountNumbers,
-  isPendingCharge,
   invoiceNumberRef,
 }: InvoiceMetadataProps) {
   const categoryItems: ComboboxItem[] = categories
@@ -92,11 +90,7 @@ export function InvoiceMetadata({
         </div>
 
         {/* Invoice Number */}
-        <div className={cn(
-          "space-y-1",
-          isPendingCharge && !form.invoiceNumber &&
-            "rounded-lg border-l-4 border-l-primary bg-primary/5 p-2 -ml-2"
-        )}>
+        <div className={cn("space-y-1")}>
           <label className="text-sm font-medium">
             Invoice Number <span className="text-destructive">*</span>
           </label>
@@ -104,7 +98,7 @@ export function InvoiceMetadata({
             ref={invoiceNumberRef}
             value={form.invoiceNumber}
             onChange={(e) => updateField("invoiceNumber", e.target.value)}
-            placeholder="AG-XXXXXX (leave blank if not yet charged)"
+            placeholder="AG-XXXXXX (enter when ready to finalize)"
             name="invoiceNumber"
           />
         </div>

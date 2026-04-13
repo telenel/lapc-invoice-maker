@@ -47,8 +47,8 @@ const QUOTE_STATUS_LABEL: Record<QuoteStatus, string> = {
 };
 
 function invoiceBadge(status: string) {
-  const variant = status === "FINAL" ? "success" : status === "PENDING_CHARGE" ? "info" : "warning";
-  const label = status === "FINAL" ? "Final" : status === "PENDING_CHARGE" ? "Pending" : "Draft";
+  const variant = status === "FINAL" ? "success" : "warning";
+  const label = status === "FINAL" ? "Final" : "Draft";
   return { variant, label } as const;
 }
 

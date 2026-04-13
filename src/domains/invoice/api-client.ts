@@ -84,7 +84,7 @@ export const invoiceApi = {
     return request<InvoiceStatsResponse>(`${BASE}?${params}`);
   },
 
-  async getCreatorStats(status?: "DRAFT" | "FINAL" | "PENDING_CHARGE"): Promise<CreatorStatsResponse> {
+  async getCreatorStats(status?: "DRAFT" | "FINAL"): Promise<CreatorStatsResponse> {
     const params = new URLSearchParams({ statsOnly: "true", groupBy: "creator" });
     if (status) params.set("status", status);
     return request<CreatorStatsResponse>(`${BASE}?${params}`);

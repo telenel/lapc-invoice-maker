@@ -21,7 +21,7 @@ export function buildTools(user: ChatUser) {
       inputSchema: z.object({
         search: z.string().optional().describe("Search term for invoice number or department"),
         status: z
-          .enum(["DRAFT", "FINAL", "PENDING_CHARGE"])
+          .enum(["DRAFT", "FINAL"])
           .optional()
           .describe("Filter by invoice status"),
         department: z.string().optional().describe("Filter by department"),

@@ -47,7 +47,7 @@ export function useInvoiceForm(
     originalStaffRef
   );
 
-  const { saving, generationStep, saveDraft, saveAndFinalize, savePendingCharge } =
+  const { saving, generationStep, saveDraft, saveAndFinalize } =
     useInvoiceSave(form, existingId);
 
   return {
@@ -66,7 +66,6 @@ export function useInvoiceForm(
     staffAccountNumbers,
     saveDraft,
     saveAndFinalize,
-    savePendingCharge,
     saving,
     generationStep,
     existingId,

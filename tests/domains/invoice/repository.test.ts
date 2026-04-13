@@ -152,6 +152,20 @@ describe("invoiceRepository", () => {
       );
     });
 
+    it("treats pending-charge records as drafts when filtering drafts", async () => {
+      mockPrisma.$transaction.mockResolvedValue([[], 0] as never);
+
+      await invoiceRepository.findMany({ status: "DRAFT" });
+
+      expect(mockPrisma.invoice.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            status: { in: ["DRAFT", "PENDING_CHARGE"] },
+          }),
+        })
+      );
+    });
+
     it("applies department filter (case-insensitive contains)", async () => {
       mockPrisma.$transaction.mockResolvedValue([[], 0] as never);
 
@@ -231,6 +245,38 @@ describe("invoiceRepository", () => {
             ]),
           }),
         })
+      );
+    });
+  });
+
+  describe("countByCreator", () => {
+    it("defaults creator stats to finalized invoices only", async () => {
+      mockPrisma.invoice.findMany.mockResolvedValue([] as never);
+
+      await invoiceRepository.countByCreator();
+
+      expect(mockPrisma.invoice.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            type: "INVOICE",
+            status: "FINAL",
+          }),
+        }),
+      );
+    });
+
+    it("treats legacy pending-charge invoices as drafts for creator stats when requested", async () => {
+      mockPrisma.invoice.findMany.mockResolvedValue([] as never);
+
+      await invoiceRepository.countByCreator("DRAFT");
+
+      expect(mockPrisma.invoice.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            type: "INVOICE",
+            status: { in: ["DRAFT", "PENDING_CHARGE"] },
+          }),
+        }),
       );
     });
   });

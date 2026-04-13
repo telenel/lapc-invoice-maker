@@ -23,7 +23,7 @@ import type { Invoice, InvoiceStatus } from "./hooks/use-invoice-manager";
 import type { EditingCell, EditableField, InlineEditState } from "./hooks/use-inline-edit";
 import { getFieldValue } from "./hooks/use-inline-edit";
 
-const STATUS_OPTIONS: InvoiceStatus[] = ["DRAFT", "FINAL", "PENDING_CHARGE"];
+const STATUS_OPTIONS: InvoiceStatus[] = ["DRAFT", "FINAL"];
 
 function statusBadgeVariant(status: InvoiceStatus) {
   switch (status) {
@@ -31,8 +31,6 @@ function statusBadgeVariant(status: InvoiceStatus) {
       return "success" as const;
     case "DRAFT":
       return "warning" as const;
-    case "PENDING_CHARGE":
-      return "info" as const;
   }
 }
 
@@ -42,8 +40,6 @@ function statusLabel(status: InvoiceStatus) {
       return "Final";
     case "DRAFT":
       return "Draft";
-    case "PENDING_CHARGE":
-      return "Pending Charge";
   }
 }
 

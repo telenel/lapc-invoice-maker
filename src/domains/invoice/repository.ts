@@ -36,7 +36,9 @@ function buildWhere(filters: InvoiceFilters): Prisma.InvoiceWhereInput {
   const where: Prisma.InvoiceWhereInput = { type: "INVOICE" };
 
   if (filters.status) {
-    where.status = filters.status;
+    where.status = filters.status === "DRAFT"
+      ? { in: ["DRAFT", "PENDING_CHARGE"] }
+      : filters.status;
   }
   if (filters.staffId) {
     where.staffId = filters.staffId;
@@ -51,7 +53,15 @@ function buildWhere(filters: InvoiceFilters): Prisma.InvoiceWhereInput {
     where.createdBy = filters.creatorId;
   }
   if (filters.isRunning) {
-    where.isRunning = true;
+    where.AND = [
+      ...(Array.isArray(where.AND) ? where.AND : where.AND ? [where.AND] : []),
+      {
+        OR: [
+          { isRunning: true },
+          { status: "PENDING_CHARGE" },
+        ],
+      },
+    ];
   }
   if (filters.needsAccountNumber) {
     where.followUps = {
@@ -167,7 +177,7 @@ export async function create(
     recurringEmail?: string;
     isRunning?: boolean;
     runningTitle?: string;
-    status?: "DRAFT" | "PENDING_CHARGE";
+    status?: "DRAFT";
     marginEnabled?: boolean;
     marginPercent?: number;
     taxEnabled?: boolean;
@@ -311,11 +321,15 @@ export async function countAndSum(filters: InvoiceFilters) {
 export async function countByCreator(status?: string) {
   const now = new Date();
   const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const statusFilter: Prisma.InvoiceWhereInput["status"] =
+    status === "DRAFT"
+      ? { in: ["DRAFT", "PENDING_CHARGE"] }
+      : "FINAL";
 
   const invoices = await prisma.invoice.findMany({
     where: {
       type: "INVOICE",
-      status: status ? (status as "FINAL" | "PENDING_CHARGE") : { in: ["FINAL", "PENDING_CHARGE"] },
+      status: statusFilter,
       createdAt: { gte: firstOfMonth },
     },
     select: {

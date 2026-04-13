@@ -39,6 +39,10 @@ export interface CreatorStatEntry {
   totalAmount: number;
 }
 
+function normalizeInvoiceStatus(status: string): InvoiceResponse["status"] {
+  return status === "PENDING_CHARGE" ? "DRAFT" : (status as InvoiceResponse["status"]);
+}
+
 // ── DTO mapper ─────────────────────────────────────────────────────────────
 
 type InvoiceWithRelations = Awaited<ReturnType<typeof invoiceRepository.findById>>;
@@ -87,7 +91,7 @@ function toInvoiceResponse(invoice: NonNullable<InvoiceWithRelations>): InvoiceR
     invoiceNumber: invoice.invoiceNumber,
     date: invoice.date.toISOString(),
     staffId: invoice.staffId ?? null,
-    status: invoice.status as InvoiceResponse["status"],
+    status: normalizeInvoiceStatus(invoice.status),
     type: invoice.type,
     department: invoice.department,
     category: invoice.category,
@@ -99,7 +103,7 @@ function toInvoiceResponse(invoice: NonNullable<InvoiceWithRelations>): InvoiceR
     isRecurring: invoice.isRecurring,
     recurringInterval: invoice.recurringInterval,
     recurringEmail: invoice.recurringEmail,
-    isRunning: invoice.isRunning,
+    isRunning: invoice.isRunning || invoice.status === "PENDING_CHARGE",
     runningTitle: invoice.runningTitle,
     pdfPath: invoice.pdfPath,
     pdfMetadata: (invoice.pdfMetadata as InvoicePdfMetadata | null) ?? null,
@@ -461,7 +465,6 @@ export const invoiceService = {
 
   /**
    * Aggregate invoice stats grouped by creator for the current month.
-   * Used by the pending-charges dashboard panel.
    */
   async getCreatorStats(status?: InvoiceFilters["status"]): Promise<{ users: CreatorStatEntry[] }> {
     return invoiceRepository.countByCreator(status);
