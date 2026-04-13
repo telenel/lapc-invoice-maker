@@ -9,6 +9,8 @@ import { ThemeProviderWrapper } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { UIScaleProvider } from "@/components/ui-scale-provider";
 import { ChatSidebarShell } from "@/components/chat/chat-sidebar-shell";
+import { readBuildMeta } from "@/lib/build-meta";
+import { siteIconsMetadata } from "@/lib/site-icons";
 
 const dmSans = DM_Sans({
   subsets: ["latin"],
@@ -23,6 +25,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "LAPortal",
   description: "Operations portal for Los Angeles Pierce College",
+  icons: siteIconsMetadata,
 };
 
 export const viewport: Viewport = {
@@ -32,11 +35,13 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const buildMeta = await readBuildMeta();
+
   return (
     <html lang="en" className={cn(dmSans.variable, jetbrainsMono.variable)} suppressHydrationWarning>
       <body className="min-h-dvh overflow-x-hidden antialiased">
@@ -51,7 +56,7 @@ export default function RootLayout({
                 </div>
                 <ChatSidebarShell />
               </div>
-              <RepoLink />
+              <RepoLink buildSha={buildMeta?.buildSha ?? null} />
               <Toaster />
             </UIScaleProvider>
           </ThemeProviderWrapper>
