@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useDeferredValue, useEffect, useMemo, useState, useCallback } from "react";
+import React, { useDeferredValue, useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -25,9 +25,10 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { FollowUpBadge } from "@/components/follow-up/follow-up-badge";
 import { BulkRequestDialog } from "@/components/follow-up/bulk-request-dialog";
 import { useSSE } from "@/lib/use-sse";
-import { quoteApi } from "@/domains/quote/api-client";
+import { quoteApi, type QuoteListResponse } from "@/domains/quote/api-client";
 import { followUpApi } from "@/domains/follow-up/api-client";
 import type { FollowUpBadgeState } from "@/domains/follow-up/types";
+import type { QuoteFilters as QuoteRequestFilters } from "@/domains/quote/types";
 
 type QuoteStatus = "DRAFT" | "SENT" | "SUBMITTED_EMAIL" | "SUBMITTED_MANUAL" | "ACCEPTED" | "DECLINED" | "REVISED" | "EXPIRED";
 
@@ -87,6 +88,9 @@ const STATUS_LABEL: Record<QuoteStatus, string> = {
 interface QuoteTableProps {
   departments: string[];
   categories: { name: string; label: string }[];
+  initialData?: QuoteListResponse;
+  initialRequest?: QuoteRequestFilters & { sortBy?: string; sortOrder?: "asc" | "desc" };
+  initialBadgeStates?: Record<string, FollowUpBadgeState>;
 }
 
 function parseInitialFilters(searchParams: ReturnType<typeof useSearchParams>): QuoteFilters {
@@ -191,7 +195,13 @@ const QuoteRow = React.memo(function QuoteRow({ quote, onClick, badgeState, sele
   );
 });
 
-export function QuoteTable({ departments, categories }: QuoteTableProps) {
+export function QuoteTable({
+  departments,
+  categories,
+  initialData,
+  initialRequest,
+  initialBadgeStates = {},
+}: QuoteTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -200,19 +210,39 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
   }, [router]);
 
   const [filters, setFilters] = useState<QuoteFilters>(() => parseInitialFilters(searchParams));
-  const [quotes, setQuotes] = useState<Quote[]>([]);
-  const [total, setTotal] = useState(0);
+  const [quotes, setQuotes] = useState<Quote[]>(initialData?.quotes ?? []);
+  const [total, setTotal] = useState(initialData?.total ?? 0);
   const [page, setPage] = useState(() => parsePage(searchParams));
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => initialData === undefined);
   const [sortBy, setSortBy] = useState<SortField>(() => parseSortField(searchParams));
   const [sortDir, setSortDir] = useState<SortDir>(() => parseSortDir(searchParams));
   const [creatorId, setCreatorId] = useState<string | undefined>(() => searchParams.get("creatorId") ?? undefined);
   const deferredSearch = useDeferredValue(filters.search);
-  const [badgeStates, setBadgeStates] = useState<Record<string, FollowUpBadgeState>>({});
+  const [badgeStates, setBadgeStates] = useState<Record<string, FollowUpBadgeState>>(initialBadgeStates);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
+  const skippedInitialFetchRef = useRef(initialData !== undefined);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const currentRequestKey = JSON.stringify({
+    search: deferredSearch || undefined,
+    quoteStatus: filters.quoteStatus && filters.quoteStatus !== "all"
+      ? filters.quoteStatus as QuoteRequestFilters["quoteStatus"]
+      : undefined,
+    category: filters.category && filters.category !== "all" ? filters.category : undefined,
+    department: filters.department && filters.department !== "all" ? filters.department : undefined,
+    creatorId,
+    dateFrom: filters.dateFrom || undefined,
+    dateTo: filters.dateTo || undefined,
+    amountMin: filters.amountMin ? Number(filters.amountMin) : undefined,
+    amountMax: filters.amountMax ? Number(filters.amountMax) : undefined,
+    needsAccountNumber: filters.needsAccountNumber || undefined,
+    page,
+    pageSize: PAGE_SIZE,
+    sortBy,
+    sortOrder: sortDir,
+  });
+  const initialRequestKey = initialRequest ? JSON.stringify(initialRequest) : null;
 
   const fetchQuotes = useCallback(async () => {
     setLoading(true);
@@ -220,7 +250,7 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
       const data = await quoteApi.list({
         search: deferredSearch || undefined,
         quoteStatus: filters.quoteStatus && filters.quoteStatus !== "all"
-          ? filters.quoteStatus as import("@/domains/quote/types").QuoteFilters["quoteStatus"]
+          ? filters.quoteStatus as QuoteRequestFilters["quoteStatus"]
           : undefined,
         category: filters.category && filters.category !== "all" ? filters.category : undefined,
         department: filters.department && filters.department !== "all" ? filters.department : undefined,
@@ -252,11 +282,30 @@ export function QuoteTable({ departments, categories }: QuoteTableProps) {
       toast.error("Failed to load quotes");
     }
     setLoading(false);
-  }, [creatorId, deferredSearch, filters.quoteStatus, filters.category, filters.department, filters.dateFrom, filters.dateTo, filters.amountMin, filters.amountMax, filters.needsAccountNumber, page, sortBy, sortDir]);
+  }, [
+    creatorId,
+    deferredSearch,
+    filters.amountMax,
+    filters.amountMin,
+    filters.category,
+    filters.dateFrom,
+    filters.dateTo,
+    filters.department,
+    filters.needsAccountNumber,
+    filters.quoteStatus,
+    page,
+    sortBy,
+    sortDir,
+  ]);
 
   useEffect(() => {
-    fetchQuotes();
-  }, [fetchQuotes]);
+    if (skippedInitialFetchRef.current && initialRequestKey === currentRequestKey) {
+      skippedInitialFetchRef.current = false;
+      return;
+    }
+
+    void fetchQuotes();
+  }, [currentRequestKey, fetchQuotes, initialRequestKey]);
 
   useSSE("quote-changed", fetchQuotes);
 

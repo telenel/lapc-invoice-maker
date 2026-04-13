@@ -1,22 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { AnalyticsResponse } from "@/domains/analytics/types";
 
 const CategoryChart = dynamic(() => import("./category-chart").then((m) => m.CategoryChart), { ssr: false });
 const MonthlyTotalsChart = dynamic(() => import("./monthly-totals-chart").then((m) => m.MonthlyTotalsChart), { ssr: false });
 const DepartmentSpendChart = dynamic(() => import("./department-spend-chart").then((m) => m.DepartmentSpendChart), { ssr: false });
 const InvoiceTrendChart = dynamic(() => import("./invoice-trend-chart").then((m) => m.InvoiceTrendChart), { ssr: false });
 const UserChart = dynamic(() => import("./user-chart").then((m) => m.UserChart), { ssr: false });
-
-interface AnalyticsData {
-  byCategory: { category: string; count: number; total: number }[];
-  byMonth: { month: string; count: number; total: number }[];
-  byDepartment: { department: string; count: number; total: number }[];
-  trend: { month: string; count: number }[];
-  byUser: { user: string; count: number; total: number }[];
-}
 
 function getDefaultDateRange() {
   const to = new Date();
@@ -28,15 +21,31 @@ function getDefaultDateRange() {
   };
 }
 
-export function AnalyticsDashboard() {
+export function AnalyticsDashboard({
+  initialData = null,
+  initialDateFrom,
+  initialDateTo,
+}: {
+  initialData?: AnalyticsResponse | null;
+  initialDateFrom?: string;
+  initialDateTo?: string;
+}) {
   const defaults = getDefaultDateRange();
-  const [dateFrom, setDateFrom] = useState(defaults.dateFrom);
-  const [dateTo, setDateTo] = useState(defaults.dateTo);
-  const [data, setData] = useState<AnalyticsData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [dateFrom, setDateFrom] = useState(initialDateFrom ?? defaults.dateFrom);
+  const [dateTo, setDateTo] = useState(initialDateTo ?? defaults.dateTo);
+  const [data, setData] = useState<AnalyticsResponse | null>(initialData);
+  const [loading, setLoading] = useState(() => initialData === null);
   const [error, setError] = useState<string | null>(null);
+  const skippedInitialFetchRef = useRef(initialData !== null);
+  const initialRangeKey = `${initialDateFrom ?? defaults.dateFrom}|${initialDateTo ?? defaults.dateTo}`;
+  const currentRangeKey = `${dateFrom}|${dateTo}`;
 
   useEffect(() => {
+    if (skippedInitialFetchRef.current && currentRangeKey === initialRangeKey) {
+      skippedInitialFetchRef.current = false;
+      return;
+    }
+
     async function fetchAnalytics() {
       setLoading(true);
       setError(null);
@@ -56,7 +65,7 @@ export function AnalyticsDashboard() {
     }
 
     fetchAnalytics();
-  }, [dateFrom, dateTo]);
+  }, [currentRangeKey, dateFrom, dateTo, initialRangeKey]);
 
   return (
     <div className="flex flex-col gap-6">

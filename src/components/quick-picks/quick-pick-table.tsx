@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { PlusIcon, PencilIcon, TrashIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,9 +24,14 @@ interface QuickPickItem {
   usageCount: number;
 }
 
-export function QuickPickTable() {
-  const [items, setItems] = useState<QuickPickItem[]>([]);
-  const [loading, setLoading] = useState(true);
+export function QuickPickTable({
+  initialItems,
+}: {
+  initialItems?: QuickPickItem[];
+}) {
+  const [items, setItems] = useState<QuickPickItem[]>(initialItems ?? []);
+  const [loading, setLoading] = useState(() => initialItems === undefined);
+  const skippedInitialFetchRef = useRef(initialItems !== undefined);
 
   const fetchItems = useCallback(async () => {
     setLoading(true);
@@ -40,7 +45,12 @@ export function QuickPickTable() {
   }, []);
 
   useEffect(() => {
-    fetchItems();
+    if (skippedInitialFetchRef.current) {
+      skippedInitialFetchRef.current = false;
+      return;
+    }
+
+    void fetchItems();
   }, [fetchItems]);
 
   async function handleDelete(id: string) {

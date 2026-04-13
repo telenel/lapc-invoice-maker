@@ -2,9 +2,14 @@
 
 import { cn } from "@/lib/utils";
 import { useRequisitionStats } from "@/domains/textbook-requisition/hooks";
+import type { RequisitionStats as RequisitionStatsData } from "@/domains/textbook-requisition/types";
 
-export function RequisitionStats() {
-  const { data } = useRequisitionStats();
+export function RequisitionStats({
+  initialData = null,
+}: {
+  initialData?: RequisitionStatsData | null;
+}) {
+  const { data } = useRequisitionStats(initialData);
 
   if (!data) return null;
 

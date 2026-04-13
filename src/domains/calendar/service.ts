@@ -3,6 +3,30 @@ import { eventService } from "@/domains/event/service";
 import { Prisma } from "@/generated/prisma/client";
 import { BIRTHDAY_COLOR, CATERING_COLOR, type CalendarEventItem } from "@/domains/event/types";
 
+export interface CalendarBootstrapRange {
+  start: string;
+  end: string;
+  events: CalendarEventItem[];
+}
+
+export interface CalendarBootstrapData {
+  desktop: CalendarBootstrapRange;
+  mobile: CalendarBootstrapRange;
+}
+
+function formatDateKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+    date.getDate(),
+  ).padStart(2, "0")}`;
+}
+
+function getWeekStart(date: Date): Date {
+  const start = new Date(date);
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - start.getDay());
+  return start;
+}
+
 export async function listCalendarEventsForRange(
   start: string,
   end: string,
@@ -125,4 +149,41 @@ export async function listCalendarEventsForRange(
   }
 
   return [...cateringEvents, ...manualEvents, ...birthdayEvents];
+}
+
+export async function getCalendarBootstrapData(
+  now = new Date(),
+): Promise<CalendarBootstrapData> {
+  const mobileStart = new Date(now);
+  mobileStart.setHours(0, 0, 0, 0);
+  const mobileEnd = new Date(mobileStart);
+  mobileEnd.setDate(mobileEnd.getDate() + 1);
+
+  const desktopStart = getWeekStart(now);
+  const desktopEnd = new Date(desktopStart);
+  desktopEnd.setDate(desktopEnd.getDate() + 7);
+
+  const mobileRange = {
+    start: formatDateKey(mobileStart),
+    end: formatDateKey(mobileEnd),
+  };
+  const desktopRange = {
+    start: formatDateKey(desktopStart),
+    end: formatDateKey(desktopEnd),
+  };
+  const [desktopEvents, mobileEvents] = await Promise.all([
+    listCalendarEventsForRange(desktopRange.start, desktopRange.end),
+    listCalendarEventsForRange(mobileRange.start, mobileRange.end),
+  ]);
+
+  return {
+    desktop: {
+      ...desktopRange,
+      events: desktopEvents,
+    },
+    mobile: {
+      ...mobileRange,
+      events: mobileEvents,
+    },
+  };
 }

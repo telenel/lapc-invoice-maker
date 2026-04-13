@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { calendarApi } from "@/domains/calendar/api-client";
 import { eventApi } from "@/domains/event/api-client";
-import type { EventResponse } from "@/domains/event/types";
+import type { CalendarEventItem, EventResponse } from "@/domains/event/types";
 import {
   EventDetailSidebar,
   type CalendarEvent,
@@ -19,12 +19,56 @@ import {
 import { AddEventModal } from "@/components/calendar/add-event-modal";
 import { useCalendarSSE } from "@/domains/calendar/hooks";
 import { cn } from "@/lib/utils";
+import type { CalendarBootstrapData } from "@/domains/calendar/service";
 
-export function CalendarView() {
+function getRangeKey(start: string, end: string): string {
+  return `${start}|${end}`;
+}
+
+function toEventInputs(events: CalendarEventItem[]): EventInput[] {
+  return events.map((event) => ({
+    id: event.id,
+    title: event.title,
+    start: event.start,
+    end: event.end ?? undefined,
+    allDay: event.allDay,
+    backgroundColor: event.color,
+    borderColor: event.borderColor,
+    textColor: event.textColor,
+    extendedProps: {
+      ...event.extendedProps,
+      source: event.source,
+    },
+  }));
+}
+
+export function CalendarView({
+  initialData = null,
+}: {
+  initialData?: CalendarBootstrapData | null;
+}) {
   const calendarRef = useRef<FullCalendar | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [calendarHeight, setCalendarHeight] = useState<number>(600);
-  const [isMobile, setIsMobile] = useState<boolean | null>(null);
+  const [isMobile, setIsMobile] = useState<boolean>(() => (
+    typeof window !== "undefined" ? window.innerWidth < 1024 : false
+  ));
+  const eventCacheRef = useRef<Map<string, EventInput[]>>(
+    new Map(
+      initialData
+        ? [
+            [
+              getRangeKey(initialData.desktop.start, initialData.desktop.end),
+              toEventInputs(initialData.desktop.events),
+            ],
+            [
+              getRangeKey(initialData.mobile.start, initialData.mobile.end),
+              toEventInputs(initialData.mobile.events),
+            ],
+          ]
+        : [],
+    ),
+  );
 
   // Sidebar state
   const [hoveredEvent, setHoveredEvent] = useState<CalendarEvent | null>(null);
@@ -115,6 +159,7 @@ export function CalendarView() {
   }, []);
 
   function refetchEvents() {
+    eventCacheRef.current.clear();
     setHoveredEvent(null);
     setPinnedEvent(null);
     calendarRef.current?.getApi().refetchEvents();
@@ -139,26 +184,19 @@ export function CalendarView() {
       failureCallback: (error: Error) => void,
     ) => {
       try {
-        const events = await calendarApi.getEvents(
-          fetchInfo.startStr.split("T")[0],
-          fetchInfo.endStr.split("T")[0],
-        );
-        successCallback(
-          events.map((e) => ({
-            id: e.id,
-            title: e.title,
-            start: e.start,
-            end: e.end ?? undefined,
-            allDay: e.allDay,
-            backgroundColor: e.color,
-            borderColor: e.borderColor,
-            textColor: e.textColor,
-            extendedProps: {
-              ...e.extendedProps,
-              source: e.source,
-            },
-          })),
-        );
+        const start = fetchInfo.startStr.split("T")[0];
+        const end = fetchInfo.endStr.split("T")[0];
+        const rangeKey = getRangeKey(start, end);
+        const cached = eventCacheRef.current.get(rangeKey);
+        if (cached) {
+          successCallback(cached);
+          return;
+        }
+
+        const events = await calendarApi.getEvents(start, end);
+        const mappedEvents = toEventInputs(events);
+        eventCacheRef.current.set(rangeKey, mappedEvents);
+        successCallback(mappedEvents);
       } catch (err) {
         failureCallback(
           err instanceof Error ? err : new Error("Failed to fetch events"),

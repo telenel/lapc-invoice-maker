@@ -1,14 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatAmount, getInitials } from "@/lib/formatters";
 import { invoiceApi } from "@/domains/invoice/api-client";
 import type { CreatorStatEntry } from "@/domains/invoice/types";
 
-export function UserActivityStrip() {
-  const [users, setUsers] = useState<CreatorStatEntry[]>([]);
+export function UserActivityStrip({
+  initialUsers,
+}: {
+  initialUsers?: CreatorStatEntry[];
+}) {
+  const [users, setUsers] = useState<CreatorStatEntry[]>(initialUsers ?? []);
+  const skippedInitialFetchRef = useRef(initialUsers !== undefined);
 
   useEffect(() => {
+    if (skippedInitialFetchRef.current) {
+      skippedInitialFetchRef.current = false;
+      return;
+    }
+
     invoiceApi.getCreatorStats()
       .then((data) => setUsers(data.users))
       .catch(() => {});

@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useEffect, useState, useCallback } from "react";
+import { useDeferredValue, useEffect, useRef, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { PlusIcon, PencilIcon, UserMinus, SearchIcon, UsersIcon } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -18,20 +18,32 @@ import {
 import { StaffForm } from "./staff-form";
 import { staffApi } from "@/domains/staff/api-client";
 import type { StaffResponse } from "@/domains/staff/types";
+import type { PaginatedResponse } from "@/domains/shared/types";
 import { getInitials } from "@/lib/formatters";
 import { useSSE } from "@/lib/use-sse";
 
 const PAGE_SIZE = 20;
 
-export function StaffTable() {
-  const [staff, setStaff] = useState<StaffResponse[]>([]);
-  const [loading, setLoading] = useState(true);
+export function StaffTable({
+  initialData,
+}: {
+  initialData?: PaginatedResponse<StaffResponse>;
+}) {
+  const [staff, setStaff] = useState<StaffResponse[]>(initialData?.data ?? []);
+  const [loading, setLoading] = useState(() => initialData === undefined);
   const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
+  const [total, setTotal] = useState(initialData?.total ?? 0);
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
+  const skippedInitialFetchRef = useRef(initialData !== undefined);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
+  const currentRequestKey = JSON.stringify({
+    page,
+    pageSize: PAGE_SIZE,
+    search: deferredSearch || undefined,
+  });
+  const initialRequestKey = JSON.stringify({ page: 1, pageSize: PAGE_SIZE });
 
   const fetchStaff = useCallback(async () => {
     setLoading(true);
@@ -50,8 +62,13 @@ export function StaffTable() {
   }, [page, deferredSearch]);
 
   useEffect(() => {
-    fetchStaff();
-  }, [fetchStaff]);
+    if (skippedInitialFetchRef.current && currentRequestKey === initialRequestKey) {
+      skippedInitialFetchRef.current = false;
+      return;
+    }
+
+    void fetchStaff();
+  }, [currentRequestKey, fetchStaff, initialRequestKey]);
 
   useSSE("staff-changed", fetchStaff);
 

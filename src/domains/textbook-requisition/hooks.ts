@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { requisitionApi } from "./api-client";
 import { useSSE } from "@/lib/use-sse";
 import type {
@@ -10,11 +10,15 @@ import type {
   RequisitionStats,
 } from "./types";
 
-export function useRequisitions(initialFilters: RequisitionFilters = {}) {
-  const [data, setData] = useState<RequisitionListResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+export function useRequisitions(
+  initialFilters: RequisitionFilters = {},
+  initialData: RequisitionListResponse | null = null,
+) {
+  const [data, setData] = useState<RequisitionListResponse | null>(initialData);
+  const [loading, setLoading] = useState(initialData === null);
   const [error, setError] = useState<Error | null>(null);
   const [filters, setFilters] = useState(initialFilters);
+  const skippedInitialFetchRef = useRef(initialData !== null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -30,6 +34,11 @@ export function useRequisitions(initialFilters: RequisitionFilters = {}) {
   }, [filters]);
 
   useEffect(() => {
+    if (skippedInitialFetchRef.current) {
+      skippedInitialFetchRef.current = false;
+      return;
+    }
+
     void fetchData();
   }, [fetchData]);
 
@@ -65,9 +74,10 @@ export function useRequisition(id: string) {
   return { data, loading, error, refetch: fetchData };
 }
 
-export function useRequisitionStats() {
-  const [data, setData] = useState<RequisitionStats | null>(null);
-  const [loading, setLoading] = useState(true);
+export function useRequisitionStats(initialData: RequisitionStats | null = null) {
+  const [data, setData] = useState<RequisitionStats | null>(initialData);
+  const [loading, setLoading] = useState(initialData === null);
+  const skippedInitialFetchRef = useRef(initialData !== null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -81,6 +91,11 @@ export function useRequisitionStats() {
   }, []);
 
   useEffect(() => {
+    if (skippedInitialFetchRef.current) {
+      skippedInitialFetchRef.current = false;
+      return;
+    }
+
     void fetchData();
   }, [fetchData]);
 

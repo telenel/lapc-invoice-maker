@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SearchIcon, XIcon } from "lucide-react";
@@ -10,13 +10,24 @@ import type { RequisitionFilters as Filters } from "@/domains/textbook-requisiti
 interface RequisitionFiltersProps {
   filters: Filters;
   onFilterChange: (filters: Filters) => void;
+  initialYears?: number[];
 }
 
-export function RequisitionFilters({ filters, onFilterChange }: RequisitionFiltersProps) {
+export function RequisitionFilters({
+  filters,
+  onFilterChange,
+  initialYears,
+}: RequisitionFiltersProps) {
   const [search, setSearch] = useState(filters.search ?? "");
-  const [years, setYears] = useState<number[]>([]);
+  const [years, setYears] = useState<number[]>(initialYears ?? []);
+  const skippedInitialFetchRef = useRef(initialYears !== undefined);
 
   useEffect(() => {
+    if (skippedInitialFetchRef.current) {
+      skippedInitialFetchRef.current = false;
+      return;
+    }
+
     void requisitionApi.getDistinctYears().then(setYears).catch(() => {});
   }, []);
 

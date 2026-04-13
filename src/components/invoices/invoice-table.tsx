@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useEffect, useState, useCallback } from "react";
+import { useDeferredValue, useEffect, useRef, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { FileTextIcon, RefreshCwIcon, MailIcon } from "lucide-react";
@@ -22,7 +22,7 @@ import {
 } from "./invoice-filters";
 import { formatAmount, formatDate, getInitials } from "@/lib/formatters";
 import { invoiceApi } from "@/domains/invoice/api-client";
-import type { InvoiceResponse } from "@/domains/invoice/types";
+import type { InvoiceFilters, InvoiceListResponse, InvoiceResponse } from "@/domains/invoice/types";
 import { useSSE } from "@/lib/use-sse";
 import { FollowUpBadge } from "@/components/follow-up/follow-up-badge";
 import { followUpApi } from "@/domains/follow-up/api-client";
@@ -49,6 +49,9 @@ const PAGE_SIZE = 20;
 interface InvoiceTableProps {
   departments: string[];
   categories: { name: string; label: string }[];
+  initialData?: InvoiceListResponse;
+  initialRequest?: InvoiceFilters & { sortBy?: string; sortOrder?: "asc" | "desc" };
+  initialBadgeStates?: Record<string, FollowUpBadgeState>;
 }
 
 function parseInitialFilters(searchParams: ReturnType<typeof useSearchParams>): FilterBarFilters {
@@ -82,31 +85,58 @@ function parseSortDir(searchParams: ReturnType<typeof useSearchParams>): SortDir
   return raw === "asc" ? "asc" : "desc";
 }
 
-export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
+export function InvoiceTable({
+  departments,
+  categories,
+  initialData,
+  initialRequest,
+  initialBadgeStates = {},
+}: InvoiceTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
   const [filters, setFilters] = useState<FilterBarFilters>(() => parseInitialFilters(searchParams));
-  const [invoices, setInvoices] = useState<InvoiceResponse[]>([]);
-  const [total, setTotal] = useState(0);
+  const [invoices, setInvoices] = useState<InvoiceResponse[]>(initialData?.invoices ?? []);
+  const [total, setTotal] = useState(initialData?.total ?? 0);
   const [page, setPage] = useState(() => parsePage(searchParams));
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => initialData === undefined);
   const [sortBy, setSortBy] = useState<SortField>(() => parseSortField(searchParams));
   const [sortDir, setSortDir] = useState<SortDir>(() => parseSortDir(searchParams));
   const [creatorId, setCreatorId] = useState<string | undefined>(() => searchParams.get("creatorId") ?? undefined);
   const deferredSearch = useDeferredValue(filters.search);
-  const [badgeStates, setBadgeStates] = useState<Record<string, FollowUpBadgeState>>({});
+  const [badgeStates, setBadgeStates] = useState<Record<string, FollowUpBadgeState>>(initialBadgeStates);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const skippedInitialFetchRef = useRef(initialData !== undefined);
+  const skippedInitialBadgeFetchRef = useRef(initialData !== undefined);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const currentRequestKey = JSON.stringify({
+    search: deferredSearch || undefined,
+    status:
+      (filters.status && filters.status !== "all" ? filters.status : undefined) as InvoiceFilters["status"],
+    category: filters.category && filters.category !== "all" ? filters.category : undefined,
+    department: filters.department && filters.department !== "all" ? filters.department : undefined,
+    dateFrom: filters.dateFrom || undefined,
+    dateTo: filters.dateTo || undefined,
+    amountMin: filters.amountMin ? Number(filters.amountMin) : undefined,
+    amountMax: filters.amountMax ? Number(filters.amountMax) : undefined,
+    needsAccountNumber: filters.needsAccountNumber || undefined,
+    creatorId,
+    page,
+    pageSize: PAGE_SIZE,
+    sortBy,
+    sortOrder: sortDir,
+  });
+  const initialRequestKey = initialRequest ? JSON.stringify(initialRequest) : null;
 
   const fetchInvoices = useCallback(async () => {
     setLoading(true);
     try {
       const data = await invoiceApi.list({
         search: deferredSearch || undefined,
-        status: (filters.status && filters.status !== "all" ? filters.status : undefined) as import("@/domains/invoice/types").InvoiceFilters["status"],
+        status:
+          (filters.status && filters.status !== "all" ? filters.status : undefined) as InvoiceFilters["status"],
         category: filters.category && filters.category !== "all" ? filters.category : undefined,
         department: filters.department && filters.department !== "all" ? filters.department : undefined,
         dateFrom: filters.dateFrom || undefined,
@@ -126,11 +156,30 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
       toast.error("Failed to load invoices");
     }
     setLoading(false);
-  }, [creatorId, deferredSearch, filters.status, filters.category, filters.department, filters.dateFrom, filters.dateTo, filters.amountMin, filters.amountMax, filters.needsAccountNumber, page, sortBy, sortDir]);
+  }, [
+    creatorId,
+    deferredSearch,
+    filters.amountMax,
+    filters.amountMin,
+    filters.category,
+    filters.dateFrom,
+    filters.dateTo,
+    filters.department,
+    filters.needsAccountNumber,
+    filters.status,
+    page,
+    sortBy,
+    sortDir,
+  ]);
 
   useEffect(() => {
-    fetchInvoices();
-  }, [fetchInvoices]);
+    if (skippedInitialFetchRef.current && initialRequestKey === currentRequestKey) {
+      skippedInitialFetchRef.current = false;
+      return;
+    }
+
+    void fetchInvoices();
+  }, [currentRequestKey, fetchInvoices, initialRequestKey]);
 
   useSSE("invoice-changed", fetchInvoices);
 
@@ -141,8 +190,17 @@ export function InvoiceTable({ departments, categories }: InvoiceTableProps) {
       setBadgeStates({});
       return;
     }
+    if (
+      skippedInitialBadgeFetchRef.current
+      && initialData
+      && ids.join(",") === initialData.invoices.map((invoice) => invoice.id).join(",")
+    ) {
+      skippedInitialBadgeFetchRef.current = false;
+      return;
+    }
+
     followUpApi.getBadgeStatesForInvoices(ids).then(setBadgeStates).catch(() => setBadgeStates({}));
-  }, [invoices]);
+  }, [initialData, invoices]);
 
   // Clear selection when page or filters change
   useEffect(() => {

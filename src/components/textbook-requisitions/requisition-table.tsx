@@ -27,7 +27,10 @@ import { RequisitionStatusBadge } from "./requisition-status-badge";
 import { useRequisitions } from "@/domains/textbook-requisition/hooks";
 import { requisitionApi } from "@/domains/textbook-requisition/api-client";
 import { formatDate } from "@/lib/formatters";
-import type { RequisitionFilters as Filters } from "@/domains/textbook-requisition/types";
+import type {
+  RequisitionFilters as Filters,
+  RequisitionListResponse,
+} from "@/domains/textbook-requisition/types";
 
 const PAGE_SIZE = 20;
 
@@ -59,14 +62,22 @@ function SortableHeader({ label, field, currentSort, currentOrder, onSort }: Sor
   );
 }
 
-export function RequisitionTable() {
-  const router = useRouter();
-  const { data, loading, filters, setFilters } = useRequisitions({
+export function RequisitionTable({
+  initialData = null,
+  initialFilters = {
     page: 1,
     pageSize: PAGE_SIZE,
     sortBy: "submittedAt",
     sortOrder: "desc",
-  });
+  },
+  initialYears = [],
+}: {
+  initialData?: RequisitionListResponse | null;
+  initialFilters?: Filters;
+  initialYears?: number[];
+}) {
+  const router = useRouter();
+  const { data, loading, filters, setFilters } = useRequisitions(initialFilters, initialData);
 
   const requisitions = data?.requisitions ?? [];
   const total = data?.total ?? 0;
@@ -108,7 +119,11 @@ export function RequisitionTable() {
     <div className="space-y-4">
       {/* Toolbar */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <RequisitionFilters filters={filters} onFilterChange={handleFilterChange} />
+        <RequisitionFilters
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          initialYears={initialYears}
+        />
         <div className="flex items-center gap-2 shrink-0">
           <Button variant="outline" size="sm" onClick={handleExportCsv}>
             <Download className="size-3.5" data-icon="inline-start" />
