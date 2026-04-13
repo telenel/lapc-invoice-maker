@@ -40,6 +40,25 @@ export function AccountNumberSelect({
     sublabel: an.description,
   }));
 
+  function commitAccountNumber(rawValue: string) {
+    const normalizedValue = rawValue.trim();
+    updateField("accountNumber", normalizedValue);
+
+    const matchesExistingAccount = staffAccountNumbers.some(
+      (account) => account.accountCode.toLowerCase() === normalizedValue.toLowerCase()
+    );
+
+    if (!normalizedValue || !form.staffId || matchesExistingAccount) {
+      setShowAccountDescInput(false);
+      setPendingAccountNumber("");
+      setNewAccountDescription("");
+      return;
+    }
+
+    setPendingAccountNumber(normalizedValue);
+    setShowAccountDescInput(true);
+  }
+
   function handleAccountNumberSelect(item: ComboboxItem) {
     if (item.isCustom) {
       if (!form.staffId) {
@@ -47,13 +66,9 @@ export function AccountNumberSelect({
         return;
       }
       const raw = item.label.replace(/^Add new:\s*/, "");
-      setPendingAccountNumber(raw);
-      setNewAccountDescription("");
-      setShowAccountDescInput(true);
-      // Don't update form.accountNumber yet — wait until POST succeeds
+      commitAccountNumber(raw);
     } else {
-      updateField("accountNumber", item.label);
-      setShowAccountDescInput(false);
+      commitAccountNumber(item.label);
     }
   }
 
@@ -91,6 +106,7 @@ export function AccountNumberSelect({
         value={form.accountNumber}
         displayValue={form.accountNumber}
         onSelect={handleAccountNumberSelect}
+        onCommitText={commitAccountNumber}
         placeholder="Search or add account number…"
         allowCustom={Boolean(form.staffId)}
         customPrefix="Add new:"
