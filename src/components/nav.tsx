@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { usePathname } from "next/navigation";
@@ -18,12 +18,6 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useUIScale } from "@/components/ui-scale-provider";
-import { RealtimeStatusIndicator } from "@/components/realtime/realtime-status-indicator";
-
-const HelpModal = dynamic(
-  () => import("@/components/help-modal").then((m) => m.HelpModal),
-  { ssr: false },
-);
 
 const NotificationBell = dynamic(
   () => import("@/components/notifications/notification-bell").then((m) => m.NotificationBell),
@@ -59,7 +53,6 @@ export function Nav() {
   const [menuOpen, setMenuOpen] = useState<"theme" | "scale" | null>(null);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
-  const [buildInfo, setBuildInfo] = useState<{ buildSha: string | null; buildTime: string | null } | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Close any open menu on outside click
@@ -79,29 +72,6 @@ export function Nav() {
     setMenuOpen(null);
   }, [pathname]);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    fetch("/api/version", { cache: "no-store" })
-      .then(async (res) => {
-        if (!res.ok) return null;
-        return res.json() as Promise<{ buildSha?: string | null; buildTime?: string | null }>;
-      })
-      .then((data) => {
-        if (!cancelled && data) {
-          setBuildInfo({
-            buildSha: data.buildSha ?? null,
-            buildTime: data.buildTime ?? null,
-          });
-        }
-      })
-      .catch(() => {});
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   if (status !== "authenticated") return null;
 
   const role = (session?.user as { role?: string } | undefined)?.role;
@@ -109,7 +79,6 @@ export function Nav() {
   const allLinks = role === "admin"
     ? [
         ...links,
-        { href: "/quick-picks", label: "Quick Picks" },
         { href: "/analytics", label: "Analytics" },
         adminLink,
       ]
@@ -127,11 +96,6 @@ export function Nav() {
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:gap-6">
         <Link href="/" className="flex min-w-0 items-center gap-2 shrink-0">
           <span className="font-bold tracking-tight text-lg"><span className="text-red-600">LA</span>Portal</span>
-          {buildInfo?.buildSha && (
-            <span className="mt-1.5 hidden select-all font-mono text-[10px] text-muted-foreground/50 sm:inline-block" title={`Built ${buildInfo.buildTime ?? ""}`}>
-              {buildInfo.buildSha}
-            </span>
-          )}
         </Link>
         <div className="hidden gap-0.5 md:flex">
           {allLinks.map((link) => {
@@ -153,8 +117,6 @@ export function Nav() {
           })}
         </div>
         <div ref={menuRef} className="ml-auto flex items-center gap-1">
-          <HelpModal />
-          <RealtimeStatusIndicator />
           <NotificationBell />
 
           {/* Theme picker */}

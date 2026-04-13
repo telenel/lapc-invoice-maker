@@ -1,0 +1,9 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>LAPortal Icon</title>
+  <rect x="80" y="80" width="352" height="352" rx="88" fill="#9B1C20"/>
+  <rect x="144" y="146" width="60" height="220" rx="30" fill="#FFF7F1"/>
+  <rect x="144" y="306" width="126" height="60" rx="30" fill="#FFF7F1"/>
+  <rect x="286" y="146" width="60" height="220" rx="30" fill="#FFF7F1"/>
+  <rect x="286" y="146" width="126" height="136" rx="48" fill="#FFF7F1"/>
+  <rect x="326" y="186" width="48" height="56" rx="24" fill="#9B1C20"/>
+</svg>
