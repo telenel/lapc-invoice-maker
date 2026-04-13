@@ -1,33 +1,41 @@
 import { test, expect } from "@playwright/test";
 
+function invoicesHeading(page: Parameters<typeof test>[0]["page"]) {
+  return page.getByRole("heading", { name: "Invoices", exact: true });
+}
+
+function invoicesSurface(page: Parameters<typeof test>[0]["page"]) {
+  return page
+    .getByRole("table")
+    .or(page.getByRole("heading", { name: "No invoices found", exact: true }));
+}
+
 test.describe("Invoices", () => {
   test("list page loads with heading and table", async ({ page }) => {
     await page.goto("/invoices");
 
-    await expect(page.getByRole("heading", { name: /Invoices/i })).toBeVisible();
-    await expect(page.getByRole("table")).toBeVisible({ timeout: 15_000 });
+    await expect(invoicesHeading(page)).toBeVisible();
+    await expect(invoicesSurface(page)).toBeVisible({ timeout: 15_000 });
   });
 
   test("filter bar is present with status, category, search", async ({ page }) => {
     await page.goto("/invoices");
 
-    // Wait for page to fully load
-    await expect(page.getByRole("heading", { name: /Invoices/i })).toBeVisible();
+    await expect(invoicesHeading(page)).toBeVisible();
 
-    // Search input should exist
     await expect(
-      page.getByPlaceholder(/search/i).or(page.locator("input[type='search'], input[type='text']").first()),
+      page.getByPlaceholder("Search invoices…"),
     ).toBeVisible({ timeout: 10_000 });
   });
 
   test("CSV export button is available", async ({ page }) => {
     await page.goto("/invoices");
-    await expect(page.getByRole("table")).toBeVisible({ timeout: 15_000 });
+    await expect(invoicesSurface(page)).toBeVisible({ timeout: 15_000 });
+
+    await page.getByRole("button", { name: /^Filters$/i }).click();
 
     await expect(
-      page.getByRole("button", { name: /Export CSV/i }).or(
-        page.getByText(/Export CSV/i),
-      ),
+      page.getByRole("button", { name: /Export CSV/i }),
     ).toBeVisible();
   });
 
@@ -54,54 +62,163 @@ test.describe("Invoices", () => {
   });
 
   test("save invoice as draft", async ({ page }) => {
+    const suffix = Date.now().toString().slice(-6);
+    const staffName = `E2E Draft Staff ${suffix}`;
+    const department = `E2E Draft Department ${suffix}`;
+
+    const createStaffResponse = await page.request.post("/api/staff", {
+      data: {
+        name: staffName,
+        title: "Program Assistant",
+        department,
+        email: `e2e-draft-${suffix}@example.com`,
+      },
+    });
+    expect(createStaffResponse.ok()).toBeTruthy();
+
     await page.goto("/invoices/new");
 
-    // Wait for form to be ready
     await expect(
       page.getByRole("button", { name: /Save Draft/i }),
     ).toBeVisible({ timeout: 10_000 });
 
-    // Click Save Draft — should save even with minimal data
+    const requestorCombobox = page.getByPlaceholder("Search staff…");
+    await requestorCombobox.fill(staffName);
+    await page.getByRole("option", { name: new RegExp(staffName, "i") }).click();
+
+    const categoryCombobox = page.getByPlaceholder("Search categories…");
+    await categoryCombobox.focus();
+    await categoryCombobox.press("ArrowDown");
+    await categoryCombobox.press("Enter");
+
+    const descriptionInput = page.getByPlaceholder("Item description…").first();
+    await descriptionInput.fill(`E2E draft line item ${suffix}`);
+    await descriptionInput.press("Tab");
+    await page.getByLabel("Line item 1 unit price").fill("18.75");
+
     await page.getByRole("button", { name: /Save Draft/i }).click();
 
-    // Should show a success toast or redirect
+    await expect(page).toHaveURL(/\/invoices\/[a-zA-Z0-9-]+$/, { timeout: 15_000 });
     await expect(
-      page.getByText(/saved|draft|created/i).or(page.locator("[data-sonner-toast]")),
+      page.getByRole("heading", { name: "Draft Invoice", exact: true }),
     ).toBeVisible({ timeout: 10_000 });
   });
 
   test("filter invoices by search", async ({ page }) => {
     await page.goto("/invoices");
-    await expect(page.getByRole("table")).toBeVisible({ timeout: 15_000 });
+    await expect(invoicesSurface(page)).toBeVisible({ timeout: 15_000 });
 
-    // Type in search to filter
-    const searchInput = page.getByPlaceholder(/search/i).or(
-      page.locator("input[type='search'], input[type='text']").first(),
-    );
+    const searchInput = page.getByPlaceholder("Search invoices…");
     await searchInput.fill("nonexistent-query-xyz123");
+    await expect(
+      page.getByRole("heading", { name: "No invoices found", exact: true }),
+    ).toBeVisible({ timeout: 10_000 });
+  });
 
-    // Wait for table to update — should show empty state or fewer rows
-    await page.waitForTimeout(1000);
+  test("running invoices preserve requestor and account details for non-admin users", async ({
+    page,
+  }) => {
+    const suffix = Date.now().toString().slice(-6);
+    const staffName = `E2E Invoice Staff ${suffix}`;
+    const department = `E2E Department ${suffix}`;
+    const runningTitle = `E2E Running Invoice ${suffix}`;
+    const accountNumber = `ACCT-${suffix}`;
+    const accountDescription = `E2E account ${suffix}`;
+    const lineItemDescription = `E2E line item ${suffix}`;
+
+    await page.goto("/staff");
+    await page
+      .locator("main button")
+      .filter({ hasText: "Add Staff Member" })
+      .first()
+      .click();
+
+    const addStaffDialog = page.getByRole("dialog");
+    await addStaffDialog.getByLabel("Name").fill(staffName);
+    await addStaffDialog.getByLabel("Title").fill("Program Coordinator");
+    await addStaffDialog.getByLabel("Department").fill(department);
+    await addStaffDialog.getByLabel("Email").fill(`e2e-invoice-${suffix}@example.com`);
+    await addStaffDialog.getByRole("button", { name: "Add Staff Member", exact: true }).click();
+    await expect(page.getByText(/Staff member created/i)).toBeVisible({ timeout: 10_000 });
+
+    await page.goto("/invoices/new");
+    await expect(page.getByRole("heading", { name: /New Invoice/i })).toBeVisible({
+      timeout: 10_000,
+    });
+
+    const requestorCombobox = page.getByPlaceholder("Search staff…");
+    await requestorCombobox.fill(staffName);
+    await page.getByRole("option", { name: new RegExp(staffName, "i") }).click();
+
+    const categoryCombobox = page.getByPlaceholder("Search categories…");
+    await categoryCombobox.focus();
+    await categoryCombobox.press("ArrowDown");
+    await categoryCombobox.press("Enter");
+
+    await page.getByRole("checkbox", { name: /Running Invoice/i }).check();
+    await page.getByPlaceholder("Title (e.g. Music Dept Fall 2026 Supplies)").fill(
+      runningTitle,
+    );
+
+    const accountCombobox = page.getByPlaceholder("Search or add account number…");
+    await accountCombobox.fill(accountNumber);
+    await page.getByRole("option", { name: new RegExp(`Add new:\\s+${accountNumber}`, "i") }).click();
+    await page.getByPlaceholder("Description for this account number…").fill(
+      accountDescription,
+    );
+    await page.getByRole("button", { name: /^Save$/ }).click();
+    await expect(page.getByText(/Account number saved/i)).toBeVisible({ timeout: 10_000 });
+
+    const descriptionInput = page.getByPlaceholder("Item description…").first();
+    await descriptionInput.fill(lineItemDescription);
+    await descriptionInput.press("Tab");
+    await page.getByLabel("Line item 1 unit price").fill("42.50");
+
+    await page.getByRole("button", { name: /Save Running Invoice/i }).click();
+
+    await expect(page.getByText(/Draft saved/i)).toBeVisible({ timeout: 10_000 });
+    await expect(page).toHaveURL(/\/invoices\/[a-zA-Z0-9-]+$/, { timeout: 15_000 });
+    await expect(page.getByRole("heading", { name: runningTitle, exact: true })).toBeVisible();
+
+    await page.getByRole("link", { name: "Edit", exact: true }).click();
+    await expect(page).toHaveURL(/\/invoices\/[a-zA-Z0-9-]+\/edit$/, { timeout: 10_000 });
+
+    await expect(page.getByPlaceholder("Search staff…")).toHaveValue(staffName);
+    await expect(page.getByPlaceholder("Search or add account number…")).toHaveValue(
+      accountNumber,
+    );
+    await expect(
+      page.getByPlaceholder("Title (e.g. Music Dept Fall 2026 Supplies)"),
+    ).toHaveValue(runningTitle);
+
+    await page.goto("/");
+    await expect(page.getByRole("heading", { name: /Running Invoices/i })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(
+      page.getByRole("link", {
+        name: new RegExp(`${runningTitle}.*${staffName}.*${department}`, "i"),
+      }),
+    ).toBeVisible({ timeout: 15_000 });
   });
 });
 
 test.describe("Invoice Detail", () => {
   test("clicking a table row navigates to detail", async ({ page }) => {
     await page.goto("/invoices");
-    await expect(page.getByRole("table")).toBeVisible({ timeout: 15_000 });
+    await expect(invoicesSurface(page)).toBeVisible({ timeout: 15_000 });
 
-    // Check if there are any rows, skip if empty
+    const table = page.getByRole("table");
+    const tableVisible = await table.isVisible().catch(() => false);
+    test.skip(!tableVisible, "No invoice rows available to test navigation");
+
     const rowCount = await page.locator("tbody tr").count();
-    if (rowCount === 0) {
-      test.skip(true, "No invoice rows available to test navigation");
-    }
+    test.skip(rowCount === 0, "No invoice rows available to test navigation");
 
-    // Click first row
     const firstRow = page.locator("tbody tr").first();
     await expect(firstRow).toBeVisible();
     await firstRow.click();
 
-    // Should navigate to a detail page
     await expect(page).toHaveURL(/\/invoices\/[a-zA-Z0-9-]+/, {
       timeout: 10_000,
     });

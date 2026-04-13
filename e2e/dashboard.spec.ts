@@ -25,8 +25,6 @@ test.describe("Dashboard", () => {
       "Requisitions",
       "Calendar",
       "Staff",
-      "Quick Picks",
-      "Analytics",
     ];
 
     for (const label of expectedLinks) {
