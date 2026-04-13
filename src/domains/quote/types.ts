@@ -57,6 +57,7 @@ export interface QuoteResponse {
   quoteNumber: string | null;
   quoteStatus: QuoteStatus;
   date: string;
+  staffId: string | null;
   expirationDate: string | null;
   type: string;
   department: string;

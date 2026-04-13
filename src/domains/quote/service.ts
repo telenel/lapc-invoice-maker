@@ -131,6 +131,7 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
     quoteNumber: quote.quoteNumber,
     quoteStatus: (quote.quoteStatus ?? "DRAFT") as QuoteResponse["quoteStatus"],
     date: quote.date.toISOString(),
+    staffId: quote.staffId ?? null,
     expirationDate: quote.expirationDate ? quote.expirationDate.toISOString() : null,
     type: quote.type,
     department: quote.department,

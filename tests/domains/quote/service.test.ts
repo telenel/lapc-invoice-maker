@@ -223,6 +223,7 @@ describe("quoteService", () => {
 
       expect(result).not.toBeNull();
       expect(result!.id).toBe("q1");
+      expect(result!.staffId).toBe("s1");
       expect(result!.createdAt).toBe("2026-01-01T00:00:00.000Z");
       expect(result!.creatorName).toBe("Admin");
       expect(result!.paymentFollowUpBadge).toBeNull();

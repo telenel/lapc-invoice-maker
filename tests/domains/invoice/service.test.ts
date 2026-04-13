@@ -172,6 +172,7 @@ describe("invoiceService", () => {
 
       expect(result).not.toBeNull();
       expect(result!.id).toBe("inv1");
+      expect(result!.staffId).toBe("s1");
       expect(result!.invoiceNumber).toBe("AG-001");
       expect(result!.totalAmount).toBe(150);
       expect(result!.creatorId).toBe("u1");

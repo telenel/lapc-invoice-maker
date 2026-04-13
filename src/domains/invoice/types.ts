@@ -23,6 +23,7 @@ export interface InvoiceResponse {
   id: string;
   invoiceNumber: string | null;
   date: string;
+  staffId: string | null;
   status: InvoiceStatus;
   type: string;
   department: string;

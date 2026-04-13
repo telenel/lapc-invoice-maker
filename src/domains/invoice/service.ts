@@ -86,6 +86,7 @@ function toInvoiceResponse(invoice: NonNullable<InvoiceWithRelations>): InvoiceR
     id: invoice.id,
     invoiceNumber: invoice.invoiceNumber,
     date: invoice.date.toISOString(),
+    staffId: invoice.staffId ?? null,
     status: invoice.status as InvoiceResponse["status"],
     type: invoice.type,
     department: invoice.department,
