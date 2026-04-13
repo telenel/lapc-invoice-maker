@@ -1,6 +1,7 @@
 // src/domains/quote/types.ts
 import type { StaffSummary } from "@/domains/staff/types";
 import type { ContactResponse } from "@/domains/contact/types";
+import type { FollowUpBadgeState } from "@/domains/follow-up/types";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -85,6 +86,7 @@ export interface QuoteResponse {
   paymentMethod: string | null;
   paymentAccountNumber: string | null;
   paymentDetailsResolved: boolean;
+  paymentFollowUpBadge?: FollowUpBadgeState | null;
   viewerAccess?: {
     canViewQuote: boolean;
     canManageActions: boolean;

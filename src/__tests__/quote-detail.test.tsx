@@ -63,6 +63,7 @@ function makeQuote(overrides: Record<string, unknown> = {}) {
     paymentMethod: null,
     paymentAccountNumber: null,
     paymentDetailsResolved: false,
+    paymentFollowUpBadge: null,
     viewerAccess: {
       canViewQuote: true,
       canManageActions: true,
@@ -192,6 +193,39 @@ describe("QuoteDetailView", () => {
     await screen.findByRole("heading", { level: 1, name: "Q-1" });
     expect(screen.getByRole("button", { name: "Resolve Payment Details" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Convert to Invoice" })).not.toBeInTheDocument();
+  });
+
+  it("shows accepted quotes with an active payment follow-up badge", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        if (String(input) === "/api/quotes/q1") {
+          return {
+            ok: true,
+            json: async () =>
+              makeQuote({
+                quoteStatus: "ACCEPTED",
+                convertedToInvoice: null,
+                paymentDetailsResolved: false,
+                paymentFollowUpBadge: {
+                  seriesStatus: "ACTIVE",
+                  currentAttempt: 1,
+                  maxAttempts: 5,
+                },
+              }),
+          } satisfies Partial<Response>;
+        }
+
+        throw new Error(`Unexpected fetch: ${String(input)}`);
+      }),
+    );
+
+    render(<QuoteDetailView id="q1" />);
+
+    await screen.findByRole("heading", { level: 1, name: "Q-1" });
+    expect(screen.getByText("Accepted")).toBeInTheDocument();
+    expect(screen.getAllByText("Follow Up 1/5").length).toBeGreaterThan(0);
+    expect(screen.getByText(/Automatic payment follow-up is active/i)).toBeInTheDocument();
   });
 
   it("still offers payment resolution after a quote has already been converted", async () => {

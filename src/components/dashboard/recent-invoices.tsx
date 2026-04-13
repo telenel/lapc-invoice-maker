@@ -126,6 +126,7 @@ export function RecentActivity({
         creatorId: q.creatorId,
         creatorName: q.creatorName,
         createdAt: q.createdAt,
+        paymentFollowUpBadge: q.paymentFollowUpBadge ?? null,
       }));
 
       const merged = [...invoiceItems, ...quoteItems]
@@ -329,12 +330,14 @@ export function RecentActivity({
                         {invoiceBadge(item.status).label}
                       </Badge>
                     ) : (
-                      <Badge
-                        variant={QUOTE_BADGE_VARIANT[item.status as QuoteStatus] ?? "outline"}
-                        className="mt-0.5"
-                      >
-                        {QUOTE_STATUS_LABEL[item.status as QuoteStatus] ?? item.status}
-                      </Badge>
+                      <div className="mt-0.5 flex items-center justify-end gap-1">
+                        <Badge
+                          variant={QUOTE_BADGE_VARIANT[item.status as QuoteStatus] ?? "outline"}
+                        >
+                          {QUOTE_STATUS_LABEL[item.status as QuoteStatus] ?? item.status}
+                        </Badge>
+                        <FollowUpBadgeChip state={item.paymentFollowUpBadge ?? null} />
+                      </div>
                     )}
                     {item.type === "invoice" && (
                       <FollowUpBadgeChip state={badgeStates[item.id] ?? null} />

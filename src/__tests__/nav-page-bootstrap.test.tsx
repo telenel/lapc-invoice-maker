@@ -94,7 +94,8 @@ vi.mock("@/components/quotes/quote-filters", () => ({
 }));
 
 vi.mock("@/components/follow-up/follow-up-badge", () => ({
-  FollowUpBadge: () => null,
+  FollowUpBadge: ({ state }: { state?: { currentAttempt: number; maxAttempts: number } | null }) =>
+    state ? <span>{`Follow Up ${state.currentAttempt}/${state.maxAttempts}`}</span> : null,
 }));
 
 vi.mock("@/components/follow-up/bulk-request-dialog", () => ({
@@ -203,7 +204,7 @@ describe("Main Nav Page Bootstraps", () => {
             {
               id: "quote-1",
               quoteNumber: "Q-001",
-              quoteStatus: "SENT",
+              quoteStatus: "ACCEPTED",
               date: "2026-04-12T00:00:00.000Z",
               expirationDate: "2026-04-30T00:00:00.000Z",
               type: "QUOTE",
@@ -234,6 +235,11 @@ describe("Main Nav Page Bootstraps", () => {
               paymentMethod: null,
               paymentAccountNumber: null,
               paymentDetailsResolved: false,
+              paymentFollowUpBadge: {
+                seriesStatus: "ACTIVE",
+                currentAttempt: 1,
+                maxAttempts: 5,
+              },
               convertedToInvoice: null,
               revisedFromQuote: null,
               revisedToQuote: null,
@@ -248,6 +254,8 @@ describe("Main Nav Page Bootstraps", () => {
     );
 
     expect(screen.getAllByText(/Q-001/i)).toHaveLength(2);
+    expect(screen.getAllByText("Accepted")).toHaveLength(2);
+    expect(screen.getAllByText("Follow Up 1/5")).toHaveLength(2);
     expect(quoteListMock).not.toHaveBeenCalled();
   });
 

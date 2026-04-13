@@ -29,8 +29,11 @@ import { getMissingCustomerCateringRequirements, normalizeQuoteTimeInput } from 
 import { ApiError } from "@/domains/shared/types";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
-import type { CateringDetails, PublicQuoteResponse, QuotePublicSettingsResponse } from "@/domains/quote/types";
+import type { CateringDetails, PublicQuoteResponse } from "@/domains/quote/types";
 import { QUOTE_PAYMENT_METHODS } from "@/domains/quote/payment";
+
+const PUBLIC_QUOTE_TIME_MIN = "07:30";
+const PUBLIC_QUOTE_TIME_MAX = "23:00";
 
 function expirationText(dateStr: string): string {
   const exp = new Date(dateStr);
@@ -89,7 +92,6 @@ export function PublicQuoteView({ token }: { token: string }) {
   const [cateringForm, setCateringForm] = useState<PublicCateringForm>(makeCateringForm(null));
   const [paymentMethod, setPaymentMethod] = useState("");
   const [sapAccountNumber, setSapAccountNumber] = useState("");
-  const [contactInfo, setContactInfo] = useState<QuotePublicSettingsResponse>({});
   const viewIdRef = useRef<string | null>(null);
   const publicViewRegistrationRef = useRef<Promise<string | null> | null>(null);
   const pendingUnloadDurationRef = useRef<number | null>(null);
@@ -107,7 +109,6 @@ export function PublicQuoteView({ token }: { token: string }) {
         setResponded(false);
         setPaymentMethod("");
         setSapAccountNumber("");
-        setContactInfo({});
         setCateringForm(makeCateringForm(null));
         viewIdRef.current = null;
         publicViewRegistrationRef.current = null;
@@ -120,9 +121,6 @@ export function PublicQuoteView({ token }: { token: string }) {
         if (quoteData.isCateringEvent) {
           setCateringForm(makeCateringForm(quoteData.cateringDetails));
         }
-        quoteApi.getPublicSettings().then(setContactInfo).catch(() => {
-          /* non-critical */
-        });
         const registrationPromise = quoteApi
           .registerPublicView(token, `${window.innerWidth}x${window.innerHeight}`)
           .then(({ viewId }) => {
@@ -514,6 +512,8 @@ export function PublicQuoteView({ token }: { token: string }) {
                       setCateringForm((prev) => ({ ...prev, startTime: value }))
                     }
                     placeholder="Select start time"
+                    minTime={PUBLIC_QUOTE_TIME_MIN}
+                    maxTime={PUBLIC_QUOTE_TIME_MAX}
                     invalid={hasMissingCateringRequirement("start time")}
                     className={cn(
                       hasMissingCateringRequirement("start time") && "border-destructive focus-visible:ring-destructive/30",
@@ -534,6 +534,8 @@ export function PublicQuoteView({ token }: { token: string }) {
                       setCateringForm((prev) => ({ ...prev, endTime: value }))
                     }
                     placeholder="Select end time"
+                    minTime={PUBLIC_QUOTE_TIME_MIN}
+                    maxTime={PUBLIC_QUOTE_TIME_MAX}
                     invalid={hasMissingCateringRequirement("end time")}
                     className={cn(
                       hasMissingCateringRequirement("end time") && "border-destructive focus-visible:ring-destructive/30",
@@ -663,6 +665,8 @@ export function PublicQuoteView({ token }: { token: string }) {
                           setCateringForm((prev) => ({ ...prev, setupTime: value }))
                         }
                         placeholder="Select setup time"
+                        minTime={PUBLIC_QUOTE_TIME_MIN}
+                        maxTime={PUBLIC_QUOTE_TIME_MAX}
                         invalid={hasMissingCateringRequirement("setup time")}
                         className={cn(
                           hasMissingCateringRequirement("setup time") && "border-destructive focus-visible:ring-destructive/30",
@@ -704,6 +708,8 @@ export function PublicQuoteView({ token }: { token: string }) {
                           setCateringForm((prev) => ({ ...prev, takedownTime: value }))
                         }
                         placeholder="Select takedown time"
+                        minTime={PUBLIC_QUOTE_TIME_MIN}
+                        maxTime={PUBLIC_QUOTE_TIME_MAX}
                         invalid={hasMissingCateringRequirement("takedown time")}
                         className={cn(
                           hasMissingCateringRequirement("takedown time") && "border-destructive focus-visible:ring-destructive/30",
@@ -811,30 +817,6 @@ export function PublicQuoteView({ token }: { token: string }) {
             </CardContent>
           </Card>
         )}
-
-        {/* Contact information */}
-        {canRespond && (() => {
-          const key = quote.isCateringEvent ? "quote_contact_catering" : "quote_contact_default";
-          const info = contactInfo[key] as { name?: string; phone?: string; email?: string; note?: string } | undefined;
-          if (!info) return null;
-          return (
-            <Card>
-              <CardHeader>
-                <CardTitle>Questions?</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-1 text-sm">
-                {info.name && <p className="font-medium">{info.name}</p>}
-                {info.phone && <p className="text-muted-foreground">{info.phone}</p>}
-                {info.email && (
-                  <p>
-                    <a href={`mailto:${info.email}`} className="text-primary underline">{info.email}</a>
-                  </p>
-                )}
-                {info.note && <p className="text-muted-foreground mt-2">{info.note}</p>}
-              </CardContent>
-            </Card>
-          );
-        })()}
 
         {publicActionsClosed && (
           <Card>

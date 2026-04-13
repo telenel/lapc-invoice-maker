@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("@/domains/quote/repository", () => ({
   findMany: vi.fn(),
   findById: vi.fn(),
+  countPaymentReminderAttemptsByInvoiceIds: vi.fn(),
   findAcceptedPublicPaymentCandidate: vi.fn(),
   create: vi.fn(),
   update: vi.fn(),
@@ -155,6 +156,7 @@ describe("quoteService", () => {
         page: 1,
         pageSize: 20,
       } as never);
+      mockRepo.countPaymentReminderAttemptsByInvoiceIds.mockResolvedValue({} as never);
 
       const result = await quoteService.list({ page: 1, pageSize: 20 });
 
@@ -174,6 +176,7 @@ describe("quoteService", () => {
       expect(q.items[0].quantity).toBe(3);
       expect(q.items[0].unitPrice).toBe(25);
       expect(q.items[0].extendedPrice).toBe(75);
+      expect(q.paymentFollowUpBadge).toBeNull();
     });
 
     it("maps null expirationDate to null", async () => {
@@ -184,6 +187,7 @@ describe("quoteService", () => {
         page: 1,
         pageSize: 20,
       } as never);
+      mockRepo.countPaymentReminderAttemptsByInvoiceIds.mockResolvedValue({} as never);
 
       const result = await quoteService.list({});
 
@@ -213,6 +217,7 @@ describe("quoteService", () => {
     it("returns mapped QuoteResponse for existing quote", async () => {
       const quote = makeQuote();
       mockRepo.findById.mockResolvedValue(quote as never);
+      mockRepo.countPaymentReminderAttemptsByInvoiceIds.mockResolvedValue({} as never);
 
       const result = await quoteService.getById("q1");
 
@@ -220,6 +225,7 @@ describe("quoteService", () => {
       expect(result!.id).toBe("q1");
       expect(result!.createdAt).toBe("2026-01-01T00:00:00.000Z");
       expect(result!.creatorName).toBe("Admin");
+      expect(result!.paymentFollowUpBadge).toBeNull();
     });
 
     it("includes converted invoice ownership in the mapped quote response", async () => {
@@ -227,6 +233,7 @@ describe("quoteService", () => {
         convertedToInvoice: { id: "inv1", invoiceNumber: "INV-2026-0001", createdBy: "u2" },
       });
       mockRepo.findById.mockResolvedValue(quote as never);
+      mockRepo.countPaymentReminderAttemptsByInvoiceIds.mockResolvedValue({} as never);
 
       const result = await quoteService.getById("q1");
 
@@ -248,6 +255,7 @@ describe("quoteService", () => {
         },
       });
       mockRepo.findById.mockResolvedValue(quote as never);
+      mockRepo.countPaymentReminderAttemptsByInvoiceIds.mockResolvedValue({} as never);
 
       const result = await quoteService.getById("q1");
 
@@ -259,6 +267,7 @@ describe("quoteService", () => {
       const quote = makeQuote({ expirationDate: pastDate, quoteStatus: "DRAFT" });
       mockRepo.findById.mockResolvedValue(quote as never);
       mockRepo.update.mockResolvedValue(quote as never);
+      mockRepo.countPaymentReminderAttemptsByInvoiceIds.mockResolvedValue({} as never);
 
       const result = await quoteService.getById("q1");
 
@@ -271,6 +280,7 @@ describe("quoteService", () => {
       const quote = makeQuote({ expirationDate: pastDate, quoteStatus: "SENT" });
       mockRepo.findById.mockResolvedValue(quote as never);
       mockRepo.update.mockResolvedValue(quote as never);
+      mockRepo.countPaymentReminderAttemptsByInvoiceIds.mockResolvedValue({} as never);
 
       await quoteService.getById("q1");
 
@@ -281,10 +291,54 @@ describe("quoteService", () => {
       const pastDate = new Date("2020-01-01");
       const quote = makeQuote({ expirationDate: pastDate, quoteStatus: "ACCEPTED" });
       mockRepo.findById.mockResolvedValue(quote as never);
+      mockRepo.countPaymentReminderAttemptsByInvoiceIds.mockResolvedValue({} as never);
 
       await quoteService.getById("q1");
 
       expect(mockRepo.update).not.toHaveBeenCalled();
+    });
+
+    it("adds an active payment follow-up badge for accepted quotes still awaiting payment details", async () => {
+      const quote = makeQuote({
+        quoteStatus: "ACCEPTED",
+        shareToken: "share-token",
+      });
+      mockRepo.findById.mockResolvedValue(quote as never);
+      mockRepo.countPaymentReminderAttemptsByInvoiceIds.mockResolvedValue({
+        q1: 0,
+      } as never);
+
+      const result = await quoteService.getById("q1");
+
+      expect(result?.paymentFollowUpBadge).toEqual({
+        seriesStatus: "ACTIVE",
+        currentAttempt: 1,
+        maxAttempts: 5,
+      });
+    });
+
+    it("increments the quote payment follow-up badge after sent reminders", async () => {
+      const quote = makeQuote({
+        quoteStatus: "ACCEPTED",
+        shareToken: "share-token",
+      });
+      mockRepo.findMany.mockResolvedValue({
+        quotes: [quote],
+        total: 1,
+        page: 1,
+        pageSize: 20,
+      } as never);
+      mockRepo.countPaymentReminderAttemptsByInvoiceIds.mockResolvedValue({
+        q1: 2,
+      } as never);
+
+      const result = await quoteService.list({ page: 1, pageSize: 20 });
+
+      expect(result.quotes[0].paymentFollowUpBadge).toEqual({
+        seriesStatus: "ACTIVE",
+        currentAttempt: 3,
+        maxAttempts: 5,
+      });
     });
   });
 

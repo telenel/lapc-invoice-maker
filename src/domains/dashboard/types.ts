@@ -60,6 +60,7 @@ export interface DashboardActivityItem {
   creatorId: string;
   creatorName: string;
   createdAt: string;
+  paymentFollowUpBadge?: FollowUpBadgeState | null;
 }
 
 export interface DashboardRecentActivityData {

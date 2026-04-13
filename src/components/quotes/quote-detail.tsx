@@ -49,6 +49,7 @@ import { QuoteActivity } from "@/components/quotes/quote-activity";
 import { FollowUpBadge } from "@/components/follow-up/follow-up-badge";
 import { RequestAccountDialog } from "@/components/follow-up/request-account-dialog";
 import { useFollowUpBadge } from "@/domains/follow-up/hooks";
+import type { FollowUpBadgeState } from "@/domains/follow-up/types";
 import { getMissingCustomerCateringRequirements } from "@/domains/quote/catering";
 import { QUOTE_PAYMENT_METHODS } from "@/domains/quote/payment";
 import type { CateringDetails } from "@/domains/quote/types";
@@ -114,6 +115,7 @@ interface Quote {
   paymentMethod: string | null;
   paymentAccountNumber: string | null;
   paymentDetailsResolved: boolean;
+  paymentFollowUpBadge?: FollowUpBadgeState | null;
   viewerAccess?: {
     canViewQuote: boolean;
     canManageActions: boolean;
@@ -1252,6 +1254,7 @@ export function QuoteDetailView({ id }: { id: string }) {
           <Badge variant={statusBadgeVariant[status]}>
             {statusLabel[status]}
           </Badge>
+          <FollowUpBadge state={quote.paymentFollowUpBadge ?? null} />
 
           <Button variant="outline" size="sm" onClick={handleOpenPdf}>
             <PrinterIcon className="size-3.5 mr-1.5" />
@@ -1921,11 +1924,20 @@ export function QuoteDetailView({ id }: { id: string }) {
       {canViewPaymentDetails && quote.quoteStatus === "ACCEPTED" && !quote.paymentDetailsResolved && (
         <Card className="border-amber-500/30 bg-amber-50 dark:bg-amber-950/20">
           <CardContent className="py-4">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="text-amber-600 text-sm font-medium">
                 Payment details incomplete
               </span>
+              <FollowUpBadge state={quote.paymentFollowUpBadge ?? null} />
             </div>
+            <p className="mt-2 text-sm text-amber-900/80 dark:text-amber-200/80">
+              {quote.paymentFollowUpBadge?.seriesStatus === "EXHAUSTED"
+                ? "Automatic payment follow-up ended without a payment response for this accepted quote."
+                : "Automatic payment follow-up is active for this accepted quote until payment details are collected."}
+            </p>
+            <p className="mt-1 text-xs text-amber-800/80 dark:text-amber-300/80">
+              The customer can still use the public payment link, and staff can resolve payment details here at any time.
+            </p>
           </CardContent>
         </Card>
       )}

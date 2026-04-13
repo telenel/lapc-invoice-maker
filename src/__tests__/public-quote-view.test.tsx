@@ -298,6 +298,36 @@ describe("PublicQuoteView", () => {
     expect(quoteApi.respondToPublicQuote).not.toHaveBeenCalled();
   });
 
+  it("limits customer approval time options to 7:30 AM through 11:00 PM", async () => {
+    const user = userEvent.setup();
+    render(<PublicQuoteView token="token" />);
+
+    await screen.findByText("Event Details Required");
+
+    await user.click(screen.getByLabelText(/Start Time/i));
+    expect(screen.queryByRole("option", { name: "7:15 AM" })).not.toBeInTheDocument();
+    expect(await screen.findByRole("option", { name: "7:30 AM" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "11:00 PM" })).toBeInTheDocument();
+    expect(screen.queryByRole("option", { name: "11:15 PM" })).not.toBeInTheDocument();
+  });
+
+  it("does not render the questions card even when public contact settings exist", async () => {
+    vi.mocked(quoteApi.getPublicSettings).mockResolvedValueOnce({
+      quote_contact_catering: {
+        name: "Catering Desk",
+        phone: "555-1111",
+        email: "catering@example.com",
+        note: "Questions welcome",
+      },
+    } as never);
+
+    render(<PublicQuoteView token="token" />);
+
+    await screen.findByText("Approve Quote");
+    expect(screen.queryByText("Questions?")).not.toBeInTheDocument();
+    expect(screen.queryByText("Catering Desk")).not.toBeInTheDocument();
+  });
+
   it("shows which required catering fields are still blocking approval", async () => {
     vi.mocked(quoteApi.getPublicQuote).mockResolvedValueOnce({
       id: "q1",

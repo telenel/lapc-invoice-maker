@@ -59,12 +59,21 @@ export function formatWallClockTime(value: string | null | undefined): string {
 
 export function buildWallClockTimeOptions(
   values: Iterable<string | null | undefined> = [],
+  options?: {
+    minTime?: string | null | undefined;
+    maxTime?: string | null | undefined;
+  },
 ): Array<{ value: string; label: string }> {
   const optionValues = new Set<string>();
+  const minTime = normalizeWallClockTimeInput(options?.minTime ?? "") ?? "00:00";
+  const maxTime = normalizeWallClockTimeInput(options?.maxTime ?? "") ?? "23:45";
 
   for (let hour = 0; hour < 24; hour += 1) {
     for (let minute = 0; minute < 60; minute += 15) {
-      optionValues.add(`${padTimePart(hour)}:${padTimePart(minute)}`);
+      const value = `${padTimePart(hour)}:${padTimePart(minute)}`;
+      if (value >= minTime && value <= maxTime) {
+        optionValues.add(value);
+      }
     }
   }
 

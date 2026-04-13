@@ -23,6 +23,7 @@ import type { StaffSummary } from "@/domains/staff/types";
 import type { ContactResponse } from "@/domains/contact/types";
 import { getMissingCustomerCateringRequirements, normalizeQuoteTimeInput } from "./catering";
 import { normalizeQuotePaymentDetails } from "./payment";
+import { getQuotePaymentFollowUpBadgeState } from "./payment-follow-up";
 
 // ── DTO mapper ─────────────────────────────────────────────────────────────
 
@@ -162,6 +163,7 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
         ? ((quote as { paymentAccountNumber?: string | null }).paymentAccountNumber ?? null)
         : null),
     paymentDetailsResolved: Boolean(quote.paymentMethod || convertedToInvoice?.paymentMethod),
+    paymentFollowUpBadge: null,
     convertedToInvoice: convertedInvoiceResponse,
     revisedFromQuote: "revisedFromQuote" in quote && (quote as { revisedFromQuote?: { id: string; quoteNumber: string | null } | null }).revisedFromQuote
       ? { id: (quote as { revisedFromQuote: { id: string; quoteNumber: string | null } }).revisedFromQuote.id, quoteNumber: (quote as { revisedFromQuote: { id: string; quoteNumber: string | null } }).revisedFromQuote.quoteNumber }
@@ -170,6 +172,34 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
       ? { id: (quote as { revisedToQuote: { id: string; quoteNumber: string | null } }).revisedToQuote.id, quoteNumber: (quote as { revisedToQuote: { id: string; quoteNumber: string | null } }).revisedToQuote.quoteNumber }
       : null,
   };
+}
+
+async function attachQuotePaymentFollowUpBadges(
+  quotes: QuoteResponse[],
+): Promise<QuoteResponse[]> {
+  const eligibleIds = quotes
+    .filter((quote) =>
+      quote.quoteStatus === "ACCEPTED" &&
+      !quote.paymentDetailsResolved &&
+      Boolean(quote.shareToken) &&
+      Boolean(quote.recipientEmail) &&
+      !quote.convertedToInvoice,
+    )
+    .map((quote) => quote.id);
+
+  const sentAttemptsByInvoiceId = await quoteRepository.countPaymentReminderAttemptsByInvoiceIds(eligibleIds);
+
+  return quotes.map((quote) => ({
+    ...quote,
+    paymentFollowUpBadge: getQuotePaymentFollowUpBadgeState({
+      quoteStatus: quote.quoteStatus,
+      paymentDetailsResolved: quote.paymentDetailsResolved,
+      hasShareToken: Boolean(quote.shareToken),
+      hasRecipientEmail: Boolean(quote.recipientEmail),
+      hasConvertedInvoice: Boolean(quote.convertedToInvoice),
+      sentAttempts: sentAttemptsByInvoiceId[quote.id] ?? 0,
+    }),
+  }));
 }
 
 function calculateLineItems(
@@ -271,8 +301,11 @@ export const quoteService = {
    */
   async list(filters: QuoteFilters) {
     const { quotes, total, page, pageSize } = await quoteRepository.findMany(filters);
+    const mappedQuotes = await attachQuotePaymentFollowUpBadges(
+      quotes.map((q) => toQuoteResponse(q as unknown as NonNullable<QuoteWithRelations>)),
+    );
     return {
-      quotes: quotes.map((q) => toQuoteResponse(q as unknown as NonNullable<QuoteWithRelations>)),
+      quotes: mappedQuotes,
       total,
       page,
       pageSize,
@@ -297,7 +330,8 @@ export const quoteService = {
       quote.quoteStatus = "EXPIRED";
     }
 
-    return toQuoteResponse(quote);
+    const [withPaymentFollowUp] = await attachQuotePaymentFollowUpBadges([toQuoteResponse(quote)]);
+    return withPaymentFollowUp;
   },
 
   /**
@@ -317,7 +351,8 @@ export const quoteService = {
       quote.quoteStatus = "EXPIRED";
     }
 
-    return toQuoteResponse(quote);
+    const [withPaymentFollowUp] = await attachQuotePaymentFollowUpBadges([toQuoteResponse(quote)]);
+    return withPaymentFollowUp;
   },
 
   async submitPublicPaymentDetails(

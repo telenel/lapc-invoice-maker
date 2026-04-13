@@ -44,6 +44,7 @@ interface Quote {
   expirationDate: string | null;
   quoteStatus: QuoteStatus;
   accountNumber?: string | null;
+  paymentFollowUpBadge?: FollowUpBadgeState | null;
 }
 
 const EMPTY_FILTERS: QuoteFilters = {
@@ -185,10 +186,11 @@ const QuoteRow = React.memo(function QuoteRow({ quote, onClick, badgeState, sele
           {formatAmount(quote.totalAmount)}
         </p>
         <div className="flex items-center gap-1 justify-end mt-0.5">
-          <FollowUpBadge state={badgeState} />
           <Badge variant={STATUS_BADGE_VARIANT[quote.quoteStatus]}>
             {STATUS_LABEL[quote.quoteStatus]}
           </Badge>
+          <FollowUpBadge state={quote.paymentFollowUpBadge ?? null} />
+          <FollowUpBadge state={badgeState} />
         </div>
       </TableCell>
     </TableRow>
@@ -438,10 +440,11 @@ export function QuoteTable({
                       <p className="min-w-0 flex-1 text-sm font-semibold leading-tight">
                         {quote.quoteNumber}
                       </p>
-                      <FollowUpBadge state={badgeStates[quote.id] ?? null} />
                       <Badge variant={STATUS_BADGE_VARIANT[quote.quoteStatus]}>
                         {STATUS_LABEL[quote.quoteStatus]}
                       </Badge>
+                      <FollowUpBadge state={quote.paymentFollowUpBadge ?? null} />
+                      <FollowUpBadge state={badgeStates[quote.id] ?? null} />
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">
                       {quote.recipientName || quote.recipientOrg || "—"}

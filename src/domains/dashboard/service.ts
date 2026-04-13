@@ -6,6 +6,8 @@ import { listCalendarEventsForRange } from "@/domains/calendar/service";
 import { followUpRepository } from "@/domains/follow-up/repository";
 import { followUpService } from "@/domains/follow-up/service";
 import { invoiceService } from "@/domains/invoice/service";
+import { getQuotePaymentFollowUpBadgeState } from "@/domains/quote/payment-follow-up";
+import { countPaymentReminderAttemptsByInvoiceIds } from "@/domains/quote/repository";
 import type {
   DashboardActivityItem,
   DashboardBootstrapData,
@@ -233,13 +235,27 @@ async function getRecentActivity(): Promise<DashboardRecentActivityData> {
       totalAmount: true,
       status: true,
       quoteStatus: true,
+      recipientEmail: true,
+      shareToken: true,
+      paymentMethod: true,
       createdBy: true,
       createdAt: true,
       creator: { select: { name: true } },
       staff: { select: { name: true } },
       contact: { select: { name: true } },
+      convertedToInvoice: {
+        select: {
+          id: true,
+          paymentMethod: true,
+        },
+      },
     },
   });
+
+  const quoteIds = rows
+    .filter((row) => row.type === "QUOTE")
+    .map((row) => row.id);
+  const paymentReminderAttempts = await countPaymentReminderAttemptsByInvoiceIds(quoteIds);
 
   const items: DashboardActivityItem[] = rows.map((row) => ({
     type: row.type === "QUOTE" ? "quote" : "invoice",
@@ -257,6 +273,16 @@ async function getRecentActivity(): Promise<DashboardRecentActivityData> {
     creatorId: row.createdBy,
     creatorName: row.creator.name,
     createdAt: row.createdAt.toISOString(),
+    paymentFollowUpBadge: row.type === "QUOTE"
+      ? getQuotePaymentFollowUpBadgeState({
+          quoteStatus: row.quoteStatus ?? "DRAFT",
+          paymentDetailsResolved: Boolean(row.paymentMethod || row.convertedToInvoice?.paymentMethod),
+          hasShareToken: Boolean(row.shareToken),
+          hasRecipientEmail: Boolean(row.recipientEmail),
+          hasConvertedInvoice: Boolean(row.convertedToInvoice),
+          sentAttempts: paymentReminderAttempts[row.id] ?? 0,
+        })
+      : null,
   }));
 
   const invoiceIds = items

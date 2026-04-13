@@ -178,6 +178,24 @@ export async function findAcceptedPublicPaymentCandidate(token: string) {
   });
 }
 
+export async function countPaymentReminderAttemptsByInvoiceIds(invoiceIds: string[]): Promise<Record<string, number>> {
+  if (invoiceIds.length === 0) return {};
+
+  const rows = await prisma.followUp.groupBy({
+    by: ["invoiceId"],
+    where: {
+      invoiceId: { in: invoiceIds },
+      type: "PAYMENT_REMINDER",
+    },
+    _count: { _all: true },
+  });
+
+  return rows.reduce<Record<string, number>>((counts, row) => {
+    counts[row.invoiceId] = row._count._all;
+    return counts;
+  }, {});
+}
+
 export interface CalculatedLineItem {
   description: string;
   quantity: number;

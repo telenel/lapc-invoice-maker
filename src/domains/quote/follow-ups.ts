@@ -4,6 +4,7 @@ import { escapeHtml } from "@/lib/html";
 import { businessDaysBetween } from "@/lib/date-utils";
 import { safePublishAll } from "@/lib/sse";
 import type { Prisma } from "@/generated/prisma/client";
+import { PAYMENT_FOLLOW_UP_MAX_ATTEMPTS } from "./payment-follow-up";
 
 const FOLLOW_UP_INTERVAL_BUSINESS_DAYS = 7;
 const PAYMENT_FOLLOW_UP_LOCK_KEY = 318742;
@@ -120,9 +121,14 @@ async function claimPaymentFollowUp(quoteId: string, now: Date) {
       return null;
     }
 
-    const attemptNumber = await tx.followUp.count({
+    const sentAttempts = await tx.followUp.count({
       where: { invoiceId: quoteId, type: "PAYMENT_REMINDER" },
-    }) + 1;
+    });
+    if (sentAttempts >= PAYMENT_FOLLOW_UP_MAX_ATTEMPTS) {
+      return null;
+    }
+
+    const attemptNumber = sentAttempts + 1;
     const quoteNum = quote.quoteNumber ?? "your quote";
     const subject = `Payment details needed — ${quoteNum}`;
     const followUp = await tx.followUp.create({

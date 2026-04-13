@@ -19,6 +19,8 @@ interface TimeSelectProps {
   invalid?: boolean;
   className?: string;
   additionalValues?: Array<string | null | undefined>;
+  minTime?: string;
+  maxTime?: string;
 }
 
 export function TimeSelect({
@@ -30,10 +32,12 @@ export function TimeSelect({
   invalid = false,
   className,
   additionalValues = [],
+  minTime,
+  maxTime,
 }: TimeSelectProps) {
   const normalizedValue = normalizeWallClockTimeInput(value) ?? "";
   const selectedLabel = normalizedValue ? formatWallClockTime(normalizedValue) : "";
-  const options = buildWallClockTimeOptions([value, ...additionalValues]);
+  const options = buildWallClockTimeOptions([value, ...additionalValues], { minTime, maxTime });
 
   return (
     <Select

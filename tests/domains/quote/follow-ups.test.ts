@@ -270,6 +270,58 @@ describe("checkAndSendPaymentFollowUps", () => {
     );
   });
 
+  it("stops sending payment reminders after the fifth attempt", async () => {
+    const scanTx = makeTx();
+    const claimTx = makeTx();
+
+    scanTx.$queryRaw.mockResolvedValue([{ acquired: true }]);
+    vi.mocked(businessDaysBetween).mockReturnValue(7);
+    scanTx.invoice.findMany.mockResolvedValue([
+      {
+        id: "q1",
+        quoteNumber: "Q-1",
+        recipientName: "Jane",
+        recipientEmail: "jane@example.com",
+        shareToken: "token",
+        acceptedAt: new Date("2026-03-01T12:00:00.000Z"),
+        updatedAt: new Date("2026-03-01T12:00:00.000Z"),
+        followUps: [
+          {
+            sentAt: new Date("2026-03-08T12:00:00.000Z"),
+          },
+        ],
+        creator: { id: "u1", name: "Admin" },
+      },
+    ] as never);
+    claimTx.$queryRaw
+      .mockResolvedValueOnce([
+        {
+          id: "q1",
+          quoteNumber: "Q-1",
+          recipientName: "Jane",
+          recipientEmail: "jane@example.com",
+          shareToken: "token",
+          quoteStatus: "ACCEPTED",
+          acceptedAt: new Date("2026-03-01T12:00:00.000Z"),
+          updatedAt: new Date("2026-03-01T12:00:00.000Z"),
+          paymentMethod: null,
+          createdBy: "u1",
+        },
+      ] as never)
+      .mockResolvedValueOnce([] as never);
+    claimTx.followUp.findFirst.mockResolvedValue(null as never);
+    claimTx.followUp.count.mockResolvedValue(5 as never);
+    vi.mocked(prisma.$transaction)
+      .mockImplementationOnce(async (callback) => callback(scanTx as never) as never)
+      .mockImplementationOnce(async (callback) => callback(claimTx as never) as never);
+
+    await checkAndSendPaymentFollowUps();
+
+    expect(claimTx.followUp.create).not.toHaveBeenCalled();
+    expect(sendEmail).not.toHaveBeenCalled();
+    expect(prisma.followUp.update).not.toHaveBeenCalled();
+  });
+
   it("promotes the reminder claim before emailing, even if the send fails", async () => {
     const scanTx = makeTx();
     const claimTx = makeTx();
