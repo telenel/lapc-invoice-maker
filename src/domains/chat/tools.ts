@@ -7,7 +7,6 @@ import { staffService } from "@/domains/staff/service";
 import { contactService } from "@/domains/contact/service";
 import { eventService } from "@/domains/event/service";
 import { prisma } from "@/lib/prisma";
-import { safePublishAll } from "@/lib/sse";
 import { addDaysToDateKey, getDateKeyInLosAngeles } from "@/lib/date-utils";
 import type { ChatUser } from "./types";
 import type { InvoiceFilters } from "@/domains/invoice/types";
