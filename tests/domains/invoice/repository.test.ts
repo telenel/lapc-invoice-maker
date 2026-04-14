@@ -435,6 +435,24 @@ describe("invoiceRepository", () => {
         })
       );
     });
+
+    it("normalizes blank invoiceNumber to null during updates", async () => {
+      mockPrisma.invoice.update.mockResolvedValue(mockInvoice as never);
+
+      await invoiceRepository.update("inv1", {
+        invoiceNumber: "",
+        runningTitle: "guidedpathways-Denise Robb",
+      });
+
+      expect(mockPrisma.invoice.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            invoiceNumber: null,
+            runningTitle: "guidedpathways-Denise Robb",
+          }),
+        })
+      );
+    });
   });
 
   // ── deleteById ────────────────────────────────────────────────────────────

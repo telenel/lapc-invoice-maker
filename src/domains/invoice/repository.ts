@@ -231,6 +231,12 @@ export async function update(
 ) {
   const { date, ...rest } = input;
   const updateData: Record<string, unknown> = { ...rest };
+
+  if (typeof updateData.invoiceNumber === "string") {
+    const normalizedInvoiceNumber = updateData.invoiceNumber.trim();
+    updateData.invoiceNumber = normalizedInvoiceNumber || null;
+  }
+
   if (date) {
     updateData.date = new Date(date);
   }
