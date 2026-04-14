@@ -1,57 +1,36 @@
-// src/domains/analytics/repository.ts
 import { prisma } from "@/lib/prisma";
+import { buildIncludedFinanceWhere } from "@/domains/shared/finance";
 import type { AnalyticsFilters } from "./types";
 
-function buildDateFilter(filters: AnalyticsFilters): Record<string, unknown> {
-  const where: Record<string, unknown> = { type: "INVOICE" as const };
-  if (filters.dateFrom || filters.dateTo) {
-    where.date = {
-      ...(filters.dateFrom ? { gte: new Date(filters.dateFrom) } : {}),
-      ...(filters.dateTo ? { lte: new Date(filters.dateTo) } : {}),
-    };
-  }
-  return where;
-}
-
 export const analyticsRepository = {
-  async groupByCategory(filters: AnalyticsFilters) {
-    return prisma.invoice.groupBy({
-      by: ["category"],
-      _count: true,
-      _sum: { totalAmount: true },
-      where: buildDateFilter(filters),
-    });
-  },
-
-  async groupByDepartment(filters: AnalyticsFilters) {
-    return prisma.invoice.groupBy({
-      by: ["department"],
-      _count: true,
-      _sum: { totalAmount: true },
-      where: buildDateFilter(filters),
-      orderBy: { _sum: { totalAmount: "desc" } },
-      take: 10,
-    });
-  },
-
-  async findInvoicesForMonthly(filters: AnalyticsFilters) {
+  async findFinanceDocuments(filters: AnalyticsFilters) {
     return prisma.invoice.findMany({
-      where: buildDateFilter(filters),
-      select: { date: true, totalAmount: true },
+      where: buildIncludedFinanceWhere(filters.dateFrom, filters.dateTo),
+      select: {
+        type: true,
+        status: true,
+        quoteStatus: true,
+        convertedToInvoice: { select: { id: true } },
+        date: true,
+        totalAmount: true,
+        category: true,
+        department: true,
+        createdBy: true,
+      },
       orderBy: { date: "asc" },
-    });
-  },
-
-  async groupByUser(filters: AnalyticsFilters) {
-    return prisma.invoice.groupBy({
-      by: ["createdBy"],
-      _count: true,
-      _sum: { totalAmount: true },
-      where: buildDateFilter(filters),
-    });
+    }).then((documents) =>
+      documents.map((document) => ({
+        ...document,
+        convertedToInvoiceId: document.convertedToInvoice?.id ?? null,
+      })),
+    );
   },
 
   async findUsersByIds(ids: string[]) {
+    if (ids.length === 0) {
+      return [];
+    }
+
     return prisma.user.findMany({
       where: { id: { in: ids } },
       select: { id: true, name: true },

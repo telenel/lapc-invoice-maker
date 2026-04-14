@@ -14,6 +14,8 @@ interface MonthlyData {
   month: string;
   count: number;
   total: number;
+  finalizedTotal: number;
+  expectedTotal: number;
 }
 
 interface MonthlyTotalsChartProps {
@@ -33,7 +35,8 @@ function formatMonth(month: string) {
 export function MonthlyTotalsChart({ data }: MonthlyTotalsChartProps) {
   const chartData = data.map((d) => ({
     month: formatMonth(d.month),
-    total: d.total,
+    finalizedTotal: d.finalizedTotal,
+    expectedTotal: d.expectedTotal,
   }));
 
   return (
@@ -42,8 +45,14 @@ export function MonthlyTotalsChart({ data }: MonthlyTotalsChartProps) {
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
         <XAxis dataKey="month" tick={{ fontSize: 12 }} />
         <YAxis tickFormatter={formatCurrency} tick={{ fontSize: 11 }} width={70} />
-        <Tooltip formatter={(value) => [formatCurrency(Number(value)), "Total"]} />
-        <Bar dataKey="total" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+        <Tooltip
+          formatter={(value, name) => [
+            formatCurrency(Number(value)),
+            name === "expectedTotal" ? "Expected" : "Finalized",
+          ]}
+        />
+        <Bar dataKey="finalizedTotal" name="Finalized" fill="#2563eb" radius={[4, 4, 0, 0]} />
+        <Bar dataKey="expectedTotal" name="Expected" fill="#f59e0b" radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

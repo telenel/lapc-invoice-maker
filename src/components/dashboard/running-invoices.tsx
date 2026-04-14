@@ -25,11 +25,22 @@ export function RunningInvoices({
       return;
     }
 
+    if (!currentUserId) {
+      setInvoices([]);
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
 
     void import("@/domains/invoice/api-client")
       .then(({ invoiceApi }) =>
-        invoiceApi.list({ status: "DRAFT", isRunning: true, pageSize: 50 }),
+        invoiceApi.list({
+          status: "DRAFT",
+          isRunning: true,
+          creatorId: currentUserId,
+          pageSize: 50,
+        }),
       )
       .then((data) => {
         if (!cancelled) {
@@ -64,16 +75,11 @@ export function RunningInvoices({
     return () => {
       cancelled = true;
     };
-  }, [initialInvoices]);
+  }, [currentUserId, initialInvoices]);
 
   if (loading || invoices.length === 0) return null;
 
-  // Sort: current user's running invoices first
-  const sorted = [...invoices].sort((a, b) => {
-    const aIsMine = a.creatorId === currentUserId ? 0 : 1;
-    const bIsMine = b.creatorId === currentUserId ? 0 : 1;
-    return aIsMine - bIsMine;
-  });
+  const sorted = [...invoices];
 
   return (
     <Card className="card-hover">

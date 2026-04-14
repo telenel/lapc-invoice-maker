@@ -15,6 +15,8 @@ interface UserData {
   user: string;
   count: number;
   total: number;
+  finalizedTotal: number;
+  expectedTotal: number;
 }
 
 interface UserChartProps {
@@ -27,11 +29,11 @@ function formatCurrency(value: number) {
 
 export function UserChart({ data }: UserChartProps) {
   const chartData = [...data]
-    .sort((a, b) => b.total - a.total)
+    .sort((a, b) => (b.finalizedTotal + b.expectedTotal) - (a.finalizedTotal + a.expectedTotal))
     .map((d) => ({
       user: d.user.length > 20 ? d.user.slice(0, 18) + "…" : d.user,
-      count: d.count,
-      total: d.total,
+      finalizedTotal: d.finalizedTotal,
+      expectedTotal: d.expectedTotal,
     }));
 
   const barHeight = 36;
@@ -49,14 +51,14 @@ export function UserChart({ data }: UserChartProps) {
         <YAxis type="category" dataKey="user" tick={{ fontSize: 11 }} width={120} />
         <Tooltip
           formatter={(value, name) =>
-            name === "total"
-              ? [formatCurrency(Number(value)), "Total Spend"]
-              : [value, "Invoices"]
+            name === "expectedTotal"
+              ? [formatCurrency(Number(value)), "Expected"]
+              : [formatCurrency(Number(value)), "Finalized"]
           }
         />
         <Legend />
-        <Bar dataKey="total" name="Total Spend" fill="#3b82f6" radius={[0, 4, 4, 0]} />
-        <Bar dataKey="count" name="Invoices" fill="#10b981" radius={[0, 4, 4, 0]} />
+        <Bar dataKey="finalizedTotal" name="Finalized" fill="#3b82f6" radius={[0, 4, 4, 0]} />
+        <Bar dataKey="expectedTotal" name="Expected" fill="#f59e0b" radius={[0, 4, 4, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

@@ -17,6 +17,8 @@ describe("RunningInvoices", () => {
               totalThisMonth: 0,
               invoicesLastMonth: 0,
               totalLastMonth: 0,
+              expectedCount: 0,
+              expectedTotal: 0,
             },
             teamUsers: [],
           },

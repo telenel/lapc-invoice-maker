@@ -121,10 +121,61 @@ export function AnalyticsDashboard({
           ))}
         </div>
       ) : data ? (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <div className="flex flex-col gap-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Finalized Total</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-bold">{data.summary.finalizedTotal.toLocaleString("en-US", { style: "currency", currency: "USD" })}</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {data.summary.finalizedCount} finalized document{data.summary.finalizedCount !== 1 ? "s" : ""}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Expected Total</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-bold">{data.summary.expectedTotal.toLocaleString("en-US", { style: "currency", currency: "USD" })}</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {data.summary.expectedCount} open document{data.summary.expectedCount !== 1 ? "s" : ""}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Combined Total</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-bold">{data.summary.total.toLocaleString("en-US", { style: "currency", currency: "USD" })}</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Finalized plus active pipeline
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Tracked Documents</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-3xl font-bold">{data.summary.count}</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Included invoices and active quotes
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Invoices by Category</CardTitle>
+              <CardTitle>Documents by Category</CardTitle>
             </CardHeader>
             <CardContent>
               <CategoryChart data={data.byCategory} />
@@ -142,7 +193,7 @@ export function AnalyticsDashboard({
 
           <Card>
             <CardHeader>
-              <CardTitle>Top Departments by Spend</CardTitle>
+              <CardTitle>Department Totals</CardTitle>
             </CardHeader>
             <CardContent>
               <DepartmentSpendChart data={data.byDepartment} />
@@ -151,7 +202,7 @@ export function AnalyticsDashboard({
 
           <Card>
             <CardHeader>
-              <CardTitle>Invoice Trend</CardTitle>
+              <CardTitle>Document Trend</CardTitle>
             </CardHeader>
             <CardContent>
               <InvoiceTrendChart data={data.trend} />
@@ -160,12 +211,13 @@ export function AnalyticsDashboard({
 
           <Card className="md:col-span-2">
             <CardHeader>
-              <CardTitle>Invoices by User</CardTitle>
+              <CardTitle>Totals by User</CardTitle>
             </CardHeader>
             <CardContent>
               <UserChart data={data.byUser} />
             </CardContent>
           </Card>
+          </div>
         </div>
       ) : null}
     </div>

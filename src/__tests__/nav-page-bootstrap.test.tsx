@@ -327,11 +327,51 @@ describe("Main Nav Page Bootstraps", () => {
         initialDateFrom="2025-04-12"
         initialDateTo="2026-04-12"
         initialData={{
-          byCategory: [{ category: "Print", count: 3, total: 180 }],
-          byMonth: [{ month: "2026-04", count: 3, total: 180 }],
-          byDepartment: [{ department: "Bookstore", count: 3, total: 180 }],
-          trend: [{ month: "2026-04", count: 3 }],
-          byUser: [{ user: "Mia", count: 3, total: 180 }],
+          summary: {
+            count: 3,
+            total: 180,
+            finalizedCount: 1,
+            finalizedTotal: 60,
+            expectedCount: 2,
+            expectedTotal: 120,
+          },
+          byCategory: [{
+            category: "Print",
+            count: 3,
+            total: 180,
+            finalizedCount: 1,
+            finalizedTotal: 60,
+            expectedCount: 2,
+            expectedTotal: 120,
+          }],
+          byMonth: [{
+            month: "2026-04",
+            count: 3,
+            total: 180,
+            finalizedCount: 1,
+            finalizedTotal: 60,
+            expectedCount: 2,
+            expectedTotal: 120,
+          }],
+          byDepartment: [{
+            department: "Bookstore",
+            count: 3,
+            total: 180,
+            finalizedCount: 1,
+            finalizedTotal: 60,
+            expectedCount: 2,
+            expectedTotal: 120,
+          }],
+          trend: [{ month: "2026-04", count: 3, finalizedCount: 1, expectedCount: 2 }],
+          byUser: [{
+            user: "Mia",
+            count: 3,
+            total: 180,
+            finalizedCount: 1,
+            finalizedTotal: 60,
+            expectedCount: 2,
+            expectedTotal: 120,
+          }],
         }}
       />,
     );

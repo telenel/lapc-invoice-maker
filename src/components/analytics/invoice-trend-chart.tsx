@@ -13,6 +13,8 @@ import {
 interface TrendData {
   month: string;
   count: number;
+  finalizedCount: number;
+  expectedCount: number;
 }
 
 interface InvoiceTrendChartProps {
@@ -28,7 +30,8 @@ function formatMonth(month: string) {
 export function InvoiceTrendChart({ data }: InvoiceTrendChartProps) {
   const chartData = data.map((d) => ({
     month: formatMonth(d.month),
-    count: d.count,
+    finalizedCount: d.finalizedCount,
+    expectedCount: d.expectedCount,
   }));
 
   return (
@@ -37,11 +40,24 @@ export function InvoiceTrendChart({ data }: InvoiceTrendChartProps) {
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
         <XAxis dataKey="month" tick={{ fontSize: 12 }} />
         <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
-        <Tooltip formatter={(value) => [value, "Invoices"]} />
+        <Tooltip
+          formatter={(value, name) => [
+            value,
+            name === "expectedCount" ? "Expected Docs" : "Finalized Docs",
+          ]}
+        />
         <Line
           type="monotone"
-          dataKey="count"
+          dataKey="finalizedCount"
           stroke="#10b981"
+          strokeWidth={2}
+          dot={{ r: 4 }}
+          activeDot={{ r: 6 }}
+        />
+        <Line
+          type="monotone"
+          dataKey="expectedCount"
+          stroke="#f59e0b"
           strokeWidth={2}
           dot={{ r: 4 }}
           activeDot={{ r: 6 }}

@@ -14,6 +14,8 @@ interface DepartmentData {
   department: string;
   count: number;
   total: number;
+  finalizedTotal: number;
+  expectedTotal: number;
 }
 
 interface DepartmentSpendChartProps {
@@ -26,10 +28,11 @@ function formatCurrency(value: number) {
 
 export function DepartmentSpendChart({ data }: DepartmentSpendChartProps) {
   const chartData = [...data]
-    .sort((a, b) => a.total - b.total)
+    .sort((a, b) => (a.finalizedTotal + a.expectedTotal) - (b.finalizedTotal + b.expectedTotal))
     .map((d) => ({
       department: d.department.length > 20 ? d.department.slice(0, 18) + "…" : d.department,
-      total: d.total,
+      finalizedTotal: d.finalizedTotal,
+      expectedTotal: d.expectedTotal,
     }));
 
   const barHeight = 32;
@@ -45,8 +48,14 @@ export function DepartmentSpendChart({ data }: DepartmentSpendChartProps) {
         <CartesianGrid strokeDasharray="3 3" className="stroke-border" horizontal={false} />
         <XAxis type="number" tickFormatter={formatCurrency} tick={{ fontSize: 11 }} />
         <YAxis type="category" dataKey="department" tick={{ fontSize: 11 }} width={120} />
-        <Tooltip formatter={(value) => [formatCurrency(Number(value)), "Total"]} />
-        <Bar dataKey="total" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+        <Tooltip
+          formatter={(value, name) => [
+            formatCurrency(Number(value)),
+            name === "expectedTotal" ? "Expected" : "Finalized",
+          ]}
+        />
+        <Bar dataKey="finalizedTotal" name="Finalized" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+        <Bar dataKey="expectedTotal" name="Expected" fill="#f59e0b" radius={[0, 4, 4, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

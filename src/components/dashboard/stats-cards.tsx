@@ -4,10 +4,9 @@ import { startTransition, useCallback, useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { formatAmount, getInitials } from "@/lib/formatters";
-import { invoiceApi } from "@/domains/invoice/api-client";
 import type { CreatorStatEntry } from "@/domains/invoice/types";
 import { useDashboardBootstrapData } from "./dashboard-bootstrap-provider";
-import type { DashboardStatsSummary } from "@/domains/dashboard/types";
+import type { DashboardStatsData, DashboardStatsSummary } from "@/domains/dashboard/types";
 import { useDeferredDashboardRealtime } from "./use-deferred-dashboard-realtime";
 
 type IdleCapableWindow = Window & {
@@ -44,30 +43,15 @@ export function StatsCards({
 
   const fetchStats = useCallback(async () => {
     try {
-      const now = new Date();
-      const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      const firstOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      const lastOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
-
-      const pad = (d: Date) =>
-        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-      const dateFrom = pad(firstOfMonth);
-      const dateTo = pad(now);
-      const lastMonthFrom = pad(firstOfLastMonth);
-      const lastMonthTo = pad(lastOfLastMonth);
-
-      const [monthData, lastMonthData] = await Promise.all([
-        invoiceApi.getStats({ status: "FINAL", dateFrom, dateTo }),
-        invoiceApi.getStats({ status: "FINAL", dateFrom: lastMonthFrom, dateTo: lastMonthTo }),
-      ]);
+      const response = await fetch("/api/dashboard/stats", { cache: "no-store" });
+      if (!response.ok) {
+        throw new Error("Failed to load dashboard stats");
+      }
+      const data = (await response.json()) as DashboardStatsData;
 
       startTransition(() => {
-        setStats({
-          invoicesThisMonth: monthData.total,
-          totalThisMonth: monthData.sumTotalAmount,
-          invoicesLastMonth: lastMonthData.total,
-          totalLastMonth: lastMonthData.sumTotalAmount,
-        });
+        setStats(data.summary);
+        setTeamUsers(data.teamUsers);
       });
     } catch (err) {
       console.error("Failed to fetch stats:", err);
@@ -78,18 +62,6 @@ export function StatsCards({
         .catch(() => {});
     } finally {
       setLoading(false);
-    }
-  }, []);
-
-  const fetchTeamUsers = useCallback(async () => {
-    try {
-      const creatorStats = await invoiceApi.getCreatorStats();
-      startTransition(() => {
-        setTeamUsers(creatorStats.users);
-      });
-    } catch (err) {
-      console.error("Failed to fetch team activity:", err);
-    } finally {
       setTeamLoading(false);
     }
   }, []);
@@ -104,8 +76,7 @@ export function StatsCards({
 
   const refreshStats = useCallback(() => {
     void fetchStats();
-    void fetchTeamUsers();
-  }, [fetchStats, fetchTeamUsers]);
+  }, [fetchStats]);
 
   useEffect(() => {
     if (detailsReady) {
@@ -165,8 +136,8 @@ export function StatsCards({
       return;
     }
 
-    void fetchTeamUsers();
-  }, [detailsReady, fetchTeamUsers, initialStats]);
+    void fetchStats();
+  }, [detailsReady, fetchStats, initialStats]);
 
   useDeferredDashboardRealtime(
     ["invoice-changed", "quote-changed"],
@@ -175,9 +146,6 @@ export function StatsCards({
   );
 
   const invoiceDelta = (stats?.invoicesThisMonth ?? 0) - (stats?.invoicesLastMonth ?? 0);
-  const totalPctChange = stats?.totalLastMonth
-    ? Math.round(((stats.totalThisMonth - stats.totalLastMonth) / stats.totalLastMonth) * 100)
-    : null;
 
   if (loading) {
     return (
@@ -197,12 +165,12 @@ export function StatsCards({
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-      {/* Invoices This Month */}
+      {/* Finalized This Month */}
       <div className="dashboard-enter dashboard-enter-1">
       <Card className="card-hover">
         <CardContent className="pt-4">
           <div className="flex items-start justify-between">
-            <p className="text-[11px] font-medium text-muted-foreground">Invoices This Month</p>
+            <p className="text-[11px] font-medium text-muted-foreground">Finalized This Month</p>
             {invoiceDelta !== 0 && (
               <span className={cn(
                 "text-[10px] font-semibold px-1.5 py-0.5 rounded",
@@ -217,49 +185,6 @@ export function StatsCards({
           <p className="text-[26px] font-extrabold tracking-tight tabular-nums mt-1">
             {NumberFlowComponent ? (
               <NumberFlowComponent
-                value={stats?.invoicesThisMonth ?? 0}
-                transformTiming={{ duration: 750, easing: "cubic-bezier(0.22, 1, 0.36, 1)" }}
-              />
-            ) : (
-              formatCount(stats?.invoicesThisMonth ?? 0)
-            )}
-          </p>
-          <div className="flex items-end gap-[3px] mt-3 h-6">
-            {[30, 55, 40, 70, 50, 100].map((h, i, arr) => (
-              <div
-                key={i}
-                className={cn(
-                  "flex-1 rounded-sm bar-grow",
-                  i === arr.length - 1 ? "bg-primary" : "bg-primary/15"
-                )}
-                style={{ height: `${h}%`, animationDelay: `${i * 80}ms` }}
-              />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-      </div>
-
-      {/* Total This Month */}
-      <div className="dashboard-enter dashboard-enter-2">
-      <Card className="card-hover">
-        <CardContent className="pt-4">
-          <div className="flex items-start justify-between">
-            <p className="text-[11px] font-medium text-muted-foreground">Total This Month</p>
-            {totalPctChange !== null && totalPctChange !== 0 && (
-              <span className={cn(
-                "text-[10px] font-semibold px-1.5 py-0.5 rounded",
-                totalPctChange > 0
-                  ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400"
-                  : "bg-red-50 text-red-700 dark:bg-red-500/20 dark:text-red-400"
-              )}>
-                {totalPctChange > 0 ? "+" : ""}{totalPctChange}%
-              </span>
-            )}
-          </div>
-          <p className="text-[26px] font-extrabold tracking-tight tabular-nums mt-1">
-            {NumberFlowComponent ? (
-              <NumberFlowComponent
                 value={Number(stats?.totalThisMonth ?? 0)}
                 format={{ style: "currency", currency: "USD", minimumFractionDigits: 2 }}
                 transformTiming={{ duration: 750, easing: "cubic-bezier(0.22, 1, 0.36, 1)" }}
@@ -268,10 +193,51 @@ export function StatsCards({
               formatAmount(stats?.totalThisMonth ?? 0)
             )}
           </p>
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            {formatCount(stats?.invoicesThisMonth ?? 0)} finalized invoice{(stats?.invoicesThisMonth ?? 0) !== 1 ? "s" : ""}
+          </p>
           <div className="mt-3.5 h-1 bg-muted rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-primary to-primary/70 rounded-full progress-fill"
               style={{ width: `${Math.min(100, Math.max(5, ((stats?.totalThisMonth ?? 0) / Math.max(stats?.totalLastMonth ?? 1, 1)) * 50))}%` }}
+            />
+          </div>
+        </CardContent>
+      </Card>
+      </div>
+
+      {/* Expected Pipeline */}
+      <div className="dashboard-enter dashboard-enter-2">
+      <Card className="card-hover">
+        <CardContent className="pt-4">
+          <div className="flex items-start justify-between">
+            <p className="text-[11px] font-medium text-muted-foreground">Expected Pipeline</p>
+            {(stats?.expectedCount ?? 0) > 0 && (
+              <span className={cn(
+                "text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400"
+              )}>
+                {stats?.expectedCount ?? 0} open
+              </span>
+            )}
+          </div>
+          <p className="text-[26px] font-extrabold tracking-tight tabular-nums mt-1">
+            {NumberFlowComponent ? (
+              <NumberFlowComponent
+                value={Number(stats?.expectedTotal ?? 0)}
+                format={{ style: "currency", currency: "USD", minimumFractionDigits: 2 }}
+                transformTiming={{ duration: 750, easing: "cubic-bezier(0.22, 1, 0.36, 1)" }}
+              />
+            ) : (
+              formatAmount(stats?.expectedTotal ?? 0)
+            )}
+          </p>
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            Draft and running invoices plus active quotes
+          </p>
+          <div className="mt-3.5 h-1 bg-muted rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-400"
+              style={{ width: `${Math.min(100, Math.max(5, (stats?.expectedCount ?? 0) * 10))}%` }}
             />
           </div>
         </CardContent>

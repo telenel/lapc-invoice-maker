@@ -1,83 +1,156 @@
-// src/domains/analytics/service.ts
 import { analyticsRepository } from "./repository";
+import {
+  isExpectedFinanceDocument,
+  isFinalizedFinanceDocument,
+  type FinanceDocumentShape,
+} from "@/domains/shared/finance";
 import type {
   AnalyticsFilters,
   AnalyticsResponse,
+  CategoryStat,
+  DepartmentStat,
   MonthStat,
   TrendPoint,
+  UserStat,
 } from "./types";
 
-function aggregateByMonth(
-  invoices: { date: Date; totalAmount: unknown }[]
-): { byMonth: MonthStat[]; trend: TrendPoint[] } {
-  const monthMap = new Map<string, { count: number; total: number }>();
+type FinanceDocument = FinanceDocumentShape & {
+  date: Date;
+  totalAmount: unknown;
+  category: string;
+  department: string;
+  createdBy: string;
+};
 
-  for (const inv of invoices) {
-    const d = new Date(inv.date);
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    const existing = monthMap.get(key) ?? { count: 0, total: 0 };
-    monthMap.set(key, {
-      count: existing.count + 1,
-      total: existing.total + Number(inv.totalAmount),
-    });
+type AggregateBucket = {
+  count: number;
+  total: number;
+  finalizedCount: number;
+  finalizedTotal: number;
+  expectedCount: number;
+  expectedTotal: number;
+};
+
+function createBucket(): AggregateBucket {
+  return {
+    count: 0,
+    total: 0,
+    finalizedCount: 0,
+    finalizedTotal: 0,
+    expectedCount: 0,
+    expectedTotal: 0,
+  };
+}
+
+function accumulate(
+  map: Map<string, AggregateBucket>,
+  key: string,
+  amount: number,
+  lane: "finalized" | "expected",
+) {
+  const bucket = map.get(key) ?? createBucket();
+  bucket.count += 1;
+  bucket.total += amount;
+
+  if (lane === "finalized") {
+    bucket.finalizedCount += 1;
+    bucket.finalizedTotal += amount;
+  } else {
+    bucket.expectedCount += 1;
+    bucket.expectedTotal += amount;
   }
 
-  const sorted = Array.from(monthMap.entries()).sort(([a], [b]) =>
-    a.localeCompare(b)
-  );
+  map.set(key, bucket);
+}
 
-  const byMonth: MonthStat[] = sorted.map(([month, data]) => ({
-    month,
-    count: data.count,
-    total: data.total,
-  }));
+function monthKey(date: Date): string {
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+}
 
-  const trend: TrendPoint[] = sorted.map(([month, data]) => ({
-    month,
-    count: data.count,
-  }));
+function toCategoryStats(map: Map<string, AggregateBucket>): CategoryStat[] {
+  return Array.from(map.entries())
+    .map(([category, bucket]) => ({ category, ...bucket }))
+    .sort((a, b) => b.total - a.total);
+}
 
-  return { byMonth, trend };
+function toMonthStats(map: Map<string, AggregateBucket>): MonthStat[] {
+  return Array.from(map.entries())
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([month, bucket]) => ({ month, ...bucket }));
+}
+
+function toDepartmentStats(map: Map<string, AggregateBucket>): DepartmentStat[] {
+  return Array.from(map.entries())
+    .map(([department, bucket]) => ({ department, ...bucket }))
+    .sort((a, b) => a.department.localeCompare(b.department));
+}
+
+function toTrend(map: Map<string, AggregateBucket>): TrendPoint[] {
+  return Array.from(map.entries())
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([month, bucket]) => ({
+      month,
+      count: bucket.count,
+      finalizedCount: bucket.finalizedCount,
+      expectedCount: bucket.expectedCount,
+    }));
 }
 
 export const analyticsService = {
   async getAnalytics(filters: AnalyticsFilters): Promise<AnalyticsResponse> {
-    const [categoryGroups, departmentGroups, invoices, userGroups] =
-      await Promise.all([
-        analyticsRepository.groupByCategory(filters),
-        analyticsRepository.groupByDepartment(filters),
-        analyticsRepository.findInvoicesForMonthly(filters),
-        analyticsRepository.groupByUser(filters),
-      ]);
+    const documents = (await analyticsRepository.findFinanceDocuments(filters)) as FinanceDocument[];
 
-    const byCategory = categoryGroups.map((g) => ({
-      category: g.category,
-      count: g._count,
-      total: Number(g._sum.totalAmount ?? 0),
-    }));
+    const byCategory = new Map<string, AggregateBucket>();
+    const byMonth = new Map<string, AggregateBucket>();
+    const byDepartment = new Map<string, AggregateBucket>();
+    const byUser = new Map<string, AggregateBucket>();
+    const summary = createBucket();
 
-    const byDepartment = departmentGroups.map((g) => ({
-      department: g.department,
-      count: g._count,
-      total: Number(g._sum.totalAmount ?? 0),
-    }));
+    for (const document of documents) {
+      const lane = isFinalizedFinanceDocument(document)
+        ? "finalized"
+        : isExpectedFinanceDocument(document)
+          ? "expected"
+          : null;
 
-    const { byMonth, trend } = aggregateByMonth(invoices);
+      if (!lane) {
+        continue;
+      }
 
-    const userIds = userGroups.map((g) => g.createdBy);
-    const users = await analyticsRepository.findUsersByIds(userIds);
+      const amount = Number(document.totalAmount);
+      const month = monthKey(new Date(document.date));
 
-    const byUser = userGroups
-      .map((g) => {
-        const user = users.find((u) => u.id === g.createdBy);
-        return {
-          user: user?.name ?? "Unknown",
-          count: g._count,
-          total: Number(g._sum?.totalAmount ?? 0),
-        };
-      })
+      accumulate(byCategory, document.category, amount, lane);
+      accumulate(byMonth, month, amount, lane);
+      accumulate(byDepartment, document.department, amount, lane);
+      accumulate(byUser, document.createdBy, amount, lane);
+      summary.count += 1;
+      summary.total += amount;
+      if (lane === "finalized") {
+        summary.finalizedCount += 1;
+        summary.finalizedTotal += amount;
+      } else {
+        summary.expectedCount += 1;
+        summary.expectedTotal += amount;
+      }
+    }
+
+    const users = await analyticsRepository.findUsersByIds(Array.from(byUser.keys()));
+
+    const userStats: UserStat[] = Array.from(byUser.entries())
+      .map(([userId, bucket]) => ({
+        user: users.find((candidate) => candidate.id === userId)?.name ?? "Unknown",
+        ...bucket,
+      }))
       .sort((a, b) => b.total - a.total);
 
-    return { byCategory, byMonth, byDepartment, trend, byUser };
+    return {
+      summary,
+      byCategory: toCategoryStats(byCategory),
+      byMonth: toMonthStats(byMonth),
+      byDepartment: toDepartmentStats(byDepartment),
+      trend: toTrend(byMonth),
+      byUser: userStats,
+    };
   },
 };

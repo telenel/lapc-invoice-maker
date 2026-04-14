@@ -20,6 +20,14 @@ describe("GET /api/analytics", () => {
     vi.clearAllMocks();
     vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u1", role: "admin" } } as never);
     vi.mocked(analyticsService.getAnalytics).mockResolvedValue({
+      summary: {
+        count: 0,
+        total: 0,
+        finalizedCount: 0,
+        finalizedTotal: 0,
+        expectedCount: 0,
+        expectedTotal: 0,
+      },
       byCategory: [],
       byMonth: [],
       byDepartment: [],

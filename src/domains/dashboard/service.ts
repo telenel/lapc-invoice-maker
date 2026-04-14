@@ -1,5 +1,3 @@
-import "server-only";
-
 import { prisma } from "@/lib/prisma";
 import { LOS_ANGELES_TIME_ZONE } from "@/lib/date-utils";
 import { listCalendarEventsForRange } from "@/domains/calendar/service";
@@ -8,6 +6,7 @@ import { followUpService } from "@/domains/follow-up/service";
 import { invoiceService } from "@/domains/invoice/service";
 import { getQuotePaymentFollowUpBadgeState } from "@/domains/quote/payment-follow-up";
 import { countPaymentReminderAttemptsByInvoiceIds } from "@/domains/quote/repository";
+import { buildExpectedFinanceWhere } from "@/domains/shared/finance";
 import type {
   DashboardActivityItem,
   DashboardBootstrapData,
@@ -80,10 +79,10 @@ function getFocusDateRanges(now = new Date()) {
   };
 }
 
-async function getDashboardStatsData(now = new Date()): Promise<DashboardStatsData> {
+export async function getDashboardStatsData(now = new Date()): Promise<DashboardStatsData> {
   const { dateFrom, dateTo, lastMonthFrom, lastMonthTo } = getFocusDateRanges(now);
 
-  const [monthData, lastMonthData, teamUsers] = await Promise.all([
+  const [monthData, lastMonthData, teamUsers, expectedOpen] = await Promise.all([
     invoiceService.getStats({ status: "FINAL", dateFrom, dateTo }),
     invoiceService.getStats({
       status: "FINAL",
@@ -91,6 +90,11 @@ async function getDashboardStatsData(now = new Date()): Promise<DashboardStatsDa
       dateTo: lastMonthTo,
     }),
     invoiceService.getCreatorStats(),
+    prisma.invoice.aggregate({
+      where: buildExpectedFinanceWhere(),
+      _sum: { totalAmount: true },
+      _count: { _all: true },
+    }),
   ]);
 
   return {
@@ -99,6 +103,8 @@ async function getDashboardStatsData(now = new Date()): Promise<DashboardStatsDa
       totalThisMonth: monthData.sumTotalAmount,
       invoicesLastMonth: lastMonthData.total,
       totalLastMonth: lastMonthData.sumTotalAmount,
+      expectedCount: expectedOpen._count._all,
+      expectedTotal: Number(expectedOpen._sum.totalAmount ?? 0),
     },
     teamUsers: teamUsers.users,
   };
@@ -204,10 +210,15 @@ async function getPendingAccounts(): Promise<DashboardPendingAccountItem[]> {
   });
 }
 
-async function getRunningInvoices(): Promise<DashboardRunningInvoiceItem[]> {
+async function getRunningInvoices(currentUserId: string | null): Promise<DashboardRunningInvoiceItem[]> {
+  if (!currentUserId) {
+    return [];
+  }
+
   const invoices = await prisma.invoice.findMany({
     where: {
       type: "INVOICE",
+      createdBy: currentUserId,
       OR: [
         { status: "PENDING_CHARGE" },
         { status: "DRAFT", isRunning: true },
@@ -349,7 +360,7 @@ export async function getDashboardBootstrapData(
     getDashboardFocusData(currentUserId),
     getDashboardStatsData(),
     getPendingAccounts(),
-    getRunningInvoices(),
+    getRunningInvoices(currentUserId),
     getRecentActivity(),
   ]);
 

@@ -379,6 +379,7 @@ export function InvoiceTable({
                     onCheckedChange={() => toggleSelected(invoice.id)}
                     aria-label={`Select invoice ${invoice.invoiceNumber ?? invoice.id}`}
                     onClick={(e) => e.stopPropagation()}
+                    className="shrink-0"
                   />
                 </div>
                 <button
@@ -430,6 +431,7 @@ export function InvoiceTable({
                     checked={invoices.length > 0 && selectedIds.size === invoices.length}
                     onCheckedChange={toggleSelectAll}
                     aria-label="Select all invoices"
+                    className="shrink-0"
                   />
                 </TableHead>
                 <TableHead>
@@ -473,6 +475,7 @@ export function InvoiceTable({
                       checked={selectedIds.has(invoice.id)}
                       onCheckedChange={() => toggleSelected(invoice.id)}
                       aria-label={`Select invoice ${invoice.invoiceNumber ?? invoice.id}`}
+                      className="shrink-0"
                     />
                   </TableCell>
                   <TableCell>

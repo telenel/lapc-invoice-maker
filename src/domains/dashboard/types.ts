@@ -18,6 +18,8 @@ export interface DashboardStatsSummary {
   totalThisMonth: number;
   invoicesLastMonth: number;
   totalLastMonth: number;
+  expectedCount: number;
+  expectedTotal: number;
 }
 
 export interface DashboardStatsData {
