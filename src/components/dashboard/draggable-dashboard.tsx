@@ -12,9 +12,7 @@ export function DraggableDashboard({
 }) {
   const {
     order: storedOrder,
-    loaded,
     setPersistedOrder,
-    clearPersistedOrder,
   } = useDashboardOrder(DEFAULT_ORDER);
   const [order, setOrder] = useState<string[]>(DEFAULT_ORDER);
 
@@ -26,13 +24,6 @@ export function DraggableDashboard({
     setOrder(nextOrder);
     setPersistedOrder(nextOrder);
   }, [setPersistedOrder]);
-
-  const handleReset = useCallback(() => {
-    setOrder(DEFAULT_ORDER);
-    clearPersistedOrder();
-  }, [clearPersistedOrder]);
-
-  const isCustomOrder = loaded && JSON.stringify(order) !== JSON.stringify(DEFAULT_ORDER);
 
   return (
     <div className="relative">
