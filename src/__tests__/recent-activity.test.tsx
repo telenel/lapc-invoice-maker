@@ -60,4 +60,65 @@ describe("RecentActivity", () => {
     expect(screen.getByText("Accepted")).toBeInTheDocument();
     expect(screen.getByText("Follow Up 1/5")).toBeInTheDocument();
   });
+
+  it("omits placeholder separators when an activity item has no number", () => {
+    render(
+      <DashboardBootstrapProvider
+        value={{
+          todaysEvents: [],
+          yourFocus: null,
+          stats: {
+            summary: {
+              invoicesThisMonth: 0,
+              totalThisMonth: 0,
+              invoicesLastMonth: 0,
+              totalLastMonth: 0,
+              expectedCount: 0,
+              expectedTotal: 0,
+            },
+            teamUsers: [],
+          },
+          pendingAccounts: [],
+          runningInvoices: [],
+          recentActivity: {
+            items: [
+              {
+                type: "invoice",
+                id: "invoice-1",
+                number: "INV-001",
+                name: "Denise Robb",
+                department: "Catering",
+                date: "2026-04-12T00:00:00.000Z",
+                amount: 240,
+                status: "FINAL",
+                creatorId: "user-1",
+                creatorName: "Mia",
+                createdAt: "2026-04-12T00:00:00.000Z",
+              },
+              {
+                type: "invoice",
+                id: "invoice-2",
+                number: null,
+                name: "Ronald Faulseit",
+                department: "Catering",
+                date: "2026-04-11T00:00:00.000Z",
+                amount: 180,
+                status: "FINAL",
+                creatorId: "user-2",
+                creatorName: "Mia",
+                createdAt: "2026-04-11T00:00:00.000Z",
+              },
+            ],
+            badgeStates: {},
+          },
+        }}
+      >
+        <RecentActivity currentUserId={null} />
+      </DashboardBootstrapProvider>,
+    );
+
+    expect(screen.getByText("INV-001 · Denise Robb")).toBeInTheDocument();
+    expect(screen.getByText("Ronald Faulseit")).toBeInTheDocument();
+    expect(screen.queryByText("— · Ronald Faulseit")).not.toBeInTheDocument();
+  });
 });

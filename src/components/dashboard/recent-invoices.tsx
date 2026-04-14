@@ -52,6 +52,11 @@ function invoiceBadge(status: string) {
   return { variant, label } as const;
 }
 
+function formatActivityHeading(number: string | null, name: string) {
+  const displayNumber = number?.trim();
+  return displayNumber ? `${displayNumber} · ${name}` : name;
+}
+
 function FollowUpBadgeChip({ state }: { state: FollowUpBadgeState | null }) {
   if (!state) {
     return null;
@@ -311,7 +316,7 @@ export function RecentActivity({
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-semibold truncate">
-                      {item.number ?? "—"} · {item.name}
+                      {formatActivityHeading(item.number, item.name)}
                       {isMine && <span className="text-[10px] text-primary font-medium ml-1.5">You</span>}
                     </p>
                     <p className="text-[11px] text-muted-foreground">
