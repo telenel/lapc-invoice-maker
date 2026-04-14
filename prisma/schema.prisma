@@ -19,6 +19,7 @@ model User {
   createdAt      DateTime        @default(now()) @map("created_at")
   updatedAt      DateTime        @updatedAt @map("updated_at")
   invoices       Invoice[]
+  archivedInvoices Invoice[]     @relation("InvoiceArchiver")
   userQuickPicks UserQuickPick[]
   notifications  Notification[]
   events         Event[]
@@ -99,6 +100,8 @@ model Invoice {
   category             String        @default("SUPPLIES")
   date                 DateTime      @db.Date
   createdBy            String        @map("created_by")
+  archivedAt           DateTime?     @map("archived_at")
+  archivedBy           String?       @map("archived_by")
   staffId              String?       @map("staff_id")
   contactId            String?       @map("contact_id")
   department           String
@@ -139,6 +142,7 @@ model Invoice {
   updatedAt            DateTime      @updatedAt @map("updated_at")
 
   creator User          @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  archiver User?        @relation("InvoiceArchiver", fields: [archivedBy], references: [id], onDelete: SetNull)
   staff   Staff?        @relation(fields: [staffId], references: [id])
   contact Contact?      @relation(fields: [contactId], references: [id])
   items   InvoiceItem[]
@@ -151,6 +155,9 @@ model Invoice {
   quoteViews         QuoteView[]
   followUps          FollowUp[]
 
+  @@index([type, archivedAt])
+  @@index([createdBy, archivedAt])
+  @@index([archivedBy, archivedAt])
   @@map("invoices")
 }
 

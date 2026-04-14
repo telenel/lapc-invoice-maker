@@ -14,6 +14,7 @@ import type {
   FinalizeInput,
   InvoiceStatsResponse,
   InvoicePdfMetadata,
+  ArchivedBySummary,
 } from "./types";
 import type { InvoiceStaffDetail } from "./types";
 import type { ContactResponse } from "@/domains/contact/types";
@@ -37,6 +38,15 @@ export interface CreatorStatEntry {
   name: string;
   invoiceCount: number;
   totalAmount: number;
+}
+
+function assertInvoiceIsActive(invoice: { archivedAt?: Date | null }) {
+  if (invoice.archivedAt) {
+    throw Object.assign(
+      new Error("Archived invoices must be restored before they can be changed"),
+      { code: "FORBIDDEN" },
+    );
+  }
 }
 
 // ── DTO mapper ─────────────────────────────────────────────────────────────
@@ -82,6 +92,10 @@ function toInvoiceResponse(invoice: NonNullable<InvoiceWithRelations>): InvoiceR
     marginOverride: item.marginOverride != null ? Number(item.marginOverride) : null,
   }));
 
+  const archivedBy = "archiver" in invoice
+    ? ((invoice as { archiver?: ArchivedBySummary | null }).archiver ?? null)
+    : null;
+
   return {
     id: invoice.id,
     invoiceNumber: invoice.invoiceNumber,
@@ -110,6 +124,8 @@ function toInvoiceResponse(invoice: NonNullable<InvoiceWithRelations>): InvoiceR
     isCateringEvent: invoice.isCateringEvent,
     cateringDetails: invoice.cateringDetails,
     createdAt: invoice.createdAt.toISOString(),
+    archivedAt: invoice.archivedAt?.toISOString() ?? null,
+    archivedBy,
     staff,
     contact,
     creatorId: invoice.creator.id,
@@ -137,8 +153,8 @@ export const invoiceService = {
   /**
    * Single invoice by ID, or null if not found.
    */
-  async getById(id: string): Promise<InvoiceResponse | null> {
-    const invoice = await invoiceRepository.findById(id);
+  async getById(id: string, options?: { includeArchived?: boolean }): Promise<InvoiceResponse | null> {
+    const invoice = await invoiceRepository.findById(id, options);
     if (!invoice || invoice.type !== "INVOICE") return null;
     return toInvoiceResponse(invoice);
   },
@@ -197,6 +213,7 @@ export const invoiceService = {
     if (!source || source.type !== "INVOICE") {
       throw Object.assign(new Error("Invoice not found"), { code: "NOT_FOUND" });
     }
+    assertInvoiceIsActive(source);
 
     const items: CreateInvoiceInput["items"] = source.items.map((item) => ({
       description: item.description,
@@ -266,6 +283,7 @@ export const invoiceService = {
     if (existing.status === "FINAL") {
       throw Object.assign(new Error("Cannot update a finalized invoice"), { code: "FORBIDDEN" });
     }
+    assertInvoiceIsActive(existing);
 
     const { items, ...invoiceData } = input;
 
@@ -326,6 +344,21 @@ export const invoiceService = {
     safePublishAll({ type: "invoice-changed" });
   },
 
+  async archive(id: string, actorId: string): Promise<void> {
+    const invoice = await invoiceRepository.findById(id, { includeArchived: true });
+    if (!invoice || invoice.type !== "INVOICE") {
+      throw Object.assign(new Error("Invoice not found"), { code: "NOT_FOUND" });
+    }
+
+    await invoiceRepository.archiveById(id, actorId);
+    safePublishAll({ type: "invoice-changed" });
+  },
+
+  async restore(id: string): Promise<InvoiceResponse> {
+    const invoice = await invoiceRepository.restoreById(id);
+    return toInvoiceResponse(invoice as NonNullable<InvoiceWithRelations>);
+  },
+
   /**
    * Finalize an invoice: generate PDFs, optionally merge PrismCore,
    * update status to FINAL, record signer history, increment quick pick usage.
@@ -335,6 +368,7 @@ export const invoiceService = {
     if (!invoice || invoice.type !== "INVOICE") {
       throw Object.assign(new Error("Invoice not found"), { code: "NOT_FOUND" });
     }
+    assertInvoiceIsActive(invoice);
 
     if (!invoice.invoiceNumber) {
       throw Object.assign(

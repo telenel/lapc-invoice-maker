@@ -1,6 +1,7 @@
 // src/domains/quote/types.ts
 import type { StaffSummary } from "@/domains/staff/types";
 import type { ContactResponse } from "@/domains/contact/types";
+import type { ArchivedBySummary } from "@/domains/invoice/types";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -71,6 +72,8 @@ export interface QuoteResponse {
   pdfPath: string | null;
   shareToken: string | null;
   createdAt: string;
+  archivedAt?: string | null;
+  archivedBy?: ArchivedBySummary | null;
   staff: StaffSummary | null;
   contact: ContactResponse | null;
   creatorId: string;

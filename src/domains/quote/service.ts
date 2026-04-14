@@ -20,6 +20,7 @@ import type {
 } from "./types";
 import type { StaffSummary } from "@/domains/staff/types";
 import type { ContactResponse } from "@/domains/contact/types";
+import type { ArchivedBySummary } from "@/domains/invoice/types";
 import { getMissingCustomerCateringRequirements, normalizeQuoteTimeInput } from "./catering";
 import { normalizeQuotePaymentDetails } from "./payment";
 
@@ -47,6 +48,15 @@ export function isPublicPaymentLinkAvailable(
 
 function isUniqueConstraintViolation(error: unknown): boolean {
   return typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
+}
+
+function assertQuoteIsActive(quote: { archivedAt?: Date | null }) {
+  if (quote.archivedAt) {
+    throw Object.assign(
+      new Error("Archived quotes must be restored before they can be changed"),
+      { code: "FORBIDDEN" },
+    );
+  }
 }
 
 async function withGeneratedQuoteNumber<T>(operation: (quoteNumber: string) => Promise<T>): Promise<T> {
@@ -117,6 +127,10 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
     costPrice: item.costPrice != null ? Number(item.costPrice) : null,
   }));
 
+  const archivedBy = "archiver" in quote
+    ? ((quote as { archiver?: ArchivedBySummary | null }).archiver ?? null)
+    : null;
+
   return {
     id: quote.id,
     quoteNumber: quote.quoteNumber,
@@ -137,6 +151,8 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
     pdfPath: quote.pdfPath,
     shareToken: quote.shareToken ?? null,
     createdAt: quote.createdAt.toISOString(),
+    archivedAt: quote.archivedAt?.toISOString() ?? null,
+    archivedBy,
     staff,
     contact,
     creatorId: quote.creator.id,
@@ -275,8 +291,8 @@ export const quoteService = {
    * Single quote by ID, or null if not found / not a quote.
    * Auto-expires if past expiration date.
    */
-  async getById(id: string): Promise<QuoteResponse | null> {
-    const quote = await quoteRepository.findById(id);
+  async getById(id: string, options?: { includeArchived?: boolean }): Promise<QuoteResponse | null> {
+    const quote = await quoteRepository.findById(id, options);
     if (!quote || quote.type !== "QUOTE") return null;
 
     // Auto-expire if past expiration date
@@ -786,6 +802,7 @@ export const quoteService = {
     if (!existing || existing.type !== "QUOTE") {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
     }
+    assertQuoteIsActive(existing);
     if (
       existing.quoteStatus === "DECLINED" ||
       existing.quoteStatus === "EXPIRED" ||
@@ -876,6 +893,22 @@ export const quoteService = {
     }
 
     await quoteRepository.deleteById(id);
+  },
+
+  async archive(id: string, actorId: string): Promise<void> {
+    const quote = await quoteRepository.findById(id, { includeArchived: true });
+    if (!quote || quote.type !== "QUOTE") {
+      throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
+    }
+
+    await quoteRepository.archiveById(id, actorId);
+    safePublishAll({ type: "quote-changed" });
+  },
+
+  async restore(id: string): Promise<QuoteResponse> {
+    const quote = await quoteRepository.restoreById(id);
+    safePublishAll({ type: "quote-changed" });
+    return toQuoteResponse(quote as NonNullable<QuoteWithRelations>);
   },
 
   /**

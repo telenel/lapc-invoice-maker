@@ -7,7 +7,8 @@ vi.mock("@/domains/quote/repository", () => ({
   findAcceptedPublicPaymentCandidate: vi.fn(),
   create: vi.fn(),
   update: vi.fn(),
-  deleteById: vi.fn(),
+  archiveById: vi.fn(),
+  restoreById: vi.fn(),
   markSent: vi.fn(),
   markSentWithToken: vi.fn(),
   getShareToken: vi.fn(),
@@ -105,11 +106,14 @@ function makeQuote(overrides: Record<string, unknown> = {}) {
     recipientEmail: "jane@test.com",
     recipientOrg: "ACME Corp",
     pdfPath: null,
+    archivedAt: null,
+    archivedBy: null,
     createdAt: new Date("2026-01-01"),
     staffId: "s1",
     staff: { id: "s1", name: "Alice", title: "Manager", department: "IT" },
     contact: null,
     creator: { id: "u1", name: "Admin", username: "admin" },
+    archiver: null,
     items: [
       {
         id: "i1",
@@ -1056,44 +1060,54 @@ describe("quoteService", () => {
         message: "Cannot update a quote that has already been converted to an invoice",
       });
     });
+
+    it("rejects archived quotes until they are restored", async () => {
+      mockRepo.findById.mockResolvedValue(
+        makeQuote({ archivedAt: new Date("2026-04-13T12:00:00.000Z") }) as never,
+      );
+
+      await expect(quoteService.update("q1", { notes: "x" })).rejects.toMatchObject({
+        code: "FORBIDDEN",
+        message: "Archived quotes must be restored before they can be changed",
+      });
+    });
   });
 
-  // ── delete ──────────────────────────────────────────────────────────────
+  // ── archive / restore ───────────────────────────────────────────────────
 
-  describe("delete", () => {
+  describe("archive", () => {
     it("throws NOT_FOUND when quote does not exist", async () => {
       mockRepo.findById.mockResolvedValue(null);
 
-      await expect(quoteService.delete("missing")).rejects.toMatchObject({ code: "NOT_FOUND" });
+      await expect(quoteService.archive("missing", "u1")).rejects.toMatchObject({ code: "NOT_FOUND" });
     });
 
-    it("calls repository deleteById", async () => {
+    it("archives accepted quotes instead of blocking deletion", async () => {
+      mockRepo.findById.mockResolvedValue(makeQuote({ quoteStatus: "ACCEPTED" }) as never);
+      mockRepo.archiveById.mockResolvedValue(undefined as never);
+
+      await quoteService.archive("q1", "u1");
+
+      expect(mockRepo.archiveById).toHaveBeenCalledWith("q1", "u1");
+    });
+
+    it("archives quotes without deleting their generated pdf files", async () => {
       mockRepo.findById.mockResolvedValue(makeQuote() as never);
-      mockRepo.deleteById.mockResolvedValue(undefined as never);
+      mockRepo.archiveById.mockResolvedValue(undefined as never);
 
-      await quoteService.delete("q1");
-
-      expect(mockRepo.deleteById).toHaveBeenCalledWith("q1");
-    });
-
-    it("cleans up PDF before deleting when pdfPath is set", async () => {
-      mockRepo.findById.mockResolvedValue(makeQuote({ pdfPath: "/path/to/quote.pdf" }) as never);
-      mockRepo.deleteById.mockResolvedValue(undefined as never);
-      mockPdfService.deletePdfFiles.mockResolvedValue(undefined as never);
-
-      await quoteService.delete("q1");
-
-      expect(mockPdfService.deletePdfFiles).toHaveBeenCalledWith("/path/to/quote.pdf", null);
-      expect(mockRepo.deleteById).toHaveBeenCalledWith("q1");
-    });
-
-    it("skips PDF cleanup when pdfPath is null", async () => {
-      mockRepo.findById.mockResolvedValue(makeQuote({ pdfPath: null }) as never);
-      mockRepo.deleteById.mockResolvedValue(undefined as never);
-
-      await quoteService.delete("q1");
+      await quoteService.archive("q1", "u1");
 
       expect(mockPdfService.deletePdfFiles).not.toHaveBeenCalled();
+      expect(mockRepo.archiveById).toHaveBeenCalledWith("q1", "u1");
+    });
+
+    it("restores an archived quote", async () => {
+      mockRepo.restoreById.mockResolvedValue(makeQuote() as never);
+
+      const result = await quoteService.restore("q1");
+
+      expect(mockRepo.restoreById).toHaveBeenCalledWith("q1");
+      expect(result.archivedAt).toBeNull();
     });
   });
 

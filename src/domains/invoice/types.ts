@@ -19,6 +19,11 @@ export interface InvoicePdfMetadata {
   contactExtension?: string;
 }
 
+export interface ArchivedBySummary {
+  id: string;
+  name: string;
+}
+
 export interface InvoiceResponse {
   id: string;
   invoiceNumber: string | null;
@@ -47,6 +52,8 @@ export interface InvoiceResponse {
   isCateringEvent: boolean;
   cateringDetails: unknown;
   createdAt: string;
+  archivedAt?: string | null;
+  archivedBy?: ArchivedBySummary | null;
   staff: InvoiceStaffDetail | null;
   contact: ContactResponse | null;
   creatorId: string;
