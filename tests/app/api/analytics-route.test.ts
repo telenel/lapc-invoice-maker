@@ -60,4 +60,13 @@ describe("GET /api/analytics", () => {
       error: "dateFrom must be less than or equal to dateTo",
     });
   });
+
+  it("allows authenticated non-admin users to view analytics", async () => {
+    vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u1", role: "user" } } as never);
+
+    const response = await GET(new NextRequest("http://localhost/api/analytics"));
+
+    expect(response.status).toBe(200);
+    expect(analyticsService.getAnalytics).toHaveBeenCalledWith({ dateFrom: undefined, dateTo: undefined });
+  });
 });

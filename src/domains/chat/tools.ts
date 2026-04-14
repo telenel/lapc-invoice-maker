@@ -267,9 +267,6 @@ export function buildTools(user: ChatUser) {
           .describe("End date filter in YYYY-MM-DD format"),
       }),
       execute: async ({ dateFrom, dateTo }) => {
-        if (user.role !== "admin") {
-          return { error: "You do not have permission to view analytics" };
-        }
         const { analyticsService } = await import("@/domains/analytics/service");
         const data = await analyticsService.getAnalytics({ dateFrom, dateTo });
         return {

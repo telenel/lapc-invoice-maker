@@ -172,6 +172,25 @@ describe("Nav cleanup", () => {
     expect(screen.queryByText("Realtime Live")).not.toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
   });
+
+  it("shows analytics in the nav for regular users too", async () => {
+    sessionState = {
+      data: {
+        user: {
+          name: "Regular User",
+          email: "user@example.com",
+          role: "user",
+        },
+      },
+      status: "authenticated",
+    };
+
+    render(<Nav />);
+
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(screen.getByRole("link", { name: "Analytics" })).toBeInTheDocument();
+  });
 });
 
 describe("Admin panel quick picks", () => {

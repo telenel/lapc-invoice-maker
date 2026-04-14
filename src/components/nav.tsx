@@ -77,13 +77,11 @@ export function Nav() {
 
   const role = (session?.user as { role?: string } | undefined)?.role;
   const adminLink: NavLink = { href: "/admin/settings", label: "Admin", matchPrefix: "/admin" };
-  const allLinks = role === "admin"
-    ? [
-        ...links,
-        { href: "/analytics", label: "Analytics" },
-        adminLink,
-      ]
-    : links;
+  const allLinks = [
+    ...links,
+    { href: "/analytics", label: "Analytics" },
+    ...(role === "admin" ? [adminLink] : []),
+  ];
 
   function isLinkActive(link: NavLink) {
     const matchTarget = link.matchPrefix ?? link.href;

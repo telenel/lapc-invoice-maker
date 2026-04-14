@@ -21,10 +21,6 @@ export default async function AnalyticsPage() {
     redirect("/login");
   }
 
-  if ((session.user as { role?: string }).role !== "admin") {
-    redirect("/");
-  }
-
   const initialDateRange = getDefaultDateRange();
   const initialData = await analyticsService.getAnalytics(initialDateRange);
 

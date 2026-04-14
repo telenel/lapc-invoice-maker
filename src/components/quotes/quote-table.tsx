@@ -153,16 +153,18 @@ const QuoteRow = React.memo(function QuoteRow({ quote, onClick, badgeState, sele
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === "Enter") onClick(quote.id); }}
     >
+      <TableCell className="w-[40px]" onClick={(e) => e.stopPropagation()}>
+        <Checkbox
+          checked={selected}
+          disabled={!selectable}
+          onCheckedChange={(checked) => onSelect(quote.id, !!checked)}
+          onClick={(e) => e.stopPropagation()}
+          aria-label={`Select ${quote.quoteNumber ?? "quote"}`}
+          className="shrink-0"
+        />
+      </TableCell>
       <TableCell>
         <div className="flex items-center gap-3">
-          <Checkbox
-            checked={selected}
-            disabled={!selectable}
-            onCheckedChange={(checked) => onSelect(quote.id, !!checked)}
-            onClick={(e) => e.stopPropagation()}
-            aria-label={`Select ${quote.quoteNumber ?? "quote"}`}
-            className="shrink-0"
-          />
           <div className="flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-muted text-[11px] font-bold text-muted-foreground shrink-0">
             {getInitials(quote.recipientName || quote.recipientOrg || "??")}
           </div>
@@ -469,14 +471,16 @@ export function QuoteTable({
           <Table className="hidden md:table">
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[40px]">
+                  <Checkbox
+                    checked={allSelected}
+                    onCheckedChange={(checked) => handleSelectAll(!!checked)}
+                    aria-label="Select all quotes"
+                    className="shrink-0"
+                  />
+                </TableHead>
                 <TableHead>
                   <div className="flex items-center gap-4">
-                    <Checkbox
-                      checked={allSelected}
-                      onCheckedChange={(checked) => handleSelectAll(!!checked)}
-                      aria-label="Select all quotes"
-                      className="shrink-0"
-                    />
                     <button
                       className="cursor-pointer select-none text-xs font-medium hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded"
                       onClick={() => handleSort("quoteNumber")}

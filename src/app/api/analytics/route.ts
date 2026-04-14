@@ -1,12 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { withAdmin } from "@/domains/shared/auth";
+import { withAuth } from "@/domains/shared/auth";
 import { analyticsService } from "@/domains/analytics/service";
 
 function isValidDateString(value: string): boolean {
   return !Number.isNaN(new Date(value).getTime());
 }
 
-export const GET = withAdmin(async (req: NextRequest) => {
+export const GET = withAuth(async (req: NextRequest) => {
   const { searchParams } = new URL(req.url);
   const dateFrom = searchParams.get("dateFrom") ?? undefined;
   const dateTo = searchParams.get("dateTo") ?? undefined;

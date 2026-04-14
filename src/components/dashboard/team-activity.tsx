@@ -29,7 +29,7 @@ export function TeamActivity() {
       <CardHeader className="border-b border-border/50">
         <div className="flex items-center justify-between">
           <CardTitle className="text-sm font-bold">Team Activity</CardTitle>
-          <span className="text-[11px] text-muted-foreground">This month</span>
+          <span className="text-[11px] text-muted-foreground">Funding leaderboard</span>
         </div>
       </CardHeader>
       <CardContent className="p-0">
@@ -53,10 +53,13 @@ export function TeamActivity() {
               )}>
                 {getInitials(user.name)}
               </div>
+              <div className="w-7 shrink-0 text-[11px] font-semibold text-muted-foreground">
+                #{i + 1}
+              </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[13px] font-semibold truncate">
                   {user.name}
-                  {isMine && <span className="text-[10px] text-primary font-medium ml-1.5">You</span>}
+                  {isMine && <span className="text-[10px] text-primary font-medium ml-1.5">(You)</span>}
                 </p>
               </div>
               <div className="text-right shrink-0">

@@ -250,7 +250,7 @@ export function StatsCards({
         <CardContent className="pt-4">
           <div className="flex items-start justify-between mb-2">
             <p className="text-[11px] font-medium text-muted-foreground">Team Activity</p>
-            <span className="text-[10px] text-muted-foreground">This month</span>
+            <span className="text-[10px] text-muted-foreground">Funding leaderboard</span>
           </div>
           {teamLoading ? (
             <div className="space-y-1.5">
@@ -266,21 +266,25 @@ export function StatsCards({
             <p className="text-[13px] text-muted-foreground">No activity yet</p>
           ) : (
             <div className="space-y-1.5 max-h-[88px] overflow-y-auto">
-              {teamUsers.map((user) => {
+              {teamUsers.map((user, index) => {
                 const isMine = user.id === currentUserId;
                 return (
                   <div key={user.id} className="flex items-center gap-2">
                     <div className={cn(
                       "flex items-center justify-center w-[22px] h-[22px] rounded-md text-[8px] font-bold shrink-0",
-                      isMine ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                    )}>
+                        isMine ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
+                      )}>
                       {getInitials(user.name)}
                     </div>
+                    <span className="w-5 shrink-0 text-[10px] font-semibold text-muted-foreground">
+                      #{index + 1}
+                    </span>
                     <span className={cn(
                       "text-[11px] font-medium truncate flex-1",
                       isMine && "text-primary"
                     )}>
-                      {isMine ? "You" : user.name.split(" ")[0]}
+                      {user.name}
+                      {isMine && <span className="ml-1 text-[10px] font-semibold">(You)</span>}
                     </span>
                     <span className="text-[11px] font-bold tabular-nums shrink-0">
                       {formatAmount(user.totalAmount)}
