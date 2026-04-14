@@ -53,6 +53,9 @@ interface ApiInvoice {
   isRecurring: boolean;
   recurringInterval: string | null;
   recurringEmail: string | null;
+  viewerAccess?: {
+    canManageActions: boolean;
+  };
   staff: { id: string; name: string; title: string; department: string; extension: string; email: string } | null;
   items: ApiInvoiceItem[];
 }
@@ -141,6 +144,9 @@ export default function EditInvoicePage() {
         return res.json();
       })
       .then((invoice: ApiInvoice) => {
+        if (invoice.viewerAccess?.canManageActions === false) {
+          throw new Error("You can't edit an invoice created by another user. Open the invoice detail page and use Duplicate to make your own editable copy.");
+        }
         if (invoice.status === "FINAL") {
           throw new Error("Finalized invoices cannot be edited");
         }

@@ -67,6 +67,7 @@ function makeQuote(overrides: Record<string, unknown> = {}) {
     viewerAccess: {
       canViewQuote: true,
       canManageActions: true,
+      canDuplicateQuote: true,
       canViewActivity: true,
       canViewSensitiveFields: true,
     },

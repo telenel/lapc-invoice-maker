@@ -58,6 +58,9 @@ interface ApiQuote {
   recipientEmail: string | null;
   recipientOrg: string | null;
   quoteStatus: string;
+  viewerAccess?: {
+    canManageActions: boolean;
+  };
   convertedToInvoice?: {
     id: string;
     invoiceNumber: string | null;
@@ -177,6 +180,9 @@ export default function EditQuotePage() {
         return res.json();
       })
       .then((quote: ApiQuote) => {
+        if (quote.viewerAccess?.canManageActions === false) {
+          throw new Error("You can't edit a quote created by another user. Open the quote detail page, choose More, and use Duplicate to make your own editable copy.");
+        }
         if (
           quote.quoteStatus === "DECLINED" ||
           quote.quoteStatus === "EXPIRED" ||
