@@ -48,6 +48,7 @@ export function buildIncludedFinanceWhere(
       : undefined;
 
   return {
+    archivedAt: null,
     ...(date ? { date } : {}),
     OR: [
       {
@@ -65,6 +66,7 @@ export function buildIncludedFinanceWhere(
 
 export function buildExpectedFinanceWhere(): Prisma.InvoiceWhereInput {
   return {
+    archivedAt: null,
     OR: [
       {
         type: "INVOICE",

@@ -33,6 +33,7 @@ export async function listCalendarEventsForRange(
       where: {
         type: "QUOTE",
         isCateringEvent: true,
+        archivedAt: null,
         quoteStatus: { in: ["SENT", "ACCEPTED"] },
         cateringDetails: { not: Prisma.JsonNull },
       },
