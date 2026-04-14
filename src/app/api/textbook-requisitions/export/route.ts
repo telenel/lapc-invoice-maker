@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/domains/shared/auth";
 import { requisitionService } from "@/domains/textbook-requisition/service";
 import { buildCsv } from "@/lib/csv";
+import { getDateKeyInLosAngeles } from "@/lib/date-utils";
 import type { RequisitionFilters, RequisitionResponse } from "@/domains/textbook-requisition/types";
 
 const CSV_HEADERS = [
@@ -77,7 +78,7 @@ export const GET = withAuth(async (req: NextRequest) => {
     return new NextResponse(csv, {
       headers: {
         "Content-Type": "text/csv",
-        "Content-Disposition": `attachment; filename="requisitions_${new Date().toISOString().slice(0, 10)}.csv"`,
+        "Content-Disposition": `attachment; filename="requisitions_${getDateKeyInLosAngeles()}.csv"`,
         "X-Export-Total": String(allRequisitions.length),
       },
     });

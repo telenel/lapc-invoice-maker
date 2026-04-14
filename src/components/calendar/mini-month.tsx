@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getDateKeyInLosAngeles } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 
 interface MiniMonthProps {
@@ -32,8 +33,7 @@ export function MiniMonth({
   const month = displayMonth.getMonth();
 
   const today = useMemo(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    return getDateKeyInLosAngeles();
   }, []);
 
   const weeks = useMemo(() => {

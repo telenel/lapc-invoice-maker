@@ -293,6 +293,27 @@ describe("quoteService", () => {
       expect(mockRepo.update).toHaveBeenCalledWith("q1", { quoteStatus: "EXPIRED" });
     });
 
+    it("does not expire a quote until the Los Angeles business day has ended", async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2026-04-14T05:30:00.000Z"));
+
+      try {
+        const quote = makeQuote({
+          expirationDate: new Date("2026-04-13T00:00:00.000Z"),
+          quoteStatus: "SENT",
+        });
+        mockRepo.findById.mockResolvedValue(quote as never);
+        mockRepo.countPaymentReminderAttemptsByInvoiceIds.mockResolvedValue({} as never);
+
+        const result = await quoteService.getById("q1");
+
+        expect(mockRepo.update).not.toHaveBeenCalled();
+        expect(result?.quoteStatus).toBe("SENT");
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
     it("does not expire an ACCEPTED quote even if past date", async () => {
       const pastDate = new Date("2020-01-01");
       const quote = makeQuote({ expirationDate: pastDate, quoteStatus: "ACCEPTED" });

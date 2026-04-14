@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { useDashboardBootstrapData } from "./dashboard-bootstrap-provider";
-import { LOS_ANGELES_TIME_ZONE } from "@/lib/date-utils";
+import { addDaysToDateKey, getDateKeyInLosAngeles } from "@/lib/date-utils";
 import { calendarApi, type CalendarEvent } from "@/domains/calendar/api-client";
 import { formatLosAngelesTime, formatWallClockTime } from "@/lib/time";
 
@@ -19,30 +19,11 @@ type TodaysEventsCacheEntry = {
 // otherwise remount this widget and replay its loading state.
 let todaysEventsCache: TodaysEventsCacheEntry | null = null;
 
-function getDateKeyInLosAngeles(date: Date): string {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: LOS_ANGELES_TIME_ZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date);
-  const year = parts.find((part) => part.type === "year")?.value;
-  const month = parts.find((part) => part.type === "month")?.value;
-  const day = parts.find((part) => part.type === "day")?.value;
-
-  if (!year || !month || !day) {
-    throw new Error("Unable to derive Los Angeles date key");
-  }
-
-  return `${year}-${month}-${day}`;
-}
-
 function getTodaysEventsWindow(now = new Date()) {
+  const startDateKey = getDateKeyInLosAngeles(now);
   return {
-    startDateKey: getDateKeyInLosAngeles(now),
-    endDateKey: getDateKeyInLosAngeles(
-      new Date(now.getTime() + 24 * 60 * 60 * 1000),
-    ),
+    startDateKey,
+    endDateKey: addDaysToDateKey(startDateKey, 1),
   };
 }
 

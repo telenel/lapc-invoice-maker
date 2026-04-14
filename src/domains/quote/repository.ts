@@ -2,6 +2,7 @@
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/generated/prisma/client";
 import type { QuoteFilters } from "./types";
+import { getDateKeyInLosAngeles, getYearInLosAngeles } from "@/lib/date-utils";
 
 const PAYMENT_REMINDER_CLAIM = "PAYMENT_REMINDER_CLAIM";
 
@@ -112,7 +113,7 @@ export async function expireOverdue(): Promise<void> {
       type: "QUOTE",
       archivedAt: null,
       quoteStatus: { in: ["DRAFT", "SENT", "SUBMITTED_EMAIL", "SUBMITTED_MANUAL"] },
-      expirationDate: { lt: new Date() },
+      expirationDate: { lt: new Date(getDateKeyInLosAngeles()) },
     },
     data: { quoteStatus: "EXPIRED" },
   });
@@ -407,7 +408,7 @@ export async function markAccepted(id: string) {
  * Generate the next quote number in the format Q-YYYY-NNNN.
  */
 export async function generateNumber(): Promise<string> {
-  const year = new Date().getFullYear();
+  const year = getYearInLosAngeles();
   const prefix = `Q-${year}-`;
 
   const latest = await prisma.invoice.findFirst({

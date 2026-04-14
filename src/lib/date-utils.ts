@@ -6,15 +6,15 @@ function pad(value: number): string {
   return String(value).padStart(2, "0");
 }
 
-function toDateKey(date: Date): string {
+export function toDateKey(date: Date): string {
   return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
 }
 
-function fromDateKey(dateKey: string): Date {
+export function fromDateKey(dateKey: string): Date {
   return new Date(`${dateKey}T00:00:00.000Z`);
 }
 
-function getDateKeyInTimeZone(date: Date, timeZone: string): string {
+export function getDateKeyInTimeZone(date: Date, timeZone: string): string {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone,
     year: "numeric",
@@ -28,6 +28,28 @@ function getDateKeyInTimeZone(date: Date, timeZone: string): string {
     throw new Error(`Unable to format date in time zone: ${timeZone}`);
   }
   return `${year}-${month}-${day}`;
+}
+
+export function getDateKeyInLosAngeles(date = new Date()): string {
+  return getDateKeyInTimeZone(date, LOS_ANGELES_TIME_ZONE);
+}
+
+export function getYearInLosAngeles(date = new Date()): number {
+  return Number(getDateKeyInLosAngeles(date).slice(0, 4));
+}
+
+export function getDateOnlyKey(value: Date | string): string | null {
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : toDateKey(value);
+  }
+
+  const trimmed = value.trim();
+  if (DATE_KEY_PATTERN.test(trimmed)) {
+    return trimmed;
+  }
+
+  const parsed = new Date(trimmed);
+  return Number.isNaN(parsed.getTime()) ? null : toDateKey(parsed);
 }
 
 function getTimeZoneOffsetMinutes(date: Date, timeZone: string): number {
@@ -51,10 +73,42 @@ function getTimeZoneOffsetMinutes(date: Date, timeZone: string): number {
   return (localAsUtc - date.getTime()) / 60000;
 }
 
-function addDaysToDateKey(dateKey: string, days: number): string {
+export function shiftDateKey(
+  dateKey: string,
+  offsets: { days?: number; months?: number; years?: number },
+): string {
   const result = fromDateKey(dateKey);
-  result.setUTCDate(result.getUTCDate() + days);
+  if (offsets.years) {
+    result.setUTCFullYear(result.getUTCFullYear() + offsets.years);
+  }
+  if (offsets.months) {
+    result.setUTCMonth(result.getUTCMonth() + offsets.months);
+  }
+  if (offsets.days) {
+    result.setUTCDate(result.getUTCDate() + offsets.days);
+  }
   return toDateKey(result);
+}
+
+export function addDaysToDateKey(dateKey: string, days: number): string {
+  return shiftDateKey(dateKey, { days });
+}
+
+export function differenceInDateKeys(startDateKey: string, endDateKey: string): number {
+  const start = fromDateKey(startDateKey).getTime();
+  const end = fromDateKey(endDateKey).getTime();
+  return Math.round((end - start) / 86_400_000);
+}
+
+export function isDateOnlyBeforeTodayInTimeZone(
+  value: Date | string,
+  now = new Date(),
+  timeZone = LOS_ANGELES_TIME_ZONE,
+): boolean {
+  const dateKey = getDateOnlyKey(value);
+  if (!dateKey) return false;
+
+  return dateKey < getDateKeyInTimeZone(now, timeZone);
 }
 
 function isBusinessDayKey(dateKey: string): boolean {

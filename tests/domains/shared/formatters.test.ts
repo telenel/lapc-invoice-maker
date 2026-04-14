@@ -37,6 +37,10 @@ describe("formatDate", () => {
   it("formats ISO date to short format", () => {
     expect(formatDate("2026-03-15")).toBe("Mar 15, 2026");
   });
+
+  it("formats timestamps in Los Angeles time instead of UTC", () => {
+    expect(formatDate("2026-04-14T05:30:00.000Z")).toBe("Apr 13, 2026");
+  });
 });
 
 describe("formatDateLong", () => {

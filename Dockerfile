@@ -3,7 +3,9 @@
 FROM node:22-slim AS base
 
 # Install Chromium dependencies for server-side PDF rendering
-RUN apt-get update && apt-get install -y \
+ENV TZ=America/Los_Angeles
+
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     chromium \
     fonts-liberation \
     libappindicator3-1 \
@@ -19,6 +21,7 @@ RUN apt-get update && apt-get install -y \
     libxcomposite1 \
     libxdamage1 \
     libxrandr2 \
+    tzdata \
     xdg-utils \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { AnalyticsResponse } from "@/domains/analytics/types";
+import { getDateKeyInLosAngeles, shiftDateKey } from "@/lib/date-utils";
 
 const CategoryChart = dynamic(() => import("./category-chart").then((m) => m.CategoryChart), { ssr: false });
 const MonthlyTotalsChart = dynamic(() => import("./monthly-totals-chart").then((m) => m.MonthlyTotalsChart), { ssr: false });
@@ -12,12 +13,10 @@ const InvoiceTrendChart = dynamic(() => import("./invoice-trend-chart").then((m)
 const UserChart = dynamic(() => import("./user-chart").then((m) => m.UserChart), { ssr: false });
 
 function getDefaultDateRange() {
-  const to = new Date();
-  const from = new Date();
-  from.setFullYear(from.getFullYear() - 1);
+  const dateTo = getDateKeyInLosAngeles();
   return {
-    dateFrom: from.toISOString().split("T")[0],
-    dateTo: to.toISOString().split("T")[0],
+    dateFrom: shiftDateKey(dateTo, { years: -1 }),
+    dateTo,
   };
 }
 

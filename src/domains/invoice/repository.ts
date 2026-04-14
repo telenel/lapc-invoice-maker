@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/generated/prisma/client";
 import type { CalculatedLineItem } from "./calculations";
 import type { InvoiceFilters } from "./types";
+import { addDaysToDateKey, getDateKeyInLosAngeles, zonedDateTimeToUtc } from "@/lib/date-utils";
 
 // ── Shared include shapes ──────────────────────────────────────────────────
 
@@ -75,8 +76,8 @@ function buildWhere(filters: InvoiceFilters): Prisma.InvoiceWhereInput {
   }
   if (filters.createdFrom || filters.createdTo) {
     where.createdAt = {};
-    if (filters.createdFrom) where.createdAt.gte = new Date(filters.createdFrom);
-    if (filters.createdTo) where.createdAt.lte = new Date(filters.createdTo + "T23:59:59.999Z");
+    if (filters.createdFrom) where.createdAt.gte = zonedDateTimeToUtc(filters.createdFrom, "00:00");
+    if (filters.createdTo) where.createdAt.lt = zonedDateTimeToUtc(addDaysToDateKey(filters.createdTo, 1), "00:00");
   }
   if (filters.dateFrom || filters.dateTo) {
     where.date = {};
@@ -352,8 +353,7 @@ export async function countAndSum(filters: InvoiceFilters) {
  * Aggregate invoice counts and totals grouped by creator for the current month.
  */
 export async function countByCreator(status?: string) {
-  const now = new Date();
-  const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const firstOfMonth = zonedDateTimeToUtc(`${getDateKeyInLosAngeles().slice(0, 7)}-01`, "00:00");
   const statusFilter: Prisma.InvoiceWhereInput["status"] =
     status === "DRAFT"
       ? { in: ["DRAFT", "PENDING_CHARGE"] }

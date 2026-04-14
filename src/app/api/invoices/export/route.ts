@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/domains/shared/auth";
 import { invoiceService } from "@/domains/invoice/service";
 import { escapeCsv } from "@/lib/csv";
+import { getDateOnlyKey } from "@/lib/date-utils";
 
 const VALID_STATUSES = new Set(["DRAFT", "FINAL", "PENDING_CHARGE"]);
 
@@ -129,7 +130,7 @@ export const GET = withAuth(async (req: NextRequest) => {
       const itemDescriptions = inv.items.map((item) => item.description).join("; ");
       return [
         inv.invoiceNumber ?? "",
-        new Date(inv.date).toISOString().split("T")[0],
+        getDateOnlyKey(inv.date) ?? "",
         inv.category,
         inv.staff?.name ?? inv.contact?.name ?? "",
         inv.department,

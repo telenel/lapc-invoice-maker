@@ -28,6 +28,7 @@ import { quoteApi } from "@/domains/quote/api-client";
 import { getMissingCustomerCateringRequirements, normalizeQuoteTimeInput } from "@/domains/quote/catering";
 import { ApiError } from "@/domains/shared/types";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
+import { differenceInDateKeys, getDateKeyInLosAngeles, getDateOnlyKey } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 import type { CateringDetails, PublicQuoteResponse } from "@/domains/quote/types";
 import { QUOTE_PAYMENT_METHODS } from "@/domains/quote/payment";
@@ -36,10 +37,10 @@ const PUBLIC_QUOTE_TIME_MIN = "07:30";
 const PUBLIC_QUOTE_TIME_MAX = "23:00";
 
 function expirationText(dateStr: string): string {
-  const exp = new Date(dateStr);
-  const now = new Date();
-  const diffMs = exp.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const expirationDateKey = getDateOnlyKey(dateStr);
+  if (!expirationDateKey) return "";
+
+  const diffDays = differenceInDateKeys(getDateKeyInLosAngeles(), expirationDateKey);
   if (diffDays > 0) return `Expires in ${diffDays} day${diffDays !== 1 ? "s" : ""}`;
   if (diffDays === 0) return "Expires today";
   return `Expired ${Math.abs(diffDays)} day${Math.abs(diffDays) !== 1 ? "s" : ""} ago`;

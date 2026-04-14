@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { LOS_ANGELES_TIME_ZONE } from "@/lib/date-utils";
+import { addDaysToDateKey, getDateKeyInLosAngeles } from "@/lib/date-utils";
 import { listCalendarEventsForRange } from "@/domains/calendar/service";
 import { followUpRepository } from "@/domains/follow-up/repository";
 import { followUpService } from "@/domains/follow-up/service";
@@ -33,49 +33,25 @@ function buildRunningInvoiceDetail(invoice: {
   return invoice.runningTitle?.trim() || firstItemDescription || "Untitled Running Invoice";
 }
 
-function getDateKeyInLosAngeles(date: Date): string {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: LOS_ANGELES_TIME_ZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date);
-  const year = parts.find((part) => part.type === "year")?.value;
-  const month = parts.find((part) => part.type === "month")?.value;
-  const day = parts.find((part) => part.type === "day")?.value;
-
-  if (!year || !month || !day) {
-    throw new Error("Unable to derive Los Angeles date key");
-  }
-
-  return `${year}-${month}-${day}`;
-}
-
 function getTodaysEventsWindow(now = new Date()) {
+  const startDateKey = getDateKeyInLosAngeles(now);
   return {
-    startDateKey: getDateKeyInLosAngeles(now),
-    endDateKey: getDateKeyInLosAngeles(
-      new Date(now.getTime() + 24 * 60 * 60 * 1000),
-    ),
+    startDateKey,
+    endDateKey: addDaysToDateKey(startDateKey, 1),
   };
 }
 
-function formatDateKey(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
-    date.getDate(),
-  ).padStart(2, "0")}`;
-}
-
 function getFocusDateRanges(now = new Date()) {
-  const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const firstOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-  const lastOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+  const dateTo = getDateKeyInLosAngeles(now);
+  const dateFrom = `${dateTo.slice(0, 7)}-01`;
+  const lastMonthTo = addDaysToDateKey(dateFrom, -1);
+  const lastMonthFrom = `${lastMonthTo.slice(0, 7)}-01`;
 
   return {
-    dateFrom: formatDateKey(firstOfMonth),
-    dateTo: formatDateKey(now),
-    lastMonthFrom: formatDateKey(firstOfLastMonth),
-    lastMonthTo: formatDateKey(lastOfLastMonth),
+    dateFrom,
+    dateTo,
+    lastMonthFrom,
+    lastMonthTo,
   };
 }
 

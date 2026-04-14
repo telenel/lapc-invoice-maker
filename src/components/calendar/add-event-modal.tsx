@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { TimeSelect } from "@/components/ui/time-select";
 import { useCreateEvent, useUpdateEvent, useDeleteEvent } from "@/domains/event/hooks";
 import { EVENT_TYPE_COLORS } from "@/domains/event/types";
+import { getDateKeyInLosAngeles } from "@/lib/date-utils";
 import type {
   EventResponse,
   EventType,
@@ -56,8 +57,7 @@ const REMINDER_OPTIONS: { value: number | null; label: string }[] = [
 ];
 
 function todayStr(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return getDateKeyInLosAngeles();
 }
 
 export function AddEventModal({ event, onSave, onClose, trigger, defaultOpen = false }: AddEventModalProps) {

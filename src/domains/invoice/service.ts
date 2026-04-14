@@ -5,6 +5,7 @@ import { pdfService } from "@/domains/pdf/service";
 import { pdfStorage } from "@/domains/pdf/storage";
 import { staffService } from "@/domains/staff/service";
 import { formatCurrency, formatDateFromDate } from "@/domains/shared/formatters";
+import { getDateKeyInLosAngeles } from "@/lib/date-utils";
 import { safePublishAll } from "@/lib/sse";
 import type {
   InvoiceResponse,
@@ -240,7 +241,7 @@ export const invoiceService = {
 
     const invoice = await invoiceRepository.create(
       {
-        date: new Date().toISOString().split("T")[0],
+        date: getDateKeyInLosAngeles(),
         category: source.category,
         department: source.department,
         staffId: source.staffId ?? undefined,

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { staffApi } from "@/domains/staff/api-client";
 import type { StaffResponse, StaffDetailResponse, AccountNumberResponse } from "@/domains/staff/types";
 import type { CateringDetails } from "@/domains/quote/types";
+import { addDaysToDateKey, getDateKeyInLosAngeles } from "@/lib/date-utils";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -64,13 +65,11 @@ export type { StaffResponse as StaffMember };
 // ---------------------------------------------------------------------------
 
 function todayISO(): string {
-  return new Date().toISOString().split("T")[0];
+  return getDateKeyInLosAngeles();
 }
 
 function thirtyDaysFromNow(): string {
-  const d = new Date();
-  d.setDate(d.getDate() + 30);
-  return d.toISOString().split("T")[0];
+  return addDaysToDateKey(todayISO(), 30);
 }
 
 function emptyItem(sortOrder = 0): QuoteItem {

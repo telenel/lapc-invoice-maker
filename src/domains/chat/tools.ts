@@ -7,6 +7,8 @@ import { staffService } from "@/domains/staff/service";
 import { contactService } from "@/domains/contact/service";
 import { eventService } from "@/domains/event/service";
 import { prisma } from "@/lib/prisma";
+import { safePublishAll } from "@/lib/sse";
+import { addDaysToDateKey, getDateKeyInLosAngeles } from "@/lib/date-utils";
 import type { ChatUser } from "./types";
 import type { InvoiceFilters } from "@/domains/invoice/types";
 import type { QuoteFilters } from "@/domains/quote/types";
@@ -785,7 +787,7 @@ export function buildTools(user: ChatUser) {
           return { error: "Template not found" };
         }
 
-        const resolvedDate = date ?? new Date().toISOString().split("T")[0];
+        const resolvedDate = date ?? getDateKeyInLosAngeles();
         const resolvedStaffId = staffId ?? template.staffId ?? undefined;
 
         const items = template.items.map((item) => ({
@@ -824,8 +826,6 @@ export function buildTools(user: ChatUser) {
             message: `Invoice created from template "${template.name}". [View Invoice](/invoices/${invoice.id})`,
           };
         } else {
-          const expirationDate = new Date();
-          expirationDate.setDate(expirationDate.getDate() + 30);
           const quote = await quoteService.create(
             {
               date: resolvedDate,
@@ -841,7 +841,7 @@ export function buildTools(user: ChatUser) {
               isCateringEvent: template.isCateringEvent,
               items,
               recipientName: "",
-              expirationDate: expirationDate.toISOString().split("T")[0],
+              expirationDate: addDaysToDateKey(resolvedDate, 30),
             },
             user.id
           );

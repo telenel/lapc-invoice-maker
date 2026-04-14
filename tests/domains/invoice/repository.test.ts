@@ -28,6 +28,7 @@ vi.mock("@/lib/prisma", () => ({
 
 import { prisma } from "@/lib/prisma";
 import * as invoiceRepository from "@/domains/invoice/repository";
+import { addDaysToDateKey, zonedDateTimeToUtc } from "@/lib/date-utils";
 
 const mockPrisma = vi.mocked(prisma, true);
 
@@ -207,8 +208,8 @@ describe("invoiceRepository", () => {
         expect.objectContaining({
           where: expect.objectContaining({
             createdAt: {
-              gte: new Date("2026-01-01"),
-              lte: new Date("2026-01-31T23:59:59.999Z"),
+              gte: zonedDateTimeToUtc("2026-01-01", "00:00"),
+              lt: zonedDateTimeToUtc(addDaysToDateKey("2026-01-31", 1), "00:00"),
             },
           }),
         })

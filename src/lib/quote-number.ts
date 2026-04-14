@@ -1,11 +1,12 @@
 import { prisma } from "@/lib/prisma";
+import { getYearInLosAngeles } from "@/lib/date-utils";
 
 /**
  * Generates the next quote number in the format Q-YYYY-NNNN.
  * Finds the highest existing number for the current year and increments.
  */
 export async function generateQuoteNumber(): Promise<string> {
-  const year = new Date().getFullYear();
+  const year = getYearInLosAngeles();
   const prefix = `Q-${year}-`;
 
   const latest = await prisma.invoice.findFirst({

@@ -14,6 +14,7 @@ services:
     environment:
       BUILD_SHA: ${BUILD_SHA:-dev}
       BUILD_TIME: ${BUILD_TIME:-unknown}
+      TZ: America/Los_Angeles
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.laportal.rule=Host(`laportal.montalvo.io`)"

@@ -18,6 +18,7 @@ import {
   type QuoteFilters,
 } from "./quote-filters";
 import { formatAmount, formatDate, getInitials } from "@/lib/formatters";
+import { isDateOnlyBeforeTodayInTimeZone } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 import { ClipboardListIcon, SendIcon } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -136,11 +137,7 @@ interface QuoteRowProps {
 
 function isExpired(dateStr: string | null): boolean {
   if (!dateStr) return false;
-  const expiry = new Date(dateStr);
-  expiry.setUTCHours(0, 0, 0, 0);
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
-  return expiry < today;
+  return isDateOnlyBeforeTodayInTimeZone(dateStr);
 }
 
 const QuoteRow = React.memo(function QuoteRow({ quote, onClick, badgeState, selected, selectable, onSelect }: QuoteRowProps) {

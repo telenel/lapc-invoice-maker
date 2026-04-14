@@ -18,6 +18,7 @@ import {
 } from "@/components/calendar/event-detail-sidebar";
 import { AddEventModal } from "@/components/calendar/add-event-modal";
 import { useCalendarSSE } from "@/domains/calendar/hooks";
+import { fromDateKey, getDateKeyInLosAngeles } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 import type { CalendarBootstrapData } from "@/domains/calendar/service";
 
@@ -81,7 +82,7 @@ export function CalendarView({
   const [editModalKey, setEditModalKey] = useState(0);
 
   // Mini month state
-  const [displayMonth, setDisplayMonth] = useState(() => new Date());
+  const [displayMonth, setDisplayMonth] = useState(() => fromDateKey(getDateKeyInLosAngeles()));
   const [activeRange, setActiveRange] = useState<{ start: string; end: string }>();
 
   // Calendar fills viewport: disable main scrolling/padding, compute slot height

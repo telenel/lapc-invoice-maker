@@ -20,11 +20,12 @@ import type {
   RequisitionSubmitAck,
 } from "@/domains/textbook-requisition/types";
 import { ApiError } from "@/domains/shared/types";
+import { getYearInLosAngeles } from "@/lib/date-utils";
 import { formatLosAngelesDateTime } from "@/lib/time";
 
 // ── Constants ──
 
-const CURRENT_YEAR = new Date().getFullYear();
+const CURRENT_YEAR = getYearInLosAngeles();
 
 const TERM_OPTIONS = ["Winter", "Spring", "Summer", "Fall"] as const;
 

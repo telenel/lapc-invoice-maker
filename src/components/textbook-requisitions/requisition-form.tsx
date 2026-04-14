@@ -10,6 +10,7 @@ import {
   toCreateBookInputs,
   createEmptyBook,
 } from "./requisition-books";
+import { getYearInLosAngeles } from "@/lib/date-utils";
 import type { BookFormData } from "./requisition-books";
 import type {
   RequisitionResponse,
@@ -19,7 +20,7 @@ import type {
 
 // ── Constants ──
 
-const CURRENT_YEAR = new Date().getFullYear();
+const CURRENT_YEAR = getYearInLosAngeles();
 
 const TERM_OPTIONS = ["Winter", "Spring", "Summer", "Fall"] as const;
 

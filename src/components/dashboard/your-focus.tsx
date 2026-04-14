@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { formatAmount } from "@/lib/formatters";
+import { addDaysToDateKey, getDateKeyInLosAngeles } from "@/lib/date-utils";
 import { useDashboardBootstrapData } from "./dashboard-bootstrap-provider";
 import type { DashboardFocusData } from "@/domains/dashboard/types";
 
@@ -52,14 +53,10 @@ export function YourFocus({
     async function fetchFocus() {
       try {
         const creatorId = currentUserId ?? undefined;
-        const now = new Date();
-        const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const firstOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-        const lastOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
-        const dateFrom = firstOfMonth.toISOString().split("T")[0];
-        const dateTo = now.toISOString().split("T")[0];
-        const lastMonthFrom = firstOfLastMonth.toISOString().split("T")[0];
-        const lastMonthTo = lastOfLastMonth.toISOString().split("T")[0];
+        const dateTo = getDateKeyInLosAngeles();
+        const dateFrom = `${dateTo.slice(0, 7)}-01`;
+        const lastMonthTo = addDaysToDateKey(dateFrom, -1);
+        const lastMonthFrom = `${lastMonthTo.slice(0, 7)}-01`;
         const [{ invoiceApi }, { quoteApi }] = await Promise.all([
           import("@/domains/invoice/api-client"),
           import("@/domains/quote/api-client"),

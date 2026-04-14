@@ -43,6 +43,7 @@ import { TimeSelect } from "@/components/ui/time-select";
 import { LinkIcon, MoreHorizontalIcon, PrinterIcon } from "lucide-react";
 import { escapeHtml } from "@/lib/html";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
+import { differenceInDateKeys, getDateKeyInLosAngeles, getDateOnlyKey } from "@/lib/date-utils";
 import { formatLosAngelesDate, formatWallClockTime } from "@/lib/time";
 import { useSSE } from "@/lib/use-sse";
 import { ShareLinkDialog } from "@/components/quotes/share-link-dialog";
@@ -140,10 +141,10 @@ type QuoteStatus = Quote["quoteStatus"];
 // ---------------------------------------------------------------------------
 
 function expirationText(dateStr: string): string {
-  const exp = new Date(dateStr);
-  const now = new Date();
-  const diffMs = exp.getTime() - now.getTime();
-  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  const expirationDateKey = getDateOnlyKey(dateStr);
+  if (!expirationDateKey) return "";
+
+  const diffDays = differenceInDateKeys(getDateKeyInLosAngeles(), expirationDateKey);
   if (diffDays > 0) return `Expires in ${diffDays} day${diffDays !== 1 ? "s" : ""}`;
   if (diffDays === 0) return "Expires today";
   return `Expired ${Math.abs(diffDays)} day${Math.abs(diffDays) !== 1 ? "s" : ""} ago`;

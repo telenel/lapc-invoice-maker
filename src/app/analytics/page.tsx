@@ -3,14 +3,13 @@ import { getServerSession } from "next-auth";
 import { AnalyticsDashboard } from "@/components/analytics/analytics-dashboard";
 import { authOptions } from "@/lib/auth";
 import { analyticsService } from "@/domains/analytics/service";
+import { getDateKeyInLosAngeles, shiftDateKey } from "@/lib/date-utils";
 
 function getDefaultDateRange() {
-  const to = new Date();
-  const from = new Date();
-  from.setFullYear(from.getFullYear() - 1);
+  const dateTo = getDateKeyInLosAngeles();
   return {
-    dateFrom: from.toISOString().split("T")[0],
-    dateTo: to.toISOString().split("T")[0],
+    dateFrom: shiftDateKey(dateTo, { years: -1 }),
+    dateTo,
   };
 }
 

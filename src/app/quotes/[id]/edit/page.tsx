@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { useQuoteForm, QuoteFormData } from "@/components/quote/quote-form";
 import { QuoteMode } from "@/components/quote/quote-mode";
+import { getDateKeyInLosAngeles } from "@/lib/date-utils";
 
 interface ApiQuoteItem {
   description: string;
@@ -106,7 +107,7 @@ function mapApiToFormData(quote: ApiQuote): QuoteFormData {
           specialInstructions: quote.cateringDetails.specialInstructions ?? "",
         }
       : {
-          eventDate: new Date().toISOString().split("T")[0],
+          eventDate: getDateKeyInLosAngeles(),
           startTime: "",
           endTime: "",
           location: "",

@@ -1,3 +1,6 @@
+import { getDateOnlyKey } from "@/lib/date-utils";
+import { formatLosAngelesDate } from "@/lib/time";
+
 // src/domains/shared/formatters.ts
 
 /** Dollar format with commas for display: "$1,234.50" */
@@ -15,30 +18,28 @@ export function formatCurrency(value: string | number): string {
 
 /** "Mar 15, 2026" */
 export function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
+  return formatLosAngelesDate(dateStr, {
     year: "numeric",
     month: "short",
     day: "numeric",
-    timeZone: "UTC",
   });
 }
 
 /** "March 15, 2026" */
 export function formatDateLong(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
+  return formatLosAngelesDate(dateStr, {
     year: "numeric",
     month: "long",
     day: "numeric",
-    timeZone: "UTC",
   });
 }
 
 /** "Mar 15" */
 export function formatDateCompact(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
+  return formatLosAngelesDate(dateStr, {
+    year: undefined,
     month: "short",
     day: "numeric",
-    timeZone: "UTC",
   });
 }
 
@@ -54,10 +55,12 @@ export function getInitials(name: string): string {
 
 /** "March 15, 2026" from Date object (for PDF templates) */
 export function formatDateFromDate(date: Date): string {
-  return date.toLocaleDateString("en-US", {
+  const dateKey = getDateOnlyKey(date);
+  if (!dateKey) return "";
+
+  return formatLosAngelesDate(dateKey, {
     year: "numeric",
     month: "long",
     day: "numeric",
-    timeZone: "UTC",
   });
 }

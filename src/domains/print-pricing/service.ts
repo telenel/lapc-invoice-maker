@@ -22,6 +22,7 @@ import {
   printEstimateRequestSchema,
   type PricingConfigUpdateInput,
 } from "@/lib/pricing/validators";
+import { getYearInLosAngeles } from "@/lib/date-utils";
 import { formatLosAngelesDateTime } from "@/lib/time";
 
 type ConfigRecord = NonNullable<Awaited<ReturnType<typeof printPricingRepository.findConfig>>>;
@@ -137,7 +138,7 @@ async function ensurePricingConfig(): Promise<ConfigRecord> {
 }
 
 async function generateQuoteNumber(prefix: string): Promise<string> {
-  const year = new Date().getFullYear();
+  const year = getYearInLosAngeles();
   const latest = await printPricingRepository.findLatestQuoteNumber(prefix, year);
   const nextSequence = latest?.quoteNumber
     ? Number.parseInt(latest.quoteNumber.split("-").pop() ?? "0", 10) + 1

@@ -3,6 +3,13 @@ import * as quoteRepository from "./repository";
 import { pdfService } from "@/domains/pdf/service";
 import { formatDateFromDate } from "@/domains/shared/formatters";
 import { calculateTotal } from "@/domains/invoice/calculations";
+import {
+  addDaysToDateKey,
+  fromDateKey,
+  getDateKeyInLosAngeles,
+  getDateOnlyKey,
+  isDateOnlyBeforeTodayInTimeZone,
+} from "@/lib/date-utils";
 import { prisma } from "@/lib/prisma";
 import { safePublishAll } from "@/lib/sse";
 import type { Prisma } from "@/generated/prisma/client";
@@ -65,6 +72,19 @@ function assertQuoteIsActive(quote: { archivedAt?: Date | null }) {
       { code: "FORBIDDEN" },
     );
   }
+}
+
+function isQuoteExpired(expirationDate: Date | string | null | undefined, now = new Date()): boolean {
+  if (!expirationDate) return false;
+  return isDateOnlyBeforeTodayInTimeZone(expirationDate, now);
+}
+
+function getDefaultQuoteDateKey(now = new Date()): string {
+  return getDateKeyInLosAngeles(now);
+}
+
+function getDefaultQuoteExpirationDateKey(now = new Date()): string {
+  return addDaysToDateKey(getDefaultQuoteDateKey(now), 30);
 }
 
 async function withGeneratedQuoteNumber<T>(operation: (quoteNumber: string) => Promise<T>): Promise<T> {
@@ -239,8 +259,7 @@ function calculateLineItems(
 
 function normalizeQuoteDateInput(value: string | Date | null | undefined): string | null {
   if (!value) return null;
-  const date = value instanceof Date ? value : new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date.toISOString().split("T")[0];
+  return getDateOnlyKey(value);
 }
 
 function normalizeQuoteItemForComparison(item: {
@@ -338,8 +357,7 @@ export const quoteService = {
 
     // Auto-expire if past expiration date
     if (
-      quote.expirationDate &&
-      new Date(quote.expirationDate) < new Date() &&
+      isQuoteExpired(quote.expirationDate) &&
       (quote.quoteStatus === "DRAFT" || quote.quoteStatus === "SENT" || quote.quoteStatus === "SUBMITTED_EMAIL" || quote.quoteStatus === "SUBMITTED_MANUAL")
     ) {
       await quoteRepository.update(id, { quoteStatus: "EXPIRED" });
@@ -359,8 +377,7 @@ export const quoteService = {
 
     // Auto-expire if past expiration date
     if (
-      quote.expirationDate &&
-      new Date(quote.expirationDate) < new Date() &&
+      isQuoteExpired(quote.expirationDate) &&
       (quote.quoteStatus === "DRAFT" || quote.quoteStatus === "SENT" || quote.quoteStatus === "SUBMITTED_EMAIL" || quote.quoteStatus === "SUBMITTED_MANUAL")
     ) {
       await quoteRepository.update(quote.id, { quoteStatus: "EXPIRED" });
@@ -578,7 +595,7 @@ export const quoteService = {
     }
 
     // Check expiration
-    if (quote.expirationDate && new Date(quote.expirationDate) < new Date()) {
+    if (isQuoteExpired(quote.expirationDate)) {
       await quoteRepository.update(quote.id, { quoteStatus: "EXPIRED" });
       safePublishAll({ type: "quote-changed" });
       throw Object.assign(new Error("This quote has expired"), { code: "FORBIDDEN" });
@@ -626,7 +643,7 @@ export const quoteService = {
           code: "FORBIDDEN",
         });
       }
-      if (lockedQuote.expirationDate && new Date(lockedQuote.expirationDate) < new Date()) {
+      if (isQuoteExpired(lockedQuote.expirationDate)) {
         return { expired: true, updatedConvertedInvoice: false };
       }
       const lockedQuoteCateringDetails = lockedQuote.cateringDetails as CateringDetails | null;
@@ -983,7 +1000,7 @@ export const quoteService = {
     }
 
     // Check expiration
-    if (quote.expirationDate && new Date(quote.expirationDate) < new Date()) {
+    if (isQuoteExpired(quote.expirationDate)) {
       await quoteRepository.update(quote.id, { quoteStatus: "EXPIRED" });
       throw Object.assign(new Error("This quote has expired"), { code: "FORBIDDEN" });
     }
@@ -1374,8 +1391,8 @@ export const quoteService = {
     }
 
     const now = new Date();
-    const expirationDate = new Date(now);
-    expirationDate.setDate(expirationDate.getDate() + 30);
+    const dateKey = getDefaultQuoteDateKey(now);
+    const expirationDateKey = getDefaultQuoteExpirationDateKey(now);
 
     const newQuote = await withGeneratedQuoteNumber((quoteNumber) => prisma.$transaction(async (tx) => {
       const lockedQuotes = await tx.$queryRaw<Array<{
@@ -1405,7 +1422,7 @@ export const quoteService = {
           status: "DRAFT",
           quoteStatus: "DRAFT",
           quoteNumber,
-          date: now,
+          date: fromDateKey(dateKey),
           category: quote.category,
           department: quote.department,
           staffId: quote.staffId ?? undefined,
@@ -1417,7 +1434,7 @@ export const quoteService = {
           recipientName: quote.recipientName,
           recipientEmail: quote.recipientEmail,
           recipientOrg: quote.recipientOrg,
-          expirationDate,
+          expirationDate: fromDateKey(expirationDateKey),
           totalAmount: quote.totalAmount,
           marginEnabled: quote.marginEnabled,
           marginPercent: quote.marginPercent,
@@ -1476,8 +1493,8 @@ export const quoteService = {
     assertQuoteIsActive(quote);
 
     const now = new Date();
-    const expirationDate = new Date(now);
-    expirationDate.setDate(expirationDate.getDate() + 30);
+    const dateKey = getDefaultQuoteDateKey(now);
+    const expirationDateKey = getDefaultQuoteExpirationDateKey(now);
 
     const calculatedItems = calculateLineItems(
       quote.items.map((item) => ({
@@ -1505,7 +1522,7 @@ export const quoteService = {
         status: "DRAFT",
         quoteStatus: "DRAFT",
         quoteNumber,
-        date: now,
+        date: fromDateKey(dateKey),
         category: quote.category,
         department: quote.department,
         staffId: quote.staffId ?? undefined,
@@ -1517,7 +1534,7 @@ export const quoteService = {
         recipientName: quote.recipientName,
         recipientEmail: quote.recipientEmail,
         recipientOrg: quote.recipientOrg,
-        expirationDate,
+        expirationDate: fromDateKey(expirationDateKey),
         totalAmount: total,
         marginEnabled: quote.marginEnabled,
         marginPercent: quote.marginPercent,

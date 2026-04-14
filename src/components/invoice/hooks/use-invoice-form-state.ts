@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { TAX_RATE } from "@/domains/invoice/constants";
+import { getDateKeyInLosAngeles } from "@/lib/date-utils";
 
 // ---------------------------------------------------------------------------
 // Types (re-exported so consumers can import from here)
@@ -75,7 +76,7 @@ export interface InvoiceFormData {
 // ---------------------------------------------------------------------------
 
 export function todayISO(): string {
-  return new Date().toISOString().split("T")[0];
+  return getDateKeyInLosAngeles();
 }
 
 export function emptyItem(sortOrder = 0): InvoiceItem {

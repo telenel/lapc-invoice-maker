@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { eventService } from "@/domains/event/service";
 import { Prisma } from "@/generated/prisma/client";
 import { BIRTHDAY_COLOR, CATERING_COLOR, type CalendarEventItem } from "@/domains/event/types";
+import { addDaysToDateKey, fromDateKey, getDateKeyInLosAngeles } from "@/lib/date-utils";
 
 export interface CalendarBootstrapRange {
   start: string;
@@ -14,25 +15,18 @@ export interface CalendarBootstrapData {
   mobile: CalendarBootstrapRange;
 }
 
-function formatDateKey(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
-    date.getDate(),
-  ).padStart(2, "0")}`;
-}
-
-function getWeekStart(date: Date): Date {
-  const start = new Date(date);
-  start.setHours(0, 0, 0, 0);
-  start.setDate(start.getDate() - start.getDay());
-  return start;
+function getWeekStartDateKey(date = new Date()): string {
+  const currentDateKey = getDateKeyInLosAngeles(date);
+  const dayOfWeek = fromDateKey(currentDateKey).getUTCDay();
+  return addDaysToDateKey(currentDateKey, -dayOfWeek);
 }
 
 export async function listCalendarEventsForRange(
   start: string,
   end: string,
 ): Promise<CalendarEventItem[]> {
-  const rangeStart = new Date(start);
-  const rangeEnd = new Date(end);
+  const rangeStart = fromDateKey(start);
+  const rangeEnd = fromDateKey(end);
 
   const [quotes, manualEvents, staffWithBirthdays] = await Promise.all([
     prisma.invoice.findMany({
@@ -113,23 +107,23 @@ export async function listCalendarEventsForRange(
       continue;
     }
 
-    const startYear = rangeStart.getFullYear();
-    const endYear = rangeEnd.getFullYear();
+    const startYear = Number(start.slice(0, 4));
+    const endYear = Number(end.slice(0, 4));
 
     for (let year = startYear; year <= endYear; year += 1) {
       const birthMonth: string = `${staff.birthMonth}`.padStart(2, "0");
       const birthDay: string = `${staff.birthDay}`.padStart(2, "0");
       const birthdayKey = `${year}-${birthMonth}-${birthDay}`;
-      const birthdayDate = new Date(birthdayKey);
+      const birthdayDate = fromDateKey(birthdayKey);
 
       if (
         Number.isNaN(birthdayDate.getTime()) ||
-        birthdayDate.getMonth() + 1 !== staff.birthMonth
+        birthdayDate.getUTCMonth() + 1 !== staff.birthMonth
       ) {
         continue;
       }
 
-      if (birthdayDate >= rangeStart && birthdayDate < rangeEnd) {
+      if (birthdayKey >= start && birthdayKey < end) {
         birthdayEvents.push({
           id: `birthday-${staff.id}-${year}`,
           title: `🎂 ${staff.name}'s Birthday`,
@@ -154,22 +148,14 @@ export async function listCalendarEventsForRange(
 export async function getCalendarBootstrapData(
   now = new Date(),
 ): Promise<CalendarBootstrapData> {
-  const mobileStart = new Date(now);
-  mobileStart.setHours(0, 0, 0, 0);
-  const mobileEnd = new Date(mobileStart);
-  mobileEnd.setDate(mobileEnd.getDate() + 1);
-
-  const desktopStart = getWeekStart(now);
-  const desktopEnd = new Date(desktopStart);
-  desktopEnd.setDate(desktopEnd.getDate() + 7);
-
   const mobileRange = {
-    start: formatDateKey(mobileStart),
-    end: formatDateKey(mobileEnd),
+    start: getDateKeyInLosAngeles(now),
+    end: addDaysToDateKey(getDateKeyInLosAngeles(now), 1),
   };
+  const desktopStart = getWeekStartDateKey(now);
   const desktopRange = {
-    start: formatDateKey(desktopStart),
-    end: formatDateKey(desktopEnd),
+    start: desktopStart,
+    end: addDaysToDateKey(desktopStart, 7),
   };
   const [desktopEvents, mobileEvents] = await Promise.all([
     listCalendarEventsForRange(desktopRange.start, desktopRange.end),

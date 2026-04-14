@@ -27,6 +27,7 @@ import { RequisitionStatusBadge } from "./requisition-status-badge";
 import { useRequisitions } from "@/domains/textbook-requisition/hooks";
 import { requisitionApi } from "@/domains/textbook-requisition/api-client";
 import { formatDate } from "@/lib/formatters";
+import { getDateKeyInLosAngeles } from "@/lib/date-utils";
 import type {
   RequisitionFilters as Filters,
   RequisitionListResponse,
@@ -108,7 +109,7 @@ export function RequisitionTable({
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `requisitions-${new Date().toISOString().slice(0, 10)}.csv`;
+        a.download = `requisitions-${getDateKeyInLosAngeles()}.csv`;
         a.click();
         setTimeout(() => URL.revokeObjectURL(url), 10_000);
       })

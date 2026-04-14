@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { startOfDayInTimeZone, zonedDateTimeToUtc } from "@/lib/date-utils";
+import {
+  addDaysToDateKey,
+  getDateKeyInLosAngeles,
+  getDateOnlyKey,
+  isDateOnlyBeforeTodayInTimeZone,
+  startOfDayInTimeZone,
+  zonedDateTimeToUtc,
+} from "@/lib/date-utils";
 
 describe("zonedDateTimeToUtc", () => {
   it("resolves Los Angeles spring DST transition correctly", () => {
@@ -30,5 +37,25 @@ describe("startOfDayInTimeZone", () => {
     expect(
       startOfDayInTimeZone(new Date("2026-03-08T15:30:00.000Z")).toISOString(),
     ).toBe("2026-03-08T08:00:00.000Z");
+  });
+});
+
+describe("Los Angeles business-date helpers", () => {
+  it("derives the current Los Angeles date key instead of the UTC date", () => {
+    expect(getDateKeyInLosAngeles(new Date("2026-04-14T05:30:00.000Z"))).toBe("2026-04-13");
+  });
+
+  it("preserves a stored date-only value when normalizing JS Date objects", () => {
+    expect(getDateOnlyKey(new Date("2026-04-13T00:00:00.000Z"))).toBe("2026-04-13");
+  });
+
+  it("treats a date-only value as active for the full Los Angeles business day", () => {
+    const now = new Date("2026-04-14T05:30:00.000Z");
+    expect(isDateOnlyBeforeTodayInTimeZone("2026-04-13T00:00:00.000Z", now)).toBe(false);
+    expect(isDateOnlyBeforeTodayInTimeZone("2026-04-12T00:00:00.000Z", now)).toBe(true);
+  });
+
+  it("adds calendar days to date keys without relying on host timezone", () => {
+    expect(addDaysToDateKey("2026-04-13", 30)).toBe("2026-05-13");
   });
 });
