@@ -65,6 +65,7 @@ export function buildIncludedFinanceWhere(
 
 export function buildExpectedFinanceWhere(): Prisma.InvoiceWhereInput {
   return {
+    archivedAt: null,
     OR: [
       {
         type: "INVOICE",

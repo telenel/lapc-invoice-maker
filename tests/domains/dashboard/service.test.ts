@@ -106,6 +106,58 @@ describe("dashboard service", () => {
       .mockResolvedValueOnce([] as never);
   });
 
+  it("excludes archived records from focus data counts", async () => {
+    await getDashboardBootstrapData("user-1");
+
+    // count is called 3 times: myDrafts, myRunning, myQuotesAwaitingResponse
+    for (const call of mockPrisma.invoice.count.mock.calls) {
+      expect(call[0]).toMatchObject({
+        where: expect.objectContaining({ archivedAt: null }),
+      });
+    }
+  });
+
+  it("excludes archived records from focus data aggregates", async () => {
+    await getDashboardBootstrapData("user-1");
+
+    // aggregate calls [0] and [1] are thisMonthFinal and lastMonthFinal from focus data
+    for (const i of [0, 1]) {
+      expect(mockPrisma.invoice.aggregate.mock.calls[i]?.[0]).toMatchObject({
+        where: expect.objectContaining({ archivedAt: null }),
+      });
+    }
+  });
+
+  it("excludes archived records from expected pipeline totals", async () => {
+    await getDashboardBootstrapData("user-1");
+
+    // aggregate call [2] is expectedOpen from getDashboardStatsData (uses buildExpectedFinanceWhere)
+    expect(mockPrisma.invoice.aggregate.mock.calls[2]?.[0]).toMatchObject({
+      where: expect.objectContaining({ archivedAt: null }),
+    });
+  });
+
+  it("excludes archived records from running invoices", async () => {
+    await getDashboardBootstrapData("user-1");
+
+    // findMany[0] is the running invoices query
+    expect(mockPrisma.invoice.findMany.mock.calls[0]?.[0]).toMatchObject({
+      where: expect.objectContaining({ archivedAt: null }),
+    });
+  });
+
+  it("excludes archived records from recent activity", async () => {
+    await getDashboardBootstrapData("user-1");
+
+    // findMany is called twice: first for running invoices, second for recent activity
+    const recentActivityCall = mockPrisma.invoice.findMany.mock.calls[1]?.[0];
+    expect(recentActivityCall).toMatchObject({
+      where: expect.objectContaining({
+        archivedAt: null,
+      }),
+    });
+  });
+
   it("includes expected pipeline totals and scopes running invoices to the current user", async () => {
     const result = await getDashboardBootstrapData("user-1");
 

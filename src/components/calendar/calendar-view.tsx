@@ -50,6 +50,7 @@ export function CalendarView({
 }) {
   const calendarRef = useRef<FullCalendar | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const syncRef = useRef<() => void>(() => {});
   const [calendarHeight, setCalendarHeight] = useState<number>(600);
   const [isMobile, setIsMobile] = useState<boolean>(() => (
     typeof window !== "undefined" ? window.innerWidth < 1024 : false
@@ -136,6 +137,7 @@ export function CalendarView({
       }, 50);
     }
 
+    syncRef.current = sync;
     sync();
     const ro = new ResizeObserver(sync);
     ro.observe(mainEl);
@@ -176,6 +178,8 @@ export function CalendarView({
     });
     // Sync mini month to the calendar's displayed month (not padded range start)
     setDisplayMonth(info.view.currentStart);
+    // Recalculate slot heights for the new view/date range
+    syncRef.current();
   }, []);
 
   const fetchEvents = useCallback(
