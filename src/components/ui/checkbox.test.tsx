@@ -10,6 +10,6 @@ describe("Checkbox", () => {
     const checkbox = screen.getByRole("checkbox", { name: "Select row" });
 
     expect(checkbox).toHaveClass("inline-flex");
-    expect(checkbox).toHaveClass("size-4");
+    expect(checkbox).toHaveClass("size-[1.125rem]");
   });
 });
