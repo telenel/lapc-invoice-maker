@@ -516,7 +516,7 @@ describe("PublicQuoteView", () => {
       quoteNumber: "Q-1",
       quoteStatus: "SUBMITTED_EMAIL",
       paymentLinkAvailable: false,
-      responseLinkAvailable: false,
+      responseLinkAvailable: true,
       date: "2026-03-31T00:00:00.000Z",
       expirationDate: null,
       department: "IT",

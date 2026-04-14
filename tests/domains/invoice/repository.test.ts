@@ -5,6 +5,7 @@ vi.mock("@/lib/prisma", () => ({
   prisma: {
     invoice: {
       findMany: vi.fn(),
+      findFirst: vi.fn(),
       findUnique: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
@@ -285,12 +286,12 @@ describe("invoiceRepository", () => {
 
   describe("findById", () => {
     it("returns invoice with staff, creator, and items relations", async () => {
-      mockPrisma.invoice.findUnique.mockResolvedValue(mockInvoice as never);
+      mockPrisma.invoice.findFirst.mockResolvedValue(mockInvoice as never);
 
       const result = await invoiceRepository.findById("inv1");
 
-      expect(mockPrisma.invoice.findUnique).toHaveBeenCalledWith({
-        where: { id: "inv1" },
+      expect(mockPrisma.invoice.findFirst).toHaveBeenCalledWith({
+        where: { id: "inv1", archivedAt: null },
         include: expect.objectContaining({
           staff: expect.any(Object),
           creator: expect.any(Object),
@@ -301,7 +302,7 @@ describe("invoiceRepository", () => {
     });
 
     it("returns null when invoice does not exist", async () => {
-      mockPrisma.invoice.findUnique.mockResolvedValue(null as never);
+      mockPrisma.invoice.findFirst.mockResolvedValue(null as never);
 
       const result = await invoiceRepository.findById("missing");
 

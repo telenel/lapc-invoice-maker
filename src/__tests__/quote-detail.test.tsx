@@ -191,7 +191,8 @@ describe("QuoteDetailView", () => {
     render(<QuoteDetailView id="q1" />);
 
     await screen.findByText("Q-1");
-    expect(screen.getByRole("button", { name: "Mark as Sent" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Send Quote" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Mark as Sent" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Edit" })).toHaveAttribute("href", "/quotes/q1/edit");
     expect(screen.getByRole("button", { name: "Download / Regenerate PDF" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Approve Manually" })).not.toBeInTheDocument();
