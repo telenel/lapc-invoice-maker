@@ -1,10 +1,5 @@
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import path from "node:path";
-
-const execFileAsync = promisify(execFile);
+import { access } from "node:fs/promises";
+import puppeteer from "puppeteer";
 
 function chromiumCandidates(): string[] {
   return Array.from(new Set([
@@ -15,58 +10,43 @@ function chromiumCandidates(): string[] {
   ].filter((value): value is string => Boolean(value))));
 }
 
+async function resolveChromiumExecutable(): Promise<string | undefined> {
+  for (const executablePath of chromiumCandidates()) {
+    try {
+      await access(executablePath);
+      return executablePath;
+    } catch {
+      // Try the next candidate.
+    }
+  }
+
+  return undefined;
+}
+
 export async function renderHtmlToPdf(html: string): Promise<Buffer> {
-  const tempDir = await mkdtemp(path.join(tmpdir(), "laportal-pdf-"));
-  const inputPath = path.join(tempDir, "document.html");
-  const outputPath = path.join(tempDir, "document.pdf");
-  const profileDir = path.join(tempDir, "profile");
-  const configDir = path.join(tempDir, "config");
-  const cacheDir = path.join(tempDir, "cache");
-  const errors: string[] = [];
+  const browser = await puppeteer.launch({
+    headless: true,
+    executablePath: await resolveChromiumExecutable(),
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+    ],
+    timeout: 30_000,
+  });
 
   try {
-    await mkdir(profileDir, { recursive: true });
-    await mkdir(configDir, { recursive: true });
-    await mkdir(cacheDir, { recursive: true });
-    await writeFile(inputPath, html, "utf8");
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "networkidle0" });
 
-    for (const executablePath of chromiumCandidates()) {
-      try {
-        await execFileAsync(
-          executablePath,
-          [
-            "--headless",
-            "--disable-gpu",
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-            "--disable-dev-shm-usage",
-            "--disable-breakpad",
-            "--user-data-dir=" + profileDir,
-            "--print-to-pdf-no-header",
-            `--print-to-pdf=${outputPath}`,
-            `file://${inputPath}`,
-          ],
-          {
-            env: {
-              ...process.env,
-              XDG_CONFIG_HOME: configDir,
-              XDG_CACHE_HOME: cacheDir,
-            },
-            timeout: 30_000,
-          },
-        );
+    const pdf = await page.pdf({
+      displayHeaderFooter: false,
+      preferCSSPageSize: true,
+      printBackground: true,
+    });
 
-        return await readFile(outputPath);
-      } catch (error) {
-        const detail = error instanceof Error ? error.message : String(error);
-        errors.push(`${executablePath}: ${detail}`);
-      }
-    }
-
-    throw new Error(
-      `Failed to render PDF with available Chromium executables. ${errors.join(" | ")}`
-    );
+    return Buffer.from(pdf);
   } finally {
-    await rm(tempDir, { recursive: true, force: true });
+    await browser.close();
   }
 }

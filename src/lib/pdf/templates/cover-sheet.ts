@@ -154,6 +154,7 @@ export function renderCoverSheet(data: CoverSheetData): string {
     font-size: 15px;
     margin-top: 4px;
     color: #333;
+    font-style: italic;
   }
 </style>
 </head>

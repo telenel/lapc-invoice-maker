@@ -162,6 +162,11 @@ describe("renderCoverSheet", () => {
     });
     expect(html).toContain("Dr. Alice Kim, Vice President");
   });
+
+  it("renders signature names in italics", () => {
+    const html = renderCoverSheet(baseCoverData);
+    expect(html).toContain("font-style: italic");
+  });
 });
 
 // ---------------------------------------------------------------------------

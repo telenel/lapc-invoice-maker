@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { useAutoSave, loadDraft } from "@/lib/use-auto-save";
 import { DraftRecoveryBanner } from "@/components/ui/draft-recovery-banner";
 import { InfoIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -26,6 +25,7 @@ import { PdfProgress } from "./pdf-progress";
 import { StaffSummaryEditor } from "./staff-summary-editor";
 import { SignatureSection } from "./signature-section";
 import { InvoiceMetadata } from "./invoice-metadata";
+import { InvoiceActionButtons } from "./invoice-action-buttons";
 import type {
   InvoiceFormData,
   InvoiceItem,
@@ -128,6 +128,7 @@ export function KeyboardMode({
   const [userPickDescriptions, setUserPickDescriptions] = useState<Set<string>>(() => new Set());
   const [userPicks, setUserPicks] = useState<{ id: string; description: string; unitPrice: number; department: string }[]>([]);
   const [isMac, setIsMac] = useState(false);
+  const [prismcoreUploading, setPrismcoreUploading] = useState(false);
 
   // ---- Auto-save + draft recovery ----
   const routeKey = existingId ? `/invoices/${existingId}/edit` : "/invoices/new";
@@ -239,6 +240,10 @@ export function KeyboardMode({
 
   // ---- Validation + generate ----
   const handleGenerate = useCallback(() => {
+    if (prismcoreUploading) {
+      toast.error("Please wait for the PrismCore upload to finish");
+      return;
+    }
     if (!form.staffId) {
       toast.error("Please select a staff member");
       return;
@@ -252,7 +257,13 @@ export function KeyboardMode({
       return;
     }
     handleSaveAndFinalize();
-  }, [form.staffId, form.invoiceNumber, form.category, handleSaveAndFinalize]);
+  }, [
+    form.staffId,
+    form.invoiceNumber,
+    form.category,
+    handleSaveAndFinalize,
+    prismcoreUploading,
+  ]);
 
   // ---- Keyboard shortcut: Ctrl/Cmd+Enter -> Generate PDF ----
   useEffect(() => {
@@ -673,38 +684,21 @@ export function KeyboardMode({
           <PrismcoreUpload
             value={form.prismcorePath}
             onChange={(path) => updateField("prismcorePath", path)}
+            onUploadingChange={setPrismcoreUploading}
           />
         </div>
 
         <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:flex-wrap sm:justify-end">
-          {!form.isRunning && (
-            <>
-              <Button variant="outline" onClick={handleSaveAsTemplate} disabled={saving} className="w-full sm:w-auto">
-                Save as Template
-              </Button>
-              <Button variant="outline" onClick={handleSaveDraft} disabled={saving} className="w-full sm:w-auto">
-                Save Draft
-              </Button>
-            </>
-          )}
-          {form.isRunning ? (
-            <Button onClick={handleSaveDraft} disabled={saving} className="w-full sm:w-auto">
-              Save Running Invoice
-            </Button>
-          ) : existingId ? (
-            <>
-              <Button onClick={handleSaveDraft} disabled={saving} className="w-full sm:w-auto">
-                {saving ? "Updating..." : "Update"}
-              </Button>
-              <Button onClick={handleGenerate} disabled={saving} className="w-full sm:w-auto">
-                {`Generate PDF ${isMac ? "\u2318\u21B5" : "Ctrl\u21B5"}`}
-              </Button>
-            </>
-          ) : (
-            <Button onClick={handleGenerate} disabled={saving} className="w-full sm:w-auto">
-              Generate PDF {isMac ? "\u2318\u21B5" : "Ctrl\u21B5"}
-            </Button>
-          )}
+          <InvoiceActionButtons
+            isRunning={form.isRunning}
+            existingId={existingId}
+            saving={saving}
+            prismcoreUploading={prismcoreUploading}
+            isMac={isMac}
+            onSaveAsTemplate={handleSaveAsTemplate}
+            onSaveDraft={handleSaveDraft}
+            onGenerate={handleGenerate}
+          />
         </div>
       </div>
 

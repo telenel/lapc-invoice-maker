@@ -10,9 +10,14 @@ import { uploadApi } from "@/domains/upload/api-client";
 interface PrismcoreUploadProps {
   value: string | null;
   onChange: (path: string | null) => void;
+  onUploadingChange?: (uploading: boolean) => void;
 }
 
-export function PrismcoreUpload({ value, onChange }: PrismcoreUploadProps) {
+export function PrismcoreUpload({
+  value,
+  onChange,
+  onUploadingChange,
+}: PrismcoreUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [filename, setFilename] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -22,6 +27,7 @@ export function PrismcoreUpload({ value, onChange }: PrismcoreUploadProps) {
     if (!file) return;
 
     setUploading(true);
+    onUploadingChange?.(true);
     try {
       const data = await uploadApi.uploadPdf(file);
       setFilename(data.filename);
@@ -31,6 +37,7 @@ export function PrismcoreUpload({ value, onChange }: PrismcoreUploadProps) {
       if (inputRef.current) inputRef.current.value = "";
     } finally {
       setUploading(false);
+      onUploadingChange?.(false);
     }
   }
 
