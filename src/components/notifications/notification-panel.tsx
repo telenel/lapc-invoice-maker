@@ -74,7 +74,7 @@ export function NotificationPanel({
                   transition={{ delay: index * 0.03 }}
                   className={cn(
                     "group relative flex items-start border-b border-border/50 last:border-0",
-                    !notification.read && "bg-accent/30",
+                    !notification.read && "bg-accent/60 dark:bg-accent/40",
                   )}
                 >
                   <button

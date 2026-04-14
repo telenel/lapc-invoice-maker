@@ -52,7 +52,7 @@ export default async function RootLayout({
               <div className="flex min-h-dvh flex-col lg:h-screen lg:flex-row">
                 <div className="flex min-w-0 flex-1 flex-col">
                   <Nav />
-                  <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-6">{children}</main>
+                  <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto px-5 py-5 sm:px-8 sm:py-6">{children}</main>
                 </div>
                 <ChatSidebarShell />
               </div>

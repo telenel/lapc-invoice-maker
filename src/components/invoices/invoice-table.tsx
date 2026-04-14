@@ -356,6 +356,7 @@ export function InvoiceTable({
       ) : invoices.length === 0 ? (
         <EmptyState
           icon={<FileTextIcon className="size-7" />}
+          illustration={Object.values(filters).some((v) => v !== "" && v !== false) ? "/illustrations/empty-no-results.png" : "/illustrations/empty-invoices.png"}
           title="No invoices found"
           description={
             Object.values(filters).some((v) => v !== "" && v !== false)
@@ -388,7 +389,7 @@ export function InvoiceTable({
                   onClick={() => router.push(`/invoices/${invoice.id}`)}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-lg bg-muted text-[11px] font-bold text-muted-foreground">
+                    <div className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-lg bg-muted text-xs font-bold text-muted-foreground">
                       {getInitials(invoice.staff?.name ?? invoice.contact?.name ?? "?")}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -398,7 +399,7 @@ export function InvoiceTable({
                             ? invoice.runningTitle
                             : (invoice.invoiceNumber ?? "—")}
                         </p>
-                        {invoice.isRunning && <Badge variant="info" className="text-[9px]">Running</Badge>}
+                        {invoice.isRunning && <Badge variant="info" className="text-[0.625rem]">Running</Badge>}
                         <FollowUpBadge state={badgeStates[invoice.id] ?? null} />
                         <Badge variant={statusVariant(invoice.status)}>{statusLabel(invoice.status)}</Badge>
                       </div>
@@ -480,7 +481,7 @@ export function InvoiceTable({
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-muted text-[11px] font-bold text-muted-foreground shrink-0">
+                      <div className="flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-muted text-xs font-bold text-muted-foreground shrink-0">
                         {getInitials(invoice.staff?.name ?? invoice.contact?.name ?? "?")}
                       </div>
                       <div className="min-w-0">
@@ -496,7 +497,7 @@ export function InvoiceTable({
                             )}
                           </span>
                         </p>
-                        <p className="text-[11px] text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
                           {invoice.department} · {formatDate(invoice.date)}
                           {invoice.category && (
                             <> · {invoice.category.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())}</>
@@ -512,7 +513,7 @@ export function InvoiceTable({
                     </p>
                     <div className="flex items-center gap-1 justify-end mt-0.5">
                       {invoice.isRunning && (
-                        <Badge variant="info" className="text-[9px]">Running</Badge>
+                        <Badge variant="info" className="text-[0.625rem]">Running</Badge>
                       )}
                       <FollowUpBadge state={badgeStates[invoice.id] ?? null} />
                       <Badge variant={statusVariant(invoice.status)}>
@@ -526,10 +527,9 @@ export function InvoiceTable({
           </Table>
 
           {/* Pagination */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">
-              Page {page} of {totalPages} ({total} invoice
-              {total !== 1 ? "s" : ""})
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t pt-4">
+            <p className="text-sm text-muted-foreground tabular-nums">
+              Page <span className="font-medium text-foreground">{page}</span> of <span className="font-medium text-foreground">{totalPages}</span> ({total} invoice{total !== 1 ? "s" : ""})
             </p>
             <div className="flex gap-2">
               <Button

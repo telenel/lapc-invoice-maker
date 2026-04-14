@@ -108,15 +108,17 @@ export default async function InvoicesPage({
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold text-balance">Invoices</h1>
-      <UserActivityStrip initialUsers={initialUsers.users} />
-      <InvoiceTable
-        departments={departments}
-        categories={categories}
-        initialData={initialTableData}
-        initialRequest={initialRequest}
-        initialBadgeStates={initialBadgeStates}
-      />
+      <h1 className="text-2xl font-bold tracking-tight text-balance page-enter page-enter-1">Invoices</h1>
+      <div className="page-enter page-enter-2"><UserActivityStrip initialUsers={initialUsers.users} /></div>
+      <div className="page-enter page-enter-3">
+        <InvoiceTable
+          departments={departments}
+          categories={categories}
+          initialData={initialTableData}
+          initialRequest={initialRequest}
+          initialBadgeStates={initialBadgeStates}
+        />
+      </div>
     </div>
   );
 }

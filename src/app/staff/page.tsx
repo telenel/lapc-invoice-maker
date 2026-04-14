@@ -9,5 +9,5 @@ export default async function StaffPage() {
     pageSize: 20,
   });
 
-  return <StaffTable initialData={initialData} />;
+  return <div className="page-enter page-enter-1"><StaffTable initialData={initialData} /></div>;
 }

@@ -383,135 +383,191 @@
 .dashboard-enter-4 { animation-delay: 180ms; }
 .dashboard-enter-5 { animation-delay: 240ms; }
 
-/* ── FullCalendar theme integration ── */
+/* ── FullCalendar — Modern calendar design ── */
 .fc {
-  --fc-border-color: var(--border);
+  --fc-border-color: color-mix(in oklch, var(--border) 60%, transparent);
   --fc-button-bg-color: var(--secondary);
-  --fc-button-border-color: var(--border);
+  --fc-button-border-color: transparent;
   --fc-button-text-color: var(--secondary-foreground);
   --fc-button-hover-bg-color: var(--accent);
-  --fc-button-hover-border-color: var(--border);
-  --fc-button-active-bg-color: var(--accent);
-  --fc-button-active-border-color: var(--border);
-  --fc-today-bg-color: color-mix(in oklch, var(--primary) 8%, transparent);
+  --fc-button-hover-border-color: transparent;
+  --fc-button-active-bg-color: var(--primary);
+  --fc-button-active-border-color: var(--primary);
+  --fc-today-bg-color: color-mix(in oklch, var(--primary) 4%, transparent);
   --fc-neutral-bg-color: var(--muted);
   --fc-list-event-hover-bg-color: var(--accent);
-  --fc-page-bg-color: var(--background);
-  --fc-event-border-radius: 4px;
+  --fc-page-bg-color: transparent;
+  --fc-event-border-radius: 6px;
 
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
 }
 
+/* ── Toolbar ── */
+.fc .fc-toolbar.fc-header-toolbar {
+  margin-bottom: 0.75rem;
+  padding: 0.25rem 0;
+}
 .fc .fc-toolbar-title {
-  font-size: 1.125rem;
-  font-weight: 600;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--foreground);
 }
-
 .fc .fc-button {
   font-size: 0.8125rem;
-  font-weight: 500;
-  border-radius: var(--radius-sm);
-  padding: 0.3rem 0.75rem;
+  font-weight: 600;
+  border-radius: var(--radius);
+  padding: 0.4rem 0.75rem;
   box-shadow: none;
   text-transform: capitalize;
+  transition: all 150ms ease;
 }
-
 .fc .fc-button:focus {
   box-shadow: 0 0 0 2px var(--ring);
 }
-
 .fc .fc-button-primary:not(:disabled):active,
 .fc .fc-button-primary:not(:disabled).fc-button-active {
   background-color: var(--primary);
   border-color: var(--primary);
   color: var(--primary-foreground);
 }
+.fc .fc-button-group {
+  gap: 2px;
+}
+.fc .fc-button-group .fc-button {
+  border-radius: var(--radius) !important;
+}
 
+/* ── Column headers ── */
 .fc .fc-col-header-cell {
-  background: var(--muted);
+  background: transparent;
   font-weight: 600;
   font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   color: var(--muted-foreground);
-  padding: 0.5rem 0;
+  padding: 0.625rem 0;
+  border-bottom: 2px solid var(--border);
+  border-left: none;
+  border-right: none;
+}
+.fc .fc-col-header-cell.fc-day-today {
+  color: var(--primary);
 }
 
+/* ── Grid lines — softer, less "Excel" ── */
+.fc td,
+.fc th {
+  border-color: color-mix(in oklch, var(--border) 50%, transparent);
+}
 .fc .fc-timegrid-slot {
-  height: var(--fc-slot-height, 2.5rem);
+  height: var(--fc-slot-height, 2.75rem);
+  border-bottom-style: dashed;
 }
-
+.fc .fc-timegrid-slot-minor {
+  border-bottom-style: none;
+}
 .fc .fc-timegrid-slot-label {
-  font-size: var(--fc-slot-font, 0.75rem);
+  font-size: var(--fc-slot-font, 0.6875rem);
+  font-weight: 500;
   color: var(--muted-foreground);
+  vertical-align: top;
+  padding-top: 0.125rem;
+  padding-right: 0.75rem;
+}
+/* Hide the half-hour labels for cleaner look */
+.fc .fc-timegrid-slot-label-frame.fc-scrollgrid-shrink-frame {
+  text-align: right;
 }
 
+/* ── Scrollgrid container ── */
+.fc .fc-scrollgrid {
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+
+/* ── Today column ── */
+.fc .fc-day-today {
+  background: color-mix(in oklch, var(--primary) 3%, var(--card)) !important;
+}
+
+/* ── Now indicator (current time line) ── */
+.fc .fc-timegrid-now-indicator-line {
+  border-color: var(--primary);
+  border-width: 2px;
+}
+.fc .fc-timegrid-now-indicator-arrow {
+  border-color: var(--primary);
+  border-top-color: transparent;
+  border-bottom-color: transparent;
+}
+
+/* ── Events — rounded cards with depth ── */
 .fc .fc-event {
-  border-radius: 0 6px 6px 0;
+  border-radius: 6px;
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
-  transition: opacity 150ms ease, filter 150ms ease;
   border-left-width: 3px;
+  box-shadow: 0 1px 3px oklch(0 0 0 / 0.06);
+  transition: transform 150ms ease, box-shadow 150ms ease, opacity 150ms ease;
 }
-
 .fc .fc-event:hover {
-  opacity: 0.85;
-  filter: brightness(0.95);
+  transform: scale(1.01);
+  box-shadow: 0 2px 8px oklch(0 0 0 / 0.1);
+  opacity: 0.95;
+  z-index: 3;
 }
-
 .fc .fc-event.event-hovered {
   outline: 2px solid currentcolor;
   outline-offset: 1px;
+  box-shadow: 0 3px 12px oklch(0 0 0 / 0.12);
   z-index: 5;
 }
-
 .fc .fc-daygrid-event {
-  border-radius: 3px;
+  border-radius: 4px;
+  padding: 1px 4px;
 }
 
+/* ── Day grid (month view) ── */
 .fc .fc-daygrid-day-number {
   font-size: 0.8125rem;
+  font-weight: 500;
   color: var(--foreground);
-  padding: 0.375rem 0.5rem;
+  padding: 0.5rem;
 }
-
 .fc .fc-day-today .fc-daygrid-day-number {
   background: var(--primary);
   color: var(--primary-foreground);
   border-radius: 50%;
-  width: 1.75rem;
-  height: 1.75rem;
+  width: 1.875rem;
+  height: 1.875rem;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0.25rem;
+  font-weight: 700;
 }
-
-.fc td,
-.fc th {
-  border-color: var(--border);
+.fc .fc-daygrid-day-frame {
+  min-height: 5.5rem;
 }
-
-.fc .fc-scrollgrid {
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  border-color: var(--border);
-}
-
-.fc .fc-toolbar.fc-header-toolbar {
-  margin-bottom: 1rem;
-}
-
 .fc .fc-more-link {
   font-size: 0.75rem;
-  color: var(--muted-foreground);
-  font-weight: 500;
+  color: var(--primary);
+  font-weight: 600;
+}
+.fc .fc-more-link:hover {
+  text-decoration: underline;
 }
 
-.fc .fc-daygrid-day-frame {
-  min-height: 5rem;
+/* ── Column dividers — subtle vertical lines ── */
+.fc .fc-timegrid-col {
+  border-right: 1px solid color-mix(in oklch, var(--border) 40%, transparent);
+}
+.fc .fc-timegrid-col:last-child {
+  border-right: none;
 }
 .dashboard-enter-6 { animation-delay: 300ms; }
 .dashboard-enter-7 { animation-delay: 360ms; }
@@ -550,8 +606,29 @@
   }
   .card-hover:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 6px 20px oklch(0.3 0.02 60 / 0.1), 0 2px 6px oklch(0.3 0.02 60 / 0.06);
   }
+}
+
+/* ── Grain / noise texture overlay ── */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+.dark body::after,
+.theme-frappe body::after,
+.theme-macchiato body::after,
+.theme-mocha body::after {
+  opacity: 0.04;
+  mix-blend-mode: soft-light;
 }
 
 .keyboard-mode input:focus-visible,
@@ -664,8 +741,55 @@
   }
 }
 
-/* Login page background pattern */
+/* ── Login page ── */
 .login-dots {
-  background-image: radial-gradient(circle, oklch(0.75 0.01 60 / 0.3) 1px, transparent 1px);
-  background-size: 24px 24px;
+  background-image: radial-gradient(circle, oklch(0.75 0.01 60 / 0.15) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
+.login-glow {
+  position: absolute;
+  top: 35%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, oklch(0.45 0.18 25 / 0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.dark .login-glow {
+  background: radial-gradient(circle, oklch(0.58 0.18 25 / 0.1) 0%, transparent 70%);
+}
+
+@keyframes login-entrance {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.login-entrance {
+  animation: login-entrance 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Page transition animations for list pages ── */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.page-enter {
+  animation: page-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.page-enter-1 { animation-delay: 0ms; }
+.page-enter-2 { animation-delay: 50ms; }
+.page-enter-3 { animation-delay: 100ms; }
+.page-enter-4 { animation-delay: 150ms; }

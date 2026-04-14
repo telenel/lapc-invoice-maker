@@ -435,7 +435,7 @@ export function CalendarView({
             <AddEventModal
               onSave={refetchEvents}
               trigger={
-                <Button className="w-full bg-purple-600 hover:bg-purple-700 text-white gap-1.5">
+                <Button className="w-full gap-1.5">
                   <Plus className="h-4 w-4" />
                   Add Event
                 </Button>

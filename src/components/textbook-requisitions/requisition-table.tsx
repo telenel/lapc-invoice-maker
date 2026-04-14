@@ -142,6 +142,7 @@ export function RequisitionTable({
       ) : requisitions.length === 0 ? (
         <EmptyState
           icon={<FileTextIcon className="size-7" />}
+          illustration={filters.search || filters.status || filters.term || filters.year ? "/illustrations/empty-no-results.png" : "/illustrations/empty-textbooks.png"}
           title="No requisitions found"
           description={
             filters.search || filters.status || filters.term || filters.year
@@ -314,10 +315,9 @@ export function RequisitionTable({
           </Table>
 
           {/* Pagination */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">
-              Page {page} of {totalPages} ({total} requisition
-              {total !== 1 ? "s" : ""})
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t pt-4">
+            <p className="text-sm text-muted-foreground tabular-nums">
+              Page <span className="font-medium text-foreground">{page}</span> of <span className="font-medium text-foreground">{totalPages}</span> ({total} requisition{total !== 1 ? "s" : ""})
             </p>
             <div className="flex gap-2">
               <Button

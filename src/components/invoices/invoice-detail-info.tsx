@@ -31,15 +31,15 @@ export function InvoiceDetailInfo({ invoice }: InvoiceDetailInfoProps) {
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex justify-between text-sm">
-          <span className="text-[11px] font-medium text-muted-foreground">Date</span>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Date</span>
           <span>{formatDate(invoice.date)}</span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-[11px] font-medium text-muted-foreground">Department</span>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Department</span>
           <Badge variant="secondary">{invoice.department}</Badge>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-[11px] font-medium text-muted-foreground">Category</span>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Category</span>
           <Badge variant="outline">
             {invoice.category
               ? invoice.category.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())
@@ -47,7 +47,7 @@ export function InvoiceDetailInfo({ invoice }: InvoiceDetailInfoProps) {
           </Badge>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-[11px] font-medium text-muted-foreground">Account Number</span>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Account Number</span>
           <div className="flex items-center gap-2">
             <span>{invoice.accountNumber || "—"}</span>
             <FollowUpBadge state={followUpBadge} />
@@ -64,15 +64,15 @@ export function InvoiceDetailInfo({ invoice }: InvoiceDetailInfoProps) {
           </Button>
         )}
         <div className="flex justify-between text-sm">
-          <span className="text-[11px] font-medium text-muted-foreground">Account Code</span>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Account Code</span>
           <span>{invoice.accountCode || "—"}</span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-[11px] font-medium text-muted-foreground">Total Amount</span>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Amount</span>
           <span className="font-bold">{formatAmount(invoice.totalAmount)}</span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-[11px] font-medium text-muted-foreground">PrismCore</span>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">PrismCore</span>
           {invoice.prismcorePath ? (
             <Badge variant="secondary">Attached</Badge>
           ) : (
@@ -82,7 +82,7 @@ export function InvoiceDetailInfo({ invoice }: InvoiceDetailInfoProps) {
         {invoice.isRecurring && (
           <>
             <div className="flex justify-between text-sm">
-              <span className="text-[11px] font-medium text-muted-foreground">Recurring</span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Recurring</span>
               <Badge variant="secondary">
                 {invoice.recurringInterval
                   ? invoice.recurringInterval.charAt(0).toUpperCase() + invoice.recurringInterval.slice(1)
@@ -91,7 +91,7 @@ export function InvoiceDetailInfo({ invoice }: InvoiceDetailInfoProps) {
             </div>
             {invoice.recurringEmail && (
               <div className="flex justify-between text-sm">
-                <span className="text-[11px] font-medium text-muted-foreground">Recurring Email</span>
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Recurring Email</span>
                 <span>{invoice.recurringEmail}</span>
               </div>
             )}
@@ -102,7 +102,7 @@ export function InvoiceDetailInfo({ invoice }: InvoiceDetailInfoProps) {
           <>
             <Separator />
             <div className="text-sm">
-              <p className="text-[11px] font-medium text-muted-foreground mb-1">Notes</p>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Notes</p>
               <p className="whitespace-pre-wrap">{invoice.notes}</p>
             </div>
           </>

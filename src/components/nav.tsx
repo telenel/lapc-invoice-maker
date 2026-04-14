@@ -92,11 +92,11 @@ export function Nav() {
 
   return (
     <nav className="sticky top-0 z-50 bg-background/85 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.06)]">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-3 px-4 sm:gap-6">
+      <div className="mx-auto flex h-16 max-w-[1440px] items-center gap-4 px-5 sm:gap-6">
         <Link href="/" className="flex min-w-0 items-center gap-2 shrink-0">
-          <span className="font-bold tracking-tight text-lg"><span className="text-red-600">LA</span>Portal</span>
+          <span className="font-bold tracking-tight text-xl"><span className="text-red-600">LA</span>Portal</span>
         </Link>
-        <div className="hidden gap-0.5 md:flex">
+        <div className="hidden gap-1 md:flex">
           {allLinks.map((link) => {
             const isActive = isLinkActive(link);
             return (
@@ -104,7 +104,7 @@ export function Nav() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  "relative px-3 py-1.5 text-sm font-medium rounded-lg transition-colors",
+                  "relative px-3.5 py-2 text-[0.9375rem] font-medium rounded-lg transition-colors",
                   isActive
                     ? "bg-muted text-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/50"

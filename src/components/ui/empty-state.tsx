@@ -5,6 +5,7 @@ interface EmptyStateProps {
   icon: ReactNode;
   title: string;
   description: string;
+  illustration?: string;
   action?: {
     label: string;
     onClick: () => void;
@@ -12,12 +13,17 @@ interface EmptyStateProps {
   };
 }
 
-export function EmptyState({ icon, title, description, action }: EmptyStateProps) {
+export function EmptyState({ icon, title, description, illustration, action }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4">
-      <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-muted/60 text-muted-foreground mb-4">
-        {icon}
-      </div>
+      {illustration ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={illustration} alt="" aria-hidden="true" className="w-40 h-auto mb-6 opacity-60 dark:opacity-40" />
+      ) : (
+        <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-muted/60 text-muted-foreground mb-4">
+          {icon}
+        </div>
+      )}
       <h3 className="text-lg font-semibold text-foreground mb-1">{title}</h3>
       <p className="text-sm text-muted-foreground text-center max-w-xs mb-6">{description}</p>
       {action && (

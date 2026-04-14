@@ -283,16 +283,17 @@ export function PublicQuoteView({ token }: { token: string }) {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="border-b border-border bg-background/95 backdrop-blur-sm">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-3">
-          <span className="font-bold text-lg"><span className="text-red-600">LA</span>Portal</span>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-5 flex items-center gap-4">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/lapc-logo.png" alt="" aria-hidden="true" className="w-10 h-10 shrink-0" />
           <div>
-            <h1 className="font-bold text-lg">Los Angeles Pierce College</h1>
+            <h1 className="font-bold text-lg tracking-tight">Los Angeles Pierce College Store</h1>
             <p className="text-sm text-muted-foreground">Quote Review</p>
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
         {/* Quote header */}
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -450,10 +451,10 @@ export function PublicQuoteView({ token }: { token: string }) {
 
         {/* Catering event details */}
         {isCatering && canRespond && (
-          <Card className="border-orange-500/20">
-            <CardHeader className="bg-orange-500/5">
+          <Card className="border-primary/20">
+            <CardHeader className="bg-primary/5">
               <div>
-                <CardTitle className="text-orange-500">Event Details Required</CardTitle>
+                <CardTitle className="text-primary">Event Details Required</CardTitle>
                 <p className="text-sm text-muted-foreground mt-1">
                   Please fill out before approving
                 </p>
@@ -637,7 +638,7 @@ export function PublicQuoteView({ token }: { token: string }) {
               {/* Setup & Takedown */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Setup */}
-                <div className="space-y-3 rounded-lg border border-orange-500/10 p-4">
+                <div className="space-y-3 rounded-lg border border-primary/10 p-4">
                   <div className="flex items-center gap-2">
                     <Checkbox
                       id="pub-setup-needed"
@@ -680,7 +681,7 @@ export function PublicQuoteView({ token }: { token: string }) {
                 </div>
 
                 {/* Takedown */}
-                <div className="space-y-3 rounded-lg border border-orange-500/10 p-4">
+                <div className="space-y-3 rounded-lg border border-primary/10 p-4">
                   <div className="flex items-center gap-2">
                     <Checkbox
                       id="pub-takedown-needed"
@@ -770,10 +771,10 @@ export function PublicQuoteView({ token }: { token: string }) {
                           setPaymentMethod(value);
                           if (value !== "ACCOUNT_NUMBER") setSapAccountNumber("");
                         }}
-                        className={`rounded-md border px-3 py-2 text-sm transition-colors ${
+                        className={`rounded-lg border px-4 py-2.5 text-sm font-medium transition-all ${
                           paymentMethod === value
-                            ? "border-primary bg-primary/10 font-medium text-primary"
-                            : "border-border hover:border-primary/50"
+                            ? "border-primary bg-primary/10 text-primary ring-1 ring-primary/20"
+                            : "border-border hover:border-primary/40 hover:bg-accent/50"
                         }`}
                       >
                         {label}
@@ -840,12 +841,12 @@ export function PublicQuoteView({ token }: { token: string }) {
                   Complete the required event details to approve: {missingCateringRequirements.join(", ")}.
                 </p>
               )}
-              <div className="flex justify-center gap-4">
+              <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
                 <Button
                   size="lg"
                   onClick={() => handleRespond("ACCEPTED")}
                   disabled={responding || cateringRequiredMissing}
-                  className="bg-green-600 text-white hover:bg-green-700 min-w-[140px]"
+                  className="bg-brand-teal text-brand-teal-foreground hover:bg-brand-teal/85 min-w-[160px] h-12 text-base font-semibold"
                   title={cateringRequiredMissing ? "Fill in required event details above" : undefined}
                 >
                   {responding ? "Submitting..." : "Approve Quote"}
@@ -855,7 +856,7 @@ export function PublicQuoteView({ token }: { token: string }) {
                   variant="destructive"
                   onClick={() => handleRespond("DECLINED")}
                   disabled={responding}
-                  className="min-w-[140px]"
+                  className="min-w-[160px] h-12 text-base"
                 >
                   {responding ? "Submitting..." : "Decline Quote"}
                 </Button>

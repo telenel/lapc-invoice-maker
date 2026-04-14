@@ -11,5 +11,5 @@ const CalendarView = nextDynamic(
 export default async function CalendarPage() {
   const initialData = await getCalendarBootstrapData();
 
-  return <CalendarView initialData={initialData} />;
+  return <div className="page-enter page-enter-1"><CalendarView initialData={initialData} /></div>;
 }

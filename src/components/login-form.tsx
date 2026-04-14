@@ -67,39 +67,39 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="w-full max-w-sm shadow-lg border-border/40">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-3xl font-bold tracking-tight text-center">
+    <Card className="w-full max-w-3xl shadow-lg border-border/40">
+      <CardHeader className="pb-6 pt-14 px-16">
+        <CardTitle className="text-5xl font-bold tracking-tight text-center">
           <span className="text-red-600">LA</span>Portal
         </CardTitle>
-        <p className="text-sm text-muted-foreground text-center">Los Angeles Pierce College</p>
+        <p className="text-lg text-muted-foreground text-center mt-1">Los Angeles Pierce College</p>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={onSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="username">Username or Email</Label>
+      <CardContent className="px-16 pb-14">
+        <form onSubmit={onSubmit} className="space-y-6">
+          <div className="space-y-3">
+            <Label htmlFor="username" className="text-base">Email</Label>
             <Input
               ref={usernameRef}
               id="username"
               name="username"
               required
-              className="h-11"
+              className="h-14 text-lg"
               type="text"
               inputMode="email"
-              placeholder="username or email"
+              placeholder="you@piercecollege.edu"
               autoComplete="username"
               spellCheck={false}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+          <div className="space-y-3">
+            <Label htmlFor="password" className="text-base">Password</Label>
             <div className="relative">
               <Input
                 id="password"
                 name="password"
                 type={showPassword ? "text" : "password"}
                 required
-                className="h-11 pr-10"
+                className="h-14 text-lg pr-12"
                 autoComplete="current-password"
                 onKeyDown={handleCapsLock}
                 onKeyUp={handleCapsLock}
@@ -145,12 +145,12 @@ export function LoginForm() {
               <p className="text-sm text-red-500">{error}</p>
             </div>
           )}
-          <Button type="submit" className="w-full h-11 font-semibold uppercase tracking-wide bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white" disabled={loading}>
+          <Button type="submit" className="w-full h-14 text-lg font-semibold uppercase tracking-wide" disabled={loading}>
             {loading ? "Signing in…" : "Sign in"}
           </Button>
         </form>
-        <p className="text-xs text-muted-foreground text-center mt-4">
-          Los Angeles Pierce College Bookstore
+        <p className="text-sm text-muted-foreground text-center mt-6">
+          Los Angeles Pierce College Store
         </p>
       </CardContent>
     </Card>

@@ -30,9 +30,9 @@ const iconMap: Record<TimeOfDay, typeof Sun> = {
 };
 
 const iconColorMap: Record<TimeOfDay, string> = {
-  morning: "text-muted-foreground",
-  afternoon: "text-muted-foreground",
-  evening: "text-muted-foreground",
+  morning: "text-amber-500",
+  afternoon: "text-orange-500",
+  evening: "text-indigo-400",
 };
 
 function getFormattedDate(date: Date): string {
@@ -62,19 +62,19 @@ export function PersonalizedHeader({ name = "" }: { name?: string }) {
               {greetingMap[timeOfDay]}{firstName ? `, ${firstName}` : ""}
             </h1>
           </div>
-          <p className="text-[13px] text-muted-foreground mt-0.5 ml-7">{date}</p>
+          <p className="text-sm text-muted-foreground mt-0.5 ml-7">{date}</p>
         </div>
         <div className="flex items-center gap-2">
           <Link
             href="/quotes/new"
-            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-green-600 to-green-800 px-3 text-sm font-semibold text-white transition-colors hover:from-green-700 hover:to-green-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-brand-teal text-brand-teal-foreground px-3 text-sm font-semibold transition-colors hover:bg-brand-teal/85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <FileText className="h-4 w-4" aria-hidden="true" />
             New Quote
           </Link>
           <Link
             href="/invoices/new"
-            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-red-600 to-red-800 px-3 text-sm font-semibold text-white transition-colors hover:from-red-700 hover:to-red-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg bg-primary text-primary-foreground px-3 text-sm font-semibold transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Plus className="h-4 w-4" aria-hidden="true" />
             New Invoice

@@ -31,7 +31,7 @@ export function SettingsPanel() {
       <h1 className="text-2xl font-bold tracking-tight">Admin Panel</h1>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as string)}>
-        <TabsList>
+        <TabsList className="w-full overflow-x-auto justify-start">
           <TabsTrigger value="users">Users &amp; Access Codes</TabsTrigger>
           <TabsTrigger value="categories">Invoice Categories</TabsTrigger>
           <TabsTrigger value="account-codes">Account Numbers</TabsTrigger>

@@ -22,36 +22,36 @@ export function InvoiceDetailStaff({ staff, contact }: InvoiceDetailStaffProps) 
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex justify-between text-sm">
-            <span className="text-[11px] font-medium text-muted-foreground">Name</span>
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Name</span>
             <span className="font-bold">{contact.name}</span>
           </div>
           {contact.title && (
             <div className="flex justify-between text-sm">
-              <span className="text-[11px] font-medium text-muted-foreground">Title</span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Title</span>
               <span>{contact.title}</span>
             </div>
           )}
           {contact.org && (
             <div className="flex justify-between text-sm">
-              <span className="text-[11px] font-medium text-muted-foreground">Organization</span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Organization</span>
               <span>{contact.org}</span>
             </div>
           )}
           {contact.department && (
             <div className="flex justify-between text-sm">
-              <span className="text-[11px] font-medium text-muted-foreground">Department</span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Department</span>
               <span>{contact.department}</span>
             </div>
           )}
           {contact.email && (
             <div className="flex justify-between text-sm">
-              <span className="text-[11px] font-medium text-muted-foreground">Email</span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email</span>
               <span>{contact.email}</span>
             </div>
           )}
           {contact.phone && (
             <div className="flex justify-between text-sm">
-              <span className="text-[11px] font-medium text-muted-foreground">Phone</span>
+              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Phone</span>
               <span>{contact.phone}</span>
             </div>
           )}
@@ -80,26 +80,26 @@ export function InvoiceDetailStaff({ staff, contact }: InvoiceDetailStaffProps) 
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex justify-between text-sm">
-          <span className="text-[11px] font-medium text-muted-foreground">Name</span>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Name</span>
           <span className="font-bold">{staff.name}</span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-[11px] font-medium text-muted-foreground">Title</span>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Title</span>
           <span>{staff.title}</span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-[11px] font-medium text-muted-foreground">Department</span>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Department</span>
           <span>{staff.department}</span>
         </div>
         {staff.extension && (
           <div className="flex justify-between text-sm">
-            <span className="text-[11px] font-medium text-muted-foreground">Extension</span>
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Extension</span>
             <span>{staff.extension}</span>
           </div>
         )}
         {staff.email && (
           <div className="flex justify-between text-sm">
-            <span className="text-[11px] font-medium text-muted-foreground">Email</span>
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Email</span>
             <span>{staff.email}</span>
           </div>
         )}

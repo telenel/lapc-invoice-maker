@@ -115,7 +115,7 @@ export default function SetupPage() {
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Your full name…"
                   autoFocus
-                  className="h-11"
+                  className="h-9"
                 />
               </div>
               <div className="space-y-2">
@@ -126,14 +126,14 @@ export default function SetupPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="h-11"
+                  className="h-9"
                 />
                 <p className="text-xs text-muted-foreground">
                   This will become your username for future logins.
                 </p>
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button onClick={handleNextProfile} className="w-full h-11 font-semibold bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white">
+              <Button onClick={handleNextProfile} className="w-full h-11 font-semibold">
                 Continue
               </Button>
             </div>
@@ -151,7 +151,7 @@ export default function SetupPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Minimum 8 characters…"
                   autoFocus
-                  className="h-11"
+                  className="h-9"
                   autoComplete="new-password"
                 />
               </div>
@@ -163,7 +163,7 @@ export default function SetupPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm your password…"
-                  className="h-11"
+                  className="h-9"
                   autoComplete="new-password"
                 />
               </div>
@@ -172,7 +172,7 @@ export default function SetupPage() {
                 <Button variant="outline" onClick={() => { setStep(1); setError(""); }} className="flex-1 h-11">
                   Back
                 </Button>
-                <Button onClick={handleNextPassword} className="flex-1 h-11 font-semibold bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white">
+                <Button onClick={handleNextPassword} className="flex-1 h-11 font-semibold">
                   Continue
                 </Button>
               </div>
@@ -210,7 +210,7 @@ export default function SetupPage() {
                 <Button variant="outline" onClick={() => { setStep(2); setError(""); }} className="flex-1 h-11">
                   Back
                 </Button>
-                <Button onClick={handleComplete} disabled={loading} className="flex-1 h-11 font-semibold bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 text-white">
+                <Button onClick={handleComplete} disabled={loading} className="flex-1 h-11 font-semibold">
                   {loading ? "Setting up…" : "Complete Setup"}
                 </Button>
               </div>

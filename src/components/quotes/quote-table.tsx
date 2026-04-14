@@ -165,14 +165,14 @@ const QuoteRow = React.memo(function QuoteRow({ quote, onClick, badgeState, sele
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-muted text-[11px] font-bold text-muted-foreground shrink-0">
+          <div className="flex items-center justify-center w-[34px] h-[34px] rounded-lg bg-muted text-xs font-bold text-muted-foreground shrink-0">
             {getInitials(quote.recipientName || quote.recipientOrg || "??")}
           </div>
           <div className="min-w-0">
-            <p className="text-[13px] font-semibold truncate">
+            <p className="text-sm font-semibold truncate">
               {quote.quoteNumber} · {quote.recipientName || quote.recipientOrg || "—"}
             </p>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               {quote.department} · {formatDate(quote.date)}
               {quote.expirationDate && (
                 <span className={isExpired(quote.expirationDate) ? " text-destructive" : ""}>
@@ -184,7 +184,7 @@ const QuoteRow = React.memo(function QuoteRow({ quote, onClick, badgeState, sele
         </div>
       </TableCell>
       <TableCell className="text-right">
-        <p className="text-[13px] font-bold tabular-nums">
+        <p className="text-sm font-bold tabular-nums">
           {formatAmount(quote.totalAmount)}
         </p>
         <div className="flex items-center gap-1 justify-end mt-0.5">
@@ -408,6 +408,7 @@ export function QuoteTable({
       ) : quotes.length === 0 ? (
         <EmptyState
           icon={<ClipboardListIcon className="size-7" />}
+          illustration={Object.values(filters).some((v) => v !== "" && v !== false) ? "/illustrations/empty-no-results.png" : "/illustrations/empty-quotes.png"}
           title="No quotes found"
           description={
             Object.values(filters).some((v) => v !== "" && v !== false)
@@ -434,7 +435,7 @@ export function QuoteTable({
                 onClick={() => handleRowClick(quote.id)}
               >
                 <div className="flex items-start gap-3">
-                  <div className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-lg bg-muted text-[11px] font-bold text-muted-foreground">
+                  <div className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-lg bg-muted text-xs font-bold text-muted-foreground">
                     {getInitials(quote.recipientName || quote.recipientOrg || "??")}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -527,10 +528,9 @@ export function QuoteTable({
           </Table>
 
           {/* Pagination */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">
-              Page {page} of {totalPages} ({total} quote
-              {total !== 1 ? "s" : ""})
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t pt-4">
+            <p className="text-sm text-muted-foreground tabular-nums">
+              Page <span className="font-medium text-foreground">{page}</span> of <span className="font-medium text-foreground">{totalPages}</span> ({total} quote{total !== 1 ? "s" : ""})
             </p>
             <div className="flex gap-2">
               <Button

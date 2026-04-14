@@ -117,19 +117,21 @@ export default async function QuotesPage({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between page-enter page-enter-1">
         <h1 className="text-2xl font-bold">Quotes</h1>
-        <Button className="w-full bg-green-600 text-white hover:bg-green-700 sm:w-auto" render={<Link href="/quotes/new" />}>
+        <Button className="w-full sm:w-auto" render={<Link href="/quotes/new" />}>
           New Quote
         </Button>
       </div>
-      <QuoteTable
-        departments={departments}
-        categories={categories}
-        initialData={initialTableData}
-        initialRequest={initialRequest}
-        initialBadgeStates={initialBadgeStates}
-      />
+      <div className="page-enter page-enter-2">
+        <QuoteTable
+          departments={departments}
+          categories={categories}
+          initialData={initialTableData}
+          initialRequest={initialRequest}
+          initialBadgeStates={initialBadgeStates}
+        />
+      </div>
     </div>
   );
 }

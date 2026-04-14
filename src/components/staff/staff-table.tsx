@@ -97,7 +97,7 @@ export function StaffTable({
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-semibold">Staff Directory</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Staff Directory</h1>
         <StaffForm
           onSave={fetchStaff}
           trigger={
@@ -124,6 +124,7 @@ export function StaffTable({
       ) : staff.length === 0 ? (
         <EmptyState
           icon={<UsersIcon className="size-7" />}
+          illustration={search ? "/illustrations/empty-no-results.png" : "/illustrations/empty-staff.png"}
           title={search ? "No staff members match your search" : "No staff members yet"}
           description={search ? "Try a different search term." : "Add your first staff member to get started."}
           action={
@@ -247,9 +248,9 @@ export function StaffTable({
             </TableBody>
           </Table>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-muted-foreground">
-              Page {page} of {totalPages} ({total} staff member{total !== 1 ? "s" : ""})
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t pt-4">
+            <p className="text-sm text-muted-foreground tabular-nums">
+              Page <span className="font-medium text-foreground">{page}</span> of <span className="font-medium text-foreground">{totalPages}</span> ({total} staff member{total !== 1 ? "s" : ""})
             </p>
             <div className="flex gap-2">
               <Button

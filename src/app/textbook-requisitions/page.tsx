@@ -27,9 +27,9 @@ export default async function RequisitionsPage() {
 
   return (
     <main className="mx-auto max-w-7xl space-y-6 px-4 py-8">
-      <h1 className="text-2xl font-bold tracking-tight">Textbook Requisitions</h1>
-      <RequisitionStats initialData={initialStats} />
-      <RequisitionTable initialData={initialData} initialFilters={initialFilters} initialYears={initialYears} />
+      <h1 className="text-2xl font-bold tracking-tight page-enter page-enter-1">Textbook Requisitions</h1>
+      <div className="page-enter page-enter-2"><RequisitionStats initialData={initialStats} /></div>
+      <div className="page-enter page-enter-3"><RequisitionTable initialData={initialData} initialFilters={initialFilters} initialYears={initialYears} /></div>
     </main>
   );
 }
