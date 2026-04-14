@@ -209,7 +209,7 @@ export const invoiceService = {
    * Copies all fields except invoiceNumber, pdfPath, convertedFromQuoteId, and revisedFromQuoteId.
    */
   async duplicate(id: string, creatorId: string): Promise<InvoiceResponse> {
-    const source = await invoiceRepository.findById(id);
+    const source = await invoiceRepository.findById(id, { includeArchived: true });
     if (!source || source.type !== "INVOICE") {
       throw Object.assign(new Error("Invoice not found"), { code: "NOT_FOUND" });
     }
@@ -276,7 +276,7 @@ export const invoiceService = {
     id: string,
     input: { items?: CreateInvoiceInput["items"]; [key: string]: unknown }
   ): Promise<InvoiceResponse> {
-    const existing = await invoiceRepository.findById(id);
+    const existing = await invoiceRepository.findById(id, { includeArchived: true });
     if (!existing || existing.type !== "INVOICE") {
       throw Object.assign(new Error("Invoice not found"), { code: "NOT_FOUND" });
     }
@@ -356,6 +356,7 @@ export const invoiceService = {
 
   async restore(id: string): Promise<InvoiceResponse> {
     const invoice = await invoiceRepository.restoreById(id);
+    safePublishAll({ type: "invoice-changed" });
     return toInvoiceResponse(invoice as NonNullable<InvoiceWithRelations>);
   },
 
@@ -364,7 +365,7 @@ export const invoiceService = {
    * update status to FINAL, record signer history, increment quick pick usage.
    */
   async finalize(id: string, input: FinalizeInput): Promise<{ pdfPath: string }> {
-    const invoice = await invoiceRepository.findById(id);
+    const invoice = await invoiceRepository.findById(id, { includeArchived: true });
     if (!invoice || invoice.type !== "INVOICE") {
       throw Object.assign(new Error("Invoice not found"), { code: "NOT_FOUND" });
     }

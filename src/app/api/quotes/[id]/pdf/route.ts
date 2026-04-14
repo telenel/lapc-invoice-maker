@@ -10,7 +10,7 @@ export const GET = withAuth(async (_req: NextRequest, _session, ctx) => {
   }
 
   try {
-    const quote = await quoteService.getById(id);
+    const quote = await quoteService.getById(id, { includeArchived: true });
     if (!quote) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
     const { buffer, filename } = await quoteService.generatePdf(id);
     return new NextResponse(new Uint8Array(buffer), {

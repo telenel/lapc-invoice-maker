@@ -11,7 +11,7 @@ vi.mock("@/domains/quote/service", () => ({
     approveManually: vi.fn(),
     declineManually: vi.fn(),
     convertToInvoice: vi.fn(),
-    delete: vi.fn(),
+    archive: vi.fn(),
   },
 }));
 
@@ -54,7 +54,7 @@ describe("quote transition routes", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(quoteService.getById).toHaveBeenCalledWith("q1");
+    expect(quoteService.getById).toHaveBeenCalledWith("q1", { includeArchived: true });
     expect(quoteService.approveManually).toHaveBeenCalledWith("q1", {
       paymentMethod: "CHECK",
     });
@@ -113,7 +113,7 @@ describe("quote transition routes", () => {
   });
 
   it("normalizes quote ids for delete", async () => {
-    vi.mocked(quoteService.delete).mockResolvedValue(undefined as never);
+    vi.mocked(quoteService.archive).mockResolvedValue(undefined as never);
 
     const response = await deleteQuote(
       new NextRequest("http://localhost/api/quotes/q1", {
@@ -123,15 +123,12 @@ describe("quote transition routes", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(quoteService.delete).toHaveBeenCalledWith("q1");
+    expect(quoteService.getById).toHaveBeenCalledWith("q1", { includeArchived: true });
+    expect(quoteService.archive).toHaveBeenCalledWith("q1", "u1");
   });
 
-  it("returns 400 when quote deletion is rejected by workflow rules", async () => {
-    vi.mocked(quoteService.delete).mockRejectedValue(
-      Object.assign(new Error("Only draft, sent, declined, or expired quotes can be deleted"), {
-        code: "FORBIDDEN",
-      }),
-    );
+  it("returns 404 when the quote cannot be found for archive", async () => {
+    vi.mocked(quoteService.getById).mockResolvedValue(null as never);
 
     const response = await deleteQuote(
       new NextRequest("http://localhost/api/quotes/q1", {
@@ -140,9 +137,9 @@ describe("quote transition routes", () => {
       { params: Promise.resolve({ id: "q1" }) },
     );
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(404);
     await expect(response.json()).resolves.toEqual({
-      error: "Only draft, sent, declined, or expired quotes can be deleted",
+      error: "Quote not found",
     });
   });
 });

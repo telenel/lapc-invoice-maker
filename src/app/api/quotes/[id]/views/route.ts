@@ -17,7 +17,7 @@ export const GET = withAuth(async (_req: NextRequest, session, ctx) => {
   }
 
   try {
-    const quote = await quoteService.getById(id);
+    const quote = await quoteService.getById(id, { includeArchived: true });
     if (!quote) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
     if (!canViewQuoteActivity(quote, session.user.id, session.user.role === "admin")) {
       return forbiddenResponse();

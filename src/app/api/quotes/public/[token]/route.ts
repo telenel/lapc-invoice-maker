@@ -83,7 +83,7 @@ export async function GET(_req: NextRequest, ctx: RouteContext) {
 
   try {
     const quote = await quoteService.getByShareToken(token);
-    if (!quote) {
+    if (!quote || quote.archivedAt) {
       return NextResponse.json({ error: "Quote not found" }, { status: 404 });
     }
 

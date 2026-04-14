@@ -5,6 +5,13 @@ import fs from "fs";
 const authFile = path.join(__dirname, "e2e", ".auth", "user.json");
 const hasAuthCreds = !!(process.env.E2E_USERNAME && process.env.E2E_PASSWORD);
 const hasAuthState = fs.existsSync(authFile);
+const port = Number(process.env.PLAYWRIGHT_PORT ?? "3000");
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${port}`;
+const reuseExistingServer =
+  process.env.PLAYWRIGHT_REUSE_EXISTING_SERVER == null
+    ? true
+    : process.env.PLAYWRIGHT_REUSE_EXISTING_SERVER === "true";
+const webServerCommand = process.env.PLAYWRIGHT_WEB_SERVER_COMMAND ?? `npm run dev -- --port ${port}`;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -12,15 +19,15 @@ export default defineConfig({
   retries: 1,
   outputDir: "./test-results",
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL,
     headless: true,
     screenshot: "only-on-failure",
     trace: "on-first-retry",
   },
   webServer: {
-    command: "npm run dev",
-    port: 3000,
-    reuseExistingServer: true,
+    command: webServerCommand,
+    port,
+    reuseExistingServer,
     timeout: 60_000,
   },
   projects: [

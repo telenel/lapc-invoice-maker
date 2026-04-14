@@ -5,7 +5,7 @@ import { invoiceService } from "@/domains/invoice/service";
 export const POST = withAuth(async (_req: NextRequest, session, ctx) => {
   const { id } = await ctx!.params;
   try {
-    const existing = await invoiceService.getById(id);
+    const existing = await invoiceService.getById(id, { includeArchived: true });
     if (!existing) return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
     if (session.user.role !== "admin" && existing.creatorId !== session.user.id) {
       return forbiddenResponse();

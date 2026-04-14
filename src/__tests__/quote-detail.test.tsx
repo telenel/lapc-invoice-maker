@@ -283,6 +283,65 @@ describe("QuoteDetailView", () => {
     expect(screen.queryByRole("button", { name: "Approve Manually" })).not.toBeInTheDocument();
   });
 
+  it("offers delete for accepted quotes that the owner can still manage", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        if (String(input) === "/api/quotes/q1") {
+          return {
+            ok: true,
+            json: async () =>
+              makeQuote({
+                quoteStatus: "ACCEPTED",
+                convertedToInvoice: null,
+                paymentDetailsResolved: true,
+                paymentMethod: "CHECK",
+              }),
+          } satisfies Partial<Response>;
+        }
+
+        throw new Error(`Unexpected fetch: ${String(input)}`);
+      }),
+    );
+
+    render(<QuoteDetailView id="q1" />);
+
+    await screen.findByText("Q-1");
+    expect(screen.getByRole("button", { name: /^Delete$/ })).toBeInTheDocument();
+  });
+
+  it("shows an archive banner and restore action for archived quotes", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL) => {
+        if (String(input) === "/api/quotes/q1") {
+          return {
+            ok: true,
+            json: async () =>
+              makeQuote({
+                quoteStatus: "ACCEPTED",
+                convertedToInvoice: null,
+                archivedAt: "2026-04-13T12:00:00.000Z",
+                archivedBy: { id: "u1", name: "Admin User" },
+                paymentDetailsResolved: true,
+                paymentMethod: "CHECK",
+              }),
+          } satisfies Partial<Response>;
+        }
+
+        throw new Error(`Unexpected fetch: ${String(input)}`);
+      }),
+    );
+
+    render(<QuoteDetailView id="q1" />);
+
+    await screen.findByText("Q-1");
+    expect(screen.getByText(/This quote is in the Deleted Archive/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Restore/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Convert to Invoice" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Approve Manually" })).not.toBeInTheDocument();
+  });
+
   it("keeps the payment dialog open when saving payment details fails", async () => {
     const user = userEvent.setup();
     vi.stubGlobal(

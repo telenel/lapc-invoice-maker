@@ -10,7 +10,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { CopyIcon, MailIcon } from "lucide-react";
 import { formatDateLong as formatDate } from "@/lib/formatters";
@@ -140,49 +139,43 @@ export function InvoiceDetailHeader({
           </>
         )}
 
-        {canManageActions && ((isDraft || isPendingCharge) ? (
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={onDeleteClick}
-            disabled={deleting}
-          >
-            {deleting ? "Deleting…" : "Delete"}
-          </Button>
-        ) : (
-          <Dialog open={deleteDialogOpen} onOpenChange={onDeleteDialogOpenChange}>
-            <DialogTrigger
-              render={
-                <Button variant="destructive" size="sm" disabled={deleting}>
-                  {deleting ? "Deleting…" : "Delete"}
-                </Button>
-              }
-            />
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Delete Invoice</DialogTitle>
-                <DialogDescription>
-                  This will permanently delete the invoice and its generated PDF. This action cannot be undone.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => onDeleteDialogOpenChange(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={onDeleteConfirm}
-                  disabled={deleting}
-                >
-                  {deleting ? "Deleting…" : "Delete Invoice"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        ))}
+        {canManageActions && (
+          <>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={onDeleteClick}
+              disabled={deleting}
+            >
+              {deleting ? "Deleting…" : "Delete"}
+            </Button>
+            <Dialog open={deleteDialogOpen} onOpenChange={onDeleteDialogOpenChange}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Delete Invoice</DialogTitle>
+                  <DialogDescription>
+                    This invoice will be moved to the Deleted Archive. It can be restored later whenever you need it.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => onDeleteDialogOpenChange(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={onDeleteConfirm}
+                    disabled={deleting}
+                  >
+                    {deleting ? "Deleting…" : "Delete Invoice"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </>
+        )}
       </div>
     </div>
   );

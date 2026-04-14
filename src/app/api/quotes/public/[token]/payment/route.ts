@@ -40,7 +40,7 @@ export async function POST(req: NextRequest, ctx: RouteContext) {
 
   try {
     const existing = await quoteService.getByShareToken(token);
-    if (!existing) {
+    if (!existing || existing.archivedAt) {
       return NextResponse.json({ error: "Quote not found or not accepted" }, { status: 404 });
     }
     if (!isPublicPaymentLinkAvailable(existing)) {

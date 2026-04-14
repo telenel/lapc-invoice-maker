@@ -16,7 +16,7 @@ export const GET = withAuth(async (_req: NextRequest, session, ctx) => {
     return NextResponse.json({ error: "Invalid quote id" }, { status: 400 });
   }
 
-  const quote = await quoteService.getById(id);
+  const quote = await quoteService.getById(id, { includeArchived: true });
   if (!quote) {
     return NextResponse.json({ error: "Quote not found" }, { status: 404 });
   }

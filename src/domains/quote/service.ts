@@ -798,7 +798,7 @@ export const quoteService = {
    * Recalculates totals if items are provided.
    */
   async update(id: string, input: UpdateQuoteInput): Promise<QuoteResponse> {
-    const existing = await quoteRepository.findById(id);
+    const existing = await quoteRepository.findById(id, { includeArchived: true });
     if (!existing || existing.type !== "QUOTE") {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
     }
@@ -922,10 +922,11 @@ export const quoteService = {
       cateringDetails?: Partial<CateringDetails>;
     }
   ): Promise<{ success: boolean; status: string }> {
-    const quote = await quoteRepository.findById(id);
+    const quote = await quoteRepository.findById(id, { includeArchived: true });
     if (!quote || quote.type !== "QUOTE") {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
     }
+    assertQuoteIsActive(quote);
 
     if (!["SENT", "SUBMITTED_EMAIL", "SUBMITTED_MANUAL"].includes(quote.quoteStatus as string)) {
       throw Object.assign(
@@ -1113,6 +1114,12 @@ export const quoteService = {
    * Returns the share token for URL construction.
    */
   async markSent(id: string): Promise<{ shareToken: string }> {
+    const existing = await quoteRepository.findById(id, { includeArchived: true });
+    if (!existing || existing.type !== "QUOTE") {
+      throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
+    }
+    assertQuoteIsActive(existing);
+
     const result = await prisma.$transaction(async (tx) => {
       const lockedQuotes = await tx.$queryRaw<Array<{
         id: string;
@@ -1169,6 +1176,12 @@ export const quoteService = {
    * Creates the invoice directly via Prisma (cross-domain conversion).
    */
   async convertToInvoice(id: string, creatorId: string): Promise<{ id: string; invoiceNumber: string | null }> {
+    const existing = await quoteRepository.findById(id, { includeArchived: true });
+    if (!existing || existing.type !== "QUOTE") {
+      throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
+    }
+    assertQuoteIsActive(existing);
+
     const { prisma } = await import("@/lib/prisma");
     const now = new Date();
     const invoice = await prisma.$transaction(async (tx) => {
@@ -1308,10 +1321,11 @@ export const quoteService = {
    */
   async createRevision(id: string, creatorId: string): Promise<QuoteResponse> {
     const { prisma } = await import("@/lib/prisma");
-    const quote = await quoteRepository.findById(id);
+    const quote = await quoteRepository.findById(id, { includeArchived: true });
     if (!quote || quote.type !== "QUOTE") {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
     }
+    assertQuoteIsActive(quote);
     if (quote.quoteStatus !== "DECLINED" && quote.quoteStatus !== "EXPIRED") {
       throw Object.assign(new Error("Only declined or expired quotes can be revised"), { code: "FORBIDDEN" });
     }
@@ -1412,10 +1426,11 @@ export const quoteService = {
     creatorId: string,
   ): Promise<{ id: string; quoteNumber: string | null }> {
     const { prisma } = await import("@/lib/prisma");
-    const quote = await quoteRepository.findById(id);
+    const quote = await quoteRepository.findById(id, { includeArchived: true });
     if (!quote || quote.type !== "QUOTE") {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
     }
+    assertQuoteIsActive(quote);
 
     const now = new Date();
     const expirationDate = new Date(now);
@@ -1492,6 +1507,12 @@ export const quoteService = {
    * Mark a SENT quote as submitted via email.
    */
   async markSubmittedEmail(id: string): Promise<void> {
+    const existing = await quoteRepository.findById(id, { includeArchived: true });
+    if (!existing || existing.type !== "QUOTE") {
+      throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
+    }
+    assertQuoteIsActive(existing);
+
     let shouldPublish = false;
     await prisma.$transaction(async (tx) => {
       const lockedQuotes = await tx.$queryRaw<Array<{
@@ -1537,6 +1558,12 @@ export const quoteService = {
    * Generates a share token if one does not exist.
    */
   async markSubmittedManual(id: string): Promise<void> {
+    const existing = await quoteRepository.findById(id, { includeArchived: true });
+    if (!existing || existing.type !== "QUOTE") {
+      throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
+    }
+    assertQuoteIsActive(existing);
+
     let shouldPublish = false;
     await prisma.$transaction(async (tx) => {
       const lockedQuotes = await tx.$queryRaw<Array<{
@@ -1587,10 +1614,11 @@ export const quoteService = {
   },
 
   async declineManually(id: string): Promise<{ success: boolean; status: "DECLINED" }> {
-    const quote = await quoteRepository.findById(id);
+    const quote = await quoteRepository.findById(id, { includeArchived: true });
     if (!quote || quote.type !== "QUOTE") {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
     }
+    assertQuoteIsActive(quote);
     if (!["SENT", "SUBMITTED_EMAIL", "SUBMITTED_MANUAL"].includes(quote.quoteStatus ?? "")) {
       throw Object.assign(new Error("Only sent quotes can be declined"), { code: "FORBIDDEN" });
     }
@@ -1614,10 +1642,11 @@ export const quoteService = {
       throw Object.assign(new Error("paymentMethod is required"), { code: "INVALID_INPUT" });
     }
 
-    const quote = await quoteRepository.findById(id);
+    const quote = await quoteRepository.findById(id, { includeArchived: true });
     if (!quote || quote.type !== "QUOTE") {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
     }
+    assertQuoteIsActive(quote);
 
     const paymentResult = await prisma.$transaction(async (tx) => {
       const lockedQuotes = await tx.$queryRaw<Array<{
@@ -1737,7 +1766,7 @@ export const quoteService = {
     id: string,
     options?: { includePublicShareLink?: boolean }
   ): Promise<{ buffer: Buffer; filename: string }> {
-    const quote = await quoteRepository.findById(id);
+    const quote = await quoteRepository.findById(id, { includeArchived: true });
     if (!quote || quote.type !== "QUOTE") {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
     }

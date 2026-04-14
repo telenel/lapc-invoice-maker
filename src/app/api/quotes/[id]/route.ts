@@ -22,7 +22,7 @@ export const GET = withAuth(async (_req: NextRequest, session, ctx) => {
   }
 
   try {
-    const quote = await quoteService.getById(id);
+    const quote = await quoteService.getById(id, { includeArchived: true });
     if (!quote) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
     const access = getQuoteViewerAccess(quote, session.user.id, session.user.role === "admin");
     if (!canViewQuoteDetails(quote, session.user.id, session.user.role === "admin")) {
@@ -65,7 +65,7 @@ export const PUT = withAuth(async (req: NextRequest, session, ctx) => {
   }
 
   try {
-    const existing = await quoteService.getById(id);
+    const existing = await quoteService.getById(id, { includeArchived: true });
     if (!existing) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
     if (session.user.role !== "admin" && existing.creatorId !== session.user.id) {
       return forbiddenResponse();
@@ -93,17 +93,16 @@ export const DELETE = withAuth(async (_req: NextRequest, session, ctx) => {
   }
 
   try {
-    const existing = await quoteService.getById(id);
+    const existing = await quoteService.getById(id, { includeArchived: true });
     if (!existing) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
     if (session.user.role !== "admin" && existing.creatorId !== session.user.id) {
       return forbiddenResponse();
     }
-    await quoteService.delete(id);
+    await quoteService.archive(id, session.user.id);
     return NextResponse.json({ success: true });
   } catch (err) {
     const code = (err as { code?: string }).code;
     if (code === "NOT_FOUND") return NextResponse.json({ error: "Quote not found" }, { status: 404 });
-    if (code === "FORBIDDEN") return NextResponse.json({ error: (err as Error).message }, { status: 400 });
     console.error("DELETE /api/quotes/[id] failed:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

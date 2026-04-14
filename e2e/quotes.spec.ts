@@ -319,8 +319,7 @@ test.describe("Quote Workflow Transitions", () => {
   test("draft quotes can be deleted from the detail view", async ({ page }) => {
     await createDraftQuote(page, "delete-draft");
 
-    await page.getByRole("button", { name: /More/i }).click();
-    await page.getByRole("menuitem", { name: /^Delete$/ }).click();
+    await page.getByRole("button", { name: /^Delete$/ }).click();
     await expect(page.getByRole("dialog", { name: /Delete Quote/i })).toBeVisible({
       timeout: 10_000,
     });
@@ -328,6 +327,33 @@ test.describe("Quote Workflow Transitions", () => {
 
     await expect(page).toHaveURL(/\/quotes$/, { timeout: 15_000 });
     await expect(page.getByRole("heading", { name: /Quotes/i })).toBeVisible();
+  });
+
+  test("accepted quotes can be moved to the deleted archive and restored", async ({ page }) => {
+    const quote = await createDraftQuote(page, "archive-accepted");
+
+    await markQuoteSent(page);
+    await approveQuoteWithCheck(page);
+
+    await page.getByRole("button", { name: /^Delete$/ }).click();
+    await expect(page.getByRole("dialog", { name: /Delete Quote/i })).toBeVisible({
+      timeout: 10_000,
+    });
+    await page.getByRole("button", { name: /^Delete Quote$/ }).click();
+
+    await expect(page).toHaveURL(/\/quotes$/, { timeout: 15_000 });
+
+    await page.goto("/archive");
+    const archiveRow = page.getByRole("row", { name: new RegExp(quote.suffix, "i") });
+    await expect(archiveRow).toBeVisible({ timeout: 15_000 });
+    await archiveRow.getByRole("button", { name: /^Restore$/ }).click();
+
+    await expect(
+      page.locator("[data-sonner-toast]").filter({ hasText: /Document restored/i })
+    ).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(archiveRow).toHaveCount(0);
   });
 });
 
