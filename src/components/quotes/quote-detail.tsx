@@ -123,6 +123,7 @@ interface Quote {
   viewerAccess?: {
     canViewQuote: boolean;
     canManageActions: boolean;
+    canDuplicateQuote: boolean;
     canViewActivity: boolean;
     canViewSensitiveFields: boolean;
   };
@@ -1191,6 +1192,7 @@ export function QuoteDetailView({ id }: { id: string }) {
   const viewerAccess = quote.viewerAccess ?? {
     canViewQuote: false,
     canManageActions: false,
+    canDuplicateQuote: false,
     canViewActivity: false,
     canViewSensitiveFields: false,
   };
@@ -1200,6 +1202,7 @@ export function QuoteDetailView({ id }: { id: string }) {
   const canManageActions = viewerAccess.canManageActions;
   const isArchived = Boolean(quote.archivedAt);
   const canManageLiveActions = canManageActions && !isArchived;
+  const canDuplicate = (viewerAccess.canDuplicateQuote ?? viewerAccess.canViewQuote) && !isArchived;
   const canViewActivity = viewerAccess.canViewActivity;
   const canViewPaymentDetails = viewerAccess.canViewSensitiveFields;
   const showInternalFields = canViewPaymentDetails;
@@ -1443,7 +1446,7 @@ export function QuoteDetailView({ id }: { id: string }) {
               )}
 
               {/* Duplicate: all statuses */}
-              {canManageLiveActions && (
+              {canDuplicate && (
                 <DropdownMenuItem onClick={handleDuplicate} disabled={actionState.duplicating}>
                   {actionState.duplicating ? "Duplicating..." : "Duplicate"}
                 </DropdownMenuItem>

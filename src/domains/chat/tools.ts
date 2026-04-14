@@ -1,7 +1,9 @@
 // src/domains/chat/tools.ts
 import { tool } from "ai";
 import { z } from "zod";
+import { getInvoiceViewerAccess } from "@/domains/invoice/access";
 import { invoiceService } from "@/domains/invoice/service";
+import { getQuoteViewerAccess } from "@/domains/quote/access";
 import { quoteService } from "@/domains/quote/service";
 import { staffService } from "@/domains/staff/service";
 import { contactService } from "@/domains/contact/service";
@@ -688,7 +690,8 @@ export function buildTools(user: ChatUser) {
         if (!existing) {
           return { error: "Invoice not found" };
         }
-        if (user.role !== "admin" && existing.creatorId !== user.id) {
+        const access = getInvoiceViewerAccess(existing, user.id, user.role === "admin");
+        if (!access.canDuplicateInvoice) {
           return { error: "You do not have permission to duplicate this invoice" };
         }
 
@@ -727,7 +730,8 @@ export function buildTools(user: ChatUser) {
         if (!existing) {
           return { error: "Quote not found" };
         }
-        if (user.role !== "admin" && existing.creatorId !== user.id) {
+        const access = getQuoteViewerAccess(existing, user.id, user.role === "admin");
+        if (!access.canDuplicateQuote) {
           return { error: "You do not have permission to duplicate this quote" };
         }
 

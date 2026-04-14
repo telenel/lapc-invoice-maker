@@ -94,6 +94,7 @@ export interface QuoteResponse {
   viewerAccess?: {
     canViewQuote: boolean;
     canManageActions: boolean;
+    canDuplicateQuote: boolean;
     canViewActivity: boolean;
     canViewSensitiveFields: boolean;
   };

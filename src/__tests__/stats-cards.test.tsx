@@ -44,7 +44,7 @@ describe("StatsCards", () => {
     cleanup();
   });
 
-  it("shows the team funding leaderboard with every user name, including the current user", () => {
+  it("shows team activity with every user name, including the current user", () => {
     renderStatsCards();
 
     const teamActivityCard = screen.getByText("Team Activity").closest("[data-slot='card']") as HTMLElement | null;
@@ -56,5 +56,6 @@ describe("StatsCards", () => {
     expect(within(teamActivityCard!).getByText(/Alex Chen/i)).toBeInTheDocument();
     expect(within(teamActivityCard!).getByText(/\(You\)/i)).toBeInTheDocument();
     expect(within(teamActivityCard!).getByText(/\$1,200\.00/)).toBeInTheDocument();
+    expect(within(teamActivityCard!).queryByText(/Funding leaderboard/i)).not.toBeInTheDocument();
   });
 });

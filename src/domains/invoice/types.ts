@@ -59,6 +59,11 @@ export interface InvoiceResponse {
   contact: ContactResponse | null;
   creatorId: string;
   creatorName: string;
+  viewerAccess?: {
+    canViewInvoice: boolean;
+    canManageActions: boolean;
+    canDuplicateInvoice: boolean;
+  };
   items: InvoiceItemResponse[];
 }
 

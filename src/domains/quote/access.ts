@@ -3,6 +3,7 @@ import type { QuoteResponse } from "./types";
 export interface QuoteViewerAccess {
   canViewQuote: boolean;
   canManageActions: boolean;
+  canDuplicateQuote: boolean;
   canViewActivity: boolean;
   canViewSensitiveFields: boolean;
 }
@@ -16,6 +17,7 @@ export function getQuoteViewerAccess(
     return {
       canViewQuote: true,
       canManageActions: true,
+      canDuplicateQuote: true,
       canViewActivity: true,
       canViewSensitiveFields: true,
     };
@@ -24,6 +26,7 @@ export function getQuoteViewerAccess(
   return {
     canViewQuote: true,
     canManageActions: false,
+    canDuplicateQuote: true,
     canViewActivity: true,
     canViewSensitiveFields: true,
   };

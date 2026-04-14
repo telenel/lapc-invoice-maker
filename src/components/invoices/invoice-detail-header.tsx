@@ -18,6 +18,7 @@ import type { InvoiceResponse } from "@/domains/invoice/types";
 interface InvoiceDetailHeaderProps {
   invoice: InvoiceResponse;
   canManageActions: boolean;
+  canDuplicate: boolean;
   regenerating: boolean;
   deleting: boolean;
   duplicating: boolean;
@@ -34,6 +35,7 @@ interface InvoiceDetailHeaderProps {
 export function InvoiceDetailHeader({
   invoice,
   canManageActions,
+  canDuplicate,
   regenerating,
   deleting,
   duplicating,
@@ -105,7 +107,7 @@ export function InvoiceDetailHeader({
           </Button>
         )}
 
-        {canManageActions && (
+        {canDuplicate && (
           <Button variant="outline" size="sm" onClick={onDuplicate} disabled={duplicating}>
             <CopyIcon className="size-3.5 mr-1.5" />
             {duplicating ? "Duplicating…" : "Duplicate"}
