@@ -37,6 +37,7 @@ describe("canViewQuoteDetails", () => {
     expect(access).toEqual({
       canViewQuote: true,
       canManageActions: false,
+      canDuplicateQuote: true,
       canViewActivity: true,
       canViewSensitiveFields: true,
     });
@@ -108,6 +109,7 @@ describe("canViewQuoteDetails", () => {
     const redacted = redactQuoteForViewer(quote, {
       canViewQuote: true,
       canManageActions: false,
+      canDuplicateQuote: false,
       canViewActivity: false,
       canViewSensitiveFields: false,
     });
@@ -141,6 +143,7 @@ describe("canViewQuoteDetails", () => {
     expect(redacted.viewerAccess).toEqual({
       canViewQuote: true,
       canManageActions: false,
+      canDuplicateQuote: false,
       canViewActivity: false,
       canViewSensitiveFields: false,
     });
