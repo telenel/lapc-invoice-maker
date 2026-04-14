@@ -11,6 +11,7 @@ const listInclude = {
   staff: { select: { id: true, name: true, title: true, department: true } },
   contact: { select: { id: true, name: true, email: true, phone: true, org: true, department: true, title: true, notes: true, createdAt: true } },
   creator: { select: { id: true, name: true, username: true } },
+  archiver: { select: { id: true, name: true } },
   items: { orderBy: { sortOrder: "asc" as const } },
 } as const;
 
@@ -27,6 +28,7 @@ const detailInclude = {
   },
   contact: { select: { id: true, name: true, email: true, phone: true, org: true, department: true, title: true, notes: true, createdAt: true } },
   creator: { select: { id: true, name: true, username: true } },
+  archiver: { select: { id: true, name: true } },
   items: { orderBy: { sortOrder: "asc" as const } },
   convertedToInvoice: { select: { id: true, invoiceNumber: true, status: true, paymentMethod: true, createdBy: true } },
   revisedFromQuote: { select: { id: true, quoteNumber: true } },
@@ -36,7 +38,7 @@ const detailInclude = {
 // ── Where builder ──────────────────────────────────────────────────────────
 
 function buildWhere(filters: QuoteFilters): Prisma.InvoiceWhereInput {
-  const where: Prisma.InvoiceWhereInput = { type: "QUOTE" };
+  const where: Prisma.InvoiceWhereInput = { type: "QUOTE", archivedAt: null };
 
   if (filters.quoteStatus && filters.quoteStatus !== "all") {
     where.quoteStatus = filters.quoteStatus as Prisma.InvoiceWhereInput["quoteStatus"];
@@ -108,6 +110,7 @@ export async function expireOverdue(): Promise<void> {
   await prisma.invoice.updateMany({
     where: {
       type: "QUOTE",
+      archivedAt: null,
       quoteStatus: { in: ["DRAFT", "SENT", "SUBMITTED_EMAIL", "SUBMITTED_MANUAL"] },
       expirationDate: { lt: new Date() },
     },
@@ -147,9 +150,12 @@ export async function findMany(filters: QuoteFilters) {
 /**
  * Single quote with all relations (staff with extension/email, items, convertedToInvoice).
  */
-export async function findById(id: string) {
-  return prisma.invoice.findUnique({
-    where: { id },
+export async function findById(id: string, options?: { includeArchived?: boolean }) {
+  return prisma.invoice.findFirst({
+    where: {
+      id,
+      ...(options?.includeArchived ? {} : { archivedAt: null }),
+    },
     include: detailInclude,
   });
 }
@@ -158,15 +164,15 @@ export async function findById(id: string) {
  * Find a quote by its public share token.
  */
 export async function findByShareToken(token: string) {
-  return prisma.invoice.findUnique({
-    where: { shareToken: token },
+  return prisma.invoice.findFirst({
+    where: { shareToken: token, archivedAt: null },
     include: detailInclude,
   });
 }
 
 export async function findAcceptedPublicPaymentCandidate(token: string) {
   return prisma.invoice.findFirst({
-    where: { shareToken: token, type: "QUOTE", quoteStatus: "ACCEPTED" },
+    where: { shareToken: token, type: "QUOTE", quoteStatus: "ACCEPTED", archivedAt: null },
     select: {
       id: true,
       quoteNumber: true,
@@ -194,6 +200,28 @@ export async function countPaymentReminderAttemptsByInvoiceIds(invoiceIds: strin
     counts[row.invoiceId] = row._count._all;
     return counts;
   }, {});
+}
+
+export async function archiveById(id: string, userId: string) {
+  return prisma.invoice.update({
+    where: { id },
+    data: {
+      archivedAt: new Date(),
+      archivedBy: userId,
+    },
+    include: detailInclude,
+  });
+}
+
+export async function restoreById(id: string) {
+  return prisma.invoice.update({
+    where: { id },
+    data: {
+      archivedAt: null,
+      archivedBy: null,
+    },
+    include: detailInclude,
+  });
 }
 
 export interface CalculatedLineItem {

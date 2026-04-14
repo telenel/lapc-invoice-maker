@@ -10,6 +10,7 @@ const listInclude = {
   staff: { select: { id: true, name: true, title: true, department: true } },
   contact: { select: { id: true, name: true, email: true, phone: true, org: true, department: true, title: true, notes: true, createdAt: true } },
   creator: { select: { id: true, name: true, username: true } },
+  archiver: { select: { id: true, name: true } },
   items: { orderBy: { sortOrder: "asc" as const } },
   _count: { select: { items: true } },
 } as const;
@@ -27,13 +28,14 @@ const detailInclude = {
   },
   contact: { select: { id: true, name: true, email: true, phone: true, org: true, department: true, title: true, notes: true, createdAt: true } },
   creator: { select: { id: true, name: true, username: true } },
+  archiver: { select: { id: true, name: true } },
   items: { orderBy: { sortOrder: "asc" as const } },
 } as const;
 
 // ── Where builder ──────────────────────────────────────────────────────────
 
 function buildWhere(filters: InvoiceFilters): Prisma.InvoiceWhereInput {
-  const where: Prisma.InvoiceWhereInput = { type: "INVOICE" };
+  const where: Prisma.InvoiceWhereInput = { type: "INVOICE", archivedAt: null };
 
   if (filters.status) {
     where.status = filters.status === "DRAFT"
@@ -148,9 +150,34 @@ export async function findMany(filters: InvoiceFilters & {
 /**
  * Single invoice with all relations (staff with extension/email, items).
  */
-export async function findById(id: string) {
-  return prisma.invoice.findUnique({
+export async function findById(id: string, options?: { includeArchived?: boolean }) {
+  return prisma.invoice.findFirst({
+    where: {
+      id,
+      ...(options?.includeArchived ? {} : { archivedAt: null }),
+    },
+    include: detailInclude,
+  });
+}
+
+export async function archiveById(id: string, userId: string) {
+  return prisma.invoice.update({
     where: { id },
+    data: {
+      archivedAt: new Date(),
+      archivedBy: userId,
+    },
+    include: detailInclude,
+  });
+}
+
+export async function restoreById(id: string) {
+  return prisma.invoice.update({
+    where: { id },
+    data: {
+      archivedAt: null,
+      archivedBy: null,
+    },
     include: detailInclude,
   });
 }

@@ -13,7 +13,7 @@ function isObjectBody(body: unknown) {
   return typeof body === "object" && body !== null && !Array.isArray(body);
 }
 
-export const GET = withAuth(async (_req: NextRequest, _session, ctx) => {
+export const GET = withAuth(async (_req: NextRequest, session, ctx) => {
   const { id: rawId } = await ctx!.params;
   const id = parseId(rawId);
   if (!id) {
@@ -21,8 +21,11 @@ export const GET = withAuth(async (_req: NextRequest, _session, ctx) => {
   }
 
   try {
-    const invoice = await invoiceService.getById(id);
+    const invoice = await invoiceService.getById(id, { includeArchived: true });
     if (!invoice) return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
+    if (session.user.role !== "admin" && invoice.creatorId !== session.user.id) {
+      return forbiddenResponse();
+    }
     return NextResponse.json(invoice);
   } catch (err) {
     console.error("GET /api/invoices/[id] failed:", err);
@@ -49,7 +52,7 @@ export const PUT = withAuth(async (req: NextRequest, session, ctx) => {
   }
 
   try {
-    const existing = await invoiceService.getById(id);
+    const existing = await invoiceService.getById(id, { includeArchived: true });
     if (!existing) return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
     if (session.user.role !== "admin" && existing.creatorId !== session.user.id) {
       return forbiddenResponse();
@@ -73,12 +76,12 @@ export const DELETE = withAuth(async (_req: NextRequest, session, ctx) => {
   }
 
   try {
-    const existing = await invoiceService.getById(id);
+    const existing = await invoiceService.getById(id, { includeArchived: true });
     if (!existing) return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
     if (session.user.role !== "admin" && existing.creatorId !== session.user.id) {
       return forbiddenResponse();
     }
-    await invoiceService.delete(id);
+    await invoiceService.archive(id, session.user.id);
     return NextResponse.json({ success: true });
   } catch (err) {
     const code = (err as { code?: string }).code;

@@ -4,9 +4,12 @@ import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
+import { archiveApi } from "@/domains/archive/api-client";
 import { useInvoice } from "@/domains/invoice/hooks";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
 import { useSSE } from "@/lib/use-sse";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { InvoiceDetailHeader } from "./invoice-detail-header";
 import { InvoiceDetailInfo } from "./invoice-detail-info";
 import { InvoiceDetailStaff } from "./invoice-detail-staff";
@@ -20,6 +23,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
   const [regenerating, setRegenerating] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
+  const [restoring, setRestoring] = useState(false);
   const duplicatingRef = useRef(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -76,13 +80,13 @@ export function InvoiceDetailView({ id }: { id: string }) {
       const res = await fetch(`/api/invoices/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json();
-        toast.error(data.error ?? "Failed to delete invoice");
+        toast.error(data.error ?? "Failed to move invoice to the Deleted Archive");
       } else {
-        toast.success("Invoice deleted");
+        toast.success("Invoice moved to the Deleted Archive");
         router.push("/invoices");
       }
     } catch {
-      toast.error("Failed to delete invoice");
+      toast.error("Failed to move invoice to the Deleted Archive");
     } finally {
       setDeleting(false);
       setDeleteDialogOpen(false);
@@ -111,15 +115,23 @@ export function InvoiceDetailView({ id }: { id: string }) {
     }
   }, [invoice, router]);
 
+  async function handleRestore() {
+    if (!invoice) return;
+    setRestoring(true);
+    try {
+      await archiveApi.restore(invoice.id);
+      toast.success("Invoice restored");
+      await refetch();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to restore invoice");
+    } finally {
+      setRestoring(false);
+    }
+  }
+
   function handleDeleteClick() {
     if (!invoice) return;
-    if (invoice.status === "DRAFT") {
-      if (window.confirm("Are you sure you want to delete this draft invoice?")) {
-        handleDelete();
-      }
-    } else {
-      setDeleteDialogOpen(true);
-    }
+    setDeleteDialogOpen(true);
   }
 
   if (loading) {
@@ -133,12 +145,33 @@ export function InvoiceDetailView({ id }: { id: string }) {
   const sessionUser = session?.user as { id?: string; role?: string } | undefined;
   const canManageActions =
     sessionUser?.role === "admin" || (sessionUser?.id != null && sessionUser.id === invoice.creatorId);
+  const isArchived = Boolean(invoice.archivedAt);
 
   return (
     <div className="space-y-6">
+      {isArchived && (
+        <Card className="border-amber-300 bg-amber-50">
+          <CardContent className="flex flex-col gap-3 py-4 text-sm text-amber-950 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <p className="font-medium">This invoice is in the Deleted Archive.</p>
+              <p className="text-amber-900/80">
+                {invoice.archivedBy?.name
+                  ? `Deleted by ${invoice.archivedBy.name}.`
+                  : "Restore it whenever you need it."}
+              </p>
+            </div>
+            {canManageActions && (
+              <Button size="sm" variant="outline" onClick={handleRestore} disabled={restoring}>
+                {restoring ? "Restoring…" : "Restore"}
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <InvoiceDetailHeader
         invoice={invoice}
-        canManageActions={canManageActions}
+        canManageActions={canManageActions && !isArchived}
         regenerating={regenerating}
         deleting={deleting}
         duplicating={duplicating}

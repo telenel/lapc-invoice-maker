@@ -8,7 +8,8 @@ vi.mock("@/domains/quote/repository", () => ({
   findAcceptedPublicPaymentCandidate: vi.fn(),
   create: vi.fn(),
   update: vi.fn(),
-  deleteById: vi.fn(),
+  archiveById: vi.fn(),
+  restoreById: vi.fn(),
   markSent: vi.fn(),
   markSentWithToken: vi.fn(),
   getShareToken: vi.fn(),
@@ -30,6 +31,7 @@ vi.mock("@/domains/quote/repository", () => ({
 vi.mock("@/domains/pdf/service", () => ({
   pdfService: {
     generateQuote: vi.fn(),
+    generateQuoteBuffer: vi.fn(),
     readPdf: vi.fn(),
     deletePdfFiles: vi.fn(),
   },
@@ -109,11 +111,14 @@ function makeQuote(overrides: Record<string, unknown> = {}) {
     recipientEmail: "jane@test.com",
     recipientOrg: "ACME Corp",
     pdfPath: null,
+    archivedAt: null,
+    archivedBy: null,
     createdAt: new Date("2026-01-01"),
     staffId: "s1",
     staff: { id: "s1", name: "Alice", title: "Manager", department: "IT" },
     contact: null,
     creator: { id: "u1", name: "Admin", username: "admin" },
+    archiver: null,
     items: [
       {
         id: "i1",
@@ -1086,6 +1091,50 @@ describe("quoteService", () => {
       await expect(quoteService.update("q1", { notes: "Updated after approval" })).resolves.toBeDefined();
     });
 
+    it("reopens accepted quotes to draft when a meaningful edit is made", async () => {
+      const quote = makeQuote({
+        quoteStatus: "ACCEPTED",
+        convertedToInvoice: null,
+        acceptedAt: new Date("2026-01-20T00:00:00.000Z"),
+        paymentMethod: "CHECK",
+        paymentAccountNumber: null,
+      });
+      mockRepo.findById.mockResolvedValue(quote as never);
+      mockRepo.update.mockResolvedValue({
+        ...quote,
+        quoteStatus: "DRAFT",
+        notes: "Updated after approval",
+        acceptedAt: null,
+        paymentMethod: null,
+        paymentAccountNumber: null,
+      } as never);
+
+      await quoteService.update("q1", { notes: "Updated after approval" });
+
+      expect(mockRepo.update).toHaveBeenCalledWith("q1", {
+        notes: "Updated after approval",
+        quoteStatus: "DRAFT",
+        acceptedAt: null,
+        paymentMethod: null,
+        paymentAccountNumber: null,
+      });
+    });
+
+    it("keeps accepted quotes accepted when the submitted edit is a no-op", async () => {
+      const quote = makeQuote({
+        quoteStatus: "ACCEPTED",
+        convertedToInvoice: null,
+        acceptedAt: new Date("2026-01-20T00:00:00.000Z"),
+        paymentMethod: "CHECK",
+      });
+      mockRepo.findById.mockResolvedValue(quote as never);
+      mockRepo.update.mockResolvedValue(quote as never);
+
+      await quoteService.update("q1", { notes: "Test notes" });
+
+      expect(mockRepo.update).toHaveBeenCalledWith("q1", { notes: "Test notes" });
+    });
+
     it("throws FORBIDDEN when an accepted quote has already been converted", async () => {
       mockRepo.findById.mockResolvedValue(
         makeQuote({
@@ -1099,44 +1148,54 @@ describe("quoteService", () => {
         message: "Cannot update a quote that has already been converted to an invoice",
       });
     });
+
+    it("rejects archived quotes until they are restored", async () => {
+      mockRepo.findById.mockResolvedValue(
+        makeQuote({ archivedAt: new Date("2026-04-13T12:00:00.000Z") }) as never,
+      );
+
+      await expect(quoteService.update("q1", { notes: "x" })).rejects.toMatchObject({
+        code: "FORBIDDEN",
+        message: "Archived quotes must be restored before they can be changed",
+      });
+    });
   });
 
-  // ── delete ──────────────────────────────────────────────────────────────
+  // ── archive / restore ───────────────────────────────────────────────────
 
-  describe("delete", () => {
+  describe("archive", () => {
     it("throws NOT_FOUND when quote does not exist", async () => {
       mockRepo.findById.mockResolvedValue(null);
 
-      await expect(quoteService.delete("missing")).rejects.toMatchObject({ code: "NOT_FOUND" });
+      await expect(quoteService.archive("missing", "u1")).rejects.toMatchObject({ code: "NOT_FOUND" });
     });
 
-    it("calls repository deleteById", async () => {
+    it("archives accepted quotes instead of blocking deletion", async () => {
+      mockRepo.findById.mockResolvedValue(makeQuote({ quoteStatus: "ACCEPTED" }) as never);
+      mockRepo.archiveById.mockResolvedValue(undefined as never);
+
+      await quoteService.archive("q1", "u1");
+
+      expect(mockRepo.archiveById).toHaveBeenCalledWith("q1", "u1");
+    });
+
+    it("archives quotes without deleting their generated pdf files", async () => {
       mockRepo.findById.mockResolvedValue(makeQuote() as never);
-      mockRepo.deleteById.mockResolvedValue(undefined as never);
+      mockRepo.archiveById.mockResolvedValue(undefined as never);
 
-      await quoteService.delete("q1");
-
-      expect(mockRepo.deleteById).toHaveBeenCalledWith("q1");
-    });
-
-    it("cleans up PDF before deleting when pdfPath is set", async () => {
-      mockRepo.findById.mockResolvedValue(makeQuote({ pdfPath: "/path/to/quote.pdf" }) as never);
-      mockRepo.deleteById.mockResolvedValue(undefined as never);
-      mockPdfService.deletePdfFiles.mockResolvedValue(undefined as never);
-
-      await quoteService.delete("q1");
-
-      expect(mockPdfService.deletePdfFiles).toHaveBeenCalledWith("/path/to/quote.pdf", null);
-      expect(mockRepo.deleteById).toHaveBeenCalledWith("q1");
-    });
-
-    it("skips PDF cleanup when pdfPath is null", async () => {
-      mockRepo.findById.mockResolvedValue(makeQuote({ pdfPath: null }) as never);
-      mockRepo.deleteById.mockResolvedValue(undefined as never);
-
-      await quoteService.delete("q1");
+      await quoteService.archive("q1", "u1");
 
       expect(mockPdfService.deletePdfFiles).not.toHaveBeenCalled();
+      expect(mockRepo.archiveById).toHaveBeenCalledWith("q1", "u1");
+    });
+
+    it("restores an archived quote", async () => {
+      mockRepo.restoreById.mockResolvedValue(makeQuote() as never);
+
+      const result = await quoteService.restore("q1");
+
+      expect(mockRepo.restoreById).toHaveBeenCalledWith("q1");
+      expect(result.archivedAt).toBeNull();
     });
   });
 
@@ -1828,12 +1887,11 @@ describe("quoteService", () => {
     it("calls pdfService.generateQuote with correct mapped data", async () => {
       const quote = makeQuote();
       mockRepo.findById.mockResolvedValue(quote as never);
-      mockPdfService.generateQuote.mockResolvedValue("/pdf/q1.pdf" as never);
-      mockPdfService.readPdf.mockResolvedValue(Buffer.from("pdf-bytes") as never);
+      mockPdfService.generateQuoteBuffer.mockResolvedValue(Buffer.from("pdf-bytes") as never);
 
       const result = await quoteService.generatePdf("q1");
 
-      expect(mockPdfService.generateQuote).toHaveBeenCalledWith(
+      expect(mockPdfService.generateQuoteBuffer).toHaveBeenCalledWith(
         expect.objectContaining({
           quoteNumber: "Q-2026-0001",
           date: "January 15, 2026",
@@ -1862,11 +1920,8 @@ describe("quoteService", () => {
               extendedPrice: "75",
             }),
           ],
-        }),
-        "quotes/q1/Q-2026-0001.pdf"
+        })
       );
-
-      expect(mockPdfService.readPdf).toHaveBeenCalledWith("/pdf/q1.pdf");
       expect(result.buffer).toBeInstanceOf(Buffer);
       expect(result.filename).toBe("Q-2026-0001");
     });
@@ -1874,31 +1929,27 @@ describe("quoteService", () => {
     it("includes the public share link only when explicitly requested", async () => {
       const quote = makeQuote({ shareToken: "share-token" });
       mockRepo.findById.mockResolvedValue(quote as never);
-      mockPdfService.generateQuote.mockResolvedValue("/pdf/q1.pdf" as never);
-      mockPdfService.readPdf.mockResolvedValue(Buffer.from("pdf-bytes") as never);
+      mockPdfService.generateQuoteBuffer.mockResolvedValue(Buffer.from("pdf-bytes") as never);
 
       await quoteService.generatePdf("q1", { includePublicShareLink: true });
 
-      expect(mockPdfService.generateQuote).toHaveBeenCalledWith(
+      expect(mockPdfService.generateQuoteBuffer).toHaveBeenCalledWith(
         expect.objectContaining({
           shareToken: "share-token",
           appUrl: expect.any(String),
-        }),
-        "quotes/q1/Q-2026-0001.pdf"
+        })
       );
     });
 
     it("uses 'DRAFT' as quoteNumber when quote has no number", async () => {
       const quote = makeQuote({ quoteNumber: null });
       mockRepo.findById.mockResolvedValue(quote as never);
-      mockPdfService.generateQuote.mockResolvedValue("/pdf/q1.pdf" as never);
-      mockPdfService.readPdf.mockResolvedValue(Buffer.from("") as never);
+      mockPdfService.generateQuoteBuffer.mockResolvedValue(Buffer.from("") as never);
 
       const result = await quoteService.generatePdf("q1");
 
-      expect(mockPdfService.generateQuote).toHaveBeenCalledWith(
-        expect.objectContaining({ quoteNumber: "DRAFT" }),
-        "quotes/q1/quote.pdf"
+      expect(mockPdfService.generateQuoteBuffer).toHaveBeenCalledWith(
+        expect.objectContaining({ quoteNumber: "DRAFT" })
       );
       expect(result.filename).toBe("quote");
     });

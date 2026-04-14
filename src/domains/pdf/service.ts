@@ -4,6 +4,18 @@ import { mergePrismCorePDF } from "@/lib/pdf/merge";
 import { pdfStorage } from "./storage";
 import type { GenerateInvoicePDFInput, QuotePDFData } from "./types";
 
+function adaptQuotePdfData(data: QuotePDFData) {
+  return {
+    ...data,
+    items: data.items.map((item) => ({
+      ...item,
+      unitPrice: Number(item.unitPrice),
+      extendedPrice: Number(item.extendedPrice),
+      costPrice: item.costPrice != null ? Number(item.costPrice) : null,
+    })),
+  };
+}
+
 export const pdfService = {
   async generateInvoice(
     input: GenerateInvoicePDFInput,
@@ -34,19 +46,12 @@ export const pdfService = {
   },
 
   async generateQuote(data: QuotePDFData, objectKey: string): Promise<string> {
-    // Bridge: domain QuotePDFData has unitPrice/extendedPrice as strings,
-    // but the quote template expects numbers. Convert here.
-    const adapted = {
-      ...data,
-      items: data.items.map((item) => ({
-        ...item,
-        unitPrice: Number(item.unitPrice),
-        extendedPrice: Number(item.extendedPrice),
-        costPrice: item.costPrice != null ? Number(item.costPrice) : null,
-      })),
-    };
-    const pdfBuffer = await generateQuotePDF(adapted);
+    const pdfBuffer = await this.generateQuoteBuffer(data);
     return pdfStorage.write(objectKey, pdfBuffer);
+  },
+
+  async generateQuoteBuffer(data: QuotePDFData): Promise<Buffer> {
+    return generateQuotePDF(adaptQuotePdfData(data));
   },
 
   async readPdf(objectKey: string): Promise<Buffer> {

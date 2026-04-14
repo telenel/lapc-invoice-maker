@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { archiveApi } from "@/domains/archive/api-client";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -105,6 +106,8 @@ interface Quote {
     phone: string;
   } | null;
   creatorName: string;
+  archivedAt?: string | null;
+  archivedBy?: { id: string; name: string } | null;
   items: QuoteItem[];
   isCateringEvent: boolean;
   cateringDetails: unknown;
@@ -838,6 +841,7 @@ export function QuoteDetailView({ id }: { id: string }) {
     duplicating: false,
     approving: false,
     resolvingPayment: false,
+    restoring: false,
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [declineDialogOpen, setDeclineDialogOpen] = useState(false);
@@ -886,18 +890,32 @@ export function QuoteDetailView({ id }: { id: string }) {
       const res = await fetch(`/api/quotes/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json();
-        toast.error(data.error ?? "Failed to delete quote");
+        toast.error(data.error ?? "Failed to move quote to the Deleted Archive");
       } else {
-        toast.success("Quote deleted");
+        toast.success("Quote moved to the Deleted Archive");
         router.push("/quotes");
       }
     } catch {
-      toast.error("Failed to delete quote");
+      toast.error("Failed to move quote to the Deleted Archive");
     } finally {
       setActionState((prev) => ({ ...prev, deleting: false }));
       setDeleteDialogOpen(false);
     }
   }, [quote, id, router]);
+
+  const handleRestore = useCallback(async () => {
+    if (!quote) return;
+    setActionState((prev) => ({ ...prev, restoring: true }));
+    try {
+      await archiveApi.restore(quote.id);
+      toast.success("Quote restored");
+      await fetchQuote();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to restore quote");
+    } finally {
+      setActionState((prev) => ({ ...prev, restoring: false }));
+    }
+  }, [quote, fetchQuote]);
 
   const handleMarkAsSent = useCallback(async () => {
     if (!quote) return;
@@ -1179,6 +1197,8 @@ export function QuoteDetailView({ id }: { id: string }) {
     return <p className="text-muted-foreground text-sm">You do not have access to this quote.</p>;
   }
   const canManageActions = viewerAccess.canManageActions;
+  const isArchived = Boolean(quote.archivedAt);
+  const canManageLiveActions = canManageActions && !isArchived;
   const canViewActivity = viewerAccess.canViewActivity;
   const canViewPaymentDetails = viewerAccess.canViewSensitiveFields;
   const showInternalFields = canViewPaymentDetails;
@@ -1194,7 +1214,7 @@ export function QuoteDetailView({ id }: { id: string }) {
     missingManualApprovalCateringRequirements.includes(requirement);
   const isConverted = Boolean(quote.convertedToInvoice);
   const canEdit =
-    canManageActions &&
+    canManageLiveActions &&
     !isConverted &&
     (
       status === "DRAFT" ||
@@ -1224,6 +1244,31 @@ export function QuoteDetailView({ id }: { id: string }) {
 
   return (
     <div className="space-y-6">
+      {isArchived && (
+        <Card className="border-amber-300 bg-amber-50">
+          <CardContent className="flex flex-col gap-3 py-4 text-sm text-amber-950 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <p className="font-medium">This quote is in the Deleted Archive.</p>
+              <p className="text-amber-900/80">
+                {quote.archivedBy?.name
+                  ? `Deleted by ${quote.archivedBy.name}. Restore it when you want to work on it again.`
+                  : "Restore it whenever you need it."}
+              </p>
+            </div>
+            {canManageActions && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleRestore}
+                disabled={actionState.restoring}
+              >
+                {actionState.restoring ? "Restoring..." : "Restore"}
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
@@ -1263,7 +1308,7 @@ export function QuoteDetailView({ id }: { id: string }) {
 
           {/* ── Primary actions ─────────────────────────────────────── */}
 
-          {canManageActions && (
+          {canManageLiveActions && (
             <>
               {/* DRAFT: Send Quote + Edit */}
               {status === "DRAFT" && (
@@ -1345,7 +1390,7 @@ export function QuoteDetailView({ id }: { id: string }) {
           )}
 
           {/* DECLINED / EXPIRED: Revise & Resubmit */}
-          {canManageActions && (status === "DECLINED" || status === "EXPIRED") && (
+          {canManageLiveActions && (status === "DECLINED" || status === "EXPIRED") && (
             <Button
               size="sm"
               className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -1359,10 +1404,21 @@ export function QuoteDetailView({ id }: { id: string }) {
           {/* ── Secondary actions ──────────────────────────────────── */}
 
           {/* Share Link: visible for SENT/SUBMITTED statuses */}
-          {canManageActions && !isConverted && (status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && quote.shareToken && (
+          {canManageLiveActions && !isConverted && (status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && quote.shareToken && (
             <Button variant="outline" size="sm" onClick={handleShareLink}>
               <LinkIcon className="size-3.5 mr-1.5" />
               Share Link
+            </Button>
+          )}
+
+          {canManageLiveActions && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setDeleteDialogOpen(true)}
+              disabled={actionState.deleting}
+            >
+              {actionState.deleting ? "Deleting..." : "Delete"}
             </Button>
           )}
 
@@ -1379,41 +1435,40 @@ export function QuoteDetailView({ id }: { id: string }) {
             />
             <DropdownMenuContent align="end">
               {/* Edit (when not shown as primary) */}
-              {canManageActions && canEdit && status !== "DRAFT" && !(status === "ACCEPTED" && !quote.convertedToInvoice) && (
+              {canManageLiveActions && canEdit && status !== "DRAFT" && !(status === "ACCEPTED" && !quote.convertedToInvoice) && (
                 <DropdownMenuItem onClick={() => router.push(`/quotes/${id}/edit`)}>
                   Edit
                 </DropdownMenuItem>
               )}
 
               {/* Duplicate: all statuses */}
-              {canManageActions && (
+              {canManageLiveActions && (
                 <DropdownMenuItem onClick={handleDuplicate} disabled={actionState.duplicating}>
                   {actionState.duplicating ? "Duplicating..." : "Duplicate"}
                 </DropdownMenuItem>
               )}
 
               {/* Share Link: in dropdown for ACCEPTED, DECLINED, REVISED, EXPIRED */}
-              {canManageActions && status !== "DRAFT" && status !== "SENT" && status !== "SUBMITTED_EMAIL" && status !== "SUBMITTED_MANUAL" && quote.shareToken && (
+              {canManageLiveActions && status !== "DRAFT" && status !== "SENT" && status !== "SUBMITTED_EMAIL" && status !== "SUBMITTED_MANUAL" && quote.shareToken && (
                 <DropdownMenuItem onClick={handleShareLink}>
                   Share Link
                 </DropdownMenuItem>
               )}
 
               {/* Mark as Delivered: SENT only */}
-              {canManageActions && status === "SENT" && (
+              {canManageLiveActions && status === "SENT" && (
                 <DropdownMenuItem onClick={() => handleMarkSubmitted("manual")} disabled={actionState.markingSubmitted}>
                   {actionState.markingSubmitted ? "Updating..." : "Mark as Delivered"}
                 </DropdownMenuItem>
               )}
 
               {/* Destructive actions separator */}
-              {canManageActions && (status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL" ||
-                status === "DRAFT" || status === "DECLINED" || status === "EXPIRED") && (
+              {canManageLiveActions && (
                 <DropdownMenuSeparator />
               )}
 
               {/* Decline: SENT, SUBMITTED_EMAIL, SUBMITTED_MANUAL */}
-              {canManageActions && (status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
+              {canManageLiveActions && (status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL") && (
                 <DropdownMenuItem
                   variant="destructive"
                   onClick={() => setDeclineDialogOpen(true)}
@@ -1422,15 +1477,6 @@ export function QuoteDetailView({ id }: { id: string }) {
                 </DropdownMenuItem>
               )}
 
-              {/* Delete: DRAFT, SENT, DECLINED, EXPIRED */}
-              {canManageActions && (status === "DRAFT" || status === "SENT" || status === "DECLINED" || status === "EXPIRED") && (
-                <DropdownMenuItem
-                  variant="destructive"
-                  onClick={() => setDeleteDialogOpen(true)}
-                >
-                  Delete
-                </DropdownMenuItem>
-              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -1714,8 +1760,7 @@ export function QuoteDetailView({ id }: { id: string }) {
             <DialogHeader>
               <DialogTitle>Delete Quote</DialogTitle>
               <DialogDescription>
-                This will permanently delete the quote. This action cannot be
-                undone.
+                This will move the quote to the Deleted Archive. It can be restored later whenever you need it.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>

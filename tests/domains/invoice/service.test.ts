@@ -6,7 +6,8 @@ vi.mock("@/domains/invoice/repository", () => ({
   findById: vi.fn(),
   create: vi.fn(),
   update: vi.fn(),
-  deleteById: vi.fn(),
+  archiveById: vi.fn(),
+  restoreById: vi.fn(),
   finalize: vi.fn(),
   countAndSum: vi.fn(),
   incrementQuickPickUsage: vi.fn(),
@@ -59,6 +60,8 @@ const mockInvoiceRow = {
   runningTitle: null,
   pdfPath: null,
   prismcorePath: null,
+  archivedAt: null,
+  archivedBy: null,
   createdAt: new Date("2026-01-15T10:00:00Z"),
   updatedAt: new Date("2026-01-15T10:00:00Z"),
   staffId: "s1",
@@ -73,6 +76,7 @@ const mockInvoiceRow = {
   },
   contact: null,
   creator: { id: "u1", name: "Bob", username: "bob" },
+  archiver: null,
   items: [
     {
       id: "item1",
@@ -319,35 +323,33 @@ describe("invoiceService", () => {
     });
   });
 
-  // ── delete ────────────────────────────────────────────────────────────────
+  // ── archive / restore ─────────────────────────────────────────────────────
 
-  describe("delete", () => {
+  describe("archive", () => {
     it("throws NOT_FOUND when invoice does not exist", async () => {
       mockRepo.findById.mockResolvedValue(null as never);
 
-      await expect(invoiceService.delete("missing")).rejects.toMatchObject({ code: "NOT_FOUND" });
+      await expect(invoiceService.archive("missing", "u1")).rejects.toMatchObject({ code: "NOT_FOUND" });
     });
 
-    it("calls pdfService.deletePdfFiles then repository.deleteById", async () => {
+    it("archives finalized invoices instead of deleting files", async () => {
       const finalInvoice = { ...mockInvoiceRow, status: "FINAL", pdfPath: "/pdfs/inv1.pdf", prismcorePath: "/uploads/pc.pdf" };
       mockRepo.findById.mockResolvedValue(finalInvoice as never);
-      mockPdfService.deletePdfFiles.mockResolvedValue(undefined as never);
-      mockRepo.deleteById.mockResolvedValue(finalInvoice as never);
+      mockRepo.archiveById.mockResolvedValue(finalInvoice as never);
 
-      await invoiceService.delete("inv1");
+      await invoiceService.archive("inv1", "admin-1");
 
-      expect(mockPdfService.deletePdfFiles).toHaveBeenCalledWith("/pdfs/inv1.pdf", "/uploads/pc.pdf");
-      expect(mockRepo.deleteById).toHaveBeenCalledWith("inv1");
+      expect(mockPdfService.deletePdfFiles).not.toHaveBeenCalled();
+      expect(mockRepo.archiveById).toHaveBeenCalledWith("inv1", "admin-1");
     });
 
-    it("passes null pdfPath for non-FINAL invoices", async () => {
-      mockRepo.findById.mockResolvedValue({ ...mockInvoiceRow, status: "DRAFT", pdfPath: null, prismcorePath: null } as never);
-      mockPdfService.deletePdfFiles.mockResolvedValue(undefined as never);
-      mockRepo.deleteById.mockResolvedValue(mockInvoiceRow as never);
+    it("restores an archived invoice", async () => {
+      mockRepo.restoreById.mockResolvedValue(mockInvoiceRow as never);
 
-      await invoiceService.delete("inv1");
+      const result = await invoiceService.restore("inv1");
 
-      expect(mockPdfService.deletePdfFiles).toHaveBeenCalledWith(null, null);
+      expect(mockRepo.restoreById).toHaveBeenCalledWith("inv1");
+      expect(result.archivedAt).toBeNull();
     });
   });
 

@@ -28,6 +28,23 @@ describe("GET /api/quotes/public/[token]", () => {
     expect(quoteService.getByShareToken).not.toHaveBeenCalled();
   });
 
+  it("treats archived public quotes as missing", async () => {
+    vi.mocked(quoteService.getByShareToken).mockResolvedValue({
+      id: "q1",
+      quoteNumber: "Q-1",
+      quoteStatus: "SENT",
+      archivedAt: "2026-04-13T12:00:00.000Z",
+    } as never);
+
+    const response = await GET(
+      new NextRequest("http://localhost/api/quotes/public/token"),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: "Quote not found" });
+  });
+
   it("strips payment details from the public payload", async () => {
     vi.mocked(isPublicPaymentLinkAvailable).mockReturnValue(true);
     vi.mocked(isPublicQuoteResponseAvailable).mockReturnValue(false);

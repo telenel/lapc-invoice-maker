@@ -6,7 +6,7 @@ import { pdfService } from "@/domains/pdf/service";
 export const GET = withAuth(async (_req: NextRequest, _session, ctx) => {
   const { id } = await ctx!.params;
 
-  const invoice = await invoiceService.getById(id);
+  const invoice = await invoiceService.getById(id, { includeArchived: true });
   if (!invoice) return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
 
   if (!invoice.pdfPath) {

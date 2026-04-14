@@ -7,7 +7,6 @@ import { staffService } from "@/domains/staff/service";
 import { contactService } from "@/domains/contact/service";
 import { eventService } from "@/domains/event/service";
 import { prisma } from "@/lib/prisma";
-import { safePublishAll } from "@/lib/sse";
 import type { ChatUser } from "./types";
 import type { InvoiceFilters } from "@/domains/invoice/types";
 import type { QuoteFilters } from "@/domains/quote/types";
@@ -888,27 +887,27 @@ export function buildTools(user: ChatUser) {
 
     deleteInvoice: tool({
       description:
-        "Delete a draft or pending invoice. ALWAYS ask the user to confirm before deleting.",
+        "Move an invoice to the Deleted Archive. Owners can archive their own invoices, and admins can archive any invoice. ALWAYS ask the user to confirm before archiving.",
       inputSchema: z.object({
         id: z.string().describe("Invoice ID"),
         confirmed: z.boolean().describe("Whether the user has confirmed deletion"),
       }),
       execute: async ({ id, confirmed }) => {
         if (!confirmed) return { error: "Please confirm you want to delete this invoice" };
-        const existing = await invoiceService.getById(id);
+        const existing = await invoiceService.getById(id, { includeArchived: true });
         if (!existing) return { error: "Invoice not found" };
         if (existing.type !== "INVOICE") {
           return { error: "Record is not an invoice" };
         }
-        if (existing.status === "FINAL") {
-          return { error: "Cannot delete a finalized invoice" };
-        }
         if (user.role !== "admin" && existing.creatorId !== user.id) {
           return { error: "You don't have permission to delete this invoice" };
         }
+        if (existing.archivedAt) {
+          return { message: `Invoice is already in the Deleted Archive. [View Invoice](/invoices/${id})` };
+        }
         try {
-          await invoiceService.delete(id);
-          return { message: "Invoice deleted successfully." };
+          await invoiceService.archive(id, user.id);
+          return { message: `Invoice moved to the Deleted Archive. [View Invoice](/invoices/${id})` };
         } catch (err) {
           return { error: (err as Error).message ?? "Failed to delete invoice" };
         }
@@ -917,22 +916,24 @@ export function buildTools(user: ChatUser) {
 
     deleteQuote: tool({
       description:
-        "Delete a draft or pending quote. ALWAYS ask the user to confirm before deleting.",
+        "Move a quote to the Deleted Archive. Owners can archive their own quotes, and admins can archive any quote. ALWAYS ask the user to confirm before archiving.",
       inputSchema: z.object({
         id: z.string().describe("Quote ID"),
         confirmed: z.boolean().describe("Whether the user has confirmed deletion"),
       }),
       execute: async ({ id, confirmed }) => {
         if (!confirmed) return { error: "Please confirm you want to delete this quote" };
-        const existing = await quoteService.getById(id);
+        const existing = await quoteService.getById(id, { includeArchived: true });
         if (!existing) return { error: "Quote not found" };
         if (user.role !== "admin" && existing.creatorId !== user.id) {
           return { error: "You don't have permission to delete this quote" };
         }
+        if (existing.archivedAt) {
+          return { message: `Quote is already in the Deleted Archive. [View Quote](/quotes/${id})` };
+        }
         try {
-          await quoteService.delete(id);
-          safePublishAll({ type: "quote-changed" });
-          return { message: "Quote deleted successfully." };
+          await quoteService.archive(id, user.id);
+          return { message: `Quote moved to the Deleted Archive. [View Quote](/quotes/${id})` };
         } catch (err) {
           return { error: (err as Error).message ?? "Failed to delete quote" };
         }

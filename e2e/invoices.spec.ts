@@ -1,4 +1,70 @@
 import { test, expect } from "@playwright/test";
+import type { APIRequestContext, Page } from "@playwright/test";
+
+function uniqueSuffix(prefix: string) {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+async function createFinalInvoice(
+  request: APIRequestContext,
+  page: Page,
+  prefix: string
+) {
+  const suffix = uniqueSuffix(prefix);
+  const invoiceNumber = `AG-${Date.now()}`;
+  const staffResponse = await request.get("/api/staff");
+  expect(staffResponse.ok()).toBe(true);
+
+  const staffList = (await staffResponse.json()) as Array<{
+    id: string;
+    department?: string | null;
+  }>;
+  const staff = staffList.find((entry) => entry.department?.trim()) ?? staffList[0];
+
+  if (!staff) {
+    throw new Error("No staff records available to create a finalized invoice");
+  }
+
+  const createResponse = await request.post("/api/invoices", {
+    data: {
+      invoiceNumber,
+      date: new Date().toISOString().slice(0, 10),
+      staffId: staff.id,
+      department: staff.department ?? "Operations",
+      category: "SUPPLIES",
+      accountCode: "",
+      accountNumber: "",
+      approvalChain: [],
+      notes: `Archive invoice ${suffix}`,
+      items: [
+        {
+          description: `Archive item ${suffix}`,
+          quantity: 1,
+          unitPrice: 10,
+          sortOrder: 0,
+          isTaxable: true,
+        },
+      ],
+      marginEnabled: false,
+      taxEnabled: false,
+      taxRate: 0.0975,
+    },
+  });
+  expect(createResponse.ok()).toBe(true);
+  const createdInvoice = (await createResponse.json()) as { id: string; invoiceNumber: string | null };
+
+  const finalizeResponse = await request.post(`/api/invoices/${createdInvoice.id}/finalize`, {
+    data: {},
+  });
+  expect(finalizeResponse.ok()).toBe(true);
+
+  await page.goto(`/invoices/${createdInvoice.id}`);
+  await expect(page.getByText(/^Final$/i)).toBeVisible({
+    timeout: 20_000,
+  });
+
+  return { invoiceNumber, suffix };
+}
 
 function invoicesHeading(page: Parameters<typeof test>[0]["page"]) {
   return page.getByRole("heading", { name: "Invoices", exact: true });
@@ -222,5 +288,30 @@ test.describe("Invoice Detail", () => {
     await expect(page).toHaveURL(/\/invoices\/[a-zA-Z0-9-]+/, {
       timeout: 10_000,
     });
+  });
+
+  test("finalized invoices can be archived and restored", async ({ page, request }) => {
+    test.slow();
+    const invoice = await createFinalInvoice(request, page, "archive-final");
+
+    await page.getByRole("button", { name: /^Delete$/ }).click();
+    await expect(page.getByRole("dialog", { name: /Delete Invoice/i })).toBeVisible({
+      timeout: 10_000,
+    });
+    await page.getByRole("button", { name: /^Delete Invoice$/ }).click();
+
+    await expect(page).toHaveURL(/\/invoices$/, { timeout: 15_000 });
+
+    await page.goto("/archive");
+    const archiveRow = page.getByRole("row", { name: new RegExp(invoice.invoiceNumber, "i") });
+    await expect(archiveRow).toBeVisible({ timeout: 15_000 });
+    await archiveRow.getByRole("button", { name: /^Restore$/ }).click();
+
+    await expect(
+      page.locator("[data-sonner-toast]").filter({ hasText: /Document restored/i })
+    ).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(archiveRow).toHaveCount(0);
   });
 });

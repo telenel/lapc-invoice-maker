@@ -16,7 +16,7 @@ export const POST = withAuth(async (req: NextRequest, session, ctx) => {
   }
 
   try {
-    const existing = await quoteService.getById(id);
+    const existing = await quoteService.getById(id, { includeArchived: true });
     if (!existing) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
     if (session.user.role !== "admin" && existing.creatorId !== session.user.id) {
       return forbiddenResponse();

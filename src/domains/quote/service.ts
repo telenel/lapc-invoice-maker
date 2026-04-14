@@ -1,7 +1,6 @@
 // src/domains/quote/service.ts
 import * as quoteRepository from "./repository";
 import { pdfService } from "@/domains/pdf/service";
-import { pdfStorage } from "@/domains/pdf/storage";
 import { formatDateFromDate } from "@/domains/shared/formatters";
 import { calculateTotal } from "@/domains/invoice/calculations";
 import { prisma } from "@/lib/prisma";
@@ -21,6 +20,7 @@ import type {
 } from "./types";
 import type { StaffSummary } from "@/domains/staff/types";
 import type { ContactResponse } from "@/domains/contact/types";
+import type { ArchivedBySummary } from "@/domains/invoice/types";
 import { getMissingCustomerCateringRequirements, normalizeQuoteTimeInput } from "./catering";
 import { normalizeQuotePaymentDetails } from "./payment";
 import { getQuotePaymentFollowUpBadgeState } from "./payment-follow-up";
@@ -56,6 +56,15 @@ export function isPublicQuoteResponseAvailable(
 
 function isUniqueConstraintViolation(error: unknown): boolean {
   return typeof error === "object" && error !== null && "code" in error && error.code === "P2002";
+}
+
+function assertQuoteIsActive(quote: { archivedAt?: Date | null }) {
+  if (quote.archivedAt) {
+    throw Object.assign(
+      new Error("Archived quotes must be restored before they can be changed"),
+      { code: "FORBIDDEN" },
+    );
+  }
 }
 
 async function withGeneratedQuoteNumber<T>(operation: (quoteNumber: string) => Promise<T>): Promise<T> {
@@ -126,6 +135,10 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
     costPrice: item.costPrice != null ? Number(item.costPrice) : null,
   }));
 
+  const archivedBy = "archiver" in quote
+    ? ((quote as { archiver?: ArchivedBySummary | null }).archiver ?? null)
+    : null;
+
   return {
     id: quote.id,
     quoteNumber: quote.quoteNumber,
@@ -147,6 +160,8 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
     pdfPath: quote.pdfPath,
     shareToken: quote.shareToken ?? null,
     createdAt: quote.createdAt.toISOString(),
+    archivedAt: quote.archivedAt?.toISOString() ?? null,
+    archivedBy,
     staff,
     contact,
     creatorId: quote.creator.id,
@@ -317,8 +332,8 @@ export const quoteService = {
    * Single quote by ID, or null if not found / not a quote.
    * Auto-expires if past expiration date.
    */
-  async getById(id: string): Promise<QuoteResponse | null> {
-    const quote = await quoteRepository.findById(id);
+  async getById(id: string, options?: { includeArchived?: boolean }): Promise<QuoteResponse | null> {
+    const quote = await quoteRepository.findById(id, options);
     if (!quote || quote.type !== "QUOTE") return null;
 
     // Auto-expire if past expiration date
@@ -826,10 +841,11 @@ export const quoteService = {
    * Recalculates totals if items are provided.
    */
   async update(id: string, input: UpdateQuoteInput): Promise<QuoteResponse> {
-    const existing = await quoteRepository.findById(id);
+    const existing = await quoteRepository.findById(id, { includeArchived: true });
     if (!existing || existing.type !== "QUOTE") {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
     }
+    assertQuoteIsActive(existing);
     if (
       existing.quoteStatus === "DECLINED" ||
       existing.quoteStatus === "EXPIRED" ||
@@ -922,6 +938,22 @@ export const quoteService = {
     await quoteRepository.deleteById(id);
   },
 
+  async archive(id: string, actorId: string): Promise<void> {
+    const quote = await quoteRepository.findById(id, { includeArchived: true });
+    if (!quote || quote.type !== "QUOTE") {
+      throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
+    }
+
+    await quoteRepository.archiveById(id, actorId);
+    safePublishAll({ type: "quote-changed" });
+  },
+
+  async restore(id: string): Promise<QuoteResponse> {
+    const quote = await quoteRepository.restoreById(id);
+    safePublishAll({ type: "quote-changed" });
+    return toQuoteResponse(quote as NonNullable<QuoteWithRelations>);
+  },
+
   /**
    * Manually approve a quote (admin override when client can't use email/public link).
    */
@@ -933,10 +965,11 @@ export const quoteService = {
       cateringDetails?: Partial<CateringDetails>;
     }
   ): Promise<{ success: boolean; status: string }> {
-    const quote = await quoteRepository.findById(id);
+    const quote = await quoteRepository.findById(id, { includeArchived: true });
     if (!quote || quote.type !== "QUOTE") {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
     }
+    assertQuoteIsActive(quote);
 
     if (!["SENT", "SUBMITTED_EMAIL", "SUBMITTED_MANUAL"].includes(quote.quoteStatus as string)) {
       throw Object.assign(
@@ -1124,6 +1157,12 @@ export const quoteService = {
    * Returns the share token for URL construction.
    */
   async markSent(id: string): Promise<{ shareToken: string }> {
+    const existing = await quoteRepository.findById(id, { includeArchived: true });
+    if (!existing || existing.type !== "QUOTE") {
+      throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
+    }
+    assertQuoteIsActive(existing);
+
     const result = await prisma.$transaction(async (tx) => {
       const lockedQuotes = await tx.$queryRaw<Array<{
         id: string;
@@ -1180,6 +1219,12 @@ export const quoteService = {
    * Creates the invoice directly via Prisma (cross-domain conversion).
    */
   async convertToInvoice(id: string, creatorId: string): Promise<{ id: string; invoiceNumber: string | null }> {
+    const existing = await quoteRepository.findById(id, { includeArchived: true });
+    if (!existing || existing.type !== "QUOTE") {
+      throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
+    }
+    assertQuoteIsActive(existing);
+
     const { prisma } = await import("@/lib/prisma");
     const now = new Date();
     const invoice = await prisma.$transaction(async (tx) => {
@@ -1319,10 +1364,11 @@ export const quoteService = {
    */
   async createRevision(id: string, creatorId: string): Promise<QuoteResponse> {
     const { prisma } = await import("@/lib/prisma");
-    const quote = await quoteRepository.findById(id);
+    const quote = await quoteRepository.findById(id, { includeArchived: true });
     if (!quote || quote.type !== "QUOTE") {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
     }
+    assertQuoteIsActive(quote);
     if (quote.quoteStatus !== "DECLINED" && quote.quoteStatus !== "EXPIRED") {
       throw Object.assign(new Error("Only declined or expired quotes can be revised"), { code: "FORBIDDEN" });
     }
@@ -1423,10 +1469,11 @@ export const quoteService = {
     creatorId: string,
   ): Promise<{ id: string; quoteNumber: string | null }> {
     const { prisma } = await import("@/lib/prisma");
-    const quote = await quoteRepository.findById(id);
+    const quote = await quoteRepository.findById(id, { includeArchived: true });
     if (!quote || quote.type !== "QUOTE") {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
     }
+    assertQuoteIsActive(quote);
 
     const now = new Date();
     const expirationDate = new Date(now);
@@ -1503,6 +1550,12 @@ export const quoteService = {
    * Mark a SENT quote as submitted via email.
    */
   async markSubmittedEmail(id: string): Promise<void> {
+    const existing = await quoteRepository.findById(id, { includeArchived: true });
+    if (!existing || existing.type !== "QUOTE") {
+      throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
+    }
+    assertQuoteIsActive(existing);
+
     let shouldPublish = false;
     await prisma.$transaction(async (tx) => {
       const lockedQuotes = await tx.$queryRaw<Array<{
@@ -1548,6 +1601,12 @@ export const quoteService = {
    * Generates a share token if one does not exist.
    */
   async markSubmittedManual(id: string): Promise<void> {
+    const existing = await quoteRepository.findById(id, { includeArchived: true });
+    if (!existing || existing.type !== "QUOTE") {
+      throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
+    }
+    assertQuoteIsActive(existing);
+
     let shouldPublish = false;
     await prisma.$transaction(async (tx) => {
       const lockedQuotes = await tx.$queryRaw<Array<{
@@ -1605,10 +1664,11 @@ export const quoteService = {
   },
 
   async declineManually(id: string): Promise<{ success: boolean; status: "DECLINED" }> {
-    const quote = await quoteRepository.findById(id);
+    const quote = await quoteRepository.findById(id, { includeArchived: true });
     if (!quote || quote.type !== "QUOTE") {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
     }
+    assertQuoteIsActive(quote);
     if (!["SENT", "SUBMITTED_EMAIL", "SUBMITTED_MANUAL"].includes(quote.quoteStatus ?? "")) {
       throw Object.assign(new Error("Only sent quotes can be declined"), { code: "FORBIDDEN" });
     }
@@ -1632,10 +1692,11 @@ export const quoteService = {
       throw Object.assign(new Error("paymentMethod is required"), { code: "INVALID_INPUT" });
     }
 
-    const quote = await quoteRepository.findById(id);
+    const quote = await quoteRepository.findById(id, { includeArchived: true });
     if (!quote || quote.type !== "QUOTE") {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
     }
+    assertQuoteIsActive(quote);
 
     const paymentResult = await prisma.$transaction(async (tx) => {
       const lockedQuotes = await tx.$queryRaw<Array<{
@@ -1755,7 +1816,7 @@ export const quoteService = {
     id: string,
     options?: { includePublicShareLink?: boolean }
   ): Promise<{ buffer: Buffer; filename: string }> {
-    const quote = await quoteRepository.findById(id);
+    const quote = await quoteRepository.findById(id, { includeArchived: true });
     if (!quote || quote.type !== "QUOTE") {
       throw Object.assign(new Error("Quote not found"), { code: "NOT_FOUND" });
     }
@@ -1765,7 +1826,7 @@ export const quoteService = {
     const appUrl = process.env.NEXTAUTH_URL ?? "https://laportal.montalvo.io";
     const includePublicShareLink = options?.includePublicShareLink === true;
 
-    const pdfPath = await pdfService.generateQuote({
+    const buffer = await pdfService.generateQuoteBuffer({
       quoteNumber: quote.quoteNumber ?? "DRAFT",
       date: formatDateFromDate(new Date(quote.date)),
       expirationDate: quote.expirationDate
@@ -1813,9 +1874,7 @@ export const quoteService = {
         : null,
       shareToken: includePublicShareLink ? quote.shareToken : null,
       appUrl: includePublicShareLink ? appUrl : undefined,
-    }, pdfStorage.quoteKey(id, quote.quoteNumber ?? "quote"));
-
-    const buffer = await pdfService.readPdf(pdfPath);
+    });
     const filename = (quote.quoteNumber ?? "quote").replace(/[\r\n"]/g, "");
 
     return { buffer, filename };

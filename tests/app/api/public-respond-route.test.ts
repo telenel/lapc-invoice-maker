@@ -69,6 +69,30 @@ describe("POST /api/quotes/public/[token]/respond", () => {
     expect(quoteService.respondToQuote).toHaveBeenCalledWith("token", "DECLINED", undefined, undefined, undefined);
   });
 
+  it("treats archived quotes as unavailable for public responses", async () => {
+    vi.mocked(quoteService.getByShareToken).mockResolvedValue({
+      id: "q1",
+      quoteStatus: "SENT",
+      isCateringEvent: false,
+      archivedAt: "2026-04-13T12:00:00.000Z",
+    } as never);
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/quotes/public/token/respond", {
+        method: "POST",
+        body: JSON.stringify({
+          response: "DECLINED",
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ token: "token" }) },
+    );
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({ error: "Quote not found" });
+    expect(quoteService.respondToQuote).not.toHaveBeenCalled();
+  });
+
   it("does not persist catering details when payment validation fails", async () => {
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
       id: "q1",
