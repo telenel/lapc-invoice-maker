@@ -48,6 +48,7 @@ export function buildIncludedFinanceWhere(
       : undefined;
 
   return {
+    archivedAt: null,
     ...(date ? { date } : {}),
     OR: [
       {

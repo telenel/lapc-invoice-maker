@@ -50,6 +50,7 @@ describe("followUpRepository", () => {
             invoiceId: "inv-1",
             seriesStatus: "ACTIVE",
             type: expect.objectContaining({ in: expect.any(Array) }),
+            invoice: { is: { archivedAt: null } },
           }),
         }),
       );
@@ -101,6 +102,7 @@ describe("followUpRepository", () => {
           where: expect.objectContaining({
             invoiceId: { in: ["inv-1", "inv-2"] },
             seriesStatus: { in: ["ACTIVE", "EXHAUSTED"] },
+            invoice: { is: { archivedAt: null } },
           }),
           distinct: ["invoiceId"],
         }),
@@ -123,7 +125,10 @@ describe("followUpRepository", () => {
       expect(result).toEqual(mockRow);
       expect(prisma.followUp.findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { shareToken: "tok-abc" },
+          where: {
+            shareToken: "tok-abc",
+            invoice: { is: { archivedAt: null } },
+          },
           include: expect.objectContaining({
             invoice: expect.any(Object),
           }),
@@ -311,7 +316,10 @@ describe("followUpRepository", () => {
       expect(result).toEqual(mockRows);
       expect(prisma.followUp.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ seriesStatus: "ACTIVE" }),
+          where: expect.objectContaining({
+            seriesStatus: "ACTIVE",
+            invoice: { is: { archivedAt: null } },
+          }),
           distinct: ["seriesId"],
           include: expect.objectContaining({
             invoice: expect.any(Object),
@@ -355,6 +363,7 @@ describe("followUpRepository", () => {
         expect.objectContaining({
           where: expect.objectContaining({
             seriesStatus: { in: ["ACTIVE", "EXHAUSTED"] },
+            invoice: { is: { archivedAt: null } },
           }),
           distinct: ["seriesId"],
           include: expect.objectContaining({

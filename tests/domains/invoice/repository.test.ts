@@ -262,6 +262,7 @@ describe("invoiceRepository", () => {
           where: expect.objectContaining({
             type: "INVOICE",
             status: "FINAL",
+            archivedAt: null,
           }),
         }),
       );
@@ -296,6 +297,7 @@ describe("invoiceRepository", () => {
           where: expect.objectContaining({
             type: "INVOICE",
             status: { in: ["DRAFT", "PENDING_CHARGE"] },
+            archivedAt: null,
           }),
         }),
       );

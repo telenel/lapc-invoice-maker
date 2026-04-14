@@ -193,6 +193,7 @@ describe("checkAndSendPaymentFollowUps", () => {
         where: expect.objectContaining({
           quoteStatus: "ACCEPTED",
           acceptedAt: { not: null },
+          archivedAt: null,
           convertedToInvoice: null,
         }),
       }),
