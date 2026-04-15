@@ -311,7 +311,7 @@ export function RecentActivity({
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-semibold truncate">
-                      {item.number ?? "—"} · {item.name}
+                      {item.number ? `${item.number} · ` : ""}{item.name}
                       {isMine && <span className="text-[10px] text-primary font-medium ml-1.5">You</span>}
                     </p>
                     <p className="text-[11px] text-muted-foreground">
