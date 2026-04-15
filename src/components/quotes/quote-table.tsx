@@ -144,7 +144,7 @@ const QuoteRow = React.memo(function QuoteRow({ quote, onClick, badgeState, sele
   return (
     <TableRow
       key={quote.id}
-      className={cn("cursor-pointer group", quote.quoteStatus === "REVISED" && "opacity-60")}
+      className={cn("cursor-pointer group hover:bg-muted/30 transition-colors", quote.quoteStatus === "REVISED" && "opacity-60")}
       onClick={() => onClick(quote.id)}
       role="link"
       tabIndex={0}
@@ -401,7 +401,18 @@ export function QuoteTable({
       />
 
       {loading ? (
-        <p className="text-muted-foreground text-sm">Loading...</p>
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 rounded-xl border border-border/40 bg-card p-4">
+              <div className="skeleton h-[34px] w-[34px] rounded-lg shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="skeleton h-3.5 w-40" />
+                <div className="skeleton h-2.5 w-56" />
+              </div>
+              <div className="skeleton h-3.5 w-16 shrink-0" />
+            </div>
+          ))}
+        </div>
       ) : quotes.length === 0 ? (
         <EmptyState
           icon={<ClipboardListIcon className="size-7" />}
@@ -525,7 +536,7 @@ export function QuoteTable({
           </Table>
 
           {/* Pagination */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t pt-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-border/40 bg-muted/20 px-4 py-2.5">
             <p className="text-sm text-muted-foreground tabular-nums">
               Page <span className="font-medium text-foreground">{page}</span> of <span className="font-medium text-foreground">{totalPages}</span> ({total} quote{total !== 1 ? "s" : ""})
             </p>

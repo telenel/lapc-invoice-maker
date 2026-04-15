@@ -91,7 +91,7 @@ export function QuoteFiltersBar({
 
       {/* Collapsible filter panel */}
       {open && (
-        <div className="space-y-3 rounded-lg border border-border/50 bg-muted/20 p-3 animate-in fade-in-0 slide-in-from-top-1 duration-200">
+        <div className="space-y-3 rounded-xl border border-border/50 bg-card p-4 shadow-sm animate-in fade-in-0 slide-in-from-top-1 duration-200">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {/* Status */}
             <div className="grid gap-1.5">

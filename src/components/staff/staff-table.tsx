@@ -96,8 +96,11 @@ export function StaffTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Staff Directory</h1>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Staff Directory</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Pierce College staff directory</p>
+        </div>
         <StaffForm
           onSave={fetchStaff}
           trigger={
@@ -120,7 +123,18 @@ export function StaffTable({
       </div>
 
       {loading ? (
-        <p className="text-muted-foreground text-sm">Loading…</p>
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 rounded-xl border border-border/40 bg-card p-4">
+              <div className="skeleton h-[34px] w-[34px] rounded-lg shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="skeleton h-3.5 w-32" />
+                <div className="skeleton h-2.5 w-48" />
+              </div>
+              <div className="skeleton h-2.5 w-20 shrink-0" />
+            </div>
+          ))}
+        </div>
       ) : staff.length === 0 ? (
         <EmptyState
           icon={<UsersIcon className="size-7" />}
@@ -200,7 +214,7 @@ export function StaffTable({
               {staff.map((member, index) => (
                 <TableRow
                   key={member.id}
-                  className={`hover:bg-muted/50 transition-colors ${index % 2 === 1 ? "bg-muted/20" : ""}`}
+                  className={`hover:bg-muted/30 transition-colors ${index % 2 === 1 ? "bg-muted/15" : ""}`}
                 >
                   <TableCell>
                     <div className="flex items-center gap-2.5">
@@ -248,7 +262,7 @@ export function StaffTable({
             </TableBody>
           </Table>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t pt-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-border/40 bg-muted/20 px-4 py-2.5">
             <p className="text-sm text-muted-foreground tabular-nums">
               Page <span className="font-medium text-foreground">{page}</span> of <span className="font-medium text-foreground">{totalPages}</span> ({total} staff member{total !== 1 ? "s" : ""})
             </p>

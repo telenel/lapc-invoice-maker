@@ -108,7 +108,10 @@ export default async function InvoicesPage({
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold tracking-tight text-balance page-enter page-enter-1">Invoices</h1>
+      <div className="page-enter page-enter-1">
+        <h1 className="text-3xl font-bold tracking-tight">Invoices</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Track and manage your invoices</p>
+      </div>
       <div className="page-enter page-enter-2"><UserActivityStrip initialUsers={initialUsers.users} /></div>
       <div className="page-enter page-enter-3">
         <InvoiceTable

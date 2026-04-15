@@ -117,8 +117,11 @@ export default async function QuotesPage({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between page-enter page-enter-1">
-        <h1 className="text-2xl font-bold">Quotes</h1>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between page-enter page-enter-1">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Quotes</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Manage quotes and proposals</p>
+        </div>
         <Button className="w-full sm:w-auto" render={<Link href="/quotes/new" />}>
           New Quote
         </Button>
