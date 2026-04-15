@@ -265,7 +265,7 @@ export function StatsCards({
             <p className="text-[13px] text-muted-foreground">No activity yet</p>
           ) : (
             <div className="space-y-1.5 max-h-[88px] overflow-y-auto">
-              {teamUsers.map((user, index) => {
+              {teamUsers.map((user) => {
                 const isMine = user.id === currentUserId;
                 return (
                   <div key={user.id} className="flex items-center gap-2">
