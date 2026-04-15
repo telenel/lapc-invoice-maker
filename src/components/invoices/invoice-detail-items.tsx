@@ -107,59 +107,38 @@ export function InvoiceDetailItems({
               </TableRow>
             ))}
 
-            {/* Breakdown rows */}
-            {marginEnabled && (
-              <TableRow>
-                <TableCell
-                  colSpan={colCount - 1}
-                  className="text-right text-sm text-muted-foreground"
-                >
-                  Subtotal (Cost)
-                </TableCell>
-                <TableCell className="text-right text-sm text-muted-foreground tabular-nums">
-                  {formatAmount(costSubtotal)}
-                </TableCell>
-              </TableRow>
-            )}
-            {marginEnabled && (
-              <TableRow>
-                <TableCell
-                  colSpan={colCount - 1}
-                  className="text-right text-sm text-muted-foreground"
-                >
-                  Margin ({Number(marginPercent ?? 0)}%)
-                </TableCell>
-                <TableCell className="text-right text-sm text-muted-foreground tabular-nums">
-                  +{formatAmount(marginAmt)}
-                </TableCell>
-              </TableRow>
-            )}
-            {taxEnabled && (
-              <TableRow>
-                <TableCell
-                  colSpan={colCount - 1}
-                  className="text-right text-sm text-muted-foreground"
-                >
-                  Tax ({(effectiveTaxRate * 100).toFixed(2)}%)
-                </TableCell>
-                <TableCell className="text-right text-sm text-muted-foreground tabular-nums">
-                  +{formatAmount(taxAmt)}
-                </TableCell>
-              </TableRow>
-            )}
-
-            {/* Total row */}
-            <TableRow>
-              <TableCell colSpan={colCount - 1} className="text-right font-bold">
-                Total
-              </TableCell>
-              <TableCell className="text-right font-bold tabular-nums">
-                {formatAmount(totalAmount)}
-              </TableCell>
-            </TableRow>
           </TableBody>
         </Table>
       </CardContent>
+
+      {/* Totals summary */}
+      <div className="mx-5 mb-5 rounded-xl border border-border bg-muted/30 p-4 tabular-nums">
+        <div className="space-y-1.5 text-sm">
+          {marginEnabled && (
+            <>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Subtotal (Cost)</span>
+                <span>{formatAmount(costSubtotal)}</span>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <span>Margin ({Number(marginPercent ?? 0)}%)</span>
+                <span>+{formatAmount(marginAmt)}</span>
+              </div>
+            </>
+          )}
+          {taxEnabled && (
+            <div className="flex justify-between text-muted-foreground">
+              <span>Tax ({(effectiveTaxRate * 100).toFixed(2)}%)</span>
+              <span>+{formatAmount(taxAmt)}</span>
+            </div>
+          )}
+          {(marginEnabled || taxEnabled) && <div className="border-t border-border my-2" />}
+          <div className="flex justify-between text-xl font-bold pt-1">
+            <span>Total</span>
+            <span>{formatAmount(totalAmount)}</span>
+          </div>
+        </div>
+      </div>
     </Card>
   );
 }

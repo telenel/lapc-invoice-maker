@@ -54,9 +54,9 @@ export function InvoiceDetailHeader({
     : invoice.invoiceNumber || "Draft Invoice";
 
   return (
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between page-enter page-enter-1">
       <div>
-        <h1 className="text-2xl font-bold text-balance">
+        <h1 className="text-3xl font-bold tracking-tight text-balance">
           {title}
         </h1>
         {invoice.isRunning && invoice.invoiceNumber && (

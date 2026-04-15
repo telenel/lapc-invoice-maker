@@ -232,8 +232,44 @@ export function PublicQuoteView({ token }: { token: string }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Loading quote...</p>
+      <div className="min-h-screen bg-background">
+        <div className="border-b border-border bg-background/95">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 py-5 flex items-center gap-4">
+            <div className="skeleton w-12 h-12 rounded-lg shrink-0" />
+            <div className="space-y-2">
+              <div className="skeleton h-5 w-56" />
+              <div className="skeleton h-3 w-24" />
+            </div>
+          </div>
+        </div>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+          <div className="space-y-2">
+            <div className="skeleton h-8 w-40" />
+            <div className="skeleton h-4 w-32" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[0, 1].map((i) => (
+              <div key={i} className="rounded-xl border border-border/40 bg-card p-5 space-y-3">
+                <div className="skeleton h-4 w-16" />
+                {[0, 1, 2].map((j) => (
+                  <div key={j} className="flex justify-between">
+                    <div className="skeleton h-3 w-20" />
+                    <div className="skeleton h-3 w-28" />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+          <div className="rounded-xl border border-border/40 bg-card p-5 space-y-3">
+            <div className="skeleton h-4 w-24" />
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="flex justify-between">
+                <div className="skeleton h-3 w-40" />
+                <div className="skeleton h-3 w-16" />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
@@ -286,9 +322,9 @@ export function PublicQuoteView({ token }: { token: string }) {
       <div className="border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-5 flex items-center gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/lapc-logo.png" alt="" aria-hidden="true" className="w-10 h-10 shrink-0" />
+          <img src="/lapc-logo.png" alt="" aria-hidden="true" className="w-12 h-12 shrink-0" />
           <div>
-            <h1 className="font-bold text-lg tracking-tight">Los Angeles Pierce College Store</h1>
+            <h1 className="font-bold text-xl tracking-tight">Los Angeles Pierce College Store</h1>
             <p className="text-sm text-muted-foreground">Quote Review</p>
           </div>
         </div>
@@ -296,9 +332,9 @@ export function PublicQuoteView({ token }: { token: string }) {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
         {/* Quote header */}
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start justify-between gap-4 page-enter page-enter-1">
           <div>
-            <h2 className="text-2xl font-bold">{quote.quoteNumber ?? "Quote"}</h2>
+            <h2 className="text-3xl font-bold tracking-tight">{quote.quoteNumber ?? "Quote"}</h2>
             <p className="text-sm text-muted-foreground mt-1">
               Date: {formatDate(quote.date)}
             </p>
@@ -315,7 +351,7 @@ export function PublicQuoteView({ token }: { token: string }) {
         </div>
 
         {/* Info grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 page-enter page-enter-2">
           {/* Staff/Contact info */}
           {quote.staff ? (
             <Card>
@@ -441,13 +477,17 @@ export function PublicQuoteView({ token }: { token: string }) {
                     <TableCell className="text-right tabular-nums">{formatAmount(item.extendedPrice)}</TableCell>
                   </TableRow>
                 ))}
-                <TableRow>
-                  <TableCell colSpan={3} className="text-right font-bold">Total</TableCell>
-                  <TableCell className="text-right font-bold tabular-nums">{formatAmount(quote.totalAmount)}</TableCell>
-                </TableRow>
               </TableBody>
             </Table>
           </CardContent>
+
+          {/* Totals summary */}
+          <div className="mx-5 mb-5 rounded-xl border border-border bg-muted/30 p-4 tabular-nums">
+            <div className="flex justify-between text-xl font-bold">
+              <span>Total</span>
+              <span>{formatAmount(quote.totalAmount)}</span>
+            </div>
+          </div>
         </Card>
 
         {/* Catering event details */}
@@ -842,25 +882,27 @@ export function PublicQuoteView({ token }: { token: string }) {
                   Complete the required event details to approve: {missingCateringRequirements.join(", ")}.
                 </p>
               )}
-              <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
-                <Button
-                  size="lg"
-                  onClick={() => handleRespond("ACCEPTED")}
-                  disabled={responding || cateringRequiredMissing}
-                  className="bg-brand-teal text-brand-teal-foreground hover:bg-brand-teal/85 min-w-[160px] h-12 text-base font-semibold"
-                  title={cateringRequiredMissing ? "Fill in required event details above" : undefined}
-                >
-                  {responding ? "Submitting..." : "Approve Quote"}
-                </Button>
-                <Button
-                  size="lg"
-                  variant="destructive"
-                  onClick={() => handleRespond("DECLINED")}
-                  disabled={responding}
-                  className="min-w-[160px] h-12 text-base"
-                >
-                  {responding ? "Submitting..." : "Decline Quote"}
-                </Button>
+              <div className="sticky bottom-0 -mx-5 bg-background/90 backdrop-blur-lg border-t border-border/60 px-5 py-4 sm:relative sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none">
+                <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
+                  <Button
+                    size="lg"
+                    onClick={() => handleRespond("ACCEPTED")}
+                    disabled={responding || cateringRequiredMissing}
+                    className="bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm min-w-[160px] h-12 text-base font-semibold"
+                    title={cateringRequiredMissing ? "Fill in required event details above" : undefined}
+                  >
+                    {responding ? "Submitting..." : "Approve Quote"}
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="destructive"
+                    onClick={() => handleRespond("DECLINED")}
+                    disabled={responding}
+                    className="min-w-[160px] h-12 text-base shadow-sm"
+                  >
+                    {responding ? "Submitting..." : "Decline Quote"}
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

@@ -135,7 +135,36 @@ export function InvoiceDetailView({ id }: { id: string }) {
   }
 
   if (loading) {
-    return <p className="text-muted-foreground text-sm">Loading…</p>;
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <div className="skeleton h-8 w-48" />
+          <div className="skeleton h-4 w-32" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[0, 1].map((i) => (
+            <div key={i} className="rounded-xl border border-border/40 bg-card p-5 space-y-3">
+              <div className="skeleton h-4 w-32" />
+              {[0, 1, 2, 3].map((j) => (
+                <div key={j} className="flex justify-between">
+                  <div className="skeleton h-3 w-20" />
+                  <div className="skeleton h-3 w-24" />
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+        <div className="rounded-xl border border-border/40 bg-card p-5 space-y-3">
+          <div className="skeleton h-4 w-24" />
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex justify-between">
+              <div className="skeleton h-3 w-40" />
+              <div className="skeleton h-3 w-16" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   if (!invoice) {
@@ -185,7 +214,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
         onDuplicate={handleDuplicate}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 page-enter page-enter-2">
         <InvoiceDetailInfo invoice={invoice} />
         <InvoiceDetailStaff staff={invoice.staff} contact={invoice.contact} />
       </div>
