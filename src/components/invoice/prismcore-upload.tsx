@@ -1,10 +1,10 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { UploadIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { uploadApi } from "@/domains/upload/api-client";
 
 interface PrismcoreUploadProps {
@@ -41,8 +41,18 @@ export function PrismcoreUpload({ value, onChange }: PrismcoreUploadProps) {
   }
 
   return (
-    <div className="space-y-1">
-      <Label htmlFor="prismcore-upload">PrismCore Invoice (optional)</Label>
+    <div className="space-y-1.5">
+      <Label>PrismCore Invoice (optional)</Label>
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".pdf"
+        onChange={handleFileChange}
+        className="sr-only"
+        aria-hidden="true"
+        tabIndex={-1}
+      />
 
       {uploading ? (
         <p className="text-sm text-muted-foreground" aria-live="polite">Uploading…</p>
@@ -59,15 +69,15 @@ export function PrismcoreUpload({ value, onChange }: PrismcoreUploadProps) {
           </Button>
         </div>
       ) : (
-        <Input
-          ref={inputRef}
-          id="prismcore-upload"
-          type="file"
-          accept=".pdf"
-          onChange={handleFileChange}
-          className="cursor-pointer"
-          name="prismcoreUpload"
-        />
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => inputRef.current?.click()}
+          className="gap-2"
+        >
+          <UploadIcon className="size-4" aria-hidden="true" />
+          Choose PDF
+        </Button>
       )}
     </div>
   );

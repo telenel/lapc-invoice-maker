@@ -90,9 +90,12 @@ function SectionDivider({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-3 pt-6 pb-2">
-      <span className="section-label">{label}</span>
-      <div className="flex-1 border-t border-border" />
+    <div className="flex flex-wrap items-center gap-3 pt-8 pb-2">
+      <span className="flex items-center gap-2 text-[11px] font-semibold tracking-widest text-muted-foreground/70 uppercase">
+        <span className="inline-block size-1.5 rounded-full bg-primary/40" aria-hidden="true" />
+        {label}
+      </span>
+      <div className="flex-1 border-t border-border/60" />
       {children}
     </div>
   );
@@ -330,12 +333,11 @@ export function QuoteMode({
       )}
 
       {templates.length > 0 && (
-        <div className="mb-4">
-          <select
-            className="rounded-md border border-input bg-background px-3 py-2 text-sm w-full"
-            defaultValue=""
-            onChange={(e) => {
-              const t = templates.find((tmpl) => tmpl.id === e.target.value);
+        <div className="mb-6 rounded-xl border border-dashed border-border bg-muted/30 p-3">
+          <p className="mb-1.5 text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">Start from a template</p>
+          <Select
+            onValueChange={(value) => {
+              const t = templates.find((tmpl) => tmpl.id === value);
               if (!t) return;
               updateField("staffId", t.staffId ?? "");
               updateField("department", t.department ?? "");
@@ -363,14 +365,17 @@ export function QuoteMode({
               }));
               updateField("items", newItems);
               toast.success(`Loaded template "${t.name}"`);
-              e.target.value = "";
             }}
           >
-            <option value="">Load from template...</option>
-            {templates.map((t) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Choose a template..." />
+            </SelectTrigger>
+            <SelectContent>
+              {templates.map((t) => (
+                <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       )}
 
@@ -379,7 +384,7 @@ export function QuoteMode({
         <CardHeader>
           <CardTitle>Recipient</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-4">
           <div className="space-y-1">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <Label>Pierce Staff Recipient</Label>
@@ -442,7 +447,8 @@ export function QuoteMode({
       {/* ============ QUOTE DETAILS ============ */}
       <SectionDivider label="QUOTE DETAILS" />
 
-      <div className="space-y-3">
+      <Card>
+        <CardContent className="space-y-4 pt-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1">
             <Label htmlFor="quoteDate">Date</Label>
@@ -501,12 +507,14 @@ export function QuoteMode({
             rows={3}
           />
         </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* ============ DEPARTMENT & ACCOUNT ============ */}
       <SectionDivider label="DEPARTMENT & ACCOUNT" />
 
-      <div className="space-y-3">
+      <Card>
+        <CardContent className="space-y-4 pt-5">
         {/* Auto-filled summary row */}
         {form.staffId && (
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground px-1">
@@ -623,12 +631,13 @@ export function QuoteMode({
             placeholder="Account code…"
           />
         </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* ============ CATERING ============ */}
       <SectionDivider label="CATERING" />
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-2">
           <Checkbox
             checked={form.isCateringEvent}
@@ -650,129 +659,8 @@ export function QuoteMode({
         )}
       </div>
 
-      {/* ============ MARGIN & TAX ============ */}
-      <SectionDivider label="PRICING" />
-
-      <div className="space-y-3">
-        {/* Apply Margin */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="marginEnabled"
-              checked={form.marginEnabled}
-              onCheckedChange={(checked) =>
-                updateField("marginEnabled", checked === true)
-              }
-            />
-            <Label
-              htmlFor="marginEnabled"
-              className="text-sm font-medium cursor-pointer"
-            >
-              Apply Margin
-            </Label>
-          </div>
-          {form.marginEnabled && (
-            <div className="flex items-center gap-1">
-              <Input
-                type="number"
-                min={0}
-                max={100}
-                step={1}
-                value={form.marginPercent}
-                onChange={(e) =>
-                  updateField("marginPercent", Number(e.target.value))
-                }
-                className="w-20 h-7 text-sm"
-                aria-label="Margin percentage"
-              />
-              <span className="text-sm text-muted-foreground">%</span>
-            </div>
-          )}
-        </div>
-        {form.marginEnabled && (
-          <span className="text-xs text-muted-foreground italic">
-            Margin is internal only — the customer sees the final price, not the markup
-          </span>
-        )}
-
-        {/* Apply Sales Tax */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="taxEnabled"
-              checked={form.taxEnabled}
-              onCheckedChange={(checked) =>
-                updateField("taxEnabled", checked === true)
-              }
-            />
-            <Label
-              htmlFor="taxEnabled"
-              className="text-sm font-medium cursor-pointer"
-            >
-              Apply Sales Tax{" "}
-              <span className="text-muted-foreground font-normal">
-                ({(form.taxRate * 100).toFixed(2)}%)
-              </span>
-            </Label>
-          </div>
-
-          {form.taxEnabled && (
-            <div className="flex items-center gap-1">
-              <Input
-                type="number"
-                min={0}
-                max={100}
-                step={0.01}
-                value={Number((form.taxRate * 100).toFixed(2))}
-                onChange={(e) => updateField("taxRate", Number(e.target.value || "0") / 100)}
-                className="w-24 h-7 text-sm"
-                aria-label="Sales tax percentage"
-              />
-              <span className="text-sm text-muted-foreground">%</span>
-            </div>
-          )}
-
-          {/* CA Tax Rules info */}
-          <Popover>
-            <PopoverTrigger
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <InfoIcon className="size-3.5" />
-              <span>CA Tax Rules</span>
-            </PopoverTrigger>
-            <PopoverContent side="bottom" align="start" className="w-[min(20rem,calc(100vw-2rem))]">
-              <div className="space-y-2 text-xs">
-                <p className="font-semibold text-sm">
-                  California Food Tax Rules
-                </p>
-                <ul className="space-y-1.5 list-disc pl-4">
-                  <li>
-                    <strong>Hot prepared food</strong> — always taxable
-                  </li>
-                  <li>
-                    <strong>Cold food to-go</strong> (no eating establishment)
-                    — usually exempt
-                  </li>
-                  <li>
-                    <strong>Catering</strong> (food + service) — always fully
-                    taxable
-                  </li>
-                  <li>
-                    <strong>Carbonated beverages, candy</strong> — always
-                    taxable
-                  </li>
-                </ul>
-                <p className="text-muted-foreground pt-1">
-                  Source: CDTFA Regulation 1603
-                </p>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
-
-      {/* ============ LINE ITEMS ============ */}
-      <SectionDivider label="LINE ITEMS">
+      {/* ============ PRICING ============ */}
+      <SectionDivider label="PRICING">
         <button
           type="button"
           tabIndex={-1}
@@ -790,34 +678,153 @@ export function QuoteMode({
         </button>
       </SectionDivider>
 
-      <div className="space-y-3">
-        {quickPicksOpen && (
-          <QuickPickPanel
-            department={form.department}
-            onSelect={handleQuickPick}
-            currentSubtotal={total}
-          />
-        )}
+      <Card>
+        <CardContent className="space-y-4 pt-5">
+          {/* Apply Margin */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="marginEnabled"
+                checked={form.marginEnabled}
+                onCheckedChange={(checked) =>
+                  updateField("marginEnabled", checked === true)
+                }
+              />
+              <Label
+                htmlFor="marginEnabled"
+                className="text-sm font-medium cursor-pointer"
+              >
+                Apply Margin
+              </Label>
+            </div>
+            {form.marginEnabled && (
+              <div className="flex items-center gap-1">
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={1}
+                  value={form.marginPercent}
+                  onChange={(e) =>
+                    updateField("marginPercent", Number(e.target.value))
+                  }
+                  className="w-20 h-7 text-sm"
+                  aria-label="Margin percentage"
+                />
+                <span className="text-sm text-muted-foreground">%</span>
+              </div>
+            )}
+          </div>
+          {form.marginEnabled && (
+            <span className="text-xs text-muted-foreground italic">
+              Margin is internal only — the customer sees the final price, not the markup
+            </span>
+          )}
 
-        <LineItems
-          items={form.items}
-          onUpdate={updateItem}
-          onAdd={addItem}
-          onRemove={removeItem}
-          total={total}
-          department={form.department}
-          marginEnabled={form.marginEnabled}
-          itemsWithMargin={itemsWithMargin}
-          taxEnabled={form.taxEnabled}
-          isCateringEvent={form.isCateringEvent}
-        />
-      </div>
+          {/* Apply Sales Tax */}
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="taxEnabled"
+                checked={form.taxEnabled}
+                onCheckedChange={(checked) =>
+                  updateField("taxEnabled", checked === true)
+                }
+              />
+              <Label
+                htmlFor="taxEnabled"
+                className="text-sm font-medium cursor-pointer"
+              >
+                Apply Sales Tax{" "}
+                <span className="text-muted-foreground font-normal">
+                  ({(form.taxRate * 100).toFixed(2)}%)
+                </span>
+              </Label>
+            </div>
+
+            {form.taxEnabled && (
+              <div className="flex items-center gap-1">
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  step={0.01}
+                  value={Number((form.taxRate * 100).toFixed(2))}
+                  onChange={(e) => updateField("taxRate", Number(e.target.value || "0") / 100)}
+                  className="w-24 h-7 text-sm"
+                  aria-label="Sales tax percentage"
+                />
+                <span className="text-sm text-muted-foreground">%</span>
+              </div>
+            )}
+
+            {/* CA Tax Rules info */}
+            <Popover>
+              <PopoverTrigger
+                className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <InfoIcon className="size-3.5" />
+                <span>CA Tax Rules</span>
+              </PopoverTrigger>
+              <PopoverContent side="bottom" align="start" className="w-[min(20rem,calc(100vw-2rem))]">
+                <div className="space-y-2 text-xs">
+                  <p className="font-semibold text-sm">
+                    California Food Tax Rules
+                  </p>
+                  <ul className="space-y-1.5 list-disc pl-4">
+                    <li>
+                      <strong>Hot prepared food</strong> — always taxable
+                    </li>
+                    <li>
+                      <strong>Cold food to-go</strong> (no eating establishment)
+                      — usually exempt
+                    </li>
+                    <li>
+                      <strong>Catering</strong> (food + service) — always fully
+                      taxable
+                    </li>
+                    <li>
+                      <strong>Carbonated beverages, candy</strong> — always
+                      taxable
+                    </li>
+                  </ul>
+                  <p className="text-muted-foreground pt-1">
+                    Source: CDTFA Regulation 1603
+                  </p>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <Separator />
+
+          {/* Quick Picks + Line Items */}
+          {quickPicksOpen && (
+            <QuickPickPanel
+              department={form.department}
+              onSelect={handleQuickPick}
+              currentSubtotal={total}
+            />
+          )}
+
+          <LineItems
+            items={form.items}
+            onUpdate={updateItem}
+            onAdd={addItem}
+            onRemove={removeItem}
+            total={total}
+            department={form.department}
+            marginEnabled={form.marginEnabled}
+            itemsWithMargin={itemsWithMargin}
+            taxEnabled={form.taxEnabled}
+            isCateringEvent={form.isCateringEvent}
+          />
+        </CardContent>
+      </Card>
 
       {/* ============ TOTALS + SAVE ============ */}
-      <Separator className="mt-6" />
-
-      <div className="pt-4 pb-8 space-y-3">
-        <div className="space-y-1.5 text-sm tabular-nums">
+      <div className="mt-8 rounded-xl border border-border bg-muted/30 p-4 tabular-nums">
+        <div className="space-y-1.5 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Subtotal</span>
             <span>
@@ -851,7 +858,7 @@ export function QuoteMode({
 
           <Separator />
 
-          <div className="flex justify-between text-lg font-semibold">
+          <div className="flex justify-between text-xl font-bold pt-1">
             <span>Total</span>
             <span>
               ${grandTotal.toLocaleString("en-US", {
@@ -861,12 +868,14 @@ export function QuoteMode({
             </span>
           </div>
         </div>
+      </div>
 
+      <div className="sticky bottom-0 -mx-5 border-t border-border/60 bg-background/90 px-5 py-4 backdrop-blur-lg sm:relative sm:mx-0 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-none sm:pt-4 sm:pb-8">
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
           <Button variant="outline" onClick={handleSaveAsTemplate} disabled={saving} className="w-full sm:w-auto">
             Save as Template
           </Button>
-          <Button onClick={handleSave} disabled={saving} size="lg" className="w-full sm:w-auto">
+          <Button onClick={handleSave} disabled={saving} size="lg" className="w-full sm:w-auto shadow-sm">
             {saving ? "Saving..." : existingId ? "Update Quote" : "Save Quote"}
           </Button>
         </div>
