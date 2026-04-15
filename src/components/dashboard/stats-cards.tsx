@@ -248,9 +248,8 @@ export function StatsCards({
       <div className="dashboard-enter dashboard-enter-3">
       <Card className="card-hover">
         <CardContent className="pt-4">
-          <div className="flex items-start justify-between mb-2">
+          <div className="mb-2">
             <p className="text-[11px] font-medium text-muted-foreground">Team Activity</p>
-            <span className="text-[10px] text-muted-foreground">Funding leaderboard</span>
           </div>
           {teamLoading ? (
             <div className="space-y-1.5">
@@ -276,9 +275,6 @@ export function StatsCards({
                       )}>
                       {getInitials(user.name)}
                     </div>
-                    <span className="w-5 shrink-0 text-[10px] font-semibold text-muted-foreground">
-                      #{index + 1}
-                    </span>
                     <span className={cn(
                       "text-[11px] font-medium truncate flex-1",
                       isMine && "text-primary"
