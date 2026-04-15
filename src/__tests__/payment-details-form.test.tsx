@@ -47,6 +47,24 @@ describe("PaymentDetailsForm", () => {
     expect(screen.getByText(/Q-1/)).toBeInTheDocument();
   });
 
+  it("shows offline payment instructions when a resolved quote was already marked for check payment", () => {
+    render(
+      <PaymentDetailsForm
+        token="token"
+        initialQuote={{
+          quoteStatus: "ACCEPTED",
+          paymentDetailsResolved: true,
+          quoteNumber: "Q-1",
+          paymentMethod: "CHECK",
+        }}
+      />,
+    );
+
+    expect(screen.getByText(/We already recorded your selected payment method/i)).toBeInTheDocument();
+    expect(screen.getByText(/Check payments are not collected online/i)).toBeInTheDocument();
+    expect(screen.getAllByText("6201 Winnetka Ave").length).toBeGreaterThan(0);
+  });
+
   it("shows the payment form for accepted quotes that still need payment details", () => {
     render(
       <PaymentDetailsForm
@@ -61,6 +79,39 @@ describe("PaymentDetailsForm", () => {
 
     expect(screen.getByText("Provide Payment Details")).toBeInTheDocument();
     expect(screen.getByText("Submit Payment Details")).toBeInTheDocument();
+  });
+
+  it("shows check mailing instructions and still submits the selected payment method", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <PaymentDetailsForm
+        token="token"
+        initialQuote={{
+          quoteStatus: "ACCEPTED",
+          paymentDetailsResolved: false,
+          quoteNumber: "Q-1",
+        }}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Check" }));
+
+    expect(screen.getByText("Mail Your Check")).toBeInTheDocument();
+    expect(screen.getAllByText("6201 Winnetka Ave").length).toBeGreaterThan(0);
+
+    await user.click(screen.getByRole("button", { name: "Got it" }));
+    await user.click(screen.getByRole("button", { name: "Submit Payment Details" }));
+
+    await waitFor(() => {
+      expect(quoteApi.submitPublicPaymentDetails).toHaveBeenCalledWith("token", {
+        paymentMethod: "CHECK",
+        accountNumber: undefined,
+      });
+    });
+
+    expect(screen.getByText(/We recorded your selected payment method/i)).toBeInTheDocument();
+    expect(screen.getByText(/Check payments are not collected online/i)).toBeInTheDocument();
   });
 
   it("does not show the payment form when status is sent even if paymentLinkAvailable is true", () => {

@@ -6,22 +6,26 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  PaymentMethodGuidanceCallout,
+  PaymentMethodGuidanceDialog,
+} from "@/components/quotes/payment-method-guidance";
 import { quoteApi } from "@/domains/quote/api-client";
-import { QUOTE_PAYMENT_METHODS } from "@/domains/quote/payment";
+import {
+  coerceQuotePaymentMethod,
+  getQuotePaymentMethodLabel,
+  getQuotePaymentMethodGuidance,
+  QUOTE_PAYMENT_METHODS,
+  type QuotePaymentMethod,
+} from "@/domains/quote/payment";
 import type { QuoteStatus } from "@/domains/quote/types";
-
-const PAYMENT_OPTIONS = QUOTE_PAYMENT_METHODS.map((value) => ({
-  value,
-  label: value === "ACCOUNT_NUMBER"
-    ? "Account Number"
-    : value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase()),
-}));
 
 type PaymentQuoteState = {
   quoteStatus: QuoteStatus;
   paymentDetailsResolved: boolean;
   paymentLinkAvailable?: boolean;
   quoteNumber: string | null;
+  paymentMethod?: string | null;
 };
 
 export function PaymentDetailsForm({
@@ -31,17 +35,31 @@ export function PaymentDetailsForm({
   token: string;
   initialQuote: PaymentQuoteState | null;
 }) {
-  const [paymentMethod, setPaymentMethod] = useState("");
+  const initialPaymentMethod = coerceQuotePaymentMethod(initialQuote?.paymentMethod) ?? "";
+  const [paymentMethod, setPaymentMethod] = useState<QuotePaymentMethod | "">(initialPaymentMethod);
   const [accountNumber, setAccountNumber] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submittedMethod, setSubmittedMethod] = useState<QuotePaymentMethod | null>(null);
+  const [guidanceOpen, setGuidanceOpen] = useState(false);
   const accountNumberRequired = paymentMethod === "ACCOUNT_NUMBER";
   const normalizedAccountNumber = accountNumber.trim();
+  const selectedGuidance = getQuotePaymentMethodGuidance(paymentMethod);
+  const submittedGuidance = getQuotePaymentMethodGuidance(submittedMethod);
   const quote = initialQuote;
+  const existingGuidance = getQuotePaymentMethodGuidance(quote?.paymentMethod);
   const isAccepted = quote?.quoteStatus === "ACCEPTED";
   const isExpired = quote?.quoteStatus === "EXPIRED";
   const isResolved = Boolean(quote && quote.paymentDetailsResolved);
   const isPaymentLinkClosed = Boolean(quote && quote.paymentLinkAvailable === false);
+
+  function handlePaymentMethodSelect(nextMethod: QuotePaymentMethod) {
+    setPaymentMethod(nextMethod);
+    if (nextMethod !== "ACCOUNT_NUMBER") {
+      setAccountNumber("");
+    }
+    setGuidanceOpen(Boolean(getQuotePaymentMethodGuidance(nextMethod)));
+  }
 
   async function handleSubmit() {
     if (!paymentMethod) {
@@ -58,8 +76,13 @@ export function PaymentDetailsForm({
         paymentMethod,
         accountNumber: accountNumberRequired ? normalizedAccountNumber : undefined,
       });
+      setSubmittedMethod(paymentMethod);
       setSubmitted(true);
-      toast.success("Payment details submitted — thank you!");
+      toast.success(
+        selectedGuidance
+          ? "Payment method recorded — please follow the instructions provided."
+          : "Payment details submitted — thank you!",
+      );
     } catch (err) {
       if (typeof err === "string") {
         toast.error(err);
@@ -144,9 +167,18 @@ export function PaymentDetailsForm({
         <Card className="max-w-md w-full">
           <CardContent className="pt-6 text-center space-y-2">
             <h2 className="text-lg font-semibold">Payment Details Already On File</h2>
-            <p className="text-sm text-muted-foreground">
-              We already have payment details for {quote.quoteNumber ?? "this quote"}.
-            </p>
+            {existingGuidance ? (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  We already recorded your selected payment method for {quote.quoteNumber ?? "this quote"}.
+                </p>
+                <PaymentMethodGuidanceCallout method={quote.paymentMethod} className="mt-4 text-left" />
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                We already have payment details for {quote.quoteNumber ?? "this quote"}.
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -159,9 +191,18 @@ export function PaymentDetailsForm({
         <Card className="max-w-md w-full">
           <CardContent className="pt-6 text-center space-y-2">
             <h2 className="text-lg font-semibold">Thank You!</h2>
-            <p className="text-sm text-muted-foreground">
-              Your payment details have been received. No further action is needed.
-            </p>
+            {submittedGuidance ? (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  We recorded your selected payment method for {quote.quoteNumber ?? "this quote"}.
+                </p>
+                <PaymentMethodGuidanceCallout method={submittedMethod} className="mt-4 text-left" />
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Your payment details have been received. No further action is needed.
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -191,21 +232,20 @@ export function PaymentDetailsForm({
                 Payment Method
               </Label>
               <div className="grid grid-cols-2 gap-2">
-                {PAYMENT_OPTIONS.map((opt) => (
+                {QUOTE_PAYMENT_METHODS.map((value) => (
                   <button
-                    key={opt.value}
+                    key={value}
                     type="button"
                     onClick={() => {
-                      setPaymentMethod(opt.value);
-                      if (opt.value !== "ACCOUNT_NUMBER") setAccountNumber("");
+                      handlePaymentMethodSelect(value);
                     }}
                     className={`rounded-md border px-3 py-2 text-sm transition-colors ${
-                      paymentMethod === opt.value
+                      paymentMethod === value
                         ? "border-primary bg-primary/10 font-medium text-primary"
                         : "border-border hover:border-primary/50"
                     }`}
                   >
-                    {opt.label}
+                    {getQuotePaymentMethodLabel(value)}
                   </button>
                 ))}
               </div>
@@ -222,6 +262,10 @@ export function PaymentDetailsForm({
               </div>
             )}
 
+            {selectedGuidance && (
+              <PaymentMethodGuidanceCallout method={paymentMethod} />
+            )}
+
             <Button
               onClick={handleSubmit}
               disabled={!paymentMethod || submitting || (accountNumberRequired && !normalizedAccountNumber)}
@@ -232,6 +276,11 @@ export function PaymentDetailsForm({
           </CardContent>
         </Card>
       </div>
+      <PaymentMethodGuidanceDialog
+        method={paymentMethod}
+        open={guidanceOpen}
+        onOpenChange={setGuidanceOpen}
+      />
     </div>
   );
 }
