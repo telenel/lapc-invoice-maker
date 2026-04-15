@@ -172,7 +172,7 @@ export function PaymentDetailsForm({
                 <p className="text-sm text-muted-foreground">
                   We already recorded your selected payment method for {quote.quoteNumber ?? "this quote"}.
                 </p>
-                <PaymentMethodGuidanceCallout method={quote.paymentMethod} className="mt-4 text-left" />
+                <PaymentMethodGuidanceCallout method={quote.paymentMethod ?? null} className="mt-4 text-left" />
               </>
             ) : (
               <p className="text-sm text-muted-foreground">
