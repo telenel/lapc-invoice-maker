@@ -51,6 +51,7 @@ describe("PublicQuoteView", () => {
       quoteStatus: "SENT",
       paymentLinkAvailable: true,
       responseLinkAvailable: true,
+      paymentMethod: null,
       date: "2026-03-31T00:00:00.000Z",
       expirationDate: null,
       department: "IT",
@@ -117,6 +118,102 @@ describe("PublicQuoteView", () => {
         }),
       );
     });
+  });
+
+  it("renders the public quote header logo without forcing it into a square", async () => {
+    const { container } = render(<PublicQuoteView token="token" />);
+
+    await screen.findByText("Quote Review");
+
+    const logo = container.querySelector('img[src="/lapc-logo.png"]');
+    expect(logo).toBeTruthy();
+    expect(logo).toHaveClass("w-auto");
+    expect(logo).toHaveClass("object-contain");
+    expect(logo).not.toHaveClass("w-10");
+    expect(logo).not.toHaveClass("h-10", { exact: true });
+  });
+
+  it("shows offline payment guidance for cash selections and still approves the quote", async () => {
+    vi.mocked(quoteApi.getPublicQuote).mockResolvedValueOnce({
+      id: "q1",
+      quoteNumber: "Q-1",
+      quoteStatus: "SENT",
+      paymentLinkAvailable: true,
+      responseLinkAvailable: true,
+      paymentMethod: null,
+      date: "2026-03-31T00:00:00.000Z",
+      expirationDate: null,
+      department: "IT",
+      category: "SUPPLIES",
+      notes: "",
+      totalAmount: 10,
+      recipientName: "Jane",
+      recipientEmail: "jane@example.com",
+      recipientOrg: "",
+      staff: null,
+      contact: null,
+      items: [],
+      isCateringEvent: false,
+      cateringDetails: null,
+      paymentDetailsResolved: false,
+    } as never);
+
+    const user = userEvent.setup();
+    render(<PublicQuoteView token="token" />);
+
+    await screen.findByText("Payment Details");
+    await user.click(screen.getByRole("button", { name: "Cash" }));
+
+    expect(screen.getByText("Cash Payments Are In-Store Only")).toBeInTheDocument();
+    expect(screen.getAllByText("6201 Winnetka Ave").length).toBeGreaterThan(0);
+
+    await user.click(screen.getByRole("button", { name: "Got it" }));
+    await user.click(screen.getByRole("button", { name: "Approve Quote" }));
+
+    await waitFor(() => {
+      expect(quoteApi.respondToPublicQuote).toHaveBeenCalledWith(
+        "token",
+        expect.objectContaining({
+          response: "ACCEPTED",
+          paymentMethod: "CASH",
+          accountNumber: undefined,
+        }),
+      );
+    });
+
+    expect(screen.getByText(/Please follow the payment instructions below/i)).toBeInTheDocument();
+  });
+
+  it("shows saved offline payment guidance after the quote page is revisited", async () => {
+    vi.mocked(quoteApi.getPublicQuote).mockResolvedValueOnce({
+      id: "q1",
+      quoteNumber: "Q-1",
+      quoteStatus: "ACCEPTED",
+      paymentLinkAvailable: false,
+      responseLinkAvailable: false,
+      paymentMethod: "CASH",
+      date: "2026-03-31T00:00:00.000Z",
+      expirationDate: null,
+      department: "IT",
+      category: "SUPPLIES",
+      notes: "",
+      totalAmount: 10,
+      recipientName: "Jane",
+      recipientEmail: "jane@example.com",
+      recipientOrg: "",
+      staff: null,
+      contact: null,
+      items: [],
+      isCateringEvent: false,
+      cateringDetails: null,
+      paymentDetailsResolved: true,
+    } as never);
+
+    render(<PublicQuoteView token="token" />);
+
+    await screen.findByText(/Please follow the payment instructions below/i);
+    expect(screen.getByText(/Cash payments must be completed in person/i)).toBeInTheDocument();
+    expect(screen.getAllByText("6201 Winnetka Ave").length).toBeGreaterThan(0);
   });
 
   it("waits for public view registration before submitting an approval", async () => {

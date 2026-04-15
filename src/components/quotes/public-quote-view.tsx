@@ -24,14 +24,24 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { TimeSelect } from "@/components/ui/time-select";
+import {
+  PaymentMethodGuidanceCallout,
+  PaymentMethodGuidanceDialog,
+} from "@/components/quotes/payment-method-guidance";
 import { quoteApi } from "@/domains/quote/api-client";
 import { getMissingCustomerCateringRequirements, normalizeQuoteTimeInput } from "@/domains/quote/catering";
+import {
+  coerceQuotePaymentMethod,
+  getQuotePaymentMethodGuidance,
+  getQuotePaymentMethodLabel,
+  QUOTE_PAYMENT_METHODS,
+  type QuotePaymentMethod,
+} from "@/domains/quote/payment";
 import { ApiError } from "@/domains/shared/types";
 import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
 import { differenceInDateKeys, getDateKeyInLosAngeles, getDateOnlyKey } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 import type { CateringDetails, PublicQuoteResponse } from "@/domains/quote/types";
-import { QUOTE_PAYMENT_METHODS } from "@/domains/quote/payment";
 
 const PUBLIC_QUOTE_TIME_MIN = "07:30";
 const PUBLIC_QUOTE_TIME_MAX = "23:00";
@@ -91,8 +101,9 @@ export function PublicQuoteView({ token }: { token: string }) {
   const [responding, setResponding] = useState(false);
   const [responded, setResponded] = useState(false);
   const [cateringForm, setCateringForm] = useState<PublicCateringForm>(makeCateringForm(null));
-  const [paymentMethod, setPaymentMethod] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<QuotePaymentMethod | "">("");
   const [sapAccountNumber, setSapAccountNumber] = useState("");
+  const [guidanceOpen, setGuidanceOpen] = useState(false);
   const viewIdRef = useRef<string | null>(null);
   const publicViewRegistrationRef = useRef<Promise<string | null> | null>(null);
   const pendingUnloadDurationRef = useRef<number | null>(null);
@@ -100,6 +111,14 @@ export function PublicQuoteView({ token }: { token: string }) {
   const accountNumberRequired = paymentMethod === "ACCOUNT_NUMBER";
   const normalizedSapAccountNumber = sapAccountNumber.trim();
   const paymentDetailsResolved = quote?.paymentDetailsResolved ?? false;
+
+  function handlePaymentMethodSelect(nextMethod: QuotePaymentMethod) {
+    setPaymentMethod(nextMethod);
+    if (nextMethod !== "ACCOUNT_NUMBER") {
+      setSapAccountNumber("");
+    }
+    setGuidanceOpen(Boolean(getQuotePaymentMethodGuidance(nextMethod)));
+  }
 
   // Fetch quote data and register view
   useEffect(() => {
@@ -110,6 +129,7 @@ export function PublicQuoteView({ token }: { token: string }) {
         setResponded(false);
         setPaymentMethod("");
         setSapAccountNumber("");
+        setGuidanceOpen(false);
         setCateringForm(makeCateringForm(null));
         viewIdRef.current = null;
         publicViewRegistrationRef.current = null;
@@ -119,6 +139,7 @@ export function PublicQuoteView({ token }: { token: string }) {
         setLoadError(null);
         const quoteData = await quoteApi.getPublicQuote(token);
         setQuote(quoteData);
+        setPaymentMethod(coerceQuotePaymentMethod(quoteData.paymentMethod) ?? "");
         if (quoteData.isCateringEvent) {
           setCateringForm(makeCateringForm(quoteData.cateringDetails));
         }
@@ -222,7 +243,13 @@ export function PublicQuoteView({ token }: { token: string }) {
             }
           : prev,
       );
-      toast.success(response === "ACCEPTED" ? "Quote approved!" : "Quote declined");
+      toast.success(
+        response === "ACCEPTED"
+          ? selectedPaymentGuidance
+            ? "Quote approved — please follow the payment instructions."
+            : "Quote approved!"
+          : "Quote declined",
+      );
     } catch (err) {
       toast.error((err as Error).message ?? "Failed to submit response");
     } finally {
@@ -279,6 +306,7 @@ export function PublicQuoteView({ token }: { token: string }) {
   const cateringRequiredMissing = missingCateringRequirements.length > 0;
   const missingCateringRequirementSet = new Set(missingCateringRequirements);
   const hasMissingCateringRequirement = (requirement: string): boolean => missingCateringRequirementSet.has(requirement);
+  const selectedPaymentGuidance = getQuotePaymentMethodGuidance(paymentMethod);
 
   return (
     <div className="min-h-screen bg-background">
@@ -286,7 +314,12 @@ export function PublicQuoteView({ token }: { token: string }) {
       <div className="border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-5 flex items-center gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/lapc-logo.png" alt="" aria-hidden="true" className="w-10 h-10 shrink-0" />
+          <img
+            src="/lapc-logo.png"
+            alt=""
+            aria-hidden="true"
+            className="h-8 w-auto max-w-[9.5rem] shrink-0 object-contain sm:h-9 sm:max-w-[11rem] md:h-10 md:max-w-[13rem]"
+          />
           <div>
             <h1 className="font-bold text-lg tracking-tight">Los Angeles Pierce College Store</h1>
             <p className="text-sm text-muted-foreground">Quote Review</p>
@@ -760,17 +793,12 @@ export function PublicQuoteView({ token }: { token: string }) {
                 <Label className={labelClass}>Payment Method</Label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   {QUOTE_PAYMENT_METHODS.map((value) => {
-                    const label = value === "ACCOUNT_NUMBER"
-                      ? "Account Number"
-                      : value.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
-
                     return (
                       <button
                         key={value}
                         type="button"
                         onClick={() => {
-                          setPaymentMethod(value);
-                          if (value !== "ACCOUNT_NUMBER") setSapAccountNumber("");
+                          handlePaymentMethodSelect(value);
                         }}
                         className={`rounded-lg border px-4 py-2.5 text-sm font-medium transition-all ${
                           paymentMethod === value
@@ -778,7 +806,7 @@ export function PublicQuoteView({ token }: { token: string }) {
                             : "border-border hover:border-primary/40 hover:bg-accent/50"
                         }`}
                       >
-                        {label}
+                        {getQuotePaymentMethodLabel(value)}
                       </button>
                     );
                   })}
@@ -798,6 +826,10 @@ export function PublicQuoteView({ token }: { token: string }) {
                     onChange={(e) => setSapAccountNumber(e.target.value)}
                   />
                 </div>
+              )}
+
+              {selectedPaymentGuidance && (
+                <PaymentMethodGuidanceCallout method={paymentMethod} />
               )}
 
               {!paymentMethod && (
@@ -886,6 +918,13 @@ export function PublicQuoteView({ token }: { token: string }) {
                 <p className="text-sm text-muted-foreground">
                   Your approval was received. Payment collection for this quote is now closed.
                 </p>
+              ) : quote.quoteStatus === "ACCEPTED" && selectedPaymentGuidance ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    This quote has been approved. Please follow the payment instructions below.
+                  </p>
+                  <PaymentMethodGuidanceCallout method={paymentMethod} className="mx-auto max-w-lg text-left" />
+                </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
                   {quote.quoteStatus === "ACCEPTED"
@@ -909,6 +948,11 @@ export function PublicQuoteView({ token }: { token: string }) {
           </Card>
         )}
       </div>
+      <PaymentMethodGuidanceDialog
+        method={paymentMethod}
+        open={guidanceOpen}
+        onOpenChange={setGuidanceOpen}
+      />
     </div>
   );
 }
