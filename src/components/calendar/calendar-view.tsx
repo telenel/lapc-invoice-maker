@@ -51,8 +51,11 @@ export function CalendarView({
   const calendarRef = useRef<FullCalendar | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [calendarHeight, setCalendarHeight] = useState<number>(600);
-  const [isMobile, setIsMobile] = useState<boolean>(() => (
+  const [isMobileViewport, setIsMobileViewport] = useState<boolean>(() => (
     typeof window !== "undefined" ? window.innerWidth < 1024 : false
+  ));
+  const [useStackedLayout, setUseStackedLayout] = useState<boolean>(() => (
+    typeof window !== "undefined" ? window.innerWidth < 1280 : false
   ));
   const eventCacheRef = useRef<Map<string, EventInput[]>>(
     new Map(
@@ -98,17 +101,20 @@ export function CalendarView({
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
         const navH = document.querySelector("nav")?.getBoundingClientRect().height ?? 64;
-        const mobile = window.innerWidth < 1024;
-        setIsMobile(mobile);
+        const mobileViewport = window.innerWidth < 1024;
+        const stackedLayout = window.innerWidth < 1280;
+        setIsMobileViewport(mobileViewport);
+        setUseStackedLayout(stackedLayout);
 
-        if (mobile) {
+        if (stackedLayout) {
           mainEl.style.overflow = prevOverflow;
           mainEl.style.padding = prevPadding;
           document.documentElement.style.removeProperty("--fc-slot-height");
           document.documentElement.style.removeProperty("--fc-slot-font");
           const sidebarHeight =
             document.querySelector<HTMLElement>("[data-calendar-sidebar]")?.getBoundingClientRect().height ?? 320;
-          setCalendarHeight(Math.max(window.innerHeight - navH - sidebarHeight - 24, 480));
+          const minimumCalendarHeight = mobileViewport ? 480 : 560;
+          setCalendarHeight(Math.max(window.innerHeight - navH - sidebarHeight - 24, minimumCalendarHeight));
           calendarRef.current?.getApi().updateSize();
           return;
         }
@@ -391,7 +397,10 @@ export function CalendarView({
   const sidebarEvent = pinnedEvent ?? hoveredEvent;
 
   return (
-    <div className={cn("flex", isMobile ? "flex-col gap-3" : "")} style={isMobile ? undefined : { height: "calc(100vh - 64px)" }}>
+    <div
+      className={cn("flex min-w-0", useStackedLayout ? "flex-col gap-3" : "")}
+      style={useStackedLayout ? undefined : { height: "calc(100vh - 64px)" }}
+    >
       {/* Edit modal triggered by sidebar Edit button */}
       {selectedEvent && (
         <AddEventModal
@@ -408,7 +417,13 @@ export function CalendarView({
       )}
 
       {/* Main content: sidebar + calendar */}
-      <div ref={containerRef} className="flex min-h-0 flex-1 flex-col overflow-hidden border-t border-border bg-card lg:flex-row">
+      <div
+        ref={containerRef}
+        className={cn(
+          "flex min-h-0 min-w-0 flex-1 overflow-hidden border-t border-border bg-card",
+          useStackedLayout ? "flex-col" : "flex-row",
+        )}
+      >
         {/* Left sidebar */}
         <EventDetailSidebar
           event={sidebarEvent}
@@ -446,16 +461,16 @@ export function CalendarView({
         />
 
         {/* Calendar */}
-        <div className="min-h-[480px] flex-1 min-w-0 overflow-hidden p-2">
+        <div className="min-h-[480px] w-full flex-1 min-w-0 overflow-hidden p-2">
           <FullCalendar
-            key={isMobile ? "mobile" : "desktop"}
+            key={isMobileViewport ? "mobile" : "desktop"}
             ref={calendarRef}
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-            initialView={isMobile ? "timeGridDay" : "timeGridWeek"}
+            initialView={isMobileViewport ? "timeGridDay" : "timeGridWeek"}
             headerToolbar={{
-              left: isMobile ? "prev,next" : "prev,next today",
+              left: isMobileViewport ? "prev,next" : "prev,next today",
               center: "title",
-              right: isMobile ? "dayGridMonth,timeGridDay" : "dayGridMonth,timeGridWeek,timeGridDay",
+              right: isMobileViewport ? "dayGridMonth,timeGridDay" : "dayGridMonth,timeGridWeek,timeGridDay",
             }}
             events={fetchEvents}
             datesSet={handleDatesSet}

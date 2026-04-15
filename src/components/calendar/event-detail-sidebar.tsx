@@ -287,7 +287,7 @@ export function EventDetailSidebar({
   const showEvent = event !== null;
 
   return (
-    <div data-calendar-sidebar className="relative flex min-h-[20rem] w-full shrink-0 flex-col overflow-hidden border-b border-border bg-card lg:h-full lg:w-[260px] lg:border-r lg:border-b-0">
+    <div data-calendar-sidebar className="relative flex min-h-[20rem] w-full shrink-0 flex-col overflow-hidden border-b border-border bg-card xl:h-full xl:w-[240px] xl:border-r xl:border-b-0 2xl:w-[260px]">
       {/* Default state — always mounted, toggled via opacity */}
       <div
         className="absolute inset-0 flex flex-col h-full p-4 gap-4 transition-opacity duration-150"
