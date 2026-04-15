@@ -32,8 +32,6 @@ export function InvoiceDetailItems({
   taxEnabled,
   taxRate,
 }: InvoiceDetailItemsProps) {
-  const colCount = marginEnabled ? 5 : 4;
-
   // Cost subtotal (before margin)
   const costSubtotal = items.reduce((sum, item) => {
     const cost = item.costPrice != null ? Number(item.costPrice) : Number(item.unitPrice);
