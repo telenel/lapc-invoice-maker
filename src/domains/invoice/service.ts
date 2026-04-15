@@ -16,6 +16,7 @@ import type {
   InvoiceStatsResponse,
   InvoicePdfMetadata,
   ArchivedBySummary,
+  CreatorStatsStatus,
 } from "./types";
 import type { InvoiceStaffDetail } from "./types";
 import type { ContactResponse } from "@/domains/contact/types";
@@ -502,7 +503,7 @@ export const invoiceService = {
   /**
    * Aggregate invoice stats grouped by creator for the current month.
    */
-  async getCreatorStats(status?: InvoiceFilters["status"]): Promise<{ users: CreatorStatEntry[] }> {
+  async getCreatorStats(status?: CreatorStatsStatus): Promise<{ users: CreatorStatEntry[] }> {
     return invoiceRepository.countByCreator(status);
   },
 };

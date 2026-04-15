@@ -267,6 +267,25 @@ describe("invoiceRepository", () => {
       );
     });
 
+    it("includes all active invoices when creator stats request ALL", async () => {
+      mockPrisma.invoice.findMany.mockResolvedValue([] as never);
+
+      await invoiceRepository.countByCreator("ALL");
+
+      expect(mockPrisma.invoice.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            type: "INVOICE",
+            createdAt: { gte: expect.any(Date) },
+          },
+          select: {
+            totalAmount: true,
+            creator: { select: { id: true, name: true } },
+          },
+        }),
+      );
+    });
+
     it("treats legacy pending-charge invoices as drafts for creator stats when requested", async () => {
       mockPrisma.invoice.findMany.mockResolvedValue([] as never);
 

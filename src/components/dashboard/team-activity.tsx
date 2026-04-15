@@ -16,7 +16,7 @@ export function TeamActivity() {
   const currentUserId = (session?.user as { id?: string } | undefined)?.id;
 
   useEffect(() => {
-    invoiceApi.getCreatorStats()
+    invoiceApi.getCreatorStats("ALL")
       .then((data) => setUsers(data.users))
       .catch(() => {})
       .finally(() => setLoading(false));

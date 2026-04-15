@@ -65,7 +65,7 @@ export async function getDashboardStatsData(now = new Date()): Promise<Dashboard
       dateFrom: lastMonthFrom,
       dateTo: lastMonthTo,
     }),
-    invoiceService.getCreatorStats(),
+    invoiceService.getCreatorStats("ALL"),
     prisma.invoice.aggregate({
       where: buildExpectedFinanceWhere(),
       _sum: { totalAmount: true },

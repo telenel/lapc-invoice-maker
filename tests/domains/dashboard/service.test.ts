@@ -170,6 +170,8 @@ describe("dashboard service", () => {
       expectedTotal: 650,
     });
 
+    expect(mockInvoiceService.getCreatorStats).toHaveBeenCalledWith("ALL");
+
     expect(mockPrisma.invoice.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({

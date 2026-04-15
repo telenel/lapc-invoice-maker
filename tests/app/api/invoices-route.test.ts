@@ -159,10 +159,10 @@ describe("GET /api/invoices", () => {
 
   it("allows authenticated users to load creator-grouped team stats", async () => {
     const response = await GET(
-      new NextRequest("http://localhost/api/invoices?statsOnly=true&groupBy=creator&status=FINAL"),
+      new NextRequest("http://localhost/api/invoices?statsOnly=true&groupBy=creator&status=ALL"),
     );
 
     expect(response.status).toBe(200);
-    expect(invoiceService.getCreatorStats).toHaveBeenCalledWith("FINAL");
+    expect(invoiceService.getCreatorStats).toHaveBeenCalledWith("ALL");
   });
 });

@@ -7,6 +7,7 @@ import type {
   FinalizeInput,
   InvoiceStatsResponse,
   CreatorStatsResponse,
+  CreatorStatsStatus,
 } from "./types";
 
 const BASE = "/api/invoices";
@@ -84,7 +85,7 @@ export const invoiceApi = {
     return request<InvoiceStatsResponse>(`${BASE}?${params}`);
   },
 
-  async getCreatorStats(status?: "DRAFT" | "FINAL"): Promise<CreatorStatsResponse> {
+  async getCreatorStats(status?: CreatorStatsStatus): Promise<CreatorStatsResponse> {
     const params = new URLSearchParams({ statsOnly: "true", groupBy: "creator" });
     if (status) params.set("status", status);
     return request<CreatorStatsResponse>(`${BASE}?${params}`);

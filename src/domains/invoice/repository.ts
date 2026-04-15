@@ -2,7 +2,7 @@
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@/generated/prisma/client";
 import type { CalculatedLineItem } from "./calculations";
-import type { InvoiceFilters } from "./types";
+import type { CreatorStatsStatus, InvoiceFilters } from "./types";
 import { addDaysToDateKey, getDateKeyInLosAngeles, zonedDateTimeToUtc } from "@/lib/date-utils";
 
 // ── Shared include shapes ──────────────────────────────────────────────────
@@ -352,17 +352,19 @@ export async function countAndSum(filters: InvoiceFilters) {
 /**
  * Aggregate invoice counts and totals grouped by creator for the current month.
  */
-export async function countByCreator(status?: string) {
+export async function countByCreator(status?: CreatorStatsStatus) {
   const firstOfMonth = zonedDateTimeToUtc(`${getDateKeyInLosAngeles().slice(0, 7)}-01`, "00:00");
-  const statusFilter: Prisma.InvoiceWhereInput["status"] =
+  const statusFilter: Prisma.InvoiceWhereInput["status"] | undefined =
     status === "DRAFT"
       ? { in: ["DRAFT", "PENDING_CHARGE"] }
-      : "FINAL";
+      : status === "ALL"
+        ? undefined
+        : "FINAL";
 
   const invoices = await prisma.invoice.findMany({
     where: {
       type: "INVOICE",
-      status: statusFilter,
+      ...(statusFilter ? { status: statusFilter } : {}),
       createdAt: { gte: firstOfMonth },
     },
     select: {

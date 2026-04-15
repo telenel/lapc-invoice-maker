@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/domains/shared/auth";
 import { invoiceService } from "@/domains/invoice/service";
+import type { CreatorStatsStatus } from "@/domains/invoice/types";
 import { invoiceCreateSchema } from "@/lib/validators";
 import { Prisma } from "@/generated/prisma/client";
 
@@ -14,6 +15,13 @@ function parseStatus(
   if (value == null) return undefined;
   if (!VALID_STATUSES.has(value)) return "error";
   return (value === "PENDING_CHARGE" ? "DRAFT" : value) as "DRAFT" | "FINAL";
+}
+
+function parseCreatorStatsStatus(
+  value: string | null,
+): CreatorStatsStatus | undefined | "error" {
+  if (value === "ALL") return "ALL";
+  return parseStatus(value);
 }
 
 function parsePositiveInt(value: string | null, fallback: number): number | "error" {
@@ -51,7 +59,7 @@ export const GET = withAuth(async (req: NextRequest) => {
     const groupBy = sp.get("groupBy");
 
     if (statsOnly && groupBy === "creator") {
-      const status = parseStatus(sp.get("status"));
+      const status = parseCreatorStatsStatus(sp.get("status"));
       if (status === "error") {
         return NextResponse.json({ error: "Invalid status value" }, { status: 400 });
       }

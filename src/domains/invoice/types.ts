@@ -161,6 +161,8 @@ export interface CreatorStatEntry {
   totalAmount: number;
 }
 
+export type CreatorStatsStatus = "DRAFT" | "FINAL" | "ALL";
+
 export interface CreatorStatsResponse {
   users: CreatorStatEntry[];
 }
