@@ -2,9 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { PrinterIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useQuoteForm, QuoteFormData } from "@/components/quote/quote-form";
 import { QuoteMode } from "@/components/quote/quote-mode";
+import { openRegisterPrintWindow } from "@/components/shared/register-print-view";
 import { getDateKeyInLosAngeles } from "@/lib/date-utils";
+import { formatDateLong as formatDate } from "@/lib/formatters";
 
 interface ApiQuoteItem {
   description: string;
@@ -205,9 +209,48 @@ export default function EditQuotePage() {
     );
   }
 
+  function handlePrintForRegister() {
+    const { form, itemsWithMargin } = quoteForm;
+    if (form.items.length === 0) return;
+    const displayItems = form.marginEnabled ? itemsWithMargin : form.items;
+    const subtotal = displayItems.reduce((sum, item) => sum + Number(item.extendedPrice), 0);
+    const taxRate = form.taxEnabled ? Number(form.taxRate) : 0;
+    const taxableTotal = displayItems
+      .filter((item) => item.isTaxable)
+      .reduce((sum, item) => sum + Number(item.extendedPrice), 0);
+    const taxAmount = taxableTotal * taxRate;
+
+    openRegisterPrintWindow({
+      documentNumber: "Draft Quote",
+      documentType: "Quote",
+      status: "DRAFT",
+      date: form.date ? formatDate(form.date) : "—",
+      staffName: form.contactName || "—",
+      department: form.department || "—",
+      items: form.items.map((item) => ({
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        extendedPrice: item.extendedPrice,
+        sku: null,
+      })),
+      subtotal,
+      taxAmount,
+      total: subtotal + taxAmount,
+    });
+  }
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
-      <h1 className="text-2xl font-bold tracking-tight mb-6">Edit Quote</h1>
+      <div className="mb-6 flex items-start justify-between">
+        <h1 className="text-2xl font-bold tracking-tight">Edit Quote</h1>
+        {quoteForm.form.items.length > 0 && (
+          <Button variant="outline" size="sm" onClick={handlePrintForRegister}>
+            <PrinterIcon className="size-3.5 mr-1.5" />
+            Print for Register
+          </Button>
+        )}
+      </div>
       <QuoteMode {...quoteForm} />
     </div>
   );

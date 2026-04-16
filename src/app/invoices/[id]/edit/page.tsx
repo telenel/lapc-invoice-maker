@@ -2,9 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { PrinterIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useInvoiceForm, InvoiceFormData } from "@/components/invoice/invoice-form";
 import { KeyboardMode } from "@/components/invoice/keyboard-mode";
+import { openRegisterPrintWindow } from "@/components/shared/register-print-view";
 import { TAX_RATE } from "@/domains/invoice/constants";
+import { formatDateLong as formatDate } from "@/lib/formatters";
 
 interface ApiInvoiceItem {
   description: string;
@@ -166,11 +170,40 @@ export default function EditInvoicePage() {
     );
   }
 
+  function handlePrintForRegister() {
+    const { form, subtotal, taxAmount, grandTotal } = invoiceForm;
+    if (form.items.length === 0) return;
+    openRegisterPrintWindow({
+      documentNumber: form.invoiceNumber || form.runningTitle || "Draft Invoice",
+      documentType: "Invoice",
+      status: "DRAFT",
+      date: form.date ? formatDate(form.date) : "—",
+      staffName: form.contactName || "—",
+      department: form.department || "—",
+      items: form.items.map((item) => ({
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        extendedPrice: item.extendedPrice,
+        sku: null,
+      })),
+      subtotal,
+      taxAmount,
+      total: grandTotal,
+    });
+  }
+
   return (
     <div className="mx-auto max-w-5xl px-0 py-4 sm:px-4 sm:py-8">
-      <h1 className="mb-4 text-2xl font-semibold sm:mb-6">
-        Edit Invoice
-      </h1>
+      <div className="mb-4 sm:mb-6 flex items-start justify-between">
+        <h1 className="text-2xl font-semibold">Edit Invoice</h1>
+        {invoiceForm.form.items.length > 0 && (
+          <Button variant="outline" size="sm" onClick={handlePrintForRegister}>
+            <PrinterIcon className="size-3.5 mr-1.5" />
+            Print for Register
+          </Button>
+        )}
+      </div>
       <KeyboardMode {...invoiceForm} />
     </div>
   );
