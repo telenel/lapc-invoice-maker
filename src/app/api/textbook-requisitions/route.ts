@@ -23,7 +23,8 @@ function parseNonNegativeInt(param: string | null): number | "error" | undefined
   return parsed;
 }
 
-export const GET = withAuth(async (req: NextRequest, session) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- withAuth requires session param
+export const GET = withAuth(async (req: NextRequest, _session) => {
   const params = req.nextUrl.searchParams;
 
   if (params.get("statsOnly") === "true") {

@@ -21,7 +21,7 @@ async function parseId(
   return id;
 }
 
-async function getAccessibleRequisition(id: string, _userId: string, _isAdmin: boolean) {
+async function getAccessibleRequisition(id: string) {
   // Requisitions are team-visible — any authenticated user can view/edit/manage.
   // Faculty submissions have createdBy=NULL; ownership scoping would hide them.
   const result = await requisitionService.getById(id);
@@ -37,7 +37,7 @@ export const GET = withAuth(async (_req: NextRequest, session, ctx) => {
     return NextResponse.json({ error: "Invalid requisition id" }, { status: 400 });
   }
   try {
-    const access = await getAccessibleRequisition(id, session.user.id, session.user.role === "admin");
+    const access = await getAccessibleRequisition(id);
     if (access.response) {
       return access.response;
     }
@@ -64,7 +64,7 @@ export const PUT = withAuth(async (req: NextRequest, session, ctx) => {
     );
   }
   try {
-    const access = await getAccessibleRequisition(id, session.user.id, session.user.role === "admin");
+    const access = await getAccessibleRequisition(id);
     if (access.response) {
       return access.response;
     }
@@ -98,7 +98,7 @@ export const PATCH = withAuth(async (req: NextRequest, session, ctx) => {
     );
   }
   try {
-    const access = await getAccessibleRequisition(id, session.user.id, session.user.role === "admin");
+    const access = await getAccessibleRequisition(id);
     if (access.response) {
       return access.response;
     }
@@ -119,7 +119,7 @@ export const DELETE = withAuth(async (_req: NextRequest, session, ctx) => {
     return NextResponse.json({ error: "Invalid requisition id" }, { status: 400 });
   }
   try {
-    const access = await getAccessibleRequisition(id, session.user.id, session.user.role === "admin");
+    const access = await getAccessibleRequisition(id);
     if (access.response) {
       return access.response;
     }
