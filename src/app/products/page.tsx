@@ -113,7 +113,7 @@ export default function ProductsPage() {
       <div className="page-enter page-enter-1 mb-5">
         <h1 className="text-3xl font-bold tracking-tight">Product Catalog</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Search the Pierce College bookstore inventory
+          Los Angeles Pierce College Store INVENTORY
           {data ? ` · ${data.total.toLocaleString()} results` : ""}
         </p>
       </div>
