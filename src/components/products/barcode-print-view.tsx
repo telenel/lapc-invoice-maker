@@ -1,27 +1,5 @@
-import JsBarcode from "jsbarcode";
 import type { SelectedProduct } from "@/domains/product/types";
-
-/**
- * Render a Code 128 barcode for the given SKU as an SVG markup string.
- * Uses an off-screen SVG element so JsBarcode can render to it, then
- * extracts the outerHTML. The temporary element is never added to the DOM.
- */
-function renderBarcodeSvg(sku: number): string {
-  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  try {
-    JsBarcode(svg, String(sku), {
-      format: "CODE128",
-      width: 1.5,
-      height: 50,
-      displayValue: true,
-      fontSize: 12,
-      margin: 5,
-    });
-    return svg.outerHTML;
-  } catch {
-    return `<span style="color:red;font-size:11px;">Barcode error for SKU ${sku}</span>`;
-  }
-}
+import { renderBarcodeSvg, escapeHtml } from "@/lib/barcode";
 
 /**
  * Opens a new browser window with a print-optimized barcode sheet.
@@ -33,7 +11,7 @@ export function openBarcodePrintWindow(items: SelectedProduct[]): void {
   // Pre-render all barcodes from the locally installed JsBarcode package
   const barcodes = new Map<number, string>();
   for (const item of items) {
-    barcodes.set(item.sku, renderBarcodeSvg(item.sku));
+    barcodes.set(item.sku, renderBarcodeSvg(String(item.sku)));
   }
 
   const rows = items
@@ -109,10 +87,3 @@ export function openBarcodePrintWindow(items: SelectedProduct[]): void {
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
