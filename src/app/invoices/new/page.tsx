@@ -39,6 +39,7 @@ export default function NewInvoicePage() {
     return {
       items: catalogItems.map((item, i) => ({
         _key: `catalog-${i}`,
+        sku: null,
         description: item.description,
         quantity: item.quantity,
         unitPrice: item.unitPrice,

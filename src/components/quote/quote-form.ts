@@ -15,6 +15,8 @@ import { addDaysToDateKey, getDateKeyInLosAngeles } from "@/lib/date-utils";
 export interface QuoteItem {
   /** Stable client-side key for React reconciliation (not persisted) */
   _key: string;
+  /** Product SKU from inventory database (null for manually-typed items) */
+  sku: string | null;
   description: string;
   quantity: number;
   unitPrice: number;
@@ -75,6 +77,7 @@ function thirtyDaysFromNow(): string {
 function emptyItem(sortOrder = 0): QuoteItem {
   return {
     _key: crypto.randomUUID(),
+    sku: null,
     description: "",
     quantity: 1,
     unitPrice: 0,

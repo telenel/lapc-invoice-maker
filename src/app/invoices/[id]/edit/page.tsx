@@ -19,6 +19,7 @@ interface ApiInvoiceItem {
   isTaxable?: boolean;
   marginOverride?: number | null;
   costPrice?: string | number | null;
+  sku?: string | null;
 }
 
 interface ApiInvoice {
@@ -99,6 +100,7 @@ function mapApiToFormData(invoice: ApiInvoice): InvoiceFormData {
       const formUnitPrice = dbCostPrice ?? dbUnitPrice;
       return {
         _key: crypto.randomUUID(),
+        sku: item.sku ?? null,
         description: item.description,
         quantity: Number(item.quantity),
         unitPrice: formUnitPrice,

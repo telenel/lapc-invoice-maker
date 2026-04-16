@@ -93,6 +93,7 @@ describe("canViewQuoteDetails", () => {
       items: [
         {
           id: "item-1",
+          sku: null,
           description: "Widget",
           quantity: 2,
           unitPrice: 10,

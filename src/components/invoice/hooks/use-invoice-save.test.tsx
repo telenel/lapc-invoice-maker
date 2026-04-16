@@ -52,6 +52,7 @@ const baseForm: InvoiceFormData = {
   taxRate: 0.0975,
   items: [{
     _key: "item-1",
+    sku: null,
     description: "Laptop",
     quantity: 1,
     unitPrice: 150,

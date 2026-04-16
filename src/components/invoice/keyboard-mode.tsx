@@ -286,6 +286,7 @@ export function KeyboardMode({
       ...form.items,
       {
         _key: crypto.randomUUID(),
+        sku: null,
         description,
         quantity: 1,
         unitPrice,
@@ -416,6 +417,7 @@ export function KeyboardMode({
               if (t.notes) updateField("notes", t.notes);
               const newItems = t.items.map((item, idx) => ({
                 _key: crypto.randomUUID(),
+                sku: null,
                 description: item.description,
                 quantity: item.quantity,
                 unitPrice: item.unitPrice,

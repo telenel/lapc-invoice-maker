@@ -91,6 +91,7 @@ function makeForm(overrides: Partial<QuoteFormData> = {}): QuoteFormData {
     items: [
       {
         _key: "item-1",
+        sku: null,
         description: "",
         quantity: 1,
         unitPrice: 0,
@@ -102,6 +103,7 @@ function makeForm(overrides: Partial<QuoteFormData> = {}): QuoteFormData {
       },
       {
         _key: "item-2",
+        sku: null,
         description: "Existing Item",
         quantity: 2,
         unitPrice: 10,

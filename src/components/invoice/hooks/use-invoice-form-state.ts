@@ -11,6 +11,8 @@ import { getDateKeyInLosAngeles } from "@/lib/date-utils";
 export interface InvoiceItem {
   /** Stable client-side key for React reconciliation (not persisted) */
   _key: string;
+  /** Product SKU from inventory database (null for manually-typed items) */
+  sku: string | null;
   description: string;
   quantity: number;
   unitPrice: number;
@@ -82,6 +84,7 @@ export function todayISO(): string {
 export function emptyItem(sortOrder = 0): InvoiceItem {
   return {
     _key: crypto.randomUUID(),
+    sku: null,
     description: "",
     quantity: 1,
     unitPrice: 0,

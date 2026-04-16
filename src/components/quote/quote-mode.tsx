@@ -212,6 +212,7 @@ export function QuoteMode({
       ...form.items,
       {
         _key: crypto.randomUUID(),
+        sku: null,
         description,
         quantity: 1,
         unitPrice,
@@ -354,6 +355,7 @@ export function QuoteMode({
               }
               const newItems = t.items.map((item, idx) => ({
                 _key: crypto.randomUUID(),
+                sku: null,
                 description: item.description,
                 quantity: item.quantity,
                 unitPrice: item.unitPrice,
