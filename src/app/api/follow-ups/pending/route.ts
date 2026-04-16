@@ -4,7 +4,7 @@ import { followUpRepository } from "@/domains/follow-up/repository";
 
 export const GET = withAuth(async () => {
   const rows = await followUpRepository.getPendingAccountsSummary();
-  const items = rows.map((row) => {
+  const items = rows.map((row: (typeof rows)[number]) => {
     const attempt =
       ((row.metadata as Record<string, unknown>)?.attempt as number) ?? 1;
     return {
