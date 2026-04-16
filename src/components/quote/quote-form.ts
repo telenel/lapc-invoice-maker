@@ -277,12 +277,16 @@ export function useQuoteForm(
       department: staff.department,
     };
 
+    const hasAccountNumbers = (staff.accountNumbers?.length ?? 0) > 0;
+
     setForm((prev) => ({
       ...prev,
       staffId: staff.id,
       department: staff.department,
-      accountNumber: latestAccount?.accountCode ?? "",
-      accountCode: staff.accountCode,
+      accountNumber: hasAccountNumbers
+        ? (latestAccount?.accountCode ?? "")
+        : staff.accountCode,
+      accountCode: hasAccountNumbers ? staff.accountCode : "",
       recipientName: staff.name,
       recipientEmail: staff.email,
       contactName: staff.name,

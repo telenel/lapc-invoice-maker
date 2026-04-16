@@ -58,12 +58,20 @@ export function useStaffAutofill(
         }
       });
 
+      // If the staff has dedicated account number records, use those for the
+      // account number field and the staff-level accountCode for the code field.
+      // Otherwise fall back to the staff-level accountCode as the account number
+      // (users often enter account numbers there when no separate records exist).
+      const hasAccountNumbers = (staff.accountNumbers?.length ?? 0) > 0;
+
       setForm((prev) => ({
         ...prev,
         staffId: staff.id,
         department: staff.department,
-        accountNumber: latestAccount?.accountCode ?? "",
-        accountCode: staff.accountCode,
+        accountNumber: hasAccountNumbers
+          ? (latestAccount?.accountCode ?? "")
+          : staff.accountCode,
+        accountCode: hasAccountNumbers ? staff.accountCode : "",
         contactName: staff.name,
         contactExtension: staff.extension,
         contactEmail: staff.email,
