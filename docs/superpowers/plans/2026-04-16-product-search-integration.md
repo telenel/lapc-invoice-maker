@@ -20,14 +20,21 @@
 ### Modified Files
 - `src/components/invoice/hooks/use-invoice-form-state.ts` — Add `sku` to `InvoiceItem`, add `addItems` batch method
 - `src/components/quote/quote-form.ts` — Add `sku` to `QuoteItem`, add `addItems` batch method
+- `src/components/invoice/invoice-form.tsx` — Expose `addItems` from composition hook
 - `src/components/invoice/line-items.tsx` — Add SKU column, replace `InlineCombobox` with plain `Input`
 - `src/components/invoice/keyboard-mode.tsx` — Remove `max-w-2xl`, wire `addItems` for product panel
 - `src/components/quote/quote-mode.tsx` — Remove equivalent constraint, wire `addItems` for product panel
 - `src/app/invoices/new/page.tsx` — Widen to `max-w-7xl`, two-column grid, render `ProductSearchPanel`
 - `src/app/quotes/new/page.tsx` — Same layout changes
-- `src/components/invoice/hooks/use-invoice-save.ts` — Include `sku` in save payload
+- `src/lib/validators.ts` — Add `sku` to `invoiceItemSchema` and `quoteItemSchema`
 - `src/domains/invoice/types.ts` — Add `sku` to `CreateLineItemInput`
 - `src/domains/quote/types.ts` — Add `sku` to `CreateLineItemInput`
+- `src/domains/invoice/calculations.ts` — Add `sku` to `CalculatedLineItem`
+- `src/domains/invoice/repository.ts` — Include `sku` in create/update item maps
+- `src/domains/quote/repository.ts` — Include `sku` in `CalculatedLineItem` and create/update item maps
+- `src/domains/invoice/service.ts` — Include `sku` in duplicate item mapping
+- `src/domains/quote/service.ts` — Include `sku` in duplicate, convert-to-invoice, and revise item mappings
+- `src/components/invoice/hooks/use-invoice-save.ts` — Include `sku` in save payload
 
 ---
 
@@ -278,15 +285,50 @@ return {
 };
 ```
 
-- [ ] **Step 5: Verify TypeScript compiles**
+- [ ] **Step 5: Expose `addItems` from `useInvoiceForm` composition hook**
+
+In `src/components/invoice/invoice-form.tsx`, update the destructuring on line 26 to include `addItems`, and add it to the return object:
+
+```typescript
+const { form, setForm, updateField, updateItem, addItem, addItems, removeItem, total, itemsWithMargin } =
+  useInvoiceFormState(initial);
+```
+
+Add `addItems` to the return object (line 53):
+
+```typescript
+return {
+  form,
+  updateField,
+  updateItem,
+  addItem,
+  addItems,
+  removeItem,
+  total,
+  itemsWithMargin,
+  subtotal,
+  taxAmount,
+  grandTotal,
+  handleStaffSelect,
+  handleStaffEdit,
+  staffAccountNumbers,
+  saveDraft,
+  saveAndFinalize,
+  saving,
+  generationStep,
+  existingId,
+};
+```
+
+- [ ] **Step 6: Verify TypeScript compiles**
 
 Run: `npx tsc --noEmit`
 Expected: No errors. `addItems` is newly exposed but not yet consumed.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add src/components/invoice/hooks/use-invoice-form-state.ts src/components/quote/quote-form.ts
+git add src/components/invoice/hooks/use-invoice-form-state.ts src/components/quote/quote-form.ts src/components/invoice/invoice-form.tsx
 git commit -m "feat: add addItems batch method to invoice and quote form hooks"
 ```
 
@@ -426,6 +468,7 @@ import { searchProducts } from "@/domains/product/queries";
 import { TABS, EMPTY_FILTERS, PAGE_SIZE } from "@/domains/product/constants";
 import type { Product, ProductTab, ProductFilters, SelectedProduct } from "@/domains/product/types";
 import { SearchIcon, PackageIcon, Loader2Icon } from "lucide-react";
+import { toast } from "sonner";
 
 function productToSelected(product: Product): SelectedProduct {
   return {
@@ -481,8 +524,9 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
         }
         setTotal(result.total);
       })
-      .catch(() => {
+      .catch((err) => {
         if (cancelled) return;
+        toast.error(err instanceof Error ? err.message : "Failed to search products");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -788,9 +832,11 @@ return (
       )}
     </div>
     <div className="page-enter page-enter-2 grid grid-cols-1 lg:grid-cols-[1fr,380px] gap-6 items-start">
-      <KeyboardMode {...invoiceForm} />
-      <div className="lg:sticky lg:top-8">
-        <ProductSearchPanel onAddProducts={invoiceForm.addItems} />
+      <div className="order-2 lg:order-1">
+        <KeyboardMode {...invoiceForm} />
+      </div>
+      <div className="order-1 lg:order-2 lg:sticky lg:top-8">
+        <ProductSearchPanel onAddProducts={(products) => invoiceForm.addItems(mapProductsToItems(products))} />
       </div>
     </div>
   </div>
@@ -837,10 +883,7 @@ function mapProductsToItems(products: SelectedProduct[]) {
 }
 ```
 
-Then in the JSX:
-```tsx
-<ProductSearchPanel onAddProducts={(products) => invoiceForm.addItems(mapProductsToItems(products))} />
-```
+The `mapProductsToItems` helper is already used in the JSX above.
 
 - [ ] **Step 4: Verify TypeScript compiles**
 
@@ -890,8 +933,10 @@ return (
       )}
     </div>
     <div className="page-enter page-enter-2 grid grid-cols-1 lg:grid-cols-[1fr,380px] gap-6 items-start">
-      <QuoteMode {...quoteForm} />
-      <div className="lg:sticky lg:top-8">
+      <div className="order-2 lg:order-1">
+        <QuoteMode {...quoteForm} />
+      </div>
+      <div className="order-1 lg:order-2 lg:sticky lg:top-8">
         <ProductSearchPanel onAddProducts={(products) => quoteForm.addItems(mapProductsToItems(products))} />
       </div>
     </div>
@@ -981,7 +1026,254 @@ git commit -m "feat: include sku in invoice and quote save payloads"
 
 ---
 
-### Task 8: Update Template Loading to Include SKU
+### Task 8: Backend SKU Plumbing — Validators, Calculations, Repositories, Services
+
+**Files:**
+- Modify: `src/lib/validators.ts:16-24` (invoiceItemSchema)
+- Modify: `src/lib/validators.ts:116-124` (quoteItemSchema)
+- Modify: `src/domains/invoice/calculations.ts:4-13` (CalculatedLineItem)
+- Modify: `src/domains/invoice/calculations.ts:15-32` (calculateLineItems)
+- Modify: `src/domains/invoice/repository.ts:232-241` (create item map)
+- Modify: `src/domains/invoice/repository.ts:282-291` (update item map)
+- Modify: `src/domains/quote/repository.ts:228-237` (CalculatedLineItem)
+- Modify: `src/domains/quote/repository.ts:289-298` (create item map)
+- Modify: `src/domains/quote/repository.ts:333-342` (update item map)
+- Modify: `src/domains/invoice/service.ts:226-233` (duplicate item map)
+- Modify: `src/domains/quote/service.ts:242-258` (calculateLineItems)
+- Modify: `src/domains/quote/service.ts:1346-1355` (convert-to-invoice item map)
+- Modify: `src/domains/quote/service.ts:1449-1458` (revise item map)
+- Modify: `src/domains/quote/service.ts:1501-1509` (duplicate item map)
+
+- [ ] **Step 1: Add `sku` to Zod validators**
+
+In `src/lib/validators.ts`, add `sku` to both item schemas:
+
+```typescript
+export const invoiceItemSchema = z.object({
+  description: z.string().min(1, "Description is required"),
+  quantity: z.number().positive("Quantity must be positive"),
+  unitPrice: z.number().min(0, "Price must be non-negative"),
+  sortOrder: z.number().int().default(0),
+  isTaxable: z.boolean().default(true),
+  marginOverride: z.number().optional(),
+  costPrice: z.number().optional(),
+  sku: z.string().nullable().optional(),
+});
+```
+
+```typescript
+export const quoteItemSchema = z.object({
+  description: z.string().min(1, "Description is required"),
+  quantity: z.number().positive("Quantity must be positive"),
+  unitPrice: z.number().min(0, "Price must be non-negative"),
+  sortOrder: z.number().int().default(0),
+  isTaxable: z.boolean().default(true),
+  marginOverride: z.number().optional(),
+  costPrice: z.number().optional(),
+  sku: z.string().nullable().optional(),
+});
+```
+
+- [ ] **Step 2: Add `sku` to invoice `CalculatedLineItem` and `calculateLineItems`**
+
+In `src/domains/invoice/calculations.ts`:
+
+```typescript
+export interface CalculatedLineItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  extendedPrice: number;
+  sortOrder: number;
+  isTaxable?: boolean;
+  costPrice?: number;
+  marginOverride?: number;
+  sku?: string | null;
+}
+
+export function calculateLineItems(
+  items: (CreateLineItemInput & { sortOrder?: number })[]
+): CalculatedLineItem[] {
+  return items.map((item, index) => {
+    const qty = Number(item.quantity);
+    const price = Number(item.unitPrice);
+    return {
+      description: item.description,
+      quantity: qty,
+      unitPrice: price,
+      extendedPrice: qty * price,
+      sortOrder: item.sortOrder ?? index,
+      isTaxable: item.isTaxable,
+      costPrice: item.costPrice,
+      marginOverride: item.marginOverride,
+      sku: item.sku ?? null,
+    };
+  });
+}
+```
+
+- [ ] **Step 3: Add `sku` to quote `CalculatedLineItem`**
+
+In `src/domains/quote/repository.ts`, update the `CalculatedLineItem` interface:
+
+```typescript
+export interface CalculatedLineItem {
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  extendedPrice: number;
+  sortOrder: number;
+  isTaxable?: boolean;
+  marginOverride?: number;
+  costPrice?: number;
+  sku?: string | null;
+}
+```
+
+- [ ] **Step 4: Add `sku` to quote `calculateLineItems`**
+
+In `src/domains/quote/service.ts`, update the `calculateLineItems` function (around line 242):
+
+```typescript
+function calculateLineItems(
+  items: CreateQuoteInput["items"]
+): quoteRepository.CalculatedLineItem[] {
+  return items.map((item, index) => {
+    const qty = Number(item.quantity);
+    const price = Number(item.unitPrice);
+    return {
+      description: item.description,
+      quantity: qty,
+      unitPrice: price,
+      extendedPrice: qty * price,
+      sortOrder: item.sortOrder ?? index,
+      isTaxable: item.isTaxable,
+      marginOverride: item.marginOverride,
+      costPrice: item.costPrice,
+      sku: item.sku ?? null,
+    };
+  });
+}
+```
+
+- [ ] **Step 5: Add `sku` to invoice repository create/update item maps**
+
+In `src/domains/invoice/repository.ts`, add `sku` to the create item map (line 232):
+
+```typescript
+create: calculatedItems.map((item) => ({
+  description: item.description,
+  quantity: item.quantity,
+  unitPrice: item.unitPrice,
+  extendedPrice: item.extendedPrice,
+  sortOrder: item.sortOrder,
+  isTaxable: item.isTaxable,
+  costPrice: item.costPrice,
+  marginOverride: item.marginOverride,
+  sku: item.sku ?? undefined,
+})),
+```
+
+Apply the same change to the update item map (line 282) — identical mapping.
+
+- [ ] **Step 6: Add `sku` to quote repository create/update item maps**
+
+In `src/domains/quote/repository.ts`, add `sku` to the create item map (line 289):
+
+```typescript
+create: calculatedItems.map((item) => ({
+  description: item.description,
+  quantity: item.quantity,
+  unitPrice: item.unitPrice,
+  extendedPrice: item.extendedPrice,
+  sortOrder: item.sortOrder,
+  isTaxable: item.isTaxable ?? true,
+  marginOverride: item.marginOverride ?? undefined,
+  costPrice: item.costPrice ?? undefined,
+  sku: item.sku ?? undefined,
+})),
+```
+
+Apply the same to the update item map (line 333).
+
+- [ ] **Step 7: Add `sku` to invoice duplicate item mapping**
+
+In `src/domains/invoice/service.ts`, update the duplicate method's item mapping (line 226):
+
+```typescript
+const items: CreateInvoiceInput["items"] = source.items.map((item) => ({
+  description: item.description,
+  quantity: Number(item.quantity),
+  unitPrice: Number(item.unitPrice),
+  isTaxable: item.isTaxable,
+  costPrice: item.costPrice != null ? Number(item.costPrice) : undefined,
+  marginOverride: item.marginOverride != null ? Number(item.marginOverride) : undefined,
+  sku: item.sku ?? undefined,
+}));
+```
+
+- [ ] **Step 8: Add `sku` to quote duplicate, convert-to-invoice, and revise item mappings**
+
+In `src/domains/quote/service.ts`, update three item mappings:
+
+**Duplicate** (line 1501):
+```typescript
+quote.items.map((item) => ({
+  description: item.description,
+  quantity: Number(item.quantity),
+  unitPrice: Number(item.unitPrice),
+  isTaxable: item.isTaxable,
+  costPrice: item.costPrice != null ? Number(item.costPrice) : undefined,
+  marginOverride: item.marginOverride != null ? Number(item.marginOverride) : undefined,
+  sku: item.sku ?? undefined,
+})),
+```
+
+**Convert to invoice** (line 1346):
+```typescript
+create: quote.items.map((item) => ({
+  description: item.description,
+  quantity: item.quantity,
+  unitPrice: item.unitPrice,
+  extendedPrice: item.extendedPrice,
+  sortOrder: item.sortOrder,
+  isTaxable: item.isTaxable,
+  costPrice: item.costPrice ?? undefined,
+  marginOverride: item.marginOverride ?? undefined,
+  sku: item.sku ?? undefined,
+})),
+```
+
+**Revise** (line 1449):
+```typescript
+create: quote.items.map((item) => ({
+  description: item.description,
+  quantity: item.quantity,
+  unitPrice: item.unitPrice,
+  extendedPrice: item.extendedPrice,
+  sortOrder: item.sortOrder,
+  isTaxable: item.isTaxable,
+  costPrice: item.costPrice ?? undefined,
+  marginOverride: item.marginOverride ?? undefined,
+  sku: item.sku ?? undefined,
+})),
+```
+
+- [ ] **Step 9: Verify TypeScript compiles**
+
+Run: `npx tsc --noEmit`
+Expected: No errors. SKU now flows through the entire pipeline: validator → calculation → repository → Prisma.
+
+- [ ] **Step 10: Commit**
+
+```bash
+git add src/lib/validators.ts src/domains/invoice/calculations.ts src/domains/invoice/repository.ts src/domains/invoice/service.ts src/domains/quote/repository.ts src/domains/quote/service.ts
+git commit -m "feat: add sku to backend pipeline — validators, calculations, repositories, services"
+```
+
+---
+
+### Task 9: Update Template and Edit Page Loading to Include SKU
 
 **Files:**
 - Modify: `src/components/invoice/keyboard-mode.tsx:417-425` (template item mapping)
@@ -1023,7 +1315,7 @@ git commit -m "fix: include sku field in template item mapping"
 
 ---
 
-### Task 9: Visual Verification
+### Task 10: Visual Verification
 
 - [ ] **Step 1: Start dev server**
 
@@ -1053,11 +1345,19 @@ Navigate to `http://localhost:3000/quotes/new`. Verify same behavior as invoice 
 
 Navigate to products page, select some products, click "Create Invoice from Selected". Verify items appear with SKU and costPrice populated.
 
-- [ ] **Step 5: Test saving**
+- [ ] **Step 5: Test saving and SKU persistence**
 
 Create an invoice with product-sourced items. Save it. Navigate to the detail page. Verify SKU is persisted and displayed.
 
-- [ ] **Step 6: Commit any fixes**
+- [ ] **Step 6: Test duplicate flow**
+
+Open a saved invoice with SKU-populated items. Duplicate it. Verify the duplicate has SKU values carried over.
+
+- [ ] **Step 7: Test quote-to-invoice conversion**
+
+Create a quote with product-sourced items. Convert to invoice. Verify SKU values carry over.
+
+- [ ] **Step 8: Commit any fixes**
 
 ```bash
 git add -A
