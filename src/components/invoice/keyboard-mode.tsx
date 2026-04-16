@@ -379,7 +379,7 @@ export function KeyboardMode({
   return (
     <div
       ref={containerRef}
-      className="keyboard-mode mx-auto max-w-2xl"
+      className="keyboard-mode"
       tabIndex={-1}
     >
       {draftEntry && (
