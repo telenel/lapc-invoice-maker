@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { searchProducts } from "@/domains/product/queries";
-import { TABS, EMPTY_FILTERS, PAGE_SIZE } from "@/domains/product/constants";
+import { TABS, EMPTY_FILTERS } from "@/domains/product/constants";
 import type { Product, ProductTab, SelectedProduct } from "@/domains/product/types";
 
 // ---------------------------------------------------------------------------

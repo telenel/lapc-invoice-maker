@@ -53,6 +53,7 @@ export function LineItems({
   total,
   department,
   // firstDescriptionRef and focusQtyForRow are accepted for API compatibility
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for QuickPicks API compatibility until removal
   suggestions = [],
   userPickDescriptions = new Set<string>(),
   onTogglePick,
