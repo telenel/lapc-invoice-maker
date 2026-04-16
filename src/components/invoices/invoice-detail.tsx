@@ -10,6 +10,7 @@ import { formatAmount, formatDateLong as formatDate } from "@/lib/formatters";
 import { useSSE } from "@/lib/use-sse";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { openRegisterPrintWindow } from "@/components/shared/register-print-view";
 import { InvoiceDetailHeader } from "./invoice-detail-header";
 import { InvoiceDetailInfo } from "./invoice-detail-info";
 import { InvoiceDetailStaff } from "./invoice-detail-staff";
@@ -134,6 +135,35 @@ export function InvoiceDetailView({ id }: { id: string }) {
     setDeleteDialogOpen(true);
   }
 
+  function handlePrintForRegister() {
+    if (!invoice) return;
+    const taxRate = invoice.taxEnabled ? Number(invoice.taxRate) : 0;
+    const subtotal = invoice.items.reduce((sum, item) => sum + Number(item.extendedPrice), 0);
+    const taxableTotal = invoice.items
+      .filter((item) => item.isTaxable)
+      .reduce((sum, item) => sum + Number(item.extendedPrice), 0);
+    const taxAmount = taxableTotal * taxRate;
+
+    openRegisterPrintWindow({
+      documentNumber: invoice.invoiceNumber || invoice.runningTitle || "Draft Invoice",
+      documentType: "Invoice",
+      status: invoice.status,
+      date: formatDate(invoice.date),
+      staffName: invoice.staff?.name ?? invoice.creatorName,
+      department: invoice.department,
+      items: invoice.items.map((item) => ({
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        extendedPrice: item.extendedPrice,
+        sku: item.sku,
+      })),
+      subtotal,
+      taxAmount,
+      total: subtotal + taxAmount,
+    });
+  }
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -212,6 +242,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
         onDeleteClick={handleDeleteClick}
         onDeleteConfirm={handleDelete}
         onDuplicate={handleDuplicate}
+        onPrintForRegister={handlePrintForRegister}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 page-enter page-enter-2">

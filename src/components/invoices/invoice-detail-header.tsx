@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CopyIcon, MailIcon } from "lucide-react";
+import { CopyIcon, MailIcon, PrinterIcon } from "lucide-react";
 import { formatDateLong as formatDate } from "@/lib/formatters";
 import type { InvoiceResponse } from "@/domains/invoice/types";
 
@@ -29,6 +29,7 @@ interface InvoiceDetailHeaderProps {
   onDeleteClick: () => void;
   onDeleteConfirm: () => void;
   onDuplicate: () => void;
+  onPrintForRegister: () => void;
 }
 
 export function InvoiceDetailHeader({
@@ -45,6 +46,7 @@ export function InvoiceDetailHeader({
   onDeleteClick,
   onDeleteConfirm,
   onDuplicate,
+  onPrintForRegister,
 }: InvoiceDetailHeaderProps) {
   const isDraft = invoice.status === "DRAFT";
   const isFinal = invoice.status === "FINAL";
@@ -104,6 +106,11 @@ export function InvoiceDetailHeader({
             Download PDF
           </Button>
         )}
+
+        <Button variant="outline" size="sm" onClick={onPrintForRegister}>
+          <PrinterIcon className="size-3.5 mr-1.5" />
+          Print for Register
+        </Button>
 
         {canManageActions && (
           <Button variant="outline" size="sm" onClick={onDuplicate} disabled={duplicating}>
