@@ -1,10 +1,54 @@
 "use client";
 
+import { useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuoteForm } from "@/components/quote/quote-form";
 import { QuoteMode } from "@/components/quote/quote-mode";
+import { CATALOG_ITEMS_STORAGE_KEY } from "@/domains/product/constants";
+import type { SelectedProduct } from "@/domains/product/types";
+
+function readCatalogItems(): { description: string; quantity: number; unitPrice: number }[] | undefined {
+  if (typeof window === "undefined") return undefined;
+  try {
+    const raw = sessionStorage.getItem(CATALOG_ITEMS_STORAGE_KEY);
+    if (!raw) return undefined;
+    sessionStorage.removeItem(CATALOG_ITEMS_STORAGE_KEY);
+    const items = JSON.parse(raw) as SelectedProduct[];
+    return items.map((item) => ({
+      description: item.description.toUpperCase(),
+      quantity: 1,
+      unitPrice: item.retailPrice,
+    }));
+  } catch {
+    return undefined;
+  }
+}
 
 export default function NewQuotePage() {
-  const quoteForm = useQuoteForm();
+  const searchParams = useSearchParams();
+  const fromCatalog = searchParams.get("from") === "catalog";
+
+  const initial = useMemo(() => {
+    if (!fromCatalog) return undefined;
+    const catalogItems = readCatalogItems();
+    if (!catalogItems || catalogItems.length === 0) return undefined;
+    return {
+      items: catalogItems.map((item, i) => ({
+        _key: `catalog-${i}`,
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        extendedPrice: item.quantity * item.unitPrice,
+        sortOrder: i,
+        isTaxable: true,
+        marginOverride: null,
+        costPrice: null,
+      })),
+    };
+  }, [fromCatalog]);
+
+  const quoteForm = useQuoteForm(initial);
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
       <div className="page-enter page-enter-1 mb-7">
