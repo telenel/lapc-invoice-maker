@@ -8,8 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Star } from "lucide-react";
-import { InlineCombobox } from "@/components/ui/inline-combobox";
-import type { ComboboxItem } from "@/components/ui/inline-combobox";
 import { cn } from "@/lib/utils";
 
 /** Case-insensitive check so picks saved as "Coffee" still match "COFFEE". */
@@ -55,7 +53,6 @@ export function LineItems({
   total,
   department,
   // firstDescriptionRef and focusQtyForRow are accepted for API compatibility
-  // but not used now that description uses InlineCombobox
   suggestions = [],
   userPickDescriptions = new Set<string>(),
   onTogglePick,
@@ -68,14 +65,6 @@ export function LineItems({
   // Refs for qty fields so we can programmatically focus
   const qtyRefs = useRef<(HTMLInputElement | null)[]>([]);
   const addButtonRef = useRef<HTMLButtonElement | null>(null);
-
-  // Convert suggestions to ComboboxItem format
-  const suggestionItems: ComboboxItem[] = suggestions.map((s) => ({
-    id: s.description,
-    label: s.description,
-    sublabel: `$${Number(s.unitPrice).toFixed(2)}`,
-    searchValue: s.description,
-  }));
 
   function handleAddItem() {
     onAdd();
@@ -143,36 +132,31 @@ export function LineItems({
           transition={{ type: "spring", stiffness: 200, damping: 25 }}
           className="rounded-lg border border-border/60 bg-muted/20 p-3 space-y-2 line-item-row"
         >
-          {/* Row 1: Full-width description with actions */}
+          {/* Row 1: SKU + Description with actions */}
           <div className="flex gap-2 items-start">
-            <div
-              className="flex-1 min-w-0"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  requestAnimationFrame(() => qtyRefs.current[index]?.focus());
-                }
-              }}
-            >
-              <InlineCombobox
-                items={suggestionItems}
+            <Input
+              type="text"
+              value={item.sku ?? ""}
+              onChange={(e) => onUpdate(index, { sku: e.target.value || null })}
+              placeholder="SKU"
+              className="w-20 h-8 text-xs tabular-nums shrink-0"
+              aria-label={`Line item ${index + 1} SKU`}
+              tabIndex={-1}
+            />
+            <div className="flex-1 min-w-0">
+              <Input
+                type="text"
                 value={item.description}
-                displayValue={item.description}
-                placeholder="Item description…"
-                onSelect={(selected) => {
-                  const match = suggestions.find((s) => s.description === selected.id);
-                  onUpdate(index, {
-                    description: match ? match.description : selected.label,
-                    ...(match
-                      ? { unitPrice: match.unitPrice, quantity: 1, extendedPrice: match.unitPrice }
-                      : {}),
-                  });
-                  requestAnimationFrame(() => qtyRefs.current[index]?.focus());
+                onChange={(e) => onUpdate(index, { description: e.target.value.toUpperCase() })}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    requestAnimationFrame(() => qtyRefs.current[index]?.focus());
+                  }
                 }}
-                onCommitText={(text) => {
-                  onUpdate(index, { description: text });
-                  requestAnimationFrame(() => qtyRefs.current[index]?.focus());
-                }}
+                placeholder="Item description..."
+                className="h-8 text-sm"
+                aria-label={`Line item ${index + 1} description`}
               />
             </div>
             <div className="flex items-center gap-0.5 shrink-0">
