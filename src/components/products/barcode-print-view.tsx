@@ -64,6 +64,7 @@ export function openBarcodePrintWindow(items: SelectedProduct[]): void {
   const html = `<!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
   <title>Product Barcodes</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
