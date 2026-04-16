@@ -55,6 +55,7 @@ import type { FollowUpBadgeState } from "@/domains/follow-up/types";
 import { getMissingCustomerCateringRequirements } from "@/domains/quote/catering";
 import { QUOTE_PAYMENT_METHODS } from "@/domains/quote/payment";
 import type { CateringDetails } from "@/domains/quote/types";
+import { openRegisterPrintWindow } from "@/components/shared/register-print-view";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -1180,6 +1181,38 @@ export function QuoteDetailView({ id }: { id: string }) {
     link.remove();
   }, [pdfUrl]);
 
+  function handlePrintForRegister() {
+    if (!quote) return;
+    const taxRate = quote.taxEnabled ? Number(quote.taxRate) : 0;
+    const subtotal = quote.items.reduce(
+      (sum, item) => sum + Number(item.extendedPrice),
+      0
+    );
+    const taxableTotal = quote.items
+      .filter((item) => item.isTaxable)
+      .reduce((sum, item) => sum + Number(item.extendedPrice), 0);
+    const taxAmount = taxableTotal * taxRate;
+
+    openRegisterPrintWindow({
+      documentNumber: quote.quoteNumber || "Draft Quote",
+      documentType: "Quote",
+      status: quote.quoteStatus,
+      date: formatDate(quote.date),
+      staffName: quote.staff?.name ?? quote.creatorName,
+      department: quote.department,
+      items: quote.items.map((item) => ({
+        description: item.description,
+        quantity: Number(item.quantity),
+        unitPrice: Number(item.unitPrice),
+        extendedPrice: Number(item.extendedPrice),
+        sku: item.sku,
+      })),
+      subtotal,
+      taxAmount,
+      total: subtotal + taxAmount,
+    });
+  }
+
   if (loading) {
     return (
       <div className="space-y-6">
@@ -1335,6 +1368,11 @@ export function QuoteDetailView({ id }: { id: string }) {
           <Button variant="outline" size="sm" onClick={handleOpenPdf}>
             <PrinterIcon className="size-3.5 mr-1.5" />
             Download / Regenerate PDF
+          </Button>
+
+          <Button variant="outline" size="sm" onClick={handlePrintForRegister}>
+            <PrinterIcon className="size-3.5 mr-1.5" />
+            Print for Register
           </Button>
 
           {/* ── Primary actions ─────────────────────────────────────── */}
