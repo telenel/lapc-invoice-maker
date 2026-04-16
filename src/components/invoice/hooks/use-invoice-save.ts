@@ -51,6 +51,7 @@ function buildPayload(form: InvoiceFormData) {
         isTaxable: item.isTaxable,
         marginOverride: item.marginOverride ?? undefined,
         costPrice: form.marginEnabled ? cost : undefined,
+        sku: item.sku ?? undefined,
       };
     }),
   };

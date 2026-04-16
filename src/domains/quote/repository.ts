@@ -234,6 +234,7 @@ export interface CalculatedLineItem {
   isTaxable?: boolean;
   marginOverride?: number;
   costPrice?: number;
+  sku?: string | null;
 }
 
 /**
@@ -295,6 +296,7 @@ export async function create(
           isTaxable: item.isTaxable ?? true,
           marginOverride: item.marginOverride ?? undefined,
           costPrice: item.costPrice ?? undefined,
+          sku: item.sku ?? undefined,
         })),
       },
     },
@@ -339,6 +341,7 @@ export async function update(
               isTaxable: item.isTaxable ?? true,
               marginOverride: item.marginOverride ?? undefined,
               costPrice: item.costPrice ?? undefined,
+              sku: item.sku ?? undefined,
             })),
           },
         },

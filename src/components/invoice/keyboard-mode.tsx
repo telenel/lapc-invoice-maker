@@ -286,6 +286,7 @@ export function KeyboardMode({
       ...form.items,
       {
         _key: crypto.randomUUID(),
+        sku: null,
         description,
         quantity: 1,
         unitPrice,
@@ -378,7 +379,7 @@ export function KeyboardMode({
   return (
     <div
       ref={containerRef}
-      className="keyboard-mode mx-auto max-w-2xl"
+      className="keyboard-mode"
       tabIndex={-1}
     >
       {draftEntry && (
@@ -416,6 +417,7 @@ export function KeyboardMode({
               if (t.notes) updateField("notes", t.notes);
               const newItems = t.items.map((item, idx) => ({
                 _key: crypto.randomUUID(),
+                sku: null,
                 description: item.description,
                 quantity: item.quantity,
                 unitPrice: item.unitPrice,

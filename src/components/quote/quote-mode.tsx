@@ -212,6 +212,7 @@ export function QuoteMode({
       ...form.items,
       {
         _key: crypto.randomUUID(),
+        sku: null,
         description,
         quantity: 1,
         unitPrice,
@@ -314,7 +315,7 @@ export function QuoteMode({
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-2">
+    <div className="space-y-2">
       {draftEntry && (
         <DraftRecoveryBanner
           savedAt={draftEntry.savedAt}
@@ -354,6 +355,7 @@ export function QuoteMode({
               }
               const newItems = t.items.map((item, idx) => ({
                 _key: crypto.randomUUID(),
+                sku: null,
                 description: item.description,
                 quantity: item.quantity,
                 unitPrice: item.unitPrice,

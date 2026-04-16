@@ -15,6 +15,8 @@ import { addDaysToDateKey, getDateKeyInLosAngeles } from "@/lib/date-utils";
 export interface QuoteItem {
   /** Stable client-side key for React reconciliation (not persisted) */
   _key: string;
+  /** Product SKU from inventory database (null for manually-typed items) */
+  sku: string | null;
   description: string;
   quantity: number;
   unitPrice: number;
@@ -75,6 +77,7 @@ function thirtyDaysFromNow(): string {
 function emptyItem(sortOrder = 0): QuoteItem {
   return {
     _key: crypto.randomUUID(),
+    sku: null,
     description: "",
     quantity: 1,
     unitPrice: 0,
@@ -185,6 +188,32 @@ export function useQuoteForm(
       items: [...prev.items, emptyItem(prev.items.length)],
     }));
   }, []);
+
+  const addItems = useCallback(
+    (newItems: Partial<QuoteItem>[]) => {
+      setForm((prev) => {
+        const startSort = prev.items.length;
+        const created = newItems.map((partial, i) => {
+          const qty = partial.quantity ?? 1;
+          const price = partial.unitPrice ?? 0;
+          return {
+            _key: crypto.randomUUID(),
+            sku: partial.sku ?? null,
+            description: partial.description ?? "",
+            quantity: qty,
+            unitPrice: price,
+            extendedPrice: qty * price,
+            sortOrder: startSort + i,
+            isTaxable: partial.isTaxable ?? true,
+            marginOverride: partial.marginOverride ?? null,
+            costPrice: partial.costPrice ?? null,
+          };
+        });
+        return { ...prev, items: [...prev.items, ...created] };
+      });
+    },
+    []
+  );
 
   const removeItem = useCallback((index: number) => {
     setForm((prev) => {
@@ -411,6 +440,7 @@ export function useQuoteForm(
           isTaxable: item.isTaxable,
           marginOverride: item.marginOverride ?? undefined,
           costPrice: currentForm.marginEnabled ? cost : undefined,
+          sku: item.sku ?? undefined,
         };
       }),
     };
@@ -484,6 +514,7 @@ export function useQuoteForm(
     updateField,
     updateItem,
     addItem,
+    addItems,
     removeItem,
     total,
     itemsWithMargin,

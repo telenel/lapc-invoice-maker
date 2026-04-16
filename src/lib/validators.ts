@@ -21,6 +21,7 @@ export const invoiceItemSchema = z.object({
   isTaxable: z.boolean().default(true),
   marginOverride: z.number().optional(),
   costPrice: z.number().optional(),
+  sku: z.string().nullable().optional(),
 });
 
 export const invoiceCreateSchema = z.object({
@@ -121,6 +122,7 @@ export const quoteItemSchema = z.object({
   isTaxable: z.boolean().default(true),
   marginOverride: z.number().optional(),
   costPrice: z.number().optional(),
+  sku: z.string().nullable().optional(),
 });
 
 export const quoteCreateSchema = z.object({

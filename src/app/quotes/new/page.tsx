@@ -6,12 +6,13 @@ import { PrinterIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuoteForm } from "@/components/quote/quote-form";
 import { QuoteMode } from "@/components/quote/quote-mode";
+import { ProductSearchPanel } from "@/components/shared/product-search-panel";
 import { openRegisterPrintWindow } from "@/components/shared/register-print-view";
 import { CATALOG_ITEMS_STORAGE_KEY } from "@/domains/product/constants";
 import type { SelectedProduct } from "@/domains/product/types";
 import { formatDateLong as formatDate } from "@/lib/formatters";
 
-function readCatalogItems(): { description: string; quantity: number; unitPrice: number }[] | undefined {
+function readCatalogItems(): { sku: string; description: string; quantity: number; unitPrice: number; costPrice: number }[] | undefined {
   if (typeof window === "undefined") return undefined;
   try {
     const raw = sessionStorage.getItem(CATALOG_ITEMS_STORAGE_KEY);
@@ -19,13 +20,26 @@ function readCatalogItems(): { description: string; quantity: number; unitPrice:
     sessionStorage.removeItem(CATALOG_ITEMS_STORAGE_KEY);
     const items = JSON.parse(raw) as SelectedProduct[];
     return items.map((item) => ({
+      sku: String(item.sku),
       description: item.description.toUpperCase(),
       quantity: 1,
       unitPrice: item.retailPrice,
+      costPrice: item.cost,
     }));
   } catch {
     return undefined;
   }
+}
+
+function mapProductsToItems(products: SelectedProduct[]) {
+  return products.map((p) => ({
+    sku: String(p.sku),
+    description: p.description.toUpperCase(),
+    unitPrice: p.retailPrice,
+    costPrice: p.cost,
+    quantity: 1,
+    isTaxable: true,
+  }));
 }
 
 export default function NewQuotePage() {
@@ -39,6 +53,7 @@ export default function NewQuotePage() {
     return {
       items: catalogItems.map((item, i) => ({
         _key: `catalog-${i}`,
+        sku: item.sku,
         description: item.description,
         quantity: item.quantity,
         unitPrice: item.unitPrice,
@@ -46,7 +61,7 @@ export default function NewQuotePage() {
         sortOrder: i,
         isTaxable: true,
         marginOverride: null,
-        costPrice: null,
+        costPrice: item.costPrice,
       })),
     };
   }, [fromCatalog]);
@@ -76,7 +91,7 @@ export default function NewQuotePage() {
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         extendedPrice: item.extendedPrice,
-        sku: null,
+        sku: item.sku ?? null,
       })),
       subtotal,
       taxAmount,
@@ -85,7 +100,7 @@ export default function NewQuotePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl">
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="page-enter page-enter-1 mb-7 flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">New Quote</h1>
@@ -98,8 +113,13 @@ export default function NewQuotePage() {
           </Button>
         )}
       </div>
-      <div className="page-enter page-enter-2">
-        <QuoteMode {...quoteForm} />
+      <div className="page-enter page-enter-2 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 items-start">
+        <div className="order-2 lg:order-1">
+          <QuoteMode {...quoteForm} />
+        </div>
+        <div className="order-1 lg:order-2 lg:sticky lg:top-8">
+          <ProductSearchPanel onAddProducts={(products) => quoteForm.addItems(mapProductsToItems(products))} />
+        </div>
       </div>
     </div>
   );

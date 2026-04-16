@@ -230,6 +230,7 @@ export const invoiceService = {
       isTaxable: item.isTaxable,
       costPrice: item.costPrice != null ? Number(item.costPrice) : undefined,
       marginOverride: item.marginOverride != null ? Number(item.marginOverride) : undefined,
+      sku: item.sku ?? undefined,
     }));
 
     const calculatedItems = calculateLineItems(items);

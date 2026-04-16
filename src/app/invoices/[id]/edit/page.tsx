@@ -6,7 +6,9 @@ import { PrinterIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useInvoiceForm, InvoiceFormData } from "@/components/invoice/invoice-form";
 import { KeyboardMode } from "@/components/invoice/keyboard-mode";
+import { ProductSearchPanel } from "@/components/shared/product-search-panel";
 import { openRegisterPrintWindow } from "@/components/shared/register-print-view";
+import type { SelectedProduct } from "@/domains/product/types";
 import { TAX_RATE } from "@/domains/invoice/constants";
 import { formatDateLong as formatDate } from "@/lib/formatters";
 
@@ -19,6 +21,7 @@ interface ApiInvoiceItem {
   isTaxable?: boolean;
   marginOverride?: number | null;
   costPrice?: string | number | null;
+  sku?: string | null;
 }
 
 interface ApiInvoice {
@@ -99,6 +102,7 @@ function mapApiToFormData(invoice: ApiInvoice): InvoiceFormData {
       const formUnitPrice = dbCostPrice ?? dbUnitPrice;
       return {
         _key: crypto.randomUUID(),
+        sku: item.sku ?? null,
         description: item.description,
         quantity: Number(item.quantity),
         unitPrice: formUnitPrice,
@@ -185,7 +189,7 @@ export default function EditInvoicePage() {
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         extendedPrice: item.extendedPrice,
-        sku: null,
+        sku: item.sku ?? null,
       })),
       subtotal,
       taxAmount,
@@ -193,8 +197,19 @@ export default function EditInvoicePage() {
     });
   }
 
+  function mapProductsToItems(products: SelectedProduct[]) {
+    return products.map((p) => ({
+      sku: String(p.sku),
+      description: p.description.toUpperCase(),
+      unitPrice: p.retailPrice,
+      costPrice: p.cost,
+      quantity: 1,
+      isTaxable: true,
+    }));
+  }
+
   return (
-    <div className="mx-auto max-w-5xl px-0 py-4 sm:px-4 sm:py-8">
+    <div className="mx-auto max-w-7xl px-0 py-4 sm:px-4 sm:py-8">
       <div className="mb-4 sm:mb-6 flex items-start justify-between">
         <h1 className="text-2xl font-semibold">Edit Invoice</h1>
         {invoiceForm.form.items.length > 0 && (
@@ -204,7 +219,14 @@ export default function EditInvoicePage() {
           </Button>
         )}
       </div>
-      <KeyboardMode {...invoiceForm} />
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 items-start">
+        <div className="order-2 lg:order-1">
+          <KeyboardMode {...invoiceForm} />
+        </div>
+        <div className="order-1 lg:order-2 lg:sticky lg:top-8">
+          <ProductSearchPanel onAddProducts={(products) => invoiceForm.addItems(mapProductsToItems(products))} />
+        </div>
+      </div>
     </div>
   );
 }

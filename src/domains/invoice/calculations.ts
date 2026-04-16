@@ -10,6 +10,7 @@ export interface CalculatedLineItem {
   isTaxable?: boolean;
   costPrice?: number;
   marginOverride?: number;
+  sku?: string | null;
 }
 
 export function calculateLineItems(
@@ -27,6 +28,7 @@ export function calculateLineItems(
       isTaxable: item.isTaxable,
       costPrice: item.costPrice,
       marginOverride: item.marginOverride,
+      sku: item.sku ?? null,
     };
   });
 }

@@ -23,7 +23,7 @@ export function useInvoiceForm(
   initial?: Partial<InvoiceFormData>,
   existingId?: string
 ) {
-  const { form, setForm, updateField, updateItem, addItem, removeItem, total, itemsWithMargin } =
+  const { form, setForm, updateField, updateItem, addItem, addItems, removeItem, total, itemsWithMargin } =
     useInvoiceFormState(initial);
 
   const taxItems = form.marginEnabled ? itemsWithMargin : form.items;
@@ -55,6 +55,7 @@ export function useInvoiceForm(
     updateField,
     updateItem,
     addItem,
+    addItems,
     removeItem,
     total,
     itemsWithMargin,
