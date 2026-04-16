@@ -266,7 +266,7 @@ export default function EditQuotePage() {
           </Button>
         )}
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr,380px] gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 items-start">
         <div className="order-2 lg:order-1">
           <QuoteMode {...quoteForm} />
         </div>
