@@ -5,7 +5,7 @@
 
 ## Summary
 
-Integrate the Supabase product/inventory database directly into the invoice and quote creation forms via a persistent side panel. Users can search, browse, and multi-select products which auto-populate as line items with SKU, description, price, and cost data. Simultaneously remove the QuickPicks system, which is superseded by the product database.
+Integrate the Supabase product/inventory database directly into the invoice and quote creation forms via a persistent side panel. Users can search, browse, and multi-select products which auto-populate as line items with SKU, description, price, and cost data.
 
 ## Goals
 
@@ -13,14 +13,13 @@ Integrate the Supabase product/inventory database directly into the invoice and 
 - Utilize the significant unused screen space alongside the narrow form
 - Display financial information clearly — favor readability over compactness
 - Make SKU a visible, editable field on line items
-- Remove QuickPicks infrastructure entirely (to be rebuilt differently later)
 
 ## Non-Goals
 
 - Inline autocomplete on the description field (panel-only search)
 - Quantity selection in the product panel (always adds at qty 1)
 - Modifying the products page itself
-- Rebuilding QuickPicks as something new (deferred)
+- Removing QuickPicks (deferred to a separate effort)
 
 ---
 
@@ -46,13 +45,13 @@ The form column gets more breathing room for long descriptions, SKU column, and 
 ### Responsive Behavior
 
 - **Desktop (lg+):** Two columns side by side. Product panel uses `sticky top-8` so it stays visible in the viewport as the user scrolls the form.
-- **Tablet/mobile (below lg):** Single column. Product panel stacks below the form header area, or becomes a collapsible section at the top. Exact mobile treatment is secondary — the primary use case is desktop.
+- **Tablet/mobile (below lg):** Single column. Product panel stacks above the form as a full-width section. Not collapsible — it remains visible, just reflows vertically. The primary use case is desktop.
 
 ### Files Changed
 
 - `src/app/invoices/new/page.tsx` — Widen container, add two-column grid wrapper
 - `src/app/quotes/new/page.tsx` — Same changes
-- `src/components/invoice/keyboard-mode.tsx` — Remove `mx-auto max-w-2xl`, accept panel slot or render panel
+- `src/components/invoice/keyboard-mode.tsx` — Remove `mx-auto max-w-2xl`
 - `src/components/quote/quote-mode.tsx` — Same changes
 
 ---
@@ -94,7 +93,7 @@ interface ProductSearchPanelProps {
 }
 ```
 
-The parent form handles converting `SelectedProduct[]` into line items via its own `addItem` logic.
+The parent form handles converting `SelectedProduct[]` into line items via its own batch-insert logic (see Section 4).
 
 ### Supabase Query Reuse
 
@@ -114,14 +113,22 @@ Add a visible SKU column to the `LineItems` component. The column appears for al
 | 67890 | PIERCE COLLEGE HOODIE - BLACK | 3 | $29.99 | $89.97 |
 | *(empty)* | CUSTOM HAND-TYPED ITEM | 2 | $15.00 | $30.00 |
 
-- SKU field is a text/number input, **editable** at all times
+- SKU field is a text input, **editable** at all times
 - Auto-filled when item comes from product selection
 - Empty (null) for manually-typed items — this is expected and normal
-- Existing taxable checkbox, margin display, and star button behavior unchanged (star button removed — see QuickPicks removal below)
+- Existing taxable checkbox and margin display behavior unchanged
+- QuickPicks star button remains for now (QuickPicks removal is deferred)
 
 ### Description Field
 
-The description field changes from `InlineCombobox` (autocomplete) to a plain text `Input`. With QuickPicks removed and no inline product search, there are no suggestions to show. Users type freely or get auto-filled descriptions from the product panel.
+The description field changes from `InlineCombobox` (autocomplete) to a plain text `Input`. Product search happens via the side panel, not inline.
+
+**Keyboard behavior must be preserved:**
+- **Enter on description** → focus moves to quantity field (same row)
+- **Tab out of unit price on last row** → auto-adds a new empty row
+- These interactions are critical for keyboard-first users and must not regress
+
+QuickPicks suggestions that currently feed into `InlineCombobox` will still be available via the existing QuickPicks side panel until that system is removed in a future effort.
 
 All descriptions continue to be **ALL CAPS** (existing behavior, enforced on input).
 
@@ -131,7 +138,7 @@ When products are added from the panel, each creates a new line item:
 
 | Product Field | Line Item Field | Notes |
 |---|---|---|
-| `sku` | `sku` | New field |
+| `sku` (as string) | `sku` | Matches existing Prisma `String?` type |
 | `description` (uppercased) or `title` (uppercased, for textbooks) | `description` | Textbooks use title; merchandise uses description |
 | `retail_price` | `unitPrice` | Editable after population |
 | `cost` | `costPrice` | Used for margin calculations |
@@ -144,9 +151,9 @@ All fields remain editable after auto-fill.
 
 ### Files Changed
 
-- `src/components/invoice/line-items.tsx` — Add SKU column, replace `InlineCombobox` with plain `Input`, remove star/pick toggle button
-- `src/components/invoice/hooks/use-invoice-form-state.ts` — Add `sku` to `InvoiceItem` interface, update `addItem`/`updateItem` logic
-- `src/components/quote/quote-form.ts` — Add `sku` to `QuoteItem` interface
+- `src/components/invoice/line-items.tsx` — Add SKU column, replace `InlineCombobox` with plain `Input` (preserving keyboard nav), add SKU to the row layout
+- `src/components/invoice/hooks/use-invoice-form-state.ts` — Add `sku` to `InvoiceItem` interface, add `addItems` batch method
+- `src/components/quote/quote-form.ts` — Add `sku` to `QuoteItem` interface, add `addItems` batch method
 
 ---
 
@@ -159,7 +166,7 @@ Both `InvoiceItem` and `QuoteItem` gain a `sku` field:
 ```typescript
 interface InvoiceItem {
   _key: string;
-  sku: number | null;          // NEW — null for manually-typed items
+  sku: string | null;            // NEW — matches Prisma String?, null for manual items
   description: string;
   quantity: number;
   unitPrice: number;
@@ -173,9 +180,32 @@ interface InvoiceItem {
 
 `QuoteItem` is structurally identical (same change).
 
-### Persistence
+### Batch Insert Method
 
-The Prisma `InvoiceItem` model already has a `sku` field (integer, nullable). No database migration required for invoices. Verify the quote item model has the same field; add migration if not.
+The current form hooks only expose `addItem()` (appends one blank row) and `updateItem()` (patches one existing row). The product panel needs to add multiple prefilled items at once.
+
+Add an `addItems(items: Partial<InvoiceItem>[])` method to both `useInvoiceFormState` and `useQuoteForm` that:
+
+1. Accepts an array of partial item data (sku, description, unitPrice, costPrice)
+2. Generates `_key` for each item
+3. Calculates `extendedPrice` (quantity × unitPrice, accounting for margin if enabled)
+4. Assigns sequential `sortOrder` values starting after the last existing item
+5. Appends all items to the form's items array in a single state update
+
+This avoids N separate `addItem` + `updateItem` calls which would cause N re-renders.
+
+### Persistence / Serialization
+
+SKU must flow through every path where line items are saved or displayed:
+
+- **`CreateLineItemInput`** (both `src/domains/invoice/types.ts` and `src/domains/quote/types.ts`) — Add `sku: string | null` field
+- **Invoice/quote save API calls** — Include `sku` in the payload sent to the server
+- **Register print handlers** (`src/app/invoices/new/page.tsx` line 66, `src/app/quotes/new/page.tsx` line 74) — Map `sku` from item instead of hardcoding `null`
+- **Quote template save** (`src/components/quote/quote-form.ts` ~line 283) — Preserve `sku` when mapping items for template storage
+
+### Persistence (Database)
+
+The Prisma `InvoiceItem` model already has `sku` as `String?`. No migration needed for invoices. Verify the quote line item model has the same field; add a migration if not.
 
 ### New Item Default
 
@@ -183,43 +213,17 @@ When a user manually adds a new empty row, `sku` defaults to `null`.
 
 ---
 
-## 5. QuickPicks Removal
+## 5. QuickPicks Coexistence
 
-Full removal of the QuickPicks system. This is a separate, cleanly-scoped piece of work.
+QuickPicks removal is **deferred to a separate effort**. For this implementation:
 
-### Components to Remove
+- The existing `QuickPicksSidePanel` (invoice) and `QuickPickPanel` (quote) remain in place
+- They continue to render inside the line items card as they do today
+- The `InlineCombobox` is replaced with a plain `Input`, but QuickPicks star button stays on line item rows
+- QuickPicks suggestions no longer feed into the description field autocomplete (since `InlineCombobox` is removed), but the side panel itself still works for clicking to add items
+- No QuickPicks code, API routes, admin UI, or database models are modified or deleted
 
-- `src/components/invoice/quick-picks-side-panel.tsx` — Side panel in invoice form
-- `src/components/invoice/quick-pick-panel.tsx` — Panel used in quote form
-
-### Hooks/Utilities to Remove
-
-- `src/components/invoice/hooks/quick-pick-resource-cache.ts` — Resource fetching cache
-- All star/toggle-pick handlers in `KeyboardMode` and `QuoteMode`
-- `InlineCombobox` suggestion-building logic that sources from quick picks
-
-### Domain/API to Remove
-
-- `src/domains/user-quick-picks/` — Entire domain directory (API client, types, routes)
-- Any `SavedLineItem` API routes and domain logic
-- Any `QuickPickItem` API routes and domain logic
-
-### Database Models to Remove
-
-- `UserQuickPick` model from Prisma schema (and migration to drop table)
-- `SavedLineItem` model from Prisma schema (and migration to drop table)
-- `QuickPickItem` model from Prisma schema if it exists (and migration to drop table)
-
-### Admin UI to Remove
-
-- Any quick pick management pages/components in the admin section
-
-### Line Items Cleanup
-
-- Remove star button from line item rows
-- Remove `onTogglePick` prop from `LineItems` component
-- Remove `userPickDescriptions` prop from `LineItems` component
-- Remove `suggestions` prop from `LineItems` component
+This means the line items area will temporarily have both the old QuickPicks mini-panel and the new product search panel. The QuickPicks panel is small (160px) and lives inside the line items card, while the product panel is a full-width column. They don't conflict spatially.
 
 ---
 
@@ -227,14 +231,20 @@ Full removal of the QuickPicks system. This is a separate, cleanly-scoped piece 
 
 The existing sessionStorage-based flow (select products on catalog page → navigate to create form → items auto-populate) should continue to work. The `readCatalogItems()` function in both `new/page.tsx` files maps `SelectedProduct[]` into initial line items.
 
-Update this mapping to also populate the new `sku` field:
+Update this mapping to also populate the new `sku` and `costPrice` fields:
 
 ```typescript
 // Before
 { description: item.description.toUpperCase(), quantity: 1, unitPrice: item.retailPrice }
 
 // After
-{ sku: item.sku, description: item.description.toUpperCase(), quantity: 1, unitPrice: item.retailPrice, costPrice: item.cost }
+{
+  sku: String(item.sku),
+  description: item.description.toUpperCase(),
+  quantity: 1,
+  unitPrice: item.retailPrice,
+  costPrice: item.cost,
+}
 ```
 
 ---
@@ -249,7 +259,8 @@ NewInvoicePage
     │   ├── Template selector
     │   ├── Invoice metadata (staff, department, dates, etc.)
     │   ├── Line items card
-    │   │   └── LineItems (with SKU column, plain text description input)
+    │   │   ├── LineItems (with SKU column, plain text description input)
+    │   │   └── QuickPicksSidePanel (unchanged, still inside line items card)
     │   ├── Notes
     │   ├── Signatures
     │   └── Action buttons
@@ -266,11 +277,21 @@ Quote form follows the same structure with `QuoteMode` on the left.
 
 ## 8. Implementation Order
 
-1. **Create `ProductSearchPanel` component** — New shared component with search, tabs, product list, multi-select, add button
-2. **Widen page layout** — Update both `new/page.tsx` files to max-w-7xl two-column grid
-3. **Add SKU to line items** — Update interfaces, add SKU column to `LineItems` component
-4. **Wire product panel to forms** — Connect `onAddProducts` callback in both `KeyboardMode` and `QuoteMode`
-5. **Replace description autocomplete** — Swap `InlineCombobox` for plain `Input`
-6. **Update sessionStorage flow** — Map `sku` and `costPrice` from catalog selection
-7. **Remove QuickPicks** — Delete components, hooks, domains, API routes, admin UI, database models
-8. **Verify margin/tax calculations** — Ensure `costPrice` from product data flows correctly through existing margin pipeline
+1. **Add SKU to form state interfaces** — Update `InvoiceItem`, `QuoteItem`, `CreateLineItemInput` types to include `sku: string | null`
+2. **Add `addItems` batch method** — New method on both `useInvoiceFormState` and `useQuoteForm` for inserting multiple prefilled items
+3. **Add SKU column to line items** — Update `LineItems` component with visible, editable SKU field
+4. **Replace description autocomplete** — Swap `InlineCombobox` for plain `Input`, preserving Enter-to-qty and Tab-to-add-row keyboard behavior
+5. **Create `ProductSearchPanel` component** — New shared component with search, tabs, product list, multi-select, add button
+6. **Widen page layout** — Update both `new/page.tsx` files to max-w-7xl two-column grid, render `ProductSearchPanel` in right column
+7. **Wire product panel to forms** — Connect `onAddProducts` → `addItems` in both `KeyboardMode` and `QuoteMode`
+8. **Update persistence paths** — Ensure `sku` flows through save APIs, register-print handlers, and template save
+9. **Update sessionStorage flow** — Map `sku` and `costPrice` from catalog selection
+10. **Verify margin/tax calculations** — Ensure `costPrice` from product data flows correctly through existing margin pipeline
+
+---
+
+## 9. Future Work (Out of Scope)
+
+- **QuickPicks removal** — Full teardown of QuickPicks infrastructure (components, hooks, API routes, admin UI, database models). Separate PR/effort.
+- **QuickPicks replacement** — New system to be designed and built after removal.
+- **Inline product autocomplete** — Could add product DB search to the description field in the future if the panel-only approach proves insufficient.
