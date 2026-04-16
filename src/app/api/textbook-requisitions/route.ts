@@ -58,7 +58,8 @@ export const GET = withAuth(async (req: NextRequest, session) => {
     status: VALID_STATUSES.has(rawStatus) ? (rawStatus as RequisitionFilters["status"]) : undefined,
     term: params.get("term")?.trim() || undefined,
     year,
-    createdBy: session.user.role === "admin" ? undefined : session.user.id,
+    // Requisitions are team-visible (like invoices/quotes) — no ownership scoping.
+    // Faculty submissions have createdBy=NULL; restricting by user would hide them.
     page,
     pageSize,
     sortBy: params.get("sortBy")?.trim() || undefined,

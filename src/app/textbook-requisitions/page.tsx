@@ -8,16 +8,12 @@ import { RequisitionTable } from "@/components/textbook-requisitions/requisition
 export default async function RequisitionsPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
-  const createdBy =
-    (session.user as { role?: string; id?: string }).role === "admin"
-      ? undefined
-      : (session.user as { id?: string }).id;
+  // Requisitions are team-visible — no ownership scoping (like invoices/quotes).
   const initialFilters = {
     page: 1,
     pageSize: 20,
     sortBy: "submittedAt",
     sortOrder: "desc" as const,
-    createdBy,
   };
   const [initialStats, initialData, initialYears] = await Promise.all([
     requisitionService.getStats(),

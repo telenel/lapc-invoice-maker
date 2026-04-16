@@ -37,7 +37,12 @@ export function RequisitionFilters({
 
   function clearFilters() {
     setSearch("");
-    onFilterChange({ page: 1, pageSize: filters.pageSize });
+    onFilterChange({
+      page: 1,
+      pageSize: filters.pageSize,
+      sortBy: filters.sortBy,
+      sortOrder: filters.sortOrder,
+    });
   }
 
   const hasFilters = filters.search || filters.status || filters.term || filters.year;

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { forbiddenResponse, withAuth } from "@/domains/shared/auth";
+import { withAuth } from "@/domains/shared/auth";
 import { requisitionService } from "@/domains/textbook-requisition/service";
 import { requisitionUpdateSchema, requisitionStatusUpdateSchema } from "@/lib/validators";
 
@@ -21,13 +21,12 @@ async function parseId(
   return id;
 }
 
-async function getAccessibleRequisition(id: string, userId: string, isAdmin: boolean) {
+async function getAccessibleRequisition(id: string, _userId: string, _isAdmin: boolean) {
+  // Requisitions are team-visible — any authenticated user can view/edit/manage.
+  // Faculty submissions have createdBy=NULL; ownership scoping would hide them.
   const result = await requisitionService.getById(id);
   if (!result) {
     return { result: null, response: NextResponse.json({ error: "Not found" }, { status: 404 }) };
-  }
-  if (!isAdmin && result.createdBy !== userId) {
-    return { result: null, response: forbiddenResponse() };
   }
   return { result, response: null };
 }

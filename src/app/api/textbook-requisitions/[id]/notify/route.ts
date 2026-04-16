@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { forbiddenResponse, withAuth } from "@/domains/shared/auth";
+import { withAuth } from "@/domains/shared/auth";
 import { requisitionService } from "@/domains/textbook-requisition/service";
 
 export const POST = withAuth(async (req: NextRequest, session, ctx) => {
@@ -31,9 +31,7 @@ export const POST = withAuth(async (req: NextRequest, session, ctx) => {
     if (!existing) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    if (session.user.role !== "admin" && existing.createdBy !== session.user.id) {
-      return forbiddenResponse();
-    }
+    // Requisitions are team-visible — any authenticated user can send notifications.
     const result = await requisitionService.sendNotification(id, emailType, session.user.id);
     if (!result) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
