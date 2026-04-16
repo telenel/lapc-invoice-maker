@@ -2,10 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileTextIcon, PrinterIcon, XIcon } from "lucide-react";
+import { FileTextIcon, PrinterIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SelectedProduct } from "@/domains/product/types";
-import { CATALOG_ITEMS_STORAGE_KEY } from "@/domains/product/constants";
 import { openBarcodePrintWindow } from "./barcode-print-view";
 
 interface ProductActionBarProps {

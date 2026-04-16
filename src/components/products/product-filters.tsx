@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import type { ProductFilters, ProductTab } from "@/domains/product/types";
+import type { ProductFilters } from "@/domains/product/types";
 
 interface ProductFiltersBarProps {
   filters: ProductFilters;

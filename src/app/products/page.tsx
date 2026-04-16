@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { useProductSearch, useProductSelection } from "@/domains/product/hooks";
-import { EMPTY_FILTERS, TABS, TAB_ITEM_TYPES } from "@/domains/product/constants";
+import { EMPTY_FILTERS, TABS } from "@/domains/product/constants";
 import type { ProductFilters, ProductTab } from "@/domains/product/types";
 import { ProductFiltersBar } from "@/components/products/product-filters";
 import { ProductTable } from "@/components/products/product-table";
