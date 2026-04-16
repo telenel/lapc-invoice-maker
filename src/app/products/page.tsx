@@ -9,6 +9,9 @@ import type { ProductFilters, ProductTab } from "@/domains/product/types";
 import { ProductFiltersBar } from "@/components/products/product-filters";
 import { ProductTable } from "@/components/products/product-table";
 import { ProductActionBar } from "@/components/products/product-action-bar";
+import { NewItemDialog } from "@/components/products/new-item-dialog";
+import { Button } from "@/components/ui/button";
+import { productApi } from "@/domains/product/api-client";
 
 function parseFiltersFromParams(
   searchParams: ReturnType<typeof useSearchParams>
@@ -67,7 +70,22 @@ export default function ProductsPage() {
     parseFiltersFromParams(searchParams)
   );
 
-  const { data, loading } = useProductSearch(filters);
+  const { data, loading, refetch } = useProductSearch(filters);
+
+  // Prism availability — controls whether write features (New Item, Delete) are shown.
+  // True only on the campus dev machine where the SQL Server is reachable.
+  const [prismAvailable, setPrismAvailable] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    productApi.health().then((h) => {
+      if (!cancelled) setPrismAvailable(h.available);
+    }).catch(() => {
+      if (!cancelled) setPrismAvailable(false);
+    });
+    return () => { cancelled = true; };
+  }, []);
+
+  const [newItemOpen, setNewItemOpen] = useState(false);
 
   // Track tab counts so both tabs always show their last-known count
   const [tabCounts, setTabCounts] = useState<Record<ProductTab, number | null>>({
@@ -119,13 +137,29 @@ export default function ProductsPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
       {/* Header */}
-      <div className="page-enter page-enter-1 mb-5">
-        <h1 className="text-3xl font-bold tracking-tight">Product Catalog</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Los Angeles Pierce College Store INVENTORY
-          {data ? ` · ${data.total.toLocaleString()} results` : ""}
-        </p>
+      <div className="page-enter page-enter-1 mb-5 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Product Catalog</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Los Angeles Pierce College Store INVENTORY
+            {data ? ` · ${data.total.toLocaleString()} results` : ""}
+          </p>
+        </div>
+        {prismAvailable ? (
+          <Button onClick={() => setNewItemOpen(true)}>
+            New Item
+          </Button>
+        ) : null}
       </div>
+
+      <NewItemDialog
+        open={newItemOpen}
+        onOpenChange={setNewItemOpen}
+        onCreated={() => {
+          // Refresh the list so the new item shows immediately (mirror is upserted server-side)
+          refetch();
+        }}
+      />
 
       {/* Search + Filters */}
       <div className="page-enter page-enter-2 mb-4">
@@ -187,6 +221,8 @@ export default function ProductsPage() {
         selectedCount={selectedCount}
         onClear={clear}
         saveToSession={saveToSession}
+        prismAvailable={prismAvailable}
+        onDiscontinued={() => refetch()}
       />
 
       {/* Spacer so content isn't hidden behind the sticky action bar */}

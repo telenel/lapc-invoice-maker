@@ -1,17 +1,23 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileTextIcon, PrinterIcon } from "lucide-react";
+import { FileTextIcon, PrinterIcon, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SelectedProduct } from "@/domains/product/types";
 import { openBarcodePrintWindow } from "./barcode-print-view";
+import { productApi } from "@/domains/product/api-client";
 
 interface ProductActionBarProps {
   selected: Map<number, SelectedProduct>;
   selectedCount: number;
   onClear: () => void;
   saveToSession: () => void;
+  /** When true, the Discontinue action is shown. Only when Prism is reachable. */
+  prismAvailable?: boolean;
+  /** Called after a successful discontinue so the page can refetch. */
+  onDiscontinued?: (skus: number[]) => void;
 }
 
 export function ProductActionBar({
@@ -19,8 +25,11 @@ export function ProductActionBar({
   selectedCount,
   onClear,
   saveToSession,
+  prismAvailable = false,
+  onDiscontinued,
 }: ProductActionBarProps) {
   const router = useRouter();
+  const [discontinuing, setDiscontinuing] = useState(false);
 
   function handleCreateInvoice() {
     saveToSession();
@@ -35,6 +44,44 @@ export function ProductActionBar({
   function handlePrintBarcodes() {
     const items = Array.from(selected.values());
     openBarcodePrintWindow(items);
+  }
+
+  async function handleDiscontinue() {
+    const skus = Array.from(selected.keys());
+    if (skus.length === 0) return;
+    const ok = window.confirm(
+      `Discontinue ${skus.length} item${skus.length !== 1 ? "s" : ""}? ` +
+        `This sets fDiscontinue=1 in Prism — items will be hidden from POS but ` +
+        `historical data is preserved. This cannot be undone from this UI.`,
+    );
+    if (!ok) return;
+
+    setDiscontinuing(true);
+    try {
+      const results = await Promise.allSettled(
+        skus.map((sku) => productApi.discontinue(sku)),
+      );
+      const succeeded = results
+        .map((r, i) => (r.status === "fulfilled" ? skus[i] : null))
+        .filter((sku): sku is number => sku !== null);
+      const failed = results.filter((r) => r.status === "rejected").length;
+
+      if (failed > 0) {
+        window.alert(
+          `Discontinued ${succeeded.length} of ${skus.length}. ${failed} failed — check the console.`,
+        );
+        results.forEach((r, i) => {
+          if (r.status === "rejected") {
+            console.error(`Discontinue SKU ${skus[i]} failed:`, r.reason);
+          }
+        });
+      }
+
+      onDiscontinued?.(succeeded);
+      onClear();
+    } finally {
+      setDiscontinuing(false);
+    }
   }
 
   return (
@@ -64,6 +111,18 @@ export function ProductActionBar({
                 <PrinterIcon className="mr-1.5 size-3.5" />
                 Print Barcodes
               </Button>
+              {prismAvailable ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleDiscontinue}
+                  disabled={discontinuing}
+                  className="border-destructive/30 text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2Icon className="mr-1.5 size-3.5" />
+                  {discontinuing ? "Discontinuing…" : "Discontinue"}
+                </Button>
+              ) : null}
               <Button size="sm" variant="outline" onClick={handleCreateQuote}>
                 <FileTextIcon className="mr-1.5 size-3.5" />
                 Create Quote
