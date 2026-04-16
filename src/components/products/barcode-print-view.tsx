@@ -61,10 +61,7 @@ export function openBarcodePrintWindow(items: SelectedProduct[]): void {
     )
     .join("");
 
-  const win = window.open("", "_blank", "width=800,height=600,noopener,noreferrer");
-  if (!win) return;
-
-  win.document.write(`<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html>
 <head>
   <title>Product Barcodes</title>
@@ -99,9 +96,16 @@ export function openBarcodePrintWindow(items: SelectedProduct[]): void {
   <h1>Product Barcodes — ${items.length} item${items.length !== 1 ? "s" : ""}</h1>
   ${rows}
 </body>
-</html>`);
+</html>`;
 
-  win.document.close();
+  // Use a Blob URL so the popup has no window.opener reference
+  // (window.open with noopener returns null, so document.write is not possible)
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  window.open(url, "_blank", "width=800,height=600,noopener,noreferrer");
+
+  // Revoke after a short delay to allow the popup to load
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
 function escapeHtml(text: string): string {
