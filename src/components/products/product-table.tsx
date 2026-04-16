@@ -56,7 +56,7 @@ export function ProductTable({
   if (!loading && products.length === 0) {
     return (
       <EmptyState
-        icon={SearchIcon}
+        icon={<SearchIcon className="size-10 text-muted-foreground" />}
         title="No products found"
         description="Try adjusting your search or filters"
       />

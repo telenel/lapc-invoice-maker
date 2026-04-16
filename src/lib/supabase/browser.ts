@@ -68,7 +68,7 @@ export function invalidateSupabaseRealtimeToken(): void {
   tokenCache = null;
 }
 
-function getSupabaseBrowserClient(): SupabaseClient {
+export function getSupabaseBrowserClient(): SupabaseClient {
   if (browserClient) return browserClient;
 
   const { url, anonKey } = getSupabasePublicEnv();
