@@ -96,6 +96,7 @@ function toInvoiceResponse(invoice: NonNullable<InvoiceWithRelations>): InvoiceR
     isTaxable: item.isTaxable,
     costPrice: item.costPrice != null ? Number(item.costPrice) : null,
     marginOverride: item.marginOverride != null ? Number(item.marginOverride) : null,
+    sku: item.sku ?? null,
   }));
 
   const archivedBy = "archiver" in invoice

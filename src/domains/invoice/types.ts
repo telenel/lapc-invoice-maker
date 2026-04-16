@@ -72,6 +72,7 @@ export interface InvoiceItemResponse {
   isTaxable: boolean;
   costPrice: number | null;
   marginOverride: number | null;
+  sku: string | null;
 }
 
 export interface CreateLineItemInput {

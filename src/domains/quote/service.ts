@@ -153,6 +153,7 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
     isTaxable: item.isTaxable,
     marginOverride: item.marginOverride != null ? Number(item.marginOverride) : null,
     costPrice: item.costPrice != null ? Number(item.costPrice) : null,
+    sku: item.sku ?? null,
   }));
 
   const archivedBy = "archiver" in quote

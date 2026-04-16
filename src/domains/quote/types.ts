@@ -41,6 +41,7 @@ export interface QuoteItemResponse {
   isTaxable: boolean;
   marginOverride: number | null;
   costPrice: number | null;
+  sku: string | null;
 }
 
 export interface PublicQuoteItemResponse {

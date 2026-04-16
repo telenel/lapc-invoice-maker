@@ -70,6 +70,7 @@ interface QuoteItem {
   sortOrder: number;
   costPrice: string | number | null;
   marginOverride: number | null;
+  sku: string | null;
 }
 
 interface Quote {
