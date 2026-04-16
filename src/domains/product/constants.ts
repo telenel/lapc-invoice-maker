@@ -27,6 +27,8 @@ export const EMPTY_FILTERS: ProductFilters = {
   edition: "",
   catalogNumber: "",
   productType: "",
+  sortBy: "sku",
+  sortDir: "asc",
   page: 1,
 };
 

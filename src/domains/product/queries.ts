@@ -2,7 +2,14 @@
 
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { PAGE_SIZE, TAB_ITEM_TYPES } from "./constants";
-import type { Product, ProductFilters, ProductSearchResult } from "./types";
+import type { Product, ProductFilters, ProductSearchResult, ProductSortField } from "./types";
+
+/** Whitelist of columns that can be sorted — prevents arbitrary column injection */
+const ALLOWED_SORT_FIELDS: Set<string> = new Set<ProductSortField>([
+  "sku", "description", "title", "author", "retail_price", "cost",
+  "last_sale_date", "barcode", "catalog_number", "product_type",
+  "vendor_id", "isbn", "edition",
+]);
 
 /**
  * Escape a value for safe interpolation into a PostgREST `.or()` filter string.
@@ -111,7 +118,10 @@ export async function searchProducts(
     }
   }
 
-  query = query.order("sku", { ascending: true }).range(from, to);
+  // Sorting — validate against whitelist to prevent arbitrary column injection
+  const sortField = ALLOWED_SORT_FIELDS.has(filters.sortBy) ? filters.sortBy : "sku";
+  const ascending = filters.sortDir !== "desc";
+  query = query.order(sortField, { ascending, nullsFirst: false }).range(from, to);
 
   const { data, count, error } = await query;
 

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { SearchIcon } from "lucide-react";
+import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon, SearchIcon } from "lucide-react";
 import type { Product, ProductTab } from "@/domains/product/types";
 import { PAGE_SIZE } from "@/domains/product/constants";
 
@@ -21,10 +21,13 @@ interface ProductTableProps {
   total: number;
   page: number;
   loading: boolean;
+  sortBy: string;
+  sortDir: "asc" | "desc";
   isSelected: (sku: number) => boolean;
   onToggle: (product: Product) => void;
   onToggleAll: (products: Product[]) => void;
   onPageChange: (page: number) => void;
+  onSort: (field: string) => void;
 }
 
 function formatCurrency(value: number): string {
@@ -37,16 +40,49 @@ function formatSaleDate(date: string | null): string {
   return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }
 
+function SortHeader({ field, label, sortBy, sortDir, onSort, className }: {
+  field: string;
+  label: string;
+  sortBy: string;
+  sortDir: "asc" | "desc";
+  onSort: (field: string) => void;
+  className?: string;
+}) {
+  const isActive = sortBy === field;
+  return (
+    <TableHead className={className}>
+      <button
+        className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
+        onClick={() => onSort(field)}
+      >
+        {label}
+        {isActive ? (
+          sortDir === "asc" ? (
+            <ArrowUpIcon className="size-3" />
+          ) : (
+            <ArrowDownIcon className="size-3" />
+          )
+        ) : (
+          <ArrowUpDownIcon className="size-3 opacity-30" />
+        )}
+      </button>
+    </TableHead>
+  );
+}
+
 export function ProductTable({
   tab,
   products,
   total,
   page,
   loading,
+  sortBy,
+  sortDir,
   isSelected,
   onToggle,
   onToggleAll,
   onPageChange,
+  onSort,
 }: ProductTableProps) {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const from = (page - 1) * PAGE_SIZE + 1;
@@ -77,27 +113,27 @@ export function ProductTable({
                   aria-label="Select all on page"
                 />
               </TableHead>
-              <TableHead>SKU</TableHead>
+              <SortHeader field="sku" label="SKU" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
               {tab === "textbooks" ? (
                 <>
-                  <TableHead>Title</TableHead>
-                  <TableHead>Author</TableHead>
-                  <TableHead>ISBN</TableHead>
-                  <TableHead>Edition</TableHead>
+                  <SortHeader field="title" label="Title" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+                  <SortHeader field="author" label="Author" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+                  <SortHeader field="isbn" label="ISBN" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+                  <SortHeader field="edition" label="Edition" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
                   <TableHead>Barcode</TableHead>
                 </>
               ) : (
                 <>
-                  <TableHead>Description</TableHead>
+                  <SortHeader field="description" label="Description" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
                   <TableHead>Barcode</TableHead>
-                  <TableHead>Catalog #</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Vendor</TableHead>
+                  <SortHeader field="catalog_number" label="Catalog #" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+                  <SortHeader field="product_type" label="Type" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+                  <SortHeader field="vendor_id" label="Vendor" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
                 </>
               )}
-              <TableHead className="text-right">Retail</TableHead>
-              <TableHead className="text-right">Cost</TableHead>
-              <TableHead>Last Sale</TableHead>
+              <SortHeader field="retail_price" label="Retail" sortBy={sortBy} sortDir={sortDir} onSort={onSort} className="text-right" />
+              <SortHeader field="cost" label="Cost" sortBy={sortBy} sortDir={sortDir} onSort={onSort} className="text-right" />
+              <SortHeader field="last_sale_date" label="Last Sale" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
             </TableRow>
           </TableHeader>
           <TableBody>

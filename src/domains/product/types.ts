@@ -38,9 +38,14 @@ export interface ProductFilters {
   // Merchandise-only
   catalogNumber: string;
   productType: string;
+  // Sorting
+  sortBy: string;
+  sortDir: "asc" | "desc";
   // Pagination
   page: number;
 }
+
+export type ProductSortField = "sku" | "description" | "title" | "author" | "retail_price" | "cost" | "last_sale_date" | "barcode" | "catalog_number" | "product_type" | "vendor_id" | "isbn" | "edition";
 
 export interface ProductSearchResult {
   products: Product[];

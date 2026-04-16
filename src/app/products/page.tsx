@@ -33,6 +33,8 @@ function parseFiltersFromParams(
     edition: searchParams.get("edition") ?? "",
     catalogNumber: searchParams.get("catalogNumber") ?? "",
     productType: searchParams.get("productType") ?? "",
+    sortBy: searchParams.get("sortBy") ?? "sku",
+    sortDir: searchParams.get("sortDir") === "desc" ? "desc" : "asc",
     page,
   };
 }
@@ -52,6 +54,8 @@ function filtersToParams(filters: ProductFilters): URLSearchParams {
   if (filters.edition) params.set("edition", filters.edition);
   if (filters.catalogNumber) params.set("catalogNumber", filters.catalogNumber);
   if (filters.productType) params.set("productType", filters.productType);
+  if (filters.sortBy !== "sku") params.set("sortBy", filters.sortBy);
+  if (filters.sortDir !== "asc") params.set("sortDir", filters.sortDir);
   if (filters.page > 1) params.set("page", String(filters.page));
   return params;
 }
@@ -97,6 +101,11 @@ export default function ProductsPage() {
 
   function handleTabChange(tab: ProductTab) {
     updateFilters({ ...filters, tab, page: 1 });
+  }
+
+  function handleSort(field: string) {
+    const newDir = filters.sortBy === field && filters.sortDir === "asc" ? "desc" : "asc";
+    updateFilters({ ...filters, sortBy: field, sortDir: newDir, page: 1 });
   }
 
   function handlePageChange(page: number) {
@@ -162,10 +171,13 @@ export default function ProductsPage() {
           total={data?.total ?? 0}
           page={filters.page}
           loading={loading}
+          sortBy={filters.sortBy}
+          sortDir={filters.sortDir}
           isSelected={isSelected}
           onToggle={toggle}
           onToggleAll={toggleAll}
           onPageChange={handlePageChange}
+          onSort={handleSort}
         />
       </div>
 
