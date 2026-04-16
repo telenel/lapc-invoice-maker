@@ -204,7 +204,7 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
       </div>
 
       {/* Product list */}
-      <div className="max-h-[500px] overflow-y-auto">
+      <div className="max-h-[500px] overflow-y-auto scroll-pb-16">
         {loading && products.length === 0 ? (
           <div className="space-y-1 p-2">
             {Array.from({ length: 6 }).map((_, i) => (
@@ -220,7 +220,7 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
             <span>No products found</span>
           </div>
         ) : (
-          <ul className="divide-y">
+          <ul className="divide-y pb-16">
             {products.map((product) => {
               const isChecked = selected.has(product.sku);
               return (
@@ -279,7 +279,7 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
       </div>
 
       {/* Sticky footer — Add button */}
-      <div className="border-t px-3 py-2.5 bg-card">
+      <div className="sticky bottom-0 z-10 border-t px-3 py-2.5 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/90">
         <Button
           tabIndex={-1}
           className="w-full h-8 text-sm gap-1.5"
