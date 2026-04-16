@@ -315,7 +315,7 @@ export function QuoteMode({
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-2">
+    <div className="space-y-2">
       {draftEntry && (
         <DraftRecoveryBanner
           savedAt={draftEntry.savedAt}
