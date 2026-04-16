@@ -177,6 +177,32 @@ export function useInvoiceFormState(initial?: Partial<InvoiceFormData>) {
     }));
   }, []);
 
+  const addItems = useCallback(
+    (newItems: Partial<InvoiceItem>[]) => {
+      setForm((prev) => {
+        const startSort = prev.items.length;
+        const created = newItems.map((partial, i) => {
+          const qty = partial.quantity ?? 1;
+          const price = partial.unitPrice ?? 0;
+          return {
+            _key: crypto.randomUUID(),
+            sku: partial.sku ?? null,
+            description: partial.description ?? "",
+            quantity: qty,
+            unitPrice: price,
+            extendedPrice: qty * price,
+            sortOrder: startSort + i,
+            isTaxable: partial.isTaxable ?? true,
+            marginOverride: partial.marginOverride ?? null,
+            costPrice: partial.costPrice ?? null,
+          };
+        });
+        return { ...prev, items: [...prev.items, ...created] };
+      });
+    },
+    []
+  );
+
   const removeItem = useCallback((index: number) => {
     setForm((prev) => {
       const items = prev.items
@@ -201,5 +227,5 @@ export function useInvoiceFormState(initial?: Partial<InvoiceFormData>) {
     });
   }, [form.items, form.marginEnabled, form.marginPercent]);
 
-  return { form, setForm, updateField, updateItem, addItem, removeItem, total, itemsWithMargin };
+  return { form, setForm, updateField, updateItem, addItem, addItems, removeItem, total, itemsWithMargin };
 }

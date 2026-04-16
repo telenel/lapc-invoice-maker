@@ -189,6 +189,32 @@ export function useQuoteForm(
     }));
   }, []);
 
+  const addItems = useCallback(
+    (newItems: Partial<QuoteItem>[]) => {
+      setForm((prev) => {
+        const startSort = prev.items.length;
+        const created = newItems.map((partial, i) => {
+          const qty = partial.quantity ?? 1;
+          const price = partial.unitPrice ?? 0;
+          return {
+            _key: crypto.randomUUID(),
+            sku: partial.sku ?? null,
+            description: partial.description ?? "",
+            quantity: qty,
+            unitPrice: price,
+            extendedPrice: qty * price,
+            sortOrder: startSort + i,
+            isTaxable: partial.isTaxable ?? true,
+            marginOverride: partial.marginOverride ?? null,
+            costPrice: partial.costPrice ?? null,
+          };
+        });
+        return { ...prev, items: [...prev.items, ...created] };
+      });
+    },
+    []
+  );
+
   const removeItem = useCallback((index: number) => {
     setForm((prev) => {
       const items = prev.items
@@ -487,6 +513,7 @@ export function useQuoteForm(
     updateField,
     updateItem,
     addItem,
+    addItems,
     removeItem,
     total,
     itemsWithMargin,
