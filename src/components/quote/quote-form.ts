@@ -440,6 +440,7 @@ export function useQuoteForm(
           isTaxable: item.isTaxable,
           marginOverride: item.marginOverride ?? undefined,
           costPrice: currentForm.marginEnabled ? cost : undefined,
+          sku: item.sku ?? undefined,
         };
       }),
     };
