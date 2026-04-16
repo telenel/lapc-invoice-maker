@@ -296,6 +296,18 @@ export async function archiveById(id: string, userId: string) {
 }
 
 /**
+ * Soft delete multiple requisitions in a single query.
+ * Returns count of newly archived records (skips already-archived).
+ */
+export async function archiveByIds(ids: string[], userId: string) {
+  const result = await prisma.textbookRequisition.updateMany({
+    where: { id: { in: ids }, archivedAt: null },
+    data: { archivedAt: new Date(), archivedBy: userId },
+  });
+  return result.count;
+}
+
+/**
  * Aggregate counts by status for the stats panel.
  */
 export async function countByStatus() {

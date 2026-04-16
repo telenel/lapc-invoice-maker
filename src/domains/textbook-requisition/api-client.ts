@@ -87,6 +87,14 @@ export const requisitionApi = {
     if (!res.ok) throw await ApiError.fromResponse(res);
   },
 
+  async bulkDelete(ids: string[]): Promise<{ deleted: number }> {
+    return request<{ deleted: number }>(BASE, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    });
+  },
+
   async sendNotification(
     id: string,
     emailType: "ordered" | "on-shelf",

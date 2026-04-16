@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -11,8 +12,19 @@ import {
   Eye,
   FileTextIcon,
   Plus,
+  Trash2,
+  XIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   Table,
@@ -78,12 +90,58 @@ export function RequisitionTable({
   initialYears?: number[];
 }) {
   const router = useRouter();
-  const { data, loading, filters, setFilters } = useRequisitions(initialFilters, initialData);
+  const { data, loading, filters, setFilters, refetch } = useRequisitions(initialFilters, initialData);
 
   const requisitions = data?.requisitions ?? [];
   const total = data?.total ?? 0;
   const page = filters.page ?? 1;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  // ── Bulk selection ──
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  // Clear selection when page or filters change
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [filters.page, filters.search, filters.status, filters.term, filters.year]);
+
+  function toggleSelected(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  function toggleSelectAll() {
+    if (selectedIds.size === requisitions.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(requisitions.map((r) => r.id)));
+    }
+  }
+
+  async function handleBulkDelete() {
+    if (selectedIds.size === 0) return;
+    setBulkDeleting(true);
+    try {
+      const result = await requisitionApi.bulkDelete(Array.from(selectedIds));
+      toast.success(`Deleted ${result.deleted} requisition${result.deleted !== 1 ? "s" : ""}`);
+      setSelectedIds(new Set());
+      setBulkDeleteOpen(false);
+      refetch();
+    } catch {
+      toast.error("Failed to delete requisitions");
+    } finally {
+      setBulkDeleting(false);
+    }
+  }
 
   function handleFilterChange(next: Filters) {
     setFilters(next);
@@ -137,6 +195,51 @@ export function RequisitionTable({
         </div>
       </div>
 
+      {/* Bulk action bar */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 rounded-lg border border-border/50 bg-muted/30 px-3 py-2 animate-in fade-in-0 slide-in-from-top-1 duration-200">
+          <p className="text-sm text-muted-foreground">
+            {selectedIds.size} selected
+          </p>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => setBulkDeleteOpen(true)}
+          >
+            <Trash2 className="size-3.5" data-icon="inline-start" />
+            Delete Selected
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedIds(new Set())}
+          >
+            <XIcon className="size-3.5" data-icon="inline-start" />
+            Clear
+          </Button>
+        </div>
+      )}
+
+      {/* Bulk delete confirmation */}
+      <Dialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete {selectedIds.size} Requisition{selectedIds.size !== 1 ? "s" : ""}?</DialogTitle>
+            <DialogDescription>
+              This will archive the selected requisitions. They will no longer appear in the list.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkDeleteOpen(false)} disabled={bulkDeleting}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleBulkDelete} disabled={bulkDeleting}>
+              {bulkDeleting ? "Deleting..." : `Delete ${selectedIds.size}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Content */}
       {loading ? (
         <p className="text-muted-foreground text-sm">Loading...</p>
@@ -165,35 +268,44 @@ export function RequisitionTable({
           {/* Mobile cards */}
           <div className="space-y-3 md:hidden">
             {requisitions.map((req) => (
-              <button
-                key={req.id}
-                type="button"
-                className="w-full rounded-xl border border-border/60 bg-card p-4 text-left shadow-sm transition-colors hover:bg-muted/20"
-                onClick={() => router.push(`/textbook-requisitions/${req.id}`)}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold truncate">{req.instructorName}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {req.department} &middot; {req.course}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {req.term} {req.reqYear} &middot; {formatDate(req.submittedAt)}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-1.5 shrink-0">
-                    <RequisitionStatusBadge status={req.status} />
-                    <span className="text-xs text-muted-foreground">
-                      {req.books.length} book{req.books.length !== 1 ? "s" : ""}
-                    </span>
-                    {req.attentionFlags.length > 0 && (
-                      <span className="text-xs text-amber-600 dark:text-amber-400">
-                        {req.attentionFlags.length} flag{req.attentionFlags.length !== 1 ? "s" : ""}
-                      </span>
-                    )}
-                  </div>
+              <div key={req.id} className="flex items-start gap-3">
+                <div className="pt-4">
+                  <Checkbox
+                    checked={selectedIds.has(req.id)}
+                    onCheckedChange={() => toggleSelected(req.id)}
+                    aria-label={`Select ${req.instructorName}`}
+                    onClick={(e) => e.stopPropagation()}
+                  />
                 </div>
-              </button>
+                <button
+                  type="button"
+                  className="flex-1 rounded-xl border border-border/60 bg-card p-4 text-left shadow-sm transition-colors hover:bg-muted/20"
+                  onClick={() => router.push(`/textbook-requisitions/${req.id}`)}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold truncate">{req.instructorName}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {req.department} &middot; {req.course}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {req.term} {req.reqYear} &middot; {formatDate(req.submittedAt)}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1.5 shrink-0">
+                      <RequisitionStatusBadge status={req.status} />
+                      <span className="text-xs text-muted-foreground">
+                        {req.books.length} book{req.books.length !== 1 ? "s" : ""}
+                      </span>
+                      {req.attentionFlags.length > 0 && (
+                        <span className="text-xs text-amber-600 dark:text-amber-400">
+                          {req.attentionFlags.length} flag{req.attentionFlags.length !== 1 ? "s" : ""}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              </div>
             ))}
           </div>
 
@@ -201,6 +313,14 @@ export function RequisitionTable({
           <Table className="hidden md:table">
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[40px]">
+                  <Checkbox
+                    checked={requisitions.length > 0 && selectedIds.size === requisitions.length}
+                    onCheckedChange={toggleSelectAll}
+                    aria-label="Select all requisitions"
+                    className="shrink-0"
+                  />
+                </TableHead>
                 <TableHead>
                   <SortableHeader
                     label="Submitted"
@@ -272,6 +392,14 @@ export function RequisitionTable({
                     if (e.key === "Enter") router.push(`/textbook-requisitions/${req.id}`);
                   }}
                 >
+                  <TableCell className="w-[40px]" onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={selectedIds.has(req.id)}
+                      onCheckedChange={() => toggleSelected(req.id)}
+                      aria-label={`Select ${req.instructorName}`}
+                      className="shrink-0"
+                    />
+                  </TableCell>
                   <TableCell className="text-[13px]">{formatDate(req.submittedAt)}</TableCell>
                   <TableCell className="text-[13px] font-medium">{req.instructorName}</TableCell>
                   <TableCell className="text-[13px]">{req.department}</TableCell>

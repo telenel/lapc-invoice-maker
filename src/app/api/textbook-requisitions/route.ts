@@ -76,6 +76,29 @@ export const GET = withAuth(async (req: NextRequest, _session) => {
   }
 });
 
+const MAX_BULK_DELETE = 200;
+
+export const DELETE = withAuth(async (req: NextRequest, session: AuthSession) => {
+  try {
+    const body = await req.json().catch(() => null);
+    if (body === null || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
+    const { ids } = body as { ids?: unknown };
+    if (!Array.isArray(ids) || ids.length === 0 || !ids.every((id) => typeof id === "string")) {
+      return NextResponse.json({ error: "ids must be a non-empty array of strings" }, { status: 400 });
+    }
+    if (ids.length > MAX_BULK_DELETE) {
+      return NextResponse.json({ error: `Cannot delete more than ${MAX_BULK_DELETE} at once` }, { status: 400 });
+    }
+    const deleted = await requisitionService.bulkArchive(ids, session.user.id);
+    return NextResponse.json({ deleted });
+  } catch (error) {
+    console.error("[textbook-requisitions] bulk delete error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+});
+
 export const POST = withAuth(async (req: NextRequest, session: AuthSession) => {
   try {
     const body = await req.json().catch(() => null);

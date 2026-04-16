@@ -360,6 +360,15 @@ export const requisitionService = {
   },
 
   /**
+   * Bulk soft delete (archive) multiple requisitions.
+   */
+  async bulkArchive(ids: string[], userId: string): Promise<number> {
+    const count = await repository.archiveByIds(ids, userId);
+    if (count > 0) broadcastChange();
+    return count;
+  },
+
+  /**
    * Send an email notification and record it. Updates status on success.
    * Returns null if the requisition is not found.
    */
