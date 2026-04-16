@@ -34,7 +34,6 @@ const links: NavLink[] = [
   { href: "/", label: "Dashboard" },
   { href: "/invoices", label: "Invoices" },
   { href: "/quotes", label: "Quotes" },
-  { href: "/archive", label: "Deleted Archive", matchPrefix: "/archive" },
   { href: "/textbook-requisitions", label: "Requisitions", matchPrefix: "/textbook-requisitions" },
   { href: "/products", label: "Products" },
   { href: "/calendar", label: "Calendar" },
@@ -80,6 +79,7 @@ export function Nav() {
   const adminLink: NavLink = { href: "/admin/settings", label: "Admin", matchPrefix: "/admin" };
   const allLinks = [
     ...links,
+    { href: "/archive", label: "Archive", matchPrefix: "/archive" },
     { href: "/analytics", label: "Analytics" },
     ...(role === "admin" ? [adminLink] : []),
   ];
