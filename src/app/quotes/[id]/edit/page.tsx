@@ -6,7 +6,9 @@ import { PrinterIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuoteForm, QuoteFormData } from "@/components/quote/quote-form";
 import { QuoteMode } from "@/components/quote/quote-mode";
+import { ProductSearchPanel } from "@/components/shared/product-search-panel";
 import { openRegisterPrintWindow } from "@/components/shared/register-print-view";
+import type { SelectedProduct } from "@/domains/product/types";
 import { getDateKeyInLosAngeles } from "@/lib/date-utils";
 import { formatDateLong as formatDate } from "@/lib/formatters";
 
@@ -234,7 +236,7 @@ export default function EditQuotePage() {
         quantity: item.quantity,
         unitPrice: item.unitPrice,
         extendedPrice: item.extendedPrice,
-        sku: null,
+        sku: item.sku ?? null,
       })),
       subtotal,
       taxAmount,
@@ -242,8 +244,19 @@ export default function EditQuotePage() {
     });
   }
 
+  function mapProductsToItems(products: SelectedProduct[]) {
+    return products.map((p) => ({
+      sku: String(p.sku),
+      description: p.description.toUpperCase(),
+      unitPrice: p.retailPrice,
+      costPrice: p.cost,
+      quantity: 1,
+      isTaxable: true,
+    }));
+  }
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-5xl">
+    <div className="mx-auto max-w-7xl px-0 py-4 sm:px-4 sm:py-8">
       <div className="mb-6 flex items-start justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Edit Quote</h1>
         {quoteForm.form.items.length > 0 && (
@@ -253,7 +266,14 @@ export default function EditQuotePage() {
           </Button>
         )}
       </div>
-      <QuoteMode {...quoteForm} />
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr,380px] gap-6 items-start">
+        <div className="order-2 lg:order-1">
+          <QuoteMode {...quoteForm} />
+        </div>
+        <div className="order-1 lg:order-2 lg:sticky lg:top-8">
+          <ProductSearchPanel onAddProducts={(products) => quoteForm.addItems(mapProductsToItems(products))} />
+        </div>
+      </div>
     </div>
   );
 }
