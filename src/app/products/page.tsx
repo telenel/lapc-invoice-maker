@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { useProductSearch, useProductSelection } from "@/domains/product/hooks";
@@ -13,9 +13,14 @@ import { ProductActionBar } from "@/components/products/product-action-bar";
 function parseFiltersFromParams(
   searchParams: ReturnType<typeof useSearchParams>
 ): ProductFilters {
+  const rawTab = searchParams.get("tab");
+  const tab: ProductTab = rawTab === "textbooks" || rawTab === "merchandise" ? rawTab : "textbooks";
+  const rawPage = Number(searchParams.get("page") ?? "1");
+  const page = Number.isFinite(rawPage) && rawPage >= 1 ? Math.floor(rawPage) : 1;
+
   return {
     ...EMPTY_FILTERS,
-    tab: (searchParams.get("tab") as ProductTab) || "textbooks",
+    tab,
     search: searchParams.get("q") ?? "",
     minPrice: searchParams.get("minPrice") ?? "",
     maxPrice: searchParams.get("maxPrice") ?? "",
@@ -28,7 +33,7 @@ function parseFiltersFromParams(
     edition: searchParams.get("edition") ?? "",
     catalogNumber: searchParams.get("catalogNumber") ?? "",
     productType: searchParams.get("productType") ?? "",
-    page: Number(searchParams.get("page") ?? "1") || 1,
+    page,
   };
 }
 
@@ -59,6 +64,17 @@ export default function ProductsPage() {
   );
 
   const { data, loading } = useProductSearch(filters);
+
+  // Track tab counts so both tabs always show their last-known count
+  const [tabCounts, setTabCounts] = useState<Record<ProductTab, number | null>>({
+    textbooks: null,
+    merchandise: null,
+  });
+  useEffect(() => {
+    if (data) {
+      setTabCounts((prev) => ({ ...prev, [filters.tab]: data.total }));
+    }
+  }, [data, filters.tab]);
   const {
     selected,
     selectedCount,
@@ -124,14 +140,16 @@ export default function ProductsPage() {
             }`}
           >
             {tab.label}
-            {data && filters.tab === tab.value && (
+            {tabCounts[tab.value] != null ? (
               <Badge
                 variant="secondary"
                 className="ml-2 px-1.5 py-0 text-[10px] font-bold rounded-full"
               >
-                {data.total.toLocaleString()}
+                {tabCounts[tab.value]!.toLocaleString()}
               </Badge>
-            )}
+            ) : tab.value === filters.tab && loading ? (
+              <span className="ml-2 inline-block h-3 w-8 animate-pulse rounded bg-muted align-middle" />
+            ) : null}
           </button>
         ))}
       </div>

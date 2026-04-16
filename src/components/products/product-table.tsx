@@ -199,12 +199,14 @@ export function ProductTable({
                       {product.author && ` · ${product.author}`}
                     </p>
                   </div>
-                  <Checkbox
-                    checked={isSelected(product.sku)}
-                    onCheckedChange={() => onToggle(product)}
-                    className="ml-2 mt-0.5"
-                    aria-label={`Select SKU ${product.sku}`}
-                  />
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={isSelected(product.sku)}
+                      onCheckedChange={() => onToggle(product)}
+                      className="ml-2 mt-0.5"
+                      aria-label={`Select SKU ${product.sku}`}
+                    />
+                  </div>
                 </div>
                 <div className="mt-1.5 flex gap-3 text-xs">
                   <span className="font-medium">{formatCurrency(product.retail_price)}</span>
