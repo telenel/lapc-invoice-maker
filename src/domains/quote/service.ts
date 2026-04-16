@@ -254,6 +254,7 @@ function calculateLineItems(
       isTaxable: item.isTaxable,
       marginOverride: item.marginOverride,
       costPrice: item.costPrice,
+      sku: item.sku ?? null,
     };
   });
 }
@@ -1299,6 +1300,7 @@ export const quoteService = {
               isTaxable: true,
               costPrice: true,
               marginOverride: true,
+              sku: true,
             },
           },
         },
@@ -1352,6 +1354,7 @@ export const quoteService = {
               isTaxable: item.isTaxable,
               costPrice: item.costPrice ?? undefined,
               marginOverride: item.marginOverride ?? undefined,
+              sku: item.sku ?? undefined,
             })),
           },
         },
@@ -1455,6 +1458,7 @@ export const quoteService = {
               isTaxable: item.isTaxable,
               costPrice: item.costPrice ?? undefined,
               marginOverride: item.marginOverride ?? undefined,
+              sku: item.sku ?? undefined,
             })),
           },
         },
@@ -1506,6 +1510,7 @@ export const quoteService = {
         costPrice: item.costPrice != null ? Number(item.costPrice) : undefined,
         marginOverride:
           item.marginOverride != null ? Number(item.marginOverride) : undefined,
+        sku: item.sku ?? undefined,
       })),
     );
 
@@ -1554,6 +1559,7 @@ export const quoteService = {
             isTaxable: ci.isTaxable,
             costPrice: ci.costPrice ?? undefined,
             marginOverride: ci.marginOverride ?? undefined,
+            sku: ci.sku ?? undefined,
           })),
         },
       },
