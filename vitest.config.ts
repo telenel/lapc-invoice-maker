@@ -7,6 +7,10 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     globals: true,
+    // Heavy component trees (e.g. PublicQuoteView) with userEvent interactions
+    // run fine on CI but exceed the default 5s timeout under parallel load on
+    // slower local environments. 15s gives headroom without masking real hangs.
+    testTimeout: 15_000,
     exclude: [
       "**/node_modules/**",
       "**/dist/**",

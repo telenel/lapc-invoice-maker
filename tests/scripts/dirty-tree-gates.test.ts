@@ -51,7 +51,10 @@ function createRepoFixture(trackedPaths: string[]) {
 }
 
 function runScript(repoDir: string, scriptPath: string, env: Record<string, string | undefined> = {}) {
-  return spawnSync("/bin/bash", [scriptPath], {
+  // Resolve `bash` from PATH so the test works on Windows (where /bin/bash
+  // doesn't exist) as well as on Linux/macOS CI runners.
+  const shell = process.platform === "win32" ? "bash.exe" : "/bin/bash";
+  return spawnSync(shell, [scriptPath], {
     cwd: repoDir,
     env: { ...process.env, ...env },
     encoding: "utf8",
