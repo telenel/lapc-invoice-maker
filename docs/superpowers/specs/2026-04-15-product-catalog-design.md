@@ -124,6 +124,7 @@ Single page with:
 - Full-text search via GIN index for text fields (`description`, `title`, `author`)
 - Prefix/exact match for identifier fields (`sku`, `barcode`, `isbn`, `catalog_number`)
 - No special input parsing — whatever the user types gets matched against all fields
+- **PostgREST safety:** all user input in `.or()` filter strings is escaped via a `quotePostgrestValue()` helper that double-quotes values containing PostgREST metacharacters (commas, dots, parens). Tsquery tokens are stripped of all non-alphanumeric characters before construction.
 
 ### Filters
 
@@ -229,9 +230,11 @@ Each selected item renders as a row:
 
 ### Technical implementation
 
-- **Library:** JsBarcode (lightweight, renders Code 128 to SVG)
+- **Library:** JsBarcode (locally installed npm package — NOT loaded from a CDN)
+- **Rendering:** barcodes are pre-rendered to SVG strings in the main window using an off-screen SVG element, then embedded as static markup in the print popup. No `<script>` tags in the popup.
 - **Barcode value:** the SKU number (integer, rendered as string)
 - **Format:** Code 128 (standard retail barcode format)
+- **Popup security:** opened with `noopener,noreferrer` to prevent `window.opener` back-reference
 - **Styling:** white background, `@media print` styles, no nav/chrome, clean grid layout
 - **User prints** via Cmd+P / Ctrl+P from the opened window
 

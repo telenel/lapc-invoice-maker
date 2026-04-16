@@ -366,12 +366,45 @@ Expected: FAIL — module `@/domains/product/queries` not found
 
 - [ ] **Step 3: Implement `src/domains/product/queries.ts`**
 
+Note: User input is never interpolated raw into PostgREST `.or()` filter strings.
+All values are escaped via `quotePostgrestValue()` which double-quotes any value
+containing PostgREST metacharacters (commas, dots, parens, backslashes, quotes).
+The tsquery is built from only alphanumeric word tokens — all special characters are
+stripped before constructing the query.
+
 ```typescript
 "use client";
 
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { PAGE_SIZE, TAB_ITEM_TYPES } from "./constants";
 import type { Product, ProductFilters, ProductSearchResult } from "./types";
+
+/**
+ * Escape a value for safe interpolation into a PostgREST `.or()` filter string.
+ * If the value contains any PostgREST metacharacters (, . ( ) " \), it is
+ * wrapped in double quotes with inner quotes escaped.
+ * See: https://postgrest.org/en/stable/references/api/tables_views.html#reserved-characters
+ */
+function quotePostgrestValue(value: string): string {
+  if (/[,.()"\\]/.test(value)) {
+    return `"${value.replace(/["\\]/g, "\\$&")}"`;
+  }
+  return value;
+}
+
+/**
+ * Build a safe tsquery string from user input.
+ * Only alphanumeric word tokens are kept; everything else is stripped.
+ * Tokens are joined with & (AND) for Postgres full-text search.
+ */
+function buildTsquery(input: string): string | null {
+  const tokens = input
+    .replace(/[^\w\s]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 0);
+  if (tokens.length === 0) return null;
+  return tokens.map((w) => `'${w}'`).join(" & ");
+}
 
 export async function searchProducts(
   filters: ProductFilters
@@ -386,26 +419,34 @@ export async function searchProducts(
     .in("item_type", TAB_ITEM_TYPES[filters.tab]);
 
   // Full-text search on description + prefix match on identifiers
+  // All user input is escaped before interpolation into PostgREST filter strings
   if (filters.search.trim()) {
     const term = filters.search.trim();
     const isNumeric = /^\d+$/.test(term);
 
     if (isNumeric) {
       // Numeric input: match SKU exactly or barcode/isbn/catalog_number as prefix
+      const safe = quotePostgrestValue(term);
       query = query.or(
-        `sku.eq.${term},barcode.ilike.${term}%,isbn.ilike.${term}%,catalog_number.ilike.${term}%`
+        `sku.eq.${safe},barcode.ilike.${safe}%,isbn.ilike.${safe}%,catalog_number.ilike.${safe}%`
       );
     } else {
       // Text input: full-text search on description, ilike on title/author/isbn/catalog_number
-      const escaped = term.replace(/'/g, "''");
-      const tsquery = term
-        .split(/\s+/)
-        .filter(Boolean)
-        .map((w) => `'${w}'`)
-        .join(" & ");
-      query = query.or(
-        `description.fts.${tsquery},title.ilike.%${escaped}%,author.ilike.%${escaped}%,isbn.ilike.%${escaped}%,barcode.ilike.%${escaped}%,catalog_number.ilike.%${escaped}%`
+      const safeIlike = quotePostgrestValue(`%${term}%`);
+      const tsquery = buildTsquery(term);
+
+      const conditions: string[] = [];
+      if (tsquery) {
+        conditions.push(`description.fts.${quotePostgrestValue(tsquery)}`);
+      }
+      conditions.push(
+        `title.ilike.${safeIlike}`,
+        `author.ilike.${safeIlike}`,
+        `isbn.ilike.${safeIlike}`,
+        `barcode.ilike.${safeIlike}`,
+        `catalog_number.ilike.${safeIlike}`
       );
+      query = query.or(conditions.join(","));
     }
   }
 
@@ -1276,17 +1317,50 @@ export function ProductActionBar({
 
 - [ ] **Step 2: Create `src/components/products/barcode-print-view.tsx`**
 
+Note: JsBarcode is imported from the locally installed npm package — NOT loaded
+from a CDN. Barcodes are pre-rendered to SVG strings in the main window before
+the print popup is opened. The popup receives only static HTML with embedded SVGs
+and has no script tags. The popup is opened with `noopener,noreferrer` to prevent
+any `window.opener` back-reference.
+
 ```typescript
+import JsBarcode from "jsbarcode";
 import type { SelectedProduct } from "@/domains/product/types";
 
 /**
+ * Render a Code 128 barcode for the given SKU as an SVG markup string.
+ * Uses an off-screen SVG element so JsBarcode can render to it, then
+ * extracts the outerHTML. The temporary element is never added to the DOM.
+ */
+function renderBarcodeSvg(sku: number): string {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  try {
+    JsBarcode(svg, String(sku), {
+      format: "CODE128",
+      width: 1.5,
+      height: 50,
+      displayValue: true,
+      fontSize: 12,
+      margin: 5,
+    });
+    return svg.outerHTML;
+  } catch {
+    return `<span style="color:red;font-size:11px;">Barcode error for SKU ${sku}</span>`;
+  }
+}
+
+/**
  * Opens a new browser window with a print-optimized barcode sheet.
- * Each selected item displays full product info + a Code 128 barcode of the SKU.
- * JsBarcode renders into SVG elements after the window loads.
+ * Each selected item displays full product info + a pre-rendered Code 128 barcode.
+ * No external scripts are loaded — all barcodes are rendered locally before the
+ * popup opens, and the window is opened with noopener,noreferrer.
  */
 export function openBarcodePrintWindow(items: SelectedProduct[]): void {
-  const win = window.open("", "_blank", "width=800,height=600");
-  if (!win) return;
+  // Pre-render all barcodes from the locally installed JsBarcode package
+  const barcodes = new Map<number, string>();
+  for (const item of items) {
+    barcodes.set(item.sku, renderBarcodeSvg(item.sku));
+  }
 
   const rows = items
     .map(
@@ -1306,18 +1380,20 @@ export function openBarcodePrintWindow(items: SelectedProduct[]): void {
         </div>
       </div>
       <div class="barcode-cell">
-        <svg class="barcode" data-sku="${item.sku}"></svg>
+        ${barcodes.get(item.sku) ?? ""}
       </div>
     </div>
   `
     )
     .join("");
 
+  const win = window.open("", "_blank", "width=800,height=600,noopener,noreferrer");
+  if (!win) return;
+
   win.document.write(`<!DOCTYPE html>
 <html>
 <head>
   <title>Product Barcodes</title>
-  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3/dist/JsBarcode.all.min.js"><\/script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: Arial, Helvetica, sans-serif; padding: 20px; }
@@ -1348,18 +1424,6 @@ export function openBarcodePrintWindow(items: SelectedProduct[]): void {
 <body>
   <h1>Product Barcodes — ${items.length} item${items.length !== 1 ? "s" : ""}</h1>
   ${rows}
-  <script>
-    document.querySelectorAll('.barcode').forEach(function(svg) {
-      JsBarcode(svg, String(svg.dataset.sku), {
-        format: 'CODE128',
-        width: 1.5,
-        height: 50,
-        displayValue: true,
-        fontSize: 12,
-        margin: 5,
-      });
-    });
-  <\/script>
 </body>
 </html>`);
 
