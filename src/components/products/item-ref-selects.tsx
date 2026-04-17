@@ -35,7 +35,7 @@ export function ItemRefSelects({
     <>
       <div className="space-y-1.5">
         <Label>Vendor</Label>
-        <Select value={vendorId} onValueChange={(v) => onChange("vendorId", v)} disabled={disabled}>
+        <Select value={vendorId} onValueChange={(v) => onChange("vendorId", v ?? "")} disabled={disabled}>
           <SelectTrigger><SelectValue placeholder={placeholder} /></SelectTrigger>
           <SelectContent>
             {refs?.vendors.map((v) => (
@@ -46,7 +46,7 @@ export function ItemRefSelects({
       </div>
       <div className="space-y-1.5">
         <Label>DCC</Label>
-        <Select value={dccId} onValueChange={(v) => onChange("dccId", v)} disabled={disabled}>
+        <Select value={dccId} onValueChange={(v) => onChange("dccId", v ?? "")} disabled={disabled}>
           <SelectTrigger><SelectValue placeholder={placeholder} /></SelectTrigger>
           <SelectContent>
             {refs?.dccs.map((d) => (
@@ -59,7 +59,7 @@ export function ItemRefSelects({
       </div>
       <div className="space-y-1.5">
         <Label>Tax Type</Label>
-        <Select value={itemTaxTypeId} onValueChange={(v) => onChange("itemTaxTypeId", v)} disabled={disabled}>
+        <Select value={itemTaxTypeId} onValueChange={(v) => onChange("itemTaxTypeId", v ?? "")} disabled={disabled}>
           <SelectTrigger><SelectValue placeholder={placeholder} /></SelectTrigger>
           <SelectContent>
             {refs?.taxTypes.map((t) => (

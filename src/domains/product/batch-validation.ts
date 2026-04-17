@@ -48,18 +48,18 @@ export function validateBatchCreateShape(rows: BatchCreateRow[]): BatchValidatio
     list.push(i);
     seen.set(bc, list);
   });
-  for (const [bc, indices] of seen) {
+  seen.forEach((indices, bc) => {
     if (indices.length > 1) {
-      for (const i of indices) {
+      indices.forEach((i) => {
         errors.push({
           rowIndex: i,
           field: "barcode",
           code: "DUPLICATE_BARCODE",
           message: `Barcode '${bc}' appears on rows ${indices.map((x) => x + 1).join(", ")}`,
         });
-      }
+      });
     }
-  }
+  });
 
   return errors;
 }

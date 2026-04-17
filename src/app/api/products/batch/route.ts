@@ -37,7 +37,7 @@ const bodySchema = z.discriminatedUnion("action", [
     rows: z.array(z.object({
       sku: z.number().int().positive(),
       isTextbook: z.boolean().optional(),
-      patch: z.record(z.any()),
+      patch: z.record(z.string(), z.any()),
     })),
   }),
   z.object({
@@ -103,14 +103,15 @@ export const POST = withAdmin(async (request: NextRequest) => {
     }
 
     // hard-delete
-    const hist = await hasTransactionHistory(parsed.data.skus);
-    const blocked = parsed.data.skus.filter((s) => hist.has(s));
+    const hdSkus = parsed.data.skus;
+    const hist = await hasTransactionHistory(hdSkus);
+    const blocked = hdSkus.filter((s) => hist.has(s));
     if (blocked.length > 0) {
       return NextResponse.json({
-        errors: blocked.map((sku) => ({ rowIndex: parsed.data.skus.indexOf(sku), field: "sku", code: "HAS_HISTORY", message: `SKU ${sku} has transaction history` })),
+        errors: blocked.map((sku) => ({ rowIndex: hdSkus.indexOf(sku), field: "sku", code: "HAS_HISTORY", message: `SKU ${sku} has transaction history` })),
       }, { status: 409 });
     }
-    const deleted = await batchHardDeleteItems(parsed.data.skus);
+    const deleted = await batchHardDeleteItems(hdSkus);
     try {
       const supabase = getSupabaseAdminClient();
       await supabase.from("products").delete().in("sku", deleted);
