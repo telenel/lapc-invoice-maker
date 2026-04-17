@@ -262,6 +262,7 @@ describe("invoiceRepository", () => {
           where: expect.objectContaining({
             type: "INVOICE",
             status: "FINAL",
+            archivedAt: null,
           }),
         }),
       );
@@ -277,6 +278,7 @@ describe("invoiceRepository", () => {
           where: {
             type: "INVOICE",
             createdAt: { gte: expect.any(Date) },
+            archivedAt: null,
           },
           select: {
             totalAmount: true,
@@ -296,6 +298,7 @@ describe("invoiceRepository", () => {
           where: expect.objectContaining({
             type: "INVOICE",
             status: { in: ["DRAFT", "PENDING_CHARGE"] },
+            archivedAt: null,
           }),
         }),
       );

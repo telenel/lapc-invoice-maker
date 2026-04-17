@@ -17,6 +17,7 @@ export default async function PaymentPage(
               paymentDetailsResolved: quote.paymentDetailsResolved,
               paymentLinkAvailable: isPublicPaymentLinkAvailable(quote),
               quoteNumber: quote.quoteNumber,
+              paymentMethod: quote.paymentMethod === "ACCOUNT_NUMBER" ? null : quote.paymentMethod,
             }
           : null
       }

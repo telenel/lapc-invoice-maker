@@ -52,6 +52,7 @@ async function readPaymentFollowUpState(
       created_by AS "createdBy"
     FROM invoices
     WHERE id = ${quoteId}
+      AND archived_at IS NULL
     FOR UPDATE
   `;
 
@@ -176,6 +177,7 @@ export async function checkAndSendPaymentFollowUps(): Promise<void> {
           paymentMethod: null,
           shareToken: { not: null },
           convertedToInvoice: null,
+          archivedAt: null,
       },
       include: {
         followUps: {

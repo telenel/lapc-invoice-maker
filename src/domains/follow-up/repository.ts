@@ -14,6 +14,7 @@ export const followUpRepository = {
         invoiceId,
         seriesStatus: "ACTIVE",
         type: { in: [...ACCOUNT_FOLLOWUP_TYPES] },
+        invoice: { is: { archivedAt: null } },
       },
       orderBy: { sentAt: "desc" },
     });
@@ -24,6 +25,7 @@ export const followUpRepository = {
       where: {
         invoiceId,
         type: { in: [...ACCOUNT_FOLLOWUP_TYPES] },
+        invoice: { is: { archivedAt: null } },
       },
       orderBy: { sentAt: "desc" },
     });
@@ -36,6 +38,7 @@ export const followUpRepository = {
         invoiceId: { in: invoiceIds },
         type: { in: [...ACCOUNT_FOLLOWUP_TYPES] },
         seriesStatus: { in: ["ACTIVE", "EXHAUSTED"] },
+        invoice: { is: { archivedAt: null } },
       },
       orderBy: { sentAt: "desc" },
       distinct: ["invoiceId"],
@@ -44,7 +47,10 @@ export const followUpRepository = {
 
   async findByShareToken(token: string) {
     return prisma.followUp.findFirst({
-      where: { shareToken: token },
+      where: {
+        shareToken: token,
+        invoice: { is: { archivedAt: null } },
+      },
       include: {
         invoice: {
           select: {
@@ -137,6 +143,7 @@ export const followUpRepository = {
       where: {
         type: { in: [...ACCOUNT_FOLLOWUP_TYPES] },
         seriesStatus: "ACTIVE",
+        invoice: { is: { archivedAt: null } },
       },
       orderBy: { sentAt: "desc" },
       distinct: ["seriesId"],
@@ -165,6 +172,7 @@ export const followUpRepository = {
       where: {
         type: { in: [...ACCOUNT_FOLLOWUP_TYPES] },
         seriesStatus: { in: ["ACTIVE", "EXHAUSTED"] },
+        invoice: { is: { archivedAt: null } },
       },
       distinct: ["seriesId"],
       select: { seriesId: true },
@@ -177,6 +185,7 @@ export const followUpRepository = {
       where: {
         type: { in: [...ACCOUNT_FOLLOWUP_TYPES] },
         seriesStatus: { in: ["ACTIVE", "EXHAUSTED"] },
+        invoice: { is: { archivedAt: null } },
       },
       orderBy: { sentAt: "desc" },
       distinct: ["seriesId"],

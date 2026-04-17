@@ -33,6 +33,7 @@ function sanitizeForPublic(
     id: quote.id,
     quoteNumber: quote.quoteNumber,
     quoteStatus: quote.quoteStatus,
+    paymentMethod: quote.paymentMethod === "ACCOUNT_NUMBER" ? null : quote.paymentMethod,
     date: quote.date,
     expirationDate: quote.expirationDate,
     department: quote.department,

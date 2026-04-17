@@ -87,6 +87,11 @@ function makeInvoice(overrides: Record<string, unknown> = {}) {
     contact: null,
     creatorId: "u1",
     creatorName: "Owner User",
+    viewerAccess: {
+      canViewInvoice: true,
+      canManageActions: true,
+      canDuplicateInvoice: true,
+    },
     items: [],
     ...overrides,
   };
@@ -136,6 +141,32 @@ describe("InvoiceDetailView", () => {
 
     expect(screen.getByText(/This invoice is in the Deleted Archive/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Restore/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Delete$/ })).not.toBeInTheDocument();
+  });
+
+  it("lets non-owners duplicate an invoice without showing edit or delete actions", () => {
+    sessionState = {
+      data: { user: { id: "u2", role: "user" } },
+    };
+    useInvoiceMock.mockReturnValue({
+      data: makeInvoice({
+        creatorId: "u1",
+        creatorName: "Owner User",
+        viewerAccess: {
+          canViewInvoice: true,
+          canManageActions: false,
+          canDuplicateInvoice: true,
+        },
+      }),
+      loading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
+
+    render(<InvoiceDetailView id="inv1" />);
+
+    expect(screen.getByRole("button", { name: "Duplicate" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Edit" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /^Delete$/ })).not.toBeInTheDocument();
   });
 });

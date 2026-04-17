@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { MiniMonth } from "@/components/calendar/mini-month";
 import { formatLosAngelesDateTimeRange, formatWallClockTime } from "@/lib/time";
+import { cn } from "@/lib/utils";
 
 export interface CalendarEvent {
   id: string;
@@ -41,6 +42,7 @@ interface EventDetailSidebarProps {
   onMonthChange: (date: Date) => void;
   onDateClick: (dateStr: string) => void;
   activeRange?: { start: string; end: string };
+  stacked?: boolean;
   /** Slot for the Add Event trigger (rendered at bottom of default state) */
   addEventTrigger?: React.ReactNode;
 }
@@ -282,12 +284,21 @@ export function EventDetailSidebar({
   onMonthChange,
   onDateClick,
   activeRange,
+  stacked = false,
   addEventTrigger,
 }: EventDetailSidebarProps) {
   const showEvent = event !== null;
 
   return (
-    <div data-calendar-sidebar className="relative flex min-h-[20rem] w-full shrink-0 flex-col overflow-hidden border-b border-border bg-card lg:h-full lg:w-[260px] lg:border-r lg:border-b-0">
+    <div
+      data-calendar-sidebar
+      className={cn(
+        "relative flex min-h-[20rem] shrink-0 flex-col overflow-hidden border-border bg-card",
+        stacked
+          ? "w-full border-b"
+          : "w-full border-b xl:h-full xl:w-[240px] xl:border-r xl:border-b-0 2xl:w-[260px]",
+      )}
+    >
       {/* Default state — always mounted, toggled via opacity */}
       <div
         className="absolute inset-0 flex flex-col h-full p-4 gap-4 transition-opacity duration-150"
