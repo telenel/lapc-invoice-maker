@@ -9,11 +9,11 @@ export default function BatchAddPage() {
   const router = useRouter();
   return (
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-6">
-      <div className="flex items-center justify-between">
+      <div className="page-enter page-enter-1 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Batch add items</h1>
-          <p className="text-sm text-muted-foreground">
-            Paste from Excel or type rows directly. Validate before submitting — all rows must pass before any are written.
+          <h1 className="text-3xl font-bold tracking-tight">Batch add items</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Paste from Excel or type rows directly. All rows are validated together — nothing is written until every row passes.
           </p>
         </div>
         <Button variant="outline" render={<Link href="/products" />}>
