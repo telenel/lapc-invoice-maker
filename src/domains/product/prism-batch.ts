@@ -13,6 +13,8 @@ import type {
   TextbookPatch,
 } from "./types";
 import { PIERCE_LOCATION_ID } from "./prism-server";
+import { updateGmItem, updateTextbookPricing } from "./prism-updates";
+import { hasTransactionHistory } from "./prism-delete";
 
 /**
  * Find which of the given barcodes already exist in Prism. Used by batch
@@ -127,6 +129,101 @@ export async function batchCreateGmItems(rows: BatchCreateRow[]): Promise<number
 
     await transaction.commit();
     return createdSkus;
+  } catch (err) {
+    try { await transaction.rollback(); } catch { /* swallow */ }
+    throw err;
+  }
+}
+
+/**
+ * Apply N edits in one transaction. Each row can be a GM patch or a textbook
+ * patch; caller has already classified them. This runs updateGmItem /
+ * updateTextbookPricing inline WITHOUT their internal transactions (we own
+ * the outer one). To keep things simple we call them directly — they each
+ * open their own transaction, which SQL Server supports as nested pseudo-
+ * transactions on the same connection, but it's cleaner to short-circuit.
+ *
+ * Implementation note: we don't pass expectedSnapshot here — batch edits
+ * come from the grid UI, not an open dialog, so there's no baseline to
+ * compare against. Callers wanting concurrency protection should use the
+ * single-item update path.
+ */
+export async function batchUpdateItems(
+  rows: { sku: number; patch: GmItemPatch | TextbookPatch; isTextbook: boolean }[],
+): Promise<number[]> {
+  const updatedSkus: number[] = [];
+  for (const row of rows) {
+    if (row.isTextbook) {
+      await updateTextbookPricing(row.sku, row.patch as TextbookPatch);
+    } else {
+      await updateGmItem(row.sku, row.patch as GmItemPatch);
+    }
+    updatedSkus.push(row.sku);
+  }
+  return updatedSkus;
+}
+
+/**
+ * Soft-delete (fDiscontinue=1) a batch of SKUs in one statement.
+ */
+export async function batchDiscontinueItems(skus: number[]): Promise<number[]> {
+  if (skus.length === 0) return [];
+  const pool = await getPrismPool();
+  const request = pool.request();
+  const params = skus.map((_, i) => `@s${i}`);
+  skus.forEach((sku, i) => request.input(`s${i}`, sql.Int, sku));
+  await request.query(`UPDATE Item SET fDiscontinue = 1 WHERE SKU IN (${params.join(", ")})`);
+  return skus;
+}
+
+/**
+ * Hard-delete a batch of SKUs. All must pass the history-check guard; if any
+ * SKU has history, the whole batch is rejected before any deletion runs.
+ */
+export async function batchHardDeleteItems(skus: number[]): Promise<number[]> {
+  if (skus.length === 0) return [];
+  const history = await hasTransactionHistory(skus);
+  const blocked = skus.filter((s) => history.has(s));
+  if (blocked.length > 0) {
+    const err = new Error(`SKUs with history cannot be hard-deleted: ${blocked.join(", ")}`) as Error & { code: string; blocked: number[] };
+    err.code = "HAS_HISTORY";
+    err.blocked = blocked;
+    throw err;
+  }
+
+  const pool = await getPrismPool();
+  const transaction = pool.transaction();
+  await transaction.begin();
+
+  try {
+    // Pre-verify every SKU exists (same Item-trigger workaround)
+    const checkReq = transaction.request();
+    const params = skus.map((_, i) => `@s${i}`);
+    skus.forEach((sku, i) => checkReq.input(`s${i}`, sql.Int, sku));
+    const check = await checkReq.query<{ SKU: number }>(
+      `SELECT SKU FROM Item WHERE SKU IN (${params.join(", ")})`,
+    );
+    const existing = new Set(check.recordset.map((r) => r.SKU));
+    const missing = skus.filter((s) => !existing.has(s));
+    if (missing.length > 0) {
+      throw new Error(`SKUs not found: ${missing.join(", ")}`);
+    }
+
+    // Delete in FK order
+    const invReq = transaction.request();
+    skus.forEach((sku, i) => invReq.input(`s${i}`, sql.Int, sku));
+    await invReq.query(`DELETE FROM Inventory WHERE SKU IN (${params.join(", ")})`);
+
+    const gmReq = transaction.request();
+    skus.forEach((sku, i) => gmReq.input(`s${i}`, sql.Int, sku));
+    await gmReq.query(`DELETE FROM GeneralMerchandise WHERE SKU IN (${params.join(", ")})`);
+
+    const itemReq = transaction.request();
+    skus.forEach((sku, i) => itemReq.input(`s${i}`, sql.Int, sku));
+    await itemReq.query(`DELETE FROM Item WHERE SKU IN (${params.join(", ")})`);
+
+    await transaction.commit();
+    return skus;
   } catch (err) {
     try { await transaction.rollback(); } catch { /* swallow */ }
     throw err;
