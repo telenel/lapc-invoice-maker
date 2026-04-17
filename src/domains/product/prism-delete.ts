@@ -55,3 +55,47 @@ export async function hasTransactionHistory(skus: number[]): Promise<Set<number>
     return new Set(skus);
   }
 }
+
+/**
+ * Hard-delete a real (non-test) item. Requires the SKU to have zero
+ * transaction history. Returns the SKU on success. Transaction-wrapped.
+ * Uses the verify-then-assume pattern from deleteTestItem because Item
+ * triggers clobber @@ROWCOUNT.
+ */
+export async function hardDeleteItem(sku: number): Promise<{ sku: number; affected: number }> {
+  const history = await hasTransactionHistory([sku]);
+  if (history.has(sku)) {
+    const err = new Error(`SKU ${sku} has transaction history and cannot be hard-deleted`) as Error & { code: string };
+    err.code = "HAS_HISTORY";
+    throw err;
+  }
+
+  const pool = await getPrismPool();
+  const transaction = pool.transaction();
+  await transaction.begin();
+
+  try {
+    // Verify the row exists before deleting (same reasoning as deleteTestItem —
+    // triggers on Item make rowcount unreliable, so we check presence first).
+    const check = await transaction
+      .request()
+      .input("sku", sql.Int, sku)
+      .query<{ SKU: number }>("SELECT SKU FROM Item WHERE SKU = @sku");
+    if (check.recordset.length === 0) {
+      throw new Error(`Item SKU ${sku} not found`);
+    }
+
+    await transaction.request().input("sku", sql.Int, sku)
+      .query("DELETE FROM Inventory WHERE SKU = @sku");
+    await transaction.request().input("sku", sql.Int, sku)
+      .query("DELETE FROM GeneralMerchandise WHERE SKU = @sku");
+    await transaction.request().input("sku", sql.Int, sku)
+      .query("DELETE FROM Item WHERE SKU = @sku");
+
+    await transaction.commit();
+    return { sku, affected: 1 };
+  } catch (err) {
+    try { await transaction.rollback(); } catch { /* swallow */ }
+    throw err;
+  }
+}
