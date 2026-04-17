@@ -51,6 +51,29 @@ export async function register() {
       { timezone: "America/Los_Angeles" },
     );
 
+    // Prism pull sync — daily at 11 AM Los Angeles time
+    cron.schedule(
+      "0 11 * * *",
+      () => {
+        runTrackedJob("prism-pull-sync", { runner: "node-cron" }, async () => {
+          const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+          const secret = process.env.CRON_INTERNAL_SECRET;
+          if (!secret) {
+            console.warn("[cron] CRON_INTERNAL_SECRET not set; skipping prism-pull-sync");
+            return;
+          }
+          const res = await fetch(`${baseUrl}/api/sync/prism-pull`, {
+            method: "POST",
+            headers: { "x-internal-cron-secret": secret },
+          });
+          if (!res.ok) {
+            throw new Error(`prism-pull returned ${res.status}: ${await res.text()}`);
+          }
+        }).catch((err) => console.error("[cron] prism-pull-sync failed:", err));
+      },
+      { timezone: "America/Los_Angeles" },
+    );
+
     state.__laportalCronRegistered = true;
     if (getJobSchedulerMode() === "supabase") {
       console.warn("[instrumentation] JOB_SCHEDULER=supabase but scheduler is not confirmed; keeping app cron active");

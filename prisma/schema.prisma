@@ -31,6 +31,8 @@ model User {
   requisitionsCreated          TextbookRequisition[]        @relation("RequisitionCreator")
   requisitionsStatusChanged    TextbookRequisition[]        @relation("RequisitionStatusChanger")
   requisitionNotificationsSent RequisitionNotification[]    @relation("RequisitionNotificationSender")
+  savedSearches                SavedSearch[]
+  bulkEditRuns                 BulkEditRun[]
 
   @@map("users")
 }
@@ -654,4 +656,53 @@ model RequisitionNotification {
   @@index([requisitionId, type])
   @@index([requisitionId, sentAt])
   @@map("requisition_notifications")
+}
+
+model SavedSearch {
+  id            String    @id @default(uuid())
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  ownerUserId   String?   @map("owner_user_id")
+  name          String
+  filter        Json
+  isSystem      Boolean   @default(false) @map("is_system")
+
+  owner         User?     @relation(fields: [ownerUserId], references: [id])
+
+  @@index([ownerUserId, name])
+  @@map("saved_searches")
+}
+
+model BulkEditRun {
+  id                  String   @id @default(uuid())
+  createdAt           DateTime @default(now()) @map("created_at")
+  operatorUserId      String   @map("operator_user_id")
+  operatorDisplay     String   @map("operator_display")
+  selection           Json
+  transform           Json
+  affectedSkus        Int[]    @map("affected_skus")
+  skuCount            Int      @map("sku_count")
+  pricingDeltaCents   BigInt   @default(0) @map("pricing_delta_cents")
+  hadDistrictChanges  Boolean  @map("had_district_changes")
+  summary             String
+
+  operator            User     @relation(fields: [operatorUserId], references: [id])
+
+  @@index([createdAt(sort: Desc)])
+  @@index([operatorUserId, createdAt(sort: Desc)])
+  @@map("bulk_edit_runs")
+}
+
+model SyncRun {
+  id              String    @id @default(uuid())
+  startedAt       DateTime  @default(now()) @map("started_at")
+  completedAt     DateTime? @map("completed_at")
+  triggeredBy     String    @map("triggered_by")
+  scannedCount    Int?      @map("scanned_count")
+  updatedCount    Int?      @map("updated_count")
+  status          String
+  error           String?
+
+  @@index([startedAt(sort: Desc)])
+  @@map("sync_runs")
 }

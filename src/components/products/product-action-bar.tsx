@@ -20,6 +20,7 @@ interface ProductActionBarProps {
   onDiscontinued?: (skus: number[]) => void;
   onEditClick?: () => void;
   onHardDeleteClick?: () => void;
+  onBulkEdit?: () => void;
 }
 
 export function ProductActionBar({
@@ -31,6 +32,7 @@ export function ProductActionBar({
   onDiscontinued,
   onEditClick,
   onHardDeleteClick,
+  onBulkEdit,
 }: ProductActionBarProps) {
   const router = useRouter();
   const [discontinuing, setDiscontinuing] = useState(false);
@@ -130,6 +132,11 @@ export function ProductActionBar({
               {prismAvailable && onEditClick ? (
                 <Button size="sm" variant="outline" onClick={onEditClick}>
                   Edit
+                </Button>
+              ) : null}
+              {prismAvailable && onBulkEdit ? (
+                <Button size="sm" variant="outline" onClick={onBulkEdit}>
+                  Bulk Edit
                 </Button>
               ) : null}
               {prismAvailable && onHardDeleteClick ? (

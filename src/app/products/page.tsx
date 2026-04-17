@@ -14,6 +14,7 @@ import { NewItemDialog } from "@/components/products/new-item-dialog";
 import { EditItemDialog } from "@/components/products/edit-item-dialog";
 import { HardDeleteDialog } from "@/components/products/hard-delete-dialog";
 import { Button } from "@/components/ui/button";
+import { SyncDatabaseButton } from "@/components/products/sync-database-button";
 import { productApi } from "@/domains/product/api-client";
 
 function parseFiltersFromParams(
@@ -150,16 +151,22 @@ export default function ProductsPage() {
             {data ? ` · ${data.total.toLocaleString()} results` : ""}
           </p>
         </div>
-        {prismAvailable ? (
-          <div className="flex items-center gap-2">
-            <Button onClick={() => setNewItemOpen(true)}>
-              New Item
-            </Button>
-            <Button variant="outline" render={<Link href="/products/batch-add" />}>
-              Batch Add
-            </Button>
-          </div>
-        ) : null}
+        <div className="flex items-center gap-2">
+          <SyncDatabaseButton />
+          {prismAvailable ? (
+            <>
+              <Button onClick={() => setNewItemOpen(true)}>
+                New Item
+              </Button>
+              <Button variant="outline" render={<Link href="/products/batch-add" />}>
+                Batch Add
+              </Button>
+              <Button variant="outline" render={<Link href="/products/bulk-edit" />}>
+                Bulk Edit Workspace
+              </Button>
+            </>
+          ) : null}
+        </div>
       </div>
 
       <NewItemDialog
@@ -269,6 +276,7 @@ export default function ProductsPage() {
         onDiscontinued={() => refetch()}
         onEditClick={() => setEditOpen(true)}
         onHardDeleteClick={() => setHardDeleteOpen(true)}
+        onBulkEdit={() => router.push('/products/bulk-edit?preloadSkus=' + Array.from(selected.keys()).join(','))}
       />
 
       {/* Spacer so content isn't hidden behind the sticky action bar */}
