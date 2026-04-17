@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   productApi,
   type PrismRefs,
@@ -129,11 +128,11 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
         </DialogHeader>
 
         {refsLoading ? (
-          <div className="py-8 text-center text-sm text-muted-foreground">
+          <div role="status" aria-live="polite" className="py-8 text-center text-sm text-muted-foreground">
             Loading vendors and categories…
           </div>
         ) : refsError ? (
-          <div className="py-4 rounded border border-destructive/30 bg-destructive/5 px-3 text-sm text-destructive">
+          <div role="alert" aria-live="polite" className="py-4 rounded border border-destructive/30 bg-destructive/5 px-3 text-sm text-destructive">
             {refsError}
           </div>
         ) : refs ? (
@@ -142,10 +141,12 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
               <Label htmlFor="description">Description *</Label>
               <Input
                 id="description"
+                name="description"
+                autoComplete="off"
                 value={form.description}
                 onChange={(e) => update("description", e.target.value)}
                 maxLength={128}
-                placeholder="e.g. PIERCE LOGO MUG 12OZ"
+                placeholder="e.g. PIERCE LOGO MUG 12OZ…"
                 autoFocus
               />
             </div>
@@ -162,12 +163,16 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
               <Label htmlFor="cost">Cost *</Label>
               <Input
                 id="cost"
+                name="cost"
+                autoComplete="off"
+                inputMode="decimal"
                 type="number"
                 step="0.01"
                 min="0"
                 value={form.cost}
                 onChange={(e) => update("cost", e.target.value)}
                 placeholder="0.00"
+                className="tabular-nums"
               />
             </div>
 
@@ -175,12 +180,16 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
               <Label htmlFor="retail">Retail Price *</Label>
               <Input
                 id="retail"
+                name="retail"
+                autoComplete="off"
+                inputMode="decimal"
                 type="number"
                 step="0.01"
                 min="0"
                 value={form.retail}
                 onChange={(e) => update("retail", e.target.value)}
                 placeholder="0.00"
+                className="tabular-nums"
               />
             </div>
 
@@ -188,10 +197,13 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
               <Label htmlFor="barcode">Barcode</Label>
               <Input
                 id="barcode"
+                name="barcode"
+                autoComplete="off"
+                spellCheck={false}
                 value={form.barcode}
                 onChange={(e) => update("barcode", e.target.value)}
                 maxLength={20}
-                placeholder="Optional UPC/EAN"
+                placeholder="Optional UPC/EAN…"
               />
             </div>
 
@@ -199,27 +211,31 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
               <Label htmlFor="catalogNumber">Catalog #</Label>
               <Input
                 id="catalogNumber"
+                name="catalogNumber"
+                autoComplete="off"
+                spellCheck={false}
                 value={form.catalogNumber}
                 onChange={(e) => update("catalogNumber", e.target.value)}
                 maxLength={30}
-                placeholder="Optional vendor part #"
+                placeholder="Optional vendor part #…"
               />
             </div>
 
             <div className="sm:col-span-2 space-y-1.5">
               <Label htmlFor="comment">Comment</Label>
-              <Textarea
+              <Input
                 id="comment"
+                name="comment"
+                autoComplete="off"
                 value={form.comment}
                 onChange={(e) => update("comment", e.target.value)}
                 maxLength={25}
-                placeholder="Optional internal note (max 25 chars)"
-                rows={2}
+                placeholder="Optional internal note…"
               />
             </div>
 
             {error ? (
-              <div className="sm:col-span-2 rounded border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              <div role="alert" aria-live="polite" className="sm:col-span-2 rounded border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
                 {error}
               </div>
             ) : null}

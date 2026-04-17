@@ -160,34 +160,74 @@ export function EditItemDialog({ open, onOpenChange, items, onSaved }: EditItemD
     }
   }
 
+  // Detect unsaved changes so we can warn on close
+  function hasUnsavedChanges(): boolean {
+    if (!isBulk) {
+      const it = items[0];
+      if (!it) return false;
+      return (
+        (form.description ?? "") !== (it.description ?? "") ||
+        (form.barcode ?? "") !== (it.barcode ?? "") ||
+        form.retail !== String(it.retail) ||
+        form.cost !== String(it.cost) ||
+        (form.catalogNumber ?? "") !== (it.catalogNumber ?? "") ||
+        (form.comment ?? "") !== (it.comment ?? "") ||
+        (form.vendorId ?? "") !== (it.vendorId ? String(it.vendorId) : "") ||
+        (form.dccId ?? "") !== (it.dccId ? String(it.dccId) : "") ||
+        (form.itemTaxTypeId ?? "") !== (it.itemTaxTypeId ? String(it.itemTaxTypeId) : "")
+      );
+    }
+    // bulk mode: any non-empty field is a change
+    return Object.values(form).some((v) => v !== "" && v !== undefined);
+  }
+
+  function handleClose(nextOpen: boolean) {
+    if (!nextOpen && hasUnsavedChanges()) {
+      const ok = window.confirm("Discard unsaved changes?");
+      if (!ok) return;
+    }
+    onOpenChange(nextOpen);
+  }
+
+  const uid = items[0]?.sku ?? "bulk";
+  const idFor = (field: string) => `edit-${uid}-${field}`;
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>{isBulk ? `Edit ${items.length} items` : `Edit SKU ${items[0]?.sku}`}</DialogTitle>
           <DialogDescription>
-            {isBulk ? "Fields left blank won't be changed. Fields you fill will be applied to all selected items." : "Only changed fields will be written."}
+            {isBulk ? "Fields left blank won\u2019t be changed. Fields you fill will be applied to all selected items." : "Only changed fields will be written."}
             {hasTextbook ? " (textbook-safe fields only)" : null}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           {!narrow && (
-            <div className="col-span-2 space-y-1.5">
-              <Label>Description</Label>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label htmlFor={idFor("description")}>Description</Label>
               <Input
-                placeholder={isBulk ? "Leave unchanged (per-row)" : ""}
+                id={idFor("description")}
+                name="description"
+                autoComplete="off"
+                placeholder={isBulk ? "Leave unchanged (per-row)…" : ""}
                 value={form.description ?? ""}
                 disabled={isBulk}
                 onChange={(e) => update("description", e.target.value)}
+                autoFocus={!isBulk}
               />
             </div>
           )}
 
           <div className="space-y-1.5">
-            <Label>Barcode</Label>
+            <Label htmlFor={idFor("barcode")}>Barcode</Label>
             <Input
-              placeholder={isBulk ? "Leave unchanged (per-row)" : ""}
+              id={idFor("barcode")}
+              name="barcode"
+              autoComplete="off"
+              spellCheck={false}
+              placeholder={isBulk ? "Leave unchanged (per-row)…" : ""}
               value={form.barcode ?? ""}
               disabled={isBulk}
               onChange={(e) => update("barcode", e.target.value)}
@@ -195,22 +235,36 @@ export function EditItemDialog({ open, onOpenChange, items, onSaved }: EditItemD
           </div>
 
           <div className="space-y-1.5">
-            <Label>Retail</Label>
+            <Label htmlFor={idFor("retail")}>Retail</Label>
             <Input
-              type="number" step="0.01"
-              placeholder={isBulk ? "Leave unchanged" : ""}
+              id={idFor("retail")}
+              name="retail"
+              autoComplete="off"
+              inputMode="decimal"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder={isBulk ? "Leave unchanged…" : ""}
               value={form.retail ?? ""}
               onChange={(e) => update("retail", e.target.value)}
+              className="tabular-nums"
             />
           </div>
 
           <div className="space-y-1.5">
-            <Label>Cost</Label>
+            <Label htmlFor={idFor("cost")}>Cost</Label>
             <Input
-              type="number" step="0.01"
-              placeholder={isBulk ? "Leave unchanged" : ""}
+              id={idFor("cost")}
+              name="cost"
+              autoComplete="off"
+              inputMode="decimal"
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder={isBulk ? "Leave unchanged…" : ""}
               value={form.cost ?? ""}
               onChange={(e) => update("cost", e.target.value)}
+              className="tabular-nums"
             />
           </div>
 
@@ -228,17 +282,24 @@ export function EditItemDialog({ open, onOpenChange, items, onSaved }: EditItemD
           {!narrow && (
             <>
               <div className="space-y-1.5">
-                <Label>Catalog #</Label>
+                <Label htmlFor={idFor("catalogNumber")}>Catalog #</Label>
                 <Input
-                  placeholder={isBulk ? "Leave unchanged" : ""}
+                  id={idFor("catalogNumber")}
+                  name="catalogNumber"
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder={isBulk ? "Leave unchanged…" : ""}
                   value={form.catalogNumber ?? ""}
                   onChange={(e) => update("catalogNumber", e.target.value)}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label>Comment</Label>
+                <Label htmlFor={idFor("comment")}>Comment</Label>
                 <Input
-                  placeholder={isBulk ? "Leave unchanged" : ""}
+                  id={idFor("comment")}
+                  name="comment"
+                  autoComplete="off"
+                  placeholder={isBulk ? "Leave unchanged…" : ""}
                   value={form.comment ?? ""}
                   onChange={(e) => update("comment", e.target.value)}
                 />
@@ -247,10 +308,14 @@ export function EditItemDialog({ open, onOpenChange, items, onSaved }: EditItemD
           )}
         </div>
 
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
+        {error ? (
+          <div role="alert" aria-live="polite" className="rounded border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+            {error}
+          </div>
+        ) : null}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>Cancel</Button>
+          <Button variant="outline" onClick={() => handleClose(false)} disabled={saving}>Cancel</Button>
           <Button onClick={handleSave} disabled={saving}>
             {saving ? "Saving…" : isBulk ? `Apply to ${items.length}` : "Save"}
           </Button>
