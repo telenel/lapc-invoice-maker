@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useProductSearch, useProductSelection } from "@/domains/product/hooks";
 import { EMPTY_FILTERS, TABS } from "@/domains/product/constants";
@@ -150,9 +151,14 @@ export default function ProductsPage() {
           </p>
         </div>
         {prismAvailable ? (
-          <Button onClick={() => setNewItemOpen(true)}>
-            New Item
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={() => setNewItemOpen(true)}>
+              New Item
+            </Button>
+            <Button variant="outline" render={<Link href="/products/batch-add" />}>
+              Batch Add
+            </Button>
+          </div>
         ) : null}
       </div>
 
