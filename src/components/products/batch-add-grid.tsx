@@ -13,16 +13,18 @@ export function parsePastedGrid(text: string): string[][] {
 }
 
 const COLUMNS = [
-  { key: "description", label: "Description", type: "text" as const, width: "min-w-60" },
-  { key: "vendorId",    label: "Vendor ID",   type: "number" as const, width: "w-28" },
-  { key: "dccId",       label: "DCC ID",      type: "number" as const, width: "w-32" },
-  { key: "itemTaxTypeId", label: "Tax",       type: "number" as const, width: "w-20" },
-  { key: "barcode",     label: "Barcode",     type: "text" as const, width: "w-40" },
-  { key: "catalogNumber", label: "Catalog #", type: "text" as const, width: "w-32" },
-  { key: "comment",     label: "Comment",     type: "text" as const, width: "w-32" },
-  { key: "retail",      label: "Retail",      type: "number" as const, width: "w-24" },
-  { key: "cost",        label: "Cost",        type: "number" as const, width: "w-24" },
+  { key: "description",   label: "Description", type: "text"   as const, width: "min-w-60", placeholder: "PIERCE LOGO MUG 12OZ…" },
+  { key: "vendorId",      label: "Vendor ID",   type: "number" as const, width: "w-28",     placeholder: "21" },
+  { key: "dccId",         label: "DCC ID",      type: "number" as const, width: "w-32",     placeholder: "1968650" },
+  { key: "itemTaxTypeId", label: "Tax",         type: "number" as const, width: "w-20",     placeholder: "6" },
+  { key: "barcode",       label: "Barcode",     type: "text"   as const, width: "w-40",     placeholder: "UPC…" },
+  { key: "catalogNumber", label: "Catalog #",   type: "text"   as const, width: "w-32",     placeholder: "vendor part #" },
+  { key: "comment",       label: "Comment",     type: "text"   as const, width: "w-32",     placeholder: "note…" },
+  { key: "retail",        label: "Retail",      type: "number" as const, width: "w-24",     placeholder: "0.00" },
+  { key: "cost",          label: "Cost",        type: "number" as const, width: "w-24",     placeholder: "0.00" },
 ];
+
+const NUMERIC_KEYS = new Set(["retail", "cost", "vendorId", "dccId", "itemTaxTypeId"]);
 
 interface GridRow {
   [key: string]: string;
@@ -137,42 +139,70 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
     return e ? e.message : null;
   }
 
+  const batchCount = rowsToBatch().length;
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <Button onClick={addRow} variant="outline" size="sm">Add row</Button>
-        <Button onClick={removeLastRow} variant="outline" size="sm">Remove last</Button>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={useDefaults} onChange={(e) => setUseDefaults(e.target.checked)} />
-          Use row 1 as defaults for blank cells
+      <div className="flex flex-wrap items-center gap-3">
+        <Button onClick={addRow} variant="outline" size="sm">Add Row</Button>
+        <Button onClick={removeLastRow} variant="outline" size="sm">Remove Last Row</Button>
+        <label className="flex items-center gap-2 text-sm" title="When on, any cell you leave blank in rows 2+ is filled at submit time with the value from row 1 in the same column.">
+          <input
+            type="checkbox"
+            checked={useDefaults}
+            onChange={(e) => setUseDefaults(e.target.checked)}
+          />
+          Copy row 1 into blank cells on submit
         </label>
-        <span className="ml-auto text-sm text-muted-foreground">{rows.length} rows</span>
+        <span className="ml-auto text-sm tabular-nums text-muted-foreground">
+          {rows.length} row{rows.length === 1 ? "" : "s"}
+        </span>
       </div>
 
-      <div className="overflow-x-auto rounded border">
+      <div className="overflow-x-auto overflow-y-auto rounded border max-h-[60vh]">
         <table className="w-full text-sm">
-          <thead className="bg-muted">
+          <thead className="sticky top-0 z-10 bg-muted">
             <tr>
+              <th scope="col" className="sticky left-0 z-20 bg-muted px-2 py-2 text-right font-medium text-muted-foreground w-10">#</th>
               {COLUMNS.map((c) => (
-                <th key={c.key} className={`px-2 py-2 text-left font-medium ${c.width}`}>{c.label}</th>
+                <th key={c.key} scope="col" className={`px-2 py-2 text-left font-medium ${c.width}`}>{c.label}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {rows.map((row, rowIdx) => (
               <tr key={rowIdx} className="border-t">
+                <td className="sticky left-0 bg-background px-2 py-1 text-right text-xs tabular-nums text-muted-foreground">
+                  {rowIdx + 1}
+                </td>
                 {COLUMNS.map((col, colIdx) => {
                   const err = cellError(rowIdx, col.key);
+                  const cellId = `batch-${rowIdx}-${col.key}`;
+                  const errId = `${cellId}-err`;
+                  const isMoney = col.key === "retail" || col.key === "cost";
                   return (
-                    <td key={col.key} className={`p-1 ${err ? "border-l-2 border-destructive" : ""}`} title={err ?? undefined}>
+                    <td key={col.key} className={`p-1 ${err ? "border-l-2 border-destructive" : ""}`}>
                       <Input
+                        id={cellId}
+                        name={col.key}
+                        aria-label={`${col.label} for row ${rowIdx + 1}`}
+                        aria-invalid={err ? true : undefined}
+                        aria-errormessage={err ? errId : undefined}
+                        autoComplete="off"
+                        spellCheck={false}
                         type={col.type}
                         step={col.type === "number" ? "0.01" : undefined}
+                        min={NUMERIC_KEYS.has(col.key) ? "0" : undefined}
+                        inputMode={col.type === "number" ? "decimal" : undefined}
+                        placeholder={col.placeholder}
                         value={row[col.key] ?? ""}
                         onPaste={(e) => onPaste(e, rowIdx, colIdx)}
                         onChange={(e) => updateCell(rowIdx, col.key, e.target.value)}
-                        className={`h-8 ${err ? "border-destructive" : ""}`}
+                        className={`h-8 ${isMoney ? "tabular-nums" : ""} ${err ? "border-destructive" : ""}`}
                       />
+                      {err ? (
+                        <span id={errId} className="sr-only">{err}</span>
+                      ) : null}
                     </td>
                   );
                 })}
@@ -182,17 +212,20 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
         </table>
       </div>
 
-      {errors.length > 0 ? (
-        <p className="text-sm text-destructive">
-          {errors.length} error{errors.length !== 1 ? "s" : ""} — fix before submitting.
-        </p>
-      ) : null}
-      {toast ? <p className="text-sm text-green-700">{toast}</p> : null}
+      <div aria-live="polite" className="min-h-[1.25rem] text-sm">
+        {errors.length > 0 ? (
+          <span className="text-destructive">
+            {errors.length} error{errors.length === 1 ? "" : "s"} — hover the red cells for details, then fix and re-validate.
+          </span>
+        ) : toast ? (
+          <span className="text-emerald-700 dark:text-emerald-400">{toast}</span>
+        ) : null}
+      </div>
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={handleValidate} disabled={submitting}>Validate</Button>
-        <Button onClick={handleSubmit} disabled={submitting || errors.length > 0}>
-          {submitting ? "Working…" : `Submit ${rowsToBatch().length} items`}
+        <Button onClick={handleSubmit} disabled={submitting || errors.length > 0 || batchCount === 0}>
+          {submitting ? "Working…" : batchCount === 0 ? "Nothing to submit" : `Submit ${batchCount} Item${batchCount === 1 ? "" : "s"}`}
         </Button>
       </div>
     </div>
