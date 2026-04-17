@@ -27,9 +27,8 @@ export function TeamActivity() {
   return (
     <Card className="card-hover">
       <CardHeader className="border-b border-border/50">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center">
           <CardTitle className="text-sm font-bold">Team Activity</CardTitle>
-          <span className="text-[11px] text-muted-foreground">Funding leaderboard</span>
         </div>
       </CardHeader>
       <CardContent className="p-0">

@@ -368,6 +368,7 @@ export async function countByCreator(status?: CreatorStatsStatus) {
       type: "INVOICE",
       ...(statusFilter ? { status: statusFilter } : {}),
       createdAt: { gte: firstOfMonth },
+      archivedAt: null,
     },
     select: {
       totalAmount: true,

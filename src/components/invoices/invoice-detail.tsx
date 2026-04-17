@@ -202,9 +202,19 @@ export function InvoiceDetailView({ id }: { id: string }) {
   }
 
   const sessionUser = session?.user as { id?: string; role?: string } | undefined;
-  const canManageActions =
+  const fallbackCanManageActions =
     sessionUser?.role === "admin" || (sessionUser?.id != null && sessionUser.id === invoice.creatorId);
+  const viewerAccess = invoice.viewerAccess ?? {
+    canViewInvoice: Boolean(sessionUser?.id),
+    canManageActions: fallbackCanManageActions,
+    canDuplicateInvoice: Boolean(sessionUser?.id),
+  };
+  if (!viewerAccess.canViewInvoice) {
+    return <p className="text-muted-foreground text-sm">You do not have access to this invoice.</p>;
+  }
+  const canManageActions = viewerAccess.canManageActions;
   const isArchived = Boolean(invoice.archivedAt);
+  const canDuplicate = viewerAccess.canDuplicateInvoice && !isArchived;
 
   return (
     <div className="space-y-6">
@@ -231,6 +241,7 @@ export function InvoiceDetailView({ id }: { id: string }) {
       <InvoiceDetailHeader
         invoice={invoice}
         canManageActions={canManageActions && !isArchived}
+        canDuplicate={canDuplicate}
         regenerating={regenerating}
         deleting={deleting}
         duplicating={duplicating}

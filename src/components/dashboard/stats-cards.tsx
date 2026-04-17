@@ -248,7 +248,7 @@ export function StatsCards({
       <div className="dashboard-enter dashboard-enter-3">
       <Card className="card-hover">
         <CardContent className="pt-4">
-          <div className="mb-2">
+          <div className="mb-2 flex items-start">
             <p className="text-[11px] font-medium text-muted-foreground">Team Activity</p>
           </div>
           {teamLoading ? (

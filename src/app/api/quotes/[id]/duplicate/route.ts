@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth, forbiddenResponse } from "@/domains/shared/auth";
+import { getQuoteViewerAccess } from "@/domains/quote/access";
 import { quoteService } from "@/domains/quote/service";
 
 export const POST = withAuth(async (_req: NextRequest, session, ctx) => {
@@ -12,7 +13,8 @@ export const POST = withAuth(async (_req: NextRequest, session, ctx) => {
   try {
     const existing = await quoteService.getById(id, { includeArchived: true });
     if (!existing) return NextResponse.json({ error: "Quote not found" }, { status: 404 });
-    if (session.user.role !== "admin" && existing.creatorId !== session.user.id) {
+    const access = getQuoteViewerAccess(existing, session.user.id, session.user.role === "admin");
+    if (!access.canDuplicateQuote) {
       return forbiddenResponse();
     }
     const result = await quoteService.duplicate(id, session.user.id);
@@ -23,6 +25,7 @@ export const POST = withAuth(async (_req: NextRequest, session, ctx) => {
   } catch (err) {
     const code = (err as { code?: string }).code;
     if (code === "NOT_FOUND") return NextResponse.json({ error: "Quote not found" }, { status: 404 });
+    if (code === "FORBIDDEN") return NextResponse.json({ error: (err as Error).message }, { status: 403 });
     console.error("POST /api/quotes/[id]/duplicate failed:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }

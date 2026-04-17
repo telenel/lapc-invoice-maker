@@ -95,6 +95,7 @@ export interface QuoteResponse {
   viewerAccess?: {
     canViewQuote: boolean;
     canManageActions: boolean;
+    canDuplicateQuote: boolean;
     canViewActivity: boolean;
     canViewSensitiveFields: boolean;
   };
@@ -109,6 +110,7 @@ export interface PublicQuoteResponse {
   quoteStatus: QuoteStatus;
   paymentLinkAvailable: boolean;
   responseLinkAvailable: boolean;
+  paymentMethod?: string | null;
   date: string;
   expirationDate: string | null;
   department: string;

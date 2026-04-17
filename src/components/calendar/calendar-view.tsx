@@ -17,6 +17,7 @@ import {
   type CalendarEvent,
 } from "@/components/calendar/event-detail-sidebar";
 import { AddEventModal } from "@/components/calendar/add-event-modal";
+import { useUIScale } from "@/components/ui-scale-provider";
 import { useCalendarSSE } from "@/domains/calendar/hooks";
 import { fromDateKey, getDateKeyInLosAngeles } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
@@ -25,6 +26,11 @@ import type { CalendarBootstrapData } from "@/domains/calendar/service";
 function getRangeKey(start: string, end: string): string {
   return `${start}|${end}`;
 }
+
+const MOBILE_VIEWPORT_WIDTH = 1024;
+const MIN_WEEK_CALENDAR_WIDTH = 1080;
+const DESKTOP_SIDEBAR_WIDTH = 240;
+const STACKED_LAYOUT_MIN_CONTENT_WIDTH = MIN_WEEK_CALENDAR_WIDTH + DESKTOP_SIDEBAR_WIDTH;
 
 function toEventInputs(events: CalendarEventItem[]): EventInput[] {
   return events.map((event) => ({
@@ -51,9 +57,13 @@ export function CalendarView({
   const calendarRef = useRef<FullCalendar | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const syncRef = useRef<() => void>(() => {});
+  const { scale } = useUIScale();
   const [calendarHeight, setCalendarHeight] = useState<number>(600);
-  const [isMobile, setIsMobile] = useState<boolean>(() => (
-    typeof window !== "undefined" ? window.innerWidth < 1024 : false
+  const [isMobileViewport, setIsMobileViewport] = useState<boolean>(() => (
+    typeof window !== "undefined" ? window.innerWidth < MOBILE_VIEWPORT_WIDTH : false
+  ));
+  const [useStackedLayout, setUseStackedLayout] = useState<boolean>(() => (
+    typeof window !== "undefined" ? window.innerWidth < STACKED_LAYOUT_MIN_CONTENT_WIDTH : false
   ));
   const eventCacheRef = useRef<Map<string, EventInput[]>>(
     new Map(
@@ -99,17 +109,21 @@ export function CalendarView({
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
         const navH = document.querySelector("nav")?.getBoundingClientRect().height ?? 64;
-        const mobile = window.innerWidth < 1024;
-        setIsMobile(mobile);
+        const availableWidth = mainEl.clientWidth || window.innerWidth;
+        const mobileViewport = window.innerWidth < MOBILE_VIEWPORT_WIDTH;
+        const stackedLayout = availableWidth < STACKED_LAYOUT_MIN_CONTENT_WIDTH;
+        setIsMobileViewport(mobileViewport);
+        setUseStackedLayout(stackedLayout);
 
-        if (mobile) {
+        if (stackedLayout) {
           mainEl.style.overflow = prevOverflow;
           mainEl.style.padding = prevPadding;
           document.documentElement.style.removeProperty("--fc-slot-height");
           document.documentElement.style.removeProperty("--fc-slot-font");
           const sidebarHeight =
             document.querySelector<HTMLElement>("[data-calendar-sidebar]")?.getBoundingClientRect().height ?? 320;
-          setCalendarHeight(Math.max(window.innerHeight - navH - sidebarHeight - 24, 480));
+          const minimumCalendarHeight = mobileViewport ? 480 : 560;
+          setCalendarHeight(Math.max(window.innerHeight - navH - sidebarHeight - 24, minimumCalendarHeight));
           calendarRef.current?.getApi().updateSize();
           return;
         }
@@ -160,6 +174,22 @@ export function CalendarView({
       clearTimeout(leaveTimerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    let frameOne = 0;
+    let frameTwo = 0;
+
+    frameOne = requestAnimationFrame(() => {
+      frameTwo = requestAnimationFrame(() => {
+        calendarRef.current?.getApi().updateSize();
+      });
+    });
+
+    return () => {
+      cancelAnimationFrame(frameOne);
+      cancelAnimationFrame(frameTwo);
+    };
+  }, [calendarHeight, isMobileViewport, useStackedLayout]);
 
   function refetchEvents() {
     eventCacheRef.current.clear();
@@ -393,9 +423,13 @@ export function CalendarView({
 
   // The event to show in sidebar: pinned takes priority, then hovered
   const sidebarEvent = pinnedEvent ?? hoveredEvent;
+  const calendarZoomCompensation = Math.max(1 / Number(scale || 1), 0.5);
 
   return (
-    <div className={cn("flex", isMobile ? "flex-col gap-3" : "")} style={isMobile ? undefined : { height: "calc(100vh - 64px)" }}>
+    <div
+      className={cn("flex min-w-0", useStackedLayout ? "flex-col gap-3" : "")}
+      style={useStackedLayout ? undefined : { height: "calc(100vh - 64px)" }}
+    >
       {/* Edit modal triggered by sidebar Edit button */}
       {selectedEvent && (
         <AddEventModal
@@ -412,11 +446,18 @@ export function CalendarView({
       )}
 
       {/* Main content: sidebar + calendar */}
-      <div ref={containerRef} className="flex min-h-0 flex-1 flex-col overflow-hidden border-t border-border bg-card lg:flex-row">
+      <div
+        ref={containerRef}
+        className={cn(
+          "flex min-h-0 min-w-0 flex-1 overflow-hidden border-t border-border bg-card",
+          useStackedLayout ? "flex-col" : "flex-row",
+        )}
+      >
         {/* Left sidebar */}
         <EventDetailSidebar
           event={sidebarEvent}
           pinned={pinnedEvent !== null}
+          stacked={useStackedLayout}
           onEditEvent={(eventId) => {
             eventApi
               .getById(eventId)
@@ -450,32 +491,34 @@ export function CalendarView({
         />
 
         {/* Calendar */}
-        <div className="min-h-[480px] flex-1 min-w-0 overflow-hidden p-2">
-          <FullCalendar
-            key={isMobile ? "mobile" : "desktop"}
-            ref={calendarRef}
-            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-            initialView={isMobile ? "timeGridDay" : "timeGridWeek"}
-            headerToolbar={{
-              left: isMobile ? "prev,next" : "prev,next today",
-              center: "title",
-              right: isMobile ? "dayGridMonth,timeGridDay" : "dayGridMonth,timeGridWeek,timeGridDay",
-            }}
-            events={fetchEvents}
-            datesSet={handleDatesSet}
-            eventClick={handleEventClick}
-            eventMouseEnter={handleEventMouseEnter}
-            eventMouseLeave={handleEventMouseLeave}
-            eventContent={renderEventContent}
-            eventDidMount={handleEventDidMount}
-            eventWillUnmount={handleEventWillUnmount}
-            height={calendarHeight}
-            weekends={false}
-            slotMinTime="07:00:00"
-            slotMaxTime="19:30:00"
-            nowIndicator
-            slotEventOverlap
-          />
+        <div className="min-h-[480px] w-full flex-1 min-w-0 overflow-hidden p-2">
+          <div style={{ zoom: String(calendarZoomCompensation) }}>
+            <FullCalendar
+              key={isMobileViewport ? "mobile" : "desktop"}
+              ref={calendarRef}
+              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+              initialView={isMobileViewport ? "timeGridDay" : "timeGridWeek"}
+              headerToolbar={{
+                left: isMobileViewport ? "prev,next" : "prev,next today",
+                center: "title",
+                right: isMobileViewport ? "dayGridMonth,timeGridDay" : "dayGridMonth,timeGridWeek,timeGridDay",
+              }}
+              events={fetchEvents}
+              datesSet={handleDatesSet}
+              eventClick={handleEventClick}
+              eventMouseEnter={handleEventMouseEnter}
+              eventMouseLeave={handleEventMouseLeave}
+              eventContent={renderEventContent}
+              eventDidMount={handleEventDidMount}
+              eventWillUnmount={handleEventWillUnmount}
+              height={calendarHeight}
+              weekends={false}
+              slotMinTime="07:00:00"
+              slotMaxTime="19:30:00"
+              nowIndicator
+              slotEventOverlap
+            />
+          </div>
         </div>
       </div>
     </div>

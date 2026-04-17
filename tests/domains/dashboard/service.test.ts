@@ -189,4 +189,83 @@ describe("dashboard service", () => {
       }),
     ]);
   });
+
+  it("excludes archived records from direct dashboard bootstrap queries", async () => {
+    await getDashboardBootstrapData("user-1");
+
+    expect(mockPrisma.invoice.count).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        where: expect.objectContaining({
+          type: "INVOICE",
+          createdBy: "user-1",
+          archivedAt: null,
+        }),
+      }),
+    );
+    expect(mockPrisma.invoice.count).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        where: expect.objectContaining({
+          type: "INVOICE",
+          createdBy: "user-1",
+          archivedAt: null,
+        }),
+      }),
+    );
+    expect(mockPrisma.invoice.count).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
+        where: expect.objectContaining({
+          type: "QUOTE",
+          quoteStatus: "SENT",
+          createdBy: "user-1",
+          archivedAt: null,
+        }),
+      }),
+    );
+
+    expect(mockPrisma.invoice.aggregate).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        where: expect.objectContaining({
+          type: "INVOICE",
+          status: "FINAL",
+          createdBy: "user-1",
+          archivedAt: null,
+        }),
+      }),
+    );
+    expect(mockPrisma.invoice.aggregate).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        where: expect.objectContaining({
+          type: "INVOICE",
+          status: "FINAL",
+          createdBy: "user-1",
+          archivedAt: null,
+        }),
+      }),
+    );
+
+    expect(mockPrisma.invoice.findMany).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        where: expect.objectContaining({
+          type: "INVOICE",
+          createdBy: "user-1",
+          archivedAt: null,
+        }),
+      }),
+    );
+    expect(mockPrisma.invoice.findMany).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        where: {
+          type: { in: ["INVOICE", "QUOTE"] },
+          archivedAt: null,
+        },
+      }),
+    );
+  });
 });

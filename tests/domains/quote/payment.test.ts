@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { normalizeQuotePaymentDetails } from "@/domains/quote/payment";
+import {
+  coerceQuotePaymentMethod,
+  getQuotePaymentMethodGuidance,
+  getQuotePaymentMethodLabel,
+  normalizeQuotePaymentDetails,
+} from "@/domains/quote/payment";
 
 describe("normalizeQuotePaymentDetails", () => {
   it("returns undefined when no payment method is provided", () => {
@@ -46,5 +51,31 @@ describe("normalizeQuotePaymentDetails", () => {
         paymentMethod: "WIRE_TRANSFER",
       }),
     ).toThrowError("Invalid payment method");
+  });
+
+  it("formats payment method labels for display", () => {
+    expect(getQuotePaymentMethodLabel("ACCOUNT_NUMBER")).toBe("Account Number");
+    expect(getQuotePaymentMethodLabel("credit_card")).toBe("Credit Card");
+  });
+
+  it("coerces valid payment methods and rejects unknown ones", () => {
+    expect(coerceQuotePaymentMethod("cash")).toBe("CASH");
+    expect(coerceQuotePaymentMethod("wire")).toBeNull();
+  });
+
+  it("returns bookstore guidance for offline payment methods", () => {
+    expect(getQuotePaymentMethodGuidance("CHECK")).toMatchObject({
+      title: "Mail Your Check",
+      calloutLines: expect.arrayContaining([
+        "Los Angeles Pierce College Bookstore",
+        "6201 Winnetka Ave",
+        "Woodland Hills, CA 91371",
+      ]),
+    });
+
+    expect(getQuotePaymentMethodGuidance("CASH")).toMatchObject({
+      title: "Cash Payments Are In-Store Only",
+    });
+    expect(getQuotePaymentMethodGuidance("ACCOUNT_NUMBER")).toBeNull();
   });
 });

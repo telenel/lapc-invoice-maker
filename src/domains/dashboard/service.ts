@@ -106,28 +106,28 @@ async function getDashboardFocusData(
     prisma.invoice.count({
       where: {
         type: "INVOICE",
-        archivedAt: null,
         status: { in: ["DRAFT", "PENDING_CHARGE"] },
         createdBy: currentUserId,
+        archivedAt: null,
       },
     }),
     prisma.invoice.count({
       where: {
         type: "INVOICE",
-        archivedAt: null,
         OR: [
           { status: "PENDING_CHARGE" },
           { status: "DRAFT", isRunning: true },
         ],
         createdBy: currentUserId,
+        archivedAt: null,
       },
     }),
     prisma.invoice.aggregate({
       where: {
         type: "INVOICE",
-        archivedAt: null,
         status: "FINAL",
         createdBy: currentUserId,
+        archivedAt: null,
         date: {
           gte: new Date(dateFrom),
           lte: new Date(dateTo),
@@ -139,9 +139,9 @@ async function getDashboardFocusData(
     prisma.invoice.aggregate({
       where: {
         type: "INVOICE",
-        archivedAt: null,
         status: "FINAL",
         createdBy: currentUserId,
+        archivedAt: null,
         date: {
           gte: new Date(lastMonthFrom),
           lte: new Date(lastMonthTo),
@@ -153,9 +153,9 @@ async function getDashboardFocusData(
     prisma.invoice.count({
       where: {
         type: "QUOTE",
-        archivedAt: null,
         quoteStatus: "SENT",
         createdBy: currentUserId,
+        archivedAt: null,
       },
     }),
   ]);
@@ -199,8 +199,8 @@ async function getRunningInvoices(currentUserId: string | null): Promise<Dashboa
   const invoices = await prisma.invoice.findMany({
     where: {
       type: "INVOICE",
-      archivedAt: null,
       createdBy: currentUserId,
+      archivedAt: null,
       OR: [
         { status: "PENDING_CHARGE" },
         { status: "DRAFT", isRunning: true },

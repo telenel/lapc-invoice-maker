@@ -45,7 +45,7 @@ describe("GET /api/quotes/public/[token]", () => {
     expect(await response.json()).toEqual({ error: "Quote not found" });
   });
 
-  it("strips payment details from the public payload", async () => {
+  it("keeps the account number hidden in the public payload", async () => {
     vi.mocked(isPublicPaymentLinkAvailable).mockReturnValue(true);
     vi.mocked(isPublicQuoteResponseAvailable).mockReturnValue(false);
     vi.mocked(quoteService.getByShareToken).mockResolvedValue({
@@ -103,7 +103,7 @@ describe("GET /api/quotes/public/[token]", () => {
     );
 
     const body = await response.json();
-    expect(body.paymentMethod).toBeUndefined();
+    expect(body.paymentMethod).toBeNull();
     expect(body.paymentAccountNumber).toBeUndefined();
     expect(body.paymentLinkAvailable).toBe(true);
     expect(body.responseLinkAvailable).toBe(false);

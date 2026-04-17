@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth, forbiddenResponse } from "@/domains/shared/auth";
+import { annotateInvoiceForViewer, canViewInvoiceDetails, getInvoiceViewerAccess } from "@/domains/invoice/access";
 import { invoiceService } from "@/domains/invoice/service";
 import { invoiceUpdateSchema } from "@/lib/validators";
 
@@ -23,10 +24,11 @@ export const GET = withAuth(async (_req: NextRequest, session, ctx) => {
   try {
     const invoice = await invoiceService.getById(id, { includeArchived: true });
     if (!invoice) return NextResponse.json({ error: "Invoice not found" }, { status: 404 });
-    if (session.user.role !== "admin" && invoice.creatorId !== session.user.id) {
+    const access = getInvoiceViewerAccess(invoice, session.user.id, session.user.role === "admin");
+    if (!canViewInvoiceDetails(invoice, session.user.id, session.user.role === "admin")) {
       return forbiddenResponse();
     }
-    return NextResponse.json(invoice);
+    return NextResponse.json(annotateInvoiceForViewer(invoice, access));
   } catch (err) {
     console.error("GET /api/invoices/[id] failed:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
