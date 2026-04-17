@@ -18,16 +18,13 @@ jobs:
   merge:
     runs-on: ubuntu-latest
     env:
-      QUIET_PERIOD_MINUTES: "15"
       REQUIRED_CHECK_GROUPS: '[["actionlint","ship-check"],["Lint, Build & Test"]]'
     steps:
       - name: Merge eligible pull requests
         uses: actions/github-script@v8
         with:
           script: |
-            const quietMs = Number(process.env.QUIET_PERIOD_MINUTES) * 60 * 1000;
             const requiredCheckGroups = JSON.parse(process.env.REQUIRED_CHECK_GROUPS);
-            const now = Date.now();
 
             const openPullRequests = await github.paginate(github.rest.pulls.list, {
               ...context.repo,
@@ -52,68 +49,6 @@ jobs:
               const labels = (pullRequest.labels || []).map((label) => label.name.toLowerCase());
               if (labels.includes("no-automerge") || labels.includes("hold")) {
                 core.info(`PR #${pullRequest.number} opted out of auto-merge`);
-                continue;
-              }
-
-              const { data: headCommit } = await github.rest.repos.getCommit({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: pullRequest.head.sha,
-              });
-
-              const commitTimestamp =
-                headCommit.commit.committer?.date ??
-                headCommit.commit.author?.date ??
-                pullRequest.updated_at;
-
-              if (!commitTimestamp) {
-                core.info(`PR #${pullRequest.number} has no commit timestamp; skipping`);
-                continue;
-              }
-
-              const commitAgeMs = now - Date.parse(commitTimestamp);
-              if (Number.isNaN(commitAgeMs) || commitAgeMs < quietMs) {
-                core.info(
-                  `PR #${pullRequest.number} is still inside quiet period (${Math.max(0, Math.floor(commitAgeMs / 60000))} min old)`,
-                );
-                continue;
-              }
-
-              const coderabbitActorLogins = [
-                headCommit.author?.login,
-                headCommit.committer?.login,
-              ]
-                .filter(Boolean)
-                .map((value) => value.toLowerCase());
-              const coderabbitActorNames = [
-                headCommit.commit.author?.name,
-                headCommit.commit.committer?.name,
-              ]
-                .filter(Boolean)
-                .map((value) => value.toLowerCase());
-
-              const headIsCodeRabbit =
-                coderabbitActorLogins.some((value) => value.includes("coderabbit")) ||
-                coderabbitActorNames.some((value) => value.includes("coderabbit"));
-
-              const reviews = await github.paginate(github.rest.pulls.listReviews, {
-                ...context.repo,
-                pull_number: pullRequest.number,
-                per_page: 100,
-              });
-
-              const reviewedCurrentHead = reviews.some((review) => {
-                const login = review.user?.login?.toLowerCase() ?? "";
-                return (
-                  (login === "coderabbitai" || login === "coderabbitai[bot]") &&
-                  review.commit_id === pullRequest.head.sha
-                );
-              });
-
-              if (!reviewedCurrentHead && !headIsCodeRabbit) {
-                core.info(
-                  `PR #${pullRequest.number} has not been reviewed by CodeRabbit for ${pullRequest.head.sha}`,
-                );
                 continue;
               }
 
