@@ -15,6 +15,7 @@ import type {
 import { PIERCE_LOCATION_ID } from "./prism-server";
 import { updateGmItem, updateTextbookPricing } from "./prism-updates";
 import { hasTransactionHistory } from "./prism-delete";
+import { validateBatchCreateShape, validateBatchUpdateShape } from "./batch-validation";
 
 /**
  * Find which of the given barcodes already exist in Prism. Used by batch
@@ -228,4 +229,84 @@ export async function batchHardDeleteItems(skus: number[]): Promise<number[]> {
     try { await transaction.rollback(); } catch { /* swallow */ }
     throw err;
   }
+}
+
+/**
+ * Full batch-create validation: pure shape checks + live FK checks + live
+ * duplicate-barcode lookup. Returns all errors in one pass.
+ */
+export async function validateBatchCreateAgainstPrism(
+  rows: BatchCreateRow[],
+): Promise<BatchValidationError[]> {
+  const shapeErrors = validateBatchCreateShape(rows);
+
+  const [refs, existingBarcodes] = await Promise.all([
+    findMissingRefs(
+      rows.map((r) => r.vendorId),
+      rows.map((r) => r.dccId),
+      rows.map((r) => r.itemTaxTypeId ?? 6),
+    ),
+    findExistingBarcodes(rows.map((r) => r.barcode ?? "").filter((b): b is string => !!b)),
+  ]);
+
+  const live: BatchValidationError[] = [];
+  rows.forEach((r, i) => {
+    if (r.vendorId && refs.missingVendors.has(r.vendorId)) {
+      live.push({ rowIndex: i, field: "vendorId", code: "INVALID_VENDOR", message: `Vendor ${r.vendorId} does not exist in Prism` });
+    }
+    if (r.dccId && refs.missingDccs.has(r.dccId)) {
+      live.push({ rowIndex: i, field: "dccId", code: "INVALID_DCC", message: `DCC ${r.dccId} does not exist in Prism` });
+    }
+    const tax = r.itemTaxTypeId ?? 6;
+    if (tax && refs.missingTax.has(tax)) {
+      live.push({ rowIndex: i, field: "itemTaxTypeId", code: "INVALID_TAX_TYPE", message: `Tax type ${tax} does not exist in Prism` });
+    }
+    const bc = (r.barcode ?? "").trim();
+    if (bc && existingBarcodes.has(bc)) {
+      live.push({ rowIndex: i, field: "barcode", code: "DUPLICATE_BARCODE", message: `Barcode '${bc}' already exists in Prism (SKU ${existingBarcodes.get(bc)})` });
+    }
+  });
+
+  return [...shapeErrors, ...live];
+}
+
+export async function validateBatchUpdateAgainstPrism(
+  rows: BatchUpdateRow[],
+): Promise<BatchValidationError[]> {
+  const shapeErrors = validateBatchUpdateShape(rows);
+  // For update, we only check FKs when the patch tries to change them; barcode
+  // duplicates are checked against everything OTHER than the row's own SKU.
+  const vendorIds = rows.map((r) => (r.patch as GmItemPatch).vendorId ?? 0).filter((v) => v > 0);
+  const dccIds = rows.map((r) => (r.patch as GmItemPatch).dccId ?? 0).filter((d) => d > 0);
+  const taxIds = rows.map((r) => (r.patch as GmItemPatch).itemTaxTypeId ?? 0).filter((t) => t > 0);
+  const barcodes = rows
+    .map((r) => (r.patch as GmItemPatch).barcode ?? "")
+    .filter((b): b is string => typeof b === "string" && b.length > 0);
+
+  const [refs, existingBarcodes] = await Promise.all([
+    findMissingRefs(vendorIds, dccIds, taxIds),
+    findExistingBarcodes(barcodes),
+  ]);
+
+  const live: BatchValidationError[] = [];
+  rows.forEach((r, i) => {
+    const p = r.patch as GmItemPatch;
+    if (p.vendorId && refs.missingVendors.has(p.vendorId)) {
+      live.push({ rowIndex: i, field: "vendorId", code: "INVALID_VENDOR", message: `Vendor ${p.vendorId} does not exist` });
+    }
+    if (p.dccId && refs.missingDccs.has(p.dccId)) {
+      live.push({ rowIndex: i, field: "dccId", code: "INVALID_DCC", message: `DCC ${p.dccId} does not exist` });
+    }
+    if (p.itemTaxTypeId && refs.missingTax.has(p.itemTaxTypeId)) {
+      live.push({ rowIndex: i, field: "itemTaxTypeId", code: "INVALID_TAX_TYPE", message: `Tax type ${p.itemTaxTypeId} does not exist` });
+    }
+    if (p.barcode) {
+      const owner = existingBarcodes.get(p.barcode.trim());
+      if (owner !== undefined && owner !== r.sku) {
+        live.push({ rowIndex: i, field: "barcode", code: "DUPLICATE_BARCODE", message: `Barcode '${p.barcode}' is used by SKU ${owner}` });
+      }
+    }
+  });
+
+  return [...shapeErrors, ...live];
 }
