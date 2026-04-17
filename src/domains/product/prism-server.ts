@@ -154,13 +154,15 @@ export async function deleteTestItem(sku: number): Promise<{ affected: number }>
       .query("DELETE FROM Inventory WHERE SKU = @sku");
     await transaction.request().input("sku", sql.Int, sku)
       .query("DELETE FROM GeneralMerchandise WHERE SKU = @sku");
-    const result = await transaction.request().input("sku", sql.Int, sku)
-      .query<{ affected: number }>(
-        "DELETE FROM Item WHERE SKU = @sku; SELECT @@ROWCOUNT AS affected;",
-      );
+    // Triggers on Item make both @@ROWCOUNT and the OUTPUT clause unreliable:
+    // rowcount gets clobbered, bare OUTPUT is rejected, and trigger recordsets
+    // crowd out the OUTPUT-INTO result. We pre-verified the row exists via the
+    // barcode check above, so a committed DELETE means one row was removed.
+    await transaction.request().input("sku", sql.Int, sku)
+      .query("DELETE FROM Item WHERE SKU = @sku");
 
     await transaction.commit();
-    return { affected: result.recordset[0]?.affected ?? 0 };
+    return { affected: 1 };
   } catch (err) {
     try { await transaction.rollback(); } catch { /* swallow */ }
     throw err;
