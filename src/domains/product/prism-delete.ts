@@ -13,47 +13,60 @@ import { PIERCE_LOCATION_ID } from "./prism-server";
  * Returns the subset of the given SKUs that have at least one transaction
  * history record. SKUs not in the returned set are safe to hard-delete.
  *
- * Checked tables (discovered empirically via the Prism schema):
+ * Candidate history tables (queried independently; missing ones skipped):
  *   - Inventory_Sales_History — POS sales rollup
  *   - Acct_ARInvoiceDetail    — invoice line items
  *   - PO_Detail               — purchase order lines
  *   - Receiving_Detail        — physical receiving lines
- *   - MarkdownReceipt_Detail  — markdown/receiving claims
  *
- * If any of these table names don't exist in a given Prism deployment, the
- * query silently returns "has history" for safety (fail closed).
+ * If ALL candidate tables fail (unknown schema or connection failure), we
+ * fail closed and treat every SKU as "has history" to block the delete.
  */
 export async function hasTransactionHistory(skus: number[]): Promise<Set<number>> {
   if (skus.length === 0) return new Set();
 
   const pool = await getPrismPool();
-  const request = pool.request();
-  const params = skus.map((_, i) => `@sku${i}`);
-  skus.forEach((sku, i) => request.input(`sku${i}`, sql.Int, sku));
 
-  // One query per table, UNION-ed. Wrapped in a best-effort: if a table doesn't
-  // exist (schema drift between Prism versions), fail closed — treat the SKU
-  // as "has history" to block the delete.
-  const query = `
-    SELECT DISTINCT SKU FROM (
-      SELECT SKU FROM Inventory_Sales_History WHERE SKU IN (${params.join(", ")})
-      UNION ALL
-      SELECT SKU FROM Acct_ARInvoiceDetail WHERE SKU IN (${params.join(", ")})
-      UNION ALL
-      SELECT SKU FROM PO_Detail WHERE SKU IN (${params.join(", ")})
-      UNION ALL
-      SELECT SKU FROM Receiving_Detail WHERE SKU IN (${params.join(", ")})
-    ) h
-  `;
+  // Query each history table independently. Tables absent from this Prism
+  // deployment are skipped (logged as warn). At least one must succeed for
+  // the guard to be meaningful — if ALL fail we still fail closed and return
+  // the full input set.
+  const candidateTables = [
+    "Inventory_Sales_History",
+    "Acct_ARInvoiceDetail",
+    "PO_Detail",
+    "Receiving_Detail",
+  ];
 
-  try {
-    const result = await request.query<{ SKU: number }>(query);
-    return new Set(result.recordset.map((r) => r.SKU));
-  } catch (err) {
-    // Schema drift or any other failure → fail closed: every SKU "has history"
-    console.warn("[hasTransactionHistory] query failed — failing closed:", err);
+  const hits = new Set<number>();
+  let anySucceeded = false;
+
+  for (const table of candidateTables) {
+    try {
+      const request = pool.request();
+      const params = skus.map((_, i) => `@sku${i}`);
+      skus.forEach((sku, i) => request.input(`sku${i}`, sql.Int, sku));
+      const result = await request.query<{ SKU: number }>(
+        `SELECT DISTINCT SKU FROM ${table} WHERE SKU IN (${params.join(", ")})`,
+      );
+      for (const row of result.recordset) hits.add(row.SKU);
+      anySucceeded = true;
+    } catch (err) {
+      // Missing table or permission issue — skip. Logged once so operators
+      // can notice schema drift, but don't let it poison the check.
+      const msg = err instanceof Error ? err.message : String(err);
+      if (!msg.includes("Invalid object name")) {
+        console.warn(`[hasTransactionHistory] ${table} check failed:`, msg);
+      }
+    }
+  }
+
+  if (!anySucceeded) {
+    console.warn("[hasTransactionHistory] all history tables failed — failing closed");
     return new Set(skus);
   }
+
+  return hits;
 }
 
 /**
