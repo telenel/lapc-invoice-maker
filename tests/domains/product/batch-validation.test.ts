@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { validateBatchCreateShape } from "@/domains/product/batch-validation";
-import type { BatchCreateRow } from "@/domains/product/types";
+import { validateBatchCreateShape, validateBatchUpdateShape } from "@/domains/product/batch-validation";
+import type { BatchCreateRow, BatchUpdateRow } from "@/domains/product/types";
 
 function row(overrides: Partial<BatchCreateRow> = {}): BatchCreateRow {
   return {
@@ -70,5 +70,54 @@ describe("validateBatchCreateShape", () => {
       row({ retail: -5 }),
     ]);
     expect(errors.map((e) => e.rowIndex).sort()).toEqual([1, 2]);
+  });
+});
+
+describe("validateBatchUpdateShape", () => {
+  it("accepts a clean update", () => {
+    const rows: BatchUpdateRow[] = [{ sku: 100, patch: { retail: 12 } }];
+    expect(validateBatchUpdateShape(rows)).toEqual([]);
+  });
+
+  it("flags missing SKU and skips other checks on that row", () => {
+    const rows: BatchUpdateRow[] = [{ sku: 0, patch: { retail: -1 } }];
+    const errors = validateBatchUpdateShape(rows);
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toMatchObject({ field: "sku", code: "MISSING_REQUIRED" });
+  });
+
+  it("flags negative retail in patch", () => {
+    const rows: BatchUpdateRow[] = [{ sku: 100, patch: { retail: -1 } }];
+    const errors = validateBatchUpdateShape(rows);
+    expect(errors[0].code).toBe("NEGATIVE_PRICE");
+  });
+
+  it("flags negative cost in patch", () => {
+    const rows: BatchUpdateRow[] = [{ sku: 100, patch: { cost: -1 } }];
+    const errors = validateBatchUpdateShape(rows);
+    expect(errors[0].code).toBe("NEGATIVE_COST");
+  });
+
+  it("flags over-long description in patch", () => {
+    const rows: BatchUpdateRow[] = [{ sku: 100, patch: { description: "x".repeat(129) } }];
+    const errors = validateBatchUpdateShape(rows);
+    expect(errors[0].code).toBe("DESCRIPTION_TOO_LONG");
+  });
+
+  it("flags over-long barcode in patch", () => {
+    const rows: BatchUpdateRow[] = [{ sku: 100, patch: { barcode: "x".repeat(21) } }];
+    const errors = validateBatchUpdateShape(rows);
+    expect(errors[0].code).toBe("BARCODE_TOO_LONG");
+  });
+
+  it("flags over-long imageUrl in patch with IMAGE_URL_TOO_LONG code", () => {
+    const rows: BatchUpdateRow[] = [{ sku: 100, patch: { imageUrl: "x".repeat(129) } }];
+    const errors = validateBatchUpdateShape(rows);
+    expect(errors[0].code).toBe("IMAGE_URL_TOO_LONG");
+  });
+
+  it("produces no errors when patch only contains unrelated fields", () => {
+    const rows: BatchUpdateRow[] = [{ sku: 100, patch: { vendorId: 21 } }];
+    expect(validateBatchUpdateShape(rows)).toEqual([]);
   });
 });

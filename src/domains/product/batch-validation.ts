@@ -26,10 +26,10 @@ export function validateBatchCreateShape(rows: BatchCreateRow[]): BatchValidatio
       errors.push({ rowIndex: i, field: "barcode", code: "BARCODE_TOO_LONG", message: `Barcode must be ≤ ${MAX_BARCODE} characters` });
     }
     if (r.comment && r.comment.length > MAX_COMMENT) {
-      errors.push({ rowIndex: i, field: "comment", code: "DESCRIPTION_TOO_LONG", message: `Comment must be ≤ ${MAX_COMMENT} characters` });
+      errors.push({ rowIndex: i, field: "comment", code: "COMMENT_TOO_LONG", message: `Comment must be ≤ ${MAX_COMMENT} characters` });
     }
     if (r.catalogNumber && r.catalogNumber.length > MAX_CATALOG) {
-      errors.push({ rowIndex: i, field: "catalogNumber", code: "DESCRIPTION_TOO_LONG", message: `Catalog number must be ≤ ${MAX_CATALOG} characters` });
+      errors.push({ rowIndex: i, field: "catalogNumber", code: "CATALOG_TOO_LONG", message: `Catalog number must be ≤ ${MAX_CATALOG} characters` });
     }
     if (typeof r.retail !== "number" || r.retail < 0) {
       errors.push({ rowIndex: i, field: "retail", code: "NEGATIVE_PRICE", message: "Retail must be ≥ 0" });
@@ -72,21 +72,21 @@ export function validateBatchUpdateShape(rows: BatchUpdateRow[]): BatchValidatio
       errors.push({ rowIndex: i, field: "sku", code: "MISSING_REQUIRED", message: "SKU is required" });
       continue;
     }
-    const p = r.patch as Record<string, unknown>;
-    if (typeof p.retail === "number" && p.retail < 0) {
+    const p = r.patch;
+    if (p.retail !== undefined && p.retail < 0) {
       errors.push({ rowIndex: i, field: "retail", code: "NEGATIVE_PRICE", message: "Retail must be ≥ 0" });
     }
-    if (typeof p.cost === "number" && p.cost < 0) {
+    if (p.cost !== undefined && p.cost < 0) {
       errors.push({ rowIndex: i, field: "cost", code: "NEGATIVE_COST", message: "Cost must be ≥ 0" });
     }
-    if (typeof p.description === "string" && p.description.length > MAX_DESCRIPTION) {
+    if ("description" in p && p.description !== undefined && p.description.length > MAX_DESCRIPTION) {
       errors.push({ rowIndex: i, field: "description", code: "DESCRIPTION_TOO_LONG", message: `Description must be ≤ ${MAX_DESCRIPTION} characters` });
     }
-    if (typeof p.barcode === "string" && p.barcode.length > MAX_BARCODE) {
+    if (p.barcode !== undefined && p.barcode !== null && p.barcode.length > MAX_BARCODE) {
       errors.push({ rowIndex: i, field: "barcode", code: "BARCODE_TOO_LONG", message: `Barcode must be ≤ ${MAX_BARCODE} characters` });
     }
-    if (typeof p.imageUrl === "string" && p.imageUrl.length > MAX_IMAGE_URL) {
-      errors.push({ rowIndex: i, field: "imageUrl", code: "DESCRIPTION_TOO_LONG", message: `Image URL must be ≤ ${MAX_IMAGE_URL} characters` });
+    if ("imageUrl" in p && p.imageUrl !== undefined && p.imageUrl !== null && p.imageUrl.length > MAX_IMAGE_URL) {
+      errors.push({ rowIndex: i, field: "imageUrl", code: "IMAGE_URL_TOO_LONG", message: `Image URL must be ≤ ${MAX_IMAGE_URL} characters` });
     }
   }
   return errors;
