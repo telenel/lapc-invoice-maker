@@ -13,6 +13,11 @@ import type {
   BatchCreateRow,
   BatchValidationError,
 } from "./types";
+import type {
+  BulkEditRequest,
+  PreviewResult,
+  CommitResult,
+} from "@/domains/bulk-edit/types";
 
 export interface PrismHealth {
   available: boolean;
@@ -177,6 +182,92 @@ export const productApi = {
       const data = await res.json().catch(() => ({}));
       throw new Error(data.error ?? `HTTP ${res.status}`);
     }
+    return res.json();
+  },
+
+  async bulkEditDryRun(body: BulkEditRequest): Promise<PreviewResult | { errors: unknown[] }> {
+    const res = await fetch("/api/products/bulk-edit/dry-run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (res.status === 400) {
+      const data = await res.json();
+      if (data.errors) return { errors: data.errors };
+    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  },
+
+  async bulkEditCommit(body: BulkEditRequest): Promise<CommitResult | { errors: unknown[] }> {
+    const res = await fetch("/api/products/bulk-edit/commit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (res.status === 400 || res.status === 409) {
+      const data = await res.json();
+      if (data.errors) return { errors: data.errors };
+    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  },
+
+  async listBulkEditRuns(params: { limit?: number; offset?: number } = {}): Promise<{ items: unknown[]; total: number }> {
+    const qs = new URLSearchParams();
+    if (params.limit !== undefined) qs.set("limit", String(params.limit));
+    if (params.offset !== undefined) qs.set("offset", String(params.offset));
+    const res = await fetch(`/api/products/bulk-edit/runs?${qs.toString()}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  },
+
+  async getBulkEditRun(id: string): Promise<unknown> {
+    const res = await fetch(`/api/products/bulk-edit/runs/${id}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  },
+
+  async syncPrismPull(): Promise<{ runId: string; scanned: number; updated: number; durationMs: number }> {
+    const res = await fetch("/api/sync/prism-pull", { method: "POST" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error ?? `HTTP ${res.status}`);
+    }
+    return res.json();
+  },
+};
+
+export const savedSearchesApi = {
+  async list(): Promise<{ items: Array<{ id: string; name: string; filter: Record<string, unknown>; isSystem: boolean }> }> {
+    const res = await fetch("/api/saved-searches");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  },
+  async create(body: { name: string; filter: Record<string, unknown> }) {
+    const res = await fetch("/api/saved-searches", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error ?? `HTTP ${res.status}`);
+    }
+    return res.json();
+  },
+  async update(id: string, body: { name?: string; filter?: Record<string, unknown> }) {
+    const res = await fetch(`/api/saved-searches/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  },
+  async remove(id: string) {
+    const res = await fetch(`/api/saved-searches/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
   },
 };
