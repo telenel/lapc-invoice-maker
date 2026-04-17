@@ -1,0 +1,134 @@
+/**
+ * Batch writes to Prism — all wrapped in single transactions so failures
+ * roll back the entire batch. Pre-validation (FK existence, duplicate-barcode
+ * against live Prism) is in validateBatchAgainstPrism; shape validation is
+ * in batch-validation.ts.
+ */
+import { getPrismPool, sql } from "@/lib/prism";
+import type {
+  BatchCreateRow,
+  BatchUpdateRow,
+  BatchValidationError,
+  GmItemPatch,
+  TextbookPatch,
+} from "./types";
+import { PIERCE_LOCATION_ID } from "./prism-server";
+
+/**
+ * Find which of the given barcodes already exist in Prism. Used by batch
+ * pre-validation. Empty/null barcodes are skipped.
+ */
+export async function findExistingBarcodes(
+  barcodes: string[],
+): Promise<Map<string, number>> {
+  const cleaned = [...new Set(barcodes.map((b) => b.trim()).filter(Boolean))];
+  if (cleaned.length === 0) return new Map();
+
+  const pool = await getPrismPool();
+  const request = pool.request();
+  const params = cleaned.map((_, i) => `@bc${i}`);
+  cleaned.forEach((bc, i) => request.input(`bc${i}`, sql.VarChar(20), bc));
+
+  const result = await request.query<{ SKU: number; BarCode: string }>(
+    `SELECT SKU, LTRIM(RTRIM(BarCode)) AS BarCode FROM Item WHERE BarCode IN (${params.join(", ")})`,
+  );
+  const out = new Map<string, number>();
+  for (const row of result.recordset) {
+    out.set(row.BarCode, row.SKU);
+  }
+  return out;
+}
+
+/**
+ * Verify the given FK ids exist in Prism. Returns the subset that are missing.
+ */
+export async function findMissingRefs(
+  vendorIds: number[],
+  dccIds: number[],
+  taxTypeIds: number[],
+): Promise<{ missingVendors: Set<number>; missingDccs: Set<number>; missingTax: Set<number> }> {
+  const pool = await getPrismPool();
+
+  async function existingSet(
+    ids: number[],
+    table: string,
+    pk: string,
+  ): Promise<Set<number>> {
+    const unique = [...new Set(ids)].filter((n) => Number.isFinite(n) && n > 0);
+    if (unique.length === 0) return new Set();
+    const req = pool.request();
+    const params = unique.map((_, i) => `@id${i}`);
+    unique.forEach((id, i) => req.input(`id${i}`, sql.Int, id));
+    const result = await req.query<Record<string, number>>(
+      `SELECT ${pk} AS id FROM ${table} WHERE ${pk} IN (${params.join(", ")})`,
+    );
+    return new Set(result.recordset.map((r) => r.id));
+  }
+
+  const [existingV, existingD, existingT] = await Promise.all([
+    existingSet(vendorIds, "VendorMaster", "VendorID"),
+    existingSet(dccIds, "DeptClassCat", "DCCID"),
+    existingSet(taxTypeIds, "Item_Tax_Type", "ItemTaxTypeID"),
+  ]);
+
+  return {
+    missingVendors: new Set(vendorIds.filter((v) => v && !existingV.has(v))),
+    missingDccs: new Set(dccIds.filter((d) => d && !existingD.has(d))),
+    missingTax: new Set(taxTypeIds.filter((t) => t && !existingT.has(t))),
+  };
+}
+
+/**
+ * Create N GM items in one transaction. Uses the same P_Item_Add_GM + Inventory
+ * insert path as createGmItem. Returns the array of created SKUs.
+ */
+export async function batchCreateGmItems(rows: BatchCreateRow[]): Promise<number[]> {
+  const pool = await getPrismPool();
+  const transaction = pool.transaction();
+  await transaction.begin();
+
+  const createdSkus: number[] = [];
+
+  try {
+    for (const input of rows) {
+      const addReq = transaction.request();
+      addReq.input("MfgId", sql.Int, input.vendorId);
+      addReq.input("Description", sql.VarChar(128), input.description);
+      addReq.input("Color", sql.Int, 0);
+      addReq.input("SizeId", sql.Int, 0);
+      addReq.input("CatalogNumber", sql.VarChar(30), input.catalogNumber ?? "");
+      addReq.input("PackageType", sql.VarChar(3), input.packageType ?? "");
+      addReq.input("UnitsPerPack", sql.SmallInt, input.unitsPerPack ?? 1);
+      addReq.input("DccId", sql.Int, input.dccId);
+      addReq.input("ItemTaxTypeId", sql.Int, input.itemTaxTypeId ?? 6);
+      addReq.input("Comment", sql.VarChar(25), input.comment ?? "");
+      addReq.input("VendorId", sql.Int, input.vendorId);
+      addReq.input("Weight", sql.Decimal(9, 4), 0);
+      addReq.input("ImageURL", sql.VarChar(128), "");
+      addReq.input("DiscCodeId", sql.Int, 0);
+      addReq.input("BarCode", sql.VarChar(20), input.barcode ?? "");
+
+      const result = await addReq.execute<{ SKU?: number }>("P_Item_Add_GM");
+      const firstRow = result.recordsets?.[0]?.[0] as Record<string, unknown> | undefined;
+      const newSku = firstRow ? Number(Object.values(firstRow)[0]) : NaN;
+      if (!Number.isFinite(newSku) || newSku <= 0) {
+        throw new Error(`P_Item_Add_GM did not return a valid SKU for row "${input.description}"`);
+      }
+
+      await transaction.request()
+        .input("sku", sql.Int, newSku)
+        .input("loc", sql.Numeric(8, 0), PIERCE_LOCATION_ID)
+        .input("retail", sql.Money, input.retail)
+        .input("cost", sql.Money, input.cost)
+        .query("INSERT INTO Inventory (SKU, LocationID, Retail, Cost) VALUES (@sku, @loc, @retail, @cost)");
+
+      createdSkus.push(newSku);
+    }
+
+    await transaction.commit();
+    return createdSkus;
+  } catch (err) {
+    try { await transaction.rollback(); } catch { /* swallow */ }
+    throw err;
+  }
+}
