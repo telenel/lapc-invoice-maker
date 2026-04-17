@@ -24,6 +24,11 @@ services:
     networks:
       - default
       - traefik-net
+    # Route "host.docker.internal" to the VPS host's docker-bridge IP so the
+    # app can reach an SSH reverse tunnel bound on that bridge (lets the VPS
+    # talk to intranet-only winprism-la via an on-campus relay machine).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 networks:
   default:

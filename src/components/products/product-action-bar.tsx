@@ -18,6 +18,8 @@ interface ProductActionBarProps {
   prismAvailable?: boolean;
   /** Called after a successful discontinue so the page can refetch. */
   onDiscontinued?: (skus: number[]) => void;
+  onEditClick?: () => void;
+  onHardDeleteClick?: () => void;
 }
 
 export function ProductActionBar({
@@ -27,6 +29,8 @@ export function ProductActionBar({
   saveToSession,
   prismAvailable = false,
   onDiscontinued,
+  onEditClick,
+  onHardDeleteClick,
 }: ProductActionBarProps) {
   const router = useRouter();
   const [discontinuing, setDiscontinuing] = useState(false);
@@ -121,6 +125,16 @@ export function ProductActionBar({
                 >
                   <Trash2Icon className="mr-1.5 size-3.5" />
                   {discontinuing ? "Discontinuing…" : "Discontinue"}
+                </Button>
+              ) : null}
+              {prismAvailable && onEditClick ? (
+                <Button size="sm" variant="outline" onClick={onEditClick}>
+                  Edit
+                </Button>
+              ) : null}
+              {prismAvailable && onHardDeleteClick ? (
+                <Button size="sm" variant="outline" onClick={onHardDeleteClick} className="border-destructive/30 text-destructive hover:bg-destructive/10">
+                  Delete
                 </Button>
               ) : null}
               <Button size="sm" variant="outline" onClick={handleCreateQuote}>

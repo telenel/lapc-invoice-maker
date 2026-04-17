@@ -69,3 +69,91 @@ export interface SelectedProduct {
   vendorId: number;
   itemType: string;
 }
+
+/** Fields editable on a GM item. Every field is optional — only present fields are applied. */
+export interface GmItemPatch {
+  description?: string;
+  vendorId?: number;
+  dccId?: number;
+  itemTaxTypeId?: number;
+  barcode?: string | null;
+  catalogNumber?: string | null;
+  comment?: string | null;
+  weight?: number;
+  imageUrl?: string | null;
+  unitsPerPack?: number;
+  packageType?: string | null;
+  retail?: number;
+  cost?: number;
+  fDiscontinue?: 0 | 1;
+}
+
+/** Narrow patch for textbook rows — only fields that live on Item/Inventory. */
+export interface TextbookPatch {
+  barcode?: string | null;
+  retail?: number;
+  cost?: number;
+  fDiscontinue?: 0 | 1;
+}
+
+/** Baseline snapshot captured when an edit dialog opens, sent back on submit for concurrency check. */
+export interface ItemSnapshot {
+  sku: number;
+  barcode: string | null;
+  retail: number;
+  cost: number;
+  fDiscontinue: 0 | 1;
+}
+
+/** One validation error attached to a batch-add or batch-edit row. */
+export interface BatchValidationError {
+  rowIndex: number;
+  field: string;
+  code:
+    | "DUPLICATE_BARCODE"
+    | "INVALID_VENDOR"
+    | "INVALID_DCC"
+    | "INVALID_TAX_TYPE"
+    | "MISSING_REQUIRED"
+    | "NEGATIVE_PRICE"
+    | "NEGATIVE_COST"
+    | "BARCODE_TOO_LONG"
+    | "DESCRIPTION_TOO_LONG"
+    | "COMMENT_TOO_LONG"
+    | "CATALOG_TOO_LONG"
+    | "IMAGE_URL_TOO_LONG"
+    | "HAS_HISTORY"
+    | "TEXTBOOK_NOT_SUPPORTED";
+  message: string;
+}
+
+export type BatchAction = "create" | "update" | "discontinue" | "hard-delete";
+
+export interface BatchCreateRow {
+  description: string;
+  vendorId: number;
+  dccId: number;
+  itemTaxTypeId?: number;
+  barcode?: string | null;
+  catalogNumber?: string | null;
+  comment?: string | null;
+  packageType?: string | null;
+  unitsPerPack?: number;
+  retail: number;
+  cost: number;
+}
+
+export interface BatchUpdateRow {
+  sku: number;
+  patch: GmItemPatch | TextbookPatch;
+}
+
+export interface BatchValidationResponse {
+  errors: BatchValidationError[];
+}
+
+export interface BatchResult {
+  action: BatchAction;
+  count: number;
+  skus: number[];
+}

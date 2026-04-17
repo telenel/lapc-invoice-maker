@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useProductSearch, useProductSelection } from "@/domains/product/hooks";
 import { EMPTY_FILTERS, TABS } from "@/domains/product/constants";
@@ -10,6 +11,8 @@ import { ProductFiltersBar } from "@/components/products/product-filters";
 import { ProductTable } from "@/components/products/product-table";
 import { ProductActionBar } from "@/components/products/product-action-bar";
 import { NewItemDialog } from "@/components/products/new-item-dialog";
+import { EditItemDialog } from "@/components/products/edit-item-dialog";
+import { HardDeleteDialog } from "@/components/products/hard-delete-dialog";
 import { Button } from "@/components/ui/button";
 import { productApi } from "@/domains/product/api-client";
 
@@ -86,6 +89,8 @@ export default function ProductsPage() {
   }, []);
 
   const [newItemOpen, setNewItemOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [hardDeleteOpen, setHardDeleteOpen] = useState(false);
 
   // Track tab counts so both tabs always show their last-known count
   const [tabCounts, setTabCounts] = useState<Record<ProductTab, number | null>>({
@@ -146,9 +151,14 @@ export default function ProductsPage() {
           </p>
         </div>
         {prismAvailable ? (
-          <Button onClick={() => setNewItemOpen(true)}>
-            New Item
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={() => setNewItemOpen(true)}>
+              New Item
+            </Button>
+            <Button variant="outline" render={<Link href="/products/batch-add" />}>
+              Batch Add
+            </Button>
+          </div>
         ) : null}
       </div>
 
@@ -157,6 +167,40 @@ export default function ProductsPage() {
         onOpenChange={setNewItemOpen}
         onCreated={() => {
           // Refresh the list so the new item shows immediately (mirror is upserted server-side)
+          refetch();
+        }}
+      />
+
+      <EditItemDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        items={Array.from(selected.values()).map((p) => ({
+          sku: p.sku,
+          barcode: p.barcode ?? null,
+          retail: p.retailPrice ?? 0,
+          cost: p.cost ?? 0,
+          fDiscontinue: 0 as 0 | 1,
+          description: p.description ?? "",
+          vendorId: p.vendorId ?? undefined,
+          dccId: undefined,
+          isTextbook: p.itemType === "textbook",
+        }))}
+        onSaved={() => {
+          setEditOpen(false);
+          refetch();
+        }}
+      />
+
+      <HardDeleteDialog
+        open={hardDeleteOpen}
+        onOpenChange={setHardDeleteOpen}
+        items={Array.from(selected.values()).map((p) => ({
+          sku: p.sku,
+          description: p.description ?? "",
+          isTextbook: p.itemType === "textbook",
+        }))}
+        onDeleted={() => {
+          setHardDeleteOpen(false);
           refetch();
         }}
       />
@@ -223,6 +267,8 @@ export default function ProductsPage() {
         saveToSession={saveToSession}
         prismAvailable={prismAvailable}
         onDiscontinued={() => refetch()}
+        onEditClick={() => setEditOpen(true)}
+        onHardDeleteClick={() => setHardDeleteOpen(true)}
       />
 
       {/* Spacer so content isn't hidden behind the sticky action bar */}

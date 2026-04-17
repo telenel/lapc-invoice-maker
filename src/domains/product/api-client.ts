@@ -6,6 +6,14 @@
  * health endpoint reports `available: false`).
  */
 
+import type {
+  GmItemPatch,
+  TextbookPatch,
+  ItemSnapshot,
+  BatchCreateRow,
+  BatchValidationError,
+} from "./types";
+
 export interface PrismHealth {
   available: boolean;
   configured: boolean;
@@ -88,9 +96,87 @@ export const productApi = {
     return (await res.json()) as { sku: number; mode: string; affected: number };
   },
 
-  async hardDelete(sku: number): Promise<{ sku: number; mode: string; affected: number }> {
-    const res = await fetch(`/api/products/${sku}?hard=true`, { method: "DELETE" });
-    if (!res.ok) throw new Error(await parseError(res));
-    return (await res.json()) as { sku: number; mode: string; affected: number };
+  async update(
+    sku: number,
+    body: {
+      patch: GmItemPatch | TextbookPatch;
+      isTextbook?: boolean;
+      baseline?: ItemSnapshot;
+    },
+  ): Promise<{ sku: number; appliedFields: string[] }> {
+    const res = await fetch(`/api/products/${sku}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (res.status === 409) {
+      const data = await res.json();
+      const err = new Error("CONCURRENT_MODIFICATION") as Error & { code: string; current: unknown };
+      err.code = "CONCURRENT_MODIFICATION";
+      err.current = data.current;
+      throw err;
+    }
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error ?? `HTTP ${res.status}`);
+    }
+    return res.json();
+  },
+
+  async hardDelete(sku: number): Promise<{ sku: number; affected: number }> {
+    const res = await fetch(`/api/products/${sku}/hard-delete`, { method: "DELETE" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.message ?? data.error ?? `HTTP ${res.status}`);
+    }
+    return res.json();
+  },
+
+  async historyCheck(skus: number[]): Promise<Record<string, boolean>> {
+    if (skus.length === 0) return {};
+    const res = await fetch(`/api/products/history-check?skus=${skus.join(",")}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  },
+
+  async validateBatch(
+    body:
+      | { action: "create"; rows: BatchCreateRow[] }
+      | { action: "update"; rows: { sku: number; patch: GmItemPatch | TextbookPatch }[] }
+      | { action: "hard-delete"; skus: number[] },
+  ): Promise<{ errors: BatchValidationError[] }> {
+    const res = await fetch("/api/products/validate-batch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error ?? `HTTP ${res.status}`);
+    }
+    return res.json();
+  },
+
+  async batch(
+    body:
+      | { action: "create"; rows: BatchCreateRow[] }
+      | { action: "update"; rows: { sku: number; patch: GmItemPatch | TextbookPatch; isTextbook?: boolean }[] }
+      | { action: "discontinue"; skus: number[] }
+      | { action: "hard-delete"; skus: number[] },
+  ): Promise<{ action: string; count: number; skus: number[] } | { errors: BatchValidationError[] }> {
+    const res = await fetch("/api/products/batch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (res.status === 400 || res.status === 409) {
+      const data = await res.json();
+      if (data.errors) return { errors: data.errors };
+    }
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error ?? `HTTP ${res.status}`);
+    }
+    return res.json();
   },
 };
