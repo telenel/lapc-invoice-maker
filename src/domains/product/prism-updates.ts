@@ -221,3 +221,101 @@ export async function updateGmItem(
     throw err;
   }
 }
+
+/**
+ * Narrow update for textbook rows — only touches fields on Item / Inventory
+ * (no GeneralMerchandise row to update). Mirrors updateGmItem's tx-and-verify
+ * pattern but with a smaller field set.
+ */
+export async function updateTextbookPricing(
+  sku: number,
+  patch: TextbookPatch,
+  expectedSnapshot?: ItemSnapshot,
+): Promise<UpdateGmItemResult> {
+  const pool = await getPrismPool();
+  const transaction = pool.transaction();
+  await transaction.begin();
+
+  try {
+    const check = await transaction
+      .request()
+      .input("sku", sql.Int, sku)
+      .input("loc", sql.Int, PIERCE_LOCATION_ID)
+      .query<{
+        BarCode: string | null;
+        Retail: number | null;
+        Cost: number | null;
+        fDiscontinue: number | null;
+      }>(`
+        SELECT LTRIM(RTRIM(i.BarCode)) AS BarCode,
+               inv.Retail, inv.Cost, i.fDiscontinue
+        FROM Item i
+        LEFT JOIN Inventory inv ON inv.SKU = i.SKU AND inv.LocationID = @loc
+        WHERE i.SKU = @sku
+      `);
+    const current = check.recordset[0];
+    if (!current) {
+      throw new Error(`Item SKU ${sku} not found`);
+    }
+
+    if (expectedSnapshot) {
+      const currentBarcode = current.BarCode && current.BarCode.length > 0 ? current.BarCode : null;
+      const currentRetail = Number(current.Retail ?? 0);
+      const currentCost = Number(current.Cost ?? 0);
+      const currentFDisc = (current.fDiscontinue === 1 ? 1 : 0) as 0 | 1;
+      if (
+        currentBarcode !== expectedSnapshot.barcode ||
+        currentRetail !== expectedSnapshot.retail ||
+        currentCost !== expectedSnapshot.cost ||
+        currentFDisc !== expectedSnapshot.fDiscontinue
+      ) {
+        const err = new Error("CONCURRENT_MODIFICATION") as Error & { code: string };
+        err.code = "CONCURRENT_MODIFICATION";
+        throw err;
+      }
+    }
+
+    const applied: string[] = [];
+    const itemSet: string[] = [];
+    const invSet: string[] = [];
+
+    if (patch.barcode !== undefined) {
+      itemSet.push("BarCode = @barcode");
+      applied.push("barcode");
+    }
+    if (patch.fDiscontinue !== undefined) {
+      itemSet.push("fDiscontinue = @fDiscontinue");
+      applied.push("fDiscontinue");
+    }
+    if (patch.retail !== undefined) {
+      invSet.push("Retail = @retail");
+      applied.push("retail");
+    }
+    if (patch.cost !== undefined) {
+      invSet.push("Cost = @cost");
+      applied.push("cost");
+    }
+
+    if (itemSet.length > 0) {
+      await transaction.request()
+        .input("sku", sql.Int, sku)
+        .input("barcode", sql.VarChar(20), patch.barcode ?? "")
+        .input("fDiscontinue", sql.TinyInt, patch.fDiscontinue ?? 0)
+        .query(`UPDATE Item SET ${itemSet.join(", ")} WHERE SKU = @sku`);
+    }
+    if (invSet.length > 0) {
+      await transaction.request()
+        .input("sku", sql.Int, sku)
+        .input("loc", sql.Int, PIERCE_LOCATION_ID)
+        .input("retail", sql.Money, patch.retail ?? 0)
+        .input("cost", sql.Money, patch.cost ?? 0)
+        .query(`UPDATE Inventory SET ${invSet.join(", ")} WHERE SKU = @sku AND LocationID = @loc`);
+    }
+
+    await transaction.commit();
+    return { sku, appliedFields: applied };
+  } catch (err) {
+    try { await transaction.rollback(); } catch { /* swallow */ }
+    throw err;
+  }
+}
