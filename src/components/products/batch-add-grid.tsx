@@ -7,7 +7,9 @@ import {
   Loader2Icon,
   MinusIcon,
   PlusIcon,
+  SparklesIcon,
   Trash2Icon,
+  XIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -22,6 +24,21 @@ import {
 import { cn } from "@/lib/utils";
 import { productApi, type PrismRefs } from "@/domains/product/api-client";
 import type { BatchCreateRow, BatchValidationError } from "@/domains/product/types";
+import { ItemRefSelects } from "./item-ref-selects";
+
+const PASTE_HINT_KEY = "laportal.batch-add.paste-hint-dismissed";
+
+interface DefaultsState {
+  vendorId: string;
+  dccId: string;
+  itemTaxTypeId: string;
+}
+
+const EMPTY_DEFAULTS: DefaultsState = {
+  vendorId: "",
+  dccId: "",
+  itemTaxTypeId: "6",
+};
 
 export function parsePastedGrid(text: string): string[][] {
   const normalized = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
@@ -89,24 +106,25 @@ function emptyRow(defaults?: Record<string, string | undefined>): GridRow {
   return base;
 }
 
-function toBatchRow(r: GridRow, defaults?: GridRow): BatchCreateRow | null {
+function toBatchRow(r: GridRow, defaults: DefaultsState): BatchCreateRow | null {
   function v(key: string): string {
     const own = r[key]?.trim();
     if (own) return own;
-    return (defaults?.[key] ?? "").trim();
+    if (key in defaults) return (defaults[key as keyof DefaultsState] ?? "").trim();
+    return "";
   }
-  const description = v("description");
+  const description = r.description?.trim() ?? "";
   if (!description) return null;
   return {
     description,
     vendorId: Number(v("vendorId")) || 0,
     dccId: Number(v("dccId")) || 0,
     itemTaxTypeId: v("itemTaxTypeId") ? Number(v("itemTaxTypeId")) : undefined,
-    barcode: v("barcode") || null,
-    catalogNumber: v("catalogNumber") || null,
-    comment: v("comment") || null,
-    retail: Number(v("retail")) || 0,
-    cost: Number(v("cost")) || 0,
+    barcode: (r.barcode?.trim() || null) as string | null,
+    catalogNumber: (r.catalogNumber?.trim() || null) as string | null,
+    comment: (r.comment?.trim() || null) as string | null,
+    retail: Number(r.retail) || 0,
+    cost: Number(r.cost) || 0,
   };
 }
 
@@ -158,22 +176,27 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
   const [refs, setRefs] = useState<PrismRefs | null>(null);
   const [refsError, setRefsError] = useState<string | null>(null);
   const [rows, setRows] = useState<GridRow[]>(() => [emptyRow(), emptyRow(), emptyRow()]);
-  const [useDefaults, setUseDefaults] = useState(true);
+  const [defaults, setDefaults] = useState<DefaultsState>(EMPTY_DEFAULTS);
   const [errors, setErrors] = useState<BatchValidationError[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [lastValidated, setLastValidated] = useState<"clean" | "dirty" | "idle">("idle");
   const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+  const [pasteHintDismissed, setPasteHintDismissed] = useState(true);
   const tbodyRef = useRef<HTMLTableSectionElement | null>(null);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(PASTE_HINT_KEY);
+      setPasteHintDismissed(stored === "1");
+    } catch {
+      setPasteHintDismissed(false);
+    }
+  }, []);
 
   useEffect(() => {
     productApi
       .refs()
-      .then((r) => {
-        setRefs(r);
-        setRows((prev) =>
-          prev.map((row) => (row.itemTaxTypeId ? row : { ...row, itemTaxTypeId: "6" })),
-        );
-      })
+      .then(setRefs)
       .catch((err) => setRefsError(err instanceof Error ? err.message : String(err)));
   }, []);
 
@@ -185,14 +208,8 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
 
   const addRow = useCallback((count = 1) => {
     setRows((r) => {
-      const last = r[r.length - 1];
-      const seed = {
-        vendorId: last?.vendorId ?? "",
-        dccId: last?.dccId ?? "",
-        itemTaxTypeId: last?.itemTaxTypeId ?? "6",
-      };
       const next = [...r];
-      for (let i = 0; i < count; i++) next.push(emptyRow(seed));
+      for (let i = 0; i < count; i++) next.push(emptyRow());
       return next;
     });
     setLastValidated("dirty");
@@ -254,9 +271,8 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
   }
 
   const rowsToBatch = useCallback((): BatchCreateRow[] => {
-    const defaults = useDefaults ? rows[0] : undefined;
     return rows.map((r) => toBatchRow(r, defaults)).filter((r): r is BatchCreateRow => r !== null);
-  }, [rows, useDefaults]);
+  }, [rows, defaults]);
 
   const handleValidate = useCallback(async () => {
     setSubmitting(true);
@@ -388,48 +404,106 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
         </div>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-card px-3 py-2 shadow-sm">
-        <Button onClick={() => addRow(1)} variant="outline" size="sm" disabled={refsLoading}>
-          <PlusIcon className="mr-1 size-3.5" />
-          Add row
-        </Button>
-        <Button onClick={() => addRow(5)} variant="ghost" size="sm" disabled={refsLoading}>
-          +5
-        </Button>
-        <Button
-          onClick={removeLastRow}
-          variant="ghost"
-          size="sm"
-          disabled={refsLoading || rows.length <= 1}
-        >
-          <MinusIcon className="mr-1 size-3.5" />
-          Remove last
-        </Button>
-        <div className="mx-1 h-5 w-px bg-border" aria-hidden />
-        <label
-          className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground"
-          title="Blank cells in rows 2+ inherit the value from row 1 in the same column."
-        >
-          <input
-            type="checkbox"
-            checked={useDefaults}
-            onChange={(e) => setUseDefaults(e.target.checked)}
-            className="size-3.5 accent-primary"
-          />
-          Use row 1 as defaults
-        </label>
-        <button
-          type="button"
-          onClick={() => setShowKeyboardHelp((v) => !v)}
-          className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-          aria-expanded={showKeyboardHelp}
-        >
-          <KeyboardIcon className="size-3.5" />
-          Shortcuts
-        </button>
-        <span className="text-xs tabular-nums text-muted-foreground">
-          {rows.length} row{rows.length === 1 ? "" : "s"}
-        </span>
+      {!pasteHintDismissed && !refsLoading ? (
+        <div className="flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm">
+          <SparklesIcon className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+          <div className="flex-1">
+            <div className="font-medium">Paste rows from Excel or Google Sheets.</div>
+            <div className="text-xs text-muted-foreground">
+              Copy a range in your spreadsheet and paste into any cell — values
+              spread across columns and wrap to new rows automatically.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setPasteHintDismissed(true);
+              try {
+                window.localStorage.setItem(PASTE_HINT_KEY, "1");
+              } catch {
+                /* ignore storage errors */
+              }
+            }}
+            className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+            aria-label="Dismiss paste hint"
+          >
+            <XIcon className="size-3.5" />
+          </button>
+        </div>
+      ) : null}
+
+      {/* Defaults + toolbar: defaults set vendor / dept / tax for every blank cell. */}
+      <div className="rounded-lg border bg-card shadow-sm">
+        <div className="flex flex-wrap items-center gap-2 px-3 py-2">
+          <Button onClick={() => addRow(1)} variant="outline" size="sm" disabled={refsLoading}>
+            <PlusIcon className="mr-1 size-3.5" />
+            Add row
+          </Button>
+          <Button onClick={() => addRow(5)} variant="ghost" size="sm" disabled={refsLoading}>
+            +5
+          </Button>
+          <Button
+            onClick={removeLastRow}
+            variant="ghost"
+            size="sm"
+            disabled={refsLoading || rows.length <= 1}
+          >
+            <MinusIcon className="mr-1 size-3.5" />
+            Remove last
+          </Button>
+          <button
+            type="button"
+            onClick={() => setShowKeyboardHelp((v) => !v)}
+            className="ml-auto inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            aria-expanded={showKeyboardHelp}
+          >
+            <KeyboardIcon className="size-3.5" />
+            Shortcuts
+          </button>
+          <span className="text-xs tabular-nums text-muted-foreground">
+            {rows.length} row{rows.length === 1 ? "" : "s"}
+          </span>
+        </div>
+
+        {/* Defaults panel */}
+        <div className="border-t bg-muted/10 px-3 py-2">
+          <div className="mb-1.5 flex items-baseline justify-between gap-3">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Defaults
+            </h2>
+            <div className="flex items-center gap-3">
+              <span className="text-[11px] text-muted-foreground/80">
+                applied to blank cells in every row
+              </span>
+              <button
+                type="button"
+                onClick={() => setDefaults(EMPTY_DEFAULTS)}
+                disabled={
+                  defaults.vendorId === "" &&
+                  defaults.dccId === "" &&
+                  defaults.itemTaxTypeId === EMPTY_DEFAULTS.itemTaxTypeId
+                }
+                className="text-[11px] text-muted-foreground underline-offset-2 hover:underline disabled:opacity-40 disabled:no-underline"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <ItemRefSelects
+              refs={refs}
+              vendorId={defaults.vendorId}
+              dccId={defaults.dccId}
+              itemTaxTypeId={defaults.itemTaxTypeId}
+              disabled={refsLoading}
+              bulkMode
+              onChange={(field, value) => {
+                setDefaults((d) => ({ ...d, [field]: value }));
+                setLastValidated("dirty");
+              }}
+            />
+          </div>
+        </div>
       </div>
 
       {showKeyboardHelp ? (
@@ -487,29 +561,10 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
             <tbody ref={tbodyRef}>
               {rows.map((row, rowIdx) => {
                 const margin = computeMargin(row.cost, row.retail);
-                const isTemplate = useDefaults && rowIdx === 0;
                 return (
-                  <tr
-                    key={rowIdx}
-                    className={cn(
-                      "border-t even:bg-muted/20",
-                      isTemplate && "bg-primary/5 even:bg-primary/5",
-                    )}
-                  >
-                    <td
-                      className={cn(
-                        "sticky left-0 z-10 bg-background px-2 py-1.5 text-right text-xs tabular-nums text-muted-foreground align-top",
-                        isTemplate && "bg-primary/5",
-                      )}
-                    >
-                      <div className="flex flex-col items-end gap-0.5 pt-1.5">
-                        <span>{rowIdx + 1}</span>
-                        {isTemplate ? (
-                          <span className="rounded-sm bg-primary/15 px-1 text-[9px] font-semibold uppercase text-primary">
-                            Def
-                          </span>
-                        ) : null}
-                      </div>
+                  <tr key={rowIdx} className="border-t even:bg-muted/20">
+                    <td className="sticky left-0 z-10 bg-background px-2 py-1.5 text-right text-xs tabular-nums text-muted-foreground align-top">
+                      <span className="inline-block pt-1.5">{rowIdx + 1}</span>
                     </td>
                     {COLUMNS.map((col, colIdx) => {
                       if (col.kind === "margin") {
