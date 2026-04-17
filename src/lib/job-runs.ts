@@ -2,7 +2,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { getActiveJobSchedulerMode, getJobSchedulerMode } from "@/lib/job-scheduler";
 
-export const KNOWN_JOB_KEYS = ["event-reminders", "payment-follow-ups", "account-follow-ups"] as const;
+export const KNOWN_JOB_KEYS = ["event-reminders", "payment-follow-ups", "account-follow-ups", "prism-pull-sync"] as const;
 
 type KnownJobKey = typeof KNOWN_JOB_KEYS[number];
 
