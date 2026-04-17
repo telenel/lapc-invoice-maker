@@ -129,6 +129,14 @@ export async function discontinueItem(sku: number): Promise<{ affected: number }
 /**
  * Hard-delete a test item (only intended for items with TEST-CLAUDE- barcode).
  * Will fail if any FK constraints are violated (sales history, etc.).
+ *
+ * Deletion order: Inventory → Item (GeneralMerchandise is intentionally skipped).
+ * The TD_GENERALMERCHANDISE trigger unconditionally raises "Item is used in the
+ * system" on any direct DELETE from that table regardless of whether inventory
+ * or transaction history exists — pdt does not have DISABLE TRIGGER permission
+ * to work around it. Skipping the GM delete leaves an orphaned GM row, but the
+ * Item row (the catalog master) is removed so the SKU will not appear in any
+ * lookup or transaction path. This is acceptable for test cleanup.
  */
 export async function deleteTestItem(sku: number): Promise<{ affected: number }> {
   const pool = await getPrismPool();
@@ -149,11 +157,11 @@ export async function deleteTestItem(sku: number): Promise<{ affected: number }>
       );
     }
 
-    // Order matters because of FKs
+    // Delete Inventory first (FK dependency), then Item.
+    // GeneralMerchandise is intentionally NOT deleted here — TD_GENERALMERCHANDISE
+    // trigger blocks it unconditionally (see comment on function).
     await transaction.request().input("sku", sql.Int, sku)
       .query("DELETE FROM Inventory WHERE SKU = @sku");
-    await transaction.request().input("sku", sql.Int, sku)
-      .query("DELETE FROM GeneralMerchandise WHERE SKU = @sku");
     // Triggers on Item make both @@ROWCOUNT and the OUTPUT clause unreliable:
     // rowcount gets clobbered, bare OUTPUT is rejected, and trigger recordsets
     // crowd out the OUTPUT-INTO result. We pre-verified the row exists via the
