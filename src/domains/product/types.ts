@@ -119,6 +119,9 @@ export interface BatchValidationError {
     | "NEGATIVE_COST"
     | "BARCODE_TOO_LONG"
     | "DESCRIPTION_TOO_LONG"
+    | "COMMENT_TOO_LONG"
+    | "CATALOG_TOO_LONG"
+    | "IMAGE_URL_TOO_LONG"
     | "HAS_HISTORY"
     | "TEXTBOOK_NOT_SUPPORTED";
   message: string;
