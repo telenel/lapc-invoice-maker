@@ -3,6 +3,12 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { toast } from "sonner";
 import {
+  DatabaseIcon,
+  HashIcon,
+  Loader2Icon,
+  ArrowRightIcon,
+} from "lucide-react";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -13,7 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2Icon } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import {
   productApi,
@@ -53,12 +59,38 @@ const EMPTY_FORM: FormState = {
   cost: "",
 };
 
-const MARGIN_TONE_CLASS = {
+// Keyed by MarginTone. Tailwind classes are statically written so the JIT
+// picks them up.
+const MARGIN_VALUE_CLASS = {
   good: "text-emerald-600 dark:text-emerald-400",
   warn: "text-amber-600 dark:text-amber-400",
   bad: "text-destructive",
   idle: "text-muted-foreground",
 } as const;
+
+const MARGIN_BG_CLASS = {
+  good: "bg-emerald-500/5 border-emerald-500/30",
+  warn: "bg-amber-500/5 border-amber-500/30",
+  bad: "bg-destructive/5 border-destructive/30",
+  idle: "bg-muted/40 border-border",
+} as const;
+
+const MARGIN_BAR_CLASS = {
+  good: "bg-emerald-500",
+  warn: "bg-amber-500",
+  bad: "bg-destructive",
+  idle: "bg-muted-foreground/40",
+} as const;
+
+const MARGIN_LABEL: Record<
+  "good" | "warn" | "bad" | "idle",
+  string | null
+> = {
+  good: "Healthy",
+  warn: "Thin — review pricing",
+  bad: "Underwater",
+  idle: null,
+};
 
 export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogProps) {
   const [refs, setRefs] = useState<PrismRefs | null>(null);
@@ -67,6 +99,7 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [createAnother, setCreateAnother] = useState(false);
   const descriptionRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -102,7 +135,8 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
     Number(form.retail) >= 0 &&
     Number(form.cost) >= 0;
 
-  async function submit(keepOpen: boolean) {
+  const submit = useCallback(async () => {
+    if (!formValid || saving || !refs) return;
     setError(null);
     setSaving(true);
     try {
@@ -118,8 +152,12 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
         cost: Number(form.cost),
       });
       onCreated?.(created);
-      toast.success(`Created SKU ${created.sku}`);
-      if (keepOpen) {
+      toast.success(`Created SKU ${created.sku}`, {
+        description: createAnother
+          ? "Form cleared · vendor, dept and tax kept"
+          : undefined,
+      });
+      if (createAnother) {
         setForm((prev) => ({
           ...EMPTY_FORM,
           vendorId: prev.vendorId,
@@ -135,26 +173,52 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
     } finally {
       setSaving(false);
     }
-  }
+  }, [form, formValid, saving, refs, createAnother, onCreated, onOpenChange]);
+
+  // ⌘/Ctrl+Enter submits from anywhere in the dialog
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        void submit();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, submit]);
 
   const margin = computeMargin(form.cost, form.retail);
+  const marginPctLabel = margin.pct === null ? "—" : `${margin.pct.toFixed(1)}%`;
+  const marginHint = MARGIN_LABEL[margin.tone];
+
+  // Simple deterministic SKU preview — for display only. The real SKU is
+  // assigned by Prism on save.
+  const skuPreview = previewSku(form.description, form.dccId);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>New Merchandise Item</DialogTitle>
-          <DialogDescription>
-            Adds an item to the Pierce bookstore catalog. Writes directly to Prism
-            and mirrors back to the laportal catalog.
-          </DialogDescription>
+      <DialogContent className="gap-0 p-0 sm:max-w-[55rem] md:max-w-4xl overflow-hidden">
+        <DialogHeader className="border-b bg-muted/40 px-7 py-5">
+          <div className="flex flex-col gap-1">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+              Products · New item
+            </span>
+            <DialogTitle className="text-[1.35rem] font-bold tracking-tight leading-tight">
+              New merchandise item
+            </DialogTitle>
+            <DialogDescription className="sr-only">
+              Adds an item to the Pierce bookstore catalog. Writes directly to
+              Prism and mirrors back to the LAPortal catalog.
+            </DialogDescription>
+          </div>
         </DialogHeader>
 
         {refsLoading ? (
           <div
             role="status"
             aria-live="polite"
-            className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground"
+            className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground"
           >
             <Loader2Icon className="size-4 animate-spin" aria-hidden />
             Loading vendors and categories…
@@ -163,17 +227,34 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
           <div
             role="alert"
             aria-live="polite"
-            className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-3 text-sm text-destructive"
+            className="m-7 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-3 text-sm text-destructive"
           >
             {refsError}
           </div>
         ) : refs ? (
-          <div className="space-y-5">
-            {/* Identity */}
-            <section aria-labelledby="new-item-identity" className="space-y-3">
-              <SectionHeading id="new-item-identity">Identity</SectionHeading>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="sm:col-span-2 space-y-1.5">
+          <div className="grid max-h-[calc(92vh-11rem)] grid-cols-1 gap-7 overflow-y-auto px-7 py-5 md:grid-cols-[1fr_17rem]">
+            {/* LEFT — form */}
+            <div className="space-y-6">
+              {/* Prism destination banner */}
+              <div className="flex items-center gap-2.5 rounded-md border border-teal-500/25 bg-teal-500/5 px-3 py-2.5 text-xs">
+                <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-md bg-teal-500/15 text-teal-700 dark:text-teal-300">
+                  <DatabaseIcon className="size-3" aria-hidden />
+                </span>
+                <div className="leading-snug">
+                  <span className="font-semibold text-foreground">
+                    Writes to Prism.
+                  </span>{" "}
+                  <span className="text-muted-foreground">
+                    New items appear in the Pierce POS within a minute and
+                    mirror back into the LAPortal catalog.
+                  </span>
+                </div>
+              </div>
+
+              {/* Identity */}
+              <section aria-labelledby="new-item-identity" className="space-y-3">
+                <SectionHeading id="new-item-identity">Identity</SectionHeading>
+                <div className="space-y-1.5">
                   <Label htmlFor="description">
                     Description <Required />
                   </Label>
@@ -187,141 +268,271 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
                     placeholder="PIERCE LOGO MUG 12OZ"
                     autoFocus
                     ref={descriptionRef}
+                    className="h-11 text-[15px] font-medium"
                   />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="barcode">Barcode</Label>
-                  <Input
-                    id="barcode"
-                    name="barcode"
-                    autoComplete="off"
-                    spellCheck={false}
-                    value={form.barcode}
-                    onChange={(e) => update("barcode", e.target.value)}
-                    maxLength={20}
-                    placeholder="Optional UPC / EAN"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="catalogNumber">Catalog #</Label>
-                  <Input
-                    id="catalogNumber"
-                    name="catalogNumber"
-                    autoComplete="off"
-                    spellCheck={false}
-                    value={form.catalogNumber}
-                    onChange={(e) => update("catalogNumber", e.target.value)}
-                    maxLength={30}
-                    placeholder="Optional vendor part #"
-                  />
-                </div>
-              </div>
-            </section>
-
-            {/* Classification */}
-            <section aria-labelledby="new-item-classification" className="space-y-3">
-              <SectionHeading
-                id="new-item-classification"
-                hint="Tax defaults to 9.75% CA standard"
-              >
-                Classification
-              </SectionHeading>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <ItemRefSelects
-                  refs={refs}
-                  vendorId={form.vendorId}
-                  dccId={form.dccId}
-                  itemTaxTypeId={form.itemTaxTypeId}
-                  onChange={(field, value) => setForm((f) => ({ ...f, [field]: value }))}
-                />
-              </div>
-            </section>
-
-            {/* Pricing */}
-            <section aria-labelledby="new-item-pricing" className="space-y-3">
-              <SectionHeading id="new-item-pricing">Pricing</SectionHeading>
-              <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto]">
-                <MoneyField
-                  id="cost"
-                  label="Cost"
-                  required
-                  value={form.cost}
-                  onChange={(v) => update("cost", v)}
-                />
-                <MoneyField
-                  id="retail"
-                  label="Retail"
-                  required
-                  value={form.retail}
-                  onChange={(v) => update("retail", v)}
-                />
-                <div className="flex flex-col justify-end">
-                  <Label className="text-muted-foreground">Margin</Label>
-                  <div
-                    className={cn(
-                      "mt-1.5 inline-flex h-9 items-center justify-center rounded-md border border-dashed border-border/60 bg-muted/20 px-3 text-sm font-medium tabular-nums",
-                      MARGIN_TONE_CLASS[margin.tone],
-                    )}
-                    aria-live="polite"
-                  >
-                    {margin.pct === null ? "—" : `${margin.pct.toFixed(1)}%`}
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                    <span>Shown on receipts and at the POS. Keep it terse.</span>
+                    <span className="tabular-nums">
+                      {form.description.length}/128
+                    </span>
                   </div>
                 </div>
-              </div>
-            </section>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="barcode">
+                      Barcode{" "}
+                      <OptionalHint />
+                    </Label>
+                    <Input
+                      id="barcode"
+                      name="barcode"
+                      autoComplete="off"
+                      spellCheck={false}
+                      value={form.barcode}
+                      onChange={(e) => update("barcode", e.target.value)}
+                      maxLength={20}
+                      placeholder="UPC / EAN"
+                      className="font-mono"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="catalogNumber">
+                      Catalog #{" "}
+                      <OptionalHint />
+                    </Label>
+                    <Input
+                      id="catalogNumber"
+                      name="catalogNumber"
+                      autoComplete="off"
+                      spellCheck={false}
+                      value={form.catalogNumber}
+                      onChange={(e) => update("catalogNumber", e.target.value)}
+                      maxLength={30}
+                      placeholder="Vendor part #"
+                      className="font-mono"
+                    />
+                  </div>
+                </div>
+              </section>
 
-            {/* Comment */}
-            <section aria-labelledby="new-item-comment" className="space-y-1.5">
-              <Label htmlFor="comment">
-                Comment{" "}
-                <span className="text-xs font-normal text-muted-foreground">
-                  (internal note, max 25 chars)
-                </span>
-              </Label>
-              <Input
-                id="comment"
-                name="comment"
-                autoComplete="off"
-                value={form.comment}
-                onChange={(e) => update("comment", e.target.value)}
-                maxLength={25}
-                placeholder="Optional"
-              />
-            </section>
-
-            {error ? (
-              <div
-                role="alert"
-                aria-live="polite"
-                className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
+              {/* Classification */}
+              <section
+                aria-labelledby="new-item-classification"
+                className="space-y-3"
               >
-                {error}
+                <SectionHeading
+                  id="new-item-classification"
+                  hint="Tax defaults to 9.75% CA standard"
+                >
+                  Classification
+                </SectionHeading>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <ItemRefSelects
+                    refs={refs}
+                    vendorId={form.vendorId}
+                    dccId={form.dccId}
+                    itemTaxTypeId={form.itemTaxTypeId}
+                    onChange={(field, value) =>
+                      setForm((f) => ({ ...f, [field]: value }))
+                    }
+                  />
+                </div>
+              </section>
+
+              {/* Pricing */}
+              <section aria-labelledby="new-item-pricing" className="space-y-3">
+                <SectionHeading id="new-item-pricing">Pricing</SectionHeading>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <MoneyField
+                    id="cost"
+                    label="Cost"
+                    required
+                    value={form.cost}
+                    onChange={(v) => update("cost", v)}
+                  />
+                  <MoneyField
+                    id="retail"
+                    label="Retail"
+                    required
+                    value={form.retail}
+                    onChange={(v) => update("retail", v)}
+                  />
+                </div>
+              </section>
+
+              {/* Comment */}
+              <section
+                aria-labelledby="new-item-comment"
+                className="space-y-3"
+              >
+                <SectionHeading id="new-item-comment">
+                  Internal note
+                </SectionHeading>
+                <div className="space-y-1.5">
+                  <Label htmlFor="comment">
+                    Comment{" "}
+                    <span className="text-xs font-normal text-muted-foreground">
+                      (max 25 chars, staff only)
+                    </span>
+                  </Label>
+                  <Input
+                    id="comment"
+                    name="comment"
+                    autoComplete="off"
+                    value={form.comment}
+                    onChange={(e) => update("comment", e.target.value)}
+                    maxLength={25}
+                    placeholder="e.g. fall run, reorder"
+                  />
+                </div>
+              </section>
+
+              {error ? (
+                <div
+                  role="alert"
+                  aria-live="polite"
+                  className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
+                >
+                  {error}
+                </div>
+              ) : null}
+            </div>
+
+            {/* RIGHT — summary rail */}
+            <aside className="hidden self-start border-l pl-6 md:block">
+              <div className="mb-3 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                Preview
               </div>
-            ) : null}
+
+              {/* SKU card */}
+              <SummaryCard>
+                <CardLabel icon={<HashIcon className="size-3" aria-hidden />}>
+                  SKU
+                </CardLabel>
+                <div
+                  key={skuPreview ?? "empty"}
+                  className={cn(
+                    "mt-1 font-mono text-[22px] font-semibold tracking-tight tabular-nums animate-in fade-in-0 slide-in-from-bottom-0.5",
+                    skuPreview ? "text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  {skuPreview ?? "— — — —"}
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {skuPreview
+                    ? "Preview — confirmed on save"
+                    : "After description + dept / class"}
+                </p>
+              </SummaryCard>
+
+              {/* Margin card */}
+              <SummaryCard
+                className={cn("mt-3 border", MARGIN_BG_CLASS[margin.tone])}
+              >
+                <CardLabel>Margin</CardLabel>
+                <div
+                  className={cn(
+                    "mt-1 text-[26px] font-bold leading-none tracking-tight tabular-nums",
+                    MARGIN_VALUE_CLASS[margin.tone],
+                  )}
+                  aria-live="polite"
+                >
+                  {marginPctLabel}
+                </div>
+                {margin.pct !== null && marginHint ? (
+                  <>
+                    <div
+                      className={cn(
+                        "mt-1 text-xs font-medium",
+                        MARGIN_VALUE_CLASS[margin.tone],
+                      )}
+                    >
+                      {marginHint}
+                    </div>
+                    <div className="relative mt-2.5 h-1 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className={cn(
+                          "h-full rounded-full transition-[width] duration-200",
+                          MARGIN_BAR_CLASS[margin.tone],
+                        )}
+                        style={{
+                          width: `${Math.max(2, Math.min(100, margin.pct))}%`,
+                        }}
+                      />
+                      <div
+                        aria-hidden
+                        className="absolute top-[-2px] h-2 w-px bg-muted-foreground/40"
+                        style={{ left: "30%" }}
+                      />
+                    </div>
+                    <div className="mt-1 flex justify-between text-[10px] tabular-nums text-muted-foreground">
+                      <span>0%</span>
+                      <span>30%</span>
+                      <span>100%</span>
+                    </div>
+                  </>
+                ) : null}
+              </SummaryCard>
+
+              {/* Destination card */}
+              <SummaryCard className="mt-3 border border-teal-500/25 bg-teal-500/5">
+                <CardLabel icon={<DatabaseIcon className="size-3" aria-hidden />}>
+                  Destination
+                </CardLabel>
+                <div className="mt-1 text-sm font-semibold">Prism POS</div>
+                <div className="text-[11px] leading-snug text-muted-foreground">
+                  Mirrors to LAPortal catalog within a minute.
+                </div>
+              </SummaryCard>
+
+              <div className="mt-3 flex items-center justify-end gap-1.5 text-[11px] text-muted-foreground">
+                <Kbd>⌘</Kbd>
+                <Kbd>↵</Kbd>
+                <span>to create</span>
+              </div>
+            </aside>
           </div>
         ) : null}
 
-        <DialogFooter className="gap-2 sm:justify-between">
-          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>
-            Cancel
-          </Button>
+        <DialogFooter className="mx-0 mb-0 rounded-none border-t bg-muted/40 px-7 py-3.5 sm:justify-between">
+          <label className="flex cursor-pointer select-none items-start gap-2.5">
+            <Checkbox
+              checked={createAnother}
+              onCheckedChange={(v) => setCreateAnother(v === true)}
+              className="mt-0.5"
+              aria-label="Create another after this"
+            />
+            <span className="text-sm leading-tight">
+              Create another after this
+              <span className="mt-0.5 block text-xs text-muted-foreground">
+                Keeps vendor, dept / class and tax.
+              </span>
+            </span>
+          </label>
           <div className="flex gap-2">
             <Button
-              variant="outline"
-              onClick={() => submit(true)}
+              variant="ghost"
+              onClick={() => onOpenChange(false)}
+              disabled={saving}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => void submit()}
               disabled={!formValid || saving || !refs}
-              title="Create this item and clear the form for another"
+              data-icon="inline-end"
             >
               {saving ? (
-                <Loader2Icon className="mr-1 size-3.5 animate-spin" aria-hidden />
-              ) : null}
-              Create & add another
-            </Button>
-            <Button onClick={() => submit(false)} disabled={!formValid || saving || !refs}>
-              {saving ? (
-                <Loader2Icon className="mr-1 size-3.5 animate-spin" aria-hidden />
-              ) : null}
-              {saving ? "Creating…" : "Create Item"}
+                <>
+                  <Loader2Icon className="animate-spin" aria-hidden />
+                  Creating…
+                </>
+              ) : (
+                <>
+                  Create item
+                  <ArrowRightIcon aria-hidden />
+                </>
+              )}
             </Button>
           </div>
         </DialogFooter>
@@ -329,6 +540,10 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
     </Dialog>
   );
 }
+
+/* ────────────────────────────────────────────────────────────
+   Helpers
+   ──────────────────────────────────────────────────────────── */
 
 function SectionHeading({
   id,
@@ -340,14 +555,16 @@ function SectionHeading({
   hint?: string;
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 border-b border-border/50 pb-1">
+    <div className="flex items-baseline justify-between gap-3 border-b border-border/60 pb-1.5">
       <h3
         id={id}
-        className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+        className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground"
       >
         {children}
       </h3>
-      {hint ? <span className="text-xs text-muted-foreground/70">{hint}</span> : null}
+      {hint ? (
+        <span className="text-[11px] text-muted-foreground/75">{hint}</span>
+      ) : null}
     </div>
   );
 }
@@ -357,6 +574,54 @@ function Required() {
     <span className="text-destructive" aria-label="required">
       *
     </span>
+  );
+}
+
+function OptionalHint() {
+  return (
+    <span className="text-xs font-normal text-muted-foreground">(optional)</span>
+  );
+}
+
+function SummaryCard({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-lg border border-border bg-muted/30 p-3.5",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+function CardLabel({
+  icon,
+  children,
+}: {
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+      {icon}
+      {children}
+    </div>
+  );
+}
+
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="rounded border border-border bg-background px-1.5 py-px font-mono text-[10px]">
+      {children}
+    </kbd>
   );
 }
 
@@ -398,9 +663,26 @@ function MoneyField({ id, label, required, value, onChange }: MoneyFieldProps) {
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="0.00"
-          className="pl-6 text-right tabular-nums"
+          className="pl-6 text-right font-mono tabular-nums"
         />
       </div>
     </div>
   );
+}
+
+/**
+ * Deterministic display-only SKU preview. The authoritative SKU is returned
+ * by Prism on save; this just gives users a sense that an identifier will be
+ * formed from their input.
+ */
+function previewSku(description: string, dccId: string): string | null {
+  const d = description.trim();
+  if (!d || !dccId) return null;
+  let hash = 7;
+  for (let i = 0; i < d.length; i++) {
+    hash = (hash * 31 + d.charCodeAt(i)) >>> 0;
+  }
+  const suffix = (hash % 9000) + 1000;
+  const dept = dccId.slice(-3);
+  return `${dept}-${suffix}`;
 }
