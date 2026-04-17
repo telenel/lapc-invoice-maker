@@ -19,6 +19,12 @@ export interface ItemRefSelectsProps {
   /** Bulk-mode: render a "Leave unchanged" placeholder as the default value. */
   bulkMode?: boolean;
   disabled?: boolean;
+  /**
+   * "stacked" (default) renders each select as its own field with a label, one
+   * per row. "inline" drops the labels and lays them out as a 3-column grid —
+   * for compact toolbars like the batch-add "Apply to all" strip.
+   */
+  layout?: "stacked" | "inline";
 }
 
 function formatDcc(deptName: string, className: string | null): string {
@@ -38,6 +44,7 @@ export function ItemRefSelects({
   onChange,
   bulkMode = false,
   disabled = false,
+  layout = "stacked",
 }: ItemRefSelectsProps) {
   const placeholder = bulkMode ? "Leave unchanged" : "Select…";
   // The default SelectTrigger is `w-fit`, which collapses to placeholder width
@@ -45,6 +52,49 @@ export function ItemRefSelects({
   // long vendor names aren't truncated mid-scan.
   const triggerClass = "w-full";
   const contentClass = "min-w-[var(--anchor-width)] sm:min-w-80 max-w-[min(32rem,90vw)]";
+
+  if (layout === "inline") {
+    return (
+      <div className="grid min-w-0 grid-cols-3 gap-2">
+        <Select value={vendorId} onValueChange={(v) => onChange("vendorId", v ?? "")} disabled={disabled}>
+          <SelectTrigger aria-label="Vendor" size="sm" className={triggerClass}>
+            <SelectValue placeholder={bulkMode ? "Any vendor" : placeholder} />
+          </SelectTrigger>
+          <SelectContent className={contentClass}>
+            {refs?.vendors.map((v) => (
+              <SelectItem key={v.vendorId} value={String(v.vendorId)}>
+                {v.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={dccId} onValueChange={(v) => onChange("dccId", v ?? "")} disabled={disabled}>
+          <SelectTrigger aria-label="Department / Class" size="sm" className={triggerClass}>
+            <SelectValue placeholder={bulkMode ? "Any dept / class" : placeholder} />
+          </SelectTrigger>
+          <SelectContent className={contentClass}>
+            {refs?.dccs.map((d) => (
+              <SelectItem key={d.dccId} value={String(d.dccId)}>
+                {formatDcc(d.deptName, d.className)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={itemTaxTypeId} onValueChange={(v) => onChange("itemTaxTypeId", v ?? "")} disabled={disabled}>
+          <SelectTrigger aria-label="Tax Type" size="sm" className={triggerClass}>
+            <SelectValue placeholder={placeholder} />
+          </SelectTrigger>
+          <SelectContent className={contentClass}>
+            {refs?.taxTypes.map((t) => (
+              <SelectItem key={t.taxTypeId} value={String(t.taxTypeId)}>
+                {t.description}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  }
 
   return (
     <>
