@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { productApi, type PrismRefs } from "@/domains/product/api-client";
+import { productApi } from "@/domains/product/api-client";
 import type { BatchCreateRow, BatchValidationError } from "@/domains/product/types";
 
 export function parsePastedGrid(text: string): string[][] {
@@ -62,10 +62,7 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
   const [useDefaults, setUseDefaults] = useState(true);
   const [errors, setErrors] = useState<BatchValidationError[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [refs, setRefs] = useState<PrismRefs | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-
-  useEffect(() => { productApi.refs().then(setRefs).catch(() => {}); }, []);
 
   function updateCell(rowIdx: number, key: string, value: string) {
     setRows((r) => r.map((row, i) => (i === rowIdx ? { ...row, [key]: value } : row)));

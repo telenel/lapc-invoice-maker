@@ -24,7 +24,7 @@ import { validateBatchCreateShape, validateBatchUpdateShape } from "./batch-vali
 export async function findExistingBarcodes(
   barcodes: string[],
 ): Promise<Map<string, number>> {
-  const cleaned = [...new Set(barcodes.map((b) => b.trim()).filter(Boolean))];
+  const cleaned = Array.from(new Set(barcodes.map((b) => b.trim()).filter(Boolean)));
   if (cleaned.length === 0) return new Map();
 
   const pool = await getPrismPool();
@@ -57,7 +57,7 @@ export async function findMissingRefs(
     table: string,
     pk: string,
   ): Promise<Set<number>> {
-    const unique = [...new Set(ids)].filter((n) => Number.isFinite(n) && n > 0);
+    const unique = Array.from(new Set(ids)).filter((n) => Number.isFinite(n) && n > 0);
     if (unique.length === 0) return new Set();
     const req = pool.request();
     const params = unique.map((_, i) => `@id${i}`);

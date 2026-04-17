@@ -7,7 +7,6 @@
  * function is for test scripts only.
  */
 import { getPrismPool, sql } from "@/lib/prism";
-import { PIERCE_LOCATION_ID } from "./prism-server";
 
 /**
  * Returns the subset of the given SKUs that have at least one transaction

@@ -31,7 +31,7 @@ const bodySchema = z.discriminatedUnion("action", [
     action: z.literal("update"),
     rows: z.array(z.object({
       sku: z.number().int().positive(),
-      patch: z.record(z.any()),
+      patch: z.record(z.string(), z.any()),
     })),
   }),
   z.object({
