@@ -14,17 +14,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   productApi,
   type PrismRefs,
   type CreatedItem,
 } from "@/domains/product/api-client";
+import { ItemRefSelects } from "./item-ref-selects";
 
 interface NewItemDialogProps {
   open: boolean;
@@ -156,38 +150,13 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
               />
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="vendor">Vendor *</Label>
-              <Select value={form.vendorId} onValueChange={(v) => update("vendorId", v ?? "")}>
-                <SelectTrigger id="vendor">
-                  <SelectValue placeholder="Select vendor" />
-                </SelectTrigger>
-                <SelectContent className="max-h-72">
-                  {refs.vendors.map((v) => (
-                    <SelectItem key={v.vendorId} value={String(v.vendorId)}>
-                      {v.name} ({v.vendorId})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="dcc">Department / Class *</Label>
-              <Select value={form.dccId} onValueChange={(v) => update("dccId", v ?? "")}>
-                <SelectTrigger id="dcc">
-                  <SelectValue placeholder="Select DCC" />
-                </SelectTrigger>
-                <SelectContent className="max-h-72">
-                  {refs.dccs.map((d) => (
-                    <SelectItem key={d.dccId} value={String(d.dccId)}>
-                      {d.deptName}
-                      {d.className ? ` › ${d.className}` : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <ItemRefSelects
+              refs={refs}
+              vendorId={form.vendorId}
+              dccId={form.dccId}
+              itemTaxTypeId={form.itemTaxTypeId}
+              onChange={(field, value) => setForm((f) => ({ ...f, [field]: value }))}
+            />
 
             <div className="space-y-1.5">
               <Label htmlFor="cost">Cost *</Label>
@@ -235,25 +204,6 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
                 maxLength={30}
                 placeholder="Optional vendor part #"
               />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="taxType">Tax Type</Label>
-              <Select
-                value={form.itemTaxTypeId}
-                onValueChange={(v) => update("itemTaxTypeId", v ?? "")}
-              >
-                <SelectTrigger id="taxType">
-                  <SelectValue placeholder="Select tax type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {refs.taxTypes.map((t) => (
-                    <SelectItem key={t.taxTypeId} value={String(t.taxTypeId)}>
-                      {t.description}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
 
             <div className="sm:col-span-2 space-y-1.5">
