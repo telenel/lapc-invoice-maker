@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -12,12 +13,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Loader2Icon } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   productApi,
   type PrismRefs,
   type CreatedItem,
 } from "@/domains/product/api-client";
 import { ItemRefSelects } from "./item-ref-selects";
+import { computeMargin } from "./batch-add-grid";
 
 interface NewItemDialogProps {
   open: boolean;
@@ -41,13 +45,20 @@ const EMPTY_FORM: FormState = {
   description: "",
   vendorId: "",
   dccId: "",
-  itemTaxTypeId: "6", // 9.75% CA standard default
+  itemTaxTypeId: "6",
   barcode: "",
   catalogNumber: "",
   comment: "",
   retail: "",
   cost: "",
 };
+
+const MARGIN_TONE_CLASS = {
+  good: "text-emerald-600 dark:text-emerald-400",
+  warn: "text-amber-600 dark:text-amber-400",
+  bad: "text-destructive",
+  idle: "text-muted-foreground",
+} as const;
 
 export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogProps) {
   const [refs, setRefs] = useState<PrismRefs | null>(null);
@@ -56,8 +67,8 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const descriptionRef = useRef<HTMLInputElement | null>(null);
 
-  // Fetch lookup data when the dialog opens
   useEffect(() => {
     if (!open || refs) return;
     setRefsLoading(true);
@@ -71,7 +82,6 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
       .finally(() => setRefsLoading(false));
   }, [open, refs]);
 
-  // Reset on close
   useEffect(() => {
     if (!open) {
       setForm(EMPTY_FORM);
@@ -83,7 +93,16 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
     setForm((prev) => ({ ...prev, [field]: value }));
   }, []);
 
-  async function handleSubmit() {
+  const formValid =
+    form.description.trim().length > 0 &&
+    form.vendorId !== "" &&
+    form.dccId !== "" &&
+    form.retail !== "" &&
+    form.cost !== "" &&
+    Number(form.retail) >= 0 &&
+    Number(form.cost) >= 0;
+
+  async function submit(keepOpen: boolean) {
     setError(null);
     setSaving(true);
     try {
@@ -99,7 +118,18 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
         cost: Number(form.cost),
       });
       onCreated?.(created);
-      onOpenChange(false);
+      toast.success(`Created SKU ${created.sku}`);
+      if (keepOpen) {
+        setForm((prev) => ({
+          ...EMPTY_FORM,
+          vendorId: prev.vendorId,
+          dccId: prev.dccId,
+          itemTaxTypeId: prev.itemTaxTypeId,
+        }));
+        requestAnimationFrame(() => descriptionRef.current?.focus());
+      } else {
+        onOpenChange(false);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create item");
     } finally {
@@ -107,14 +137,7 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
     }
   }
 
-  const formValid =
-    form.description.trim().length > 0 &&
-    form.vendorId !== "" &&
-    form.dccId !== "" &&
-    form.retail !== "" &&
-    form.cost !== "" &&
-    Number(form.retail) >= 0 &&
-    Number(form.cost) >= 0;
+  const margin = computeMargin(form.cost, form.retail);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -128,101 +151,133 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
         </DialogHeader>
 
         {refsLoading ? (
-          <div role="status" aria-live="polite" className="py-8 text-center text-sm text-muted-foreground">
+          <div
+            role="status"
+            aria-live="polite"
+            className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground"
+          >
+            <Loader2Icon className="size-4 animate-spin" aria-hidden />
             Loading vendors and categories…
           </div>
         ) : refsError ? (
-          <div role="alert" aria-live="polite" className="py-4 rounded border border-destructive/30 bg-destructive/5 px-3 text-sm text-destructive">
+          <div
+            role="alert"
+            aria-live="polite"
+            className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-3 text-sm text-destructive"
+          >
             {refsError}
           </div>
         ) : refs ? (
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2 space-y-1.5">
-              <Label htmlFor="description">Description *</Label>
-              <Input
-                id="description"
-                name="description"
-                autoComplete="off"
-                value={form.description}
-                onChange={(e) => update("description", e.target.value)}
-                maxLength={128}
-                placeholder="e.g. PIERCE LOGO MUG 12OZ…"
-                autoFocus
-              />
-            </div>
+          <div className="space-y-5">
+            {/* Identity */}
+            <section aria-labelledby="new-item-identity" className="space-y-3">
+              <SectionHeading id="new-item-identity">Identity</SectionHeading>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="sm:col-span-2 space-y-1.5">
+                  <Label htmlFor="description">
+                    Description <Required />
+                  </Label>
+                  <Input
+                    id="description"
+                    name="description"
+                    autoComplete="off"
+                    value={form.description}
+                    onChange={(e) => update("description", e.target.value)}
+                    maxLength={128}
+                    placeholder="PIERCE LOGO MUG 12OZ"
+                    autoFocus
+                    ref={descriptionRef}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="barcode">Barcode</Label>
+                  <Input
+                    id="barcode"
+                    name="barcode"
+                    autoComplete="off"
+                    spellCheck={false}
+                    value={form.barcode}
+                    onChange={(e) => update("barcode", e.target.value)}
+                    maxLength={20}
+                    placeholder="Optional UPC / EAN"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="catalogNumber">Catalog #</Label>
+                  <Input
+                    id="catalogNumber"
+                    name="catalogNumber"
+                    autoComplete="off"
+                    spellCheck={false}
+                    value={form.catalogNumber}
+                    onChange={(e) => update("catalogNumber", e.target.value)}
+                    maxLength={30}
+                    placeholder="Optional vendor part #"
+                  />
+                </div>
+              </div>
+            </section>
 
-            <ItemRefSelects
-              refs={refs}
-              vendorId={form.vendorId}
-              dccId={form.dccId}
-              itemTaxTypeId={form.itemTaxTypeId}
-              onChange={(field, value) => setForm((f) => ({ ...f, [field]: value }))}
-            />
+            {/* Classification */}
+            <section aria-labelledby="new-item-classification" className="space-y-3">
+              <SectionHeading
+                id="new-item-classification"
+                hint="Tax defaults to 9.75% CA standard"
+              >
+                Classification
+              </SectionHeading>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <ItemRefSelects
+                  refs={refs}
+                  vendorId={form.vendorId}
+                  dccId={form.dccId}
+                  itemTaxTypeId={form.itemTaxTypeId}
+                  onChange={(field, value) => setForm((f) => ({ ...f, [field]: value }))}
+                />
+              </div>
+            </section>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="cost">Cost *</Label>
-              <Input
-                id="cost"
-                name="cost"
-                autoComplete="off"
-                inputMode="decimal"
-                type="number"
-                step="0.01"
-                min="0"
-                value={form.cost}
-                onChange={(e) => update("cost", e.target.value)}
-                placeholder="0.00"
-                className="tabular-nums"
-              />
-            </div>
+            {/* Pricing */}
+            <section aria-labelledby="new-item-pricing" className="space-y-3">
+              <SectionHeading id="new-item-pricing">Pricing</SectionHeading>
+              <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto]">
+                <MoneyField
+                  id="cost"
+                  label="Cost"
+                  required
+                  value={form.cost}
+                  onChange={(v) => update("cost", v)}
+                />
+                <MoneyField
+                  id="retail"
+                  label="Retail"
+                  required
+                  value={form.retail}
+                  onChange={(v) => update("retail", v)}
+                />
+                <div className="flex flex-col justify-end">
+                  <Label className="text-muted-foreground">Margin</Label>
+                  <div
+                    className={cn(
+                      "mt-1.5 inline-flex h-9 items-center justify-center rounded-md border border-dashed border-border/60 bg-muted/20 px-3 text-sm font-medium tabular-nums",
+                      MARGIN_TONE_CLASS[margin.tone],
+                    )}
+                    aria-live="polite"
+                  >
+                    {margin.pct === null ? "—" : `${margin.pct.toFixed(1)}%`}
+                  </div>
+                </div>
+              </div>
+            </section>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="retail">Retail Price *</Label>
-              <Input
-                id="retail"
-                name="retail"
-                autoComplete="off"
-                inputMode="decimal"
-                type="number"
-                step="0.01"
-                min="0"
-                value={form.retail}
-                onChange={(e) => update("retail", e.target.value)}
-                placeholder="0.00"
-                className="tabular-nums"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="barcode">Barcode</Label>
-              <Input
-                id="barcode"
-                name="barcode"
-                autoComplete="off"
-                spellCheck={false}
-                value={form.barcode}
-                onChange={(e) => update("barcode", e.target.value)}
-                maxLength={20}
-                placeholder="Optional UPC/EAN…"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="catalogNumber">Catalog #</Label>
-              <Input
-                id="catalogNumber"
-                name="catalogNumber"
-                autoComplete="off"
-                spellCheck={false}
-                value={form.catalogNumber}
-                onChange={(e) => update("catalogNumber", e.target.value)}
-                maxLength={30}
-                placeholder="Optional vendor part #…"
-              />
-            </div>
-
-            <div className="sm:col-span-2 space-y-1.5">
-              <Label htmlFor="comment">Comment</Label>
+            {/* Comment */}
+            <section aria-labelledby="new-item-comment" className="space-y-1.5">
+              <Label htmlFor="comment">
+                Comment{" "}
+                <span className="text-xs font-normal text-muted-foreground">
+                  (internal note, max 25 chars)
+                </span>
+              </Label>
               <Input
                 id="comment"
                 name="comment"
@@ -230,27 +285,122 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
                 value={form.comment}
                 onChange={(e) => update("comment", e.target.value)}
                 maxLength={25}
-                placeholder="Optional internal note…"
+                placeholder="Optional"
               />
-            </div>
+            </section>
 
             {error ? (
-              <div role="alert" aria-live="polite" className="sm:col-span-2 rounded border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              <div
+                role="alert"
+                aria-live="polite"
+                className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
+              >
                 {error}
               </div>
             ) : null}
           </div>
         ) : null}
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
+        <DialogFooter className="gap-2 sm:justify-between">
+          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!formValid || saving || !refs}>
-            {saving ? "Creating…" : "Create Item"}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => submit(true)}
+              disabled={!formValid || saving || !refs}
+              title="Create this item and clear the form for another"
+            >
+              {saving ? (
+                <Loader2Icon className="mr-1 size-3.5 animate-spin" aria-hidden />
+              ) : null}
+              Create & add another
+            </Button>
+            <Button onClick={() => submit(false)} disabled={!formValid || saving || !refs}>
+              {saving ? (
+                <Loader2Icon className="mr-1 size-3.5 animate-spin" aria-hidden />
+              ) : null}
+              {saving ? "Creating…" : "Create Item"}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function SectionHeading({
+  id,
+  children,
+  hint,
+}: {
+  id: string;
+  children: React.ReactNode;
+  hint?: string;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 border-b border-border/50 pb-1">
+      <h3
+        id={id}
+        className="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+      >
+        {children}
+      </h3>
+      {hint ? <span className="text-xs text-muted-foreground/70">{hint}</span> : null}
+    </div>
+  );
+}
+
+function Required() {
+  return (
+    <span className="text-destructive" aria-label="required">
+      *
+    </span>
+  );
+}
+
+interface MoneyFieldProps {
+  id: string;
+  label: string;
+  required?: boolean;
+  value: string;
+  onChange: (value: string) => void;
+}
+
+function MoneyField({ id, label, required, value, onChange }: MoneyFieldProps) {
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id}>
+        {label}
+        {required ? (
+          <>
+            {" "}
+            <Required />
+          </>
+        ) : null}
+      </Label>
+      <div className="relative">
+        <span
+          className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+          aria-hidden
+        >
+          $
+        </span>
+        <Input
+          id={id}
+          name={id}
+          autoComplete="off"
+          inputMode="decimal"
+          type="number"
+          step="0.01"
+          min="0"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="0.00"
+          className="pl-6 text-right tabular-nums"
+        />
+      </div>
+    </div>
   );
 }
