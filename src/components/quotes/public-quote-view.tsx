@@ -350,7 +350,12 @@ export function PublicQuoteView({ token }: { token: string }) {
       <div className="border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-5 flex items-center gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/lapc-logo.png" alt="" aria-hidden="true" className="w-12 h-12 shrink-0" />
+          <img
+            src="/lapc-logo.png"
+            alt=""
+            aria-hidden="true"
+            className="h-8 w-auto max-w-[9.5rem] shrink-0 object-contain sm:h-9 sm:max-w-[11rem] md:h-10 md:max-w-[13rem]"
+          />
           <div>
             <h1 className="font-bold text-xl tracking-tight">Los Angeles Pierce College Store</h1>
             <p className="text-sm text-muted-foreground">Quote Review</p>

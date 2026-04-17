@@ -278,6 +278,7 @@ describe("invoiceRepository", () => {
           where: {
             type: "INVOICE",
             createdAt: { gte: expect.any(Date) },
+            archivedAt: null,
           },
           select: {
             totalAmount: true,
