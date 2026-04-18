@@ -16,6 +16,11 @@ const TIMELINE_PIXELS_PER_MINUTE = 1.4;
 const ALL_SOURCES = ["MEETING", "SEMINAR", "VENDOR", "OTHER", "catering", "birthday"] as const;
 const EMPTY_DATE_KEYS: string[] = [];
 
+interface TimelineLaneEvent extends AgendaLaneEvent {
+  originalStartMin: number;
+  originalDurMin: number;
+}
+
 export interface AgendaStreamViewProps {
   dateProfile?: ViewProps["dateProfile"];
   businessHours?: ViewProps["businessHours"];
@@ -99,6 +104,14 @@ function formatTime(minutes: number): string {
   return `${hour12}:${String(minute).padStart(2, "0")} ${suffix}`;
 }
 
+function formatEventTimeLabel(event: { allDay: boolean; startMin: number; durMin: number }): string {
+  if (event.allDay) {
+    return "All day";
+  }
+
+  return `${formatTime(event.startMin)} - ${formatTime(event.startMin + event.durMin)}`;
+}
+
 function formatHourLabel(hour24: number): string {
   const suffix = hour24 >= 12 ? "PM" : "AM";
   const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
@@ -108,6 +121,82 @@ function formatHourLabel(hour24: number): string {
 function getTimelinePercent(minutes: number): number {
   const clamped = Math.min(DAY_END_MIN, Math.max(DAY_START_MIN, minutes));
   return ((clamped - DAY_START_MIN) / DAY_RANGE_MIN) * 100;
+}
+
+function getEventEndMin(event: { startMin: number; durMin: number }): number {
+  return event.startMin + event.durMin;
+}
+
+function buildTimelineEvents(events: AgendaStreamEvent[]): TimelineLaneEvent[] {
+  const clampedEvents = events
+    .flatMap<TimelineLaneEvent>((event) => {
+      if (event.allDay) {
+        return [];
+      }
+
+      const clampedStart = Math.max(DAY_START_MIN, event.startMin);
+      const clampedEnd = Math.min(DAY_END_MIN, getEventEndMin(event));
+      if (clampedEnd <= clampedStart) {
+        return [];
+      }
+
+      return [
+        {
+          ...event,
+          originalStartMin: event.startMin,
+          originalDurMin: event.durMin,
+          startMin: clampedStart,
+          durMin: clampedEnd - clampedStart,
+        },
+      ];
+    })
+    .sort((left, right) => {
+      if (left.startMin !== right.startMin) return left.startMin - right.startMin;
+      if (left.durMin !== right.durMin) return left.durMin - right.durMin;
+      return left.id.localeCompare(right.id);
+    });
+
+  const positioned: TimelineLaneEvent[] = [];
+  let cluster: TimelineLaneEvent[] = [];
+  let clusterEnd = -Infinity;
+
+  function flushCluster() {
+    if (cluster.length === 0) {
+      return;
+    }
+
+    positioned.push(...assignColumns(cluster));
+    cluster = [];
+    clusterEnd = -Infinity;
+  }
+
+  for (const event of clampedEvents) {
+    const endMin = getEventEndMin(event);
+    if (cluster.length === 0) {
+      cluster.push(event);
+      clusterEnd = endMin;
+      continue;
+    }
+
+    if (event.startMin < clusterEnd) {
+      cluster.push(event);
+      clusterEnd = Math.max(clusterEnd, endMin);
+      continue;
+    }
+
+    flushCluster();
+    cluster.push(event);
+    clusterEnd = endMin;
+  }
+
+  flushCluster();
+
+  return positioned;
+}
+
+function getCompactTrackHeight(events: TimelineLaneEvent[]): number {
+  const overlapDepth = events.reduce((maxDepth, event) => Math.max(maxDepth, event.col + 1), 1);
+  return Math.max(22, overlapDepth * 22);
 }
 
 function buildDensityMap(events: AgendaStreamEvent[]): Record<string, number> {
@@ -139,7 +228,7 @@ function LaneCard({ event }: { event: AgendaStreamEvent }) {
       <div className={styles.cardBody}>
         <div className={styles.cardHeader}>
           <span className={styles.cardEyebrow}>{sourceMeta.label}</span>
-          <span className={styles.cardTime}>{`${formatTime(event.startMin)} - ${formatTime(event.startMin + event.durMin)}`}</span>
+          <span className={styles.cardTime}>{formatEventTimeLabel(event)}</span>
         </div>
         <div className={styles.cardTitle}>{event.title}</div>
         {summary.length > 0 ? (
@@ -150,9 +239,21 @@ function LaneCard({ event }: { event: AgendaStreamEvent }) {
   );
 }
 
-function CompactBar({ events, isToday, nowMin }: { events: AgendaLaneEvent[]; isToday: boolean; nowMin: number | null }) {
+function CompactBar({
+  dateKey,
+  events,
+  isToday,
+  nowMin,
+}: {
+  dateKey: string;
+  events: TimelineLaneEvent[];
+  isToday: boolean;
+  nowMin: number | null;
+}) {
+  const trackHeight = getCompactTrackHeight(events);
+
   return (
-    <div className={styles.compactBar}>
+    <div className={styles.compactBar} style={{ minHeight: `${trackHeight + 44}px` }}>
       <div className={styles.compactAxis}>
         {[8, 10, 12, 14, 16, 18].map((hour) => (
           <div
@@ -166,19 +267,20 @@ function CompactBar({ events, isToday, nowMin }: { events: AgendaLaneEvent[]; is
         {isToday && nowMin != null ? (
           <div
             className={styles.compactNow}
-            style={{ left: `${getTimelinePercent(nowMin)}%` }}
+            style={{ left: `${getTimelinePercent(nowMin)}%`, bottom: `${-(trackHeight + 12)}px` }}
             aria-hidden="true"
           />
         ) : null}
       </div>
 
-      <div className={styles.compactTrack}>
+      <div className={styles.compactTrack} data-testid={`compact-track-${dateKey}`} style={{ height: `${trackHeight}px` }}>
         {events.map((event) => {
           const sourceMeta = getAgendaSourceMeta(event.source);
           return (
             <div
               key={event.id}
               className={styles.compactEvent}
+              data-testid={`compact-event-${event.id}`}
               style={{
                 left: `${getTimelinePercent(event.startMin)}%`,
                 width: `${Math.max(5, getTimelinePercent(event.startMin + event.durMin) - getTimelinePercent(event.startMin))}%`,
@@ -186,7 +288,7 @@ function CompactBar({ events, isToday, nowMin }: { events: AgendaLaneEvent[]; is
                 backgroundColor: `${sourceMeta.color}20`,
                 borderLeftColor: sourceMeta.color,
               }}
-              title={`${event.title} · ${formatTime(event.startMin)} - ${formatTime(event.startMin + event.durMin)}`}
+              title={`${event.title} · ${formatTime(event.originalStartMin)} - ${formatTime(event.originalStartMin + event.originalDurMin)}`}
             >
               <span className={styles.compactEventTitle}>{event.title}</span>
             </div>
@@ -200,11 +302,13 @@ function CompactBar({ events, isToday, nowMin }: { events: AgendaLaneEvent[]; is
 function ExpandedLane({
   day,
   events,
+  supplementalEvents,
   isToday,
   nowMin,
 }: {
-  day: AgendaStreamDay<AgendaLaneEvent>;
-  events: AgendaLaneEvent[];
+  day: AgendaStreamDay<TimelineLaneEvent>;
+  events: TimelineLaneEvent[];
+  supplementalEvents: AgendaStreamEvent[];
   isToday: boolean;
   nowMin: number | null;
 }) {
@@ -269,6 +373,7 @@ function ExpandedLane({
               <div
                 key={event.id}
                 className={styles.expandedEvent}
+                data-testid={`expanded-event-${event.id}`}
                 style={{
                   top: `${top}px`,
                   left: `calc(${left}% + 4px)`,
@@ -279,7 +384,7 @@ function ExpandedLane({
                 }}
               >
                 <div className={styles.expandedEventTitle}>{event.title}</div>
-                <div className={styles.expandedEventTime}>{`${formatTime(event.startMin)} - ${formatTime(event.startMin + event.durMin)}`}</div>
+                <div className={styles.expandedEventTime}>{`${formatTime(event.originalStartMin)} - ${formatTime(event.originalStartMin + event.originalDurMin)}`}</div>
               </div>
             );
           })}
@@ -294,6 +399,17 @@ function ExpandedLane({
         <span>Double-click empty space to add</span>
         <span>Drag event to reschedule</span>
       </div>
+
+      {supplementalEvents.length > 0 ? (
+        <div className={styles.supplementalEvents}>
+          <div className={styles.supplementalLabel}>Outside timeline</div>
+          <div className={styles.laneCards}>
+            {supplementalEvents.map((event) => (
+              <LaneCard key={event.id} event={event} />
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -311,10 +427,19 @@ function DayLane({
   nowMin: number | null;
   onToggle: () => void;
 }) {
-  const events = useMemo(() => {
-    const positioned = assignColumns(day.events);
-    return positioned.sort((left, right) => left.startMin - right.startMin);
+  const cardEvents = useMemo(() => {
+    return [...day.events].sort((left, right) => {
+      if (left.startMin !== right.startMin) return left.startMin - right.startMin;
+      if (left.durMin !== right.durMin) return left.durMin - right.durMin;
+      return left.id.localeCompare(right.id);
+    });
   }, [day.events]);
+  const timelineEvents = useMemo(() => buildTimelineEvents(cardEvents), [cardEvents]);
+  const timelineEventIds = useMemo(() => new Set(timelineEvents.map((event) => event.id)), [timelineEvents]);
+  const supplementalEvents = useMemo(
+    () => cardEvents.filter((event) => !timelineEventIds.has(event.id)),
+    [cardEvents, timelineEventIds],
+  );
 
   const buttonLabel = `${formatDateKey(day.dateKey, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}`;
 
@@ -330,18 +455,24 @@ function DayLane({
         <div className={styles.plateEyebrow}>{formatDateKey(day.dateKey, { weekday: "long" }).slice(0, 3).toUpperCase()}</div>
         <div className={styles.plateNumber}>{formatDateKey(day.dateKey, { day: "numeric" })}</div>
         {isToday ? <div className={styles.todayPill}>TODAY</div> : null}
-        <div className={styles.plateCount}>{`${events.length} event${events.length === 1 ? "" : "s"}`}</div>
+        <div className={styles.plateCount}>{`${cardEvents.length} event${cardEvents.length === 1 ? "" : "s"}`}</div>
       </button>
 
       <div className={styles.laneBody}>
         {expanded ? (
-          <ExpandedLane day={{ ...day, events }} events={events} isToday={isToday} nowMin={nowMin} />
+          <ExpandedLane
+            day={{ ...day, events: timelineEvents }}
+            events={timelineEvents}
+            supplementalEvents={supplementalEvents}
+            isToday={isToday}
+            nowMin={nowMin}
+          />
         ) : (
           <>
-            <CompactBar events={events} isToday={isToday} nowMin={nowMin} />
+            <CompactBar dateKey={day.dateKey} events={timelineEvents} isToday={isToday} nowMin={nowMin} />
             <div className={styles.laneCards}>
-              {events.length > 0 ? (
-                events.slice(0, 4).map((event) => <LaneCard key={event.id} event={event} />)
+              {cardEvents.length > 0 ? (
+                cardEvents.slice(0, 4).map((event) => <LaneCard key={event.id} event={event} />)
               ) : (
                 <div className={styles.emptyState}>Nothing scheduled.</div>
               )}
@@ -390,6 +521,12 @@ export function AgendaStreamView({
       setCurrentDisplayMonth(displayMonth);
     }
   }, [displayMonth]);
+
+  useEffect(() => {
+    if (!displayMonth) {
+      setCurrentDisplayMonth(fromDateKey(derivedWeekStart));
+    }
+  }, [displayMonth, derivedWeekStart]);
 
   useEffect(() => {
     setShowPast(initialShowPast);

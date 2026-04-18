@@ -154,6 +154,291 @@ function buildFullCalendarLikeViewProps(): Partial<ViewProps> {
   } as Partial<ViewProps>;
 }
 
+function buildMayFullCalendarLikeViewProps(): Partial<ViewProps> {
+  return {
+    dateProfile: {
+      currentRange: {
+        start: new Date("2026-05-04T07:00:00.000Z"),
+      },
+    },
+  } as Partial<ViewProps>;
+}
+
+function buildBoundaryAgendaEvents(): AgendaStreamEvent[] {
+  return [
+    ...buildAgendaEvents(),
+    {
+      id: "all-day-1",
+      calendarEventId: "all-day-1",
+      dateKey: "2026-04-13",
+      startMin: 0,
+      durMin: 24 * 60,
+      source: "SEMINAR",
+      title: "All-day Conference",
+      metadata: {
+        amount: null,
+        location: "Student Union",
+        headcount: null,
+        quoteId: null,
+        quoteNumber: null,
+        quoteStatus: null,
+        staffId: null,
+        eventId: "evt-all-day",
+        description: null,
+        setupTime: null,
+        takedownTime: null,
+      },
+      readOnly: false,
+      allDay: true,
+      original: {
+        id: "all-day-1",
+        title: "All-day Conference",
+        start: "2026-04-13",
+        end: null,
+        allDay: true,
+        color: "#ede9fe",
+        borderColor: "#8b5cf6",
+        textColor: "#6d28d9",
+        source: "manual",
+        extendedProps: {
+          type: "SEMINAR",
+          location: "Student Union",
+          eventId: "evt-all-day",
+        },
+      },
+    },
+    {
+      id: "early-1",
+      calendarEventId: "early-1",
+      dateKey: "2026-04-13",
+      startMin: 6 * 60,
+      durMin: 45,
+      source: "OTHER",
+      title: "Sunrise Setup",
+      metadata: {
+        amount: null,
+        location: "Quad",
+        headcount: null,
+        quoteId: null,
+        quoteNumber: null,
+        quoteStatus: null,
+        staffId: null,
+        eventId: "evt-early",
+        description: null,
+        setupTime: null,
+        takedownTime: null,
+      },
+      readOnly: false,
+      allDay: false,
+      original: {
+        id: "early-1",
+        title: "Sunrise Setup",
+        start: "2026-04-13T13:00:00.000Z",
+        end: "2026-04-13T13:45:00.000Z",
+        allDay: false,
+        color: "#f3f4f6",
+        borderColor: "#6b7280",
+        textColor: "#374151",
+        source: "manual",
+        extendedProps: {
+          type: "OTHER",
+          location: "Quad",
+          eventId: "evt-early",
+        },
+      },
+    },
+    {
+      id: "late-1",
+      calendarEventId: "late-1",
+      dateKey: "2026-04-13",
+      startMin: 20 * 60,
+      durMin: 60,
+      source: "VENDOR",
+      title: "Evening Breakdown",
+      metadata: {
+        amount: null,
+        location: "Gym",
+        headcount: null,
+        quoteId: null,
+        quoteNumber: null,
+        quoteStatus: null,
+        staffId: null,
+        eventId: "evt-late",
+        description: null,
+        setupTime: null,
+        takedownTime: null,
+      },
+      readOnly: false,
+      allDay: false,
+      original: {
+        id: "late-1",
+        title: "Evening Breakdown",
+        start: "2026-04-14T03:00:00.000Z",
+        end: "2026-04-14T04:00:00.000Z",
+        allDay: false,
+        color: "#ccfbf1",
+        borderColor: "#14b8a6",
+        textColor: "#0f766e",
+        source: "manual",
+        extendedProps: {
+          type: "VENDOR",
+          location: "Gym",
+          eventId: "evt-late",
+        },
+      },
+    },
+  ];
+}
+
+function buildDenseAgendaEvents(): AgendaStreamEvent[] {
+  return [
+    {
+      id: "overlap-a",
+      calendarEventId: "overlap-a",
+      dateKey: "2026-04-14",
+      startMin: 9 * 60,
+      durMin: 60,
+      source: "MEETING",
+      title: "Morning Sync",
+      metadata: {
+        amount: null,
+        location: "Admin 201",
+        headcount: null,
+        quoteId: null,
+        quoteNumber: null,
+        quoteStatus: null,
+        staffId: null,
+        eventId: "evt-a",
+        description: null,
+        setupTime: null,
+        takedownTime: null,
+      },
+      readOnly: false,
+      allDay: false,
+      original: {
+        id: "overlap-a",
+        title: "Morning Sync",
+        start: "2026-04-14T16:00:00.000Z",
+        end: "2026-04-14T17:00:00.000Z",
+        allDay: false,
+        color: "#dbeafe",
+        borderColor: "#3b82f6",
+        textColor: "#1d4ed8",
+        source: "manual",
+        extendedProps: { type: "MEETING", eventId: "evt-a" },
+      },
+    },
+    {
+      id: "overlap-b",
+      calendarEventId: "overlap-b",
+      dateKey: "2026-04-14",
+      startMin: 9 * 60 + 15,
+      durMin: 60,
+      source: "SEMINAR",
+      title: "Training Block",
+      metadata: {
+        amount: null,
+        location: "Room 2",
+        headcount: null,
+        quoteId: null,
+        quoteNumber: null,
+        quoteStatus: null,
+        staffId: null,
+        eventId: "evt-b",
+        description: null,
+        setupTime: null,
+        takedownTime: null,
+      },
+      readOnly: false,
+      allDay: false,
+      original: {
+        id: "overlap-b",
+        title: "Training Block",
+        start: "2026-04-14T16:15:00.000Z",
+        end: "2026-04-14T17:15:00.000Z",
+        allDay: false,
+        color: "#ede9fe",
+        borderColor: "#8b5cf6",
+        textColor: "#6d28d9",
+        source: "manual",
+        extendedProps: { type: "SEMINAR", eventId: "evt-b" },
+      },
+    },
+    {
+      id: "overlap-c",
+      calendarEventId: "overlap-c",
+      dateKey: "2026-04-14",
+      startMin: 9 * 60 + 30,
+      durMin: 45,
+      source: "OTHER",
+      title: "Vendor Prep",
+      metadata: {
+        amount: null,
+        location: "Dock",
+        headcount: null,
+        quoteId: null,
+        quoteNumber: null,
+        quoteStatus: null,
+        staffId: null,
+        eventId: "evt-c",
+        description: null,
+        setupTime: null,
+        takedownTime: null,
+      },
+      readOnly: false,
+      allDay: false,
+      original: {
+        id: "overlap-c",
+        title: "Vendor Prep",
+        start: "2026-04-14T16:30:00.000Z",
+        end: "2026-04-14T17:15:00.000Z",
+        allDay: false,
+        color: "#f3f4f6",
+        borderColor: "#6b7280",
+        textColor: "#374151",
+        source: "manual",
+        extendedProps: { type: "OTHER", eventId: "evt-c" },
+      },
+    },
+    {
+      id: "solo-late",
+      calendarEventId: "solo-late",
+      dateKey: "2026-04-14",
+      startMin: 13 * 60,
+      durMin: 45,
+      source: "MEETING",
+      title: "Solo Review",
+      metadata: {
+        amount: null,
+        location: "Office",
+        headcount: null,
+        quoteId: null,
+        quoteNumber: null,
+        quoteStatus: null,
+        staffId: null,
+        eventId: "evt-solo",
+        description: null,
+        setupTime: null,
+        takedownTime: null,
+      },
+      readOnly: false,
+      allDay: false,
+      original: {
+        id: "solo-late",
+        title: "Solo Review",
+        start: "2026-04-14T20:00:00.000Z",
+        end: "2026-04-14T20:45:00.000Z",
+        allDay: false,
+        color: "#dbeafe",
+        borderColor: "#3b82f6",
+        textColor: "#1d4ed8",
+        source: "manual",
+        extendedProps: { type: "MEETING", eventId: "evt-solo" },
+      },
+    },
+  ];
+}
+
 describe("AgendaStreamView", () => {
   it("renders from direct fullcalendar-like props plus local test data", () => {
     render(
@@ -213,6 +498,84 @@ describe("AgendaStreamView", () => {
     expect(within(expandedLane).getByText("7 AM")).toBeTruthy();
     expect(within(expandedLane).getByText("12 PM")).toBeTruthy();
     expect(within(expandedLane).getByText("Ops Sync")).toBeTruthy();
+  });
+
+  it("syncs the displayed month when the parent-driven fullcalendar date profile changes", () => {
+    const { rerender } = render(
+      <AgendaStreamView
+        {...buildFullCalendarLikeViewProps()}
+        agendaEvents={buildAgendaEvents()}
+        now={NON_MATCHING_NOW}
+      />,
+    );
+
+    expect(screen.getAllByText("April 2026").length).toBeGreaterThan(0);
+    expect(screen.getByText("Week of Apr 13, 2026")).toBeTruthy();
+
+    rerender(
+      <AgendaStreamView
+        {...buildMayFullCalendarLikeViewProps()}
+        agendaEvents={buildAgendaEvents()}
+        now={NON_MATCHING_NOW}
+      />,
+    );
+
+    expect(screen.getAllByText("May 2026").length).toBeGreaterThan(1);
+    expect(screen.getByText("Week of May 4, 2026")).toBeTruthy();
+  });
+
+  it("keeps all-day and off-hours events in cards while excluding them from the timeline display", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <AgendaStreamView
+        weekStart="2026-04-13"
+        agendaEvents={buildBoundaryAgendaEvents()}
+        now={NOW}
+      />,
+    );
+
+    expect(screen.getAllByText("All-day Conference").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Sunrise Setup").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Evening Breakdown").length).toBeGreaterThan(0);
+
+    const laneToggle = screen.getByRole("button", { name: /Monday, April 13, 2026/i });
+    await user.click(laneToggle);
+
+    const expandedLane = laneToggle.closest("section");
+    expect(expandedLane).not.toBeNull();
+    if (!expandedLane) {
+      throw new Error("Expected expanded lane section");
+    }
+
+    expect(within(expandedLane).queryByTestId("expanded-event-all-day-1")).toBeNull();
+    expect(within(expandedLane).queryByTestId("expanded-event-early-1")).toBeNull();
+    expect(within(expandedLane).queryByTestId("expanded-event-late-1")).toBeNull();
+    expect(within(expandedLane).getByText("All day")).toBeTruthy();
+  });
+
+  it("grows the compact track for dense overlaps and keeps later solo expanded events full width", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <AgendaStreamView
+        weekStart="2026-04-13"
+        agendaEvents={buildDenseAgendaEvents()}
+        now={NOW}
+      />,
+    );
+
+    const compactTrack = screen.getByTestId("compact-track-2026-04-14");
+    expect(compactTrack.getAttribute("style") ?? "").toContain("height: 66px");
+
+    const laneToggle = screen.getByRole("button", { name: /Tuesday, April 14, 2026/i });
+    await user.click(laneToggle);
+
+    const overlapEvent = screen.getByTestId("expanded-event-overlap-a");
+    const soloEvent = screen.getByTestId("expanded-event-solo-late");
+
+    expect(overlapEvent.getAttribute("style") ?? "").toContain("width: calc(33.3333% - 8px)");
+    expect(soloEvent.getAttribute("style") ?? "").toContain("width: calc(100% - 8px)");
   });
 });
 
