@@ -29,10 +29,11 @@ This is the deployment contract to use across repos when the goal is:
 ### Normal `main` deploy
 
 1. CI validates the exact Git SHA.
-2. GitHub deploys over SSH with that exact SHA pinned.
-3. VPS fetches that ref and refuses to continue if it does not match the pinned SHA.
-4. VPS builds the image, recreates the container, verifies the live SHA, and logs the outcome.
-5. On verification failure, VPS rolls back to the last known-good commit.
+2. GitHub builds one deployable image for that exact SHA and publishes it to a registry.
+3. GitHub deploys over SSH with both the pinned SHA and the exact image reference.
+4. VPS fetches that ref and refuses to continue if it does not match the pinned SHA.
+5. VPS pulls the exact image, recreates the container, verifies the live SHA, and logs the outcome.
+6. On verification failure, VPS rolls back to the last known-good commit or image.
 
 ### Hotfix deploy
 
@@ -61,8 +62,8 @@ The remote deploy script should:
 
 1. fetch the target ref
 2. compare fetched commit to the expected SHA
-3. export `BUILD_SHA` and `BUILD_TIME`
-4. build the app image
+3. prefer an exact image pull when GitHub provides one, while preserving a local build fallback for direct hotfixes
+4. export `BUILD_SHA` and `BUILD_TIME`
 5. recreate the container
 6. poll the live version endpoint until the target SHA is reported
 7. run lightweight smoke checks against critical routes
@@ -88,6 +89,7 @@ For exact-SHA GitHub deploys, each repo should define:
 - `DEPLOY_SSH_PORT`
 - `DEPLOY_SSH_KEY`
 - `DEPLOY_REMOTE_PROJECT_DIR`
+- build-time public env values needed by the Docker image (for LAPortal, `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`)
 
 Fallback webhook deploys are acceptable only as a temporary compatibility path. They are weaker because they do not inherently guarantee exact-SHA execution unless the receiver explicitly forwards the pinned SHA.
 

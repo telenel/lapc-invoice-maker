@@ -1,5 +1,6 @@
 services:
   app:
+    image: ${APP_IMAGE:-lapc-invoice-maker-app:local}
     build:
       context: .
       args:

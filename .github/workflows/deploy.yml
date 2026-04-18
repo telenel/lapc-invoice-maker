@@ -1,13 +1,19 @@
 name: Deploy to VPS
 
 on:
-  push:
-    branches: [main]
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
   workflow_dispatch:
+    inputs:
+      ref:
+        description: "Git ref to build and deploy"
+        required: false
+        default: "main"
 
 permissions:
-  actions: read
   contents: read
+  packages: write
 
 concurrency:
   group: deploy-main
@@ -15,151 +21,114 @@ concurrency:
 
 jobs:
   deploy:
+    if: >-
+      ${{
+        github.event_name == 'workflow_dispatch' ||
+        (
+          github.event.workflow_run.conclusion == 'success' &&
+          github.event.workflow_run.event == 'push' &&
+          github.event.workflow_run.head_branch == 'main'
+        )
+      }}
     runs-on: ubuntu-latest
     env:
-      CI_WAIT_ATTEMPTS: 30
-      CI_WAIT_SLEEP: 10
-      WEBHOOK_READY_ATTEMPTS: 6
-      WEBHOOK_READY_SLEEP: 10
-      WEBHOOK_CONNECT_TIMEOUT: 20
-      WEBHOOK_MAX_TIME: 45
       DEPLOY_SSH_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
       DEPLOY_SSH_USER: ${{ secrets.DEPLOY_SSH_USER }}
       DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
       DEPLOY_SSH_PORT: ${{ secrets.DEPLOY_SSH_PORT || '22' }}
       DEPLOY_REMOTE_PROJECT_DIR: ${{ secrets.DEPLOY_REMOTE_PROJECT_DIR || '/opt/lapc-invoice-maker' }}
-      DEPLOY_VERIFY_ATTEMPTS: 28
-      DEPLOY_VERIFY_SLEEP: 15
-      DEPLOY_VERIFY_INITIAL_SLEEP: 60
     steps:
-      - name: Wait for matching CI run
-        uses: actions/github-script@v8
+      - name: Resolve deploy target
+        id: target
         env:
-          EXPECTED_SHA: ${{ github.sha }}
+          INPUT_REF: ${{ github.event.inputs.ref }}
+          WORKFLOW_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          WORKFLOW_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            ref="${INPUT_REF:-main}"
+          else
+            ref="$WORKFLOW_HEAD_SHA"
+          fi
+
+          {
+            echo "checkout_ref=$ref"
+            echo "deploy_ref=${INPUT_REF:-${WORKFLOW_HEAD_BRANCH:-main}}"
+          } >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v5
         with:
-          script: |
-            const expectedSha = process.env.EXPECTED_SHA;
-            const maxAttempts = Number(process.env.CI_WAIT_ATTEMPTS);
-            const waitMs = Number(process.env.CI_WAIT_SLEEP) * 1000;
+          ref: ${{ steps.target.outputs.checkout_ref }}
 
-            core.info(`Waiting for CI to succeed for ${expectedSha}...`);
+      - name: Compute image metadata
+        id: meta
+        run: |
+          full_sha=$(git rev-parse HEAD)
+          short_sha=$(git rev-parse --short=7 HEAD)
+          build_time=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          image_repository="ghcr.io/${GITHUB_REPOSITORY,,}"
+          image="$image_repository:$full_sha"
 
-            for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-              const { data } = await github.rest.actions.listWorkflowRunsForRepo({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                branch: "main",
-                event: "push",
-                per_page: 20,
-              });
+          {
+            echo "full_sha=$full_sha"
+            echo "short_sha=$short_sha"
+            echo "build_time=$build_time"
+            echo "image_repository=$image_repository"
+            echo "image=$image"
+          } >> "$GITHUB_OUTPUT"
 
-              const ciRun = data.workflow_runs.find(
-                (run) => run.name === "CI" && run.head_sha === expectedSha,
-              );
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-              if (!ciRun) {
-                core.info(`Attempt ${attempt}/${maxAttempts}: waiting for CI run to appear`);
-                await new Promise((resolve) => setTimeout(resolve, waitMs));
-                continue;
-              }
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-              core.info(
-                `Attempt ${attempt}/${maxAttempts}: CI status=${ciRun.status} conclusion=${ciRun.conclusion ?? "none"}`,
-              );
+      - name: Build and publish exact image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          provenance: false
+          tags: |
+            ${{ steps.meta.outputs.image }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_SHA=${{ steps.meta.outputs.short_sha }}
+            BUILD_TIME=${{ steps.meta.outputs.build_time }}
+            NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
-              if (ciRun.status === "completed" && ciRun.conclusion === "success") {
-                core.info(`Matched successful CI run: ${ciRun.html_url}`);
-                return;
-              }
-
-              if (ciRun.status === "completed") {
-                throw new Error(`CI did not succeed for ${expectedSha}: ${ciRun.html_url}`);
-              }
-
-              await new Promise((resolve) => setTimeout(resolve, waitMs));
-            }
-
-            throw new Error(`Timed out waiting for CI to succeed for ${expectedSha}`);
+      - name: Require SSH deploy secrets
+        run: |
+          if [ -z "$DEPLOY_SSH_HOST" ] || [ -z "$DEPLOY_SSH_KEY" ]; then
+            echo "::error::DEPLOY_SSH_HOST and DEPLOY_SSH_KEY must be configured for exact-image VPS deploys."
+            exit 1
+          fi
 
       - name: Configure SSH
-        if: ${{ env.DEPLOY_SSH_HOST != '' && env.DEPLOY_SSH_KEY != '' }}
         run: |
           install -d -m 700 ~/.ssh
           printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -p "$DEPLOY_SSH_PORT" "$DEPLOY_SSH_HOST" >> ~/.ssh/known_hosts
 
-      - name: Wait for deploy webhook ingress
-        if: ${{ env.DEPLOY_SSH_HOST == '' || env.DEPLOY_SSH_KEY == '' }}
-        run: |
-          for i in $(seq 1 "$WEBHOOK_READY_ATTEMPTS"); do
-            if curl -fsSI --connect-timeout "$WEBHOOK_CONNECT_TIMEOUT" --max-time "$WEBHOOK_CONNECT_TIMEOUT" https://montalvo.io/hooks/deploy-laportal >/dev/null; then
-              echo "Webhook ingress reachable"
-              exit 0
-            fi
-            echo "Attempt $i/$WEBHOOK_READY_ATTEMPTS: webhook ingress not reachable yet"
-            sleep "$WEBHOOK_READY_SLEEP"
-          done
-          echo "Timed out waiting for webhook ingress to become reachable"
-          exit 1
-
-      - name: Deploy over SSH
-        if: ${{ env.DEPLOY_SSH_HOST != '' && env.DEPLOY_SSH_KEY != '' }}
+      - name: Deploy exact image over SSH
         env:
-          EXPECTED_SHA: ${{ github.sha }}
+          EXPECTED_SHA: ${{ steps.meta.outputs.full_sha }}
+          DEPLOY_IMAGE: ${{ steps.meta.outputs.image }}
+          DEPLOY_REF: ${{ steps.target.outputs.deploy_ref }}
         run: |
           quoted_project_dir=$(printf '%q' "$DEPLOY_REMOTE_PROJECT_DIR")
-          remote_cmd="cd $quoted_project_dir && DEPLOY_CHANNEL=github-main DEPLOY_ACTOR=github-actions DEPLOY_EXPECTED_SHA=$EXPECTED_SHA ./scripts/deploy-webhook.sh main"
+          quoted_deploy_ref=$(printf '%q' "$DEPLOY_REF")
+          quoted_deploy_image=$(printf '%q' "$DEPLOY_IMAGE")
+          remote_cmd="cd $quoted_project_dir && DEPLOY_CHANNEL=github-main DEPLOY_ACTOR=github-actions DEPLOY_EXPECTED_SHA=$EXPECTED_SHA DEPLOY_IMAGE=$quoted_deploy_image ./scripts/deploy-webhook.sh $quoted_deploy_ref"
           ssh_target="$DEPLOY_SSH_HOST"
           if [ -n "$DEPLOY_SSH_USER" ]; then
             ssh_target="${DEPLOY_SSH_USER}@${DEPLOY_SSH_HOST}"
           fi
           ssh -p "$DEPLOY_SSH_PORT" -o BatchMode=yes "$ssh_target" "$remote_cmd"
-
-      - name: Trigger legacy deploy webhook
-        if: ${{ env.DEPLOY_SSH_HOST == '' || env.DEPLOY_SSH_KEY == '' }}
-        env:
-          EXPECTED_SHA: ${{ github.sha }}
-        run: |
-          echo "WARNING: falling back to legacy webhook deploy because DEPLOY_SSH_HOST / DEPLOY_SSH_KEY secrets are not configured."
-          response=$(curl -sfS --connect-timeout "$WEBHOOK_CONNECT_TIMEOUT" --max-time "$WEBHOOK_MAX_TIME" -X POST \
-            https://montalvo.io/hooks/deploy-laportal \
-            -H "X-Deploy-Secret: ${{ secrets.DEPLOY_WEBHOOK_SECRET }}" \
-            -H "X-Deploy-Expected-Sha: $EXPECTED_SHA" \
-            -w "\n%{http_code}")
-          body=$(printf '%s\n' "$response" | sed '$d')
-          code=$(printf '%s\n' "$response" | tail -1)
-          echo "Webhook response: HTTP $code — $body"
-          if [ "$code" != "200" ] || ! printf '%s' "$body" | grep -Fq "Deploy triggered"; then
-            echo "Deploy webhook failed: HTTP $code — $body"
-            exit 1
-          fi
-          echo "Deploy triggered successfully"
-
-      - name: Health check
-        env:
-          EXPECTED_SHA: ${{ github.sha }}
-        run: |
-          # shellcheck disable=SC2153
-          expected_sha="${EXPECTED_SHA::7}"
-          echo "Waiting for deployed build SHA $expected_sha..."
-          sleep "$DEPLOY_VERIFY_INITIAL_SLEEP"
-          last_body=""
-          for i in $(seq 1 "$DEPLOY_VERIFY_ATTEMPTS"); do
-            body=""
-            if ! body=$(curl -fsS --connect-timeout 10 --max-time 20 https://laportal.montalvo.io/api/version 2>/dev/null); then
-              body=""
-            fi
-            last_body="$body"
-            status=$(printf '%s' "$body" | grep -oE '"status":"[^"]+"' | cut -d'"' -f4 || true)
-            deployed_sha=$(printf '%s' "$body" | grep -oE '"buildSha":"[^"]*"' | cut -d'"' -f4 || true)
-            echo "Attempt $i/$DEPLOY_VERIFY_ATTEMPTS: status=${status:-unknown} buildSha=${deployed_sha:-missing}"
-            if [ "$status" = "ok" ] && [ "$deployed_sha" = "$expected_sha" ]; then
-              echo "Deploy verification passed"
-              exit 0
-            fi
-            sleep "$DEPLOY_VERIFY_SLEEP"
-          done
-          echo "Last /api/version response: ${last_body:-<empty>}"
-          echo "Deploy verification failed: live build SHA did not match $expected_sha"
-          exit 1

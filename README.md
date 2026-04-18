@@ -98,9 +98,11 @@ ALLOW_LEGACY_FILESYSTEM_FALLBACK=false
 
 ## Deployment
 
-Docker Compose behind Traefik on [montalvo.io](https://montalvo.io). GitHub Actions runs formal `ship-check` and `actionlint` checks on PRs and pushes, auto-merges PRs by default after a 15-minute quiet period once the latest head SHA has green CI and CodeRabbit has reviewed it or produced the latest commit, and deploys `main` after CI passes. When deploy SSH secrets are configured, GitHub now prefers an exact-SHA SSH deploy to the VPS. If those secrets are absent, it falls back to the legacy webhook path. Add `no-automerge` or `hold` to opt out.
+Docker Compose behind Traefik on [montalvo.io](https://montalvo.io). GitHub Actions runs formal `ship-check` and `actionlint` checks on PRs and pushes, enables native GitHub auto-merge on PRs when `AUTOMERGE_PAT` is configured, and deploys `main` by building a single exact-SHA image in GitHub, publishing it to GHCR, then SSHing to the VPS so the server pulls that exact image and verifies it live. Manual `workflow_dispatch` deploys can build and ship any pushed ref through the same exact-image path.
 
 Production build identity now comes from immutable runtime metadata baked into the image (`BUILD_SHA` / `BUILD_TIME`). The container rewrites `.build-meta.json` from those values on startup as a fallback, but `/api/version` prefers the immutable runtime values first so repo SHA, image SHA, and live app SHA do not drift. Remote deploys now verify both the live SHA and a lightweight route smoke-check set before they declare success or skip a rebuild.
+
+The emergency hotfix lane still exists for low-risk fixes that need to bypass the GitHub image publish step. That lane keeps the older build-on-VPS path on purpose, but it now shares the same SHA verification, smoke checks, and rollback behavior.
 
 Important: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` must be present at image build time, not only container runtime. The Docker build bakes those public values into the client bundle and the runtime version endpoint reports whether they were present.
 

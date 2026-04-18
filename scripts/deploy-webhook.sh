@@ -16,6 +16,33 @@ VERIFY_ATTEMPTS=36
 VERIFY_SLEEP=10
 VERIFY_INITIAL_SLEEP=15
 DEPLOY_LOG_FILE=".deploy-history.log"
+DEPLOY_IMAGE="${DEPLOY_IMAGE:-}"
+
+infer_image_repository() {
+  local origin_url owner_repo
+
+  origin_url=$(git config --get remote.origin.url || true)
+  owner_repo=""
+
+  case "$origin_url" in
+    git@github.com:*)
+      owner_repo="${origin_url#git@github.com:}"
+      ;;
+    https://github.com/*)
+      owner_repo="${origin_url#https://github.com/}"
+      ;;
+    http://github.com/*)
+      owner_repo="${origin_url#http://github.com/}"
+      ;;
+  esac
+
+  owner_repo="${owner_repo%.git}"
+  if [ -z "$owner_repo" ]; then
+    return 0
+  fi
+
+  printf 'ghcr.io/%s\n' "$(printf '%s' "$owner_repo" | tr '[:upper:]' '[:lower:]')"
+}
 
 extract_json_string_field() {
   local body="$1"
@@ -56,13 +83,53 @@ run_smoke_checks() {
   DEPLOY_SMOKE_BASE_URL="$SMOKE_BASE_URL" ./scripts/deploy-smoke-check.sh
 }
 
+login_registry_if_configured() {
+  if [ -z "${GHCR_USERNAME:-}" ] || [ -z "${GHCR_TOKEN:-}" ]; then
+    return 0
+  fi
+
+  printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin >/dev/null
+}
+
+deploy_with_image() {
+  local image="$1"
+  local build_sha="$2"
+  local build_time="$3"
+
+  login_registry_if_configured
+
+  echo "[deploy] Pulling image $image..."
+  docker pull "$image"
+
+  echo "[deploy] Replacing containers with pulled image..."
+  APP_IMAGE="$image" BUILD_SHA="$build_sha" BUILD_TIME="$build_time" \
+    docker compose up -d --remove-orphans --no-build
+}
+
+deploy_with_build() {
+  local build_sha="$1"
+  local build_time="$2"
+
+  echo "[deploy] Building app image locally..."
+  BUILD_SHA="$build_sha" BUILD_TIME="$build_time" docker compose build app
+
+  echo "[deploy] Replacing containers with newly built image..."
+  BUILD_SHA="$build_sha" BUILD_TIME="$build_time" docker compose up -d --remove-orphans
+}
+
 cd "$PROJECT_DIR"
 
 set -a
 source ./.env
 set +a
 
-if [ -z "${NEXT_PUBLIC_SUPABASE_URL:-}" ] || [ -z "${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}" ]; then
+DEPLOY_IMAGE_REPOSITORY="${DEPLOY_IMAGE_REPOSITORY:-$(infer_image_repository)}"
+DEPLOY_MODE="build"
+if [ -n "$DEPLOY_IMAGE" ]; then
+  DEPLOY_MODE="image"
+fi
+
+if [ "$DEPLOY_MODE" = "build" ] && { [ -z "${NEXT_PUBLIC_SUPABASE_URL:-}" ] || [ -z "${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}" ]; }; then
   echo "[deploy] ERROR: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set before building"
   exit 1
 fi
@@ -84,15 +151,31 @@ fi
 
 rollback_deploy() {
   local target_commit="$1"
+  local rollback_image=""
 
   echo "[deploy] Rolling back to $target_commit"
   git reset --hard "$target_commit"
-  BUILD_SHA=$(git rev-parse --short HEAD)
+  BUILD_SHA=$(git rev-parse --short=7 HEAD)
   BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-  export BUILD_SHA BUILD_TIME
 
-  docker compose build app
-  docker compose up -d --remove-orphans
+  if [ "$DEPLOY_MODE" = "image" ]; then
+    if [ -z "$DEPLOY_IMAGE_REPOSITORY" ]; then
+      echo "[deploy] ERROR: cannot infer GHCR image repository for rollback"
+      append_deploy_log "rollback_failed" "missing image repository for rollback"
+      return 1
+    fi
+
+    rollback_image="${DEPLOY_IMAGE_REPOSITORY}:$target_commit"
+    if ! deploy_with_image "$rollback_image" "$BUILD_SHA" "$BUILD_TIME"; then
+      append_deploy_log "rollback_failed" "failed to pull rollback image ${rollback_image}"
+      return 1
+    fi
+  else
+    if ! deploy_with_build "$BUILD_SHA" "$BUILD_TIME"; then
+      append_deploy_log "rollback_failed" "local rebuild failed during rollback"
+      return 1
+    fi
+  fi
 
   append_deploy_log "rollback" "rollback to ${target_commit}"
 }
@@ -116,10 +199,12 @@ echo "[deploy] Resetting worktree to $TARGET_COMMIT..."
 git reset --hard "$TARGET_COMMIT"
 
 NEW_COMMIT=$(git rev-parse HEAD)
-BUILD_SHA=$(git rev-parse --short HEAD)
+BUILD_SHA=$(git rev-parse --short=7 HEAD)
 BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-export BUILD_SHA BUILD_TIME
 echo "[deploy] New commit: $NEW_COMMIT"
+if [ "$DEPLOY_MODE" = "image" ]; then
+  echo "[deploy] Target image: $DEPLOY_IMAGE"
+fi
 
 live_before_body=$(fetch_live_version)
 live_before_sha=$(extract_json_string_field "$live_before_body" "buildSha")
@@ -129,27 +214,27 @@ if [ -n "$live_before_sha" ]; then
 fi
 
 if [ "$live_before_status" = "ok" ] && [ "$live_before_sha" = "$BUILD_SHA" ]; then
-  echo "[deploy] Live app already reports $BUILD_SHA — running smoke checks before skipping rebuild"
+  echo "[deploy] Live app already reports $BUILD_SHA — running smoke checks before skipping deploy"
   if run_smoke_checks; then
     echo "$NEW_COMMIT" > .last-good-commit
     append_deploy_log "skip" "live app already serving $BUILD_SHA and smoke checks passed"
-    echo "[deploy] Live app already serves $BUILD_SHA — skipping rebuild"
+    echo "[deploy] Live app already serves $BUILD_SHA — skipping deploy"
     exit 0
   fi
-  echo "[deploy] Smoke checks failed while target SHA was already live — rebuilding target commit to recover"
+  echo "[deploy] Smoke checks failed while target SHA was already live — re-deploying target SHA to recover"
 fi
 
-if ! docker compose build app; then
-  echo "[deploy] ERROR: Docker build failed — rolling repo checkout back to $PREV_COMMIT"
+if [ "$DEPLOY_MODE" = "image" ]; then
+  if ! deploy_with_image "$DEPLOY_IMAGE" "$BUILD_SHA" "$BUILD_TIME"; then
+    echo "[deploy] ERROR: image pull or container replace failed"
+    append_deploy_log "pull_failed" "failed to pull or start $DEPLOY_IMAGE"
+    rollback_deploy "$ROLLBACK_COMMIT" || true
+    exit 1
+  fi
+elif ! deploy_with_build "$BUILD_SHA" "$BUILD_TIME"; then
+  echo "[deploy] ERROR: local image build or container replace failed"
   git reset --hard "$PREV_COMMIT"
-  append_deploy_log "build_failed" "docker compose build failed"
-  exit 1
-fi
-
-echo "[deploy] Replacing containers with new image..."
-if ! docker compose up -d --remove-orphans; then
-  echo "[deploy] ERROR: docker compose up failed"
-  append_deploy_log "up_failed" "docker compose up failed"
+  append_deploy_log "build_failed" "docker compose build/up failed"
   rollback_deploy "$ROLLBACK_COMMIT" || true
   exit 1
 fi
