@@ -3,8 +3,21 @@ name: Enable auto-merge
 # Turns on GitHub's native auto-merge on every new PR targeting main. Once
 # enabled, the PR is held server-side and merges the instant required checks
 # (actionlint + ship-check, per main's branch protection) go green — no cron,
-# no polling. Replaces the previous custom auto-merge.yml workflow which
-# depended on scheduled cron fires that GitHub skips on idle repos.
+# no polling.
+#
+# Why AUTOMERGE_PAT instead of GITHUB_TOKEN:
+# When a workflow enables auto-merge using the default GITHUB_TOKEN, GitHub
+# attributes the eventual merge to github-actions[bot]. Events produced by
+# that identity do NOT trigger further workflow runs, which silently skips
+# the push-to-main event and breaks the Deploy workflow (lost PR #175 deploy
+# on 2026-04-18 — see follow-up fix commit). Using a Personal Access Token
+# attributes the merge to the PAT's owner so the push event fires normally.
+#
+# Configure the PAT:
+#   - Fine-grained token with contents:write + pull-requests:write on this repo
+#   - Stored as repo secret AUTOMERGE_PAT
+# If AUTOMERGE_PAT is not configured, this workflow emits a warning and exits
+# cleanly — PRs will need auto-merge enabled manually via `gh pr merge --auto`.
 
 on:
   pull_request:
@@ -12,8 +25,8 @@ on:
     types: [opened, reopened, ready_for_review]
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
+  pull-requests: read
 
 jobs:
   enable:
@@ -22,6 +35,11 @@ jobs:
     steps:
       - name: Enable auto-merge (squash, delete branch)
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.AUTOMERGE_PAT }}
           PR_URL: ${{ github.event.pull_request.html_url }}
-        run: gh pr merge --auto --squash --delete-branch "$PR_URL"
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::AUTOMERGE_PAT secret is not configured. Auto-merge was NOT enabled on this PR. Configure AUTOMERGE_PAT as a fine-grained PAT with contents:write + pull-requests:write scopes, or enable auto-merge manually via 'gh pr merge --auto --squash --delete-branch'."
+            exit 0
+          fi
+          gh pr merge --auto --squash --delete-branch "$PR_URL"

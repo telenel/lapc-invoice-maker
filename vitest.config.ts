@@ -19,6 +19,7 @@ export default defineConfig({
       "**/.{idea,git,cache,output,temp}/**",
       "**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,tsup,build,eslint,prettier}.config.*",
       ".claude/worktrees/**",
+      ".worktrees/**",
       "everything-claude-code/**",
     ],
   },
