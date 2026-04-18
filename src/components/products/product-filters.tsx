@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { ProductFiltersExtended } from "./product-filters-extended";
+import { EMPTY_FILTERS } from "@/domains/product/constants";
 import type { ProductFilters } from "@/domains/product/types";
 
 interface ProductFiltersBarProps {
@@ -37,6 +39,28 @@ export function ProductFiltersBar({
     filters.tab === "textbooks" && filters.edition,
     filters.tab === "merchandise" && filters.catalogNumber,
     filters.tab === "merchandise" && filters.productType,
+    // Extended filters — count only when non-default
+    filters.minStock !== EMPTY_FILTERS.minStock && filters.minStock,
+    filters.maxStock !== EMPTY_FILTERS.maxStock && filters.maxStock,
+    filters.deptNum !== EMPTY_FILTERS.deptNum && filters.deptNum,
+    filters.classNum !== EMPTY_FILTERS.classNum && filters.classNum,
+    filters.catNum !== EMPTY_FILTERS.catNum && filters.catNum,
+    filters.missingBarcode,
+    filters.missingIsbn,
+    filters.missingTitle,
+    filters.retailBelowCost,
+    filters.zeroPrice,
+    filters.minMargin !== EMPTY_FILTERS.minMargin && filters.minMargin,
+    filters.maxMargin !== EMPTY_FILTERS.maxMargin && filters.maxMargin,
+    filters.lastSaleWithin !== EMPTY_FILTERS.lastSaleWithin &&
+      filters.lastSaleWithin,
+    filters.lastSaleNever,
+    filters.lastSaleOlderThan !== EMPTY_FILTERS.lastSaleOlderThan &&
+      filters.lastSaleOlderThan,
+    filters.editedWithin !== EMPTY_FILTERS.editedWithin && filters.editedWithin,
+    filters.editedSinceSync,
+    filters.discontinued !== EMPTY_FILTERS.discontinued && filters.discontinued,
+    filters.itemType !== EMPTY_FILTERS.itemType && filters.itemType,
   ].filter(Boolean).length;
 
   return (
@@ -215,6 +239,12 @@ export function ProductFiltersBar({
               </div>
             )}
           </div>
+
+          {/* Extended filter sub-sections */}
+          <ProductFiltersExtended
+            filters={filters}
+            onChange={(patch) => onChange({ ...filters, ...patch, page: 1 })}
+          />
 
           <div className="flex justify-end">
             <Button variant="outline" size="sm" onClick={onClear}>

@@ -5,8 +5,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useProductSearch, useProductSelection } from "@/domains/product/hooks";
-import { EMPTY_FILTERS, TABS } from "@/domains/product/constants";
-import type { ProductFilters, ProductTab } from "@/domains/product/types";
+import { EMPTY_FILTERS, TABS, DEFAULT_COLUMN_SET } from "@/domains/product/constants";
+import type { OptionalColumnKey } from "@/domains/product/constants";
+import type { ProductFilters, ProductTab, SavedView } from "@/domains/product/types";
+import {
+  parseFiltersFromSearchParams,
+  serializeFiltersToSearchParams,
+  applyPreset,
+} from "@/domains/product/view-serializer";
 import { ProductFiltersBar } from "@/components/products/product-filters";
 import { ProductTable } from "@/components/products/product-table";
 import { ProductActionBar } from "@/components/products/product-action-bar";
@@ -15,64 +21,22 @@ import { EditItemDialog } from "@/components/products/edit-item-dialog";
 import { HardDeleteDialog } from "@/components/products/hard-delete-dialog";
 import { Button } from "@/components/ui/button";
 import { SyncDatabaseButton } from "@/components/products/sync-database-button";
+import { SavedViewsBar } from "@/components/products/saved-views-bar";
+import { SaveViewDialog } from "@/components/products/save-view-dialog";
+import { DeleteViewDialog } from "@/components/products/delete-view-dialog";
+import { ColumnVisibilityToggle } from "@/components/products/column-visibility-toggle";
+import { PierceAssuranceBadge } from "@/components/products/pierce-assurance-badge";
 import { productApi } from "@/domains/product/api-client";
-
-function parseFiltersFromParams(
-  searchParams: ReturnType<typeof useSearchParams>
-): ProductFilters {
-  const rawTab = searchParams.get("tab");
-  const tab: ProductTab = rawTab === "textbooks" || rawTab === "merchandise" ? rawTab : "textbooks";
-  const rawPage = Number(searchParams.get("page") ?? "1");
-  const page = Number.isFinite(rawPage) && rawPage >= 1 ? Math.floor(rawPage) : 1;
-
-  return {
-    ...EMPTY_FILTERS,
-    tab,
-    search: searchParams.get("q") ?? "",
-    minPrice: searchParams.get("minPrice") ?? "",
-    maxPrice: searchParams.get("maxPrice") ?? "",
-    vendorId: searchParams.get("vendorId") ?? "",
-    hasBarcode: searchParams.get("hasBarcode") === "true",
-    lastSaleDateFrom: searchParams.get("lastSaleDateFrom") ?? "",
-    lastSaleDateTo: searchParams.get("lastSaleDateTo") ?? "",
-    author: searchParams.get("author") ?? "",
-    hasIsbn: searchParams.get("hasIsbn") === "true",
-    edition: searchParams.get("edition") ?? "",
-    catalogNumber: searchParams.get("catalogNumber") ?? "",
-    productType: searchParams.get("productType") ?? "",
-    sortBy: searchParams.get("sortBy") ?? "sku",
-    sortDir: searchParams.get("sortDir") === "desc" ? "desc" : "asc",
-    page,
-  };
-}
-
-function filtersToParams(filters: ProductFilters): URLSearchParams {
-  const params = new URLSearchParams();
-  if (filters.tab !== "textbooks") params.set("tab", filters.tab);
-  if (filters.search) params.set("q", filters.search);
-  if (filters.minPrice) params.set("minPrice", filters.minPrice);
-  if (filters.maxPrice) params.set("maxPrice", filters.maxPrice);
-  if (filters.vendorId) params.set("vendorId", filters.vendorId);
-  if (filters.hasBarcode) params.set("hasBarcode", "true");
-  if (filters.lastSaleDateFrom) params.set("lastSaleDateFrom", filters.lastSaleDateFrom);
-  if (filters.lastSaleDateTo) params.set("lastSaleDateTo", filters.lastSaleDateTo);
-  if (filters.author) params.set("author", filters.author);
-  if (filters.hasIsbn) params.set("hasIsbn", "true");
-  if (filters.edition) params.set("edition", filters.edition);
-  if (filters.catalogNumber) params.set("catalogNumber", filters.catalogNumber);
-  if (filters.productType) params.set("productType", filters.productType);
-  if (filters.sortBy !== "sku") params.set("sortBy", filters.sortBy);
-  if (filters.sortDir !== "asc") params.set("sortDir", filters.sortDir);
-  if (filters.page > 1) params.set("page", String(filters.page));
-  return params;
-}
 
 export default function ProductsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [filters, setFilters] = useState<ProductFilters>(() =>
-    parseFiltersFromParams(searchParams)
-  );
+  const [filters, setFilters] = useState<ProductFilters>(() => {
+    // Convert Next.js useSearchParams() to URLSearchParams
+    const params = new URLSearchParams();
+    searchParams.forEach((value, key) => params.set(key, value));
+    return parseFiltersFromSearchParams(params);
+  });
 
   const { data, loading, refetch } = useProductSearch(filters);
 
@@ -92,6 +56,12 @@ export default function ProductsPage() {
   const [newItemOpen, setNewItemOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [hardDeleteOpen, setHardDeleteOpen] = useState(false);
+
+  const [activeView, setActiveView] = useState<SavedView | null>(null);
+  const [runtimeColumns, setRuntimeColumns] = useState<OptionalColumnKey[] | null>(null);
+  const [baseColumns, setBaseColumns] = useState<OptionalColumnKey[]>(DEFAULT_COLUMN_SET);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<SavedView | null>(null);
 
   // Track tab counts so both tabs always show their last-known count
   const [tabCounts, setTabCounts] = useState<Record<ProductTab, number | null>>({
@@ -114,13 +84,13 @@ export default function ProductsPage() {
   } = useProductSelection();
 
   const updateFilters = useCallback(
-    (next: ProductFilters) => {
+    (next: ProductFilters, extras: { view?: string } = {}) => {
       setFilters(next);
-      const params = filtersToParams(next);
+      const params = serializeFiltersToSearchParams(next, extras);
       const qs = params.toString();
       router.replace(qs ? `/products?${qs}` : "/products", { scroll: false });
     },
-    [router]
+    [router],
   );
 
   function handleTabChange(tab: ProductTab) {
@@ -140,6 +110,21 @@ export default function ProductsPage() {
     updateFilters({ ...EMPTY_FILTERS, tab: filters.tab });
   }
 
+  function handlePresetClick(view: SavedView) {
+    const { filters: next, visibleColumns } = applyPreset(view);
+    const withPage = { ...next, page: 1 } as ProductFilters;
+    setActiveView(view);
+    setRuntimeColumns(visibleColumns);
+    updateFilters(withPage, { view: view.slug ?? view.id });
+  }
+
+  function handleFilterChange(next: ProductFilters) {
+    // Explicit filter edits drop the active view + runtime column override.
+    setActiveView(null);
+    setRuntimeColumns(null);
+    updateFilters(next);
+  }
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-6">
       {/* Header */}
@@ -152,6 +137,11 @@ export default function ProductsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <PierceAssuranceBadge
+            onClick={() => {
+              /* TODO: wire to sync history dialog after refactor */
+            }}
+          />
           <SyncDatabaseButton />
           {prismAvailable ? (
             <>
@@ -216,8 +206,23 @@ export default function ProductsPage() {
       <div className="page-enter page-enter-2 mb-4">
         <ProductFiltersBar
           filters={filters}
-          onChange={updateFilters}
+          onChange={handleFilterChange}
           onClear={handleClearFilters}
+        />
+      </div>
+
+      <div className="page-enter page-enter-2 mb-4 flex items-center justify-between gap-3">
+        <SavedViewsBar
+          activeSlug={activeView?.slug ?? null}
+          activeId={activeView?.id ?? null}
+          onPresetClick={handlePresetClick}
+          onSaveClick={() => setSaveDialogOpen(true)}
+          onDeleteClick={(v) => setDeleteTarget(v)}
+        />
+        <ColumnVisibilityToggle
+          runtimeOverride={runtimeColumns}
+          onUserChange={setBaseColumns}
+          onResetRuntime={() => setRuntimeColumns(null)}
         />
       </div>
 
@@ -248,6 +253,29 @@ export default function ProductsPage() {
         ))}
       </div>
 
+      {data?.total === 0 && activeView && (
+        <div className="page-enter page-enter-3 mb-4 rounded-md border border-dashed p-6 text-center">
+          <p className="text-sm font-medium">
+            No items match &ldquo;{activeView.name}&rdquo;.
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Try clearing the preset or widening a filter.
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            className="mt-3"
+            onClick={() => {
+              setActiveView(null);
+              setRuntimeColumns(null);
+              updateFilters({ ...EMPTY_FILTERS, tab: filters.tab });
+            }}
+          >
+            Clear Preset
+          </Button>
+        </div>
+      )}
+
       {/* Table */}
       <div className="page-enter page-enter-4">
         <ProductTable
@@ -263,6 +291,7 @@ export default function ProductsPage() {
           onToggleAll={toggleAll}
           onPageChange={handlePageChange}
           onSort={handleSort}
+          visibleColumns={runtimeColumns ?? baseColumns}
         />
       </div>
 
@@ -281,6 +310,25 @@ export default function ProductsPage() {
 
       {/* Spacer so content isn't hidden behind the sticky action bar */}
       {selectedCount > 0 && <div className="h-16" />}
+
+      <SaveViewDialog
+        open={saveDialogOpen}
+        onOpenChange={setSaveDialogOpen}
+        filters={filters}
+        columnPreferences={{ visible: runtimeColumns ?? baseColumns }}
+        onSaved={(v) => setActiveView(v)}
+      />
+
+      <DeleteViewDialog
+        view={deleteTarget}
+        onOpenChange={(o) => {
+          if (!o) setDeleteTarget(null);
+        }}
+        onDeleted={(v) => {
+          if (activeView?.id === v.id) setActiveView(null);
+          setDeleteTarget(null);
+        }}
+      />
     </div>
   );
 }

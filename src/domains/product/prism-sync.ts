@@ -38,6 +38,17 @@ interface PrismItemRow {
   cost: number | null;
   stockOnHand: number | null;
   lastSaleDate: Date | null;
+  deptNum: number | null;
+  classNum: number | null;
+  catNum: number | null;
+  deptName: string | null;
+  className: string | null;
+  catName: string | null;
+  oneYearSales: number | null;
+  lookBackSales: number | null;
+  salesToAvgRatio: number | null;
+  estSalesCalc: number | null;
+  estSalesPrev: number | null;
 }
 
 function hashRow(r: PrismItemRow): string {
@@ -57,6 +68,17 @@ function hashRow(r: PrismItemRow): string {
     r.retail ?? 0,
     r.cost ?? 0,
     r.stockOnHand ?? 0,
+    r.deptNum ?? 0,
+    r.classNum ?? 0,
+    r.catNum ?? 0,
+    r.deptName ?? "",
+    r.className ?? "",
+    r.catName ?? "",
+    r.oneYearSales ?? 0,
+    r.lookBackSales ?? 0,
+    r.salesToAvgRatio ?? 0,
+    r.estSalesCalc ?? 0,
+    r.estSalesPrev ?? 0,
     r.lastSaleDate?.toISOString() ?? "",
   ]);
   return crypto.createHash("sha256").update(canonical).digest("hex").slice(0, 16);
@@ -151,6 +173,17 @@ export async function runPrismPull(options: {
         Cost: number | null;
         StockOnHand: number | null;
         LastSaleDate: Date | null;
+        DeptNum: number | null;
+        ClassNum: number | null;
+        CatNum: number | null;
+        DeptName: string | null;
+        ClassName: string | null;
+        CatName: string | null;
+        OneYearSales: number | null;
+        LookBackSales: number | null;
+        SalesToAvgRatio: number | null;
+        EstSalesCalc: number | null;
+        EstSalesPrev: number | null;
       }>(`
         SELECT TOP (@pageSize)
           i.SKU,
@@ -169,15 +202,48 @@ export async function runPrismPull(options: {
             WHEN gm.SKU IS NOT NULL          THEN 'general_merchandise'
             ELSE                                  'other'
           END AS ItemType,
+          dcc.Department                AS DeptNum,
+          dcc.Class                     AS ClassNum,
+          dcc.Category                  AS CatNum,
+          LTRIM(RTRIM(dep.Name))        AS DeptName,
+          LTRIM(RTRIM(cls.Name))        AS ClassName,
+          LTRIM(RTRIM(cat.Name))        AS CatName,
           i.fDiscontinue,
           inv.Retail,
           inv.Cost,
           inv.StockOnHand,
-          inv.LastSaleDate
+          inv.LastSaleDate,
+          es.OneYearSales               AS OneYearSales,
+          es.LookBackSales              AS LookBackSales,
+          es.SalesToAvgSalesRatio       AS SalesToAvgRatio,
+          es.EstSalesCalc               AS EstSalesCalc,
+          esPrev.EstSalesCalc           AS EstSalesPrev
         FROM Item i
         INNER JOIN Inventory inv ON inv.SKU = i.SKU AND inv.LocationID = @loc
         LEFT JOIN Textbook tb ON tb.SKU = i.SKU
         LEFT JOIN GeneralMerchandise gm ON gm.SKU = i.SKU
+        LEFT JOIN DeptClassCat dcc ON i.DCCID = dcc.DCCID
+        LEFT JOIN DCC_Department dep ON dcc.Department = dep.Department
+        LEFT JOIN DCC_Class      cls ON dcc.Department = cls.Department
+                                     AND dcc.Class      = cls.Class
+        LEFT JOIN DCC_Category   cat ON dcc.Department = cat.Department
+                                     AND dcc.Class      = cat.Class
+                                     AND dcc.Category   = cat.Category
+        LEFT JOIN (
+          SELECT es.SKU, es.OneYearSales, es.LookBackSales,
+                 es.SalesToAvgSalesRatio, es.EstSalesCalc,
+                 ROW_NUMBER() OVER (PARTITION BY es.SKU
+                                    ORDER BY es.CalculationDate DESC) AS rn
+          FROM Inventory_EstSales es
+          WHERE es.LocationID = @loc
+        ) es     ON es.SKU = i.SKU     AND es.rn = 1
+        LEFT JOIN (
+          SELECT es.SKU, es.EstSalesCalc,
+                 ROW_NUMBER() OVER (PARTITION BY es.SKU
+                                    ORDER BY es.CalculationDate DESC) AS rn
+          FROM Inventory_EstSales es
+          WHERE es.LocationID = @loc
+        ) esPrev ON esPrev.SKU = i.SKU AND esPrev.rn = 2
         WHERE i.SKU > @cursor
         ORDER BY i.SKU
       `);
@@ -205,6 +271,17 @@ export async function runPrismPull(options: {
         cost: raw.Cost != null ? Number(raw.Cost) : null,
         stockOnHand: raw.StockOnHand != null ? Number(raw.StockOnHand) : null,
         lastSaleDate: coerceEpochZeroDate(raw.LastSaleDate ?? null),
+        deptNum: raw.DeptNum,
+        classNum: raw.ClassNum,
+        catNum: raw.CatNum,
+        deptName: raw.DeptName && raw.DeptName.length > 0 ? raw.DeptName : null,
+        className: raw.ClassName && raw.ClassName.length > 0 ? raw.ClassName : null,
+        catName: raw.CatName && raw.CatName.length > 0 ? raw.CatName : null,
+        oneYearSales: raw.OneYearSales != null ? Number(raw.OneYearSales) : null,
+        lookBackSales: raw.LookBackSales != null ? Number(raw.LookBackSales) : null,
+        salesToAvgRatio: raw.SalesToAvgRatio != null ? Number(raw.SalesToAvgRatio) : null,
+        estSalesCalc: raw.EstSalesCalc != null ? Number(raw.EstSalesCalc) : null,
+        estSalesPrev: raw.EstSalesPrev != null ? Number(raw.EstSalesPrev) : null,
       };
       const newHash = hashRow(row);
       if (existingHashes.get(row.sku) === newHash) continue;
@@ -226,6 +303,17 @@ export async function runPrismPull(options: {
         cost: row.cost,
         stock_on_hand: row.stockOnHand,
         last_sale_date: row.lastSaleDate?.toISOString() ?? null,
+        dept_num: row.deptNum,
+        class_num: row.classNum,
+        cat_num: row.catNum,
+        dept_name: row.deptName,
+        class_name: row.className,
+        cat_name: row.catName,
+        one_year_sales: row.oneYearSales,
+        look_back_sales: row.lookBackSales,
+        sales_to_avg_ratio: row.salesToAvgRatio,
+        est_sales_calc: row.estSalesCalc,
+        est_sales_prev: row.estSalesPrev,
         sync_hash: newHash,
         synced_at: new Date().toISOString(),
       });

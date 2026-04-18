@@ -20,6 +20,18 @@ export interface Product {
   updated_at: string;
   last_sale_date: string | null;
   synced_at: string;
+  dept_num: number | null;
+  class_num: number | null;
+  cat_num: number | null;
+  dept_name: string | null;
+  class_name: string | null;
+  cat_name: string | null;
+  one_year_sales: number | null;
+  look_back_sales: number | null;
+  sales_to_avg_ratio: number | null;
+  est_sales_calc: number | null;
+  est_sales_prev: number | null;
+  discontinued: boolean | null;
 }
 
 export type ProductTab = "textbooks" | "merchandise";
@@ -45,6 +57,31 @@ export interface ProductFilters {
   sortDir: "asc" | "desc";
   // Pagination
   page: number;
+  // Stock
+  minStock: string;
+  maxStock: string;
+  // Classification
+  deptNum: string;
+  classNum: string;
+  catNum: string;
+  // Data quality
+  missingBarcode: boolean;
+  missingIsbn: boolean;
+  missingTitle: boolean;
+  retailBelowCost: boolean;
+  zeroPrice: boolean;
+  // Pricing / margin
+  minMargin: string;
+  maxMargin: string;
+  // Activity
+  lastSaleWithin: "" | "30d" | "90d" | "365d";
+  lastSaleNever: boolean;
+  lastSaleOlderThan: "" | "2y" | "5y";
+  editedWithin: "" | "7d";
+  editedSinceSync: boolean;
+  // Status
+  discontinued: "" | "yes" | "no";
+  itemType: "" | "textbook" | "used_textbook" | "general_merchandise" | "supplies" | "other";
 }
 
 export type ProductSortField = "sku" | "description" | "title" | "author" | "retail_price" | "cost" | "last_sale_date" | "barcode" | "catalog_number" | "product_type" | "vendor_id" | "isbn" | "edition";
@@ -158,4 +195,28 @@ export interface BatchResult {
   action: BatchAction;
   count: number;
   skus: number[];
+}
+
+export type PresetGroup =
+  | "dead-weight"
+  | "movers"
+  | "data-quality"
+  | "pricing"
+  | "recent-activity"
+  | "textbook";
+
+export interface ColumnPreferences {
+  visible: string[];
+}
+
+export interface SavedView {
+  id: string;
+  name: string;
+  description: string | null;
+  filter: Partial<ProductFilters>;
+  columnPreferences: ColumnPreferences | null;
+  isSystem: boolean;
+  slug: string | null;
+  presetGroup: PresetGroup | null;
+  sortOrder: number | null;
 }
