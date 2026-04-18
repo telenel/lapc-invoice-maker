@@ -700,6 +700,7 @@ model SyncRun {
   triggeredBy     String    @map("triggered_by")
   scannedCount    Int?      @map("scanned_count")
   updatedCount    Int?      @map("updated_count")
+  removedCount    Int?      @map("removed_count")
   status          String
   error           String?
 

@@ -49,6 +49,7 @@ async function handle(request: NextRequest): Promise<NextResponse> {
         completedAt: new Date(),
         scannedCount: result.scanned,
         updatedCount: result.updated,
+        removedCount: result.removed,
         status: "ok",
       },
     });
@@ -69,4 +70,16 @@ async function handle(request: NextRequest): Promise<NextResponse> {
 
 export async function POST(request: NextRequest) {
   return handle(request);
+}
+
+export async function GET() {
+  const session = await getServerSession(authOptions);
+  if (!session || (session.user as { role?: string }).role !== "admin") {
+    return NextResponse.json({ error: "Admin required" }, { status: 403 });
+  }
+  const runs = await prisma.syncRun.findMany({
+    orderBy: { startedAt: "desc" },
+    take: 20,
+  });
+  return NextResponse.json({ runs });
 }
