@@ -9,7 +9,7 @@ export const TABS: { value: ProductTab; label: string }[] = [
 
 /** item_type values that map to each tab */
 export const TAB_ITEM_TYPES: Record<ProductTab, string[]> = {
-  textbooks: ["textbook"],
+  textbooks: ["textbook", "used_textbook"],
   merchandise: ["general_merchandise", "supplies", "other"],
 };
 

@@ -2,8 +2,16 @@
  * Prism -> Supabase pull sync. Reads Item + Inventory from Prism, hash-compares
  * against the products mirror, and upserts only changed rows. Idempotent.
  *
- * Pierce-only: Inventory is joined on LocationID = 2 (Pierce). Item-master
- * fields (description, DCC, tax, barcode) are district-wide.
+ * Pierce-scoped: INNER JOIN on Inventory.LocationID = 2 restricts the pull to
+ * SKUs that Pierce actually stocks (~61k of the 195k district-wide Item master).
+ * After the pull we delete any products rows whose SKU wasn't seen this run —
+ * that's how items going out of Pierce stock (or pre-Pierce-scoping mirror
+ * leftovers) get reaped.
+ *
+ * Classification: Prism's Item.TypeID is New(1)/Used(2), NOT textbook/GM.
+ * Real type comes from whether a child row exists in Textbook or GeneralMerchandise.
+ * Used items (TypeID=2) are labeled used_textbook — they're the "used copy"
+ * sibling SKUs of real textbooks, but don't have their own Textbook row.
  */
 import crypto from "crypto";
 import { getPrismPool, sql } from "@/lib/prism";
@@ -44,12 +52,15 @@ function hashRow(r: PrismItemRow): string {
 export interface PullSyncResult {
   scanned: number;
   updated: number;
+  removed: number;
   durationMs: number;
 }
 
+const DELETE_CHUNK_SIZE = 1000;
+
 /**
  * Run one full-catalog pull. Paginates Prism reads with a SKU cursor to
- * avoid loading the ~195k-row catalog into memory at once.
+ * avoid loading the ~61k Pierce-stocked rows into memory at once.
  */
 export async function runPrismPull(options: {
   pageSize?: number;
@@ -63,17 +74,20 @@ export async function runPrismPull(options: {
   const pool = await getPrismPool();
   const supabase = getSupabaseAdminClient();
 
-  // Load existing hashes from Supabase in one shot (~195k rows, ~20MB -- acceptable)
-  const { data: existingHashRows, error: hashErr } = await supabase
+  // Load existing SKU+hash map in one shot so we can hash-skip unchanged rows
+  // and identify stale rows to delete at the end.
+  const { data: existingRows, error: hashErr } = await supabase
     .from("products")
     .select("sku, sync_hash");
   if (hashErr) {
     throw new Error(`Supabase hash read failed: ${hashErr.message}`);
   }
   const existingHashes = new Map<number, string | null>();
-  for (const r of existingHashRows ?? []) {
+  for (const r of existingRows ?? []) {
     existingHashes.set(r.sku, (r as { sync_hash: string | null }).sync_hash);
   }
+
+  const seenSkus = new Set<number>();
 
   // Paginate Prism with SKU cursor (SKU is the PK, monotonically increasing)
   let lastSku = 0;
@@ -103,14 +117,20 @@ export async function runPrismPull(options: {
           i.VendorID,
           i.DCCID,
           i.ItemTaxTypeID,
-          CASE WHEN i.TypeID = 1 THEN 'textbook' ELSE 'general_merchandise' END AS ItemType,
+          CASE
+            WHEN i.TypeID = 2                THEN 'used_textbook'
+            WHEN tb.SKU IS NOT NULL          THEN 'textbook'
+            WHEN gm.SKU IS NOT NULL          THEN 'general_merchandise'
+            ELSE                                  'other'
+          END AS ItemType,
           i.fDiscontinue,
           inv.Retail,
           inv.Cost,
           inv.LastSaleDate
         FROM Item i
+        INNER JOIN Inventory inv ON inv.SKU = i.SKU AND inv.LocationID = @loc
+        LEFT JOIN Textbook tb ON tb.SKU = i.SKU
         LEFT JOIN GeneralMerchandise gm ON gm.SKU = i.SKU
-        LEFT JOIN Inventory inv ON inv.SKU = i.SKU AND inv.LocationID = @loc
         WHERE i.SKU > @cursor
         ORDER BY i.SKU
       `);
@@ -120,6 +140,7 @@ export async function runPrismPull(options: {
     const toUpsert: Array<Record<string, unknown>> = [];
     for (const raw of result.recordset) {
       scanned += 1;
+      seenSkus.add(raw.SKU);
       const row: PrismItemRow = {
         sku: raw.SKU,
         description: raw.Description,
@@ -151,7 +172,6 @@ export async function runPrismPull(options: {
         sync_hash: newHash,
         synced_at: new Date().toISOString(),
       });
-      lastSku = row.sku;
     }
 
     if (toUpsert.length > 0) {
@@ -162,18 +182,34 @@ export async function runPrismPull(options: {
       updated += toUpsert.length;
     }
 
-    // Advance cursor even if no rows needed upsert
-    if (toUpsert.length === 0) {
-      lastSku = result.recordset[result.recordset.length - 1].SKU;
-    }
+    lastSku = result.recordset[result.recordset.length - 1].SKU;
     options.onProgress?.(scanned);
 
     if (result.recordset.length < pageSize) break;
   }
 
+  // Reap rows whose SKU wasn't in Pierce stock this run. Includes both
+  // legitimately discontinued items and — on the first post-fix sync —
+  // the ~134k district-wide leftovers that the old LEFT-JOIN sync pulled.
+  const staleSkus: number[] = [];
+  existingHashes.forEach((_, sku) => {
+    if (!seenSkus.has(sku)) staleSkus.push(sku);
+  });
+
+  let removed = 0;
+  for (let i = 0; i < staleSkus.length; i += DELETE_CHUNK_SIZE) {
+    const chunk = staleSkus.slice(i, i + DELETE_CHUNK_SIZE);
+    const { error: delErr } = await supabase.from("products").delete().in("sku", chunk);
+    if (delErr) {
+      throw new Error(`Supabase stale-delete failed: ${delErr.message}`);
+    }
+    removed += chunk.length;
+  }
+
   return {
     scanned,
     updated,
+    removed,
     durationMs: Date.now() - started,
   };
 }

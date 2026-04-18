@@ -228,7 +228,7 @@ export const productApi = {
     return res.json();
   },
 
-  async syncPrismPull(): Promise<{ runId: string; scanned: number; updated: number; durationMs: number }> {
+  async syncPrismPull(): Promise<SyncPullResult> {
     const res = await fetch("/api/sync/prism-pull", { method: "POST" });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
@@ -236,7 +236,36 @@ export const productApi = {
     }
     return res.json();
   },
+
+  async getSyncRuns(): Promise<{ runs: SyncRun[] }> {
+    const res = await fetch("/api/sync/prism-pull", { cache: "no-store" });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error ?? `HTTP ${res.status}`);
+    }
+    return res.json();
+  },
 };
+
+export interface SyncPullResult {
+  runId: string;
+  scanned: number;
+  updated: number;
+  removed: number;
+  durationMs: number;
+}
+
+export interface SyncRun {
+  id: string;
+  startedAt: string;
+  completedAt: string | null;
+  triggeredBy: string;
+  scannedCount: number | null;
+  updatedCount: number | null;
+  removedCount: number | null;
+  status: string;
+  error: string | null;
+}
 
 export const savedSearchesApi = {
   async list(): Promise<{ items: Array<{ id: string; name: string; filter: Record<string, unknown>; isSystem: boolean }> }> {
