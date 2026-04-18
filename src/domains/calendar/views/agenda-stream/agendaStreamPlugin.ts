@@ -5,7 +5,7 @@ import {
   type ReactNode,
 } from "react";
 import { createPlugin } from "@fullcalendar/core";
-import type { CustomContentGenerator, ViewProps } from "@fullcalendar/core";
+import type { CustomContentGenerator, SpecificViewContentArg } from "@fullcalendar/core";
 import { AgendaStreamView, type AgendaStreamViewProps } from "./AgendaStreamView";
 
 export type AgendaStreamIntegrationValue = Pick<
@@ -37,7 +37,7 @@ export function AgendaStreamIntegrationProvider({
   );
 }
 
-function AgendaStreamPluginView({ viewProps }: { viewProps: ViewProps }) {
+function AgendaStreamPluginView({ viewProps }: { viewProps: SpecificViewContentArg }) {
   const integration = useContext(AgendaStreamIntegrationContext);
 
   return createElement(AgendaStreamView, {
@@ -46,7 +46,7 @@ function AgendaStreamPluginView({ viewProps }: { viewProps: ViewProps }) {
   });
 }
 
-export const agendaStreamViewContent: CustomContentGenerator<ViewProps> = (props) =>
+export const agendaStreamViewContent: CustomContentGenerator<SpecificViewContentArg> = (props) =>
   createElement(AgendaStreamPluginView, { viewProps: props });
 
 export const agendaStreamPlugin = createPlugin({

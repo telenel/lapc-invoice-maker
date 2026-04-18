@@ -130,6 +130,7 @@ describe("agenda stream utils", () => {
         quoteId: "quote-1",
         quoteNumber: "QT-101",
         quoteStatus: "ACCEPTED",
+        totalAmount: 1250,
         location: "Library",
         headcount: 18,
       },
@@ -144,7 +145,7 @@ describe("agenda stream utils", () => {
       title: "Board Lunch",
       readOnly: true,
       metadata: {
-        amount: null,
+        amount: 1250,
         quoteId: "quote-1",
         quoteNumber: "QT-101",
         quoteStatus: "ACCEPTED",

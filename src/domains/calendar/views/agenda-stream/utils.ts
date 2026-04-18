@@ -5,7 +5,6 @@ import {
   zonedDateTimeToUtc,
 } from "@/lib/date-utils";
 import type {
-  AgendaLaneEvent,
   AgendaSourceKey,
   AgendaSourceMeta,
   AgendaStreamDay,
@@ -110,7 +109,7 @@ export function toAgendaStreamEvent(event: CalendarEventItem): AgendaStreamEvent
     source,
     title: event.title,
     metadata: {
-      amount: null,
+      amount: event.extendedProps.totalAmount ?? null,
       location: event.extendedProps.location ?? null,
       headcount: event.extendedProps.headcount ?? null,
       quoteId: event.extendedProps.quoteId ?? null,

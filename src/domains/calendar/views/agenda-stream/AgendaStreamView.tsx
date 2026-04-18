@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent as ReactMouseEvent } from "react";
-import type { ViewProps } from "@fullcalendar/core";
+import type { SpecificViewContentArg } from "@fullcalendar/core";
 import { toast } from "sonner";
 import { MiniMonth } from "@/components/calendar/mini-month";
 import { addDaysToDateKey, fromDateKey, getDateKeyInLosAngeles } from "@/lib/date-utils";
@@ -33,6 +33,8 @@ interface TimelineLaneEvent extends AgendaLaneEvent {
   originalDurMin: number;
 }
 
+type PendingTimelineLaneEvent = Omit<TimelineLaneEvent, "col" | "colCount">;
+
 interface QuickAddDraft {
   dateKey: string;
   title: string;
@@ -43,16 +45,16 @@ interface QuickAddDraft {
 }
 
 export interface AgendaStreamViewProps {
-  dateProfile?: ViewProps["dateProfile"];
-  businessHours?: ViewProps["businessHours"];
-  eventStore?: ViewProps["eventStore"];
-  eventUiBases?: ViewProps["eventUiBases"];
-  dateSelection?: ViewProps["dateSelection"];
-  eventSelection?: ViewProps["eventSelection"];
-  eventDrag?: ViewProps["eventDrag"];
-  eventResize?: ViewProps["eventResize"];
-  isHeightAuto?: ViewProps["isHeightAuto"];
-  forPrint?: ViewProps["forPrint"];
+  dateProfile?: SpecificViewContentArg["dateProfile"];
+  businessHours?: SpecificViewContentArg["businessHours"];
+  eventStore?: SpecificViewContentArg["eventStore"];
+  eventUiBases?: SpecificViewContentArg["eventUiBases"];
+  dateSelection?: SpecificViewContentArg["dateSelection"];
+  eventSelection?: SpecificViewContentArg["eventSelection"];
+  eventDrag?: SpecificViewContentArg["eventDrag"];
+  eventResize?: SpecificViewContentArg["eventResize"];
+  isHeightAuto?: SpecificViewContentArg["isHeightAuto"];
+  forPrint?: SpecificViewContentArg["forPrint"];
   weekStart?: string;
   displayMonth?: Date;
   agendaEvents?: AgendaStreamEvent[];
@@ -80,7 +82,11 @@ function toMondayDateKey(dateKey: string): string {
   return addDaysToDateKey(dateKey, offset);
 }
 
-function deriveWeekStart(dateProfile: ViewProps["dateProfile"] | undefined, explicitWeekStart: string | undefined, now: Date): string {
+function deriveWeekStart(
+  dateProfile: SpecificViewContentArg["dateProfile"] | undefined,
+  explicitWeekStart: string | undefined,
+  now: Date,
+): string {
   if (explicitWeekStart) {
     return toMondayDateKey(explicitWeekStart);
   }
@@ -162,7 +168,7 @@ function getEventEndMin(event: { startMin: number; durMin: number }): number {
 
 function buildTimelineEvents(events: AgendaStreamEvent[]): TimelineLaneEvent[] {
   const clampedEvents = events
-    .flatMap<TimelineLaneEvent>((event) => {
+    .flatMap<PendingTimelineLaneEvent>((event) => {
       if (event.allDay) {
         return [];
       }
@@ -190,7 +196,7 @@ function buildTimelineEvents(events: AgendaStreamEvent[]): TimelineLaneEvent[] {
     });
 
   const positioned: TimelineLaneEvent[] = [];
-  let cluster: TimelineLaneEvent[] = [];
+  let cluster: PendingTimelineLaneEvent[] = [];
   let clusterEnd = -Infinity;
 
   function flushCluster() {
@@ -460,7 +466,9 @@ function ExpandedLane({
   }
 
   function handleEventDragStart(event: TimelineLaneEvent, mouseEvent: ReactMouseEvent<HTMLButtonElement>) {
-    if (event.readOnly || !event.metadata.eventId) {
+    const manualEventId = event.metadata.eventId;
+
+    if (event.readOnly || !manualEventId) {
       return;
     }
 
@@ -508,7 +516,7 @@ function ExpandedLane({
       }
 
       try {
-        await rescheduleManualAgendaEvent(event.metadata.eventId, {
+        await rescheduleManualAgendaEvent(manualEventId, {
           date: day.dateKey,
           startTime: minutesToTimeString(preview.startMin),
           endTime: minutesToTimeString(preview.startMin + event.originalDurMin),

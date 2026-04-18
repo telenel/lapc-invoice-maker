@@ -406,6 +406,7 @@ function buildCalendarBootstrapData() {
             quoteId: "quote-123",
             quoteNumber: "QT-123",
             quoteStatus: "ACCEPTED",
+            totalAmount: 2400,
             location: "Library",
             headcount: 24,
           },
@@ -1027,10 +1028,11 @@ describe("CalendarView agenda stream integration", () => {
 
     expect(screen.getByTestId("mock-fullcalendar")).toHaveAttribute("data-view", "agendaStreamWeek");
     expect(await screen.findByText("Show past")).toBeInTheDocument();
+    expect(screen.getByText("$2,400")).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /add event/i }).length).toBeGreaterThan(0);
 
     await user.click(screen.getByRole("button", { name: /Dean Lunch/i }));
-    expect(screen.getByText("QT-123")).toBeInTheDocument();
+    expect(screen.getAllByText(/QT-123/).length).toBeGreaterThan(0);
     expect(screen.getByRole("link", { name: /view quote/i })).toHaveAttribute("href", "/quotes/quote-123");
 
     await user.click(screen.getByRole("button", { name: /Sam's Birthday/i }));
