@@ -130,3 +130,54 @@ ALTER TABLE "sales_transactions_sync_state" ENABLE ROW LEVEL SECURITY;
 -- row-level rules automatically through the view).
 REVOKE ALL ON "products_with_derived" FROM anon;
 REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER ON "products_with_derived" FROM authenticated;
+
+-- Stored recompute function. Called once at the end of every sync run.
+-- Returns the count of product rows whose aggregates row was touched.
+CREATE OR REPLACE FUNCTION recompute_product_sales_aggregates()
+RETURNS INTEGER
+LANGUAGE SQL
+AS $$
+  WITH rolled AS (
+    SELECT
+      sku,
+      SUM(CASE WHEN process_date >= now() - interval '30 days' THEN qty ELSE 0 END)::int      AS u30,
+      SUM(CASE WHEN process_date >= now() - interval '90 days' THEN qty ELSE 0 END)::int      AS u90,
+      SUM(CASE WHEN process_date >= now() - interval '1 year'  THEN qty ELSE 0 END)::int      AS u1y,
+      SUM(CASE WHEN process_date >= now() - interval '3 years' THEN qty ELSE 0 END)::int      AS u3y,
+      SUM(qty)::int                                                                            AS ulife,
+      SUM(CASE WHEN process_date >= now() - interval '30 days' THEN ext_price ELSE 0 END)     AS r30,
+      SUM(CASE WHEN process_date >= now() - interval '90 days' THEN ext_price ELSE 0 END)     AS r90,
+      SUM(CASE WHEN process_date >= now() - interval '1 year'  THEN ext_price ELSE 0 END)     AS r1y,
+      SUM(CASE WHEN process_date >= now() - interval '3 years' THEN ext_price ELSE 0 END)     AS r3y,
+      SUM(ext_price)                                                                           AS rlife,
+      COUNT(DISTINCT CASE WHEN process_date >= now() - interval '1 year' THEN transaction_id END)::int AS t1y,
+      COUNT(DISTINCT transaction_id)::int                                                      AS tlife,
+      MIN(process_date)                                                                        AS first_sale,
+      MAX(process_date)                                                                        AS last_sale
+    FROM sales_transactions
+    WHERE dtl_f_status <> 1
+    GROUP BY sku
+  ),
+  updated AS (
+    UPDATE products p SET
+      units_sold_30d               = r.u30,
+      units_sold_90d               = r.u90,
+      units_sold_1y                = r.u1y,
+      units_sold_3y                = r.u3y,
+      units_sold_lifetime          = r.ulife,
+      revenue_30d                  = r.r30,
+      revenue_90d                  = r.r90,
+      revenue_1y                   = r.r1y,
+      revenue_3y                   = r.r3y,
+      revenue_lifetime             = r.rlife,
+      txns_1y                      = r.t1y,
+      txns_lifetime                = r.tlife,
+      first_sale_date_computed     = r.first_sale,
+      last_sale_date_computed      = r.last_sale,
+      sales_aggregates_computed_at = now()
+    FROM rolled r
+    WHERE p.sku = r.sku
+    RETURNING p.sku
+  )
+  SELECT COUNT(*)::int FROM updated;
+$$;
