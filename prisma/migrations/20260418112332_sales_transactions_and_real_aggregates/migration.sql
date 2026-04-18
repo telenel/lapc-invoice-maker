@@ -111,3 +111,22 @@ SELECT
     ELSE 'steady'
   END AS trend_direction
 FROM "products" p;
+
+-- Access control.
+-- sales_transactions and sales_transactions_sync_state are written and read
+-- exclusively by the server (admin client / service_role). The browser must
+-- NOT have visibility into raw POS transaction rows — all user-facing
+-- queries go through the denormalized aggregate columns on `products`.
+-- Enable RLS with no policies so only service_role (which bypasses RLS)
+-- can access these tables.
+REVOKE ALL ON "sales_transactions" FROM anon, authenticated;
+REVOKE ALL ON "sales_transactions_sync_state" FROM anon, authenticated;
+ALTER TABLE "sales_transactions" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "sales_transactions_sync_state" ENABLE ROW LEVEL SECURITY;
+
+-- products_with_derived is browser-queried by searchProducts when trend or
+-- stock-coverage filters are active. Match the `products` grant pattern:
+-- authenticated SELECT only (RLS on the underlying products table enforces
+-- row-level rules automatically through the view).
+REVOKE ALL ON "products_with_derived" FROM anon;
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER ON "products_with_derived" FROM authenticated;
