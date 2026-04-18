@@ -2,6 +2,7 @@
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DccPicker } from "./dcc-picker";
 import type { ProductFilters } from "@/domains/product/types";
 
 interface ProductFiltersExtendedProps {
@@ -63,36 +64,11 @@ export function ProductFiltersExtended({
         </h3>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="grid gap-1.5">
-            <Label htmlFor="pf-dept-num">Department #</Label>
-            <Input
-              id="pf-dept-num"
-              type="number"
-              inputMode="numeric"
-              placeholder="e.g. 100"
-              value={filters.deptNum}
-              onChange={(e) => onChange({ deptNum: e.target.value })}
-            />
-          </div>
-          <div className="grid gap-1.5">
-            <Label htmlFor="pf-class-num">Class #</Label>
-            <Input
-              id="pf-class-num"
-              type="number"
-              inputMode="numeric"
-              placeholder="e.g. 10"
-              value={filters.classNum}
-              onChange={(e) => onChange({ classNum: e.target.value })}
-            />
-          </div>
-          <div className="grid gap-1.5">
-            <Label htmlFor="pf-cat-num">Category #</Label>
-            <Input
-              id="pf-cat-num"
-              type="number"
-              inputMode="numeric"
-              placeholder="e.g. 1"
-              value={filters.catNum}
-              onChange={(e) => onChange({ catNum: e.target.value })}
+            <DccPicker
+              deptNum={filters.deptNum}
+              classNum={filters.classNum}
+              catNum={filters.catNum}
+              onChange={onChange}
             />
           </div>
         </div>
