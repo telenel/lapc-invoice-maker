@@ -56,9 +56,9 @@ describe("parseFiltersFromSearchParams", () => {
 
 describe("applyPreset", () => {
   it("returns the preset filter merged over defaults and preserves empty keys", () => {
-    const preset = SYSTEM_PRESET_VIEWS.find((v) => v.slug === "dead-never-sold")!;
+    const preset = SYSTEM_PRESET_VIEWS.find((v) => v.slug === "dead-never-sold-authoritative")!;
     const result = applyPreset(preset);
-    expect(result.filters.lastSaleNever).toBe(true);
+    expect(result.filters.neverSoldLifetime).toBe(true);
     expect(result.filters.tab).toBe(EMPTY_FILTERS.tab);
   });
 
