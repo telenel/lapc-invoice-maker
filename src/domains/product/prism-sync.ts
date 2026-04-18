@@ -38,6 +38,17 @@ interface PrismItemRow {
   cost: number | null;
   stockOnHand: number | null;
   lastSaleDate: Date | null;
+  deptNum: number | null;
+  classNum: number | null;
+  catNum: number | null;
+  deptName: string | null;
+  className: string | null;
+  catName: string | null;
+  oneYearSales: number | null;
+  lookBackSales: number | null;
+  salesToAvgRatio: number | null;
+  estSalesCalc: number | null;
+  estSalesPrev: number | null;
 }
 
 function hashRow(r: PrismItemRow): string {
@@ -58,6 +69,17 @@ function hashRow(r: PrismItemRow): string {
     r.cost ?? 0,
     r.stockOnHand ?? 0,
     r.lastSaleDate?.toISOString() ?? "",
+    r.deptNum ?? 0,
+    r.classNum ?? 0,
+    r.catNum ?? 0,
+    r.deptName ?? "",
+    r.className ?? "",
+    r.catName ?? "",
+    r.oneYearSales ?? 0,
+    r.lookBackSales ?? 0,
+    r.salesToAvgRatio ?? 0,
+    r.estSalesCalc ?? 0,
+    r.estSalesPrev ?? 0,
   ]);
   return crypto.createHash("sha256").update(canonical).digest("hex").slice(0, 16);
 }
@@ -205,6 +227,17 @@ export async function runPrismPull(options: {
         cost: raw.Cost != null ? Number(raw.Cost) : null,
         stockOnHand: raw.StockOnHand != null ? Number(raw.StockOnHand) : null,
         lastSaleDate: coerceEpochZeroDate(raw.LastSaleDate ?? null),
+        deptNum: null,
+        classNum: null,
+        catNum: null,
+        deptName: null,
+        className: null,
+        catName: null,
+        oneYearSales: null,
+        lookBackSales: null,
+        salesToAvgRatio: null,
+        estSalesCalc: null,
+        estSalesPrev: null,
       };
       const newHash = hashRow(row);
       if (existingHashes.get(row.sku) === newHash) continue;
