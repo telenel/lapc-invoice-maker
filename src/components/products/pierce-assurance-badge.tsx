@@ -54,7 +54,7 @@ export function PierceAssuranceBadge({ onClick }: Props) {
       className="inline-flex items-center gap-2 rounded-md border px-2 py-1 text-xs hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       role="status"
       aria-live="polite"
-      title={unknown ? "Couldn't read sync status" : srText}
+      title={unknown ? "Couldn\u2019t read sync status" : srText}
     >
       <span className={`h-2 w-2 rounded-full motion-safe:animate-pulse ${dotClass}`} aria-hidden />
       <span>Pierce</span>
