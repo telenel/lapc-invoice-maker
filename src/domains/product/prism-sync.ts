@@ -12,6 +12,9 @@
  * Real type comes from whether a child row exists in Textbook or GeneralMerchandise.
  * Used items (TypeID=2) are labeled used_textbook — they're the "used copy"
  * sibling SKUs of real textbooks, but don't have their own Textbook row.
+ *
+ * Textbook metadata (title/author/isbn/edition) comes from the Textbook table,
+ * GM descriptions from GeneralMerchandise. Stock level comes from Inventory.
  */
 import crypto from "crypto";
 import { getPrismPool, sql } from "@/lib/prism";
@@ -21,6 +24,10 @@ import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 interface PrismItemRow {
   sku: number;
   description: string | null;
+  title: string | null;
+  author: string | null;
+  isbn: string | null;
+  edition: string | null;
   barcode: string | null;
   vendorId: number | null;
   dccId: number | null;
@@ -29,6 +36,7 @@ interface PrismItemRow {
   fDiscontinue: 0 | 1;
   retail: number | null;
   cost: number | null;
+  stockOnHand: number | null;
   lastSaleDate: Date | null;
 }
 
@@ -36,6 +44,10 @@ function hashRow(r: PrismItemRow): string {
   const canonical = JSON.stringify([
     r.sku,
     r.description ?? "",
+    r.title ?? "",
+    r.author ?? "",
+    r.isbn ?? "",
+    r.edition ?? "",
     r.barcode ?? "",
     r.vendorId ?? 0,
     r.dccId ?? 0,
@@ -44,6 +56,7 @@ function hashRow(r: PrismItemRow): string {
     r.fDiscontinue,
     r.retail ?? 0,
     r.cost ?? 0,
+    r.stockOnHand ?? 0,
     r.lastSaleDate?.toISOString() ?? "",
   ]);
   return crypto.createHash("sha256").update(canonical).digest("hex").slice(0, 16);
@@ -57,6 +70,42 @@ export interface PullSyncResult {
 }
 
 const DELETE_CHUNK_SIZE = 1000;
+const HASH_READ_PAGE_SIZE = 1000;
+
+// Prism stores "never sold" as epoch zero (1970-01-01 00:00:00) instead of NULL
+// on Inventory.LastSaleDate. Treat anything at or before the epoch as null so
+// the UI doesn't render "Dec 1969" due to Pacific-TZ underflow of UTC epoch.
+function coerceEpochZeroDate(d: Date | null | undefined): Date | null {
+  if (!d) return null;
+  return d.getTime() > 0 ? d : null;
+}
+
+// Supabase PostgREST caps anonymous `.select()` results at a configured max
+// (default 1000). Without pagination the mirror-hash map was truncated and
+// the reap step quietly left ~134k stale rows behind on 2026-04-17. Always
+// paginate this read with `.range()`.
+async function loadExistingHashes(
+  supabase: ReturnType<typeof getSupabaseAdminClient>,
+): Promise<Map<number, string | null>> {
+  const map = new Map<number, string | null>();
+  let from = 0;
+  while (true) {
+    const to = from + HASH_READ_PAGE_SIZE - 1;
+    const { data, error } = await supabase
+      .from("products")
+      .select("sku, sync_hash")
+      .order("sku", { ascending: true })
+      .range(from, to);
+    if (error) throw new Error(`Supabase hash read failed: ${error.message}`);
+    if (!data || data.length === 0) break;
+    for (const r of data) {
+      map.set((r as { sku: number }).sku, (r as { sync_hash: string | null }).sync_hash);
+    }
+    if (data.length < HASH_READ_PAGE_SIZE) break;
+    from += HASH_READ_PAGE_SIZE;
+  }
+  return map;
+}
 
 /**
  * Run one full-catalog pull. Paginates Prism reads with a SKU cursor to
@@ -74,19 +123,7 @@ export async function runPrismPull(options: {
   const pool = await getPrismPool();
   const supabase = getSupabaseAdminClient();
 
-  // Load existing SKU+hash map in one shot so we can hash-skip unchanged rows
-  // and identify stale rows to delete at the end.
-  const { data: existingRows, error: hashErr } = await supabase
-    .from("products")
-    .select("sku, sync_hash");
-  if (hashErr) {
-    throw new Error(`Supabase hash read failed: ${hashErr.message}`);
-  }
-  const existingHashes = new Map<number, string | null>();
-  for (const r of existingRows ?? []) {
-    existingHashes.set(r.sku, (r as { sync_hash: string | null }).sync_hash);
-  }
-
+  const existingHashes = await loadExistingHashes(supabase);
   const seenSkus = new Set<number>();
 
   // Paginate Prism with SKU cursor (SKU is the PK, monotonically increasing)
@@ -100,6 +137,10 @@ export async function runPrismPull(options: {
       .query<{
         SKU: number;
         Description: string | null;
+        Title: string | null;
+        Author: string | null;
+        ISBN: string | null;
+        Edition: string | null;
         BarCode: string | null;
         VendorID: number | null;
         DCCID: number | null;
@@ -108,11 +149,16 @@ export async function runPrismPull(options: {
         fDiscontinue: number | null;
         Retail: number | null;
         Cost: number | null;
+        StockOnHand: number | null;
         LastSaleDate: Date | null;
       }>(`
         SELECT TOP (@pageSize)
           i.SKU,
           LTRIM(RTRIM(gm.Description)) AS Description,
+          LTRIM(RTRIM(tb.Title))       AS Title,
+          LTRIM(RTRIM(tb.Author))      AS Author,
+          LTRIM(RTRIM(tb.ISBN))        AS ISBN,
+          LTRIM(RTRIM(tb.Edition))     AS Edition,
           LTRIM(RTRIM(i.BarCode))      AS BarCode,
           i.VendorID,
           i.DCCID,
@@ -126,6 +172,7 @@ export async function runPrismPull(options: {
           i.fDiscontinue,
           inv.Retail,
           inv.Cost,
+          inv.StockOnHand,
           inv.LastSaleDate
         FROM Item i
         INNER JOIN Inventory inv ON inv.SKU = i.SKU AND inv.LocationID = @loc
@@ -143,7 +190,11 @@ export async function runPrismPull(options: {
       seenSkus.add(raw.SKU);
       const row: PrismItemRow = {
         sku: raw.SKU,
-        description: raw.Description,
+        description: raw.Description && raw.Description.length > 0 ? raw.Description : null,
+        title: raw.Title && raw.Title.length > 0 ? raw.Title : null,
+        author: raw.Author && raw.Author.length > 0 ? raw.Author : null,
+        isbn: raw.ISBN && raw.ISBN.length > 0 ? raw.ISBN : null,
+        edition: raw.Edition && raw.Edition.length > 0 ? raw.Edition : null,
         barcode: raw.BarCode && raw.BarCode.length > 0 ? raw.BarCode : null,
         vendorId: raw.VendorID,
         dccId: raw.DCCID,
@@ -152,7 +203,8 @@ export async function runPrismPull(options: {
         fDiscontinue: raw.fDiscontinue === 1 ? 1 : 0,
         retail: raw.Retail != null ? Number(raw.Retail) : null,
         cost: raw.Cost != null ? Number(raw.Cost) : null,
-        lastSaleDate: raw.LastSaleDate ?? null,
+        stockOnHand: raw.StockOnHand != null ? Number(raw.StockOnHand) : null,
+        lastSaleDate: coerceEpochZeroDate(raw.LastSaleDate ?? null),
       };
       const newHash = hashRow(row);
       if (existingHashes.get(row.sku) === newHash) continue;
@@ -160,6 +212,10 @@ export async function runPrismPull(options: {
       toUpsert.push({
         sku: row.sku,
         description: row.description,
+        title: row.title,
+        author: row.author,
+        isbn: row.isbn,
+        edition: row.edition,
         barcode: row.barcode,
         vendor_id: row.vendorId,
         dcc_id: row.dccId,
@@ -168,6 +224,7 @@ export async function runPrismPull(options: {
         discontinued: row.fDiscontinue === 1,
         retail_price: row.retail,
         cost: row.cost,
+        stock_on_hand: row.stockOnHand,
         last_sale_date: row.lastSaleDate?.toISOString() ?? null,
         sync_hash: newHash,
         synced_at: new Date().toISOString(),

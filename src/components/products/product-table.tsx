@@ -37,6 +37,8 @@ function formatCurrency(value: number): string {
 function formatSaleDate(date: string | null): string {
   if (!date) return "—";
   const d = new Date(date);
+  // Prism stores "never sold" as epoch zero; in Pacific TZ that underflows to Dec 1969.
+  if (d.getUTCFullYear() < 2000) return "—";
   return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }
 
