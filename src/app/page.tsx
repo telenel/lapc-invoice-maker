@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { DeferredDashboard } from "@/components/dashboard/deferred-dashboard";
-import { PersonalizedHeader } from "@/components/dashboard/personalized-header";
 import { getDashboardBootstrapData } from "@/domains/dashboard/service";
 import { authOptions } from "@/lib/auth";
 
@@ -17,16 +16,10 @@ export default async function DashboardPage() {
   const dashboardBootstrap = await getDashboardBootstrapData(currentUserId);
 
   return (
-    <div className="flex flex-col gap-3 -mt-2 pb-0">
-      <div className="dashboard-enter dashboard-enter-1">
-        <PersonalizedHeader name={session.user.name ?? ""} />
-      </div>
-      <div className="dashboard-enter dashboard-enter-2">
-        <DeferredDashboard
-          currentUserId={currentUserId}
-          initialData={dashboardBootstrap}
-        />
-      </div>
-    </div>
+    <DeferredDashboard
+      currentUserId={currentUserId}
+      currentUserName={session.user.name ?? ""}
+      initialData={dashboardBootstrap}
+    />
   );
 }
