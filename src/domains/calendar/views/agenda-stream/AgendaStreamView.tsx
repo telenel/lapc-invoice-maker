@@ -17,7 +17,16 @@ const ALL_SOURCES = ["MEETING", "SEMINAR", "VENDOR", "OTHER", "catering", "birth
 const EMPTY_DATE_KEYS: string[] = [];
 
 export interface AgendaStreamViewProps {
-  viewProps?: ViewProps | null;
+  dateProfile?: ViewProps["dateProfile"];
+  businessHours?: ViewProps["businessHours"];
+  eventStore?: ViewProps["eventStore"];
+  eventUiBases?: ViewProps["eventUiBases"];
+  dateSelection?: ViewProps["dateSelection"];
+  eventSelection?: ViewProps["eventSelection"];
+  eventDrag?: ViewProps["eventDrag"];
+  eventResize?: ViewProps["eventResize"];
+  isHeightAuto?: ViewProps["isHeightAuto"];
+  forPrint?: ViewProps["forPrint"];
   weekStart?: string;
   displayMonth?: Date;
   agendaEvents?: AgendaStreamEvent[];
@@ -38,12 +47,12 @@ function toMondayDateKey(dateKey: string): string {
   return addDaysToDateKey(dateKey, offset);
 }
 
-function deriveWeekStart(viewProps: ViewProps | null | undefined, explicitWeekStart: string | undefined, now: Date): string {
+function deriveWeekStart(dateProfile: ViewProps["dateProfile"] | undefined, explicitWeekStart: string | undefined, now: Date): string {
   if (explicitWeekStart) {
     return toMondayDateKey(explicitWeekStart);
   }
 
-  const viewStart = viewProps?.dateProfile?.currentRange?.start;
+  const viewStart = dateProfile?.currentRange?.start;
   if (viewStart instanceof Date && !Number.isNaN(viewStart.getTime())) {
     return toMondayDateKey(getDateKeyInLosAngeles(viewStart));
   }
@@ -345,7 +354,7 @@ function DayLane({
 }
 
 export function AgendaStreamView({
-  viewProps,
+  dateProfile,
   weekStart,
   displayMonth,
   agendaEvents,
@@ -359,8 +368,8 @@ export function AgendaStreamView({
   onToggleShowPast,
 }: AgendaStreamViewProps) {
   const derivedWeekStart = useMemo(
-    () => deriveWeekStart(viewProps, weekStart, now),
-    [viewProps, weekStart, now],
+    () => deriveWeekStart(dateProfile, weekStart, now),
+    [dateProfile, weekStart, now],
   );
 
   const [currentWeekStart, setCurrentWeekStart] = useState(derivedWeekStart);

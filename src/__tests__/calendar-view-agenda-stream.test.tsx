@@ -1,5 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ViewProps } from "@fullcalendar/core";
 import { describe, expect, it, vi } from "vitest";
 import { MiniMonth } from "@/components/calendar/mini-month";
 import { AgendaStreamView } from "@/domains/calendar/views/agenda-stream/AgendaStreamView";
@@ -7,6 +8,7 @@ import type { AgendaStreamEvent } from "@/domains/calendar/views/agenda-stream/t
 import type { CalendarEventItem } from "@/domains/event/types";
 
 const NOW = new Date("2026-04-16T17:45:00.000Z");
+const NON_MATCHING_NOW = new Date("2026-05-01T17:45:00.000Z");
 
 function buildAgendaEvents(): AgendaStreamEvent[] {
   return [
@@ -142,14 +144,23 @@ function buildCalendarEvents(): CalendarEventItem[] {
   return buildAgendaEvents().map((event) => event.original);
 }
 
+function buildFullCalendarLikeViewProps(): Partial<ViewProps> {
+  return {
+    dateProfile: {
+      currentRange: {
+        start: new Date("2026-04-13T07:00:00.000Z"),
+      },
+    },
+  } as Partial<ViewProps>;
+}
+
 describe("AgendaStreamView", () => {
-  it("renders the desktop agenda stream shell with top bar, rail, lanes, and cards", () => {
+  it("renders from direct fullcalendar-like props plus local test data", () => {
     render(
       <AgendaStreamView
-        weekStart="2026-04-13"
-        displayMonth={new Date("2026-04-01T12:00:00.000Z")}
+        {...buildFullCalendarLikeViewProps()}
         agendaEvents={buildAgendaEvents()}
-        now={NOW}
+        now={NON_MATCHING_NOW}
       />,
     );
 
