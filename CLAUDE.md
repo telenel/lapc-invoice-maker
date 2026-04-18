@@ -4,8 +4,9 @@
 
 1. `README.md`
 2. `docs/PROJECT-OVERVIEW.md`
-3. `docs/SUPABASE-MIGRATION-STATUS.md` for infrastructure and deployment work
-4. `prisma/schema.prisma` for data model changes
+3. `docs/GIT-WORKFLOW.md`
+4. `docs/SUPABASE-MIGRATION-STATUS.md` for infrastructure and deployment work
+5. `prisma/schema.prisma` for data model changes
 
 ## Notes
 

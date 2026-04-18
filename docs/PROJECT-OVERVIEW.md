@@ -122,7 +122,7 @@ tests/                     # Domain and lib tests
 └── lib/
 
 hooks/
-└── pre-push               # Blocks pushes to branches with open PRs
+└── pre-push               # Blocks stale/non-fast-forward pushes and open-PR branch pushes
 
 docs/
 ├── superpowers/
