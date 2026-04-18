@@ -1,5 +1,9 @@
 import type { CalendarEventItem } from "@/domains/event/types";
-import { addDaysToDateKey, fromDateKey, getDateKeyInLosAngeles } from "@/lib/date-utils";
+import {
+  addDaysToDateKey,
+  getDateKeyInLosAngeles,
+  zonedDateTimeToUtc,
+} from "@/lib/date-utils";
 import type {
   AgendaLaneEvent,
   AgendaSourceKey,
@@ -21,6 +25,9 @@ const AGENDA_SOURCE_META: Record<AgendaSourceKey, AgendaSourceMeta> = {
 const MILLISECONDS_PER_MINUTE = 60_000;
 const DEFAULT_EVENT_DURATION_MIN = 30;
 const LA_TIME_ZONE = "America/Los_Angeles";
+const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const FLOATING_DATETIME_PATTERN = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})(?::\d{2}(?:\.\d+)?)?$/;
+const TIMEZONE_SUFFIX_PATTERN = /(Z|[+-]\d{2}:\d{2})$/;
 
 function getTimePartsInTimeZone(date: Date, timeZone: string): { hour: number; minute: number } {
   const parts = new Intl.DateTimeFormat("en-US", {
@@ -46,8 +53,32 @@ function getStartMinutesInLosAngeles(date: Date): number {
   return hour * 60 + minute;
 }
 
-function getDateKeyFromEventStart(event: CalendarEventItem): string {
-  return getDateKeyInLosAngeles(new Date(event.start));
+function parseEventTimestamp(value: string): { date: Date; dateKey: string } {
+  if (DATE_ONLY_PATTERN.test(value)) {
+    return {
+      date: zonedDateTimeToUtc(value, "12:00"),
+      dateKey: value,
+    };
+  }
+
+  const floatingMatch = value.match(FLOATING_DATETIME_PATTERN);
+  if (floatingMatch && !TIMEZONE_SUFFIX_PATTERN.test(value)) {
+    const [, dateKey, hour, minute] = floatingMatch;
+    return {
+      date: zonedDateTimeToUtc(dateKey, `${hour}:${minute}`),
+      dateKey,
+    };
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(`Invalid calendar event timestamp: ${value}`);
+  }
+
+  return {
+    date,
+    dateKey: getDateKeyInLosAngeles(date),
+  };
 }
 
 export function getAgendaSourceMeta(source: AgendaSourceKey): AgendaSourceMeta {
@@ -55,18 +86,27 @@ export function getAgendaSourceMeta(source: AgendaSourceKey): AgendaSourceMeta {
 }
 
 export function toAgendaStreamEvent(event: CalendarEventItem): AgendaStreamEvent {
-  const start = new Date(event.start);
-  const end = event.end ? new Date(event.end) : new Date(start.getTime() + DEFAULT_EVENT_DURATION_MIN * MILLISECONDS_PER_MINUTE);
+  const start = parseEventTimestamp(event.start);
+  const end = event.end ? parseEventTimestamp(event.end) : null;
   const source = event.source === "manual" ? (event.extendedProps.type ?? "OTHER") : event.source;
-  const dateKey = event.allDay ? getDateKeyFromEventStart(event) : getDateKeyInLosAngeles(start);
-  const durMin = Math.max(0, Math.round((end.getTime() - start.getTime()) / MILLISECONDS_PER_MINUTE));
+  const dateKey = start.dateKey;
+  const durMin = event.allDay
+    ? 24 * 60
+    : Math.max(
+        0,
+        Math.round(
+          ((end?.date.getTime() ?? start.date.getTime() + DEFAULT_EVENT_DURATION_MIN * MILLISECONDS_PER_MINUTE) -
+            start.date.getTime()) /
+            MILLISECONDS_PER_MINUTE,
+        ),
+      );
 
   return {
     id: event.id,
     calendarEventId: event.id,
     dateKey,
-    startMin: event.allDay ? 0 : getStartMinutesInLosAngeles(start),
-    durMin: event.allDay ? 24 * 60 : durMin,
+    startMin: event.allDay ? 0 : getStartMinutesInLosAngeles(start.date),
+    durMin,
     source,
     title: event.title,
     metadata: {
@@ -123,13 +163,10 @@ export function buildAgendaStreamDays<TEvent extends { dateKey: string }>(
   weekStart: string,
   events: TEvent[],
 ): AgendaStreamDay<TEvent>[] {
-  const start = fromDateKey(weekStart);
-
   return Array.from({ length: 5 }, (_, index) => {
     const dateKey = addDaysToDateKey(weekStart, index);
-    const dayStart = new Date(start.getTime() + index * 24 * 60 * 60 * 1000);
     return {
-      date: dayStart,
+      date: zonedDateTimeToUtc(dateKey, "12:00"),
       dateKey,
       events: events.filter((event) => event.dateKey === dateKey),
     };

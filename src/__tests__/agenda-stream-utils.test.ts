@@ -83,6 +83,46 @@ describe("agenda stream utils", () => {
     expect(fallbackManual.source).toBe("OTHER");
   });
 
+  it("keeps all-day date-only events on their intended LA day", () => {
+    const event = toAgendaStreamEvent({
+      id: "birthday-1",
+      title: "Birthday",
+      start: "2026-04-14",
+      end: null,
+      allDay: true,
+      color: "#ec4899",
+      borderColor: "#ec4899",
+      textColor: "#ec4899",
+      source: "birthday",
+      extendedProps: {},
+    });
+
+    expect(event.dateKey).toBe("2026-04-14");
+    expect(event.startMin).toBe(0);
+    expect(event.durMin).toBe(24 * 60);
+  });
+
+  it("parses floating local timestamps as Los Angeles wall clock time", () => {
+    const event = toAgendaStreamEvent({
+      id: "catering-1",
+      title: "Breakfast",
+      start: "2026-04-14T09:00:00",
+      end: "2026-04-14T10:15:00",
+      allDay: false,
+      color: "#f97316",
+      borderColor: "#f97316",
+      textColor: "#f97316",
+      source: "catering",
+      extendedProps: {
+        quoteId: "quote-2",
+      },
+    });
+
+    expect(event.dateKey).toBe("2026-04-14");
+    expect(event.startMin).toBe(9 * 60);
+    expect(event.durMin).toBe(75);
+  });
+
   it("assigns side-by-side columns for overlapping events", () => {
     const events = assignColumns([
       { id: "a", startMin: 540, durMin: 60 },
@@ -115,6 +155,14 @@ describe("agenda stream utils", () => {
 
     expect(days).toHaveLength(5);
     expect(days[0].dateKey).toBe("2026-04-13");
+    expect(
+      days[0].date.toLocaleDateString("en-US", {
+        timeZone: "America/Los_Angeles",
+        weekday: "long",
+        month: "numeric",
+        day: "numeric",
+      }),
+    ).toBe("Monday, 4/13");
     expect(days[1].events).toHaveLength(1);
     expect(days[4].events).toHaveLength(0);
   });
