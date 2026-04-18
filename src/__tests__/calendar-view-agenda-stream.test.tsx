@@ -1,4 +1,5 @@
 import "@testing-library/jest-dom/vitest";
+import type { AnchorHTMLAttributes, ReactNode } from "react";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ViewProps } from "@fullcalendar/core";
@@ -65,7 +66,14 @@ vi.mock("@/domains/event/hooks", () => ({
 }));
 
 vi.mock("next/link", () => ({
-  default: ({ href, children, ...props }: any) => (
+  default: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string | { pathname?: string };
+    children: ReactNode;
+  } & AnchorHTMLAttributes<HTMLAnchorElement>) => (
     <a href={typeof href === "string" ? href : href.pathname ?? "#"} {...props}>
       {children}
     </a>
@@ -82,38 +90,70 @@ vi.mock("sonner", () => ({
 vi.mock("@fullcalendar/react", async () => {
   const React = await import("react");
 
-  const MockFullCalendar = React.forwardRef(function MockFullCalendar(
-    props: any,
-    ref: any,
+  interface MockCalendarApi {
+    gotoDate: ReturnType<typeof vi.fn>;
+    prev: ReturnType<typeof vi.fn>;
+    next: ReturnType<typeof vi.fn>;
+    today: ReturnType<typeof vi.fn>;
+    refetchEvents: ReturnType<typeof vi.fn>;
+    updateSize: ReturnType<typeof vi.fn>;
+  }
+
+  interface MockCalendarRef {
+    getApi: () => MockCalendarApi;
+  }
+
+  interface MockCalendarEventLike {
+    id: string;
+    title: string;
+  }
+
+  interface MockFullCalendarProps {
+    initialView: string;
+    plugins?: Array<{
+      views?: Record<string, { content?: (props: Partial<ViewProps>) => ReactNode }>;
+    }>;
+    events?: (
+      info: { startStr: string; endStr: string },
+      successCallback: (events: MockCalendarEventLike[]) => void,
+      failureCallback: () => void,
+    ) => void;
+    datesSet?: (info: ReturnType<typeof toDatesSetRange>) => void;
+  }
+
+  const MockFullCalendar = React.forwardRef<MockCalendarRef, MockFullCalendarProps>(function MockFullCalendar(
+    props,
+    ref,
   ) {
-    const [loadedEvents, setLoadedEvents] = React.useState<any[]>([]);
+    const { initialView, plugins, events, datesSet } = props;
+    const [loadedEvents, setLoadedEvents] = React.useState<MockCalendarEventLike[]>([]);
     const [currentStart, setCurrentStart] = React.useState(() =>
-      toNormalizedViewStart(MOCK_TODAY, props.initialView),
+      toNormalizedViewStart(MOCK_TODAY, initialView),
     );
     const currentStartRef = React.useRef(currentStart);
-    const apiRef = React.useRef({
+    const apiRef = React.useRef<MockCalendarApi>({
       gotoDate: vi.fn((date: string | Date) => {
         const nextDate = typeof date === "string" ? new Date(`${date}T12:00:00.000Z`) : date;
-        setCurrentStart(toNormalizedViewStart(nextDate, props.initialView));
+        setCurrentStart(toNormalizedViewStart(nextDate, initialView));
       }),
       prev: vi.fn(() => {
         setCurrentStart((previous: Date) =>
-          addDays(previous, props.initialView === "agendaStreamWeek" ? -7 : -1),
+          addDays(previous, initialView === "agendaStreamWeek" ? -7 : -1),
         );
       }),
       next: vi.fn(() => {
         setCurrentStart((previous: Date) =>
-          addDays(previous, props.initialView === "agendaStreamWeek" ? 7 : 1),
+          addDays(previous, initialView === "agendaStreamWeek" ? 7 : 1),
         );
       }),
       today: vi.fn(() => {
-        setCurrentStart(toNormalizedViewStart(MOCK_TODAY, props.initialView));
+        setCurrentStart(toNormalizedViewStart(MOCK_TODAY, initialView));
       }),
       refetchEvents: vi.fn(() => {
-        const range = toDatesSetRange(currentStartRef.current, props.initialView);
-        props.events?.(
+        const range = toDatesSetRange(currentStartRef.current, initialView);
+        events?.(
           { startStr: range.startStr, endStr: range.endStr },
-          (events: any[]) => setLoadedEvents(events),
+          (nextEvents) => setLoadedEvents(nextEvents),
           () => setLoadedEvents([]),
         );
       }),
@@ -125,25 +165,25 @@ vi.mock("@fullcalendar/react", async () => {
     }));
 
     React.useEffect(() => {
-      const nextStart = toNormalizedViewStart(currentStart, props.initialView);
+      const nextStart = toNormalizedViewStart(currentStart, initialView);
       currentStartRef.current = nextStart;
-      const range = toDatesSetRange(nextStart, props.initialView);
+      const range = toDatesSetRange(nextStart, initialView);
 
-      props.datesSet?.(range);
-      props.events?.(
+      datesSet?.(range);
+      events?.(
         { startStr: range.startStr, endStr: range.endStr },
-        (events) => setLoadedEvents(events),
+        (nextEvents) => setLoadedEvents(nextEvents),
         () => setLoadedEvents([]),
       );
-    }, [currentStart, props.initialView, props.events, props.datesSet]);
+    }, [currentStart, initialView, events, datesSet]);
 
-    const customView = props.plugins
-      ?.map((plugin) => plugin.views?.[props.initialView])
+    const customView = plugins
+      ?.map((plugin) => plugin.views?.[initialView])
       .find((view) => view?.content);
 
     if (customView?.content) {
       return (
-        <div data-testid="mock-fullcalendar" data-view={props.initialView}>
+        <div data-testid="mock-fullcalendar" data-view={initialView}>
           {customView.content({
             dateProfile: {
               currentRange: {
@@ -156,8 +196,8 @@ vi.mock("@fullcalendar/react", async () => {
     }
 
     return (
-      <div data-testid="mock-fullcalendar" data-view={props.initialView}>
-        <div>{props.initialView}</div>
+      <div data-testid="mock-fullcalendar" data-view={initialView}>
+        <div>{initialView}</div>
         {loadedEvents.map((event) => (
           <div key={event.id}>{event.title}</div>
         ))}
