@@ -14,6 +14,12 @@ describe("EMPTY_FILTERS", () => {
     "lastSaleWithin", "lastSaleNever", "lastSaleOlderThan",
     "editedWithin", "editedSinceSync",
     "discontinued", "itemType",
+    // Task 15: txn-based aggregates + derived-view filters
+    "minUnitsSold", "maxUnitsSold", "unitsSoldWindow",
+    "minRevenue", "maxRevenue", "revenueWindow",
+    "minTxns", "maxTxns", "txnsWindow",
+    "neverSoldLifetime", "firstSaleWithin",
+    "trendDirection", "maxStockCoverageDays",
   ])("includes new filter key: %s", (key) => {
     expect(key in EMPTY_FILTERS).toBe(true);
   });
