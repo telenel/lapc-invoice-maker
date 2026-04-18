@@ -253,6 +253,9 @@ export interface SyncPullResult {
   updated: number;
   removed: number;
   durationMs: number;
+  txnsAdded: number;
+  aggregatesUpdated: number;
+  txnSyncDurationMs: number;
 }
 
 export interface SyncRun {
@@ -263,6 +266,9 @@ export interface SyncRun {
   scannedCount: number | null;
   updatedCount: number | null;
   removedCount: number | null;
+  txnsAdded: number | null;
+  aggregatesUpdated: number | null;
+  txnSyncDurationMs: number | null;
   status: string;
   error: string | null;
 }

@@ -50,6 +50,19 @@ export const EMPTY_FILTERS: ProductFilters = {
   editedSinceSync: false,
   discontinued: "",
   itemType: "",
+  minUnitsSold: "",
+  maxUnitsSold: "",
+  unitsSoldWindow: "",
+  minRevenue: "",
+  maxRevenue: "",
+  revenueWindow: "",
+  minTxns: "",
+  maxTxns: "",
+  txnsWindow: "",
+  neverSoldLifetime: false,
+  firstSaleWithin: "",
+  trendDirection: "",
+  maxStockCoverageDays: "",
 };
 
 /** sessionStorage key for transferring selected products to invoice/quote forms */
@@ -58,7 +71,9 @@ export const CATALOG_ITEMS_STORAGE_KEY = "catalog-selected-items";
 export const OPTIONAL_COLUMNS = [
   "stock",
   "dcc",
-  "est_sales",
+  "units_1y",
+  "revenue_1y",
+  "txns_1y",
   "margin",
   "days_since_sale",
   "updated",
@@ -66,24 +81,28 @@ export const OPTIONAL_COLUMNS = [
 
 export type OptionalColumnKey = typeof OPTIONAL_COLUMNS[number];
 
-export const DEFAULT_COLUMN_SET: OptionalColumnKey[] = ["stock", "dcc"];
+export const DEFAULT_COLUMN_SET: OptionalColumnKey[] = ["stock", "units_1y", "dcc"];
 
 export const COLUMN_LABELS: Record<OptionalColumnKey, string> = {
   stock: "Stock",
   dcc: "DCC",
-  est_sales: "Est. annual sales",
+  units_1y: "Units 1y",
+  revenue_1y: "Revenue 1y",
+  txns_1y: "Receipts 1y",
   margin: "Margin %",
   days_since_sale: "Days since sale",
   updated: "Updated",
 };
 
 export const PRESET_GROUPS = [
-  { value: "dead-weight", label: "Dead weight", icon: "💀" },
-  { value: "movers", label: "Movers", icon: "📊" },
-  { value: "data-quality", label: "Data", icon: "🔍" },
-  { value: "pricing", label: "Pricing", icon: "💰" },
-  { value: "recent-activity", label: "Recent", icon: "📝" },
-  { value: "textbook", label: "Textbook", icon: "📚" },
+  { value: "dead-weight",     label: "Dead weight",  icon: "💀" },
+  { value: "movers",          label: "Movers",       icon: "📊" },
+  { value: "trending",        label: "Trending",     icon: "📈" },
+  { value: "stock-health",    label: "Stock health", icon: "📦" },
+  { value: "pricing",         label: "Pricing",      icon: "💰" },
+  { value: "textbook",        label: "Textbook",     icon: "📚" },
+  { value: "data-quality",    label: "Data",         icon: "🔍" },
+  { value: "recent-activity", label: "Recent",       icon: "📝" },
 ] as const;
 
 export const COLUMN_PREFS_STORAGE_KEY = "products:columns:v1";

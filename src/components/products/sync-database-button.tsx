@@ -122,7 +122,10 @@ function SyncResultsDialog({
             <Stat label="Scanned" value={lastResult.scanned} />
             <Stat label="Updated" value={lastResult.updated} accent={lastResult.updated > 0} />
             <Stat label="Removed" value={lastResult.removed} accent={lastResult.removed > 0} />
-            <Stat label="Duration" value={formatDuration(lastResult.durationMs)} />
+            <Stat label="Catalog time" value={formatDuration(lastResult.durationMs)} />
+            <Stat label="Txns +" value={lastResult.txnsAdded} accent={lastResult.txnsAdded > 0} />
+            <Stat label="Aggs refreshed" value={lastResult.aggregatesUpdated} accent={lastResult.aggregatesUpdated > 0} />
+            <Stat label="Txn time" value={formatDuration(lastResult.txnSyncDurationMs)} />
           </div>
         ) : null}
 
@@ -134,6 +137,8 @@ function SyncResultsDialog({
                 <th className="px-3 py-2 font-medium">By</th>
                 <th className="px-3 py-2 text-right font-medium">Scanned</th>
                 <th className="px-3 py-2 text-right font-medium">Updated</th>
+                <th className="px-3 py-2 text-right font-medium">Txns+</th>
+                <th className="px-3 py-2 text-right font-medium">Aggs</th>
                 <th className="px-3 py-2 text-right font-medium">Removed</th>
                 <th className="px-3 py-2 font-medium">Status</th>
               </tr>
@@ -141,7 +146,7 @@ function SyncResultsDialog({
             <tbody>
               {runs.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-3 py-4 text-center text-muted-foreground">
+                  <td colSpan={8} className="px-3 py-4 text-center text-muted-foreground">
                     No sync runs yet.
                   </td>
                 </tr>
@@ -152,6 +157,8 @@ function SyncResultsDialog({
                     <td className="px-3 py-2 truncate">{formatTriggeredBy(r.triggeredBy)}</td>
                     <td className="px-3 py-2 text-right">{r.scannedCount?.toLocaleString() ?? "—"}</td>
                     <td className="px-3 py-2 text-right">{r.updatedCount?.toLocaleString() ?? "—"}</td>
+                    <td className="px-3 py-2 text-right">{r.txnsAdded?.toLocaleString() ?? "—"}</td>
+                    <td className="px-3 py-2 text-right">{r.aggregatesUpdated?.toLocaleString() ?? "—"}</td>
                     <td className="px-3 py-2 text-right">{r.removedCount?.toLocaleString() ?? "—"}</td>
                     <td className="px-3 py-2">
                       <StatusBadge status={r.status} error={r.error} />

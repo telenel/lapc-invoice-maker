@@ -146,9 +146,9 @@ export function ProductTable({
               {visibleColumns?.includes("dcc") && (
                 <TableHead>DCC</TableHead>
               )}
-              {visibleColumns?.includes("est_sales") && (
-                <TableHead className="text-right">Est. annual sales</TableHead>
-              )}
+              {visibleColumns?.includes("units_1y")   && <TableHead className="text-right">Units 1y</TableHead>}
+              {visibleColumns?.includes("revenue_1y") && <TableHead className="text-right">Revenue 1y</TableHead>}
+              {visibleColumns?.includes("txns_1y")    && <TableHead className="text-right">Receipts 1y</TableHead>}
               {visibleColumns?.includes("margin") && (
                 <TableHead className="text-right">Margin %</TableHead>
               )}
@@ -252,23 +252,21 @@ export function ProductTable({
                         )}
                       </TableCell>
                     )}
-                    {visibleColumns?.includes("est_sales") && (
+                    {visibleColumns?.includes("units_1y") && (
                       <TableCell className="text-right tabular-nums">
-                        {product.est_sales_calc != null ? (
-                          <>
-                            {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(product.est_sales_calc)}
-                            {product.est_sales_prev != null && (
-                              <span
-                                className="ml-1 text-xs text-muted-foreground"
-                                aria-label={product.est_sales_calc > product.est_sales_prev ? "rising" : product.est_sales_calc < product.est_sales_prev ? "falling" : "flat"}
-                              >
-                                {product.est_sales_calc > product.est_sales_prev ? "▲" : product.est_sales_calc < product.est_sales_prev ? "▼" : "="}
-                              </span>
-                            )}
-                          </>
-                        ) : (
-                          "—"
-                        )}
+                        {product.units_sold_1y > 0 ? product.units_sold_1y.toLocaleString() : "—"}
+                      </TableCell>
+                    )}
+                    {visibleColumns?.includes("revenue_1y") && (
+                      <TableCell className="text-right tabular-nums">
+                        {product.revenue_1y > 0
+                          ? new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(product.revenue_1y)
+                          : "—"}
+                      </TableCell>
+                    )}
+                    {visibleColumns?.includes("txns_1y") && (
+                      <TableCell className="text-right tabular-nums">
+                        {product.txns_1y > 0 ? product.txns_1y.toLocaleString() : "—"}
                       </TableCell>
                     )}
                     {visibleColumns?.includes("margin") && (

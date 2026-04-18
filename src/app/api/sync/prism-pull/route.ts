@@ -43,6 +43,26 @@ async function handle(request: NextRequest): Promise<NextResponse> {
 
   try {
     const result = await runPrismPull();
+
+    // Incremental transaction history + aggregate recompute. Isolated from
+    // the catalog step's success/failure — even if this block throws, we
+    // still surface the catalog result.
+    let txnResult: { txnsAdded: number; aggregatesUpdated: number; durationMs: number; skipped?: string } = {
+      txnsAdded: 0,
+      aggregatesUpdated: 0,
+      durationMs: 0,
+    };
+    try {
+      const { getPrismPool } = await import("@/lib/prism");
+      const { runSalesTxnSync } = await import("@/domains/product/sales-txn-sync");
+      const { getSupabaseAdminClient } = await import("@/lib/supabase/admin");
+      const pool = await getPrismPool();
+      const supabase = getSupabaseAdminClient();
+      txnResult = await runSalesTxnSync({ supabase, prism: pool });
+    } catch (txnErr) {
+      console.error("sales-txn-sync failed (non-fatal):", txnErr);
+    }
+
     await prisma.syncRun.update({
       where: { id: run.id },
       data: {
@@ -50,10 +70,19 @@ async function handle(request: NextRequest): Promise<NextResponse> {
         scannedCount: result.scanned,
         updatedCount: result.updated,
         removedCount: result.removed,
+        txnsAdded: txnResult.txnsAdded,
+        aggregatesUpdated: txnResult.aggregatesUpdated,
+        txnSyncDurationMs: txnResult.durationMs,
         status: "ok",
       },
     });
-    return NextResponse.json({ runId: run.id, ...result });
+    return NextResponse.json({
+      runId: run.id,
+      ...result,
+      txnsAdded: txnResult.txnsAdded,
+      aggregatesUpdated: txnResult.aggregatesUpdated,
+      txnSyncDurationMs: txnResult.durationMs,
+    });
   } catch (err) {
     await prisma.syncRun.update({
       where: { id: run.id },
@@ -80,6 +109,20 @@ export async function GET() {
   const runs = await prisma.syncRun.findMany({
     orderBy: { startedAt: "desc" },
     take: 20,
+    select: {
+      id: true,
+      startedAt: true,
+      completedAt: true,
+      triggeredBy: true,
+      scannedCount: true,
+      updatedCount: true,
+      removedCount: true,
+      txnsAdded: true,
+      aggregatesUpdated: true,
+      txnSyncDurationMs: true,
+      status: true,
+      error: true,
+    },
   });
   return NextResponse.json({ runs });
 }

@@ -14,9 +14,23 @@ const base = (p: Partial<Product>): Product => ({
   catalog_number: null, vendor_id: 1, dcc_id: 1, product_type: null, color_id: 0,
   created_at: null, updated_at: daysAgo(30), last_sale_date: daysAgo(30),
   synced_at: daysAgo(30), dept_num: null, class_num: null, cat_num: null,
-  dept_name: null, class_name: null, cat_name: null, one_year_sales: null,
-  look_back_sales: null, sales_to_avg_ratio: null, est_sales_calc: null,
-  est_sales_prev: null, discontinued: false,
+  dept_name: null, class_name: null, cat_name: null,
+  units_sold_30d: 0,
+  units_sold_90d: 0,
+  units_sold_1y: 0,
+  units_sold_3y: 0,
+  units_sold_lifetime: 0,
+  revenue_30d: 0,
+  revenue_90d: 0,
+  revenue_1y: 0,
+  revenue_3y: 0,
+  revenue_lifetime: 0,
+  txns_1y: 0,
+  txns_lifetime: 0,
+  first_sale_date_computed: null,
+  last_sale_date_computed: null,
+  sales_aggregates_computed_at: null,
+  discontinued: false,
   ...p,
 });
 
@@ -40,6 +54,19 @@ const fixtures: Product[] = [
   base({ sku: 17, description: "Recently edited", updated_at: daysAgo(2) }),
   base({ sku: 18, description: "Edited post-sync", updated_at: daysAgo(1), synced_at: daysAgo(5) }),
   base({ sku: 19, item_type: "used_textbook", description: "Used copy" }),
+  base({ sku: 20, description: "Top unit seller 30d", units_sold_30d: 200, units_sold_1y: 2000, units_sold_lifetime: 5000, txns_1y: 300, txns_lifetime: 1200, revenue_30d: 1000, revenue_1y: 9000, last_sale_date_computed: daysAgo(1) }),
+  base({ sku: 21, description: "Revenue champ 1y", revenue_1y: 50000, units_sold_1y: 500, txns_1y: 300 }),
+  base({ sku: 22, description: "Consistent seller", txns_1y: 80, units_sold_1y: 400 }),
+  base({ sku: 23, description: "One-hit wonder", txns_lifetime: 1, units_sold_lifetime: 20 }),
+  base({ sku: 24, description: "Accelerating", units_sold_30d: 30, units_sold_1y: 100 }),
+  base({ sku: 25, description: "Decelerating", units_sold_30d: 1, units_sold_1y: 100 }),
+  base({ sku: 26, description: "New arrival", first_sale_date_computed: daysAgo(30), units_sold_30d: 10 }),
+  base({ sku: 27, description: "Overstocked", stock_on_hand: 500, units_sold_1y: 20 }),
+  base({ sku: 28, description: "Stockout risk", stock_on_hand: 2, units_sold_30d: 15 }),
+  base({ sku: 29, description: "Authoritative dead", txns_lifetime: 0, stock_on_hand: 5 }),
+  base({ sku: 30, description: "Textbook this semester", item_type: "textbook", title: "Calc", units_sold_90d: 20 }),
+  base({ sku: 31, description: "High margin popular", retail_price: 100, cost: 40, units_sold_1y: 100 }),
+  base({ sku: 32, description: "High margin dead", retail_price: 100, cost: 40, units_sold_1y: 0 }),
 ];
 
 function matchesFilter(p: Product, f: ProductFilters): boolean {
@@ -86,6 +113,46 @@ function matchesFilter(p: Product, f: ProductFilters): boolean {
     const m = (p.retail_price - p.cost) / p.retail_price;
     if (f.minMargin !== "" && m < Number(f.minMargin)) return false;
     if (f.maxMargin !== "" && m > Number(f.maxMargin)) return false;
+  }
+  if (f.neverSoldLifetime && (p.txns_lifetime ?? 0) > 0) return false;
+  if (f.unitsSoldWindow !== "") {
+    const col = (`units_sold_${f.unitsSoldWindow}` as const) as keyof Product;
+    const v = (p[col] as number | null) ?? 0;
+    if (f.minUnitsSold !== "" && v < Number(f.minUnitsSold)) return false;
+    if (f.maxUnitsSold !== "" && v > Number(f.maxUnitsSold)) return false;
+  }
+  if (f.revenueWindow !== "") {
+    const col = (`revenue_${f.revenueWindow}` as const) as keyof Product;
+    const v = (p[col] as number | null) ?? 0;
+    if (f.minRevenue !== "" && v < Number(f.minRevenue)) return false;
+    if (f.maxRevenue !== "" && v > Number(f.maxRevenue)) return false;
+  }
+  if (f.txnsWindow !== "") {
+    const col = (`txns_${f.txnsWindow}` as const) as keyof Product;
+    const v = (p[col] as number | null) ?? 0;
+    if (f.minTxns !== "" && v < Number(f.minTxns)) return false;
+    if (f.maxTxns !== "" && v > Number(f.maxTxns)) return false;
+  }
+  if (f.firstSaleWithin !== "") {
+    const days = f.firstSaleWithin === "90d" ? 90 : 365;
+    if (!p.first_sale_date_computed) return false;
+    if (new Date(p.first_sale_date_computed).getTime() < now.getTime() - days * 86400000) return false;
+  }
+  if (f.trendDirection === "accelerating") {
+    const r30 = (p.units_sold_30d ?? 0) / 30;
+    const r1y = (p.units_sold_1y ?? 0) / 365;
+    if (!(r1y > 0 && r30 > r1y * 1.5)) return false;
+  }
+  if (f.trendDirection === "decelerating") {
+    const r30 = (p.units_sold_30d ?? 0) / 30;
+    const r1y = (p.units_sold_1y ?? 0) / 365;
+    if (!(r1y > 0 && r30 < r1y * 0.5)) return false;
+  }
+  if (f.maxStockCoverageDays !== "") {
+    const rate30 = (p.units_sold_30d ?? 0) / 30;
+    if (rate30 === 0) return false;
+    const cover = (p.stock_on_hand ?? 0) / rate30;
+    if (cover > Number(f.maxStockCoverageDays)) return false;
   }
   return true;
 }

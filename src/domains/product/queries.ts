@@ -44,8 +44,9 @@ export async function searchProducts(
   const from = (filters.page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
+  const needsDerived = filters.trendDirection !== "" || filters.maxStockCoverageDays !== "";
   let query = client
-    .from("products")
+    .from(needsDerived ? "products_with_derived" : "products")
     .select("*", { count: "exact" })
     .in("item_type", TAB_ITEM_TYPES[filters.tab]);
 
@@ -202,6 +203,39 @@ export async function searchProducts(
     if (filters.productType) {
       query = query.ilike("product_type", `%${filters.productType}%`);
     }
+  }
+
+  // Units sold window (filters map to the per-window denormalized columns
+  // on products — no derived view needed for these)
+  if (filters.unitsSoldWindow !== "" && (filters.minUnitsSold !== "" || filters.maxUnitsSold !== "")) {
+    const col = `units_sold_${filters.unitsSoldWindow}`;
+    if (filters.minUnitsSold !== "") query = query.gte(col, Number(filters.minUnitsSold));
+    if (filters.maxUnitsSold !== "") query = query.lte(col, Number(filters.maxUnitsSold));
+  }
+  if (filters.revenueWindow !== "" && (filters.minRevenue !== "" || filters.maxRevenue !== "")) {
+    const col = `revenue_${filters.revenueWindow}`;
+    if (filters.minRevenue !== "") query = query.gte(col, Number(filters.minRevenue));
+    if (filters.maxRevenue !== "") query = query.lte(col, Number(filters.maxRevenue));
+  }
+  if (filters.txnsWindow !== "" && (filters.minTxns !== "" || filters.maxTxns !== "")) {
+    const col = `txns_${filters.txnsWindow}`;
+    if (filters.minTxns !== "") query = query.gte(col, Number(filters.minTxns));
+    if (filters.maxTxns !== "") query = query.lte(col, Number(filters.maxTxns));
+  }
+  if (filters.neverSoldLifetime) {
+    query = query.eq("txns_lifetime", 0);
+  }
+  if (filters.firstSaleWithin !== "") {
+    const days = filters.firstSaleWithin === "90d" ? 90 : 365;
+    const threshold = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+    query = query.gte("first_sale_date_computed", threshold);
+  }
+  // Derived-view-only filters
+  if (filters.trendDirection !== "") {
+    query = query.eq("trend_direction", filters.trendDirection);
+  }
+  if (filters.maxStockCoverageDays !== "") {
+    query = query.lte("stock_coverage_days", Number(filters.maxStockCoverageDays));
   }
 
   // Sorting — validate against whitelist to prevent arbitrary column injection
