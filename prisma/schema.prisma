@@ -723,7 +723,7 @@ model SalesTransaction {
   posId           Int?      @map("pos_id")
   registerId     Int?      @map("register_id")
   receiptId       BigInt?   @map("receipt_id")
-  tranNumber      Int?      @map("tran_number")
+  tranNumber      String?   @map("tran_number")
   posLineNumber   Int?      @map("pos_line_number")
   qty             Decimal?  @db.Decimal(12, 3)
   price           Decimal?  @db.Decimal(12, 2)

@@ -38,7 +38,7 @@ interface PrismTxnRow {
   POSID: number | null;
   RegisterID: number | null;
   ReceiptID: number | string | null;
-  TranNumber: number | null;
+  TranNumber: string | null;
   PosLineNumber: number | null;
   Qty: number | null;
   Price: number | null;
@@ -68,7 +68,7 @@ const PRISM_TXN_SELECT = `
     th.POSID,
     th.RegisterID,
     th.ReceiptID,
-    th.TranNumber,
+    LTRIM(RTRIM(th.TranNumber)) AS TranNumber,
     td.PosLineNumber,
     td.Qty,
     td.Price,
@@ -104,7 +104,7 @@ function toSupabaseRow(r: PrismTxnRow) {
     pos_id:           r.POSID,
     register_id:      r.RegisterID,
     receipt_id:       r.ReceiptID != null ? Number(r.ReceiptID) : null,
-    tran_number:      r.TranNumber,
+    tran_number:      r.TranNumber != null ? r.TranNumber.trimEnd() : null,
     pos_line_number:  r.PosLineNumber,
     qty:              r.Qty,
     price:            r.Price,
