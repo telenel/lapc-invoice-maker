@@ -20,6 +20,7 @@ export interface DashboardStatsSummary {
   totalLastMonth: number;
   expectedCount: number;
   expectedTotal: number;
+  pipeline?: number[];
 }
 
 export interface DashboardStatsData {
@@ -42,8 +43,10 @@ export interface DashboardPendingAccountItem {
 
 export interface DashboardRunningInvoiceItem {
   id: string;
+  invoiceNumber?: string | null;
   creatorId: string;
   creatorName: string;
+  openedAt?: string;
   requestorName: string;
   department: string;
   detail: string;

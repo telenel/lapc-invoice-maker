@@ -55,10 +55,35 @@ function getFocusDateRanges(now = new Date()) {
   };
 }
 
+async function getDashboardPipeline(now = new Date()) {
+  const endDateKey = getDateKeyInLosAngeles(now);
+  const ranges = Array.from({ length: 12 }, (_, index) => {
+    const endOffset = (11 - index) * 7;
+    const startOffset = endOffset + 6;
+
+    return {
+      dateFrom: addDaysToDateKey(endDateKey, -startOffset),
+      dateTo: addDaysToDateKey(endDateKey, -endOffset),
+    };
+  });
+
+  const weeklyTotals = await Promise.all(
+    ranges.map(({ dateFrom, dateTo }) =>
+      invoiceService.getStats({
+        status: "FINAL",
+        dateFrom,
+        dateTo,
+      }),
+    ),
+  );
+
+  return weeklyTotals.map((entry) => entry.sumTotalAmount);
+}
+
 export async function getDashboardStatsData(now = new Date()): Promise<DashboardStatsData> {
   const { dateFrom, dateTo, lastMonthFrom, lastMonthTo } = getFocusDateRanges(now);
 
-  const [monthData, lastMonthData, teamUsers, expectedOpen] = await Promise.all([
+  const [monthData, lastMonthData, teamUsers, expectedOpen, pipeline] = await Promise.all([
     invoiceService.getStats({ status: "FINAL", dateFrom, dateTo }),
     invoiceService.getStats({
       status: "FINAL",
@@ -71,6 +96,7 @@ export async function getDashboardStatsData(now = new Date()): Promise<Dashboard
       _sum: { totalAmount: true },
       _count: { _all: true },
     }),
+    getDashboardPipeline(now),
   ]);
 
   return {
@@ -81,6 +107,7 @@ export async function getDashboardStatsData(now = new Date()): Promise<Dashboard
       totalLastMonth: lastMonthData.sumTotalAmount,
       expectedCount: expectedOpen._count._all,
       expectedTotal: Number(expectedOpen._sum.totalAmount ?? 0),
+      pipeline,
     },
     teamUsers: teamUsers.users,
   };
@@ -210,7 +237,9 @@ async function getRunningInvoices(currentUserId: string | null): Promise<Dashboa
     take: 50,
     select: {
       id: true,
+      invoiceNumber: true,
       createdBy: true,
+      createdAt: true,
       department: true,
       totalAmount: true,
       runningTitle: true,
@@ -229,8 +258,10 @@ async function getRunningInvoices(currentUserId: string | null): Promise<Dashboa
 
   return invoices.map((invoice) => ({
     id: invoice.id,
+    invoiceNumber: invoice.invoiceNumber,
     creatorId: invoice.createdBy,
     creatorName: invoice.creator.name,
+    openedAt: invoice.createdAt.toISOString(),
     requestorName: invoice.staff?.name ?? invoice.contact?.name ?? "Unknown Requestor",
     department: invoice.department,
     detail: buildRunningInvoiceDetail(invoice),

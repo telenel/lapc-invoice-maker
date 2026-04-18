@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}), { virtual: true });
 
@@ -56,8 +56,14 @@ const mockCountPaymentReminderAttemptsByInvoiceIds = vi.mocked(countPaymentRemin
 
 describe("dashboard service", () => {
   beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-17T19:00:00.000Z"));
     vi.clearAllMocks();
 
+    mockInvoiceService.getStats.mockResolvedValue({
+      total: 0,
+      sumTotalAmount: 0,
+    } as never);
     mockListCalendarEventsForRange.mockResolvedValue([] as never);
     mockFollowUpRepository.getPendingAccountsSummary.mockResolvedValue([] as never);
     mockFollowUpService.getBadgeStatesForInvoices.mockResolvedValue({} as never);
@@ -91,7 +97,9 @@ describe("dashboard service", () => {
       .mockResolvedValueOnce([
         {
           id: "inv-1",
+          invoiceNumber: "INV-2414",
           createdBy: "user-1",
+          createdAt: new Date("2026-04-14T12:00:00.000Z"),
           department: "Catering",
           totalAmount: "240",
           runningTitle: "Denise Robb lunch",
@@ -104,6 +112,10 @@ describe("dashboard service", () => {
         },
       ] as never)
       .mockResolvedValueOnce([] as never);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("excludes archived records from focus data counts", async () => {
@@ -168,6 +180,7 @@ describe("dashboard service", () => {
       totalLastMonth: 800,
       expectedCount: 2,
       expectedTotal: 650,
+      pipeline: Array(12).fill(0),
     });
 
     expect(mockInvoiceService.getCreatorStats).toHaveBeenCalledWith("ALL");
