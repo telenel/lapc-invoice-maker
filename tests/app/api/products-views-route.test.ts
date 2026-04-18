@@ -16,6 +16,7 @@ vi.mock("@/lib/supabase/admin", () => ({
 import { getServerSession } from "next-auth";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { GET, POST } from "@/app/api/products/views/route";
+import { DELETE } from "@/app/api/products/views/[id]/route";
 
 type QueryResult = { data: unknown; error: unknown };
 
@@ -256,5 +257,50 @@ describe("POST /api/products/views", () => {
     );
 
     expect(response.status).toBe(400);
+  });
+});
+
+describe("DELETE /api/products/views/:id", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: "u1", role: "user" },
+    } as never);
+  });
+
+  it("returns 404 when the row isn't owned by the caller or doesn't exist", async () => {
+    const supabaseMock = makeSupabaseMock({ data: null, error: null });
+    vi.mocked(getSupabaseAdminClient).mockReturnValue(supabaseMock as never);
+
+    const response = await DELETE(
+      new NextRequest("http://localhost/api/products/views/nope", {
+        method: "DELETE",
+      }),
+      {
+        params: Promise.resolve({ id: "nope" }),
+      } as never,
+    );
+
+    expect(response.status).toBe(404);
+    const body = await response.json();
+    expect(body.error).toContain("not found");
+  });
+
+  it("returns 200 and { ok: true } on successful delete", async () => {
+    const supabaseMock = makeSupabaseMock({ data: { id: "v1" }, error: null });
+    vi.mocked(getSupabaseAdminClient).mockReturnValue(supabaseMock as never);
+
+    const response = await DELETE(
+      new NextRequest("http://localhost/api/products/views/v1", {
+        method: "DELETE",
+      }),
+      {
+        params: Promise.resolve({ id: "v1" }),
+      } as never,
+    );
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body).toEqual({ ok: true });
   });
 });
