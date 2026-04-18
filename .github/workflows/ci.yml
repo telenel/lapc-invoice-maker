@@ -5,6 +5,10 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # Safety net: allow manual re-run of CI for a given ref. Needed when a
+  # merge push-event workflow didn't fire (e.g., the GITHUB_TOKEN auto-merge
+  # attribution bug that skipped PR #175's deploy on 2026-04-18).
+  workflow_dispatch:
 
 permissions:
   contents: read
