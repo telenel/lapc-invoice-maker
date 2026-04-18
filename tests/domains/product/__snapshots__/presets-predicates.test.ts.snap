@@ -6,6 +6,7 @@ exports[`preset 'data-missing-barcode' > runs cleanly over the fixture and retur
   8,
   13,
   19,
+  30,
 ]
 `;
 
@@ -14,6 +15,7 @@ exports[`preset 'data-missing-isbn-textbook' > runs cleanly over the fixture and
   7,
   13,
   19,
+  30,
 ]
 `;
 
@@ -28,49 +30,78 @@ exports[`preset 'data-retail-below-cost' > runs cleanly over the fixture and ret
 
 exports[`preset 'data-zero-price' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
 
-exports[`preset 'dead-discontinued' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
+exports[`preset 'dead-discontinued-with-recent-sales' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
 
 exports[`preset 'dead-discontinued-with-stock' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
 
-exports[`preset 'dead-never-sold' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
-
-exports[`preset 'dead-no-sales-2y' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
-
-exports[`preset 'dead-no-sales-5y' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
-
-exports[`preset 'dead-zero-stock-never-sold' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
-
-exports[`preset 'movers-last-30d' > runs cleanly over the fixture and returns deterministic set 1`] = `
+exports[`preset 'dead-never-sold-authoritative' > runs cleanly over the fixture and returns deterministic set 1`] = `
 [
   7,
   8,
   13,
   19,
+  30,
 ]
 `;
 
-exports[`preset 'movers-last-90d' > runs cleanly over the fixture and returns deterministic set 1`] = `
+exports[`preset 'dead-never-sold-with-stock' > runs cleanly over the fixture and returns deterministic set 1`] = `
 [
   7,
   8,
   13,
   19,
+  30,
 ]
 `;
 
-exports[`preset 'movers-proven-sellers' > runs cleanly over the fixture and returns deterministic set 1`] = `
+exports[`preset 'dead-no-sales-1y-stock' > runs cleanly over the fixture and returns deterministic set 1`] = `
 [
   7,
   8,
   13,
   19,
+  30,
 ]
 `;
+
+exports[`preset 'dead-no-sales-2y-stock' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
+
+exports[`preset 'movers-consistent-sellers' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
+
+exports[`preset 'movers-one-hit-wonders' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
+
+exports[`preset 'movers-top-revenue-1y' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
+
+exports[`preset 'movers-top-revenue-30d' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
+
+exports[`preset 'movers-top-units-1y' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
+
+exports[`preset 'movers-top-units-30d' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
+
+exports[`preset 'movers-top-units-lifetime' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
+
+exports[`preset 'price-high-margin-dead' > runs cleanly over the fixture and returns deterministic set 1`] = `
+[
+  7,
+  8,
+  13,
+  19,
+  30,
+]
+`;
+
+exports[`preset 'price-high-margin-high-velocity' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
+
+exports[`preset 'price-low-revenue-high-stock' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
+
+exports[`preset 'price-thin-margin-popular' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
 
 exports[`preset 'pricing-gm-over-50' > runs cleanly over the fixture and returns deterministic set 1`] = `
 [
   15,
   16,
+  31,
+  32,
 ]
 `;
 
@@ -82,29 +113,48 @@ exports[`preset 'pricing-gm-under-5' > runs cleanly over the fixture and returns
 ]
 `;
 
-exports[`preset 'pricing-high-margin' > runs cleanly over the fixture and returns deterministic set 1`] = `
-[
-  7,
-  8,
-  13,
-  19,
-]
-`;
-
 exports[`preset 'pricing-textbooks-over-100' > runs cleanly over the fixture and returns deterministic set 1`] = `
 [
   13,
 ]
 `;
 
-exports[`preset 'pricing-thin-margin' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
-
 exports[`preset 'recent-edited-7d' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
 
 exports[`preset 'recent-edited-since-sync' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
+
+exports[`preset 'stock-less-than-30d-cover' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
+
+exports[`preset 'stock-stale-stock' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
+
+exports[`preset 'stock-stockout-risk' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
+
+exports[`preset 'textbook-current-semester-active' > runs cleanly over the fixture and returns deterministic set 1`] = `
+[
+  30,
+]
+`;
+
+exports[`preset 'textbook-faded-this-year' > runs cleanly over the fixture and returns deterministic set 1`] = `
+[
+  7,
+  8,
+  13,
+  19,
+  30,
+]
+`;
+
+exports[`preset 'textbook-used-moving' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
 
 exports[`preset 'textbook-used-only' > runs cleanly over the fixture and returns deterministic set 1`] = `
 [
   19,
 ]
 `;
+
+exports[`preset 'trend-accelerating' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
+
+exports[`preset 'trend-decelerating' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
+
+exports[`preset 'trend-new-arrivals' > runs cleanly over the fixture and returns deterministic set 1`] = `[]`;
