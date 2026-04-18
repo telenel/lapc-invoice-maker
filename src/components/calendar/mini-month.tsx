@@ -15,6 +15,12 @@ interface MiniMonthProps {
   onDateClick: (dateStr: string) => void;
   /** Currently highlighted date range (start inclusive, end exclusive) */
   activeRange?: { start: string; end: string };
+  /** Optional density counts keyed by date for small agenda dots */
+  densityByDate?: Record<string, number>;
+  /** Optional selected week start for row highlighting */
+  selectedWeekStart?: string;
+  /** Optional agenda-stream week jump affordance */
+  onWeekRowClick?: (weekStart: string) => void;
 }
 
 const DAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
@@ -28,6 +34,9 @@ export function MiniMonth({
   onMonthChange,
   onDateClick,
   activeRange,
+  densityByDate,
+  selectedWeekStart,
+  onWeekRowClick,
 }: MiniMonthProps) {
   const year = displayMonth.getFullYear();
   const month = displayMonth.getMonth();
@@ -80,9 +89,16 @@ export function MiniMonth({
     }
 
     // Group into weeks
-    const result: typeof cells[] = [];
+    const result: Array<{
+      weekStart: string;
+      cells: typeof cells;
+    }> = [];
     for (let i = 0; i < cells.length; i += 7) {
-      result.push(cells.slice(i, i + 7));
+      const weekCells = cells.slice(i, i + 7);
+      result.push({
+        weekStart: weekCells[1]?.dateStr ?? weekCells[0]?.dateStr ?? "",
+        cells: weekCells,
+      });
     }
     return result;
   }, [year, month]);
@@ -137,18 +153,44 @@ export function MiniMonth({
 
       {/* Date grid */}
       {weeks.map((week, wi) => (
-        <div key={wi} className="grid grid-cols-7 text-center">
-          {week.map((cell) => {
+        <div
+          key={week.weekStart || wi}
+          className={cn(
+            "grid items-center gap-0.5",
+            onWeekRowClick ? "grid-cols-[18px_repeat(7,minmax(0,1fr))]" : "grid-cols-7",
+            selectedWeekStart === week.weekStart && "rounded-lg bg-primary/5 ring-1 ring-primary/20",
+          )}
+        >
+          {onWeekRowClick ? (
+            <button
+              type="button"
+              className="h-7 w-4 rounded-md text-[10px] text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+              aria-label={new Date(`${week.weekStart}T12:00:00`).toLocaleDateString("en-US", {
+                weekday: undefined,
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              }).replace(/^/, "Jump to week of ")}
+              onClick={() => onWeekRowClick(week.weekStart)}
+            >
+              |
+            </button>
+          ) : null}
+
+          {week.cells.map((cell) => {
             const isToday = cell.dateStr === today;
             const inRange = isInRange(cell.dateStr);
+            const density = Math.max(0, densityByDate?.[cell.dateStr] ?? 0);
+            const dotSize = Math.min(7, 3 + density);
             return (
               <button
                 key={cell.dateStr}
+                type="button"
                 onClick={() => onDateClick(cell.dateStr)}
                 aria-label={new Date(cell.dateStr + "T12:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
                 aria-current={isToday ? "date" : undefined}
                 className={cn(
-                  "h-7 w-7 mx-auto text-[11px] rounded-md transition-colors",
+                  "relative h-7 w-7 mx-auto text-[11px] rounded-md transition-colors",
                   "hover:bg-accent hover:text-accent-foreground",
                   !cell.inMonth && "text-muted-foreground/40",
                   cell.inMonth && !isToday && !inRange && "text-foreground",
@@ -158,6 +200,21 @@ export function MiniMonth({
                 )}
               >
                 {cell.day}
+                {density > 0 && cell.inMonth ? (
+                  <span
+                    aria-label={`Events on ${new Date(cell.dateStr + "T12:00:00").toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })}: ${density}`}
+                    className="absolute bottom-0.5 left-1/2 -translate-x-1/2 rounded-full bg-primary/70"
+                    style={{
+                      width: `${dotSize}px`,
+                      height: `${dotSize}px`,
+                      opacity: Math.min(1, 0.3 + density * 0.15),
+                    }}
+                  />
+                ) : null}
               </button>
             );
           })}
