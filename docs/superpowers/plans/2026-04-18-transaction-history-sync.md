@@ -218,7 +218,8 @@ SELECT
     WHEN (p.units_sold_30d::NUMERIC / 30.0) < (p.units_sold_1y::NUMERIC / 365.0) * 0.5
       THEN 'decelerating'
     ELSE 'steady'
-  END AS trend_direction;
+  END AS trend_direction
+FROM "products" p;
 ```
 
 - [ ] **Step 2: Apply locally and verify**
