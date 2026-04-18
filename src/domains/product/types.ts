@@ -10,12 +10,14 @@ export interface Product {
   edition: string | null;
   retail_price: number;
   cost: number;
+  stock_on_hand: number | null;
   catalog_number: string | null;
   vendor_id: number;
   dcc_id: number;
   product_type: string | null;
   color_id: number;
   created_at: string | null;
+  updated_at: string;
   last_sale_date: string | null;
   synced_at: string;
 }
