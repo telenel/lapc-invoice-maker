@@ -699,15 +699,18 @@ model BulkEditRun {
 }
 
 model SyncRun {
-  id              String    @id @default(uuid())
-  startedAt       DateTime  @default(now()) @map("started_at")
-  completedAt     DateTime? @map("completed_at")
-  triggeredBy     String    @map("triggered_by")
-  scannedCount    Int?      @map("scanned_count")
-  updatedCount    Int?      @map("updated_count")
-  removedCount    Int?      @map("removed_count")
-  status          String
-  error           String?
+  id                  String    @id @default(uuid())
+  startedAt           DateTime  @default(now()) @map("started_at")
+  completedAt         DateTime? @map("completed_at")
+  triggeredBy         String    @map("triggered_by")
+  scannedCount        Int?      @map("scanned_count")
+  updatedCount        Int?      @map("updated_count")
+  removedCount        Int?      @map("removed_count")
+  txnsAdded           Int?      @map("txns_added")
+  aggregatesUpdated   Int?      @map("aggregates_updated")
+  txnSyncDurationMs   Int?      @map("txn_sync_duration_ms")
+  status              String
+  error               String?
 
   @@index([startedAt(sort: Desc)])
   @@map("sync_runs")
