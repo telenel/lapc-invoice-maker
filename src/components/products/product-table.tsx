@@ -14,6 +14,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon, SearchIcon } from "lucide-react";
 import type { Product, ProductTab } from "@/domains/product/types";
 import { PAGE_SIZE } from "@/domains/product/constants";
+import type { OptionalColumnKey } from "@/domains/product/constants";
 
 interface ProductTableProps {
   tab: ProductTab;
@@ -28,6 +29,7 @@ interface ProductTableProps {
   onToggleAll: (products: Product[]) => void;
   onPageChange: (page: number) => void;
   onSort: (field: string) => void;
+  visibleColumns?: OptionalColumnKey[];
 }
 
 function formatCurrency(value: number): string {
@@ -85,8 +87,10 @@ export function ProductTable({
   onToggleAll,
   onPageChange,
   onSort,
+  visibleColumns = [],
 }: ProductTableProps) {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const extraCols = visibleColumns?.length ?? 0;
   const from = (page - 1) * PAGE_SIZE + 1;
   const to = Math.min(page * PAGE_SIZE, total);
   const allOnPageSelected = products.length > 0 && products.every((p) => isSelected(p.sku));
@@ -136,13 +140,31 @@ export function ProductTable({
               <SortHeader field="retail_price" label="Retail" sortBy={sortBy} sortDir={sortDir} onSort={onSort} className="text-right" />
               <SortHeader field="cost" label="Cost" sortBy={sortBy} sortDir={sortDir} onSort={onSort} className="text-right" />
               <SortHeader field="last_sale_date" label="Last Sale" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+              {visibleColumns?.includes("stock") && (
+                <TableHead className="text-right">Stock</TableHead>
+              )}
+              {visibleColumns?.includes("dcc") && (
+                <TableHead>DCC</TableHead>
+              )}
+              {visibleColumns?.includes("est_sales") && (
+                <TableHead className="text-right">Est. annual sales</TableHead>
+              )}
+              {visibleColumns?.includes("margin") && (
+                <TableHead className="text-right">Margin %</TableHead>
+              )}
+              {visibleColumns?.includes("days_since_sale") && (
+                <TableHead className="text-right">Days since sale</TableHead>
+              )}
+              {visibleColumns?.includes("updated") && (
+                <TableHead>Updated</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading
               ? Array.from({ length: 10 }).map((_, i) => (
                   <TableRow key={`skeleton-${i}`}>
-                    {Array.from({ length: tab === "textbooks" ? 10 : 10 }).map((_, j) => (
+                    {Array.from({ length: (tab === "textbooks" ? 10 : 10) + extraCols }).map((_, j) => (
                       <TableCell key={j}>
                         <div className="h-4 w-full animate-pulse rounded bg-muted" />
                       </TableCell>
@@ -206,6 +228,82 @@ export function ProductTable({
                     <TableCell className="text-xs">
                       {formatSaleDate(product.last_sale_date)}
                     </TableCell>
+                    {visibleColumns?.includes("stock") && (
+                      <TableCell className="text-right tabular-nums">
+                        {product.stock_on_hand ?? "—"}
+                      </TableCell>
+                    )}
+                    {visibleColumns?.includes("dcc") && (
+                      <TableCell className="min-w-0 max-w-[16ch]">
+                        {product.dept_num != null ? (
+                          <>
+                            <div className="font-mono text-xs tabular-nums" translate="no">
+                              {product.dept_num}.{product.class_num ?? ""}.{product.cat_num ?? ""}
+                            </div>
+                            <div
+                              className="truncate text-xs text-muted-foreground"
+                              title={[product.dept_name, product.class_name, product.cat_name].filter(Boolean).join(" › ")}
+                            >
+                              {[product.dept_name, product.class_name, product.cat_name].filter(Boolean).join(" › ") || "—"}
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                    )}
+                    {visibleColumns?.includes("est_sales") && (
+                      <TableCell className="text-right tabular-nums">
+                        {product.est_sales_calc != null ? (
+                          <>
+                            {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(product.est_sales_calc)}
+                            {product.est_sales_prev != null && (
+                              <span
+                                className="ml-1 text-xs text-muted-foreground"
+                                aria-label={product.est_sales_calc > product.est_sales_prev ? "rising" : product.est_sales_calc < product.est_sales_prev ? "falling" : "flat"}
+                              >
+                                {product.est_sales_calc > product.est_sales_prev ? "▲" : product.est_sales_calc < product.est_sales_prev ? "▼" : "="}
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          "—"
+                        )}
+                      </TableCell>
+                    )}
+                    {visibleColumns?.includes("margin") && (
+                      <TableCell
+                        className={`text-right tabular-nums ${
+                          product.retail_price > 0 && (product.retail_price - product.cost) / product.retail_price < 0.1
+                            ? "text-destructive"
+                            : ""
+                        }`}
+                      >
+                        {product.retail_price > 0
+                          ? new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 0 }).format(
+                              (product.retail_price - product.cost) / product.retail_price,
+                            )
+                          : "—"}
+                      </TableCell>
+                    )}
+                    {visibleColumns?.includes("days_since_sale") && (
+                      <TableCell className="text-right tabular-nums">
+                        {product.last_sale_date
+                          ? Math.floor((Date.now() - new Date(product.last_sale_date).getTime()) / 86_400_000)
+                          : "Never"}
+                      </TableCell>
+                    )}
+                    {visibleColumns?.includes("updated") && (
+                      <TableCell className="tabular-nums" title={new Date(product.updated_at).toLocaleString()}>
+                        {(() => {
+                          const diffMs = Date.now() - new Date(product.updated_at).getTime();
+                          const days = Math.round(diffMs / 86_400_000);
+                          const fmt = new Intl.RelativeTimeFormat("en-US", { numeric: "auto" });
+                          if (Math.abs(days) < 1) return fmt.format(-Math.round(diffMs / 3_600_000), "hour");
+                          return fmt.format(-days, "day");
+                        })()}
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
           </TableBody>
