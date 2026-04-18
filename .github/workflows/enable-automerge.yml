@@ -1,0 +1,27 @@
+name: Enable auto-merge
+
+# Turns on GitHub's native auto-merge on every new PR targeting main. Once
+# enabled, the PR is held server-side and merges the instant required checks
+# (actionlint + ship-check, per main's branch protection) go green — no cron,
+# no polling. Replaces the previous custom auto-merge.yml workflow which
+# depended on scheduled cron fires that GitHub skips on idle repos.
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, ready_for_review]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  enable:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enable auto-merge (squash, delete branch)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --squash --delete-branch "$PR_URL"
