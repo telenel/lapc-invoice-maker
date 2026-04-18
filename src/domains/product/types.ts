@@ -26,11 +26,21 @@ export interface Product {
   dept_name: string | null;
   class_name: string | null;
   cat_name: string | null;
-  one_year_sales: number | null;
-  look_back_sales: number | null;
-  sales_to_avg_ratio: number | null;
-  est_sales_calc: number | null;
-  est_sales_prev: number | null;
+  units_sold_30d: number;
+  units_sold_90d: number;
+  units_sold_1y: number;
+  units_sold_3y: number;
+  units_sold_lifetime: number;
+  revenue_30d: number;
+  revenue_90d: number;
+  revenue_1y: number;
+  revenue_3y: number;
+  revenue_lifetime: number;
+  txns_1y: number;
+  txns_lifetime: number;
+  first_sale_date_computed: string | null;
+  last_sale_date_computed: string | null;
+  sales_aggregates_computed_at: string | null;
   discontinued: boolean | null;
 }
 
@@ -82,6 +92,20 @@ export interface ProductFilters {
   // Status
   discontinued: "" | "yes" | "no";
   itemType: "" | "textbook" | "used_textbook" | "general_merchandise" | "supplies" | "other";
+  // Transaction-based aggregates
+  minUnitsSold: string;
+  maxUnitsSold: string;
+  unitsSoldWindow: "" | "30d" | "90d" | "1y" | "3y" | "lifetime";
+  minRevenue: string;
+  maxRevenue: string;
+  revenueWindow: "" | "30d" | "90d" | "1y" | "3y" | "lifetime";
+  minTxns: string;
+  maxTxns: string;
+  txnsWindow: "" | "1y" | "lifetime";
+  neverSoldLifetime: boolean;
+  firstSaleWithin: "" | "90d" | "1y";
+  trendDirection: "" | "accelerating" | "decelerating";
+  maxStockCoverageDays: string;
 }
 
 export type ProductSortField = "sku" | "description" | "title" | "author" | "retail_price" | "cost" | "last_sale_date" | "barcode" | "catalog_number" | "product_type" | "vendor_id" | "isbn" | "edition";
@@ -200,10 +224,12 @@ export interface BatchResult {
 export type PresetGroup =
   | "dead-weight"
   | "movers"
-  | "data-quality"
+  | "trending"
+  | "stock-health"
   | "pricing"
-  | "recent-activity"
-  | "textbook";
+  | "textbook"
+  | "data-quality"
+  | "recent-activity";
 
 export interface ColumnPreferences {
   visible: string[];
