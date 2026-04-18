@@ -268,6 +268,8 @@
     --sidebar-accent-foreground: oklch(0.840 0.038 273.0);
     --sidebar-border: oklch(0.298 0.030 276.0);
     --sidebar-ring: oklch(0.695 0.118 270.0);
+    --c-past-fade: color-mix(in oklch, var(--muted-foreground) 16%, transparent);
+    --c-lane-today: color-mix(in oklch, var(--primary) 75%, transparent);
   }
 
   /* Catppuccin Mocha (dark) */
@@ -305,6 +307,8 @@
     --sidebar-accent-foreground: oklch(0.845 0.034 272.0);
     --sidebar-border: oklch(0.278 0.024 278.0);
     --sidebar-ring: oklch(0.710 0.120 270.0);
+    --c-past-fade: color-mix(in oklch, var(--muted-foreground) 16%, transparent);
+    --c-lane-today: color-mix(in oklch, var(--primary) 75%, transparent);
   }
 
   * {
