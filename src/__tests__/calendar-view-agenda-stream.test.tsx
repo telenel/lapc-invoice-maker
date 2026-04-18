@@ -81,9 +81,36 @@ vi.mock("@fullcalendar/react", async () => {
     ref: any,
   ) {
     const [loadedEvents, setLoadedEvents] = React.useState<any[]>([]);
+    const [currentStart, setCurrentStart] = React.useState(() =>
+      toNormalizedViewStart(MOCK_TODAY, props.initialView),
+    );
+    const currentStartRef = React.useRef(currentStart);
     const apiRef = React.useRef({
-      gotoDate: vi.fn(),
-      refetchEvents: vi.fn(),
+      gotoDate: vi.fn((date: string | Date) => {
+        const nextDate = typeof date === "string" ? new Date(`${date}T12:00:00.000Z`) : date;
+        setCurrentStart(toNormalizedViewStart(nextDate, props.initialView));
+      }),
+      prev: vi.fn(() => {
+        setCurrentStart((previous: Date) =>
+          addDays(previous, props.initialView === "agendaStreamWeek" ? -7 : -1),
+        );
+      }),
+      next: vi.fn(() => {
+        setCurrentStart((previous: Date) =>
+          addDays(previous, props.initialView === "agendaStreamWeek" ? 7 : 1),
+        );
+      }),
+      today: vi.fn(() => {
+        setCurrentStart(toNormalizedViewStart(MOCK_TODAY, props.initialView));
+      }),
+      refetchEvents: vi.fn(() => {
+        const range = toDatesSetRange(currentStartRef.current, props.initialView);
+        props.events?.(
+          { startStr: range.startStr, endStr: range.endStr },
+          (events: any[]) => setLoadedEvents(events),
+          () => setLoadedEvents([]),
+        );
+      }),
       updateSize: vi.fn(),
     });
 
@@ -92,22 +119,9 @@ vi.mock("@fullcalendar/react", async () => {
     }));
 
     React.useEffect(() => {
-      const range =
-        props.initialView === "agendaStreamWeek"
-          ? {
-              startStr: "2026-04-13T00:00:00.000Z",
-              endStr: "2026-04-20T00:00:00.000Z",
-              view: {
-                currentStart: new Date("2026-04-13T12:00:00.000Z"),
-              },
-            }
-          : {
-              startStr: "2026-04-16T00:00:00.000Z",
-              endStr: "2026-04-17T00:00:00.000Z",
-              view: {
-                currentStart: new Date("2026-04-16T12:00:00.000Z"),
-              },
-            };
+      const nextStart = toNormalizedViewStart(currentStart, props.initialView);
+      currentStartRef.current = nextStart;
+      const range = toDatesSetRange(nextStart, props.initialView);
 
       props.datesSet?.(range);
       props.events?.(
@@ -115,7 +129,7 @@ vi.mock("@fullcalendar/react", async () => {
         (events) => setLoadedEvents(events),
         () => setLoadedEvents([]),
       );
-    }, [props.initialView, props.events, props.datesSet]);
+    }, [currentStart, props.initialView, props.events, props.datesSet]);
 
     const customView = props.plugins
       ?.map((plugin) => plugin.views?.[props.initialView])
@@ -127,7 +141,7 @@ vi.mock("@fullcalendar/react", async () => {
           {customView.content({
             dateProfile: {
               currentRange: {
-                start: new Date("2026-04-13T12:00:00.000Z"),
+                start: currentStartRef.current,
               },
             },
           })}
@@ -152,6 +166,40 @@ import { CalendarView } from "@/components/calendar/calendar-view";
 
 const NOW = new Date("2026-04-16T17:45:00.000Z");
 const NON_MATCHING_NOW = new Date("2026-05-01T17:45:00.000Z");
+const MOCK_TODAY = new Date("2026-04-16T12:00:00.000Z");
+
+function addDays(date: Date, days: number): Date {
+  const next = new Date(date.getTime());
+  next.setUTCDate(next.getUTCDate() + days);
+  return next;
+}
+
+function toNormalizedViewStart(date: Date, initialView: string): Date {
+  const next = new Date(date.getTime());
+  next.setUTCHours(12, 0, 0, 0);
+
+  if (initialView !== "agendaStreamWeek") {
+    return next;
+  }
+
+  const dayOfWeek = next.getUTCDay();
+  const offset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  next.setUTCDate(next.getUTCDate() + offset);
+  return next;
+}
+
+function toDatesSetRange(start: Date, initialView: string) {
+  const rangeStart = toNormalizedViewStart(start, initialView);
+  const rangeEnd = addDays(rangeStart, initialView === "agendaStreamWeek" ? 7 : 1);
+
+  return {
+    startStr: `${rangeStart.toISOString().split("T")[0]}T00:00:00.000Z`,
+    endStr: `${rangeEnd.toISOString().split("T")[0]}T00:00:00.000Z`,
+    view: {
+      currentStart: rangeStart,
+    },
+  };
+}
 
 function buildAgendaEvents(): AgendaStreamEvent[] {
   return [
@@ -369,6 +417,27 @@ function buildCalendarBootstrapData() {
   };
 }
 
+function buildNextWeekEvents(): CalendarEventItem[] {
+  return [
+    {
+      id: "next-week-evt",
+      title: "Budget Review",
+      start: "2026-04-21T18:00:00.000Z",
+      end: "2026-04-21T19:00:00.000Z",
+      allDay: false,
+      color: "#dbeafe",
+      borderColor: "#3b82f6",
+      textColor: "#1d4ed8",
+      source: "manual",
+      extendedProps: {
+        type: "MEETING",
+        eventId: "evt-next",
+        location: "Admin 301",
+      },
+    },
+  ];
+}
+
 function buildManualEventResponse(): EventResponse {
   return {
     id: "evt-1",
@@ -391,7 +460,13 @@ function buildManualEventResponse(): EventResponse {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  calendarApiGetEvents.mockResolvedValue([]);
+  calendarApiGetEvents.mockImplementation(async (start: string, end: string) => {
+    if (start === "2026-04-20" && end === "2026-04-27") {
+      return buildNextWeekEvents();
+    }
+
+    return [];
+  });
   eventApiGetById.mockResolvedValue(buildManualEventResponse());
 
   Object.defineProperty(window, "innerWidth", {
@@ -731,6 +806,27 @@ describe("CalendarView agenda stream integration", () => {
     await user.click(screen.getByRole("button", { name: /edit event/i }));
     expect(eventApiGetById).toHaveBeenCalledWith("evt-1");
     expect(await screen.findByRole("heading", { name: /edit event/i })).toBeInTheDocument();
+  });
+
+  it("routes agenda stream next and today controls through the outer calendar state", async () => {
+    const user = userEvent.setup();
+
+    render(<CalendarView initialData={buildCalendarBootstrapData()} />);
+
+    expect(await screen.findByText("Week of Apr 13, 2026")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Dean Lunch/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Next week/i }));
+
+    expect(await screen.findByText("Week of Apr 20, 2026")).toBeInTheDocument();
+    expect(calendarApiGetEvents).toHaveBeenCalledWith("2026-04-20", "2026-04-27");
+    expect(await screen.findByRole("button", { name: /Budget Review/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Dean Lunch/i })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /^Today$/i }));
+
+    expect(await screen.findByText("Week of Apr 13, 2026")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /Dean Lunch/i })).toBeInTheDocument();
   });
 
   it("keeps mobile on the familiar timeGridDay flow", () => {

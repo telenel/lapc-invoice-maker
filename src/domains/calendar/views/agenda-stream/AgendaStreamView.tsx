@@ -41,6 +41,9 @@ export interface AgendaStreamViewProps {
   initialShowPast?: boolean;
   showRail?: boolean;
   selectedEventId?: string | null;
+  onNavigatePreviousWeek?: () => void;
+  onNavigateNextWeek?: () => void;
+  onNavigateToday?: () => void;
   onWeekStartChange?: (weekStart: string) => void;
   onDisplayMonthChange?: (date: Date) => void;
   onDateClick?: (dateKey: string) => void;
@@ -576,6 +579,9 @@ export function AgendaStreamView({
   initialShowPast = true,
   showRail = true,
   selectedEventId = null,
+  onNavigatePreviousWeek,
+  onNavigateNextWeek,
+  onNavigateToday,
   onWeekStartChange,
   onDisplayMonthChange,
   onDateClick,
@@ -700,14 +706,32 @@ export function AgendaStreamView({
       <header className={styles.topBar}>
         <div className={styles.topBarLeft}>
           <div className={styles.navButtons}>
-            <button type="button" className={styles.secondaryButton} onClick={() => updateWeekStart(todayDateKey)}>
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              onClick={() => {
+                if (onNavigateToday) {
+                  onNavigateToday();
+                  return;
+                }
+
+                updateWeekStart(todayDateKey);
+              }}
+            >
               Today
             </button>
             <button
               type="button"
               className={styles.iconButton}
               aria-label="Previous week"
-              onClick={() => updateWeekStart(addDaysToDateKey(currentWeekStart, -7))}
+              onClick={() => {
+                if (onNavigatePreviousWeek) {
+                  onNavigatePreviousWeek();
+                  return;
+                }
+
+                updateWeekStart(addDaysToDateKey(currentWeekStart, -7));
+              }}
             >
               {"<"}
             </button>
@@ -715,7 +739,14 @@ export function AgendaStreamView({
               type="button"
               className={styles.iconButton}
               aria-label="Next week"
-              onClick={() => updateWeekStart(addDaysToDateKey(currentWeekStart, 7))}
+              onClick={() => {
+                if (onNavigateNextWeek) {
+                  onNavigateNextWeek();
+                  return;
+                }
+
+                updateWeekStart(addDaysToDateKey(currentWeekStart, 7));
+              }}
             >
               {">"}
             </button>
