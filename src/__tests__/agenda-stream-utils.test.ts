@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { agendaStreamPlugin } from "@/domains/calendar/views/agenda-stream/agendaStreamPlugin";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { agendaStreamPlugin, agendaStreamViewContent } from "@/domains/calendar/views/agenda-stream/agendaStreamPlugin";
 import {
   AGENDA_PREFERENCES_KEY,
   loadAgendaPreferences,
@@ -13,14 +13,29 @@ import {
   toAgendaStreamEvent,
 } from "@/domains/calendar/views/agenda-stream/utils";
 
-const localStorageMock = (() => {
+type LocalStorageMock = {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
+  clear(): void;
+  setWriteFailure(next: boolean): void;
+};
+
+const originalLocalStorageDescriptor = Object.getOwnPropertyDescriptor(window, "localStorage");
+let localStorageMock: LocalStorageMock;
+
+function createLocalStorageMock(): LocalStorageMock {
   let store: Record<string, string> = {};
+  let failWrites = false;
 
   return {
     getItem(key: string) {
       return Object.prototype.hasOwnProperty.call(store, key) ? store[key] : null;
     },
     setItem(key: string, value: string) {
+      if (failWrites) {
+        throw new Error("localStorage write blocked");
+      }
       store[key] = value;
     },
     removeItem(key: string) {
@@ -29,11 +44,24 @@ const localStorageMock = (() => {
     clear() {
       store = {};
     },
+    setWriteFailure(next: boolean) {
+      failWrites = next;
+    },
   };
-})();
+}
 
-Object.defineProperty(window, "localStorage", {
-  value: localStorageMock,
+beforeEach(() => {
+  localStorageMock = createLocalStorageMock();
+  Object.defineProperty(window, "localStorage", {
+    configurable: true,
+    value: localStorageMock,
+  });
+});
+
+afterEach(() => {
+  if (originalLocalStorageDescriptor) {
+    Object.defineProperty(window, "localStorage", originalLocalStorageDescriptor);
+  }
 });
 
 describe("agenda stream utils", () => {
@@ -55,13 +83,36 @@ describe("agenda stream utils", () => {
     });
   });
 
-  it("registers agendaStreamWeek as a time-grid-derived custom view", () => {
+  it("fails soft when preference writes are blocked", () => {
+    localStorageMock.setWriteFailure(true);
+
+    expect(() =>
+      saveAgendaPreferences({
+        weekStart: "2026-04-13",
+        expanded: ["2026-04-16"],
+        showPast: false,
+        activeSources: ["MEETING", "catering"],
+      }),
+    ).not.toThrow();
+
+    expect(window.localStorage.getItem(AGENDA_PREFERENCES_KEY)).toBeNull();
+    expect(loadAgendaPreferences()).toEqual({
+      weekStart: null,
+      expanded: [],
+      showPast: true,
+      activeSources: ["MEETING", "SEMINAR", "VENDOR", "OTHER", "catering", "birthday"],
+    });
+  });
+
+  it("registers agendaStreamWeek with a real temporary content hook", () => {
     expect(agendaStreamPlugin.name).toBe("agendaStream");
     expect(agendaStreamPlugin.views?.agendaStreamWeek).toMatchObject({
       type: "timeGrid",
       duration: { weeks: 1 },
       buttonText: "Stream",
     });
+    expect(agendaStreamViewContent).toEqual(expect.any(Function));
+    expect(agendaStreamPlugin.views?.agendaStreamWeek?.content).toBe(agendaStreamViewContent);
   });
 
   it("maps calendar events into minute-based agenda events", () => {

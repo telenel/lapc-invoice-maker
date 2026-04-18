@@ -91,14 +91,18 @@ export function saveAgendaPreferences(value: AgendaPreferences) {
     return;
   }
 
-  writeStoredValue(
-    window.localStorage as AgendaStorage,
-    AGENDA_PREFERENCES_KEY,
-    JSON.stringify({
-      weekStart: value.weekStart,
-      expanded: [...value.expanded],
-      showPast: value.showPast,
-      activeSources: [...value.activeSources],
-    }),
-  );
+  try {
+    writeStoredValue(
+      window.localStorage as AgendaStorage,
+      AGENDA_PREFERENCES_KEY,
+      JSON.stringify({
+        weekStart: value.weekStart,
+        expanded: [...value.expanded],
+        showPast: value.showPast,
+        activeSources: [...value.activeSources],
+      }),
+    );
+  } catch {
+    // Ignore storage quota / privacy-mode failures so preference changes fail softly.
+  }
 }
