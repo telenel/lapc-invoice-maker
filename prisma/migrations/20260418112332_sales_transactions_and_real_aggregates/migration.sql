@@ -131,6 +131,11 @@ ALTER TABLE "sales_transactions_sync_state" ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON "products_with_derived" FROM anon;
 REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER ON "products_with_derived" FROM authenticated;
 
+-- Views on RLS-protected tables must run as the invoker so the underlying
+-- `products` RLS policy applies to view reads. Without this, the view
+-- inherits the owner's (superuser) privileges and silently bypasses RLS.
+ALTER VIEW "products_with_derived" SET (security_invoker = true);
+
 -- Stored recompute function. Called once at the end of every sync run.
 -- Returns the count of product rows whose aggregates row was touched.
 CREATE OR REPLACE FUNCTION recompute_product_sales_aggregates()
@@ -181,3 +186,9 @@ AS $$
   )
   SELECT COUNT(*)::int FROM updated;
 $$;
+
+-- Only service_role invokes this function (from the backfill script and the
+-- incremental sync module via the admin Supabase client). Revoke the default
+-- PostgREST exposure to anon/authenticated so it's not callable from the
+-- browser-facing Supabase API.
+REVOKE EXECUTE ON FUNCTION recompute_product_sales_aggregates() FROM anon, authenticated, public;

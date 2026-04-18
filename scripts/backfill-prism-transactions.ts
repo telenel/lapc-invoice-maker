@@ -224,4 +224,4 @@ async function main() {
   console.log(`=== Done. Total elapsed: ${((Date.now() - started) / 1000).toFixed(1)}s ===`);
 }
 
-main().catch(e => { console.error(e); process.exit(1); }).finally(() => process.exit(0));
+main().catch((e) => { console.error(e); process.exit(1); });
