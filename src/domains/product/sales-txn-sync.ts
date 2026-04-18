@@ -86,6 +86,13 @@ export async function runSalesTxnSync(deps: {
     if (!maxProcessDate || pd > maxProcessDate) maxProcessDate = pd;
   }
 
+  // Recompute FIRST, then advance the cursor. If the recompute throws,
+  // the cursor stays at the previous value and the next sync will retry
+  // both the insert (no-op due to ON CONFLICT) and the recompute. Without
+  // this ordering, a recompute failure would leave aggregates stale with
+  // no retry path since next sync sees zero new rows.
+  const aggregatesUpdated = await runAggregateRecompute(supabase);
+
   const { count: totalRows } = await supabase
     .from("sales_transactions")
     .select("*", { count: "exact", head: true });
@@ -99,8 +106,6 @@ export async function runSalesTxnSync(deps: {
     })
     .eq("id", 1);
   if (updErr) throw new Error(`sync_state update failed: ${updErr.message}`);
-
-  const aggregatesUpdated = await runAggregateRecompute(supabase);
 
   return {
     txnsAdded: rows.length,

@@ -90,7 +90,7 @@ export const SYSTEM_PRESETS: PresetSeed[] = [
     presetGroup: "stock-health", sortOrder: 20,
     filter: { maxStockCoverageDays: "30", unitsSoldWindow: "30d", minUnitsSold: "1" },
     columnPreferences: { visible: ["stock", "units_1y"] } },
-  { slug: "stock-stale-stock", name: "Stale stock (180d+ idle)", description: ">=10 units on hand but no sale in 180 days.",
+  { slug: "stock-stale-stock", name: "Stale stock (2y+ idle)", description: ">=10 units on hand but no sale in the last 2 years.",
     presetGroup: "stock-health", sortOrder: 30,
     filter: { minStock: "10", lastSaleOlderThan: "2y" },
     columnPreferences: { visible: ["stock", "days_since_sale"] } },
