@@ -659,13 +659,18 @@ model RequisitionNotification {
 }
 
 model SavedSearch {
-  id            String    @id @default(uuid())
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-  ownerUserId   String?   @map("owner_user_id")
-  name          String
-  filter        Json
-  isSystem      Boolean   @default(false) @map("is_system")
+  id                 String    @id @default(uuid())
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+  ownerUserId        String?   @map("owner_user_id")
+  name               String
+  filter             Json
+  isSystem           Boolean   @default(false) @map("is_system")
+  description        String?
+  columnPreferences  Json?     @map("column_preferences")
+  slug               String?
+  presetGroup        String?   @map("preset_group")
+  sortOrder          Int?      @map("sort_order") @db.SmallInt
 
   owner         User?     @relation(fields: [ownerUserId], references: [id])
 
