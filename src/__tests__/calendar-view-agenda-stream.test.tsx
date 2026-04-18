@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ViewProps } from "@fullcalendar/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -12,6 +12,8 @@ import type { EventResponse } from "@/domains/event/types";
 const {
   calendarApiGetEvents,
   eventApiGetById,
+  eventApiCreate,
+  eventApiUpdate,
   createEvent,
   updateEvent,
   deleteEvent,
@@ -20,6 +22,8 @@ const {
 } = vi.hoisted(() => ({
   calendarApiGetEvents: vi.fn(),
   eventApiGetById: vi.fn(),
+  eventApiCreate: vi.fn(),
+  eventApiUpdate: vi.fn(),
   createEvent: vi.fn(),
   updateEvent: vi.fn(),
   deleteEvent: vi.fn(),
@@ -36,6 +40,8 @@ vi.mock("@/domains/calendar/api-client", () => ({
 vi.mock("@/domains/event/api-client", () => ({
   eventApi: {
     getById: eventApiGetById,
+    create: eventApiCreate,
+    update: eventApiUpdate,
   },
 }));
 
@@ -167,6 +173,11 @@ import { CalendarView } from "@/components/calendar/calendar-view";
 const NOW = new Date("2026-04-16T17:45:00.000Z");
 const NON_MATCHING_NOW = new Date("2026-05-01T17:45:00.000Z");
 const MOCK_TODAY = new Date("2026-04-16T12:00:00.000Z");
+const TIMELINE_TOP = 100;
+const TIMELINE_HEIGHT = 1050;
+
+let currentDesktopEvents: CalendarEventItem[] = [];
+let currentMobileEvents: CalendarEventItem[] = [];
 
 function addDays(date: Date, days: number): Date {
   const next = new Date(date.getTime());
@@ -417,6 +428,23 @@ function buildCalendarBootstrapData() {
   };
 }
 
+function cloneCalendarEventItem(event: CalendarEventItem): CalendarEventItem {
+  return {
+    ...event,
+    extendedProps: {
+      ...event.extendedProps,
+    },
+  };
+}
+
+function buildDesktopEventsState(): CalendarEventItem[] {
+  return buildCalendarBootstrapData().desktop.events.map(cloneCalendarEventItem);
+}
+
+function buildMobileEventsState(): CalendarEventItem[] {
+  return buildCalendarBootstrapData().mobile.events.map(cloneCalendarEventItem);
+}
+
 function buildNextWeekEvents(): CalendarEventItem[] {
   return [
     {
@@ -458,9 +486,139 @@ function buildManualEventResponse(): EventResponse {
   };
 }
 
+function buildEventResponseFromInput(
+  id: string,
+  input: {
+    title: string;
+    type: EventResponse["type"];
+    date: string;
+    startTime?: string | null;
+    endTime?: string | null;
+    allDay?: boolean;
+    location?: string | null;
+    description?: string | null;
+  },
+): EventResponse {
+  return {
+    id,
+    title: input.title,
+    description: input.description ?? null,
+    type: input.type,
+    date: input.date,
+    startTime: input.startTime ?? null,
+    endTime: input.endTime ?? null,
+    allDay: input.allDay ?? false,
+    location: input.location ?? null,
+    color: "#3b82f6",
+    recurrence: null,
+    recurrenceEnd: null,
+    reminderMinutes: 60,
+    createdBy: "user-1",
+    createdAt: "2026-04-01T12:00:00.000Z",
+  };
+}
+
+function toIsoRange(date: string, time: string | null | undefined): string {
+  return time ? `${date}T${time}:00` : date;
+}
+
+function buildManualCalendarItemFromInput(
+  id: string,
+  input: {
+    title: string;
+    type: EventResponse["type"];
+    date: string;
+    startTime?: string | null;
+    endTime?: string | null;
+    allDay?: boolean;
+    location?: string | null;
+    description?: string | null;
+  },
+): CalendarEventItem {
+  return {
+    id,
+    title: input.title,
+    start: toIsoRange(input.date, input.allDay ? null : input.startTime ?? null),
+    end: input.allDay ? null : toIsoRange(input.date, input.endTime ?? null),
+    allDay: input.allDay ?? false,
+    color: "#dbeafe",
+    borderColor: "#3b82f6",
+    textColor: "#1d4ed8",
+    source: "manual",
+    extendedProps: {
+      type: input.type,
+      eventId: id,
+      location: input.location ?? null,
+      description: input.description ?? null,
+    },
+  };
+}
+
+function updateManualCalendarItem(
+  event: CalendarEventItem,
+  input: {
+    title?: string;
+    type?: EventResponse["type"];
+    date?: string;
+    startTime?: string | null;
+    endTime?: string | null;
+    allDay?: boolean;
+    location?: string | null;
+    description?: string | null;
+  },
+): CalendarEventItem {
+  const nextDate = input.date ?? event.start.split("T")[0];
+  const nextAllDay = input.allDay ?? event.allDay;
+  const nextTitle = input.title ?? event.title;
+  const nextType = input.type ?? event.extendedProps.type ?? "MEETING";
+  const nextStartTime = input.startTime ?? (nextAllDay ? null : event.start.split("T")[1]?.slice(0, 5) ?? null);
+  const nextEndTime = input.endTime ?? (nextAllDay ? null : event.end?.split("T")[1]?.slice(0, 5) ?? null);
+
+  return {
+    ...event,
+    title: nextTitle,
+    start: toIsoRange(nextDate, nextAllDay ? null : nextStartTime),
+    end: nextAllDay ? null : toIsoRange(nextDate, nextEndTime),
+    allDay: nextAllDay,
+    extendedProps: {
+      ...event.extendedProps,
+      type: nextType,
+      location: input.location ?? event.extendedProps.location ?? null,
+      description: input.description ?? event.extendedProps.description ?? null,
+    },
+  };
+}
+
+function setTimelineRect(element: HTMLElement) {
+  Object.defineProperty(element, "getBoundingClientRect", {
+    configurable: true,
+    value: () => ({
+      x: 0,
+      y: TIMELINE_TOP,
+      width: 640,
+      height: TIMELINE_HEIGHT,
+      top: TIMELINE_TOP,
+      right: 640,
+      bottom: TIMELINE_TOP + TIMELINE_HEIGHT,
+      left: 0,
+      toJSON: () => ({}),
+    }),
+  });
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
+  currentDesktopEvents = buildDesktopEventsState();
+  currentMobileEvents = buildMobileEventsState();
   calendarApiGetEvents.mockImplementation(async (start: string, end: string) => {
+    if (start === "2026-04-13" && end === "2026-04-20") {
+      return currentDesktopEvents.map(cloneCalendarEventItem);
+    }
+
+    if (start === "2026-04-16" && end === "2026-04-17") {
+      return currentMobileEvents.map(cloneCalendarEventItem);
+    }
+
     if (start === "2026-04-20" && end === "2026-04-27") {
       return buildNextWeekEvents();
     }
@@ -468,6 +626,44 @@ beforeEach(() => {
     return [];
   });
   eventApiGetById.mockResolvedValue(buildManualEventResponse());
+  eventApiCreate.mockImplementation(async (input) => {
+    const createdId = "evt-created";
+    currentDesktopEvents = [
+      ...currentDesktopEvents,
+      buildManualCalendarItemFromInput(createdId, {
+        title: input.title,
+        type: input.type,
+        date: input.date,
+        startTime: input.startTime,
+        endTime: input.endTime,
+        allDay: input.allDay,
+        location: input.location,
+        description: input.description,
+      }),
+    ];
+    return buildEventResponseFromInput(createdId, input);
+  });
+  eventApiUpdate.mockImplementation(async (id, input) => {
+    const existing = currentDesktopEvents.find((event) => event.extendedProps.eventId === id || event.id === id);
+    const updated = buildEventResponseFromInput(id, {
+      title: input.title ?? existing?.title ?? "Updated Event",
+      type: input.type ?? existing?.extendedProps.type ?? "MEETING",
+      date: input.date ?? existing?.start.split("T")[0] ?? "2026-04-16",
+      startTime: input.startTime ?? existing?.start.split("T")[1]?.slice(0, 5) ?? null,
+      endTime: input.endTime ?? existing?.end?.split("T")[1]?.slice(0, 5) ?? null,
+      allDay: input.allDay ?? existing?.allDay ?? false,
+      location: input.location ?? existing?.extendedProps.location ?? null,
+      description: input.description ?? existing?.extendedProps.description ?? null,
+    });
+
+    currentDesktopEvents = currentDesktopEvents.map((event) => (
+      event.extendedProps.eventId === id || event.id === id
+        ? updateManualCalendarItem(event, input)
+        : event
+    ));
+
+    return updated;
+  });
 
   Object.defineProperty(window, "innerWidth", {
     value: 1280,
@@ -842,6 +1038,81 @@ describe("CalendarView agenda stream integration", () => {
     expect(screen.getByText("timeGridDay")).toBeInTheDocument();
     expect(screen.queryByText("Show past")).not.toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /add event/i }).length).toBeGreaterThan(0);
+  });
+
+  it("creates manual events from agenda stream quick add defaults and refreshes the desktop view", async () => {
+    const user = userEvent.setup();
+
+    render(<CalendarView initialData={buildCalendarBootstrapData()} />);
+
+    const laneToggle = screen.getByRole("button", { name: /Thursday, April 16, 2026/i });
+    await user.click(laneToggle);
+
+    const timelineCanvas = screen.getByTestId("expanded-timeline-canvas-2026-04-16");
+    setTimelineRect(timelineCanvas);
+
+    fireEvent.doubleClick(timelineCanvas, { clientY: TIMELINE_TOP + 252 });
+
+    const quickAddHeading = await screen.findByRole("heading", { name: /quick add event/i });
+    const quickAddForm = quickAddHeading.closest("form");
+    if (!quickAddForm) {
+      throw new Error("Expected quick add form");
+    }
+
+    await user.type(within(quickAddForm).getByPlaceholderText(/event title/i), "Ops Review");
+    await user.click(within(quickAddForm).getByRole("button", { name: /^Add Event$/i }));
+
+    expect(eventApiCreate).toHaveBeenCalledWith(expect.objectContaining({
+      title: "Ops Review",
+      type: "MEETING",
+      date: "2026-04-16",
+      startTime: "10:00",
+      endTime: "11:00",
+      allDay: false,
+    }));
+
+    expect(await screen.findByRole("button", { name: /Ops Review/i })).toBeInTheDocument();
+    expect(calendarApiGetEvents).toHaveBeenCalledWith("2026-04-13", "2026-04-20");
+  });
+
+  it("updates only manual events during agenda stream drag reschedule and keeps the sidebar in sync", async () => {
+    const user = userEvent.setup();
+
+    render(<CalendarView initialData={buildCalendarBootstrapData()} />);
+
+    await user.click(screen.getByRole("button", { name: /Ops Sync/i }));
+    expect(screen.getByText(/Thursday, April 16, 2026 · 10:00 AM/i)).toBeInTheDocument();
+
+    const laneToggle = screen.getByRole("button", { name: /Thursday, April 16, 2026/i });
+    await user.click(laneToggle);
+
+    const timelineCanvas = screen.getByTestId("expanded-timeline-canvas-2026-04-16");
+    setTimelineRect(timelineCanvas);
+
+    fireEvent.mouseDown(screen.getByTestId("expanded-event-manual-evt"), { clientY: TIMELINE_TOP + 252 });
+    fireEvent.mouseMove(window, { clientY: TIMELINE_TOP + 336 });
+    fireEvent.mouseUp(window, { clientY: TIMELINE_TOP + 336 });
+
+    expect(eventApiUpdate).toHaveBeenCalledWith("evt-1", expect.objectContaining({
+      date: "2026-04-16",
+      startTime: "11:00",
+      endTime: "12:00",
+      allDay: false,
+    }));
+
+    expect(await screen.findByText(/Thursday, April 16, 2026 · 11:00 AM/i)).toBeInTheDocument();
+
+    const updateCallCount = eventApiUpdate.mock.calls.length;
+    fireEvent.mouseDown(screen.getByTestId("expanded-event-quote-evt"), { clientY: TIMELINE_TOP + 336 });
+    fireEvent.mouseMove(window, { clientY: TIMELINE_TOP + 420 });
+    fireEvent.mouseUp(window, { clientY: TIMELINE_TOP + 420 });
+
+    await user.click(screen.getByRole("button", { name: /Friday, April 17, 2026/i }));
+    fireEvent.mouseDown(screen.getAllByRole("button", { name: /Sam's Birthday/i })[0], { clientY: TIMELINE_TOP + 100 });
+    fireEvent.mouseMove(window, { clientY: TIMELINE_TOP + 180 });
+    fireEvent.mouseUp(window, { clientY: TIMELINE_TOP + 180 });
+
+    expect(eventApiUpdate).toHaveBeenCalledTimes(updateCallCount);
   });
 });
 

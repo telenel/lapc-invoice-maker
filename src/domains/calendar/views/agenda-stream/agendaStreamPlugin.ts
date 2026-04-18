@@ -12,6 +12,7 @@ export type AgendaStreamIntegrationValue = Pick<
   AgendaStreamViewProps,
   | "displayMonth"
   | "events"
+  | "onRefreshEvents"
   | "onEventSelect"
   | "selectedEventId"
   | "showRail"

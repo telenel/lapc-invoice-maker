@@ -1,16 +1,28 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent as ReactMouseEvent } from "react";
 import type { ViewProps } from "@fullcalendar/core";
+import { toast } from "sonner";
 import { MiniMonth } from "@/components/calendar/mini-month";
 import { addDaysToDateKey, fromDateKey, getDateKeyInLosAngeles } from "@/lib/date-utils";
-import type { CalendarEventItem } from "@/domains/event/types";
+import type { CalendarEventItem, EventType } from "@/domains/event/types";
 import type { AgendaLaneEvent, AgendaStreamDay, AgendaStreamEvent } from "./types";
+import {
+  AGENDA_DAY_END_MIN,
+  AGENDA_DAY_START_MIN,
+  AGENDA_DEFAULT_DURATION_MIN,
+  clampAgendaEventStart,
+  clampAgendaMinutes,
+  createManualAgendaEvent,
+  minutesToTimeString,
+  rescheduleManualAgendaEvent,
+  snapAgendaMinutes,
+} from "./hooks";
 import { assignColumns, buildAgendaStreamDays, buildAgendaStreamStats, getAgendaSourceMeta, toAgendaStreamEvent } from "./utils";
 import styles from "./agendaStream.module.css";
 
-const DAY_START_MIN = 7 * 60;
-const DAY_END_MIN = 19 * 60 + 30;
+const DAY_START_MIN = AGENDA_DAY_START_MIN;
+const DAY_END_MIN = AGENDA_DAY_END_MIN;
 const DAY_RANGE_MIN = DAY_END_MIN - DAY_START_MIN;
 const TIMELINE_PIXELS_PER_MINUTE = 1.4;
 const ALL_SOURCES = ["MEETING", "SEMINAR", "VENDOR", "OTHER", "catering", "birthday"] as const;
@@ -19,6 +31,15 @@ const EMPTY_DATE_KEYS: string[] = [];
 interface TimelineLaneEvent extends AgendaLaneEvent {
   originalStartMin: number;
   originalDurMin: number;
+}
+
+interface QuickAddDraft {
+  dateKey: string;
+  title: string;
+  type: EventType;
+  location: string;
+  startMin: number;
+  endMin: number;
 }
 
 export interface AgendaStreamViewProps {
@@ -44,6 +65,7 @@ export interface AgendaStreamViewProps {
   onNavigatePreviousWeek?: () => void;
   onNavigateNextWeek?: () => void;
   onNavigateToday?: () => void;
+  onRefreshEvents?: () => void | Promise<void>;
   onWeekStartChange?: (weekStart: string) => void;
   onDisplayMonthChange?: (date: Date) => void;
   onDateClick?: (dateKey: string) => void;
@@ -122,6 +144,11 @@ function formatHourLabel(hour24: number): string {
   const suffix = hour24 >= 12 ? "PM" : "AM";
   const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
   return `${hour12} ${suffix}`;
+}
+
+function getMinutesFromTimelinePointer(clientY: number, rectTop: number, rectHeight: number): number {
+  const ratio = (clientY - rectTop) / Math.max(rectHeight, 1);
+  return DAY_START_MIN + ratio * DAY_RANGE_MIN;
 }
 
 function getTimelinePercent(minutes: number): number {
@@ -340,6 +367,7 @@ function ExpandedLane({
   nowMin,
   selectedEventId,
   onEventSelect,
+  onRefreshEvents,
 }: {
   day: AgendaStreamDay<TimelineLaneEvent>;
   events: TimelineLaneEvent[];
@@ -348,11 +376,249 @@ function ExpandedLane({
   nowMin: number | null;
   selectedEventId?: string | null;
   onEventSelect?: (event: AgendaStreamEvent) => void;
+  onRefreshEvents?: () => void | Promise<void>;
 }) {
   const timelineHeight = DAY_RANGE_MIN * TIMELINE_PIXELS_PER_MINUTE;
+  const timelineCanvasRef = useRef<HTMLDivElement | null>(null);
+  const dragCleanupRef = useRef<(() => void) | null>(null);
+  const dragPreviewRef = useRef<{ eventId: string; startMin: number } | null>(null);
+  const [quickAddDraft, setQuickAddDraft] = useState<QuickAddDraft | null>(null);
+  const [quickAddPending, setQuickAddPending] = useState(false);
+  const [dragPreview, setDragPreview] = useState<{ eventId: string; startMin: number } | null>(null);
+
+  useEffect(() => {
+    return () => {
+      dragCleanupRef.current?.();
+    };
+  }, []);
+
+  function updateDragPreview(next: { eventId: string; startMin: number } | null) {
+    dragPreviewRef.current = next;
+    setDragPreview(next);
+  }
+
+  function handleTimelineDoubleClick(mouseEvent: ReactMouseEvent<HTMLDivElement>) {
+    if (quickAddPending) {
+      return;
+    }
+
+    if (
+      mouseEvent.target instanceof HTMLElement &&
+      mouseEvent.target.closest("[data-agenda-draggable='true']")
+    ) {
+      return;
+    }
+
+    const canvas = timelineCanvasRef.current;
+    if (!canvas) {
+      return;
+    }
+
+    const rect = canvas.getBoundingClientRect();
+    const rawMinutes = getMinutesFromTimelinePointer(mouseEvent.clientY, rect.top, rect.height);
+    const snappedStart = clampAgendaEventStart(
+      clampAgendaMinutes(snapAgendaMinutes(rawMinutes)),
+      AGENDA_DEFAULT_DURATION_MIN,
+    );
+
+    setQuickAddDraft({
+      dateKey: day.dateKey,
+      title: "",
+      type: "MEETING",
+      location: "",
+      startMin: snappedStart,
+      endMin: snappedStart + AGENDA_DEFAULT_DURATION_MIN,
+    });
+  }
+
+  async function handleQuickAddSubmit(formEvent: FormEvent<HTMLFormElement>) {
+    formEvent.preventDefault();
+
+    if (!quickAddDraft?.title.trim()) {
+      return;
+    }
+
+    setQuickAddPending(true);
+
+    try {
+      await createManualAgendaEvent({
+        title: quickAddDraft.title.trim(),
+        type: quickAddDraft.type,
+        date: quickAddDraft.dateKey,
+        startTime: minutesToTimeString(quickAddDraft.startMin),
+        endTime: minutesToTimeString(quickAddDraft.endMin),
+        location: quickAddDraft.location.trim() || null,
+      });
+      await Promise.resolve(onRefreshEvents?.());
+      toast.success("Event created");
+      setQuickAddDraft(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Failed to create event");
+    } finally {
+      setQuickAddPending(false);
+    }
+  }
+
+  function handleEventDragStart(event: TimelineLaneEvent, mouseEvent: ReactMouseEvent<HTMLButtonElement>) {
+    if (event.readOnly || !event.metadata.eventId) {
+      return;
+    }
+
+    const canvas = timelineCanvasRef.current;
+    if (!canvas) {
+      return;
+    }
+
+    mouseEvent.preventDefault();
+    mouseEvent.stopPropagation();
+    dragCleanupRef.current?.();
+
+    const rect = canvas.getBoundingClientRect();
+    const pointerOffsetMin =
+      getMinutesFromTimelinePointer(mouseEvent.clientY, rect.top, rect.height) - event.originalStartMin;
+
+    const setPreviewFromClientY = (clientY: number) => {
+      const pointerMinutes = getMinutesFromTimelinePointer(clientY, rect.top, rect.height);
+      const nextStartMin = clampAgendaEventStart(
+        clampAgendaMinutes(snapAgendaMinutes(pointerMinutes - pointerOffsetMin)),
+        event.originalDurMin,
+      );
+      updateDragPreview({ eventId: event.id, startMin: nextStartMin });
+    };
+
+    setPreviewFromClientY(mouseEvent.clientY);
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      setPreviewFromClientY(moveEvent.clientY);
+    };
+
+    const handleMouseUp = async () => {
+      const preview = dragPreviewRef.current;
+      dragCleanupRef.current?.();
+
+      if (!preview || preview.eventId !== event.id) {
+        updateDragPreview(null);
+        return;
+      }
+
+      updateDragPreview(null);
+
+      if (preview.startMin === event.originalStartMin) {
+        return;
+      }
+
+      try {
+        await rescheduleManualAgendaEvent(event.metadata.eventId, {
+          date: day.dateKey,
+          startTime: minutesToTimeString(preview.startMin),
+          endTime: minutesToTimeString(preview.startMin + event.originalDurMin),
+        });
+        await Promise.resolve(onRefreshEvents?.());
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Failed to reschedule event");
+      }
+    };
+
+    const cleanup = () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+      dragCleanupRef.current = null;
+    };
+
+    dragCleanupRef.current = cleanup;
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp, { once: true });
+  }
 
   return (
     <div className={styles.expandedLane}>
+      {quickAddDraft ? (
+        <form
+          className="mb-3 rounded-2xl border border-border bg-background/95 p-3 shadow-sm"
+          onSubmit={handleQuickAddSubmit}
+        >
+          <div className="mb-3 flex items-start justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold">Quick Add Event</h3>
+              <p className="text-xs text-muted-foreground">
+                {formatDateKey(day.dateKey, { weekday: "long", month: "short", day: "numeric" })}
+                {" · "}
+                {formatTime(quickAddDraft.startMin)}
+                {" - "}
+                {formatTime(quickAddDraft.endMin)}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="text-xs font-medium text-muted-foreground transition hover:text-foreground"
+              onClick={() => setQuickAddDraft(null)}
+            >
+              Cancel
+            </button>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)_minmax(0,1fr)]">
+            <label className="grid gap-1 text-xs font-medium text-muted-foreground">
+              Title
+              <input
+                className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground outline-none focus:border-primary"
+                placeholder="Event title"
+                value={quickAddDraft.title}
+                onChange={(event) => setQuickAddDraft((current) => (
+                  current ? { ...current, title: event.target.value } : current
+                ))}
+                required
+              />
+            </label>
+
+            <label className="grid gap-1 text-xs font-medium text-muted-foreground">
+              Type
+              <select
+                className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground outline-none focus:border-primary"
+                value={quickAddDraft.type}
+                onChange={(event) => setQuickAddDraft((current) => (
+                  current ? { ...current, type: event.target.value as EventType } : current
+                ))}
+              >
+                <option value="MEETING">Meeting</option>
+                <option value="SEMINAR">Seminar</option>
+                <option value="VENDOR">Vendor</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </label>
+
+            <label className="grid gap-1 text-xs font-medium text-muted-foreground">
+              Location
+              <input
+                className="h-9 rounded-md border border-border bg-background px-3 text-sm text-foreground outline-none focus:border-primary"
+                placeholder="Optional"
+                value={quickAddDraft.location}
+                onChange={(event) => setQuickAddDraft((current) => (
+                  current ? { ...current, location: event.target.value } : current
+                ))}
+              />
+            </label>
+          </div>
+
+          <div className="mt-3 flex justify-end gap-2">
+            <button
+              type="button"
+              className="rounded-md border border-border px-3 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
+              onClick={() => setQuickAddDraft(null)}
+            >
+              Dismiss
+            </button>
+            <button
+              type="submit"
+              className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60"
+              disabled={quickAddPending}
+            >
+              {quickAddPending ? "Adding..." : "Add Event"}
+            </button>
+          </div>
+        </form>
+      ) : null}
+
       <div className={styles.expandedTimeline} style={{ minHeight: `${timelineHeight}px` }}>
         <div className={styles.timelineGutter}>
           {Array.from({ length: 13 }, (_, index) => 7 + index).map((hour) => (
@@ -366,7 +632,12 @@ function ExpandedLane({
           ))}
         </div>
 
-        <div className={styles.timelineCanvas}>
+        <div
+          ref={timelineCanvasRef}
+          className={styles.timelineCanvas}
+          data-testid={`expanded-timeline-canvas-${day.dateKey}`}
+          onDoubleClick={handleTimelineDoubleClick}
+        >
           {Array.from({ length: 13 }, (_, index) => 7 + index).map((hour) => (
             <div
               key={`hour-${hour}`}
@@ -401,15 +672,17 @@ function ExpandedLane({
 
           {events.map((event) => {
             const sourceMeta = getAgendaSourceMeta(event.source);
-            const top = (event.startMin - DAY_START_MIN) * TIMELINE_PIXELS_PER_MINUTE;
-            const height = Math.max(24, event.durMin * TIMELINE_PIXELS_PER_MINUTE - 2);
+            const previewStartMin = dragPreview?.eventId === event.id ? dragPreview.startMin : event.startMin;
+            const previewDurationMin = dragPreview?.eventId === event.id ? event.originalDurMin : event.durMin;
+            const top = (previewStartMin - DAY_START_MIN) * TIMELINE_PIXELS_PER_MINUTE;
+            const height = Math.max(24, previewDurationMin * TIMELINE_PIXELS_PER_MINUTE - 2);
             const width = 100 / event.colCount;
             const left = event.col * width;
             const timelineClassName = `${styles.expandedEvent}${selectedEventId === event.id ? " ring-2 ring-primary/30" : ""}${onEventSelect ? " cursor-pointer appearance-none border-0 bg-transparent p-0 text-left text-inherit" : ""}`;
             const content = (
               <>
                 <div className={styles.expandedEventTitle}>{event.title}</div>
-                <div className={styles.expandedEventTime}>{`${formatTime(event.originalStartMin)} - ${formatTime(event.originalStartMin + event.originalDurMin)}`}</div>
+                <div className={styles.expandedEventTime}>{`${formatTime(previewStartMin)} - ${formatTime(previewStartMin + event.originalDurMin)}`}</div>
               </>
             );
 
@@ -421,7 +694,9 @@ function ExpandedLane({
                   className={timelineClassName}
                   data-testid={`expanded-event-${event.id}`}
                   onClick={() => onEventSelect(event)}
+                  onMouseDown={(mouseEvent) => handleEventDragStart(event, mouseEvent)}
                   aria-pressed={selectedEventId === event.id}
+                  data-agenda-draggable={!event.readOnly}
                   style={{
                     top: `${top}px`,
                     left: `calc(${left}% + 4px)`,
@@ -429,6 +704,8 @@ function ExpandedLane({
                     height: `${height}px`,
                     backgroundColor: `${sourceMeta.color}18`,
                     borderLeftColor: sourceMeta.color,
+                    cursor: event.readOnly ? "pointer" : "grab",
+                    opacity: dragPreview?.eventId === event.id ? 0.95 : 1,
                   }}
                 >
                   {content}
@@ -493,6 +770,7 @@ function DayLane({
   onToggle,
   selectedEventId,
   onEventSelect,
+  onRefreshEvents,
 }: {
   day: AgendaStreamDay<AgendaStreamEvent>;
   expanded: boolean;
@@ -501,6 +779,7 @@ function DayLane({
   onToggle: () => void;
   selectedEventId?: string | null;
   onEventSelect?: (event: AgendaStreamEvent) => void;
+  onRefreshEvents?: () => void | Promise<void>;
 }) {
   const cardEvents = useMemo(() => {
     return [...day.events].sort((left, right) => {
@@ -543,6 +822,7 @@ function DayLane({
             nowMin={nowMin}
             selectedEventId={selectedEventId}
             onEventSelect={onEventSelect}
+            onRefreshEvents={onRefreshEvents}
           />
         ) : (
           <>
@@ -582,6 +862,7 @@ export function AgendaStreamView({
   onNavigatePreviousWeek,
   onNavigateNextWeek,
   onNavigateToday,
+  onRefreshEvents,
   onWeekStartChange,
   onDisplayMonthChange,
   onDateClick,
@@ -833,6 +1114,7 @@ export function AgendaStreamView({
               onToggle={() => toggleExpanded(day.dateKey)}
               selectedEventId={selectedEventId}
               onEventSelect={onEventSelect}
+              onRefreshEvents={onRefreshEvents}
             />
           ))}
         </main>
