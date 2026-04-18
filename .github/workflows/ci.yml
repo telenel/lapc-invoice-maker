@@ -38,12 +38,39 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Detect validation-relevant changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            relevant:
+              - '.github/workflows/**'
+              - 'hooks/**'
+              - 'package.json'
+              - 'package-lock.json'
+              - 'src/**'
+              - 'public/**'
+              - 'prisma/**'
+              - 'scripts/**'
+              - 'tests/**'
+              - 'next.config.*'
+              - 'postcss.config.*'
+              - 'tailwind.config.*'
+              - 'tsconfig.json'
+              - 'vitest.config.*'
+
+      - name: Skip docs-only validation
+        if: steps.changes.outputs.relevant != 'true'
+        run: echo "Docs-only change detected; skipping ship-check."
+
       - uses: actions/setup-node@v6
+        if: steps.changes.outputs.relevant == 'true'
         with:
           node-version: 22
           cache: npm
 
       - name: Restore Next.js build cache
+        if: steps.changes.outputs.relevant == 'true'
         uses: actions/cache@v4
         with:
           path: .next/cache
@@ -52,7 +79,9 @@ jobs:
             ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
 
       - name: Install dependencies
+        if: steps.changes.outputs.relevant == 'true'
         run: npm ci && npx prisma generate
 
       - name: Run ship-check
+        if: steps.changes.outputs.relevant == 'true'
         run: npm run ship-check

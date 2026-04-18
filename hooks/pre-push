@@ -1,9 +1,10 @@
 #!/bin/bash
 # Block pushes that have not passed ship-check for the current HEAD.
-# Also block pushes to branches with open PRs unless CR_FIX=1 is set.
+# Also block pushes to stale or already-reviewed branches unless CR_FIX=1 is set.
 
 set -euo pipefail
 
+remote_name="${1:-origin}"
 branch=$(git symbolic-ref --short HEAD 2>/dev/null || true)
 
 # Only check feature branches, not main
@@ -31,6 +32,58 @@ if [ "${SHIP_CHECK_HEAD:-}" != "$head_sha" ]; then
   echo "Run: npm run ship-check"
   echo ""
   exit 1
+fi
+
+zero_sha="0000000000000000000000000000000000000000"
+tracking_ref="refs/remotes/$remote_name/$branch"
+tracking_sha=""
+push_local_sha=""
+push_remote_sha=""
+
+if git show-ref --verify --quiet "$tracking_ref"; then
+  tracking_sha=$(git rev-parse "$tracking_ref")
+fi
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+  [ -n "${local_ref:-}" ] || continue
+
+  if [ "$remote_ref" = "refs/heads/$branch" ]; then
+    push_local_sha="$local_sha"
+    push_remote_sha="$remote_sha"
+    break
+  fi
+done
+
+if [ -n "$push_remote_sha" ] && [ "$push_remote_sha" != "$zero_sha" ]; then
+  if [ -z "$tracking_sha" ]; then
+    echo ""
+    echo "BLOCKED: remote branch '$remote_name/$branch' exists, but this machine has no fresh tracking ref."
+    echo "Run: git fetch $remote_name --prune"
+    echo "Then: npm run git:resume-branch -- $branch"
+    echo ""
+    exit 1
+  fi
+
+  if [ "$tracking_sha" != "$push_remote_sha" ]; then
+    echo ""
+    echo "BLOCKED: local tracking ref for '$remote_name/$branch' is stale."
+    echo "Tracked: $tracking_sha"
+    echo "Remote:  $push_remote_sha"
+    echo "Run: git fetch $remote_name --prune"
+    echo "Then: npm run git:resume-branch -- $branch"
+    echo ""
+    exit 1
+  fi
+
+  if ! git merge-base --is-ancestor "$push_remote_sha" "$push_local_sha"; then
+    echo ""
+    echo "BLOCKED: push is not a fast-forward of '$remote_name/$branch'."
+    echo "Review remote changes first so this branch has a single writer and a clean handoff."
+    echo "Run: git fetch $remote_name --prune"
+    echo "Then: npm run git:resume-branch -- $branch"
+    echo ""
+    exit 1
+  fi
 fi
 
 if [ "${CR_FIX:-}" = "1" ]; then

@@ -31,8 +31,7 @@ yarn-error.log*
 .env*.local
 .build-meta.json
 
-# claude code (keep local, not in public repo)
-CLAUDE.md
+# claude code local state
 .claude/
 .claude.local.md
 

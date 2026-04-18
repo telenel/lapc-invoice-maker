@@ -10,6 +10,7 @@ Use this page as the entry point for LAPortal documentation.
 
 ## Operations
 
+- [GIT-WORKFLOW.md](GIT-WORKFLOW.md) — multi-machine branch workflow and handoff rules
 - [HOTFIX-WORKFLOW.md](HOTFIX-WORKFLOW.md) — fast SHA-pinned SSH hotfix lane
 - [SUPABASE-MIGRATION-STATUS.md](SUPABASE-MIGRATION-STATUS.md) — infrastructure and migration status
 - [PRINT-SHOP-PRICING.md](PRINT-SHOP-PRICING.md) — pricing reference
