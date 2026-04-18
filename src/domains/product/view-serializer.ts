@@ -81,7 +81,7 @@ export function parseFiltersFromSearchParams(params: URLSearchParams): ProductFi
 
   // Log unknown keys once per parse so schema drift is visible in console
   // without throwing. EMPTY_FILTERS is the allow-list.
-  const known = new Set<string>([...Object.keys(EMPTY_FILTERS), "view"]);
+  const known = new Set<string>([...Object.keys(EMPTY_FILTERS), "view", "q"]);
   const seenKeys: string[] = [];
   params.forEach((_, key) => {
     if (seenKeys.indexOf(key) === -1) seenKeys.push(key);
@@ -90,6 +90,12 @@ export function parseFiltersFromSearchParams(params: URLSearchParams): ProductFi
     if (!known.has(key) && typeof console !== "undefined") {
       console.warn(`[products filter] ignoring unknown key: ${key}`);
     }
+  }
+
+  // Backward compat: legacy bookmarks used `q` for the search term.
+  const legacyQ = params.get("q");
+  if (legacyQ && !out.search) {
+    out.search = legacyQ;
   }
 
   return out;
