@@ -98,7 +98,7 @@ ALLOW_LEGACY_FILESYSTEM_FALLBACK=false
 
 ## Deployment
 
-Docker Compose behind Traefik on [montalvo.io](https://montalvo.io). GitHub Actions runs formal `ship-check` and `actionlint` checks on PRs and pushes, enables native GitHub auto-merge on PRs when `AUTOMERGE_PAT` is configured, and deploys `main` by building a single exact-SHA image in GitHub, publishing it to GHCR, then SSHing to the VPS so the server pulls that exact image and verifies it live. Manual `workflow_dispatch` deploys can build and ship any pushed ref through the same exact-image path.
+Docker Compose behind Traefik on [montalvo.io](https://montalvo.io). GitHub Actions runs formal `ship-check` and `actionlint` checks on PRs and pushes, enables native GitHub auto-merge on PRs when `AUTOMERGE_PAT` is configured, and deploys `main` by building a single exact-SHA image in GitHub, publishing it to GHCR, then SSHing to the VPS so the server pulls that exact image and verifies it live. The deploy workflow forwards its short-lived GHCR credentials over SSH, so regular GitHub-driven deploys do not need a long-lived registry token stored on the VPS. Manual `workflow_dispatch` deploys can build and ship any pushed ref through the same exact-image path.
 
 Production build identity now comes from immutable runtime metadata baked into the image (`BUILD_SHA` / `BUILD_TIME`). The container rewrites `.build-meta.json` from those values on startup as a fallback, but `/api/version` prefers the immutable runtime values first so repo SHA, image SHA, and live app SHA do not drift. Remote deploys now verify both the live SHA and a lightweight route smoke-check set before they declare success or skip a rebuild.
 

@@ -612,7 +612,7 @@ GitHub Actions runs on every push to `main` and every PR targeting `main`:
 1. **`actionlint`** — validates GitHub Actions workflow syntax and common mistakes
 2. **`ship-check`** — runs the repo validation command (`npm run ship-check`) on Node 22 after `npm ci` and `npx prisma generate`
 3. **Auto-merge** (PRs to `main`) — enables GitHub native auto-merge when `AUTOMERGE_PAT` is configured so the PR merges as soon as required checks are green
-4. **Deploy** (successful `CI` on `main`, plus manual dispatch) — checks out the exact validated SHA, builds and publishes a GHCR image tagged with that full SHA, then SSHes to the VPS so the server can pull and start that exact image
+4. **Deploy** (successful `CI` on `main`, plus manual dispatch) — checks out the exact validated SHA, builds and publishes a GHCR image tagged with that full SHA, then SSHes to the VPS so the server can pull and start that exact image with short-lived GHCR credentials forwarded from the workflow
 
 Deployment is Docker Compose on montalvo.io behind Traefik. The VPS deploy script now:
 

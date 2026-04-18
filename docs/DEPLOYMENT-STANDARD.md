@@ -30,7 +30,7 @@ This is the deployment contract to use across repos when the goal is:
 
 1. CI validates the exact Git SHA.
 2. GitHub builds one deployable image for that exact SHA and publishes it to a registry.
-3. GitHub deploys over SSH with both the pinned SHA and the exact image reference.
+3. GitHub deploys over SSH with both the pinned SHA and the exact image reference, plus short-lived registry credentials for the image pull.
 4. VPS fetches that ref and refuses to continue if it does not match the pinned SHA.
 5. VPS pulls the exact image, recreates the container, verifies the live SHA, and logs the outcome.
 6. On verification failure, VPS rolls back to the last known-good commit or image.
