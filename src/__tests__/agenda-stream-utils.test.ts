@@ -1,4 +1,10 @@
 import { describe, expect, it } from "vitest";
+import { agendaStreamPlugin } from "@/domains/calendar/views/agenda-stream/agendaStreamPlugin";
+import {
+  AGENDA_PREFERENCES_KEY,
+  loadAgendaPreferences,
+  saveAgendaPreferences,
+} from "@/domains/calendar/views/agenda-stream/hooks";
 import {
   assignColumns,
   buildAgendaStreamDays,
@@ -7,7 +13,57 @@ import {
   toAgendaStreamEvent,
 } from "@/domains/calendar/views/agenda-stream/utils";
 
+const localStorageMock = (() => {
+  let store: Record<string, string> = {};
+
+  return {
+    getItem(key: string) {
+      return Object.prototype.hasOwnProperty.call(store, key) ? store[key] : null;
+    },
+    setItem(key: string, value: string) {
+      store[key] = value;
+    },
+    removeItem(key: string) {
+      delete store[key];
+    },
+    clear() {
+      store = {};
+    },
+  };
+})();
+
+Object.defineProperty(window, "localStorage", {
+  value: localStorageMock,
+});
+
 describe("agenda stream utils", () => {
+  it("round-trips agenda stream preferences in localStorage", () => {
+    localStorageMock.clear();
+
+    saveAgendaPreferences({
+      weekStart: "2026-04-13",
+      expanded: ["2026-04-16"],
+      showPast: false,
+      activeSources: ["MEETING", "catering"],
+    });
+
+    expect(loadAgendaPreferences()).toEqual({
+      weekStart: "2026-04-13",
+      expanded: ["2026-04-16"],
+      showPast: false,
+      activeSources: ["MEETING", "catering"],
+    });
+  });
+
+  it("registers agendaStreamWeek as a time-grid-derived custom view", () => {
+    expect(agendaStreamPlugin.name).toBe("agendaStream");
+    expect(agendaStreamPlugin.views?.agendaStreamWeek).toMatchObject({
+      type: "timeGrid",
+      duration: { weeks: 1 },
+      buttonText: "Stream",
+    });
+  });
+
   it("maps calendar events into minute-based agenda events", () => {
     const event = toAgendaStreamEvent({
       id: "quote-1",
