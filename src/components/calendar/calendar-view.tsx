@@ -1,30 +1,51 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import type { EventClickArg, EventInput, DatesSetArg } from "@fullcalendar/core";
+import type { DatesSetArg, EventClickArg, EventInput } from "@fullcalendar/core";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { calendarApi } from "@/domains/calendar/api-client";
-import { eventApi } from "@/domains/event/api-client";
-import type { CalendarEventItem, EventResponse } from "@/domains/event/types";
+import { AddEventModal } from "@/components/calendar/add-event-modal";
 import {
   EventDetailSidebar,
   type CalendarEvent,
 } from "@/components/calendar/event-detail-sidebar";
-import { AddEventModal } from "@/components/calendar/add-event-modal";
+import { Button } from "@/components/ui/button";
 import { useUIScale } from "@/components/ui-scale-provider";
+import { calendarApi } from "@/domains/calendar/api-client";
 import { useCalendarSSE } from "@/domains/calendar/hooks";
+import type { CalendarBootstrapData } from "@/domains/calendar/service";
+import type { AgendaStreamEvent } from "@/domains/calendar/views/agenda-stream/types";
+import {
+  AgendaStreamIntegrationProvider,
+  agendaStreamPlugin,
+} from "@/domains/calendar/views/agenda-stream/agendaStreamPlugin";
+import { eventApi } from "@/domains/event/api-client";
+import type { CalendarEventItem, EventResponse } from "@/domains/event/types";
 import { fromDateKey, getDateKeyInLosAngeles } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
-import type { CalendarBootstrapData } from "@/domains/calendar/service";
+
+interface CalendarApiHandle {
+  gotoDate: (date: string) => void;
+  next?: () => void;
+  prev?: () => void;
+  today?: () => void;
+  refetchEvents: () => void;
+  updateSize: () => void;
+}
 
 function getRangeKey(start: string, end: string): string {
   return `${start}|${end}`;
+}
+
+function matchesSidebarEvent(candidate: CalendarEventItem, current: CalendarEvent): boolean {
+  return (
+    candidate.id === current.id ||
+    (!!current.eventId && candidate.extendedProps.eventId === current.eventId)
+  );
 }
 
 const MOBILE_VIEWPORT_WIDTH = 1024;
@@ -81,22 +102,41 @@ export function CalendarView({
         : [],
     ),
   );
+  const agendaEventCacheRef = useRef<Map<string, CalendarEventItem[]>>(
+    new Map(
+      initialData
+        ? [
+            [
+              getRangeKey(initialData.desktop.start, initialData.desktop.end),
+              initialData.desktop.events,
+            ],
+            [
+              getRangeKey(initialData.mobile.start, initialData.mobile.end),
+              initialData.mobile.events,
+            ],
+          ]
+        : [],
+    ),
+  );
+  const [desktopAgendaEvents, setDesktopAgendaEvents] = useState<CalendarEventItem[]>(
+    initialData?.desktop.events ?? [],
+  );
 
-  // Sidebar state
   const [hoveredEvent, setHoveredEvent] = useState<CalendarEvent | null>(null);
   const [pinnedEvent, setPinnedEvent] = useState<CalendarEvent | null>(null);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout>>();
   const leaveTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  // Edit modal state
   const [selectedEvent, setSelectedEvent] = useState<EventResponse | undefined>(undefined);
   const [editModalKey, setEditModalKey] = useState(0);
 
-  // Mini month state
   const [displayMonth, setDisplayMonth] = useState(() => fromDateKey(getDateKeyInLosAngeles()));
   const [activeRange, setActiveRange] = useState<{ start: string; end: string }>();
 
-  // Calendar fills viewport: disable main scrolling/padding, compute slot height
+  const getCalendarApi = useCallback(() => {
+    return calendarRef.current?.getApi() as CalendarApiHandle | undefined;
+  }, []);
+
   useEffect(() => {
     const main = document.getElementById("main-content");
     if (!main) return;
@@ -140,7 +180,6 @@ export function CalendarView({
           const allSlots = container.querySelectorAll(".fc-timegrid-slot");
           if (!scroller || allSlots.length === 0) return;
 
-          // Use fractional px so slots fill the scroller exactly.
           const slotH = Math.max(scroller.clientHeight / allSlots.length, 10);
           const root = document.documentElement;
           root.style.setProperty("--fc-slot-height", `${slotH}px`);
@@ -167,7 +206,6 @@ export function CalendarView({
     };
   }, []);
 
-  // Clean up timers
   useEffect(() => {
     return () => {
       clearTimeout(hoverTimerRef.current);
@@ -191,24 +229,21 @@ export function CalendarView({
     };
   }, [calendarHeight, isMobileViewport, useStackedLayout]);
 
-  function refetchEvents() {
+  const refetchEvents = useCallback(() => {
     eventCacheRef.current.clear();
+    agendaEventCacheRef.current.clear();
     setHoveredEvent(null);
-    setPinnedEvent(null);
-    calendarRef.current?.getApi().refetchEvents();
-  }
+    getCalendarApi()?.refetchEvents();
+  }, [getCalendarApi]);
 
   useCalendarSSE(refetchEvents);
 
-  // Track FullCalendar's visible date range for mini month highlighting
   const handleDatesSet = useCallback((info: DatesSetArg) => {
     setActiveRange({
       start: info.startStr.split("T")[0],
       end: info.endStr.split("T")[0],
     });
-    // Sync mini month to the calendar's displayed month (not padded range start)
     setDisplayMonth(info.view.currentStart);
-    // Recalculate slot heights for the new view/date range
     syncRef.current();
   }, []);
 
@@ -223,7 +258,11 @@ export function CalendarView({
         const end = fetchInfo.endStr.split("T")[0];
         const rangeKey = getRangeKey(start, end);
         const cached = eventCacheRef.current.get(rangeKey);
+        const cachedAgendaEvents = agendaEventCacheRef.current.get(rangeKey);
         if (cached) {
+          if (!isMobileViewport && cachedAgendaEvents) {
+            setDesktopAgendaEvents(cachedAgendaEvents);
+          }
           successCallback(cached);
           return;
         }
@@ -231,6 +270,10 @@ export function CalendarView({
         const events = await calendarApi.getEvents(start, end);
         const mappedEvents = toEventInputs(events);
         eventCacheRef.current.set(rangeKey, mappedEvents);
+        agendaEventCacheRef.current.set(rangeKey, events);
+        if (!isMobileViewport) {
+          setDesktopAgendaEvents(events);
+        }
         successCallback(mappedEvents);
       } catch (err) {
         failureCallback(
@@ -238,10 +281,34 @@ export function CalendarView({
         );
       }
     },
-    [],
+    [isMobileViewport],
   );
 
-  // Build a CalendarEvent from FullCalendar's event object
+  useEffect(() => {
+    if (!isMobileViewport && activeRange) {
+      const rangeKey = getRangeKey(activeRange.start, activeRange.end);
+      const cachedAgendaEvents = agendaEventCacheRef.current.get(rangeKey);
+      if (cachedAgendaEvents) {
+        setDesktopAgendaEvents(cachedAgendaEvents);
+      }
+    }
+  }, [activeRange, isMobileViewport]);
+
+  useEffect(() => {
+    if (isMobileViewport) {
+      return;
+    }
+
+    setPinnedEvent((current) => {
+      if (!current) {
+        return current;
+      }
+
+      const match = desktopAgendaEvents.find((event) => matchesSidebarEvent(event, current));
+      return match ? toCalendarEventFromItem(match) : null;
+    });
+  }, [desktopAgendaEvents, isMobileViewport]);
+
   function toCalendarEvent(fcEvent: {
     id: string;
     title: string;
@@ -274,21 +341,42 @@ export function CalendarView({
     };
   }
 
-  // Click pins/unpins event in sidebar (no navigation)
+  function toCalendarEventFromItem(event: CalendarEventItem): CalendarEvent {
+    const extendedProps = event.extendedProps;
+    return {
+      id: event.id,
+      title: event.title,
+      start: event.start,
+      end: event.end ?? null,
+      allDay: event.allDay,
+      source: event.source,
+      type: extendedProps.type,
+      location: extendedProps.location ?? undefined,
+      description: extendedProps.description ?? undefined,
+      eventId: extendedProps.eventId ?? undefined,
+      quoteId: extendedProps.quoteId ?? undefined,
+      quoteStatus: extendedProps.quoteStatus ?? undefined,
+      quoteNumber: extendedProps.quoteNumber ?? undefined,
+      totalAmount: extendedProps.totalAmount ?? undefined,
+      headcount: extendedProps.headcount ?? undefined,
+      setupTime: extendedProps.setupTime ?? undefined,
+      takedownTime: extendedProps.takedownTime ?? undefined,
+      staffId: extendedProps.staffId ?? undefined,
+      department: undefined,
+    };
+  }
+
   const handleEventClick = useCallback(
     (info: EventClickArg) => {
       info.jsEvent.preventDefault();
-      // Clear pending hover timers before changing pin state
       clearTimeout(hoverTimerRef.current);
       clearTimeout(leaveTimerRef.current);
       const clicked = toCalendarEvent(info.event);
 
       if (pinnedEvent?.id === clicked.id) {
-        // Unpin
         setPinnedEvent(null);
         setHoveredEvent(null);
       } else {
-        // Pin this event
         setPinnedEvent(clicked);
         setHoveredEvent(null);
       }
@@ -307,7 +395,6 @@ export function CalendarView({
         extendedProps: Record<string, unknown>;
       };
     }) => {
-      // Don't update hover preview while something is pinned
       if (pinnedEvent) return;
       clearTimeout(hoverTimerRef.current);
       clearTimeout(leaveTimerRef.current);
@@ -326,7 +413,6 @@ export function CalendarView({
     }, 300);
   }, [pinnedEvent]);
 
-  // Dense event content renderer — show as much info as the block allows
   const renderEventContent = useCallback(
     (arg: {
       event: {
@@ -355,7 +441,6 @@ export function CalendarView({
                 ? "🎓"
                 : "📋";
 
-      // Calculate duration for layout decisions
       const start = arg.event.start;
       const end = arg.event.end;
       const durationMin =
@@ -401,11 +486,15 @@ export function CalendarView({
     const onLeave = () => el.classList.remove("event-hovered");
     el.addEventListener("mouseenter", onEnter);
     el.addEventListener("mouseleave", onLeave);
-    (el as HTMLElement & { __fcHoverHandlers?: { onEnter: () => void; onLeave: () => void } }).__fcHoverHandlers = { onEnter, onLeave };
+    (el as HTMLElement & {
+      __fcHoverHandlers?: { onEnter: () => void; onLeave: () => void };
+    }).__fcHoverHandlers = { onEnter, onLeave };
   }, []);
 
   const handleEventWillUnmount = useCallback((info: { el: HTMLElement }) => {
-    const el = info.el as HTMLElement & { __fcHoverHandlers?: { onEnter: () => void; onLeave: () => void } };
+    const el = info.el as HTMLElement & {
+      __fcHoverHandlers?: { onEnter: () => void; onLeave: () => void };
+    };
     if (el.__fcHoverHandlers) {
       el.removeEventListener("mouseenter", el.__fcHoverHandlers.onEnter);
       el.removeEventListener("mouseleave", el.__fcHoverHandlers.onLeave);
@@ -413,24 +502,79 @@ export function CalendarView({
     }
   }, []);
 
-  // Mini month date click navigates FullCalendar
-  const handleMiniDateClick = useCallback((dateStr: string) => {
-    const api = calendarRef.current?.getApi();
-    if (api) {
-      api.gotoDate(dateStr);
-    }
-  }, []);
+  const navigateCalendar = useCallback(
+    (action: "prev" | "next" | "today" | "gotoDate", dateStr?: string) => {
+      const api = getCalendarApi();
+      if (!api) return;
 
-  // The event to show in sidebar: pinned takes priority, then hovered
+      clearTimeout(hoverTimerRef.current);
+      clearTimeout(leaveTimerRef.current);
+      setHoveredEvent(null);
+      setPinnedEvent(null);
+
+      if (action === "gotoDate") {
+        if (dateStr) {
+          api.gotoDate(dateStr);
+        }
+        return;
+      }
+
+      api[action]?.();
+    },
+    [getCalendarApi],
+  );
+
+  const handleMiniDateClick = useCallback((dateStr: string) => {
+    navigateCalendar("gotoDate", dateStr);
+  }, [navigateCalendar]);
+
+  const handleAgendaEventSelect = useCallback(
+    (event: AgendaStreamEvent) => {
+      clearTimeout(hoverTimerRef.current);
+      clearTimeout(leaveTimerRef.current);
+      const clicked = toCalendarEventFromItem(event.original);
+
+      if (pinnedEvent?.id === clicked.id) {
+        setPinnedEvent(null);
+        setHoveredEvent(null);
+        return;
+      }
+
+      setPinnedEvent(clicked);
+      setHoveredEvent(null);
+    },
+    [pinnedEvent],
+  );
+
   const sidebarEvent = pinnedEvent ?? hoveredEvent;
   const calendarZoomCompensation = Math.max(1 / Number(scale || 1), 0.5);
+  const agendaIntegrationValue = useMemo(
+    () => ({
+      events: desktopAgendaEvents,
+      displayMonth,
+      onEventSelect: handleAgendaEventSelect,
+      selectedEventId: pinnedEvent?.id ?? null,
+      showRail: false,
+      onNavigatePreviousWeek: () => navigateCalendar("prev"),
+      onNavigateNextWeek: () => navigateCalendar("next"),
+      onNavigateToday: () => navigateCalendar("today"),
+      onRefreshEvents: refetchEvents,
+    }),
+    [
+      desktopAgendaEvents,
+      displayMonth,
+      handleAgendaEventSelect,
+      navigateCalendar,
+      pinnedEvent?.id,
+      refetchEvents,
+    ],
+  );
 
   return (
     <div
       className={cn("flex min-w-0", useStackedLayout ? "flex-col gap-3" : "")}
       style={useStackedLayout ? undefined : { height: "calc(100vh - 64px)" }}
     >
-      {/* Edit modal triggered by sidebar Edit button */}
       {selectedEvent && (
         <AddEventModal
           key={editModalKey}
@@ -445,7 +589,6 @@ export function CalendarView({
         />
       )}
 
-      {/* Main content: sidebar + calendar */}
       <div
         ref={containerRef}
         className={cn(
@@ -453,7 +596,6 @@ export function CalendarView({
           useStackedLayout ? "flex-col" : "flex-row",
         )}
       >
-        {/* Left sidebar */}
         <EventDetailSidebar
           event={sidebarEvent}
           pinned={pinnedEvent !== null}
@@ -490,34 +632,35 @@ export function CalendarView({
           }
         />
 
-        {/* Calendar */}
         <div className="min-h-[480px] w-full flex-1 min-w-0 overflow-hidden p-2">
           <div style={{ zoom: String(calendarZoomCompensation) }}>
-            <FullCalendar
-              key={isMobileViewport ? "mobile" : "desktop"}
-              ref={calendarRef}
-              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-              initialView={isMobileViewport ? "timeGridDay" : "timeGridWeek"}
-              headerToolbar={{
-                left: isMobileViewport ? "prev,next" : "prev,next today",
-                center: "title",
-                right: isMobileViewport ? "dayGridMonth,timeGridDay" : "dayGridMonth,timeGridWeek,timeGridDay",
-              }}
-              events={fetchEvents}
-              datesSet={handleDatesSet}
-              eventClick={handleEventClick}
-              eventMouseEnter={handleEventMouseEnter}
-              eventMouseLeave={handleEventMouseLeave}
-              eventContent={renderEventContent}
-              eventDidMount={handleEventDidMount}
-              eventWillUnmount={handleEventWillUnmount}
-              height={calendarHeight}
-              weekends={false}
-              slotMinTime="07:00:00"
-              slotMaxTime="19:30:00"
-              nowIndicator
-              slotEventOverlap
-            />
+            <AgendaStreamIntegrationProvider value={agendaIntegrationValue}>
+              <FullCalendar
+                key={isMobileViewport ? "mobile" : "desktop"}
+                ref={calendarRef}
+                plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin, agendaStreamPlugin]}
+                initialView={isMobileViewport ? "timeGridDay" : "agendaStreamWeek"}
+                headerToolbar={{
+                  left: isMobileViewport ? "prev,next" : "prev,next today",
+                  center: "title",
+                  right: isMobileViewport ? "dayGridMonth,timeGridDay" : "dayGridMonth,agendaStreamWeek,timeGridDay",
+                }}
+                events={fetchEvents}
+                datesSet={handleDatesSet}
+                eventClick={handleEventClick}
+                eventMouseEnter={handleEventMouseEnter}
+                eventMouseLeave={handleEventMouseLeave}
+                eventContent={renderEventContent}
+                eventDidMount={handleEventDidMount}
+                eventWillUnmount={handleEventWillUnmount}
+                height={calendarHeight}
+                weekends={false}
+                slotMinTime="07:00:00"
+                slotMaxTime="19:30:00"
+                nowIndicator
+                slotEventOverlap
+              />
+            </AgendaStreamIntegrationProvider>
           </div>
         </div>
       </div>

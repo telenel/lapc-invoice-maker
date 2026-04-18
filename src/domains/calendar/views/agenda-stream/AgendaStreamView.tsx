@@ -39,9 +39,12 @@ export interface AgendaStreamViewProps {
   now?: Date;
   initialExpandedDateKeys?: string[];
   initialShowPast?: boolean;
+  showRail?: boolean;
+  selectedEventId?: string | null;
   onWeekStartChange?: (weekStart: string) => void;
   onDisplayMonthChange?: (date: Date) => void;
   onDateClick?: (dateKey: string) => void;
+  onEventSelect?: (event: AgendaStreamEvent) => void;
   onToggleShowPast?: (showPast: boolean) => void;
 }
 
@@ -214,12 +217,20 @@ function getEventSummary(event: AgendaStreamEvent): string[] {
   return summary;
 }
 
-function LaneCard({ event }: { event: AgendaStreamEvent }) {
+function LaneCard({
+  event,
+  selected = false,
+  onSelect,
+}: {
+  event: AgendaStreamEvent;
+  selected?: boolean;
+  onSelect?: (event: AgendaStreamEvent) => void;
+}) {
   const sourceMeta = getAgendaSourceMeta(event.source);
   const summary = getEventSummary(event);
-
-  return (
-    <article className={styles.laneCard}>
+  const cardClassName = `${styles.laneCard}${selected ? " ring-2 ring-primary/30" : ""}${onSelect ? " cursor-pointer appearance-none border-0 bg-transparent p-0 text-left text-inherit" : ""}`;
+  const content = (
+    <>
       <div
         className={styles.cardRail}
         style={{ backgroundColor: sourceMeta.color }}
@@ -235,6 +246,25 @@ function LaneCard({ event }: { event: AgendaStreamEvent }) {
           <div className={styles.cardMeta}>{summary.join(" · ")}</div>
         ) : null}
       </div>
+    </>
+  );
+
+  if (onSelect) {
+    return (
+      <button
+        type="button"
+        className={cardClassName}
+        onClick={() => onSelect(event)}
+        aria-pressed={selected}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <article className={cardClassName}>
+      {content}
     </article>
   );
 }
@@ -305,12 +335,16 @@ function ExpandedLane({
   supplementalEvents,
   isToday,
   nowMin,
+  selectedEventId,
+  onEventSelect,
 }: {
   day: AgendaStreamDay<TimelineLaneEvent>;
   events: TimelineLaneEvent[];
   supplementalEvents: AgendaStreamEvent[];
   isToday: boolean;
   nowMin: number | null;
+  selectedEventId?: string | null;
+  onEventSelect?: (event: AgendaStreamEvent) => void;
 }) {
   const timelineHeight = DAY_RANGE_MIN * TIMELINE_PIXELS_PER_MINUTE;
 
@@ -368,11 +402,41 @@ function ExpandedLane({
             const height = Math.max(24, event.durMin * TIMELINE_PIXELS_PER_MINUTE - 2);
             const width = 100 / event.colCount;
             const left = event.col * width;
+            const timelineClassName = `${styles.expandedEvent}${selectedEventId === event.id ? " ring-2 ring-primary/30" : ""}${onEventSelect ? " cursor-pointer appearance-none border-0 bg-transparent p-0 text-left text-inherit" : ""}`;
+            const content = (
+              <>
+                <div className={styles.expandedEventTitle}>{event.title}</div>
+                <div className={styles.expandedEventTime}>{`${formatTime(event.originalStartMin)} - ${formatTime(event.originalStartMin + event.originalDurMin)}`}</div>
+              </>
+            );
+
+            if (onEventSelect) {
+              return (
+                <button
+                  key={event.id}
+                  type="button"
+                  className={timelineClassName}
+                  data-testid={`expanded-event-${event.id}`}
+                  onClick={() => onEventSelect(event)}
+                  aria-pressed={selectedEventId === event.id}
+                  style={{
+                    top: `${top}px`,
+                    left: `calc(${left}% + 4px)`,
+                    width: `calc(${width}% - 8px)`,
+                    height: `${height}px`,
+                    backgroundColor: `${sourceMeta.color}18`,
+                    borderLeftColor: sourceMeta.color,
+                  }}
+                >
+                  {content}
+                </button>
+              );
+            }
 
             return (
               <div
                 key={event.id}
-                className={styles.expandedEvent}
+                className={timelineClassName}
                 data-testid={`expanded-event-${event.id}`}
                 style={{
                   top: `${top}px`,
@@ -383,8 +447,7 @@ function ExpandedLane({
                   borderLeftColor: sourceMeta.color,
                 }}
               >
-                <div className={styles.expandedEventTitle}>{event.title}</div>
-                <div className={styles.expandedEventTime}>{`${formatTime(event.originalStartMin)} - ${formatTime(event.originalStartMin + event.originalDurMin)}`}</div>
+                {content}
               </div>
             );
           })}
@@ -405,7 +468,12 @@ function ExpandedLane({
           <div className={styles.supplementalLabel}>Outside timeline</div>
           <div className={styles.laneCards}>
             {supplementalEvents.map((event) => (
-              <LaneCard key={event.id} event={event} />
+              <LaneCard
+                key={event.id}
+                event={event}
+                selected={selectedEventId === event.id}
+                onSelect={onEventSelect}
+              />
             ))}
           </div>
         </div>
@@ -420,12 +488,16 @@ function DayLane({
   isToday,
   nowMin,
   onToggle,
+  selectedEventId,
+  onEventSelect,
 }: {
   day: AgendaStreamDay<AgendaStreamEvent>;
   expanded: boolean;
   isToday: boolean;
   nowMin: number | null;
   onToggle: () => void;
+  selectedEventId?: string | null;
+  onEventSelect?: (event: AgendaStreamEvent) => void;
 }) {
   const cardEvents = useMemo(() => {
     return [...day.events].sort((left, right) => {
@@ -466,13 +538,22 @@ function DayLane({
             supplementalEvents={supplementalEvents}
             isToday={isToday}
             nowMin={nowMin}
+            selectedEventId={selectedEventId}
+            onEventSelect={onEventSelect}
           />
         ) : (
           <>
             <CompactBar dateKey={day.dateKey} events={timelineEvents} isToday={isToday} nowMin={nowMin} />
             <div className={styles.laneCards}>
               {cardEvents.length > 0 ? (
-                cardEvents.slice(0, 4).map((event) => <LaneCard key={event.id} event={event} />)
+                cardEvents.slice(0, 4).map((event) => (
+                  <LaneCard
+                    key={event.id}
+                    event={event}
+                    selected={selectedEventId === event.id}
+                    onSelect={onEventSelect}
+                  />
+                ))
               ) : (
                 <div className={styles.emptyState}>Nothing scheduled.</div>
               )}
@@ -493,9 +574,12 @@ export function AgendaStreamView({
   now = new Date(),
   initialExpandedDateKeys,
   initialShowPast = true,
+  showRail = true,
+  selectedEventId = null,
   onWeekStartChange,
   onDisplayMonthChange,
   onDateClick,
+  onEventSelect,
   onToggleShowPast,
 }: AgendaStreamViewProps) {
   const derivedWeekStart = useMemo(
@@ -663,44 +747,49 @@ export function AgendaStreamView({
         </div>
       </header>
 
-      <div className={styles.body}>
-        <aside className={styles.rail}>
-          <div className={styles.railSection}>
-            <div className={styles.sectionEyebrow}>Jump to</div>
-            <MiniMonth
-              displayMonth={currentDisplayMonth}
-              onMonthChange={updateDisplayMonth}
-              onDateClick={(dateKey) => onDateClick?.(dateKey)}
-              activeRange={{ start: currentWeekStart, end: addDaysToDateKey(currentWeekStart, 5) }}
-              densityByDate={densityByDate}
-              selectedWeekStart={currentWeekStart}
-              onWeekRowClick={updateWeekStart}
-            />
-          </div>
-
-          <div className={styles.railSection}>
-            <div className={styles.sectionEyebrow}>This week</div>
-            <div className={styles.railStatValue}>{`${stats.totalEvents} events`}</div>
-            <div className={styles.railStatMeta}>{`${stats.cateringCount} catering · ${formatCurrency(stats.cateringTotal)}`}</div>
-          </div>
-
-          <div className={styles.railSection}>
-            <div className={styles.sectionEyebrow}>Sources</div>
-            <div className={styles.sourceList}>
-              {ALL_SOURCES.map((source) => {
-                const meta = getAgendaSourceMeta(source);
-                const count = weekEvents.filter((event) => event.source === source).length;
-                return (
-                  <div key={source} className={styles.sourceRow}>
-                    <span className={styles.sourceSwatch} style={{ backgroundColor: meta.color }} aria-hidden="true" />
-                    <span className={styles.sourceLabel}>{meta.label}</span>
-                    <span className={styles.sourceCount}>{count}</span>
-                  </div>
-                );
-              })}
+      <div
+        className={styles.body}
+        style={showRail ? undefined : { gridTemplateColumns: "minmax(0, 1fr)" }}
+      >
+        {showRail ? (
+          <aside className={styles.rail}>
+            <div className={styles.railSection}>
+              <div className={styles.sectionEyebrow}>Jump to</div>
+              <MiniMonth
+                displayMonth={currentDisplayMonth}
+                onMonthChange={updateDisplayMonth}
+                onDateClick={(dateKey) => onDateClick?.(dateKey)}
+                activeRange={{ start: currentWeekStart, end: addDaysToDateKey(currentWeekStart, 5) }}
+                densityByDate={densityByDate}
+                selectedWeekStart={currentWeekStart}
+                onWeekRowClick={updateWeekStart}
+              />
             </div>
-          </div>
-        </aside>
+
+            <div className={styles.railSection}>
+              <div className={styles.sectionEyebrow}>This week</div>
+              <div className={styles.railStatValue}>{`${stats.totalEvents} events`}</div>
+              <div className={styles.railStatMeta}>{`${stats.cateringCount} catering · ${formatCurrency(stats.cateringTotal)}`}</div>
+            </div>
+
+            <div className={styles.railSection}>
+              <div className={styles.sectionEyebrow}>Sources</div>
+              <div className={styles.sourceList}>
+                {ALL_SOURCES.map((source) => {
+                  const meta = getAgendaSourceMeta(source);
+                  const count = weekEvents.filter((event) => event.source === source).length;
+                  return (
+                    <div key={source} className={styles.sourceRow}>
+                      <span className={styles.sourceSwatch} style={{ backgroundColor: meta.color }} aria-hidden="true" />
+                      <span className={styles.sourceLabel}>{meta.label}</span>
+                      <span className={styles.sourceCount}>{count}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </aside>
+        ) : null}
 
         <main className={styles.laneStack}>
           {visibleDays.map((day) => (
@@ -711,6 +800,8 @@ export function AgendaStreamView({
               isToday={day.dateKey === nowDateKey}
               nowMin={day.dateKey === nowDateKey ? nowMinutes : null}
               onToggle={() => toggleExpanded(day.dateKey)}
+              selectedEventId={selectedEventId}
+              onEventSelect={onEventSelect}
             />
           ))}
         </main>

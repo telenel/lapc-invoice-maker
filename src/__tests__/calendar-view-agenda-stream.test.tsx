@@ -1,11 +1,154 @@
+import "@testing-library/jest-dom/vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ViewProps } from "@fullcalendar/core";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MiniMonth } from "@/components/calendar/mini-month";
 import { AgendaStreamView } from "@/domains/calendar/views/agenda-stream/AgendaStreamView";
 import type { AgendaStreamEvent } from "@/domains/calendar/views/agenda-stream/types";
 import type { CalendarEventItem } from "@/domains/event/types";
+import type { EventResponse } from "@/domains/event/types";
+
+const {
+  calendarApiGetEvents,
+  eventApiGetById,
+  createEvent,
+  updateEvent,
+  deleteEvent,
+  toastError,
+  toastSuccess,
+} = vi.hoisted(() => ({
+  calendarApiGetEvents: vi.fn(),
+  eventApiGetById: vi.fn(),
+  createEvent: vi.fn(),
+  updateEvent: vi.fn(),
+  deleteEvent: vi.fn(),
+  toastError: vi.fn(),
+  toastSuccess: vi.fn(),
+}));
+
+vi.mock("@/domains/calendar/api-client", () => ({
+  calendarApi: {
+    getEvents: calendarApiGetEvents,
+  },
+}));
+
+vi.mock("@/domains/event/api-client", () => ({
+  eventApi: {
+    getById: eventApiGetById,
+  },
+}));
+
+vi.mock("@/domains/calendar/hooks", () => ({
+  useCalendarSSE: vi.fn(),
+}));
+
+vi.mock("@/domains/event/hooks", () => ({
+  useCreateEvent: () => ({
+    createEvent,
+    loading: false,
+  }),
+  useUpdateEvent: () => ({
+    updateEvent,
+    loading: false,
+  }),
+  useDeleteEvent: () => ({
+    deleteEvent,
+    loading: false,
+  }),
+}));
+
+vi.mock("next/link", () => ({
+  default: ({ href, children, ...props }: any) => (
+    <a href={typeof href === "string" ? href : href.pathname ?? "#"} {...props}>
+      {children}
+    </a>
+  ),
+}));
+
+vi.mock("sonner", () => ({
+  toast: {
+    error: toastError,
+    success: toastSuccess,
+  },
+}));
+
+vi.mock("@fullcalendar/react", async () => {
+  const React = await import("react");
+
+  const MockFullCalendar = React.forwardRef(function MockFullCalendar(
+    props: any,
+    ref: any,
+  ) {
+    const [loadedEvents, setLoadedEvents] = React.useState<any[]>([]);
+    const apiRef = React.useRef({
+      gotoDate: vi.fn(),
+      refetchEvents: vi.fn(),
+      updateSize: vi.fn(),
+    });
+
+    React.useImperativeHandle(ref, () => ({
+      getApi: () => apiRef.current,
+    }));
+
+    React.useEffect(() => {
+      const range =
+        props.initialView === "agendaStreamWeek"
+          ? {
+              startStr: "2026-04-13T00:00:00.000Z",
+              endStr: "2026-04-20T00:00:00.000Z",
+              view: {
+                currentStart: new Date("2026-04-13T12:00:00.000Z"),
+              },
+            }
+          : {
+              startStr: "2026-04-16T00:00:00.000Z",
+              endStr: "2026-04-17T00:00:00.000Z",
+              view: {
+                currentStart: new Date("2026-04-16T12:00:00.000Z"),
+              },
+            };
+
+      props.datesSet?.(range);
+      props.events?.(
+        { startStr: range.startStr, endStr: range.endStr },
+        (events) => setLoadedEvents(events),
+        () => setLoadedEvents([]),
+      );
+    }, [props.initialView, props.events, props.datesSet]);
+
+    const customView = props.plugins
+      ?.map((plugin) => plugin.views?.[props.initialView])
+      .find((view) => view?.content);
+
+    if (customView?.content) {
+      return (
+        <div data-testid="mock-fullcalendar" data-view={props.initialView}>
+          {customView.content({
+            dateProfile: {
+              currentRange: {
+                start: new Date("2026-04-13T12:00:00.000Z"),
+              },
+            },
+          })}
+        </div>
+      );
+    }
+
+    return (
+      <div data-testid="mock-fullcalendar" data-view={props.initialView}>
+        <div>{props.initialView}</div>
+        {loadedEvents.map((event) => (
+          <div key={event.id}>{event.title}</div>
+        ))}
+      </div>
+    );
+  });
+
+  return { default: MockFullCalendar };
+});
+
+import { CalendarView } from "@/components/calendar/calendar-view";
 
 const NOW = new Date("2026-04-16T17:45:00.000Z");
 const NON_MATCHING_NOW = new Date("2026-05-01T17:45:00.000Z");
@@ -143,6 +286,132 @@ function buildAgendaEvents(): AgendaStreamEvent[] {
 function buildCalendarEvents(): CalendarEventItem[] {
   return buildAgendaEvents().map((event) => event.original);
 }
+
+function buildCalendarBootstrapData() {
+  return {
+    desktop: {
+      start: "2026-04-13",
+      end: "2026-04-20",
+      events: [
+        {
+          id: "quote-evt",
+          title: "Dean Lunch",
+          start: "2026-04-16T18:00:00.000Z",
+          end: "2026-04-16T19:00:00.000Z",
+          allDay: false,
+          color: "#fff7ed",
+          borderColor: "#f97316",
+          textColor: "#7c2d12",
+          source: "catering" as const,
+          extendedProps: {
+            quoteId: "quote-123",
+            quoteNumber: "QT-123",
+            quoteStatus: "ACCEPTED",
+            location: "Library",
+            headcount: 24,
+          },
+        },
+        {
+          id: "manual-evt",
+          title: "Ops Sync",
+          start: "2026-04-16T17:00:00.000Z",
+          end: "2026-04-16T18:00:00.000Z",
+          allDay: false,
+          color: "#dbeafe",
+          borderColor: "#3b82f6",
+          textColor: "#1d4ed8",
+          source: "manual" as const,
+          extendedProps: {
+            type: "MEETING" as const,
+            eventId: "evt-1",
+            location: "Admin 201",
+            description: "Weekly operations check-in",
+          },
+        },
+        {
+          id: "birthday-evt",
+          title: "Sam's Birthday",
+          start: "2026-04-17",
+          end: null,
+          allDay: true,
+          color: "#fce7f3",
+          borderColor: "#ec4899",
+          textColor: "#9d174d",
+          source: "birthday" as const,
+          extendedProps: {
+            staffId: "staff-77",
+            description: "Bring cake",
+          },
+        },
+      ],
+    },
+    mobile: {
+      start: "2026-04-16",
+      end: "2026-04-17",
+      events: [
+        {
+          id: "mobile-evt",
+          title: "Mobile View Event",
+          start: "2026-04-16T18:00:00.000Z",
+          end: "2026-04-16T19:00:00.000Z",
+          allDay: false,
+          color: "#dbeafe",
+          borderColor: "#3b82f6",
+          textColor: "#1d4ed8",
+          source: "manual" as const,
+          extendedProps: {
+            type: "MEETING" as const,
+            eventId: "evt-mobile",
+          },
+        },
+      ],
+    },
+  };
+}
+
+function buildManualEventResponse(): EventResponse {
+  return {
+    id: "evt-1",
+    title: "Ops Sync",
+    description: "Weekly operations check-in",
+    type: "MEETING",
+    date: "2026-04-16",
+    startTime: "10:00",
+    endTime: "11:00",
+    allDay: false,
+    location: "Admin 201",
+    color: "#3b82f6",
+    recurrence: null,
+    recurrenceEnd: null,
+    reminderMinutes: 60,
+    createdBy: "user-1",
+    createdAt: "2026-04-01T12:00:00.000Z",
+  };
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  calendarApiGetEvents.mockResolvedValue([]);
+  eventApiGetById.mockResolvedValue(buildManualEventResponse());
+
+  Object.defineProperty(window, "innerWidth", {
+    value: 1280,
+    configurable: true,
+    writable: true,
+  });
+
+  class ResizeObserverMock {
+    observe() {}
+    disconnect() {}
+    unobserve() {}
+  }
+
+  vi.stubGlobal("ResizeObserver", ResizeObserverMock);
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 function buildFullCalendarLikeViewProps(): Partial<ViewProps> {
   return {
@@ -438,6 +707,47 @@ function buildDenseAgendaEvents(): AgendaStreamEvent[] {
     },
   ];
 }
+
+describe("CalendarView agenda stream integration", () => {
+  it("uses the agenda stream on desktop and preserves quote, birthday, and manual-event affordances", async () => {
+    const user = userEvent.setup();
+
+    render(<CalendarView initialData={buildCalendarBootstrapData()} />);
+
+    expect(screen.getByTestId("mock-fullcalendar")).toHaveAttribute("data-view", "agendaStreamWeek");
+    expect(await screen.findByText("Show past")).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /add event/i }).length).toBeGreaterThan(0);
+
+    await user.click(screen.getByRole("button", { name: /Dean Lunch/i }));
+    expect(screen.getByText("QT-123")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /view quote/i })).toHaveAttribute("href", "/quotes/quote-123");
+
+    await user.click(screen.getByRole("button", { name: /Sam's Birthday/i }));
+    expect(screen.getByRole("link", { name: /view staff/i })).toHaveAttribute("href", "/staff/staff-77");
+
+    await user.click(screen.getByRole("button", { name: /Ops Sync/i }));
+    expect(screen.getByText("Weekly operations check-in")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /edit event/i }));
+    expect(eventApiGetById).toHaveBeenCalledWith("evt-1");
+    expect(await screen.findByRole("heading", { name: /edit event/i })).toBeInTheDocument();
+  });
+
+  it("keeps mobile on the familiar timeGridDay flow", () => {
+    Object.defineProperty(window, "innerWidth", {
+      value: 390,
+      configurable: true,
+      writable: true,
+    });
+
+    render(<CalendarView initialData={buildCalendarBootstrapData()} />);
+
+    expect(screen.getByTestId("mock-fullcalendar")).toHaveAttribute("data-view", "timeGridDay");
+    expect(screen.getByText("timeGridDay")).toBeInTheDocument();
+    expect(screen.queryByText("Show past")).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /add event/i }).length).toBeGreaterThan(0);
+  });
+});
 
 describe("AgendaStreamView", () => {
   it("renders from direct fullcalendar-like props plus local test data", () => {
