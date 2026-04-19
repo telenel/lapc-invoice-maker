@@ -186,6 +186,9 @@ export function ProductTable({
   const showDaysSinceSale = visibleColumns?.includes("days_since_sale") ?? false;
   const showUpdated = visibleColumns?.includes("updated") ?? false;
   const showDcc = visibleColumns?.includes("dcc") ?? false;
+  // `margin` is listed as an optional column in OPTIONAL_COLUMNS; respect the
+  // toggle so saved views / the Add Column popover can hide it.
+  const showMargin = visibleColumns?.includes("margin") ?? true;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const to = Math.min(page * PAGE_SIZE, total);
@@ -203,7 +206,18 @@ export function ProductTable({
     );
   }
 
-  const skeletonCols = 9;
+  // Keep the loading row in lockstep with the header set: checkbox + SKU +
+  // Description + Vendor + Cost + Retail + [Margin?] + ISBN/Barcode + LastSale
+  // + [optional columns].
+  const baseCols = 8 + (showMargin ? 1 : 0);
+  const optionalCols =
+    (showUnits ? 1 : 0) +
+    (showRevenue ? 1 : 0) +
+    (showTxns ? 1 : 0) +
+    (showDaysSinceSale ? 1 : 0) +
+    (showUpdated ? 1 : 0) +
+    (showDcc ? 1 : 0);
+  const skeletonCols = baseCols + optionalCols;
 
   return (
     <div className="rounded-[10px] border border-border bg-card overflow-hidden shadow-[0_1px_0_color-mix(in_oklch,var(--border)_55%,transparent),0_2px_8px_-2px_color-mix(in_oklch,var(--foreground)_6%,transparent)]">
@@ -266,12 +280,15 @@ export function ProductTable({
                   mono
                   width={86}
                 />
-                <th
-                  className="px-2.5 py-2 text-[11px] font-semibold tracking-[-0.005em] text-muted-foreground bg-card border-b border-border whitespace-nowrap sticky top-0 z-[1] text-right"
-                  style={{ width: 112 }}
-                >
-                  Margin
-                </th>
+                {showMargin ? (
+                  <th
+                    data-priority="medium"
+                    className="px-2.5 py-2 text-[11px] font-semibold tracking-[-0.005em] text-muted-foreground bg-card border-b border-border whitespace-nowrap sticky top-0 z-[1] text-right"
+                    style={{ width: 112 }}
+                  >
+                    Margin
+                  </th>
+                ) : null}
                 {tab === "textbooks" ? (
                   <SortHeader
                     field="isbn"
@@ -365,13 +382,15 @@ export function ProductTable({
                   />
                 ) : null}
                 {showDcc ? (
-                  <th
-                    data-priority="medium"
-                    className="px-2.5 py-2 text-[11px] font-semibold tracking-[-0.005em] text-muted-foreground bg-card border-b border-border whitespace-nowrap sticky top-0 z-[1] text-left"
-                    style={{ width: 110 }}
-                  >
-                    DCC
-                  </th>
+                  <SortHeader
+                    field="dept_num"
+                    label="DCC"
+                    sortBy={sortBy}
+                    sortDir={sortDir}
+                    onSort={onSort}
+                    width={110}
+                    priority="medium"
+                  />
                 ) : null}
               </tr>
             </thead>
@@ -379,7 +398,7 @@ export function ProductTable({
               {loading
                 ? Array.from({ length: 10 }).map((_, i) => (
                     <tr key={`skeleton-${i}`} className="h-[34px]">
-                      {Array.from({ length: skeletonCols + 1 }).map((_, j) => (
+                      {Array.from({ length: skeletonCols }).map((_, j) => (
                         <td key={j} className="px-2.5 py-1.5">
                           <div className="h-3 w-full animate-pulse rounded bg-muted" />
                         </td>
@@ -482,12 +501,14 @@ export function ProductTable({
                             {formatCurrency(product.retail_price)}
                           </span>
                         </td>
-                        <td className="px-2.5 py-1.5 text-right">
-                          <MarginBar
-                            cost={Number(product.cost)}
-                            retail={Number(product.retail_price)}
-                          />
-                        </td>
+                        {showMargin ? (
+                          <td data-priority="medium" className="px-2.5 py-1.5 text-right">
+                            <MarginBar
+                              cost={Number(product.cost)}
+                              retail={Number(product.retail_price)}
+                            />
+                          </td>
+                        ) : null}
                         <td className="px-2.5 py-1.5">
                           <span className="font-mono tnum text-[11px] text-muted-foreground">
                             {tab === "textbooks"
