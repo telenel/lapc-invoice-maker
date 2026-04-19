@@ -18,6 +18,7 @@ import type {
 export function useProductSearch(filters: ProductFilters) {
   const [data, setData] = useState<ProductSearchResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const deferredSearch = useDeferredValue(filters.search);
 
   const effectiveFilters: ProductFilters = {
@@ -29,9 +30,12 @@ export function useProductSearch(filters: ProductFilters) {
     setLoading(true);
     try {
       const result = await searchProducts(effectiveFilters);
+      setError(null);
       setData(result);
     } catch (e) {
       const message = e instanceof Error ? e.message : "Failed to search products";
+      setData(null);
+      setError(message);
       toast.error(message);
     } finally {
       setLoading(false);
@@ -42,7 +46,7 @@ export function useProductSearch(filters: ProductFilters) {
     refetch();
   }, [refetch]);
 
-  return { data, loading, refetch };
+  return { data, loading, error, refetch };
 }
 
 // ---------------------------------------------------------------------------
@@ -100,6 +104,14 @@ export function useProductSelection() {
     setSelected(new Map());
   }, []);
 
+  const removeMany = useCallback((skus: number[]) => {
+    setSelected((prev) => {
+      const next = new Map(prev);
+      skus.forEach((sku) => next.delete(sku));
+      return next;
+    });
+  }, []);
+
   const isSelected = useCallback(
     (sku: number) => selected.has(sku),
     [selected]
@@ -116,6 +128,7 @@ export function useProductSelection() {
     toggle,
     toggleAll,
     clear,
+    removeMany,
     isSelected,
     saveToSession,
   };

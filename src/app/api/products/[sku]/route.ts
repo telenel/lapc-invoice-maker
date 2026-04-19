@@ -44,16 +44,14 @@ export const DELETE = withAdmin(async (request: NextRequest, _session, ctx?: Rou
     }
 
     // Mirror to Supabase. For soft delete we just upsert the discontinue flag
-    // (the products table doesn't have one — we just delete the row to hide it
-    // from the UI; nightly sync will restore it but that's OK since the read
-    // page filters on whatever Prism shows).
+    // (the products table doesn't have one — remove the row so the UI stops
+    // offering actions on an item Prism now considers discontinued).
     try {
       const supabase = getSupabaseAdminClient();
-      if (hard) {
-        await supabase.from("products").delete().eq("sku", sku);
+      const { error: mirrorError } = await supabase.from("products").delete().eq("sku", sku);
+      if (mirrorError) {
+        console.warn(`[DELETE /api/products/${sku}] mirror delete failed:`, mirrorError);
       }
-      // Soft delete: leave the row, the UI shouldn't show discontinued items.
-      // (A future migration could add a `discontinued` boolean to products.)
     } catch (mirrorErr) {
       console.warn(`[DELETE /api/products/${sku}] mirror failed:`, mirrorErr);
     }
