@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon, SearchIcon } from "lucide-react";
+import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon, SearchIcon, XIcon } from "lucide-react";
 import type { Product, ProductTab } from "@/domains/product/types";
 import { PAGE_SIZE } from "@/domains/product/constants";
 import type { OptionalColumnKey } from "@/domains/product/constants";
@@ -30,6 +30,7 @@ interface ProductTableProps {
   onPageChange: (page: number) => void;
   onSort: (field: string) => void;
   visibleColumns?: OptionalColumnKey[];
+  onHideColumn?: (key: OptionalColumnKey) => void;
 }
 
 function formatCurrency(value: number): string {
@@ -74,6 +75,47 @@ function SortHeader({ field, label, sortBy, sortDir, onSort, className }: {
   );
 }
 
+function OptionalSortHeader(props: {
+  field: string;
+  label: string;
+  columnKey: OptionalColumnKey;
+  sortBy: string;
+  sortDir: "asc" | "desc";
+  onSort: (field: string) => void;
+  onHide?: (key: OptionalColumnKey) => void;
+  className?: string;
+}) {
+  const { field, label, columnKey, sortBy, sortDir, onSort, onHide, className } = props;
+  const isActive = sortBy === field;
+  return (
+    <TableHead className={className}>
+      <div className="group inline-flex items-center gap-1">
+        <button
+          className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
+          onClick={() => onSort(field)}
+        >
+          {label}
+          {isActive ? (
+            sortDir === "asc" ? <ArrowUpIcon className="size-3" /> : <ArrowDownIcon className="size-3" />
+          ) : (
+            <ArrowUpDownIcon className="size-3 opacity-30" />
+          )}
+        </button>
+        {onHide && (
+          <button
+            type="button"
+            aria-label={`Hide ${label}`}
+            className="ml-1 opacity-0 group-hover:opacity-60 hover:opacity-100 transition-opacity"
+            onClick={(e) => { e.stopPropagation(); onHide(columnKey); }}
+          >
+            <XIcon className="size-3" />
+          </button>
+        )}
+      </div>
+    </TableHead>
+  );
+}
+
 export function ProductTable({
   tab,
   products,
@@ -88,6 +130,7 @@ export function ProductTable({
   onPageChange,
   onSort,
   visibleColumns = [],
+  onHideColumn,
 }: ProductTableProps) {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const extraCols = visibleColumns?.length ?? 0;
@@ -157,32 +200,25 @@ export function ProductTable({
                 className="text-right"
               />
               {visibleColumns?.includes("dcc") && (
-                <SortHeader field="dept_num" label="DCC" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+                <OptionalSortHeader field="dept_num" columnKey="dcc" label="DCC" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} />
               )}
               {visibleColumns?.includes("units_1y") && (
-                <SortHeader field="units_sold_1y" label="Units 1y" sortBy={sortBy} sortDir={sortDir} onSort={onSort} className="text-right" />
+                <OptionalSortHeader field="units_sold_1y" columnKey="units_1y" label="Units 1y" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
               )}
               {visibleColumns?.includes("revenue_1y") && (
-                <SortHeader field="revenue_1y" label="Revenue 1y" sortBy={sortBy} sortDir={sortDir} onSort={onSort} className="text-right" />
+                <OptionalSortHeader field="revenue_1y" columnKey="revenue_1y" label="Revenue 1y" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
               )}
               {visibleColumns?.includes("txns_1y") && (
-                <SortHeader field="txns_1y" label="Receipts 1y" sortBy={sortBy} sortDir={sortDir} onSort={onSort} className="text-right" />
+                <OptionalSortHeader field="txns_1y" columnKey="txns_1y" label="Receipts 1y" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
               )}
               {visibleColumns?.includes("margin") && (
-                <SortHeader
-                  field="margin"
-                  label={sortBy === "margin" ? "Margin % (page)" : "Margin %"}
-                  sortBy={sortBy}
-                  sortDir={sortDir}
-                  onSort={onSort}
-                  className="text-right"
-                />
+                <OptionalSortHeader field="margin" columnKey="margin" label={sortBy === "margin" ? "Margin % (page)" : "Margin %"} sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
               )}
               {visibleColumns?.includes("days_since_sale") && (
-                <SortHeader field="days_since_sale" label="Days since sale" sortBy={sortBy} sortDir={daysSinceSaleDisplayDir} onSort={onSort} className="text-right" />
+                <OptionalSortHeader field="days_since_sale" columnKey="days_since_sale" label="Days since sale" sortBy={sortBy} sortDir={daysSinceSaleDisplayDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
               )}
               {visibleColumns?.includes("updated") && (
-                <SortHeader field="updated_at" label="Updated" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
+                <OptionalSortHeader field="updated_at" columnKey="updated" label="Updated" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} />
               )}
             </TableRow>
           </TableHeader>

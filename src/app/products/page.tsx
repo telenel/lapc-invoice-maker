@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +24,7 @@ import { SyncDatabaseButton } from "@/components/products/sync-database-button";
 import { SavedViewsBar } from "@/components/products/saved-views-bar";
 import { SaveViewDialog } from "@/components/products/save-view-dialog";
 import { DeleteViewDialog } from "@/components/products/delete-view-dialog";
-import { ColumnVisibilityToggle } from "@/components/products/column-visibility-toggle";
+import { ColumnVisibilityToggle, type ColumnVisibilityHandle } from "@/components/products/column-visibility-toggle";
 import { PierceAssuranceBadge } from "@/components/products/pierce-assurance-badge";
 import { productApi } from "@/domains/product/api-client";
 
@@ -62,6 +62,7 @@ export default function ProductsPage() {
   const [baseColumns, setBaseColumns] = useState<OptionalColumnKey[]>(DEFAULT_COLUMN_SET);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<SavedView | null>(null);
+  const columnsRef = useRef<ColumnVisibilityHandle>(null);
 
   // Track tab counts so both tabs always show their last-known count
   const [tabCounts, setTabCounts] = useState<Record<ProductTab, number | null>>({
@@ -223,6 +224,7 @@ export default function ProductsPage() {
           onDeleteClick={(v) => setDeleteTarget(v)}
         />
         <ColumnVisibilityToggle
+          ref={columnsRef}
           runtimeOverride={runtimeColumns}
           onUserChange={setBaseColumns}
           onResetRuntime={() => setRuntimeColumns(null)}
@@ -295,6 +297,7 @@ export default function ProductsPage() {
           onPageChange={handlePageChange}
           onSort={handleSort}
           visibleColumns={runtimeColumns ?? baseColumns}
+          onHideColumn={(key) => columnsRef.current?.hideColumn(key)}
         />
       </div>
 
