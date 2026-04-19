@@ -84,6 +84,52 @@ export interface PullSyncResult {
 const DELETE_CHUNK_SIZE = 1000;
 const HASH_READ_PAGE_SIZE = 1000;
 
+export function buildPrismPullPageQuery(): string {
+  return `
+        SELECT TOP (@pageSize)
+          i.SKU,
+          LTRIM(RTRIM(gm.Description)) AS Description,
+          LTRIM(RTRIM(tb.Title))       AS Title,
+          LTRIM(RTRIM(tb.Author))      AS Author,
+          LTRIM(RTRIM(tb.ISBN))        AS ISBN,
+          LTRIM(RTRIM(tb.Edition))     AS Edition,
+          LTRIM(RTRIM(i.BarCode))      AS BarCode,
+          i.VendorID,
+          i.DCCID,
+          i.ItemTaxTypeID,
+          CASE
+            WHEN i.TypeID = 2                THEN 'used_textbook'
+            WHEN tb.SKU IS NOT NULL          THEN 'textbook'
+            WHEN gm.SKU IS NOT NULL          THEN 'general_merchandise'
+            ELSE                                  'other'
+          END AS ItemType,
+          dcc.Department                  AS DeptNum,
+          dcc.Class                       AS ClassNum,
+          dcc.Category                    AS CatNum,
+          LTRIM(RTRIM(dep.DeptName))      AS DeptName,
+          LTRIM(RTRIM(cls.ClassName))     AS ClassName,
+          LTRIM(RTRIM(cat.CatName))       AS CatName,
+          i.fDiscontinue,
+          inv.Retail,
+          inv.Cost,
+          inv.StockOnHand,
+          inv.LastSaleDate
+        FROM Item i
+        INNER JOIN Inventory inv ON inv.SKU = i.SKU AND inv.LocationID = @loc
+        LEFT JOIN Textbook tb ON tb.SKU = i.SKU
+        LEFT JOIN GeneralMerchandise gm ON gm.SKU = i.SKU
+        LEFT JOIN DeptClassCat dcc ON i.DCCID = dcc.DCCID
+        LEFT JOIN DCC_Department dep ON dcc.Department = dep.Department
+        LEFT JOIN DCC_Class      cls ON dcc.Department = cls.Department
+                                     AND dcc.Class      = cls.Class
+        LEFT JOIN DCC_Category   cat ON dcc.Department = cat.Department
+                                     AND dcc.Class      = cat.Class
+                                     AND dcc.Category   = cat.Category
+        WHERE i.SKU > @cursor
+        ORDER BY i.SKU
+      `;
+}
+
 // Prism stores "never sold" as epoch zero (1970-01-01 00:00:00) instead of NULL
 // on Inventory.LastSaleDate. Treat anything at or before the epoch as null so
 // the UI doesn't render "Dec 1969" due to Pacific-TZ underflow of UTC epoch.
@@ -169,49 +215,7 @@ export async function runPrismPull(options: {
         DeptName: string | null;
         ClassName: string | null;
         CatName: string | null;
-      }>(`
-        SELECT TOP (@pageSize)
-          i.SKU,
-          LTRIM(RTRIM(gm.Description)) AS Description,
-          LTRIM(RTRIM(tb.Title))       AS Title,
-          LTRIM(RTRIM(tb.Author))      AS Author,
-          LTRIM(RTRIM(tb.ISBN))        AS ISBN,
-          LTRIM(RTRIM(tb.Edition))     AS Edition,
-          LTRIM(RTRIM(i.BarCode))      AS BarCode,
-          i.VendorID,
-          i.DCCID,
-          i.ItemTaxTypeID,
-          CASE
-            WHEN i.TypeID = 2                THEN 'used_textbook'
-            WHEN tb.SKU IS NOT NULL          THEN 'textbook'
-            WHEN gm.SKU IS NOT NULL          THEN 'general_merchandise'
-            ELSE                                  'other'
-          END AS ItemType,
-          dcc.Department                AS DeptNum,
-          dcc.Class                     AS ClassNum,
-          dcc.Category                  AS CatNum,
-          LTRIM(RTRIM(dep.Name))        AS DeptName,
-          LTRIM(RTRIM(cls.Name))        AS ClassName,
-          LTRIM(RTRIM(cat.Name))        AS CatName,
-          i.fDiscontinue,
-          inv.Retail,
-          inv.Cost,
-          inv.StockOnHand,
-          inv.LastSaleDate
-        FROM Item i
-        INNER JOIN Inventory inv ON inv.SKU = i.SKU AND inv.LocationID = @loc
-        LEFT JOIN Textbook tb ON tb.SKU = i.SKU
-        LEFT JOIN GeneralMerchandise gm ON gm.SKU = i.SKU
-        LEFT JOIN DeptClassCat dcc ON i.DCCID = dcc.DCCID
-        LEFT JOIN DCC_Department dep ON dcc.Department = dep.Department
-        LEFT JOIN DCC_Class      cls ON dcc.Department = cls.Department
-                                     AND dcc.Class      = cls.Class
-        LEFT JOIN DCC_Category   cat ON dcc.Department = cat.Department
-                                     AND dcc.Class      = cat.Class
-                                     AND dcc.Category   = cat.Category
-        WHERE i.SKU > @cursor
-        ORDER BY i.SKU
-      `);
+      }>(buildPrismPullPageQuery());
 
     if (result.recordset.length === 0) break;
 
