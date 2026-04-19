@@ -95,6 +95,14 @@ export function ProductTable({
   const to = Math.min(page * PAGE_SIZE, total);
   const allOnPageSelected = products.length > 0 && products.every((p) => isSelected(p.sku));
 
+  // "days_since_sale" is a UI alias: queries.ts maps it to last_sale_date
+  // with inverted sort direction, so the arrow must also invert to match
+  // the data the user sees.
+  const daysSinceSaleDisplayDir: "asc" | "desc" =
+    sortBy === "days_since_sale"
+      ? sortDir === "asc" ? "desc" : "asc"
+      : sortDir;
+
   if (!loading && products.length === 0) {
     return (
       <EmptyState
@@ -164,7 +172,7 @@ export function ProductTable({
                 <SortHeader field="margin" label="Margin %" sortBy={sortBy} sortDir={sortDir} onSort={onSort} className="text-right" />
               )}
               {visibleColumns?.includes("days_since_sale") && (
-                <SortHeader field="days_since_sale" label="Days since sale" sortBy={sortBy} sortDir={sortDir} onSort={onSort} className="text-right" />
+                <SortHeader field="days_since_sale" label="Days since sale" sortBy={sortBy} sortDir={daysSinceSaleDisplayDir} onSort={onSort} className="text-right" />
               )}
               {visibleColumns?.includes("updated") && (
                 <SortHeader field="updated_at" label="Updated" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
