@@ -140,9 +140,14 @@ export function ProductTable({
               <SortHeader field="retail_price" label="Retail" sortBy={sortBy} sortDir={sortDir} onSort={onSort} className="text-right" />
               <SortHeader field="cost" label="Cost" sortBy={sortBy} sortDir={sortDir} onSort={onSort} className="text-right" />
               <SortHeader field="last_sale_date" label="Last Sale" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
-              {visibleColumns?.includes("stock") && (
-                <TableHead className="text-right">Stock</TableHead>
-              )}
+              <SortHeader
+                field="stock_on_hand"
+                label="Stock"
+                sortBy={sortBy}
+                sortDir={sortDir}
+                onSort={onSort}
+                className="text-right"
+              />
               {visibleColumns?.includes("dcc") && (
                 <TableHead>DCC</TableHead>
               )}
@@ -164,7 +169,7 @@ export function ProductTable({
             {loading
               ? Array.from({ length: 10 }).map((_, i) => (
                   <TableRow key={`skeleton-${i}`}>
-                    {Array.from({ length: (tab === "textbooks" ? 10 : 10) + extraCols }).map((_, j) => (
+                    {Array.from({ length: (tab === "textbooks" ? 11 : 11) + extraCols }).map((_, j) => (
                       <TableCell key={j}>
                         <div className="h-4 w-full animate-pulse rounded bg-muted" />
                       </TableCell>
@@ -228,11 +233,9 @@ export function ProductTable({
                     <TableCell className="text-xs">
                       {formatSaleDate(product.last_sale_date)}
                     </TableCell>
-                    {visibleColumns?.includes("stock") && (
-                      <TableCell className="text-right tabular-nums">
-                        {product.stock_on_hand ?? "—"}
-                      </TableCell>
-                    )}
+                    <TableCell className="text-right tabular-nums">
+                      {product.stock_on_hand ?? "—"}
+                    </TableCell>
                     {visibleColumns?.includes("dcc") && (
                       <TableCell className="min-w-0 max-w-[16ch]">
                         {product.dept_num != null ? (
