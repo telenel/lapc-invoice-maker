@@ -169,7 +169,7 @@ export function ProductTable({
             {loading
               ? Array.from({ length: 10 }).map((_, i) => (
                   <TableRow key={`skeleton-${i}`}>
-                    {Array.from({ length: (tab === "textbooks" ? 11 : 11) + extraCols }).map((_, j) => (
+                    {Array.from({ length: 11 + extraCols }).map((_, j) => (
                       <TableCell key={j}>
                         <div className="h-4 w-full animate-pulse rounded bg-muted" />
                       </TableCell>
