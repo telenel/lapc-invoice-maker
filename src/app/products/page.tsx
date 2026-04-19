@@ -130,7 +130,7 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6">
+    <div className="px-4 py-6">
       {/* Header */}
       <div className="page-enter page-enter-1 mb-5 flex items-start justify-between gap-4">
         <div>
