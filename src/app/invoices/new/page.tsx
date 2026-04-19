@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { PrinterIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,12 +45,13 @@ function mapProductsToItems(products: SelectedProduct[]) {
 export default function NewInvoicePage() {
   const searchParams = useSearchParams();
   const fromCatalog = searchParams.get("from") === "catalog";
+  const [initial, setInitial] = useState<Parameters<typeof useInvoiceForm>[0]>();
 
-  const initial = useMemo(() => {
-    if (!fromCatalog) return undefined;
+  useEffect(() => {
+    if (!fromCatalog) return;
     const catalogItems = readCatalogItems();
-    if (!catalogItems || catalogItems.length === 0) return undefined;
-    return {
+    if (!catalogItems || catalogItems.length === 0) return;
+    setInitial({
       items: catalogItems.map((item, i) => ({
         _key: `catalog-${i}`,
         sku: item.sku,
@@ -63,7 +64,7 @@ export default function NewInvoicePage() {
         marginOverride: null,
         costPrice: item.costPrice,
       })),
-    };
+    });
   }, [fromCatalog]);
 
   const invoiceForm = useInvoiceForm(initial);

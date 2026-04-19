@@ -13,6 +13,7 @@ interface ProductActionBarProps {
   selected: Map<number, SelectedProduct>;
   selectedCount: number;
   onClear: () => void;
+  onRemoveSelected: (skus: number[]) => void;
   saveToSession: () => void;
   /** When true, the Discontinue action is shown. Only when Prism is reachable. */
   prismAvailable?: boolean;
@@ -27,6 +28,7 @@ export function ProductActionBar({
   selected,
   selectedCount,
   onClear,
+  onRemoveSelected,
   saveToSession,
   prismAvailable = false,
   onDiscontinued,
@@ -84,7 +86,11 @@ export function ProductActionBar({
       }
 
       onDiscontinued?.(succeeded);
-      onClear();
+      if (succeeded.length === skus.length) {
+        onClear();
+      } else if (succeeded.length > 0) {
+        onRemoveSelected(succeeded);
+      }
     } finally {
       setDiscontinuing(false);
     }

@@ -30,6 +30,10 @@ import { PierceAssuranceBadge } from "@/components/products/pierce-assurance-bad
 import { productApi } from "@/domains/product/api-client";
 import { SYSTEM_PRESET_VIEWS } from "@/domains/product/presets";
 
+function filtersEqual(a: ProductFilters, b: ProductFilters): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
 export default function ProductsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -41,7 +45,14 @@ export default function ProductsPage() {
     return parseFiltersFromSearchParams(params);
   });
 
-  const { data, loading, refetch } = useProductSearch(filters);
+  useEffect(() => {
+    const params = new URLSearchParams();
+    searchParams.forEach((value, key) => params.set(key, value));
+    const next = parseFiltersFromSearchParams(params);
+    setFilters((current) => (filtersEqual(current, next) ? current : next));
+  }, [searchParams]);
+
+  const { data, loading, error, refetch } = useProductSearch(filters);
 
   // Prism availability — controls whether write features (New Item, Delete) are shown.
   // True only on the campus dev machine where the SQL Server is reachable.
@@ -87,6 +98,7 @@ export default function ProductsPage() {
     toggle,
     toggleAll,
     clear,
+    removeMany,
     isSelected,
     saveToSession,
   } = useProductSelection();
@@ -98,7 +110,7 @@ export default function ProductsPage() {
       const qs = params.toString();
       router.replace(qs ? `/products?${qs}` : "/products", { scroll: false });
     },
-    [router],
+    [router, setFilters],
   );
 
   useEffect(() => {
@@ -319,6 +331,11 @@ export default function ProductsPage() {
 
       {/* Table */}
       <div className="page-enter page-enter-4">
+        {error ? (
+          <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+            {error}
+          </div>
+        ) : null}
         <ProductTable
           tab={filters.tab}
           products={data?.products ?? []}
@@ -343,6 +360,7 @@ export default function ProductsPage() {
         selected={selected}
         selectedCount={selectedCount}
         onClear={clear}
+        onRemoveSelected={removeMany}
         saveToSession={saveToSession}
         prismAvailable={prismAvailable}
         onDiscontinued={() => refetch()}
