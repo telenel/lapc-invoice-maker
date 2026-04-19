@@ -82,6 +82,7 @@ describe("applyPreset", () => {
   it("returns the preset column preferences (filtered to known optional keys)", () => {
     const preset = SYSTEM_PRESET_VIEWS.find((v) => v.slug === "dead-discontinued-with-stock")!;
     const result = applyPreset(preset, baseTextbook);
-    expect(result.visibleColumns).toEqual(["stock", "updated"]);
+    // "stock" is permanent now — it gets filtered out of the optional column set.
+    expect(result.visibleColumns).toEqual(["updated"]);
   });
 });

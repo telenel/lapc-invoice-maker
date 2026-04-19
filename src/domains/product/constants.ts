@@ -69,7 +69,6 @@ export const EMPTY_FILTERS: ProductFilters = {
 export const CATALOG_ITEMS_STORAGE_KEY = "catalog-selected-items";
 
 export const OPTIONAL_COLUMNS = [
-  "stock",
   "dcc",
   "units_1y",
   "revenue_1y",
@@ -81,10 +80,9 @@ export const OPTIONAL_COLUMNS = [
 
 export type OptionalColumnKey = typeof OPTIONAL_COLUMNS[number];
 
-export const DEFAULT_COLUMN_SET: OptionalColumnKey[] = ["stock", "units_1y", "dcc"];
+export const DEFAULT_COLUMN_SET: OptionalColumnKey[] = ["units_1y", "dcc"];
 
 export const COLUMN_LABELS: Record<OptionalColumnKey, string> = {
-  stock: "Stock",
   dcc: "DCC",
   units_1y: "Units 1y",
   revenue_1y: "Revenue 1y",
