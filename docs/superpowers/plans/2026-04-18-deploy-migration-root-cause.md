@@ -40,6 +40,10 @@ Why:
   database with the full migration chain
 - the migration was therefore never exercised against an existing
   `products_with_derived` view before merge
+- once CI started replaying the full chain, it also exposed a second hidden
+  gap: the `products` table itself had never been codified in Prisma's
+  migration history, so clean databases could not apply
+  `20260417000001_extend_products_for_bulk_edit`
 
 ## Prevention
 
@@ -48,7 +52,11 @@ Why:
    unavoidable.
 2. Validate `prisma migrate deploy` in CI against disposable PostgreSQL so
    historical-schema migration failures are caught before merge.
-3. Run production migrations as a deploy preflight step before replacing the
+3. Recreate out-of-band baseline objects like `products` inside the recorded
+   migration chain so clean databases can replay history end to end.
+4. Bootstrap the Supabase roles that older raw SQL migrations reference during
+   CI migration replay, so validation matches production assumptions closely.
+5. Run production migrations as a deploy preflight step before replacing the
    live app container.
-4. Do not make the app container startup path depend on successful migrations by
+6. Do not make the app container startup path depend on successful migrations by
    default.
