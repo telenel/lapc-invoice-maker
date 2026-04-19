@@ -249,6 +249,7 @@ export const productApi = {
 
 export interface SyncPullResult {
   runId: string;
+  status: "ok" | "partial";
   scanned: number;
   updated: number;
   removed: number;
@@ -256,6 +257,8 @@ export interface SyncPullResult {
   txnsAdded: number;
   aggregatesUpdated: number;
   txnSyncDurationMs: number;
+  txnSyncSkipped?: string;
+  txnSyncError?: string | null;
 }
 
 export interface SyncRun {

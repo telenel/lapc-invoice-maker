@@ -17,6 +17,72 @@ const ALLOWED_SORT_FIELDS: Set<string> = new Set<ProductSortField>([
   "dept_num",
 ]);
 
+const ALLOWED_DERIVED_SORT_FIELDS = new Set<string>([
+  ...Array.from(ALLOWED_SORT_FIELDS),
+  "effective_last_sale_date",
+  "margin_ratio",
+]);
+
+export function hasAnalyticsProductFilters(filters: ProductFilters): boolean {
+  return (
+    (filters.unitsSoldWindow !== "" && (filters.minUnitsSold !== "" || filters.maxUnitsSold !== ""))
+    || (filters.revenueWindow !== "" && (filters.minRevenue !== "" || filters.maxRevenue !== ""))
+    || (filters.txnsWindow !== "" && (filters.minTxns !== "" || filters.maxTxns !== ""))
+    || filters.neverSoldLifetime
+    || filters.firstSaleWithin !== ""
+  );
+}
+
+function hasLastSaleProductFilters(filters: ProductFilters): boolean {
+  return (
+    filters.lastSaleDateFrom !== ""
+    || filters.lastSaleDateTo !== ""
+    || filters.lastSaleWithin !== ""
+    || filters.lastSaleNever
+    || filters.lastSaleOlderThan !== ""
+    || filters.sortBy === "last_sale_date"
+    || filters.sortBy === "days_since_sale"
+  );
+}
+
+export function buildProductQueryPlan(filters: ProductFilters): {
+  source: "products" | "products_with_derived";
+  lastSaleField: "last_sale_date" | "effective_last_sale_date";
+  requireAggregatesReady: boolean;
+  sortField: string;
+  ascending: boolean;
+} {
+  const requireAggregatesReady = hasAnalyticsProductFilters(filters)
+    || filters.trendDirection !== ""
+    || filters.maxStockCoverageDays !== "";
+  const needsDerived = requireAggregatesReady
+    || filters.minMargin !== ""
+    || filters.maxMargin !== ""
+    || filters.sortBy === "margin"
+    || hasLastSaleProductFilters(filters);
+  const source = needsDerived ? "products_with_derived" : "products";
+  const lastSaleField = needsDerived ? "effective_last_sale_date" : "last_sale_date";
+
+  let sortField = filters.sortBy;
+  let ascending = filters.sortDir !== "desc";
+  if (filters.sortBy === "days_since_sale") {
+    sortField = lastSaleField;
+    ascending = !ascending;
+  } else if (filters.sortBy === "last_sale_date" && needsDerived) {
+    sortField = "effective_last_sale_date";
+  } else if (filters.sortBy === "margin") {
+    sortField = "margin_ratio";
+  }
+
+  return {
+    source,
+    lastSaleField,
+    requireAggregatesReady,
+    sortField,
+    ascending,
+  };
+}
+
 /**
  * Escape a value for safe interpolation into a PostgREST `.or()` filter string.
  * If the value contains any PostgREST metacharacters (, . ( ) " \), it is
@@ -49,10 +115,9 @@ export async function searchProducts(
   const client = getSupabaseBrowserClient();
   const from = (filters.page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
-
-  const needsDerived = filters.trendDirection !== "" || filters.maxStockCoverageDays !== "";
+  const plan = buildProductQueryPlan(filters);
   let query = client
-    .from(needsDerived ? "products_with_derived" : "products")
+    .from(plan.source)
     .select("*", { count: "exact" })
     .in("item_type", TAB_ITEM_TYPES[filters.tab]);
 
@@ -98,10 +163,10 @@ export async function searchProducts(
     query = query.not("barcode", "is", null);
   }
   if (filters.lastSaleDateFrom) {
-    query = query.gte("last_sale_date", filters.lastSaleDateFrom);
+    query = query.gte(plan.lastSaleField, filters.lastSaleDateFrom);
   }
   if (filters.lastSaleDateTo) {
-    query = query.lte("last_sale_date", filters.lastSaleDateTo);
+    query = query.lte(plan.lastSaleField, filters.lastSaleDateTo);
   }
 
   // Stock range
@@ -141,18 +206,9 @@ export async function searchProducts(
     query = query.or("retail_price.eq.0,cost.eq.0");
   }
 
-  // Margin range (computed client-side via a view would be better long-term;
-  // for now approximate with (retail - cost) using Supabase's filter on computed
-  // expression — fall back to client-side filter for rows missing retail).
   if (filters.minMargin !== "" || filters.maxMargin !== "") {
-    // Supabase/PostgREST can't filter on computed expressions directly, so for
-    // high/thin margin we rely on a Postgres view created in this migration
-    // phase OR filter client-side. For MVP we filter on the server by issuing
-    // a zero-margin proxy: `retail > cost` when minMargin > 0, and apply
-    // exact bounds client-side after fetch.
-    if (filters.minMargin !== "" && Number(filters.minMargin) > 0) {
-      query = query.filter("retail_price", "gt", "cost");
-    }
+    if (filters.minMargin !== "") query = query.gte("margin_ratio", Number(filters.minMargin));
+    if (filters.maxMargin !== "") query = query.lte("margin_ratio", Number(filters.maxMargin));
   }
 
   // Activity: last-sale windows
@@ -160,15 +216,15 @@ export async function searchProducts(
     const now = new Date();
     const days = filters.lastSaleWithin === "30d" ? 30 : filters.lastSaleWithin === "90d" ? 90 : 365;
     const threshold = new Date(now.getTime() - days * 24 * 60 * 60 * 1000).toISOString();
-    query = query.gte("last_sale_date", threshold);
+    query = query.gte(plan.lastSaleField, threshold);
   }
   if (filters.lastSaleNever) {
-    query = query.is("last_sale_date", null);
+    query = query.is(plan.lastSaleField, null);
   }
   if (filters.lastSaleOlderThan !== "") {
     const years = filters.lastSaleOlderThan === "2y" ? 2 : 5;
     const threshold = new Date(Date.now() - years * 365 * 24 * 60 * 60 * 1000).toISOString();
-    query = query.lt("last_sale_date", threshold);
+    query = query.lt(plan.lastSaleField, threshold);
   }
 
   // Activity: edited
@@ -211,6 +267,10 @@ export async function searchProducts(
     }
   }
 
+  if (plan.requireAggregatesReady) {
+    query = query.eq("aggregates_ready", true);
+  }
+
   // Units sold window (filters map to the per-window denormalized columns
   // on products — no derived view needed for these)
   if (filters.unitsSoldWindow !== "" && (filters.minUnitsSold !== "" || filters.maxUnitsSold !== "")) {
@@ -244,17 +304,8 @@ export async function searchProducts(
     query = query.lte("stock_coverage_days", Number(filters.maxStockCoverageDays));
   }
 
-  // Sorting — validate against whitelist to prevent arbitrary column injection.
-  // "days_since_sale" is a presentation alias for last_sale_date with inverted
-  // direction: more days = older = ascending in days is descending in date.
-  let effectiveSortBy: string = filters.sortBy;
-  let effectiveAscending = filters.sortDir !== "desc";
-  if (filters.sortBy === "days_since_sale") {
-    effectiveSortBy = "last_sale_date";
-    effectiveAscending = !effectiveAscending;
-  }
-  const sortField = ALLOWED_SORT_FIELDS.has(effectiveSortBy) ? effectiveSortBy : "sku";
-  query = query.order(sortField, { ascending: effectiveAscending, nullsFirst: false }).range(from, to);
+  const sortField = ALLOWED_DERIVED_SORT_FIELDS.has(plan.sortField) ? plan.sortField : "sku";
+  query = query.order(sortField, { ascending: plan.ascending, nullsFirst: false }).range(from, to);
 
   const { data, count, error } = await query;
 
@@ -262,32 +313,7 @@ export async function searchProducts(
     throw new Error(error.message);
   }
 
-  let products = (data ?? []) as Product[];
-
-  // Margin bound is applied client-side because PostgREST can't filter on a
-  // computed expression. Server-side retail>cost already cut zero/negative
-  // cases when minMargin>0.
-  if (filters.minMargin !== "" || filters.maxMargin !== "") {
-    const min = filters.minMargin === "" ? -Infinity : Number(filters.minMargin);
-    const max = filters.maxMargin === "" ? Infinity : Number(filters.maxMargin);
-    products = products.filter((p) => {
-      if (p.retail_price <= 0) return false;
-      const margin = (p.retail_price - p.cost) / p.retail_price;
-      return margin >= min && margin <= max;
-    });
-  }
-
-  // Margin is a derived ratio. PostgREST can't sort on a computed expression,
-  // so when sortBy=margin we sort the current page client-side. Users see a
-  // "(page)" hint on the header so the scope is clear.
-  if (filters.sortBy === "margin") {
-    const dir = filters.sortDir === "desc" ? -1 : 1;
-    products = [...products].sort((a, b) => {
-      const ma = a.retail_price > 0 ? (a.retail_price - a.cost) / a.retail_price : -Infinity;
-      const mb = b.retail_price > 0 ? (b.retail_price - b.cost) / b.retail_price : -Infinity;
-      return (ma - mb) * dir;
-    });
-  }
+  const products = (data ?? []) as Product[];
 
   return {
     products,

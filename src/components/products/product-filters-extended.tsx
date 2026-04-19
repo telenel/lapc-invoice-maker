@@ -282,6 +282,223 @@ export function ProductFiltersExtended({
         </div>
       </section>
 
+      {/* Sales analytics */}
+      <section className="space-y-2">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Sales analytics
+        </h3>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-1.5">
+            <Label htmlFor="pf-units-window">Units sold window</Label>
+            <select
+              id="pf-units-window"
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              value={filters.unitsSoldWindow}
+              onChange={(e) =>
+                onChange({
+                  unitsSoldWindow: e.target.value as ProductFilters["unitsSoldWindow"],
+                })
+              }
+            >
+              <option value="">Any</option>
+              <option value="30d">Last 30 days</option>
+              <option value="90d">Last 90 days</option>
+              <option value="1y">Last year</option>
+              <option value="3y">Last 3 years</option>
+              <option value="lifetime">Lifetime</option>
+            </select>
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="pf-min-units">Min units sold</Label>
+            <Input
+              id="pf-min-units"
+              type="number"
+              inputMode="numeric"
+              min="0"
+              placeholder="0"
+              value={filters.minUnitsSold}
+              onChange={(e) => onChange({ minUnitsSold: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="pf-max-units">Max units sold</Label>
+            <Input
+              id="pf-max-units"
+              type="number"
+              inputMode="numeric"
+              min="0"
+              placeholder="0"
+              value={filters.maxUnitsSold}
+              onChange={(e) => onChange({ maxUnitsSold: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label className="invisible">Lifetime</Label>
+            <label
+              htmlFor="pf-never-sold-lifetime"
+              className="flex h-9 items-center gap-2 text-sm"
+            >
+              <input
+                id="pf-never-sold-lifetime"
+                type="checkbox"
+                className="size-4 rounded border-border"
+                checked={filters.neverSoldLifetime}
+                onChange={(e) => onChange({ neverSoldLifetime: e.target.checked })}
+              />
+              Never sold lifetime
+            </label>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-1.5">
+            <Label htmlFor="pf-revenue-window">Revenue window</Label>
+            <select
+              id="pf-revenue-window"
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              value={filters.revenueWindow}
+              onChange={(e) =>
+                onChange({
+                  revenueWindow: e.target.value as ProductFilters["revenueWindow"],
+                })
+              }
+            >
+              <option value="">Any</option>
+              <option value="30d">Last 30 days</option>
+              <option value="90d">Last 90 days</option>
+              <option value="1y">Last year</option>
+              <option value="3y">Last 3 years</option>
+              <option value="lifetime">Lifetime</option>
+            </select>
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="pf-min-revenue">Min revenue</Label>
+            <Input
+              id="pf-min-revenue"
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              value={filters.minRevenue}
+              onChange={(e) => onChange({ minRevenue: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="pf-max-revenue">Max revenue</Label>
+            <Input
+              id="pf-max-revenue"
+              type="number"
+              inputMode="decimal"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+              value={filters.maxRevenue}
+              onChange={(e) => onChange({ maxRevenue: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-1.5">
+            <Label htmlFor="pf-txns-window">Receipt window</Label>
+            <select
+              id="pf-txns-window"
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              value={filters.txnsWindow}
+              onChange={(e) =>
+                onChange({
+                  txnsWindow: e.target.value as ProductFilters["txnsWindow"],
+                })
+              }
+            >
+              <option value="">Any</option>
+              <option value="1y">Last year</option>
+              <option value="lifetime">Lifetime</option>
+            </select>
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="pf-min-txns">Min receipts</Label>
+            <Input
+              id="pf-min-txns"
+              type="number"
+              inputMode="numeric"
+              min="0"
+              placeholder="0"
+              value={filters.minTxns}
+              onChange={(e) => onChange({ minTxns: e.target.value })}
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="pf-max-txns">Max receipts</Label>
+            <Input
+              id="pf-max-txns"
+              type="number"
+              inputMode="numeric"
+              min="0"
+              placeholder="0"
+              value={filters.maxTxns}
+              onChange={(e) => onChange({ maxTxns: e.target.value })}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Derived signals */}
+      <section className="space-y-2">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Derived signals
+        </h3>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-1.5">
+            <Label htmlFor="pf-first-sale-within">First sale within</Label>
+            <select
+              id="pf-first-sale-within"
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              value={filters.firstSaleWithin}
+              onChange={(e) =>
+                onChange({
+                  firstSaleWithin: e.target.value as ProductFilters["firstSaleWithin"],
+                })
+              }
+            >
+              <option value="">Any</option>
+              <option value="90d">Last 90 days</option>
+              <option value="1y">Last year</option>
+            </select>
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="pf-trend-direction">Trend</Label>
+            <select
+              id="pf-trend-direction"
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+              value={filters.trendDirection}
+              onChange={(e) =>
+                onChange({
+                  trendDirection: e.target.value as ProductFilters["trendDirection"],
+                })
+              }
+            >
+              <option value="">Any</option>
+              <option value="accelerating">Accelerating</option>
+              <option value="decelerating">Decelerating</option>
+            </select>
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="pf-max-stock-coverage-days">Max stock coverage days</Label>
+            <Input
+              id="pf-max-stock-coverage-days"
+              type="number"
+              inputMode="numeric"
+              min="0"
+              placeholder="30"
+              value={filters.maxStockCoverageDays}
+              onChange={(e) => onChange({ maxStockCoverageDays: e.target.value })}
+            />
+          </div>
+        </div>
+      </section>
+
       {/* Status */}
       <section className="space-y-2">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">

@@ -10,7 +10,7 @@ const BOOL_KEYS: (keyof ProductFilters)[] = [
   "hasBarcode", "hasIsbn",
   "missingBarcode", "missingIsbn", "missingTitle",
   "retailBelowCost", "zeroPrice",
-  "lastSaleNever", "editedSinceSync",
+  "lastSaleNever", "editedSinceSync", "neverSoldLifetime",
 ];
 
 const NUMERIC_STRING_KEYS: (keyof ProductFilters)[] = [
@@ -18,6 +18,10 @@ const NUMERIC_STRING_KEYS: (keyof ProductFilters)[] = [
   "minStock", "maxStock",
   "deptNum", "classNum", "catNum",
   "minMargin", "maxMargin",
+  "minUnitsSold", "maxUnitsSold",
+  "minRevenue", "maxRevenue",
+  "minTxns", "maxTxns",
+  "maxStockCoverageDays",
 ];
 
 const TEXT_KEYS: (keyof ProductFilters)[] = [
@@ -33,6 +37,11 @@ const ENUM_KEYS: { [K in keyof ProductFilters]?: readonly ProductFilters[K][] } 
   editedWithin: ["", "7d"],
   discontinued: ["", "yes", "no"],
   itemType: ["", "textbook", "used_textbook", "general_merchandise", "supplies", "other"],
+  unitsSoldWindow: ["", "30d", "90d", "1y", "3y", "lifetime"],
+  revenueWindow: ["", "30d", "90d", "1y", "3y", "lifetime"],
+  txnsWindow: ["", "1y", "lifetime"],
+  firstSaleWithin: ["", "90d", "1y"],
+  trendDirection: ["", "accelerating", "decelerating"],
 };
 
 function coerceNumericString(raw: string): string {

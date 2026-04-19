@@ -41,6 +41,11 @@ export interface Product {
   first_sale_date_computed: string | null;
   last_sale_date_computed: string | null;
   sales_aggregates_computed_at: string | null;
+  effective_last_sale_date?: string | null;
+  aggregates_ready?: boolean;
+  margin_ratio?: number | null;
+  stock_coverage_days?: number | null;
+  trend_direction?: "accelerating" | "decelerating" | "steady" | null;
   discontinued: boolean | null;
 }
 

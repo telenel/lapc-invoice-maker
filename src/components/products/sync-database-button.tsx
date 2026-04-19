@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,83 +12,91 @@ import {
 import { Button } from "@/components/ui/button";
 import { productApi, type SyncPullResult, type SyncRun } from "@/domains/product/api-client";
 
-export function SyncDatabaseButton() {
-  const [runs, setRuns] = useState<SyncRun[]>([]);
-  const [syncing, setSyncing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [lastResult, setLastResult] = useState<SyncPullResult | null>(null);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogMode, setDialogMode] = useState<"just-synced" | "history">("history");
-
-  useEffect(() => {
-    let cancelled = false;
-    productApi.getSyncRuns()
-      .then((r) => { if (!cancelled) setRuns(r.runs); })
-      .catch(() => { /* unauth / unconfigured — silent */ });
-    return () => { cancelled = true; };
-  }, []);
-
-  async function handleSync() {
-    setSyncing(true);
-    setError(null);
-    setLastResult(null);
-    try {
-      const result = await productApi.syncPrismPull();
-      setLastResult(result);
-      setDialogMode("just-synced");
-      setDialogOpen(true);
-      const refreshed = await productApi.getSyncRuns();
-      setRuns(refreshed.runs);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setSyncing(false);
-    }
-  }
-
-  function openHistory() {
-    setDialogMode("history");
-    setDialogOpen(true);
-  }
-
-  const latest = runs[0] ?? null;
-  const lastSyncLabel = latest?.completedAt
-    ? `Last synced ${relativeTime(new Date(latest.completedAt))}`
-    : latest
-    ? `Last attempt ${relativeTime(new Date(latest.startedAt))}`
-    : "Never synced";
-
-  return (
-    <>
-      <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" onClick={handleSync} disabled={syncing}>
-          {syncing ? "Syncing..." : "Sync Database"}
-        </Button>
-        <div className="flex flex-col items-start text-xs tabular-nums leading-tight text-muted-foreground">
-          <span>{lastSyncLabel}</span>
-          {runs.length > 0 ? (
-            <button
-              type="button"
-              onClick={openHistory}
-              className="text-xs text-muted-foreground underline hover:text-foreground"
-            >
-              History
-            </button>
-          ) : null}
-        </div>
-        {error ? <span className="text-xs text-destructive">{error}</span> : null}
-      </div>
-
-      <SyncResultsDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        mode={dialogMode}
-        lastResult={lastResult}
-        runs={runs}
-      />
-    </>
-  );
+export interface SyncDatabaseHandle {
+  openHistory: () => void;
 }
+
+export const SyncDatabaseButton = forwardRef<SyncDatabaseHandle, object>(
+  function SyncDatabaseButton(_props, ref) {
+    const [runs, setRuns] = useState<SyncRun[]>([]);
+    const [syncing, setSyncing] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [lastResult, setLastResult] = useState<SyncPullResult | null>(null);
+    const [dialogOpen, setDialogOpen] = useState(false);
+    const [dialogMode, setDialogMode] = useState<"just-synced" | "history">("history");
+
+    useEffect(() => {
+      let cancelled = false;
+      productApi.getSyncRuns()
+        .then((r) => { if (!cancelled) setRuns(r.runs); })
+        .catch(() => { /* unauth / unconfigured — silent */ });
+      return () => { cancelled = true; };
+    }, []);
+
+    async function handleSync() {
+      setSyncing(true);
+      setError(null);
+      setLastResult(null);
+      try {
+        const result = await productApi.syncPrismPull();
+        setLastResult(result);
+        setDialogMode("just-synced");
+        setDialogOpen(true);
+        const refreshed = await productApi.getSyncRuns();
+        setRuns(refreshed.runs);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err));
+      } finally {
+        setSyncing(false);
+      }
+    }
+
+    function openHistory() {
+      setDialogMode("history");
+      setDialogOpen(true);
+    }
+
+    useImperativeHandle(ref, () => ({ openHistory }), []);
+
+    const latest = runs[0] ?? null;
+    const lastSyncLabel = latest?.completedAt
+      ? `Last synced ${relativeTime(new Date(latest.completedAt))}`
+      : latest
+      ? `Last attempt ${relativeTime(new Date(latest.startedAt))}`
+      : "Never synced";
+
+    return (
+      <>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleSync} disabled={syncing}>
+            {syncing ? "Syncing..." : "Sync Database"}
+          </Button>
+          <div className="flex flex-col items-start text-xs tabular-nums leading-tight text-muted-foreground">
+            <span>{lastSyncLabel}</span>
+            {runs.length > 0 ? (
+              <button
+                type="button"
+                onClick={openHistory}
+                className="text-xs text-muted-foreground underline hover:text-foreground"
+              >
+                History
+              </button>
+            ) : null}
+          </div>
+          {error ? <span className="text-xs text-destructive">{error}</span> : null}
+        </div>
+
+        <SyncResultsDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          mode={dialogMode}
+          lastResult={lastResult}
+          runs={runs}
+        />
+      </>
+    );
+  },
+);
 
 function SyncResultsDialog({
   open,
@@ -108,25 +116,39 @@ function SyncResultsDialog({
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>
-            {mode === "just-synced" ? "Sync complete" : "Sync history"}
+            {mode === "just-synced"
+              ? lastResult?.status === "partial" ? "Sync partially complete" : "Sync complete"
+              : "Sync history"}
           </DialogTitle>
           <DialogDescription>
             {mode === "just-synced"
-              ? "The Supabase mirror has been refreshed from WinPRISM. Here's what changed."
+              ? lastResult?.status === "partial"
+                ? "The catalog refresh completed, but the transaction analytics stage needs attention."
+                : "The Supabase mirror has been refreshed from WinPRISM. Here's what changed."
               : "Most recent Prism pull-sync runs."}
           </DialogDescription>
         </DialogHeader>
 
         {mode === "just-synced" && lastResult ? (
-          <div className="grid grid-cols-4 gap-3 py-2">
-            <Stat label="Scanned" value={lastResult.scanned} />
-            <Stat label="Updated" value={lastResult.updated} accent={lastResult.updated > 0} />
-            <Stat label="Removed" value={lastResult.removed} accent={lastResult.removed > 0} />
-            <Stat label="Catalog time" value={formatDuration(lastResult.durationMs)} />
-            <Stat label="Txns +" value={lastResult.txnsAdded} accent={lastResult.txnsAdded > 0} />
-            <Stat label="Aggs refreshed" value={lastResult.aggregatesUpdated} accent={lastResult.aggregatesUpdated > 0} />
-            <Stat label="Txn time" value={formatDuration(lastResult.txnSyncDurationMs)} />
-          </div>
+          <>
+            <div className="grid grid-cols-4 gap-3 py-2">
+              <Stat label="Scanned" value={lastResult.scanned} />
+              <Stat label="Updated" value={lastResult.updated} accent={lastResult.updated > 0} />
+              <Stat label="Removed" value={lastResult.removed} accent={lastResult.removed > 0} />
+              <Stat label="Catalog time" value={formatDuration(lastResult.durationMs)} />
+              <Stat label="Txns +" value={lastResult.txnsAdded} accent={lastResult.txnsAdded > 0} />
+              <Stat label="Aggs refreshed" value={lastResult.aggregatesUpdated} accent={lastResult.aggregatesUpdated > 0} />
+              <Stat label="Txn time" value={formatDuration(lastResult.txnSyncDurationMs)} />
+            </div>
+            {lastResult.status === "partial" ? (
+              <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                {lastResult.txnSyncError
+                  ?? (lastResult.txnSyncSkipped
+                    ? `Transaction sync skipped: ${lastResult.txnSyncSkipped}.`
+                    : "Transaction analytics did not finish cleanly.")}
+              </div>
+            ) : null}
+          </>
         ) : null}
 
         <div className="max-h-80 overflow-y-auto rounded-md border">
@@ -194,6 +216,13 @@ function Stat({ label, value, accent }: { label: string; value: number | string;
 function StatusBadge({ status, error }: { status: string; error: string | null }) {
   if (status === "ok") {
     return <span className="rounded bg-green-100 px-1.5 py-0.5 text-[11px] text-green-800">ok</span>;
+  }
+  if (status === "partial") {
+    return (
+      <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[11px] text-amber-800" title={error ?? undefined}>
+        partial
+      </span>
+    );
   }
   if (status === "failed") {
     return (

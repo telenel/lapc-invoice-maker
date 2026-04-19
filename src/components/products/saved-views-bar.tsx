@@ -14,12 +14,20 @@ interface Props {
   onPresetClick: (view: SavedView) => void;
   onSaveClick: () => void;
   onDeleteClick: (view: SavedView) => void;
+  onViewsResolved?: (views: SavedView[]) => void;
 }
 
-export function SavedViewsBar({ activeSlug, activeId, onPresetClick, onSaveClick, onDeleteClick }: Props) {
+export function SavedViewsBar({
+  activeSlug,
+  activeId,
+  onPresetClick,
+  onSaveClick,
+  onDeleteClick,
+  onViewsResolved,
+}: Props) {
   const [system, setSystem] = useState<SavedView[]>(SYSTEM_PRESET_VIEWS);
   const [mine, setMine] = useState<SavedView[]>([]);
-  const [fellBack, setFellBack] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const listRef = useRef<HTMLOListElement>(null);
 
   useEffect(() => {
@@ -27,14 +35,19 @@ export function SavedViewsBar({ activeSlug, activeId, onPresetClick, onSaveClick
     listViews()
       .then((r) => {
         if (cancelled) return;
-        if (r.system.length > 0) setSystem(r.system);
+        const nextSystem = r.system.length > 0 ? r.system : SYSTEM_PRESET_VIEWS;
+        setSystem(nextSystem);
         setMine(r.mine);
+        setLoadError(null);
+        onViewsResolved?.([...nextSystem, ...r.mine]);
       })
-      .catch(() => {
-        if (!cancelled) setFellBack(true);
+      .catch((err) => {
+        if (cancelled) return;
+        setLoadError(err instanceof Error ? err.message : "Could not load saved views.");
+        onViewsResolved?.(SYSTEM_PRESET_VIEWS);
       });
     return () => { cancelled = true; };
-  }, []);
+  }, [onViewsResolved]);
 
   const byGroup = new Map<PresetGroup, SavedView[]>();
   for (const v of system) {
@@ -103,9 +116,9 @@ export function SavedViewsBar({ activeSlug, activeId, onPresetClick, onSaveClick
         + Save View
       </Button>
 
-      {fellBack && (
+      {loadError && (
         <p className="w-full text-xs text-muted-foreground" role="status" aria-live="polite">
-          Showing system presets only — couldn&apos;t load saved views.
+          Showing system presets only — {loadError}
         </p>
       )}
     </div>

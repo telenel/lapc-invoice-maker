@@ -45,13 +45,15 @@ async function handle(request: NextRequest): Promise<NextResponse> {
     const result = await runPrismPull();
 
     // Incremental transaction history + aggregate recompute. Isolated from
-    // the catalog step's success/failure — even if this block throws, we
-    // still surface the catalog result.
+    // the catalog step's success/failure — but the run is marked partial so
+    // operators can see when analytics are stale or skipped.
     let txnResult: { txnsAdded: number; aggregatesUpdated: number; durationMs: number; skipped?: string } = {
       txnsAdded: 0,
       aggregatesUpdated: 0,
       durationMs: 0,
     };
+    let status: "ok" | "partial" = "ok";
+    let txnSyncError: string | null = null;
     try {
       const { getPrismPool } = await import("@/lib/prism");
       const { runSalesTxnSync } = await import("@/domains/product/sales-txn-sync");
@@ -59,8 +61,14 @@ async function handle(request: NextRequest): Promise<NextResponse> {
       const pool = await getPrismPool();
       const supabase = getSupabaseAdminClient();
       txnResult = await runSalesTxnSync({ supabase, prism: pool });
+      if (txnResult.skipped) {
+        status = "partial";
+        txnSyncError = `Transaction sync skipped: ${txnResult.skipped}`;
+      }
     } catch (txnErr) {
-      console.error("sales-txn-sync failed (non-fatal):", txnErr);
+      status = "partial";
+      txnSyncError = txnErr instanceof Error ? txnErr.message : String(txnErr);
+      console.error("sales-txn-sync failed:", txnErr);
     }
 
     await prisma.syncRun.update({
@@ -73,15 +81,19 @@ async function handle(request: NextRequest): Promise<NextResponse> {
         txnsAdded: txnResult.txnsAdded,
         aggregatesUpdated: txnResult.aggregatesUpdated,
         txnSyncDurationMs: txnResult.durationMs,
-        status: "ok",
+        status,
+        error: txnSyncError,
       },
     });
     return NextResponse.json({
       runId: run.id,
+      status,
       ...result,
       txnsAdded: txnResult.txnsAdded,
       aggregatesUpdated: txnResult.aggregatesUpdated,
       txnSyncDurationMs: txnResult.durationMs,
+      txnSyncSkipped: txnResult.skipped,
+      txnSyncError,
     });
   } catch (err) {
     await prisma.syncRun.update({
