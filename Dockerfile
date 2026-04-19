@@ -84,11 +84,14 @@ COPY --from=builder /app/scripts/docker-entrypoint.sh ./scripts/docker-entrypoin
 # Prisma v7 generates client to src/generated/prisma (not node_modules/.prisma)
 COPY --from=builder /app/src/generated/prisma ./src/generated/prisma
 
-# Install prisma CLI for migrations at runtime, then copy dotenv on top
-# (prisma's npm install creates nested node_modules that swallows dotenv if installed together)
-RUN npm install --no-save prisma
+# Copy the Prisma CLI directly from the dependency stage so runtime migrations
+# do not pay for a fresh npm install during every image build.
+COPY --from=deps /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
+COPY --from=deps /app/node_modules/prisma ./node_modules/prisma
+COPY --from=deps /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=deps /app/node_modules/dotenv ./node_modules/dotenv
 
+RUN chmod +x ./node_modules/.bin/prisma
 RUN chmod +x ./scripts/docker-entrypoint.sh
 RUN addgroup --system app && adduser --system --ingroup app app
 RUN mkdir -p data/pdfs public/uploads && chown -R app:app data public/uploads
