@@ -74,6 +74,12 @@ interface ProductTableProps {
   onHideColumn?: (key: OptionalColumnKey) => void;
   /** Reports how many optional columns were hidden by this render (always 0 here). */
   onHiddenChange?: (count: number) => void;
+  /**
+   * When true, the table returns null for an empty result set so the page
+   * can own the empty-state message (e.g. preset-specific "no matches"
+   * treatment) without stacking two empty states on top of each other.
+   */
+  suppressEmptyState?: boolean;
 }
 
 function formatCurrency(value: number): string {
@@ -176,6 +182,7 @@ export function ProductTable({
   visibleColumns,
   onHideColumn,
   onHiddenChange,
+  suppressEmptyState = false,
 }: ProductTableProps) {
   void onHideColumn;
   const { byId: vendorsById, available: vendorsAvailable } = useVendorDirectory();
@@ -212,6 +219,7 @@ export function ProductTable({
     products.length > 0 && products.some((p) => isSelected(p.sku)) && !allOnPageSelected;
 
   if (!loading && products.length === 0) {
+    if (suppressEmptyState) return null;
     return (
       <EmptyState
         icon={<SearchIcon className="size-10 text-muted-foreground" />}

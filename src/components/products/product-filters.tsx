@@ -250,17 +250,17 @@ function VendorSelect({
           )}
         </span>
         {value ? (
-          <span
-            role="button"
+          <button
+            type="button"
             aria-label="Clear vendor"
             onClick={(e) => {
               e.stopPropagation();
               onChange("");
             }}
-            className="inline-flex items-center justify-center rounded-[3px] p-0.5 text-muted-foreground hover:text-foreground hover:bg-accent"
+            className="inline-flex items-center justify-center rounded-[3px] p-0.5 text-muted-foreground hover:text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <XIcon className="size-3" aria-hidden="true" />
-          </span>
+          </button>
         ) : null}
         <ChevronDownIcon
           className={`size-3 text-muted-foreground transition-transform ${

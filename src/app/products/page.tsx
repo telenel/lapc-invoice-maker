@@ -55,7 +55,10 @@ export default function ProductsPage() {
     const hasExplicitFilter = (Object.keys(EMPTY_FILTERS) as Array<keyof ProductFilters>).some(
       (k) => !TRANSPORT_KEYS.has(k) && parsed[k] !== EMPTY_FILTERS[k],
     );
-    if (!hasExplicitFilter && parsed.minStock === "") {
+    // Do NOT inject the stock default when a saved view is being restored —
+    // the view itself is authoritative, including an intentionally empty one.
+    const isRestoringView = params.get("view") !== null;
+    if (!isRestoringView && !hasExplicitFilter && parsed.minStock === "") {
       return { ...parsed, minStock: "1" };
     }
     return parsed;
@@ -505,6 +508,7 @@ export default function ProductsPage() {
             visibleColumns={runtimeColumns ?? baseColumns}
             onHideColumn={(key) => columnsRef.current?.hideColumn(key)}
             onHiddenChange={setHiddenCount}
+            suppressEmptyState={data?.total === 0 && activeView != null}
           />
         </div>
       </div>
