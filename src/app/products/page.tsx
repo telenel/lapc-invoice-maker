@@ -112,9 +112,12 @@ export default function ProductsPage() {
 
   function handlePresetClick(view: SavedView) {
     const { filters: next, visibleColumns } = applyPreset(view, filters);
+    const merged = visibleColumns
+      ? Array.from(new Set([...baseColumns, ...visibleColumns]))
+      : null;
     const withPage = { ...next, page: 1 } as ProductFilters;
     setActiveView(view);
-    setRuntimeColumns(visibleColumns);
+    setRuntimeColumns(merged);
     updateFilters(withPage, { view: view.slug ?? view.id });
   }
 
