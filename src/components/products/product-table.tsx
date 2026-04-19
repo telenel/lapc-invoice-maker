@@ -169,7 +169,14 @@ export function ProductTable({
                 <SortHeader field="txns_1y" label="Receipts 1y" sortBy={sortBy} sortDir={sortDir} onSort={onSort} className="text-right" />
               )}
               {visibleColumns?.includes("margin") && (
-                <SortHeader field="margin" label="Margin %" sortBy={sortBy} sortDir={sortDir} onSort={onSort} className="text-right" />
+                <SortHeader
+                  field="margin"
+                  label={sortBy === "margin" ? "Margin % (page)" : "Margin %"}
+                  sortBy={sortBy}
+                  sortDir={sortDir}
+                  onSort={onSort}
+                  className="text-right"
+                />
               )}
               {visibleColumns?.includes("days_since_sale") && (
                 <SortHeader field="days_since_sale" label="Days since sale" sortBy={sortBy} sortDir={daysSinceSaleDisplayDir} onSort={onSort} className="text-right" />

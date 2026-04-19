@@ -277,6 +277,18 @@ export async function searchProducts(
     });
   }
 
+  // Margin is a derived ratio. PostgREST can't sort on a computed expression,
+  // so when sortBy=margin we sort the current page client-side. Users see a
+  // "(page)" hint on the header so the scope is clear.
+  if (filters.sortBy === "margin") {
+    const dir = filters.sortDir === "desc" ? -1 : 1;
+    products = [...products].sort((a, b) => {
+      const ma = a.retail_price > 0 ? (a.retail_price - a.cost) / a.retail_price : -Infinity;
+      const mb = b.retail_price > 0 ? (b.retail_price - b.cost) / b.retail_price : -Infinity;
+      return (ma - mb) * dir;
+    });
+  }
+
   return {
     products,
     total: count ?? 0,
