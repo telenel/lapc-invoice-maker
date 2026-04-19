@@ -140,14 +140,35 @@ export function SavedViewsBar({
           ) : null}
         </div>
 
-        {/* Featured chips */}
-        <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+        {/* Featured chips — roving-tabindex group with arrow-key navigation */}
+        <div
+          role="toolbar"
+          aria-label="Featured presets"
+          className="flex items-center gap-1.5 flex-wrap min-w-0"
+          onKeyDown={(e) => {
+            if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+            const chips = Array.from(
+              (e.currentTarget as HTMLElement).querySelectorAll<HTMLButtonElement>(
+                "button[data-featured-chip]",
+              ),
+            );
+            const idx = chips.indexOf(document.activeElement as HTMLButtonElement);
+            if (idx === -1) return;
+            const next =
+              e.key === "ArrowRight"
+                ? (idx + 1) % chips.length
+                : (idx - 1 + chips.length) % chips.length;
+            chips[next]?.focus();
+            e.preventDefault();
+          }}
+        >
           {featured.map((v) => {
             const active = activeSlug === v.slug;
             return (
               <button
                 key={v.id}
                 type="button"
+                data-featured-chip
                 aria-pressed={active}
                 onClick={() => onPresetClick(v)}
                 title={v.description ?? v.name}

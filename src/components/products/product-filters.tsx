@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDownIcon, SearchIcon, XIcon } from "lucide-react";
 import { useVendorDirectory } from "@/domains/product/vendor-directory";
 import type { ProductFilters } from "@/domains/product/types";
@@ -175,12 +176,37 @@ function VendorSelect({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
 
-  // Close on outside click
+  const recomputeRect = () => {
+    if (triggerRef.current) setTriggerRect(triggerRef.current.getBoundingClientRect());
+  };
+
+  // Keep the portalled popover aligned with the trigger as the rail scrolls,
+  // the window resizes, or any ancestor scrolls.
+  useLayoutEffect(() => {
+    if (!open) return;
+    recomputeRect();
+    const update = () => recomputeRect();
+    window.addEventListener("scroll", update, true);
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", update);
+    };
+  }, [open]);
+
+  // Close on outside click (checks both the trigger shell and the portalled
+  // popover since they live in different DOM subtrees).
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+      const t = e.target as Node;
+      if (rootRef.current?.contains(t)) return;
+      if (popoverRef.current?.contains(t)) return;
+      setOpen(false);
     };
     window.addEventListener("mousedown", handler);
     return () => window.removeEventListener("mousedown", handler);
@@ -229,7 +255,10 @@ function VendorSelect({
       {/* Toggle button and clear button are siblings inside a shared shell so
           we don't nest interactive controls. The shell renders the border, and
           each button owns its own click target. */}
-      <div className="flex w-full items-center gap-1 rounded-md border border-border bg-card px-1.5 py-1 text-xs focus-within:ring-2 focus-within:ring-ring focus-within:border-ring">
+      <div
+        ref={triggerRef}
+        className="flex w-full items-center gap-1 rounded-md border border-border bg-card px-1.5 py-1 text-xs focus-within:ring-2 focus-within:ring-ring focus-within:border-ring"
+      >
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
@@ -274,59 +303,68 @@ function VendorSelect({
         ) : null}
       </div>
 
-      {open ? (
-        <div
-          className="absolute left-0 right-0 top-[calc(100%+4px)] z-30 rounded-md border border-border bg-card shadow-[0_6px_18px_-6px_rgba(0,0,0,.18)]"
-          role="listbox"
-        >
-          <div className="p-1.5 border-b border-border">
-            <div className="flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1">
-              <SearchIcon
-                className="size-3 text-muted-foreground shrink-0"
-                aria-hidden="true"
-              />
-              <input
-                autoFocus
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search vendors…"
-                className="flex-1 min-w-0 border-none outline-none bg-transparent text-foreground text-xs"
-              />
-            </div>
-          </div>
-          <ul className="max-h-[240px] overflow-auto py-1">
-            {filtered.length === 0 ? (
-              <li className="px-2.5 py-2 text-[11px] text-muted-foreground">
-                No vendors match &ldquo;{query}&rdquo;.
-              </li>
-            ) : (
-              filtered.map((v) => {
-                const selected = String(v.vendorId) === value;
-                return (
-                  <li key={v.vendorId}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onChange(String(v.vendorId));
-                        setOpen(false);
-                        setQuery("");
-                      }}
-                      className={`flex w-full items-baseline justify-between gap-2 px-2.5 py-1 text-[11.5px] text-left hover:bg-accent ${
-                        selected ? "bg-primary/10 text-primary" : "text-foreground"
-                      }`}
-                    >
-                      <span className="truncate">{v.name}</span>
-                      <span className="font-mono tnum text-[10px] text-muted-foreground shrink-0">
-                        #{v.vendorId}
-                      </span>
-                    </button>
+      {open && triggerRect && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              ref={popoverRef}
+              role="listbox"
+              className="fixed z-[60] rounded-md border border-border bg-card shadow-[0_10px_30px_-8px_color-mix(in_oklch,var(--foreground)_25%,transparent)]"
+              style={{
+                top: triggerRect.bottom + 4,
+                left: triggerRect.left,
+                width: triggerRect.width,
+              }}
+            >
+              <div className="p-1.5 border-b border-border">
+                <div className="flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1">
+                  <SearchIcon
+                    className="size-3 text-muted-foreground shrink-0"
+                    aria-hidden="true"
+                  />
+                  <input
+                    autoFocus
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search vendors…"
+                    className="flex-1 min-w-0 border-none outline-none bg-transparent text-foreground text-xs"
+                  />
+                </div>
+              </div>
+              <ul className="max-h-[240px] overflow-auto py-1">
+                {filtered.length === 0 ? (
+                  <li className="px-2.5 py-2 text-[11px] text-muted-foreground">
+                    No vendors match &ldquo;{query}&rdquo;.
                   </li>
-                );
-              })
-            )}
-          </ul>
-        </div>
-      ) : null}
+                ) : (
+                  filtered.map((v) => {
+                    const isSelected = String(v.vendorId) === value;
+                    return (
+                      <li key={v.vendorId}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onChange(String(v.vendorId));
+                            setOpen(false);
+                            setQuery("");
+                          }}
+                          className={`flex w-full items-baseline justify-between gap-2 px-2.5 py-1 text-[11.5px] text-left hover:bg-accent ${
+                            isSelected ? "bg-primary/10 text-primary" : "text-foreground"
+                          }`}
+                        >
+                          <span className="truncate">{v.name}</span>
+                          <span className="font-mono tnum text-[10px] text-muted-foreground shrink-0">
+                            #{v.vendorId}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })
+                )}
+              </ul>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }
