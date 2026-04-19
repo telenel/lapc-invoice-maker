@@ -3,19 +3,9 @@ import { z } from "zod";
 import { withAuth } from "@/domains/shared/auth";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { PresetGroup, SavedView } from "@/domains/product/types";
+import { PRODUCTS_PAGE_GROUPS } from "@/domains/product/view-groups";
 
 export const dynamic = "force-dynamic";
-
-export const PRODUCTS_PAGE_GROUPS: PresetGroup[] = [
-  "dead-weight",
-  "movers",
-  "trending",
-  "stock-health",
-  "data-quality",
-  "pricing",
-  "recent-activity",
-  "textbook",
-];
 
 const postBodySchema = z.object({
   name: z.string().min(1).max(120),

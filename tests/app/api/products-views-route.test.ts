@@ -15,8 +15,9 @@ vi.mock("@/lib/supabase/admin", () => ({
 
 import { getServerSession } from "next-auth";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import { GET, POST, PRODUCTS_PAGE_GROUPS } from "@/app/api/products/views/route";
+import { GET, POST } from "@/app/api/products/views/route";
 import { DELETE } from "@/app/api/products/views/[id]/route";
+import { PRODUCTS_PAGE_GROUPS } from "@/domains/product/view-groups";
 
 type QueryResult = { data: unknown; error: unknown };
 
