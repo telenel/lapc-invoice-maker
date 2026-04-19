@@ -28,6 +28,24 @@ describe("deploy and migration guardrails", () => {
     expect(bootstrapSql).toContain('CREATE POLICY "Authenticated users can read products"');
   });
 
+  it("adds the saved_searches slug constraint before preset upserts rely on ON CONFLICT", () => {
+    const migrationDirs = fs
+      .readdirSync(path.join(repoRoot, "prisma/migrations"), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      .sort();
+    const constraintName = "20260418070000_saved_searches_slug_unique_constraint";
+    const constraintSql = readRepoFile(`prisma/migrations/${constraintName}/migration.sql`);
+
+    expect(migrationDirs.indexOf(constraintName)).toBeGreaterThan(
+      migrationDirs.indexOf("20260418064543_saved_searches_presets_schema"),
+    );
+    expect(migrationDirs.indexOf(constraintName)).toBeLessThan(
+      migrationDirs.indexOf("20260418070856_seed_products_page_presets"),
+    );
+    expect(constraintSql).toContain('ADD CONSTRAINT "saved_searches_slug_key" UNIQUE ("slug")');
+  });
+
   it("keeps existing products_with_derived view columns in place before appending new ones", () => {
     const sql = readRepoFile("prisma/migrations/20260418153000_products_derived_accuracy_and_margin/migration.sql");
 
