@@ -13,7 +13,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon, SearchIcon, XIcon } from "lucide-react";
-import type { Product, ProductTab } from "@/domains/product/types";
+import { buildProductExplanationChips, getCoverageBand, getRecommendedAction } from "@/domains/product/explanations";
+import type { Product, ProductFilters, ProductTab } from "@/domains/product/types";
 import { PAGE_SIZE, COLUMN_PRIORITY } from "@/domains/product/constants";
 import type { OptionalColumnKey } from "@/domains/product/constants";
 import { useHiddenColumns } from "./use-hidden-columns";
@@ -35,6 +36,7 @@ interface ProductTableProps {
   visibleColumns?: OptionalColumnKey[];
   onHideColumn?: (key: OptionalColumnKey) => void;
   onHiddenChange?: (count: number) => void;
+  activeFilters?: ProductFilters;
 }
 
 function formatCurrency(value: number): string {
@@ -158,6 +160,7 @@ export function ProductTable({
   visibleColumns = [],
   onHideColumn,
   onHiddenChange,
+  activeFilters,
 }: ProductTableProps) {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const extraCols = visibleColumns?.length ?? 0;
@@ -273,147 +276,195 @@ export function ProductTable({
                     ))}
                   </TableRow>
                 ))
-              : products.map((product) => (
-                  <TableRow
-                    key={product.sku}
-                    className={isSelected(product.sku) ? "bg-primary/5" : ""}
-                  >
-                    <TableCell>
-                      <Checkbox
-                        checked={isSelected(product.sku)}
-                        onCheckedChange={() => onToggle(product)}
-                        aria-label={`Select SKU ${product.sku}`}
-                      />
-                    </TableCell>
-                    <TableCell className="font-medium text-primary">
-                      {product.sku}
-                    </TableCell>
-                    {tab === "textbooks" ? (
-                      <>
-                        <TableCell className="font-medium max-w-[300px] truncate">
-                          {product.title ?? product.description ?? "—"}
+              : products.map((product) => {
+                    const explanationChips = activeFilters
+                      ? buildProductExplanationChips(product, activeFilters).slice(0, 3)
+                      : [];
+                    const recommendedAction = getRecommendedAction(product);
+                    const coverageBand = getCoverageBand(product.stock_coverage_days);
+
+                    return (
+                      <TableRow
+                        key={product.sku}
+                        className={isSelected(product.sku) ? "bg-primary/5" : ""}
+                      >
+                        <TableCell>
+                          <Checkbox
+                            checked={isSelected(product.sku)}
+                            onCheckedChange={() => onToggle(product)}
+                            aria-label={`Select SKU ${product.sku}`}
+                          />
                         </TableCell>
-                        <TableCell>{product.author ?? "—"}</TableCell>
-                        <TableCell className="font-mono text-xs">
-                          {product.isbn ?? "—"}
+                        <TableCell className="font-medium text-primary">
+                          {product.sku}
                         </TableCell>
-                        <TableCell>{product.edition ?? "—"}</TableCell>
-                        <TableCell className="font-mono text-xs">
-                          {product.barcode ?? "—"}
-                        </TableCell>
-                      </>
-                    ) : (
-                      <>
-                        <TableCell className="font-medium max-w-[300px] truncate">
-                          {product.description ?? "—"}
-                        </TableCell>
-                        <TableCell className="font-mono text-xs">
-                          {product.barcode ?? "—"}
-                        </TableCell>
-                        <TableCell className="font-mono text-xs">
-                          {product.catalog_number ?? "—"}
-                        </TableCell>
-                        <TableCell className="text-xs">
-                          {product.product_type ?? "—"}
-                        </TableCell>
-                        <TableCell className="text-xs">
-                          Vendor #{product.vendor_id}
-                        </TableCell>
-                      </>
-                    )}
-                    <TableCell className="text-right font-medium">
-                      {formatCurrency(product.retail_price)}
-                    </TableCell>
-                    <TableCell className="text-right text-muted-foreground">
-                      {formatCurrency(product.cost)}
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      {formatSaleDate(getProductDisplaySaleDate(product))}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {product.stock_on_hand ?? "—"}
-                    </TableCell>
-                    {visibleColumns?.includes("dcc") && (
-                      <TableCell className="min-w-0 max-w-[16ch]" data-priority="medium">
-                        {product.dept_num != null ? (
+                        {tab === "textbooks" ? (
                           <>
-                            <div className="font-mono text-xs tabular-nums" translate="no">
-                              {product.dept_num}.{product.class_num ?? ""}.{product.cat_num ?? ""}
-                            </div>
-                            <div
-                              className="truncate text-xs text-muted-foreground"
-                              title={[product.dept_name, product.class_name, product.cat_name].filter(Boolean).join(" › ")}
-                            >
-                              {[product.dept_name, product.class_name, product.cat_name].filter(Boolean).join(" › ") || "—"}
-                            </div>
+                            <TableCell className="font-medium max-w-[320px]">
+                              <div className="truncate">{product.title ?? product.description ?? "—"}</div>
+                              {activeFilters ? (
+                                <div className="mt-1 flex flex-wrap gap-1">
+                                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] text-primary">
+                                    {recommendedAction}
+                                  </span>
+                                  {coverageBand !== "unknown" ? (
+                                    <span className="rounded-full bg-muted px-2 py-0.5 text-[11px]">
+                                      {coverageBand}
+                                    </span>
+                                  ) : null}
+                                  {explanationChips.map((chip) => (
+                                    <span
+                                      key={chip}
+                                      className="rounded-full border px-2 py-0.5 text-[11px] text-muted-foreground"
+                                    >
+                                      {chip}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : null}
+                            </TableCell>
+                            <TableCell>{product.author ?? "—"}</TableCell>
+                            <TableCell className="font-mono text-xs">
+                              {product.isbn ?? "—"}
+                            </TableCell>
+                            <TableCell>{product.edition ?? "—"}</TableCell>
+                            <TableCell className="font-mono text-xs">
+                              {product.barcode ?? "—"}
+                            </TableCell>
                           </>
                         ) : (
-                          <span className="text-muted-foreground">—</span>
+                          <>
+                            <TableCell className="font-medium max-w-[320px]">
+                              <div className="truncate">{product.description ?? "—"}</div>
+                              {activeFilters ? (
+                                <div className="mt-1 flex flex-wrap gap-1">
+                                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] text-primary">
+                                    {recommendedAction}
+                                  </span>
+                                  {coverageBand !== "unknown" ? (
+                                    <span className="rounded-full bg-muted px-2 py-0.5 text-[11px]">
+                                      {coverageBand}
+                                    </span>
+                                  ) : null}
+                                  {explanationChips.map((chip) => (
+                                    <span
+                                      key={chip}
+                                      className="rounded-full border px-2 py-0.5 text-[11px] text-muted-foreground"
+                                    >
+                                      {chip}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : null}
+                            </TableCell>
+                            <TableCell className="font-mono text-xs">
+                              {product.barcode ?? "—"}
+                            </TableCell>
+                            <TableCell className="font-mono text-xs">
+                              {product.catalog_number ?? "—"}
+                            </TableCell>
+                            <TableCell className="text-xs">
+                              {product.product_type ?? "—"}
+                            </TableCell>
+                            <TableCell className="text-xs">
+                              Vendor #{product.vendor_id}
+                            </TableCell>
+                          </>
                         )}
-                      </TableCell>
-                    )}
-                    {visibleColumns?.includes("units_1y") && (
-                      <TableCell className="text-right tabular-nums" data-priority="high">
-                        {getProductAnalyticsDisplay(product, product.units_sold_1y)}
-                      </TableCell>
-                    )}
-                    {visibleColumns?.includes("revenue_1y") && (
-                      <TableCell className="text-right tabular-nums" data-priority="high">
-                        {getProductAnalyticsDisplay(
-                          product,
-                          product.revenue_1y,
-                          (value) => new Intl.NumberFormat(
-                            "en-US",
-                            { style: "currency", currency: "USD", maximumFractionDigits: 0 },
-                          ).format(value),
+                        <TableCell className="text-right font-medium">
+                          {formatCurrency(product.retail_price)}
+                        </TableCell>
+                        <TableCell className="text-right text-muted-foreground">
+                          {formatCurrency(product.cost)}
+                        </TableCell>
+                        <TableCell className="text-xs">
+                          {formatSaleDate(getProductDisplaySaleDate(product))}
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {product.stock_on_hand ?? "—"}
+                        </TableCell>
+                        {visibleColumns?.includes("dcc") && (
+                          <TableCell className="min-w-0 max-w-[16ch]" data-priority="medium">
+                            {product.dept_num != null ? (
+                              <>
+                                <div className="font-mono text-xs tabular-nums" translate="no">
+                                  {product.dept_num}.{product.class_num ?? ""}.{product.cat_num ?? ""}
+                                </div>
+                                <div
+                                  className="truncate text-xs text-muted-foreground"
+                                  title={[product.dept_name, product.class_name, product.cat_name].filter(Boolean).join(" › ")}
+                                >
+                                  {[product.dept_name, product.class_name, product.cat_name].filter(Boolean).join(" › ") || "—"}
+                                </div>
+                              </>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
                         )}
-                      </TableCell>
-                    )}
-                    {visibleColumns?.includes("txns_1y") && (
-                      <TableCell className="text-right tabular-nums" data-priority="medium">
-                        {getProductAnalyticsDisplay(product, product.txns_1y)}
-                      </TableCell>
-                    )}
-                    {visibleColumns?.includes("margin") && (
-                      <TableCell
-                        className={`text-right tabular-nums ${
-                          product.retail_price > 0 && (product.retail_price - product.cost) / product.retail_price < 0.1
-                            ? "text-destructive"
-                            : ""
-                        }`}
-                        data-priority="medium"
-                      >
-                        {product.retail_price > 0
-                          ? new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 0 }).format(
-                              (product.retail_price - product.cost) / product.retail_price,
-                            )
-                          : "—"}
-                      </TableCell>
-                    )}
-                    {visibleColumns?.includes("days_since_sale") && (
-                      <TableCell className="text-right tabular-nums" data-priority="low">
-                        {(() => {
-                          const saleDate = getProductDisplaySaleDate(product);
-                          if (!saleDate) return "Never";
-                          const d = new Date(saleDate);
-                          if (d.getUTCFullYear() < 2000) return "Never";
-                          return Math.floor((Date.now() - d.getTime()) / 86_400_000);
-                        })()}
-                      </TableCell>
-                    )}
-                    {visibleColumns?.includes("updated") && (
-                      <TableCell className="tabular-nums" data-priority="low" title={new Date(product.updated_at).toLocaleString()}>
-                        {(() => {
-                          const diffMs = Date.now() - new Date(product.updated_at).getTime();
-                          const days = Math.round(diffMs / 86_400_000);
-                          const fmt = new Intl.RelativeTimeFormat("en-US", { numeric: "auto" });
-                          if (Math.abs(days) < 1) return fmt.format(-Math.round(diffMs / 3_600_000), "hour");
-                          return fmt.format(-days, "day");
-                        })()}
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
+                        {visibleColumns?.includes("units_1y") && (
+                          <TableCell className="text-right tabular-nums" data-priority="high">
+                            {getProductAnalyticsDisplay(product, product.units_sold_1y)}
+                          </TableCell>
+                        )}
+                        {visibleColumns?.includes("revenue_1y") && (
+                          <TableCell className="text-right tabular-nums" data-priority="high">
+                            {getProductAnalyticsDisplay(
+                              product,
+                              product.revenue_1y,
+                              (value) => new Intl.NumberFormat(
+                                "en-US",
+                                { style: "currency", currency: "USD", maximumFractionDigits: 0 },
+                              ).format(value),
+                            )}
+                          </TableCell>
+                        )}
+                        {visibleColumns?.includes("txns_1y") && (
+                          <TableCell className="text-right tabular-nums" data-priority="medium">
+                            {getProductAnalyticsDisplay(product, product.txns_1y)}
+                          </TableCell>
+                        )}
+                        {visibleColumns?.includes("margin") && (
+                          <TableCell
+                            className={`text-right tabular-nums ${
+                              product.retail_price > 0 && (product.retail_price - product.cost) / product.retail_price < 0.1
+                                ? "text-destructive"
+                                : ""
+                            }`}
+                            data-priority="medium"
+                          >
+                            {product.retail_price > 0
+                              ? new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 0 }).format(
+                                  (product.retail_price - product.cost) / product.retail_price,
+                                )
+                              : "—"}
+                          </TableCell>
+                        )}
+                        {visibleColumns?.includes("days_since_sale") && (
+                          <TableCell className="text-right tabular-nums" data-priority="low">
+                            {(() => {
+                              const saleDate = getProductDisplaySaleDate(product);
+                              if (!saleDate) return "Never";
+                              const d = new Date(saleDate);
+                              if (d.getUTCFullYear() < 2000) return "Never";
+                              return Math.floor((Date.now() - d.getTime()) / 86_400_000);
+                            })()}
+                          </TableCell>
+                        )}
+                        {visibleColumns?.includes("updated") && (
+                          <TableCell className="tabular-nums" data-priority="low" title={new Date(product.updated_at).toLocaleString()}>
+                            {(() => {
+                              const diffMs = Date.now() - new Date(product.updated_at).getTime();
+                              const days = Math.round(diffMs / 86_400_000);
+                              const fmt = new Intl.RelativeTimeFormat("en-US", { numeric: "auto" });
+                              if (Math.abs(days) < 1) return fmt.format(-Math.round(diffMs / 3_600_000), "hour");
+                              return fmt.format(-days, "day");
+                            })()}
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    );
+                  })}
           </TableBody>
         </Table>
       </div>
@@ -427,40 +478,68 @@ export function ProductTable({
                 <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
               </div>
             ))
-          : products.map((product) => (
-              <div
-                key={product.sku}
-                className={`rounded-lg border p-3 ${isSelected(product.sku) ? "border-primary bg-primary/5" : ""}`}
-                onClick={() => onToggle(product)}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">
-                      {product.title ?? product.description ?? "—"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      SKU: {product.sku}
-                      {product.author && ` · ${product.author}`}
-                    </p>
+          : products.map((product) => {
+              const explanationChips = activeFilters
+                ? buildProductExplanationChips(product, activeFilters).slice(0, 2)
+                : [];
+              const recommendedAction = getRecommendedAction(product);
+              const coverageBand = getCoverageBand(product.stock_coverage_days);
+
+              return (
+                <div
+                  key={product.sku}
+                  className={`rounded-lg border p-3 ${isSelected(product.sku) ? "border-primary bg-primary/5" : ""}`}
+                  onClick={() => onToggle(product)}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">
+                        {product.title ?? product.description ?? "—"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        SKU: {product.sku}
+                        {product.author && ` · ${product.author}`}
+                      </p>
+                    </div>
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={isSelected(product.sku)}
+                        onCheckedChange={() => onToggle(product)}
+                        className="ml-2 mt-0.5"
+                        aria-label={`Select SKU ${product.sku}`}
+                      />
+                    </div>
                   </div>
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <Checkbox
-                      checked={isSelected(product.sku)}
-                      onCheckedChange={() => onToggle(product)}
-                      className="ml-2 mt-0.5"
-                      aria-label={`Select SKU ${product.sku}`}
-                    />
+                  <div className="mt-1.5 flex gap-3 text-xs">
+                    <span className="font-medium">{formatCurrency(product.retail_price)}</span>
+                    <span className="text-muted-foreground">{formatCurrency(product.cost)}</span>
+                    {product.barcode && (
+                      <span className="font-mono text-muted-foreground">{product.barcode}</span>
+                    )}
                   </div>
+                  {activeFilters ? (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] text-primary">
+                        {recommendedAction}
+                      </span>
+                      {coverageBand !== "unknown" ? (
+                        <span className="rounded-full bg-muted px-2 py-0.5 text-[11px]">
+                          {coverageBand}
+                        </span>
+                      ) : null}
+                      {explanationChips.map((chip) => (
+                        <span
+                          key={chip}
+                          className="rounded-full border px-2 py-0.5 text-[11px] text-muted-foreground"
+                        >
+                          {chip}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
-                <div className="mt-1.5 flex gap-3 text-xs">
-                  <span className="font-medium">{formatCurrency(product.retail_price)}</span>
-                  <span className="text-muted-foreground">{formatCurrency(product.cost)}</span>
-                  {product.barcode && (
-                    <span className="font-mono text-muted-foreground">{product.barcode}</span>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
       </div>
 
       {/* Pagination */}

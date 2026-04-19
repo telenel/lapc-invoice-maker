@@ -2,6 +2,7 @@
 
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { PAGE_SIZE, TAB_ITEM_TYPES } from "./constants";
+import { buildProductQueryPlan } from "./query-builder";
 import type { Product, ProductFilters, ProductSearchResult, ProductSortField } from "./types";
 
 /** Whitelist of columns that can be sorted — prevents arbitrary column injection */
@@ -23,65 +24,11 @@ const ALLOWED_DERIVED_SORT_FIELDS = new Set<string>([
   "margin_ratio",
 ]);
 
-export function hasAnalyticsProductFilters(filters: ProductFilters): boolean {
-  return (
-    (filters.unitsSoldWindow !== "" && (filters.minUnitsSold !== "" || filters.maxUnitsSold !== ""))
-    || (filters.revenueWindow !== "" && (filters.minRevenue !== "" || filters.maxRevenue !== ""))
-    || (filters.txnsWindow !== "" && (filters.minTxns !== "" || filters.maxTxns !== ""))
-    || filters.neverSoldLifetime
-    || filters.firstSaleWithin !== ""
-  );
-}
-
-function hasLastSaleProductFilters(filters: ProductFilters): boolean {
-  return (
-    filters.lastSaleDateFrom !== ""
-    || filters.lastSaleDateTo !== ""
-    || filters.lastSaleWithin !== ""
-    || filters.lastSaleNever
-    || filters.lastSaleOlderThan !== ""
-    || filters.sortBy === "last_sale_date"
-    || filters.sortBy === "days_since_sale"
-  );
-}
-
-export function buildProductQueryPlan(filters: ProductFilters): {
-  source: "products" | "products_with_derived";
-  lastSaleField: "last_sale_date" | "effective_last_sale_date";
-  requireAggregatesReady: boolean;
-  sortField: string;
-  ascending: boolean;
-} {
-  const requireAggregatesReady = hasAnalyticsProductFilters(filters)
-    || filters.trendDirection !== ""
-    || filters.maxStockCoverageDays !== "";
-  const needsDerived = requireAggregatesReady
-    || filters.minMargin !== ""
-    || filters.maxMargin !== ""
-    || filters.sortBy === "margin"
-    || hasLastSaleProductFilters(filters);
-  const source = needsDerived ? "products_with_derived" : "products";
-  const lastSaleField = needsDerived ? "effective_last_sale_date" : "last_sale_date";
-
-  let sortField = filters.sortBy;
-  let ascending = filters.sortDir !== "desc";
-  if (filters.sortBy === "days_since_sale") {
-    sortField = lastSaleField;
-    ascending = !ascending;
-  } else if (filters.sortBy === "last_sale_date" && needsDerived) {
-    sortField = "effective_last_sale_date";
-  } else if (filters.sortBy === "margin") {
-    sortField = "margin_ratio";
-  }
-
-  return {
-    source,
-    lastSaleField,
-    requireAggregatesReady,
-    sortField,
-    ascending,
-  };
-}
+export {
+  buildProductQueryPlan,
+  hasAnalyticsProductFilters,
+  shouldRequireAggregatesReady,
+} from "./query-builder";
 
 /**
  * Escape a value for safe interpolation into a PostgREST `.or()` filter string.

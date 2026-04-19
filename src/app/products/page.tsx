@@ -5,9 +5,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useProductSearch, useProductSelection } from "@/domains/product/hooks";
+import { useProductRollups, useProductSummary } from "@/domains/product/summary-hooks";
 import { EMPTY_FILTERS, TABS, DEFAULT_COLUMN_SET, OPTIONAL_COLUMNS } from "@/domains/product/constants";
 import type { OptionalColumnKey } from "@/domains/product/constants";
 import type { ProductFilters, ProductTab, SavedView } from "@/domains/product/types";
+import type { ProductRollupGroup } from "@/domains/product/summary-types";
 import {
   parseFiltersFromSearchParams,
   serializeFiltersToSearchParams,
@@ -27,6 +29,8 @@ import { SaveViewDialog } from "@/components/products/save-view-dialog";
 import { DeleteViewDialog } from "@/components/products/delete-view-dialog";
 import { ColumnVisibilityToggle, type ColumnVisibilityHandle } from "@/components/products/column-visibility-toggle";
 import { PierceAssuranceBadge } from "@/components/products/pierce-assurance-badge";
+import { ProductsRollupsPanel } from "@/components/products/products-rollups-panel";
+import { ProductsSummaryStrip } from "@/components/products/products-summary-strip";
 import { productApi } from "@/domains/product/api-client";
 import { SYSTEM_PRESET_VIEWS } from "@/domains/product/presets";
 
@@ -65,11 +69,14 @@ export default function ProductsPage() {
   const [baseColumns, setBaseColumns] = useState<OptionalColumnKey[]>(DEFAULT_COLUMN_SET);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<SavedView | null>(null);
+  const [rollupGroup, setRollupGroup] = useState<ProductRollupGroup>("dcc");
   const columnsRef = useRef<ColumnVisibilityHandle>(null);
   const syncButtonRef = useRef<SyncDatabaseHandle>(null);
   const restoredViewRef = useRef<string | null>(null);
   const [hiddenCount, setHiddenCount] = useState(0);
   const [resolvedViews, setResolvedViews] = useState<SavedView[]>(SYSTEM_PRESET_VIEWS);
+  const { summary, loading: summaryLoading } = useProductSummary(filters, filters.analysisWindow);
+  const { rollups, loading: rollupsLoading } = useProductRollups(filters, rollupGroup);
 
   // Track tab counts so both tabs always show their last-known count
   const [tabCounts, setTabCounts] = useState<Record<ProductTab, number | null>>({
@@ -137,6 +144,13 @@ export default function ProductsPage() {
 
   function handleClearFilters() {
     updateFilters({ ...EMPTY_FILTERS, tab: filters.tab });
+  }
+
+  function handleAnalysisWindowChange(analysisWindow: ProductFilters["analysisWindow"]) {
+    updateFilters(
+      { ...filters, analysisWindow },
+      activeView ? { view: activeView.slug ?? activeView.id } : {},
+    );
   }
 
   const handlePresetClick = useCallback((view: SavedView) => {
@@ -267,8 +281,28 @@ export default function ProductsPage() {
         </div>
       </div>
 
+      <div className="page-enter page-enter-3 mb-4">
+        {!summaryLoading && summary ? (
+          <ProductsSummaryStrip
+            summary={summary}
+            analysisWindow={filters.analysisWindow}
+            onAnalysisWindowChange={handleAnalysisWindowChange}
+          />
+        ) : null}
+      </div>
+
+      <div className="page-enter page-enter-4 mb-4">
+        {!rollupsLoading && rollups ? (
+          <ProductsRollupsPanel
+            group={rollupGroup}
+            rows={rollups.rows}
+            onGroupChange={setRollupGroup}
+          />
+        ) : null}
+      </div>
+
       {/* Tabs */}
-      <div className="page-enter page-enter-3 mb-4 flex gap-0 border-b">
+      <div className="page-enter page-enter-5 mb-4 flex gap-0 border-b">
         {TABS.map((tab) => (
           <button
             key={tab.value}
@@ -295,7 +329,7 @@ export default function ProductsPage() {
       </div>
 
       {data?.total === 0 && activeView && (
-        <div className="page-enter page-enter-3 mb-4 rounded-md border border-dashed p-6 text-center">
+        <div className="page-enter page-enter-5 mb-4 rounded-md border border-dashed p-6 text-center">
           <p className="text-sm font-medium">
             No items match &ldquo;{activeView.name}&rdquo;.
           </p>
@@ -318,7 +352,7 @@ export default function ProductsPage() {
       )}
 
       {/* Table */}
-      <div className="page-enter page-enter-4">
+      <div className="page-enter page-enter-6">
         <ProductTable
           tab={filters.tab}
           products={data?.products ?? []}
@@ -335,6 +369,7 @@ export default function ProductsPage() {
           visibleColumns={runtimeColumns ?? baseColumns}
           onHideColumn={(key) => columnsRef.current?.hideColumn(key)}
           onHiddenChange={setHiddenCount}
+          activeFilters={filters}
         />
       </div>
 

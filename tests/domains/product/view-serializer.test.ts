@@ -58,6 +58,22 @@ describe("parseFiltersFromSearchParams", () => {
     expect(roundtripped).toEqual(filters);
   });
 
+  it("round-trips the analysis window without changing product filtering", () => {
+    const params = serializeFiltersToSearchParams({
+      ...EMPTY_FILTERS,
+      tab: "merchandise",
+      analysisWindow: "90d",
+      minStock: "5",
+    });
+
+    expect(params.get("analysisWindow")).toBe("90d");
+
+    const parsed = parseFiltersFromSearchParams(params);
+    expect(parsed.analysisWindow).toBe("90d");
+    expect(parsed.minStock).toBe("5");
+    expect(parsed.tab).toBe("merchandise");
+  });
+
   it("coerces boolean keys from 'true'/'false'", () => {
     const out = parseFiltersFromSearchParams(makeParams({
       missingBarcode: "true",

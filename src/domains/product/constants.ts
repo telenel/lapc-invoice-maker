@@ -16,6 +16,7 @@ export const TAB_ITEM_TYPES: Record<ProductTab, string[]> = {
 export const EMPTY_FILTERS: ProductFilters = {
   search: "",
   tab: "textbooks",
+  analysisWindow: "1y",
   minPrice: "",
   maxPrice: "",
   vendorId: "",
