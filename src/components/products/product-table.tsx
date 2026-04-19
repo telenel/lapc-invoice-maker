@@ -97,8 +97,7 @@ function formatSaleDate(date: string | null): string {
 
 /**
  * Relative time for the Updated column — preserves the recency signal an
- * operator list needs (minutes vs hours vs days) instead of collapsing
- * everything into month/year.
+ * operator list needs at every scale (minutes → years), not just under 30d.
  */
 function formatRelativeUpdated(date: string | null | undefined): string {
   if (!date) return "—";
@@ -111,8 +110,13 @@ function formatRelativeUpdated(date: string | null | undefined): string {
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
-  return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  if (days < 7) return `${days}d ago`;
+  const weeks = Math.floor(days / 7);
+  if (weeks < 5) return `${weeks}w ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}mo ago`;
+  const years = Math.floor(days / 365);
+  return `${years}y ago`;
 }
 
 function SortHeader({
@@ -659,11 +663,13 @@ export function ProductTable({
                                   product.effective_last_sale_date ??
                                   product.last_sale_date_computed ??
                                   product.last_sale_date;
-                                if (!ref) return "—";
+                                // No sale-date in any form → never sold. The
+                                // never-sold presets rely on this label
+                                // reading as "Never", not as missing data.
+                                if (!ref) return "Never";
                                 const parsed = new Date(ref);
-                                // Same sentinel guard as formatSaleDate — a
-                                // 1899 / 1970 placeholder should read as
-                                // "Never", not 40,000 days ago.
+                                // Prism's 1899 / 1970 placeholder collapses
+                                // the same way — "Never", not 40,000 days.
                                 if (
                                   Number.isNaN(parsed.getTime()) ||
                                   parsed.getFullYear() < 1990
@@ -697,11 +703,13 @@ export function ProductTable({
                               const anyDccPart = segs.some((n) => n != null);
                               // Preserve positions — a missing class between dept and cat
                               // must render as `10.—.5`, not collapse to `10.5`.
+                              // When everything is null, show "—" rather than
+                              // leaking the internal dcc_id surrogate key.
                               const numLabel = anyDccPart
                                 ? segs
                                     .map((n) => (n != null ? String(n) : "—"))
                                     .join(".")
-                                : (product.dcc_id ?? 0).toString();
+                                : "—";
                               const names = [
                                 product.dept_name,
                                 product.class_name,
