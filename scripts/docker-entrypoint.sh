@@ -1,7 +1,11 @@
 #!/bin/sh
 set -eu
 
-DEFAULT_CMD='npx prisma migrate deploy && node server.js'
+DEFAULT_CMD='node server.js'
+
+if [ "${RUN_PRISMA_MIGRATIONS_ON_START:-0}" = "1" ]; then
+  DEFAULT_CMD='./node_modules/.bin/prisma migrate deploy && node server.js'
+fi
 
 write_build_meta() {
   build_sha="${BUILD_SHA:-${NEXT_PUBLIC_BUILD_SHA:-dev}}"
