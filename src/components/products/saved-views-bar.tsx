@@ -64,6 +64,11 @@ export function SavedViewsBar({
       })
       .catch((err) => {
         if (cancelled) return;
+        // Clear stale arrays so a refresh triggered by save/delete doesn't
+        // keep rendering deleted user views (or a view a parent no longer
+        // recognizes). System presets always fall back to the baked-in list.
+        setSystem(SYSTEM_PRESET_VIEWS);
+        setMine([]);
         setLoadError(err instanceof Error ? err.message : "Could not load saved views.");
         onViewsResolved?.(SYSTEM_PRESET_VIEWS);
       });

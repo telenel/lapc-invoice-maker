@@ -19,12 +19,18 @@ function emit(state: DirectoryState) {
   listeners.forEach((fn) => fn(state));
 }
 
+let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
 async function load(): Promise<DirectoryState> {
   // Only reuse the cached state if it was a successful load. A failed lookup
   // leaves `available: false` but MUST NOT permanently downgrade the UI to
   // raw numeric IDs — later mounts should retry instead.
   if (cached && cached.available) return cached;
   if (pending) return pending;
+  if (retryTimer) {
+    clearTimeout(retryTimer);
+    retryTimer = null;
+  }
   pending = productApi
     .refs()
     .then((refs) => {
@@ -51,6 +57,15 @@ async function load(): Promise<DirectoryState> {
       // clear the module cache so the next load() triggers a real retry.
       cached = null;
       listeners.forEach((fn) => fn(state));
+      // Schedule a background retry from inside the catch path. useEffect
+      // reschedulers don't fire when two consecutive failures leave state
+      // unchanged, so we own the timer here and reschedule unconditionally.
+      if (listeners.size > 0) {
+        retryTimer = setTimeout(() => {
+          retryTimer = null;
+          load();
+        }, 30_000);
+      }
       return state;
     })
     .finally(() => {
@@ -90,13 +105,9 @@ export function useVendorDirectory(): DirectoryState {
     };
   }, []);
 
-  // If the directory is unavailable (Prism blip), retry every 30s so a brief
-  // outage doesn't permanently downgrade the vendor UI mid-session.
-  useEffect(() => {
-    if (state.available || state.loading) return;
-    const timer = setTimeout(() => load(), 30_000);
-    return () => clearTimeout(timer);
-  }, [state.available, state.loading]);
+  // Retry is scheduled inside `load()` itself (module-level timer), so we
+  // don't need a per-component effect — that used to stall after a second
+  // consecutive failure because the effect deps never changed.
 
   return state;
 }
