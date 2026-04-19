@@ -805,3 +805,7 @@ body::after {
 .page-enter-2 { animation-delay: 50ms; }
 .page-enter-3 { animation-delay: 100ms; }
 .page-enter-4 { animation-delay: 150ms; }
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}

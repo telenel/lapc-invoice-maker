@@ -3,8 +3,9 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
+import { SearchIcon, XIcon } from "lucide-react";
 import { useProductSearch, useProductSelection } from "@/domains/product/hooks";
+import { searchProducts } from "@/domains/product/queries";
 import { EMPTY_FILTERS, TABS, DEFAULT_COLUMN_SET, OPTIONAL_COLUMNS } from "@/domains/product/constants";
 import type { OptionalColumnKey } from "@/domains/product/constants";
 import type { ProductFilters, ProductTab, SavedView } from "@/domains/product/types";
@@ -38,7 +39,17 @@ export default function ProductsPage() {
     // Convert Next.js useSearchParams() to URLSearchParams
     const params = new URLSearchParams();
     searchParams.forEach((value, key) => params.set(key, value));
-    return parseFiltersFromSearchParams(params);
+    const parsed = parseFiltersFromSearchParams(params);
+    // Fresh loads (no filter-bearing params) default to "in stock" so users
+    // don't immediately see discontinued/out-of-stock clutter. Anyone linking
+    // in with explicit filters keeps exactly what the URL specifies.
+    const filterParamKeys = Array.from(params.keys()).filter(
+      (k) => k !== "tab" && k !== "view",
+    );
+    if (filterParamKeys.length === 0 && parsed.minStock === "") {
+      return { ...parsed, minStock: "1" };
+    }
+    return parsed;
   });
 
   const { data, loading, refetch } = useProductSearch(filters);
@@ -81,6 +92,27 @@ export default function ProductsPage() {
       setTabCounts((prev) => ({ ...prev, [filters.tab]: data.total }));
     }
   }, [data, filters.tab]);
+
+  // Inactive-tab count — fired whenever the active data resolves so the user
+  // always sees both totals under the current filter set.
+  useEffect(() => {
+    if (!data) return;
+    const otherTab: ProductTab = filters.tab === "textbooks" ? "merchandise" : "textbooks";
+    let cancelled = false;
+    searchProducts({ ...filters, tab: otherTab, page: 1 }, { countOnly: true })
+      .then((r) => {
+        if (!cancelled) {
+          setTabCounts((prev) => ({ ...prev, [otherTab]: r.total }));
+        }
+      })
+      .catch(() => {
+        // Silent — stale count stays visible rather than showing a spinner.
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
   const {
     selected,
     selectedCount,
@@ -159,34 +191,55 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="px-4 py-6">
+    <div className="mx-auto max-w-[1440px] px-4 py-6 md:px-5">
       {/* Header */}
-      <div className="page-enter page-enter-1 mb-5 flex items-start justify-between gap-4">
+      <div className="page-enter page-enter-1 mb-3 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Product Catalog</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Los Angeles Pierce College Store INVENTORY
-            {data ? ` · ${data.total.toLocaleString()} results` : ""}
-          </p>
+          <div className="mb-0.5 text-[11px] font-semibold tracking-[-0.005em] text-muted-foreground">
+            Los Angeles Pierce College Store · Inventory
+          </div>
+          <h1 className="flex items-baseline gap-2.5 text-[30px] font-bold leading-[1.1] tracking-[-0.03em] text-foreground">
+            <span className="text-balance">Product catalog</span>
+            {data ? (
+              <span className="font-mono tnum text-[13px] font-medium tracking-[-0.01em] text-muted-foreground/80">
+                {data.total.toLocaleString()}
+              </span>
+            ) : loading ? (
+              <span className="inline-block h-3 w-14 animate-pulse rounded bg-muted" />
+            ) : null}
+          </h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <PierceAssuranceBadge
             onClick={() => syncButtonRef.current?.openHistory()}
           />
           <SyncDatabaseButton ref={syncButtonRef} />
-          {prismAvailable ? (
-            <>
-              <Button onClick={() => setNewItemOpen(true)}>
-                New Item
-              </Button>
-              <Button variant="outline" render={<Link href="/products/batch-add" />}>
-                Batch Add
-              </Button>
-              <Button variant="outline" render={<Link href="/products/bulk-edit" />}>
-                Bulk Edit Workspace
-              </Button>
-            </>
-          ) : null}
+          <Button
+            size="sm"
+            onClick={() => setNewItemOpen(true)}
+            disabled={!prismAvailable}
+            title={prismAvailable ? undefined : "Prism is unreachable — write actions disabled"}
+          >
+            New Item
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={!prismAvailable}
+            title={prismAvailable ? undefined : "Prism is unreachable — write actions disabled"}
+            render={prismAvailable ? <Link href="/products/batch-add" /> : undefined}
+          >
+            Batch Add
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={!prismAvailable}
+            title={prismAvailable ? undefined : "Prism is unreachable — write actions disabled"}
+            render={prismAvailable ? <Link href="/products/bulk-edit" /> : undefined}
+          >
+            Bulk Edit
+          </Button>
         </div>
       </div>
 
@@ -233,30 +286,115 @@ export default function ProductsPage() {
         }}
       />
 
-      {/* Search + Filters */}
-      <div className="page-enter page-enter-2 mb-4">
-        <ProductFiltersBar
-          filters={filters}
-          onChange={handleFilterChange}
-          onClear={handleClearFilters}
-        />
+      {/* Comprehensive search bar */}
+      <div className="page-enter page-enter-2 mb-2.5">
+        <div className="flex items-center gap-2 rounded-[10px] border border-border bg-card px-3 py-2 focus-within:ring-2 focus-within:ring-ring focus-within:border-ring">
+          <SearchIcon
+            className="size-4 text-muted-foreground shrink-0"
+            aria-hidden="true"
+          />
+          <input
+            aria-label="Search products"
+            type="search"
+            value={filters.search}
+            onChange={(e) =>
+              handleFilterChange({ ...filters, search: e.target.value, page: 1 })
+            }
+            placeholder={
+              filters.tab === "textbooks"
+                ? "Search by SKU, ISBN, title, author, vendor, barcode, catalog #…"
+                : "Search by SKU, description, barcode, catalog #, vendor, product type…"
+            }
+            className="flex-1 min-w-0 border-none outline-none bg-transparent text-foreground text-[14px] placeholder:text-muted-foreground/70"
+          />
+          {filters.search ? (
+            <button
+              type="button"
+              onClick={() =>
+                handleFilterChange({ ...filters, search: "", page: 1 })
+              }
+              aria-label="Clear search"
+              className="inline-flex items-center justify-center rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent"
+            >
+              <XIcon className="size-3.5" aria-hidden="true" />
+            </button>
+          ) : null}
+          <span className="font-mono tnum text-[11px] text-muted-foreground shrink-0 pl-1 border-l border-border">
+            {data
+              ? `${data.total.toLocaleString()} results`
+              : loading
+                ? "…"
+                : "0 results"}
+          </span>
+        </div>
       </div>
 
-      <div className="page-enter page-enter-2 mb-4 flex items-center justify-between gap-3">
+      {/* Presets banner */}
+      <div className="page-enter page-enter-2 mb-2">
         <SavedViewsBar
           activeSlug={activeView?.slug ?? null}
           activeId={activeView?.id ?? null}
           onPresetClick={handlePresetClick}
-          onSaveClick={() => setSaveDialogOpen(true)}
           onDeleteClick={(v) => setDeleteTarget(v)}
           onViewsResolved={setResolvedViews}
         />
-        <div className="flex items-center gap-2">
+      </div>
+
+      {/* Table toolbar: tabs left · save view + column toggle right */}
+      <div className="page-enter page-enter-3 mb-2 flex flex-wrap items-center justify-between gap-2">
+        <div
+          className="inline-flex rounded-lg border border-border bg-secondary p-0.5"
+          role="tablist"
+          aria-label="Product category"
+        >
+          {TABS.map((tab) => {
+            const active = filters.tab === tab.value;
+            return (
+              <button
+                key={tab.value}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => handleTabChange(tab.value)}
+                className={`inline-flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-[13px] font-medium transition-all duration-150 ease-out active:translate-y-px cursor-pointer ${
+                  active
+                    ? "bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,.06)]"
+                    : "bg-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {tab.label}
+                {tabCounts[tab.value] != null ? (
+                  <span
+                    className={`ml-0.5 rounded px-1.5 py-[1px] font-mono tnum text-[10.5px] ${
+                      active
+                        ? "bg-secondary text-muted-foreground"
+                        : "bg-transparent text-muted-foreground/70"
+                    }`}
+                  >
+                    {tabCounts[tab.value]!.toLocaleString()}
+                  </span>
+                ) : active && loading ? (
+                  <span className="ml-1 inline-block h-3 w-8 animate-pulse rounded bg-muted" />
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex items-center gap-1.5">
           {hiddenCount > 0 && (
-            <span className="text-xs text-muted-foreground rounded-full bg-muted px-2 py-1">
-              {hiddenCount} hidden — narrow window
+            <span className="text-[11px] text-muted-foreground rounded-full bg-muted px-2 py-1">
+              {hiddenCount} hidden
             </span>
           )}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setSaveDialogOpen(true)}
+            className="gap-1"
+          >
+            + Save View
+          </Button>
           <ColumnVisibilityToggle
             ref={columnsRef}
             runtimeOverride={runtimeColumns}
@@ -265,33 +403,6 @@ export default function ProductsPage() {
             onResetRuntime={() => setRuntimeColumns(null)}
           />
         </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="page-enter page-enter-3 mb-4 flex gap-0 border-b">
-        {TABS.map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => handleTabChange(tab.value)}
-            className={`px-4 py-2 text-sm font-medium transition-colors ${
-              filters.tab === tab.value
-                ? "border-b-2 border-primary text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {tab.label}
-            {tabCounts[tab.value] != null ? (
-              <Badge
-                variant="secondary"
-                className="ml-2 px-1.5 py-0 text-[10px] font-bold rounded-full"
-              >
-                {tabCounts[tab.value]!.toLocaleString()}
-              </Badge>
-            ) : tab.value === filters.tab && loading ? (
-              <span className="ml-2 inline-block h-3 w-8 animate-pulse rounded bg-muted align-middle" />
-            ) : null}
-          </button>
-        ))}
       </div>
 
       {data?.total === 0 && activeView && (
@@ -317,25 +428,42 @@ export default function ProductsPage() {
         </div>
       )}
 
-      {/* Table */}
-      <div className="page-enter page-enter-4">
-        <ProductTable
-          tab={filters.tab}
-          products={data?.products ?? []}
-          total={data?.total ?? 0}
-          page={filters.page}
-          loading={loading}
-          sortBy={filters.sortBy}
-          sortDir={filters.sortDir}
-          isSelected={isSelected}
-          onToggle={toggle}
-          onToggleAll={toggleAll}
-          onPageChange={handlePageChange}
-          onSort={handleSort}
-          visibleColumns={runtimeColumns ?? baseColumns}
-          onHideColumn={(key) => columnsRef.current?.hideColumn(key)}
-          onHiddenChange={setHiddenCount}
-        />
+      {/* Rail + Table */}
+      <div className="page-enter page-enter-4 flex items-start gap-3">
+        <div className="hidden md:block">
+          <ProductFiltersBar
+            filters={filters}
+            onChange={handleFilterChange}
+            onClear={handleClearFilters}
+          />
+        </div>
+        <div className="min-w-0 flex-1">
+          {/* Mobile filters collapse above the table */}
+          <div className="mb-3 md:hidden">
+            <ProductFiltersBar
+              filters={filters}
+              onChange={handleFilterChange}
+              onClear={handleClearFilters}
+            />
+          </div>
+          <ProductTable
+            tab={filters.tab}
+            products={data?.products ?? []}
+            total={data?.total ?? 0}
+            page={filters.page}
+            loading={loading}
+            sortBy={filters.sortBy}
+            sortDir={filters.sortDir}
+            isSelected={isSelected}
+            onToggle={toggle}
+            onToggleAll={toggleAll}
+            onPageChange={handlePageChange}
+            onSort={handleSort}
+            visibleColumns={runtimeColumns ?? baseColumns}
+            onHideColumn={(key) => columnsRef.current?.hideColumn(key)}
+            onHiddenChange={setHiddenCount}
+          />
+        </div>
       </div>
 
       {/* Action bar */}

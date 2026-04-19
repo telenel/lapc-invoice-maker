@@ -109,8 +109,14 @@ function buildTsquery(input: string): string | null {
   return tokens.map((w) => `'${w}'`).join(" & ");
 }
 
+export interface SearchProductsOptions {
+  /** When true, the query skips selecting row data and returns only the count. */
+  countOnly?: boolean;
+}
+
 export async function searchProducts(
-  filters: ProductFilters
+  filters: ProductFilters,
+  options: SearchProductsOptions = {},
 ): Promise<ProductSearchResult> {
   const client = getSupabaseBrowserClient();
   const from = (filters.page - 1) * PAGE_SIZE;
@@ -118,7 +124,10 @@ export async function searchProducts(
   const plan = buildProductQueryPlan(filters);
   let query = client
     .from(plan.source)
-    .select("*", { count: "exact" })
+    .select(options.countOnly ? "sku" : "*", {
+      count: "exact",
+      head: !!options.countOnly,
+    })
     .in("item_type", TAB_ITEM_TYPES[filters.tab]);
 
   // Full-text search on description + prefix match on identifiers
@@ -304,8 +313,10 @@ export async function searchProducts(
     query = query.lte("stock_coverage_days", Number(filters.maxStockCoverageDays));
   }
 
-  const sortField = ALLOWED_DERIVED_SORT_FIELDS.has(plan.sortField) ? plan.sortField : "sku";
-  query = query.order(sortField, { ascending: plan.ascending, nullsFirst: false }).range(from, to);
+  if (!options.countOnly) {
+    const sortField = ALLOWED_DERIVED_SORT_FIELDS.has(plan.sortField) ? plan.sortField : "sku";
+    query = query.order(sortField, { ascending: plan.ascending, nullsFirst: false }).range(from, to);
+  }
 
   const { data, count, error } = await query;
 
@@ -313,7 +324,7 @@ export async function searchProducts(
     throw new Error(error.message);
   }
 
-  const products = (data ?? []) as Product[];
+  const products = options.countOnly ? [] : ((data ?? []) as Product[]);
 
   return {
     products,
