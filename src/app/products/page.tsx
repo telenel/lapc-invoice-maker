@@ -55,10 +55,17 @@ export default function ProductsPage() {
     const hasExplicitFilter = (Object.keys(EMPTY_FILTERS) as Array<keyof ProductFilters>).some(
       (k) => !TRANSPORT_KEYS.has(k) && parsed[k] !== EMPTY_FILTERS[k],
     );
-    // Do NOT inject the stock default when a saved view is being restored —
-    // the view itself is authoritative, including an intentionally empty one.
-    const isRestoringView = params.get("view") !== null;
-    if (!isRestoringView && !hasExplicitFilter && parsed.minStock === "") {
+    // Do NOT inject the stock default when a RESTORABLE saved view is the
+    // reason for the URL (the view is authoritative). An unrecognized view
+    // slug — a stale or broken link — should still fall through to the
+    // default. Custom-user views always serialize their filter values into
+    // the URL (hasExplicitFilter catches them), so verifying against the
+    // baked-in system preset slugs here is enough.
+    const viewSlug = params.get("view");
+    const matchesKnownSystemView = !!(
+      viewSlug && SYSTEM_PRESET_VIEWS.some((v) => v.slug === viewSlug)
+    );
+    if (!matchesKnownSystemView && !hasExplicitFilter && parsed.minStock === "") {
       return { ...parsed, minStock: "1" };
     }
     return parsed;
@@ -349,8 +356,8 @@ export default function ProductsPage() {
             }
             placeholder={
               filters.tab === "textbooks"
-                ? "Search by SKU, ISBN, title, author, vendor, barcode, catalog #…"
-                : "Search by SKU, description, barcode, catalog #, vendor, product type…"
+                ? "Search by SKU, ISBN, title, author, barcode, catalog #…"
+                : "Search by SKU, description, barcode, catalog #…"
             }
             className="flex-1 min-w-0 border-none outline-none bg-transparent text-foreground text-[14px] placeholder:text-muted-foreground/70"
           />
@@ -576,7 +583,16 @@ export default function ProductsPage() {
           if (!o) setDeleteTarget(null);
         }}
         onDeleted={(v) => {
-          if (activeView?.id === v.id) setActiveView(null);
+          if (activeView?.id === v.id) {
+            // The currently-applied view was just removed — drop every
+            // trailing piece of its state (URL param, runtime columns,
+            // the restoration guard) so the deleted preset stops driving
+            // the page on the next render.
+            setActiveView(null);
+            setRuntimeColumns(null);
+            restoredViewRef.current = null;
+            updateFilters({ ...EMPTY_FILTERS, tab: filters.tab });
+          }
           setDeleteTarget(null);
           setSavedViewsRefresh((n) => n + 1);
         }}
