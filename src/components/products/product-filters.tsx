@@ -224,51 +224,53 @@ function VendorSelect({
 
   return (
     <div ref={rootRef} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        className="flex w-full items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs text-left focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring"
-      >
-        <SearchIcon
-          className="size-3 text-muted-foreground shrink-0"
-          aria-hidden="true"
-        />
-        <span className="flex-1 min-w-0 truncate text-foreground">
-          {selected.label ? (
-            <span className="inline-flex items-baseline gap-1">
-              <span>{selected.label}</span>
-              {selected.knownName && value ? (
-                <span className="font-mono tnum text-[10px] text-muted-foreground">
-                  #{value}
-                </span>
-              ) : null}
-            </span>
-          ) : (
-            <span className="text-muted-foreground">Any vendor</span>
-          )}
-        </span>
+      {/* Toggle button and clear button are siblings inside a shared shell so
+          we don't nest interactive controls. The shell renders the border, and
+          each button owns its own click target. */}
+      <div className="flex w-full items-center gap-1 rounded-md border border-border bg-card px-1.5 py-1 text-xs focus-within:ring-2 focus-within:ring-ring focus-within:border-ring">
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          className="flex flex-1 min-w-0 items-center gap-1.5 rounded-[3px] bg-transparent px-1 py-0.5 text-left focus:outline-none"
+        >
+          <SearchIcon
+            className="size-3 text-muted-foreground shrink-0"
+            aria-hidden="true"
+          />
+          <span className="flex-1 min-w-0 truncate text-foreground">
+            {selected.label ? (
+              <span className="inline-flex items-baseline gap-1">
+                <span>{selected.label}</span>
+                {selected.knownName && value ? (
+                  <span className="font-mono tnum text-[10px] text-muted-foreground">
+                    #{value}
+                  </span>
+                ) : null}
+              </span>
+            ) : (
+              <span className="text-muted-foreground">Any vendor</span>
+            )}
+          </span>
+          <ChevronDownIcon
+            className={`size-3 text-muted-foreground transition-transform ${
+              open ? "rotate-180" : ""
+            }`}
+            aria-hidden="true"
+          />
+        </button>
         {value ? (
           <button
             type="button"
             aria-label="Clear vendor"
-            onClick={(e) => {
-              e.stopPropagation();
-              onChange("");
-            }}
+            onClick={() => onChange("")}
             className="inline-flex items-center justify-center rounded-[3px] p-0.5 text-muted-foreground hover:text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <XIcon className="size-3" aria-hidden="true" />
           </button>
         ) : null}
-        <ChevronDownIcon
-          className={`size-3 text-muted-foreground transition-transform ${
-            open ? "rotate-180" : ""
-          }`}
-          aria-hidden="true"
-        />
-      </button>
+      </div>
 
       {open ? (
         <div

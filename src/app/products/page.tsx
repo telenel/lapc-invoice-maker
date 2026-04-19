@@ -161,11 +161,14 @@ export default function ProductsPage() {
       (key): key is OptionalColumnKey => (OPTIONAL_COLUMNS as readonly string[]).includes(key),
     );
     if (presetColumns && presetColumns.length > 0) {
-      setRuntimeColumns(Array.from(new Set([...baseColumns, ...presetColumns])));
+      // Preset column layouts are authoritative — they replace the user's
+      // default set rather than augment it, so presets can legitimately
+      // REMOVE columns (e.g. the "days_since_sale-only" built-in view).
+      setRuntimeColumns(presetColumns);
     } else {
       setRuntimeColumns(null);
     }
-  }, [viewParam, resolvedViews, baseColumns]);
+  }, [viewParam, resolvedViews]);
 
   function handleTabChange(tab: ProductTab) {
     updateFilters({ ...filters, tab, page: 1 });
@@ -191,15 +194,15 @@ export default function ProductsPage() {
 
   const handlePresetClick = useCallback((view: SavedView) => {
     const { filters: next, visibleColumns } = applyPreset(view, filters);
-    const merged = visibleColumns
-      ? Array.from(new Set([...baseColumns, ...visibleColumns]))
-      : null;
+    // Use the preset's column list verbatim. Merging with baseColumns would
+    // prevent presets from hiding columns the user happens to have enabled.
+    const runtime = visibleColumns && visibleColumns.length > 0 ? visibleColumns : null;
     const withPage = { ...next, page: 1 } as ProductFilters;
     restoredViewRef.current = view.slug ?? view.id;
     setActiveView(view);
-    setRuntimeColumns(merged);
+    setRuntimeColumns(runtime);
     updateFilters(withPage, { view: view.slug ?? view.id });
-  }, [filters, baseColumns, updateFilters]);
+  }, [filters, updateFilters]);
 
   function handleFilterChange(next: ProductFilters) {
     // Explicit filter edits drop the active view + runtime column override.
