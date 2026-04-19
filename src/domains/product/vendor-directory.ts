@@ -20,7 +20,10 @@ function emit(state: DirectoryState) {
 }
 
 async function load(): Promise<DirectoryState> {
-  if (cached) return cached;
+  // Only reuse the cached state if it was a successful load. A failed lookup
+  // leaves `available: false` but MUST NOT permanently downgrade the UI to
+  // raw numeric IDs — later mounts should retry instead.
+  if (cached && cached.available) return cached;
   if (pending) return pending;
   pending = productApi
     .refs()
@@ -44,7 +47,10 @@ async function load(): Promise<DirectoryState> {
         loading: false,
         available: false,
       };
-      emit(state);
+      // Emit so any mounted consumers unblock from the loading spinner, but
+      // clear the module cache so the next load() triggers a real retry.
+      cached = null;
+      listeners.forEach((fn) => fn(state));
       return state;
     })
     .finally(() => {

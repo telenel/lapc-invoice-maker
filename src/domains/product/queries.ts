@@ -66,6 +66,10 @@ export function buildProductQueryPlan(filters: ProductFilters): {
   let sortField = filters.sortBy;
   let ascending = filters.sortDir !== "desc";
   if (filters.sortBy === "days_since_sale") {
+    // days_since_sale is the INVERSE of last_sale_date. To keep the UI arrow
+    // consistent with the rendered column (asc = smallest days first), we
+    // sort by the underlying date with the inverted direction. That's why
+    // the header passes sortDir through raw — it already matches the column.
     sortField = lastSaleField;
     ascending = !ascending;
   } else if (filters.sortBy === "last_sale_date" && needsDerived) {

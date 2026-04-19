@@ -80,6 +80,9 @@ function formatCurrency(value: number): string {
 function formatSaleDate(date: string | null): string {
   if (!date) return "—";
   const d = new Date(date);
+  // Prism exports a 1899-12-30 / 1970-01-01 sentinel for never-sold rows. Treat
+  // anything before 1990 as "never sold" so the column doesn't invent history.
+  if (Number.isNaN(d.getTime()) || d.getFullYear() < 1990) return "—";
   return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }
 
@@ -466,23 +469,56 @@ export function ProductTable({
                         </td>
                         {showUnits ? (
                           <td className="px-2.5 py-1.5 text-right">
-                            <span className="font-mono tnum text-[11.5px] text-foreground">
-                              {(product.units_sold_1y ?? 0).toLocaleString()}
-                            </span>
+                            {(() => {
+                              const ready = hasProductAnalyticsReady(product);
+                              return (
+                                <span
+                                  className={`font-mono tnum text-[11.5px] ${
+                                    ready ? "text-foreground" : "text-muted-foreground italic"
+                                  }`}
+                                >
+                                  {ready
+                                    ? (product.units_sold_1y ?? 0).toLocaleString()
+                                    : "Pending"}
+                                </span>
+                              );
+                            })()}
                           </td>
                         ) : null}
                         {showRevenue ? (
                           <td className="px-2.5 py-1.5 text-right">
-                            <span className="font-mono tnum text-[11.5px] text-foreground">
-                              {formatCurrency(product.revenue_1y ?? 0)}
-                            </span>
+                            {(() => {
+                              const ready = hasProductAnalyticsReady(product);
+                              return (
+                                <span
+                                  className={`font-mono tnum text-[11.5px] ${
+                                    ready ? "text-foreground" : "text-muted-foreground italic"
+                                  }`}
+                                >
+                                  {ready
+                                    ? formatCurrency(product.revenue_1y ?? 0)
+                                    : "Pending"}
+                                </span>
+                              );
+                            })()}
                           </td>
                         ) : null}
                         {showTxns ? (
                           <td className="px-2.5 py-1.5 text-right">
-                            <span className="font-mono tnum text-[11.5px] text-muted-foreground">
-                              {(product.txns_1y ?? 0).toLocaleString()}
-                            </span>
+                            {(() => {
+                              const ready = hasProductAnalyticsReady(product);
+                              return (
+                                <span
+                                  className={`font-mono tnum text-[11.5px] ${
+                                    ready ? "text-muted-foreground" : "text-muted-foreground/70 italic"
+                                  }`}
+                                >
+                                  {ready
+                                    ? (product.txns_1y ?? 0).toLocaleString()
+                                    : "Pending"}
+                                </span>
+                              );
+                            })()}
                           </td>
                         ) : null}
                         {showDaysSinceSale ? (

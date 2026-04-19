@@ -13,6 +13,7 @@ interface Props {
   activeSlug: string | null;
   activeId: string | null;
   onPresetClick: (view: SavedView) => void;
+  onClearPreset: () => void;
   onDeleteClick: (view: SavedView) => void;
   onViewsResolved?: (views: SavedView[]) => void;
 }
@@ -32,6 +33,7 @@ export function SavedViewsBar({
   activeSlug,
   activeId,
   onPresetClick,
+  onClearPreset,
   onDeleteClick,
   onViewsResolved,
 }: Props) {
@@ -169,7 +171,7 @@ export function SavedViewsBar({
                 <button
                   type="button"
                   onClick={() => {
-                    onPresetClick(activePreset);
+                    onClearPreset();
                     setPresetsOpen(false);
                   }}
                   className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer bg-transparent border-none p-0"

@@ -335,6 +335,12 @@ export default function ProductsPage() {
           activeSlug={activeView?.slug ?? null}
           activeId={activeView?.id ?? null}
           onPresetClick={handlePresetClick}
+          onClearPreset={() => {
+            setActiveView(null);
+            setRuntimeColumns(null);
+            restoredViewRef.current = null;
+            updateFilters({ ...EMPTY_FILTERS, tab: filters.tab });
+          }}
           onDeleteClick={(v) => setDeleteTarget(v)}
           onViewsResolved={setResolvedViews}
         />
