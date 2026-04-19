@@ -171,7 +171,7 @@ function VendorSelect({
   value: string;
   onChange: (next: string) => void;
 }) {
-  const { vendors, byId, available } = useVendorDirectory();
+  const { vendors, byId, loading, available } = useVendorDirectory();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
@@ -204,10 +204,12 @@ function VendorSelect({
       .slice(0, 60);
   }, [vendors, query]);
 
-  // If Prism isn't available, fall back to a numeric ID input. Strip any
-  // non-digit characters before persisting so the downstream Number(value)
-  // coercion in searchProducts() can't produce NaN and crash the query.
-  if (!available) {
+  // Only drop to the numeric fallback when we've CONFIRMED Prism is
+  // unreachable — not while the first refs() request is still in flight.
+  // Otherwise fresh mounts on a healthy Prism flash the degraded input.
+  // Strip non-digits before persisting so the downstream Number() coercion
+  // in searchProducts() can't produce NaN and crash the query.
+  if (!loading && !available) {
     return (
       <RailInput
         ariaLabel="Vendor ID"

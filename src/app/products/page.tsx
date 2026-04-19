@@ -199,6 +199,17 @@ export default function ProductsPage() {
     } else {
       setRuntimeColumns(null);
     }
+    // Roll back the auto-applied in-stock default for custom saved views
+    // that legitimately have no stock filter. Init could not verify custom
+    // slugs synchronously, so it defaulted to minStock=1 for non-system
+    // views. Now that we know the view, respect its empty state.
+    const viewHasStockFilter =
+      matched.filter && Object.prototype.hasOwnProperty.call(matched.filter, "minStock");
+    if (!viewHasStockFilter) {
+      setFilters((curr) =>
+        curr.minStock === "1" ? { ...curr, minStock: "" } : curr,
+      );
+    }
   }, [viewParam, resolvedViews]);
 
   function handleTabChange(tab: ProductTab) {
