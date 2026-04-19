@@ -15,6 +15,7 @@ import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon, SearchIcon, XIcon } from "
 import type { Product, ProductTab } from "@/domains/product/types";
 import { PAGE_SIZE } from "@/domains/product/constants";
 import type { OptionalColumnKey } from "@/domains/product/constants";
+import "./product-table.css";
 
 interface ProductTableProps {
   tab: ProductTab;
@@ -80,16 +81,17 @@ function OptionalSortHeader(props: {
   field: string;
   label: string;
   columnKey: OptionalColumnKey;
+  priority: "high" | "medium" | "low";
   sortBy: string;
   sortDir: "asc" | "desc";
   onSort: (field: string) => void;
   onHide?: (key: OptionalColumnKey) => void;
   className?: string;
 }) {
-  const { field, label, columnKey, sortBy, sortDir, onSort, onHide, className } = props;
+  const { field, label, columnKey, priority, sortBy, sortDir, onSort, onHide, className } = props;
   const isActive = sortBy === field;
   return (
-    <TableHead className={className}>
+    <TableHead className={className} data-priority={priority}>
       <div className="group inline-flex items-center gap-1">
         <button
           type="button"
@@ -161,8 +163,8 @@ export function ProductTable({
   return (
     <div>
       {/* Desktop table */}
-      <div className="hidden md:block">
-        <Table>
+      <div className="hidden md:block product-table-wrap">
+        <Table className="product-table">
           <TableHeader>
             <TableRow>
               <TableHead className="w-10">
@@ -202,25 +204,25 @@ export function ProductTable({
                 className="text-right"
               />
               {visibleColumns?.includes("dcc") && (
-                <OptionalSortHeader field="dept_num" columnKey="dcc" label="DCC" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} />
+                <OptionalSortHeader field="dept_num" columnKey="dcc" priority="medium" label="DCC" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} />
               )}
               {visibleColumns?.includes("units_1y") && (
-                <OptionalSortHeader field="units_sold_1y" columnKey="units_1y" label="Units 1y" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
+                <OptionalSortHeader field="units_sold_1y" columnKey="units_1y" priority="high" label="Units 1y" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
               )}
               {visibleColumns?.includes("revenue_1y") && (
-                <OptionalSortHeader field="revenue_1y" columnKey="revenue_1y" label="Revenue 1y" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
+                <OptionalSortHeader field="revenue_1y" columnKey="revenue_1y" priority="high" label="Revenue 1y" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
               )}
               {visibleColumns?.includes("txns_1y") && (
-                <OptionalSortHeader field="txns_1y" columnKey="txns_1y" label="Receipts 1y" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
+                <OptionalSortHeader field="txns_1y" columnKey="txns_1y" priority="medium" label="Receipts 1y" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
               )}
               {visibleColumns?.includes("margin") && (
-                <OptionalSortHeader field="margin" columnKey="margin" label={sortBy === "margin" ? "Margin % (page)" : "Margin %"} sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
+                <OptionalSortHeader field="margin" columnKey="margin" priority="medium" label={sortBy === "margin" ? "Margin % (page)" : "Margin %"} sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
               )}
               {visibleColumns?.includes("days_since_sale") && (
-                <OptionalSortHeader field="days_since_sale" columnKey="days_since_sale" label="Days since sale" sortBy={sortBy} sortDir={daysSinceSaleDisplayDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
+                <OptionalSortHeader field="days_since_sale" columnKey="days_since_sale" priority="low" label="Days since sale" sortBy={sortBy} sortDir={daysSinceSaleDisplayDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
               )}
               {visibleColumns?.includes("updated") && (
-                <OptionalSortHeader field="updated_at" columnKey="updated" label="Updated" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} />
+                <OptionalSortHeader field="updated_at" columnKey="updated" priority="low" label="Updated" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} />
               )}
             </TableRow>
           </TableHeader>
@@ -296,7 +298,7 @@ export function ProductTable({
                       {product.stock_on_hand ?? "—"}
                     </TableCell>
                     {visibleColumns?.includes("dcc") && (
-                      <TableCell className="min-w-0 max-w-[16ch]">
+                      <TableCell className="min-w-0 max-w-[16ch]" data-priority="medium">
                         {product.dept_num != null ? (
                           <>
                             <div className="font-mono text-xs tabular-nums" translate="no">
@@ -315,19 +317,19 @@ export function ProductTable({
                       </TableCell>
                     )}
                     {visibleColumns?.includes("units_1y") && (
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="text-right tabular-nums" data-priority="high">
                         {product.units_sold_1y > 0 ? product.units_sold_1y.toLocaleString() : "—"}
                       </TableCell>
                     )}
                     {visibleColumns?.includes("revenue_1y") && (
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="text-right tabular-nums" data-priority="high">
                         {product.revenue_1y > 0
                           ? new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(product.revenue_1y)
                           : "—"}
                       </TableCell>
                     )}
                     {visibleColumns?.includes("txns_1y") && (
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="text-right tabular-nums" data-priority="medium">
                         {product.txns_1y > 0 ? product.txns_1y.toLocaleString() : "—"}
                       </TableCell>
                     )}
@@ -338,6 +340,7 @@ export function ProductTable({
                             ? "text-destructive"
                             : ""
                         }`}
+                        data-priority="medium"
                       >
                         {product.retail_price > 0
                           ? new Intl.NumberFormat("en-US", { style: "percent", maximumFractionDigits: 0 }).format(
@@ -347,14 +350,14 @@ export function ProductTable({
                       </TableCell>
                     )}
                     {visibleColumns?.includes("days_since_sale") && (
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell className="text-right tabular-nums" data-priority="low">
                         {product.last_sale_date
                           ? Math.floor((Date.now() - new Date(product.last_sale_date).getTime()) / 86_400_000)
                           : "Never"}
                       </TableCell>
                     )}
                     {visibleColumns?.includes("updated") && (
-                      <TableCell className="tabular-nums" title={new Date(product.updated_at).toLocaleString()}>
+                      <TableCell className="tabular-nums" data-priority="low" title={new Date(product.updated_at).toLocaleString()}>
                         {(() => {
                           const diffMs = Date.now() - new Date(product.updated_at).getTime();
                           const days = Math.round(diffMs / 86_400_000);
