@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { SearchIcon, XIcon } from "lucide-react";
+import { ChevronDownIcon, SearchIcon, SlidersHorizontalIcon, XIcon } from "lucide-react";
 import { useProductSearch, useProductSelection } from "@/domains/product/hooks";
 import { searchProducts } from "@/domains/product/queries";
 import { EMPTY_FILTERS, TABS, DEFAULT_COLUMN_SET, OPTIONAL_COLUMNS } from "@/domains/product/constants";
@@ -23,6 +23,7 @@ import { HardDeleteDialog } from "@/components/products/hard-delete-dialog";
 import { Button } from "@/components/ui/button";
 import { SyncDatabaseButton } from "@/components/products/sync-database-button";
 import type { SyncDatabaseHandle } from "@/components/products/sync-database-button";
+import { ProductFiltersExtended } from "@/components/products/product-filters-extended";
 import { SavedViewsBar } from "@/components/products/saved-views-bar";
 import { SaveViewDialog } from "@/components/products/save-view-dialog";
 import { DeleteViewDialog } from "@/components/products/delete-view-dialog";
@@ -70,6 +71,7 @@ export default function ProductsPage() {
   const [newItemOpen, setNewItemOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [hardDeleteOpen, setHardDeleteOpen] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const [activeView, setActiveView] = useState<SavedView | null>(null);
   const [runtimeColumns, setRuntimeColumns] = useState<OptionalColumnKey[] | null>(null);
@@ -396,6 +398,19 @@ export default function ProductsPage() {
           <Button
             size="sm"
             variant="outline"
+            onClick={() => setAdvancedOpen((o) => !o)}
+            aria-expanded={advancedOpen}
+            className="gap-1"
+          >
+            <SlidersHorizontalIcon className="size-3.5" />
+            Advanced
+            <ChevronDownIcon
+              className={`size-3 transition-transform ${advancedOpen ? "rotate-180" : ""}`}
+            />
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
             onClick={() => setSaveDialogOpen(true)}
             className="gap-1"
           >
@@ -410,6 +425,15 @@ export default function ProductsPage() {
           />
         </div>
       </div>
+
+      {advancedOpen ? (
+        <div className="page-enter page-enter-3 mb-2 rounded-xl border border-border bg-card px-4 pb-4 pt-2 shadow-[0_1px_0_color-mix(in_oklch,var(--border)_55%,transparent),0_2px_8px_-2px_color-mix(in_oklch,var(--foreground)_6%,transparent)]">
+          <ProductFiltersExtended
+            filters={filters}
+            onChange={(patch) => handleFilterChange({ ...filters, ...patch, page: 1 })}
+          />
+        </div>
+      ) : null}
 
       {data?.total === 0 && activeView && (
         <div className="page-enter page-enter-3 mb-4 rounded-md border border-dashed p-6 text-center">

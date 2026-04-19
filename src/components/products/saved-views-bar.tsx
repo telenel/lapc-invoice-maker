@@ -81,10 +81,18 @@ export function SavedViewsBar({
       .filter((v): v is SavedView => !!v);
   }, [system]);
 
-  const activePreset = useMemo(
-    () => system.find((v) => v.slug === activeSlug) ?? null,
-    [system, activeSlug],
-  );
+  const activePreset = useMemo(() => {
+    if (activeSlug) {
+      const sys = system.find((v) => v.slug === activeSlug);
+      if (sys) return sys;
+    }
+    if (activeId) {
+      // User-created views have `slug: null`, so they can only be matched by id.
+      const custom = mine.find((v) => v.id === activeId);
+      if (custom) return custom;
+    }
+    return null;
+  }, [system, mine, activeSlug, activeId]);
 
   const presetCount = system.filter((v) => v.presetGroup).length;
 

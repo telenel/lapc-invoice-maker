@@ -332,10 +332,15 @@ export function ProductFiltersBar({
 
   function toggleRecent(next: boolean) {
     if (next) {
+      // Compute the cutoff in local time — toISOString() shifts to UTC which
+      // can cross a day boundary depending on the user's timezone, producing
+      // an intermittent off-by-one on the "last 30 days" window.
       const d = new Date();
       d.setDate(d.getDate() - 30);
-      const from = d.toISOString().slice(0, 10);
-      onChange({ ...filters, lastSaleDateFrom: from, page: 1 });
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      onChange({ ...filters, lastSaleDateFrom: `${year}-${month}-${day}`, page: 1 });
     } else {
       onChange({ ...filters, lastSaleDateFrom: "", page: 1 });
     }
