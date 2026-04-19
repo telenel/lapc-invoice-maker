@@ -54,6 +54,7 @@ export type ProductTab = "textbooks" | "merchandise";
 export interface ProductFilters {
   search: string;
   tab: ProductTab;
+  analysisWindow: "30d" | "90d" | "1y";
   minPrice: string;
   maxPrice: string;
   vendorId: string;

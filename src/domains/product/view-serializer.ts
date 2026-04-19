@@ -31,6 +31,7 @@ const TEXT_KEYS: (keyof ProductFilters)[] = [
 
 const ENUM_KEYS: { [K in keyof ProductFilters]?: readonly ProductFilters[K][] } = {
   tab: ["textbooks", "merchandise"],
+  analysisWindow: ["30d", "90d", "1y"],
   sortDir: ["asc", "desc"],
   lastSaleWithin: ["", "30d", "90d", "365d"],
   lastSaleOlderThan: ["", "2y", "5y"],

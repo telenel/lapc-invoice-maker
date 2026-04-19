@@ -13,6 +13,7 @@ import type {
   BatchCreateRow,
   BatchValidationError,
 } from "./types";
+import type { ProductRollupsResponse, ProductSummaryResponse } from "./summary-types";
 import type {
   BulkEditRequest,
   PreviewResult,
@@ -244,6 +245,20 @@ export const productApi = {
       throw new Error(data.error ?? `HTTP ${res.status}`);
     }
     return res.json();
+  },
+
+  async getSummary(queryString: string): Promise<ProductSummaryResponse> {
+    const qs = queryString ? `?${queryString}` : "";
+    const res = await fetch(`/api/products/summary${qs}`, { cache: "no-store" });
+    if (!res.ok) throw new Error(await parseError(res));
+    return (await res.json()) as ProductSummaryResponse;
+  },
+
+  async getRollups(queryString: string): Promise<ProductRollupsResponse> {
+    const qs = queryString ? `?${queryString}` : "";
+    const res = await fetch(`/api/products/rollups${qs}`, { cache: "no-store" });
+    if (!res.ok) throw new Error(await parseError(res));
+    return (await res.json()) as ProductRollupsResponse;
   },
 };
 
