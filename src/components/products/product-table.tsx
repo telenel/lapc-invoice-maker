@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon, SearchIcon, XIcon } from "lucide-react";
 import type { Product, ProductTab } from "@/domains/product/types";
-import { PAGE_SIZE } from "@/domains/product/constants";
+import { PAGE_SIZE, COLUMN_PRIORITY } from "@/domains/product/constants";
 import type { OptionalColumnKey } from "@/domains/product/constants";
 import { useHiddenColumns } from "./use-hidden-columns";
 import "./product-table.css";
@@ -159,18 +159,10 @@ export function ProductTable({
   useEffect(() => {
     if (!onHiddenChange) return;
     const optionalActive = visibleColumns ?? [];
-    const PRIORITY: Record<OptionalColumnKey, "high" | "medium" | "low"> = {
-      units_1y: "high",
-      revenue_1y: "high",
-      margin: "medium",
-      txns_1y: "medium",
-      dcc: "medium",
-      days_since_sale: "low",
-      updated: "low",
-    };
-    const hidden = optionalActive.filter((k) =>
-      summary.tiers.includes(PRIORITY[k] as "medium" | "low"),
-    );
+    const hidden = optionalActive.filter((k) => {
+      const p = COLUMN_PRIORITY[k];
+      return p !== "high" && summary.tiers.includes(p);
+    });
     onHiddenChange(hidden.length);
   }, [summary.tiers, visibleColumns, onHiddenChange]);
 
@@ -228,25 +220,25 @@ export function ProductTable({
                 className="text-right"
               />
               {visibleColumns?.includes("dcc") && (
-                <OptionalSortHeader field="dept_num" columnKey="dcc" priority="medium" label="DCC" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} />
+                <OptionalSortHeader field="dept_num" columnKey="dcc" priority={COLUMN_PRIORITY.dcc} label="DCC" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} />
               )}
               {visibleColumns?.includes("units_1y") && (
-                <OptionalSortHeader field="units_sold_1y" columnKey="units_1y" priority="high" label="Units 1y" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
+                <OptionalSortHeader field="units_sold_1y" columnKey="units_1y" priority={COLUMN_PRIORITY.units_1y} label="Units 1y" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
               )}
               {visibleColumns?.includes("revenue_1y") && (
-                <OptionalSortHeader field="revenue_1y" columnKey="revenue_1y" priority="high" label="Revenue 1y" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
+                <OptionalSortHeader field="revenue_1y" columnKey="revenue_1y" priority={COLUMN_PRIORITY.revenue_1y} label="Revenue 1y" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
               )}
               {visibleColumns?.includes("txns_1y") && (
-                <OptionalSortHeader field="txns_1y" columnKey="txns_1y" priority="medium" label="Receipts 1y" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
+                <OptionalSortHeader field="txns_1y" columnKey="txns_1y" priority={COLUMN_PRIORITY.txns_1y} label="Receipts 1y" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
               )}
               {visibleColumns?.includes("margin") && (
-                <OptionalSortHeader field="margin" columnKey="margin" priority="medium" label={sortBy === "margin" ? "Margin % (page)" : "Margin %"} sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
+                <OptionalSortHeader field="margin" columnKey="margin" priority={COLUMN_PRIORITY.margin} label={sortBy === "margin" ? "Margin % (page)" : "Margin %"} sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
               )}
               {visibleColumns?.includes("days_since_sale") && (
-                <OptionalSortHeader field="days_since_sale" columnKey="days_since_sale" priority="low" label="Days since sale" sortBy={sortBy} sortDir={daysSinceSaleDisplayDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
+                <OptionalSortHeader field="days_since_sale" columnKey="days_since_sale" priority={COLUMN_PRIORITY.days_since_sale} label="Days since sale" sortBy={sortBy} sortDir={daysSinceSaleDisplayDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
               )}
               {visibleColumns?.includes("updated") && (
-                <OptionalSortHeader field="updated_at" columnKey="updated" priority="low" label="Updated" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} />
+                <OptionalSortHeader field="updated_at" columnKey="updated" priority={COLUMN_PRIORITY.updated} label="Updated" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} />
               )}
             </TableRow>
           </TableHeader>

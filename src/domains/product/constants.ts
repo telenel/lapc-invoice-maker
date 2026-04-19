@@ -92,6 +92,19 @@ export const COLUMN_LABELS: Record<OptionalColumnKey, string> = {
   updated: "Updated",
 };
 
+/** Responsive hiding tier for each optional column.
+ * Stays in sync with the CSS @container breakpoints in product-table.css.
+ * If you change one, change both. */
+export const COLUMN_PRIORITY: Record<OptionalColumnKey, "high" | "medium" | "low"> = {
+  dcc: "medium",
+  units_1y: "high",
+  revenue_1y: "high",
+  txns_1y: "medium",
+  margin: "medium",
+  days_since_sale: "low",
+  updated: "low",
+};
+
 export const PRESET_GROUPS = [
   { value: "dead-weight",     label: "Dead weight",  icon: "💀" },
   { value: "movers",          label: "Movers",       icon: "📊" },

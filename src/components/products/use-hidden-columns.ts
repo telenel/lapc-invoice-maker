@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
+// These must match the @container breakpoints in product-table.css.
+// If you change one, change both.
 const MED_BREAKPOINT = 1024;
 const LOW_BREAKPOINT = 1280;
 
