@@ -367,9 +367,12 @@ export function ProductTable({
                     )}
                     {visibleColumns?.includes("days_since_sale") && (
                       <TableCell className="text-right tabular-nums" data-priority="low">
-                        {product.last_sale_date
-                          ? Math.floor((Date.now() - new Date(product.last_sale_date).getTime()) / 86_400_000)
-                          : "Never"}
+                        {(() => {
+                          if (!product.last_sale_date) return "Never";
+                          const d = new Date(product.last_sale_date);
+                          if (d.getUTCFullYear() < 2000) return "Never";
+                          return Math.floor((Date.now() - d.getTime()) / 86_400_000);
+                        })()}
                       </TableCell>
                     )}
                     {visibleColumns?.includes("updated") && (
