@@ -43,9 +43,12 @@ export default function ProductsPage() {
     const parsed = parseFiltersFromSearchParams(params);
     // Fresh loads (no filter-bearing params) default to "in stock" so users
     // don't immediately see discontinued/out-of-stock clutter. Anyone linking
-    // in with explicit filters keeps exactly what the URL specifies.
+    // in with explicit filters keeps exactly what the URL specifies. Note:
+    // pagination/sort/view/tab are NOT filters, so a bookmark carrying only
+    // those should still get the default.
+    const NON_FILTER_KEYS = new Set(["tab", "view", "page", "sortBy", "sortDir"]);
     const filterParamKeys = Array.from(params.keys()).filter(
-      (k) => k !== "tab" && k !== "view",
+      (k) => !NON_FILTER_KEYS.has(k),
     );
     if (filterParamKeys.length === 0 && parsed.minStock === "") {
       return { ...parsed, minStock: "1" };

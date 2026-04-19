@@ -9,6 +9,7 @@ import type { Product, ProductTab } from "@/domains/product/types";
 import { PAGE_SIZE, type OptionalColumnKey } from "@/domains/product/constants";
 import { MarginBar } from "./margin-bar";
 import { useVendorDirectory } from "@/domains/product/vendor-directory";
+import "./product-table.css";
 
 /**
  * Prefer the computed effective sale date when present, then the periodic
@@ -115,6 +116,7 @@ function SortHeader({
   align = "left",
   mono = false,
   width,
+  priority,
 }: {
   field: string;
   label: string;
@@ -124,12 +126,14 @@ function SortHeader({
   align?: "left" | "right";
   mono?: boolean;
   width?: number;
+  priority?: "high" | "medium" | "low";
 }) {
   const isActive = sortBy === field;
   return (
     <th
       onClick={() => onSort(field)}
       style={{ width }}
+      data-priority={priority}
       className={`px-2.5 py-2 text-[11px] font-semibold tracking-[-0.005em] bg-card border-b border-border cursor-pointer select-none whitespace-nowrap sticky top-0 z-[1] ${
         isActive ? "text-foreground" : "text-muted-foreground"
       } ${mono ? "font-mono" : ""} ${align === "right" ? "text-right" : "text-left"}`}
@@ -203,10 +207,11 @@ export function ProductTable({
 
   return (
     <div className="rounded-[10px] border border-border bg-card overflow-hidden shadow-[0_1px_0_color-mix(in_oklch,var(--border)_55%,transparent),0_2px_8px_-2px_color-mix(in_oklch,var(--foreground)_6%,transparent)]">
-      {/* Desktop table */}
-      <div className="hidden md:block">
+      {/* Desktop table — wrapper owns the container-query context that drives
+          optional-column hiding via `data-priority` at narrow widths. */}
+      <div className="product-table-wrap hidden md:block">
         <div className="max-h-[62vh] overflow-auto">
-          <table className="w-full border-collapse text-[12.5px]">
+          <table className="product-table w-full border-collapse text-[12.5px]">
             <thead>
               <tr>
                 <th className="w-8 px-0 pl-3 py-2 bg-card border-b border-border sticky top-0 z-[1]">
@@ -306,6 +311,7 @@ export function ProductTable({
                     align="right"
                     mono
                     width={80}
+                    priority="high"
                   />
                 ) : null}
                 {showRevenue ? (
@@ -318,6 +324,7 @@ export function ProductTable({
                     align="right"
                     mono
                     width={96}
+                    priority="high"
                   />
                 ) : null}
                 {showTxns ? (
@@ -330,6 +337,7 @@ export function ProductTable({
                     align="right"
                     mono
                     width={96}
+                    priority="medium"
                   />
                 ) : null}
                 {showDaysSinceSale ? (
@@ -342,6 +350,7 @@ export function ProductTable({
                     align="right"
                     mono
                     width={110}
+                    priority="low"
                   />
                 ) : null}
                 {showUpdated ? (
@@ -352,10 +361,12 @@ export function ProductTable({
                     sortDir={sortDir}
                     onSort={onSort}
                     width={96}
+                    priority="low"
                   />
                 ) : null}
                 {showDcc ? (
                   <th
+                    data-priority="medium"
                     className="px-2.5 py-2 text-[11px] font-semibold tracking-[-0.005em] text-muted-foreground bg-card border-b border-border whitespace-nowrap sticky top-0 z-[1] text-left"
                     style={{ width: 110 }}
                   >
@@ -485,10 +496,10 @@ export function ProductTable({
                           </span>
                         </td>
                         <td className="px-2.5 py-1.5 text-[11.5px] text-muted-foreground whitespace-nowrap">
-                          {formatSaleDate(product.last_sale_date)}
+                          {formatSaleDate(getProductDisplaySaleDate(product) ?? null)}
                         </td>
                         {showUnits ? (
-                          <td className="px-2.5 py-1.5 text-right">
+                          <td data-priority="high" className="px-2.5 py-1.5 text-right">
                             {(() => {
                               const ready = hasProductAnalyticsReady(product);
                               return (
@@ -506,7 +517,7 @@ export function ProductTable({
                           </td>
                         ) : null}
                         {showRevenue ? (
-                          <td className="px-2.5 py-1.5 text-right">
+                          <td data-priority="high" className="px-2.5 py-1.5 text-right">
                             {(() => {
                               const ready = hasProductAnalyticsReady(product);
                               return (
@@ -524,7 +535,7 @@ export function ProductTable({
                           </td>
                         ) : null}
                         {showTxns ? (
-                          <td className="px-2.5 py-1.5 text-right">
+                          <td data-priority="medium" className="px-2.5 py-1.5 text-right">
                             {(() => {
                               const ready = hasProductAnalyticsReady(product);
                               return (
@@ -542,7 +553,7 @@ export function ProductTable({
                           </td>
                         ) : null}
                         {showDaysSinceSale ? (
-                          <td className="px-2.5 py-1.5 text-right">
+                          <td data-priority="low" className="px-2.5 py-1.5 text-right">
                             <span className="font-mono tnum text-[11.5px] text-muted-foreground">
                               {(() => {
                                 const ref =
@@ -559,12 +570,15 @@ export function ProductTable({
                           </td>
                         ) : null}
                         {showUpdated ? (
-                          <td className="px-2.5 py-1.5 text-[11.5px] text-muted-foreground whitespace-nowrap">
+                          <td
+                            data-priority="low"
+                            className="px-2.5 py-1.5 text-[11.5px] text-muted-foreground whitespace-nowrap"
+                          >
                             {formatRelativeUpdated(product.updated_at)}
                           </td>
                         ) : null}
                         {showDcc ? (
-                          <td className="px-2.5 py-1.5 whitespace-nowrap">
+                          <td data-priority="medium" className="px-2.5 py-1.5 whitespace-nowrap">
                             {(() => {
                               const segs = [
                                 product.dept_num,

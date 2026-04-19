@@ -186,11 +186,14 @@ function VendorSelect({
     return () => window.removeEventListener("mousedown", handler);
   }, [open]);
 
-  const selectedLabel = useMemo(() => {
-    if (!value) return "";
+  const selected = useMemo(() => {
+    if (!value) return { label: "", knownName: false };
     const id = Number(value);
-    if (!Number.isFinite(id)) return value;
-    return byId.get(id) ?? `#${id}`;
+    if (!Number.isFinite(id)) return { label: value, knownName: false };
+    const name = byId.get(id);
+    return name
+      ? { label: name, knownName: true }
+      : { label: `#${id}`, knownName: false };
   }, [value, byId]);
 
   const filtered = useMemo(() => {
@@ -230,10 +233,10 @@ function VendorSelect({
           aria-hidden="true"
         />
         <span className="flex-1 min-w-0 truncate text-foreground">
-          {selectedLabel ? (
+          {selected.label ? (
             <span className="inline-flex items-baseline gap-1">
-              <span>{selectedLabel}</span>
-              {value ? (
+              <span>{selected.label}</span>
+              {selected.knownName && value ? (
                 <span className="font-mono tnum text-[10px] text-muted-foreground">
                   #{value}
                 </span>
