@@ -110,7 +110,7 @@ export default function ProductsPage() {
     updateFilters({ ...EMPTY_FILTERS, tab: filters.tab });
   }
 
-  function handlePresetClick(view: SavedView) {
+  const handlePresetClick = useCallback((view: SavedView) => {
     const { filters: next, visibleColumns } = applyPreset(view, filters);
     const merged = visibleColumns
       ? Array.from(new Set([...baseColumns, ...visibleColumns]))
@@ -119,7 +119,7 @@ export default function ProductsPage() {
     setActiveView(view);
     setRuntimeColumns(merged);
     updateFilters(withPage, { view: view.slug ?? view.id });
-  }
+  }, [filters, baseColumns, updateFilters]);
 
   function handleFilterChange(next: ProductFilters) {
     // Explicit filter edits drop the active view + runtime column override.
