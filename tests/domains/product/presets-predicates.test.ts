@@ -159,7 +159,7 @@ function matchesFilter(p: Product, f: ProductFilters): boolean {
 
 describe.each(SYSTEM_PRESET_VIEWS)("preset $slug", (preset) => {
   it("runs cleanly over the fixture and returns deterministic set", () => {
-    const { filters } = applyPreset(preset);
+    const { filters } = applyPreset(preset, EMPTY_FILTERS);
     const matched = fixtures.filter((p) => matchesFilter(p, filters)).map((p) => p.sku).sort((a, b) => a - b);
     expect(Array.isArray(matched)).toBe(true);
     expect(matched).toMatchSnapshot();

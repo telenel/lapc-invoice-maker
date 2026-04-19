@@ -9,6 +9,12 @@ const ALLOWED_SORT_FIELDS: Set<string> = new Set<ProductSortField>([
   "sku", "description", "title", "author", "retail_price", "cost",
   "last_sale_date", "barcode", "catalog_number", "product_type",
   "vendor_id", "isbn", "edition",
+  "stock_on_hand",
+  "units_sold_30d", "units_sold_1y", "units_sold_lifetime",
+  "revenue_30d", "revenue_1y",
+  "txns_1y",
+  "updated_at",
+  "dept_num",
 ]);
 
 /**
@@ -238,10 +244,17 @@ export async function searchProducts(
     query = query.lte("stock_coverage_days", Number(filters.maxStockCoverageDays));
   }
 
-  // Sorting — validate against whitelist to prevent arbitrary column injection
-  const sortField = ALLOWED_SORT_FIELDS.has(filters.sortBy) ? filters.sortBy : "sku";
-  const ascending = filters.sortDir !== "desc";
-  query = query.order(sortField, { ascending, nullsFirst: false }).range(from, to);
+  // Sorting — validate against whitelist to prevent arbitrary column injection.
+  // "days_since_sale" is a presentation alias for last_sale_date with inverted
+  // direction: more days = older = ascending in days is descending in date.
+  let effectiveSortBy: string = filters.sortBy;
+  let effectiveAscending = filters.sortDir !== "desc";
+  if (filters.sortBy === "days_since_sale") {
+    effectiveSortBy = "last_sale_date";
+    effectiveAscending = !effectiveAscending;
+  }
+  const sortField = ALLOWED_SORT_FIELDS.has(effectiveSortBy) ? effectiveSortBy : "sku";
+  query = query.order(sortField, { ascending: effectiveAscending, nullsFirst: false }).range(from, to);
 
   const { data, count, error } = await query;
 
@@ -261,6 +274,18 @@ export async function searchProducts(
       if (p.retail_price <= 0) return false;
       const margin = (p.retail_price - p.cost) / p.retail_price;
       return margin >= min && margin <= max;
+    });
+  }
+
+  // Margin is a derived ratio. PostgREST can't sort on a computed expression,
+  // so when sortBy=margin we sort the current page client-side. Users see a
+  // "(page)" hint on the header so the scope is clear.
+  if (filters.sortBy === "margin") {
+    const dir = filters.sortDir === "desc" ? -1 : 1;
+    products = [...products].sort((a, b) => {
+      const ma = a.retail_price > 0 ? (a.retail_price - a.cost) / a.retail_price : -Infinity;
+      const mb = b.retail_price > 0 ? (b.retail_price - b.cost) / b.retail_price : -Infinity;
+      return (ma - mb) * dir;
     });
   }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +24,7 @@ import { SyncDatabaseButton } from "@/components/products/sync-database-button";
 import { SavedViewsBar } from "@/components/products/saved-views-bar";
 import { SaveViewDialog } from "@/components/products/save-view-dialog";
 import { DeleteViewDialog } from "@/components/products/delete-view-dialog";
-import { ColumnVisibilityToggle } from "@/components/products/column-visibility-toggle";
+import { ColumnVisibilityToggle, type ColumnVisibilityHandle } from "@/components/products/column-visibility-toggle";
 import { PierceAssuranceBadge } from "@/components/products/pierce-assurance-badge";
 import { productApi } from "@/domains/product/api-client";
 
@@ -62,6 +62,8 @@ export default function ProductsPage() {
   const [baseColumns, setBaseColumns] = useState<OptionalColumnKey[]>(DEFAULT_COLUMN_SET);
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<SavedView | null>(null);
+  const columnsRef = useRef<ColumnVisibilityHandle>(null);
+  const [hiddenCount, setHiddenCount] = useState(0);
 
   // Track tab counts so both tabs always show their last-known count
   const [tabCounts, setTabCounts] = useState<Record<ProductTab, number | null>>({
@@ -110,13 +112,16 @@ export default function ProductsPage() {
     updateFilters({ ...EMPTY_FILTERS, tab: filters.tab });
   }
 
-  function handlePresetClick(view: SavedView) {
-    const { filters: next, visibleColumns } = applyPreset(view);
+  const handlePresetClick = useCallback((view: SavedView) => {
+    const { filters: next, visibleColumns } = applyPreset(view, filters);
+    const merged = visibleColumns
+      ? Array.from(new Set([...baseColumns, ...visibleColumns]))
+      : null;
     const withPage = { ...next, page: 1 } as ProductFilters;
     setActiveView(view);
-    setRuntimeColumns(visibleColumns);
+    setRuntimeColumns(merged);
     updateFilters(withPage, { view: view.slug ?? view.id });
-  }
+  }, [filters, baseColumns, updateFilters]);
 
   function handleFilterChange(next: ProductFilters) {
     // Explicit filter edits drop the active view + runtime column override.
@@ -126,7 +131,7 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6">
+    <div className="px-4 py-6">
       {/* Header */}
       <div className="page-enter page-enter-1 mb-5 flex items-start justify-between gap-4">
         <div>
@@ -219,11 +224,19 @@ export default function ProductsPage() {
           onSaveClick={() => setSaveDialogOpen(true)}
           onDeleteClick={(v) => setDeleteTarget(v)}
         />
-        <ColumnVisibilityToggle
-          runtimeOverride={runtimeColumns}
-          onUserChange={setBaseColumns}
-          onResetRuntime={() => setRuntimeColumns(null)}
-        />
+        <div className="flex items-center gap-2">
+          {hiddenCount > 0 && (
+            <span className="text-xs text-muted-foreground rounded-full bg-muted px-2 py-1">
+              {hiddenCount} hidden — narrow window
+            </span>
+          )}
+          <ColumnVisibilityToggle
+            ref={columnsRef}
+            runtimeOverride={runtimeColumns}
+            onUserChange={setBaseColumns}
+            onResetRuntime={() => setRuntimeColumns(null)}
+          />
+        </div>
       </div>
 
       {/* Tabs */}
@@ -292,6 +305,8 @@ export default function ProductsPage() {
           onPageChange={handlePageChange}
           onSort={handleSort}
           visibleColumns={runtimeColumns ?? baseColumns}
+          onHideColumn={(key) => columnsRef.current?.hideColumn(key)}
+          onHiddenChange={setHiddenCount}
         />
       </div>
 

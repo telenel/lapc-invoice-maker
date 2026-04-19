@@ -1,0 +1,21 @@
+.product-table-wrap {
+  container-type: inline-size;
+}
+
+.product-table-wrap [data-slot="table-container"] {
+  overflow-x: visible;
+}
+
+@container (max-width: 1280px) {
+  .product-table th[data-priority="low"],
+  .product-table td[data-priority="low"] {
+    display: none;
+  }
+}
+
+@container (max-width: 1024px) {
+  .product-table th[data-priority="medium"],
+  .product-table td[data-priority="medium"] {
+    display: none;
+  }
+}
