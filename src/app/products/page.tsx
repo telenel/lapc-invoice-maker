@@ -67,16 +67,36 @@ export default function ProductsPage() {
   const { data, loading, refetch } = useProductSearch(filters);
 
   // Prism availability — controls whether write features (New Item, Delete) are shown.
-  // True only on the campus dev machine where the SQL Server is reachable.
+  // True only on the campus dev machine where the SQL Server is reachable. We
+  // poll every 30s while unavailable so a transient health blip doesn't lock
+  // write actions off for the rest of the SPA session.
   const [prismAvailable, setPrismAvailable] = useState(false);
   useEffect(() => {
     let cancelled = false;
-    productApi.health().then((h) => {
-      if (!cancelled) setPrismAvailable(h.available);
-    }).catch(() => {
-      if (!cancelled) setPrismAvailable(false);
-    });
-    return () => { cancelled = true; };
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const check = () => {
+      productApi
+        .health()
+        .then((h) => {
+          if (cancelled) return;
+          setPrismAvailable(h.available);
+          if (!h.available) {
+            timer = setTimeout(check, 30_000);
+          }
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setPrismAvailable(false);
+          timer = setTimeout(check, 30_000);
+        });
+    };
+
+    check();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   const [newItemOpen, setNewItemOpen] = useState(false);
@@ -94,6 +114,8 @@ export default function ProductsPage() {
   const restoredViewRef = useRef<string | null>(null);
   const [hiddenCount, setHiddenCount] = useState(0);
   const [resolvedViews, setResolvedViews] = useState<SavedView[]>(SYSTEM_PRESET_VIEWS);
+  // Bumped after saveView / deleteView succeeds so the SavedViewsBar refetches.
+  const [savedViewsRefresh, setSavedViewsRefresh] = useState(0);
 
   // Track tab counts so both tabs always show their last-known count
   const [tabCounts, setTabCounts] = useState<Record<ProductTab, number | null>>({
@@ -160,10 +182,12 @@ export default function ProductsPage() {
     const presetColumns = matched.columnPreferences?.visible.filter(
       (key): key is OptionalColumnKey => (OPTIONAL_COLUMNS as readonly string[]).includes(key),
     );
-    if (presetColumns && presetColumns.length > 0) {
+    if (presetColumns != null) {
       // Preset column layouts are authoritative — they replace the user's
       // default set rather than augment it, so presets can legitimately
       // REMOVE columns (e.g. the "days_since_sale-only" built-in view).
+      // An explicitly empty array means "hide every optional column", which
+      // must be preserved rather than falling back to baseColumns.
       setRuntimeColumns(presetColumns);
     } else {
       setRuntimeColumns(null);
@@ -196,7 +220,9 @@ export default function ProductsPage() {
     const { filters: next, visibleColumns } = applyPreset(view, filters);
     // Use the preset's column list verbatim. Merging with baseColumns would
     // prevent presets from hiding columns the user happens to have enabled.
-    const runtime = visibleColumns && visibleColumns.length > 0 ? visibleColumns : null;
+    // An explicit empty array from the preset still counts as a layout
+    // ("hide every optional column"); only nullish means "use user's default".
+    const runtime = visibleColumns ?? null;
     const withPage = { ...next, page: 1 } as ProductFilters;
     restoredViewRef.current = view.slug ?? view.id;
     setActiveView(view);
@@ -364,6 +390,7 @@ export default function ProductsPage() {
           }}
           onDeleteClick={(v) => setDeleteTarget(v)}
           onViewsResolved={setResolvedViews}
+          refreshToken={savedViewsRefresh}
         />
       </div>
 
@@ -537,7 +564,10 @@ export default function ProductsPage() {
         onOpenChange={setSaveDialogOpen}
         filters={filters}
         columnPreferences={{ visible: runtimeColumns ?? baseColumns }}
-        onSaved={(v) => setActiveView(v)}
+        onSaved={(v) => {
+          setActiveView(v);
+          setSavedViewsRefresh((n) => n + 1);
+        }}
       />
 
       <DeleteViewDialog
@@ -548,6 +578,7 @@ export default function ProductsPage() {
         onDeleted={(v) => {
           if (activeView?.id === v.id) setActiveView(null);
           setDeleteTarget(null);
+          setSavedViewsRefresh((n) => n + 1);
         }}
       />
     </div>

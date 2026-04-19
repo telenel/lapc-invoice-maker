@@ -16,6 +16,12 @@ interface Props {
   onClearPreset: () => void;
   onDeleteClick: (view: SavedView) => void;
   onViewsResolved?: (views: SavedView[]) => void;
+  /**
+   * Incrementing token that triggers a re-fetch of the views list. Parent
+   * should bump it after save or delete mutations so the bar picks up the
+   * change without a full remount.
+   */
+  refreshToken?: number;
 }
 
 /**
@@ -36,6 +42,7 @@ export function SavedViewsBar({
   onClearPreset,
   onDeleteClick,
   onViewsResolved,
+  refreshToken,
 }: Props) {
   const [system, setSystem] = useState<SavedView[]>(SYSTEM_PRESET_VIEWS);
   const [mine, setMine] = useState<SavedView[]>([]);
@@ -44,6 +51,8 @@ export function SavedViewsBar({
 
   useEffect(() => {
     let cancelled = false;
+    // Re-fires whenever refreshToken changes so the bar picks up save/delete
+    // mutations from the parent without a full component remount.
     listViews()
       .then((r) => {
         if (cancelled) return;
@@ -61,7 +70,7 @@ export function SavedViewsBar({
     return () => {
       cancelled = true;
     };
-  }, [onViewsResolved]);
+  }, [onViewsResolved, refreshToken]);
 
   const byGroup = useMemo(() => {
     const map = new Map<PresetGroup, SavedView[]>();
