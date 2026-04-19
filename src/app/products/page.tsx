@@ -63,6 +63,7 @@ export default function ProductsPage() {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<SavedView | null>(null);
   const columnsRef = useRef<ColumnVisibilityHandle>(null);
+  const [hiddenCount, setHiddenCount] = useState(0);
 
   // Track tab counts so both tabs always show their last-known count
   const [tabCounts, setTabCounts] = useState<Record<ProductTab, number | null>>({
@@ -223,12 +224,19 @@ export default function ProductsPage() {
           onSaveClick={() => setSaveDialogOpen(true)}
           onDeleteClick={(v) => setDeleteTarget(v)}
         />
-        <ColumnVisibilityToggle
-          ref={columnsRef}
-          runtimeOverride={runtimeColumns}
-          onUserChange={setBaseColumns}
-          onResetRuntime={() => setRuntimeColumns(null)}
-        />
+        <div className="flex items-center gap-2">
+          {hiddenCount > 0 && (
+            <span className="text-xs text-muted-foreground rounded-full bg-muted px-2 py-1">
+              {hiddenCount} hidden — narrow window
+            </span>
+          )}
+          <ColumnVisibilityToggle
+            ref={columnsRef}
+            runtimeOverride={runtimeColumns}
+            onUserChange={setBaseColumns}
+            onResetRuntime={() => setRuntimeColumns(null)}
+          />
+        </div>
       </div>
 
       {/* Tabs */}
@@ -298,6 +306,7 @@ export default function ProductsPage() {
           onSort={handleSort}
           visibleColumns={runtimeColumns ?? baseColumns}
           onHideColumn={(key) => columnsRef.current?.hideColumn(key)}
+          onHiddenChange={setHiddenCount}
         />
       </div>
 

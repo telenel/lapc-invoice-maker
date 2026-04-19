@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
@@ -15,6 +16,7 @@ import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon, SearchIcon, XIcon } from "
 import type { Product, ProductTab } from "@/domains/product/types";
 import { PAGE_SIZE } from "@/domains/product/constants";
 import type { OptionalColumnKey } from "@/domains/product/constants";
+import { useHiddenColumns } from "./use-hidden-columns";
 import "./product-table.css";
 
 interface ProductTableProps {
@@ -32,6 +34,7 @@ interface ProductTableProps {
   onSort: (field: string) => void;
   visibleColumns?: OptionalColumnKey[];
   onHideColumn?: (key: OptionalColumnKey) => void;
+  onHiddenChange?: (count: number) => void;
 }
 
 function formatCurrency(value: number): string {
@@ -135,6 +138,7 @@ export function ProductTable({
   onSort,
   visibleColumns = [],
   onHideColumn,
+  onHiddenChange,
 }: ProductTableProps) {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const extraCols = visibleColumns?.length ?? 0;
@@ -150,6 +154,26 @@ export function ProductTable({
       ? sortDir === "asc" ? "desc" : "asc"
       : sortDir;
 
+  const { ref: wrapRef, summary } = useHiddenColumns();
+
+  useEffect(() => {
+    if (!onHiddenChange) return;
+    const optionalActive = visibleColumns ?? [];
+    const PRIORITY: Record<OptionalColumnKey, "high" | "medium" | "low"> = {
+      units_1y: "high",
+      revenue_1y: "high",
+      margin: "medium",
+      txns_1y: "medium",
+      dcc: "medium",
+      days_since_sale: "low",
+      updated: "low",
+    };
+    const hidden = optionalActive.filter((k) =>
+      summary.tiers.includes(PRIORITY[k] as "medium" | "low"),
+    );
+    onHiddenChange(hidden.length);
+  }, [summary.tiers, visibleColumns, onHiddenChange]);
+
   if (!loading && products.length === 0) {
     return (
       <EmptyState
@@ -163,7 +187,7 @@ export function ProductTable({
   return (
     <div>
       {/* Desktop table */}
-      <div className="hidden md:block product-table-wrap">
+      <div ref={wrapRef} className="hidden md:block product-table-wrap">
         <Table className="product-table">
           <TableHeader>
             <TableRow>
