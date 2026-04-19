@@ -9,66 +9,35 @@ vi.mock("@/lib/auth", () => ({
   authOptions: {},
 }));
 
-vi.mock("@/lib/supabase/admin", () => ({
-  getSupabaseAdminClient: vi.fn(),
+const { serverViewsMocks, MockProductViewDuplicateError } = vi.hoisted(() => {
+  class ProductViewDuplicateError extends Error {
+    constructor(nameValue: string) {
+      super(`A view named "${nameValue}" already exists.`);
+      this.name = "ProductViewDuplicateError";
+    }
+  }
+
+  return {
+    serverViewsMocks: {
+      listProductViews: vi.fn(),
+      createProductView: vi.fn(),
+      deleteProductView: vi.fn(),
+    },
+    MockProductViewDuplicateError: ProductViewDuplicateError,
+  };
+});
+
+vi.mock("@/domains/product/server-views", () => ({
+  ProductViewDuplicateError: MockProductViewDuplicateError,
+  listProductViews: serverViewsMocks.listProductViews,
+  createProductView: serverViewsMocks.createProductView,
+  deleteProductView: serverViewsMocks.deleteProductView,
 }));
 
 import { getServerSession } from "next-auth";
-import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { GET, POST } from "@/app/api/products/views/route";
 import { DELETE } from "@/app/api/products/views/[id]/route";
 import { PRODUCTS_PAGE_GROUPS } from "@/domains/product/view-groups";
-
-type QueryResult = { data: unknown; error: unknown };
-
-/**
- * Build a chainable Supabase query builder that resolves to the given result
- * when awaited or when a terminator (.single()) is invoked.
- *
- * Each chain method returns the same proxy so we can cover arbitrary chains
- * like .select().eq().in().order().order() without enumerating every method.
- */
-function makeQueryBuilder(result: QueryResult) {
-  const builder: Record<string, unknown> = {};
-  const handler: ProxyHandler<Record<string, unknown>> = {
-    get(_target, prop: string) {
-      if (prop === "then") {
-        // Make the builder thenable so `await builder` resolves to `result`.
-        return (
-          resolve: (v: QueryResult) => void,
-          reject?: (err: unknown) => void,
-        ) => {
-          try {
-            resolve(result);
-          } catch (err) {
-            reject?.(err);
-          }
-        };
-      }
-      if (prop === "single") {
-        return () => Promise.resolve(result);
-      }
-      // Any other chain method returns the proxy itself.
-      return () => proxy;
-    },
-  };
-  const proxy = new Proxy(builder, handler);
-  return proxy;
-}
-
-/**
- * Build a supabase client mock whose `.from(table)` returns a builder that
- * resolves to `result`. If you need two different results (GET calls .from
- * twice), pass an array and the mock will return them in order.
- */
-function makeSupabaseMock(results: QueryResult | QueryResult[]) {
-  const queue = Array.isArray(results) ? [...results] : [results];
-  const from = vi.fn(() => {
-    const next = queue.length > 1 ? queue.shift()! : queue[0];
-    return makeQueryBuilder(next);
-  });
-  return { from };
-}
 
 describe("GET /api/products/views", () => {
   beforeEach(() => {
@@ -92,34 +61,34 @@ describe("GET /api/products/views", () => {
       user: { id: "u1", role: "user" },
     } as never);
 
-    const systemRow = {
-      id: "sv-sys",
-      name: "Dead Weight",
-      description: "No movement",
-      filter: { hasMovement: false },
-      column_preferences: null,
-      is_system: true,
-      slug: "dead-weight",
-      preset_group: "dead-weight",
-      sort_order: 1,
-    };
-    const mineRow = {
-      id: "sv-mine",
-      name: "My View",
-      description: null,
-      filter: { q: "shirt" },
-      column_preferences: { visible: ["sku", "description"] },
-      is_system: false,
-      slug: null,
-      preset_group: null,
-      sort_order: null,
-    };
-
-    const supabaseMock = makeSupabaseMock([
-      { data: [systemRow], error: null },
-      { data: [mineRow], error: null },
-    ]);
-    vi.mocked(getSupabaseAdminClient).mockReturnValue(supabaseMock as never);
+    serverViewsMocks.listProductViews.mockResolvedValue({
+      system: [
+        {
+          id: "sv-sys",
+          name: "Dead Weight",
+          description: "No movement",
+          filter: { hasMovement: false },
+          columnPreferences: null,
+          isSystem: true,
+          slug: "dead-weight",
+          presetGroup: "dead-weight",
+          sortOrder: 1,
+        },
+      ],
+      mine: [
+        {
+          id: "sv-mine",
+          name: "My View",
+          description: null,
+          filter: { q: "shirt" },
+          columnPreferences: { visible: ["sku", "description"] },
+          isSystem: false,
+          slug: null,
+          presetGroup: null,
+          sortOrder: null,
+        },
+      ],
+    });
 
     const response = await GET(
       new NextRequest("http://localhost/api/products/views"),
@@ -155,8 +124,7 @@ describe("GET /api/products/views", () => {
         },
       ],
     });
-    expect(supabaseMock.from).toHaveBeenCalledWith("saved_searches");
-    expect(supabaseMock.from).toHaveBeenCalledTimes(2);
+    expect(serverViewsMocks.listProductViews).toHaveBeenCalledWith("u1");
   });
 
   it("includes every products-page preset group in the server allow-list", () => {
@@ -196,19 +164,17 @@ describe("POST /api/products/views", () => {
   });
 
   it("returns 201 on valid body", async () => {
-    const insertedRow = {
+    serverViewsMocks.createProductView.mockResolvedValue({
       id: "sv-new",
       name: "My Saved View",
       description: null,
       filter: { q: "widget" },
-      column_preferences: null,
-      is_system: false,
+      columnPreferences: null,
+      isSystem: false,
       slug: null,
-      preset_group: null,
-      sort_order: null,
-    };
-    const supabaseMock = makeSupabaseMock({ data: insertedRow, error: null });
-    vi.mocked(getSupabaseAdminClient).mockReturnValue(supabaseMock as never);
+      presetGroup: null,
+      sortOrder: null,
+    });
 
     const response = await POST(
       new NextRequest("http://localhost/api/products/views", {
@@ -226,15 +192,19 @@ describe("POST /api/products/views", () => {
       isSystem: false,
       filter: { q: "widget" },
     });
-    expect(supabaseMock.from).toHaveBeenCalledWith("saved_searches");
+    expect(serverViewsMocks.createProductView).toHaveBeenCalledWith({
+      userId: "u1",
+      name: "My Saved View",
+      description: null,
+      filter: { q: "widget" },
+      columnPreferences: null,
+    });
   });
 
-  it("returns 409 when Supabase reports a unique-violation (code 23505)", async () => {
-    const supabaseMock = makeSupabaseMock({
-      data: null,
-      error: { code: "23505", message: "duplicate key value" },
-    });
-    vi.mocked(getSupabaseAdminClient).mockReturnValue(supabaseMock as never);
+  it("returns 409 when a duplicate view name is rejected", async () => {
+    serverViewsMocks.createProductView.mockRejectedValue(
+      new MockProductViewDuplicateError("Duplicate"),
+    );
 
     const response = await POST(
       new NextRequest("http://localhost/api/products/views", {
@@ -283,8 +253,7 @@ describe("DELETE /api/products/views/:id", () => {
   });
 
   it("returns 404 when the row isn't owned by the caller or doesn't exist", async () => {
-    const supabaseMock = makeSupabaseMock({ data: null, error: null });
-    vi.mocked(getSupabaseAdminClient).mockReturnValue(supabaseMock as never);
+    serverViewsMocks.deleteProductView.mockResolvedValue("not_found");
 
     const response = await DELETE(
       new NextRequest("http://localhost/api/products/views/nope", {
@@ -301,8 +270,7 @@ describe("DELETE /api/products/views/:id", () => {
   });
 
   it("returns 200 and { ok: true } on successful delete", async () => {
-    const supabaseMock = makeSupabaseMock({ data: { id: "v1" }, error: null });
-    vi.mocked(getSupabaseAdminClient).mockReturnValue(supabaseMock as never);
+    serverViewsMocks.deleteProductView.mockResolvedValue("deleted");
 
     const response = await DELETE(
       new NextRequest("http://localhost/api/products/views/v1", {
@@ -316,5 +284,9 @@ describe("DELETE /api/products/views/:id", () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body).toEqual({ ok: true });
+    expect(serverViewsMocks.deleteProductView).toHaveBeenCalledWith({
+      id: "v1",
+      userId: "u1",
+    });
   });
 });
