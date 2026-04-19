@@ -108,7 +108,17 @@ export interface ProductFilters {
   maxStockCoverageDays: string;
 }
 
-export type ProductSortField = "sku" | "description" | "title" | "author" | "retail_price" | "cost" | "last_sale_date" | "barcode" | "catalog_number" | "product_type" | "vendor_id" | "isbn" | "edition";
+export type ProductSortField =
+  | "sku" | "description" | "title" | "author"
+  | "retail_price" | "cost"
+  | "last_sale_date" | "barcode" | "catalog_number" | "product_type"
+  | "vendor_id" | "isbn" | "edition"
+  | "stock_on_hand"
+  | "units_sold_30d" | "units_sold_1y" | "units_sold_lifetime"
+  | "revenue_30d" | "revenue_1y"
+  | "txns_1y"
+  | "updated_at"
+  | "dept_num";
 
 export interface ProductSearchResult {
   products: Product[];
