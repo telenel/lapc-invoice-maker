@@ -244,10 +244,17 @@ export async function searchProducts(
     query = query.lte("stock_coverage_days", Number(filters.maxStockCoverageDays));
   }
 
-  // Sorting — validate against whitelist to prevent arbitrary column injection
-  const sortField = ALLOWED_SORT_FIELDS.has(filters.sortBy) ? filters.sortBy : "sku";
-  const ascending = filters.sortDir !== "desc";
-  query = query.order(sortField, { ascending, nullsFirst: false }).range(from, to);
+  // Sorting — validate against whitelist to prevent arbitrary column injection.
+  // "days_since_sale" is a presentation alias for last_sale_date with inverted
+  // direction: more days = older = ascending in days is descending in date.
+  let effectiveSortBy: string = filters.sortBy;
+  let effectiveAscending = filters.sortDir !== "desc";
+  if (filters.sortBy === "days_since_sale") {
+    effectiveSortBy = "last_sale_date";
+    effectiveAscending = !effectiveAscending;
+  }
+  const sortField = ALLOWED_SORT_FIELDS.has(effectiveSortBy) ? effectiveSortBy : "sku";
+  query = query.order(sortField, { ascending: effectiveAscending, nullsFirst: false }).range(from, to);
 
   const { data, count, error } = await query;
 

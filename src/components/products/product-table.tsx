@@ -126,12 +126,12 @@ export function ProductTable({
                   <SortHeader field="author" label="Author" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
                   <SortHeader field="isbn" label="ISBN" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
                   <SortHeader field="edition" label="Edition" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
-                  <TableHead>Barcode</TableHead>
+                  <SortHeader field="barcode" label="Barcode" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
                 </>
               ) : (
                 <>
                   <SortHeader field="description" label="Description" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
-                  <TableHead>Barcode</TableHead>
+                  <SortHeader field="barcode" label="Barcode" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
                   <SortHeader field="catalog_number" label="Catalog #" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
                   <SortHeader field="product_type" label="Type" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
                   <SortHeader field="vendor_id" label="Vendor" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
@@ -149,19 +149,25 @@ export function ProductTable({
                 className="text-right"
               />
               {visibleColumns?.includes("dcc") && (
-                <TableHead>DCC</TableHead>
+                <SortHeader field="dept_num" label="DCC" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
               )}
-              {visibleColumns?.includes("units_1y")   && <TableHead className="text-right">Units 1y</TableHead>}
-              {visibleColumns?.includes("revenue_1y") && <TableHead className="text-right">Revenue 1y</TableHead>}
-              {visibleColumns?.includes("txns_1y")    && <TableHead className="text-right">Receipts 1y</TableHead>}
+              {visibleColumns?.includes("units_1y") && (
+                <SortHeader field="units_sold_1y" label="Units 1y" sortBy={sortBy} sortDir={sortDir} onSort={onSort} className="text-right" />
+              )}
+              {visibleColumns?.includes("revenue_1y") && (
+                <SortHeader field="revenue_1y" label="Revenue 1y" sortBy={sortBy} sortDir={sortDir} onSort={onSort} className="text-right" />
+              )}
+              {visibleColumns?.includes("txns_1y") && (
+                <SortHeader field="txns_1y" label="Receipts 1y" sortBy={sortBy} sortDir={sortDir} onSort={onSort} className="text-right" />
+              )}
               {visibleColumns?.includes("margin") && (
-                <TableHead className="text-right">Margin %</TableHead>
+                <SortHeader field="margin" label="Margin %" sortBy={sortBy} sortDir={sortDir} onSort={onSort} className="text-right" />
               )}
               {visibleColumns?.includes("days_since_sale") && (
-                <TableHead className="text-right">Days since sale</TableHead>
+                <SortHeader field="days_since_sale" label="Days since sale" sortBy={sortBy} sortDir={sortDir} onSort={onSort} className="text-right" />
               )}
               {visibleColumns?.includes("updated") && (
-                <TableHead>Updated</TableHead>
+                <SortHeader field="updated_at" label="Updated" sortBy={sortBy} sortDir={sortDir} onSort={onSort} />
               )}
             </TableRow>
           </TableHeader>
