@@ -645,8 +645,18 @@ export function ProductTable({
                                   product.last_sale_date_computed ??
                                   product.last_sale_date;
                                 if (!ref) return "—";
+                                const parsed = new Date(ref);
+                                // Same sentinel guard as formatSaleDate — a
+                                // 1899 / 1970 placeholder should read as
+                                // "Never", not 40,000 days ago.
+                                if (
+                                  Number.isNaN(parsed.getTime()) ||
+                                  parsed.getFullYear() < 1990
+                                ) {
+                                  return "Never";
+                                }
                                 const days = Math.floor(
-                                  (Date.now() - new Date(ref).getTime()) / 86_400_000,
+                                  (Date.now() - parsed.getTime()) / 86_400_000,
                                 );
                                 return days >= 0 ? `${days}d` : "—";
                               })()}
@@ -815,6 +825,17 @@ export function ProductTable({
                       />
                     ) : null}
                   </div>
+                  {tab === "textbooks" ? (
+                    product.isbn ? (
+                      <p className="mt-1 font-mono tnum text-[10.5px] text-muted-foreground">
+                        ISBN {product.isbn}
+                      </p>
+                    ) : null
+                  ) : product.barcode ? (
+                    <p className="mt-1 font-mono tnum text-[10.5px] text-muted-foreground">
+                      {product.barcode}
+                    </p>
+                  ) : null}
                 </div>
               );
             })}
