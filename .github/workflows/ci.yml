@@ -64,6 +64,41 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Bootstrap Supabase-like roles for raw SQL migrations
+        run: |
+          node - <<'NODE'
+          const { Client } = require("pg");
+
+          async function main() {
+            const client = new Client({ connectionString: process.env.DATABASE_URL });
+            await client.connect();
+            await client.query(`
+              DO $$
+              BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+                  CREATE ROLE anon NOLOGIN;
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+                  CREATE ROLE authenticated NOLOGIN;
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+                  CREATE ROLE service_role NOLOGIN;
+                END IF;
+                IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'prisma') THEN
+                  CREATE ROLE prisma NOLOGIN;
+                END IF;
+              END
+              $$;
+            `);
+            await client.end();
+          }
+
+          main().catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
+
       - name: Apply Prisma migrations end to end
         run: npx prisma migrate deploy
 

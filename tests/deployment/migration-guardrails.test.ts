@@ -9,6 +9,25 @@ function readRepoFile(relativePath: string): string {
 }
 
 describe("deploy and migration guardrails", () => {
+  it("recreates the products baseline before later raw SQL migrations extend it", () => {
+    const migrationDirs = fs
+      .readdirSync(path.join(repoRoot, "prisma/migrations"), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+      .sort();
+    const bootstrapName = "20260416999999_products_table_baseline";
+    const bootstrapSql = readRepoFile(`prisma/migrations/${bootstrapName}/migration.sql`);
+
+    expect(migrationDirs.indexOf(bootstrapName)).toBeGreaterThan(-1);
+    expect(migrationDirs.indexOf(bootstrapName)).toBeLessThan(
+      migrationDirs.indexOf("20260417000001_extend_products_for_bulk_edit"),
+    );
+    expect(bootstrapSql).toContain('CREATE TABLE IF NOT EXISTS "products"');
+    expect(bootstrapSql).toContain('ALTER TABLE "products" ENABLE ROW LEVEL SECURITY;');
+    expect(bootstrapSql).toContain("rolname = 'authenticated'");
+    expect(bootstrapSql).toContain('CREATE POLICY "Authenticated users can read products"');
+  });
+
   it("keeps existing products_with_derived view columns in place before appending new ones", () => {
     const sql = readRepoFile("prisma/migrations/20260418153000_products_derived_accuracy_and_margin/migration.sql");
 
@@ -31,6 +50,7 @@ describe("deploy and migration guardrails", () => {
     const deployScript = readRepoFile("scripts/deploy-webhook.sh");
 
     expect(ciWorkflow).toContain("migration_check:");
+    expect(ciWorkflow).toContain("Bootstrap Supabase-like roles for raw SQL migrations");
     expect(ciWorkflow).toContain("npx prisma migrate deploy");
 
     expect(entrypoint).toContain("DEFAULT_CMD='node server.js'");
