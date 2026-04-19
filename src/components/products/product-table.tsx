@@ -86,6 +86,26 @@ function formatSaleDate(date: string | null): string {
   return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }
 
+/**
+ * Relative time for the Updated column — preserves the recency signal an
+ * operator list needs (minutes vs hours vs days) instead of collapsing
+ * everything into month/year.
+ */
+function formatRelativeUpdated(date: string | null | undefined): string {
+  if (!date) return "—";
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return "—";
+  const diffMs = Date.now() - d.getTime();
+  if (diffMs < 60_000) return "just now";
+  const minutes = Math.floor(diffMs / 60_000);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+}
+
 function SortHeader({
   field,
   label,
@@ -540,21 +560,25 @@ export function ProductTable({
                         ) : null}
                         {showUpdated ? (
                           <td className="px-2.5 py-1.5 text-[11.5px] text-muted-foreground whitespace-nowrap">
-                            {formatSaleDate(product.updated_at ?? null)}
+                            {formatRelativeUpdated(product.updated_at)}
                           </td>
                         ) : null}
                         {showDcc ? (
                           <td className="px-2.5 py-1.5 whitespace-nowrap">
                             {(() => {
-                              const nums = [
+                              const segs = [
                                 product.dept_num,
                                 product.class_num,
                                 product.cat_num,
-                              ].filter((n): n is number => n != null);
-                              const numLabel =
-                                nums.length > 0
-                                  ? nums.join(".")
-                                  : (product.dcc_id ?? 0).toString();
+                              ];
+                              const anyDccPart = segs.some((n) => n != null);
+                              // Preserve positions — a missing class between dept and cat
+                              // must render as `10.—.5`, not collapse to `10.5`.
+                              const numLabel = anyDccPart
+                                ? segs
+                                    .map((n) => (n != null ? String(n) : "—"))
+                                    .join(".")
+                                : (product.dcc_id ?? 0).toString();
                               const names = [
                                 product.dept_name,
                                 product.class_name,

@@ -340,7 +340,14 @@ export function ProductFiltersBar({
       const year = d.getFullYear();
       const month = String(d.getMonth() + 1).padStart(2, "0");
       const day = String(d.getDate()).padStart(2, "0");
-      onChange({ ...filters, lastSaleDateFrom: `${year}-${month}-${day}`, page: 1 });
+      // Also clear any stale upper bound so the toggle truly represents
+      // "anything with a sale in the last 30 days" instead of a narrowed slice.
+      onChange({
+        ...filters,
+        lastSaleDateFrom: `${year}-${month}-${day}`,
+        lastSaleDateTo: "",
+        page: 1,
+      });
     } else {
       onChange({ ...filters, lastSaleDateFrom: "", page: 1 });
     }
