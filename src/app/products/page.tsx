@@ -227,10 +227,12 @@ export default function ProductsPage() {
 
   function handleClearFilters() {
     // Clear preset state alongside the filters so the banner + column overrides
-    // don't linger while the filter set goes empty.
+    // don't linger while the filter set goes empty. Restoration ref is reset
+    // by the restoration effect once router.replace flushes `view=` out of
+    // the URL — resetting it synchronously here can race and snap the view
+    // back on before the URL update lands.
     setActiveView(null);
     setRuntimeColumns(null);
-    restoredViewRef.current = null;
     updateFilters({ ...EMPTY_FILTERS, tab: filters.tab });
   }
 
@@ -401,9 +403,13 @@ export default function ProductsPage() {
           activeId={activeView?.id ?? null}
           onPresetClick={handlePresetClick}
           onClearPreset={() => {
+            // Do NOT clear restoredViewRef here — the URL still carries the
+            // old view= slug for a render cycle while router.replace flushes.
+            // Letting the restoration effect's "!viewParam" branch own the
+            // ref reset avoids a race where the effect sees the stale slug
+            // with a cleared guard and re-applies the preset.
             setActiveView(null);
             setRuntimeColumns(null);
-            restoredViewRef.current = null;
             updateFilters({ ...EMPTY_FILTERS, tab: filters.tab });
           }}
           onDeleteClick={(v) => setDeleteTarget(v)}
@@ -596,12 +602,12 @@ export default function ProductsPage() {
         onDeleted={(v) => {
           if (activeView?.id === v.id) {
             // The currently-applied view was just removed — drop every
-            // trailing piece of its state (URL param, runtime columns,
-            // the restoration guard) so the deleted preset stops driving
-            // the page on the next render.
+            // trailing piece of its state (URL param, runtime columns)
+            // so the deleted preset stops driving the page on the next
+            // render. restoredViewRef is cleared by the restoration
+            // effect once router.replace flushes `view=` out of the URL.
             setActiveView(null);
             setRuntimeColumns(null);
-            restoredViewRef.current = null;
             updateFilters({ ...EMPTY_FILTERS, tab: filters.tab });
           }
           setDeleteTarget(null);
