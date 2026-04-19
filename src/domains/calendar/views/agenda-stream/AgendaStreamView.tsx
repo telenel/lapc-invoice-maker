@@ -889,7 +889,7 @@ export function AgendaStreamView({
   const [showPast, setShowPast] = useState(initialShowPast);
   const expandedSeed = initialExpandedDateKeys ?? EMPTY_DATE_KEYS;
   const expandedSeedKey = expandedSeed.join("|");
-  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set(expandedSeed));
+  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(() => new Set(expandedSeed));
 
   useEffect(() => {
     setCurrentWeekStart(derivedWeekStart);
@@ -912,8 +912,8 @@ export function AgendaStreamView({
   }, [initialShowPast]);
 
   useEffect(() => {
-    setExpandedKeys(new Set(expandedSeed));
-  }, [expandedSeed, expandedSeedKey]);
+    setExpandedKeys(new Set(expandedSeedKey ? expandedSeedKey.split("|") : EMPTY_DATE_KEYS));
+  }, [expandedSeedKey]);
 
   const normalizedEvents = useMemo<AgendaStreamEvent[]>(() => {
     if (agendaEvents !== undefined) {

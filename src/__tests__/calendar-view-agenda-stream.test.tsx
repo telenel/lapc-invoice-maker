@@ -1220,6 +1220,39 @@ describe("AgendaStreamView", () => {
     expect(within(expandedLane).getByText("Ops Sync")).toBeTruthy();
   });
 
+  it("preserves lane expansion changes when seeded keys rerender with a new array identity", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <AgendaStreamView
+        weekStart="2026-04-13"
+        agendaEvents={buildAgendaEvents()}
+        initialExpandedDateKeys={["2026-04-16"]}
+        now={NOW}
+      />,
+    );
+
+    const thursdayLane = screen.getByRole("button", { name: /Thursday, April 16, 2026/i });
+    const fridayLane = screen.getByRole("button", { name: /Friday, April 17, 2026/i });
+
+    expect(thursdayLane.getAttribute("aria-expanded")).toBe("true");
+    expect(fridayLane.getAttribute("aria-expanded")).toBe("false");
+
+    await user.click(fridayLane);
+    expect(fridayLane.getAttribute("aria-expanded")).toBe("true");
+
+    rerender(
+      <AgendaStreamView
+        weekStart="2026-04-13"
+        agendaEvents={buildAgendaEvents()}
+        initialExpandedDateKeys={["2026-04-16"]}
+        now={NOW}
+      />,
+    );
+
+    expect(thursdayLane.getAttribute("aria-expanded")).toBe("true");
+    expect(fridayLane.getAttribute("aria-expanded")).toBe("true");
+  });
+
   it("syncs the displayed month when the parent-driven fullcalendar date profile changes", () => {
     const { rerender } = render(
       <AgendaStreamView
