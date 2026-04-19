@@ -118,7 +118,12 @@ export type ProductSortField =
   | "revenue_30d" | "revenue_1y"
   | "txns_1y"
   | "updated_at"
-  | "dept_num";
+  | "dept_num"
+  // Handled outside ALLOWED_SORT_FIELDS: margin is sorted client-side on
+  // the current page; days_since_sale aliases to last_sale_date with
+  // inverted direction (see queries.ts).
+  | "margin"
+  | "days_since_sale";
 
 export interface ProductSearchResult {
   products: Product[];
