@@ -55,16 +55,33 @@ describe("parseFiltersFromSearchParams", () => {
 });
 
 describe("applyPreset", () => {
-  it("returns the preset filter merged over defaults and preserves empty keys", () => {
-    const preset = SYSTEM_PRESET_VIEWS.find((v) => v.slug === "dead-never-sold-authoritative")!;
-    const result = applyPreset(preset);
-    expect(result.filters.neverSoldLifetime).toBe(true);
-    expect(result.filters.tab).toBe(EMPTY_FILTERS.tab);
+  const baseTextbook: ProductFilters = { ...EMPTY_FILTERS, tab: "textbooks", search: "calculus" };
+  const baseMerch: ProductFilters = { ...EMPTY_FILTERS, tab: "merchandise", search: "" };
+
+  it("preserves the user's current tab when the preset does not specify one", () => {
+    const preset = SYSTEM_PRESET_VIEWS.find((v) => v.slug === "trend-accelerating")!;
+    const result = applyPreset(preset, baseMerch);
+    expect(result.filters.tab).toBe("merchandise");
+    expect(result.filters.trendDirection).toBe("accelerating");
   });
 
-  it("returns the preset column preferences", () => {
+  it("preserves the user's current search when the preset does not specify one", () => {
+    const preset = SYSTEM_PRESET_VIEWS.find((v) => v.slug === "dead-never-sold-authoritative")!;
+    const result = applyPreset(preset, baseTextbook);
+    expect(result.filters.search).toBe("calculus");
+    expect(result.filters.neverSoldLifetime).toBe(true);
+  });
+
+  it("lets a preset override tab when it sets one explicitly", () => {
+    const preset = SYSTEM_PRESET_VIEWS.find((v) => v.slug === "pricing-gm-under-5")!;
+    const result = applyPreset(preset, baseTextbook);
+    expect(result.filters.tab).toBe("merchandise");
+    expect(result.filters.maxPrice).toBe("5");
+  });
+
+  it("returns the preset column preferences (filtered to known optional keys)", () => {
     const preset = SYSTEM_PRESET_VIEWS.find((v) => v.slug === "dead-discontinued-with-stock")!;
-    const result = applyPreset(preset);
+    const result = applyPreset(preset, baseTextbook);
     expect(result.visibleColumns).toEqual(["stock", "updated"]);
   });
 });

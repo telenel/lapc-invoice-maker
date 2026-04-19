@@ -124,8 +124,13 @@ export interface AppliedPreset {
   visibleColumns: OptionalColumnKey[] | null;
 }
 
-export function applyPreset(view: SavedView): AppliedPreset {
-  const filters: ProductFilters = { ...EMPTY_FILTERS, ...view.filter } as ProductFilters;
+export function applyPreset(view: SavedView, current: ProductFilters): AppliedPreset {
+  const filters: ProductFilters = {
+    ...EMPTY_FILTERS,
+    tab: current.tab,
+    search: current.search,
+    ...view.filter,
+  } as ProductFilters;
   let visibleColumns: OptionalColumnKey[] | null = null;
   if (view.columnPreferences) {
     visibleColumns = view.columnPreferences.visible.filter(
