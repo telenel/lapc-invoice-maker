@@ -9,6 +9,7 @@ import { AgendaStreamView } from "@/domains/calendar/views/agenda-stream/AgendaS
 import type { AgendaStreamEvent } from "@/domains/calendar/views/agenda-stream/types";
 import type { CalendarEventItem } from "@/domains/event/types";
 import type { EventResponse } from "@/domains/event/types";
+import { zonedDateTimeToUtc } from "@/lib/date-utils";
 
 const {
   calendarApiGetEvents,
@@ -560,7 +561,7 @@ function buildEventResponseFromInput(
 }
 
 function toIsoRange(date: string, time: string | null | undefined): string {
-  return time ? `${date}T${time}:00` : date;
+  return time ? zonedDateTimeToUtc(date, time).toISOString() : date;
 }
 
 function buildManualCalendarItemFromInput(
