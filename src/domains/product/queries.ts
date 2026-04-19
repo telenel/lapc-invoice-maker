@@ -313,7 +313,7 @@ export async function searchProducts(
     throw new Error(error.message);
   }
 
-  let products = (data ?? []) as Product[];
+  const products = (data ?? []) as Product[];
 
   return {
     products,
