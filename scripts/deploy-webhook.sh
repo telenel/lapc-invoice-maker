@@ -99,7 +99,7 @@ rollback_deploy() {
 
 run_migration_preflight() {
   echo "[deploy] Applying Prisma migrations with the candidate image before replacing the live app..."
-  docker compose run --rm --no-deps --entrypoint sh app -lc './node_modules/.bin/prisma migrate deploy'
+  docker compose run --rm --no-deps --entrypoint sh app -lc './node_modules/.bin/prisma migrate deploy && node ./scripts/check-products-derived-view.mjs'
 }
 
 log_migration_status() {

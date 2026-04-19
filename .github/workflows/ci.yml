@@ -102,6 +102,9 @@ jobs:
       - name: Apply Prisma migrations end to end
         run: npx prisma migrate deploy
 
+      - name: Verify derived products view shape
+        run: node scripts/check-products-derived-view.mjs
+
   ship_check:
     name: ship-check
     runs-on: ubuntu-latest

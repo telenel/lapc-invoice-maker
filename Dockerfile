@@ -81,6 +81,7 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 COPY --from=builder /app/scripts/docker-entrypoint.sh ./scripts/docker-entrypoint.sh
+COPY --from=builder /app/scripts/check-products-derived-view.mjs ./scripts/check-products-derived-view.mjs
 # Prisma v7 generates client to src/generated/prisma (not node_modules/.prisma)
 COPY --from=builder /app/src/generated/prisma ./src/generated/prisma
 
