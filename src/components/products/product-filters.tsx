@@ -204,17 +204,20 @@ function VendorSelect({
       .slice(0, 60);
   }, [vendors, query]);
 
-  // If Prism isn't available, fall back to a numeric ID input.
+  // If Prism isn't available, fall back to a numeric ID input. Strip any
+  // non-digit characters before persisting so the downstream Number(value)
+  // coercion in searchProducts() can't produce NaN and crash the query.
   if (!available) {
     return (
       <RailInput
         ariaLabel="Vendor ID"
         value={value}
-        onChange={onChange}
+        onChange={(v) => onChange(v.replace(/\D+/g, ""))}
         placeholder="Vendor ID…"
         icon={<SearchIcon className="size-3" aria-hidden="true" />}
         mono
         inputMode="numeric"
+        type="text"
       />
     );
   }
@@ -336,13 +339,16 @@ export function ProductFiltersBar({
   function toggleRecent(next: boolean) {
     if (next) {
       // Use the relative window so saved views / bookmarks don't decay as
-      // the calendar advances. Also clear the absolute date bounds so the
-      // toggle doesn't conflict with them.
+      // the calendar advances. Clear every conflicting sale-state filter
+      // (date bounds, lastSaleNever, lastSaleOlderThan) so the shortcut
+      // can't form an impossible conjunction that returns zero rows.
       onChange({
         ...filters,
         lastSaleWithin: "30d",
         lastSaleDateFrom: "",
         lastSaleDateTo: "",
+        lastSaleNever: false,
+        lastSaleOlderThan: "",
         page: 1,
       });
     } else {
