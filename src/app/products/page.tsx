@@ -55,17 +55,16 @@ export default function ProductsPage() {
     const hasExplicitFilter = (Object.keys(EMPTY_FILTERS) as Array<keyof ProductFilters>).some(
       (k) => !TRANSPORT_KEYS.has(k) && parsed[k] !== EMPTY_FILTERS[k],
     );
-    // Do NOT inject the stock default when a RESTORABLE saved view is the
-    // reason for the URL (the view is authoritative). An unrecognized view
-    // slug — a stale or broken link — should still fall through to the
-    // default. Custom-user views always serialize their filter values into
-    // the URL (hasExplicitFilter catches them), so verifying against the
-    // baked-in system preset slugs here is enough.
-    const viewSlug = params.get("view");
-    const matchesKnownSystemView = !!(
-      viewSlug && SYSTEM_PRESET_VIEWS.some((v) => v.slug === viewSlug)
-    );
-    if (!matchesKnownSystemView && !hasExplicitFilter && parsed.minStock === "") {
+    // Skip the stock default whenever the URL carries a `view=` param. The
+    // view is authoritative (system or custom, with or without filters), and
+    // we can't verify a custom slug synchronously at init time. For stale or
+    // invalid slugs the restoration effect resolves to "not found" once the
+    // views list loads — the user can clear the broken param manually or the
+    // deletion handler's router.replace cleans it up. Avoiding the default
+    // injection here is strictly better than flashing pre-filtered results
+    // for a legitimate custom empty view.
+    const isRestoringView = params.get("view") !== null;
+    if (!isRestoringView && !hasExplicitFilter && parsed.minStock === "") {
       return { ...parsed, minStock: "1" };
     }
     return parsed;
@@ -198,17 +197,6 @@ export default function ProductsPage() {
       setRuntimeColumns(presetColumns);
     } else {
       setRuntimeColumns(null);
-    }
-    // Roll back the auto-applied in-stock default for custom saved views
-    // that legitimately have no stock filter. Init could not verify custom
-    // slugs synchronously, so it defaulted to minStock=1 for non-system
-    // views. Now that we know the view, respect its empty state.
-    const viewHasStockFilter =
-      matched.filter && Object.prototype.hasOwnProperty.call(matched.filter, "minStock");
-    if (!viewHasStockFilter) {
-      setFilters((curr) =>
-        curr.minStock === "1" ? { ...curr, minStock: "" } : curr,
-      );
     }
   }, [viewParam, resolvedViews]);
 

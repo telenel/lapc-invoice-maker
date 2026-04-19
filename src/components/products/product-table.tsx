@@ -137,31 +137,46 @@ function SortHeader({
   priority?: "high" | "medium" | "low";
 }) {
   const isActive = sortBy === field;
+  const ariaSort: "ascending" | "descending" | "none" = isActive
+    ? sortDir === "asc"
+      ? "ascending"
+      : "descending"
+    : "none";
   return (
     <th
-      onClick={() => onSort(field)}
       style={{ width }}
       data-priority={priority}
-      className={`px-2.5 py-2 text-[11px] font-semibold tracking-[-0.005em] bg-card border-b border-border cursor-pointer select-none whitespace-nowrap sticky top-0 z-[1] ${
-        isActive ? "text-foreground" : "text-muted-foreground"
-      } ${mono ? "font-mono" : ""} ${align === "right" ? "text-right" : "text-left"}`}
+      aria-sort={ariaSort}
+      scope="col"
+      className={`bg-card border-b border-border sticky top-0 z-[1] ${
+        align === "right" ? "text-right" : "text-left"
+      }`}
     >
-      <span
-        className={`inline-flex items-center gap-1 w-full ${
-          align === "right" ? "justify-end" : "justify-start"
+      <button
+        type="button"
+        onClick={() => onSort(field)}
+        aria-label={`Sort by ${label}${
+          isActive
+            ? sortDir === "asc"
+              ? " (currently ascending)"
+              : " (currently descending)"
+            : ""
         }`}
+        className={`flex w-full items-center gap-1 px-2.5 py-2 text-[11px] font-semibold tracking-[-0.005em] select-none whitespace-nowrap bg-transparent border-none cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+          isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+        } ${mono ? "font-mono" : ""} ${align === "right" ? "justify-end" : "justify-start"}`}
       >
         {label}
         {isActive ? (
           sortDir === "asc" ? (
-            <ArrowUpIcon className="size-2.5" />
+            <ArrowUpIcon className="size-2.5" aria-hidden="true" />
           ) : (
-            <ArrowDownIcon className="size-2.5" />
+            <ArrowDownIcon className="size-2.5" aria-hidden="true" />
           )
         ) : (
-          <ArrowUpDownIcon className="size-2.5 opacity-30" />
+          <ArrowUpDownIcon className="size-2.5 opacity-30" aria-hidden="true" />
         )}
-      </span>
+      </button>
     </th>
   );
 }
