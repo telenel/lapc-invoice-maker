@@ -97,6 +97,15 @@ rollback_deploy() {
   append_deploy_log "rollback" "rollback to ${target_commit}"
 }
 
+run_migration_preflight() {
+  echo "[deploy] Applying Prisma migrations with the candidate image before replacing the live app..."
+  docker compose run --rm --no-deps --entrypoint sh app -lc './node_modules/.bin/prisma migrate deploy'
+}
+
+log_migration_status() {
+  docker compose run --rm --no-deps --entrypoint sh app -lc './node_modules/.bin/prisma migrate status' || true
+}
+
 echo "[deploy] Fetching latest code for $TARGET_REF..."
 if ! git fetch origin "$TARGET_REF"; then
   echo "[deploy] ERROR: failed to fetch ref '$TARGET_REF' from origin"
@@ -143,6 +152,14 @@ if ! docker compose build app; then
   echo "[deploy] ERROR: Docker build failed — rolling repo checkout back to $PREV_COMMIT"
   git reset --hard "$PREV_COMMIT"
   append_deploy_log "build_failed" "docker compose build failed"
+  exit 1
+fi
+
+if ! run_migration_preflight; then
+  echo "[deploy] ERROR: migration preflight failed — leaving the current app container untouched"
+  append_deploy_log "migration_failed" "prisma migrate deploy failed before container replacement"
+  log_migration_status
+  git reset --hard "$PREV_COMMIT"
   exit 1
 fi
 

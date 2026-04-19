@@ -1,0 +1,42 @@
+import { describe, expect, it } from "vitest";
+import fs from "node:fs";
+import path from "node:path";
+
+const repoRoot = process.cwd();
+
+function readRepoFile(relativePath: string): string {
+  return fs.readFileSync(path.join(repoRoot, relativePath), "utf8");
+}
+
+describe("deploy and migration guardrails", () => {
+  it("keeps existing products_with_derived view columns in place before appending new ones", () => {
+    const sql = readRepoFile("prisma/migrations/20260418153000_products_derived_accuracy_and_margin/migration.sql");
+
+    const stockCoverageIdx = sql.indexOf("END AS stock_coverage_days");
+    const trendIdx = sql.indexOf("END AS trend_direction");
+    const effectiveLastSaleIdx = sql.indexOf("AS effective_last_sale_date");
+    const aggregatesReadyIdx = sql.indexOf("AS aggregates_ready");
+    const marginRatioIdx = sql.indexOf("AS margin_ratio");
+
+    expect(stockCoverageIdx).toBeGreaterThan(-1);
+    expect(trendIdx).toBeGreaterThan(stockCoverageIdx);
+    expect(effectiveLastSaleIdx).toBeGreaterThan(trendIdx);
+    expect(aggregatesReadyIdx).toBeGreaterThan(effectiveLastSaleIdx);
+    expect(marginRatioIdx).toBeGreaterThan(aggregatesReadyIdx);
+  });
+
+  it("adds CI migration validation and keeps container startup migration-free by default", () => {
+    const ciWorkflow = readRepoFile(".github/workflows/ci.yml");
+    const entrypoint = readRepoFile("scripts/docker-entrypoint.sh");
+    const deployScript = readRepoFile("scripts/deploy-webhook.sh");
+
+    expect(ciWorkflow).toContain("migration_check:");
+    expect(ciWorkflow).toContain("npx prisma migrate deploy");
+
+    expect(entrypoint).toContain("DEFAULT_CMD='node server.js'");
+    expect(entrypoint).toContain('RUN_PRISMA_MIGRATIONS_ON_START:-0');
+
+    expect(deployScript).toContain("run_migration_preflight()");
+    expect(deployScript).toContain("migration preflight failed");
+  });
+});

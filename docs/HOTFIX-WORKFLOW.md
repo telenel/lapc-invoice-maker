@@ -92,7 +92,7 @@ npm run hotfix:deploy -- --skip-preflight hotfix/my-fix-branch
 2. If you are deploying your current branch, it blocks when local commits have not been pushed yet.
 3. It runs `scripts/hotfix-preflight.sh` unless `--skip-preflight` is used.
 4. It SSHes to the VPS and runs `scripts/deploy-webhook.sh <ref>`.
-5. The VPS fetches that ref, verifies that it still resolves to the exact SHA selected locally, resets to that commit, skips only if the live app already reports that SHA and smoke checks pass, otherwise builds the app image, replaces the container, verifies `/api/version`, runs smoke checks, and rolls back automatically if verification fails.
+5. The VPS fetches that ref, verifies that it still resolves to the exact SHA selected locally, resets to that commit, skips only if the live app already reports that SHA and smoke checks pass, otherwise builds the app image, runs Prisma migrations as a preflight step, replaces the container only after those migrations succeed, verifies `/api/version`, runs smoke checks, and rolls back automatically if post-swap verification fails.
 
 ## Notes
 

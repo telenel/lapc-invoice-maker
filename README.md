@@ -79,6 +79,10 @@ npx prisma migrate deploy              # Apply migrations to Supabase/production
 npx prisma db seed                     # Seed database
 ```
 
+Production deploys now run migrations as an explicit preflight step before the
+live app container is replaced. The app container itself does not auto-run
+migrations on startup unless `RUN_PRISMA_MIGRATIONS_ON_START=1` is set.
+
 ### Environment Variables
 
 ```
