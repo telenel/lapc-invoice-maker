@@ -222,9 +222,9 @@ export function ProductTable({
   }
 
   // Keep the loading row in lockstep with the header set: checkbox + SKU +
-  // Description + Vendor + Cost + Retail + [Margin?] + ISBN/Barcode + LastSale
-  // + [optional columns].
-  const baseCols = 8 + (showMargin ? 1 : 0);
+  // Description + Vendor + Cost + Retail + Stock + [Margin?] + ISBN/Barcode +
+  // LastSale + [optional columns].
+  const baseCols = 9 + (showMargin ? 1 : 0);
   const optionalCols =
     (showUnits ? 1 : 0) +
     (showRevenue ? 1 : 0) +
@@ -294,6 +294,16 @@ export function ProductTable({
                   align="right"
                   mono
                   width={86}
+                />
+                <SortHeader
+                  field="stock_on_hand"
+                  label="Stock"
+                  sortBy={sortBy}
+                  sortDir={sortDir}
+                  onSort={onSort}
+                  align="right"
+                  mono
+                  width={72}
                 />
                 {showMargin ? (
                   <SortHeader
@@ -518,6 +528,33 @@ export function ProductTable({
                           <span className="font-mono tnum text-[11.5px] text-foreground font-medium">
                             {formatCurrency(product.retail_price)}
                           </span>
+                        </td>
+                        <td className="px-2.5 py-1.5 text-right">
+                          {(() => {
+                            const stock = product.stock_on_hand;
+                            if (stock == null) {
+                              return (
+                                <span className="font-mono tnum text-[11.5px] text-muted-foreground/70">
+                                  —
+                                </span>
+                              );
+                            }
+                            const isOut = stock <= 0;
+                            const isLow = stock > 0 && stock < 15;
+                            return (
+                              <span
+                                className={`font-mono tnum text-[11.5px] ${
+                                  isOut
+                                    ? "text-muted-foreground"
+                                    : isLow
+                                      ? "text-[color:var(--chart-4)] font-medium"
+                                      : "text-foreground"
+                                }`}
+                              >
+                                {stock.toLocaleString()}
+                              </span>
+                            );
+                          })()}
                         </td>
                         {showMargin ? (
                           <td data-priority="medium" className="px-2.5 py-1.5 text-right">
@@ -750,6 +787,19 @@ export function ProductTable({
                     <span className="font-mono tnum text-muted-foreground">
                       {formatCurrency(product.cost)}
                     </span>
+                    {product.stock_on_hand != null ? (
+                      <span
+                        className={`font-mono tnum ${
+                          product.stock_on_hand <= 0
+                            ? "text-muted-foreground"
+                            : product.stock_on_hand < 15
+                              ? "text-[color:var(--chart-4)] font-medium"
+                              : "text-foreground"
+                        }`}
+                      >
+                        {product.stock_on_hand.toLocaleString()} in stock
+                      </span>
+                    ) : null}
                     {showMargin ? (
                       <MarginBar
                         cost={Number(product.cost)}

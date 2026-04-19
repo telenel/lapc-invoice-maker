@@ -335,28 +335,22 @@ export function ProductFiltersBar({
 
   function toggleRecent(next: boolean) {
     if (next) {
-      // Compute the cutoff in local time — toISOString() shifts to UTC which
-      // can cross a day boundary depending on the user's timezone, producing
-      // an intermittent off-by-one on the "last 30 days" window.
-      const d = new Date();
-      d.setDate(d.getDate() - 30);
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, "0");
-      const day = String(d.getDate()).padStart(2, "0");
-      // Also clear any stale upper bound so the toggle truly represents
-      // "anything with a sale in the last 30 days" instead of a narrowed slice.
+      // Use the relative window so saved views / bookmarks don't decay as
+      // the calendar advances. Also clear the absolute date bounds so the
+      // toggle doesn't conflict with them.
       onChange({
         ...filters,
-        lastSaleDateFrom: `${year}-${month}-${day}`,
+        lastSaleWithin: "30d",
+        lastSaleDateFrom: "",
         lastSaleDateTo: "",
         page: 1,
       });
     } else {
-      onChange({ ...filters, lastSaleDateFrom: "", page: 1 });
+      onChange({ ...filters, lastSaleWithin: "", page: 1 });
     }
   }
 
-  const recentActive = !!filters.lastSaleDateFrom;
+  const recentActive = filters.lastSaleWithin === "30d";
 
   return (
     <aside
