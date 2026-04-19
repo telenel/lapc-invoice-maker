@@ -196,12 +196,23 @@ export function ProductFiltersExtended({
               id="pf-last-sale-within"
               className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
               value={filters.lastSaleWithin}
-              onChange={(e) =>
-                onChange({
-                  lastSaleWithin: e.target
-                    .value as ProductFilters["lastSaleWithin"],
-                })
-              }
+              onChange={(e) => {
+                const next = e.target.value as ProductFilters["lastSaleWithin"];
+                // Clear mutually exclusive sale-state filters so the window
+                // can't form an impossible conjunction with lastSaleNever /
+                // lastSaleOlderThan or a stale absolute date bound.
+                if (next) {
+                  onChange({
+                    lastSaleWithin: next,
+                    lastSaleOlderThan: "",
+                    lastSaleNever: false,
+                    lastSaleDateFrom: "",
+                    lastSaleDateTo: "",
+                  });
+                } else {
+                  onChange({ lastSaleWithin: next });
+                }
+              }}
             >
               <option value="">Any</option>
               <option value="30d">Last 30 days</option>
@@ -215,12 +226,20 @@ export function ProductFiltersExtended({
               id="pf-last-sale-older-than"
               className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
               value={filters.lastSaleOlderThan}
-              onChange={(e) =>
-                onChange({
-                  lastSaleOlderThan: e.target
-                    .value as ProductFilters["lastSaleOlderThan"],
-                })
-              }
+              onChange={(e) => {
+                const next = e.target.value as ProductFilters["lastSaleOlderThan"];
+                if (next) {
+                  onChange({
+                    lastSaleOlderThan: next,
+                    lastSaleWithin: "",
+                    lastSaleNever: false,
+                    lastSaleDateFrom: "",
+                    lastSaleDateTo: "",
+                  });
+                } else {
+                  onChange({ lastSaleOlderThan: next });
+                }
+              }}
             >
               <option value="">Any</option>
               <option value="2y">Over 2 years</option>

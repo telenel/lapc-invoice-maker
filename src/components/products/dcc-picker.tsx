@@ -22,9 +22,32 @@ export function DccPicker({ deptNum, classNum, catNum, onChange }: Props) {
   }, [deptNum, classNum, catNum]);
 
   useEffect(() => {
-    loadDccList()
-      .then(setItems)
-      .catch(() => setFailed(true));
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const attempt = () => {
+      loadDccList()
+        .then((list) => {
+          if (cancelled) return;
+          setItems(list);
+          setFailed(false);
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setFailed(true);
+          // Retry after 30s so a transient /api/products/dcc-list blip
+          // doesn't leave the advanced selector permanently on the text
+          // fallback. loadDccList already clears its cache on rejection,
+          // so the next call can legitimately recover.
+          timer = setTimeout(attempt, 30_000);
+        });
+    };
+
+    attempt();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
   }, []);
 
   const suggestions = useMemo(() => {
