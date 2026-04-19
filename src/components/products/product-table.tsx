@@ -57,6 +57,7 @@ function SortHeader({ field, label, sortBy, sortDir, onSort, className }: {
   return (
     <TableHead className={className}>
       <button
+        type="button"
         className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
         onClick={() => onSort(field)}
       >
@@ -91,6 +92,7 @@ function OptionalSortHeader(props: {
     <TableHead className={className}>
       <div className="group inline-flex items-center gap-1">
         <button
+          type="button"
           className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
           onClick={() => onSort(field)}
         >
@@ -105,7 +107,7 @@ function OptionalSortHeader(props: {
           <button
             type="button"
             aria-label={`Hide ${label}`}
-            className="ml-1 opacity-0 group-hover:opacity-60 hover:opacity-100 transition-opacity"
+            className="ml-1 opacity-0 group-hover:opacity-60 hover:opacity-100 focus-visible:opacity-100 transition-opacity"
             onClick={(e) => { e.stopPropagation(); onHide(columnKey); }}
           >
             <XIcon className="size-3" />
