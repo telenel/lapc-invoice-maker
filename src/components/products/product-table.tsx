@@ -9,6 +9,8 @@ import type { Product, ProductTab } from "@/domains/product/types";
 import { PAGE_SIZE, type OptionalColumnKey } from "@/domains/product/constants";
 import { MarginBar } from "./margin-bar";
 import { useVendorDirectory } from "@/domains/product/vendor-directory";
+import { useHiddenColumns } from "./use-hidden-columns";
+import { COLUMN_PRIORITY } from "@/domains/product/constants";
 import "./product-table.css";
 
 /**
@@ -177,9 +179,22 @@ export function ProductTable({
 }: ProductTableProps) {
   void onHideColumn;
   const { byId: vendorsById, available: vendorsAvailable } = useVendorDirectory();
+  // Observe the wrapper width so the hidden-count badge reflects what the
+  // @container queries actually suppress.
+  const { ref: wrapperRef, summary: hiddenSummary } = useHiddenColumns();
+  const activeOptionalColumns = visibleColumns ?? [];
   useEffect(() => {
-    if (onHiddenChange) onHiddenChange(0);
-  }, [onHiddenChange, visibleColumns]);
+    if (!onHiddenChange) return;
+    const hiddenTierSet = new Set(hiddenSummary.tiers);
+    const hiddenCount = activeOptionalColumns.filter((key) => {
+      const priority = COLUMN_PRIORITY[key];
+      return (
+        (priority === "medium" || priority === "low") &&
+        hiddenTierSet.has(priority)
+      );
+    }).length;
+    onHiddenChange(hiddenCount);
+  }, [onHiddenChange, hiddenSummary.tiers, activeOptionalColumns]);
   const showUnits = visibleColumns?.includes("units_1y") ?? false;
   const showRevenue = visibleColumns?.includes("revenue_1y") ?? false;
   const showTxns = visibleColumns?.includes("txns_1y") ?? false;
@@ -223,7 +238,7 @@ export function ProductTable({
     <div className="rounded-[10px] border border-border bg-card overflow-hidden shadow-[0_1px_0_color-mix(in_oklch,var(--border)_55%,transparent),0_2px_8px_-2px_color-mix(in_oklch,var(--foreground)_6%,transparent)]">
       {/* Desktop table — wrapper owns the container-query context that drives
           optional-column hiding via `data-priority` at narrow widths. */}
-      <div className="product-table-wrap hidden md:block">
+      <div ref={wrapperRef} className="product-table-wrap hidden md:block">
         <div className="max-h-[62vh] overflow-auto">
           <table className="product-table w-full border-collapse text-[12.5px]">
             <thead>
@@ -281,13 +296,16 @@ export function ProductTable({
                   width={86}
                 />
                 {showMargin ? (
-                  <th
-                    data-priority="medium"
-                    className="px-2.5 py-2 text-[11px] font-semibold tracking-[-0.005em] text-muted-foreground bg-card border-b border-border whitespace-nowrap sticky top-0 z-[1] text-right"
-                    style={{ width: 112 }}
-                  >
-                    Margin
-                  </th>
+                  <SortHeader
+                    field="margin"
+                    label="Margin"
+                    sortBy={sortBy}
+                    sortDir={sortDir}
+                    onSort={onSort}
+                    align="right"
+                    width={112}
+                    priority="medium"
+                  />
                 ) : null}
                 {tab === "textbooks" ? (
                   <SortHeader
@@ -732,10 +750,12 @@ export function ProductTable({
                     <span className="font-mono tnum text-muted-foreground">
                       {formatCurrency(product.cost)}
                     </span>
-                    <MarginBar
-                      cost={Number(product.cost)}
-                      retail={Number(product.retail_price)}
-                    />
+                    {showMargin ? (
+                      <MarginBar
+                        cost={Number(product.cost)}
+                        retail={Number(product.retail_price)}
+                      />
+                    ) : null}
                   </div>
                 </div>
               );

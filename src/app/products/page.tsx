@@ -173,6 +173,11 @@ export default function ProductsPage() {
   }
 
   function handleClearFilters() {
+    // Clear preset state alongside the filters so the banner + column overrides
+    // don't linger while the filter set goes empty.
+    setActiveView(null);
+    setRuntimeColumns(null);
+    restoredViewRef.current = null;
     updateFilters({ ...EMPTY_FILTERS, tab: filters.tab });
   }
 
