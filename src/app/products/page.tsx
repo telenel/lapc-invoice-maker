@@ -41,16 +41,21 @@ export default function ProductsPage() {
     const params = new URLSearchParams();
     searchParams.forEach((value, key) => params.set(key, value));
     const parsed = parseFiltersFromSearchParams(params);
-    // Fresh loads (no filter-bearing params) default to "in stock" so users
-    // don't immediately see discontinued/out-of-stock clutter. Anyone linking
-    // in with explicit filters keeps exactly what the URL specifies. Note:
-    // pagination/sort/view/tab are NOT filters, so a bookmark carrying only
-    // those should still get the default.
-    const NON_FILTER_KEYS = new Set(["tab", "view", "page", "sortBy", "sortDir"]);
-    const filterParamKeys = Array.from(params.keys()).filter(
-      (k) => !NON_FILTER_KEYS.has(k),
+    // Fresh loads (no explicit filter values) default to "in stock" so users
+    // don't immediately see discontinued/out-of-stock clutter. We compare the
+    // parsed filter state to EMPTY_FILTERS (ignoring tab/page/sort/view),
+    // which is tolerant of unknown query params like utm_* or share tags — a
+    // URL carrying only tracking params still gets the in-stock default.
+    const TRANSPORT_KEYS = new Set([
+      "tab",
+      "page",
+      "sortBy",
+      "sortDir",
+    ]);
+    const hasExplicitFilter = (Object.keys(EMPTY_FILTERS) as Array<keyof ProductFilters>).some(
+      (k) => !TRANSPORT_KEYS.has(k) && parsed[k] !== EMPTY_FILTERS[k],
     );
-    if (filterParamKeys.length === 0 && parsed.minStock === "") {
+    if (!hasExplicitFilter && parsed.minStock === "") {
       return { ...parsed, minStock: "1" };
     }
     return parsed;

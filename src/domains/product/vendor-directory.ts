@@ -90,6 +90,14 @@ export function useVendorDirectory(): DirectoryState {
     };
   }, []);
 
+  // If the directory is unavailable (Prism blip), retry every 30s so a brief
+  // outage doesn't permanently downgrade the vendor UI mid-session.
+  useEffect(() => {
+    if (state.available || state.loading) return;
+    const timer = setTimeout(() => load(), 30_000);
+    return () => clearTimeout(timer);
+  }, [state.available, state.loading]);
+
   return state;
 }
 
