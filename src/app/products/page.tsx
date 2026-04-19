@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { useProductSearch, useProductSelection } from "@/domains/product/hooks";
-import { EMPTY_FILTERS, TABS, DEFAULT_COLUMN_SET } from "@/domains/product/constants";
+import { EMPTY_FILTERS, TABS, DEFAULT_COLUMN_SET, OPTIONAL_COLUMNS } from "@/domains/product/constants";
 import type { OptionalColumnKey } from "@/domains/product/constants";
 import type { ProductFilters, ProductTab, SavedView } from "@/domains/product/types";
 import {
@@ -21,16 +21,19 @@ import { EditItemDialog } from "@/components/products/edit-item-dialog";
 import { HardDeleteDialog } from "@/components/products/hard-delete-dialog";
 import { Button } from "@/components/ui/button";
 import { SyncDatabaseButton } from "@/components/products/sync-database-button";
+import type { SyncDatabaseHandle } from "@/components/products/sync-database-button";
 import { SavedViewsBar } from "@/components/products/saved-views-bar";
 import { SaveViewDialog } from "@/components/products/save-view-dialog";
 import { DeleteViewDialog } from "@/components/products/delete-view-dialog";
 import { ColumnVisibilityToggle, type ColumnVisibilityHandle } from "@/components/products/column-visibility-toggle";
 import { PierceAssuranceBadge } from "@/components/products/pierce-assurance-badge";
 import { productApi } from "@/domains/product/api-client";
+import { SYSTEM_PRESET_VIEWS } from "@/domains/product/presets";
 
 export default function ProductsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const viewParam = searchParams.get("view");
   const [filters, setFilters] = useState<ProductFilters>(() => {
     // Convert Next.js useSearchParams() to URLSearchParams
     const params = new URLSearchParams();
@@ -63,7 +66,10 @@ export default function ProductsPage() {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<SavedView | null>(null);
   const columnsRef = useRef<ColumnVisibilityHandle>(null);
+  const syncButtonRef = useRef<SyncDatabaseHandle>(null);
+  const restoredViewRef = useRef<string | null>(null);
   const [hiddenCount, setHiddenCount] = useState(0);
+  const [resolvedViews, setResolvedViews] = useState<SavedView[]>(SYSTEM_PRESET_VIEWS);
 
   // Track tab counts so both tabs always show their last-known count
   const [tabCounts, setTabCounts] = useState<Record<ProductTab, number | null>>({
@@ -95,6 +101,27 @@ export default function ProductsPage() {
     [router],
   );
 
+  useEffect(() => {
+    if (!viewParam) {
+      restoredViewRef.current = null;
+      setActiveView(null);
+      setRuntimeColumns(null);
+      return;
+    }
+    const matched = resolvedViews.find((view) => view.slug === viewParam || view.id === viewParam);
+    if (!matched || restoredViewRef.current === viewParam) return;
+    restoredViewRef.current = viewParam;
+    setActiveView(matched);
+    const presetColumns = matched.columnPreferences?.visible.filter(
+      (key): key is OptionalColumnKey => (OPTIONAL_COLUMNS as readonly string[]).includes(key),
+    );
+    if (presetColumns && presetColumns.length > 0) {
+      setRuntimeColumns(Array.from(new Set([...baseColumns, ...presetColumns])));
+    } else {
+      setRuntimeColumns(null);
+    }
+  }, [viewParam, resolvedViews, baseColumns]);
+
   function handleTabChange(tab: ProductTab) {
     updateFilters({ ...filters, tab, page: 1 });
   }
@@ -118,6 +145,7 @@ export default function ProductsPage() {
       ? Array.from(new Set([...baseColumns, ...visibleColumns]))
       : null;
     const withPage = { ...next, page: 1 } as ProductFilters;
+    restoredViewRef.current = view.slug ?? view.id;
     setActiveView(view);
     setRuntimeColumns(merged);
     updateFilters(withPage, { view: view.slug ?? view.id });
@@ -143,11 +171,9 @@ export default function ProductsPage() {
         </div>
         <div className="flex items-center gap-2">
           <PierceAssuranceBadge
-            onClick={() => {
-              /* TODO: wire to sync history dialog after refactor */
-            }}
+            onClick={() => syncButtonRef.current?.openHistory()}
           />
-          <SyncDatabaseButton />
+          <SyncDatabaseButton ref={syncButtonRef} />
           {prismAvailable ? (
             <>
               <Button onClick={() => setNewItemOpen(true)}>
@@ -223,6 +249,7 @@ export default function ProductsPage() {
           onPresetClick={handlePresetClick}
           onSaveClick={() => setSaveDialogOpen(true)}
           onDeleteClick={(v) => setDeleteTarget(v)}
+          onViewsResolved={setResolvedViews}
         />
         <div className="flex items-center gap-2">
           {hiddenCount > 0 && (
@@ -234,6 +261,7 @@ export default function ProductsPage() {
             ref={columnsRef}
             runtimeOverride={runtimeColumns}
             onUserChange={setBaseColumns}
+            onRuntimeChange={setRuntimeColumns}
             onResetRuntime={() => setRuntimeColumns(null)}
           />
         </div>

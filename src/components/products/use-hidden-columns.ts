@@ -11,6 +11,13 @@ export interface HiddenSummary {
   tiers: Array<"medium" | "low">;
 }
 
+export function getHiddenTiersForWidth(width: number): Array<"medium" | "low"> {
+  const tiers: Array<"medium" | "low"> = [];
+  if (width <= LOW_BREAKPOINT) tiers.push("low");
+  if (width <= MED_BREAKPOINT) tiers.push("medium");
+  return tiers;
+}
+
 export function useHiddenColumns(): {
   ref: React.RefObject<HTMLDivElement>;
   summary: HiddenSummary;
@@ -22,11 +29,8 @@ export function useHiddenColumns(): {
     const el = ref.current;
     if (!el || typeof ResizeObserver === "undefined") return;
     const ro = new ResizeObserver((entries) => {
-      const w = entries[0].contentRect.width;
-      const tiers: Array<"medium" | "low"> = [];
-      if (w < LOW_BREAKPOINT) tiers.push("low");
-      if (w < MED_BREAKPOINT) tiers.push("medium");
-      setSummary({ tiers });
+      const width = entries[0].contentRect.width;
+      setSummary({ tiers: getHiddenTiersForWidth(width) });
     });
     ro.observe(el);
     return () => ro.disconnect();

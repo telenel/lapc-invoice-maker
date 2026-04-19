@@ -49,6 +49,25 @@ function formatSaleDate(date: string | null): string {
   return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }
 
+export function hasProductAnalyticsReady(product: Pick<Product, "aggregates_ready" | "sales_aggregates_computed_at">): boolean {
+  return product.aggregates_ready ?? product.sales_aggregates_computed_at !== null;
+}
+
+export function getProductDisplaySaleDate(
+  product: Pick<Product, "effective_last_sale_date" | "last_sale_date_computed" | "last_sale_date">,
+): string | null {
+  return product.effective_last_sale_date ?? product.last_sale_date_computed ?? product.last_sale_date;
+}
+
+export function getProductAnalyticsDisplay(
+  product: Pick<Product, "aggregates_ready" | "sales_aggregates_computed_at">,
+  value: number,
+  formatter?: (value: number) => string,
+): string {
+  if (!hasProductAnalyticsReady(product)) return "Pending";
+  return formatter ? formatter(value) : value.toLocaleString();
+}
+
 function SortHeader({ field, label, sortBy, sortDir, onSort, className }: {
   field: string;
   label: string;
@@ -146,7 +165,8 @@ export function ProductTable({
   const to = Math.min(page * PAGE_SIZE, total);
   const allOnPageSelected = products.length > 0 && products.every((p) => isSelected(p.sku));
 
-  // "days_since_sale" is a UI alias: queries.ts maps it to last_sale_date
+  // "days_since_sale" is a UI alias: queries.ts maps it to the effective
+  // last-sale date
   // with inverted sort direction, so the arrow must also invert to match
   // the data the user sees.
   const daysSinceSaleDisplayDir: "asc" | "desc" =
@@ -232,7 +252,7 @@ export function ProductTable({
                 <OptionalSortHeader field="txns_1y" columnKey="txns_1y" priority={COLUMN_PRIORITY.txns_1y} label="Receipts 1y" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
               )}
               {visibleColumns?.includes("margin") && (
-                <OptionalSortHeader field="margin" columnKey="margin" priority={COLUMN_PRIORITY.margin} label={sortBy === "margin" ? "Margin % (page)" : "Margin %"} sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
+                <OptionalSortHeader field="margin" columnKey="margin" priority={COLUMN_PRIORITY.margin} label="Margin %" sortBy={sortBy} sortDir={sortDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
               )}
               {visibleColumns?.includes("days_since_sale") && (
                 <OptionalSortHeader field="days_since_sale" columnKey="days_since_sale" priority={COLUMN_PRIORITY.days_since_sale} label="Days since sale" sortBy={sortBy} sortDir={daysSinceSaleDisplayDir} onSort={onSort} onHide={onHideColumn} className="text-right" />
@@ -308,7 +328,7 @@ export function ProductTable({
                       {formatCurrency(product.cost)}
                     </TableCell>
                     <TableCell className="text-xs">
-                      {formatSaleDate(product.last_sale_date)}
+                      {formatSaleDate(getProductDisplaySaleDate(product))}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
                       {product.stock_on_hand ?? "—"}
@@ -334,19 +354,24 @@ export function ProductTable({
                     )}
                     {visibleColumns?.includes("units_1y") && (
                       <TableCell className="text-right tabular-nums" data-priority="high">
-                        {product.units_sold_1y > 0 ? product.units_sold_1y.toLocaleString() : "—"}
+                        {getProductAnalyticsDisplay(product, product.units_sold_1y)}
                       </TableCell>
                     )}
                     {visibleColumns?.includes("revenue_1y") && (
                       <TableCell className="text-right tabular-nums" data-priority="high">
-                        {product.revenue_1y > 0
-                          ? new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(product.revenue_1y)
-                          : "—"}
+                        {getProductAnalyticsDisplay(
+                          product,
+                          product.revenue_1y,
+                          (value) => new Intl.NumberFormat(
+                            "en-US",
+                            { style: "currency", currency: "USD", maximumFractionDigits: 0 },
+                          ).format(value),
+                        )}
                       </TableCell>
                     )}
                     {visibleColumns?.includes("txns_1y") && (
                       <TableCell className="text-right tabular-nums" data-priority="medium">
-                        {product.txns_1y > 0 ? product.txns_1y.toLocaleString() : "—"}
+                        {getProductAnalyticsDisplay(product, product.txns_1y)}
                       </TableCell>
                     )}
                     {visibleColumns?.includes("margin") && (
@@ -368,8 +393,9 @@ export function ProductTable({
                     {visibleColumns?.includes("days_since_sale") && (
                       <TableCell className="text-right tabular-nums" data-priority="low">
                         {(() => {
-                          if (!product.last_sale_date) return "Never";
-                          const d = new Date(product.last_sale_date);
+                          const saleDate = getProductDisplaySaleDate(product);
+                          if (!saleDate) return "Never";
+                          const d = new Date(saleDate);
                           if (d.getUTCFullYear() < 2000) return "Never";
                           return Math.floor((Date.now() - d.getTime()) / 86_400_000);
                         })()}

@@ -10,14 +10,29 @@ export interface ColumnVisibilityHandle {
   hideColumn: (key: OptionalColumnKey) => void;
 }
 
+export function resolveColumnVisibilityUpdate(
+  base: OptionalColumnKey[],
+  runtimeOverride: OptionalColumnKey[] | null,
+  next: OptionalColumnKey[],
+): { base: OptionalColumnKey[]; runtime: OptionalColumnKey[] | null } {
+  if (runtimeOverride) {
+    return { base, runtime: next };
+  }
+  return { base: next, runtime: null };
+}
+
 interface Props {
   runtimeOverride: OptionalColumnKey[] | null;
   onUserChange: (visible: OptionalColumnKey[]) => void;
+  onRuntimeChange: (visible: OptionalColumnKey[] | null) => void;
   onResetRuntime: () => void;
 }
 
 export const ColumnVisibilityToggle = forwardRef<ColumnVisibilityHandle, Props>(
-  function ColumnVisibilityToggle({ runtimeOverride, onUserChange, onResetRuntime }, ref) {
+  function ColumnVisibilityToggle(
+    { runtimeOverride, onUserChange, onRuntimeChange, onResetRuntime },
+    ref,
+  ) {
     const [base, setBase] = useState<OptionalColumnKey[]>(() => {
       if (typeof window === "undefined") return DEFAULT_COLUMN_SET;
       try {
@@ -45,8 +60,8 @@ export const ColumnVisibilityToggle = forwardRef<ColumnVisibilityHandle, Props>(
     function toggle(key: OptionalColumnKey) {
       const next = active.includes(key) ? active.filter((k) => k !== key) : [...active, key];
       if (runtimeOverride) {
-        setBase(next);
-        onResetRuntime();
+        const resolved = resolveColumnVisibilityUpdate(base, runtimeOverride, next);
+        onRuntimeChange(resolved.runtime);
       } else {
         setBase(next);
       }
@@ -55,10 +70,14 @@ export const ColumnVisibilityToggle = forwardRef<ColumnVisibilityHandle, Props>(
     useImperativeHandle(ref, () => ({
       hideColumn(key: OptionalColumnKey) {
         const next = active.filter((k) => k !== key);
+        if (runtimeOverride) {
+          const resolved = resolveColumnVisibilityUpdate(base, runtimeOverride, next);
+          onRuntimeChange(resolved.runtime);
+          return;
+        }
         setBase(next);
-        if (runtimeOverride) onResetRuntime();
       },
-    }), [active, runtimeOverride, onResetRuntime]);
+    }), [active, base, runtimeOverride, onRuntimeChange]);
 
     return (
       <Popover>

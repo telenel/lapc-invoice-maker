@@ -16,18 +16,8 @@ interface ProductFiltersBarProps {
   onClear: () => void;
 }
 
-export function ProductFiltersBar({
-  filters,
-  onChange,
-  onClear,
-}: ProductFiltersBarProps) {
-  const [open, setOpen] = useState(false);
-
-  function set(key: keyof ProductFilters, value: string | boolean) {
-    onChange({ ...filters, [key]: value, page: 1 });
-  }
-
-  const activeCount = [
+export function getProductActiveFilterCount(filters: ProductFilters): number {
+  return [
     filters.minPrice,
     filters.maxPrice,
     filters.vendorId,
@@ -61,7 +51,35 @@ export function ProductFiltersBar({
     filters.editedSinceSync,
     filters.discontinued !== EMPTY_FILTERS.discontinued && filters.discontinued,
     filters.itemType !== EMPTY_FILTERS.itemType && filters.itemType,
+    filters.minUnitsSold !== EMPTY_FILTERS.minUnitsSold && filters.minUnitsSold,
+    filters.maxUnitsSold !== EMPTY_FILTERS.maxUnitsSold && filters.maxUnitsSold,
+    filters.unitsSoldWindow !== EMPTY_FILTERS.unitsSoldWindow && filters.unitsSoldWindow,
+    filters.minRevenue !== EMPTY_FILTERS.minRevenue && filters.minRevenue,
+    filters.maxRevenue !== EMPTY_FILTERS.maxRevenue && filters.maxRevenue,
+    filters.revenueWindow !== EMPTY_FILTERS.revenueWindow && filters.revenueWindow,
+    filters.minTxns !== EMPTY_FILTERS.minTxns && filters.minTxns,
+    filters.maxTxns !== EMPTY_FILTERS.maxTxns && filters.maxTxns,
+    filters.txnsWindow !== EMPTY_FILTERS.txnsWindow && filters.txnsWindow,
+    filters.neverSoldLifetime,
+    filters.firstSaleWithin !== EMPTY_FILTERS.firstSaleWithin && filters.firstSaleWithin,
+    filters.trendDirection !== EMPTY_FILTERS.trendDirection && filters.trendDirection,
+    filters.maxStockCoverageDays !== EMPTY_FILTERS.maxStockCoverageDays &&
+      filters.maxStockCoverageDays,
   ].filter(Boolean).length;
+}
+
+export function ProductFiltersBar({
+  filters,
+  onChange,
+  onClear,
+}: ProductFiltersBarProps) {
+  const [open, setOpen] = useState(false);
+
+  function set(key: keyof ProductFilters, value: string | boolean) {
+    onChange({ ...filters, [key]: value, page: 1 });
+  }
+
+  const activeCount = getProductActiveFilterCount(filters);
 
   return (
     <div className="space-y-3">

@@ -23,6 +23,7 @@ import { getPrismPool, sql, isPrismConfigured } from "@/lib/prism";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { PIERCE_LOCATION_ID } from "@/domains/product/prism-server";
 import { runAggregateRecompute } from "@/domains/product/sales-aggregates";
+import { getBackfillPageProgress } from "@/domains/product/backfill-progress";
 
 const PAGE_SIZE = 5000;
 const INSERT_CHUNK = 1000;
@@ -188,10 +189,10 @@ async function main() {
     }
     totalInserted += rows.length;
 
-    const lastRow = page.recordset[page.recordset.length - 1];
-    cursor = Number(lastRow.TranDtlID);
-    maxTransactionId = Math.max(maxTransactionId, Number(lastRow.TransactionID));
-    maxProcessDate = lastRow.ProcessDate;
+    const progress = getBackfillPageProgress(page.recordset, maxTransactionId);
+    cursor = progress.nextCursor;
+    maxTransactionId = progress.maxTransactionId;
+    maxProcessDate = progress.maxProcessDate;
 
     const pct = expected > 0 ? ((totalInserted / expected) * 100).toFixed(1) : "?";
     console.log(`  progress: ${totalInserted.toLocaleString()} / ${expected.toLocaleString()} (${pct}%) — last TranDtlID=${cursor}`);

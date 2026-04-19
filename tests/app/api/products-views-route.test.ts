@@ -15,7 +15,7 @@ vi.mock("@/lib/supabase/admin", () => ({
 
 import { getServerSession } from "next-auth";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import { GET, POST } from "@/app/api/products/views/route";
+import { GET, POST, PRODUCTS_PAGE_GROUPS } from "@/app/api/products/views/route";
 import { DELETE } from "@/app/api/products/views/[id]/route";
 
 type QueryResult = { data: unknown; error: unknown };
@@ -156,6 +156,19 @@ describe("GET /api/products/views", () => {
     });
     expect(supabaseMock.from).toHaveBeenCalledWith("saved_searches");
     expect(supabaseMock.from).toHaveBeenCalledTimes(2);
+  });
+
+  it("includes every products-page preset group in the server allow-list", () => {
+    expect(PRODUCTS_PAGE_GROUPS).toEqual([
+      "dead-weight",
+      "movers",
+      "trending",
+      "stock-health",
+      "data-quality",
+      "pricing",
+      "recent-activity",
+      "textbook",
+    ]);
   });
 });
 

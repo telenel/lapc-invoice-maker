@@ -36,10 +36,37 @@ describe("parseFiltersFromSearchParams", () => {
     expect(roundtripped).toEqual(filters);
   });
 
+  it("round-trips analytics and derived preset filters through the URL", () => {
+    const filters: ProductFilters = {
+      ...EMPTY_FILTERS,
+      unitsSoldWindow: "1y",
+      minUnitsSold: "10",
+      maxUnitsSold: "50",
+      revenueWindow: "lifetime",
+      minRevenue: "100",
+      maxRevenue: "500",
+      txnsWindow: "1y",
+      minTxns: "5",
+      maxTxns: "25",
+      neverSoldLifetime: true,
+      firstSaleWithin: "90d",
+      trendDirection: "accelerating",
+      maxStockCoverageDays: "30",
+    };
+
+    const roundtripped = parseFiltersFromSearchParams(serializeFiltersToSearchParams(filters));
+    expect(roundtripped).toEqual(filters);
+  });
+
   it("coerces boolean keys from 'true'/'false'", () => {
-    const out = parseFiltersFromSearchParams(makeParams({ missingBarcode: "true", lastSaleNever: "true" }));
+    const out = parseFiltersFromSearchParams(makeParams({
+      missingBarcode: "true",
+      lastSaleNever: "true",
+      neverSoldLifetime: "true",
+    }));
     expect(out.missingBarcode).toBe(true);
     expect(out.lastSaleNever).toBe(true);
+    expect(out.neverSoldLifetime).toBe(true);
   });
 
   it("drops invalid numeric values silently", () => {
