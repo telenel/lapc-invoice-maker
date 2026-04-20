@@ -29,9 +29,11 @@ import { SaveViewDialog } from "@/components/products/save-view-dialog";
 import { DeleteViewDialog } from "@/components/products/delete-view-dialog";
 import { ColumnVisibilityToggle, type ColumnVisibilityHandle } from "@/components/products/column-visibility-toggle";
 import { PierceAssuranceBadge } from "@/components/products/pierce-assurance-badge";
+import { LocationPicker } from "@/components/products/location-picker";
 import { productApi } from "@/domains/product/api-client";
 import { SYSTEM_PRESET_VIEWS } from "@/domains/product/presets";
 import { shouldApplyDefaultMinStock } from "@/domains/product/page-defaults";
+import type { ProductLocationId } from "@/domains/product/location-filters";
 
 export default function ProductsPage() {
   const router = useRouter();
@@ -243,6 +245,10 @@ export default function ProductsPage() {
     updateFilters(next);
   }
 
+  function handleLocationChange(locationIds: ProductLocationId[]) {
+    handleFilterChange({ ...filters, locationIds, page: 1 });
+  }
+
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-6 md:px-5">
       {/* Header */}
@@ -304,6 +310,20 @@ export default function ProductsPage() {
           refetch();
         }}
       />
+
+      <div className="page-enter page-enter-2 mb-2 rounded-[10px] border border-border bg-card px-3 py-2 shadow-[0_1px_0_color-mix(in_oklch,var(--border)_55%,transparent),0_2px_8px_-2px_color-mix(in_oklch,var(--foreground)_6%,transparent)]">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="min-w-0">
+            <div className="text-[11px] font-semibold tracking-[-0.005em] text-muted-foreground">
+              Location scope
+            </div>
+            <div className="text-[11px] text-muted-foreground/80">
+              Primary inventory follows the first selected location.
+            </div>
+          </div>
+          <LocationPicker value={filters.locationIds} onChange={handleLocationChange} />
+        </div>
+      </div>
 
       <EditItemDialog
         open={editOpen}
