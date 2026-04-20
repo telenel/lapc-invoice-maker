@@ -17,3 +17,10 @@
 - Disabled legacy filesystem fallback by default and deployed that state to production.
 - Verified Supabase scheduler jobs exist and the `prisma` role can now read `cron.job`.
 - Fixed the scheduler status route serialization bug so `cron.job` `BigInt` IDs can be returned safely after deploy.
+
+## 2026-04-20
+
+- Confirmed Phase 8 is fully deployed and the product catalog / bulk-edit final state is live.
+- Audited the repo documentation surface and rewrote the canonical docs index, project overview, and migration status docs.
+- Updated the repo entrypoint docs so future Codex and Claude sessions start from the current docs map instead of the older phase snapshots.
+- Reconciled the Claude-facing Supabase handoff with the current scheduler and build-metadata behavior.

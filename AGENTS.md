@@ -2,10 +2,12 @@
 
 ## Read First
 
-1. `README.md`
-2. `docs/PROJECT-OVERVIEW.md`
-3. `docs/SUPABASE-MIGRATION-STATUS.md` for infrastructure and deployment work
-4. `prisma/schema.prisma` for data model changes
+1. `docs/README.md`
+2. `README.md`
+3. `docs/PROJECT-OVERVIEW.md`
+4. `docs/SUPABASE-MIGRATION-STATUS.md` for infrastructure and deployment work
+5. `docs/ai/PROJECT-CONTEXT.md` for durable repo context
+6. `prisma/schema.prisma` for data model changes
 
 ## Notes
 
@@ -13,6 +15,7 @@
 - Use the repo validation command before handing changes back.
 - GitHub is the source of truth. Local branches are disposable caches.
 - One branch has one active writer at a time across all machines and AI agents.
+- Files under `docs/superpowers/` are historical phase records unless the task explicitly says to use a plan or spec.
 
 ## Branching And PRs
 

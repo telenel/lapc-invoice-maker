@@ -56,6 +56,8 @@ Important: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` must e
 10. If local DB access is unavailable, use the protected storage audit route to inspect remaining legacy document references:
    - `GET /api/internal/platform/storage-audit`
 
+The scheduler inspection route now serializes `cron.job` IDs safely, so the app can inspect cron state without the earlier BigInt failure. Use that route before setting `SUPABASE_SCHEDULER_CONFIRMED=true`.
+
 ## Runtime Expectations
 
 - Uploaded PrismCore PDFs are stored under `uploads/`
@@ -77,3 +79,4 @@ Important: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` must e
 - The local filesystem is no longer the document source of truth.
 - `ALLOW_LEGACY_FILESYSTEM_FALLBACK` is now opt-in only. Re-enable it temporarily only if `npm run audit:legacy-documents` or the protected storage audit route shows real legacy references that still need compatibility reads.
 - If the protected scheduler route returns `permission denied for schema cron`, the app role still lacks the required privileges and the scheduler migration is not complete.
+- If the scheduler route returns a serialization error, the app build is stale and should be updated to the current codebase before trying again.

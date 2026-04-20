@@ -1,137 +1,108 @@
 # Supabase Migration Status
 
-Last updated: 2026-04-05
+Last updated: 2026-04-20
 
-This file is the durable status record for LAPortal's Supabase migration. It reflects the production fixes deployed on April 4-5, 2026 and the remaining work required to call the platform migration complete.
+This is the durable status record for LAPortal's Supabase migration and the current platform wiring around it.
 
 ## Current State
 
-LAPortal is already using Supabase for the major infrastructure layers that were the intended target of the migration:
+LAPortal is now running the core infrastructure layers on Supabase:
 
-- Database: Prisma is pointed at Supabase Postgres.
-- Document storage: PDFs and uploads are stored in Supabase Storage through [`src/domains/pdf/storage.ts`](../src/domains/pdf/storage.ts).
-- Realtime: browser subscriptions use Supabase Realtime with a short-lived token bridge through [`src/app/api/realtime/token/route.ts`](../src/app/api/realtime/token/route.ts).
-- Production build wiring: public Supabase env is now baked into the client bundle at image build time and surfaced through [`/api/version`](../src/app/api/version/route.ts).
-- Platform diagnostics: admin/runtime checks now distinguish build-time public env, runtime public/admin env, scheduler mode, and scheduler confirmation state.
+- Database: Prisma points at Supabase Postgres.
+- Document storage: PDFs and uploads live in Supabase Storage.
+- Realtime: browser subscriptions use Supabase Realtime through the app token bridge.
+- Build-time public env: `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are expected in the image build and are surfaced by `/api/version` and admin health checks.
+- Shared rate limiting: login and chat throttles are persisted in Postgres.
+- Job observability: background job runs are recorded in the database and shown in admin Database Health.
+- Legacy document audit: filesystem fallback is disabled by default and can be verified with the audit tooling.
+- Scheduler inspection: the app can now inspect `cron.job` without the earlier BigInt serialization failure.
 
-## Production Fixes Landed
+Live production verification on the current codebase showed:
 
-These fixes are already deployed to production:
+- `/api/version` reports build metadata and public-env configuration state.
+- the storage audit returns zero legacy document references when fallback is disabled and the migration is clean.
+- the scheduler status route can return live cron job data instead of failing on `BigInt` serialization.
 
-- `062d56f` — restored Docker build-time Supabase public env wiring, platform diagnostics, and scheduler assets.
-- `84fbefc` — added the protected scheduler inspection/reconcile endpoint.
-- `e665c93` — kept app-side cron active unless Supabase scheduling is explicitly confirmed.
-- `74b0e0c` — added shared Postgres-backed rate limiting, job-run tracking, storage audit tooling, and the protected storage audit route.
-- `595be98` — disabled legacy filesystem fallback by default after production verified zero remaining legacy references.
+## What Is Fully In Place
 
-Live production verification after `595be98`:
+### 1. Database
 
-- `/api/version` reports `buildSha: "595be98"`
-- `publicEnv.supabaseUrlConfigured: true`
-- `publicEnv.supabaseAnonKeyConfigured: true`
-- protected storage audit reports:
-  - `legacyFilesystemFallbackEnabled: false`
-  - `totalLegacyReferences: 0`
+- Prisma repositories and services are the main data access layer.
+- Supabase Postgres is the canonical database.
+- The browser is never meant to read privileged tables directly.
 
-## What Is Still Not Fully Migrated
+### 2. Storage
 
-### 1. Supabase-managed scheduling is provisioned but not yet confirmed active
+- PDFs and uploads are stored under the private `laportal-documents` bucket.
+- Storage keys, not local filesystem paths, are the active source of truth.
+- Legacy filesystem fallback stays off unless an audit proves it is needed again.
 
-The Supabase scheduler infrastructure is now in place:
+### 3. Realtime
 
-- the `prisma` role has read access to `cron.job` and `cron.job_run_details`
-- `pg_cron`, `pg_net`, and `vault` are installed
-- the expected jobs exist and are active:
-  - `laportal-event-reminders`
-  - `laportal-payment-follow-ups`
+- Realtime uses Supabase channels.
+- Browser clients receive short-lived tokens from the app via `/api/realtime/token`.
+- Server broadcasts go through the shared Realtime shim in `src/lib/sse.ts`.
 
-Current blocker:
+### 4. Shared Rate Limiting
 
-- production still needs the scheduler serializer fix for `GET /api/internal/platform/supabase-scheduler`
-- before that fix is deployed, the route fails with `Do not know how to serialize a BigInt`
+- Login and chat throttles are stored in Postgres instead of process memory.
+- This removes single-instance behavior for those request gates.
 
-What still needs to happen:
+### 5. Job Ledger
 
-1. Deploy the scheduler serializer fix so the protected scheduler route can return live job state.
-2. Re-run `GET /api/internal/platform/supabase-scheduler` until it returns `200` with the expected jobs.
-3. Set `SUPABASE_SCHEDULER_CONFIRMED=true`.
-4. Redeploy so app-side cron stops registering and Supabase becomes the active scheduler owner.
+- Background job runs are written to `job_runs`.
+- Admin health surfaces recent job execution state and timing.
 
-Until that happens, keeping `JOB_SCHEDULER=supabase` without confirmation is still intentionally fallback-safe. The app continues registering its own cron jobs until confirmation is explicit.
+### 6. Scheduler Controls
 
-### 2. Authentication is still on NextAuth
+- `JOB_SCHEDULER=app` keeps app-owned cron active.
+- `JOB_SCHEDULER=supabase` enables Supabase ownership only when confirmation is explicit.
+- `SUPABASE_SCHEDULER_CONFIRMED=true` is the final switch that lets the active scheduler mode move to Supabase.
+- The scheduler route now supports both inspection and reconciliation.
 
-This migration slice preserved auth on purpose. Realtime uses a JWT bridge, but login/session ownership still belongs to NextAuth.
+## What Is Intentionally Still Open
 
-That is acceptable for now. A full move to Supabase Auth would require parity for:
+### NextAuth remains the session authority
 
-- credentials login flow
-- role handling (`admin` vs `user`)
+This migration slice intentionally kept auth on NextAuth. A full move to Supabase Auth would require additional work for:
+
+- credentials login
+- role handling
 - setup-complete gating
-- middleware redirects
 - server-side session access in route handlers
-- password reset / account lifecycle decisions
+- account lifecycle decisions
 
-Recommendation: do not migrate auth unless there is a concrete product or ops reason. The current split is coherent.
+That migration is not required for the current platform state.
 
-### 3. Some process-local infrastructure still exists
+### Scheduler ownership remains an explicit decision
 
-The previous process-local rate limiting gap has been addressed:
+The code now supports Supabase scheduler ownership, but the team still has to choose whether to enable it in production. If the goal is to keep app-owned scheduling, nothing else is required. If the goal is to move ownership to Supabase, the operational check is:
 
-- [`src/lib/rate-limit.ts`](../src/lib/rate-limit.ts) now stores hashed rate-limit events in Postgres.
-- Login and chat throttles now share state across app instances.
+1. Confirm `/api/internal/platform/supabase-scheduler` returns live cron state.
+2. Verify the expected jobs exist:
+   - `laportal-event-reminders`
+   - `laportal-payment-follow-ups`
+   - `laportal-account-follow-ups`
+3. Set `SUPABASE_SCHEDULER_CONFIRMED=true`.
 
-What still remains in this area:
+### Optional cleanup
 
-- Retention/cleanup of old rate-limit rows is currently demand-driven by active keys rather than a dedicated cleanup job.
+- Retention for old `rate_limit_events` rows is still optional.
+- The legacy filesystem audit tooling stays in the repo for safety even though the current production posture is storage-first.
 
-### 4. Legacy filesystem migration is operationally complete
+## Operational Checks
 
-The runtime source of truth is Supabase Storage, and production has now verified zero remaining legacy references.
+Use these routes and commands when you want to verify the platform state:
 
-The repo still retains audit and migration tooling for safety:
+- `/api/version` - build metadata and build-time public env
+- `GET /api/internal/platform/storage-audit` - legacy document audit
+- `GET /api/internal/platform/supabase-scheduler` - scheduler inspection
+- `npm run audit:legacy-documents` - local legacy storage audit
+- `npm run ship-check` - normal release gate
 
-- `data/pdfs/`
-- `public/uploads/`
-- [`scripts/supabase/migrate-legacy-documents.ts`](../scripts/supabase/migrate-legacy-documents.ts)
-- [`scripts/supabase/audit-legacy-documents.ts`](../scripts/supabase/audit-legacy-documents.ts)
+## What This Means For Future Work
 
-Current state:
-
-1. production audit is clean
-2. `ALLOW_LEGACY_FILESYSTEM_FALLBACK` now defaults to `false`
-3. the fallback should only be re-enabled if a future audit proves it is actually needed
-
-### 5. Operational runbooks should assume build-time env requirements
-
-For Next.js client code, these public env vars must exist at image build time, not just at container runtime:
-
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-
-That production mistake already happened once. Future deploy/debug workflows should always verify:
-
-- `/api/version`
-- admin platform health
-- scheduler mode and confirmation state
-
-## What Counts As "Full Migration Complete"
-
-Treat the Supabase migration as complete only when all of the following are true:
-
-- production client bundle has public Supabase env baked in
-- runtime public and admin Supabase env are configured
-- Supabase Storage is the only active document source of truth
-- Realtime subscriptions are working in production
-- shared rate limiting no longer depends on single-process memory
-- background job execution is visible in the database/admin health surface
-- Supabase scheduler jobs are verifiably installed and healthy
-- `SUPABASE_SCHEDULER_CONFIRMED=true` is set intentionally after verification
-
-## Recommended Next Steps
-
-In order:
-
-1. Deploy the scheduler serializer fix, verify the protected scheduler route, and set `SUPABASE_SCHEDULER_CONFIRMED=true` if the team wants Supabase to own scheduling.
-2. Add a dedicated retention/cleanup policy for stale `rate_limit_events` rows if that becomes operationally useful.
-3. Leave auth on NextAuth unless there is a strong reason to absorb the cost of a full auth migration.
+- Keep Supabase Storage, Realtime, and Postgres as the default platform assumptions.
+- Treat `SUPABASE_SCHEDULER_CONFIRMED` as a deliberate operations switch, not a casual setting.
+- Do not migrate auth to Supabase Auth unless the project gains a separate, explicit migration scope.
+- When platform behavior changes, update `README.md`, `docs/README.md`, `docs/PROJECT-OVERVIEW.md`, and the AI handoff docs together.

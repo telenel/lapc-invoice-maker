@@ -1,30 +1,45 @@
 # Documentation Index
 
-Use this page as the entry point for LAPortal documentation.
+Use this page as the canonical navigation point for LAPortal documentation.
 
 ## Start Here
 
-- [../README.md](../README.md) — repo-level quick start
-- [PROJECT-OVERVIEW.md](PROJECT-OVERVIEW.md) — current architecture, stack, and application behavior
-- [DEPLOYMENT-STANDARD.md](DEPLOYMENT-STANDARD.md) — deployment contract, guardrails, and reusable templates
+- [../README.md](../README.md) - repo quick start and high-level project summary
+- [PROJECT-OVERVIEW.md](PROJECT-OVERVIEW.md) - architecture, routes, major flows, and integrations
+- [DEPLOYMENT-STANDARD.md](DEPLOYMENT-STANDARD.md) - exact-SHA deploy contract and smoke-check requirements
+- [GIT-WORKFLOW.md](GIT-WORKFLOW.md) - multi-machine branch handoff rules
+- [HOTFIX-WORKFLOW.md](HOTFIX-WORKFLOW.md) - fast SSH deploy lane
+- [SUPABASE-MIGRATION-STATUS.md](SUPABASE-MIGRATION-STATUS.md) - current platform and migration status
+
+## Feature Guides
+
+- [PRINT-SHOP-PRICING.md](PRINT-SHOP-PRICING.md) - print quote pricing notes
+- [performance-testing.md](performance-testing.md) - Lighthouse and route audit workflow
+- [prism/SCHEMA.md](prism/SCHEMA.md) - Prism database capability map
+- [prism/field-usage.md](prism/field-usage.md) - Pierce field-usage snapshot
+- [prism/ref-data-snapshot-2026-04-19.json](prism/ref-data-snapshot-2026-04-19.json) - committed ref fallback used by `/api/products/refs`
 
 ## Operations
 
-- [GIT-WORKFLOW.md](GIT-WORKFLOW.md) — multi-machine branch workflow and handoff rules
-- [HOTFIX-WORKFLOW.md](HOTFIX-WORKFLOW.md) — fast SHA-pinned SSH hotfix lane
-- [SUPABASE-MIGRATION-STATUS.md](SUPABASE-MIGRATION-STATUS.md) — infrastructure and migration status
-- [PRINT-SHOP-PRICING.md](PRINT-SHOP-PRICING.md) — pricing reference
+- [templates/github-vps-sha-pinned-deploy.yml.example](templates/github-vps-sha-pinned-deploy.yml.example) - GitHub Actions deploy template
+- [templates/vps-build-verify-rollback.sh.example](templates/vps-build-verify-rollback.sh.example) - VPS build/verify/rollback template
+- [templates/deploy-smoke-check.sh.example](templates/deploy-smoke-check.sh.example) - route smoke-check template
+- [ai/PROJECT-CONTEXT.md](ai/PROJECT-CONTEXT.md) - durable agent context
+- [ai/WORKFLOW.md](ai/WORKFLOW.md) - agent workflow rules and validation gates
+- [ai/SUPABASE-HANDOFF.md](ai/SUPABASE-HANDOFF.md) - Claude-facing Supabase context
+- [ai/SESSION-LOG.md](ai/SESSION-LOG.md) - running session history
+- [SUPABASE-MIGRATION-STATUS.md](SUPABASE-MIGRATION-STATUS.md) - platform migration record
 
-## Reusable Templates
+## Historical Records
 
-- [templates/github-vps-sha-pinned-deploy.yml.example](templates/github-vps-sha-pinned-deploy.yml.example) — GitHub Actions deploy template
-- [templates/vps-build-verify-rollback.sh.example](templates/vps-build-verify-rollback.sh.example) — VPS deploy script template
-- [templates/deploy-smoke-check.sh.example](templates/deploy-smoke-check.sh.example) — Route smoke-check template
+These files are preserved for traceability and handoff history. They are not the active source of truth for current behavior.
 
-## Working / Historical Material
+- [superpowers/specs/](superpowers/specs/) - design specs for each phase
+- [superpowers/plans/](superpowers/plans/) - implementation plans and execution notes
+- [QUOTE-INVOICE-WORKFLOW-AUDIT-2026-04-08.md](QUOTE-INVOICE-WORKFLOW-AUDIT-2026-04-08.md) - workflow audit record
+- [prism/phase-1-verification-2026-04-19.md](prism/phase-1-verification-2026-04-19.md) - product phase verification notes
+- [prism/raw/inventory.json](prism/raw/inventory.json) - raw Prism discovery dump
 
-These directories are useful, but they are not the primary source of truth for current production behavior.
+## Rule Of Thumb
 
-- [ai/](ai/) — AI handoff and session notes
-- [superpowers/specs/](superpowers/specs/) — feature design specs
-- [superpowers/plans/](superpowers/plans/) — implementation plans
+If a file lives under `docs/superpowers/`, treat it as a historical phase artifact unless the current task explicitly says to work from a plan or spec. For day-to-day development, start with the files in the "Start Here" section above.
