@@ -75,21 +75,39 @@ export interface BulkEditFieldDefinition {
 
 export type BulkEditFieldRegistry = Record<BulkEditFieldId, BulkEditFieldDefinition>;
 
-export interface BulkEditFieldPreviewCell<TValue = BulkEditFieldValue> {
+export interface BulkEditSourceInventoryRow {
+  locationId: ProductLocationId;
+  retail: number | null;
+  cost: number | null;
+  expectedCost: number | null;
+  tagTypeId: number | null;
+  statusCodeId: number | null;
+  estSales: number | null;
+  estSalesLocked: boolean;
+  fInvListPriceFlag: boolean;
+  fTxWantListFlag: boolean;
+  fTxBuybackListFlag: boolean;
+  fNoReturns: boolean;
+}
+
+export interface BulkEditFieldPreviewCell {
   fieldId: BulkEditFieldId;
-  before: TValue;
-  after: TValue;
+  label: string;
+  beforeLabel: string;
+  afterLabel: string;
   changed: boolean;
 }
 
-export type BulkEditFieldPreviewRow<TValue = BulkEditFieldValue> = {
+export type BulkEditFieldPreviewRow = {
   sku: number;
   description: string;
-  cells: Partial<Record<BulkEditFieldId, BulkEditFieldPreviewCell<TValue>>>;
+  changedFields: BulkEditFieldId[];
+  cells: BulkEditFieldPreviewCell[];
+  warnings: PreviewWarning[];
 };
 
-export interface BulkEditFieldPreview<TValue = BulkEditFieldValue> {
-  rows: BulkEditFieldPreviewRow<TValue>[];
+export interface BulkEditFieldPreview {
+  rows: BulkEditFieldPreviewRow[];
   totals: {
     rowCount: number;
     changedFieldCount: number;
@@ -147,8 +165,18 @@ export interface BulkEditSourceRow {
   vendorId: number | null;
   dccId: number | null;
   itemTaxTypeId: number | null;
-  itemType: "textbook" | "general_merchandise" | null;
+  itemType: "textbook" | "used_textbook" | "general_merchandise" | null;
   fDiscontinue: 0 | 1;
+  title?: string | null;
+  author?: string | null;
+  isbn?: string | null;
+  edition?: string | null;
+  bindingId?: number | null;
+  catalogNumber?: string | null;
+  packageType?: string | null;
+  unitsPerPack?: number | null;
+  primaryLocationId?: ProductLocationId | null;
+  inventoryByLocation?: BulkEditSourceInventoryRow[];
 }
 
 /** One row in the preview grid: before/after values + row-level warnings. */
