@@ -10,6 +10,22 @@ interface ProductFiltersExtendedProps {
   onChange: (patch: Partial<ProductFilters>) => void;
 }
 
+export function getLastSaleNeverPatch(
+  enabled: boolean,
+): Partial<ProductFilters> {
+  if (!enabled) {
+    return { lastSaleNever: false };
+  }
+
+  return {
+    lastSaleNever: true,
+    lastSaleWithin: "",
+    lastSaleOlderThan: "",
+    lastSaleDateFrom: "",
+    lastSaleDateTo: "",
+  };
+}
+
 /**
  * Extended filter sub-sections: Stock, Classification, Data Quality, Margin,
  * Activity, Status. Emits a PARTIAL patch on every change; the parent merges
@@ -276,7 +292,7 @@ export function ProductFiltersExtended({
                   className="size-4 rounded border-border"
                   checked={filters.lastSaleNever}
                   onChange={(e) =>
-                    onChange({ lastSaleNever: e.target.checked })
+                    onChange(getLastSaleNeverPatch(e.target.checked))
                   }
                 />
                 Never sold
