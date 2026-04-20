@@ -63,6 +63,7 @@ export interface Product {
   sales_aggregates_computed_at: string | null;
   effective_last_sale_date?: string | null;
   aggregates_ready?: boolean;
+  edited_since_sync?: boolean;
   margin_ratio?: number | null;
   stock_coverage_days?: number | null;
   trend_direction?: "accelerating" | "decelerating" | "steady" | null;
@@ -160,6 +161,13 @@ export type ProductSortField =
 
 export interface ProductSearchResult {
   products: Product[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface ProductBrowseSearchResult {
+  products: ProductBrowseRow[];
   total: number;
   page: number;
   pageSize: number;
