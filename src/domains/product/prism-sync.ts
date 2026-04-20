@@ -158,34 +158,104 @@ export function buildPrismPullPageQuery(): string {
   return `
         SELECT TOP (@pageSize)
           i.SKU,
-          LTRIM(RTRIM(gm.Description)) AS Description,
-          LTRIM(RTRIM(tb.Title))       AS Title,
-          LTRIM(RTRIM(tb.Author))      AS Author,
-          LTRIM(RTRIM(tb.ISBN))        AS ISBN,
-          LTRIM(RTRIM(tb.Edition))     AS Edition,
-          LTRIM(RTRIM(i.BarCode))      AS BarCode,
+          inv.LocationID,
+          LTRIM(RTRIM(loc.Abbreviation))    AS LocationAbbrev,
+
+          -- GM (NULL for textbook rows)
+          LTRIM(RTRIM(gm.Description))      AS Description,
+          LTRIM(RTRIM(gm.Type))             AS TypeGm,
+          LTRIM(RTRIM(gm.Size))             AS Size,
+          gm.SizeID,
+          gm.Color                          AS GmColor,
+          LTRIM(RTRIM(gm.CatalogNumber))    AS CatalogNumber,
+          LTRIM(RTRIM(gm.PackageType))      AS PackageType,
+          LTRIM(RTRIM(pkg.Description))     AS PackageTypeLabel,
+          gm.UnitsPerPack,
+          gm.Weight                         AS GmWeight,
+          LTRIM(RTRIM(gm.ImageURL))         AS ImageURL,
+          gm.OrderIncrement,
+          gm.UseScaleInterface,
+          gm.Tare,
+          gm.MfgID,
+
+          -- Textbook (NULL for GM rows)
+          LTRIM(RTRIM(tb.Title))            AS Title,
+          LTRIM(RTRIM(tb.Author))           AS Author,
+          LTRIM(RTRIM(tb.ISBN))             AS ISBN,
+          LTRIM(RTRIM(tb.Edition))          AS Edition,
+          tb.BindingID,
+          LTRIM(RTRIM(tb.Imprint))          AS Imprint,
+          LTRIM(RTRIM(tb.Copyright))        AS Copyright,
+          tb.UsedSKU,
+          tb.TextStatusID,
+          tb.StatusDate,
+          LTRIM(RTRIM(tb.Type))             AS TypeTextbook,
+          LTRIM(RTRIM(tb.Bookkey))          AS BookKey,
+
+          -- Item (global)
+          LTRIM(RTRIM(i.BarCode))           AS BarCode,
           i.VendorID,
+          i.AltVendorID,
           i.DCCID,
+          i.UsedDCCID,
           i.ItemTaxTypeID,
+          LTRIM(RTRIM(itt.Description))     AS ItemTaxTypeLabel,
+          LTRIM(RTRIM(i.txComment))         AS TxComment,
+          i.Weight                          AS ItemWeight,
+          i.StyleID,
+          i.ItemSeasonCodeID,
+          i.fListPriceFlag,
+          i.fPerishable,
+          i.fIDRequired,
+          i.MinOrderQty                     AS MinOrderQtyItem,
           CASE
             WHEN i.TypeID = 2                THEN 'used_textbook'
             WHEN tb.SKU IS NOT NULL          THEN 'textbook'
             WHEN gm.SKU IS NOT NULL          THEN 'general_merchandise'
             ELSE                                  'other'
           END AS ItemType,
-          dcc.Department                  AS DeptNum,
-          dcc.Class                       AS ClassNum,
-          dcc.Category                    AS CatNum,
-          LTRIM(RTRIM(dep.DeptName))      AS DeptName,
-          LTRIM(RTRIM(cls.ClassName))     AS ClassName,
-          LTRIM(RTRIM(cat.CatName))       AS CatName,
           i.fDiscontinue,
+
+          -- DCC labels
+          dcc.Department                    AS DeptNum,
+          dcc.Class                         AS ClassNum,
+          dcc.Category                      AS CatNum,
+          LTRIM(RTRIM(dep.DeptName))        AS DeptName,
+          LTRIM(RTRIM(cls.ClassName))       AS ClassName,
+          LTRIM(RTRIM(cat.CatName))         AS CatName,
+
+          -- Inventory (per-location)
           inv.Retail,
           inv.Cost,
+          inv.ExpectedCost,
           inv.StockOnHand,
-          inv.LastSaleDate
+          inv.TagTypeID,
+          LTRIM(RTRIM(tag.Description))     AS TagTypeLabel,
+          inv.StatusCodeID,
+          inv.TaxTypeID                     AS TaxTypeOverrideID,
+          inv.DiscCodeID                    AS InvDiscCodeID,
+          inv.MinimumStock                  AS InvMinStock,
+          inv.MaximumStock                  AS InvMaxStock,
+          inv.AutoOrderQty                  AS InvAutoOrderQty,
+          inv.MinOrderQty                   AS InvMinOrderQty,
+          inv.ReservedQty,
+          inv.RentalQty,
+          inv.EstSales,
+          inv.EstSalesLocked,
+          inv.RoyaltyCost,
+          inv.MinRoyaltyCost,
+          inv.fInvListPriceFlag,
+          inv.fTXWantListFlag,
+          inv.fTXBuybackListFlag,
+          inv.fRentOnly,
+          inv.fNoReturns,
+          inv.TextComment                   AS TextCommentInv,
+          inv.LastSaleDate,
+          inv.LastInventoryDate,
+          inv.CreateDate                    AS InvCreateDate
         FROM Item i
-        INNER JOIN Inventory inv ON inv.SKU = i.SKU AND inv.LocationID = @loc
+        INNER JOIN Inventory inv ON inv.SKU = i.SKU AND inv.LocationID IN (2, 3, 4)
+        INNER JOIN Location loc ON loc.LocationID = inv.LocationID
         LEFT JOIN Textbook tb ON tb.SKU = i.SKU
         LEFT JOIN GeneralMerchandise gm ON gm.SKU = i.SKU
         LEFT JOIN DeptClassCat dcc ON i.DCCID = dcc.DCCID
@@ -195,8 +265,11 @@ export function buildPrismPullPageQuery(): string {
         LEFT JOIN DCC_Category   cat ON dcc.Department = cat.Department
                                      AND dcc.Class      = cat.Class
                                      AND dcc.Category   = cat.Category
-        WHERE i.SKU > @cursor
-        ORDER BY i.SKU
+        LEFT JOIN Item_Tax_Type itt ON itt.ItemTaxTypeID = i.ItemTaxTypeID
+        LEFT JOIN TagType tag ON tag.TagTypeID = inv.TagTypeID
+        LEFT JOIN PackageType pkg ON pkg.PackageType = gm.PackageType
+        WHERE i.SKU > @cursor OR (i.SKU = @cursor AND inv.LocationID > @lastLoc)
+        ORDER BY i.SKU, inv.LocationID
       `;
 }
 
