@@ -380,17 +380,18 @@ export function EditItemDialogV2({
 
     setForm((current) => {
       let changed = false;
-      const merged = { ...current };
+      const merged: Record<keyof FormState, string | boolean> = { ...current };
 
       for (const key of Object.keys(EMPTY_FORM) as Array<keyof FormState>) {
         if (dirtyFieldsRef.current.has(key)) continue;
-        if (merged[key] !== nextForm[key]) {
-          merged[key] = nextForm[key];
+        const nextValue = nextForm[key] as string | boolean;
+        if (merged[key] !== nextValue) {
+          merged[key] = nextValue;
           changed = true;
         }
       }
 
-      return changed ? merged : current;
+      return changed ? (merged as FormState) : current;
     });
   }, [detail, isBulk, items, open, selectionKey]);
 
