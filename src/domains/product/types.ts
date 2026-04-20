@@ -285,6 +285,16 @@ export interface ProductEditDetails {
   sku: number;
   itemType: string;
   description: string | null;
+  author?: string | null;
+  title?: string | null;
+  isbn?: string | null;
+  edition?: string | null;
+  bindingId?: number | null;
+  imprint?: string | null;
+  copyright?: string | null;
+  textStatusId?: number | null;
+  statusDate?: string | null;
+  bookKey?: string | null;
   barcode: string | null;
   vendorId: number | null;
   dccId: number | null;

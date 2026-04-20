@@ -23,6 +23,16 @@ type ProductEditDetailRow = {
   sku: number;
   item_type: string;
   description: string | null;
+  author: string | null;
+  title: string | null;
+  isbn: string | null;
+  edition: string | null;
+  binding_id: number | null;
+  imprint: string | null;
+  copyright: string | null;
+  text_status_id: number | null;
+  status_date: string | null;
+  book_key: string | null;
   barcode: string | null;
   vendor_id: number | null;
   dcc_id: number | null;
@@ -102,6 +112,16 @@ const PRODUCT_EDIT_DETAIL_SELECT = [
   "sku",
   "item_type",
   "description",
+  "author",
+  "title",
+  "isbn",
+  "edition",
+  "binding_id",
+  "imprint",
+  "copyright",
+  "text_status_id",
+  "status_date",
+  "book_key",
   "barcode",
   "vendor_id",
   "dcc_id",
@@ -155,6 +175,16 @@ function toProductEditDetails(row: ProductEditDetailRow): ProductEditDetails {
     sku: row.sku,
     itemType: row.item_type,
     description: row.description,
+    author: row.author,
+    title: row.title,
+    isbn: row.isbn,
+    edition: row.edition,
+    bindingId: row.binding_id,
+    imprint: row.imprint,
+    copyright: row.copyright,
+    textStatusId: row.text_status_id,
+    statusDate: row.status_date,
+    bookKey: row.book_key,
     barcode: row.barcode,
     vendorId: row.vendor_id,
     dccId: row.dcc_id,

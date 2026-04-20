@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { resolveEditDialogMode } from "@/components/products/edit-item-dialog-mode";
 
 const nextAuthMocks = vi.hoisted(() => ({
   getServerSession: vi.fn(),
@@ -313,6 +314,73 @@ describe("GET /api/products/[sku]", () => {
     });
   });
 
+  it("hydrates textbook detail fields from the products mirror", async () => {
+    mockMaybeSingle.mockResolvedValue({
+      data: {
+        sku: 1002,
+        item_type: "textbook",
+        description: "Intro Biology",
+        barcode: "9781234567890",
+        vendor_id: 42,
+        dcc_id: 1701,
+        item_tax_type_id: 6,
+        catalog_number: "BIO-1002",
+        tx_comment: null,
+        retail_price: 89.5,
+        cost: 52.25,
+        discontinued: false,
+        alt_vendor_id: null,
+        mfg_id: null,
+        weight: null,
+        package_type: null,
+        units_per_pack: null,
+        order_increment: null,
+        image_url: null,
+        size: null,
+        size_id: null,
+        color_id: null,
+        style_id: null,
+        item_season_code_id: null,
+        f_list_price_flag: null,
+        f_perishable: null,
+        f_id_required: null,
+        min_order_qty_item: null,
+        used_dcc_id: null,
+        author: "Jane Doe",
+        title: "Intro Biology",
+        isbn: "9781234567890",
+        edition: "3",
+        binding_id: 15,
+        imprint: "PEARSON",
+        copyright: "26",
+        text_status_id: 7,
+        status_date: "2026-04-20",
+        book_key: "BIO-KEY-1",
+      },
+      error: null,
+    });
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.GET(
+      new NextRequest("http://localhost/api/products/1002"),
+      { params: Promise.resolve({ sku: "1002" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(
+      expect.objectContaining({
+        itemType: "textbook",
+        author: "Jane Doe",
+        title: "Intro Biology",
+        isbn: "9781234567890",
+        edition: "3",
+        bindingId: 15,
+        imprint: "PEARSON",
+        copyright: "26",
+      }),
+    );
+  });
+
   it("hydrates all Pierce inventory slices in canonical order", async () => {
     mockMaybeSingle.mockResolvedValue({
       data: {
@@ -542,5 +610,18 @@ describe("PATCH /api/products/[sku]", () => {
       discontinued: true,
       synced_at: expect.any(String),
     }));
+  });
+});
+
+describe("resolveEditDialogMode", () => {
+  it("routes single textbook selections to v2", () => {
+    expect(
+      resolveEditDialogMode({
+        featureFlagEnabled: false,
+        override: null,
+        hasTextbookSelection: true,
+        selectionCount: 1,
+      } as never),
+    ).toBe("v2");
   });
 });

@@ -29,6 +29,7 @@ export function EditItemDialog({
     featureFlagEnabled: process.env.NEXT_PUBLIC_PRODUCTS_EDIT_DIALOG_V2 === "true",
     override: editDialogOverride ?? null,
     hasTextbookSelection: items.some((item) => item.isTextbook),
+    selectionCount: items.length,
   });
 
   const [detail, setDetail] = useState<ProductEditDetails | null>(null);
