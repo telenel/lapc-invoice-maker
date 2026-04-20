@@ -839,7 +839,11 @@ export function EditItemDialogV2({
     const fallbackLabel = selectedOption?.label ?? (value !== "" ? `Binding #${value}` : null);
     return (
       <Field id={id} label={label}>
-        <Select value={value} onValueChange={onChange} disabled={disabled}>
+        <Select
+          value={value}
+          onValueChange={(nextValue) => onChange(nextValue ?? "")}
+          disabled={disabled}
+        >
           <SelectTrigger id={id} className="w-full">
             <SelectValue placeholder={isBulk ? "Leave unchanged" : "Select…"}>
               {fallbackLabel}
