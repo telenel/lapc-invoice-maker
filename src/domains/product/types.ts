@@ -1,5 +1,23 @@
 import type { ProductLocationId } from "./location-filters";
 
+export type ProductLocationAbbrev = "PIER" | "PCOP" | "PFS";
+
+export interface ProductLocationSlice {
+  locationId: ProductLocationId;
+  locationAbbrev: ProductLocationAbbrev;
+  retailPrice: number | null;
+  cost: number | null;
+  stockOnHand: number | null;
+  lastSaleDate: string | null;
+}
+
+export interface ProductLocationVariance {
+  retailPriceVaries: boolean;
+  costVaries: boolean;
+  stockVaries: boolean;
+  lastSaleDateVaries: boolean;
+}
+
 /** Raw product row from Supabase products table */
 export interface Product {
   sku: number;
@@ -48,6 +66,10 @@ export interface Product {
   margin_ratio?: number | null;
   stock_coverage_days?: number | null;
   trend_direction?: "accelerating" | "decelerating" | "steady" | null;
+  primary_location_id?: ProductLocationId | null;
+  primary_location_abbrev?: ProductLocationAbbrev | null;
+  selected_inventories?: ProductLocationSlice[];
+  location_variance?: ProductLocationVariance;
   discontinued: boolean | null;
 }
 

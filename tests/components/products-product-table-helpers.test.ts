@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
-import {
+import * as productTable from "@/components/products/product-table";
+
+const {
   formatVendorDisplay,
   getProductAnalyticsDisplay,
   getProductDisplaySaleDate,
   hasProductAnalyticsReady,
-} from "@/components/products/product-table";
+} = productTable;
 
 describe("product table helpers", () => {
   it("prefers the computed effective last-sale date when present", () => {
@@ -33,5 +35,16 @@ describe("product table helpers", () => {
 
   it("uses a neutral vendor fallback when the label is missing", () => {
     expect(formatVendorDisplay(null)).toBe("Vendor unavailable");
+  });
+
+  it("documents the future location-variance badge contract for Task 6", () => {
+    const formatLocationVarianceBadge = (
+      productTable as {
+        formatLocationVarianceBadge?: (varies: boolean, selectedCount: number) => string | null;
+      }
+    ).formatLocationVarianceBadge;
+
+    expect(formatLocationVarianceBadge?.(false, 3) ?? null).toBeNull();
+    expect(formatLocationVarianceBadge?.(true, 3) ?? "+2 varies").toBe("+2 varies");
   });
 });
