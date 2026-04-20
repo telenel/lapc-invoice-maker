@@ -99,7 +99,7 @@ describe("product table helpers", () => {
 });
 
 describe("product table variance trigger", () => {
-  function makeVariedProduct(): ProductBrowseRow {
+  function makeTextbookProduct(): ProductBrowseRow {
     return {
       sku: 101,
       barcode: null,
@@ -177,57 +177,32 @@ describe("product table variance trigger", () => {
     } as ProductBrowseRow;
   }
 
-function renderTable(onToggle: ReturnType<typeof vi.fn>) {
-  render(React.createElement(ProductTable, {
-    tab: "textbooks",
-    products: [makeVariedProduct()],
-      total: 1,
-      page: 1,
-      loading: false,
-      sortBy: "sku",
-      sortDir: "asc",
-      isSelected: () => false,
-      onToggle,
-      onToggleAll: () => {},
-      onPageChange: () => {},
-      onSort: () => {},
-    visibleColumns: [],
-  }));
-}
+  function makeMerchandiseProduct(): ProductBrowseRow {
+    return {
+      ...makeTextbookProduct(),
+      sku: 202,
+      barcode: "BC-202",
+      item_type: "merchandise",
+      description: "Pierce hoodie merch",
+      title: "Pierce hoodie merch",
+      isbn: null,
+      selected_inventories: [
+        {
+          locationId: 2,
+          locationAbbrev: "PIER",
+          retailPrice: 24.99,
+          cost: 10.5,
+          stockOnHand: 7,
+          lastSaleDate: "2026-04-18T00:00:00.000Z",
+        },
+      ],
+    } as ProductBrowseRow;
+  }
 
-function renderEditableTable(onToggle: ReturnType<typeof vi.fn>) {
-  function Harness() {
-    const [editingCell, setEditingCell] = useState<ProductInlineEditController["editingCell"]>(null);
-    const [draftValue, setDraftValue] = useState("");
-
-    const inlineEdit = useMemo<ProductInlineEditController>(() => ({
-      editingCell,
-      draftValue,
-      pendingSave: false,
-      primaryLocationId: 2,
-      rowsBySku: new Map([[101, makeVariedProduct()]]),
-      startEdit: (sku, field, currentValue) => {
-        setEditingCell({ sku, field });
-        setDraftValue(currentValue);
-      },
-      cancelEdit: () => {
-        setEditingCell(null);
-        setDraftValue("");
-      },
-      commitEdit: async () => {
-        setEditingCell(null);
-        setDraftValue("");
-      },
-      moveToNextEditableCell: async () => {
-        setEditingCell(null);
-        setDraftValue("");
-      },
-      setDraftValue,
-    }), [draftValue, editingCell]);
-
-    return React.createElement(ProductTable, {
+  function renderTable(onToggle: ReturnType<typeof vi.fn>) {
+    render(React.createElement(ProductTable, {
       tab: "textbooks",
-      products: [makeVariedProduct()],
+      products: [makeTextbookProduct()],
       total: 1,
       page: 1,
       loading: false,
@@ -239,13 +214,91 @@ function renderEditableTable(onToggle: ReturnType<typeof vi.fn>) {
       onPageChange: () => {},
       onSort: () => {},
       visibleColumns: [],
-      inlineEdit,
-      primaryLocationId: 2,
-    });
+    }));
   }
+
+  function renderEditableTable(
+    onToggle: ReturnType<typeof vi.fn>,
+    tab: "textbooks" | "merchandise" = "textbooks",
+    product: ProductBrowseRow = makeTextbookProduct(),
+  ) {
+    function Harness() {
+      const [editingCell, setEditingCell] = useState<ProductInlineEditController["editingCell"]>(null);
+      const [draftValue, setDraftValue] = useState("");
+
+      const inlineEdit = useMemo<ProductInlineEditController>(() => ({
+        editingCell,
+        draftValue,
+        pendingSave: false,
+        primaryLocationId: 2,
+        rowsBySku: new Map([[product.sku, product]]),
+        startEdit: (sku, field, currentValue) => {
+          setEditingCell({ sku, field });
+          setDraftValue(currentValue);
+        },
+        cancelEdit: () => {
+          setEditingCell(null);
+          setDraftValue("");
+        },
+        commitEdit: async () => {
+          setEditingCell(null);
+          setDraftValue("");
+        },
+        moveToNextEditableCell: async () => {
+          setEditingCell(null);
+          setDraftValue("");
+        },
+        setDraftValue,
+      }), [draftValue, editingCell]);
+
+      return React.createElement(ProductTable, {
+        tab,
+        products: [product],
+        total: 1,
+        page: 1,
+        loading: false,
+        sortBy: "sku",
+        sortDir: "asc",
+        isSelected: () => false,
+        onToggle,
+        onToggleAll: () => {},
+        onPageChange: () => {},
+        onSort: () => {},
+        visibleColumns: [],
+        inlineEdit,
+        primaryLocationId: 2,
+      });
+    }
 
   render(React.createElement(Harness));
 }
+
+  it("renders textbook ISBNs as static text without a barcode edit affordance", async () => {
+    const onToggle = vi.fn();
+
+    renderEditableTable(onToggle, "textbooks", {
+      ...makeTextbookProduct(),
+      isbn: "9780131103627",
+    } as ProductBrowseRow);
+
+    const tableWrap = document.querySelector(".product-table-wrap");
+    expect(tableWrap).not.toBeNull();
+    expect(within(tableWrap as HTMLElement).getByText("ISBN 9780131103627")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /edit barcode for sku 101/i })).toBeNull();
+  });
+
+  it("clicking the barcode inline-edit button for SKU 202 does not toggle selection and opens the editor", async () => {
+    const user = userEvent.setup();
+    const onToggle = vi.fn();
+
+    renderEditableTable(onToggle, "merchandise", makeMerchandiseProduct());
+
+    await user.click(screen.getByRole("button", { name: /edit barcode for sku 202/i }));
+
+    expect(onToggle).not.toHaveBeenCalled();
+    const editor = screen.getByRole("textbox", { name: /barcode editor for sku 202/i });
+    expect(editor).toHaveValue("BC-202");
+  });
 
   it("opens the retail popover from the varies badge without selecting the row", async () => {
     const user = userEvent.setup();

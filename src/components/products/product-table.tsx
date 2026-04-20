@@ -862,15 +862,23 @@ export function ProductTable({
                             )}
                           </td>
                         ) : null}
-                        <InlineEditableCell
-                          product={product}
-                          field="barcode"
-                          label="Barcode"
-                          displayValue={getInlineEditDisplayValue(product, resolvedPrimaryLocationId, "barcode")}
-                          currentValue={getInlineEditValue(product, resolvedPrimaryLocationId, "barcode")}
-                          inlineEdit={inlineEdit}
-                          className="px-2.5 py-1.5"
-                        />
+                        {tab === "textbooks" ? (
+                          <td className="px-2.5 py-1.5">
+                            <span className="font-mono tnum text-[11.5px] leading-none text-foreground">
+                              {product.isbn ? `ISBN ${product.isbn}` : "—"}
+                            </span>
+                          </td>
+                        ) : (
+                          <InlineEditableCell
+                            product={product}
+                            field="barcode"
+                            label="Barcode"
+                            displayValue={getInlineEditDisplayValue(product, resolvedPrimaryLocationId, "barcode")}
+                            currentValue={getInlineEditValue(product, resolvedPrimaryLocationId, "barcode")}
+                            inlineEdit={inlineEdit}
+                            className="px-2.5 py-1.5"
+                          />
+                        )}
                         <td className="px-2.5 py-1.5 text-[11.5px] text-muted-foreground whitespace-nowrap">
                           {formatSaleDate(getProductDisplaySaleDate(product) ?? null)}
                         </td>
