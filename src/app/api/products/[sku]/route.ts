@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { withAdmin } from "@/domains/shared/auth";
-import type { ProductEditDetails } from "@/domains/product/types";
-import { isPrismConfigured } from "@/lib/prism";
-import { discontinueItem, deleteTestItem } from "@/domains/product/prism-server";
-import { updateGmItem, updateTextbookPricing, getItemSnapshot } from "@/domains/product/prism-updates";
+import type { ItemSnapshot, ProductEditDetails } from "@/domains/product/types";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -117,6 +114,24 @@ function toProductEditDetails(row: ProductEditDetailRow): ProductEditDetails {
   };
 }
 
+async function loadDeleteDeps() {
+  const [{ isPrismConfigured }, { discontinueItem, deleteTestItem }] = await Promise.all([
+    import("@/lib/prism"),
+    import("@/domains/product/prism-server"),
+  ]);
+
+  return { isPrismConfigured, discontinueItem, deleteTestItem };
+}
+
+async function loadPatchDeps() {
+  const [{ isPrismConfigured }, { updateGmItem, updateTextbookPricing, getItemSnapshot }] = await Promise.all([
+    import("@/lib/prism"),
+    import("@/domains/product/prism-updates"),
+  ]);
+
+  return { isPrismConfigured, updateGmItem, updateTextbookPricing, getItemSnapshot };
+}
+
 export const GET = withAdmin(async (_request: NextRequest, _session, ctx?: RouteCtx) => {
   const params = ctx ? await ctx.params : null;
   const sku = parseSkuParam(params?.sku ?? "");
@@ -160,6 +175,7 @@ export const GET = withAdmin(async (_request: NextRequest, _session, ctx?: Route
  * and could cause data integrity issues if removed.
  */
 export const DELETE = withAdmin(async (request: NextRequest, _session, ctx?: RouteCtx) => {
+  const { isPrismConfigured, deleteTestItem, discontinueItem } = await loadDeleteDeps();
   if (!isPrismConfigured()) {
     return NextResponse.json(
       { error: "Prism is not configured in this environment." },
@@ -237,7 +253,46 @@ const patchSchema = z.object({
   }),
 });
 
+type ProductPatchInput = z.infer<typeof patchSchema>["patch"];
+
+function buildLegacyMirrorPayload(
+  sku: number,
+  patch: ProductPatchInput,
+  snapshot: ItemSnapshot | null,
+): Record<string, unknown> {
+  const payload: Record<string, unknown> = {
+    sku,
+    synced_at: new Date().toISOString(),
+  };
+
+  if (patch.description !== undefined) payload.description = patch.description;
+  if (patch.vendorId !== undefined) payload.vendor_id = patch.vendorId;
+  if (patch.dccId !== undefined) payload.dcc_id = patch.dccId;
+  if (patch.itemTaxTypeId !== undefined) payload.item_tax_type_id = patch.itemTaxTypeId;
+  if (patch.catalogNumber !== undefined) payload.catalog_number = patch.catalogNumber;
+  if (patch.comment !== undefined) payload.tx_comment = patch.comment;
+  if (patch.weight !== undefined) payload.weight = patch.weight;
+  if (patch.imageUrl !== undefined) payload.image_url = patch.imageUrl;
+  if (patch.unitsPerPack !== undefined) payload.units_per_pack = patch.unitsPerPack;
+  if (patch.packageType !== undefined) payload.package_type = patch.packageType;
+
+  if (snapshot) {
+    payload.barcode = snapshot.barcode;
+    payload.retail_price = snapshot.retail;
+    payload.cost = snapshot.cost;
+    payload.discontinued = snapshot.fDiscontinue === 1;
+  } else {
+    if (patch.barcode !== undefined) payload.barcode = patch.barcode;
+    if (patch.retail !== undefined) payload.retail_price = patch.retail;
+    if (patch.cost !== undefined) payload.cost = patch.cost;
+    if (patch.fDiscontinue !== undefined) payload.discontinued = patch.fDiscontinue === 1;
+  }
+
+  return payload;
+}
+
 export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: RouteCtx) => {
+  const { isPrismConfigured, updateGmItem, updateTextbookPricing, getItemSnapshot } = await loadPatchDeps();
   if (!isPrismConfigured()) {
     return NextResponse.json({ error: "Prism is not configured in this environment." }, { status: 503 });
   }
@@ -266,15 +321,7 @@ export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: Rout
     try {
       const supabase = getSupabaseAdminClient();
       const snap = await getItemSnapshot(sku);
-      if (snap) {
-        await supabase.from("products").upsert({
-          sku,
-          barcode: snap.barcode,
-          retail_price: snap.retail,
-          cost: snap.cost,
-          synced_at: new Date().toISOString(),
-        });
-      }
+      await supabase.from("products").upsert(buildLegacyMirrorPayload(sku, parsed.data.patch, snap));
     } catch (mirrorErr) {
       console.warn(`[PATCH /api/products/${sku}] mirror failed:`, mirrorErr);
     }
