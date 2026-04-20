@@ -22,15 +22,15 @@ function productToSelected(product: ProductBrowseRow): SelectedProduct {
   return {
     sku: product.sku,
     description: (product.title ?? product.description ?? "").toUpperCase(),
-    retailPrice: Number(product.retail_price ?? 0),
-    cost: Number(product.cost ?? 0),
+    retailPrice: product.retail_price,
+    cost: product.cost,
     barcode: product.barcode,
     author: product.author,
     title: product.title,
     isbn: product.isbn,
     edition: product.edition,
     catalogNumber: product.catalog_number,
-    vendorId: product.vendor_id ?? 0,
+    vendorId: product.vendor_id,
     itemType: product.item_type,
   };
 }
@@ -66,6 +66,10 @@ function getSubtitle(product: ProductBrowseRow): string {
 
 export interface ProductSearchPanelProps {
   onAddProducts: (products: SelectedProduct[]) => void;
+}
+
+function canAddBrowseRowToLineItems(product: ProductBrowseRow): boolean {
+  return product.retail_price != null;
 }
 
 // ---------------------------------------------------------------------------
@@ -138,6 +142,8 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
 
   // Selection helpers
   const toggleProduct = useCallback((product: ProductBrowseRow) => {
+    if (!canAddBrowseRowToLineItems(product)) return;
+
     setSelected((prev) => {
       const next = new Map(prev);
       if (next.has(product.sku)) {
@@ -227,18 +233,22 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
           <ul className="divide-y pb-16">
             {products.map((product) => {
               const isChecked = selected.has(product.sku);
+              const selectable = canAddBrowseRowToLineItems(product);
               return (
                 <li
                   key={product.sku}
                   className={[
-                    "flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors",
+                    "flex items-center gap-3 px-3 py-2.5 transition-colors",
+                    selectable ? "cursor-pointer hover:bg-muted/40" : "cursor-not-allowed opacity-70",
                     isChecked ? "bg-primary/5" : "",
                   ].join(" ")}
                   onClick={() => toggleProduct(product)}
+                  data-disabled={!selectable ? "" : undefined}
                 >
                   <Checkbox
                     tabIndex={-1}
                     checked={isChecked}
+                    disabled={!selectable}
                     onCheckedChange={() => toggleProduct(product)}
                     onClick={(e) => e.stopPropagation()}
                     aria-label={`Select SKU ${product.sku}`}
@@ -251,10 +261,11 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
                     <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">
                       SKU {product.sku}
                       {getSubtitle(product) ? ` · ${getSubtitle(product)}` : ""}
+                      {!selectable ? " · Price unavailable" : ""}
                     </p>
                   </div>
                   <span className="text-xs font-medium text-right shrink-0">
-                    ${Number(product.retail_price).toFixed(2)}
+                    {selectable ? `$${Number(product.retail_price).toFixed(2)}` : "Price unavailable"}
                   </span>
                 </li>
               );

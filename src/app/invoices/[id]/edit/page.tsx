@@ -204,14 +204,16 @@ export default function EditInvoicePage() {
   }
 
   function mapProductsToItems(products: SelectedProduct[]) {
-    return products.map((p) => ({
+    return products
+      .filter((p): p is SelectedProduct & { retailPrice: number } => p.retailPrice != null)
+      .map((p) => ({
       sku: String(p.sku),
       description: p.description.toUpperCase(),
       unitPrice: p.retailPrice,
       costPrice: p.cost,
       quantity: 1,
       isTaxable: true,
-    }));
+      }));
   }
 
   return (

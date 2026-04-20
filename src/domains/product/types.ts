@@ -182,15 +182,15 @@ export interface ProductBrowseCountResult {
 export interface SelectedProduct {
   sku: number;
   description: string;
-  retailPrice: number;
-  cost: number;
+  retailPrice: number | null;
+  cost: number | null;
   barcode: string | null;
   author: string | null;
   title: string | null;
   isbn: string | null;
   edition: string | null;
   catalogNumber: string | null;
-  vendorId: number;
+  vendorId: number | null;
   vendorLabel?: string | null;
   itemType: string;
 }

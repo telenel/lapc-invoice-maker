@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon, SearchIcon } from "lucide-react";
 import { useEffect, useMemo } from "react";
-import type { Product, ProductTab } from "@/domains/product/types";
+import type { ProductBrowseRow, ProductTab } from "@/domains/product/types";
 import { PAGE_SIZE, type OptionalColumnKey } from "@/domains/product/constants";
 import { MarginBar } from "./margin-bar";
 import { useVendorDirectory } from "@/domains/product/vendor-directory";
@@ -20,7 +20,7 @@ import "./product-table.css";
  * days-since-sale math.
  */
 export function getProductDisplaySaleDate(
-  product: Pick<Product, "effective_last_sale_date" | "last_sale_date_computed" | "last_sale_date">,
+  product: Pick<ProductBrowseRow, "effective_last_sale_date" | "last_sale_date_computed" | "last_sale_date">,
 ): string | null | undefined {
   return (
     product.effective_last_sale_date ??
@@ -35,7 +35,7 @@ export function getProductDisplaySaleDate(
  * to the presence of a `sales_aggregates_computed_at` timestamp.
  */
 export function hasProductAnalyticsReady(
-  product: Pick<Product, "aggregates_ready" | "sales_aggregates_computed_at">,
+  product: Pick<ProductBrowseRow, "aggregates_ready" | "sales_aggregates_computed_at">,
 ): boolean {
   if (product.aggregates_ready === true) return true;
   if (product.aggregates_ready === false) return false;
@@ -48,7 +48,7 @@ export function hasProductAnalyticsReady(
  * zeros from being confused with an unready state.
  */
 export function getProductAnalyticsDisplay(
-  product: Pick<Product, "aggregates_ready" | "sales_aggregates_computed_at">,
+  product: Pick<ProductBrowseRow, "aggregates_ready" | "sales_aggregates_computed_at">,
   value: number | null | undefined,
 ): string {
   if (!hasProductAnalyticsReady(product)) return "Pending";
@@ -58,15 +58,15 @@ export function getProductAnalyticsDisplay(
 
 interface ProductTableProps {
   tab: ProductTab;
-  products: Product[];
+  products: ProductBrowseRow[];
   total: number;
   page: number;
   loading: boolean;
   sortBy: string;
   sortDir: "asc" | "desc";
   isSelected: (sku: number) => boolean;
-  onToggle: (product: Product) => void;
-  onToggleAll: (products: Product[]) => void;
+  onToggle: (product: ProductBrowseRow) => void;
+  onToggleAll: (products: ProductBrowseRow[]) => void;
   onPageChange: (page: number) => void;
   onSort: (field: string) => void;
   /** Optional column keys that should render in addition to the base set. */
@@ -83,7 +83,8 @@ interface ProductTableProps {
   suppressEmptyState?: boolean;
 }
 
-function formatCurrency(value: number): string {
+function formatCurrency(value: number | null | undefined): string {
+  if (value == null || Number.isNaN(value)) return "—";
   return `$${Number(value).toFixed(2)}`;
 }
 
@@ -530,7 +531,9 @@ export function ProductTable({
                         </td>
                         <td className="px-2.5 py-1.5 whitespace-nowrap">
                           {(() => {
-                            const name = formatVendorDisplay(vendorsById.get(product.vendor_id));
+                            const name = formatVendorDisplay(
+                              product.vendor_id != null ? vendorsById.get(product.vendor_id) : null,
+                            );
                             return (
                               <span
                                 className="text-[11.5px] text-foreground"
@@ -580,10 +583,16 @@ export function ProductTable({
                         </td>
                         {showMargin ? (
                           <td data-priority="medium" className="px-2.5 py-1.5 text-right">
-                            <MarginBar
-                              cost={Number(product.cost)}
-                              retail={Number(product.retail_price)}
-                            />
+                            {product.cost != null && product.retail_price != null ? (
+                              <MarginBar
+                                cost={product.cost}
+                                retail={product.retail_price}
+                              />
+                            ) : (
+                              <span className="font-mono tnum text-[11.5px] text-muted-foreground">
+                                —
+                              </span>
+                            )}
                           </td>
                         ) : null}
                         <td className="px-2.5 py-1.5">
@@ -837,10 +846,14 @@ export function ProductTable({
                       </span>
                     ) : null}
                     {showMargin ? (
-                      <MarginBar
-                        cost={Number(product.cost)}
-                        retail={Number(product.retail_price)}
-                      />
+                      product.cost != null && product.retail_price != null ? (
+                        <MarginBar
+                          cost={product.cost}
+                          retail={product.retail_price}
+                        />
+                      ) : (
+                        <span className="font-mono tnum text-muted-foreground">—</span>
+                      )
                     ) : null}
                   </div>
                   {tab === "textbooks" ? (

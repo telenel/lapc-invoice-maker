@@ -38,6 +38,7 @@ export function ProductActionBar({
   const router = useRouter();
   const { byId: vendorNames } = useVendorDirectory();
   const [discontinuing, setDiscontinuing] = useState(false);
+  const hasMissingRetailPrice = Array.from(selected.values()).some((item) => item.retailPrice == null);
 
   function handleCreateInvoice() {
     saveToSession();
@@ -52,7 +53,7 @@ export function ProductActionBar({
   function handlePrintBarcodes() {
     const items = Array.from(selected.values()).map((item) => ({
       ...item,
-      vendorLabel: vendorNames.get(item.vendorId) ?? null,
+      vendorLabel: item.vendorId != null ? (vendorNames.get(item.vendorId) ?? null) : null,
     }));
     openBarcodePrintWindow(items);
   }
@@ -149,11 +150,22 @@ export function ProductActionBar({
                   Delete
                 </Button>
               ) : null}
-              <Button size="sm" variant="outline" onClick={handleCreateQuote}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleCreateQuote}
+                disabled={hasMissingRetailPrice}
+                title={hasMissingRetailPrice ? "One or more selected items are missing retail price" : undefined}
+              >
                 <FileTextIcon className="mr-1.5 size-3.5" />
                 Create Quote
               </Button>
-              <Button size="sm" onClick={handleCreateInvoice}>
+              <Button
+                size="sm"
+                onClick={handleCreateInvoice}
+                disabled={hasMissingRetailPrice}
+                title={hasMissingRetailPrice ? "One or more selected items are missing retail price" : undefined}
+              >
                 <FileTextIcon className="mr-1.5 size-3.5" />
                 Create Invoice
               </Button>
