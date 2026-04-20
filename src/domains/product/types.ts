@@ -241,8 +241,8 @@ export interface ProductEditDetails {
   itemTaxTypeId: number | null;
   catalogNumber: string | null;
   comment: string | null;
-  retail: number;
-  cost: number;
+  retail: number | null;
+  cost: number | null;
   fDiscontinue: 0 | 1;
   altVendorId: number | null;
   mfgId: number | null;
@@ -256,9 +256,9 @@ export interface ProductEditDetails {
   colorId: number | null;
   styleId: number | null;
   itemSeasonCodeId: number | null;
-  fListPriceFlag: 0 | 1;
-  fPerishable: 0 | 1;
-  fIdRequired: 0 | 1;
+  fListPriceFlag: boolean;
+  fPerishable: boolean;
+  fIdRequired: boolean;
   minOrderQtyItem: number | null;
   usedDccId: number | null;
 }
