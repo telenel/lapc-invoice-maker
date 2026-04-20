@@ -11,7 +11,7 @@ import {
   listTaxTypes,
   listVendors,
 } from "@/domains/product/prism-server";
-import { loadCommittedProductRefSnapshot } from "@/domains/product/ref-data";
+import { loadCommittedProductRefSnapshot } from "@/domains/product/ref-data-server";
 
 export const dynamic = "force-dynamic";
 

@@ -5,10 +5,10 @@ import type { PrismRefs as ApiClientPrismRefs } from "@/domains/product/api-clie
 import {
   buildProductRefMaps,
   formatLookupLabel,
-  loadCommittedProductRefSnapshot,
   normalizePackageTypeLabel,
   sortRefsByUsageThenLabel,
 } from "@/domains/product/ref-data";
+import { loadCommittedProductRefSnapshot } from "@/domains/product/ref-data-server";
 
 const queryLog: string[] = [];
 

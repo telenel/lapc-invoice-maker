@@ -25,7 +25,7 @@ const refDataMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/domains/product/prism-server", () => prismServerMocks);
-vi.mock("@/domains/product/ref-data", () => refDataMocks);
+vi.mock("@/domains/product/ref-data-server", () => refDataMocks);
 vi.mock("@/lib/prism", () => ({
   isPrismConfigured: vi.fn(),
 }));
@@ -42,7 +42,7 @@ import {
   listTaxTypes,
   listVendors,
 } from "@/domains/product/prism-server";
-import { loadCommittedProductRefSnapshot } from "@/domains/product/ref-data";
+import { loadCommittedProductRefSnapshot } from "@/domains/product/ref-data-server";
 import { GET } from "@/app/api/products/refs/route";
 
 const committedSnapshot = {

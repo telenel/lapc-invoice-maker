@@ -1,6 +1,3 @@
-import { readFile } from "node:fs/promises";
-import { join } from "node:path";
-
 export interface PrismVendorRef {
   vendorId: number;
   name: string;
@@ -107,8 +104,6 @@ export const EMPTY_REFS: PrismRefs = {
   bindings: [],
 };
 
-let committedProductRefSnapshotPromise: Promise<PrismRefs> | null = null;
-
 export function normalizePackageTypeLabel(row: { code: string; label: string | null }): string {
   const label = row.label?.trim();
   return label && label.length > 0 ? label : row.code;
@@ -117,29 +112,6 @@ export function normalizePackageTypeLabel(row: { code: string; label: string | n
 export function formatLookupLabel(label: string | null | undefined, fallback: string): string {
   const trimmed = label?.trim();
   return trimmed && trimmed.length > 0 ? trimmed : fallback;
-}
-
-export function loadCommittedProductRefSnapshot(): Promise<PrismRefs> {
-  if (!committedProductRefSnapshotPromise) {
-    committedProductRefSnapshotPromise = (async () => {
-      const file = join(process.cwd(), "docs/prism/ref-data-snapshot-2026-04-19.json");
-      const raw = await readFile(file, "utf8");
-      const parsed = JSON.parse(raw) as CommittedProductRefSnapshotFile;
-
-      return {
-        vendors: parsed.vendors,
-        dccs: parsed.dccs,
-        taxTypes: parsed.taxTypes,
-        tagTypes: parsed.tagTypes,
-        statusCodes: parsed.inventoryStatusCodes,
-        packageTypes: parsed.packageTypes,
-        colors: parsed.colors,
-        bindings: parsed.bindings,
-      };
-    })();
-  }
-
-  return committedProductRefSnapshotPromise;
 }
 
 export function buildProductRefMaps(refs: PrismRefs): ProductRefMaps {
@@ -160,3 +132,5 @@ export function sortRefsByUsageThenLabel<T extends { label: string; usageCount: 
     return a.label.localeCompare(b.label);
   });
 }
+
+export type { CommittedProductRefSnapshotFile };
