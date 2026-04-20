@@ -3,6 +3,9 @@
  * transform engine, and preview builder all use these shapes.
  */
 
+import type { PrismRefs } from "@/domains/product/ref-data";
+import type { ProductLocationId } from "@/domains/product/location-filters";
+
 /**
  * Product-filter shape. Mirrors the existing products page filters so we
  * can reuse the useProductSearch hook without reshaping data.
@@ -15,6 +18,102 @@ export interface ProductFilters {
   minRetail?: number;
   maxRetail?: number;
   hasBarcode?: boolean;
+}
+
+export const BULK_EDIT_FIELD_GROUPS = ["primary", "inventory", "more", "advanced"] as const;
+
+export type BulkEditFieldGroup = (typeof BULK_EDIT_FIELD_GROUPS)[number];
+
+export type BulkEditFieldId =
+  | "description"
+  | "vendorId"
+  | "dccId"
+  | "barcode"
+  | "itemTaxTypeId"
+  | "catalogNumber"
+  | "packageType"
+  | "unitsPerPack"
+  | "title"
+  | "author"
+  | "isbn"
+  | "edition"
+  | "bindingId"
+  | "retail"
+  | "cost"
+  | "expectedCost"
+  | "tagTypeId"
+  | "statusCodeId"
+  | "estSales"
+  | "fInvListPriceFlag"
+  | "fTxWantListFlag"
+  | "fTxBuybackListFlag"
+  | "fNoReturns"
+  | "fDiscontinue";
+
+export type BulkEditFieldRefOptionKey = keyof PrismRefs;
+
+export type BulkEditFieldValue = string | number | boolean | null;
+
+export type BulkEditFieldValues = Partial<Record<BulkEditFieldId, BulkEditFieldValue>>;
+
+export type BulkEditInventoryScope = ProductLocationId | "primary" | "all" | null;
+
+export interface BulkEditFieldPickerRequest {
+  fieldIds: BulkEditFieldId[];
+  inventoryScope: BulkEditInventoryScope;
+  values: BulkEditFieldValues;
+}
+
+export interface BulkEditFieldDefinition {
+  id: BulkEditFieldId;
+  label: string;
+  group: BulkEditFieldGroup;
+  fillRateLabel: string;
+  requiresLocation: boolean;
+  refOptionKey?: BulkEditFieldRefOptionKey;
+}
+
+export type BulkEditFieldRegistry = Record<BulkEditFieldId, BulkEditFieldDefinition>;
+
+export interface BulkEditSourceInventoryRow {
+  locationId: ProductLocationId;
+  retail: number | null;
+  cost: number | null;
+  expectedCost: number | null;
+  tagTypeId: number | null;
+  statusCodeId: number | null;
+  estSales: number | null;
+  estSalesLocked: boolean;
+  fInvListPriceFlag: boolean;
+  fTxWantListFlag: boolean;
+  fTxBuybackListFlag: boolean;
+  fNoReturns: boolean;
+}
+
+export interface BulkEditFieldPreviewCell {
+  fieldId: BulkEditFieldId;
+  label: string;
+  beforeLabel: string;
+  afterLabel: string;
+  changed: boolean;
+}
+
+export type BulkEditFieldPreviewRow = {
+  sku: number;
+  description: string;
+  changedFields: BulkEditFieldId[];
+  cells: BulkEditFieldPreviewCell[];
+  warnings: PreviewWarning[];
+};
+
+export interface BulkEditFieldPreview {
+  changedFieldLabels: string[];
+  rows: BulkEditFieldPreviewRow[];
+  totals: {
+    rowCount: number;
+    changedFieldCount: number;
+  };
+  warnings: PreviewWarning[];
 }
 
 /**
@@ -57,6 +156,11 @@ export interface BulkEditRequest {
   transform: BulkEditTransform;
 }
 
+export interface BulkEditFieldEditRequest {
+  selection: BulkEditSelection;
+  transform: BulkEditFieldPickerRequest;
+}
+
 /** Row values that the transform engine operates on. Pulled from Supabase mirror. */
 export interface BulkEditSourceRow {
   sku: number;
@@ -67,8 +171,18 @@ export interface BulkEditSourceRow {
   vendorId: number | null;
   dccId: number | null;
   itemTaxTypeId: number | null;
-  itemType: "textbook" | "general_merchandise" | null;
+  itemType: "textbook" | "used_textbook" | "general_merchandise" | null;
   fDiscontinue: 0 | 1;
+  title?: string | null;
+  author?: string | null;
+  isbn?: string | null;
+  edition?: string | null;
+  bindingId?: number | null;
+  catalogNumber?: string | null;
+  packageType?: string | null;
+  unitsPerPack?: number | null;
+  primaryLocationId?: ProductLocationId | null;
+  inventoryByLocation?: BulkEditSourceInventoryRow[];
 }
 
 /** One row in the preview grid: before/after values + row-level warnings. */
@@ -108,6 +222,7 @@ export interface BulkEditValidationError {
   code:
     | "EMPTY_SELECTION"
     | "NO_OP_TRANSFORM"
+    | "MISSING_INVENTORY_SCOPE"
     | "INVALID_MARGIN"
     | "INVALID_PERCENT"
     | "INVALID_RETAIL"

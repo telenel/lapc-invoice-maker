@@ -29,9 +29,11 @@ export type {
   PrismRefs,
 } from "./ref-data";
 import type {
+  BulkEditFieldEditRequest,
+  BulkEditFieldPreview,
   BulkEditRequest,
-  PreviewResult,
   CommitResult,
+  PreviewResult,
 } from "@/domains/bulk-edit/types";
 
 export interface PrismHealth {
@@ -98,6 +100,70 @@ async function parseError(response: Response): Promise<string> {
     // fall through
   }
   return `${response.status} ${response.statusText}`;
+}
+
+async function bulkEditDryRun(
+  body: BulkEditRequest,
+): Promise<PreviewResult | { errors: unknown[] }> {
+  const res = await fetch("/api/products/bulk-edit/dry-run", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (res.status === 400) {
+    const data = await res.json();
+    if (data.errors) return { errors: data.errors };
+  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+async function bulkEditCommit(
+  body: BulkEditRequest,
+): Promise<CommitResult | { errors: unknown[] }> {
+  const res = await fetch("/api/products/bulk-edit/commit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (res.status === 400 || res.status === 409) {
+    const data = await res.json();
+    if (data.errors) return { errors: data.errors };
+  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+async function bulkEditFieldDryRun(
+  body: BulkEditFieldEditRequest,
+): Promise<BulkEditFieldPreview | { errors: unknown[] }> {
+  const res = await fetch("/api/products/bulk-edit/dry-run", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (res.status === 400) {
+    const data = await res.json();
+    if (data.errors) return { errors: data.errors };
+  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+async function bulkEditFieldCommit(
+  body: BulkEditFieldEditRequest,
+): Promise<CommitResult | { errors: unknown[] }> {
+  const res = await fetch("/api/products/bulk-edit/commit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (res.status === 400 || res.status === 409) {
+    const data = await res.json();
+    if (data.errors) return { errors: data.errors };
+  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
 }
 
 export const productApi = {
@@ -217,33 +283,13 @@ export const productApi = {
     return res.json();
   },
 
-  async bulkEditDryRun(body: BulkEditRequest): Promise<PreviewResult | { errors: unknown[] }> {
-    const res = await fetch("/api/products/bulk-edit/dry-run", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (res.status === 400) {
-      const data = await res.json();
-      if (data.errors) return { errors: data.errors };
-    }
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.json();
-  },
+  bulkEditDryRun,
 
-  async bulkEditCommit(body: BulkEditRequest): Promise<CommitResult | { errors: unknown[] }> {
-    const res = await fetch("/api/products/bulk-edit/commit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    if (res.status === 400 || res.status === 409) {
-      const data = await res.json();
-      if (data.errors) return { errors: data.errors };
-    }
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return res.json();
-  },
+  bulkEditCommit,
+
+  bulkEditFieldDryRun,
+
+  bulkEditFieldCommit,
 
   async listBulkEditRuns(params: { limit?: number; offset?: number } = {}): Promise<{ items: unknown[]; total: number }> {
     const qs = new URLSearchParams();

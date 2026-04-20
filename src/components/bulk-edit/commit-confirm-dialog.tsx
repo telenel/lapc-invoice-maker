@@ -9,19 +9,20 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import type { PreviewResult } from "@/domains/bulk-edit/types";
+import type { BulkEditFieldPreview } from "@/domains/bulk-edit/types";
 
 interface CommitConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  preview: PreviewResult | null;
+  preview: BulkEditFieldPreview | null;
   onConfirm: () => void;
   submitting: boolean;
 }
 
 export function CommitConfirmDialog({ open, onOpenChange, preview, onConfirm, submitting }: CommitConfirmDialogProps) {
   if (!preview) return null;
-  const { rowCount, pricingDeltaCents, districtChangeCount } = preview.totals;
+  const { rowCount } = preview.totals;
+  const fieldSummary = formatFieldLabelList(preview.changedFieldLabels);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -32,27 +33,8 @@ export function CommitConfirmDialog({ open, onOpenChange, preview, onConfirm, su
         </DialogHeader>
         <ul className="space-y-2 text-sm">
           <li>
-            <span className="font-medium">{rowCount.toLocaleString()}</span> item{rowCount === 1 ? "" : "s"} will be updated
+            Apply {fieldSummary} to {rowCount.toLocaleString()} item{rowCount === 1 ? "" : "s"}.
           </li>
-          {pricingDeltaCents !== 0 ? (
-            <li>
-              Pierce retail delta:{" "}
-              <span className={`tabular-nums font-medium ${pricingDeltaCents >= 0 ? "text-foreground" : "text-destructive"}`}>
-                {pricingDeltaCents >= 0 ? "+" : ""}
-                ${(pricingDeltaCents / 100).toFixed(2)}
-              </span>{" "}
-              total
-            </li>
-          ) : null}
-          {districtChangeCount > 0 ? (
-            <li className="flex items-start gap-2 rounded border border-destructive/30 bg-destructive/5 px-3 py-2">
-              <span>WARNING:</span>
-              <span>
-                <strong>{districtChangeCount}</strong> of these rows have Department/Class or Tax changes.
-                Those fields live on the shared Item record and affect all 17 LACCD locations, not just Pierce.
-              </span>
-            </li>
-          ) : null}
         </ul>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>Cancel</Button>
@@ -63,4 +45,11 @@ export function CommitConfirmDialog({ open, onOpenChange, preview, onConfirm, su
       </DialogContent>
     </Dialog>
   );
+}
+
+function formatFieldLabelList(labels: string[]): string {
+  if (labels.length === 0) return "selected fields";
+  if (labels.length === 1) return labels[0] ?? "selected fields";
+  if (labels.length === 2) return `${labels[0]} and ${labels[1]}`;
+  return `${labels.slice(0, -1).join(", ")}, and ${labels[labels.length - 1]}`;
 }

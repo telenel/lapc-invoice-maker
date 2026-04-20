@@ -3,42 +3,46 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { BulkEditSidebar } from "@/components/bulk-edit/bulk-edit-sidebar";
+import { CommitConfirmDialog } from "@/components/bulk-edit/commit-confirm-dialog";
 import { SelectionPanel } from "@/components/bulk-edit/selection-panel";
 import { TransformPanel } from "@/components/bulk-edit/transform-panel";
 import { PreviewPanel } from "@/components/bulk-edit/preview-panel";
 import { AuditLogList } from "@/components/bulk-edit/audit-log-list";
 import { SaveSearchDialog } from "@/components/bulk-edit/save-search-dialog";
-import { CommitConfirmDialog } from "@/components/bulk-edit/commit-confirm-dialog";
 import { SyncDatabaseButton } from "@/components/products/sync-database-button";
 import { productApi } from "@/domains/product/api-client";
 import type {
+  BulkEditFieldEditRequest,
+  BulkEditFieldPreview,
   BulkEditSelection,
-  BulkEditTransform,
-  PreviewResult,
   ProductFilters,
 } from "@/domains/bulk-edit/types";
 
 const EMPTY_SELECTION: BulkEditSelection = { scope: "pierce" };
-const EMPTY_TRANSFORM: BulkEditTransform = { pricing: { mode: "none" }, catalog: {} };
+const EMPTY_TRANSFORM: BulkEditFieldEditRequest["transform"] = {
+  fieldIds: [],
+  inventoryScope: null,
+  values: {},
+};
 
 export default function BulkEditPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [selection, setSelection] = useState<BulkEditSelection>(EMPTY_SELECTION);
-  const [transform, setTransform] = useState<BulkEditTransform>(EMPTY_TRANSFORM);
-  const [preview, setPreview] = useState<PreviewResult | null>(null);
+  const [transform, setTransform] = useState<BulkEditFieldEditRequest["transform"]>(EMPTY_TRANSFORM);
+  const [preview, setPreview] = useState<BulkEditFieldPreview | null>(null);
   const [previewing, setPreviewing] = useState(false);
   const [committing, setCommitting] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
   const [sidebarKey, setSidebarKey] = useState(0);
   const [matchingCount, setMatchingCount] = useState<number | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Honor ?preloadSkus=1,2,3 (from the products-page "Bulk Edit" selection shortcut)
   useEffect(() => {
     const raw = searchParams.get("preloadSkus");
     if (raw) {
@@ -52,7 +56,7 @@ export default function BulkEditPage() {
     setPreviewing(true);
     setError(null);
     try {
-      const result = await productApi.bulkEditDryRun({ selection, transform });
+      const result = await productApi.bulkEditFieldDryRun({ selection, transform });
       if ("errors" in result) {
         setError((result.errors as Array<{ message: string }>).map((e) => e.message).join("; "));
         setPreview(null);
@@ -71,17 +75,22 @@ export default function BulkEditPage() {
   async function actuallyCommit() {
     setCommitting(true);
     setError(null);
+    const fieldSummary = formatFieldLabelList(preview?.changedFieldLabels ?? []);
+
     try {
-      const result = await productApi.bulkEditCommit({ selection, transform });
+      const result = await productApi.bulkEditFieldCommit({ selection, transform });
       if ("errors" in result) {
         setError((result.errors as Array<{ message: string }>).map((e) => e.message).join("; "));
         return;
       }
-      setToast(`Committed ${result.successCount} change${result.successCount === 1 ? "" : "s"}. Run ${result.runId.slice(0, 8)}.`);
+
+      const successMessage = `Applied ${fieldSummary} to ${result.successCount} item${result.successCount === 1 ? "" : "s"}.`;
+      toast.success(successMessage);
+      setToastMessage(successMessage);
+      setConfirmOpen(false);
       setSelection(EMPTY_SELECTION);
       setTransform(EMPTY_TRANSFORM);
       setPreview(null);
-      setConfirmOpen(false);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -92,6 +101,16 @@ export default function BulkEditPage() {
 
   function handleLoadFilter(f: ProductFilters) {
     setSelection({ scope: selection.scope, filter: f });
+    setPreview(null);
+  }
+
+  function handleSelectionChange(next: BulkEditSelection) {
+    setSelection(next);
+    setPreview(null);
+  }
+
+  function handleTransformChange(next: BulkEditFieldEditRequest["transform"]) {
+    setTransform(next);
     setPreview(null);
   }
 
@@ -116,14 +135,14 @@ export default function BulkEditPage() {
         <div className="space-y-6">
           <SelectionPanel
             selection={selection}
-            onChange={setSelection}
+            onChange={handleSelectionChange}
             matchingCount={matchingCount}
             onSaveSearch={() => setSaveOpen(true)}
           />
 
           <TransformPanel
             transform={transform}
-            onChange={setTransform}
+            onChange={handleTransformChange}
             onPreview={runPreview}
             previewing={previewing}
             disabled={committing}
@@ -141,9 +160,9 @@ export default function BulkEditPage() {
               {error}
             </p>
           ) : null}
-          {toast ? (
+          {toastMessage ? (
             <p role="status" aria-live="polite" className="rounded border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400">
-              {toast}
+              {toastMessage}
             </p>
           ) : null}
 
@@ -166,4 +185,11 @@ export default function BulkEditPage() {
       />
     </div>
   );
+}
+
+function formatFieldLabelList(labels: string[]): string {
+  if (labels.length === 0) return "selected fields";
+  if (labels.length === 1) return labels[0] ?? "selected fields";
+  if (labels.length === 2) return `${labels[0]} and ${labels[1]}`;
+  return `${labels.slice(0, -1).join(", ")}, and ${labels[labels.length - 1]}`;
 }
