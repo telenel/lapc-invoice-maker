@@ -13,6 +13,11 @@ import type {
   BatchCreateRow,
   BatchValidationError,
 } from "./types";
+export type {
+  PrismVendorRef,
+  PrismDccRef,
+  PrismTaxTypeRef,
+} from "./ref-data";
 import type {
   BulkEditRequest,
   PreviewResult,
@@ -24,10 +29,6 @@ export interface PrismHealth {
   configured: boolean;
   reason: string | null;
 }
-
-export interface PrismVendorRef { vendorId: number; name: string }
-export interface PrismDccRef { dccId: number; deptName: string; className: string | null }
-export interface PrismTaxTypeRef { taxTypeId: number; description: string }
 
 export interface PrismRefs {
   vendors: PrismVendorRef[];
