@@ -27,11 +27,21 @@ vi.mock("@/lib/supabase/admin", () => supabaseMocks);
 const mockMaybeSingle = vi.fn();
 const mockEq = vi.fn(() => ({ maybeSingle: mockMaybeSingle }));
 const mockSelect = vi.fn(() => ({ eq: mockEq }));
+const mockInventoryIn = vi.fn();
+const mockInventoryEq = vi.fn(() => ({ in: mockInventoryIn }));
+const mockInventorySelect = vi.fn(() => ({ eq: mockInventoryEq }));
 const mockUpsert = vi.fn();
-const mockFrom = vi.fn(() => ({
-  select: mockSelect,
-  upsert: mockUpsert,
-}));
+const mockFrom = vi.fn((table: string) => {
+  if (table === "product_inventory") {
+    return {
+      select: mockInventorySelect,
+    };
+  }
+  return {
+    select: mockSelect,
+    upsert: mockUpsert,
+  };
+});
 
 function mockDefaultPrismModules() {
   vi.doMock("@/lib/prism", () => ({
@@ -66,6 +76,7 @@ describe("GET /api/products/[sku]", () => {
     });
     prismMocks.isPrismConfigured.mockReturnValue(true);
     mockUpsert.mockResolvedValue({ error: null });
+    mockInventoryIn.mockResolvedValue({ data: [], error: null });
   });
 
   it("returns 401 when the caller is unauthenticated", async () => {
@@ -246,7 +257,182 @@ describe("GET /api/products/[sku]", () => {
       fIdRequired: true,
       minOrderQtyItem: 3,
       usedDccId: 1802,
+      inventoryByLocation: [
+        {
+          locationId: 2,
+          locationAbbrev: "PIER",
+          retail: null,
+          cost: null,
+          expectedCost: null,
+          stockOnHand: null,
+          lastSaleDate: null,
+          tagTypeId: null,
+          statusCodeId: null,
+          estSales: null,
+          estSalesLocked: false,
+          fInvListPriceFlag: false,
+          fTxWantListFlag: false,
+          fTxBuybackListFlag: false,
+          fNoReturns: false,
+        },
+        {
+          locationId: 3,
+          locationAbbrev: "PCOP",
+          retail: null,
+          cost: null,
+          expectedCost: null,
+          stockOnHand: null,
+          lastSaleDate: null,
+          tagTypeId: null,
+          statusCodeId: null,
+          estSales: null,
+          estSalesLocked: false,
+          fInvListPriceFlag: false,
+          fTxWantListFlag: false,
+          fTxBuybackListFlag: false,
+          fNoReturns: false,
+        },
+        {
+          locationId: 4,
+          locationAbbrev: "PFS",
+          retail: null,
+          cost: null,
+          expectedCost: null,
+          stockOnHand: null,
+          lastSaleDate: null,
+          tagTypeId: null,
+          statusCodeId: null,
+          estSales: null,
+          estSalesLocked: false,
+          fInvListPriceFlag: false,
+          fTxWantListFlag: false,
+          fTxBuybackListFlag: false,
+          fNoReturns: false,
+        },
+      ],
     });
+  });
+
+  it("hydrates all Pierce inventory slices in canonical order", async () => {
+    mockMaybeSingle.mockResolvedValue({
+      data: {
+        sku: 1001,
+        item_type: "general_merchandise",
+        description: "Pierce Hoodie",
+        barcode: "123456789012",
+        vendor_id: 42,
+        dcc_id: 1701,
+        item_tax_type_id: 6,
+        catalog_number: "HD-1001",
+        tx_comment: "Front window",
+        retail_price: 11.99,
+        cost: 22.5,
+        discontinued: false,
+        alt_vendor_id: 77,
+        mfg_id: 88,
+        weight: 1.25,
+        package_type: "EA",
+        units_per_pack: 1,
+        order_increment: 2,
+        image_url: "https://cdn.example.test/hoodie.png",
+        size: "L",
+        size_id: 9,
+        color_id: 4,
+        style_id: 5,
+        item_season_code_id: 12,
+        f_list_price_flag: true,
+        f_perishable: false,
+        f_id_required: true,
+        min_order_qty_item: 3,
+        used_dcc_id: 1802,
+      },
+      error: null,
+    });
+    mockInventoryIn.mockResolvedValueOnce({
+      data: [
+        {
+          location_id: 2,
+          location_abbrev: "PIER",
+          retail_price: 12.99,
+          cost: 7.5,
+          expected_cost: 7.25,
+          stock_on_hand: 14,
+          last_sale_date: "2026-04-18T00:00:00.000Z",
+          tag_type_id: 17,
+          status_code_id: 31,
+          est_sales: 3,
+          est_sales_locked: true,
+          f_inv_list_price_flag: true,
+          f_tx_want_list_flag: false,
+          f_tx_buyback_list_flag: false,
+          f_no_returns: false,
+        },
+        {
+          location_id: 3,
+          location_abbrev: "PCOP",
+          retail_price: 13.49,
+          cost: 7.75,
+          expected_cost: 7.5,
+          stock_on_hand: 8,
+          last_sale_date: "2026-04-17T00:00:00.000Z",
+          tag_type_id: 18,
+          status_code_id: 32,
+          est_sales: 4,
+          est_sales_locked: false,
+          f_inv_list_price_flag: false,
+          f_tx_want_list_flag: true,
+          f_tx_buyback_list_flag: false,
+          f_no_returns: false,
+        },
+        {
+          location_id: 4,
+          location_abbrev: "PFS",
+          retail_price: null,
+          cost: null,
+          expected_cost: null,
+          stock_on_hand: null,
+          last_sale_date: null,
+          tag_type_id: null,
+          status_code_id: null,
+          est_sales: null,
+          est_sales_locked: false,
+          f_inv_list_price_flag: false,
+          f_tx_want_list_flag: false,
+          f_tx_buyback_list_flag: false,
+          f_no_returns: false,
+        },
+      ],
+      error: null,
+    });
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.GET(
+      new NextRequest("http://localhost/api/products/1001"),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(200);
+    const body = await response.json();
+    expect(body.inventoryByLocation).toEqual([
+      expect.objectContaining({
+        locationId: 2,
+        locationAbbrev: "PIER",
+        retail: 12.99,
+        tagTypeId: 17,
+      }),
+      expect.objectContaining({
+        locationId: 3,
+        locationAbbrev: "PCOP",
+        retail: 13.49,
+        tagTypeId: 18,
+      }),
+      expect.objectContaining({
+        locationId: 4,
+        locationAbbrev: "PFS",
+        retail: null,
+        tagTypeId: null,
+      }),
+    ]);
   });
 });
 

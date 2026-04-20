@@ -294,6 +294,25 @@ export interface ProductEditDetails {
   fIdRequired: boolean;
   minOrderQtyItem: number | null;
   usedDccId: number | null;
+  inventoryByLocation: ProductInventoryEditDetails[];
+}
+
+export interface ProductInventoryEditDetails {
+  locationId: ProductLocationId;
+  locationAbbrev: ProductLocationAbbrev;
+  retail: number | null;
+  cost: number | null;
+  expectedCost: number | null;
+  stockOnHand: number | null;
+  lastSaleDate: string | null;
+  tagTypeId: number | null;
+  statusCodeId: number | null;
+  estSales: number | null;
+  estSalesLocked: boolean;
+  fInvListPriceFlag: boolean;
+  fTxWantListFlag: boolean;
+  fTxBuybackListFlag: boolean;
+  fNoReturns: boolean;
 }
 
 /** One validation error attached to a batch-add or batch-edit row. */

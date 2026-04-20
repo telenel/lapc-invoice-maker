@@ -5,10 +5,13 @@ import type {
   ItemSnapshot,
   ProductEditDetails,
   ProductEditPatchV2,
+  ProductInventoryEditDetails,
+  ProductLocationAbbrev,
   ItemPatch,
   GmDetailsPatch,
   PrimaryInventoryPatch,
 } from "@/domains/product/types";
+import type { ProductLocationId } from "@/domains/product/location-filters";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -47,9 +50,52 @@ type ProductEditDetailRow = {
   used_dcc_id: number | null;
 };
 
+type ProductInventoryEditDetailRow = {
+  location_id: ProductLocationId;
+  location_abbrev: ProductLocationAbbrev;
+  retail_price: number | null;
+  cost: number | null;
+  expected_cost: number | null;
+  stock_on_hand: number | null;
+  last_sale_date: string | null;
+  tag_type_id: number | null;
+  status_code_id: number | null;
+  est_sales: number | null;
+  est_sales_locked: boolean | null;
+  f_inv_list_price_flag: boolean | null;
+  f_tx_want_list_flag: boolean | null;
+  f_tx_buyback_list_flag: boolean | null;
+  f_no_returns: boolean | null;
+};
+
 type ProductPatchKindRow = {
   item_type: string | null;
 };
+
+const PRODUCT_INVENTORY_LOCATION_IDS: readonly ProductLocationId[] = [2, 3, 4];
+const PRODUCT_INVENTORY_LOCATION_ABBREV_BY_ID: Record<ProductLocationId, ProductLocationAbbrev> = {
+  2: "PIER",
+  3: "PCOP",
+  4: "PFS",
+};
+
+const PRODUCT_INVENTORY_SELECT = [
+  "location_id",
+  "location_abbrev",
+  "retail_price",
+  "cost",
+  "expected_cost",
+  "stock_on_hand",
+  "last_sale_date",
+  "tag_type_id",
+  "status_code_id",
+  "est_sales",
+  "est_sales_locked",
+  "f_inv_list_price_flag",
+  "f_tx_want_list_flag",
+  "f_tx_buyback_list_flag",
+  "f_no_returns",
+].join(", ");
 
 const PRODUCT_EDIT_DETAIL_SELECT = [
   "sku",
@@ -124,7 +170,64 @@ function toProductEditDetails(row: ProductEditDetailRow): ProductEditDetails {
     fIdRequired: row.f_id_required === true,
     minOrderQtyItem: row.min_order_qty_item,
     usedDccId: row.used_dcc_id,
+    inventoryByLocation: [],
   };
+}
+
+function toProductInventoryEditDetails(
+  row: ProductInventoryEditDetailRow,
+): ProductInventoryEditDetails {
+  return {
+    locationId: row.location_id,
+    locationAbbrev: row.location_abbrev,
+    retail: row.retail_price,
+    cost: row.cost,
+    expectedCost: row.expected_cost,
+    stockOnHand: row.stock_on_hand,
+    lastSaleDate: row.last_sale_date,
+    tagTypeId: row.tag_type_id,
+    statusCodeId: row.status_code_id,
+    estSales: row.est_sales,
+    estSalesLocked: row.est_sales_locked === true,
+    fInvListPriceFlag: row.f_inv_list_price_flag === true,
+    fTxWantListFlag: row.f_tx_want_list_flag === true,
+    fTxBuybackListFlag: row.f_tx_buyback_list_flag === true,
+    fNoReturns: row.f_no_returns === true,
+  };
+}
+
+function buildEmptyInventorySlice(locationId: ProductLocationId): ProductInventoryEditDetails {
+  return {
+    locationId,
+    locationAbbrev: PRODUCT_INVENTORY_LOCATION_ABBREV_BY_ID[locationId],
+    retail: null,
+    cost: null,
+    expectedCost: null,
+    stockOnHand: null,
+    lastSaleDate: null,
+    tagTypeId: null,
+    statusCodeId: null,
+    estSales: null,
+    estSalesLocked: false,
+    fInvListPriceFlag: false,
+    fTxWantListFlag: false,
+    fTxBuybackListFlag: false,
+    fNoReturns: false,
+  };
+}
+
+function buildInventoryByLocation(
+  rows: ReadonlyArray<ProductInventoryEditDetailRow>,
+): ProductInventoryEditDetails[] {
+  const rowsByLocation = new Map<ProductLocationId, ProductInventoryEditDetailRow>();
+  for (const row of rows) {
+    rowsByLocation.set(row.location_id, row);
+  }
+
+  return PRODUCT_INVENTORY_LOCATION_IDS.map((locationId) => {
+    const row = rowsByLocation.get(locationId);
+    return row ? toProductInventoryEditDetails(row) : buildEmptyInventorySlice(locationId);
+  });
 }
 
 async function loadDeleteDeps() {
@@ -169,7 +272,23 @@ export const GET = withAdmin(async (_request: NextRequest, _session, ctx?: Route
       return NextResponse.json({ error: "Item not found" }, { status: 404 });
     }
 
-    return NextResponse.json(toProductEditDetails(data));
+    const inventoryResult = await supabase
+      .from("product_inventory")
+      .select(PRODUCT_INVENTORY_SELECT)
+      .eq("sku", sku)
+      .in("location_id", PRODUCT_INVENTORY_LOCATION_IDS);
+    const inventoryRows = (inventoryResult.data ?? []) as ProductInventoryEditDetailRow[];
+    const inventoryError = inventoryResult.error;
+
+    if (inventoryError) {
+      console.error(`GET /api/products/${sku} inventory load failed:`, inventoryError);
+      return NextResponse.json({ error: "Failed to load item inventory" }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      ...toProductEditDetails(data),
+      inventoryByLocation: buildInventoryByLocation(inventoryRows ?? []),
+    });
   } catch (err) {
     console.error(`GET /api/products/${sku} threw:`, err);
     return NextResponse.json(
