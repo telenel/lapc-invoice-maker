@@ -96,11 +96,27 @@ export interface ProductRefMaps {
   bindingLabels: Map<number, string>;
 }
 
+export const EMPTY_REFS: PrismRefs = {
+  vendors: [],
+  dccs: [],
+  taxTypes: [],
+  tagTypes: [],
+  statusCodes: [],
+  packageTypes: [],
+  colors: [],
+  bindings: [],
+};
+
 let committedProductRefSnapshotPromise: Promise<PrismRefs> | null = null;
 
 export function normalizePackageTypeLabel(row: { code: string; label: string | null }): string {
   const label = row.label?.trim();
   return label && label.length > 0 ? label : row.code;
+}
+
+export function formatLookupLabel(label: string | null | undefined, fallback: string): string {
+  const trimmed = label?.trim();
+  return trimmed && trimmed.length > 0 ? trimmed : fallback;
 }
 
 export function loadCommittedProductRefSnapshot(): Promise<PrismRefs> {

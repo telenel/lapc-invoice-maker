@@ -13,6 +13,7 @@ import type {
   BatchCreateRow,
   BatchValidationError,
 } from "./types";
+import type { PrismRefs } from "./ref-data";
 export type {
   PrismVendorRef,
   PrismDccRef,

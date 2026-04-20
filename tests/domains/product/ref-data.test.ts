@@ -1,7 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import React from "react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import type { PrismRefs as ApiClientPrismRefs } from "@/domains/product/api-client";
 import {
   buildProductRefMaps,
+  formatLookupLabel,
   loadCommittedProductRefSnapshot,
   normalizePackageTypeLabel,
   sortRefsByUsageThenLabel,
@@ -27,6 +30,10 @@ vi.mock("@/lib/prism", () => {
     },
   };
 });
+
+vi.mock("@/domains/product/vendor-directory", () => ({
+  useProductRefDirectory: vi.fn(),
+}));
 
 beforeEach(() => {
   queryLog.length = 0;
@@ -79,6 +86,164 @@ describe("product ref data helpers", () => {
 
   it("falls back to the code when a package-type label is blank", () => {
     expect(normalizePackageTypeLabel({ code: "CS", label: null })).toBe("CS");
+  });
+
+  it("uses a neutral fallback when a lookup label is missing", () => {
+    expect(formatLookupLabel(null, "Vendor unavailable")).toBe("Vendor unavailable");
+  });
+
+  it("shows an explicit refs error when the directory is unavailable", async () => {
+    const { EditItemDialog } = await import("@/components/products/edit-item-dialog");
+    const { useProductRefDirectory } = await import("@/domains/product/vendor-directory");
+
+    vi.mocked(useProductRefDirectory).mockReturnValue({
+      refs: null,
+      lookups: buildProductRefMaps({
+        vendors: [],
+        dccs: [],
+        taxTypes: [],
+        tagTypes: [],
+        statusCodes: [],
+        packageTypes: [],
+        colors: [],
+        bindings: [],
+      }),
+      vendors: [],
+      byId: new Map(),
+      loading: false,
+      available: false,
+    });
+
+    render(
+      React.createElement(EditItemDialog, {
+        open: true,
+        onOpenChange: () => {},
+        items: [
+          {
+            sku: 123,
+            barcode: null,
+            retail: 10,
+            cost: 5,
+            fDiscontinue: 0,
+            description: "Example",
+          },
+        ],
+      }),
+    );
+
+    expect(screen.getByRole("alert").textContent).toContain("Vendor, department/class, and tax type lookups are disabled");
+    expect(screen.getByLabelText(/Description/i)).toBeTruthy();
+    expect(screen.getByLabelText(/Barcode/i)).toBeTruthy();
+  });
+
+  it("shows an explicit refs error in the bulk-edit transform panel when refs are unavailable", async () => {
+    const { TransformPanel } = await import("@/components/bulk-edit/transform-panel");
+    const { useProductRefDirectory } = await import("@/domains/product/vendor-directory");
+
+    vi.mocked(useProductRefDirectory).mockReturnValue({
+      refs: null,
+      lookups: buildProductRefMaps({
+        vendors: [],
+        dccs: [],
+        taxTypes: [],
+        tagTypes: [],
+        statusCodes: [],
+        packageTypes: [],
+        colors: [],
+        bindings: [],
+      }),
+      vendors: [],
+      byId: new Map(),
+      loading: false,
+      available: false,
+    });
+
+    render(
+      React.createElement(TransformPanel, {
+        transform: {
+          pricing: { mode: "none" },
+          catalog: {},
+        } as never,
+        onChange: () => {},
+        onPreview: () => {},
+        previewing: false,
+        disabled: false,
+      }),
+    );
+
+    expect(screen.getByRole("alert").textContent).toContain("Reference data is unavailable right now");
+  });
+
+  it("shows an explicit refs error in the batch-add grid when refs are unavailable", async () => {
+    const { BatchAddGrid } = await import("@/components/products/batch-add-grid");
+    const { useProductRefDirectory } = await import("@/domains/product/vendor-directory");
+
+    vi.mocked(useProductRefDirectory).mockReturnValue({
+      refs: null,
+      lookups: buildProductRefMaps({
+        vendors: [],
+        dccs: [],
+        taxTypes: [],
+        tagTypes: [],
+        statusCodes: [],
+        packageTypes: [],
+        colors: [],
+        bindings: [],
+      }),
+      vendors: [],
+      byId: new Map(),
+      loading: false,
+      available: false,
+    });
+
+    render(
+      React.createElement(BatchAddGrid, {
+        onSubmitted: () => {},
+      }),
+    );
+
+    expect(screen.getByRole("alert").textContent).toContain("Couldn't load vendor / department / tax lookups");
+    expect(screen.getByText("Apply to all")).toBeTruthy();
+    fireEvent.change(screen.getByLabelText("Description for row 1"), {
+      target: { value: "Sample item" },
+    });
+    expect(screen.getByRole("button", { name: "Validate" }).hasAttribute("disabled")).toBe(true);
+    expect(screen.getByRole("button", { name: /Submit/i }).hasAttribute("disabled")).toBe(true);
+  });
+
+  it("keeps the new-item dialog usable when refs are unavailable", async () => {
+    const { NewItemDialog } = await import("@/components/products/new-item-dialog");
+    const { useProductRefDirectory } = await import("@/domains/product/vendor-directory");
+
+    vi.mocked(useProductRefDirectory).mockReturnValue({
+      refs: null,
+      lookups: buildProductRefMaps({
+        vendors: [],
+        dccs: [],
+        taxTypes: [],
+        tagTypes: [],
+        statusCodes: [],
+        packageTypes: [],
+        colors: [],
+        bindings: [],
+      }),
+      vendors: [],
+      byId: new Map(),
+      loading: false,
+      available: false,
+    });
+
+    render(
+      React.createElement(NewItemDialog, {
+        open: true,
+        onOpenChange: () => {},
+      }),
+    );
+
+    expect(screen.getByRole("alert").textContent).toContain("Reference data is unavailable right now");
+    expect(screen.getByLabelText(/Description/i)).toBeTruthy();
+    expect(screen.getByLabelText(/Barcode/i)).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Create item" }).hasAttribute("disabled")).toBe(true);
   });
 
   it("builds Pierce-wide live ref queries with usage-count semantics", async () => {

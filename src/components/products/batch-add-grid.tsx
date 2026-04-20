@@ -39,6 +39,7 @@ import {
 import { cn } from "@/lib/utils";
 import { productApi, type PrismRefs } from "@/domains/product/api-client";
 import type { BatchCreateRow, BatchValidationError } from "@/domains/product/types";
+import { useProductRefDirectory } from "@/domains/product/vendor-directory";
 import { ItemRefSelects } from "./item-ref-selects";
 
 interface DefaultsState {
@@ -187,8 +188,7 @@ interface BatchAddGridProps {
 }
 
 export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
-  const [refs, setRefs] = useState<PrismRefs | null>(null);
-  const [refsError, setRefsError] = useState<string | null>(null);
+  const { refs, loading: refsLoading, available: refsAvailable } = useProductRefDirectory();
   const [rows, setRows] = useState<GridRow[]>(() => [emptyRow(), emptyRow(), emptyRow()]);
   const [defaults, setDefaults] = useState<DefaultsState>(EMPTY_DEFAULTS);
   const [errors, setErrors] = useState<BatchValidationError[]>([]);
@@ -208,13 +208,6 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
     () => colState.filter((c) => c.hidden).length,
     [colState],
   );
-
-  useEffect(() => {
-    productApi
-      .refs()
-      .then(setRefs)
-      .catch((err) => setRefsError(err instanceof Error ? err.message : String(err)));
-  }, []);
 
   const updateCell = useCallback((rowIdx: number, key: string, value: string) => {
     setRows((r) => r.map((row, i) => (i === rowIdx ? { ...row, [key]: value } : row)));
@@ -266,6 +259,8 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
     });
   }, []);
 
+  const refsUnavailable = !refsLoading && !refsAvailable;
+
   // Paste spreads clipboard cells across the *visible* inputtable columns,
   // skipping the computed margin column. Starting position is the cell the
   // user pasted into; matches the spreadsheet-ish mental model.
@@ -303,6 +298,10 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
   }, [rows, defaults]);
 
   const handleValidate = useCallback(async () => {
+    if (refsUnavailable) {
+      toast.error("Reference data is unavailable right now; validation is disabled.");
+      return;
+    }
     setSubmitting(true);
     try {
       const batch = rowsToBatch();
@@ -329,9 +328,13 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
     } finally {
       setSubmitting(false);
     }
-  }, [rowsToBatch]);
+  }, [rowsToBatch, refsUnavailable]);
 
   const handleSubmit = useCallback(async () => {
+    if (refsUnavailable) {
+      toast.error("Reference data is unavailable right now; submit is disabled.");
+      return;
+    }
     setSubmitting(true);
     setErrors([]);
     try {
@@ -355,7 +358,7 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
     } finally {
       setSubmitting(false);
     }
-  }, [rowsToBatch, onSubmitted]);
+  }, [rowsToBatch, onSubmitted, refsUnavailable]);
 
   const cellError = useCallback(
     (rowIdx: number, key: string): string | null => {
@@ -378,8 +381,8 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
     [rows],
   );
 
-  const refsLoading = refs === null && !refsError;
-  const canSubmit = !submitting && !refsLoading && batch.length > 0 && errors.length === 0;
+  const refsBlocked = refsLoading || refsUnavailable;
+  const canSubmit = !submitting && !refsLoading && !refsUnavailable && batch.length > 0 && errors.length === 0;
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -392,8 +395,22 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
         e.preventDefault();
         if (e.shiftKey) {
           if (canSubmit) void handleSubmit();
+          else if (refsBlocked) {
+            toast.error(
+              refsLoading
+                ? "Reference data is still loading; submit is disabled."
+                : "Reference data is unavailable right now; submit is disabled.",
+            );
+          }
         } else {
-          void handleValidate();
+          if (!refsBlocked) void handleValidate();
+          else {
+            toast.error(
+              refsLoading
+                ? "Reference data is still loading; validation is disabled."
+                : "Reference data is unavailable right now; validation is disabled.",
+            );
+          }
         }
         return;
       }
@@ -449,13 +466,21 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
         </Button>
       </header>
 
-      {refsError ? (
+      {refsLoading ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-lg border border-amber-300/70 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-800/70 dark:bg-amber-950/30 dark:text-amber-200"
+        >
+          Loading vendor / department / tax lookups…
+        </div>
+      ) : refsUnavailable ? (
         <div
           role="alert"
           aria-live="polite"
           className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive"
         >
-          Couldn&apos;t load vendor / department / tax lookups: {refsError}
+          Couldn&apos;t load vendor / department / tax lookups. Lookup fields are disabled until Prism recovers.
         </div>
       ) : null}
 
@@ -489,7 +514,7 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
             vendorId={defaults.vendorId}
             dccId={defaults.dccId}
             itemTaxTypeId={defaults.itemTaxTypeId}
-            disabled={refsLoading}
+            disabled={refsLoading || refsUnavailable}
             bulkMode
             layout="inline"
             onChange={(field, value) => {
@@ -540,17 +565,7 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
           </div>
         )}
 
-        {refsLoading ? (
-          <div
-            role="status"
-            aria-live="polite"
-            className="flex items-center justify-center gap-2 rounded-b-lg border border-t-0 bg-muted/30 px-4 py-10 text-sm text-muted-foreground"
-          >
-            <Loader2Icon className="size-4 animate-spin" aria-hidden />
-            Loading vendor, department, and tax lookups…
-          </div>
-        ) : (
-          <div className="overflow-hidden rounded-b-lg border border-t-0 bg-card">
+        <div className="overflow-hidden rounded-b-lg border border-t-0 bg-card">
           <div className="max-h-[62vh] overflow-auto">
             <table className="w-max min-w-full table-fixed border-separate border-spacing-0 text-sm">
               <colgroup>
@@ -609,6 +624,7 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
                             value={row[col.key] ?? ""}
                             error={err}
                             refs={refs}
+                            refsDisabled={refsLoading || refsUnavailable}
                             onChange={(v) => updateCell(rowIdx, col.key, v)}
                             onPaste={(e) => onPaste(e, rowIdx, colIdx)}
                             onKeyDown={(e) => handleCellKeyDown(e, rowIdx)}
@@ -645,7 +661,6 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
             </table>
           </div>
         </div>
-        )}
       </div>
 
       {/* Sticky summary with stat blocks */}
@@ -675,7 +690,7 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
             variant="outline"
             size="sm"
             onClick={handleValidate}
-            disabled={submitting || refsLoading || batch.length === 0}
+            disabled={submitting || refsLoading || refsUnavailable || batch.length === 0}
           >
             {submitting && lastValidated !== "clean" ? (
               <Loader2Icon className="mr-1 size-3.5 animate-spin" aria-hidden />
@@ -908,6 +923,7 @@ interface BatchCellProps {
   value: string;
   error: string | null;
   refs: PrismRefs | null;
+  refsDisabled: boolean;
   onChange: (value: string) => void;
   onPaste: (e: React.ClipboardEvent<HTMLElement>) => void;
   onKeyDown: (e: React.KeyboardEvent<HTMLElement>) => void;
@@ -919,6 +935,7 @@ function BatchCell({
   value,
   error,
   refs,
+  refsDisabled,
   onChange,
   onPaste,
   onKeyDown,
@@ -940,7 +957,7 @@ function BatchCell({
     const options = refOptions(col.ref, refs, value);
     return (
       <td className={cellClass}>
-        <Select value={value} onValueChange={(v) => onChange(v ?? "")}>
+        <Select value={value} onValueChange={(v) => onChange(v ?? "")} disabled={refsDisabled}>
           <SelectTrigger
             id={cellId}
             size="sm"
