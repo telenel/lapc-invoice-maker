@@ -82,6 +82,19 @@ type ProductInventoryRow = {
   f_no_returns: boolean | null;
 };
 
+function isProductEditContextRow(value: unknown): value is ProductEditContextRow {
+  return value !== null && typeof value === "object" && typeof (value as { sku?: unknown }).sku === "number";
+}
+
+function isProductInventoryRow(value: unknown): value is ProductInventoryRow {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    typeof (value as { sku?: unknown }).sku === "number" &&
+    typeof (value as { location_id?: unknown }).location_id === "number"
+  );
+}
+
 export interface ProductEditContextSummary {
   sku: number;
   displayName: string;
@@ -274,10 +287,12 @@ export const POST = withAdmin(async (request: NextRequest) => {
       return NextResponse.json({ error: "Failed to load edit context inventory" }, { status: 500 });
     }
 
-    const rows = (productResult.data ?? []) as ProductEditContextRow[];
+    const rawRows = Array.isArray(productResult.data) ? (productResult.data as unknown[]) : [];
+    const rows = rawRows.filter(isProductEditContextRow);
     const rowBySku = new Map(rows.map((row) => [row.sku, row]));
     const vendorLabelById = new Map(refs.vendors.map((vendor) => [vendor.vendorId, vendor.name] as const));
-    const inventoryRows = (inventoryResult.data ?? []) as ProductInventoryRow[];
+    const rawInventoryRows = Array.isArray(inventoryResult.data) ? (inventoryResult.data as unknown[]) : [];
+    const inventoryRows = rawInventoryRows.filter(isProductInventoryRow);
     const inventoryBySku = new Map<number, ProductInventoryEditDetails[]>();
 
     inventoryRows.forEach((row) => {

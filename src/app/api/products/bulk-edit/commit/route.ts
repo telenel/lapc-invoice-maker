@@ -174,6 +174,7 @@ type SourceProductRow = {
   catalog_number: string | null;
   package_type: string | null;
   units_per_pack: number | null;
+  order_increment: number | null;
 };
 
 type SourceInventoryRow = {

@@ -112,6 +112,7 @@ describe("POST /api/products/bulk-edit/commit", () => {
           catalog_number: "HD-101",
           package_type: "EA",
           units_per_pack: 1,
+          order_increment: 2,
         },
       ],
       error: null,
