@@ -139,6 +139,16 @@ function parseSkuParam(rawSku: string): number | null {
   return sku;
 }
 
+function isProductInventoryEditDetailRow(row: unknown): row is ProductInventoryEditDetailRow {
+  return (
+    row !== null &&
+    typeof row === "object" &&
+    "location_id" in row &&
+    (row as { location_id?: unknown }).location_id !== null &&
+    typeof (row as { location_id?: unknown }).location_id === "number"
+  );
+}
+
 function toProductEditDetails(row: ProductEditDetailRow): ProductEditDetails {
   return {
     sku: row.sku,
@@ -279,7 +289,9 @@ export const GET = withAdmin(async (_request: NextRequest, _session, ctx?: Route
       .select(PRODUCT_INVENTORY_SELECT)
       .eq("sku", sku)
       .in("location_id", PRODUCT_INVENTORY_LOCATION_IDS);
-    const inventoryRows = (inventoryResult.data ?? []) as ProductInventoryEditDetailRow[];
+    const inventoryRows = Array.isArray(inventoryResult.data)
+      ? inventoryResult.data.filter(isProductInventoryEditDetailRow)
+      : [];
     const inventoryError = inventoryResult.error;
 
     if (inventoryError) {
