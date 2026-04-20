@@ -151,7 +151,10 @@ export default function ProductsPage() {
     saveToSession,
   } = useProductSelection();
   const editableSelectedItems = Array.from(selected.values())
-    .filter((product) => product.retailPrice != null && product.cost != null)
+    .filter(
+      (product): product is typeof product & { retailPrice: number; cost: number } =>
+        product.retailPrice != null && product.cost != null,
+    )
     .map((product) => ({
       sku: product.sku,
       barcode: product.barcode ?? null,
