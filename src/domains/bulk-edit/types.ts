@@ -3,6 +3,9 @@
  * transform engine, and preview builder all use these shapes.
  */
 
+import type { PrismRefs } from "@/domains/product/ref-data";
+import type { ProductLocationId } from "@/domains/product/location-filters";
+
 /**
  * Product-filter shape. Mirrors the existing products page filters so we
  * can reuse the useProductSearch hook without reshaping data.
@@ -15,6 +18,83 @@ export interface ProductFilters {
   minRetail?: number;
   maxRetail?: number;
   hasBarcode?: boolean;
+}
+
+export const BULK_EDIT_FIELD_GROUPS = ["primary", "inventory", "more", "advanced"] as const;
+
+export type BulkEditFieldGroup = (typeof BULK_EDIT_FIELD_GROUPS)[number];
+
+export type BulkEditFieldId =
+  | "description"
+  | "vendorId"
+  | "dccId"
+  | "barcode"
+  | "itemTaxTypeId"
+  | "catalogNumber"
+  | "packageType"
+  | "unitsPerPack"
+  | "title"
+  | "author"
+  | "isbn"
+  | "edition"
+  | "bindingId"
+  | "retail"
+  | "cost"
+  | "expectedCost"
+  | "tagTypeId"
+  | "statusCodeId"
+  | "estSales"
+  | "fInvListPriceFlag"
+  | "fTxWantListFlag"
+  | "fTxBuybackListFlag"
+  | "fNoReturns"
+  | "fDiscontinue";
+
+export type BulkEditFieldRefOptionKey = keyof PrismRefs;
+
+export type BulkEditFieldValue = string | number | boolean | null;
+
+export type BulkEditFieldValues = Partial<Record<BulkEditFieldId, BulkEditFieldValue>>;
+
+export type BulkEditInventoryScope = ProductLocationId | "primary" | "all" | null;
+
+export interface BulkEditFieldPickerRequest {
+  fieldIds: BulkEditFieldId[];
+  inventoryScope: BulkEditInventoryScope;
+  values: BulkEditFieldValues;
+}
+
+export interface BulkEditFieldDefinition {
+  id: BulkEditFieldId;
+  label: string;
+  group: BulkEditFieldGroup;
+  fillRateLabel: string;
+  requiresLocation: boolean;
+  refOptionKey?: BulkEditFieldRefOptionKey;
+}
+
+export type BulkEditFieldRegistry = Record<BulkEditFieldId, BulkEditFieldDefinition>;
+
+export interface BulkEditFieldPreviewCell<TValue = BulkEditFieldValue> {
+  fieldId: BulkEditFieldId;
+  before: TValue;
+  after: TValue;
+  changed: boolean;
+}
+
+export type BulkEditFieldPreviewRow<TValue = BulkEditFieldValue> = {
+  sku: number;
+  description: string;
+  cells: Partial<Record<BulkEditFieldId, BulkEditFieldPreviewCell<TValue>>>;
+};
+
+export interface BulkEditFieldPreview<TValue = BulkEditFieldValue> {
+  rows: BulkEditFieldPreviewRow<TValue>[];
+  totals: {
+    rowCount: number;
+    changedFieldCount: number;
+  };
+  warnings: PreviewWarning[];
 }
 
 /**
