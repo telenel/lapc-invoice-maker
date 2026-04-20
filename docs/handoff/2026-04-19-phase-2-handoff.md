@@ -69,8 +69,8 @@ Anywhere the portal surfaces a Prism reference value — TagType, ItemTaxType, S
 - Location abbreviation → `Location.Abbreviation`
 - Status_Codes (module-level, NOT the inventory one — don't confuse)
 
-**Not yet discovered:**
-- Color (backing `GeneralMerchandise.Color` int FK). Phase 2 has to discover this — probably named `Color`, `Item_Color`, or similar. Use an `INFORMATION_SCHEMA.TABLES` probe.
+**Color ref discovered and dumped (2026-04-19):**
+- `Color` table with `ColorID` + `Description` columns. Pierce top-5: BLACK (1907 items), ASSORTED - MEAD (1116), WHITE, BLUE, RED. Full list in the ref snapshot.
 
 ### 5. Pierce-only scope for Prism writes
 
@@ -123,6 +123,14 @@ Full verification notes: `docs/prism/phase-1-verification-2026-04-19.md` (commit
 Reference: `docs/superpowers/specs/2026-04-19-item-editor-parity-design.md` §Phasing → Phase 2.
 
 **Goal:** Expand `GET /api/products/refs` from the current `{ vendors, dccs, taxTypes }` to include labeled `tagTypes`, `statusCodes`, `packageTypes`, `colors`, `bindings`. Anywhere the UI currently surfaces a raw numeric ID, resolve it to a label.
+
+### Working without Prism access
+
+A full ref-data snapshot is committed at `docs/prism/ref-data-snapshot-2026-04-19.json` (176 KB) — 929 vendors (Pierce-scoped), 253 DCCs, 4 tax types, 110 tag types, 4 inventory status codes, 12 package types, 26 bindings, 200 colors. Each array is already sorted by Pierce usage frequency.
+
+**Design Phase 2's API handler to try Prism first and fall back to this snapshot on failure.** Both branches return the same JSON shape. In production (VPS has Prism tunnel) the live branch wins; in local dev without Prism access, the snapshot keeps dropdowns populated. The snapshot can be refreshed anytime by re-running `npx tsx scripts/dump-prism-ref-snapshot.ts` on any machine with Prism access.
+
+Do NOT make Phase 2 depend on Prism being reachable. The fallback pattern is load-bearing.
 
 ### Deliverables
 
