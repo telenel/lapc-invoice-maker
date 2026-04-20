@@ -43,6 +43,16 @@ describe("resolveEditDialogMode", () => {
     ).toBe("legacy");
   });
 
+  it('forces v2 when the override requests it and there is no textbook selection', () => {
+    expect(
+      resolveEditDialogMode({
+        featureFlagEnabled: false,
+        override: "v2",
+        hasTextbookSelection: false,
+      }),
+    ).toBe("v2");
+  });
+
   it("forces legacy for textbook selections", () => {
     expect(
       resolveEditDialogMode({
