@@ -5,14 +5,20 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon, SearchIcon } from "lucide-react";
-import { useEffect, useMemo } from "react";
-import type { ProductBrowseRow, ProductLocationSlice, ProductTab } from "@/domains/product/types";
+import { useEffect, useMemo, type ReactNode } from "react";
+import type {
+  ProductBrowseRow,
+  ProductLocationId,
+  ProductLocationSlice,
+  ProductTab,
+} from "@/domains/product/types";
 import { PAGE_SIZE, type OptionalColumnKey } from "@/domains/product/constants";
 import { MarginBar } from "./margin-bar";
 import { useVendorDirectory } from "@/domains/product/vendor-directory";
 import { useHiddenColumns } from "./use-hidden-columns";
 import { COLUMN_PRIORITY } from "@/domains/product/constants";
 import { formatLookupLabel } from "@/domains/product/ref-data";
+import type { ProductInlineEditController, ProductInlineEditableField } from "./use-product-inline-edit";
 import "./product-table.css";
 
 /**
@@ -82,6 +88,8 @@ interface ProductTableProps {
    * treatment) without stacking two empty states on top of each other.
    */
   suppressEmptyState?: boolean;
+  inlineEdit?: ProductInlineEditController;
+  primaryLocationId?: ProductLocationId | null;
 }
 
 function formatCurrency(value: number | null | undefined): string {
@@ -124,6 +132,135 @@ function formatRelativeUpdated(date: string | null | undefined): string {
 
 export function formatVendorDisplay(vendorLabel: string | null | undefined): string {
   return formatLookupLabel(vendorLabel ?? null, "Vendor unavailable");
+}
+
+function getPrimaryLocationSlice(
+  product: ProductBrowseRow,
+  primaryLocationId: ProductLocationId | null | undefined,
+) {
+  if (primaryLocationId == null) return null;
+  return product.selected_inventories.find((slice) => slice.locationId === primaryLocationId) ?? null;
+}
+
+function getInlineEditValue(
+  product: ProductBrowseRow,
+  primaryLocationId: ProductLocationId | null | undefined,
+  field: ProductInlineEditableField,
+): string {
+  const primarySlice = getPrimaryLocationSlice(product, primaryLocationId);
+  switch (field) {
+    case "cost":
+      return String(primarySlice?.cost ?? product.cost ?? "");
+    case "retail":
+      return String(primarySlice?.retailPrice ?? product.retail_price ?? "");
+    case "barcode":
+      return product.barcode ?? "";
+    case "discontinue":
+      return product.discontinued ? "1" : "0";
+  }
+}
+
+function getInlineEditDisplayValue(
+  product: ProductBrowseRow,
+  primaryLocationId: ProductLocationId | null | undefined,
+  field: ProductInlineEditableField,
+): string {
+  const primarySlice = getPrimaryLocationSlice(product, primaryLocationId);
+  switch (field) {
+    case "cost":
+      return formatCurrency(primarySlice?.cost ?? product.cost);
+    case "retail":
+      return formatCurrency(primarySlice?.retailPrice ?? product.retail_price);
+    case "barcode":
+      return product.barcode ?? product.isbn ?? "—";
+    case "discontinue":
+      return product.discontinued ? "Yes" : "No";
+  }
+}
+
+function InlineEditableCell({
+  product,
+  field,
+  label,
+  displayValue,
+  currentValue,
+  badge,
+  inlineEdit,
+  align = "left",
+  className,
+  inputClassName,
+}: {
+  product: ProductBrowseRow;
+  field: "retail" | "cost" | "barcode";
+  label: string;
+  displayValue: string;
+  currentValue: string;
+  badge?: ReactNode;
+  inlineEdit?: ProductInlineEditController;
+  align?: "left" | "right";
+  className?: string;
+  inputClassName?: string;
+}) {
+  const isEditing =
+    inlineEdit?.editingCell?.sku === product.sku && inlineEdit?.editingCell?.field === field;
+
+  const valueNode = isEditing && inlineEdit ? (
+    <input
+      autoFocus
+      aria-label={`${label} editor for SKU ${product.sku}`}
+      value={inlineEdit.draftValue}
+      onChange={(e) => inlineEdit.setDraftValue(e.target.value)}
+      onClick={(e) => e.stopPropagation()}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          e.stopPropagation();
+          void inlineEdit.commitEdit();
+          return;
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          e.stopPropagation();
+          inlineEdit.cancelEdit();
+          return;
+        }
+        if (e.key === "Tab") {
+          e.preventDefault();
+          e.stopPropagation();
+          void inlineEdit.moveToNextEditableCell(e.shiftKey ? "previous" : "next");
+        }
+      }}
+      className={`h-7 min-w-[88px] rounded-md border border-border bg-background px-2 py-0 text-[11.5px] font-mono tnum text-foreground outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/30 ${
+        inputClassName ?? ""
+      } ${align === "right" ? "text-right" : "text-left"}`}
+    />
+  ) : inlineEdit ? (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        inlineEdit.startEdit(product.sku, field, currentValue);
+      }}
+      aria-label={`Edit ${label.toLowerCase()} for SKU ${product.sku}`}
+      title="Click to edit"
+      className={`inline-flex items-center rounded-[6px] px-1 py-0.5 text-[11.5px] font-mono tnum transition-colors hover:bg-accent/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+        align === "right" ? "justify-end" : "justify-start"
+      }`}
+    >
+      <span className="leading-none">{displayValue}</span>
+    </button>
+  ) : (
+    <span className="font-mono tnum text-[11.5px] leading-none">{displayValue}</span>
+  );
+
+  return (
+    <td className={className} onClick={(e) => e.stopPropagation()}>
+      <div className={`flex items-center gap-1.5 ${align === "right" ? "justify-end" : "justify-start"}`}>
+        {valueNode}
+        {badge ?? null}
+      </div>
+    </td>
+  );
 }
 
 export function formatLocationVarianceBadge(varies: boolean, selectedCount: number): string | null {
@@ -281,6 +418,8 @@ export function ProductTable({
   onHideColumn,
   onHiddenChange,
   suppressEmptyState = false,
+  inlineEdit,
+  primaryLocationId,
 }: ProductTableProps) {
   void onHideColumn;
   const { byId: vendorsById } = useVendorDirectory();
@@ -560,6 +699,14 @@ export function ProductTable({
                       tab === "textbooks"
                         ? product.title ?? product.description ?? "—"
                         : product.description ?? "—";
+                    const resolvedPrimaryLocationId =
+                      primaryLocationId ?? product.primary_location_id ?? null;
+                    const primarySlice = getPrimaryLocationSlice(
+                      product,
+                      resolvedPrimaryLocationId,
+                    );
+                    const costValue = primarySlice?.cost ?? product.cost;
+                    const retailValue = primarySlice?.retailPrice ?? product.retail_price;
                     const metaParts: string[] = [];
                     if (product.author) metaParts.push(product.author);
                     if (product.edition) metaParts.push(product.edition);
@@ -626,36 +773,48 @@ export function ProductTable({
                             );
                           })()}
                         </td>
-                        <td className="px-2.5 py-1.5 text-right">
-                          <span className="inline-flex items-center justify-end gap-1.5">
-                            <span className="font-mono tnum text-[11.5px] text-muted-foreground">
-                              {formatCurrency(product.cost)}
-                            </span>
-                            {costBadge ? (
+                        <InlineEditableCell
+                          product={product}
+                          field="cost"
+                          label="Cost"
+                          displayValue={formatCurrency(costValue)}
+                          currentValue={getInlineEditValue(product, resolvedPrimaryLocationId, "cost")}
+                          badge={
+                            costBadge ? (
                               <LocationVariancePopover
                                 badge={costBadge}
                                 field="cost"
                                 label="Cost"
                                 slices={selectedInventories}
                               />
-                            ) : null}
-                          </span>
-                        </td>
-                        <td className="px-2.5 py-1.5 text-right">
-                          <span className="inline-flex items-center justify-end gap-1.5">
-                            <span className="font-mono tnum text-[11.5px] text-foreground font-medium">
-                              {formatCurrency(product.retail_price)}
-                            </span>
-                            {retailBadge ? (
+                            ) : null
+                          }
+                          inlineEdit={inlineEdit}
+                          align="right"
+                          className="px-2.5 py-1.5 text-right"
+                          inputClassName="min-w-[92px]"
+                        />
+                        <InlineEditableCell
+                          product={product}
+                          field="retail"
+                          label="Retail"
+                          displayValue={formatCurrency(retailValue)}
+                          currentValue={getInlineEditValue(product, resolvedPrimaryLocationId, "retail")}
+                          badge={
+                            retailBadge ? (
                               <LocationVariancePopover
                                 badge={retailBadge}
                                 field="retailPrice"
                                 label="Retail"
                                 slices={selectedInventories}
                               />
-                            ) : null}
-                          </span>
-                        </td>
+                            ) : null
+                          }
+                          inlineEdit={inlineEdit}
+                          align="right"
+                          className="px-2.5 py-1.5 text-right"
+                          inputClassName="min-w-[92px]"
+                        />
                         <td className="px-2.5 py-1.5 text-right">
                           {(() => {
                             const stock = product.stock_on_hand;
@@ -691,10 +850,10 @@ export function ProductTable({
                         </td>
                         {showMargin ? (
                           <td data-priority="medium" className="px-2.5 py-1.5 text-right">
-                            {product.cost != null && product.retail_price != null ? (
+                            {costValue != null && retailValue != null ? (
                               <MarginBar
-                                cost={product.cost}
-                                retail={product.retail_price}
+                                cost={costValue}
+                                retail={retailValue}
                               />
                             ) : (
                               <span className="font-mono tnum text-[11.5px] text-muted-foreground">
@@ -703,13 +862,15 @@ export function ProductTable({
                             )}
                           </td>
                         ) : null}
-                        <td className="px-2.5 py-1.5">
-                          <span className="font-mono tnum text-[11px] text-muted-foreground">
-                            {tab === "textbooks"
-                              ? (product.isbn ?? "—")
-                              : (product.barcode ?? "—")}
-                          </span>
-                        </td>
+                        <InlineEditableCell
+                          product={product}
+                          field="barcode"
+                          label="Barcode"
+                          displayValue={getInlineEditDisplayValue(product, resolvedPrimaryLocationId, "barcode")}
+                          currentValue={getInlineEditValue(product, resolvedPrimaryLocationId, "barcode")}
+                          inlineEdit={inlineEdit}
+                          className="px-2.5 py-1.5"
+                        />
                         <td className="px-2.5 py-1.5 text-[11.5px] text-muted-foreground whitespace-nowrap">
                           {formatSaleDate(getProductDisplaySaleDate(product) ?? null)}
                         </td>

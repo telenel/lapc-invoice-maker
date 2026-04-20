@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo, useRef, type ComponentProps, type ComponentType } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronDownIcon, SearchIcon, SlidersHorizontalIcon, XIcon } from "lucide-react";
@@ -319,7 +319,7 @@ export default function ProductsPage() {
 
   const primaryLocationId = getPrimaryProductLocationId(filters.locationIds);
   const inlineEditRows = useMemo(
-    () => buildInlineEditRows((data?.products ?? []) as ProductBrowseRow[], primaryLocationId),
+    () => buildInlineEditRows(data?.products ?? [], primaryLocationId),
     [data?.products, primaryLocationId],
   );
   const inlineEdit = useProductInlineEdit({
@@ -327,12 +327,6 @@ export default function ProductsPage() {
     primaryLocationId,
     onSaveSuccess: refetch,
   });
-  const ProductTableWithInlineEdit = ProductTable as unknown as ComponentType<
-    ComponentProps<typeof ProductTable> & {
-      inlineEdit: typeof inlineEdit;
-      primaryLocationId: ProductLocationId;
-    }
-  >;
 
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-6 md:px-5">
@@ -630,7 +624,7 @@ export default function ProductsPage() {
               onClear={handleClearFilters}
             />
           </div>
-          <ProductTableWithInlineEdit
+          <ProductTable
             tab={filters.tab}
             products={data?.products ?? []}
             total={data?.total ?? 0}

@@ -1,4 +1,5 @@
-import React from "react";
+import "@testing-library/jest-dom/vitest";
+import React, { useMemo, useState } from "react";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -12,6 +13,7 @@ import {
 } from "@/components/products/product-table";
 import { ProductTable } from "@/components/products/product-table";
 import type { ProductBrowseRow } from "@/domains/product/types";
+import type { ProductInlineEditController } from "@/components/products/use-product-inline-edit";
 
 vi.mock("@/domains/product/vendor-directory", () => ({
   useVendorDirectory: () => ({
@@ -175,8 +177,55 @@ describe("product table variance trigger", () => {
     } as ProductBrowseRow;
   }
 
-  function renderTable(onToggle: ReturnType<typeof vi.fn>) {
-    render(React.createElement(ProductTable, {
+function renderTable(onToggle: ReturnType<typeof vi.fn>) {
+  render(React.createElement(ProductTable, {
+    tab: "textbooks",
+    products: [makeVariedProduct()],
+      total: 1,
+      page: 1,
+      loading: false,
+      sortBy: "sku",
+      sortDir: "asc",
+      isSelected: () => false,
+      onToggle,
+      onToggleAll: () => {},
+      onPageChange: () => {},
+      onSort: () => {},
+    visibleColumns: [],
+  }));
+}
+
+function renderEditableTable(onToggle: ReturnType<typeof vi.fn>) {
+  function Harness() {
+    const [editingCell, setEditingCell] = useState<ProductInlineEditController["editingCell"]>(null);
+    const [draftValue, setDraftValue] = useState("");
+
+    const inlineEdit = useMemo<ProductInlineEditController>(() => ({
+      editingCell,
+      draftValue,
+      pendingSave: false,
+      primaryLocationId: 2,
+      rowsBySku: new Map([[101, makeVariedProduct()]]),
+      startEdit: (sku, field, currentValue) => {
+        setEditingCell({ sku, field });
+        setDraftValue(currentValue);
+      },
+      cancelEdit: () => {
+        setEditingCell(null);
+        setDraftValue("");
+      },
+      commitEdit: async () => {
+        setEditingCell(null);
+        setDraftValue("");
+      },
+      moveToNextEditableCell: async () => {
+        setEditingCell(null);
+        setDraftValue("");
+      },
+      setDraftValue,
+    }), [draftValue, editingCell]);
+
+    return React.createElement(ProductTable, {
       tab: "textbooks",
       products: [makeVariedProduct()],
       total: 1,
@@ -190,8 +239,13 @@ describe("product table variance trigger", () => {
       onPageChange: () => {},
       onSort: () => {},
       visibleColumns: [],
-    }));
+      inlineEdit,
+      primaryLocationId: 2,
+    });
   }
+
+  render(React.createElement(Harness));
+}
 
   it("opens the retail popover from the varies badge without selecting the row", async () => {
     const user = userEvent.setup();
@@ -233,5 +287,31 @@ describe("product table variance trigger", () => {
     expect(onToggle).not.toHaveBeenCalled();
     expect(await screen.findByText("PIER")).toBeTruthy();
     expect(await screen.findByText("PCOP")).toBeTruthy();
+  });
+
+  it("clicking the retail inline-edit button for SKU 101 does not toggle selection and opens the editor", async () => {
+    const user = userEvent.setup();
+    const onToggle = vi.fn();
+
+    renderEditableTable(onToggle);
+
+    await user.click(screen.getByRole("button", { name: /edit retail for sku 101/i }));
+
+    expect(onToggle).not.toHaveBeenCalled();
+    expect(screen.getByRole("textbox", { name: /retail editor for sku 101/i })).toBeTruthy();
+  });
+
+  it("esc closes the retail editor without selecting the row", async () => {
+    const user = userEvent.setup();
+    const onToggle = vi.fn();
+
+    renderEditableTable(onToggle);
+
+    await user.click(screen.getByRole("button", { name: /edit retail for sku 101/i }));
+    const editor = screen.getByRole("textbox", { name: /retail editor for sku 101/i });
+    await user.keyboard("{Escape}");
+
+    expect(onToggle).not.toHaveBeenCalled();
+    expect(editor).not.toBeInTheDocument();
   });
 });
