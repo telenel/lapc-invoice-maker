@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef, type ComponentProps, type ComponentType } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronDownIcon, SearchIcon, SlidersHorizontalIcon, XIcon } from "lucide-react";
@@ -31,6 +31,7 @@ import { DeleteViewDialog } from "@/components/products/delete-view-dialog";
 import { ColumnVisibilityToggle, type ColumnVisibilityHandle } from "@/components/products/column-visibility-toggle";
 import { PierceAssuranceBadge } from "@/components/products/pierce-assurance-badge";
 import { LocationPicker } from "@/components/products/location-picker";
+import { useProductInlineEdit, type ProductInlineEditRowBaseline } from "@/components/products/use-product-inline-edit";
 import { productApi } from "@/domains/product/api-client";
 import { SYSTEM_PRESET_VIEWS } from "@/domains/product/presets";
 import { shouldApplyDefaultMinStock } from "@/domains/product/page-defaults";
@@ -62,6 +63,25 @@ function productToScopedSelected(product: ProductBrowseRow): SelectedProduct {
     vendorId: product.vendor_id,
     itemType: product.item_type,
   };
+}
+
+function buildInlineEditRows(
+  products: ProductBrowseRow[],
+  primaryLocationId: ProductLocationId,
+): ProductInlineEditRowBaseline[] {
+  return products.map((product) => {
+    const primaryInventory = product.selected_inventories.find(
+      (inventory) => inventory.locationId === primaryLocationId,
+    );
+
+    return {
+      sku: product.sku,
+      barcode: product.barcode,
+      retail: primaryInventory?.retail ?? product.retail_price ?? null,
+      cost: primaryInventory?.cost ?? product.cost ?? null,
+      fDiscontinue: product.discontinued ? 1 : 0,
+    };
+  });
 }
 
 export default function ProductsPage() {
@@ -298,6 +318,21 @@ export default function ProductsPage() {
   }
 
   const primaryLocationId = getPrimaryProductLocationId(filters.locationIds);
+  const inlineEditRows = useMemo(
+    () => buildInlineEditRows((data?.products ?? []) as ProductBrowseRow[], primaryLocationId),
+    [data?.products, primaryLocationId],
+  );
+  const inlineEdit = useProductInlineEdit({
+    rows: inlineEditRows,
+    primaryLocationId,
+    onSaveSuccess: refetch,
+  });
+  const ProductTableWithInlineEdit = ProductTable as unknown as ComponentType<
+    ComponentProps<typeof ProductTable> & {
+      inlineEdit: typeof inlineEdit;
+      primaryLocationId: ProductLocationId;
+    }
+  >;
 
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-6 md:px-5">
@@ -595,7 +630,7 @@ export default function ProductsPage() {
               onClear={handleClearFilters}
             />
           </div>
-          <ProductTable
+          <ProductTableWithInlineEdit
             tab={filters.tab}
             products={data?.products ?? []}
             total={data?.total ?? 0}
@@ -612,6 +647,8 @@ export default function ProductsPage() {
             onHideColumn={(key) => columnsRef.current?.hideColumn(key)}
             onHiddenChange={setHiddenCount}
             suppressEmptyState={data?.total === 0 && activeView != null}
+            inlineEdit={inlineEdit}
+            primaryLocationId={primaryLocationId}
           />
         </div>
       </div>
