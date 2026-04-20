@@ -230,6 +230,39 @@ export interface ItemSnapshot {
   fDiscontinue: 0 | 1;
 }
 
+/** Rich single-item snapshot used to hydrate the edit dialog without storing full browse state. */
+export interface ProductEditDetails {
+  sku: number;
+  itemType: string;
+  description: string | null;
+  barcode: string | null;
+  vendorId: number | null;
+  dccId: number | null;
+  itemTaxTypeId: number | null;
+  catalogNumber: string | null;
+  comment: string | null;
+  retail: number;
+  cost: number;
+  fDiscontinue: 0 | 1;
+  altVendorId: number | null;
+  mfgId: number | null;
+  weight: number | null;
+  packageType: string | null;
+  unitsPerPack: number | null;
+  orderIncrement: number | null;
+  imageUrl: string | null;
+  size: string | null;
+  sizeId: number | null;
+  colorId: number | null;
+  styleId: number | null;
+  itemSeasonCodeId: number | null;
+  fListPriceFlag: 0 | 1;
+  fPerishable: 0 | 1;
+  fIdRequired: 0 | 1;
+  minOrderQtyItem: number | null;
+  usedDccId: number | null;
+}
+
 /** One validation error attached to a batch-add or batch-edit row. */
 export interface BatchValidationError {
   rowIndex: number;

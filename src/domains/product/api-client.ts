@@ -12,6 +12,7 @@ import type {
   ItemSnapshot,
   BatchCreateRow,
   BatchValidationError,
+  ProductEditDetails,
 } from "./types";
 import type { PrismRefs } from "./ref-data";
 export type {
@@ -101,6 +102,12 @@ export const productApi = {
     const res = await fetch(`/api/products/${sku}`, { method: "DELETE" });
     if (!res.ok) throw new Error(await parseError(res));
     return (await res.json()) as { sku: number; mode: string; affected: number };
+  },
+
+  async detail(sku: number): Promise<ProductEditDetails> {
+    const res = await fetch(`/api/products/${sku}`, { cache: "no-store" });
+    if (!res.ok) throw new Error(await parseError(res));
+    return (await res.json()) as ProductEditDetails;
   },
 
   async update(
