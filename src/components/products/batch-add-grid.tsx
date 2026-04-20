@@ -425,7 +425,7 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [canSubmit, handleSubmit, handleValidate, fillDown]);
+  }, [canSubmit, fillDown, handleSubmit, handleValidate, refsBlocked, refsLoading]);
 
   function handleCellKeyDown(e: React.KeyboardEvent<HTMLElement>, rowIdx: number) {
     if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey) {

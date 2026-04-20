@@ -160,7 +160,7 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
     } finally {
       setSaving(false);
     }
-  }, [form, formValid, saving, refs, createAnother, onCreated, onOpenChange]);
+  }, [form, formValid, saving, refs, refsLoading, refsUnavailable, createAnother, onCreated, onOpenChange]);
 
   // ⌘/Ctrl+Enter submits from anywhere in the dialog
   useEffect(() => {
