@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { EMPTY_FILTERS } from "@/domains/product/constants";
 import { DEFAULT_PRODUCT_LOCATION_IDS } from "@/domains/product/location-filters";
 import { SYSTEM_PRESET_VIEWS } from "@/domains/product/presets";
@@ -88,6 +88,7 @@ describe("parseFiltersFromSearchParams", () => {
   it("falls back to the default locationIds when loc is invalid", () => {
     const out = parseFiltersFromSearchParams(makeParams({ loc: "99,pierce" }));
     expect(out.locationIds).toEqual(DEFAULT_PRODUCT_LOCATION_IDS);
+    expect(out.locationIds).not.toBe(DEFAULT_PRODUCT_LOCATION_IDS);
   });
 
   it("parses valid loc values without disturbing other filters", () => {
@@ -122,6 +123,15 @@ describe("parseFiltersFromSearchParams", () => {
     const out = parseFiltersFromSearchParams(makeParams({ tab: "merchandise", garbage: "???" }));
     expect(out.tab).toBe("merchandise");
   });
+
+  it("warns when a non-wire locationIds query key appears", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    parseFiltersFromSearchParams(makeParams({ locationIds: "2,3", tab: "merchandise" }));
+
+    expect(warn).toHaveBeenCalledWith("[products filter] ignoring unknown key: locationIds");
+    warn.mockRestore();
+  });
 });
 
 describe("applyPreset", () => {
@@ -140,6 +150,15 @@ describe("applyPreset", () => {
     const result = applyPreset(preset, baseTextbook);
     expect(result.filters.search).toBe("calculus");
     expect(result.filters.neverSoldLifetime).toBe(true);
+  });
+
+  it("clones locationIds when the preset does not override them", () => {
+    const preset = SYSTEM_PRESET_VIEWS.find((v) => v.slug === "dead-never-sold-authoritative")!;
+    const result = applyPreset(preset, baseTextbook);
+
+    expect(result.filters.locationIds).toEqual(baseTextbook.locationIds);
+    expect(result.filters.locationIds).not.toBe(baseTextbook.locationIds);
+    expect(result.filters.locationIds).not.toBe(EMPTY_FILTERS.locationIds);
   });
 
   it("lets a preset override tab when it sets one explicitly", () => {

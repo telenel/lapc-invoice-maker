@@ -1,7 +1,9 @@
 import { EMPTY_FILTERS, OPTIONAL_COLUMNS } from "./constants";
 import type { OptionalColumnKey } from "./constants";
 import {
+  cloneProductLocationIds,
   DEFAULT_PRODUCT_LOCATION_IDS,
+  normalizeProductLocationIds,
   parseProductLocationIdsParam,
   serializeProductLocationIdsParam,
 } from "./location-filters";
@@ -96,7 +98,12 @@ export function parseFiltersFromSearchParams(params: URLSearchParams): ProductFi
 
   // Log unknown keys once per parse so schema drift is visible in console
   // without throwing. EMPTY_FILTERS is the allow-list.
-  const known = new Set<string>([...Object.keys(EMPTY_FILTERS), "view", "q", "loc"]);
+  const known = new Set<string>([
+    ...Object.keys(EMPTY_FILTERS).filter((key) => key !== "locationIds"),
+    "view",
+    "q",
+    "loc",
+  ]);
   const seenKeys: string[] = [];
   params.forEach((_, key) => {
     if (seenKeys.indexOf(key) === -1) seenKeys.push(key);
@@ -151,8 +158,10 @@ export function applyPreset(view: SavedView, current: ProductFilters): AppliedPr
     ...EMPTY_FILTERS,
     tab: current.tab,
     search: current.search,
+    locationIds: cloneProductLocationIds(current.locationIds),
     ...view.filter,
   } as ProductFilters;
+  filters.locationIds = normalizeProductLocationIds(filters.locationIds);
   let visibleColumns: OptionalColumnKey[] | null = null;
   if (view.columnPreferences) {
     visibleColumns = view.columnPreferences.visible.filter(

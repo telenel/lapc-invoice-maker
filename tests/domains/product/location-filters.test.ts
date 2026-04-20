@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { EMPTY_FILTERS } from "@/domains/product/constants";
 import {
   DEFAULT_PRODUCT_LOCATION_IDS,
   getPrimaryProductLocationId,
@@ -10,6 +11,11 @@ import {
 describe("location-filters", () => {
   it("exports the Pierce default location ids in canonical order", () => {
     expect(DEFAULT_PRODUCT_LOCATION_IDS).toEqual([2, 3, 4]);
+  });
+
+  it("keeps EMPTY_FILTERS from reusing the exported default array reference", () => {
+    expect(EMPTY_FILTERS.locationIds).toEqual(DEFAULT_PRODUCT_LOCATION_IDS);
+    expect(EMPTY_FILTERS.locationIds).not.toBe(DEFAULT_PRODUCT_LOCATION_IDS);
   });
 
   it("normalizes ids to the canonical Pierce order", () => {
@@ -29,8 +35,13 @@ describe("location-filters", () => {
   });
 
   it("falls back to defaults when the loc query param is missing or invalid", () => {
-    expect(parseProductLocationIdsParam(null)).toEqual(DEFAULT_PRODUCT_LOCATION_IDS);
-    expect(parseProductLocationIdsParam("pierce,99")).toEqual(DEFAULT_PRODUCT_LOCATION_IDS);
+    const missing = parseProductLocationIdsParam(null);
+    const invalid = parseProductLocationIdsParam("pierce,99");
+
+    expect(missing).toEqual(DEFAULT_PRODUCT_LOCATION_IDS);
+    expect(invalid).toEqual(DEFAULT_PRODUCT_LOCATION_IDS);
+    expect(missing).not.toBe(DEFAULT_PRODUCT_LOCATION_IDS);
+    expect(invalid).not.toBe(DEFAULT_PRODUCT_LOCATION_IDS);
   });
 
   it("serializes location ids in canonical order", () => {
