@@ -1,16 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { productApi } from "@/domains/product/api-client";
+import { PrismWriteConfirmationDialog } from "@/components/products/prism-write-confirmation-dialog";
 
 interface HardDeleteDialogProps {
   open: boolean;
@@ -78,49 +70,56 @@ export function HardDeleteDialog({ open, onOpenChange, items, onDeleted, onDisco
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Permanently delete {items.length} item{items.length !== 1 ? "s" : ""}?</DialogTitle>
-          <DialogDescription>
-            Hard-delete removes the row from Prism entirely. Only allowed when the item has no sales, purchase, invoice, or receiving history.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="max-h-80 space-y-2 overflow-y-auto">
-          {items.map((it) => {
-            const v = verdicts.get(it.sku) ?? "loading";
-            return (
-              <div key={it.sku} className="flex items-start justify-between gap-3 rounded border px-3 py-2 text-sm">
-                <div>
-                  <div className="font-mono">{it.sku}</div>
-                  {it.description ? <div className="text-muted-foreground">{it.description}</div> : null}
-                </div>
-                <div>
-                  {v === "loading" && <span className="text-muted-foreground">checking…</span>}
-                  {v === "safe" && <span className="text-green-700">0 history records — safe</span>}
-                  {v === "has-history" && <span className="text-destructive">has history — discontinue instead</span>}
-                  {v === "textbook" && <span className="text-destructive">textbook — not supported, discontinue</span>}
-                </div>
+    <PrismWriteConfirmationDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={`Permanently delete ${items.length} item${items.length !== 1 ? "s" : ""}?`}
+      description="Hard-delete removes the row from Prism entirely."
+      warnings={[
+        "This permanently removes data from Prism and the POS database.",
+        "This action is only appropriate for test items with no history.",
+        "There is no undo from this UI.",
+      ]}
+      confirmPhrase="DELETE FROM PRISM"
+      confirmLabel={deleting ? "Deleting..." : "Delete permanently"}
+      confirming={deleting}
+      confirmDisabled={!allSafe}
+      onConfirm={handleDelete}
+    >
+      <div className="max-h-80 space-y-2 overflow-y-auto">
+        {items.map((it) => {
+          const v = verdicts.get(it.sku) ?? "loading";
+          return (
+            <div key={it.sku} className="flex items-start justify-between gap-3 rounded border px-3 py-2 text-sm">
+              <div>
+                <div className="font-mono">{it.sku}</div>
+                {it.description ? <div className="text-muted-foreground">{it.description}</div> : null}
               </div>
-            );
-          })}
-        </div>
+              <div>
+                {v === "loading" && <span className="text-muted-foreground">checking…</span>}
+                {v === "safe" && <span className="text-green-700">0 history records — safe</span>}
+                {v === "has-history" && <span className="text-destructive">has history — discontinue instead</span>}
+                {v === "textbook" && <span className="text-destructive">textbook — not supported, discontinue</span>}
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
+      {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={deleting}>Cancel</Button>
-          {blockedSkus.length > 0 && onDiscontinueInstead ? (
-            <Button variant="outline" onClick={() => { onDiscontinueInstead(blockedSkus); onOpenChange(false); }}>
-              Discontinue blocked ({blockedSkus.length})
-            </Button>
-          ) : null}
-          <Button onClick={handleDelete} disabled={!allSafe || deleting} className="bg-destructive hover:bg-destructive/90">
-            {deleting ? "Deleting…" : "Delete permanently"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      {blockedSkus.length > 0 && onDiscontinueInstead ? (
+        <button
+          type="button"
+          onClick={() => {
+            onDiscontinueInstead(blockedSkus);
+            onOpenChange(false);
+          }}
+          className="text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground"
+        >
+          Discontinue blocked ({blockedSkus.length})
+        </button>
+      ) : null}
+    </PrismWriteConfirmationDialog>
   );
 }

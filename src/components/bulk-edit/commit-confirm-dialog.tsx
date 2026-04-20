@@ -1,15 +1,7 @@
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import type { PreviewResult } from "@/domains/bulk-edit/types";
+import { PrismWriteConfirmationDialog } from "@/components/products/prism-write-confirmation-dialog";
 
 interface CommitConfirmDialogProps {
   open: boolean;
@@ -23,44 +15,45 @@ export function CommitConfirmDialog({ open, onOpenChange, preview, onConfirm, su
   if (!preview) return null;
   const { rowCount, pricingDeltaCents, districtChangeCount } = preview.totals;
 
+  const warnings = [
+    `${rowCount.toLocaleString()} item${rowCount === 1 ? "" : "s"} will be updated in Prism and mirrored to the POS database.`,
+    "This is a live database write, not a local draft save.",
+    "The change cannot be undone from this UI.",
+  ];
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Apply {rowCount} change{rowCount === 1 ? "" : "s"}?</DialogTitle>
-          <DialogDescription>Review before committing. Changes are not undoable.</DialogDescription>
-        </DialogHeader>
-        <ul className="space-y-2 text-sm">
+    <PrismWriteConfirmationDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={`Apply ${rowCount} change${rowCount === 1 ? "" : "s"}?`}
+      description="Review the preview carefully before committing."
+      warnings={warnings}
+      confirmPhrase="APPLY PRISM BULK WRITE"
+      confirmLabel={submitting ? "Applying..." : "Apply Changes"}
+      confirming={submitting}
+      onConfirm={onConfirm}
+    >
+      <ul className="space-y-2 text-sm">
+        {pricingDeltaCents !== 0 ? (
           <li>
-            <span className="font-medium">{rowCount.toLocaleString()}</span> item{rowCount === 1 ? "" : "s"} will be updated
+            Pierce retail delta:{" "}
+            <span className={`tabular-nums font-medium ${pricingDeltaCents >= 0 ? "text-foreground" : "text-destructive"}`}>
+              {pricingDeltaCents >= 0 ? "+" : ""}
+              ${(pricingDeltaCents / 100).toFixed(2)}
+            </span>{" "}
+            total
           </li>
-          {pricingDeltaCents !== 0 ? (
-            <li>
-              Pierce retail delta:{" "}
-              <span className={`tabular-nums font-medium ${pricingDeltaCents >= 0 ? "text-foreground" : "text-destructive"}`}>
-                {pricingDeltaCents >= 0 ? "+" : ""}
-                ${(pricingDeltaCents / 100).toFixed(2)}
-              </span>{" "}
-              total
-            </li>
-          ) : null}
-          {districtChangeCount > 0 ? (
-            <li className="flex items-start gap-2 rounded border border-destructive/30 bg-destructive/5 px-3 py-2">
-              <span>WARNING:</span>
-              <span>
-                <strong>{districtChangeCount}</strong> of these rows have Department/Class or Tax changes.
-                Those fields live on the shared Item record and affect all 17 LACCD locations, not just Pierce.
-              </span>
-            </li>
-          ) : null}
-        </ul>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>Cancel</Button>
-          <Button onClick={onConfirm} disabled={submitting}>
-            {submitting ? "Applying..." : "Apply Changes"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        ) : null}
+        {districtChangeCount > 0 ? (
+          <li className="flex items-start gap-2 rounded border border-destructive/30 bg-destructive/5 px-3 py-2">
+            <span>WARNING:</span>
+            <span>
+              <strong>{districtChangeCount}</strong> of these rows have Department/Class or Tax changes.
+              Those fields live on the shared Item record and affect all 17 LACCD locations, not just Pierce.
+            </span>
+          </li>
+        ) : null}
+      </ul>
+    </PrismWriteConfirmationDialog>
   );
 }

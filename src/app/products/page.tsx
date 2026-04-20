@@ -29,6 +29,7 @@ import { SaveViewDialog } from "@/components/products/save-view-dialog";
 import { DeleteViewDialog } from "@/components/products/delete-view-dialog";
 import { ColumnVisibilityToggle, type ColumnVisibilityHandle } from "@/components/products/column-visibility-toggle";
 import { PierceAssuranceBadge } from "@/components/products/pierce-assurance-badge";
+import { PrismWriteWarningBanner } from "@/components/products/prism-write-warning-banner";
 import { productApi } from "@/domains/product/api-client";
 import { SYSTEM_PRESET_VIEWS } from "@/domains/product/presets";
 import { shouldApplyDefaultMinStock } from "@/domains/product/page-defaults";
@@ -282,6 +283,18 @@ export default function ProductsPage() {
           </Button>
         </div>
       </div>
+
+      {prismAvailable ? (
+        <div className="page-enter page-enter-1 mb-4">
+          <PrismWriteWarningBanner
+            messages={[
+              "Edit, new item, bulk edit, discontinue, and delete actions all write directly to Prism and the POS database.",
+              "Every live write now requires explicit human confirmation before it is sent.",
+              "Use these actions only when you intend to change live catalog data.",
+            ]}
+          />
+        </div>
+      ) : null}
 
       <NewItemDialog
         open={newItemOpen}

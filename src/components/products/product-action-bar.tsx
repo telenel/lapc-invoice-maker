@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import type { SelectedProduct } from "@/domains/product/types";
 import { openBarcodePrintWindow } from "./barcode-print-view";
 import { productApi } from "@/domains/product/api-client";
+import { PrismWriteConfirmationDialog } from "@/components/products/prism-write-confirmation-dialog";
 
 interface ProductActionBarProps {
   selected: Map<number, SelectedProduct>;
@@ -36,6 +37,7 @@ export function ProductActionBar({
 }: ProductActionBarProps) {
   const router = useRouter();
   const [discontinuing, setDiscontinuing] = useState(false);
+  const [confirmDiscontinueOpen, setConfirmDiscontinueOpen] = useState(false);
 
   function handleCreateInvoice() {
     saveToSession();
@@ -55,13 +57,6 @@ export function ProductActionBar({
   async function handleDiscontinue() {
     const skus = Array.from(selected.keys());
     if (skus.length === 0) return;
-    const ok = window.confirm(
-      `Discontinue ${skus.length} item${skus.length !== 1 ? "s" : ""}? ` +
-        `This sets fDiscontinue=1 in Prism — items will be hidden from POS but ` +
-        `historical data is preserved. This cannot be undone from this UI.`,
-    );
-    if (!ok) return;
-
     setDiscontinuing(true);
     try {
       const results = await Promise.allSettled(
@@ -121,7 +116,7 @@ export function ProductActionBar({
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={handleDiscontinue}
+                  onClick={() => setConfirmDiscontinueOpen(true)}
                   disabled={discontinuing}
                   className="border-destructive/30 text-destructive hover:bg-destructive/10"
                 >
@@ -154,6 +149,21 @@ export function ProductActionBar({
               </Button>
             </div>
           </div>
+          <PrismWriteConfirmationDialog
+            open={confirmDiscontinueOpen}
+            onOpenChange={setConfirmDiscontinueOpen}
+            title={`Discontinue ${selectedCount} item${selectedCount !== 1 ? "s" : ""}?`}
+            description="This changes live Prism/POS inventory state."
+            warnings={[
+              "This sets fDiscontinue=1 in Prism and hides the item from the POS flow.",
+              "This is a live write and cannot be undone from this UI.",
+              "Historical invoices and activity are preserved.",
+            ]}
+            confirmPhrase="DISCONTINUE IN PRISM"
+            confirmLabel={discontinuing ? "Discontinuing..." : "Discontinue"}
+            confirming={discontinuing}
+            onConfirm={handleDiscontinue}
+          />
         </motion.div>
       )}
     </AnimatePresence>

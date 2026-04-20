@@ -12,7 +12,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ItemRefSelects } from "./item-ref-selects";
+import { PrismWriteConfirmationDialog } from "@/components/products/prism-write-confirmation-dialog";
 import { productApi, type PrismRefs } from "@/domains/product/api-client";
 import type { GmItemPatch, TextbookPatch, ItemSnapshot } from "@/domains/product/types";
 
@@ -20,7 +28,19 @@ interface EditItemDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Rows to edit. Pass as ItemSnapshot[] — one per selected SKU. */
-  items: Array<ItemSnapshot & { description?: string; vendorId?: number; dccId?: number; itemTaxTypeId?: number; isTextbook?: boolean; comment?: string; catalogNumber?: string; packageType?: string; unitsPerPack?: number }>;
+  items: Array<
+    ItemSnapshot & {
+      description?: string;
+      vendorId?: number;
+      dccId?: number;
+      itemTaxTypeId?: number;
+      isTextbook?: boolean;
+      comment?: string;
+      catalogNumber?: string;
+      packageType?: string;
+      unitsPerPack?: number;
+    }
+  >;
   onSaved?: (skus: number[]) => void;
 }
 
@@ -39,6 +59,21 @@ type FormState = Partial<{
   fDiscontinue: string;
 }>;
 
+const FIELD_LABELS: Record<string, string> = {
+  description: "Description",
+  vendorId: "Vendor",
+  dccId: "Department / Class",
+  itemTaxTypeId: "Tax type",
+  barcode: "Barcode",
+  catalogNumber: "Catalog #",
+  comment: "Comment",
+  retail: "Retail",
+  cost: "Cost",
+  packageType: "Package type",
+  unitsPerPack: "Units per pack",
+  fDiscontinue: "Discontinue flag",
+};
+
 /** Diff a baseline state against a current state; return only the changed fields as a patch. */
 export function buildPatch(baseline: Record<string, unknown>, current: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
@@ -55,6 +90,23 @@ export function buildPatch(baseline: Record<string, unknown>, current: Record<st
   return out;
 }
 
+function getItemBaseline(it: EditItemDialogProps["items"][number]) {
+  return {
+    description: it.description ?? "",
+    vendorId: it.vendorId ? String(it.vendorId) : "",
+    dccId: it.dccId ? String(it.dccId) : "",
+    itemTaxTypeId: it.itemTaxTypeId ? String(it.itemTaxTypeId) : "",
+    barcode: it.barcode ?? "",
+    catalogNumber: it.catalogNumber ?? "",
+    comment: it.comment ?? "",
+    retail: String(it.retail),
+    cost: String(it.cost),
+    packageType: it.packageType ?? "",
+    unitsPerPack: it.unitsPerPack ? String(it.unitsPerPack) : "",
+    fDiscontinue: String(it.fDiscontinue),
+  };
+}
+
 export function EditItemDialog({ open, onOpenChange, items, onSaved }: EditItemDialogProps) {
   const isBulk = items.length > 1;
   const hasTextbook = items.some((i) => i.isTextbook);
@@ -62,6 +114,8 @@ export function EditItemDialog({ open, onOpenChange, items, onSaved }: EditItemD
   const [refs, setRefs] = useState<PrismRefs | null>(null);
   const [form, setForm] = useState<FormState>({});
   const [saving, setSaving] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmationWarnings, setConfirmationWarnings] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   // Load refs once
@@ -78,50 +132,22 @@ export function EditItemDialog({ open, onOpenChange, items, onSaved }: EditItemD
       return;
     }
     const it = items[0];
-    setForm({
-      description: it.description ?? "",
-      vendorId: it.vendorId ? String(it.vendorId) : "",
-      dccId: it.dccId ? String(it.dccId) : "",
-      itemTaxTypeId: it.itemTaxTypeId ? String(it.itemTaxTypeId) : "",
-      barcode: it.barcode ?? "",
-      catalogNumber: it.catalogNumber ?? "",
-      comment: it.comment ?? "",
-      retail: String(it.retail),
-      cost: String(it.cost),
-      packageType: it.packageType ?? "",
-      unitsPerPack: it.unitsPerPack ? String(it.unitsPerPack) : "",
-      fDiscontinue: String(it.fDiscontinue),
-    });
+    setForm(getItemBaseline(it));
   }, [open, items, isBulk]);
+
+  useEffect(() => {
+    if (open) return;
+    setConfirmOpen(false);
+    setConfirmationWarnings([]);
+  }, [open]);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  async function handleSave() {
-    setSaving(true);
-    setError(null);
-
-    const baseline = isBulk ? {} : (() => {
-      const it = items[0];
-      return {
-        description: it.description ?? "",
-        vendorId: it.vendorId ? String(it.vendorId) : "",
-        dccId: it.dccId ? String(it.dccId) : "",
-        itemTaxTypeId: it.itemTaxTypeId ? String(it.itemTaxTypeId) : "",
-        barcode: it.barcode ?? "",
-        catalogNumber: it.catalogNumber ?? "",
-        comment: it.comment ?? "",
-        retail: String(it.retail),
-        cost: String(it.cost),
-        packageType: it.packageType ?? "",
-        unitsPerPack: it.unitsPerPack ? String(it.unitsPerPack) : "",
-        fDiscontinue: String(it.fDiscontinue),
-      };
-    })();
-
+  function preparePatch() {
+    const baseline = isBulk ? {} : getItemBaseline(items[0]);
     const rawPatch = buildPatch(baseline, form as Record<string, unknown>);
-    // Convert string fields to correct types; drop empty strings for bulk mode fields the user didn't touch
     const patch: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(rawPatch)) {
       if (v === "" && isBulk) continue; // skip untouched bulk fields
@@ -130,9 +156,33 @@ export function EditItemDialog({ open, onOpenChange, items, onSaved }: EditItemD
       else if (k === "fDiscontinue") patch[k] = Number(v) === 1 ? 1 : 0;
       else patch[k] = v;
     }
-    // Remove undefined entries from the patch
     for (const k of Object.keys(patch)) if (patch[k] === undefined) delete patch[k];
+    const changedFields = Object.keys(patch).map((k) => FIELD_LABELS[k] ?? k);
+    return { patch, changedFields };
+  }
 
+  function handleSave() {
+    const { patch, changedFields } = preparePatch();
+    if (Object.keys(patch).length === 0) {
+      setError("Make at least one change before saving.");
+      return;
+    }
+    setError(null);
+    setConfirmationWarnings([
+      isBulk
+        ? `This will write to Prism and mirror the update into the POS database for ${items.length} selected items.`
+        : "This will write to Prism and mirror the update into the POS database for the selected item.",
+      changedFields.length > 0 ? `Changed fields: ${changedFields.join(", ")}.` : "No fields changed.",
+      "This is a live database write and cannot be undone from this UI.",
+    ]);
+    setConfirmOpen(true);
+  }
+
+  async function commitWrite() {
+    setSaving(true);
+    setError(null);
+
+    const { patch } = preparePatch();
     try {
       if (items.length === 1) {
         const it = items[0];
@@ -152,6 +202,7 @@ export function EditItemDialog({ open, onOpenChange, items, onSaved }: EditItemD
         }
       }
       onSaved?.(items.map((i) => i.sku));
+      setConfirmOpen(false);
       onOpenChange(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -174,7 +225,10 @@ export function EditItemDialog({ open, onOpenChange, items, onSaved }: EditItemD
         (form.comment ?? "") !== (it.comment ?? "") ||
         (form.vendorId ?? "") !== (it.vendorId ? String(it.vendorId) : "") ||
         (form.dccId ?? "") !== (it.dccId ? String(it.dccId) : "") ||
-        (form.itemTaxTypeId ?? "") !== (it.itemTaxTypeId ? String(it.itemTaxTypeId) : "")
+        (form.itemTaxTypeId ?? "") !== (it.itemTaxTypeId ? String(it.itemTaxTypeId) : "") ||
+        (form.packageType ?? "") !== (it.packageType ?? "") ||
+        (form.unitsPerPack ?? "") !== (it.unitsPerPack ? String(it.unitsPerPack) : "") ||
+        (form.fDiscontinue ?? "") !== String(it.fDiscontinue)
       );
     }
     // bulk mode: any non-empty field is a change
@@ -193,134 +247,194 @@ export function EditItemDialog({ open, onOpenChange, items, onSaved }: EditItemD
   const idFor = (field: string) => `edit-${uid}-${field}`;
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>{isBulk ? `Edit ${items.length} items` : `Edit SKU ${items[0]?.sku}`}</DialogTitle>
-          <DialogDescription>
-            {isBulk ? "Fields left blank won\u2019t be changed. Fields you fill will be applied to all selected items." : "Only changed fields will be written."}
-            {hasTextbook ? " (textbook-safe fields only)" : null}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{isBulk ? `Edit ${items.length} items` : `Edit SKU ${items[0]?.sku}`}</DialogTitle>
+            <DialogDescription>
+              {isBulk
+                ? "Fields left blank won\u2019t be changed. Fields you fill will be applied to all selected items."
+                : "Only changed fields will be written."}
+              {hasTextbook ? " (textbook-safe fields only)" : null}
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          {!narrow && (
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor={idFor("description")}>Description</Label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {!narrow && (
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor={idFor("description")}>Description</Label>
+                <Input
+                  id={idFor("description")}
+                  name="description"
+                  autoComplete="off"
+                  placeholder={isBulk ? "Leave unchanged (per-row)…" : ""}
+                  value={form.description ?? ""}
+                  onChange={(e) => update("description", e.target.value)}
+                  autoFocus={!isBulk}
+                />
+              </div>
+            )}
+
+            <div className="space-y-1.5">
+              <Label htmlFor={idFor("barcode")}>Barcode</Label>
               <Input
-                id={idFor("description")}
-                name="description"
+                id={idFor("barcode")}
+                name="barcode"
                 autoComplete="off"
+                spellCheck={false}
                 placeholder={isBulk ? "Leave unchanged (per-row)…" : ""}
-                value={form.description ?? ""}
-                disabled={isBulk}
-                onChange={(e) => update("description", e.target.value)}
-                autoFocus={!isBulk}
+                value={form.barcode ?? ""}
+                onChange={(e) => update("barcode", e.target.value)}
               />
             </div>
-          )}
 
-          <div className="space-y-1.5">
-            <Label htmlFor={idFor("barcode")}>Barcode</Label>
-            <Input
-              id={idFor("barcode")}
-              name="barcode"
-              autoComplete="off"
-              spellCheck={false}
-              placeholder={isBulk ? "Leave unchanged (per-row)…" : ""}
-              value={form.barcode ?? ""}
-              disabled={isBulk}
-              onChange={(e) => update("barcode", e.target.value)}
-            />
+            <div className="space-y-1.5">
+              <Label htmlFor={idFor("retail")}>Retail</Label>
+              <Input
+                id={idFor("retail")}
+                name="retail"
+                autoComplete="off"
+                inputMode="decimal"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder={isBulk ? "Leave unchanged…" : ""}
+                value={form.retail ?? ""}
+                onChange={(e) => update("retail", e.target.value)}
+                className="tabular-nums"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor={idFor("cost")}>Cost</Label>
+              <Input
+                id={idFor("cost")}
+                name="cost"
+                autoComplete="off"
+                inputMode="decimal"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder={isBulk ? "Leave unchanged…" : ""}
+                value={form.cost ?? ""}
+                onChange={(e) => update("cost", e.target.value)}
+                className="tabular-nums"
+              />
+            </div>
+
+            {!narrow && (
+              <ItemRefSelects
+                refs={refs}
+                vendorId={form.vendorId ?? ""}
+                dccId={form.dccId ?? ""}
+                itemTaxTypeId={form.itemTaxTypeId ?? ""}
+                onChange={(field, value) => update(field, value)}
+                bulkMode={isBulk}
+              />
+            )}
+
+            {!narrow && (
+              <>
+                <div className="space-y-1.5">
+                  <Label htmlFor={idFor("catalogNumber")}>Catalog #</Label>
+                  <Input
+                    id={idFor("catalogNumber")}
+                    name="catalogNumber"
+                    autoComplete="off"
+                    spellCheck={false}
+                    placeholder={isBulk ? "Leave unchanged…" : ""}
+                    value={form.catalogNumber ?? ""}
+                    onChange={(e) => update("catalogNumber", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor={idFor("comment")}>Comment</Label>
+                  <Input
+                    id={idFor("comment")}
+                    name="comment"
+                    autoComplete="off"
+                    placeholder={isBulk ? "Leave unchanged…" : ""}
+                    value={form.comment ?? ""}
+                    onChange={(e) => update("comment", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor={idFor("packageType")}>Package type</Label>
+                  <Input
+                    id={idFor("packageType")}
+                    name="packageType"
+                    autoComplete="off"
+                    placeholder={isBulk ? "Leave unchanged…" : ""}
+                    value={form.packageType ?? ""}
+                    onChange={(e) => update("packageType", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor={idFor("unitsPerPack")}>Units per pack</Label>
+                  <Input
+                    id={idFor("unitsPerPack")}
+                    name="unitsPerPack"
+                    autoComplete="off"
+                    inputMode="numeric"
+                    type="number"
+                    step="1"
+                    min="1"
+                    placeholder={isBulk ? "Leave unchanged…" : ""}
+                    value={form.unitsPerPack ?? ""}
+                    onChange={(e) => update("unitsPerPack", e.target.value)}
+                    className="tabular-nums"
+                  />
+                </div>
+              </>
+            )}
+
+            <div className="space-y-1.5">
+              <Label htmlFor={idFor("fDiscontinue")}>Status</Label>
+              <Select
+                value={form.fDiscontinue ?? ""}
+                onValueChange={(value) => update("fDiscontinue", value)}
+                disabled={saving}
+              >
+                <SelectTrigger id={idFor("fDiscontinue")}>
+                  <SelectValue placeholder={isBulk ? "Leave unchanged…" : "Active"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="0">Active</SelectItem>
+                  <SelectItem value="1">Discontinued</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor={idFor("retail")}>Retail</Label>
-            <Input
-              id={idFor("retail")}
-              name="retail"
-              autoComplete="off"
-              inputMode="decimal"
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder={isBulk ? "Leave unchanged…" : ""}
-              value={form.retail ?? ""}
-              onChange={(e) => update("retail", e.target.value)}
-              className="tabular-nums"
-            />
-          </div>
+          {error ? (
+            <div role="alert" aria-live="polite" className="rounded border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+              {error}
+            </div>
+          ) : null}
 
-          <div className="space-y-1.5">
-            <Label htmlFor={idFor("cost")}>Cost</Label>
-            <Input
-              id={idFor("cost")}
-              name="cost"
-              autoComplete="off"
-              inputMode="decimal"
-              type="number"
-              step="0.01"
-              min="0"
-              placeholder={isBulk ? "Leave unchanged…" : ""}
-              value={form.cost ?? ""}
-              onChange={(e) => update("cost", e.target.value)}
-              className="tabular-nums"
-            />
-          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => handleClose(false)} disabled={saving}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={saving || !hasUnsavedChanges()}>
+              {saving ? "Saving…" : isBulk ? `Apply to ${items.length}` : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-          {!narrow && (
-            <ItemRefSelects
-              refs={refs}
-              vendorId={form.vendorId ?? ""}
-              dccId={form.dccId ?? ""}
-              itemTaxTypeId={form.itemTaxTypeId ?? ""}
-              onChange={(field, value) => update(field, value)}
-              bulkMode={isBulk}
-            />
-          )}
-
-          {!narrow && (
-            <>
-              <div className="space-y-1.5">
-                <Label htmlFor={idFor("catalogNumber")}>Catalog #</Label>
-                <Input
-                  id={idFor("catalogNumber")}
-                  name="catalogNumber"
-                  autoComplete="off"
-                  spellCheck={false}
-                  placeholder={isBulk ? "Leave unchanged…" : ""}
-                  value={form.catalogNumber ?? ""}
-                  onChange={(e) => update("catalogNumber", e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor={idFor("comment")}>Comment</Label>
-                <Input
-                  id={idFor("comment")}
-                  name="comment"
-                  autoComplete="off"
-                  placeholder={isBulk ? "Leave unchanged…" : ""}
-                  value={form.comment ?? ""}
-                  onChange={(e) => update("comment", e.target.value)}
-                />
-              </div>
-            </>
-          )}
-        </div>
-
-        {error ? (
-          <div role="alert" aria-live="polite" className="rounded border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-            {error}
-          </div>
-        ) : null}
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => handleClose(false)} disabled={saving}>Cancel</Button>
-          <Button onClick={handleSave} disabled={saving}>
-            {saving ? "Saving…" : isBulk ? `Apply to ${items.length}` : "Save"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      <PrismWriteConfirmationDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={isBulk ? `Apply changes to ${items.length} items?` : `Save changes for SKU ${items[0]?.sku}?`}
+        description="This writes directly to Prism and the POS database."
+        warnings={confirmationWarnings}
+        confirmPhrase={isBulk ? "APPLY PRISM BULK WRITE" : "WRITE TO PRISM"}
+        confirmLabel={saving ? "Saving..." : isBulk ? `Apply to ${items.length}` : "Save"}
+        confirming={saving}
+        onConfirm={commitWrite}
+      />
+    </>
   );
 }

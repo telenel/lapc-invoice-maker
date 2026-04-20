@@ -12,6 +12,7 @@ import { AuditLogList } from "@/components/bulk-edit/audit-log-list";
 import { SaveSearchDialog } from "@/components/bulk-edit/save-search-dialog";
 import { CommitConfirmDialog } from "@/components/bulk-edit/commit-confirm-dialog";
 import { SyncDatabaseButton } from "@/components/products/sync-database-button";
+import { PrismWriteWarningBanner } from "@/components/products/prism-write-warning-banner";
 import { productApi } from "@/domains/product/api-client";
 import type {
   BulkEditSelection,
@@ -109,6 +110,14 @@ export default function BulkEditPage() {
           </Button>
         </div>
       </header>
+
+      <PrismWriteWarningBanner
+        messages={[
+          "Bulk edit commits write directly to Prism and the POS database.",
+          "You must pass the preview and explicit confirmation gate before anything is saved.",
+          "Shared Item-level fields can affect more than one location, so review the preview carefully.",
+        ]}
+      />
 
       <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
         <BulkEditSidebar onLoadFilter={handleLoadFilter} refreshKey={sidebarKey} />

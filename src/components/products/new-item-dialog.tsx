@@ -21,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
+import { PrismWriteConfirmationDialog } from "@/components/products/prism-write-confirmation-dialog";
 import {
   productApi,
   type PrismRefs,
@@ -100,6 +101,8 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [createAnother, setCreateAnother] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmationWarnings, setConfirmationWarnings] = useState<string[]>([]);
   const descriptionRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -122,6 +125,12 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
     }
   }, [open]);
 
+  useEffect(() => {
+    if (open) return;
+    setConfirmOpen(false);
+    setConfirmationWarnings([]);
+  }, [open]);
+
   const update = useCallback(<K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   }, []);
@@ -135,7 +144,18 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
     Number(form.retail) >= 0 &&
     Number(form.cost) >= 0;
 
-  const submit = useCallback(async () => {
+  const openConfirm = useCallback(() => {
+    if (!formValid || saving || !refs) return;
+    setError(null);
+    setConfirmationWarnings([
+      "This creates a new item in Prism and mirrors it into the POS database.",
+      `Fields that will be written: Description, Vendor, Dept/Class, Tax type, Barcode, Catalog #, Comment, Retail, Cost${createAnother ? ", and the form will stay open for another item" : ""}.`,
+      "This is a live database write and cannot be undone from this UI.",
+    ]);
+    setConfirmOpen(true);
+  }, [formValid, saving, refs, createAnother]);
+
+  const commitCreate = useCallback(async () => {
     if (!formValid || saving || !refs) return;
     setError(null);
     setSaving(true);
@@ -157,6 +177,7 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
           ? "Form cleared · vendor, dept and tax kept"
           : undefined,
       });
+      setConfirmOpen(false);
       if (createAnother) {
         setForm((prev) => ({
           ...EMPTY_FORM,
@@ -181,12 +202,12 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
         e.preventDefault();
-        void submit();
+        openConfirm();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, submit]);
+  }, [open, openConfirm]);
 
   const margin = computeMargin(form.cost, form.retail);
   const marginPctLabel = margin.pct === null ? "—" : `${margin.pct.toFixed(1)}%`;
@@ -197,6 +218,7 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
   const skuPreview = previewSku(form.description, form.dccId);
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="gap-0 p-0 sm:max-w-[55rem] md:max-w-4xl overflow-hidden">
         <DialogHeader className="border-b bg-muted/40 px-7 py-5">
@@ -518,7 +540,7 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
               Cancel
             </Button>
             <Button
-              onClick={() => void submit()}
+              onClick={openConfirm}
               disabled={!formValid || saving || !refs}
               data-icon="inline-end"
             >
@@ -538,6 +560,19 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+      <PrismWriteConfirmationDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Create new item in Prism?"
+        description="This writes the new catalog item directly into Prism and mirrors it into the POS database."
+        warnings={confirmationWarnings}
+        confirmPhrase="CREATE IN PRISM"
+        confirmLabel={saving ? "Creating..." : "Create item"}
+        confirming={saving}
+        onConfirm={commitCreate}
+      />
+    </>
   );
 }
 

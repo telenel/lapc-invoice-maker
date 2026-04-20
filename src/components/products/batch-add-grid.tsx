@@ -40,6 +40,7 @@ import { cn } from "@/lib/utils";
 import { productApi, type PrismRefs } from "@/domains/product/api-client";
 import type { BatchCreateRow, BatchValidationError } from "@/domains/product/types";
 import { ItemRefSelects } from "./item-ref-selects";
+import { PrismWriteConfirmationDialog } from "@/components/products/prism-write-confirmation-dialog";
 
 interface DefaultsState {
   vendorId: string;
@@ -193,6 +194,8 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
   const [defaults, setDefaults] = useState<DefaultsState>(EMPTY_DEFAULTS);
   const [errors, setErrors] = useState<BatchValidationError[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmationWarnings, setConfirmationWarnings] = useState<string[]>([]);
   const [lastValidated, setLastValidated] = useState<"clean" | "dirty" | "idle">("idle");
   const tbodyRef = useRef<HTMLTableSectionElement | null>(null);
 
@@ -331,7 +334,18 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
     }
   }, [rowsToBatch]);
 
-  const handleSubmit = useCallback(async () => {
+  const openConfirm = useCallback(() => {
+    const batch = rowsToBatch();
+    if (batch.length === 0 || errors.length > 0 || refsLoading) return;
+    setConfirmationWarnings([
+      `This will create ${batch.length} new item${batch.length === 1 ? "" : "s"} in Prism and mirror them into the POS database.`,
+      "This is a live database write and cannot be undone from this UI.",
+      "Double-check pricing, vendor, department/class, barcode, and tax before confirming.",
+    ]);
+    setConfirmOpen(true);
+  }, [rowsToBatch, errors, refsLoading]);
+
+  const commitCreate = useCallback(async () => {
     setSubmitting(true);
     setErrors([]);
     try {
@@ -350,6 +364,7 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
         toast.success(`Created ${result.count} item${result.count === 1 ? "" : "s"}`);
         onSubmitted?.(result.skus);
       }
+      setConfirmOpen(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Submit failed");
     } finally {
@@ -391,7 +406,7 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
       if (e.key === "Enter") {
         e.preventDefault();
         if (e.shiftKey) {
-          if (canSubmit) void handleSubmit();
+          if (canSubmit) openConfirm();
         } else {
           void handleValidate();
         }
@@ -408,7 +423,7 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [canSubmit, handleSubmit, handleValidate, fillDown]);
+  }, [canSubmit, openConfirm, handleValidate, fillDown]);
 
   function handleCellKeyDown(e: React.KeyboardEvent<HTMLElement>, rowIdx: number) {
     if (e.key === "Enter" && !e.shiftKey && !e.ctrlKey && !e.metaKey) {
@@ -682,18 +697,29 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
             ) : null}
             Validate
           </Button>
-          <Button size="sm" onClick={handleSubmit} disabled={!canSubmit}>
+          <Button size="sm" onClick={openConfirm} disabled={!canSubmit}>
             {submitting && lastValidated === "clean" ? (
               <Loader2Icon className="mr-1 size-3.5 animate-spin" aria-hidden />
             ) : null}
             {submitting
-              ? "Working…"
+              ? "Submitting…"
               : batch.length === 0
                 ? "Nothing to submit"
                 : `Submit ${batch.length} item${batch.length === 1 ? "" : "s"}`}
           </Button>
         </div>
       </div>
+      <PrismWriteConfirmationDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Submit batch add to Prism?"
+        description="This creates live catalog items in Prism and mirrors them into the POS database."
+        warnings={confirmationWarnings}
+        confirmPhrase="CREATE IN PRISM"
+        confirmLabel={submitting ? "Submitting..." : `Submit ${batch.length} item${batch.length === 1 ? "" : "s"}`}
+        confirming={submitting}
+        onConfirm={commitCreate}
+      />
     </div>
   );
 }
