@@ -4,6 +4,7 @@ import {
 } from "./location-filters";
 import type {
   Product,
+  ProductBrowseRow,
   ProductLocationSlice,
   ProductLocationVariance,
 } from "./types";
@@ -32,9 +33,10 @@ export function buildProductBrowseRow(
   base: Product,
   slices: ReadonlyArray<ProductInventorySliceRow>,
   locationIds: ReadonlyArray<ProductLocationId>,
-): Product {
+): ProductBrowseRow {
   const primaryLocationId = getPrimaryProductLocationId(locationIds);
   const primarySlice = slices.find((slice) => slice.locationId === primaryLocationId) ?? null;
+  const selectedInventories = slices.map((slice) => ({ ...slice }));
 
   return {
     ...base,
@@ -49,7 +51,7 @@ export function buildProductBrowseRow(
       base.last_sale_date,
     primary_location_id: primarySlice?.locationId ?? null,
     primary_location_abbrev: primarySlice?.locationAbbrev ?? null,
-    selected_inventories: slices.map((slice) => ({ ...slice })),
+    selected_inventories: selectedInventories,
     location_variance: buildProductLocationVariance(slices),
   };
 }

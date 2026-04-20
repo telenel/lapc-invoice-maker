@@ -66,11 +66,14 @@ export interface Product {
   margin_ratio?: number | null;
   stock_coverage_days?: number | null;
   trend_direction?: "accelerating" | "decelerating" | "steady" | null;
-  primary_location_id?: ProductLocationId | null;
-  primary_location_abbrev?: ProductLocationAbbrev | null;
-  selected_inventories?: ProductLocationSlice[];
-  location_variance?: ProductLocationVariance;
   discontinued: boolean | null;
+}
+
+export interface ProductBrowseRow extends Product {
+  primary_location_id: ProductLocationId | null;
+  primary_location_abbrev: ProductLocationAbbrev | null;
+  selected_inventories: ProductLocationSlice[];
+  location_variance: ProductLocationVariance;
 }
 
 export type ProductTab = "textbooks" | "merchandise";

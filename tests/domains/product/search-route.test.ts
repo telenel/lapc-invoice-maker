@@ -4,7 +4,7 @@ import {
   buildProductLocationVariance,
   type ProductInventorySliceRow,
 } from "@/domains/product/search-route";
-import type { Product } from "@/domains/product/types";
+import type { Product, ProductBrowseRow } from "@/domains/product/types";
 
 function buildBaseProduct(overrides: Partial<Product> = {}): Product {
   return {
@@ -111,7 +111,7 @@ describe("buildProductBrowseRow", () => {
       },
     ];
 
-    const row = buildProductBrowseRow(base, slices, [2, 3]);
+    const row: ProductBrowseRow = buildProductBrowseRow(base, slices, [2, 3]);
 
     expect(row.primary_location_id).toBe(2);
     expect(row.primary_location_abbrev).toBe("PIER");
@@ -127,6 +127,8 @@ describe("buildProductBrowseRow", () => {
       lastSaleDateVaries: true,
     });
     expect(row.selected_inventories).toEqual(slices);
+    expect(row.selected_inventories).not.toBe(slices);
+    expect(row.selected_inventories[0]).not.toBe(slices[0]);
   });
 
   it("preserves the base effective sale-date chain when the primary slice has no last sale", () => {
