@@ -98,6 +98,11 @@ export interface ProductRefMaps {
 
 let committedProductRefSnapshotPromise: Promise<PrismRefs> | null = null;
 
+export function normalizePackageTypeLabel(row: { code: string; label: string | null }): string {
+  const label = row.label?.trim();
+  return label && label.length > 0 ? label : row.code;
+}
+
 export function loadCommittedProductRefSnapshot(): Promise<PrismRefs> {
   if (!committedProductRefSnapshotPromise) {
     committedProductRefSnapshotPromise = (async () => {
@@ -127,7 +132,7 @@ export function buildProductRefMaps(refs: PrismRefs): ProductRefMaps {
     taxTypeLabels: new Map(refs.taxTypes.map((row) => [row.taxTypeId, row.description])),
     tagTypeLabels: new Map(refs.tagTypes.map((row) => [row.tagTypeId, row.label])),
     statusCodeLabels: new Map(refs.statusCodes.map((row) => [row.statusCodeId, row.label])),
-    packageTypeLabels: new Map(refs.packageTypes.map((row) => [row.code, row.label ?? row.code])),
+    packageTypeLabels: new Map(refs.packageTypes.map((row) => [row.code, normalizePackageTypeLabel(row)])),
     colorLabels: new Map(refs.colors.map((row) => [row.colorId, row.label])),
     bindingLabels: new Map(refs.bindings.map((row) => [row.bindingId, row.label])),
   };

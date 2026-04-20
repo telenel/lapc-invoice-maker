@@ -12,8 +12,20 @@
  * later, accept LocationID as a parameter.
  */
 import { getPrismPool, sql } from "@/lib/prism";
+import {
+  normalizePackageTypeLabel,
+  type PrismBindingRef,
+  type PrismColorRef,
+  type PrismDccRef,
+  type PrismPackageTypeRef,
+  type PrismStatusCodeRef,
+  type PrismTagTypeRef,
+  type PrismTaxTypeRef,
+  type PrismVendorRef,
+} from "./ref-data";
 
 export const PIERCE_LOCATION_ID = 2;
+const PIERCE_LOCATION_IDS = "(2, 3, 4)";
 
 export interface CreateGmItemInput {
   description: string;
@@ -177,64 +189,215 @@ export async function deleteTestItem(sku: number): Promise<{ affected: number }>
   }
 }
 
-export interface PrismVendor { vendorId: number; name: string }
-export interface PrismDcc { dccId: number; deptName: string; className: string | null }
-export interface PrismTaxType { taxTypeId: number; description: string }
-
-export async function listVendors(limit = 200): Promise<PrismVendor[]> {
+export async function listVendors(limit = 200): Promise<PrismVendorRef[]> {
   const pool = await getPrismPool();
   const result = await pool
     .request()
-    .input("loc", sql.Int, PIERCE_LOCATION_ID)
     .input("lim", sql.Int, limit)
-    .query<{ VendorID: number; Name: string }>(`
-      SELECT TOP (@lim) v.VendorID, LTRIM(RTRIM(v.Name)) AS Name
+    .query<{ VendorID: number; Name: string; PierceItems: number }>(`
+      SELECT TOP (@lim)
+        v.VendorID,
+        LTRIM(RTRIM(v.Name)) AS Name,
+        COUNT(DISTINCT i.SKU) AS PierceItems
       FROM VendorMaster v
-      WHERE EXISTS (
-        SELECT 1 FROM Item i
-        INNER JOIN Inventory inv ON i.SKU = inv.SKU AND inv.LocationID = @loc
-        WHERE i.VendorID = v.VendorID
-      )
-      ORDER BY v.Name
+      INNER JOIN Item i ON i.VendorID = v.VendorID
+      INNER JOIN Inventory inv ON i.SKU = inv.SKU AND inv.LocationID IN ${PIERCE_LOCATION_IDS}
+      GROUP BY v.VendorID, v.Name
+      ORDER BY COUNT(DISTINCT i.SKU) DESC, LTRIM(RTRIM(v.Name)) ASC
     `);
-  return result.recordset.map((r) => ({ vendorId: r.VendorID, name: r.Name }));
+  return result.recordset.map((r) => ({ vendorId: r.VendorID, name: r.Name, pierceItems: Number(r.PierceItems) }));
 }
 
-export async function listDccs(limit = 500): Promise<PrismDcc[]> {
+export async function listDccs(limit = 500): Promise<PrismDccRef[]> {
   const pool = await getPrismPool();
   const result = await pool.request().input("lim", sql.Int, limit).query<{
     DCCID: number;
+    DeptNum: number | null;
+    ClassNum: number | null;
+    CatNum: number | null;
     DeptName: string;
     ClassName: string | null;
+    CatName: string | null;
+    PierceItems: number;
   }>(`
-    SELECT TOP (@lim) d.DCCID,
-                      LTRIM(RTRIM(dep.DeptName)) AS DeptName,
-                      LTRIM(RTRIM(cls.ClassName)) AS ClassName
+    SELECT TOP (@lim)
+      d.DCCID,
+      d.Department AS DeptNum,
+      d.Class AS ClassNum,
+      d.Category AS CatNum,
+      LTRIM(RTRIM(dep.DeptName)) AS DeptName,
+      LTRIM(RTRIM(cls.ClassName)) AS ClassName,
+      LTRIM(RTRIM(cat.CatName)) AS CatName,
+      COUNT(DISTINCT i.SKU) AS PierceItems
     FROM DeptClassCat d
+    INNER JOIN Item i ON i.DCCID = d.DCCID
+    INNER JOIN Inventory inv ON i.SKU = inv.SKU AND inv.LocationID IN ${PIERCE_LOCATION_IDS}
     LEFT JOIN DCC_Department dep ON d.Department = dep.Department
     LEFT JOIN DCC_Class cls ON d.Department = cls.Department AND d.Class = cls.Class
+    LEFT JOIN DCC_Category cat ON d.Department = cat.Department AND d.Class = cat.Class AND d.Category = cat.Category
     WHERE d.DCCType = 3
-    ORDER BY dep.DeptName, cls.ClassName
+    GROUP BY d.DCCID, d.Department, d.Class, d.Category, dep.DeptName, cls.ClassName, cat.CatName
+    ORDER BY COUNT(DISTINCT i.SKU) DESC, LTRIM(RTRIM(dep.DeptName)) ASC, LTRIM(RTRIM(cls.ClassName)) ASC, LTRIM(RTRIM(cat.CatName)) ASC
   `);
   return result.recordset.map((r) => ({
     dccId: r.DCCID,
+    deptNum: r.DeptNum,
+    classNum: r.ClassNum,
+    catNum: r.CatNum,
     deptName: r.DeptName,
     className: r.ClassName,
+    catName: r.CatName,
+    pierceItems: Number(r.PierceItems),
   }));
 }
 
-export async function listTaxTypes(): Promise<PrismTaxType[]> {
+export async function listTaxTypes(limit = 200): Promise<PrismTaxTypeRef[]> {
   const pool = await getPrismPool();
-  const result = await pool.request().query<{
+  const result = await pool.request().input("lim", sql.Int, limit).query<{
     ItemTaxTypeID: number;
     Description: string;
+    PierceItems: number;
   }>(`
-    SELECT ItemTaxTypeID, LTRIM(RTRIM(Description)) AS Description
-    FROM Item_Tax_Type
-    ORDER BY ItemTaxTypeID
+      SELECT TOP (@lim)
+        itt.ItemTaxTypeID,
+        LTRIM(RTRIM(itt.Description)) AS Description,
+        COUNT(DISTINCT i.SKU) AS PierceItems
+    FROM Item_Tax_Type itt
+    INNER JOIN Item i ON i.ItemTaxTypeID = itt.ItemTaxTypeID
+    INNER JOIN Inventory inv ON inv.SKU = i.SKU AND inv.LocationID IN ${PIERCE_LOCATION_IDS}
+    GROUP BY itt.ItemTaxTypeID, itt.Description
+    ORDER BY COUNT(DISTINCT i.SKU) DESC, LTRIM(RTRIM(itt.Description)) ASC
   `);
   return result.recordset.map((r) => ({
     taxTypeId: r.ItemTaxTypeID,
     description: r.Description,
+    pierceItems: Number(r.PierceItems),
+  }));
+}
+
+export async function listTagTypes(limit = 200): Promise<PrismTagTypeRef[]> {
+  const pool = await getPrismPool();
+  const result = await pool.request().input("lim", sql.Int, limit).query<{
+    TagTypeID: number;
+    Description: string;
+    SubSystemID: number | null;
+    PierceRows: number;
+  }>(`
+    SELECT TOP (@lim)
+      tt.TagTypeID,
+      LTRIM(RTRIM(tt.Description)) AS Description,
+      tt.SubSystemID,
+      COUNT_BIG(*) AS PierceRows
+    FROM TagType tt
+    INNER JOIN Inventory inv ON inv.TagTypeID = tt.TagTypeID AND inv.LocationID IN ${PIERCE_LOCATION_IDS}
+    GROUP BY tt.TagTypeID, tt.Description, tt.SubSystemID
+    ORDER BY COUNT_BIG(*) DESC, LTRIM(RTRIM(tt.Description)) ASC
+  `);
+  return result.recordset.map((r) => ({
+    tagTypeId: r.TagTypeID,
+    label: r.Description,
+    subsystem: r.SubSystemID,
+    pierceRows: Number(r.PierceRows),
+  }));
+}
+
+export async function listStatusCodes(limit = 200): Promise<PrismStatusCodeRef[]> {
+  const pool = await getPrismPool();
+  const result = await pool.request().input("lim", sql.Int, limit).query<{
+    InvStatusCodeID: number;
+    StatusCodeName: string;
+    PierceRows: number;
+  }>(`
+    SELECT TOP (@lim)
+      sc.InvStatusCodeID,
+      LTRIM(RTRIM(sc.StatusCodeName)) AS StatusCodeName,
+      COUNT_BIG(*) AS PierceRows
+    FROM InventoryStatusCodes sc
+    INNER JOIN Inventory inv ON inv.StatusCodeID = sc.InvStatusCodeID AND inv.LocationID IN ${PIERCE_LOCATION_IDS}
+    GROUP BY sc.InvStatusCodeID, sc.StatusCodeName
+    ORDER BY COUNT_BIG(*) DESC, LTRIM(RTRIM(sc.StatusCodeName)) ASC
+  `);
+  return result.recordset.map((r) => ({
+    statusCodeId: r.InvStatusCodeID,
+    label: r.StatusCodeName,
+    pierceRows: Number(r.PierceRows),
+  }));
+}
+
+export async function listPackageTypes(limit = 200): Promise<PrismPackageTypeRef[]> {
+  const pool = await getPrismPool();
+  const result = await pool.request().input("lim", sql.Int, limit).query<{
+    PackageType: string;
+    Description: string | null;
+    DefaultQty: number | null;
+    PierceItems: number;
+  }>(`
+    SELECT TOP (@lim)
+      pkg.PackageType,
+      LTRIM(RTRIM(pkg.Description)) AS Description,
+      pkg.DefaultQty,
+      COUNT(DISTINCT i.SKU) AS PierceItems
+    FROM PackageType pkg
+    INNER JOIN GeneralMerchandise gm ON gm.PackageType = pkg.PackageType
+    INNER JOIN Item i ON i.SKU = gm.SKU
+    INNER JOIN Inventory inv ON inv.SKU = i.SKU AND inv.LocationID IN ${PIERCE_LOCATION_IDS}
+    GROUP BY pkg.PackageType, pkg.Description, pkg.DefaultQty
+    ORDER BY COUNT(DISTINCT i.SKU) DESC, LTRIM(RTRIM(pkg.Description)) ASC, pkg.PackageType ASC
+  `);
+  return result.recordset.map((r) => ({
+    code: r.PackageType,
+    label: normalizePackageTypeLabel({ code: r.PackageType, label: r.Description }),
+    defaultQty: r.DefaultQty,
+    pierceItems: Number(r.PierceItems),
+  }));
+}
+
+export async function listColors(limit = 200): Promise<PrismColorRef[]> {
+  const pool = await getPrismPool();
+  const result = await pool.request().input("lim", sql.Int, limit).query<{
+    ColorID: number;
+    Description: string;
+    PierceItems: number;
+  }>(`
+    SELECT TOP (@lim)
+      c.ColorID,
+      LTRIM(RTRIM(c.Description)) AS Description,
+      COUNT(DISTINCT i.SKU) AS PierceItems
+    FROM Color c
+    INNER JOIN GeneralMerchandise gm ON gm.Color = c.ColorID
+    INNER JOIN Item i ON i.SKU = gm.SKU
+    INNER JOIN Inventory inv ON inv.SKU = i.SKU AND inv.LocationID IN ${PIERCE_LOCATION_IDS}
+    GROUP BY c.ColorID, c.Description
+    ORDER BY COUNT(DISTINCT i.SKU) DESC, LTRIM(RTRIM(c.Description)) ASC
+  `);
+  return result.recordset.map((r) => ({
+    colorId: r.ColorID,
+    label: r.Description,
+    pierceItems: Number(r.PierceItems),
+  }));
+}
+
+export async function listBindings(limit = 200): Promise<PrismBindingRef[]> {
+  const pool = await getPrismPool();
+  const result = await pool.request().input("lim", sql.Int, limit).query<{
+    BindingID: number;
+    Name: string;
+    PierceBooks: number;
+  }>(`
+    SELECT TOP (@lim)
+      b.BindingID,
+      LTRIM(RTRIM(b.Name)) AS Name,
+      COUNT(DISTINCT i.SKU) AS PierceBooks
+    FROM Binding b
+    INNER JOIN Textbook tb ON tb.BindingID = b.BindingID
+    INNER JOIN Item i ON i.SKU = tb.SKU
+    INNER JOIN Inventory inv ON inv.SKU = i.SKU AND inv.LocationID IN ${PIERCE_LOCATION_IDS}
+    GROUP BY b.BindingID, b.Name
+    ORDER BY COUNT(DISTINCT i.SKU) DESC, LTRIM(RTRIM(b.Name)) ASC
+  `);
+  return result.recordset.map((r) => ({
+    bindingId: r.BindingID,
+    label: r.Name,
+    pierceBooks: Number(r.PierceBooks),
   }));
 }
