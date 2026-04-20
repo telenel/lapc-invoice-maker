@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildPatch } from "@/components/products/edit-item-dialog";
+import { resolveEditDialogMode } from "@/components/products/edit-item-dialog-mode";
 
 describe("buildPatch", () => {
   it("returns empty patch when nothing changed", () => {
@@ -18,5 +19,47 @@ describe("buildPatch", () => {
     const baseline = { barcode: "A" };
     const current = { barcode: "" };
     expect(buildPatch(baseline, current)).toEqual({ barcode: null });
+  });
+});
+
+describe("resolveEditDialogMode", () => {
+  it("resolves v2 when enabled and no override or textbook selection exists", () => {
+    expect(
+      resolveEditDialogMode({
+        featureFlagEnabled: true,
+        override: null,
+        hasTextbookSelection: false,
+      }),
+    ).toBe("v2");
+  });
+
+  it("forces legacy when the override requests it", () => {
+    expect(
+      resolveEditDialogMode({
+        featureFlagEnabled: true,
+        override: "legacy",
+        hasTextbookSelection: false,
+      }),
+    ).toBe("legacy");
+  });
+
+  it('forces v2 when the override requests it and there is no textbook selection', () => {
+    expect(
+      resolveEditDialogMode({
+        featureFlagEnabled: false,
+        override: "v2",
+        hasTextbookSelection: false,
+      }),
+    ).toBe("v2");
+  });
+
+  it("forces legacy for textbook selections", () => {
+    expect(
+      resolveEditDialogMode({
+        featureFlagEnabled: true,
+        override: null,
+        hasTextbookSelection: true,
+      }),
+    ).toBe("legacy");
   });
 });

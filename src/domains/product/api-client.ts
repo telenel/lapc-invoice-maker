@@ -12,6 +12,8 @@ import type {
   ItemSnapshot,
   BatchCreateRow,
   BatchValidationError,
+  ProductEditDetails,
+  ProductEditPatchV2,
 } from "./types";
 import type { PrismRefs } from "./ref-data";
 export type {
@@ -60,6 +62,18 @@ export interface CreatedItem {
   cost: number;
 }
 
+export interface LegacyUpdateBody {
+  patch: GmItemPatch | TextbookPatch;
+  isTextbook?: boolean;
+  baseline?: ItemSnapshot;
+}
+
+export interface V2UpdateBody {
+  mode: "v2";
+  patch: ProductEditPatchV2;
+  baseline?: ItemSnapshot;
+}
+
 async function parseError(response: Response): Promise<string> {
   try {
     const body = (await response.json()) as { error?: unknown };
@@ -103,13 +117,15 @@ export const productApi = {
     return (await res.json()) as { sku: number; mode: string; affected: number };
   },
 
+  async detail(sku: number): Promise<ProductEditDetails> {
+    const res = await fetch(`/api/products/${sku}`, { cache: "no-store" });
+    if (!res.ok) throw new Error(await parseError(res));
+    return (await res.json()) as ProductEditDetails;
+  },
+
   async update(
     sku: number,
-    body: {
-      patch: GmItemPatch | TextbookPatch;
-      isTextbook?: boolean;
-      baseline?: ItemSnapshot;
-    },
+    body: LegacyUpdateBody | V2UpdateBody,
   ): Promise<{ sku: number; appliedFields: string[] }> {
     const res = await fetch(`/api/products/${sku}`, {
       method: "PATCH",

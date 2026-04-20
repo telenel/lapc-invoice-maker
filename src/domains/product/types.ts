@@ -213,6 +213,39 @@ export interface GmItemPatch {
   fDiscontinue?: 0 | 1;
 }
 
+/** Fields that live on Prism Item rows for single-item edits. */
+export interface ItemPatch {
+  barcode?: string | null;
+  vendorId?: number;
+  dccId?: number;
+  itemTaxTypeId?: number;
+  comment?: string | null;
+  weight?: number;
+  fDiscontinue?: 0 | 1;
+}
+
+/** Fields that live on Prism GeneralMerchandise rows for single-item edits. */
+export interface GmDetailsPatch {
+  description?: string;
+  catalogNumber?: string | null;
+  packageType?: string | null;
+  unitsPerPack?: number;
+  imageUrl?: string | null;
+}
+
+/** Fields that live on Prism Inventory for the Pierce location. */
+export interface PrimaryInventoryPatch {
+  retail?: number;
+  cost?: number;
+}
+
+/** Typed write contract for the single-item editor. */
+export interface ProductEditPatchV2 {
+  item?: ItemPatch;
+  gm?: GmDetailsPatch;
+  primaryInventory?: PrimaryInventoryPatch;
+}
+
 /** Narrow patch for textbook rows — only fields that live on Item/Inventory. */
 export interface TextbookPatch {
   barcode?: string | null;
@@ -228,6 +261,39 @@ export interface ItemSnapshot {
   retail: number;
   cost: number;
   fDiscontinue: 0 | 1;
+}
+
+/** Rich single-item snapshot used to hydrate the edit dialog without storing full browse state. */
+export interface ProductEditDetails {
+  sku: number;
+  itemType: string;
+  description: string | null;
+  barcode: string | null;
+  vendorId: number | null;
+  dccId: number | null;
+  itemTaxTypeId: number | null;
+  catalogNumber: string | null;
+  comment: string | null;
+  retail: number | null;
+  cost: number | null;
+  fDiscontinue: 0 | 1;
+  altVendorId: number | null;
+  mfgId: number | null;
+  weight: number | null;
+  packageType: string | null;
+  unitsPerPack: number | null;
+  orderIncrement: number | null;
+  imageUrl: string | null;
+  size: string | null;
+  sizeId: number | null;
+  colorId: number | null;
+  styleId: number | null;
+  itemSeasonCodeId: number | null;
+  fListPriceFlag: boolean;
+  fPerishable: boolean;
+  fIdRequired: boolean;
+  minOrderQtyItem: number | null;
+  usedDccId: number | null;
 }
 
 /** One validation error attached to a batch-add or batch-edit row. */

@@ -8,7 +8,15 @@
  * Pierce-only by default — Inventory writes target LocationID=2 (PIER).
  */
 import { getPrismPool, sql } from "@/lib/prism";
-import type { GmItemPatch, TextbookPatch, ItemSnapshot } from "./types";
+import type {
+  GmItemPatch,
+  TextbookPatch,
+  ItemSnapshot,
+  ProductEditPatchV2,
+  ItemPatch,
+  GmDetailsPatch,
+  PrimaryInventoryPatch,
+} from "./types";
 import { PIERCE_LOCATION_ID } from "./prism-server";
 
 export async function getItemSnapshot(sku: number): Promise<ItemSnapshot | null> {
@@ -50,6 +58,51 @@ interface UpdateGmItemResult {
   appliedFields: string[];
 }
 
+export type ProductUpdaterInput = GmItemPatch | TextbookPatch | ProductEditPatchV2;
+
+interface ProductWriteBuckets {
+  item: ItemPatch;
+  gm: GmDetailsPatch;
+  primaryInventory: PrimaryInventoryPatch;
+}
+
+function isV2UpdaterInput(patch: ProductUpdaterInput): patch is ProductEditPatchV2 {
+  return "item" in patch || "gm" in patch || "primaryInventory" in patch;
+}
+
+function normalizeUpdaterInput(patch: ProductUpdaterInput): ProductWriteBuckets {
+  if (isV2UpdaterInput(patch)) {
+    return {
+      item: { ...(patch.item ?? {}) },
+      gm: { ...(patch.gm ?? {}) },
+      primaryInventory: { ...(patch.primaryInventory ?? {}) },
+    };
+  }
+
+  return {
+    item: {
+      barcode: patch.barcode,
+      vendorId: "vendorId" in patch ? patch.vendorId : undefined,
+      dccId: "dccId" in patch ? patch.dccId : undefined,
+      itemTaxTypeId: "itemTaxTypeId" in patch ? patch.itemTaxTypeId : undefined,
+      comment: "comment" in patch ? patch.comment : undefined,
+      weight: "weight" in patch ? patch.weight : undefined,
+      fDiscontinue: patch.fDiscontinue,
+    },
+    gm: {
+      description: "description" in patch ? patch.description : undefined,
+      catalogNumber: "catalogNumber" in patch ? patch.catalogNumber : undefined,
+      packageType: "packageType" in patch ? patch.packageType : undefined,
+      unitsPerPack: "unitsPerPack" in patch ? patch.unitsPerPack : undefined,
+      imageUrl: "imageUrl" in patch ? patch.imageUrl : undefined,
+    },
+    primaryInventory: {
+      retail: patch.retail,
+      cost: patch.cost,
+    },
+  };
+}
+
 /**
  * Update a GM item. Only fields present in `patch` are written. Runs in a
  * transaction. Uses the verify-then-assume pattern from deleteTestItem:
@@ -59,7 +112,7 @@ interface UpdateGmItemResult {
  */
 export async function updateGmItem(
   sku: number,
-  patch: GmItemPatch,
+  patch: ProductUpdaterInput,
   expectedSnapshot?: ItemSnapshot,
 ): Promise<UpdateGmItemResult> {
   const pool = await getPrismPool();
@@ -113,81 +166,82 @@ export async function updateGmItem(
       }
     }
 
+    const normalizedPatch = normalizeUpdaterInput(patch);
     const applied: string[] = [];
     const itemSet: string[] = [];
     const gmSet: string[] = [];
     const invSet: string[] = [];
     const req = transaction.request().input("sku", sql.Int, sku).input("loc", sql.Int, PIERCE_LOCATION_ID);
 
-    if (patch.barcode !== undefined) {
-      req.input("barcode", sql.VarChar(20), patch.barcode ?? "");
+    if (normalizedPatch.item.barcode !== undefined) {
+      req.input("barcode", sql.VarChar(20), normalizedPatch.item.barcode ?? "");
       itemSet.push("BarCode = @barcode");
       applied.push("barcode");
     }
-    if (patch.vendorId !== undefined) {
-      req.input("vendorId", sql.Int, patch.vendorId);
+    if (normalizedPatch.item.vendorId !== undefined) {
+      req.input("vendorId", sql.Int, normalizedPatch.item.vendorId);
       itemSet.push("VendorID = @vendorId");
       applied.push("vendorId");
     }
-    if (patch.dccId !== undefined) {
-      req.input("dccId", sql.Int, patch.dccId);
+    if (normalizedPatch.item.dccId !== undefined) {
+      req.input("dccId", sql.Int, normalizedPatch.item.dccId);
       itemSet.push("DCCID = @dccId");
       applied.push("dccId");
     }
-    if (patch.itemTaxTypeId !== undefined) {
-      req.input("taxId", sql.Int, patch.itemTaxTypeId);
+    if (normalizedPatch.item.itemTaxTypeId !== undefined) {
+      req.input("taxId", sql.Int, normalizedPatch.item.itemTaxTypeId);
       itemSet.push("ItemTaxTypeID = @taxId");
       applied.push("itemTaxTypeId");
     }
-    if (patch.comment !== undefined) {
-      req.input("comment", sql.VarChar(25), patch.comment ?? "");
+    if (normalizedPatch.item.comment !== undefined) {
+      req.input("comment", sql.VarChar(25), normalizedPatch.item.comment ?? "");
       itemSet.push("txComment = @comment");
       applied.push("comment");
     }
-    if (patch.weight !== undefined) {
-      req.input("weight", sql.Decimal(9, 4), patch.weight);
+    if (normalizedPatch.item.weight !== undefined) {
+      req.input("weight", sql.Decimal(9, 4), normalizedPatch.item.weight);
       itemSet.push("Weight = @weight");
       applied.push("weight");
     }
-    if (patch.fDiscontinue !== undefined) {
-      req.input("fDiscontinue", sql.TinyInt, patch.fDiscontinue);
+    if (normalizedPatch.item.fDiscontinue !== undefined) {
+      req.input("fDiscontinue", sql.TinyInt, normalizedPatch.item.fDiscontinue);
       itemSet.push("fDiscontinue = @fDiscontinue");
       applied.push("fDiscontinue");
     }
 
-    if (patch.description !== undefined) {
-      req.input("description", sql.VarChar(128), patch.description);
+    if (normalizedPatch.gm.description !== undefined) {
+      req.input("description", sql.VarChar(128), normalizedPatch.gm.description);
       gmSet.push("Description = @description");
       applied.push("description");
     }
-    if (patch.catalogNumber !== undefined) {
-      req.input("catalogNumber", sql.VarChar(30), patch.catalogNumber ?? "");
+    if (normalizedPatch.gm.catalogNumber !== undefined) {
+      req.input("catalogNumber", sql.VarChar(30), normalizedPatch.gm.catalogNumber ?? "");
       gmSet.push("CatalogNumber = @catalogNumber");
       applied.push("catalogNumber");
     }
-    if (patch.packageType !== undefined) {
-      req.input("packageType", sql.VarChar(3), patch.packageType ?? "");
+    if (normalizedPatch.gm.packageType !== undefined) {
+      req.input("packageType", sql.VarChar(3), normalizedPatch.gm.packageType ?? "");
       gmSet.push("PackageType = @packageType");
       applied.push("packageType");
     }
-    if (patch.unitsPerPack !== undefined) {
-      req.input("unitsPerPack", sql.SmallInt, patch.unitsPerPack);
+    if (normalizedPatch.gm.unitsPerPack !== undefined) {
+      req.input("unitsPerPack", sql.SmallInt, normalizedPatch.gm.unitsPerPack);
       gmSet.push("UnitsPerPack = @unitsPerPack");
       applied.push("unitsPerPack");
     }
-    if (patch.imageUrl !== undefined) {
-      req.input("imageUrl", sql.VarChar(128), patch.imageUrl ?? "");
+    if (normalizedPatch.gm.imageUrl !== undefined) {
+      req.input("imageUrl", sql.VarChar(128), normalizedPatch.gm.imageUrl ?? "");
       gmSet.push("ImageURL = @imageUrl");
       applied.push("imageUrl");
     }
 
-    if (patch.retail !== undefined) {
-      req.input("retail", sql.Money, patch.retail);
+    if (normalizedPatch.primaryInventory.retail !== undefined) {
+      req.input("retail", sql.Money, normalizedPatch.primaryInventory.retail);
       invSet.push("Retail = @retail");
       applied.push("retail");
     }
-    if (patch.cost !== undefined) {
-      req.input("cost", sql.Money, patch.cost);
+    if (normalizedPatch.primaryInventory.cost !== undefined) {
+      req.input("cost", sql.Money, normalizedPatch.primaryInventory.cost);
       invSet.push("Cost = @cost");
       applied.push("cost");
     }
@@ -198,19 +252,19 @@ export async function updateGmItem(
     if (gmSet.length > 0) {
       await transaction.request()
         .input("sku", sql.Int, sku)
-        .input("description", sql.VarChar(128), patch.description ?? "")
-        .input("catalogNumber", sql.VarChar(30), patch.catalogNumber ?? "")
-        .input("packageType", sql.VarChar(3), patch.packageType ?? "")
-        .input("unitsPerPack", sql.SmallInt, patch.unitsPerPack ?? 1)
-        .input("imageUrl", sql.VarChar(128), patch.imageUrl ?? "")
+        .input("description", sql.VarChar(128), normalizedPatch.gm.description ?? "")
+        .input("catalogNumber", sql.VarChar(30), normalizedPatch.gm.catalogNumber ?? "")
+        .input("packageType", sql.VarChar(3), normalizedPatch.gm.packageType ?? "")
+        .input("unitsPerPack", sql.SmallInt, normalizedPatch.gm.unitsPerPack ?? 1)
+        .input("imageUrl", sql.VarChar(128), normalizedPatch.gm.imageUrl ?? "")
         .query(`UPDATE GeneralMerchandise SET ${gmSet.join(", ")} WHERE SKU = @sku`);
     }
     if (invSet.length > 0) {
       await transaction.request()
         .input("sku", sql.Int, sku)
         .input("loc", sql.Int, PIERCE_LOCATION_ID)
-        .input("retail", sql.Money, patch.retail ?? 0)
-        .input("cost", sql.Money, patch.cost ?? 0)
+        .input("retail", sql.Money, normalizedPatch.primaryInventory.retail ?? 0)
+        .input("cost", sql.Money, normalizedPatch.primaryInventory.cost ?? 0)
         .query(`UPDATE Inventory SET ${invSet.join(", ")} WHERE SKU = @sku AND LocationID = @loc`);
     }
 
@@ -229,7 +283,7 @@ export async function updateGmItem(
  */
 export async function updateTextbookPricing(
   sku: number,
-  patch: TextbookPatch,
+  patch: ProductUpdaterInput,
   expectedSnapshot?: ItemSnapshot,
 ): Promise<UpdateGmItemResult> {
   const pool = await getPrismPool();
@@ -275,23 +329,24 @@ export async function updateTextbookPricing(
       }
     }
 
+    const normalizedPatch = normalizeUpdaterInput(patch);
     const applied: string[] = [];
     const itemSet: string[] = [];
     const invSet: string[] = [];
 
-    if (patch.barcode !== undefined) {
+    if (normalizedPatch.item.barcode !== undefined) {
       itemSet.push("BarCode = @barcode");
       applied.push("barcode");
     }
-    if (patch.fDiscontinue !== undefined) {
+    if (normalizedPatch.item.fDiscontinue !== undefined) {
       itemSet.push("fDiscontinue = @fDiscontinue");
       applied.push("fDiscontinue");
     }
-    if (patch.retail !== undefined) {
+    if (normalizedPatch.primaryInventory.retail !== undefined) {
       invSet.push("Retail = @retail");
       applied.push("retail");
     }
-    if (patch.cost !== undefined) {
+    if (normalizedPatch.primaryInventory.cost !== undefined) {
       invSet.push("Cost = @cost");
       applied.push("cost");
     }
@@ -299,16 +354,16 @@ export async function updateTextbookPricing(
     if (itemSet.length > 0) {
       await transaction.request()
         .input("sku", sql.Int, sku)
-        .input("barcode", sql.VarChar(20), patch.barcode ?? "")
-        .input("fDiscontinue", sql.TinyInt, patch.fDiscontinue ?? 0)
+        .input("barcode", sql.VarChar(20), normalizedPatch.item.barcode ?? "")
+        .input("fDiscontinue", sql.TinyInt, normalizedPatch.item.fDiscontinue ?? 0)
         .query(`UPDATE Item SET ${itemSet.join(", ")} WHERE SKU = @sku`);
     }
     if (invSet.length > 0) {
       await transaction.request()
         .input("sku", sql.Int, sku)
         .input("loc", sql.Int, PIERCE_LOCATION_ID)
-        .input("retail", sql.Money, patch.retail ?? 0)
-        .input("cost", sql.Money, patch.cost ?? 0)
+        .input("retail", sql.Money, normalizedPatch.primaryInventory.retail ?? 0)
+        .input("cost", sql.Money, normalizedPatch.primaryInventory.cost ?? 0)
         .query(`UPDATE Inventory SET ${invSet.join(", ")} WHERE SKU = @sku AND LocationID = @loc`);
     }
 

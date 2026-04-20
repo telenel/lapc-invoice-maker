@@ -93,6 +93,20 @@ export interface ProductRefMaps {
   bindingLabels: Map<number, string>;
 }
 
+export interface ProductRefSelectOption {
+  value: string;
+  label: string;
+  usageCount: number;
+}
+
+export interface ProductRefSelectOptions {
+  vendors: ProductRefSelectOption[];
+  dccs: ProductRefSelectOption[];
+  taxTypes: ProductRefSelectOption[];
+  packageTypes: ProductRefSelectOption[];
+  colors: ProductRefSelectOption[];
+}
+
 export const EMPTY_REFS: PrismRefs = {
   vendors: [],
   dccs: [],
@@ -107,6 +121,15 @@ export const EMPTY_REFS: PrismRefs = {
 export function normalizePackageTypeLabel(row: { code: string; label: string | null }): string {
   const label = row.label?.trim();
   return label && label.length > 0 ? label : row.code;
+}
+
+export function formatDccLabel(row: { deptName: string; className: string | null }): string {
+  const dept = row.deptName.trim();
+  const cls = row.className?.trim();
+  if (dept && cls) return `${dept} / ${cls}`;
+  if (dept) return dept;
+  if (cls) return cls;
+  return "(unnamed)";
 }
 
 export function formatLookupLabel(label: string | null | undefined, fallback: string): string {
@@ -131,6 +154,36 @@ export function sortRefsByUsageThenLabel<T extends { label: string; usageCount: 
     if (b.usageCount !== a.usageCount) return b.usageCount - a.usageCount;
     return a.label.localeCompare(b.label);
   });
+}
+
+export function buildProductRefSelectOptions(refs: PrismRefs | null): ProductRefSelectOptions {
+  return {
+    vendors: refs?.vendors.map((row) => ({
+      value: String(row.vendorId),
+      label: row.name,
+      usageCount: row.pierceItems ?? 0,
+    })) ?? [],
+    dccs: refs?.dccs.map((row) => ({
+      value: String(row.dccId),
+      label: formatDccLabel(row),
+      usageCount: row.pierceItems ?? 0,
+    })) ?? [],
+    taxTypes: refs?.taxTypes.map((row) => ({
+      value: String(row.taxTypeId),
+      label: row.description,
+      usageCount: row.pierceItems ?? 0,
+    })) ?? [],
+    packageTypes: refs?.packageTypes.map((row) => ({
+      value: row.code,
+      label: normalizePackageTypeLabel(row),
+      usageCount: row.pierceItems ?? 0,
+    })) ?? [],
+    colors: refs?.colors.map((row) => ({
+      value: String(row.colorId),
+      label: row.label,
+      usageCount: row.pierceItems ?? 0,
+    })) ?? [],
+  };
 }
 
 export type { CommittedProductRefSnapshotFile };

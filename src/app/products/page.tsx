@@ -45,6 +45,7 @@ export default function ProductsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const viewParam = searchParams.get("view");
+  const editDialogOverride = searchParams.get("editDialog");
   const [filters, setFilters] = useState<ProductFilters>(() => {
     // Convert Next.js useSearchParams() to URLSearchParams
     const params = new URLSearchParams();
@@ -337,6 +338,7 @@ export default function ProductsPage() {
       <EditItemDialog
         open={editOpen}
         onOpenChange={setEditOpen}
+        editDialogOverride={editDialogOverride}
         items={editableSelectedItems}
         onSaved={() => {
           setEditOpen(false);
