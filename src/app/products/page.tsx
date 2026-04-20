@@ -31,6 +31,7 @@ import { ColumnVisibilityToggle, type ColumnVisibilityHandle } from "@/component
 import { PierceAssuranceBadge } from "@/components/products/pierce-assurance-badge";
 import { productApi } from "@/domains/product/api-client";
 import { SYSTEM_PRESET_VIEWS } from "@/domains/product/presets";
+import { shouldApplyDefaultMinStock } from "@/domains/product/page-defaults";
 
 export default function ProductsPage() {
   const router = useRouter();
@@ -48,7 +49,7 @@ export default function ProductsPage() {
     // don't care about stock inherit the baseline (matching the normal
     // /products landing behavior), while still letting a user say "show
     // everything" with an explicit `minStock=0`.
-    if (!params.has("minStock") && parsed.minStock === "") {
+    if (shouldApplyDefaultMinStock(params, !!viewParam, parsed.minStock)) {
       return { ...parsed, minStock: "1" };
     }
     return parsed;

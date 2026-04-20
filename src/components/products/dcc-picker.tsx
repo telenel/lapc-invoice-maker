@@ -12,6 +12,19 @@ interface Props {
   onChange: (patch: { deptNum?: string; classNum?: string; catNum?: string }) => void;
 }
 
+export function findExactDccMatch(
+  items: DccListItem[] | null,
+  query: string,
+): DccListItem | null {
+  if (!items) return null;
+  const trimmed = query.trim();
+  if (!trimmed) return null;
+  return (
+    items.find((it) => `${it.deptNum}.${it.classNum ?? ""}.${it.catNum ?? ""}` === trimmed)
+    ?? null
+  );
+}
+
 export function DccPicker({ deptNum, classNum, catNum, onChange }: Props) {
   const [items, setItems] = useState<DccListItem[] | null>(null);
   const [failed, setFailed] = useState(false);
@@ -108,7 +121,8 @@ export function DccPicker({ deptNum, classNum, catNum, onChange }: Props) {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onBlur={() => {
-          if (suggestions[0]) pick(suggestions[0]);
+          const exact = findExactDccMatch(items, query);
+          if (exact) pick(exact);
         }}
         spellCheck={false}
         autoComplete="off"
