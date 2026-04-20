@@ -77,6 +77,7 @@ function buildInlineEditRows(
     return {
       sku: product.sku,
       barcode: product.barcode,
+      itemTaxTypeId: product.itemTaxTypeId,
       retail: primaryInventory?.retailPrice ?? product.retail_price ?? null,
       cost: primaryInventory?.cost ?? product.cost ?? null,
       fDiscontinue: product.discontinued ? 1 : 0,

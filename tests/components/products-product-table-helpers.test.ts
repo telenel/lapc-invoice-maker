@@ -19,6 +19,16 @@ vi.mock("@/domains/product/vendor-directory", () => ({
   useVendorDirectory: () => ({
     byId: new Map<number, string>(),
   }),
+  useProductRefDirectory: () => ({
+    refs: null,
+    lookups: {
+      taxTypeLabels: new Map([[4, "STATE"]]),
+    },
+    vendors: [],
+    byId: new Map<number, string>(),
+    loading: false,
+    available: true,
+  }),
 }));
 
 vi.mock("@/components/products/use-hidden-columns", () => ({
@@ -148,6 +158,7 @@ describe("product table variance trigger", () => {
       stock_coverage_days: null,
       trend_direction: null,
       discontinued: false,
+      itemTaxTypeId: 4,
       primary_location_id: 2,
       primary_location_abbrev: "PIER",
       selected_inventories: [
@@ -244,6 +255,7 @@ describe("product table variance trigger", () => {
           setEditingCell(null);
           setDraftValue("");
         },
+        saveField: async () => true,
         moveToNextEditableCell: async () => {
           setEditingCell(null);
           setDraftValue("");
@@ -352,6 +364,15 @@ describe("product table variance trigger", () => {
 
     expect(onToggle).not.toHaveBeenCalled();
     expect(screen.getByRole("textbox", { name: /retail editor for sku 101/i })).toBeTruthy();
+  });
+
+  it("renders desktop tax type and discontinue headers", () => {
+    const onToggle = vi.fn();
+
+    renderEditableTable(onToggle);
+
+    expect(screen.getByRole("columnheader", { name: /tax type/i })).toBeTruthy();
+    expect(screen.getByRole("columnheader", { name: /disc/i })).toBeTruthy();
   });
 
   it("clicking blank space in an inline-edit cell still selects the row", async () => {

@@ -9,6 +9,7 @@ export type ProductInlineEditableField =
   | "cost"
   | "retail"
   | "barcode"
+  | "taxType"
   | "discontinue";
 
 export interface ProductInlineEditCell {
@@ -19,6 +20,7 @@ export interface ProductInlineEditCell {
 export interface ProductInlineEditRowBaseline {
   sku: number;
   barcode: string | null;
+  itemTaxTypeId: number | null;
   retail: number | null;
   cost: number | null;
   fDiscontinue: 0 | 1;
@@ -38,6 +40,11 @@ export interface ProductInlineEditController {
   ) => void;
   cancelEdit: () => void;
   commitEdit: () => Promise<void>;
+  saveField: (
+    sku: number,
+    field: ProductInlineEditableField,
+    value: string,
+  ) => Promise<boolean>;
   moveToNextEditableCell: (direction: "next" | "previous") => Promise<void>;
   setDraftValue: (value: string) => void;
 }
@@ -67,6 +74,8 @@ function getCellValue(row: ProductInlineEditRowBaseline, field: ProductInlineEdi
       return row.retail == null ? "" : String(row.retail);
     case "barcode":
       return row.barcode ?? "";
+    case "taxType":
+      return row.itemTaxTypeId == null ? "" : String(row.itemTaxTypeId);
     case "discontinue":
       return row.fDiscontinue ? "1" : "0";
   }
@@ -74,11 +83,12 @@ function getCellValue(row: ProductInlineEditRowBaseline, field: ProductInlineEdi
 
 function buildBaseline(row: ProductInlineEditRowBaseline): Pick<
   ProductInlineEditRowBaseline,
-  "sku" | "barcode" | "retail" | "cost" | "fDiscontinue"
+  "sku" | "barcode" | "itemTaxTypeId" | "retail" | "cost" | "fDiscontinue"
 > {
   return {
     sku: row.sku,
     barcode: row.barcode,
+    itemTaxTypeId: row.itemTaxTypeId,
     retail: row.retail,
     cost: row.cost,
     fDiscontinue: row.fDiscontinue,
@@ -129,30 +139,29 @@ export function useProductInlineEdit({
     setDraftValue("");
   }, [pendingSave]);
 
-  const saveCurrentEdit = useCallback(async () => {
-    const activeCell = editingCell;
-    if (!activeCell || pendingSave) return false;
+  const persistField = useCallback(async (
+    sku: number,
+    field: ProductInlineEditableField,
+    rawValue: string,
+  ) => {
+    if (pendingSave) return false;
 
-    const row = rowsBySku.get(activeCell.sku);
+    const row = rowsBySku.get(sku);
     if (!row) {
-      setEditingCell(null);
-      setDraftValue("");
       return true;
     }
 
     const baseline = buildBaseline(row);
-    const currentValue = draftValue.trim();
-    const originalValue = getCellValue(row, activeCell.field);
+    const currentValue = rawValue.trim();
+    const originalValue = getCellValue(row, field);
 
     if (currentValue === originalValue) {
-      setEditingCell(null);
-      setDraftValue("");
       return true;
     }
 
     let patch: Parameters<typeof productApi.update>[1];
 
-    switch (activeCell.field) {
+    switch (field) {
       case "retail": {
         const parsed = Number(currentValue);
         if (currentValue.length === 0 || Number.isNaN(parsed)) {
@@ -199,6 +208,23 @@ export function useProductInlineEdit({
         };
         break;
       }
+      case "taxType": {
+        const parsed = Number(currentValue);
+        if (currentValue.length === 0 || Number.isNaN(parsed) || parsed <= 0) {
+          toast.error("Select a valid tax type.");
+          return false;
+        }
+        patch = {
+          mode: "v2",
+          patch: {
+            item: {
+              itemTaxTypeId: parsed,
+            },
+          },
+          baseline,
+        };
+        break;
+      }
       case "discontinue": {
         const normalized = currentValue === "1" || currentValue.toLowerCase() === "true" ? 1 : 0;
         patch = {
@@ -219,9 +245,7 @@ export function useProductInlineEdit({
 
     setPendingSave(true);
     try {
-      await productApi.update(activeCell.sku, patch);
-      setEditingCell(null);
-      setDraftValue("");
+      await productApi.update(sku, patch);
       await onSaveSuccess?.();
       return true;
     } catch (error) {
@@ -230,7 +254,32 @@ export function useProductInlineEdit({
     } finally {
       setPendingSave(false);
     }
-  }, [draftValue, editingCell, onSaveSuccess, pendingSave, rowsBySku]);
+  }, [onSaveSuccess, pendingSave, rowsBySku]);
+
+  const saveCurrentEdit = useCallback(async () => {
+    const activeCell = editingCell;
+    if (!activeCell || pendingSave) return false;
+
+    const committed = await persistField(activeCell.sku, activeCell.field, draftValue);
+    if (committed) {
+      setEditingCell(null);
+      setDraftValue("");
+    }
+    return committed;
+  }, [draftValue, editingCell, pendingSave, persistField]);
+
+  const saveField = useCallback(async (
+    sku: number,
+    field: ProductInlineEditableField,
+    value: string,
+  ) => {
+    const committed = await persistField(sku, field, value);
+    if (committed && editingCell?.sku === sku && editingCell.field === field) {
+      setEditingCell(null);
+      setDraftValue("");
+    }
+    return committed;
+  }, [editingCell, persistField]);
 
   const moveToNextEditableCell = useCallback(
     async (direction: "next" | "previous") => {
@@ -292,6 +341,7 @@ export function useProductInlineEdit({
     startEdit,
     cancelEdit,
     commitEdit,
+    saveField,
     moveToNextEditableCell,
     setDraftValue,
   };

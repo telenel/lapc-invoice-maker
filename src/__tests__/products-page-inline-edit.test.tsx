@@ -145,11 +145,19 @@ vi.mock("@/components/products/product-table", () => ({
       setDraftValue: (value: string) => void;
       commitEdit: () => Promise<void>;
       cancelEdit: () => void;
+      saveField: (sku: number, field: string, value: string) => Promise<boolean>;
       moveToNextEditableCell: (direction: "next" | "previous") => Promise<void>;
     };
     primaryLocationId?: number;
     tab: "textbooks" | "merchandise";
-    products: Array<{ sku: number; retail_price: number; cost: number; barcode: string | null }>;
+    products: Array<{
+      sku: number;
+      retail_price: number;
+      cost: number;
+      barcode: string | null;
+      itemTaxTypeId?: number | null;
+      discontinued?: boolean | null;
+    }>;
   }) => {
     const fieldConfig = [
       {
@@ -227,6 +235,30 @@ vi.mock("@/components/products/product-table", () => ({
                       </td>
                     );
                   })}
+                  <td>
+                    <button
+                      type="button"
+                      aria-label={`Set tax type for SKU ${product.sku} to STATE`}
+                      onClick={() => inlineEdit.saveField(product.sku, "taxType", "4")}
+                    >
+                      {`Set tax type for SKU ${product.sku} to STATE`}
+                    </button>
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      aria-label={`Toggle discontinue for SKU ${product.sku}`}
+                      onClick={() =>
+                        inlineEdit.saveField(
+                          product.sku,
+                          "discontinue",
+                          product.discontinued ? "0" : "1",
+                        )
+                      }
+                    >
+                      {`Toggle discontinue for SKU ${product.sku}`}
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -302,6 +334,7 @@ function makeProductRow(overrides: Partial<ProductBrowseRow> = {}): ProductBrows
       stockVaries: false,
       lastSaleDateVaries: false,
     },
+    itemTaxTypeId: 6,
     discontinued: false,
     ...overrides,
   };
@@ -455,6 +488,55 @@ describe("ProductsPage inline edit controller wiring", () => {
     expect(
       await screen.findByRole("textbox", { name: /cost editor for sku 1002/i }),
     ).toHaveValue("11.75");
+  });
+
+  it("saves tax type edits through the v2 item patch with the row baseline", async () => {
+    const user = userEvent.setup();
+
+    render(<ProductsPage />);
+
+    await screen.findByTestId("product-table");
+
+    await user.click(screen.getByRole("button", { name: /set tax type for sku 1001 to state/i }));
+
+    await waitFor(() => {
+      expect(updateMock).toHaveBeenCalledWith(1001, {
+        mode: "v2",
+        patch: {
+          item: {
+            itemTaxTypeId: 4,
+          },
+        },
+        baseline: expect.objectContaining({
+          sku: 1001,
+          itemTaxTypeId: 6,
+        }),
+      });
+    });
+  });
+
+  it("toggles discontinue through the v2 item patch", async () => {
+    const user = userEvent.setup();
+
+    render(<ProductsPage />);
+
+    await screen.findByTestId("product-table");
+
+    await user.click(screen.getByRole("button", { name: /toggle discontinue for sku 1001/i }));
+
+    await waitFor(() => {
+      expect(updateMock).toHaveBeenCalledWith(1001, {
+        mode: "v2",
+        patch: {
+          item: {
+            fDiscontinue: 1,
+          },
+        },
+        baseline: expect.objectContaining({
+          sku: 1001,
+        }),
+      });
+    });
   });
 
   it("tabs from textbook retail to the next row cost without landing in a hidden barcode field", async () => {
