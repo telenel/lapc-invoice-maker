@@ -15,6 +15,7 @@ import type {
   ProductEditPatchV2,
   ItemPatch,
   GmDetailsPatch,
+  InventoryPatchPerLocation,
   PrimaryInventoryPatch,
 } from "./types";
 import { PIERCE_LOCATION_ID } from "./prism-server";
@@ -47,8 +48,8 @@ export async function getItemSnapshot(sku: number): Promise<ItemSnapshot | null>
   return {
     sku: row.SKU,
     barcode: row.BarCode && row.BarCode.length > 0 ? row.BarCode : null,
-    retail: Number(row.Retail ?? 0),
-    cost: Number(row.Cost ?? 0),
+    retail: row.Retail == null ? null : Number(row.Retail),
+    cost: row.Cost == null ? null : Number(row.Cost),
     fDiscontinue: (row.fDiscontinue === 1 ? 1 : 0) as 0 | 1,
   };
 }
@@ -63,11 +64,12 @@ export type ProductUpdaterInput = GmItemPatch | TextbookPatch | ProductEditPatch
 interface ProductWriteBuckets {
   item: ItemPatch;
   gm: GmDetailsPatch;
+  inventory: InventoryPatchPerLocation[];
   primaryInventory: PrimaryInventoryPatch;
 }
 
 function isV2UpdaterInput(patch: ProductUpdaterInput): patch is ProductEditPatchV2 {
-  return "item" in patch || "gm" in patch || "primaryInventory" in patch;
+  return "item" in patch || "gm" in patch || "inventory" in patch || "primaryInventory" in patch;
 }
 
 function normalizeUpdaterInput(patch: ProductUpdaterInput): ProductWriteBuckets {
@@ -75,6 +77,7 @@ function normalizeUpdaterInput(patch: ProductUpdaterInput): ProductWriteBuckets 
     return {
       item: { ...(patch.item ?? {}) },
       gm: { ...(patch.gm ?? {}) },
+      inventory: patch.inventory ?? [],
       primaryInventory: { ...(patch.primaryInventory ?? {}) },
     };
   }
@@ -96,11 +99,46 @@ function normalizeUpdaterInput(patch: ProductUpdaterInput): ProductWriteBuckets 
       unitsPerPack: "unitsPerPack" in patch ? patch.unitsPerPack : undefined,
       imageUrl: "imageUrl" in patch ? patch.imageUrl : undefined,
     },
+    inventory: [],
     primaryInventory: {
       retail: patch.retail,
       cost: patch.cost,
     },
   };
+}
+
+function hasInventoryWriteFields(patch: InventoryPatchPerLocation): boolean {
+  return [
+    patch.retail,
+    patch.cost,
+    patch.expectedCost,
+    patch.tagTypeId,
+    patch.statusCodeId,
+    patch.estSales,
+    patch.estSalesLocked,
+    patch.fInvListPriceFlag,
+    patch.fTxWantListFlag,
+    patch.fTxBuybackListFlag,
+    patch.fNoReturns,
+  ].some((value) => value !== undefined);
+}
+
+function getInventoryPatches(normalizedPatch: ProductWriteBuckets): InventoryPatchPerLocation[] {
+  if (normalizedPatch.inventory.length > 0) {
+    return normalizedPatch.inventory;
+  }
+
+  if (normalizedPatch.primaryInventory.retail === undefined && normalizedPatch.primaryInventory.cost === undefined) {
+    return [];
+  }
+
+  return [
+    {
+      locationId: PIERCE_LOCATION_ID,
+      retail: normalizedPatch.primaryInventory.retail,
+      cost: normalizedPatch.primaryInventory.cost,
+    },
+  ];
 }
 
 /**
@@ -144,8 +182,8 @@ export async function updateGmItem(
 
     if (expectedSnapshot) {
       const currentBarcode = current.BarCode && current.BarCode.length > 0 ? current.BarCode : null;
-      const currentRetail = Number(current.Retail ?? 0);
-      const currentCost = Number(current.Cost ?? 0);
+      const currentRetail = current.Retail == null ? null : Number(current.Retail);
+      const currentCost = current.Cost == null ? null : Number(current.Cost);
       const currentFDisc = (current.fDiscontinue === 1 ? 1 : 0) as 0 | 1;
       if (
         currentBarcode !== expectedSnapshot.barcode ||
@@ -170,7 +208,6 @@ export async function updateGmItem(
     const applied: string[] = [];
     const itemSet: string[] = [];
     const gmSet: string[] = [];
-    const invSet: string[] = [];
     const req = transaction.request().input("sku", sql.Int, sku).input("loc", sql.Int, PIERCE_LOCATION_ID);
 
     if (normalizedPatch.item.barcode !== undefined) {
@@ -235,17 +272,6 @@ export async function updateGmItem(
       applied.push("imageUrl");
     }
 
-    if (normalizedPatch.primaryInventory.retail !== undefined) {
-      req.input("retail", sql.Money, normalizedPatch.primaryInventory.retail);
-      invSet.push("Retail = @retail");
-      applied.push("retail");
-    }
-    if (normalizedPatch.primaryInventory.cost !== undefined) {
-      req.input("cost", sql.Money, normalizedPatch.primaryInventory.cost);
-      invSet.push("Cost = @cost");
-      applied.push("cost");
-    }
-
     if (itemSet.length > 0) {
       await req.query(`UPDATE Item SET ${itemSet.join(", ")} WHERE SKU = @sku`);
     }
@@ -259,13 +285,73 @@ export async function updateGmItem(
         .input("imageUrl", sql.VarChar(128), normalizedPatch.gm.imageUrl ?? "")
         .query(`UPDATE GeneralMerchandise SET ${gmSet.join(", ")} WHERE SKU = @sku`);
     }
-    if (invSet.length > 0) {
-      await transaction.request()
-        .input("sku", sql.Int, sku)
-        .input("loc", sql.Int, PIERCE_LOCATION_ID)
-        .input("retail", sql.Money, normalizedPatch.primaryInventory.retail ?? 0)
-        .input("cost", sql.Money, normalizedPatch.primaryInventory.cost ?? 0)
-        .query(`UPDATE Inventory SET ${invSet.join(", ")} WHERE SKU = @sku AND LocationID = @loc`);
+    for (const inventoryPatch of getInventoryPatches(normalizedPatch)) {
+      if (!hasInventoryWriteFields(inventoryPatch)) {
+        continue;
+      }
+
+      const inventorySet: string[] = [];
+      const inventoryReq = transaction.request().input("sku", sql.Int, sku).input("loc", sql.Int, inventoryPatch.locationId);
+
+      if (inventoryPatch.retail !== undefined) {
+        inventoryReq.input("retail", sql.Money, inventoryPatch.retail);
+        inventorySet.push("Retail = @retail");
+        applied.push(`inventory:${inventoryPatch.locationId}:retail`);
+      }
+      if (inventoryPatch.cost !== undefined) {
+        inventoryReq.input("cost", sql.Money, inventoryPatch.cost);
+        inventorySet.push("Cost = @cost");
+        applied.push(`inventory:${inventoryPatch.locationId}:cost`);
+      }
+      if (inventoryPatch.expectedCost !== undefined) {
+        inventoryReq.input("expectedCost", sql.Money, inventoryPatch.expectedCost);
+        inventorySet.push("ExpectedCost = @expectedCost");
+        applied.push(`inventory:${inventoryPatch.locationId}:expectedCost`);
+      }
+      if (inventoryPatch.tagTypeId !== undefined) {
+        inventoryReq.input("tagTypeId", sql.Int, inventoryPatch.tagTypeId);
+        inventorySet.push("TagTypeID = @tagTypeId");
+        applied.push(`inventory:${inventoryPatch.locationId}:tagTypeId`);
+      }
+      if (inventoryPatch.statusCodeId !== undefined) {
+        inventoryReq.input("statusCodeId", sql.Int, inventoryPatch.statusCodeId);
+        inventorySet.push("StatusCodeID = @statusCodeId");
+        applied.push(`inventory:${inventoryPatch.locationId}:statusCodeId`);
+      }
+      if (inventoryPatch.estSales !== undefined) {
+        inventoryReq.input("estSales", sql.Decimal(9, 4), inventoryPatch.estSales);
+        inventorySet.push("EstSales = @estSales");
+        applied.push(`inventory:${inventoryPatch.locationId}:estSales`);
+      }
+      if (inventoryPatch.estSalesLocked !== undefined) {
+        inventoryReq.input("estSalesLocked", sql.Bit, inventoryPatch.estSalesLocked);
+        inventorySet.push("EstSalesLocked = @estSalesLocked");
+        applied.push(`inventory:${inventoryPatch.locationId}:estSalesLocked`);
+      }
+      if (inventoryPatch.fInvListPriceFlag !== undefined) {
+        inventoryReq.input("fInvListPriceFlag", sql.Bit, inventoryPatch.fInvListPriceFlag);
+        inventorySet.push("fInvListPriceFlag = @fInvListPriceFlag");
+        applied.push(`inventory:${inventoryPatch.locationId}:fInvListPriceFlag`);
+      }
+      if (inventoryPatch.fTxWantListFlag !== undefined) {
+        inventoryReq.input("fTxWantListFlag", sql.Bit, inventoryPatch.fTxWantListFlag);
+        inventorySet.push("fTxWantListFlag = @fTxWantListFlag");
+        applied.push(`inventory:${inventoryPatch.locationId}:fTxWantListFlag`);
+      }
+      if (inventoryPatch.fTxBuybackListFlag !== undefined) {
+        inventoryReq.input("fTxBuybackListFlag", sql.Bit, inventoryPatch.fTxBuybackListFlag);
+        inventorySet.push("fTxBuybackListFlag = @fTxBuybackListFlag");
+        applied.push(`inventory:${inventoryPatch.locationId}:fTxBuybackListFlag`);
+      }
+      if (inventoryPatch.fNoReturns !== undefined) {
+        inventoryReq.input("fNoReturns", sql.Bit, inventoryPatch.fNoReturns);
+        inventorySet.push("fNoReturns = @fNoReturns");
+        applied.push(`inventory:${inventoryPatch.locationId}:fNoReturns`);
+      }
+
+      if (inventorySet.length > 0) {
+        await inventoryReq.query(`UPDATE Inventory SET ${inventorySet.join(", ")} WHERE SKU = @sku AND LocationID = @loc`);
+      }
     }
 
     await transaction.commit();
@@ -314,8 +400,8 @@ export async function updateTextbookPricing(
 
     if (expectedSnapshot) {
       const currentBarcode = current.BarCode && current.BarCode.length > 0 ? current.BarCode : null;
-      const currentRetail = Number(current.Retail ?? 0);
-      const currentCost = Number(current.Cost ?? 0);
+      const currentRetail = current.Retail == null ? null : Number(current.Retail);
+      const currentCost = current.Cost == null ? null : Number(current.Cost);
       const currentFDisc = (current.fDiscontinue === 1 ? 1 : 0) as 0 | 1;
       if (
         currentBarcode !== expectedSnapshot.barcode ||
@@ -332,7 +418,6 @@ export async function updateTextbookPricing(
     const normalizedPatch = normalizeUpdaterInput(patch);
     const applied: string[] = [];
     const itemSet: string[] = [];
-    const invSet: string[] = [];
 
     if (normalizedPatch.item.barcode !== undefined) {
       itemSet.push("BarCode = @barcode");
@@ -342,14 +427,6 @@ export async function updateTextbookPricing(
       itemSet.push("fDiscontinue = @fDiscontinue");
       applied.push("fDiscontinue");
     }
-    if (normalizedPatch.primaryInventory.retail !== undefined) {
-      invSet.push("Retail = @retail");
-      applied.push("retail");
-    }
-    if (normalizedPatch.primaryInventory.cost !== undefined) {
-      invSet.push("Cost = @cost");
-      applied.push("cost");
-    }
 
     if (itemSet.length > 0) {
       await transaction.request()
@@ -358,13 +435,73 @@ export async function updateTextbookPricing(
         .input("fDiscontinue", sql.TinyInt, normalizedPatch.item.fDiscontinue ?? 0)
         .query(`UPDATE Item SET ${itemSet.join(", ")} WHERE SKU = @sku`);
     }
-    if (invSet.length > 0) {
-      await transaction.request()
-        .input("sku", sql.Int, sku)
-        .input("loc", sql.Int, PIERCE_LOCATION_ID)
-        .input("retail", sql.Money, normalizedPatch.primaryInventory.retail ?? 0)
-        .input("cost", sql.Money, normalizedPatch.primaryInventory.cost ?? 0)
-        .query(`UPDATE Inventory SET ${invSet.join(", ")} WHERE SKU = @sku AND LocationID = @loc`);
+    for (const inventoryPatch of getInventoryPatches(normalizedPatch)) {
+      if (!hasInventoryWriteFields(inventoryPatch)) {
+        continue;
+      }
+
+      const inventorySet: string[] = [];
+      const inventoryReq = transaction.request().input("sku", sql.Int, sku).input("loc", sql.Int, inventoryPatch.locationId);
+
+      if (inventoryPatch.retail !== undefined) {
+        inventoryReq.input("retail", sql.Money, inventoryPatch.retail);
+        inventorySet.push("Retail = @retail");
+        applied.push(`inventory:${inventoryPatch.locationId}:retail`);
+      }
+      if (inventoryPatch.cost !== undefined) {
+        inventoryReq.input("cost", sql.Money, inventoryPatch.cost);
+        inventorySet.push("Cost = @cost");
+        applied.push(`inventory:${inventoryPatch.locationId}:cost`);
+      }
+      if (inventoryPatch.expectedCost !== undefined) {
+        inventoryReq.input("expectedCost", sql.Money, inventoryPatch.expectedCost);
+        inventorySet.push("ExpectedCost = @expectedCost");
+        applied.push(`inventory:${inventoryPatch.locationId}:expectedCost`);
+      }
+      if (inventoryPatch.tagTypeId !== undefined) {
+        inventoryReq.input("tagTypeId", sql.Int, inventoryPatch.tagTypeId);
+        inventorySet.push("TagTypeID = @tagTypeId");
+        applied.push(`inventory:${inventoryPatch.locationId}:tagTypeId`);
+      }
+      if (inventoryPatch.statusCodeId !== undefined) {
+        inventoryReq.input("statusCodeId", sql.Int, inventoryPatch.statusCodeId);
+        inventorySet.push("StatusCodeID = @statusCodeId");
+        applied.push(`inventory:${inventoryPatch.locationId}:statusCodeId`);
+      }
+      if (inventoryPatch.estSales !== undefined) {
+        inventoryReq.input("estSales", sql.Decimal(9, 4), inventoryPatch.estSales);
+        inventorySet.push("EstSales = @estSales");
+        applied.push(`inventory:${inventoryPatch.locationId}:estSales`);
+      }
+      if (inventoryPatch.estSalesLocked !== undefined) {
+        inventoryReq.input("estSalesLocked", sql.Bit, inventoryPatch.estSalesLocked);
+        inventorySet.push("EstSalesLocked = @estSalesLocked");
+        applied.push(`inventory:${inventoryPatch.locationId}:estSalesLocked`);
+      }
+      if (inventoryPatch.fInvListPriceFlag !== undefined) {
+        inventoryReq.input("fInvListPriceFlag", sql.Bit, inventoryPatch.fInvListPriceFlag);
+        inventorySet.push("fInvListPriceFlag = @fInvListPriceFlag");
+        applied.push(`inventory:${inventoryPatch.locationId}:fInvListPriceFlag`);
+      }
+      if (inventoryPatch.fTxWantListFlag !== undefined) {
+        inventoryReq.input("fTxWantListFlag", sql.Bit, inventoryPatch.fTxWantListFlag);
+        inventorySet.push("fTxWantListFlag = @fTxWantListFlag");
+        applied.push(`inventory:${inventoryPatch.locationId}:fTxWantListFlag`);
+      }
+      if (inventoryPatch.fTxBuybackListFlag !== undefined) {
+        inventoryReq.input("fTxBuybackListFlag", sql.Bit, inventoryPatch.fTxBuybackListFlag);
+        inventorySet.push("fTxBuybackListFlag = @fTxBuybackListFlag");
+        applied.push(`inventory:${inventoryPatch.locationId}:fTxBuybackListFlag`);
+      }
+      if (inventoryPatch.fNoReturns !== undefined) {
+        inventoryReq.input("fNoReturns", sql.Bit, inventoryPatch.fNoReturns);
+        inventorySet.push("fNoReturns = @fNoReturns");
+        applied.push(`inventory:${inventoryPatch.locationId}:fNoReturns`);
+      }
+
+      if (inventorySet.length > 0) {
+        await inventoryReq.query(`UPDATE Inventory SET ${inventorySet.join(", ")} WHERE SKU = @sku AND LocationID = @loc`);
+      }
     }
 
     await transaction.commit();

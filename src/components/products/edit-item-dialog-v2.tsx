@@ -17,6 +17,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { productApi } from "@/domains/product/api-client";
+import {
+  DEFAULT_PRODUCT_LOCATION_IDS,
+  getPrimaryProductLocationId,
+  normalizeProductLocationIds,
+  type ProductLocationId,
+} from "@/domains/product/location-filters";
 import type { ProductEditDetails, ProductEditPatchV2 } from "@/domains/product/types";
 import { useProductRefDirectory } from "@/domains/product/vendor-directory";
 import type { EditItemDialogProps } from "./edit-item-dialog-legacy";
@@ -26,6 +32,8 @@ import { ItemRefSelectField } from "./item-ref-selects";
 export interface EditItemDialogV2Props extends EditItemDialogProps {
   detail?: ProductEditDetails | null;
   detailLoading?: boolean;
+  locationIds?: ProductLocationId[];
+  primaryLocationId?: ProductLocationId;
 }
 
 type FormState = {
@@ -86,15 +94,147 @@ const EMPTY_FORM: FormState = {
   usedDccId: "",
 };
 
-function toFormState(item: EditItemDialogProps["items"][number] | undefined, detail?: ProductEditDetails | null): FormState {
+const INVENTORY_LOCATION_IDS = [2, 3, 4] as const;
+type InventoryLocationId = (typeof INVENTORY_LOCATION_IDS)[number];
+type InventoryFieldKey =
+  | "retail"
+  | "cost"
+  | "expectedCost"
+  | "tagTypeId"
+  | "statusCodeId"
+  | "estSales"
+  | "estSalesLocked"
+  | "fInvListPriceFlag"
+  | "fTxWantListFlag"
+  | "fTxBuybackListFlag"
+  | "fNoReturns";
+
+const EDITABLE_INVENTORY_FIELDS = [
+  "retail",
+  "cost",
+  "expectedCost",
+  "tagTypeId",
+  "statusCodeId",
+  "estSales",
+  "estSalesLocked",
+  "fInvListPriceFlag",
+  "fTxWantListFlag",
+  "fTxBuybackListFlag",
+  "fNoReturns",
+] as const satisfies readonly InventoryFieldKey[];
+
+type InventoryFormState = {
+  retail: string;
+  cost: string;
+  expectedCost: string;
+  tagTypeId: string;
+  statusCodeId: string;
+  estSales: string;
+  estSalesLocked: boolean;
+  fInvListPriceFlag: boolean;
+  fTxWantListFlag: boolean;
+  fTxBuybackListFlag: boolean;
+  fNoReturns: boolean;
+  stockOnHand: string;
+  lastSaleDate: string;
+};
+
+type InventoryStateByLocation = Record<InventoryLocationId, InventoryFormState>;
+type DirtyInventoryFields = Record<InventoryLocationId, Set<InventoryFieldKey>>;
+
+const EMPTY_INVENTORY_LOCATION: InventoryFormState = {
+  retail: "",
+  cost: "",
+  expectedCost: "",
+  tagTypeId: "",
+  statusCodeId: "",
+  estSales: "",
+  estSalesLocked: false,
+  fInvListPriceFlag: false,
+  fTxWantListFlag: false,
+  fTxBuybackListFlag: false,
+  fNoReturns: false,
+  stockOnHand: "",
+  lastSaleDate: "",
+};
+
+const INVENTORY_LOCATION_LABELS: Record<InventoryLocationId, "PIER" | "PCOP" | "PFS"> = {
+  2: "PIER",
+  3: "PCOP",
+  4: "PFS",
+};
+
+function makeEmptyInventoryState(): InventoryStateByLocation {
+  return {
+    2: { ...EMPTY_INVENTORY_LOCATION },
+    3: { ...EMPTY_INVENTORY_LOCATION },
+    4: { ...EMPTY_INVENTORY_LOCATION },
+  };
+}
+
+function makeEmptyDirtyInventoryFields(): DirtyInventoryFields {
+  return {
+    2: new Set<InventoryFieldKey>(),
+    3: new Set<InventoryFieldKey>(),
+    4: new Set<InventoryFieldKey>(),
+  };
+}
+
+function toInventoryLocationState(
+  detail: ProductEditDetails | null | undefined,
+  locationId: InventoryLocationId,
+): InventoryFormState {
+  const row = detail?.inventoryByLocation.find((entry) => entry.locationId === locationId);
+  return {
+    retail: row?.retail != null ? String(row.retail) : "",
+    cost: row?.cost != null ? String(row.cost) : "",
+    expectedCost: row?.expectedCost != null ? String(row.expectedCost) : "",
+    tagTypeId: row?.tagTypeId != null ? String(row.tagTypeId) : "",
+    statusCodeId: row?.statusCodeId != null ? String(row.statusCodeId) : "",
+    estSales: row?.estSales != null ? String(row.estSales) : "",
+    estSalesLocked: row?.estSalesLocked ?? false,
+    fInvListPriceFlag: row?.fInvListPriceFlag ?? false,
+    fTxWantListFlag: row?.fTxWantListFlag ?? false,
+    fTxBuybackListFlag: row?.fTxBuybackListFlag ?? false,
+    fNoReturns: row?.fNoReturns ?? false,
+    stockOnHand: row?.stockOnHand != null ? String(row.stockOnHand) : "",
+    lastSaleDate: row?.lastSaleDate ?? "",
+  };
+}
+
+function toInventoryState(detail: ProductEditDetails | null | undefined): InventoryStateByLocation {
+  return {
+    2: toInventoryLocationState(detail, 2),
+    3: toInventoryLocationState(detail, 3),
+    4: toInventoryLocationState(detail, 4),
+  };
+}
+
+function getPrimaryInventoryField(
+  detail: ProductEditDetails | null | undefined,
+  primaryLocationId: InventoryLocationId,
+  field: "retail" | "cost",
+): number | null | undefined {
+  return detail?.inventoryByLocation.find((entry) => entry.locationId === primaryLocationId)?.[field];
+}
+
+function toFormState(
+  item: EditItemDialogProps["items"][number] | undefined,
+  detail: ProductEditDetails | null | undefined,
+  primaryLocationId: InventoryLocationId,
+): FormState {
+  const hasHydratedPrimaryInventory = detail?.inventoryByLocation.some((entry) => entry.locationId === primaryLocationId) === true;
+  const primaryRetail = getPrimaryInventoryField(detail, primaryLocationId, "retail");
+  const primaryCost = getPrimaryInventoryField(detail, primaryLocationId, "cost");
+
   return {
     description: detail?.description ?? item?.description ?? "",
     barcode: detail?.barcode ?? item?.barcode ?? "",
     vendorId: detail?.vendorId ? String(detail.vendorId) : item?.vendorId ? String(item.vendorId) : "",
     dccId: detail?.dccId ? String(detail.dccId) : item?.dccId ? String(item.dccId) : "",
     itemTaxTypeId: detail?.itemTaxTypeId ? String(detail.itemTaxTypeId) : item?.itemTaxTypeId ? String(item.itemTaxTypeId) : "",
-    retail: detail?.retail != null ? String(detail.retail) : item?.retail != null ? String(item.retail) : "",
-    cost: detail?.cost != null ? String(detail.cost) : item?.cost != null ? String(item.cost) : "",
+    retail: hasHydratedPrimaryInventory ? (primaryRetail != null ? String(primaryRetail) : "") : item?.retail != null ? String(item.retail) : "",
+    cost: hasHydratedPrimaryInventory ? (primaryCost != null ? String(primaryCost) : "") : item?.cost != null ? String(item.cost) : "",
     catalogNumber: detail?.catalogNumber ?? item?.catalogNumber ?? "",
     comment: detail?.comment ?? item?.comment ?? "",
     fDiscontinue: (detail?.fDiscontinue ?? item?.fDiscontinue ?? 0) === 1,
@@ -176,7 +316,6 @@ function buildV2Patch(form: FormState, baseline: FormState, isBulk: boolean): Pr
   const rawPatch = buildPatch(baseline as Record<string, unknown>, form as Record<string, unknown>);
   const item: NonNullable<ProductEditPatchV2["item"]> = {};
   const gm: NonNullable<ProductEditPatchV2["gm"]> = {};
-  const primaryInventory: NonNullable<ProductEditPatchV2["primaryInventory"]> = {};
 
   for (const [key, value] of Object.entries(rawPatch)) {
     if (isBulk && value === "") continue;
@@ -199,12 +338,6 @@ function buildV2Patch(form: FormState, baseline: FormState, isBulk: boolean): Pr
         break;
       case "unitsPerPack":
         gm.unitsPerPack = value === "" ? undefined : Number(value);
-        break;
-      case "retail":
-        primaryInventory.retail = Number(value);
-        break;
-      case "cost":
-        primaryInventory.cost = Number(value);
         break;
       case "weight":
         item.weight = Number(value);
@@ -232,8 +365,85 @@ function buildV2Patch(form: FormState, baseline: FormState, isBulk: boolean): Pr
   return {
     item: hasPatchFields(item) ? item : undefined,
     gm: hasPatchFields(gm) ? gm : undefined,
-    primaryInventory: hasPatchFields(primaryInventory) ? primaryInventory : undefined,
   };
+}
+
+function buildInventoryPatch(
+  form: FormState,
+  baselineForm: FormState,
+  inventory: InventoryStateByLocation,
+  baselineInventory: InventoryStateByLocation,
+  primaryLocationId: InventoryLocationId,
+  isBulk: boolean,
+): NonNullable<ProductEditPatchV2["inventory"]> | undefined {
+  if (isBulk) return undefined;
+
+  const patch: NonNullable<ProductEditPatchV2["inventory"]> = [];
+
+  for (const locationId of INVENTORY_LOCATION_IDS) {
+    const current = inventory[locationId];
+    const baseline = baselineInventory[locationId];
+    const entry: Partial<NonNullable<ProductEditPatchV2["inventory"]>[number]> = { locationId };
+
+    const retailSource = locationId === primaryLocationId ? form.retail : current.retail;
+    const retailBaseline = locationId === primaryLocationId ? baselineForm.retail : baseline.retail;
+    if (retailSource !== retailBaseline) {
+      entry.retail = retailSource === "" ? null : Number(retailSource);
+    }
+
+    const costSource = locationId === primaryLocationId ? form.cost : current.cost;
+    const costBaseline = locationId === primaryLocationId ? baselineForm.cost : baseline.cost;
+    if (costSource !== costBaseline) {
+      entry.cost = costSource === "" ? null : Number(costSource);
+    }
+
+    if (current.expectedCost !== baseline.expectedCost) {
+      entry.expectedCost = current.expectedCost === "" ? null : Number(current.expectedCost);
+    }
+    if (current.tagTypeId !== baseline.tagTypeId) {
+      entry.tagTypeId = current.tagTypeId === "" ? null : Number(current.tagTypeId);
+    }
+    if (current.statusCodeId !== baseline.statusCodeId) {
+      entry.statusCodeId = current.statusCodeId === "" ? null : Number(current.statusCodeId);
+    }
+    if (current.estSales !== baseline.estSales) {
+      entry.estSales = current.estSales === "" ? null : Number(current.estSales);
+    }
+    if (current.estSalesLocked !== baseline.estSalesLocked) {
+      entry.estSalesLocked = current.estSalesLocked;
+    }
+    if (current.fInvListPriceFlag !== baseline.fInvListPriceFlag) {
+      entry.fInvListPriceFlag = current.fInvListPriceFlag;
+    }
+    if (current.fTxWantListFlag !== baseline.fTxWantListFlag) {
+      entry.fTxWantListFlag = current.fTxWantListFlag;
+    }
+    if (current.fTxBuybackListFlag !== baseline.fTxBuybackListFlag) {
+      entry.fTxBuybackListFlag = current.fTxBuybackListFlag;
+    }
+    if (current.fNoReturns !== baseline.fNoReturns) {
+      entry.fNoReturns = current.fNoReturns;
+    }
+
+    if (Object.keys(entry).length > 1) {
+      patch.push(entry as NonNullable<ProductEditPatchV2["inventory"]>[number]);
+    }
+  }
+
+  return patch.length > 0 ? patch : undefined;
+}
+
+function syncInventoryField<K extends InventoryFieldKey>(
+  target: InventoryFormState,
+  source: InventoryFormState,
+  key: K,
+): boolean {
+  if (target[key] === source[key]) {
+    return false;
+  }
+
+  target[key] = source[key];
+  return true;
 }
 
 function Section({
@@ -343,18 +553,29 @@ export function EditItemDialogV2({
   onSaved,
   detail = null,
   detailLoading = false,
+  locationIds = [...DEFAULT_PRODUCT_LOCATION_IDS],
+  primaryLocationId,
 }: EditItemDialogV2Props) {
   const isBulk = items.length > 1;
+  const resolvedLocationIds = normalizeProductLocationIds(locationIds);
+  const resolvedPrimaryLocationId = (primaryLocationId ?? getPrimaryProductLocationId(resolvedLocationIds)) as InventoryLocationId;
   const { refs, loading: refsLoading, available: refsAvailable } = useProductRefDirectory();
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [inventoryByLocation, setInventoryByLocation] = useState<InventoryStateByLocation>(() => makeEmptyInventoryState());
+  const [activeInventoryLocation, setActiveInventoryLocation] = useState<InventoryLocationId>(resolvedPrimaryLocationId);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dirtyFieldsRef = useRef<Set<keyof FormState>>(new Set());
+  const dirtyInventoryFieldsRef = useRef<DirtyInventoryFields>(makeEmptyDirtyInventoryFields());
   const hydratedSelectionRef = useRef<string | null>(null);
 
   const refsUnavailable = !refsLoading && !refsAvailable;
   const refsControlsDisabled = refsLoading || refsUnavailable;
-  const baselineForm = useMemo(() => (isBulk ? EMPTY_FORM : toFormState(items[0], detail)), [detail, isBulk, items]);
+  const baselineForm = useMemo(
+    () => (isBulk ? EMPTY_FORM : toFormState(items[0], detail, resolvedPrimaryLocationId)),
+    [detail, isBulk, items, resolvedPrimaryLocationId],
+  );
+  const baselineInventory = useMemo(() => (isBulk ? makeEmptyInventoryState() : toInventoryState(detail)), [detail, isBulk]);
   const selectionKey = isBulk
     ? `bulk:${items.map((item) => item.sku).join(",")}`
     : `single:${items[0]?.sku ?? "none"}`;
@@ -363,15 +584,21 @@ export function EditItemDialogV2({
     if (!open) {
       hydratedSelectionRef.current = null;
       dirtyFieldsRef.current.clear();
+      dirtyInventoryFieldsRef.current = makeEmptyDirtyInventoryFields();
+      setActiveInventoryLocation(resolvedPrimaryLocationId);
       return;
     }
 
-    const nextForm = isBulk ? EMPTY_FORM : toFormState(items[0], detail);
+    const nextForm = isBulk ? EMPTY_FORM : toFormState(items[0], detail, resolvedPrimaryLocationId);
+    const nextInventory = isBulk ? makeEmptyInventoryState() : toInventoryState(detail);
 
     if (hydratedSelectionRef.current !== selectionKey) {
       hydratedSelectionRef.current = selectionKey;
       dirtyFieldsRef.current.clear();
+      dirtyInventoryFieldsRef.current = makeEmptyDirtyInventoryFields();
       setForm(nextForm);
+      setInventoryByLocation(nextInventory);
+      setActiveInventoryLocation(resolvedPrimaryLocationId);
       setError(null);
       return;
     }
@@ -393,19 +620,110 @@ export function EditItemDialogV2({
 
       return changed ? (merged as FormState) : current;
     });
-  }, [detail, isBulk, items, open, selectionKey]);
+
+    setInventoryByLocation((current) => {
+      let changed = false;
+      const merged = {
+        2: { ...current[2] },
+        3: { ...current[3] },
+        4: { ...current[4] },
+      };
+
+      for (const locationId of INVENTORY_LOCATION_IDS) {
+        const dirtyFields = dirtyInventoryFieldsRef.current[locationId];
+        const nextLocation = nextInventory[locationId];
+        const mergedLocation = merged[locationId];
+
+        for (const key of EDITABLE_INVENTORY_FIELDS) {
+          if (dirtyFields.has(key)) continue;
+          if (syncInventoryField(mergedLocation, nextLocation, key)) {
+            changed = true;
+          }
+        }
+
+        if (mergedLocation.stockOnHand !== nextLocation.stockOnHand) {
+          mergedLocation.stockOnHand = nextLocation.stockOnHand;
+          changed = true;
+        }
+        if (mergedLocation.lastSaleDate !== nextLocation.lastSaleDate) {
+          mergedLocation.lastSaleDate = nextLocation.lastSaleDate;
+          changed = true;
+        }
+      }
+
+      return changed ? merged : current;
+    });
+  }, [detail, isBulk, items, open, resolvedPrimaryLocationId, selectionKey]);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     dirtyFieldsRef.current.add(key);
     setForm((current) => ({ ...current, [key]: value }));
+    if (key === "retail" || key === "cost") {
+      dirtyInventoryFieldsRef.current[resolvedPrimaryLocationId].add(key);
+      setInventoryByLocation((current) => ({
+        ...current,
+        [resolvedPrimaryLocationId]: {
+          ...current[resolvedPrimaryLocationId],
+          [key]: value,
+        },
+      }));
+    }
+  }
+
+  function updateInventoryField<K extends keyof InventoryFormState>(locationId: InventoryLocationId, key: K, value: InventoryFormState[K]) {
+    if (locationId === resolvedPrimaryLocationId && (key === "retail" || key === "cost")) {
+      dirtyFieldsRef.current.add(key);
+      setForm((current) => ({ ...current, [key]: value }));
+    }
+    if (EDITABLE_INVENTORY_FIELDS.includes(key as InventoryFieldKey)) {
+      dirtyInventoryFieldsRef.current[locationId].add(key as InventoryFieldKey);
+    }
+    setInventoryByLocation((current) => ({
+      ...current,
+      [locationId]: {
+        ...current[locationId],
+        [key]: value,
+      },
+    }));
+  }
+
+  function copyInventoryField(field: "retail" | "cost" | "tagTypeId" | "statusCodeId") {
+    const sourceValue = inventoryByLocation[activeInventoryLocation][field];
+    if (field === "retail" || field === "cost") {
+      dirtyFieldsRef.current.add(field);
+      setForm((formState) => ({ ...formState, [field]: sourceValue }));
+    }
+    for (const locationId of INVENTORY_LOCATION_IDS) {
+      if (locationId === activeInventoryLocation) continue;
+      dirtyInventoryFieldsRef.current[locationId].add(field);
+    }
+
+    setInventoryByLocation((current) => {
+      return {
+        2: activeInventoryLocation === 2 ? current[2] : { ...current[2], [field]: sourceValue },
+        3: activeInventoryLocation === 3 ? current[3] : { ...current[3], [field]: sourceValue },
+        4: activeInventoryLocation === 4 ? current[4] : { ...current[4], [field]: sourceValue },
+      };
+    });
   }
 
   async function handleSave() {
-    const v2Patch = buildV2Patch(form, baselineForm, isBulk);
+    const inventoryPatch = buildInventoryPatch(
+      form,
+      baselineForm,
+      inventoryByLocation,
+      baselineInventory,
+      resolvedPrimaryLocationId,
+      isBulk,
+    );
+    const v2Patch = {
+      ...buildV2Patch(form, baselineForm, isBulk),
+      inventory: inventoryPatch,
+    };
     const hasV2Changes =
       hasPatchFields(v2Patch.item ?? {}) ||
       hasPatchFields(v2Patch.gm ?? {}) ||
-      hasPatchFields(v2Patch.primaryInventory ?? {});
+      (v2Patch.inventory?.length ?? 0) > 0;
 
     if (!hasV2Changes) {
       onOpenChange(false);
@@ -418,14 +736,15 @@ export function EditItemDialogV2({
     try {
       if (items.length === 1) {
         const item = items[0];
+        const pierceInventoryBaseline = detail?.inventoryByLocation.find((entry) => entry.locationId === 2);
         await productApi.update(item.sku, {
           mode: "v2",
           patch: v2Patch,
           baseline: {
             sku: item.sku,
-            barcode: item.barcode,
-            retail: item.retail,
-            cost: item.cost,
+            barcode: detail?.barcode ?? item.barcode,
+            retail: pierceInventoryBaseline?.retail ?? item.retail,
+            cost: pierceInventoryBaseline?.cost ?? item.cost,
             fDiscontinue: item.fDiscontinue,
           },
         });
@@ -457,6 +776,7 @@ export function EditItemDialogV2({
   const dialogTitle = isBulk ? `Edit ${items.length} items` : `Edit SKU ${items[0]?.sku}`;
   const uid = items[0]?.sku ?? "bulk";
   const idFor = (field: string) => `edit-v2-${uid}-${field}`;
+  const activeInventory = inventoryByLocation[activeInventoryLocation];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -466,7 +786,7 @@ export function EditItemDialogV2({
           <DialogDescription>
             {isBulk
               ? "Fields left blank won't be changed. Fill only the shared values you want to apply across the selected items."
-              : "Phase 4 surfaces the GM and shared item fields in one tabbed editor."}
+              : "Phase 5 adds the inventory editor alongside the GM and shared item fields."}
           </DialogDescription>
         </DialogHeader>
 
@@ -478,7 +798,7 @@ export function EditItemDialogV2({
 
         {refsUnavailable ? (
           <div role="alert" aria-live="polite" className="mx-6 mt-6 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-3 text-sm text-destructive">
-            Reference data is unavailable right now. Vendor, department / class, tax type, package type, and color lookups are disabled until Prism recovers.
+            Reference data is unavailable right now. Vendor, department / class, tax type, tag type, status code, package type, and color lookups are disabled until Prism recovers.
           </div>
         ) : null}
 
@@ -494,10 +814,16 @@ export function EditItemDialogV2({
               <TabsTrigger value="primary">Primary</TabsTrigger>
               <TabsTrigger value="more">More</TabsTrigger>
               <TabsTrigger value="advanced">Advanced</TabsTrigger>
+              {!isBulk ? <TabsTrigger value="inventory">Inventory</TabsTrigger> : null}
             </TabsList>
 
             <TabsContent value="primary" className="space-y-4 pt-1">
               <Section title="Core item fields" description="Merchandise-safe fields that already write through the current edit path.">
+                {!isBulk ? (
+                  <p className="text-sm text-muted-foreground">
+                    Retail and cost in this tab write to the current primary page location: {INVENTORY_LOCATION_LABELS[resolvedPrimaryLocationId]}.
+                  </p>
+                ) : null}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field id={idFor("description")} label="Description">
                     <Input
@@ -709,6 +1035,151 @@ export function EditItemDialogV2({
                 </div>
               </Section>
             </TabsContent>
+
+            {!isBulk ? (
+              <TabsContent value="inventory" className="space-y-4 pt-1">
+                <Section
+                  title={`Inventory · ${INVENTORY_LOCATION_LABELS[activeInventoryLocation]}`}
+                  description="Edit the location-scoped inventory fields without affecting bulk edit or textbook surfaces."
+                >
+                  <div className="flex flex-wrap gap-2">
+                    {INVENTORY_LOCATION_IDS.map((locationId) => (
+                      <Button
+                        key={locationId}
+                        type="button"
+                        size="sm"
+                        variant={activeInventoryLocation === locationId ? "default" : "outline"}
+                        aria-pressed={activeInventoryLocation === locationId}
+                        onClick={() => setActiveInventoryLocation(locationId)}
+                      >
+                        {INVENTORY_LOCATION_LABELS[locationId]}
+                      </Button>
+                    ))}
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <ReadOnlyValueField
+                      id={idFor(`inventory-${activeInventoryLocation}-stock`)}
+                      label="Stock on Hand"
+                      value={activeInventory.stockOnHand || "—"}
+                    />
+                    <ReadOnlyValueField
+                      id={idFor(`inventory-${activeInventoryLocation}-sale`)}
+                      label="Last Sale"
+                      value={activeInventory.lastSaleDate || "—"}
+                    />
+                    <Field id={idFor(`inventory-${activeInventoryLocation}-retail`)} label="Retail">
+                      <Input
+                        id={idFor(`inventory-${activeInventoryLocation}-retail`)}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        inputMode="decimal"
+                        value={activeInventory.retail}
+                        onChange={(event) => updateInventoryField(activeInventoryLocation, "retail", event.target.value)}
+                      />
+                    </Field>
+                    <Field id={idFor(`inventory-${activeInventoryLocation}-cost`)} label="Cost">
+                      <Input
+                        id={idFor(`inventory-${activeInventoryLocation}-cost`)}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        inputMode="decimal"
+                        value={activeInventory.cost}
+                        onChange={(event) => updateInventoryField(activeInventoryLocation, "cost", event.target.value)}
+                      />
+                    </Field>
+                    <Field id={idFor(`inventory-${activeInventoryLocation}-expected-cost`)} label="Expected Cost">
+                      <Input
+                        id={idFor(`inventory-${activeInventoryLocation}-expected-cost`)}
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        inputMode="decimal"
+                        value={activeInventory.expectedCost}
+                        onChange={(event) => updateInventoryField(activeInventoryLocation, "expectedCost", event.target.value)}
+                      />
+                    </Field>
+                    <ItemRefSelectField
+                      id={idFor(`inventory-${activeInventoryLocation}-tag-type`)}
+                      refs={refs}
+                      kind="tagType"
+                      label="Tag Type"
+                      value={activeInventory.tagTypeId}
+                      onChange={(value) => updateInventoryField(activeInventoryLocation, "tagTypeId", value)}
+                      disabled={refsControlsDisabled}
+                      allowClear
+                    />
+                    <ItemRefSelectField
+                      id={idFor(`inventory-${activeInventoryLocation}-status-code`)}
+                      refs={refs}
+                      kind="statusCode"
+                      label="Status Code"
+                      value={activeInventory.statusCodeId}
+                      onChange={(value) => updateInventoryField(activeInventoryLocation, "statusCodeId", value)}
+                      disabled={refsControlsDisabled}
+                      allowClear
+                    />
+                    <Field id={idFor(`inventory-${activeInventoryLocation}-est-sales`)} label="Est Sales">
+                      <Input
+                        id={idFor(`inventory-${activeInventoryLocation}-est-sales`)}
+                        type="number"
+                        step="1"
+                        min="0"
+                        value={activeInventory.estSales}
+                        onChange={(event) => updateInventoryField(activeInventoryLocation, "estSales", event.target.value)}
+                      />
+                    </Field>
+                    <BooleanSelectField
+                      id={idFor(`inventory-${activeInventoryLocation}-est-sales-locked`)}
+                      label="Est Sales Locked"
+                      value={activeInventory.estSalesLocked}
+                      onChange={(value) => updateInventoryField(activeInventoryLocation, "estSalesLocked", value)}
+                    />
+                    <BooleanSelectField
+                      id={idFor(`inventory-${activeInventoryLocation}-inv-list-flag`)}
+                      label="List Price Flag"
+                      value={activeInventory.fInvListPriceFlag}
+                      onChange={(value) => updateInventoryField(activeInventoryLocation, "fInvListPriceFlag", value)}
+                    />
+                    <BooleanSelectField
+                      id={idFor(`inventory-${activeInventoryLocation}-tx-want-list-flag`)}
+                      label="Want List Flag"
+                      value={activeInventory.fTxWantListFlag}
+                      onChange={(value) => updateInventoryField(activeInventoryLocation, "fTxWantListFlag", value)}
+                    />
+                    <BooleanSelectField
+                      id={idFor(`inventory-${activeInventoryLocation}-tx-buyback-list-flag`)}
+                      label="Buyback Flag"
+                      value={activeInventory.fTxBuybackListFlag}
+                      onChange={(value) => updateInventoryField(activeInventoryLocation, "fTxBuybackListFlag", value)}
+                    />
+                    <BooleanSelectField
+                      id={idFor(`inventory-${activeInventoryLocation}-no-returns`)}
+                      label="No Returns"
+                      value={activeInventory.fNoReturns}
+                      onChange={(value) => updateInventoryField(activeInventoryLocation, "fNoReturns", value)}
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <Button type="button" variant="outline" size="sm" onClick={() => copyInventoryField("retail")}>
+                      Copy retail to other locations
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => copyInventoryField("cost")}>
+                      Copy cost to other locations
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => copyInventoryField("tagTypeId")}>
+                      Copy tag type to other locations
+                    </Button>
+                    <Button type="button" variant="outline" size="sm" onClick={() => copyInventoryField("statusCodeId")}>
+                      Copy status code to other locations
+                    </Button>
+                  </div>
+                </Section>
+              </TabsContent>
+            ) : null}
           </Tabs>
         </div>
 

@@ -5,6 +5,15 @@ import { describe, expect, it, vi } from "vitest";
 import type { ProductEditDetails } from "@/domains/product/types";
 import { EditItemDialogV2 } from "./edit-item-dialog-v2";
 
+const productApiMocks = vi.hoisted(() => ({
+  update: vi.fn(),
+  batch: vi.fn(),
+}));
+
+vi.mock("@/domains/product/api-client", () => ({
+  productApi: productApiMocks,
+}));
+
 vi.mock("@/domains/product/vendor-directory", () => ({
   useProductRefDirectory: vi.fn(),
 }));
@@ -39,6 +48,59 @@ const baseDetail: ProductEditDetails = {
   fIdRequired: true,
   minOrderQtyItem: 3,
   usedDccId: 1802,
+  inventoryByLocation: [
+    {
+      locationId: 2,
+      locationAbbrev: "PIER",
+      retail: 39.99,
+      cost: 19.5,
+      expectedCost: null,
+      stockOnHand: 12,
+      lastSaleDate: null,
+      tagTypeId: null,
+      statusCodeId: null,
+      estSales: null,
+      estSalesLocked: false,
+      fInvListPriceFlag: false,
+      fTxWantListFlag: false,
+      fTxBuybackListFlag: false,
+      fNoReturns: false,
+    },
+    {
+      locationId: 3,
+      locationAbbrev: "PCOP",
+      retail: null,
+      cost: null,
+      expectedCost: null,
+      stockOnHand: null,
+      lastSaleDate: null,
+      tagTypeId: null,
+      statusCodeId: null,
+      estSales: null,
+      estSalesLocked: false,
+      fInvListPriceFlag: false,
+      fTxWantListFlag: false,
+      fTxBuybackListFlag: false,
+      fNoReturns: false,
+    },
+    {
+      locationId: 4,
+      locationAbbrev: "PFS",
+      retail: null,
+      cost: null,
+      expectedCost: null,
+      stockOnHand: null,
+      lastSaleDate: null,
+      tagTypeId: null,
+      statusCodeId: null,
+      estSales: null,
+      estSalesLocked: false,
+      fInvListPriceFlag: false,
+      fTxWantListFlag: false,
+      fTxBuybackListFlag: false,
+      fNoReturns: false,
+    },
+  ],
 };
 
 async function mockDirectoryState(overrides: Partial<ReturnType<typeof import("@/domains/product/vendor-directory")["useProductRefDirectory"]>> = {}) {
@@ -99,8 +161,8 @@ describe("EditItemDialogV2", () => {
           {
             sku: 1001,
             barcode: baseDetail.barcode,
-            retail: baseDetail.retail ?? 0,
-            cost: baseDetail.cost ?? 0,
+            retail: 42.5,
+            cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
           },
@@ -122,6 +184,154 @@ describe("EditItemDialogV2", () => {
     expect(screen.queryByLabelText(/Binding/i)).not.toBeInTheDocument();
   });
 
+  it("shows the inventory tab for a single GM item and reveals PCOP inventory values", async () => {
+    await mockDirectoryState({
+      refs: {
+        vendors: [
+          { vendorId: 21, name: "PENS ETC (3001795)", pierceItems: 50 },
+          { vendorId: 22, name: "ALT VENDOR", pierceItems: 5 },
+        ],
+        dccs: [
+          { dccId: 1313290, deptNum: 111010, classNum: null, catNum: null, deptName: "NOT USE=111010", className: "DO NOT USE", catName: null, pierceItems: 30 },
+          { dccId: 1802, deptNum: 222000, classNum: null, catNum: null, deptName: "USED DCC", className: null, catName: null, pierceItems: 10 },
+        ],
+        taxTypes: [{ taxTypeId: 4, description: "STATE", pierceItems: 40 }],
+        tagTypes: [
+          { tagTypeId: 7, label: "CLEARANCE", subsystem: 1, pierceRows: 3 },
+          { tagTypeId: 8, label: "PROMO", subsystem: 1, pierceRows: 4 },
+        ],
+        statusCodes: [
+          { statusCodeId: 11, label: "ACTIVE", pierceRows: 7 },
+          { statusCodeId: 12, label: "HOLD", pierceRows: 2 },
+        ],
+        packageTypes: [{ code: "EA", label: "Each", defaultQty: 1, pierceItems: 25 }],
+        colors: [{ colorId: 2, label: "BLACK", pierceItems: 18 }],
+        bindings: [],
+      },
+      lookups: {
+        vendorNames: new Map([
+          [21, "PENS ETC (3001795)"],
+          [22, "ALT VENDOR"],
+        ]),
+        taxTypeLabels: new Map([[4, "STATE"]]),
+        tagTypeLabels: new Map([
+          [7, "CLEARANCE"],
+          [8, "PROMO"],
+        ]),
+        statusCodeLabels: new Map([
+          [11, "ACTIVE"],
+          [12, "HOLD"],
+        ]),
+        packageTypeLabels: new Map([["EA", "Each"]]),
+        colorLabels: new Map([[2, "BLACK"]]),
+        bindingLabels: new Map(),
+      },
+    });
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 42.5,
+            cost: 21.25,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+          },
+        ]}
+        detail={{
+          ...baseDetail,
+          inventoryByLocation: [
+            baseDetail.inventoryByLocation[0],
+            {
+              ...baseDetail.inventoryByLocation[1],
+              retail: 42.5,
+              cost: 21.25,
+              expectedCost: 20.5,
+              stockOnHand: 8,
+              lastSaleDate: "2026-04-15",
+              tagTypeId: 7,
+              statusCodeId: 11,
+              estSales: 13,
+              estSalesLocked: true,
+              fInvListPriceFlag: true,
+              fTxWantListFlag: false,
+              fTxBuybackListFlag: true,
+              fNoReturns: false,
+            },
+            baseDetail.inventoryByLocation[2],
+          ],
+        }}
+      />,
+    );
+
+    expect(screen.getByRole("tab", { name: "Inventory" })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("tab", { name: "Inventory" }));
+    await userEvent.click(screen.getByRole("button", { name: "PCOP" }));
+
+    expect(screen.getByLabelText("Retail")).toHaveValue(42.5);
+    expect(screen.getByLabelText("Cost")).toHaveValue(21.25);
+  });
+
+  it("copies the active retail value to PIER and PFS from PCOP", async () => {
+    await mockDirectoryState();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 42.5,
+            cost: 21.25,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+          },
+        ]}
+        detail={{
+          ...baseDetail,
+          inventoryByLocation: [
+            {
+              ...baseDetail.inventoryByLocation[0],
+              retail: 39.99,
+              cost: 19.5,
+            },
+            {
+              ...baseDetail.inventoryByLocation[1],
+              retail: 42.5,
+              cost: 21.25,
+            },
+            {
+              ...baseDetail.inventoryByLocation[2],
+              retail: 18,
+              cost: 9,
+            },
+          ],
+        }}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("tab", { name: "Inventory" }));
+    await userEvent.click(screen.getByRole("button", { name: "PCOP" }));
+
+    const retailInput = screen.getByLabelText("Retail");
+    await userEvent.clear(retailInput);
+    await userEvent.type(retailInput, "55.5");
+
+    await userEvent.click(screen.getByRole("button", { name: "Copy retail to other locations" }));
+    await userEvent.click(screen.getByRole("button", { name: "PIER" }));
+    expect(screen.getByLabelText("Retail")).toHaveValue(55.5);
+
+    await userEvent.click(screen.getByRole("button", { name: "PFS" }));
+    expect(screen.getByLabelText("Retail")).toHaveValue(55.5);
+  });
+
   it("shows the refs-unavailable alert while keeping the form visible", async () => {
     await mockDirectoryState({
       refs: null,
@@ -139,8 +349,8 @@ describe("EditItemDialogV2", () => {
           {
             sku: 1001,
             barcode: baseDetail.barcode,
-            retail: baseDetail.retail ?? 0,
-            cost: baseDetail.cost ?? 0,
+            retail: 42.5,
+            cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
           },
@@ -255,6 +465,162 @@ describe("EditItemDialogV2", () => {
     expect(screen.getByLabelText("Barcode")).toHaveValue(baseDetail.barcode);
   });
 
+  it("hydrates inventory state when detail finishes loading after the dialog opens", async () => {
+    await mockDirectoryState({
+      refs: {
+        vendors: [
+          { vendorId: 21, name: "PENS ETC (3001795)", pierceItems: 50 },
+          { vendorId: 22, name: "ALT VENDOR", pierceItems: 5 },
+        ],
+        dccs: [
+          { dccId: 1313290, deptNum: 111010, classNum: null, catNum: null, deptName: "NOT USE=111010", className: "DO NOT USE", catName: null, pierceItems: 30 },
+          { dccId: 1802, deptNum: 222000, classNum: null, catNum: null, deptName: "USED DCC", className: null, catName: null, pierceItems: 10 },
+        ],
+        taxTypes: [{ taxTypeId: 4, description: "STATE", pierceItems: 40 }],
+        tagTypes: [{ tagTypeId: 7, label: "CLEARANCE", subsystem: 1, pierceRows: 3 }],
+        statusCodes: [{ statusCodeId: 11, label: "ACTIVE", pierceRows: 7 }],
+        packageTypes: [{ code: "EA", label: "Each", defaultQty: 1, pierceItems: 25 }],
+        colors: [{ colorId: 2, label: "BLACK", pierceItems: 18 }],
+        bindings: [],
+      },
+      lookups: {
+        vendorNames: new Map([
+          [21, "PENS ETC (3001795)"],
+          [22, "ALT VENDOR"],
+        ]),
+        taxTypeLabels: new Map([[4, "STATE"]]),
+        tagTypeLabels: new Map([[7, "CLEARANCE"]]),
+        statusCodeLabels: new Map([[11, "ACTIVE"]]),
+        packageTypeLabels: new Map([["EA", "Each"]]),
+        colorLabels: new Map([[2, "BLACK"]]),
+        bindingLabels: new Map(),
+      },
+    });
+    const user = userEvent.setup();
+
+    const { rerender } = render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: null,
+            retail: 0,
+            cost: 0,
+            fDiscontinue: 0,
+            description: "Pending description",
+          },
+        ]}
+        detail={null}
+        detailLoading
+      />,
+    );
+
+    rerender(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: baseDetail.retail ?? 0,
+            cost: baseDetail.cost ?? 0,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+          },
+        ]}
+        detail={{
+          ...baseDetail,
+          inventoryByLocation: [
+            baseDetail.inventoryByLocation[0],
+            {
+              ...baseDetail.inventoryByLocation[1],
+              retail: 42.5,
+              cost: 21.25,
+              expectedCost: 20.5,
+              tagTypeId: 7,
+              statusCodeId: 11,
+            },
+            baseDetail.inventoryByLocation[2],
+          ],
+        }}
+        detailLoading={false}
+      />,
+    );
+
+    await user.click(screen.getByRole("tab", { name: "Inventory" }));
+    await user.click(screen.getByRole("button", { name: "PCOP" }));
+
+    expect(screen.getByLabelText("Retail")).toHaveValue(42.5);
+    expect(screen.getByLabelText("Cost")).toHaveValue(21.25);
+  });
+
+  it("does not clobber in-progress inventory edits when detail hydration finishes", async () => {
+    await mockDirectoryState();
+    const user = userEvent.setup();
+
+    const { rerender } = render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: null,
+            retail: 0,
+            cost: 0,
+            fDiscontinue: 0,
+            description: "Pending description",
+          },
+        ]}
+        detail={null}
+        detailLoading
+      />,
+    );
+
+    await user.click(screen.getByRole("tab", { name: "Inventory" }));
+    await user.click(screen.getByRole("button", { name: "PCOP" }));
+
+    const retailInput = screen.getByLabelText("Retail");
+    await user.clear(retailInput);
+    await user.type(retailInput, "55.5");
+
+    rerender(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: baseDetail.retail ?? 0,
+            cost: baseDetail.cost ?? 0,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+          },
+        ]}
+        detail={{
+          ...baseDetail,
+          inventoryByLocation: [
+            baseDetail.inventoryByLocation[0],
+            {
+              ...baseDetail.inventoryByLocation[1],
+              retail: 42.5,
+              cost: 21.25,
+            },
+            baseDetail.inventoryByLocation[2],
+          ],
+        }}
+        detailLoading={false}
+      />,
+    );
+
+    expect(screen.getByLabelText("Retail")).toHaveValue(55.5);
+    expect(screen.getByLabelText("Cost")).toHaveValue(21.25);
+  });
+
   it("keeps current ref-backed IDs visible when refs are unavailable", async () => {
     await mockDirectoryState({
       refs: null,
@@ -288,5 +654,175 @@ describe("EditItemDialogV2", () => {
     expect(screen.getByLabelText("Vendor")).toHaveTextContent("21");
     expect(screen.getByLabelText("Department / Class")).toHaveTextContent("1313290");
     expect(screen.getByLabelText("Tax Type")).toHaveTextContent("4");
+  });
+
+  it("uses the scoped primary location for Primary retail/cost and persists clears as null inventory patches", async () => {
+    await mockDirectoryState({
+      refs: {
+        vendors: [
+          { vendorId: 21, name: "PENS ETC (3001795)", pierceItems: 50 },
+          { vendorId: 22, name: "ALT VENDOR", pierceItems: 5 },
+        ],
+        dccs: [
+          { dccId: 1313290, deptNum: 111010, classNum: null, catNum: null, deptName: "NOT USE=111010", className: "DO NOT USE", catName: null, pierceItems: 30 },
+          { dccId: 1802, deptNum: 222000, classNum: null, catNum: null, deptName: "USED DCC", className: null, catName: null, pierceItems: 10 },
+        ],
+        taxTypes: [{ taxTypeId: 4, description: "STATE", pierceItems: 40 }],
+        tagTypes: [{ tagTypeId: 7, label: "CLEARANCE", subsystem: 1, pierceRows: 3 }],
+        statusCodes: [{ statusCodeId: 11, label: "ACTIVE", pierceRows: 7 }],
+        packageTypes: [{ code: "EA", label: "Each", defaultQty: 1, pierceItems: 25 }],
+        colors: [{ colorId: 2, label: "BLACK", pierceItems: 18 }],
+        bindings: [],
+      },
+      lookups: {
+        vendorNames: new Map([
+          [21, "PENS ETC (3001795)"],
+          [22, "ALT VENDOR"],
+        ]),
+        taxTypeLabels: new Map([[4, "STATE"]]),
+        tagTypeLabels: new Map([[7, "CLEARANCE"]]),
+        statusCodeLabels: new Map([[11, "ACTIVE"]]),
+        packageTypeLabels: new Map([["EA", "Each"]]),
+        colorLabels: new Map([[2, "BLACK"]]),
+        bindingLabels: new Map(),
+      },
+    });
+    productApiMocks.update.mockResolvedValue({ sku: 1001, appliedFields: [] });
+    const user = userEvent.setup();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 42.5,
+            cost: 21.25,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+          },
+        ]}
+        detail={{
+          ...baseDetail,
+          inventoryByLocation: [
+            {
+              ...baseDetail.inventoryByLocation[0],
+              retail: 39.99,
+              cost: 19.5,
+            },
+            {
+              ...baseDetail.inventoryByLocation[1],
+              retail: 42.5,
+              cost: 21.25,
+              tagTypeId: 7,
+              statusCodeId: 11,
+            },
+            baseDetail.inventoryByLocation[2],
+          ],
+        }}
+        locationIds={[3, 4]}
+        primaryLocationId={3}
+      />,
+    );
+
+    expect(screen.getByLabelText("Retail")).toHaveValue(42.5);
+    expect(screen.getByLabelText("Cost")).toHaveValue(21.25);
+
+    await user.clear(screen.getByLabelText("Retail"));
+    await user.clear(screen.getByLabelText("Cost"));
+
+    await user.click(screen.getByRole("tab", { name: "Inventory" }));
+
+    await user.click(screen.getByLabelText("Tag Type"));
+    await user.click(screen.getAllByText("Clear selection")[0]);
+
+    await user.click(screen.getByLabelText("Status Code"));
+    await user.click(screen.getAllByText("Clear selection")[1]);
+
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(productApiMocks.update).toHaveBeenCalledWith(
+      1001,
+      expect.objectContaining({
+        mode: "v2",
+        baseline: {
+          sku: 1001,
+          barcode: baseDetail.barcode,
+          retail: 39.99,
+          cost: 19.5,
+          fDiscontinue: baseDetail.fDiscontinue,
+        },
+        patch: {
+          inventory: [
+            {
+              locationId: 3,
+              retail: null,
+              cost: null,
+              tagTypeId: null,
+              statusCodeId: null,
+            },
+          ],
+        },
+      }),
+    );
+  });
+
+  it("shows blank primary retail/cost when the scoped primary location has no values", async () => {
+    await mockDirectoryState();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: baseDetail.retail ?? 0,
+            cost: baseDetail.cost ?? 0,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+          },
+        ]}
+        detail={baseDetail}
+        locationIds={[4]}
+        primaryLocationId={4}
+      />,
+    );
+
+    expect(screen.getByLabelText("Retail")).toHaveValue(null);
+    expect(screen.getByLabelText("Cost")).toHaveValue(null);
+  });
+
+  it("keeps a pristine single-item dialog on the no-op save path", async () => {
+    await mockDirectoryState();
+    productApiMocks.update.mockClear();
+    const onOpenChange = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={onOpenChange}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: baseDetail.retail ?? 0,
+            cost: baseDetail.cost ?? 0,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+          },
+        ]}
+        detail={baseDetail}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(productApiMocks.update).not.toHaveBeenCalled();
+    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 });

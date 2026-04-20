@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { productApi } from "@/domains/product/api-client";
+import type { ProductLocationId } from "@/domains/product/location-filters";
 import type { ProductEditDetails } from "@/domains/product/types";
 import type { EditItemDialogProps } from "./edit-item-dialog-legacy";
 import { EditItemDialogLegacy, buildPatch } from "./edit-item-dialog-legacy";
@@ -10,11 +11,20 @@ import { resolveEditDialogMode } from "./edit-item-dialog-mode";
 
 type EditItemDialogWrapperProps = EditItemDialogProps & {
   editDialogOverride?: string | null;
+  locationIds?: ProductLocationId[];
+  primaryLocationId?: ProductLocationId;
 };
 
 export { buildPatch };
 
-export function EditItemDialog({ editDialogOverride, items, open, ...props }: EditItemDialogWrapperProps) {
+export function EditItemDialog({
+  editDialogOverride,
+  items,
+  open,
+  locationIds,
+  primaryLocationId,
+  ...props
+}: EditItemDialogWrapperProps) {
   const mode = resolveEditDialogMode({
     featureFlagEnabled: process.env.NEXT_PUBLIC_PRODUCTS_EDIT_DIALOG_V2 === "true",
     override: editDialogOverride ?? null,
@@ -71,6 +81,8 @@ export function EditItemDialog({ editDialogOverride, items, open, ...props }: Ed
         items={items}
         detail={detail}
         detailLoading={detailLoading}
+        locationIds={locationIds}
+        primaryLocationId={primaryLocationId}
       />
     );
   }

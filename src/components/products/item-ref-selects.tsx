@@ -28,7 +28,7 @@ export interface ItemRefSelectsProps {
   layout?: "stacked" | "inline";
 }
 
-type ItemRefSelectKind = "vendor" | "dcc" | "taxType" | "packageType" | "color";
+type ItemRefSelectKind = "vendor" | "dcc" | "taxType" | "tagType" | "statusCode" | "packageType" | "color";
 
 const FIELD_CONFIG: Record<
   ItemRefSelectKind,
@@ -37,6 +37,8 @@ const FIELD_CONFIG: Record<
   vendor: { label: "Vendor", inlineLabel: "Vendor", optionsKey: "vendors" },
   dcc: { label: "Department / Class", inlineLabel: "Department / Class", optionsKey: "dccs" },
   taxType: { label: "Tax Type", inlineLabel: "Tax Type", optionsKey: "taxTypes" },
+  tagType: { label: "Tag Type", inlineLabel: "Tag Type", optionsKey: "tagTypes" },
+  statusCode: { label: "Status Code", inlineLabel: "Status Code", optionsKey: "statusCodes" },
   packageType: { label: "Package Type", inlineLabel: "Package Type", optionsKey: "packageTypes" },
   color: { label: "Color", inlineLabel: "Color", optionsKey: "colors" },
 };
@@ -52,7 +54,10 @@ export interface ItemRefSelectFieldProps {
   bulkMode?: boolean;
   disabled?: boolean;
   size?: "default" | "sm";
+  allowClear?: boolean;
 }
+
+const CLEAR_SELECT_VALUE = "__clear__";
 
 export function ItemRefSelectField({
   refs,
@@ -65,6 +70,7 @@ export function ItemRefSelectField({
   bulkMode = false,
   disabled = false,
   size = "default",
+  allowClear = false,
 }: ItemRefSelectFieldProps) {
   const options = buildProductRefSelectOptions(refs)[FIELD_CONFIG[kind].optionsKey];
   const resolvedPlaceholder = placeholder ?? (bulkMode ? "Leave unchanged" : "Select…");
@@ -74,11 +80,16 @@ export function ItemRefSelectField({
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id}>{label ?? FIELD_CONFIG[kind].label}</Label>
-      <Select value={value} onValueChange={(next) => onChange(next ?? "")} disabled={disabled}>
+      <Select
+        value={value}
+        onValueChange={(next) => onChange(next === CLEAR_SELECT_VALUE ? "" : (next ?? ""))}
+        disabled={disabled}
+      >
         <SelectTrigger id={id} aria-label={label ?? FIELD_CONFIG[kind].label} className={triggerClass} size={size}>
           <SelectValue placeholder={resolvedPlaceholder} />
         </SelectTrigger>
         <SelectContent className={contentClass}>
+          {allowClear ? <SelectItem value={CLEAR_SELECT_VALUE}>Clear selection</SelectItem> : null}
           {options.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}

@@ -73,11 +73,25 @@ vi.mock("@/components/products/product-table", () => ({
 }));
 
 vi.mock("@/components/products/product-action-bar", () => ({
-  ProductActionBar: ({ onEditClick }: { onEditClick?: () => void }) => (
-    <button type="button" onClick={onEditClick}>
-      Open edit dialog
-    </button>
-  ),
+  ProductActionBar: ({
+    onEditClick,
+    selected,
+  }: {
+    onEditClick?: () => void;
+    selected?: Map<number, { retailPrice: number | null; cost: number | null }>;
+  }) => {
+    const firstSelected = selected ? Array.from(selected.values())[0] : null;
+
+    return (
+      <div>
+        <button type="button" onClick={onEditClick}>
+          Open edit dialog
+        </button>
+        <span>{`selected-retail:${firstSelected?.retailPrice ?? "null"}`}</span>
+        <span>{`selected-cost:${firstSelected?.cost ?? "null"}`}</span>
+      </div>
+    );
+  },
 }));
 
 vi.mock("@/components/products/new-item-dialog", () => ({
@@ -137,11 +151,15 @@ vi.mock("@/components/products/edit-item-dialog-v2", () => ({
       open,
       detail,
       detailLoading,
+      locationIds,
+      primaryLocationId,
       onSaved,
     }: {
       open: boolean;
       detail?: { sku: number } | null;
       detailLoading?: boolean;
+      locationIds?: number[];
+      primaryLocationId?: number;
       onSaved?: (skus: number[]) => void;
     }) =>
       open ? (
@@ -149,6 +167,8 @@ vi.mock("@/components/products/edit-item-dialog-v2", () => ({
           <span>dialog:v2</span>
           <span>{`detail-loading:${detailLoading === true ? "yes" : "no"}`}</span>
           <span>{`detail-sku:${detail?.sku ?? "none"}`}</span>
+          <span>{`location-ids:${locationIds?.join(",") ?? "none"}`}</span>
+          <span>{`primary-location:${primaryLocationId ?? "none"}`}</span>
           <button type="button" onClick={() => onSaved?.([1001])}>
             Save v2 dialog
           </button>
@@ -209,6 +229,59 @@ function makeDetail(overrides: Partial<ProductEditDetails> = {}): ProductEditDet
     fIdRequired: false,
     minOrderQtyItem: null,
     usedDccId: null,
+    inventoryByLocation: [
+      {
+        locationId: 2,
+        locationAbbrev: "PIER",
+        retail: 39.99,
+        cost: 19.5,
+        expectedCost: null,
+        stockOnHand: 12,
+        lastSaleDate: null,
+        tagTypeId: null,
+        statusCodeId: null,
+        estSales: null,
+        estSalesLocked: false,
+        fInvListPriceFlag: false,
+        fTxWantListFlag: false,
+        fTxBuybackListFlag: false,
+        fNoReturns: false,
+      },
+      {
+        locationId: 3,
+        locationAbbrev: "PCOP",
+        retail: null,
+        cost: null,
+        expectedCost: null,
+        stockOnHand: null,
+        lastSaleDate: null,
+        tagTypeId: null,
+        statusCodeId: null,
+        estSales: null,
+        estSalesLocked: false,
+        fInvListPriceFlag: false,
+        fTxWantListFlag: false,
+        fTxBuybackListFlag: false,
+        fNoReturns: false,
+      },
+      {
+        locationId: 4,
+        locationAbbrev: "PFS",
+        retail: null,
+        cost: null,
+        expectedCost: null,
+        stockOnHand: null,
+        lastSaleDate: null,
+        tagTypeId: null,
+        statusCodeId: null,
+        estSales: null,
+        estSalesLocked: false,
+        fInvListPriceFlag: false,
+        fTxWantListFlag: false,
+        fTxBuybackListFlag: false,
+        fNoReturns: false,
+      },
+    ],
     ...overrides,
   };
 }
@@ -266,6 +339,8 @@ describe("ProductsPage edit dialog mode integration", () => {
 
     expect(detailMock).toHaveBeenCalledWith(1001);
     expect(screen.getByText("detail-sku:1001")).toBeInTheDocument();
+    expect(screen.getByText("location-ids:2,3,4")).toBeInTheDocument();
+    expect(screen.getByText("primary-location:2")).toBeInTheDocument();
     expect(screen.queryByText("dialog:legacy")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Save v2 dialog" }));
@@ -273,6 +348,132 @@ describe("ProductsPage edit dialog mode integration", () => {
     await waitFor(() => {
       expect(refetchMock).toHaveBeenCalledTimes(1);
     });
+  });
+
+  it("passes canonical location scope into v2 and still refetches after save", async () => {
+    const user = userEvent.setup();
+
+    searchParamsState = new URLSearchParams("tab=merchandise&loc=3,4");
+
+    render(<ProductsPage />);
+
+    await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("dialog:v2")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("location-ids:3,4")).toBeInTheDocument();
+    expect(screen.getByText("primary-location:3")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Save v2 dialog" }));
+
+    await waitFor(() => {
+      expect(refetchMock).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  it("still opens the v2 dialog for a single scoped row with blank retail and cost", async () => {
+    const user = userEvent.setup();
+
+    searchParamsState = new URLSearchParams("tab=merchandise&loc=4");
+    detailMock.mockResolvedValue(
+      makeDetail({
+        inventoryByLocation: [
+          {
+            ...makeDetail().inventoryByLocation[0],
+            retail: 39.99,
+            cost: 19.5,
+          },
+          makeDetail().inventoryByLocation[1],
+          {
+            ...makeDetail().inventoryByLocation[2],
+            retail: null,
+            cost: null,
+          },
+        ],
+      }),
+    );
+    useProductSelectionMock.mockReturnValue({
+      selected: new Map([
+        [
+          1001,
+          makeSelectedProduct({
+            retailPrice: null,
+            cost: null,
+          }),
+        ],
+      ]),
+      selectedCount: 1,
+      toggle: vi.fn(),
+      toggleAll: vi.fn(),
+      clear: vi.fn(),
+      isSelected: vi.fn(),
+      saveToSession: vi.fn(),
+    });
+
+    render(<ProductsPage />);
+
+    await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("dialog:v2")).toBeInTheDocument();
+    });
+
+    expect(detailMock).toHaveBeenCalledWith(1001);
+    expect(screen.getByText("location-ids:4")).toBeInTheDocument();
+    expect(screen.getByText("primary-location:4")).toBeInTheDocument();
+  });
+
+  it("re-derives selected pricing from the current scoped browse row", () => {
+    searchParamsState = new URLSearchParams("tab=merchandise&loc=4");
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [
+          {
+            sku: 1001,
+            description: "Pierce Hoodie",
+            title: null,
+            retail_price: null,
+            cost: null,
+            barcode: "123456789012",
+            author: null,
+            isbn: null,
+            edition: null,
+            catalog_number: "HD-1001",
+            vendor_id: 21,
+            item_type: "general_merchandise",
+          } as never,
+        ],
+        total: 1,
+        page: 1,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    useProductSelectionMock.mockReturnValue({
+      selected: new Map([
+        [
+          1001,
+          makeSelectedProduct({
+            retailPrice: 39.99,
+            cost: 19.5,
+          }),
+        ],
+      ]),
+      selectedCount: 1,
+      toggle: vi.fn(),
+      toggleAll: vi.fn(),
+      clear: vi.fn(),
+      isSelected: vi.fn(),
+      saveToSession: vi.fn(),
+    });
+
+    render(<ProductsPage />);
+
+    expect(screen.getByText("selected-retail:null")).toBeInTheDocument();
+    expect(screen.getByText("selected-cost:null")).toBeInTheDocument();
   });
 
   it("keeps textbook selections on the legacy path even when the flag is on", async () => {
@@ -286,6 +487,40 @@ describe("ProductsPage edit dialog mode integration", () => {
             sku: 2001,
             description: "Chemistry 101",
             itemType: "textbook",
+          }),
+        ],
+      ]),
+      selectedCount: 1,
+      toggle: vi.fn(),
+      toggleAll: vi.fn(),
+      clear: vi.fn(),
+      isSelected: vi.fn(),
+      saveToSession: vi.fn(),
+    });
+
+    render(<ProductsPage />);
+
+    await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("dialog:legacy")).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText("dialog:v2")).not.toBeInTheDocument();
+    expect(detailMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps used textbook selections on the legacy path even when the flag is on", async () => {
+    const user = userEvent.setup();
+
+    useProductSelectionMock.mockReturnValue({
+      selected: new Map([
+        [
+          2001,
+          makeSelectedProduct({
+            sku: 2001,
+            description: "Used Chemistry 101",
+            itemType: "used_textbook",
           }),
         ],
       ]),

@@ -20,6 +20,7 @@ interface ProductActionBarProps {
   /** Called after a successful discontinue so the page can refetch. */
   onDiscontinued?: (skus: number[]) => void;
   onEditClick?: () => void;
+  allowMissingEditPricing?: boolean;
   onHardDeleteClick?: () => void;
   onBulkEdit?: () => void;
 }
@@ -32,6 +33,7 @@ export function ProductActionBar({
   prismAvailable = false,
   onDiscontinued,
   onEditClick,
+  allowMissingEditPricing = false,
   onHardDeleteClick,
   onBulkEdit,
 }: ProductActionBarProps) {
@@ -45,6 +47,7 @@ export function ProductActionBar({
   ).length;
   const hasMissingRetailPrice = missingRetailPriceCount > 0;
   const hasMissingEditPricing = missingEditPricingCount > 0;
+  const editDisabled = !allowMissingEditPricing && hasMissingEditPricing;
 
   function handleCreateInvoice() {
     saveToSession();
@@ -147,7 +150,7 @@ export function ProductActionBar({
                     size="sm"
                     variant="outline"
                     onClick={onEditClick}
-                    disabled={hasMissingEditPricing}
+                    disabled={editDisabled}
                   >
                     Edit
                   </Button>
@@ -188,7 +191,7 @@ export function ProductActionBar({
                     {missingRetailPriceCount} selected item{missingRetailPriceCount !== 1 ? "s are" : " is"} missing retail price, so invoice and quote creation are unavailable.
                   </span>
                 ) : null}
-                {prismAvailable && onEditClick && hasMissingEditPricing ? (
+                {prismAvailable && onEditClick && editDisabled ? (
                   <span>
                     {missingEditPricingCount} selected item{missingEditPricingCount !== 1 ? "s are" : " is"} missing retail or cost, so edit is unavailable.
                   </span>

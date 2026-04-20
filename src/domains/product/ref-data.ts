@@ -103,6 +103,8 @@ export interface ProductRefSelectOptions {
   vendors: ProductRefSelectOption[];
   dccs: ProductRefSelectOption[];
   taxTypes: ProductRefSelectOption[];
+  tagTypes: ProductRefSelectOption[];
+  statusCodes: ProductRefSelectOption[];
   packageTypes: ProductRefSelectOption[];
   colors: ProductRefSelectOption[];
 }
@@ -172,6 +174,16 @@ export function buildProductRefSelectOptions(refs: PrismRefs | null): ProductRef
       value: String(row.taxTypeId),
       label: row.description,
       usageCount: row.pierceItems ?? 0,
+    })) ?? [],
+    tagTypes: refs?.tagTypes.map((row) => ({
+      value: String(row.tagTypeId),
+      label: row.label,
+      usageCount: row.pierceRows ?? 0,
+    })) ?? [],
+    statusCodes: refs?.statusCodes.map((row) => ({
+      value: String(row.statusCodeId),
+      label: row.label,
+      usageCount: row.pierceRows ?? 0,
     })) ?? [],
     packageTypes: refs?.packageTypes.map((row) => ({
       value: row.code,

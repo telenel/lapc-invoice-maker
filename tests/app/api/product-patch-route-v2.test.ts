@@ -25,16 +25,22 @@ vi.mock("@/lib/supabase/admin", () => supabaseMocks);
 const mockMaybeSingle = vi.fn();
 const mockEq = vi.fn(() => ({ maybeSingle: mockMaybeSingle }));
 const mockSelect = vi.fn(() => ({ eq: mockEq }));
-const mockUpsert = vi.fn();
+const mockProductsUpsert = vi.fn();
+const mockProductInventoryUpsert = vi.fn();
 const mockFrom = vi.fn((table: string) => {
   if (table === "products") {
     return {
       select: mockSelect,
-      upsert: mockUpsert,
+      upsert: mockProductsUpsert,
+    };
+  }
+  if (table === "product_inventory") {
+    return {
+      upsert: mockProductInventoryUpsert,
     };
   }
   return {
-    upsert: mockUpsert,
+    upsert: vi.fn(),
   };
 });
 
@@ -92,7 +98,8 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
       cost: 6.25,
       fDiscontinue: 0,
     });
-    mockUpsert.mockResolvedValue({ error: null });
+    mockProductsUpsert.mockResolvedValue({ error: null });
+    mockProductInventoryUpsert.mockResolvedValue({ error: null });
   });
 
   it("accepts a typed v2 payload and normalizes write buckets before dispatch", async () => {
@@ -142,10 +149,13 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
           description: "Notebook",
           catalogNumber: "ABC-1",
         },
-        primaryInventory: {
-          retail: 12.99,
-          cost: 6.25,
-        },
+        inventory: [
+          {
+            locationId: 2,
+            retail: 12.99,
+            cost: 6.25,
+          },
+        ],
       },
       {
         sku: 1001,
@@ -155,7 +165,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
         fDiscontinue: 0,
       },
     );
-    expect(mockUpsert).toHaveBeenCalledWith(expect.objectContaining({
+    expect(mockProductsUpsert).toHaveBeenCalledWith(expect.objectContaining({
       sku: 1001,
       vendor_id: 17,
       tx_comment: "Promo",
@@ -165,6 +175,263 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
       cost: 6.25,
       synced_at: expect.any(String),
     }));
+    expect(mockProductInventoryUpsert).toHaveBeenCalledWith([
+      expect.objectContaining({
+        sku: 1001,
+        location_id: 2,
+        retail_price: 12.99,
+        cost: 6.25,
+      }),
+    ]);
+  });
+
+  it("accepts typed per-location inventory patches and forwards each location unchanged", async () => {
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          baseline: {
+            sku: 1001,
+            barcode: "123456789012",
+            retail: 11.99,
+            cost: 5.5,
+            fDiscontinue: 0,
+          },
+          patch: {
+            item: {
+              vendorId: 17,
+            },
+            inventory: [
+              {
+                locationId: 3,
+                retail: 14.25,
+                cost: 7.5,
+                tagTypeId: 17,
+                statusCodeId: 3,
+              },
+              {
+                locationId: 4,
+                retail: 15.0,
+                cost: 8.0,
+              },
+            ],
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(prismMocks.updateGmItem).toHaveBeenCalledWith(
+      1001,
+      {
+        item: {
+          vendorId: 17,
+        },
+        inventory: [
+          {
+            locationId: 3,
+            retail: 14.25,
+            cost: 7.5,
+            tagTypeId: 17,
+            statusCodeId: 3,
+          },
+          {
+            locationId: 4,
+            retail: 15,
+            cost: 8,
+          },
+        ],
+      },
+      {
+        sku: 1001,
+        barcode: "123456789012",
+        retail: 11.99,
+        cost: 5.5,
+        fDiscontinue: 0,
+      },
+    );
+  });
+
+  it("accepts nullable inventory clears and forwards nulls unchanged", async () => {
+    const productDetailRoute = await loadRouteModule();
+    prismMocks.getItemSnapshot.mockResolvedValueOnce({
+      sku: 1001,
+      barcode: "123456789012",
+      retail: null,
+      cost: null,
+      fDiscontinue: 0,
+    });
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          baseline: {
+            sku: 1001,
+            barcode: "123456789012",
+            retail: 11.99,
+            cost: 5.5,
+            fDiscontinue: 0,
+          },
+          patch: {
+            inventory: [
+              {
+                locationId: 3,
+                retail: null,
+                cost: null,
+                expectedCost: null,
+                tagTypeId: null,
+                statusCodeId: null,
+                estSales: null,
+              },
+            ],
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(prismMocks.updateGmItem).toHaveBeenCalledWith(
+      1001,
+      {
+        inventory: [
+          {
+            locationId: 3,
+            retail: null,
+            cost: null,
+            expectedCost: null,
+            tagTypeId: null,
+            statusCodeId: null,
+            estSales: null,
+          },
+        ],
+      },
+      {
+        sku: 1001,
+        barcode: "123456789012",
+        retail: 11.99,
+        cost: 5.5,
+        fDiscontinue: 0,
+      },
+    );
+    expect(mockProductsUpsert).toHaveBeenCalledWith(expect.objectContaining({
+      sku: 1001,
+      retail_price: null,
+      cost: null,
+    }));
+    expect(mockProductInventoryUpsert).toHaveBeenCalledWith([
+      expect.objectContaining({
+        sku: 1001,
+        location_id: 3,
+        retail_price: null,
+        cost: null,
+        expected_cost: null,
+        tag_type_id: null,
+        status_code_id: null,
+        est_sales: null,
+      }),
+    ]);
+  });
+
+  it("rejects per-location inventory patches that target invalid locations", async () => {
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          patch: {
+            inventory: [
+              {
+                locationId: 5,
+                retail: 14.25,
+              },
+            ],
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(prismMocks.updateGmItem).not.toHaveBeenCalled();
+    expect(prismMocks.updateTextbookPricing).not.toHaveBeenCalled();
+    expect(mockProductsUpsert).not.toHaveBeenCalled();
+    expect(mockProductInventoryUpsert).not.toHaveBeenCalled();
+  });
+
+  it("rejects duplicate per-location inventory patches in a single payload", async () => {
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          patch: {
+            inventory: [
+              {
+                locationId: 3,
+                retail: 14.25,
+              },
+              {
+                locationId: 3,
+                retail: 15.25,
+              },
+            ],
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(prismMocks.updateGmItem).not.toHaveBeenCalled();
+    expect(prismMocks.updateTextbookPricing).not.toHaveBeenCalled();
+    expect(mockProductsUpsert).not.toHaveBeenCalled();
+    expect(mockProductInventoryUpsert).not.toHaveBeenCalled();
+  });
+
+  it("does not fall back to primaryInventory when an explicit empty inventory array is present", async () => {
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          patch: {
+            inventory: [],
+            primaryInventory: {
+              retail: 14.25,
+              cost: 7.5,
+            },
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: "PATCH body must include at least one writable field.",
+    });
+    expect(prismMocks.updateGmItem).not.toHaveBeenCalled();
+    expect(prismMocks.updateTextbookPricing).not.toHaveBeenCalled();
+    expect(mockProductsUpsert).not.toHaveBeenCalled();
+    expect(mockProductInventoryUpsert).not.toHaveBeenCalled();
   });
 
   it("rejects typed v2 requests when the target SKU is a textbook", async () => {
@@ -196,7 +463,8 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
     });
     expect(prismMocks.updateGmItem).not.toHaveBeenCalled();
     expect(prismMocks.updateTextbookPricing).not.toHaveBeenCalled();
-    expect(mockUpsert).not.toHaveBeenCalled();
+    expect(mockProductsUpsert).not.toHaveBeenCalled();
+    expect(mockProductInventoryUpsert).not.toHaveBeenCalled();
   });
 
   it("rejects empty typed patches instead of dispatching a no-op update", async () => {
@@ -220,6 +488,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
     });
     expect(prismMocks.updateGmItem).not.toHaveBeenCalled();
     expect(prismMocks.updateTextbookPricing).not.toHaveBeenCalled();
-    expect(mockUpsert).not.toHaveBeenCalled();
+    expect(mockProductsUpsert).not.toHaveBeenCalled();
+    expect(mockProductInventoryUpsert).not.toHaveBeenCalled();
   });
 });

@@ -43,6 +43,9 @@ async function main() {
       const sku = created[0];
       const snap = await getItemSnapshot(sku);
       if (!snap) throw new Error(`snapshot for ${sku} missing`);
+      if (snap.retail == null || snap.cost == null) {
+        throw new Error(`snapshot for ${sku} is missing retail/cost`);
+      }
 
       const projected = applyTransform({
         sku,
