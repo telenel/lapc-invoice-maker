@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   formatLocationVarianceBadge,
   formatVendorDisplay,
+  getLocationValueRows,
   getProductAnalyticsDisplay,
   getProductDisplaySaleDate,
   hasProductAnalyticsReady,
@@ -40,5 +41,39 @@ describe("product table helpers", () => {
     expect(formatLocationVarianceBadge(false, 3)).toBeNull();
     expect(formatLocationVarianceBadge(true, 1)).toBeNull();
     expect(formatLocationVarianceBadge(true, 3)).toBe("+2 varies");
+  });
+
+  it("formats selected-location rows for the popover", () => {
+    const slices = [
+      {
+        locationId: 2,
+        locationAbbrev: "PIER",
+        retailPrice: 19.99,
+        cost: 8.5,
+        stockOnHand: 10,
+        lastSaleDate: "2026-04-18T00:00:00.000Z",
+      },
+      {
+        locationId: 3,
+        locationAbbrev: "PCOP",
+        retailPrice: 21.99,
+        cost: 8.5,
+        stockOnHand: 4,
+        lastSaleDate: "2026-04-17T00:00:00.000Z",
+      },
+    ] as const;
+
+    expect(getLocationValueRows(slices, "retailPrice")).toEqual([
+      { label: "PIER", value: "$19.99" },
+      { label: "PCOP", value: "$21.99" },
+    ]);
+    expect(getLocationValueRows(slices, "cost")).toEqual([
+      { label: "PIER", value: "$8.50" },
+      { label: "PCOP", value: "$8.50" },
+    ]);
+    expect(getLocationValueRows(slices, "stockOnHand")).toEqual([
+      { label: "PIER", value: "10" },
+      { label: "PCOP", value: "4" },
+    ]);
   });
 });

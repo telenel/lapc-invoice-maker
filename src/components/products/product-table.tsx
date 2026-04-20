@@ -3,9 +3,10 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon, SearchIcon } from "lucide-react";
 import { useEffect, useMemo } from "react";
-import type { ProductBrowseRow, ProductTab } from "@/domains/product/types";
+import type { ProductBrowseRow, ProductLocationSlice, ProductTab } from "@/domains/product/types";
 import { PAGE_SIZE, type OptionalColumnKey } from "@/domains/product/constants";
 import { MarginBar } from "./margin-bar";
 import { useVendorDirectory } from "@/domains/product/vendor-directory";
@@ -128,6 +129,71 @@ export function formatVendorDisplay(vendorLabel: string | null | undefined): str
 export function formatLocationVarianceBadge(varies: boolean, selectedCount: number): string | null {
   if (!varies || selectedCount <= 1) return null;
   return `+${selectedCount - 1} varies`;
+}
+
+type LocationValueField = "retailPrice" | "cost" | "stockOnHand";
+
+interface LocationValueRow {
+  label: string;
+  value: string;
+}
+
+function formatLocationValue(slice: ProductLocationSlice, field: LocationValueField): string {
+  if (field === "stockOnHand") {
+    return slice.stockOnHand == null ? "—" : slice.stockOnHand.toLocaleString();
+  }
+  const value = slice[field];
+  return value == null ? "—" : formatCurrency(value);
+}
+
+export function getLocationValueRows(
+  slices: readonly ProductLocationSlice[],
+  field: LocationValueField,
+): LocationValueRow[] {
+  return slices.map((slice) => ({
+    label: slice.locationAbbrev,
+    value: formatLocationValue(slice, field),
+  }));
+}
+
+function LocationVariancePopover({
+  badge,
+  field,
+  label,
+  slices,
+}: {
+  badge: string;
+  field: LocationValueField;
+  label: string;
+  slices: readonly ProductLocationSlice[];
+}) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          onClick={(event) => event.stopPropagation()}
+          aria-label={`${label} values vary across locations`}
+          className="inline-flex shrink-0 items-center rounded-full border border-border px-2 py-0.5 text-[10px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+        >
+          {badge}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-44 p-2">
+        <div className="space-y-1.5">
+          {getLocationValueRows(slices, field).map((row) => (
+            <div
+              key={row.label}
+              className="flex items-center justify-between gap-3 text-[11px] leading-4"
+            >
+              <span className="text-muted-foreground">{row.label}</span>
+              <span className="font-mono tnum text-foreground">{row.value}</span>
+            </div>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 function SortHeader({
@@ -474,6 +540,20 @@ export function ProductTable({
                 : products.map((product, idx) => {
                     const sel = isSelected(product.sku);
                     const zebra = idx % 2 === 1;
+                    const selectedInventories = product.selected_inventories ?? [];
+                    const selectedLocationCount = selectedInventories.length;
+                    const retailBadge = formatLocationVarianceBadge(
+                      product.location_variance?.retailPriceVaries ?? false,
+                      selectedLocationCount,
+                    );
+                    const costBadge = formatLocationVarianceBadge(
+                      product.location_variance?.costVaries ?? false,
+                      selectedLocationCount,
+                    );
+                    const stockBadge = formatLocationVarianceBadge(
+                      product.location_variance?.stockVaries ?? false,
+                      selectedLocationCount,
+                    );
                     const primaryText =
                       tab === "textbooks"
                         ? product.title ?? product.description ?? "—"
@@ -545,38 +625,64 @@ export function ProductTable({
                           })()}
                         </td>
                         <td className="px-2.5 py-1.5 text-right">
-                          <span className="font-mono tnum text-[11.5px] text-muted-foreground">
-                            {formatCurrency(product.cost)}
+                          <span className="inline-flex items-center justify-end gap-1.5">
+                            <span className="font-mono tnum text-[11.5px] text-muted-foreground">
+                              {formatCurrency(product.cost)}
+                            </span>
+                            {costBadge ? (
+                              <LocationVariancePopover
+                                badge={costBadge}
+                                field="cost"
+                                label="Cost"
+                                slices={selectedInventories}
+                              />
+                            ) : null}
                           </span>
                         </td>
                         <td className="px-2.5 py-1.5 text-right">
-                          <span className="font-mono tnum text-[11.5px] text-foreground font-medium">
-                            {formatCurrency(product.retail_price)}
+                          <span className="inline-flex items-center justify-end gap-1.5">
+                            <span className="font-mono tnum text-[11.5px] text-foreground font-medium">
+                              {formatCurrency(product.retail_price)}
+                            </span>
+                            {retailBadge ? (
+                              <LocationVariancePopover
+                                badge={retailBadge}
+                                field="retailPrice"
+                                label="Retail"
+                                slices={selectedInventories}
+                              />
+                            ) : null}
                           </span>
                         </td>
                         <td className="px-2.5 py-1.5 text-right">
                           {(() => {
                             const stock = product.stock_on_hand;
-                            if (stock == null) {
-                              return (
-                                <span className="font-mono tnum text-[11.5px] text-muted-foreground/70">
-                                  —
-                                </span>
-                              );
-                            }
-                            const isOut = stock <= 0;
-                            const isLow = stock > 0 && stock < 15;
+                            const stockValue = stock == null ? "—" : stock.toLocaleString();
+                            const isOut = stock != null && stock <= 0;
+                            const isLow = stock != null && stock > 0 && stock < 15;
                             return (
-                              <span
-                                className={`font-mono tnum text-[11.5px] ${
-                                  isOut
-                                    ? "text-muted-foreground"
-                                    : isLow
-                                      ? "text-[color:var(--chart-4)] font-medium"
-                                      : "text-foreground"
-                                }`}
-                              >
-                                {stock.toLocaleString()}
+                              <span className="inline-flex items-center justify-end gap-1.5">
+                                <span
+                                  className={`font-mono tnum text-[11.5px] ${
+                                    stock == null
+                                      ? "text-muted-foreground/70"
+                                      : isOut
+                                      ? "text-muted-foreground"
+                                      : isLow
+                                        ? "text-[color:var(--chart-4)] font-medium"
+                                        : "text-foreground"
+                                  }`}
+                                >
+                                  {stockValue}
+                                </span>
+                                {stockBadge ? (
+                                  <LocationVariancePopover
+                                    badge={stockBadge}
+                                    field="stockOnHand"
+                                    label="Stock"
+                                    slices={selectedInventories}
+                                  />
+                                ) : null}
                               </span>
                             );
                           })()}
@@ -792,6 +898,20 @@ export function ProductTable({
             ))
           : products.map((product) => {
               const sel = isSelected(product.sku);
+              const selectedInventories = product.selected_inventories ?? [];
+              const selectedLocationCount = selectedInventories.length;
+              const retailBadge = formatLocationVarianceBadge(
+                product.location_variance?.retailPriceVaries ?? false,
+                selectedLocationCount,
+              );
+              const costBadge = formatLocationVarianceBadge(
+                product.location_variance?.costVaries ?? false,
+                selectedLocationCount,
+              );
+              const stockBadge = formatLocationVarianceBadge(
+                product.location_variance?.stockVaries ?? false,
+                selectedLocationCount,
+              );
               const primaryText =
                 tab === "textbooks"
                   ? product.title ?? product.description ?? "—"
@@ -825,26 +945,52 @@ export function ProductTable({
                       />
                     </div>
                   </div>
-                  <div className="mt-1.5 flex items-center gap-3 text-xs">
-                    <span className="font-mono tnum font-medium">
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                    <span className="inline-flex items-center gap-1.5 font-mono tnum font-medium">
                       {formatCurrency(product.retail_price)}
+                      {retailBadge ? (
+                        <LocationVariancePopover
+                          badge={retailBadge}
+                          field="retailPrice"
+                          label="Retail"
+                          slices={selectedInventories}
+                        />
+                      ) : null}
                     </span>
-                    <span className="font-mono tnum text-muted-foreground">
+                    <span className="inline-flex items-center gap-1.5 font-mono tnum text-muted-foreground">
                       {formatCurrency(product.cost)}
+                      {costBadge ? (
+                        <LocationVariancePopover
+                          badge={costBadge}
+                          field="cost"
+                          label="Cost"
+                          slices={selectedInventories}
+                        />
+                      ) : null}
                     </span>
-                    {product.stock_on_hand != null ? (
-                      <span
-                        className={`font-mono tnum ${
-                          product.stock_on_hand <= 0
+                    <span
+                      className={`inline-flex items-center gap-1.5 font-mono tnum ${
+                        product.stock_on_hand == null
+                          ? "text-muted-foreground/70"
+                          : product.stock_on_hand <= 0
                             ? "text-muted-foreground"
                             : product.stock_on_hand < 15
                               ? "text-[color:var(--chart-4)] font-medium"
                               : "text-foreground"
-                        }`}
-                      >
-                        {product.stock_on_hand.toLocaleString()} in stock
-                      </span>
-                    ) : null}
+                      }`}
+                    >
+                      {product.stock_on_hand == null
+                        ? "—"
+                        : `${product.stock_on_hand.toLocaleString()} in stock`}
+                      {stockBadge ? (
+                        <LocationVariancePopover
+                          badge={stockBadge}
+                          field="stockOnHand"
+                          label="Stock"
+                          slices={selectedInventories}
+                        />
+                      ) : null}
+                    </span>
                     {showMargin ? (
                       product.cost != null && product.retail_price != null ? (
                         <MarginBar
