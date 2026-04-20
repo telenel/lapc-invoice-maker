@@ -185,6 +185,7 @@ export function buildPrismPullPageQuery(): string {
           LTRIM(RTRIM(tb.ISBN))             AS ISBN,
           LTRIM(RTRIM(tb.Edition))          AS Edition,
           tb.BindingID,
+          LTRIM(RTRIM(bnd.Name))            AS BindingLabel,
           LTRIM(RTRIM(tb.Imprint))          AS Imprint,
           LTRIM(RTRIM(tb.Copyright))        AS Copyright,
           tb.UsedSKU,
@@ -232,6 +233,7 @@ export function buildPrismPullPageQuery(): string {
           inv.TagTypeID,
           LTRIM(RTRIM(tag.Description))     AS TagTypeLabel,
           inv.StatusCodeID,
+          LTRIM(RTRIM(sc.StatusCodeName))   AS StatusCodeLabel,
           inv.TaxTypeID                     AS TaxTypeOverrideID,
           inv.DiscCodeID                    AS InvDiscCodeID,
           inv.MinimumStock                  AS InvMinStock,
@@ -268,6 +270,8 @@ export function buildPrismPullPageQuery(): string {
         LEFT JOIN Item_Tax_Type itt ON itt.ItemTaxTypeID = i.ItemTaxTypeID
         LEFT JOIN TagType tag ON tag.TagTypeID = inv.TagTypeID
         LEFT JOIN PackageType pkg ON pkg.PackageType = gm.PackageType
+        LEFT JOIN InventoryStatusCodes sc ON sc.InvStatusCodeID = inv.StatusCodeID
+        LEFT JOIN Binding bnd ON bnd.BindingID = tb.BindingID
         WHERE i.SKU > @cursor OR (i.SKU = @cursor AND inv.LocationID > @lastLoc)
         ORDER BY i.SKU, inv.LocationID
       `;

@@ -49,4 +49,12 @@ describe("buildPrismPullPageQuery", () => {
       expect(sql).toContain(col);
     }
   });
+
+  it("joins status-code and binding ref tables for their labels", () => {
+    const sql = buildPrismPullPageQuery();
+    expect(sql).toContain("StatusCodeLabel");
+    expect(sql).toContain("BindingLabel");
+    expect(sql).toMatch(/LEFT JOIN InventoryStatusCodes sc ON sc\.InvStatusCodeID = inv\.StatusCodeID/);
+    expect(sql).toMatch(/LEFT JOIN Binding bnd ON bnd\.BindingID = tb\.BindingID/);
+  });
 });
