@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import type { PrismRefs } from "@/domains/product/api-client";
+import { buildProductRefSelectOptions } from "@/domains/product/ref-data";
 
 export interface ItemRefSelectsProps {
   refs: PrismRefs | null;
@@ -27,13 +28,66 @@ export interface ItemRefSelectsProps {
   layout?: "stacked" | "inline";
 }
 
-function formatDcc(deptName: string, className: string | null): string {
-  const dept = (deptName ?? "").trim();
-  const cls = (className ?? "").trim();
-  if (dept && cls) return `${dept} / ${cls}`;
-  if (dept) return dept;
-  if (cls) return cls;
-  return "(unnamed)";
+type ItemRefSelectKind = "vendor" | "dcc" | "taxType" | "packageType" | "color";
+
+const FIELD_CONFIG: Record<
+  ItemRefSelectKind,
+  { label: string; inlineLabel: string; optionsKey: keyof ReturnType<typeof buildProductRefSelectOptions> }
+> = {
+  vendor: { label: "Vendor", inlineLabel: "Vendor", optionsKey: "vendors" },
+  dcc: { label: "Department / Class", inlineLabel: "Department / Class", optionsKey: "dccs" },
+  taxType: { label: "Tax Type", inlineLabel: "Tax Type", optionsKey: "taxTypes" },
+  packageType: { label: "Package Type", inlineLabel: "Package Type", optionsKey: "packageTypes" },
+  color: { label: "Color", inlineLabel: "Color", optionsKey: "colors" },
+};
+
+export interface ItemRefSelectFieldProps {
+  refs: PrismRefs | null;
+  kind: ItemRefSelectKind;
+  value: string;
+  onChange: (value: string) => void;
+  label?: string;
+  id?: string;
+  placeholder?: string;
+  bulkMode?: boolean;
+  disabled?: boolean;
+  size?: "default" | "sm";
+}
+
+export function ItemRefSelectField({
+  refs,
+  kind,
+  value,
+  onChange,
+  label,
+  id,
+  placeholder,
+  bulkMode = false,
+  disabled = false,
+  size = "default",
+}: ItemRefSelectFieldProps) {
+  const options = buildProductRefSelectOptions(refs)[FIELD_CONFIG[kind].optionsKey];
+  const resolvedPlaceholder = placeholder ?? (bulkMode ? "Leave unchanged" : "Select…");
+  const triggerClass = "w-full";
+  const contentClass = "min-w-[var(--anchor-width)] sm:min-w-80 max-w-[min(32rem,90vw)]";
+
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id}>{label ?? FIELD_CONFIG[kind].label}</Label>
+      <Select value={value} onValueChange={(next) => onChange(next ?? "")} disabled={disabled}>
+        <SelectTrigger id={id} aria-label={label ?? FIELD_CONFIG[kind].label} className={triggerClass} size={size}>
+          <SelectValue placeholder={resolvedPlaceholder} />
+        </SelectTrigger>
+        <SelectContent className={contentClass}>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
 }
 
 export function ItemRefSelects({
@@ -47,47 +101,43 @@ export function ItemRefSelects({
   layout = "stacked",
 }: ItemRefSelectsProps) {
   const placeholder = bulkMode ? "Leave unchanged" : "Select…";
-  // The default SelectTrigger is `w-fit`, which collapses to placeholder width
-  // inside a grid cell. Force full-width so long labels fit. Wider popup so
-  // long vendor names aren't truncated mid-scan.
-  const triggerClass = "w-full";
-  const contentClass = "min-w-[var(--anchor-width)] sm:min-w-80 max-w-[min(32rem,90vw)]";
+  const selectOptions = buildProductRefSelectOptions(refs);
 
   if (layout === "inline") {
     return (
       <div className="grid min-w-0 grid-cols-3 gap-2">
         <Select value={vendorId} onValueChange={(v) => onChange("vendorId", v ?? "")} disabled={disabled}>
-          <SelectTrigger aria-label="Vendor" size="sm" className={triggerClass}>
+          <SelectTrigger aria-label={FIELD_CONFIG.vendor.inlineLabel} size="sm" className="w-full">
             <SelectValue placeholder={bulkMode ? "Any vendor" : placeholder} />
           </SelectTrigger>
-          <SelectContent className={contentClass}>
-            {refs?.vendors.map((v) => (
-              <SelectItem key={v.vendorId} value={String(v.vendorId)}>
-                {v.name}
+          <SelectContent className="min-w-[var(--anchor-width)] sm:min-w-80 max-w-[min(32rem,90vw)]">
+            {selectOptions.vendors.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={dccId} onValueChange={(v) => onChange("dccId", v ?? "")} disabled={disabled}>
-          <SelectTrigger aria-label="Department / Class" size="sm" className={triggerClass}>
+          <SelectTrigger aria-label={FIELD_CONFIG.dcc.inlineLabel} size="sm" className="w-full">
             <SelectValue placeholder={bulkMode ? "Any dept / class" : placeholder} />
           </SelectTrigger>
-          <SelectContent className={contentClass}>
-            {refs?.dccs.map((d) => (
-              <SelectItem key={d.dccId} value={String(d.dccId)}>
-                {formatDcc(d.deptName, d.className)}
+          <SelectContent className="min-w-[var(--anchor-width)] sm:min-w-80 max-w-[min(32rem,90vw)]">
+            {selectOptions.dccs.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={itemTaxTypeId} onValueChange={(v) => onChange("itemTaxTypeId", v ?? "")} disabled={disabled}>
-          <SelectTrigger aria-label="Tax Type" size="sm" className={triggerClass}>
+          <SelectTrigger aria-label={FIELD_CONFIG.taxType.inlineLabel} size="sm" className="w-full">
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
-          <SelectContent className={contentClass}>
-            {refs?.taxTypes.map((t) => (
-              <SelectItem key={t.taxTypeId} value={String(t.taxTypeId)}>
-                {t.description}
+          <SelectContent className="min-w-[var(--anchor-width)] sm:min-w-80 max-w-[min(32rem,90vw)]">
+            {selectOptions.taxTypes.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -98,51 +148,36 @@ export function ItemRefSelects({
 
   return (
     <>
-      <div className="space-y-1.5">
-        <Label htmlFor="vendor-select">Vendor</Label>
-        <Select value={vendorId} onValueChange={(v) => onChange("vendorId", v ?? "")} disabled={disabled}>
-          <SelectTrigger id="vendor-select" className={triggerClass}>
-            <SelectValue placeholder={placeholder} />
-          </SelectTrigger>
-          <SelectContent className={contentClass}>
-            {refs?.vendors.map((v) => (
-              <SelectItem key={v.vendorId} value={String(v.vendorId)}>
-                {v.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="dcc-select">Department / Class</Label>
-        <Select value={dccId} onValueChange={(v) => onChange("dccId", v ?? "")} disabled={disabled}>
-          <SelectTrigger id="dcc-select" className={triggerClass}>
-            <SelectValue placeholder={placeholder} />
-          </SelectTrigger>
-          <SelectContent className={contentClass}>
-            {refs?.dccs.map((d) => (
-              <SelectItem key={d.dccId} value={String(d.dccId)}>
-                {formatDcc(d.deptName, d.className)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="tax-select">Tax Type</Label>
-        <Select value={itemTaxTypeId} onValueChange={(v) => onChange("itemTaxTypeId", v ?? "")} disabled={disabled}>
-          <SelectTrigger id="tax-select" className={triggerClass}>
-            <SelectValue placeholder={placeholder} />
-          </SelectTrigger>
-          <SelectContent className={contentClass}>
-            {refs?.taxTypes.map((t) => (
-              <SelectItem key={t.taxTypeId} value={String(t.taxTypeId)}>
-                {t.description}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <ItemRefSelectField
+        id="vendor-select"
+        refs={refs}
+        kind="vendor"
+        value={vendorId}
+        onChange={(value) => onChange("vendorId", value)}
+        disabled={disabled}
+        bulkMode={bulkMode}
+        placeholder={placeholder}
+      />
+      <ItemRefSelectField
+        id="dcc-select"
+        refs={refs}
+        kind="dcc"
+        value={dccId}
+        onChange={(value) => onChange("dccId", value)}
+        disabled={disabled}
+        bulkMode={bulkMode}
+        placeholder={placeholder}
+      />
+      <ItemRefSelectField
+        id="tax-select"
+        refs={refs}
+        kind="taxType"
+        value={itemTaxTypeId}
+        onChange={(value) => onChange("itemTaxTypeId", value)}
+        disabled={disabled}
+        bulkMode={bulkMode}
+        placeholder={placeholder}
+      />
     </>
   );
 }

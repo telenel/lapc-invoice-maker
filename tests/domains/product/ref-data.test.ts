@@ -3,7 +3,9 @@ import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import type { PrismRefs as ApiClientPrismRefs } from "@/domains/product/api-client";
 import {
+  buildProductRefSelectOptions,
   buildProductRefMaps,
+  formatDccLabel,
   formatLookupLabel,
   normalizePackageTypeLabel,
   sortRefsByUsageThenLabel,
@@ -86,6 +88,30 @@ describe("product ref data helpers", () => {
 
   it("falls back to the code when a package-type label is blank", () => {
     expect(normalizePackageTypeLabel({ code: "CS", label: null })).toBe("CS");
+  });
+
+  it("formats DCC labels consistently for label-backed selects", () => {
+    expect(formatDccLabel({ deptName: "Clothing", className: "Hoodies" })).toBe("Clothing / Hoodies");
+    expect(formatDccLabel({ deptName: "Clothing", className: null })).toBe("Clothing");
+  });
+
+  it("builds select options for the phase 4 ref-backed fields without changing API order", async () => {
+    const refs = await loadCommittedProductRefSnapshot();
+    const options = buildProductRefSelectOptions(refs);
+
+    expect(options.vendors[0]).toEqual({
+      value: "21",
+      label: "PENS ETC (3001795)",
+      usageCount: refs.vendors[0]?.pierceItems ?? 0,
+    });
+    expect(options.dccs[0]?.label).toBe("NOT USE=111010 / DO NOT USE");
+    expect(options.taxTypes[0]).toEqual({
+      value: "4",
+      label: "STATE",
+      usageCount: refs.taxTypes[0]?.pierceItems ?? 0,
+    });
+    expect(options.packageTypes[0]?.label).toBe("Each");
+    expect(options.colors[0]?.label).toBe("BLACK");
   });
 
   it("uses a neutral fallback when a lookup label is missing", () => {
