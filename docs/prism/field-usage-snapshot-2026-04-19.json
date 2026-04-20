@@ -1,0 +1,931 @@
+{
+  "generatedAt": "2026-04-20T03:42:06.834Z",
+  "scope": {
+    "pierceLocations": [
+      2,
+      3,
+      4
+    ],
+    "textbookActiveWindow": "18 months"
+  },
+  "snapshot": {
+    "gm_item_fields": {
+      "total": 33340,
+      "results": [
+        {
+          "table": "Item",
+          "column": "BarCode",
+          "kind": "str",
+          "populated": 23174,
+          "total": 33340,
+          "pct": 69.50809838032393
+        },
+        {
+          "table": "Item",
+          "column": "VendorID",
+          "kind": "id",
+          "populated": 33340,
+          "total": 33340,
+          "pct": 100
+        },
+        {
+          "table": "Item",
+          "column": "DCCID",
+          "kind": "id",
+          "populated": 33340,
+          "total": 33340,
+          "pct": 100
+        },
+        {
+          "table": "Item",
+          "column": "UsedDCCID",
+          "kind": "id",
+          "populated": 0,
+          "total": 33340,
+          "pct": 0
+        },
+        {
+          "table": "Item",
+          "column": "TypeID_isUsed",
+          "kind": "flag",
+          "populated": 0,
+          "total": 33340,
+          "pct": 0
+        },
+        {
+          "table": "Item",
+          "column": "MinOrderQty",
+          "kind": "int",
+          "populated": 0,
+          "total": 33340,
+          "pct": 0
+        },
+        {
+          "table": "Item",
+          "column": "txComment",
+          "kind": "str",
+          "populated": 2308,
+          "total": 33340,
+          "pct": 6.922615476904618
+        },
+        {
+          "table": "Item",
+          "column": "fListPriceFlag",
+          "kind": "flag",
+          "populated": 0,
+          "total": 33340,
+          "pct": 0
+        },
+        {
+          "table": "Item",
+          "column": "fDiscontinue",
+          "kind": "flag",
+          "populated": 52,
+          "total": 33340,
+          "pct": 0.15596880623875226
+        },
+        {
+          "table": "Item",
+          "column": "DiscCodeID",
+          "kind": "id",
+          "populated": 0,
+          "total": 33340,
+          "pct": 0
+        },
+        {
+          "table": "Item",
+          "column": "Weight",
+          "kind": "decimal",
+          "populated": 0,
+          "total": 33340,
+          "pct": 0
+        },
+        {
+          "table": "Item",
+          "column": "ItemTaxTypeID",
+          "kind": "id",
+          "populated": 33340,
+          "total": 33340,
+          "pct": 100
+        },
+        {
+          "table": "Item",
+          "column": "StyleID",
+          "kind": "id",
+          "populated": 14,
+          "total": 33340,
+          "pct": 0.041991601679664065
+        },
+        {
+          "table": "Item",
+          "column": "ItemSeasonCodeID",
+          "kind": "id",
+          "populated": 0,
+          "total": 33340,
+          "pct": 0
+        },
+        {
+          "table": "Item",
+          "column": "fPerishable",
+          "kind": "flag",
+          "populated": 8,
+          "total": 33340,
+          "pct": 0.02399520095980804
+        },
+        {
+          "table": "Item",
+          "column": "fIDRequired",
+          "kind": "flag",
+          "populated": 1,
+          "total": 33340,
+          "pct": 0.002999400119976005
+        }
+      ]
+    },
+    "gm_gm_fields": {
+      "total": 33340,
+      "results": [
+        {
+          "table": "GeneralMerchandise",
+          "column": "AlternateVendorID",
+          "kind": "id",
+          "populated": 0,
+          "total": 33340,
+          "pct": 0
+        },
+        {
+          "table": "GeneralMerchandise",
+          "column": "MfgID_distinctFromVendor",
+          "kind": "id",
+          "populated": 2024,
+          "total": 33340,
+          "pct": 6.070785842831434
+        },
+        {
+          "table": "GeneralMerchandise",
+          "column": "Description",
+          "kind": "str",
+          "populated": 33336,
+          "total": 33340,
+          "pct": 99.9880023995201
+        },
+        {
+          "table": "GeneralMerchandise",
+          "column": "Type",
+          "kind": "str",
+          "populated": 1849,
+          "total": 33340,
+          "pct": 5.545890821835632
+        },
+        {
+          "table": "GeneralMerchandise",
+          "column": "Color",
+          "kind": "id",
+          "populated": 9675,
+          "total": 33340,
+          "pct": 29.019196160767848
+        },
+        {
+          "table": "GeneralMerchandise",
+          "column": "Size",
+          "kind": "str",
+          "populated": 0,
+          "total": 33340,
+          "pct": 0
+        },
+        {
+          "table": "GeneralMerchandise",
+          "column": "SizeID",
+          "kind": "id",
+          "populated": 9692,
+          "total": 33340,
+          "pct": 29.070185962807436
+        },
+        {
+          "table": "GeneralMerchandise",
+          "column": "CatalogNumber",
+          "kind": "str",
+          "populated": 23653,
+          "total": 33340,
+          "pct": 70.94481103779245
+        },
+        {
+          "table": "GeneralMerchandise",
+          "column": "PackageType",
+          "kind": "str",
+          "populated": 33340,
+          "total": 33340,
+          "pct": 100
+        },
+        {
+          "table": "GeneralMerchandise",
+          "column": "UnitsPerPack_gt1",
+          "kind": "int",
+          "populated": 5006,
+          "total": 33340,
+          "pct": 15.01499700059988
+        },
+        {
+          "table": "GeneralMerchandise",
+          "column": "Weight",
+          "kind": "decimal",
+          "populated": 1,
+          "total": 33340,
+          "pct": 0.002999400119976005
+        },
+        {
+          "table": "GeneralMerchandise",
+          "column": "ImageURL",
+          "kind": "str",
+          "populated": 6,
+          "total": 33340,
+          "pct": 0.017996400719856028
+        },
+        {
+          "table": "GeneralMerchandise",
+          "column": "OrderIncrement_gt1",
+          "kind": "int",
+          "populated": 11,
+          "total": 33340,
+          "pct": 0.03299340131973605
+        },
+        {
+          "table": "GeneralMerchandise",
+          "column": "UseScaleInterface",
+          "kind": "flag",
+          "populated": 3,
+          "total": 33340,
+          "pct": 0.008998200359928014
+        },
+        {
+          "table": "GeneralMerchandise",
+          "column": "Tare",
+          "kind": "decimal",
+          "populated": 0,
+          "total": 33340,
+          "pct": 0
+        }
+      ]
+    },
+    "gm_inventory_fields": {
+      "total": 49940,
+      "results": [
+        {
+          "table": "Inventory",
+          "column": "Retail",
+          "kind": "money",
+          "populated": 49140,
+          "total": 49940,
+          "pct": 98.39807769323188
+        },
+        {
+          "table": "Inventory",
+          "column": "Cost",
+          "kind": "money",
+          "populated": 48277,
+          "total": 49940,
+          "pct": 96.67000400480576
+        },
+        {
+          "table": "Inventory",
+          "column": "ExpectedCost",
+          "kind": "money",
+          "populated": 19772,
+          "total": 49940,
+          "pct": 39.59150981177413
+        },
+        {
+          "table": "Inventory",
+          "column": "StockOnHand_nonzero",
+          "kind": "int",
+          "populated": 7845,
+          "total": 49940,
+          "pct": 15.708850620744894
+        },
+        {
+          "table": "Inventory",
+          "column": "MaximumStock",
+          "kind": "int",
+          "populated": 11,
+          "total": 49940,
+          "pct": 0.022026431718061675
+        },
+        {
+          "table": "Inventory",
+          "column": "MinimumStock",
+          "kind": "int",
+          "populated": 13,
+          "total": 49940,
+          "pct": 0.026031237484981977
+        },
+        {
+          "table": "Inventory",
+          "column": "AutoOrderQty",
+          "kind": "int",
+          "populated": 3,
+          "total": 49940,
+          "pct": 0.006007208650380456
+        },
+        {
+          "table": "Inventory",
+          "column": "MinOrderQty",
+          "kind": "int",
+          "populated": 3,
+          "total": 49940,
+          "pct": 0.006007208650380456
+        },
+        {
+          "table": "Inventory",
+          "column": "TaxTypeID",
+          "kind": "id",
+          "populated": 49868,
+          "total": 49940,
+          "pct": 99.85582699239087
+        },
+        {
+          "table": "Inventory",
+          "column": "TagTypeID",
+          "kind": "id",
+          "populated": 49940,
+          "total": 49940,
+          "pct": 100
+        },
+        {
+          "table": "Inventory",
+          "column": "DiscCodeID",
+          "kind": "id",
+          "populated": 0,
+          "total": 49940,
+          "pct": 0
+        },
+        {
+          "table": "Inventory",
+          "column": "StatusCodeID",
+          "kind": "id",
+          "populated": 49400,
+          "total": 49940,
+          "pct": 98.91870244293152
+        },
+        {
+          "table": "Inventory",
+          "column": "ReservedQty",
+          "kind": "int",
+          "populated": 0,
+          "total": 49940,
+          "pct": 0
+        },
+        {
+          "table": "Inventory",
+          "column": "RentalQty",
+          "kind": "int",
+          "populated": 1,
+          "total": 49940,
+          "pct": 0.002002402883460152
+        },
+        {
+          "table": "Inventory",
+          "column": "RoyaltyCost",
+          "kind": "money",
+          "populated": 0,
+          "total": 49940,
+          "pct": 0
+        },
+        {
+          "table": "Inventory",
+          "column": "MinRoyaltyCost",
+          "kind": "money",
+          "populated": 0,
+          "total": 49940,
+          "pct": 0
+        },
+        {
+          "table": "Inventory",
+          "column": "EstSales_nonzero",
+          "kind": "int",
+          "populated": 19609,
+          "total": 49940,
+          "pct": 39.265118141770124
+        },
+        {
+          "table": "Inventory",
+          "column": "EstSalesLocked",
+          "kind": "flag",
+          "populated": 0,
+          "total": 49940,
+          "pct": 0
+        },
+        {
+          "table": "Inventory",
+          "column": "fTXWantListFlag",
+          "kind": "flag",
+          "populated": 2426,
+          "total": 49940,
+          "pct": 4.8578293952743286
+        },
+        {
+          "table": "Inventory",
+          "column": "fTXBuybackListFlag",
+          "kind": "flag",
+          "populated": 2426,
+          "total": 49940,
+          "pct": 4.8578293952743286
+        },
+        {
+          "table": "Inventory",
+          "column": "fInvListPriceFlag",
+          "kind": "flag",
+          "populated": 47586,
+          "total": 49940,
+          "pct": 95.2863436123348
+        },
+        {
+          "table": "Inventory",
+          "column": "fRentOnly",
+          "kind": "flag",
+          "populated": 1,
+          "total": 49940,
+          "pct": 0.002002402883460152
+        },
+        {
+          "table": "Inventory",
+          "column": "fNoReturns",
+          "kind": "flag",
+          "populated": 2,
+          "total": 49940,
+          "pct": 0.004004805766920304
+        },
+        {
+          "table": "Inventory",
+          "column": "TextComment",
+          "kind": "str",
+          "populated": 0,
+          "total": 49940,
+          "pct": 0
+        },
+        {
+          "table": "Inventory",
+          "column": "LastSaleDate",
+          "kind": "date",
+          "populated": 49940,
+          "total": 49940,
+          "pct": 100
+        }
+      ]
+    },
+    "tx_item_fields": {
+      "total": 572,
+      "results": [
+        {
+          "table": "Item",
+          "column": "BarCode",
+          "kind": "str",
+          "populated": 538,
+          "total": 572,
+          "pct": 94.05594405594405
+        },
+        {
+          "table": "Item",
+          "column": "VendorID",
+          "kind": "id",
+          "populated": 572,
+          "total": 572,
+          "pct": 100
+        },
+        {
+          "table": "Item",
+          "column": "DCCID",
+          "kind": "id",
+          "populated": 572,
+          "total": 572,
+          "pct": 100
+        },
+        {
+          "table": "Item",
+          "column": "UsedDCCID",
+          "kind": "id",
+          "populated": 0,
+          "total": 572,
+          "pct": 0
+        },
+        {
+          "table": "Item",
+          "column": "TypeID_isUsed",
+          "kind": "flag",
+          "populated": 0,
+          "total": 572,
+          "pct": 0
+        },
+        {
+          "table": "Item",
+          "column": "MinOrderQty",
+          "kind": "int",
+          "populated": 0,
+          "total": 572,
+          "pct": 0
+        },
+        {
+          "table": "Item",
+          "column": "txComment",
+          "kind": "str",
+          "populated": 119,
+          "total": 572,
+          "pct": 20.804195804195803
+        },
+        {
+          "table": "Item",
+          "column": "fListPriceFlag",
+          "kind": "flag",
+          "populated": 87,
+          "total": 572,
+          "pct": 15.209790209790212
+        },
+        {
+          "table": "Item",
+          "column": "fDiscontinue",
+          "kind": "flag",
+          "populated": 4,
+          "total": 572,
+          "pct": 0.6993006993006993
+        },
+        {
+          "table": "Item",
+          "column": "DiscCodeID",
+          "kind": "id",
+          "populated": 0,
+          "total": 572,
+          "pct": 0
+        },
+        {
+          "table": "Item",
+          "column": "Weight",
+          "kind": "decimal",
+          "populated": 0,
+          "total": 572,
+          "pct": 0
+        },
+        {
+          "table": "Item",
+          "column": "ItemTaxTypeID",
+          "kind": "id",
+          "populated": 572,
+          "total": 572,
+          "pct": 100
+        },
+        {
+          "table": "Item",
+          "column": "StyleID",
+          "kind": "id",
+          "populated": 0,
+          "total": 572,
+          "pct": 0
+        },
+        {
+          "table": "Item",
+          "column": "ItemSeasonCodeID",
+          "kind": "id",
+          "populated": 0,
+          "total": 572,
+          "pct": 0
+        },
+        {
+          "table": "Item",
+          "column": "fPerishable",
+          "kind": "flag",
+          "populated": 0,
+          "total": 572,
+          "pct": 0
+        },
+        {
+          "table": "Item",
+          "column": "fIDRequired",
+          "kind": "flag",
+          "populated": 0,
+          "total": 572,
+          "pct": 0
+        }
+      ]
+    },
+    "tx_textbook_fields": {
+      "total": 572,
+      "results": [
+        {
+          "table": "Textbook",
+          "column": "BindingID",
+          "kind": "id",
+          "populated": 474,
+          "total": 572,
+          "pct": 82.86713286713287
+        },
+        {
+          "table": "Textbook",
+          "column": "UsedSKU",
+          "kind": "id",
+          "populated": 572,
+          "total": 572,
+          "pct": 100
+        },
+        {
+          "table": "Textbook",
+          "column": "TextStatusID",
+          "kind": "id",
+          "populated": 63,
+          "total": 572,
+          "pct": 11.013986013986015
+        },
+        {
+          "table": "Textbook",
+          "column": "StatusDate",
+          "kind": "date",
+          "populated": 572,
+          "total": 572,
+          "pct": 100
+        },
+        {
+          "table": "Textbook",
+          "column": "Author",
+          "kind": "str",
+          "populated": 572,
+          "total": 572,
+          "pct": 100
+        },
+        {
+          "table": "Textbook",
+          "column": "Title",
+          "kind": "str",
+          "populated": 572,
+          "total": 572,
+          "pct": 100
+        },
+        {
+          "table": "Textbook",
+          "column": "ISBN",
+          "kind": "str",
+          "populated": 525,
+          "total": 572,
+          "pct": 91.78321678321679
+        },
+        {
+          "table": "Textbook",
+          "column": "Imprint",
+          "kind": "str",
+          "populated": 224,
+          "total": 572,
+          "pct": 39.16083916083916
+        },
+        {
+          "table": "Textbook",
+          "column": "Edition",
+          "kind": "str",
+          "populated": 374,
+          "total": 572,
+          "pct": 65.38461538461539
+        },
+        {
+          "table": "Textbook",
+          "column": "Copyright",
+          "kind": "str",
+          "populated": 314,
+          "total": 572,
+          "pct": 54.89510489510489
+        },
+        {
+          "table": "Textbook",
+          "column": "Type",
+          "kind": "str",
+          "populated": 0,
+          "total": 572,
+          "pct": 0
+        },
+        {
+          "table": "Textbook",
+          "column": "Bookkey",
+          "kind": "str",
+          "populated": 572,
+          "total": 572,
+          "pct": 100
+        },
+        {
+          "table": "Textbook",
+          "column": "Weight",
+          "kind": "decimal",
+          "populated": 1,
+          "total": 572,
+          "pct": 0.17482517482517482
+        },
+        {
+          "table": "Textbook",
+          "column": "ImageURL",
+          "kind": "str",
+          "populated": 2,
+          "total": 572,
+          "pct": 0.34965034965034963
+        }
+      ]
+    },
+    "tx_inventory_fields": {
+      "total": 609,
+      "results": [
+        {
+          "table": "Inventory",
+          "column": "Retail",
+          "kind": "money",
+          "populated": 602,
+          "total": 609,
+          "pct": 98.85057471264368
+        },
+        {
+          "table": "Inventory",
+          "column": "Cost",
+          "kind": "money",
+          "populated": 599,
+          "total": 609,
+          "pct": 98.35796387520526
+        },
+        {
+          "table": "Inventory",
+          "column": "ExpectedCost",
+          "kind": "money",
+          "populated": 499,
+          "total": 609,
+          "pct": 81.9376026272578
+        },
+        {
+          "table": "Inventory",
+          "column": "StockOnHand_nonzero",
+          "kind": "int",
+          "populated": 217,
+          "total": 609,
+          "pct": 35.63218390804598
+        },
+        {
+          "table": "Inventory",
+          "column": "MaximumStock",
+          "kind": "int",
+          "populated": 0,
+          "total": 609,
+          "pct": 0
+        },
+        {
+          "table": "Inventory",
+          "column": "MinimumStock",
+          "kind": "int",
+          "populated": 0,
+          "total": 609,
+          "pct": 0
+        },
+        {
+          "table": "Inventory",
+          "column": "AutoOrderQty",
+          "kind": "int",
+          "populated": 0,
+          "total": 609,
+          "pct": 0
+        },
+        {
+          "table": "Inventory",
+          "column": "MinOrderQty",
+          "kind": "int",
+          "populated": 0,
+          "total": 609,
+          "pct": 0
+        },
+        {
+          "table": "Inventory",
+          "column": "TaxTypeID",
+          "kind": "id",
+          "populated": 609,
+          "total": 609,
+          "pct": 100
+        },
+        {
+          "table": "Inventory",
+          "column": "TagTypeID",
+          "kind": "id",
+          "populated": 609,
+          "total": 609,
+          "pct": 100
+        },
+        {
+          "table": "Inventory",
+          "column": "DiscCodeID",
+          "kind": "id",
+          "populated": 0,
+          "total": 609,
+          "pct": 0
+        },
+        {
+          "table": "Inventory",
+          "column": "StatusCodeID",
+          "kind": "id",
+          "populated": 609,
+          "total": 609,
+          "pct": 100
+        },
+        {
+          "table": "Inventory",
+          "column": "ReservedQty",
+          "kind": "int",
+          "populated": 1,
+          "total": 609,
+          "pct": 0.16420361247947454
+        },
+        {
+          "table": "Inventory",
+          "column": "RentalQty",
+          "kind": "int",
+          "populated": 5,
+          "total": 609,
+          "pct": 0.8210180623973727
+        },
+        {
+          "table": "Inventory",
+          "column": "RoyaltyCost",
+          "kind": "money",
+          "populated": 0,
+          "total": 609,
+          "pct": 0
+        },
+        {
+          "table": "Inventory",
+          "column": "MinRoyaltyCost",
+          "kind": "money",
+          "populated": 0,
+          "total": 609,
+          "pct": 0
+        },
+        {
+          "table": "Inventory",
+          "column": "EstSales_nonzero",
+          "kind": "int",
+          "populated": 513,
+          "total": 609,
+          "pct": 84.23645320197043
+        },
+        {
+          "table": "Inventory",
+          "column": "EstSalesLocked",
+          "kind": "flag",
+          "populated": 0,
+          "total": 609,
+          "pct": 0
+        },
+        {
+          "table": "Inventory",
+          "column": "fTXWantListFlag",
+          "kind": "flag",
+          "populated": 464,
+          "total": 609,
+          "pct": 76.19047619047619
+        },
+        {
+          "table": "Inventory",
+          "column": "fTXBuybackListFlag",
+          "kind": "flag",
+          "populated": 459,
+          "total": 609,
+          "pct": 75.36945812807882
+        },
+        {
+          "table": "Inventory",
+          "column": "fInvListPriceFlag",
+          "kind": "flag",
+          "populated": 495,
+          "total": 609,
+          "pct": 81.2807881773399
+        },
+        {
+          "table": "Inventory",
+          "column": "fRentOnly",
+          "kind": "flag",
+          "populated": 0,
+          "total": 609,
+          "pct": 0
+        },
+        {
+          "table": "Inventory",
+          "column": "fNoReturns",
+          "kind": "flag",
+          "populated": 110,
+          "total": 609,
+          "pct": 18.0623973727422
+        },
+        {
+          "table": "Inventory",
+          "column": "TextComment",
+          "kind": "str",
+          "populated": 0,
+          "total": 609,
+          "pct": 0
+        },
+        {
+          "table": "Inventory",
+          "column": "LastSaleDate",
+          "kind": "date",
+          "populated": 609,
+          "total": 609,
+          "pct": 100
+        }
+      ]
+    }
+  }
+}
