@@ -290,7 +290,7 @@ export const GET = withAdmin(async (_request: NextRequest, _session, ctx?: Route
       .select(PRODUCT_INVENTORY_SELECT)
       .eq("sku", sku)
       .in("location_id", PRODUCT_INVENTORY_LOCATION_IDS);
-    const inventoryRows = Array.isArray(inventoryResult.data)
+    const inventoryRows: ProductInventoryEditDetailRow[] = Array.isArray(inventoryResult.data)
       ? inventoryResult.data.filter(isProductInventoryEditDetailRow)
       : [];
     const inventoryError = inventoryResult.error;
@@ -302,7 +302,7 @@ export const GET = withAdmin(async (_request: NextRequest, _session, ctx?: Route
 
     return NextResponse.json({
       ...toProductEditDetails(data),
-      inventoryByLocation: buildInventoryByLocation(inventoryRows ?? []),
+      inventoryByLocation: buildInventoryByLocation(inventoryRows),
     });
   } catch (err) {
     console.error(`GET /api/products/${sku} threw:`, err);
