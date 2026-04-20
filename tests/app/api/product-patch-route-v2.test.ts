@@ -22,10 +22,21 @@ vi.mock("@/lib/auth", () => ({
 }));
 vi.mock("@/lib/supabase/admin", () => supabaseMocks);
 
+const mockMaybeSingle = vi.fn();
+const mockEq = vi.fn(() => ({ maybeSingle: mockMaybeSingle }));
+const mockSelect = vi.fn(() => ({ eq: mockEq }));
 const mockUpsert = vi.fn();
-const mockFrom = vi.fn(() => ({
-  upsert: mockUpsert,
-}));
+const mockFrom = vi.fn((table: string) => {
+  if (table === "products") {
+    return {
+      select: mockSelect,
+      upsert: mockUpsert,
+    };
+  }
+  return {
+    upsert: mockUpsert,
+  };
+});
 
 function mockDefaultPrismModules() {
   vi.doMock("@/lib/prism", () => ({
@@ -57,6 +68,10 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
     });
     supabaseMocks.getSupabaseAdminClient.mockReturnValue({
       from: mockFrom,
+    });
+    mockMaybeSingle.mockResolvedValue({
+      data: { item_type: "general_merchandise" },
+      error: null,
     });
     prismMocks.isPrismConfigured.mockReturnValue(true);
     prismMocks.updateGmItem.mockResolvedValue({
@@ -150,5 +165,61 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
       cost: 6.25,
       synced_at: expect.any(String),
     }));
+  });
+
+  it("rejects typed v2 requests when the target SKU is a textbook", async () => {
+    mockMaybeSingle.mockResolvedValueOnce({
+      data: { item_type: "textbook" },
+      error: null,
+    });
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          patch: {
+            item: {
+              vendorId: 17,
+            },
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: "V2 PATCH does not support textbook SKUs. Use the legacy textbook-safe payload.",
+    });
+    expect(prismMocks.updateGmItem).not.toHaveBeenCalled();
+    expect(prismMocks.updateTextbookPricing).not.toHaveBeenCalled();
+    expect(mockUpsert).not.toHaveBeenCalled();
+  });
+
+  it("rejects empty typed patches instead of dispatching a no-op update", async () => {
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          patch: {},
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: "PATCH body must include at least one writable field.",
+    });
+    expect(prismMocks.updateGmItem).not.toHaveBeenCalled();
+    expect(prismMocks.updateTextbookPricing).not.toHaveBeenCalled();
+    expect(mockUpsert).not.toHaveBeenCalled();
   });
 });

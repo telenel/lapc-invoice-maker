@@ -47,6 +47,10 @@ type ProductEditDetailRow = {
   used_dcc_id: number | null;
 };
 
+type ProductPatchKindRow = {
+  item_type: string | null;
+};
+
 const PRODUCT_EDIT_DETAIL_SELECT = [
   "sku",
   "item_type",
@@ -78,6 +82,8 @@ const PRODUCT_EDIT_DETAIL_SELECT = [
   "min_order_qty_item",
   "used_dcc_id",
 ].join(", ");
+
+const TEXTBOOK_ITEM_TYPES = new Set(["textbook", "used_textbook"]);
 
 function parseSkuParam(rawSku: string): number | null {
   const sku = Number(rawSku);
@@ -302,10 +308,15 @@ type NormalizedUpdateCommand = {
   baseline?: ItemSnapshot;
   isTextbook: boolean;
   patch: ProductEditPatchV2;
+  isV2: boolean;
 };
 
 function hasWritableFields<T extends object>(patch: T | undefined): patch is T {
   return Object.values(patch ?? {}).some((value) => value !== undefined);
+}
+
+function hasAnyWritablePatchFields(patch: ProductEditPatchV2): boolean {
+  return hasWritableFields(patch.item) || hasWritableFields(patch.gm) || hasWritableFields(patch.primaryInventory);
 }
 
 function normalizeLegacyPatch(patch: LegacyPatchInput): ProductEditPatchV2 {
@@ -349,6 +360,7 @@ function normalizePatchBody(body: unknown): { success: true; data: NormalizedUpd
         baseline: parsed.data.baseline,
         isTextbook: false,
         patch: parsed.data.patch,
+        isV2: true,
       },
     };
   }
@@ -364,6 +376,7 @@ function normalizePatchBody(body: unknown): { success: true; data: NormalizedUpd
       baseline: parsed.data.baseline,
       isTextbook: parsed.data.isTextbook === true,
       patch: normalizeLegacyPatch(parsed.data.patch),
+      isV2: false,
     },
   };
 }
@@ -424,15 +437,41 @@ export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: Rout
   if (!normalized.success) {
     return NextResponse.json({ error: normalized.error }, { status: 400 });
   }
+  if (!hasAnyWritablePatchFields(normalized.data.patch)) {
+    return NextResponse.json({ error: "PATCH body must include at least one writable field." }, { status: 400 });
+  }
 
   try {
+    const supabase = getSupabaseAdminClient();
+
+    if (normalized.data.isV2) {
+      const { data: kindRow, error: kindError } = await supabase
+        .from("products")
+        .select("item_type")
+        .eq("sku", sku)
+        .maybeSingle<ProductPatchKindRow>();
+
+      if (kindError) {
+        console.error(`PATCH /api/products/${sku} kind lookup failed:`, kindError);
+        return NextResponse.json({ error: "Failed to load item type" }, { status: 500 });
+      }
+      if (!kindRow) {
+        return NextResponse.json({ error: "Item not found" }, { status: 404 });
+      }
+      if (TEXTBOOK_ITEM_TYPES.has(kindRow.item_type ?? "")) {
+        return NextResponse.json(
+          { error: "V2 PATCH does not support textbook SKUs. Use the legacy textbook-safe payload." },
+          { status: 400 },
+        );
+      }
+    }
+
     const result = normalized.data.isTextbook
       ? await updateTextbookPricing(sku, normalized.data.patch, normalized.data.baseline)
       : await updateGmItem(sku, normalized.data.patch, normalized.data.baseline);
 
     // Non-blocking Supabase mirror
     try {
-      const supabase = getSupabaseAdminClient();
       const snap = await getItemSnapshot(sku);
       await supabase.from("products").upsert(buildLegacyMirrorPayload(sku, normalized.data.patch, snap));
     } catch (mirrorErr) {
