@@ -148,6 +148,19 @@ export default function ProductsPage() {
     isSelected,
     saveToSession,
   } = useProductSelection();
+  const editableSelectedItems = Array.from(selected.values())
+    .filter((product) => product.retailPrice != null && product.cost != null)
+    .map((product) => ({
+      sku: product.sku,
+      barcode: product.barcode ?? null,
+      retail: product.retailPrice,
+      cost: product.cost,
+      fDiscontinue: 0 as 0 | 1,
+      description: product.description ?? "",
+      vendorId: product.vendorId ?? undefined,
+      dccId: undefined,
+      isTextbook: product.itemType === "textbook",
+    }));
 
   const updateFilters = useCallback(
     (next: ProductFilters, extras: { view?: string } = {}) => {
@@ -295,17 +308,7 @@ export default function ProductsPage() {
       <EditItemDialog
         open={editOpen}
         onOpenChange={setEditOpen}
-        items={Array.from(selected.values()).map((p) => ({
-          sku: p.sku,
-          barcode: p.barcode ?? null,
-          retail: p.retailPrice ?? 0,
-          cost: p.cost ?? 0,
-          fDiscontinue: 0 as 0 | 1,
-          description: p.description ?? "",
-          vendorId: p.vendorId ?? undefined,
-          dccId: undefined,
-          isTextbook: p.itemType === "textbook",
-        }))}
+        items={editableSelectedItems}
         onSaved={() => {
           setEditOpen(false);
           refetch();

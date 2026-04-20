@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductSearchPanel } from "./product-search-panel";
 
 vi.mock("sonner", () => ({
@@ -144,6 +144,10 @@ function buildBrowseProducts() {
 }
 
 describe("ProductSearchPanel", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("does not allow adding rows that are missing a retail price", async () => {
     const user = userEvent.setup();
     const onAddProducts = vi.fn();
@@ -177,6 +181,42 @@ describe("ProductSearchPanel", () => {
 
     expect(addButton).toBeDisabled();
     expect(onAddProducts).not.toHaveBeenCalled();
+  });
+
+  it("adds rows with a retail price while preserving null cost and vendor id", async () => {
+    const user = userEvent.setup();
+    const onAddProducts = vi.fn();
+    queriesMocks.searchProducts.mockResolvedValueOnce({
+      total: 1,
+      products: [
+        {
+          ...buildBrowseProducts()[0],
+          sku: 10000123,
+          title: "NULL COST BOOK",
+          retail_price: 48.5,
+          cost: null,
+          vendor_id: null,
+        },
+      ],
+    });
+
+    render(<ProductSearchPanel onAddProducts={onAddProducts} />);
+
+    await waitFor(() => {
+      expect(screen.getByText("NULL COST BOOK")).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByText("NULL COST BOOK"));
+    await user.click(screen.getByRole("button", { name: /Add 1 Selected/i }));
+
+    expect(onAddProducts).toHaveBeenCalledWith([
+      expect.objectContaining({
+        sku: 10000123,
+        retailPrice: 48.5,
+        cost: null,
+        vendorId: null,
+      }),
+    ]);
   });
 
   it("reserves scroll clearance so the add button does not cover product rows", async () => {
