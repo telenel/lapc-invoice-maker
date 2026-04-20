@@ -30,12 +30,14 @@ export async function getItemSnapshot(sku: number): Promise<ItemSnapshot | null>
     .query<{
       SKU: number;
       BarCode: string | null;
+      ItemTaxTypeID: number | null;
       Retail: number | null;
       Cost: number | null;
       fDiscontinue: number | null;
     }>(`
       SELECT i.SKU,
              LTRIM(RTRIM(i.BarCode)) AS BarCode,
+             i.ItemTaxTypeID,
              inv.Retail,
              inv.Cost,
              i.fDiscontinue
@@ -49,6 +51,7 @@ export async function getItemSnapshot(sku: number): Promise<ItemSnapshot | null>
   return {
     sku: row.SKU,
     barcode: row.BarCode && row.BarCode.length > 0 ? row.BarCode : null,
+    itemTaxTypeId: row.ItemTaxTypeID == null ? null : Number(row.ItemTaxTypeID),
     retail: row.Retail == null ? null : Number(row.Retail),
     cost: row.Cost == null ? null : Number(row.Cost),
     fDiscontinue: (row.fDiscontinue === 1 ? 1 : 0) as 0 | 1,
@@ -169,11 +172,13 @@ export async function updateGmItem(
       .input("loc", sql.Int, PIERCE_LOCATION_ID)
       .query<{
         BarCode: string | null;
+        ItemTaxTypeID: number | null;
         Retail: number | null;
         Cost: number | null;
         fDiscontinue: number | null;
       }>(`
         SELECT LTRIM(RTRIM(i.BarCode)) AS BarCode,
+               i.ItemTaxTypeID,
                inv.Retail, inv.Cost, i.fDiscontinue
         FROM Item i
         LEFT JOIN Inventory inv ON inv.SKU = i.SKU AND inv.LocationID = @loc
@@ -186,11 +191,14 @@ export async function updateGmItem(
 
     if (expectedSnapshot) {
       const currentBarcode = current.BarCode && current.BarCode.length > 0 ? current.BarCode : null;
+      const currentTaxTypeId = current.ItemTaxTypeID == null ? null : Number(current.ItemTaxTypeID);
       const currentRetail = current.Retail == null ? null : Number(current.Retail);
       const currentCost = current.Cost == null ? null : Number(current.Cost);
       const currentFDisc = (current.fDiscontinue === 1 ? 1 : 0) as 0 | 1;
       if (
         currentBarcode !== expectedSnapshot.barcode ||
+        (expectedSnapshot.itemTaxTypeId !== undefined &&
+          currentTaxTypeId !== expectedSnapshot.itemTaxTypeId) ||
         currentRetail !== expectedSnapshot.retail ||
         currentCost !== expectedSnapshot.cost ||
         currentFDisc !== expectedSnapshot.fDiscontinue
@@ -200,6 +208,7 @@ export async function updateGmItem(
         err.current = {
           sku,
           barcode: currentBarcode,
+          itemTaxTypeId: currentTaxTypeId,
           retail: currentRetail,
           cost: currentCost,
           fDiscontinue: currentFDisc,
@@ -387,11 +396,13 @@ export async function updateTextbookPricing(
       .input("loc", sql.Int, PIERCE_LOCATION_ID)
       .query<{
         BarCode: string | null;
+        ItemTaxTypeID: number | null;
         Retail: number | null;
         Cost: number | null;
         fDiscontinue: number | null;
       }>(`
         SELECT LTRIM(RTRIM(i.BarCode)) AS BarCode,
+               i.ItemTaxTypeID,
                inv.Retail, inv.Cost, i.fDiscontinue
         FROM Item i
         LEFT JOIN Inventory inv ON inv.SKU = i.SKU AND inv.LocationID = @loc
@@ -404,11 +415,14 @@ export async function updateTextbookPricing(
 
     if (expectedSnapshot) {
       const currentBarcode = current.BarCode && current.BarCode.length > 0 ? current.BarCode : null;
+      const currentTaxTypeId = current.ItemTaxTypeID == null ? null : Number(current.ItemTaxTypeID);
       const currentRetail = current.Retail == null ? null : Number(current.Retail);
       const currentCost = current.Cost == null ? null : Number(current.Cost);
       const currentFDisc = (current.fDiscontinue === 1 ? 1 : 0) as 0 | 1;
       if (
         currentBarcode !== expectedSnapshot.barcode ||
+        (expectedSnapshot.itemTaxTypeId !== undefined &&
+          currentTaxTypeId !== expectedSnapshot.itemTaxTypeId) ||
         currentRetail !== expectedSnapshot.retail ||
         currentCost !== expectedSnapshot.cost ||
         currentFDisc !== expectedSnapshot.fDiscontinue
@@ -427,6 +441,10 @@ export async function updateTextbookPricing(
     if (normalizedPatch.item.barcode !== undefined) {
       itemSet.push("BarCode = @barcode");
       applied.push("barcode");
+    }
+    if (normalizedPatch.item.itemTaxTypeId !== undefined) {
+      itemSet.push("ItemTaxTypeID = @taxId");
+      applied.push("itemTaxTypeId");
     }
     if (normalizedPatch.item.fDiscontinue !== undefined) {
       itemSet.push("fDiscontinue = @fDiscontinue");
@@ -471,11 +489,17 @@ export async function updateTextbookPricing(
     }
 
     if (itemSet.length > 0) {
-      await transaction.request()
-        .input("sku", sql.Int, sku)
-        .input("barcode", sql.VarChar(20), normalizedPatch.item.barcode ?? "")
-        .input("fDiscontinue", sql.TinyInt, normalizedPatch.item.fDiscontinue ?? 0)
-        .query(`UPDATE Item SET ${itemSet.join(", ")} WHERE SKU = @sku`);
+      const itemReq = transaction.request().input("sku", sql.Int, sku);
+      if (normalizedPatch.item.barcode !== undefined) {
+        itemReq.input("barcode", sql.VarChar(20), normalizedPatch.item.barcode ?? "");
+      }
+      if (normalizedPatch.item.itemTaxTypeId !== undefined) {
+        itemReq.input("taxId", sql.Int, normalizedPatch.item.itemTaxTypeId);
+      }
+      if (normalizedPatch.item.fDiscontinue !== undefined) {
+        itemReq.input("fDiscontinue", sql.TinyInt, normalizedPatch.item.fDiscontinue ?? 0);
+      }
+      await itemReq.query(`UPDATE Item SET ${itemSet.join(", ")} WHERE SKU = @sku`);
     }
     if (textbookSet.length > 0) {
       const textbookReq = transaction.request().input("sku", sql.Int, sku);

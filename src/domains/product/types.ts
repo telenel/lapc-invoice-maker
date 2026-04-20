@@ -292,6 +292,7 @@ export interface TextbookPatch {
 export interface ItemSnapshot {
   sku: number;
   barcode: string | null;
+  itemTaxTypeId?: number | null;
   retail: number | null;
   cost: number | null;
   fDiscontinue: 0 | 1;

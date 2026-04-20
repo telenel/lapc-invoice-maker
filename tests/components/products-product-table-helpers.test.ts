@@ -245,13 +245,25 @@ describe("product table variance trigger", () => {
     function Harness() {
       const [editingCell, setEditingCell] = useState<ProductInlineEditController["editingCell"]>(null);
       const [draftValue, setDraftValue] = useState("");
+      const [rowsBySku, setRowsBySku] = useState(
+        new Map([
+          [product.sku, {
+            sku: product.sku,
+            barcode: product.barcode,
+            itemTaxTypeId: product.itemTaxTypeId ?? null,
+            retail: product.retail_price,
+            cost: product.cost,
+            fDiscontinue: product.discontinued ? 1 : 0,
+          }],
+        ]),
+      );
 
       const inlineEdit = useMemo<ProductInlineEditController>(() => ({
         editingCell,
         draftValue,
         pendingSave: false,
         primaryLocationId: 2,
-        rowsBySku: new Map([[product.sku, product]]),
+        rowsBySku,
         startEdit: (sku, field, currentValue) => {
           setEditingCell({ sku, field });
           setDraftValue(currentValue);
@@ -264,13 +276,31 @@ describe("product table variance trigger", () => {
           setEditingCell(null);
           setDraftValue("");
         },
-        saveField: async () => true,
+        saveField: async (sku, field, value) => {
+          setRowsBySku((current) => {
+            const next = new Map(current);
+            const row = next.get(sku);
+            if (!row) return current;
+
+            if (field === "taxType") {
+              next.set(sku, { ...row, itemTaxTypeId: Number(value) });
+            } else if (field === "discontinue") {
+              next.set(sku, {
+                ...row,
+                fDiscontinue: value === "1" || value.toLowerCase() === "true" ? 1 : 0,
+              });
+            }
+
+            return next;
+          });
+          return true;
+        },
         moveToNextEditableCell: async () => {
           setEditingCell(null);
           setDraftValue("");
         },
         setDraftValue,
-      }), [draftValue, editingCell]);
+      }), [draftValue, editingCell, rowsBySku]);
 
       return React.createElement(ProductTable, {
         tab,
@@ -396,6 +426,21 @@ describe("product table variance trigger", () => {
     );
 
     expect(onToggle).not.toHaveBeenCalled();
+  });
+
+  it("toggle discontinue updates the visible state immediately", async () => {
+    const user = userEvent.setup();
+    const onToggle = vi.fn();
+
+    renderEditableTable(onToggle);
+
+    const toggle = screen.getByRole("button", { name: /toggle discontinue for sku 101/i });
+    expect(toggle).toHaveTextContent("Live");
+
+    await user.click(toggle);
+
+    expect(onToggle).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: /toggle discontinue for sku 101/i })).toHaveTextContent("Disc");
   });
 
   it("clicking blank space in an inline-edit cell still selects the row", async () => {

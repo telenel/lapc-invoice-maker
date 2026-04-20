@@ -144,54 +144,61 @@ function getPrimaryLocationSlice(
 
 function getInlineEditValue(
   product: ProductBrowseRow,
+  inlineEdit: ProductInlineEditController | undefined,
   primaryLocationId: ProductLocationId | null | undefined,
   field: ProductInlineEditableField,
 ): string {
+  const inlineRow = inlineEdit?.rowsBySku.get(product.sku);
   const primarySlice = getPrimaryLocationSlice(product, primaryLocationId);
   switch (field) {
     case "cost":
-      return String(primarySlice?.cost ?? product.cost ?? "");
+      return String(inlineRow?.cost ?? primarySlice?.cost ?? product.cost ?? "");
     case "retail":
-      return String(primarySlice?.retailPrice ?? product.retail_price ?? "");
+      return String(inlineRow?.retail ?? primarySlice?.retailPrice ?? product.retail_price ?? "");
     case "barcode":
-      return product.barcode ?? "";
+      return inlineRow?.barcode ?? product.barcode ?? "";
     case "taxType":
-      return product.itemTaxTypeId == null ? "" : String(product.itemTaxTypeId);
+      return inlineRow?.itemTaxTypeId == null ? "" : String(inlineRow.itemTaxTypeId);
     case "discontinue":
-      return product.discontinued ? "1" : "0";
+      return inlineRow?.fDiscontinue ? "1" : "0";
   }
 }
 
 function getInlineEditDisplayValue(
   product: ProductBrowseRow,
+  inlineEdit: ProductInlineEditController | undefined,
   primaryLocationId: ProductLocationId | null | undefined,
   field: ProductInlineEditableField,
 ): string {
+  const inlineRow = inlineEdit?.rowsBySku.get(product.sku);
   const primarySlice = getPrimaryLocationSlice(product, primaryLocationId);
   switch (field) {
     case "cost":
-      return formatCurrency(primarySlice?.cost ?? product.cost);
+      return formatCurrency(inlineRow?.cost ?? primarySlice?.cost ?? product.cost);
     case "retail":
-      return formatCurrency(primarySlice?.retailPrice ?? product.retail_price);
+      return formatCurrency(inlineRow?.retail ?? primarySlice?.retailPrice ?? product.retail_price);
     case "barcode":
-      return product.barcode ?? product.isbn ?? "—";
+      return inlineRow?.barcode ?? product.barcode ?? product.isbn ?? "—";
     case "taxType": {
-      return product.itemTaxTypeId == null ? "Unassigned" : "Tax unavailable";
+      return inlineRow?.itemTaxTypeId == null ? "Unassigned" : "Tax unavailable";
     }
     case "discontinue":
-      return product.discontinued ? "Yes" : "No";
+      return inlineRow?.fDiscontinue ? "Yes" : "No";
   }
 }
 
 function getTaxTypeDisplayLabel(
-  product: Pick<ProductBrowseRow, "itemTaxTypeId">,
+  product: Pick<ProductBrowseRow, "itemTaxTypeId" | "sku">,
+  inlineEdit: ProductInlineEditController | undefined,
   taxTypeLabels: Map<number, string>,
 ): string {
+  const inlineRow = inlineEdit?.rowsBySku.get(product.sku);
+  const activeTaxTypeId = inlineRow?.itemTaxTypeId ?? product.itemTaxTypeId;
   const currentLabel =
-    product.itemTaxTypeId != null ? taxTypeLabels.get(product.itemTaxTypeId) ?? null : null;
+    activeTaxTypeId != null ? taxTypeLabels.get(activeTaxTypeId) ?? null : null;
   return formatLookupLabel(
     currentLabel,
-    product.itemTaxTypeId == null ? "Unassigned" : "Tax unavailable",
+    activeTaxTypeId == null ? "Unassigned" : "Tax unavailable",
   );
 }
 
@@ -293,8 +300,10 @@ function TaxTypeCell({
   taxTypeLabels: Map<number, string>;
   taxTypeOptions: ReadonlyArray<{ taxTypeId: number; description: string }>;
 }) {
-  const currentValue = product.itemTaxTypeId == null ? "" : String(product.itemTaxTypeId);
-  const currentLabel = getTaxTypeDisplayLabel(product, taxTypeLabels);
+  const inlineRow = inlineEdit?.rowsBySku.get(product.sku);
+  const activeTaxTypeId = inlineRow?.itemTaxTypeId ?? product.itemTaxTypeId;
+  const currentValue = activeTaxTypeId == null ? "" : String(activeTaxTypeId);
+  const currentLabel = getTaxTypeDisplayLabel(product, inlineEdit, taxTypeLabels);
   const hasCurrentOption = taxTypeOptions.some((option) => String(option.taxTypeId) === currentValue);
 
   if (!inlineEdit || taxTypeOptions.length === 0) {
@@ -341,7 +350,8 @@ function DiscontinueCell({
   product: ProductBrowseRow;
   inlineEdit?: ProductInlineEditController;
 }) {
-  const isDiscontinued = product.discontinued === true;
+  const inlineRow = inlineEdit?.rowsBySku.get(product.sku);
+  const isDiscontinued = inlineRow ? inlineRow.fDiscontinue === 1 : product.discontinued === true;
 
   return (
     <td className="px-2.5 py-1.5 text-center">
@@ -894,7 +904,7 @@ export function ProductTable({
                           field="cost"
                           label="Cost"
                           displayValue={formatCurrency(costValue)}
-                          currentValue={getInlineEditValue(product, resolvedPrimaryLocationId, "cost")}
+                          currentValue={getInlineEditValue(product, inlineEdit, resolvedPrimaryLocationId, "cost")}
                           fieldOrder={inlineFieldOrder}
                           badge={
                             costBadge ? (
@@ -916,7 +926,7 @@ export function ProductTable({
                           field="retail"
                           label="Retail"
                           displayValue={formatCurrency(retailValue)}
-                          currentValue={getInlineEditValue(product, resolvedPrimaryLocationId, "retail")}
+                          currentValue={getInlineEditValue(product, inlineEdit, resolvedPrimaryLocationId, "retail")}
                           fieldOrder={inlineFieldOrder}
                           badge={
                             retailBadge ? (
@@ -991,8 +1001,8 @@ export function ProductTable({
                             product={product}
                             field="barcode"
                             label="Barcode"
-                            displayValue={getInlineEditDisplayValue(product, resolvedPrimaryLocationId, "barcode")}
-                            currentValue={getInlineEditValue(product, resolvedPrimaryLocationId, "barcode")}
+                            displayValue={getInlineEditDisplayValue(product, inlineEdit, resolvedPrimaryLocationId, "barcode")}
+                            currentValue={getInlineEditValue(product, inlineEdit, resolvedPrimaryLocationId, "barcode")}
                             fieldOrder={inlineFieldOrder}
                             inlineEdit={inlineEdit}
                             className="px-2.5 py-1.5"

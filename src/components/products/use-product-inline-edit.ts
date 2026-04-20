@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { productApi } from "@/domains/product/api-client";
 import type { ProductLocationId } from "@/domains/product/location-filters";
@@ -109,14 +109,59 @@ export function useProductInlineEdit({
   const [editingCell, setEditingCell] = useState<ProductInlineEditCell | null>(null);
   const [draftValue, setDraftValue] = useState("");
   const [pendingSave, setPendingSave] = useState(false);
+  const [optimisticRowsBySku, setOptimisticRowsBySku] = useState<
+    Map<number, Partial<ProductInlineEditRowBaseline>>
+  >(new Map());
 
-  const rowsBySku = useMemo(
+  const baseRowsBySku = useMemo(
     () => new Map(rows.map((row) => [row.sku, row] as const)),
     [rows],
   );
 
   const rowOrder = useMemo(() => rows.map((row) => row.sku), [rows]);
   const [activeFieldOrder, setActiveFieldOrder] = useState<readonly ProductInlineEditableField[]>(EDITABLE_FIELD_ORDER);
+
+  useEffect(() => {
+    setOptimisticRowsBySku((current) => {
+      if (current.size === 0) return current;
+
+      let changed = false;
+      const next = new Map<number, Partial<ProductInlineEditRowBaseline>>();
+      current.forEach((overlay, sku) => {
+        const baseRow = baseRowsBySku.get(sku);
+        if (!baseRow) {
+          changed = true;
+          return;
+        }
+
+        const pendingOverlay: Partial<ProductInlineEditRowBaseline> = {};
+        (Object.keys(overlay) as Array<keyof ProductInlineEditRowBaseline>).forEach((key) => {
+          if (overlay[key] !== baseRow[key]) {
+            pendingOverlay[key] = overlay[key];
+          }
+        });
+
+        if (Object.keys(pendingOverlay).length > 0) {
+          next.set(sku, pendingOverlay);
+          return;
+        }
+
+        changed = true;
+      });
+
+      return changed ? next : current;
+    });
+  }, [baseRowsBySku]);
+
+  const rowsBySku = useMemo(() => {
+    const merged = new Map(baseRowsBySku);
+    optimisticRowsBySku.forEach((overlay, sku) => {
+      const baseRow = merged.get(sku);
+      if (!baseRow) return;
+      merged.set(sku, { ...baseRow, ...overlay });
+    });
+    return merged;
+  }, [baseRowsBySku, optimisticRowsBySku]);
 
   const startEdit = useCallback(
     (
@@ -273,10 +318,50 @@ export function useProductInlineEdit({
     field: ProductInlineEditableField,
     value: string,
   ) => {
+    let optimisticOverlay: Partial<ProductInlineEditRowBaseline> | null = null;
+    if (field === "taxType") {
+      const parsed = Number(value);
+      if (value.length > 0 && Number.isFinite(parsed) && parsed > 0) {
+        optimisticOverlay = { itemTaxTypeId: parsed };
+      }
+    } else if (field === "discontinue") {
+      optimisticOverlay = {
+        fDiscontinue: value === "1" || value.toLowerCase() === "true" ? 1 : 0,
+      };
+    }
+
+    if (optimisticOverlay) {
+      setOptimisticRowsBySku((current) => {
+        const next = new Map(current);
+        next.set(sku, { ...(next.get(sku) ?? {}), ...optimisticOverlay });
+        return next;
+      });
+    }
+
     const committed = await persistField(sku, field, value);
     if (committed && editingCell?.sku === sku && editingCell.field === field) {
       setEditingCell(null);
       setDraftValue("");
+    }
+    if (!committed && optimisticOverlay) {
+      setOptimisticRowsBySku((current) => {
+        const next = new Map(current);
+        const existing = next.get(sku);
+        if (!existing) return current;
+
+        const reverted = { ...existing };
+        (Object.keys(optimisticOverlay) as Array<keyof ProductInlineEditRowBaseline>).forEach((key) => {
+          delete reverted[key];
+        });
+
+        if (Object.keys(reverted).length === 0) {
+          next.delete(sku);
+        } else {
+          next.set(sku, reverted);
+        }
+
+        return next;
+      });
     }
     return committed;
   }, [editingCell, persistField]);
