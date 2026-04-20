@@ -2,6 +2,8 @@
 
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { PAGE_SIZE, TAB_ITEM_TYPES } from "./constants";
+export { buildProductQueryPlan, hasAnalyticsProductFilters } from "./query-plan";
+import { buildProductQueryPlan } from "./query-plan";
 import type { Product, ProductFilters, ProductSearchResult, ProductSortField } from "./types";
 
 /** Whitelist of columns that can be sorted — prevents arbitrary column injection */
@@ -22,71 +24,6 @@ const ALLOWED_DERIVED_SORT_FIELDS = new Set<string>([
   "effective_last_sale_date",
   "margin_ratio",
 ]);
-
-export function hasAnalyticsProductFilters(filters: ProductFilters): boolean {
-  return (
-    (filters.unitsSoldWindow !== "" && (filters.minUnitsSold !== "" || filters.maxUnitsSold !== ""))
-    || (filters.revenueWindow !== "" && (filters.minRevenue !== "" || filters.maxRevenue !== ""))
-    || (filters.txnsWindow !== "" && (filters.minTxns !== "" || filters.maxTxns !== ""))
-    || filters.neverSoldLifetime
-    || filters.firstSaleWithin !== ""
-  );
-}
-
-function hasLastSaleProductFilters(filters: ProductFilters): boolean {
-  return (
-    filters.lastSaleDateFrom !== ""
-    || filters.lastSaleDateTo !== ""
-    || filters.lastSaleWithin !== ""
-    || filters.lastSaleNever
-    || filters.lastSaleOlderThan !== ""
-    || filters.sortBy === "last_sale_date"
-    || filters.sortBy === "days_since_sale"
-  );
-}
-
-export function buildProductQueryPlan(filters: ProductFilters): {
-  source: "products" | "products_with_derived";
-  lastSaleField: "last_sale_date" | "effective_last_sale_date";
-  requireAggregatesReady: boolean;
-  sortField: string;
-  ascending: boolean;
-} {
-  const requireAggregatesReady = hasAnalyticsProductFilters(filters)
-    || filters.trendDirection !== ""
-    || filters.maxStockCoverageDays !== "";
-  const needsDerived = requireAggregatesReady
-    || filters.minMargin !== ""
-    || filters.maxMargin !== ""
-    || filters.sortBy === "margin"
-    || hasLastSaleProductFilters(filters)
-    || filters.editedSinceSync;
-  const source = needsDerived ? "products_with_derived" : "products";
-  const lastSaleField = needsDerived ? "effective_last_sale_date" : "last_sale_date";
-
-  let sortField = filters.sortBy;
-  let ascending = filters.sortDir !== "desc";
-  if (filters.sortBy === "days_since_sale") {
-    // days_since_sale is the INVERSE of last_sale_date. To keep the UI arrow
-    // consistent with the rendered column (asc = smallest days first), we
-    // sort by the underlying date with the inverted direction. That's why
-    // the header passes sortDir through raw — it already matches the column.
-    sortField = lastSaleField;
-    ascending = !ascending;
-  } else if (filters.sortBy === "last_sale_date" && needsDerived) {
-    sortField = "effective_last_sale_date";
-  } else if (filters.sortBy === "margin") {
-    sortField = "margin_ratio";
-  }
-
-  return {
-    source,
-    lastSaleField,
-    requireAggregatesReady,
-    sortField,
-    ascending,
-  };
-}
 
 /**
  * Escape a value for safe interpolation into a PostgREST `.or()` filter string.

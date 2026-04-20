@@ -403,4 +403,48 @@ describe("searchProductBrowseRows", () => {
     expect(row.dcc_id).toBeNull();
     expect(row.color_id).toBeNull();
   });
+
+  it("uses fallback expressions for primary-location filters and sorts when the primary slice is missing", async () => {
+    mockSearchQueryRows(
+      {
+        retail_price: 15.5,
+        cost: 5.25,
+        stock_on_hand: 9,
+        last_sale_date: new Date("2026-04-08T00:00:00.000Z"),
+        effective_last_sale_date: new Date("2026-04-09T00:00:00.000Z"),
+      },
+      [
+        {
+          sku: 101,
+          location_id: 4,
+          location_abbrev: "PFS",
+          retail_price: 18.5,
+          cost: 6.25,
+          stock_on_hand: 1,
+          last_sale_date: new Date("2026-04-05T00:00:00.000Z"),
+        },
+      ],
+    );
+
+    const result = await searchProductBrowseRows({
+      ...EMPTY_FILTERS,
+      tab: "merchandise",
+      locationIds: [2, 4],
+      minPrice: "15",
+      minStock: "9",
+      sortBy: "last_sale_date",
+    });
+
+    const sql = prismaMock.$queryRawUnsafe.mock.calls[0]?.[0];
+    expect(typeof sql).toBe("string");
+    expect(sql).toContain("COALESCE(pi.retail_price, pwd.retail_price)");
+    expect(sql).toContain("COALESCE(pi.stock_on_hand, pwd.stock_on_hand)");
+    expect(sql).toContain("COALESCE(pi.last_sale_date, pwd.last_sale_date)");
+    expect(result.products[0]).toMatchObject({
+      retail_price: 15.5,
+      stock_on_hand: 9,
+      last_sale_date: "2026-04-08T00:00:00.000Z",
+      effective_last_sale_date: "2026-04-09T00:00:00.000Z",
+    });
+  });
 });

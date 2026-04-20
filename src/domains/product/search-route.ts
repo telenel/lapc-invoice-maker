@@ -5,7 +5,7 @@ import {
   normalizeProductLocationIds,
   type ProductLocationId,
 } from "./location-filters";
-import { buildProductQueryPlan } from "./queries";
+import { buildProductQueryPlan } from "./query-plan";
 import type {
   ProductBrowseRow,
   ProductBrowseSearchResult,
@@ -195,13 +195,19 @@ function buildFilteredBrowseQuery(filters: ProductFilters): {
   const basePlan = buildProductQueryPlan(filters);
   const from = (filters.page - 1) * PAGE_SIZE;
   const builder = createSqlBuilder();
-  const primaryLastSaleExpr = "pi.last_sale_date";
-  const primaryEffectiveLastSaleExpr =
-    "COALESCE(pi.last_sale_date, pwd.effective_last_sale_date, pwd.last_sale_date_computed, pwd.last_sale_date)";
-  const lastSaleExpr = basePlan.lastSaleField === "effective_last_sale_date"
-    ? primaryEffectiveLastSaleExpr
-    : primaryLastSaleExpr;
   const sourceTable = basePlan.source === "products_with_derived" ? "products_with_derived" : "products";
+  const baseEffectiveLastSaleExpr = sourceTable === "products_with_derived"
+    ? "pwd.effective_last_sale_date"
+    : "COALESCE(pwd.last_sale_date_computed, pwd.last_sale_date)";
+  const emittedRetailExpr = "COALESCE(pi.retail_price, pwd.retail_price)";
+  const emittedCostExpr = "COALESCE(pi.cost, pwd.cost)";
+  const emittedStockExpr = "COALESCE(pi.stock_on_hand, pwd.stock_on_hand)";
+  const emittedLastSaleExpr = "COALESCE(pi.last_sale_date, pwd.last_sale_date)";
+  const emittedEffectiveLastSaleExpr =
+    `COALESCE(pi.last_sale_date, ${baseEffectiveLastSaleExpr}, pwd.last_sale_date_computed, pwd.last_sale_date)`;
+  const lastSaleExpr = basePlan.lastSaleField === "effective_last_sale_date"
+    ? emittedEffectiveLastSaleExpr
+    : emittedLastSaleExpr;
 
   const conditions: string[] = [
     `pwd.item_type IN (${addList(builder, itemTypes)})`,
@@ -232,14 +238,14 @@ function buildFilteredBrowseQuery(filters: ProductFilters): {
     }
   }
 
-  if (filters.minPrice !== "") conditions.push(`pi.retail_price >= ${builder.add(Number(filters.minPrice))}`);
-  if (filters.maxPrice !== "") conditions.push(`pi.retail_price <= ${builder.add(Number(filters.maxPrice))}`);
+  if (filters.minPrice !== "") conditions.push(`${emittedRetailExpr} >= ${builder.add(Number(filters.minPrice))}`);
+  if (filters.maxPrice !== "") conditions.push(`${emittedRetailExpr} <= ${builder.add(Number(filters.maxPrice))}`);
   if (filters.vendorId !== "") conditions.push(`pwd.vendor_id = ${builder.add(Number(filters.vendorId))}`);
   if (filters.hasBarcode) conditions.push("pwd.barcode IS NOT NULL");
   if (filters.lastSaleDateFrom) conditions.push(`${lastSaleExpr} >= ${builder.add(filters.lastSaleDateFrom)}`);
   if (filters.lastSaleDateTo) conditions.push(`${lastSaleExpr} <= ${builder.add(filters.lastSaleDateTo)}`);
-  if (filters.minStock !== "") conditions.push(`pi.stock_on_hand >= ${builder.add(Number(filters.minStock))}`);
-  if (filters.maxStock !== "") conditions.push(`pi.stock_on_hand <= ${builder.add(Number(filters.maxStock))}`);
+  if (filters.minStock !== "") conditions.push(`${emittedStockExpr} >= ${builder.add(Number(filters.minStock))}`);
+  if (filters.maxStock !== "") conditions.push(`${emittedStockExpr} <= ${builder.add(Number(filters.maxStock))}`);
   if (filters.deptNum !== "") conditions.push(`pwd.dept_num = ${builder.add(Number(filters.deptNum))}`);
   if (filters.classNum !== "") conditions.push(`pwd.class_num = ${builder.add(Number(filters.classNum))}`);
   if (filters.catNum !== "") conditions.push(`pwd.cat_num = ${builder.add(Number(filters.catNum))}`);
@@ -253,8 +259,8 @@ function buildFilteredBrowseQuery(filters: ProductFilters): {
       )`,
     );
   }
-  if (filters.retailBelowCost) conditions.push("pi.retail_price < pi.cost");
-  if (filters.zeroPrice) conditions.push("(pi.retail_price = 0 OR pi.cost = 0)");
+  if (filters.retailBelowCost) conditions.push(`${emittedRetailExpr} < ${emittedCostExpr}`);
+  if (filters.zeroPrice) conditions.push(`(${emittedRetailExpr} = 0 OR ${emittedCostExpr} = 0)`);
   if (filters.minMargin !== "") conditions.push(`pwd.margin_ratio >= ${builder.add(Number(filters.minMargin))}`);
   if (filters.maxMargin !== "") conditions.push(`pwd.margin_ratio <= ${builder.add(Number(filters.maxMargin))}`);
 
@@ -355,11 +361,11 @@ function buildFilteredBrowseQuery(filters: ProductFilters): {
         pwd.*,
         pi.location_id AS primary_location_inventory_id,
         pi.location_abbrev AS primary_location_inventory_abbrev,
-        pi.retail_price AS primary_retail_price,
-        pi.cost AS primary_cost,
-        pi.stock_on_hand AS primary_stock_on_hand,
-        pi.last_sale_date AS primary_last_sale_date,
-        ${primaryEffectiveLastSaleExpr} AS primary_effective_last_sale_date
+        ${emittedRetailExpr} AS primary_retail_price,
+        ${emittedCostExpr} AS primary_cost,
+        ${emittedStockExpr} AS primary_stock_on_hand,
+        ${emittedLastSaleExpr} AS primary_last_sale_date,
+        ${emittedEffectiveLastSaleExpr} AS primary_effective_last_sale_date
       FROM ${sourceTable} pwd
       INNER JOIN visible_skus visible ON visible.sku = pwd.sku
       LEFT JOIN product_inventory pi
