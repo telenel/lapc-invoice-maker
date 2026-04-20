@@ -334,6 +334,8 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
     }
   }, [rowsToBatch]);
 
+  const refsLoading = refs === null && !refsError;
+
   const openConfirm = useCallback(() => {
     const batch = rowsToBatch();
     if (batch.length === 0 || errors.length > 0 || refsLoading) return;
@@ -393,7 +395,6 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
     [rows],
   );
 
-  const refsLoading = refs === null && !refsError;
   const canSubmit = !submitting && !refsLoading && batch.length > 0 && errors.length === 0;
 
   useEffect(() => {
