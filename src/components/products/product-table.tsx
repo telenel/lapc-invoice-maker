@@ -5,14 +5,20 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon, SearchIcon } from "lucide-react";
-import { useEffect, useMemo } from "react";
-import type { ProductBrowseRow, ProductLocationSlice, ProductTab } from "@/domains/product/types";
+import { useEffect, useMemo, type ReactNode } from "react";
+import type {
+  ProductBrowseRow,
+  ProductLocationId,
+  ProductLocationSlice,
+  ProductTab,
+} from "@/domains/product/types";
 import { PAGE_SIZE, type OptionalColumnKey } from "@/domains/product/constants";
 import { MarginBar } from "./margin-bar";
-import { useVendorDirectory } from "@/domains/product/vendor-directory";
+import { useProductRefDirectory, useVendorDirectory } from "@/domains/product/vendor-directory";
 import { useHiddenColumns } from "./use-hidden-columns";
 import { COLUMN_PRIORITY } from "@/domains/product/constants";
 import { formatLookupLabel } from "@/domains/product/ref-data";
+import type { ProductInlineEditController, ProductInlineEditableField } from "./use-product-inline-edit";
 import "./product-table.css";
 
 /**
@@ -82,6 +88,8 @@ interface ProductTableProps {
    * treatment) without stacking two empty states on top of each other.
    */
   suppressEmptyState?: boolean;
+  inlineEdit?: ProductInlineEditController;
+  primaryLocationId?: ProductLocationId | null;
 }
 
 function formatCurrency(value: number | null | undefined): string {
@@ -124,6 +132,252 @@ function formatRelativeUpdated(date: string | null | undefined): string {
 
 export function formatVendorDisplay(vendorLabel: string | null | undefined): string {
   return formatLookupLabel(vendorLabel ?? null, "Vendor unavailable");
+}
+
+function getPrimaryLocationSlice(
+  product: ProductBrowseRow,
+  primaryLocationId: ProductLocationId | null | undefined,
+) {
+  if (primaryLocationId == null) return null;
+  return product.selected_inventories.find((slice) => slice.locationId === primaryLocationId) ?? null;
+}
+
+function getInlineEditValue(
+  product: ProductBrowseRow,
+  inlineEdit: ProductInlineEditController | undefined,
+  primaryLocationId: ProductLocationId | null | undefined,
+  field: ProductInlineEditableField,
+): string {
+  const inlineRow = inlineEdit?.rowsBySku.get(product.sku);
+  const primarySlice = getPrimaryLocationSlice(product, primaryLocationId);
+  switch (field) {
+    case "cost":
+      return String(inlineRow?.cost ?? primarySlice?.cost ?? product.cost ?? "");
+    case "retail":
+      return String(inlineRow?.retail ?? primarySlice?.retailPrice ?? product.retail_price ?? "");
+    case "barcode":
+      return inlineRow?.barcode ?? product.barcode ?? "";
+    case "taxType":
+      return inlineRow?.itemTaxTypeId == null ? "" : String(inlineRow.itemTaxTypeId);
+    case "discontinue":
+      return inlineRow?.fDiscontinue ? "1" : "0";
+  }
+}
+
+function getInlineEditDisplayValue(
+  product: ProductBrowseRow,
+  inlineEdit: ProductInlineEditController | undefined,
+  primaryLocationId: ProductLocationId | null | undefined,
+  field: ProductInlineEditableField,
+): string {
+  const inlineRow = inlineEdit?.rowsBySku.get(product.sku);
+  const primarySlice = getPrimaryLocationSlice(product, primaryLocationId);
+  switch (field) {
+    case "cost":
+      return formatCurrency(inlineRow?.cost ?? primarySlice?.cost ?? product.cost);
+    case "retail":
+      return formatCurrency(inlineRow?.retail ?? primarySlice?.retailPrice ?? product.retail_price);
+    case "barcode":
+      return inlineRow?.barcode ?? product.barcode ?? product.isbn ?? "—";
+    case "taxType": {
+      return inlineRow?.itemTaxTypeId == null ? "Unassigned" : "Tax unavailable";
+    }
+    case "discontinue":
+      return inlineRow?.fDiscontinue ? "Yes" : "No";
+  }
+}
+
+function getTaxTypeDisplayLabel(
+  product: Pick<ProductBrowseRow, "itemTaxTypeId" | "sku">,
+  inlineEdit: ProductInlineEditController | undefined,
+  taxTypeLabels: Map<number, string>,
+): string {
+  const inlineRow = inlineEdit?.rowsBySku.get(product.sku);
+  const activeTaxTypeId = inlineRow?.itemTaxTypeId ?? product.itemTaxTypeId;
+  const currentLabel =
+    activeTaxTypeId != null ? taxTypeLabels.get(activeTaxTypeId) ?? null : null;
+  return formatLookupLabel(
+    currentLabel,
+    activeTaxTypeId == null ? "Unassigned" : "Tax unavailable",
+  );
+}
+
+function InlineEditableCell({
+  product,
+  field,
+  label,
+  displayValue,
+  currentValue,
+  fieldOrder,
+  badge,
+  inlineEdit,
+  align = "left",
+  className,
+  inputClassName,
+}: {
+  product: ProductBrowseRow;
+  field: "retail" | "cost" | "barcode";
+  label: string;
+  displayValue: string;
+  currentValue: string;
+  fieldOrder: readonly ProductInlineEditableField[];
+  badge?: ReactNode;
+  inlineEdit?: ProductInlineEditController;
+  align?: "left" | "right";
+  className?: string;
+  inputClassName?: string;
+}) {
+  const isEditing =
+    inlineEdit?.editingCell?.sku === product.sku && inlineEdit?.editingCell?.field === field;
+
+  const valueNode = isEditing && inlineEdit ? (
+    <input
+      autoFocus
+      aria-label={`${label} editor for SKU ${product.sku}`}
+      value={inlineEdit.draftValue}
+      onChange={(e) => inlineEdit.setDraftValue(e.target.value)}
+      onClick={(e) => e.stopPropagation()}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          e.stopPropagation();
+          void inlineEdit.commitEdit();
+          return;
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          e.stopPropagation();
+          inlineEdit.cancelEdit();
+          return;
+        }
+        if (e.key === "Tab") {
+          e.preventDefault();
+          e.stopPropagation();
+          void inlineEdit.moveToNextEditableCell(e.shiftKey ? "previous" : "next");
+        }
+      }}
+      className={`h-7 min-w-[88px] rounded-md border border-border bg-background px-2 py-0 text-[11.5px] font-mono tnum text-foreground outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/30 ${
+        inputClassName ?? ""
+      } ${align === "right" ? "text-right" : "text-left"}`}
+    />
+  ) : inlineEdit ? (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        inlineEdit.startEdit(product.sku, field, currentValue, fieldOrder);
+      }}
+      aria-label={`Edit ${label.toLowerCase()} for SKU ${product.sku}`}
+      title="Click to edit"
+      className={`inline-flex items-center rounded-[6px] px-1 py-0.5 text-[11.5px] font-mono tnum transition-colors hover:bg-accent/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+        align === "right" ? "justify-end" : "justify-start"
+      }`}
+    >
+      <span className="leading-none">{displayValue}</span>
+    </button>
+  ) : (
+    <span className="font-mono tnum text-[11.5px] leading-none">{displayValue}</span>
+  );
+
+  return (
+    <td className={className}>
+      <div className={`flex items-center gap-1.5 ${align === "right" ? "justify-end" : "justify-start"}`}>
+        {valueNode}
+        {badge ?? null}
+      </div>
+    </td>
+  );
+}
+
+function TaxTypeCell({
+  product,
+  inlineEdit,
+  taxTypeLabels,
+  taxTypeOptions,
+}: {
+  product: ProductBrowseRow;
+  inlineEdit?: ProductInlineEditController;
+  taxTypeLabels: Map<number, string>;
+  taxTypeOptions: ReadonlyArray<{ taxTypeId: number; description: string }>;
+}) {
+  const inlineRow = inlineEdit?.rowsBySku.get(product.sku);
+  const activeTaxTypeId = inlineRow?.itemTaxTypeId ?? product.itemTaxTypeId;
+  const currentValue = activeTaxTypeId == null ? "" : String(activeTaxTypeId);
+  const currentLabel = getTaxTypeDisplayLabel(product, inlineEdit, taxTypeLabels);
+  const hasCurrentOption = taxTypeOptions.some((option) => String(option.taxTypeId) === currentValue);
+
+  if (!inlineEdit || taxTypeOptions.length === 0) {
+    return (
+      <td className="px-2.5 py-1.5">
+        <span className="text-[11.5px] text-foreground">{currentLabel}</span>
+      </td>
+    );
+  }
+
+  return (
+    <td className="px-2.5 py-1.5">
+      <select
+        aria-label={`Tax type for SKU ${product.sku}`}
+        value={currentValue}
+        disabled={inlineEdit.pendingSave}
+        onClick={(event) => event.stopPropagation()}
+        onChange={(event) => {
+          event.stopPropagation();
+          void inlineEdit.saveField(product.sku, "taxType", event.target.value);
+        }}
+        className="h-7 min-w-[110px] rounded-md border border-border bg-background px-2 py-0 text-[11px] text-foreground outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/30"
+      >
+        {currentValue.length === 0 ? (
+          <option value="">Unassigned</option>
+        ) : null}
+        {currentValue.length > 0 && !hasCurrentOption ? (
+          <option value={currentValue}>{currentLabel}</option>
+        ) : null}
+        {taxTypeOptions.map((option) => (
+          <option key={option.taxTypeId} value={String(option.taxTypeId)}>
+            {option.description}
+          </option>
+        ))}
+      </select>
+    </td>
+  );
+}
+
+function DiscontinueCell({
+  product,
+  inlineEdit,
+}: {
+  product: ProductBrowseRow;
+  inlineEdit?: ProductInlineEditController;
+}) {
+  const inlineRow = inlineEdit?.rowsBySku.get(product.sku);
+  const isDiscontinued = inlineRow ? inlineRow.fDiscontinue === 1 : product.discontinued === true;
+
+  return (
+    <td className="px-2.5 py-1.5 text-center">
+      {inlineEdit ? (
+        <button
+          type="button"
+          aria-label={`Toggle discontinue for SKU ${product.sku}`}
+          aria-pressed={isDiscontinued}
+          disabled={inlineEdit.pendingSave}
+          onClick={(event) => {
+            event.stopPropagation();
+            void inlineEdit.saveField(product.sku, "discontinue", isDiscontinued ? "0" : "1");
+          }}
+          className={`inline-flex min-w-[52px] items-center justify-center rounded-full border px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-[0.03em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+            isDiscontinued
+              ? "border-amber-500/40 bg-amber-500/10 text-amber-700"
+              : "border-emerald-500/35 bg-emerald-500/10 text-emerald-700"
+          }`}
+        >
+          {isDiscontinued ? "Disc" : "Live"}
+        </button>
+      ) : (
+        <span className="text-[11.5px] text-foreground">{isDiscontinued ? "Disc" : "Live"}</span>
+      )}
+    </td>
+  );
 }
 
 export function formatLocationVarianceBadge(varies: boolean, selectedCount: number): string | null {
@@ -281,12 +535,17 @@ export function ProductTable({
   onHideColumn,
   onHiddenChange,
   suppressEmptyState = false,
+  inlineEdit,
+  primaryLocationId,
 }: ProductTableProps) {
   void onHideColumn;
   const { byId: vendorsById } = useVendorDirectory();
+  const { lookups, refs } = useProductRefDirectory();
   // Observe the wrapper width so the hidden-count badge reflects what the
   // @container queries actually suppress.
   const { ref: wrapperRef, summary: hiddenSummary } = useHiddenColumns();
+  const inlineFieldOrder: readonly ProductInlineEditableField[] =
+    tab === "textbooks" ? ["cost", "retail"] : ["cost", "retail", "barcode"];
   const activeOptionalColumns = useMemo(() => visibleColumns ?? [], [visibleColumns]);
   useEffect(() => {
     if (!onHiddenChange) return;
@@ -329,8 +588,8 @@ export function ProductTable({
 
   // Keep the loading row in lockstep with the header set: checkbox + SKU +
   // Description + Vendor + Cost + Retail + Stock + [Margin?] + ISBN/Barcode +
-  // LastSale + [optional columns].
-  const baseCols = 9 + (showMargin ? 1 : 0);
+  // Tax Type + Disc + LastSale + [optional columns].
+  const baseCols = 11 + (showMargin ? 1 : 0);
   const optionalCols =
     (showUnits ? 1 : 0) +
     (showRevenue ? 1 : 0) +
@@ -444,6 +703,12 @@ export function ProductTable({
                     width={128}
                   />
                 )}
+                <th className="bg-card border-b border-border sticky top-0 z-[1] px-2.5 py-2 text-left text-[11px] font-semibold tracking-[-0.005em] text-muted-foreground">
+                  Tax Type
+                </th>
+                <th className="bg-card border-b border-border sticky top-0 z-[1] px-2.5 py-2 text-center text-[11px] font-semibold tracking-[-0.005em] text-muted-foreground">
+                  Disc
+                </th>
                 <SortHeader
                   field="last_sale_date"
                   label="Last Sale"
@@ -560,6 +825,14 @@ export function ProductTable({
                       tab === "textbooks"
                         ? product.title ?? product.description ?? "—"
                         : product.description ?? "—";
+                    const resolvedPrimaryLocationId =
+                      primaryLocationId ?? product.primary_location_id ?? null;
+                    const primarySlice = getPrimaryLocationSlice(
+                      product,
+                      resolvedPrimaryLocationId,
+                    );
+                    const costValue = primarySlice?.cost ?? product.cost;
+                    const retailValue = primarySlice?.retailPrice ?? product.retail_price;
                     const metaParts: string[] = [];
                     if (product.author) metaParts.push(product.author);
                     if (product.edition) metaParts.push(product.edition);
@@ -626,36 +899,50 @@ export function ProductTable({
                             );
                           })()}
                         </td>
-                        <td className="px-2.5 py-1.5 text-right">
-                          <span className="inline-flex items-center justify-end gap-1.5">
-                            <span className="font-mono tnum text-[11.5px] text-muted-foreground">
-                              {formatCurrency(product.cost)}
-                            </span>
-                            {costBadge ? (
+                        <InlineEditableCell
+                          product={product}
+                          field="cost"
+                          label="Cost"
+                          displayValue={formatCurrency(costValue)}
+                          currentValue={getInlineEditValue(product, inlineEdit, resolvedPrimaryLocationId, "cost")}
+                          fieldOrder={inlineFieldOrder}
+                          badge={
+                            costBadge ? (
                               <LocationVariancePopover
                                 badge={costBadge}
                                 field="cost"
                                 label="Cost"
                                 slices={selectedInventories}
                               />
-                            ) : null}
-                          </span>
-                        </td>
-                        <td className="px-2.5 py-1.5 text-right">
-                          <span className="inline-flex items-center justify-end gap-1.5">
-                            <span className="font-mono tnum text-[11.5px] text-foreground font-medium">
-                              {formatCurrency(product.retail_price)}
-                            </span>
-                            {retailBadge ? (
+                            ) : null
+                          }
+                          inlineEdit={inlineEdit}
+                          align="right"
+                          className="px-2.5 py-1.5 text-right"
+                          inputClassName="min-w-[92px]"
+                        />
+                        <InlineEditableCell
+                          product={product}
+                          field="retail"
+                          label="Retail"
+                          displayValue={formatCurrency(retailValue)}
+                          currentValue={getInlineEditValue(product, inlineEdit, resolvedPrimaryLocationId, "retail")}
+                          fieldOrder={inlineFieldOrder}
+                          badge={
+                            retailBadge ? (
                               <LocationVariancePopover
                                 badge={retailBadge}
                                 field="retailPrice"
                                 label="Retail"
                                 slices={selectedInventories}
                               />
-                            ) : null}
-                          </span>
-                        </td>
+                            ) : null
+                          }
+                          inlineEdit={inlineEdit}
+                          align="right"
+                          className="px-2.5 py-1.5 text-right"
+                          inputClassName="min-w-[92px]"
+                        />
                         <td className="px-2.5 py-1.5 text-right">
                           {(() => {
                             const stock = product.stock_on_hand;
@@ -691,10 +978,10 @@ export function ProductTable({
                         </td>
                         {showMargin ? (
                           <td data-priority="medium" className="px-2.5 py-1.5 text-right">
-                            {product.cost != null && product.retail_price != null ? (
+                            {costValue != null && retailValue != null ? (
                               <MarginBar
-                                cost={product.cost}
-                                retail={product.retail_price}
+                                cost={costValue}
+                                retail={retailValue}
                               />
                             ) : (
                               <span className="font-mono tnum text-[11.5px] text-muted-foreground">
@@ -703,13 +990,31 @@ export function ProductTable({
                             )}
                           </td>
                         ) : null}
-                        <td className="px-2.5 py-1.5">
-                          <span className="font-mono tnum text-[11px] text-muted-foreground">
-                            {tab === "textbooks"
-                              ? (product.isbn ?? "—")
-                              : (product.barcode ?? "—")}
-                          </span>
-                        </td>
+                        {tab === "textbooks" ? (
+                          <td className="px-2.5 py-1.5">
+                            <span className="font-mono tnum text-[11.5px] leading-none text-foreground">
+                              {product.isbn ? `ISBN ${product.isbn}` : "—"}
+                            </span>
+                          </td>
+                        ) : (
+                          <InlineEditableCell
+                            product={product}
+                            field="barcode"
+                            label="Barcode"
+                            displayValue={getInlineEditDisplayValue(product, inlineEdit, resolvedPrimaryLocationId, "barcode")}
+                            currentValue={getInlineEditValue(product, inlineEdit, resolvedPrimaryLocationId, "barcode")}
+                            fieldOrder={inlineFieldOrder}
+                            inlineEdit={inlineEdit}
+                            className="px-2.5 py-1.5"
+                          />
+                        )}
+                        <TaxTypeCell
+                          product={product}
+                          inlineEdit={inlineEdit}
+                          taxTypeLabels={lookups.taxTypeLabels}
+                          taxTypeOptions={refs?.taxTypes ?? []}
+                        />
+                        <DiscontinueCell product={product} inlineEdit={inlineEdit} />
                         <td className="px-2.5 py-1.5 text-[11.5px] text-muted-foreground whitespace-nowrap">
                           {formatSaleDate(getProductDisplaySaleDate(product) ?? null)}
                         </td>

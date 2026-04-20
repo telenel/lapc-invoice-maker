@@ -31,6 +31,7 @@ import { DeleteViewDialog } from "@/components/products/delete-view-dialog";
 import { ColumnVisibilityToggle, type ColumnVisibilityHandle } from "@/components/products/column-visibility-toggle";
 import { PierceAssuranceBadge } from "@/components/products/pierce-assurance-badge";
 import { LocationPicker } from "@/components/products/location-picker";
+import { useProductInlineEdit, type ProductInlineEditRowBaseline } from "@/components/products/use-product-inline-edit";
 import { productApi } from "@/domains/product/api-client";
 import { SYSTEM_PRESET_VIEWS } from "@/domains/product/presets";
 import { shouldApplyDefaultMinStock } from "@/domains/product/page-defaults";
@@ -62,6 +63,28 @@ function productToScopedSelected(product: ProductBrowseRow): SelectedProduct {
     vendorId: product.vendor_id,
     itemType: product.item_type,
   };
+}
+
+function buildInlineEditRows(
+  products: ProductBrowseRow[],
+  primaryLocationId: ProductLocationId,
+): ProductInlineEditRowBaseline[] {
+  return products.map((product) => {
+    const selectedInventories = product.selected_inventories ?? [];
+    const primaryInventory = selectedInventories.find(
+      (inventory) => inventory.locationId === primaryLocationId,
+    );
+    const allowItemLevelFallback = primaryInventory == null;
+
+    return {
+      sku: product.sku,
+      barcode: product.barcode,
+      itemTaxTypeId: product.itemTaxTypeId,
+      retail: primaryInventory?.retailPrice ?? (allowItemLevelFallback ? product.retail_price ?? null : null),
+      cost: primaryInventory?.cost ?? (allowItemLevelFallback ? product.cost ?? null : null),
+      fDiscontinue: product.discontinued ? 1 : 0,
+    };
+  });
 }
 
 export default function ProductsPage() {
@@ -298,6 +321,15 @@ export default function ProductsPage() {
   }
 
   const primaryLocationId = getPrimaryProductLocationId(filters.locationIds);
+  const inlineEditRows = useMemo(
+    () => buildInlineEditRows(data?.products ?? [], primaryLocationId),
+    [data?.products, primaryLocationId],
+  );
+  const inlineEdit = useProductInlineEdit({
+    rows: inlineEditRows,
+    primaryLocationId,
+    onSaveSuccess: refetch,
+  });
 
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-6 md:px-5">
@@ -612,6 +644,8 @@ export default function ProductsPage() {
             onHideColumn={(key) => columnsRef.current?.hideColumn(key)}
             onHiddenChange={setHiddenCount}
             suppressEmptyState={data?.total === 0 && activeView != null}
+            inlineEdit={inlineEdit}
+            primaryLocationId={primaryLocationId}
           />
         </div>
       </div>

@@ -410,6 +410,7 @@ export const DELETE = withAdmin(async (request: NextRequest, _session, ctx?: Rou
 const snapshotSchema = z.object({
   sku: z.number().int().positive(),
   barcode: z.string().nullable(),
+  itemTaxTypeId: z.number().int().positive().nullable().optional(),
   retail: z.number().nonnegative().nullable(),
   cost: z.number().nonnegative().nullable(),
   fDiscontinue: z.union([z.literal(0), z.literal(1)]),

@@ -26,6 +26,7 @@ type ProductBrowseBase = Omit<
 interface ProductBrowseBaseRow {
   sku: number | string | bigint;
   barcode: string | null;
+  item_tax_type_id: number | string | null;
   item_type: string;
   description: string | null;
   author: string | null;
@@ -531,6 +532,7 @@ export async function searchProductBrowseRows(
     const base: ProductBrowseBase = {
       sku,
       barcode: row.barcode,
+      itemTaxTypeId: toNullableInteger(row.item_tax_type_id),
       item_type: row.item_type,
       description: row.description,
       author: row.author,

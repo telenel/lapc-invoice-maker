@@ -24,6 +24,7 @@ export interface ProductLocationVariance {
 export interface Product {
   sku: number;
   barcode: string | null;
+  itemTaxTypeId: number | null;
   item_type: string;
   description: string | null;
   author: string | null;
@@ -291,6 +292,7 @@ export interface TextbookPatch {
 export interface ItemSnapshot {
   sku: number;
   barcode: string | null;
+  itemTaxTypeId?: number | null;
   retail: number | null;
   cost: number | null;
   fDiscontinue: 0 | 1;

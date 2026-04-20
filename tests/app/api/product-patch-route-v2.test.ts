@@ -94,6 +94,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
     prismMocks.getItemSnapshot.mockResolvedValue({
       sku: 1001,
       barcode: "123456789012",
+      itemTaxTypeId: 6,
       retail: 12.99,
       cost: 6.25,
       fDiscontinue: 0,
@@ -532,6 +533,115 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
       synced_at: expect.any(String),
     }));
     expect(mockProductInventoryUpsert).not.toHaveBeenCalled();
+  });
+
+  it("forwards tax-type baselines through GM v2 patches", async () => {
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          baseline: {
+            sku: 1001,
+            barcode: "123456789012",
+            itemTaxTypeId: 6,
+            retail: 11.99,
+            cost: 5.5,
+            fDiscontinue: 0,
+          },
+          patch: {
+            item: {
+              itemTaxTypeId: 4,
+            },
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(prismMocks.updateGmItem).toHaveBeenCalledWith(
+      1001,
+      {
+        item: {
+          itemTaxTypeId: 4,
+        },
+      },
+      {
+        sku: 1001,
+        barcode: "123456789012",
+        itemTaxTypeId: 6,
+        retail: 11.99,
+        cost: 5.5,
+        fDiscontinue: 0,
+      },
+    );
+    expect(mockProductsUpsert).toHaveBeenCalledWith(expect.objectContaining({
+      sku: 1001,
+      item_tax_type_id: 4,
+    }));
+  });
+
+  it("forwards tax-type baselines through textbook v2 patches", async () => {
+    mockMaybeSingle.mockResolvedValueOnce({
+      data: { item_type: "textbook" },
+      error: null,
+    });
+    prismMocks.updateTextbookPricing.mockResolvedValueOnce({
+      sku: 1001,
+      appliedFields: ["itemTaxTypeId"],
+    });
+
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          baseline: {
+            sku: 1001,
+            barcode: "123456789012",
+            itemTaxTypeId: 6,
+            retail: 11.99,
+            cost: 5.5,
+            fDiscontinue: 0,
+          },
+          patch: {
+            item: {
+              itemTaxTypeId: 4,
+            },
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(prismMocks.updateTextbookPricing).toHaveBeenCalledWith(
+      1001,
+      {
+        item: {
+          itemTaxTypeId: 4,
+        },
+      },
+      {
+        sku: 1001,
+        barcode: "123456789012",
+        itemTaxTypeId: 6,
+        retail: 11.99,
+        cost: 5.5,
+        fDiscontinue: 0,
+      },
+    );
+    expect(mockProductsUpsert).toHaveBeenCalledWith(expect.objectContaining({
+      sku: 1001,
+      item_tax_type_id: 4,
+    }));
   });
 
   it("ignores textbook fields for GM v2 patches when mirroring to products", async () => {
