@@ -4,6 +4,7 @@ import {
   shredRecordset,
   buildProductsUpsertPayload,
   buildProductInventoryUpsertPayload,
+  computeReapSet,
 } from "@/domains/product/prism-sync";
 
 describe("Prism sync row types", () => {
@@ -353,5 +354,33 @@ describe("buildProductsUpsertPayload", () => {
     expect(payload.tag_type_label).toBe("LARGE w/Price/Color");
     expect(payload.f_inv_list_price_flag).toBe(true);
     expect(payload.f_rent_only).toBe(false);
+  });
+});
+
+describe("computeReapSet", () => {
+  it("returns product_inventory rows that existed before but not in this run", () => {
+    const existingInventory = new Set<string>([
+      "1:2", "1:3", "2:2", "3:2", "3:4",
+    ]);
+    const seenInventory = new Set<string>([
+      "1:2", "1:3", "2:2", "3:2", // 3:4 gone
+    ]);
+    const { inventoryToDelete, skusWithNoLocations } = computeReapSet(
+      existingInventory,
+      seenInventory,
+    );
+    expect(Array.from(inventoryToDelete).sort()).toEqual(["3:4"]);
+    expect(Array.from(skusWithNoLocations)).toEqual([]);
+  });
+
+  it("flags SKUs for products reap when all locations are gone", () => {
+    const existingInventory = new Set<string>(["5:2", "5:3"]);
+    const seenInventory = new Set<string>();
+    const { inventoryToDelete, skusWithNoLocations } = computeReapSet(
+      existingInventory,
+      seenInventory,
+    );
+    expect(Array.from(inventoryToDelete).sort()).toEqual(["5:2", "5:3"]);
+    expect(Array.from(skusWithNoLocations)).toEqual([5]);
   });
 });

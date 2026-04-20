@@ -584,6 +584,71 @@ function coerceEpochZeroDate(d: Date | null | undefined): Date | null {
 }
 
 /**
+ * Given the set of (sku:location) keys that existed in product_inventory
+ * before this run and the set observed during this run, return:
+ *   - inventoryToDelete: (sku:location) keys to DELETE from product_inventory
+ *   - skusWithNoLocations: SKUs that are now orphaned (zero remaining Pierce
+ *     inventory rows); products rows should also be reaped.
+ */
+export function computeReapSet(
+  existing: Set<string>,
+  seen: Set<string>,
+): { inventoryToDelete: Set<string>; skusWithNoLocations: Set<number> } {
+  const inventoryToDelete = new Set<string>();
+  for (const key of existing) {
+    if (!seen.has(key)) inventoryToDelete.add(key);
+  }
+
+  const remainingBySku = new Map<number, number>();
+  for (const key of existing) {
+    if (!inventoryToDelete.has(key)) {
+      const sku = Number(key.split(":")[0]);
+      remainingBySku.set(sku, (remainingBySku.get(sku) ?? 0) + 1);
+    }
+  }
+
+  const skusWithNoLocations = new Set<number>();
+  const skusInExisting = new Set<number>();
+  for (const key of existing) {
+    skusInExisting.add(Number(key.split(":")[0]));
+  }
+  for (const sku of skusInExisting) {
+    if ((remainingBySku.get(sku) ?? 0) === 0) {
+      skusWithNoLocations.add(sku);
+    }
+  }
+
+  return { inventoryToDelete, skusWithNoLocations };
+}
+
+const DELETE_CHUNK_SIZE = 1000;
+const INVENTORY_KEY_READ_PAGE_SIZE = 1000;
+
+async function loadExistingInventoryKeys(
+  supabase: ReturnType<typeof getSupabaseAdminClient>,
+): Promise<Set<string>> {
+  const keys = new Set<string>();
+  let from = 0;
+  while (true) {
+    const to = from + INVENTORY_KEY_READ_PAGE_SIZE - 1;
+    const { data, error } = await supabase
+      .from("product_inventory")
+      .select("sku, location_id")
+      .order("sku", { ascending: true })
+      .order("location_id", { ascending: true })
+      .range(from, to);
+    if (error) throw new Error(`Supabase product_inventory read failed: ${error.message}`);
+    if (!data || data.length === 0) break;
+    for (const r of data) {
+      keys.add(`${(r as { sku: number }).sku}:${(r as { location_id: number }).location_id}`);
+    }
+    if (data.length < INVENTORY_KEY_READ_PAGE_SIZE) break;
+    from += INVENTORY_KEY_READ_PAGE_SIZE;
+  }
+  return keys;
+}
+
+/**
  * Run one full-catalog pull. Paginates Prism reads with a (sku, locationId)
  * cursor to avoid loading the ~180k Pierce-stocked (sku×location) rows into
  * memory at once.
@@ -663,16 +728,53 @@ export async function runPrismPull(options: {
     if (result.recordset.length < pageSize) break;
   }
 
-  // Reap is a P1.9 concern — Phase 1 deliberately skips it here. The sets
-  // above (seenSkus, seenInventoryKeys) are allocated so P1.9 can wire them
-  // in without restructuring this function.
+  // Load existing inventory keys FROM BEFORE this sync started, then reap
+  // anything we didn't see. Also reap products rows whose every location
+  // dropped out (orphans).
+  const existingInventoryKeys = await loadExistingInventoryKeys(supabase);
+  const { inventoryToDelete, skusWithNoLocations } = computeReapSet(
+    existingInventoryKeys,
+    seenInventoryKeys,
+  );
+
+  // seenSkus is retained for future use (e.g. per-SKU reap audit logging).
   void seenSkus;
-  void seenInventoryKeys;
+
+  let removed = 0;
+  if (inventoryToDelete.size > 0) {
+    const keys = Array.from(inventoryToDelete);
+    for (let i = 0; i < keys.length; i += DELETE_CHUNK_SIZE) {
+      const chunk = keys.slice(i, i + DELETE_CHUNK_SIZE);
+      const orExpr = chunk.map((k) => {
+        const [sku, loc] = k.split(":");
+        return `and(sku.eq.${sku},location_id.eq.${loc})`;
+      }).join(",");
+      const { error: delErr, count } = await supabase
+        .from("product_inventory")
+        .delete({ count: "exact" })
+        .or(orExpr);
+      if (delErr) throw new Error(`product_inventory reap failed: ${delErr.message}`);
+      removed += count ?? chunk.length;
+    }
+  }
+
+  if (skusWithNoLocations.size > 0) {
+    const skus = Array.from(skusWithNoLocations);
+    for (let i = 0; i < skus.length; i += DELETE_CHUNK_SIZE) {
+      const chunk = skus.slice(i, i + DELETE_CHUNK_SIZE);
+      const { error: delErr, count } = await supabase
+        .from("products")
+        .delete({ count: "exact" })
+        .in("sku", chunk);
+      if (delErr) throw new Error(`products reap failed: ${delErr.message}`);
+      removed += count ?? chunk.length;
+    }
+  }
 
   return {
     scanned,
     updated,
-    removed: 0,
+    removed,
     durationMs: Date.now() - started,
   };
 }
