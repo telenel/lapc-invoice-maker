@@ -374,8 +374,8 @@ export const DELETE = withAdmin(async (request: NextRequest, _session, ctx?: Rou
 const snapshotSchema = z.object({
   sku: z.number().int().positive(),
   barcode: z.string().nullable(),
-  retail: z.number().nonnegative(),
-  cost: z.number().nonnegative(),
+  retail: z.number().nonnegative().nullable(),
+  cost: z.number().nonnegative().nullable(),
   fDiscontinue: z.union([z.literal(0), z.literal(1)]),
 });
 
@@ -398,20 +398,20 @@ const gmDetailsPatchSchema = z.object({
 });
 
 const primaryInventoryPatchSchema = z.object({
-  retail: z.number().nonnegative().optional(),
-  cost: z.number().nonnegative().optional(),
+  retail: z.number().nonnegative().nullable().optional(),
+  cost: z.number().nonnegative().nullable().optional(),
 });
 
 const inventoryPatchLocationIdSchema = z.union([z.literal(2), z.literal(3), z.literal(4)]);
 
 const inventoryPatchPerLocationSchema = z.object({
   locationId: inventoryPatchLocationIdSchema,
-  retail: z.number().nonnegative().optional(),
-  cost: z.number().nonnegative().optional(),
-  expectedCost: z.number().nonnegative().optional(),
-  tagTypeId: z.number().int().positive().optional(),
-  statusCodeId: z.number().int().positive().optional(),
-  estSales: z.number().optional(),
+  retail: z.number().nonnegative().nullable().optional(),
+  cost: z.number().nonnegative().nullable().optional(),
+  expectedCost: z.number().nonnegative().nullable().optional(),
+  tagTypeId: z.number().int().positive().nullable().optional(),
+  statusCodeId: z.number().int().positive().nullable().optional(),
+  estSales: z.number().nullable().optional(),
   estSalesLocked: z.boolean().optional(),
   fInvListPriceFlag: z.boolean().optional(),
   fTxWantListFlag: z.boolean().optional(),
@@ -642,6 +642,36 @@ function buildLegacyMirrorPayload(
   return payload;
 }
 
+function buildInventoryMirrorPayload(
+  sku: number,
+  inventory: ReadonlyArray<InventoryPatchPerLocation> | undefined,
+): Record<string, unknown>[] {
+  const syncedAt = new Date().toISOString();
+
+  return (inventory ?? []).map((entry) => {
+    const payload: Record<string, unknown> = {
+      sku,
+      location_id: entry.locationId,
+      location_abbrev: PRODUCT_INVENTORY_LOCATION_ABBREV_BY_ID[entry.locationId],
+      synced_at: syncedAt,
+    };
+
+    if (entry.retail !== undefined) payload.retail_price = entry.retail;
+    if (entry.cost !== undefined) payload.cost = entry.cost;
+    if (entry.expectedCost !== undefined) payload.expected_cost = entry.expectedCost;
+    if (entry.tagTypeId !== undefined) payload.tag_type_id = entry.tagTypeId;
+    if (entry.statusCodeId !== undefined) payload.status_code_id = entry.statusCodeId;
+    if (entry.estSales !== undefined) payload.est_sales = entry.estSales;
+    if (entry.estSalesLocked !== undefined) payload.est_sales_locked = entry.estSalesLocked;
+    if (entry.fInvListPriceFlag !== undefined) payload.f_inv_list_price_flag = entry.fInvListPriceFlag;
+    if (entry.fTxWantListFlag !== undefined) payload.f_tx_want_list_flag = entry.fTxWantListFlag;
+    if (entry.fTxBuybackListFlag !== undefined) payload.f_tx_buyback_list_flag = entry.fTxBuybackListFlag;
+    if (entry.fNoReturns !== undefined) payload.f_no_returns = entry.fNoReturns;
+
+    return payload;
+  });
+}
+
 export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: RouteCtx) => {
   const { isPrismConfigured, updateGmItem, updateTextbookPricing, getItemSnapshot } = await loadPatchDeps();
   if (!isPrismConfigured()) {
@@ -699,6 +729,10 @@ export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: Rout
     try {
       const snap = await getItemSnapshot(sku);
       await supabase.from("products").upsert(buildLegacyMirrorPayload(sku, normalized.data.patch, snap));
+      const inventoryMirrorPayload = buildInventoryMirrorPayload(sku, normalized.data.patch.inventory);
+      if (inventoryMirrorPayload.length > 0) {
+        await supabase.from("product_inventory").upsert(inventoryMirrorPayload);
+      }
     } catch (mirrorErr) {
       console.warn(`[PATCH /api/products/${sku}] mirror failed:`, mirrorErr);
     }

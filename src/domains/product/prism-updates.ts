@@ -48,8 +48,8 @@ export async function getItemSnapshot(sku: number): Promise<ItemSnapshot | null>
   return {
     sku: row.SKU,
     barcode: row.BarCode && row.BarCode.length > 0 ? row.BarCode : null,
-    retail: Number(row.Retail ?? 0),
-    cost: Number(row.Cost ?? 0),
+    retail: row.Retail == null ? null : Number(row.Retail),
+    cost: row.Cost == null ? null : Number(row.Cost),
     fDiscontinue: (row.fDiscontinue === 1 ? 1 : 0) as 0 | 1,
   };
 }
@@ -182,8 +182,8 @@ export async function updateGmItem(
 
     if (expectedSnapshot) {
       const currentBarcode = current.BarCode && current.BarCode.length > 0 ? current.BarCode : null;
-      const currentRetail = Number(current.Retail ?? 0);
-      const currentCost = Number(current.Cost ?? 0);
+      const currentRetail = current.Retail == null ? null : Number(current.Retail);
+      const currentCost = current.Cost == null ? null : Number(current.Cost);
       const currentFDisc = (current.fDiscontinue === 1 ? 1 : 0) as 0 | 1;
       if (
         currentBarcode !== expectedSnapshot.barcode ||
@@ -400,8 +400,8 @@ export async function updateTextbookPricing(
 
     if (expectedSnapshot) {
       const currentBarcode = current.BarCode && current.BarCode.length > 0 ? current.BarCode : null;
-      const currentRetail = Number(current.Retail ?? 0);
-      const currentCost = Number(current.Cost ?? 0);
+      const currentRetail = current.Retail == null ? null : Number(current.Retail);
+      const currentCost = current.Cost == null ? null : Number(current.Cost);
       const currentFDisc = (current.fDiscontinue === 1 ? 1 : 0) as 0 | 1;
       if (
         currentBarcode !== expectedSnapshot.barcode ||

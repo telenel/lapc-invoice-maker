@@ -235,19 +235,19 @@ export interface GmDetailsPatch {
 
 /** Fields that live on Prism Inventory for the Pierce location. */
 export interface PrimaryInventoryPatch {
-  retail?: number;
-  cost?: number;
+  retail?: number | null;
+  cost?: number | null;
 }
 
 /** Fields that live on Prism Inventory for a single location-aware write. */
 export interface InventoryPatchPerLocation {
   locationId: ProductLocationId;
-  retail?: number;
-  cost?: number;
-  expectedCost?: number;
-  tagTypeId?: number;
-  statusCodeId?: number;
-  estSales?: number;
+  retail?: number | null;
+  cost?: number | null;
+  expectedCost?: number | null;
+  tagTypeId?: number | null;
+  statusCodeId?: number | null;
+  estSales?: number | null;
   estSalesLocked?: boolean;
   fInvListPriceFlag?: boolean;
   fTxWantListFlag?: boolean;
@@ -275,8 +275,8 @@ export interface TextbookPatch {
 export interface ItemSnapshot {
   sku: number;
   barcode: string | null;
-  retail: number;
-  cost: number;
+  retail: number | null;
+  cost: number | null;
   fDiscontinue: 0 | 1;
 }
 

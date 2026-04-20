@@ -17,6 +17,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { productApi } from "@/domains/product/api-client";
+import {
+  DEFAULT_PRODUCT_LOCATION_IDS,
+  getPrimaryProductLocationId,
+  normalizeProductLocationIds,
+  type ProductLocationId,
+} from "@/domains/product/location-filters";
 import type { ProductEditDetails, ProductEditPatchV2 } from "@/domains/product/types";
 import { useProductRefDirectory } from "@/domains/product/vendor-directory";
 import type { EditItemDialogProps } from "./edit-item-dialog-legacy";
@@ -26,6 +32,8 @@ import { ItemRefSelectField } from "./item-ref-selects";
 export interface EditItemDialogV2Props extends EditItemDialogProps {
   detail?: ProductEditDetails | null;
   detailLoading?: boolean;
+  locationIds?: ProductLocationId[];
+  primaryLocationId?: ProductLocationId;
 }
 
 type FormState = {
@@ -202,15 +210,31 @@ function toInventoryState(detail: ProductEditDetails | null | undefined): Invent
   };
 }
 
-function toFormState(item: EditItemDialogProps["items"][number] | undefined, detail?: ProductEditDetails | null): FormState {
+function getPrimaryInventoryField(
+  detail: ProductEditDetails | null | undefined,
+  primaryLocationId: InventoryLocationId,
+  field: "retail" | "cost",
+): number | null | undefined {
+  return detail?.inventoryByLocation.find((entry) => entry.locationId === primaryLocationId)?.[field];
+}
+
+function toFormState(
+  item: EditItemDialogProps["items"][number] | undefined,
+  detail: ProductEditDetails | null | undefined,
+  primaryLocationId: InventoryLocationId,
+): FormState {
+  const hasHydratedPrimaryInventory = detail?.inventoryByLocation.some((entry) => entry.locationId === primaryLocationId) === true;
+  const primaryRetail = getPrimaryInventoryField(detail, primaryLocationId, "retail");
+  const primaryCost = getPrimaryInventoryField(detail, primaryLocationId, "cost");
+
   return {
     description: detail?.description ?? item?.description ?? "",
     barcode: detail?.barcode ?? item?.barcode ?? "",
     vendorId: detail?.vendorId ? String(detail.vendorId) : item?.vendorId ? String(item.vendorId) : "",
     dccId: detail?.dccId ? String(detail.dccId) : item?.dccId ? String(item.dccId) : "",
     itemTaxTypeId: detail?.itemTaxTypeId ? String(detail.itemTaxTypeId) : item?.itemTaxTypeId ? String(item.itemTaxTypeId) : "",
-    retail: detail?.retail != null ? String(detail.retail) : item?.retail != null ? String(item.retail) : "",
-    cost: detail?.cost != null ? String(detail.cost) : item?.cost != null ? String(item.cost) : "",
+    retail: hasHydratedPrimaryInventory ? (primaryRetail != null ? String(primaryRetail) : "") : item?.retail != null ? String(item.retail) : "",
+    cost: hasHydratedPrimaryInventory ? (primaryCost != null ? String(primaryCost) : "") : item?.cost != null ? String(item.cost) : "",
     catalogNumber: detail?.catalogNumber ?? item?.catalogNumber ?? "",
     comment: detail?.comment ?? item?.comment ?? "",
     fDiscontinue: (detail?.fDiscontinue ?? item?.fDiscontinue ?? 0) === 1,
@@ -349,6 +373,7 @@ function buildInventoryPatch(
   baselineForm: FormState,
   inventory: InventoryStateByLocation,
   baselineInventory: InventoryStateByLocation,
+  primaryLocationId: InventoryLocationId,
   isBulk: boolean,
 ): NonNullable<ProductEditPatchV2["inventory"]> | undefined {
   if (isBulk) return undefined;
@@ -360,29 +385,29 @@ function buildInventoryPatch(
     const baseline = baselineInventory[locationId];
     const entry: Partial<NonNullable<ProductEditPatchV2["inventory"]>[number]> = { locationId };
 
-    const retailSource = locationId === 2 ? form.retail : current.retail;
-    const retailBaseline = locationId === 2 ? baselineForm.retail : baseline.retail;
-    if (retailSource !== retailBaseline && retailSource !== "") {
-      entry.retail = Number(retailSource);
+    const retailSource = locationId === primaryLocationId ? form.retail : current.retail;
+    const retailBaseline = locationId === primaryLocationId ? baselineForm.retail : baseline.retail;
+    if (retailSource !== retailBaseline) {
+      entry.retail = retailSource === "" ? null : Number(retailSource);
     }
 
-    const costSource = locationId === 2 ? form.cost : current.cost;
-    const costBaseline = locationId === 2 ? baselineForm.cost : baseline.cost;
-    if (costSource !== costBaseline && costSource !== "") {
-      entry.cost = Number(costSource);
+    const costSource = locationId === primaryLocationId ? form.cost : current.cost;
+    const costBaseline = locationId === primaryLocationId ? baselineForm.cost : baseline.cost;
+    if (costSource !== costBaseline) {
+      entry.cost = costSource === "" ? null : Number(costSource);
     }
 
-    if (current.expectedCost !== baseline.expectedCost && current.expectedCost !== "") {
-      entry.expectedCost = Number(current.expectedCost);
+    if (current.expectedCost !== baseline.expectedCost) {
+      entry.expectedCost = current.expectedCost === "" ? null : Number(current.expectedCost);
     }
-    if (current.tagTypeId !== baseline.tagTypeId && current.tagTypeId !== "") {
-      entry.tagTypeId = Number(current.tagTypeId);
+    if (current.tagTypeId !== baseline.tagTypeId) {
+      entry.tagTypeId = current.tagTypeId === "" ? null : Number(current.tagTypeId);
     }
-    if (current.statusCodeId !== baseline.statusCodeId && current.statusCodeId !== "") {
-      entry.statusCodeId = Number(current.statusCodeId);
+    if (current.statusCodeId !== baseline.statusCodeId) {
+      entry.statusCodeId = current.statusCodeId === "" ? null : Number(current.statusCodeId);
     }
-    if (current.estSales !== baseline.estSales && current.estSales !== "") {
-      entry.estSales = Number(current.estSales);
+    if (current.estSales !== baseline.estSales) {
+      entry.estSales = current.estSales === "" ? null : Number(current.estSales);
     }
     if (current.estSalesLocked !== baseline.estSalesLocked) {
       entry.estSalesLocked = current.estSalesLocked;
@@ -515,12 +540,16 @@ export function EditItemDialogV2({
   onSaved,
   detail = null,
   detailLoading = false,
+  locationIds = [...DEFAULT_PRODUCT_LOCATION_IDS],
+  primaryLocationId,
 }: EditItemDialogV2Props) {
   const isBulk = items.length > 1;
+  const resolvedLocationIds = normalizeProductLocationIds(locationIds);
+  const resolvedPrimaryLocationId = (primaryLocationId ?? getPrimaryProductLocationId(resolvedLocationIds)) as InventoryLocationId;
   const { refs, loading: refsLoading, available: refsAvailable } = useProductRefDirectory();
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [inventoryByLocation, setInventoryByLocation] = useState<InventoryStateByLocation>(() => makeEmptyInventoryState());
-  const [activeInventoryLocation, setActiveInventoryLocation] = useState<InventoryLocationId>(2);
+  const [activeInventoryLocation, setActiveInventoryLocation] = useState<InventoryLocationId>(resolvedPrimaryLocationId);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dirtyFieldsRef = useRef<Set<keyof FormState>>(new Set());
@@ -529,7 +558,10 @@ export function EditItemDialogV2({
 
   const refsUnavailable = !refsLoading && !refsAvailable;
   const refsControlsDisabled = refsLoading || refsUnavailable;
-  const baselineForm = useMemo(() => (isBulk ? EMPTY_FORM : toFormState(items[0], detail)), [detail, isBulk, items]);
+  const baselineForm = useMemo(
+    () => (isBulk ? EMPTY_FORM : toFormState(items[0], detail, resolvedPrimaryLocationId)),
+    [detail, isBulk, items, resolvedPrimaryLocationId],
+  );
   const baselineInventory = useMemo(() => (isBulk ? makeEmptyInventoryState() : toInventoryState(detail)), [detail, isBulk]);
   const selectionKey = isBulk
     ? `bulk:${items.map((item) => item.sku).join(",")}`
@@ -540,11 +572,11 @@ export function EditItemDialogV2({
       hydratedSelectionRef.current = null;
       dirtyFieldsRef.current.clear();
       dirtyInventoryFieldsRef.current = makeEmptyDirtyInventoryFields();
-      setActiveInventoryLocation(2);
+      setActiveInventoryLocation(resolvedPrimaryLocationId);
       return;
     }
 
-    const nextForm = isBulk ? EMPTY_FORM : toFormState(items[0], detail);
+    const nextForm = isBulk ? EMPTY_FORM : toFormState(items[0], detail, resolvedPrimaryLocationId);
     const nextInventory = isBulk ? makeEmptyInventoryState() : toInventoryState(detail);
 
     if (hydratedSelectionRef.current !== selectionKey) {
@@ -553,7 +585,7 @@ export function EditItemDialogV2({
       dirtyInventoryFieldsRef.current = makeEmptyDirtyInventoryFields();
       setForm(nextForm);
       setInventoryByLocation(nextInventory);
-      setActiveInventoryLocation(2);
+      setActiveInventoryLocation(resolvedPrimaryLocationId);
       setError(null);
       return;
     }
@@ -609,17 +641,17 @@ export function EditItemDialogV2({
 
       return changed ? merged : current;
     });
-  }, [detail, isBulk, items, open, selectionKey]);
+  }, [detail, isBulk, items, open, resolvedPrimaryLocationId, selectionKey]);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     dirtyFieldsRef.current.add(key);
     setForm((current) => ({ ...current, [key]: value }));
     if (key === "retail" || key === "cost") {
-      dirtyInventoryFieldsRef.current[2].add(key);
+      dirtyInventoryFieldsRef.current[resolvedPrimaryLocationId].add(key);
       setInventoryByLocation((current) => ({
         ...current,
-        2: {
-          ...current[2],
+        [resolvedPrimaryLocationId]: {
+          ...current[resolvedPrimaryLocationId],
           [key]: value,
         },
       }));
@@ -627,7 +659,7 @@ export function EditItemDialogV2({
   }
 
   function updateInventoryField<K extends keyof InventoryFormState>(locationId: InventoryLocationId, key: K, value: InventoryFormState[K]) {
-    if (locationId === 2 && (key === "retail" || key === "cost")) {
+    if (locationId === resolvedPrimaryLocationId && (key === "retail" || key === "cost")) {
       dirtyFieldsRef.current.add(key);
       setForm((current) => ({ ...current, [key]: value }));
     }
@@ -664,7 +696,14 @@ export function EditItemDialogV2({
   }
 
   async function handleSave() {
-    const inventoryPatch = buildInventoryPatch(form, baselineForm, inventoryByLocation, baselineInventory, isBulk);
+    const inventoryPatch = buildInventoryPatch(
+      form,
+      baselineForm,
+      inventoryByLocation,
+      baselineInventory,
+      resolvedPrimaryLocationId,
+      isBulk,
+    );
     const v2Patch = {
       ...buildV2Patch(form, baselineForm, isBulk),
       inventory: inventoryPatch,
@@ -685,14 +724,15 @@ export function EditItemDialogV2({
     try {
       if (items.length === 1) {
         const item = items[0];
+        const pierceInventoryBaseline = detail?.inventoryByLocation.find((entry) => entry.locationId === 2);
         await productApi.update(item.sku, {
           mode: "v2",
           patch: v2Patch,
           baseline: {
             sku: item.sku,
-            barcode: item.barcode,
-            retail: item.retail,
-            cost: item.cost,
+            barcode: detail?.barcode ?? item.barcode,
+            retail: pierceInventoryBaseline?.retail ?? item.retail,
+            cost: pierceInventoryBaseline?.cost ?? item.cost,
             fDiscontinue: item.fDiscontinue,
           },
         });
@@ -767,6 +807,11 @@ export function EditItemDialogV2({
 
             <TabsContent value="primary" className="space-y-4 pt-1">
               <Section title="Core item fields" description="Merchandise-safe fields that already write through the current edit path.">
+                {!isBulk ? (
+                  <p className="text-sm text-muted-foreground">
+                    Retail and cost in this tab write to the current primary page location: {INVENTORY_LOCATION_LABELS[resolvedPrimaryLocationId]}.
+                  </p>
+                ) : null}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <Field id={idFor("description")} label="Description">
                     <Input
@@ -1052,6 +1097,7 @@ export function EditItemDialogV2({
                       value={activeInventory.tagTypeId}
                       onChange={(value) => updateInventoryField(activeInventoryLocation, "tagTypeId", value)}
                       disabled={refsControlsDisabled}
+                      allowClear
                     />
                     <ItemRefSelectField
                       id={idFor(`inventory-${activeInventoryLocation}-status-code`)}
@@ -1061,6 +1107,7 @@ export function EditItemDialogV2({
                       value={activeInventory.statusCodeId}
                       onChange={(value) => updateInventoryField(activeInventoryLocation, "statusCodeId", value)}
                       disabled={refsControlsDisabled}
+                      allowClear
                     />
                     <Field id={idFor(`inventory-${activeInventoryLocation}-est-sales`)} label="Est Sales">
                       <Input

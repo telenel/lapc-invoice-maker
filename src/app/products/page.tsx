@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ChevronDownIcon, SearchIcon, SlidersHorizontalIcon, XIcon } from "lucide-react";
 import { useProductSearch, useProductSelection } from "@/domains/product/hooks";
 import { searchProducts } from "@/domains/product/queries";
-import { EMPTY_FILTERS, TABS, DEFAULT_COLUMN_SET, OPTIONAL_COLUMNS } from "@/domains/product/constants";
+import { CATALOG_ITEMS_STORAGE_KEY, EMPTY_FILTERS, TABS, DEFAULT_COLUMN_SET, OPTIONAL_COLUMNS } from "@/domains/product/constants";
 import type { OptionalColumnKey } from "@/domains/product/constants";
 import type { ProductFilters, ProductTab, SavedView } from "@/domains/product/types";
 import {
@@ -19,6 +19,7 @@ import { ProductTable } from "@/components/products/product-table";
 import { ProductActionBar } from "@/components/products/product-action-bar";
 import { NewItemDialog } from "@/components/products/new-item-dialog";
 import { EditItemDialog } from "@/components/products/edit-item-dialog";
+import { resolveEditDialogMode } from "@/components/products/edit-item-dialog-mode";
 import { HardDeleteDialog } from "@/components/products/hard-delete-dialog";
 import { Button } from "@/components/ui/button";
 import { SyncDatabaseButton } from "@/components/products/sync-database-button";
@@ -33,12 +34,34 @@ import { LocationPicker } from "@/components/products/location-picker";
 import { productApi } from "@/domains/product/api-client";
 import { SYSTEM_PRESET_VIEWS } from "@/domains/product/presets";
 import { shouldApplyDefaultMinStock } from "@/domains/product/page-defaults";
-import type { ProductLocationId } from "@/domains/product/location-filters";
+import { getPrimaryProductLocationId, type ProductLocationId } from "@/domains/product/location-filters";
+import type { ProductBrowseRow, SelectedProduct } from "@/domains/product/types";
 
 function getLocationLabel(locationId: ProductLocationId): "PIER" | "PCOP" | "PFS" {
   if (locationId === 3) return "PCOP";
   if (locationId === 4) return "PFS";
   return "PIER";
+}
+
+function isTextbookItemType(itemType: string): boolean {
+  return itemType === "textbook" || itemType === "used_textbook";
+}
+
+function productToScopedSelected(product: ProductBrowseRow): SelectedProduct {
+  return {
+    sku: product.sku,
+    description: (product.title ?? product.description ?? "").toUpperCase(),
+    retailPrice: product.retail_price,
+    cost: product.cost,
+    barcode: product.barcode,
+    author: product.author,
+    title: product.title,
+    isbn: product.isbn,
+    edition: product.edition,
+    catalogNumber: product.catalog_number,
+    vendorId: product.vendor_id,
+    itemType: product.item_type,
+  };
 }
 
 export default function ProductsPage() {
@@ -155,13 +178,27 @@ export default function ProductsPage() {
     toggleAll,
     clear,
     isSelected,
-    saveToSession,
   } = useProductSelection();
-  const editableSelectedItems = Array.from(selected.values())
-    .filter(
-      (product): product is typeof product & { retailPrice: number; cost: number } =>
-        product.retailPrice != null && product.cost != null,
-    )
+  const scopedSelected = useMemo(() => {
+    const scopedRowsBySku = new Map((data?.products ?? []).map((product) => [product.sku, product]));
+    return new Map(
+      Array.from(selected.entries()).map(([sku, product]) => {
+        const scopedRow = scopedRowsBySku.get(sku);
+        return [sku, scopedRow ? productToScopedSelected(scopedRow) : product];
+      }),
+    );
+  }, [data?.products, selected]);
+  const selectedItems = Array.from(scopedSelected.values());
+  const editDialogMode = resolveEditDialogMode({
+    featureFlagEnabled: process.env.NEXT_PUBLIC_PRODUCTS_EDIT_DIALOG_V2 === "true",
+    override: editDialogOverride ?? null,
+    hasTextbookSelection: selectedItems.some((product) => isTextbookItemType(product.itemType)),
+  });
+  const allowMissingEditPricing = editDialogMode === "v2" && selectedItems.length === 1;
+  const saveScopedSelectionToSession = useCallback(() => {
+    sessionStorage.setItem(CATALOG_ITEMS_STORAGE_KEY, JSON.stringify(selectedItems));
+  }, [selectedItems]);
+  const editableSelectedItems = selectedItems
     .map((product) => ({
       sku: product.sku,
       barcode: product.barcode ?? null,
@@ -171,7 +208,7 @@ export default function ProductsPage() {
       description: product.description ?? "",
       vendorId: product.vendorId ?? undefined,
       dccId: undefined,
-      isTextbook: product.itemType === "textbook",
+      isTextbook: isTextbookItemType(product.itemType),
     }));
 
   const updateFilters = useCallback(
@@ -259,6 +296,8 @@ export default function ProductsPage() {
     handleFilterChange({ ...filters, locationIds, page: 1 });
   }
 
+  const primaryLocationId = getPrimaryProductLocationId(filters.locationIds);
+
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-6 md:px-5">
       {/* Header */}
@@ -340,6 +379,8 @@ export default function ProductsPage() {
         onOpenChange={setEditOpen}
         editDialogOverride={editDialogOverride}
         items={editableSelectedItems}
+        locationIds={filters.locationIds}
+        primaryLocationId={primaryLocationId}
         onSaved={() => {
           setEditOpen(false);
           refetch();
@@ -352,7 +393,7 @@ export default function ProductsPage() {
         items={Array.from(selected.values()).map((p) => ({
           sku: p.sku,
           description: p.description ?? "",
-          isTextbook: p.itemType === "textbook",
+          isTextbook: isTextbookItemType(p.itemType),
         }))}
         onDeleted={() => {
           setHardDeleteOpen(false);
@@ -576,13 +617,14 @@ export default function ProductsPage() {
 
       {/* Action bar */}
       <ProductActionBar
-        selected={selected}
+        selected={scopedSelected}
         selectedCount={selectedCount}
         onClear={clear}
-        saveToSession={saveToSession}
+        saveToSession={saveScopedSelectionToSession}
         prismAvailable={prismAvailable}
         onDiscontinued={() => refetch()}
         onEditClick={() => setEditOpen(true)}
+        allowMissingEditPricing={allowMissingEditPricing}
         onHardDeleteClick={() => setHardDeleteOpen(true)}
         onBulkEdit={() => router.push('/products/bulk-edit?preloadSkus=' + Array.from(selected.keys()).join(','))}
       />

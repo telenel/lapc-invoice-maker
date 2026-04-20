@@ -82,4 +82,40 @@ describe("ProductActionBar", () => {
       screen.getByText(/2 selected items are missing retail or cost, so edit is unavailable/i),
     ).toBeInTheDocument();
   });
+
+  it("keeps edit available for a single-item v2 selection even when scoped pricing is blank", () => {
+    render(
+      <ProductActionBar
+        selected={
+          new Map([
+            [101, {
+              sku: 101,
+              description: "Blank scoped pricing",
+              retailPrice: null,
+              cost: null,
+              barcode: null,
+              author: null,
+              title: null,
+              isbn: null,
+              edition: null,
+              catalogNumber: null,
+              vendorId: null,
+              itemType: "general_merchandise",
+            }],
+          ])
+        }
+        selectedCount={1}
+        onClear={vi.fn()}
+        saveToSession={vi.fn()}
+        prismAvailable
+        onEditClick={vi.fn()}
+        allowMissingEditPricing
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: /^Edit$/i })).toBeEnabled();
+    expect(screen.getByRole("button", { name: /Create Invoice/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /Create Quote/i })).toBeDisabled();
+    expect(screen.queryByText(/edit is unavailable/i)).not.toBeInTheDocument();
+  });
 });
