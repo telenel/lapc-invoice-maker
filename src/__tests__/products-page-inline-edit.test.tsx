@@ -233,7 +233,7 @@ function makeProductRow(overrides: Partial<ProductBrowseRow> = {}): ProductBrows
       {
         locationId: 2,
         locationAbbrev: "PIER",
-        retail: 39.99,
+        retailPrice: 39.99,
         cost: 18.25,
         stockOnHand: 12,
         lastSaleDate: null,

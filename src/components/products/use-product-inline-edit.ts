@@ -6,7 +6,6 @@ import { productApi } from "@/domains/product/api-client";
 import type { ProductLocationId } from "@/domains/product/location-filters";
 
 export type ProductInlineEditableField =
-  | "taxType"
   | "cost"
   | "retail"
   | "barcode"
@@ -23,7 +22,6 @@ export interface ProductInlineEditRowBaseline {
   retail: number | null;
   cost: number | null;
   fDiscontinue: 0 | 1;
-  itemTaxTypeId?: number | null;
 }
 
 export interface ProductInlineEditController {
@@ -40,7 +38,6 @@ export interface ProductInlineEditController {
 }
 
 const EDITABLE_FIELD_ORDER: ProductInlineEditableField[] = [
-  "taxType",
   "cost",
   "retail",
   "barcode",
@@ -49,8 +46,6 @@ const EDITABLE_FIELD_ORDER: ProductInlineEditableField[] = [
 
 function getCellValue(row: ProductInlineEditRowBaseline, field: ProductInlineEditableField): string {
   switch (field) {
-    case "taxType":
-      return row.itemTaxTypeId == null ? "" : String(row.itemTaxTypeId);
     case "cost":
       return row.cost == null ? "" : String(row.cost);
     case "retail":
@@ -189,23 +184,6 @@ export function useProductInlineEdit({
           patch: {
             item: {
               fDiscontinue: normalized,
-            },
-          },
-          baseline,
-        };
-        break;
-      }
-      case "taxType": {
-        const parsed = currentValue.length === 0 ? null : Number(currentValue);
-        if (parsed != null && Number.isNaN(parsed)) {
-          toast.error("Enter a valid tax type.");
-          return false;
-        }
-        patch = {
-          mode: "v2",
-          patch: {
-            item: {
-              itemTaxTypeId: parsed,
             },
           },
           baseline,
