@@ -915,7 +915,7 @@ export function EditItemDialogV2({
 
         {refsUnavailable ? (
           <div role="alert" aria-live="polite" className="mx-6 mt-6 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-3 text-sm text-destructive">
-            Reference data is unavailable right now. Vendor, department / class, tax type, tag type, status code, package type, color, and binding lookups are disabled until Prism recovers.
+            Reference data is unavailable right now. Vendor, department/class, and tax type lookups are disabled until Prism recovers. Tag type, status code, package type, color, and binding lookups are also unavailable.
           </div>
         ) : null}
 
