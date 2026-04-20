@@ -1,10 +1,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import type { PreviewResult } from "@/domains/bulk-edit/types";
+import type { BulkEditFieldPreview } from "@/domains/bulk-edit/types";
 
 interface PreviewPanelProps {
-  preview: PreviewResult | null;
+  preview: BulkEditFieldPreview | null;
   previewing: boolean;
   onCommit: () => void;
   committing: boolean;
@@ -20,84 +20,70 @@ export function PreviewPanel({ preview, previewing, onCommit, committing }: Prev
           Building preview...
         </div>
       ) : !preview ? (
-        <p className="text-sm text-muted-foreground">Run a preview from the transform panel to see projected changes.</p>
+        <p className="text-sm text-muted-foreground">
+          Pick fields and values, then run a preview to inspect the Phase 8 patch summary before committing.
+        </p>
       ) : (
         <>
           <div className="flex flex-wrap gap-6 rounded bg-muted/40 px-4 py-3 text-sm">
             <div>
               <div className="text-muted-foreground">Rows</div>
-              <div className="tabular-nums font-medium">{preview.totals.rowCount.toLocaleString()}</div>
-            </div>
-            <div>
-              <div className="text-muted-foreground">Pierce retail delta</div>
-              <div className={`tabular-nums font-medium ${preview.totals.pricingDeltaCents < 0 ? "text-destructive" : ""}`}>
-                {preview.totals.pricingDeltaCents >= 0 ? "+" : ""}
-                ${(preview.totals.pricingDeltaCents / 100).toFixed(2)}
+              <div className="tabular-nums font-medium">
+                {preview.totals.rowCount.toLocaleString()} matching row{preview.totals.rowCount === 1 ? "" : "s"}
               </div>
             </div>
             <div>
-              <div className="text-muted-foreground">District changes</div>
-              <div className="tabular-nums font-medium">{preview.totals.districtChangeCount}</div>
+              <div className="text-muted-foreground">Field changes</div>
+              <div className="tabular-nums font-medium">
+                {preview.totals.changedFieldCount.toLocaleString()} field change{preview.totals.changedFieldCount === 1 ? "" : "s"}
+              </div>
             </div>
           </div>
 
+          {preview.changedFieldLabels.length > 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Applying {formatFieldLabelList(preview.changedFieldLabels)}.
+            </p>
+          ) : null}
+
           {preview.warnings.length > 0 ? (
             <div role="alert" aria-live="polite" className="rounded border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              <div className="font-medium">{preview.warnings.length} batch-level warning{preview.warnings.length === 1 ? "" : "s"}</div>
+              <div className="font-medium">{preview.warnings.length} warning{preview.warnings.length === 1 ? "" : "s"}</div>
               <ul className="mt-1 list-disc space-y-0.5 pl-5">
-                {preview.warnings.map((w, i) => <li key={i}>{w.message}</li>)}
+                {preview.warnings.map((warning, index) => <li key={index}>{warning.message}</li>)}
               </ul>
             </div>
           ) : null}
 
-          <div className="max-h-96 overflow-auto rounded border">
-            <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-muted">
-                <tr>
-                  <th className="px-2 py-2 text-left font-medium">SKU</th>
-                  <th className="px-2 py-2 text-left font-medium">Description</th>
-                  <th className="px-2 py-2 text-right font-medium">Retail</th>
-                  <th className="px-2 py-2 text-right font-medium">Cost</th>
-                  <th className="px-2 py-2 text-left font-medium">Changes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {preview.rows.map((r) => (
-                  <tr key={r.sku} className="border-t">
-                    <td className="px-2 py-1 font-mono tabular-nums">{r.sku}</td>
-                    <td className="px-2 py-1">{r.description}</td>
-                    <td className="px-2 py-1 text-right tabular-nums">
-                      {r.changedFields.includes("retail") ? (
-                        <>
-                          <span className="text-muted-foreground line-through">${r.before.retail.toFixed(2)}</span>{" "}
-                          <span className="font-medium">${r.after.retail.toFixed(2)}</span>
-                        </>
-                      ) : (
-                        `$${r.after.retail.toFixed(2)}`
-                      )}
-                    </td>
-                    <td className="px-2 py-1 text-right tabular-nums">
-                      {r.changedFields.includes("cost") ? (
-                        <>
-                          <span className="text-muted-foreground line-through">${r.before.cost.toFixed(2)}</span>{" "}
-                          <span className="font-medium">${r.after.cost.toFixed(2)}</span>
-                        </>
-                      ) : (
-                        `$${r.after.cost.toFixed(2)}`
-                      )}
-                    </td>
-                    <td className="px-2 py-1 text-xs text-muted-foreground">
-                      {r.changedFields.join(", ") || "-"}
-                      {r.warnings.length > 0 ? (
-                        <div className="mt-0.5 text-destructive">
-                          {r.warnings.map((w) => w.message).join("; ")}
-                        </div>
-                      ) : null}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-3 rounded border p-3">
+            {preview.rows.slice(0, 8).map((row) => (
+              <div key={row.sku} className="rounded border border-muted/70 px-3 py-2">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <div>
+                    <span className="font-mono text-xs text-muted-foreground">SKU {row.sku}</span>
+                    <div className="font-medium">{row.description}</div>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {row.changedFields.length} field change{row.changedFields.length === 1 ? "" : "s"}
+                  </span>
+                </div>
+                <ul className="mt-2 space-y-1 text-sm">
+                  {row.cells.map((cell) => (
+                    <li key={cell.fieldId} className="flex flex-wrap items-baseline gap-2">
+                      <span className="font-medium">{cell.label}</span>
+                      <span className="text-muted-foreground">{cell.beforeLabel}</span>
+                      <span aria-hidden="true">→</span>
+                      <span className={cell.changed ? "font-medium" : "text-muted-foreground"}>{cell.afterLabel}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+            {preview.rows.length > 8 ? (
+              <p className="text-xs text-muted-foreground">
+                Showing 8 of {preview.rows.length} preview rows.
+              </p>
+            ) : null}
           </div>
 
           <div className="flex justify-end">
@@ -109,4 +95,11 @@ export function PreviewPanel({ preview, previewing, onCommit, committing }: Prev
       )}
     </section>
   );
+}
+
+function formatFieldLabelList(labels: string[]): string {
+  if (labels.length === 0) return "selected fields";
+  if (labels.length === 1) return labels[0] ?? "selected fields";
+  if (labels.length === 2) return `${labels[0]} and ${labels[1]}`;
+  return `${labels.slice(0, -1).join(", ")}, and ${labels[labels.length - 1]}`;
 }

@@ -85,6 +85,7 @@ interface CommittedProductRefSnapshotFile {
 
 export interface ProductRefMaps {
   vendorNames: Map<number, string>;
+  dccLabels: Map<number, string>;
   taxTypeLabels: Map<number, string>;
   tagTypeLabels: Map<number, string>;
   statusCodeLabels: Map<number, string>;
@@ -142,6 +143,7 @@ export function formatLookupLabel(label: string | null | undefined, fallback: st
 export function buildProductRefMaps(refs: PrismRefs): ProductRefMaps {
   return {
     vendorNames: new Map(refs.vendors.map((row) => [row.vendorId, row.name])),
+    dccLabels: new Map(refs.dccs.map((row) => [row.dccId, formatDccLabel(row)])),
     taxTypeLabels: new Map(refs.taxTypes.map((row) => [row.taxTypeId, row.description])),
     tagTypeLabels: new Map(refs.tagTypes.map((row) => [row.tagTypeId, row.label])),
     statusCodeLabels: new Map(refs.statusCodes.map((row) => [row.statusCodeId, row.label])),

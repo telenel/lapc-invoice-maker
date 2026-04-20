@@ -4,6 +4,7 @@ import { buildBulkFieldPreview } from "@/domains/bulk-edit/preview-builder";
 import { bulkEditFieldRegistry } from "@/domains/bulk-edit/field-registry";
 import { validateTransform } from "@/domains/bulk-edit/transform-engine";
 import { buildPreview } from "@/domains/bulk-edit/preview-builder";
+import { loadCommittedProductRefSnapshot } from "@/domains/product/ref-data-server";
 import type {
   BulkEditFieldEditRequest,
   BulkEditFieldId,
@@ -433,7 +434,8 @@ export const POST = withAdmin(async (request: NextRequest) => {
       );
     }
 
-    const preview = buildBulkFieldPreview(sourceRowsResult.rows, parsed.data.transform);
+    const refs = await loadCommittedProductRefSnapshot().catch(() => null);
+    const preview = buildBulkFieldPreview(sourceRowsResult.rows, parsed.data.transform, refs);
     return NextResponse.json(preview);
   }
 

@@ -107,6 +107,7 @@ export type BulkEditFieldPreviewRow = {
 };
 
 export interface BulkEditFieldPreview {
+  changedFieldLabels: string[];
   rows: BulkEditFieldPreviewRow[];
   totals: {
     rowCount: number;

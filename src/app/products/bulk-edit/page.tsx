@@ -3,10 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { BulkEditSidebar } from "@/components/bulk-edit/bulk-edit-sidebar";
+import { CommitConfirmDialog } from "@/components/bulk-edit/commit-confirm-dialog";
 import { SelectionPanel } from "@/components/bulk-edit/selection-panel";
 import { TransformPanel } from "@/components/bulk-edit/transform-panel";
+import { PreviewPanel } from "@/components/bulk-edit/preview-panel";
 import { AuditLogList } from "@/components/bulk-edit/audit-log-list";
 import { SaveSearchDialog } from "@/components/bulk-edit/save-search-dialog";
 import { SyncDatabaseButton } from "@/components/products/sync-database-button";
@@ -33,13 +36,13 @@ export default function BulkEditPage() {
   const [preview, setPreview] = useState<BulkEditFieldPreview | null>(null);
   const [previewing, setPreviewing] = useState(false);
   const [committing, setCommitting] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
   const [sidebarKey, setSidebarKey] = useState(0);
   const [matchingCount, setMatchingCount] = useState<number | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Honor ?preloadSkus=1,2,3 (from the products-page "Bulk Edit" selection shortcut)
   useEffect(() => {
     const raw = searchParams.get("preloadSkus");
     if (raw) {
@@ -72,13 +75,19 @@ export default function BulkEditPage() {
   async function actuallyCommit() {
     setCommitting(true);
     setError(null);
+    const fieldSummary = formatFieldLabelList(preview?.changedFieldLabels ?? []);
+
     try {
       const result = await productApi.bulkEditFieldCommit({ selection, transform });
       if ("errors" in result) {
         setError((result.errors as Array<{ message: string }>).map((e) => e.message).join("; "));
         return;
       }
-      setToast(`Committed ${result.successCount} change${result.successCount === 1 ? "" : "s"}. Run ${result.runId.slice(0, 8)}.`);
+
+      const successMessage = `Applied ${fieldSummary} to ${result.successCount} item${result.successCount === 1 ? "" : "s"}.`;
+      toast.success(successMessage);
+      setToastMessage(successMessage);
+      setConfirmOpen(false);
       setSelection(EMPTY_SELECTION);
       setTransform(EMPTY_TRANSFORM);
       setPreview(null);
@@ -139,91 +148,21 @@ export default function BulkEditPage() {
             disabled={committing}
           />
 
-          <section aria-labelledby="preview-heading" className="space-y-3 rounded border p-4">
-            <h2 id="preview-heading" className="text-base font-semibold">3. Preview & Commit</h2>
-
-            {previewing ? (
-              <div role="status" aria-live="polite" className="py-8 text-center text-sm text-muted-foreground">
-                Building preview...
-              </div>
-            ) : !preview ? (
-              <p className="text-sm text-muted-foreground">
-                Pick fields and values, then run a preview to inspect the Phase 8 patch summary before committing.
-              </p>
-            ) : (
-              <>
-                <div className="flex flex-wrap gap-6 rounded bg-muted/40 px-4 py-3 text-sm">
-                  <div>
-                    <div className="text-muted-foreground">Rows</div>
-                    <div className="tabular-nums font-medium">
-                      {preview.totals.rowCount.toLocaleString()} matching row{preview.totals.rowCount === 1 ? "" : "s"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground">Field changes</div>
-                    <div className="tabular-nums font-medium">
-                      {preview.totals.changedFieldCount.toLocaleString()} field change{preview.totals.changedFieldCount === 1 ? "" : "s"}
-                    </div>
-                  </div>
-                </div>
-
-                {preview.warnings.length > 0 ? (
-                  <div role="alert" aria-live="polite" className="rounded border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-                    <div className="font-medium">{preview.warnings.length} warning{preview.warnings.length === 1 ? "" : "s"}</div>
-                    <ul className="mt-1 list-disc space-y-0.5 pl-5">
-                      {preview.warnings.map((warning, index) => <li key={index}>{warning.message}</li>)}
-                    </ul>
-                  </div>
-                ) : null}
-
-                <div className="space-y-3 rounded border p-3">
-                  {preview.rows.slice(0, 8).map((row) => (
-                    <div key={row.sku} className="rounded border border-muted/70 px-3 py-2">
-                      <div className="flex flex-wrap items-baseline justify-between gap-2">
-                        <div>
-                          <span className="font-mono text-xs text-muted-foreground">SKU {row.sku}</span>
-                          <div className="font-medium">{row.description}</div>
-                        </div>
-                        <span className="text-xs text-muted-foreground">
-                          {row.changedFields.length} field change{row.changedFields.length === 1 ? "" : "s"}
-                        </span>
-                      </div>
-                      <ul className="mt-2 space-y-1 text-sm">
-                        {row.cells.map((cell) => (
-                          <li key={cell.fieldId} className="flex flex-wrap items-baseline gap-2">
-                            <span className="font-medium">{cell.label}</span>
-                            <span className="text-muted-foreground">{cell.beforeLabel}</span>
-                            <span aria-hidden="true">→</span>
-                            <span className={cell.changed ? "font-medium" : "text-muted-foreground"}>{cell.afterLabel}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                  {preview.rows.length > 8 ? (
-                    <p className="text-xs text-muted-foreground">
-                      Showing 8 of {preview.rows.length} preview rows. Task 5 will expand the result surface.
-                    </p>
-                  ) : null}
-                </div>
-
-                <div className="flex justify-end">
-                  <Button onClick={actuallyCommit} disabled={committing || preview.totals.rowCount === 0}>
-                    {committing ? "Applying..." : `Commit ${preview.totals.rowCount} Change${preview.totals.rowCount === 1 ? "" : "s"}`}
-                  </Button>
-                </div>
-              </>
-            )}
-          </section>
+          <PreviewPanel
+            preview={preview}
+            previewing={previewing}
+            onCommit={() => setConfirmOpen(true)}
+            committing={committing}
+          />
 
           {error ? (
             <p role="alert" aria-live="polite" className="rounded border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
               {error}
             </p>
           ) : null}
-          {toast ? (
+          {toastMessage ? (
             <p role="status" aria-live="polite" className="rounded border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-sm text-emerald-700 dark:text-emerald-400">
-              {toast}
+              {toastMessage}
             </p>
           ) : null}
 
@@ -237,6 +176,20 @@ export default function BulkEditPage() {
         currentFilter={(selection.filter ?? {}) as Record<string, unknown>}
         onSaved={() => setSidebarKey((k) => k + 1)}
       />
+      <CommitConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        preview={preview}
+        onConfirm={actuallyCommit}
+        submitting={committing}
+      />
     </div>
   );
+}
+
+function formatFieldLabelList(labels: string[]): string {
+  if (labels.length === 0) return "selected fields";
+  if (labels.length === 1) return labels[0] ?? "selected fields";
+  if (labels.length === 2) return `${labels[0]} and ${labels[1]}`;
+  return `${labels.slice(0, -1).join(", ")}, and ${labels[labels.length - 1]}`;
 }

@@ -5,6 +5,7 @@ import { buildBulkFieldPreview } from "@/domains/bulk-edit/preview-builder";
 import { bulkEditFieldRegistry } from "@/domains/bulk-edit/field-registry";
 import { validateTransform } from "@/domains/bulk-edit/transform-engine";
 import { buildPreview } from "@/domains/bulk-edit/preview-builder";
+import { loadCommittedProductRefSnapshot } from "@/domains/product/ref-data-server";
 import type {
   BulkEditFieldEditRequest,
   BulkEditFieldId,
@@ -487,7 +488,8 @@ export const POST = withAdmin(async (request: NextRequest, session) => {
       );
     }
 
-    const preview = buildBulkFieldPreview(sourceRowsResult.rows, parsed.data.transform);
+    const refs = await loadCommittedProductRefSnapshot().catch(() => null);
+    const preview = buildBulkFieldPreview(sourceRowsResult.rows, parsed.data.transform, refs);
     const sourceRowsBySku = new Map(sourceRowsResult.rows.map((row) => [row.sku, row] as const));
     const changedRows = preview.rows.filter((row) => row.changedFields.length > 0);
 
@@ -549,7 +551,7 @@ export const POST = withAdmin(async (request: NextRequest, session) => {
         skuCount: affectedSkus.length,
         pricingDeltaCents: BigInt(0),
         hadDistrictChanges,
-        summary: `${affectedSkus.length} items — ${preview.totals.changedFieldCount} field changes`,
+        summary: `Applied ${formatFieldLabelList(preview.changedFieldLabels)} to ${affectedSkus.length} item${affectedSkus.length === 1 ? "" : "s"}.`,
       },
     });
 
@@ -646,3 +648,10 @@ export const POST = withAdmin(async (request: NextRequest, session) => {
     affectedSkus: batchRows.map((row) => row.sku),
   });
 });
+
+function formatFieldLabelList(labels: string[]): string {
+  if (labels.length === 0) return "selected fields";
+  if (labels.length === 1) return labels[0] ?? "selected fields";
+  if (labels.length === 2) return `${labels[0]} and ${labels[1]}`;
+  return `${labels.slice(0, -1).join(", ")}, and ${labels[labels.length - 1]}`;
+}

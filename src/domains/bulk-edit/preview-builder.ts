@@ -1,6 +1,7 @@
 import { bulkEditFieldRegistry } from "./field-registry";
 import { buildBulkPatchForRow } from "./patch-builder";
 import { applyTransform } from "./transform-engine";
+import { buildProductRefMaps, EMPTY_REFS, type PrismRefs } from "@/domains/product/ref-data";
 import type { ProductLocationId } from "@/domains/product/location-filters";
 import type { InventoryPatchPerLocation, ProductEditPatchV2 } from "@/domains/product/types";
 import type {
@@ -120,6 +121,7 @@ function formatInventoryFieldLabel(
     | "fTxBuybackListFlag"
     | "fNoReturns",
   inventoryTargets: ProductLocationId[],
+  refs: ReturnType<typeof buildProductRefMaps>,
 ): { beforeLabel: string; afterLabel: string } {
   const beforeParts: string[] = [];
   const afterParts: string[] = [];
@@ -128,8 +130,8 @@ function formatInventoryFieldLabel(
     const beforeValue = getInventorySnapshot(row, locationId)[fieldId];
     const afterValue = getInventoryFieldValueForLocation(row, patch, fieldId, locationId);
     const prefix = `${locationId}: `;
-    beforeParts.push(`${prefix}${formatPreviewValue(beforeValue)}`);
-    afterParts.push(`${prefix}${formatPreviewValue(afterValue)}`);
+    beforeParts.push(`${prefix}${formatFieldPreviewValue(fieldId, beforeValue, refs)}`);
+    afterParts.push(`${prefix}${formatFieldPreviewValue(fieldId, afterValue, refs)}`);
   }
 
   return {
@@ -150,11 +152,44 @@ function formatPreviewValue(value: unknown): string {
   return String(value);
 }
 
+function formatLookupFallback(value: unknown): string {
+  if (typeof value === "number") return `#${value}`;
+  return formatPreviewValue(value);
+}
+
+function formatFieldPreviewValue(
+  fieldId: BulkEditFieldId,
+  value: unknown,
+  refs: ReturnType<typeof buildProductRefMaps>,
+): string {
+  if (value === null || value === undefined) return "—";
+
+  switch (fieldId) {
+    case "vendorId":
+      return refs.vendorNames.get(Number(value)) ?? formatLookupFallback(value);
+    case "dccId":
+      return refs.dccLabels.get(Number(value)) ?? formatLookupFallback(value);
+    case "itemTaxTypeId":
+      return refs.taxTypeLabels.get(Number(value)) ?? formatLookupFallback(value);
+    case "bindingId":
+      return refs.bindingLabels.get(Number(value)) ?? formatLookupFallback(value);
+    case "tagTypeId":
+      return refs.tagTypeLabels.get(Number(value)) ?? formatLookupFallback(value);
+    case "statusCodeId":
+      return refs.statusCodeLabels.get(Number(value)) ?? formatLookupFallback(value);
+    case "packageType":
+      return refs.packageTypeLabels.get(String(value)) ?? formatPreviewValue(value);
+    default:
+      return formatPreviewValue(value);
+  }
+}
+
 function getSelectedFieldValue(
   row: BulkEditSourceRow,
   patch: ProductEditPatchV2,
   fieldId: BulkEditFieldId,
   inventoryTargets: ProductLocationId[],
+  refs: ReturnType<typeof buildProductRefMaps>,
 ): unknown {
   const primaryInventoryLocationId = inventoryTargets[0] ?? row.primaryLocationId ?? row.inventoryByLocation?.[0]?.locationId ?? null;
   const inventorySnapshot = primaryInventoryLocationId == null ? null : getInventorySnapshot(row, primaryInventoryLocationId);
@@ -189,7 +224,7 @@ function getSelectedFieldValue(
     case "retail":
     case "cost": {
       if (inventoryTargets.length > 1) {
-        return formatInventoryFieldLabel(row, patch, fieldId, inventoryTargets).afterLabel;
+        return formatInventoryFieldLabel(row, patch, fieldId, inventoryTargets, refs).afterLabel;
       }
       if (primaryInventoryLocationId == null) {
         return inventorySnapshot?.[fieldId] ?? null;
@@ -205,7 +240,7 @@ function getSelectedFieldValue(
     case "fTxBuybackListFlag":
     case "fNoReturns": {
       if (inventoryTargets.length > 1) {
-        return formatInventoryFieldLabel(row, patch, fieldId, inventoryTargets).afterLabel;
+        return formatInventoryFieldLabel(row, patch, fieldId, inventoryTargets, refs).afterLabel;
       }
       if (primaryInventoryLocationId == null) {
         return inventorySnapshot?.[fieldId] ?? null;
@@ -223,16 +258,17 @@ function buildFieldPreviewCell(
   fieldId: BulkEditFieldId,
   changedFields: BulkEditFieldId[],
   inventoryTargets: ProductLocationId[],
+  refs: ReturnType<typeof buildProductRefMaps>,
 ): BulkEditFieldPreviewCell {
   const changed = changedFields.includes(fieldId);
-  const beforeValue = getSelectedFieldValue(row, EMPTY_PATCH, fieldId, inventoryTargets);
-  const afterValue = getSelectedFieldValue(row, patch, fieldId, inventoryTargets);
+  const beforeValue = getSelectedFieldValue(row, EMPTY_PATCH, fieldId, inventoryTargets, refs);
+  const afterValue = getSelectedFieldValue(row, patch, fieldId, inventoryTargets, refs);
 
   return {
     fieldId,
     label: bulkEditFieldRegistry[fieldId].label,
-    beforeLabel: formatPreviewValue(beforeValue),
-    afterLabel: formatPreviewValue(afterValue),
+    beforeLabel: formatFieldPreviewValue(fieldId, beforeValue, refs),
+    afterLabel: formatFieldPreviewValue(fieldId, afterValue, refs),
     changed,
   };
 }
@@ -240,12 +276,14 @@ function buildFieldPreviewCell(
 export function buildBulkFieldPreview(
   sourceRows: BulkEditSourceRow[],
   request: BulkEditFieldPickerRequest,
+  refsSource: PrismRefs | null = null,
 ): BulkEditFieldPreview {
   const fieldIds = dedupeFieldIds(request.fieldIds);
+  const refs = buildProductRefMaps(refsSource ?? EMPTY_REFS);
   const rows: BulkEditFieldPreviewRow[] = sourceRows.map((row) => {
     const inventoryTargets = resolveInventoryTargets(row, request.inventoryScope);
     const { patch, changedFields } = buildBulkPatchForRow(row, request);
-    const cells = fieldIds.map((fieldId) => buildFieldPreviewCell(row, patch, fieldId, changedFields, inventoryTargets));
+    const cells = fieldIds.map((fieldId) => buildFieldPreviewCell(row, patch, fieldId, changedFields, inventoryTargets, refs));
 
     return {
       sku: row.sku,
@@ -256,7 +294,12 @@ export function buildBulkFieldPreview(
     };
   });
 
+  const changedFieldLabels = fieldIds
+    .filter((fieldId) => rows.some((row) => row.changedFields.includes(fieldId)))
+    .map((fieldId) => bulkEditFieldRegistry[fieldId].label);
+
   return {
+    changedFieldLabels,
     rows,
     totals: {
       rowCount: rows.length,

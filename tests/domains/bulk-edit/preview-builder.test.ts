@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildBulkFieldPreview } from "@/domains/bulk-edit/preview-builder";
+import type { PrismRefs } from "@/domains/product/ref-data";
 import type { BulkEditSourceRow } from "@/domains/bulk-edit/types";
 
 function row(overrides: Partial<BulkEditSourceRow> = {}): BulkEditSourceRow {
@@ -17,6 +18,28 @@ function row(overrides: Partial<BulkEditSourceRow> = {}): BulkEditSourceRow {
     ...overrides,
   };
 }
+
+const REFS: PrismRefs = {
+  vendors: [{ vendorId: 21, name: "Acme Books", pierceItems: 12 }],
+  dccs: [
+    {
+      dccId: 100,
+      deptNum: 10,
+      classNum: 20,
+      catNum: 30,
+      deptName: "Books",
+      className: "Sci-Fi",
+      catName: "Texts",
+      pierceItems: 9,
+    },
+  ],
+  taxTypes: [{ taxTypeId: 6, description: "State Tax", pierceItems: 40 }],
+  tagTypes: [{ tagTypeId: 7, label: "Used", subsystem: null, pierceRows: 14 }],
+  statusCodes: [{ statusCodeId: 11, label: "Active", pierceRows: 10 }],
+  packageTypes: [{ code: "EA", label: "Each", defaultQty: 1, pierceItems: 7 }],
+  colors: [],
+  bindings: [{ bindingId: 3, label: "Paperback", pierceBooks: 18 }],
+};
 
 describe("buildBulkFieldPreview", () => {
   it("renders after labels from normalized patch values instead of raw submitted input", () => {
@@ -187,6 +210,7 @@ describe("buildBulkFieldPreview", () => {
           tagTypeId: 7,
         },
       },
+      REFS,
     );
 
     expect(preview.totals.rowCount).toBe(1);
@@ -220,12 +244,102 @@ describe("buildBulkFieldPreview", () => {
         {
           fieldId: "tagTypeId",
           label: "Tag Type",
-          beforeLabel: "6",
-          afterLabel: "7",
+          beforeLabel: "#6",
+          afterLabel: "Used",
           changed: true,
         },
       ],
     });
+  });
+
+  it("uses committed ref labels for item and inventory lookup fields", () => {
+    const preview = buildBulkFieldPreview(
+      [
+        row({
+          sku: 5,
+          description: "Ref-backed item",
+          vendorId: 21,
+          dccId: 100,
+          itemTaxTypeId: 6,
+          itemType: "textbook",
+          bindingId: 3,
+          inventoryByLocation: [
+            {
+              locationId: 2,
+              retail: 10,
+              cost: 5,
+              expectedCost: 4.5,
+              tagTypeId: 7,
+              statusCodeId: 11,
+              estSales: 8,
+              estSalesLocked: false,
+              fInvListPriceFlag: false,
+              fTxWantListFlag: false,
+              fTxBuybackListFlag: false,
+              fNoReturns: false,
+            },
+          ],
+        }),
+      ],
+      {
+        fieldIds: ["vendorId", "dccId", "itemTaxTypeId", "bindingId", "tagTypeId", "statusCodeId"],
+        inventoryScope: 2,
+        values: {
+          vendorId: 99,
+          dccId: 101,
+          itemTaxTypeId: 12,
+          bindingId: 8,
+          tagTypeId: 13,
+          statusCodeId: 22,
+        },
+      },
+      REFS,
+    );
+
+    expect(preview.rows[0]?.cells).toEqual([
+      {
+        fieldId: "vendorId",
+        label: "Vendor",
+        beforeLabel: "Acme Books",
+        afterLabel: "#99",
+        changed: true,
+      },
+      {
+        fieldId: "dccId",
+        label: "DCC",
+        beforeLabel: "Books / Sci-Fi",
+        afterLabel: "#101",
+        changed: true,
+      },
+      {
+        fieldId: "itemTaxTypeId",
+        label: "Item Tax Type",
+        beforeLabel: "State Tax",
+        afterLabel: "#12",
+        changed: true,
+      },
+      {
+        fieldId: "bindingId",
+        label: "Binding",
+        beforeLabel: "Paperback",
+        afterLabel: "#8",
+        changed: true,
+      },
+      {
+        fieldId: "tagTypeId",
+        label: "Tag Type",
+        beforeLabel: "Used",
+        afterLabel: "#13",
+        changed: true,
+      },
+      {
+        fieldId: "statusCodeId",
+        label: "Status Code",
+        beforeLabel: "Active",
+        afterLabel: "#22",
+        changed: true,
+      },
+    ]);
   });
 
   it("keeps unchanged cells visible with matching before and after labels", () => {

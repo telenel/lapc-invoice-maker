@@ -13,6 +13,7 @@ const {
   listBulkEditRunsMock,
   refreshMock,
   refsDirectoryMock,
+  toastSuccessMock,
 } = vi.hoisted(() => ({
   bulkEditCommitMock: vi.fn(),
   bulkEditDryRunMock: vi.fn(),
@@ -21,6 +22,7 @@ const {
   listBulkEditRunsMock: vi.fn(),
   refreshMock: vi.fn(),
   refsDirectoryMock: vi.fn(),
+  toastSuccessMock: vi.fn(),
 }));
 
 let searchParamsState = new URLSearchParams();
@@ -71,18 +73,21 @@ vi.mock("@/components/bulk-edit/save-search-dialog", () => ({
   SaveSearchDialog: () => null,
 }));
 
-vi.mock("@/components/bulk-edit/commit-confirm-dialog", () => ({
-  CommitConfirmDialog: () => null,
-}));
-
 vi.mock("@/components/products/sync-database-button", () => ({
   SyncDatabaseButton: () => <div data-testid="sync-button" />,
+}));
+
+vi.mock("sonner", () => ({
+  toast: {
+    success: toastSuccessMock,
+  },
 }));
 
 import BulkEditPage from "@/app/products/bulk-edit/page";
 
 function makePreview(overrides: Partial<BulkEditFieldPreview> = {}): BulkEditFieldPreview {
   return {
+    changedFieldLabels: ["Description", "Retail"],
     rows: [
       {
         sku: 101,
@@ -125,6 +130,7 @@ describe("BulkEditPage Phase 8 field picker flow", () => {
     bulkEditFieldDryRunMock.mockReset();
     bulkEditFieldCommitMock.mockReset();
     listBulkEditRunsMock.mockResolvedValue({ items: [], total: 0 });
+    toastSuccessMock.mockReset();
     refsDirectoryMock.mockReturnValue({
       refs: {
         vendors: [{ vendorId: 21, name: "Acme Books", pierceItems: 12 }],
@@ -251,8 +257,14 @@ describe("BulkEditPage Phase 8 field picker flow", () => {
 
     expect(screen.getByText("1 matching row")).toBeInTheDocument();
     expect(screen.getAllByText("2 field changes").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Description").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Retail").length).toBeGreaterThan(0);
 
     await user.click(screen.getByRole("button", { name: /commit/i }));
+    expect(screen.getByRole("heading", { name: "Apply 1 change?" })).toBeInTheDocument();
+    expect(screen.getByText("Apply Description and Retail to 1 item.")).toBeInTheDocument();
+    expect(screen.getByText("Review before committing. Changes are not undoable.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Apply Changes" }));
 
     await waitFor(() => {
       expect(bulkEditFieldCommitMock).toHaveBeenCalledWith({
@@ -272,6 +284,7 @@ describe("BulkEditPage Phase 8 field picker flow", () => {
     });
     expect(bulkEditCommitMock).not.toHaveBeenCalled();
     expect(refreshMock).toHaveBeenCalled();
-    expect(screen.getByRole("status")).toHaveTextContent("Committed 1 change");
+    expect(toastSuccessMock).toHaveBeenCalledWith("Applied Description and Retail to 1 item.");
+    expect(screen.getByRole("status")).toHaveTextContent("Applied Description and Retail to 1 item.");
   });
 });

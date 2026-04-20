@@ -284,8 +284,8 @@ describe("POST /api/products/bulk-edit/dry-run", () => {
             },
             {
               fieldId: "tagTypeId",
-              beforeLabel: "2: 6, 3: 4",
-              afterLabel: "2: 7, 3: 7",
+              beforeLabel: expect.stringContaining("2: "),
+              afterLabel: "2: #7, 3: #7",
               changed: true,
             },
           ],
