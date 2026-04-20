@@ -1,14 +1,12 @@
 import type { SelectedProduct } from "@/domains/product/types";
 import { renderBarcodeSvg, escapeHtml } from "@/lib/barcode";
 
-/**
- * Opens a new browser window with a print-optimized barcode sheet.
- * Each selected item displays full product info + a pre-rendered Code 128 barcode.
- * No external scripts are loaded — all barcodes are rendered locally before the
- * popup opens, and the window is opened with noopener,noreferrer.
- */
-export function openBarcodePrintWindow(items: SelectedProduct[]): void {
-  // Pre-render all barcodes from the locally installed JsBarcode package
+function formatVendorLabel(vendorLabel: string | null | undefined): string {
+  const trimmed = vendorLabel?.trim();
+  return trimmed && trimmed.length > 0 ? trimmed : "Vendor unavailable";
+}
+
+export function buildBarcodePrintHtml(items: SelectedProduct[]): string {
   const barcodes = new Map<number, string>();
   for (const item of items) {
     barcodes.set(item.sku, renderBarcodeSvg(String(item.sku)));
@@ -24,7 +22,7 @@ export function openBarcodePrintWindow(items: SelectedProduct[]): void {
           <span>SKU: ${item.sku}</span>
           ${item.barcode ? `<span>Barcode: ${escapeHtml(item.barcode)}</span>` : ""}
           ${item.catalogNumber ? `<span>Catalog: ${escapeHtml(item.catalogNumber)}</span>` : ""}
-          <span>Vendor: #${item.vendorId}</span>
+          <span>Vendor: ${escapeHtml(formatVendorLabel(item.vendorLabel))}</span>
           ${item.author ? `<span>Author: ${escapeHtml(item.author)}</span>` : ""}
           ${item.edition ? `<span>Edition: ${escapeHtml(item.edition)}</span>` : ""}
           <span>Retail: $${item.retailPrice.toFixed(2)}</span>
@@ -35,11 +33,11 @@ export function openBarcodePrintWindow(items: SelectedProduct[]): void {
         ${barcodes.get(item.sku) ?? ""}
       </div>
     </div>
-  `
+  `,
     )
     .join("");
 
-  const html = `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -76,6 +74,16 @@ export function openBarcodePrintWindow(items: SelectedProduct[]): void {
   ${rows}
 </body>
 </html>`;
+}
+
+/**
+ * Opens a new browser window with a print-optimized barcode sheet.
+ * Each selected item displays full product info + a pre-rendered Code 128 barcode.
+ * No external scripts are loaded — all barcodes are rendered locally before the
+ * popup opens, and the window is opened with noopener,noreferrer.
+ */
+export function openBarcodePrintWindow(items: SelectedProduct[]): void {
+  const html = buildBarcodePrintHtml(items);
 
   // Use a Blob URL so the popup has no window.opener reference
   // (window.open with noopener returns null, so document.write is not possible)
@@ -86,4 +94,3 @@ export function openBarcodePrintWindow(items: SelectedProduct[]): void {
   // Revoke after a short delay to allow the popup to load
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
-

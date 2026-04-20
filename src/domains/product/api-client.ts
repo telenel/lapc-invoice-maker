@@ -13,6 +13,18 @@ import type {
   BatchCreateRow,
   BatchValidationError,
 } from "./types";
+import type { PrismRefs } from "./ref-data";
+export type {
+  PrismVendorRef,
+  PrismDccRef,
+  PrismTaxTypeRef,
+  PrismTagTypeRef,
+  PrismStatusCodeRef,
+  PrismPackageTypeRef,
+  PrismColorRef,
+  PrismBindingRef,
+  PrismRefs,
+} from "./ref-data";
 import type {
   BulkEditRequest,
   PreviewResult,
@@ -23,16 +35,6 @@ export interface PrismHealth {
   available: boolean;
   configured: boolean;
   reason: string | null;
-}
-
-export interface PrismVendorRef { vendorId: number; name: string }
-export interface PrismDccRef { dccId: number; deptName: string; className: string | null }
-export interface PrismTaxTypeRef { taxTypeId: number; description: string }
-
-export interface PrismRefs {
-  vendors: PrismVendorRef[];
-  dccs: PrismDccRef[];
-  taxTypes: PrismTaxTypeRef[];
 }
 
 export interface CreateItemInput {

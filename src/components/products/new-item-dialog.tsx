@@ -23,11 +23,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import {
   productApi,
-  type PrismRefs,
   type CreatedItem,
 } from "@/domains/product/api-client";
 import { ItemRefSelects } from "./item-ref-selects";
 import { computeMargin } from "./batch-add-grid";
+import { useProductRefDirectory } from "@/domains/product/vendor-directory";
 
 interface NewItemDialogProps {
   open: boolean;
@@ -93,27 +93,14 @@ const MARGIN_LABEL: Record<
 };
 
 export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogProps) {
-  const [refs, setRefs] = useState<PrismRefs | null>(null);
-  const [refsLoading, setRefsLoading] = useState(false);
-  const [refsError, setRefsError] = useState<string | null>(null);
+  const { refs, loading: refsLoading, available: refsAvailable } = useProductRefDirectory();
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [createAnother, setCreateAnother] = useState(false);
   const descriptionRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
-    if (!open || refs) return;
-    setRefsLoading(true);
-    setRefsError(null);
-    productApi
-      .refs()
-      .then(setRefs)
-      .catch((err: unknown) => {
-        setRefsError(err instanceof Error ? err.message : "Failed to load reference data");
-      })
-      .finally(() => setRefsLoading(false));
-  }, [open, refs]);
+  const refsUnavailable = !refsLoading && !refsAvailable;
 
   useEffect(() => {
     if (!open) {
@@ -136,7 +123,7 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
     Number(form.cost) >= 0;
 
   const submit = useCallback(async () => {
-    if (!formValid || saving || !refs) return;
+    if (!formValid || saving || !refs || refsLoading || refsUnavailable) return;
     setError(null);
     setSaving(true);
     try {
@@ -173,7 +160,7 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
     } finally {
       setSaving(false);
     }
-  }, [form, formValid, saving, refs, createAnother, onCreated, onOpenChange]);
+  }, [form, formValid, saving, refs, refsLoading, refsUnavailable, createAnother, onCreated, onOpenChange]);
 
   // ⌘/Ctrl+Enter submits from anywhere in the dialog
   useEffect(() => {
@@ -218,21 +205,24 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
           <div
             role="status"
             aria-live="polite"
-            className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground"
+            className="mx-7 mt-5 rounded-lg border border-amber-300/70 bg-amber-50 px-3 py-3 text-sm text-amber-900 dark:border-amber-800/70 dark:bg-amber-950/30 dark:text-amber-200"
           >
-            <Loader2Icon className="size-4 animate-spin" aria-hidden />
-            Loading vendors and categories…
+            <div className="flex items-center gap-2">
+              <Loader2Icon className="size-4 animate-spin" aria-hidden />
+              Loading vendors and categories…
+            </div>
           </div>
-        ) : refsError ? (
+        ) : null}
+        {refsUnavailable ? (
           <div
             role="alert"
             aria-live="polite"
-            className="m-7 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-3 text-sm text-destructive"
+            className="mx-7 mt-5 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-3 text-sm text-destructive"
           >
-            {refsError}
+            Reference data is unavailable right now. You can still fill out the item details below, but vendor, department / class, and tax lookups are disabled until Prism recovers.
           </div>
-        ) : refs ? (
-          <div className="grid max-h-[calc(92vh-11rem)] grid-cols-1 gap-7 overflow-y-auto px-7 py-5 md:grid-cols-[1fr_17rem]">
+        ) : null}
+        <div className="grid max-h-[calc(92vh-11rem)] grid-cols-1 gap-7 overflow-y-auto px-7 py-5 md:grid-cols-[1fr_17rem]">
             {/* LEFT — form */}
             <div className="space-y-6">
               {/* Prism destination banner */}
@@ -332,6 +322,7 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
                     vendorId={form.vendorId}
                     dccId={form.dccId}
                     itemTaxTypeId={form.itemTaxTypeId}
+                    disabled={refsLoading || refsUnavailable}
                     onChange={(field, value) =>
                       setForm((f) => ({ ...f, [field]: value }))
                     }
@@ -492,7 +483,6 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
               </div>
             </aside>
           </div>
-        ) : null}
 
         <DialogFooter className="mx-0 mb-0 rounded-none border-t bg-muted/40 px-7 py-3.5 sm:justify-between">
           <label className="flex cursor-pointer select-none items-start gap-2.5">
@@ -519,7 +509,7 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
             </Button>
             <Button
               onClick={() => void submit()}
-              disabled={!formValid || saving || !refs}
+              disabled={!formValid || saving || !refs || refsLoading || refsUnavailable}
               data-icon="inline-end"
             >
               {saving ? (

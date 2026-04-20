@@ -1,0 +1,8854 @@
+{
+  "generatedAt": "2026-04-20T06:10:50.816Z",
+  "scope": {
+    "pierceLocations": [
+      2,
+      3,
+      4
+    ]
+  },
+  "notes": {
+    "colorTableUsed": "Color(ColorID, Description)",
+    "usageNote": "Arrays sorted by Pierce usage frequency (descending), alphabetic tiebreaker. Counts come from live Prism queries at generation time."
+  },
+  "vendors": [
+    {
+      "vendorId": 21,
+      "name": "PENS ETC (3001795)",
+      "pierceItems": 5939
+    },
+    {
+      "vendorId": 7,
+      "name": "PEARSON EDUCATION (3002659)",
+      "pierceItems": 4599
+    },
+    {
+      "vendorId": 8,
+      "name": "CENGAGE LEARNING (3002411)",
+      "pierceItems": 3326
+    },
+    {
+      "vendorId": 1666,
+      "name": "REDSHELF (3016380)",
+      "pierceItems": 3174
+    },
+    {
+      "vendorId": 968,
+      "name": "OFFICE DEPOT (3001749)",
+      "pierceItems": 2200
+    },
+    {
+      "vendorId": 1326,
+      "name": "KENNEDY WHOLESALE (3002526)",
+      "pierceItems": 2091
+    },
+    {
+      "vendorId": 15,
+      "name": "MCGRAW HILL EDUCATION (3002512)",
+      "pierceItems": 1706
+    },
+    {
+      "vendorId": 56,
+      "name": "SLS ART INC. (3008486)",
+      "pierceItems": 1503
+    },
+    {
+      "vendorId": 224,
+      "name": "INGRAM HIGHER EDUCATION (3014622)",
+      "pierceItems": 1496
+    },
+    {
+      "vendorId": 90,
+      "name": "JANSPORT (3008785)",
+      "pierceItems": 1470
+    },
+    {
+      "vendorId": 11,
+      "name": "INDICO FORMERLY NACS (3001653)",
+      "pierceItems": 1427
+    },
+    {
+      "vendorId": 10,
+      "name": "MPS (3002300)",
+      "pierceItems": 1316
+    },
+    {
+      "vendorId": 346,
+      "name": "AMAZON (3010096)",
+      "pierceItems": 1074
+    },
+    {
+      "vendorId": 3,
+      "name": "W.W.NORTON (3002302)",
+      "pierceItems": 1047
+    },
+    {
+      "vendorId": 1656,
+      "name": "COSTCO",
+      "pierceItems": 1018
+    },
+    {
+      "vendorId": 102,
+      "name": "PEPSI (3002441)",
+      "pierceItems": 901
+    },
+    {
+      "vendorId": 150,
+      "name": "A&R WHOLESALE (3006425)",
+      "pierceItems": 890
+    },
+    {
+      "vendorId": 20,
+      "name": "JOHN WILEY & SONS (3002702)",
+      "pierceItems": 660
+    },
+    {
+      "vendorId": 93,
+      "name": "MANHATTAN MARKETING INT'L (3001458)",
+      "pierceItems": 614
+    },
+    {
+      "vendorId": 457,
+      "name": "COPYTECH",
+      "pierceItems": 578
+    },
+    {
+      "vendorId": 4,
+      "name": "OXFORD UNIVERSITY PRESS (3009151)",
+      "pierceItems": 499
+    },
+    {
+      "vendorId": 932,
+      "name": "VISTAR (3000408)",
+      "pierceItems": 490
+    },
+    {
+      "vendorId": 14,
+      "name": "ELSEVIER HEALTH SCIENCE (3005315)",
+      "pierceItems": 486
+    },
+    {
+      "vendorId": 80,
+      "name": "EL DORADO TRADING GROUP (3002805)",
+      "pierceItems": 455
+    },
+    {
+      "vendorId": 135,
+      "name": "PEARSON CUSTOM (3002659)",
+      "pierceItems": 441
+    },
+    {
+      "vendorId": 61,
+      "name": "BARRON'S EDUCATIONAL SERIES (3000486)",
+      "pierceItems": 435
+    },
+    {
+      "vendorId": 127,
+      "name": "CI SPORT (3009895)",
+      "pierceItems": 422
+    },
+    {
+      "vendorId": 1612,
+      "name": "GOLD STAR FOODS, INC (1020206)",
+      "pierceItems": 386
+    },
+    {
+      "vendorId": 65,
+      "name": "REYES COCA-COLA (3000711)",
+      "pierceItems": 331
+    },
+    {
+      "vendorId": 1022,
+      "name": "LA DISTRIBUTING CO (3013227)",
+      "pierceItems": 326
+    },
+    {
+      "vendorId": 19,
+      "name": "DOVER PUBLICATIONS (3003635)",
+      "pierceItems": 322
+    },
+    {
+      "vendorId": 106,
+      "name": "RESEARCH & EDUC ASSOC (3001854)",
+      "pierceItems": 316
+    },
+    {
+      "vendorId": 88,
+      "name": "BARCHARTS (3006734)",
+      "pierceItems": 304
+    },
+    {
+      "vendorId": 831,
+      "name": "7-UP (3000330)",
+      "pierceItems": 294
+    },
+    {
+      "vendorId": 323,
+      "name": "BCS APPAREL (NIKE) (1014253)",
+      "pierceItems": 272
+    },
+    {
+      "vendorId": 688,
+      "name": "PENGUIN/RANDOM HOUSE (3002602)",
+      "pierceItems": 241
+    },
+    {
+      "vendorId": 595,
+      "name": "JPT AMERICA (1014146) (PREPAY)(CALCARD)",
+      "pierceItems": 237
+    },
+    {
+      "vendorId": 1717,
+      "name": "VITAL SOURCE (3015080)",
+      "pierceItems": 236
+    },
+    {
+      "vendorId": 2023,
+      "name": "TENACE INCUBATION BEVERAGE & FOOD DIST(3015933)",
+      "pierceItems": 221
+    },
+    {
+      "vendorId": 18,
+      "name": "USE PEN003 RANDOM HOUSE LLC",
+      "pierceItems": 218
+    },
+    {
+      "vendorId": 189,
+      "name": "HARALAMBOS (3000972)",
+      "pierceItems": 217
+    },
+    {
+      "vendorId": 1806,
+      "name": "STAPLES BUSINESS CREDIT (1021474)",
+      "pierceItems": 217
+    },
+    {
+      "vendorId": 9,
+      "name": "COPY MASTER 3008797)",
+      "pierceItems": 204
+    },
+    {
+      "vendorId": 410,
+      "name": "GOURMET PURVEYORS INTERNATIONAL (3012175)",
+      "pierceItems": 202
+    },
+    {
+      "vendorId": 900,
+      "name": "MV SPORT/ THE GAME (3003537)",
+      "pierceItems": 197
+    },
+    {
+      "vendorId": 82,
+      "name": "FRITO LAY (3000941)",
+      "pierceItems": 192
+    },
+    {
+      "vendorId": 397,
+      "name": "QUILL CORPORATION (3002908)",
+      "pierceItems": 190
+    },
+    {
+      "vendorId": 820,
+      "name": "BAMKO - PUBLIC IDENTITY (3015001)",
+      "pierceItems": 184
+    },
+    {
+      "vendorId": 1356,
+      "name": "AARDVARK CLAY COMPANY (1000025)",
+      "pierceItems": 183
+    },
+    {
+      "vendorId": 215,
+      "name": "S P RICHARDS (3010750)",
+      "pierceItems": 183
+    },
+    {
+      "vendorId": 834,
+      "name": "US FOODS(3002264)",
+      "pierceItems": 181
+    },
+    {
+      "vendorId": 172,
+      "name": "CENGAGE LEARNING CUSTOM (3002411)",
+      "pierceItems": 178
+    },
+    {
+      "vendorId": 1841,
+      "name": "CA NUTRITION DISTRIBUTORS, LLC (3015086)",
+      "pierceItems": 174
+    },
+    {
+      "vendorId": 145,
+      "name": "LA PIERCE COLLEGE BOOKSTORE",
+      "pierceItems": 172
+    },
+    {
+      "vendorId": 108,
+      "name": "SAGE PUBLICATION (3015635)",
+      "pierceItems": 172
+    },
+    {
+      "vendorId": 533,
+      "name": "MONTEREY GRAPHICS (3004910)",
+      "pierceItems": 169
+    },
+    {
+      "vendorId": 299,
+      "name": "FILEXEC (3002829)",
+      "pierceItems": 168
+    },
+    {
+      "vendorId": 22,
+      "name": "TAYLOR & FRANCIS (ROUTLEDGE) (3007291)",
+      "pierceItems": 163
+    },
+    {
+      "vendorId": 107,
+      "name": "ROARING SPRINGS PAPER PRO. (3001866)",
+      "pierceItems": 159
+    },
+    {
+      "vendorId": 96,
+      "name": "OGIO INTERNATIONAL, INC. (3007175)",
+      "pierceItems": 158
+    },
+    {
+      "vendorId": 423,
+      "name": "OURAY SPORTSWEAR (3009045)",
+      "pierceItems": 157
+    },
+    {
+      "vendorId": 195,
+      "name": "LACC BOOKSTORE",
+      "pierceItems": 156
+    },
+    {
+      "vendorId": 939,
+      "name": "BLICK ART MATERIALS (3002690)",
+      "pierceItems": 155
+    },
+    {
+      "vendorId": 239,
+      "name": "ADCAMP ASSOCIATES (1015384)",
+      "pierceItems": 154
+    },
+    {
+      "vendorId": 1857,
+      "name": "ICM Distributing Company (3000273)",
+      "pierceItems": 149
+    },
+    {
+      "vendorId": 402,
+      "name": "SYSCO Foods SVCS of Los Angeles (3002442)",
+      "pierceItems": 149
+    },
+    {
+      "vendorId": 213,
+      "name": "GOODHEART-WILLCOX PUB. (3002816)",
+      "pierceItems": 142
+    },
+    {
+      "vendorId": 121,
+      "name": "WOLTERS KLUWER HEALTH LWW(3002633)",
+      "pierceItems": 138
+    },
+    {
+      "vendorId": 229,
+      "name": "BESTWAY SANDWICH (3015985)",
+      "pierceItems": 133
+    },
+    {
+      "vendorId": 1637,
+      "name": "HIGH PREMIUM DISTRIBUTION LLC (1020270)",
+      "pierceItems": 132
+    },
+    {
+      "vendorId": 355,
+      "name": "CENTURY SNACKS, LLC  (3001991)",
+      "pierceItems": 128
+    },
+    {
+      "vendorId": 17,
+      "name": "ALFRED MUSIC PUBLI. CO. (3002868)",
+      "pierceItems": 125
+    },
+    {
+      "vendorId": 401,
+      "name": "GROUNDWORK COFFEE ROASTERS, LLC (3012856)",
+      "pierceItems": 125
+    },
+    {
+      "vendorId": 1699,
+      "name": "CORNER BAKERY CAFE(3000497)",
+      "pierceItems": 124
+    },
+    {
+      "vendorId": 1848,
+      "name": "ORIENTAL TRADING CO INC(3004054)",
+      "pierceItems": 124
+    },
+    {
+      "vendorId": 928,
+      "name": "A & A WEST COAST DISTRIBUTION, (3004615)",
+      "pierceItems": 123
+    },
+    {
+      "vendorId": 1161,
+      "name": "JM ENTERPRISES (COLLEGE WEAR) (3013469)",
+      "pierceItems": 122
+    },
+    {
+      "vendorId": 1201,
+      "name": "LAD CUSTOM PUBLISHING (3013499)",
+      "pierceItems": 119
+    },
+    {
+      "vendorId": 378,
+      "name": "Brown Bag Sandwich Company (3006477)",
+      "pierceItems": 117
+    },
+    {
+      "vendorId": 60,
+      "name": "ACADEMIC CAP & GOWN (3015775)",
+      "pierceItems": 116
+    },
+    {
+      "vendorId": 2264,
+      "name": "LIGHTHOUSE PUBLICATIONS INC",
+      "pierceItems": 116
+    },
+    {
+      "vendorId": 16,
+      "name": "USE  BAK001 J.A MAJORS USE BAKER & TAYLOR) 3001111",
+      "pierceItems": 115
+    },
+    {
+      "vendorId": 2087,
+      "name": "WISMETTAC ASIAN FOODS, INC (3016206)",
+      "pierceItems": 112
+    },
+    {
+      "vendorId": 24,
+      "name": "CAMBRIDGE UNIVERSITY PRESS (3014137)",
+      "pierceItems": 110
+    },
+    {
+      "vendorId": 449,
+      "name": "MCGRAW CREATE CUSTOM(3002512)",
+      "pierceItems": 109
+    },
+    {
+      "vendorId": 1340,
+      "name": "TOPS PRODUCTS (3003502)",
+      "pierceItems": 109
+    },
+    {
+      "vendorId": 521,
+      "name": "D&H (3000729)",
+      "pierceItems": 105
+    },
+    {
+      "vendorId": 2,
+      "name": "NEBRASKA BOOK COMPANY(3001691)",
+      "pierceItems": 98
+    },
+    {
+      "vendorId": 104,
+      "name": "PPI WHOLESALE OFF. SUPPLIES (1001660)",
+      "pierceItems": 98
+    },
+    {
+      "vendorId": 690,
+      "name": "AMERICAN BEST BODY BUILDING",
+      "pierceItems": 97
+    },
+    {
+      "vendorId": 12,
+      "name": "INGRAM PUBL (3002751)",
+      "pierceItems": 96
+    },
+    {
+      "vendorId": 395,
+      "name": "P & R Paper Supply Company Inc.",
+      "pierceItems": 96
+    },
+    {
+      "vendorId": 36,
+      "name": "HAL LEONARD(3002880)",
+      "pierceItems": 94
+    },
+    {
+      "vendorId": 123,
+      "name": "DAVIS, F.A. (3004228)",
+      "pierceItems": 91
+    },
+    {
+      "vendorId": 656,
+      "name": "RED BULL DISTRIBUTION CO. (3013536)",
+      "pierceItems": 91
+    },
+    {
+      "vendorId": 383,
+      "name": "ENERGIZED DIST. (3003261)",
+      "pierceItems": 90
+    },
+    {
+      "vendorId": 1305,
+      "name": "RADIOSHACK",
+      "pierceItems": 90
+    },
+    {
+      "vendorId": 294,
+      "name": "USE PEN003 PENGUIN GROUP",
+      "pierceItems": 88
+    },
+    {
+      "vendorId": 1964,
+      "name": "VANTAGE APPAREL (1022900)",
+      "pierceItems": 86
+    },
+    {
+      "vendorId": 55,
+      "name": "SIMON & SCHUSTER (3001971)",
+      "pierceItems": 84
+    },
+    {
+      "vendorId": 216,
+      "name": "HARPER COLLINS(PREPAY) (3002754)",
+      "pierceItems": 83
+    },
+    {
+      "vendorId": 134,
+      "name": "KENDALL HUNT PUB. CO. (3001218)",
+      "pierceItems": 81
+    },
+    {
+      "vendorId": 897,
+      "name": "MICHAEL ROGER, INC. (3000360)",
+      "pierceItems": 81
+    },
+    {
+      "vendorId": 1332,
+      "name": "COMFY HOUSE FOODS INC (1017992)",
+      "pierceItems": 80
+    },
+    {
+      "vendorId": 144,
+      "name": "FRESH AND READY FOODS (1001268)",
+      "pierceItems": 78
+    },
+    {
+      "vendorId": 873,
+      "name": "FILOFAX (3000182)",
+      "pierceItems": 77
+    },
+    {
+      "vendorId": 2053,
+      "name": "OLD NEW YORK DELI & BAKERY CO. (1023858)",
+      "pierceItems": 77
+    },
+    {
+      "vendorId": 422,
+      "name": "JEFF & TONY'S (3008595)",
+      "pierceItems": 76
+    },
+    {
+      "vendorId": 109,
+      "name": "SAMSILL CORPORATION (3002923)",
+      "pierceItems": 76
+    },
+    {
+      "vendorId": 183,
+      "name": "AVANTI PRESS",
+      "pierceItems": 75
+    },
+    {
+      "vendorId": 1680,
+      "name": "ELEMENTAL BOTTLES (3016318)",
+      "pierceItems": 75
+    },
+    {
+      "vendorId": 91,
+      "name": "JONES & BARTLETT LEARNING (3001184)",
+      "pierceItems": 75
+    },
+    {
+      "vendorId": 115,
+      "name": "ULINE (3013366)",
+      "pierceItems": 75
+    },
+    {
+      "vendorId": 1490,
+      "name": "BEVERAGE BROTHERS (1019295)",
+      "pierceItems": 71
+    },
+    {
+      "vendorId": 81,
+      "name": "FOUR POINT (3002747)",
+      "pierceItems": 66
+    },
+    {
+      "vendorId": 292,
+      "name": "VISTA HIGHER LEARNING (3003605)",
+      "pierceItems": 66
+    },
+    {
+      "vendorId": 1339,
+      "name": "MELODEE ICE CREAM (1018093)",
+      "pierceItems": 65
+    },
+    {
+      "vendorId": 35,
+      "name": "HACHETTE BOOK GROUP USA (3008741)",
+      "pierceItems": 64
+    },
+    {
+      "vendorId": 89,
+      "name": "HMH TRADE DIVISION(CALCARD-PREPAY) (3001033)",
+      "pierceItems": 64
+    },
+    {
+      "vendorId": 424,
+      "name": "PAPYRUS",
+      "pierceItems": 64
+    },
+    {
+      "vendorId": 1844,
+      "name": "MAGGIANO'S LITTLE ITALY(1007908)",
+      "pierceItems": 62
+    },
+    {
+      "vendorId": 470,
+      "name": "S P PRINTING & GRAPHICS",
+      "pierceItems": 61
+    },
+    {
+      "vendorId": 418,
+      "name": "PEPPERIDGE FARM",
+      "pierceItems": 60
+    },
+    {
+      "vendorId": 27,
+      "name": "HOUGHTON MIFFLIN- HARCOURT (3001033)",
+      "pierceItems": 58
+    },
+    {
+      "vendorId": 1600,
+      "name": "FJALLRAVEN [1020130]",
+      "pierceItems": 57
+    },
+    {
+      "vendorId": 421,
+      "name": "C2F INC. (3000650)",
+      "pierceItems": 56
+    },
+    {
+      "vendorId": 537,
+      "name": "BETTER OFFICE PRODUCTS  (3000531)",
+      "pierceItems": 55
+    },
+    {
+      "vendorId": 625,
+      "name": "BLUE 84 - LAKESHIRTS, INC (1021402)",
+      "pierceItems": 55
+    },
+    {
+      "vendorId": 2120,
+      "name": "DUCK COMPANY (1024522)",
+      "pierceItems": 55
+    },
+    {
+      "vendorId": 1719,
+      "name": "VIKRAM SINGH DBA VAY, INC./SUBWAY(3014820)",
+      "pierceItems": 55
+    },
+    {
+      "vendorId": 2012,
+      "name": "ARTISANS INC (1023659)",
+      "pierceItems": 54
+    },
+    {
+      "vendorId": 206,
+      "name": "LEANIN' TREE (3007085)",
+      "pierceItems": 54
+    },
+    {
+      "vendorId": 532,
+      "name": "DOUGLAS STEWART CO (3002150)",
+      "pierceItems": 53
+    },
+    {
+      "vendorId": 132,
+      "name": "EVEREST TRADING CORP. (3000925)",
+      "pierceItems": 53
+    },
+    {
+      "vendorId": 2249,
+      "name": "HANDS CRAFT US INC(1025594)",
+      "pierceItems": 52
+    },
+    {
+      "vendorId": 1033,
+      "name": "LTD ENTERPRISES (3013147)",
+      "pierceItems": 52
+    },
+    {
+      "vendorId": 214,
+      "name": "ENERGY CLUB (3000920)",
+      "pierceItems": 51
+    },
+    {
+      "vendorId": 1725,
+      "name": "VAE INDUSTIRES (1020994)",
+      "pierceItems": 51
+    },
+    {
+      "vendorId": 513,
+      "name": "BK MULTIMEDIAS (3008777)",
+      "pierceItems": 50
+    },
+    {
+      "vendorId": 30,
+      "name": "HARRIS OFFICE PRODUCTS (1013707)",
+      "pierceItems": 50
+    },
+    {
+      "vendorId": 1092,
+      "name": "KELLY PAPER (3013036)",
+      "pierceItems": 50
+    },
+    {
+      "vendorId": 318,
+      "name": "VERISMO",
+      "pierceItems": 50
+    },
+    {
+      "vendorId": 291,
+      "name": "CHEN INTERNATIONAL (3003070)",
+      "pierceItems": 48
+    },
+    {
+      "vendorId": 71,
+      "name": "COMET SCHOOL SUPPLIES (3000715)",
+      "pierceItems": 48
+    },
+    {
+      "vendorId": 129,
+      "name": "DUBWEAR CLOTHING CO",
+      "pierceItems": 48
+    },
+    {
+      "vendorId": 59,
+      "name": "FREESTYLE PHOTOGRAPHIC SUPPLIES (1000851)",
+      "pierceItems": 48
+    },
+    {
+      "vendorId": 1554,
+      "name": "HYDRO FLASK -STEEL TECH (3014430)",
+      "pierceItems": 48
+    },
+    {
+      "vendorId": 122,
+      "name": "WAVELAND PRESS INC (3002310)",
+      "pierceItems": 48
+    },
+    {
+      "vendorId": 370,
+      "name": "AMPAD",
+      "pierceItems": 46
+    },
+    {
+      "vendorId": 2093,
+      "name": "LAPC THEATRE",
+      "pierceItems": 46
+    },
+    {
+      "vendorId": 1135,
+      "name": "LXG LASER ENGRAVED GIFTS (3013445)",
+      "pierceItems": 46
+    },
+    {
+      "vendorId": 353,
+      "name": "MATTHEWS BOOK COMPANY (3001514)",
+      "pierceItems": 46
+    },
+    {
+      "vendorId": 1892,
+      "name": "ZYANTE INC (ZYBOOKS) (3016147)",
+      "pierceItems": 46
+    },
+    {
+      "vendorId": 971,
+      "name": "INTERNATIONAL COLLEGIATE SALES",
+      "pierceItems": 45
+    },
+    {
+      "vendorId": 1521,
+      "name": "L2 BRANDS LLC (1021232)",
+      "pierceItems": 45
+    },
+    {
+      "vendorId": 271,
+      "name": "BANTAM BOOKS",
+      "pierceItems": 44
+    },
+    {
+      "vendorId": 637,
+      "name": "BRANDED CUSTOM SPORTSWARE (1014253)",
+      "pierceItems": 44
+    },
+    {
+      "vendorId": 1568,
+      "name": "PREMIUM NUT (1019942) AKA FTB SOARES INC",
+      "pierceItems": 42
+    },
+    {
+      "vendorId": 154,
+      "name": "ANTIOCH PUB COMPANY (3003315)",
+      "pierceItems": 41
+    },
+    {
+      "vendorId": 1558,
+      "name": "CONTINENTAL BOOK COMPANY(3007569)",
+      "pierceItems": 40
+    },
+    {
+      "vendorId": 47,
+      "name": "TOPHAT MONOCLE",
+      "pierceItems": 40
+    },
+    {
+      "vendorId": 2148,
+      "name": "INTERNATIONAL FOOD CREATION  LLC  1024824",
+      "pierceItems": 39
+    },
+    {
+      "vendorId": 41,
+      "name": "LA VALLEY COLLEGE BOOKSTORE",
+      "pierceItems": 39
+    },
+    {
+      "vendorId": 692,
+      "name": "LAMC/ITV (3002059)",
+      "pierceItems": 39
+    },
+    {
+      "vendorId": 1832,
+      "name": "ACHIEVERS, INC.(1019131)",
+      "pierceItems": 38
+    },
+    {
+      "vendorId": 74,
+      "name": "DAWN SIGN PRESS (1009883)",
+      "pierceItems": 38
+    },
+    {
+      "vendorId": 1444,
+      "name": "MERCHANDISE INC. (1018680)",
+      "pierceItems": 38
+    },
+    {
+      "vendorId": 114,
+      "name": "TOWNSEND PRESS BOOK CENTER (3002230)",
+      "pierceItems": 38
+    },
+    {
+      "vendorId": 1140,
+      "name": "XANEDU PUBLISHING INC (3005538)",
+      "pierceItems": 38
+    },
+    {
+      "vendorId": 263,
+      "name": "HACKETT PUBLISHING CO (3002750)",
+      "pierceItems": 37
+    },
+    {
+      "vendorId": 23,
+      "name": "NAEYC (1004221)",
+      "pierceItems": 37
+    },
+    {
+      "vendorId": 1281,
+      "name": "ARYA ICE CREAM DIST. CO. (1017630)",
+      "pierceItems": 36
+    },
+    {
+      "vendorId": 2063,
+      "name": "MKS LOUNGE INC(1023911)",
+      "pierceItems": 36
+    },
+    {
+      "vendorId": 2071,
+      "name": "AMAZON BUSINESS  (3010096)",
+      "pierceItems": 35
+    },
+    {
+      "vendorId": 1906,
+      "name": "BSN SPORTS(3003194)",
+      "pierceItems": 35
+    },
+    {
+      "vendorId": 192,
+      "name": "DODGER INDUSTRIES",
+      "pierceItems": 35
+    },
+    {
+      "vendorId": 84,
+      "name": "HAMILTON BELL CO. INC. (3002879)",
+      "pierceItems": 35
+    },
+    {
+      "vendorId": 201,
+      "name": "HPI INTERNATIONAL (3009118)",
+      "pierceItems": 35
+    },
+    {
+      "vendorId": 1020,
+      "name": "MARSHALL LEFTON",
+      "pierceItems": 35
+    },
+    {
+      "vendorId": 1883,
+      "name": "SHARKY'S WOODFIRED MEXICAN GRILL",
+      "pierceItems": 35
+    },
+    {
+      "vendorId": 1074,
+      "name": "GRAINGER (3006291)",
+      "pierceItems": 34
+    },
+    {
+      "vendorId": 368,
+      "name": "MEAD",
+      "pierceItems": 34
+    },
+    {
+      "vendorId": 441,
+      "name": "HARTRADE",
+      "pierceItems": 33
+    },
+    {
+      "vendorId": 97,
+      "name": "UNIVERSITY OF CHICAGO PRESS (3008926)",
+      "pierceItems": 33
+    },
+    {
+      "vendorId": 500,
+      "name": "PRESTIGE MEDICAL (3001818)",
+      "pierceItems": 32
+    },
+    {
+      "vendorId": 62,
+      "name": "BURT'S BEES, INC",
+      "pierceItems": 31
+    },
+    {
+      "vendorId": 193,
+      "name": "MTA",
+      "pierceItems": 31
+    },
+    {
+      "vendorId": 570,
+      "name": "ESSELTE CORPORATION (3013512)",
+      "pierceItems": 30
+    },
+    {
+      "vendorId": 1253,
+      "name": "HOUSE OF DOOLITTLE (3013606)",
+      "pierceItems": 30
+    },
+    {
+      "vendorId": 361,
+      "name": "PRINTING TECHNOLOGY INC (PTI) (1014692)",
+      "pierceItems": 30
+    },
+    {
+      "vendorId": 1801,
+      "name": "B&H PHOTO - VIDEO (1003839)",
+      "pierceItems": 29
+    },
+    {
+      "vendorId": 1055,
+      "name": "FRANKLIN MILL (3013131)",
+      "pierceItems": 29
+    },
+    {
+      "vendorId": 300,
+      "name": "KISS MY FACE (3011737)",
+      "pierceItems": 29
+    },
+    {
+      "vendorId": 1058,
+      "name": "KUM-USA",
+      "pierceItems": 29
+    },
+    {
+      "vendorId": 369,
+      "name": "TOP FLIGHT (3002222)",
+      "pierceItems": 29
+    },
+    {
+      "vendorId": 1309,
+      "name": "TRINITY GRAPHICS INC (1020787)",
+      "pierceItems": 29
+    },
+    {
+      "vendorId": 1871,
+      "name": "AZTEC SOFTWARE (1022045)",
+      "pierceItems": 28
+    },
+    {
+      "vendorId": 1492,
+      "name": "GIFTCRAFT INC (1019598)",
+      "pierceItems": 28
+    },
+    {
+      "vendorId": 1234,
+      "name": "PWI TECHNOLOGIES (3007580) link to 1011540",
+      "pierceItems": 27
+    },
+    {
+      "vendorId": 2192,
+      "name": "THE CHEFS WAREHOUSE WEST COAST LLC (3016263)",
+      "pierceItems": 27
+    },
+    {
+      "vendorId": 1428,
+      "name": "WESTERMAN MFG FASHION PRODUCTS",
+      "pierceItems": 27
+    },
+    {
+      "vendorId": 194,
+      "name": "MISC",
+      "pierceItems": 26
+    },
+    {
+      "vendorId": 377,
+      "name": "BROTHER'S DIST. (3007545)",
+      "pierceItems": 25
+    },
+    {
+      "vendorId": 302,
+      "name": "ECO USABLE",
+      "pierceItems": 25
+    },
+    {
+      "vendorId": 540,
+      "name": "EVOLUTION JUICES (3000353)",
+      "pierceItems": 25
+    },
+    {
+      "vendorId": 364,
+      "name": "SAVE THE TATAS",
+      "pierceItems": 25
+    },
+    {
+      "vendorId": 31,
+      "name": "UNIVERSITY OF HAWAII PRESS (3002548)",
+      "pierceItems": 25
+    },
+    {
+      "vendorId": 298,
+      "name": "CANYON OUTBACK LEATHER",
+      "pierceItems": 24
+    },
+    {
+      "vendorId": 66,
+      "name": "DEARBORN REAL ESTATE EDUCATION (3002955)",
+      "pierceItems": 24
+    },
+    {
+      "vendorId": 1967,
+      "name": "FORMAL FASHION INC",
+      "pierceItems": 24
+    },
+    {
+      "vendorId": 48,
+      "name": "MERRIAM WEBSTER (3001553)",
+      "pierceItems": 24
+    },
+    {
+      "vendorId": 583,
+      "name": "NORCOM",
+      "pierceItems": 24
+    },
+    {
+      "vendorId": 1899,
+      "name": "OMNICARD- BLACK HAWK NETWORK (1022381)",
+      "pierceItems": 24
+    },
+    {
+      "vendorId": 345,
+      "name": "ACE BEVERAGE CO (1013525)",
+      "pierceItems": 23
+    },
+    {
+      "vendorId": 51,
+      "name": "BERTRANDS OLD TOWN MUSIC",
+      "pierceItems": 23
+    },
+    {
+      "vendorId": 2200,
+      "name": "COUNTDOWN PRINTABLES (1023049)",
+      "pierceItems": 23
+    },
+    {
+      "vendorId": 337,
+      "name": "INDEPENDENT PUB GROUP (3002839)",
+      "pierceItems": 23
+    },
+    {
+      "vendorId": 463,
+      "name": "LABYRINTH LEARNING (3001294)",
+      "pierceItems": 23
+    },
+    {
+      "vendorId": 170,
+      "name": "SCANTRON (3016425)",
+      "pierceItems": 23
+    },
+    {
+      "vendorId": 25,
+      "name": "WOLTERS KLUWER LAW & BUSINESS (3012471)",
+      "pierceItems": 23
+    },
+    {
+      "vendorId": 790,
+      "name": "XYZTEXTBOOKS (3000139)",
+      "pierceItems": 23
+    },
+    {
+      "vendorId": 2066,
+      "name": "YERBA MATE CO. LLC (3016144)",
+      "pierceItems": 23
+    },
+    {
+      "vendorId": 486,
+      "name": "ACTIVATE LEARNING (1020679)",
+      "pierceItems": 22
+    },
+    {
+      "vendorId": 166,
+      "name": "CCH INCORPORATED (1000438)",
+      "pierceItems": 22
+    },
+    {
+      "vendorId": 280,
+      "name": "ZORBITZ INC",
+      "pierceItems": 22
+    },
+    {
+      "vendorId": 1537,
+      "name": "(USE EN-001) EN-R-G FOODS, LLC (1020567)",
+      "pierceItems": 21
+    },
+    {
+      "vendorId": 1977,
+      "name": "MCM BRANDS (1023143)",
+      "pierceItems": 21
+    },
+    {
+      "vendorId": 2160,
+      "name": "ONPOINT SALES AND MARKETING (3016522)",
+      "pierceItems": 21
+    },
+    {
+      "vendorId": 867,
+      "name": "OSAGE DISTRIBUTORS (3005021)",
+      "pierceItems": 21
+    },
+    {
+      "vendorId": 351,
+      "name": "POOPOOPAPER",
+      "pierceItems": 21
+    },
+    {
+      "vendorId": 28,
+      "name": "TEACHERS COLLEGE PRESS (3003148)",
+      "pierceItems": 21
+    },
+    {
+      "vendorId": 1860,
+      "name": "THE GLOBAL DISPLAY SOLUTION LLC",
+      "pierceItems": 20
+    },
+    {
+      "vendorId": 1564,
+      "name": "ALBANESE CONFECTIONERY (3014527)",
+      "pierceItems": 19
+    },
+    {
+      "vendorId": 375,
+      "name": "ANHEUSER-BUSCH",
+      "pierceItems": 19
+    },
+    {
+      "vendorId": 1672,
+      "name": "CRESTLINE (3002994)",
+      "pierceItems": 19
+    },
+    {
+      "vendorId": 40,
+      "name": "KINOKUNIYA BOOKSTORE (3001241)",
+      "pierceItems": 19
+    },
+    {
+      "vendorId": 301,
+      "name": "LA MISSION COLLEGE BOOKSTORE",
+      "pierceItems": 19
+    },
+    {
+      "vendorId": 552,
+      "name": "LACCD BOOKSTORES",
+      "pierceItems": 19
+    },
+    {
+      "vendorId": 238,
+      "name": "LANGESCHEIDT PUBLISHING GROUP",
+      "pierceItems": 19
+    },
+    {
+      "vendorId": 460,
+      "name": "REDLEAF PRESS (1001753)",
+      "pierceItems": 19
+    },
+    {
+      "vendorId": 273,
+      "name": "ROWMAN & LITTLEFIELD -NBN (3003018)",
+      "pierceItems": 19
+    },
+    {
+      "vendorId": 57,
+      "name": "SOADY ASSOCIATES (1001910)",
+      "pierceItems": 19
+    },
+    {
+      "vendorId": 112,
+      "name": "SPIRIT PRODUCTS LTD. (3010681)",
+      "pierceItems": 19
+    },
+    {
+      "vendorId": 2070,
+      "name": "W S I MANUFACTURING (1024488)",
+      "pierceItems": 19
+    },
+    {
+      "vendorId": 1545,
+      "name": "4 IMPRINT (1003646)",
+      "pierceItems": 18
+    },
+    {
+      "vendorId": 165,
+      "name": "CHICAGO DISTRIBUTION CENTER (3002986)",
+      "pierceItems": 18
+    },
+    {
+      "vendorId": 78,
+      "name": "EDUCATIONAL TEXTBOOK CO (3000908)",
+      "pierceItems": 18
+    },
+    {
+      "vendorId": 1348,
+      "name": "ELITE MEDICAL WEAR INC. (1018065)",
+      "pierceItems": 18
+    },
+    {
+      "vendorId": 1137,
+      "name": "FANATIC GROUP (3013412)",
+      "pierceItems": 18
+    },
+    {
+      "vendorId": 530,
+      "name": "LATHON BASS WEAR LLC",
+      "pierceItems": 18
+    },
+    {
+      "vendorId": 420,
+      "name": "MATTHEW MEDICAL BOOKS (3002934) MCCOY",
+      "pierceItems": 18
+    },
+    {
+      "vendorId": 1791,
+      "name": "STONEFIRE GRILL(3016270)",
+      "pierceItems": 18
+    },
+    {
+      "vendorId": 557,
+      "name": "YAFA LINE (3012648)",
+      "pierceItems": 18
+    },
+    {
+      "vendorId": 568,
+      "name": "(USE XAN003) XANEDU",
+      "pierceItems": 17
+    },
+    {
+      "vendorId": 180,
+      "name": "ASSOCIATED PRESS",
+      "pierceItems": 17
+    },
+    {
+      "vendorId": 79,
+      "name": "EDUCO INTERNATIONAL INC. (3000909)",
+      "pierceItems": 17
+    },
+    {
+      "vendorId": 1629,
+      "name": "JACKIE'S COOKIE CONNECTION, LLC (1020242)",
+      "pierceItems": 17
+    },
+    {
+      "vendorId": 1566,
+      "name": "LOVE TO SNACK, LLC (1019864)",
+      "pierceItems": 17
+    },
+    {
+      "vendorId": 699,
+      "name": "PENCIL GRIP",
+      "pierceItems": 17
+    },
+    {
+      "vendorId": 1856,
+      "name": "POWER BRANDS CONSULTING LLC (1021770)",
+      "pierceItems": 17
+    },
+    {
+      "vendorId": 1205,
+      "name": "SPARKLETTS- DS WATERS OF AMERICA (3003948)",
+      "pierceItems": 17
+    },
+    {
+      "vendorId": 1880,
+      "name": "SVM GIFT CARDS(1001994)",
+      "pierceItems": 17
+    },
+    {
+      "vendorId": 2025,
+      "name": "THE HEART NATURAL FOODS, INC(1023540)",
+      "pierceItems": 17
+    },
+    {
+      "vendorId": 1704,
+      "name": "THE SHOP (5011283)",
+      "pierceItems": 17
+    },
+    {
+      "vendorId": 1481,
+      "name": "UNIVERSITY BOOKSTORE FORTY-NINER SHOPS",
+      "pierceItems": 17
+    },
+    {
+      "vendorId": 1918,
+      "name": "CALI SNAX INC. (1022596)",
+      "pierceItems": 16
+    },
+    {
+      "vendorId": 69,
+      "name": "CHARM 14 / USA MARGINS",
+      "pierceItems": 16
+    },
+    {
+      "vendorId": 217,
+      "name": "CONSORTIUM BOOK SALES & DISTRIBUTION (3000719)",
+      "pierceItems": 16
+    },
+    {
+      "vendorId": 813,
+      "name": "ESRI",
+      "pierceItems": 16
+    },
+    {
+      "vendorId": 1369,
+      "name": "HUMAN KINETICS (3008629)",
+      "pierceItems": 16
+    },
+    {
+      "vendorId": 608,
+      "name": "KING HENRY'S INC. (1015209)",
+      "pierceItems": 16
+    },
+    {
+      "vendorId": 1065,
+      "name": "M&M PAPER CO (1001308)",
+      "pierceItems": 16
+    },
+    {
+      "vendorId": 1934,
+      "name": "UNISAN (1009444)",
+      "pierceItems": 16
+    },
+    {
+      "vendorId": 718,
+      "name": "(use AAR002) AARDVARK",
+      "pierceItems": 15
+    },
+    {
+      "vendorId": 2028,
+      "name": "BASAN CORD INC (5013242)",
+      "pierceItems": 15
+    },
+    {
+      "vendorId": 159,
+      "name": "BON APPETIT (3000588)",
+      "pierceItems": 15
+    },
+    {
+      "vendorId": 382,
+      "name": "DRIFTWOOD DAIRY  (1013391)",
+      "pierceItems": 15
+    },
+    {
+      "vendorId": 1345,
+      "name": "EVOLUTION TABLET, LLC (1018121)",
+      "pierceItems": 15
+    },
+    {
+      "vendorId": 511,
+      "name": "GEOCART (3001168)",
+      "pierceItems": 15
+    },
+    {
+      "vendorId": 674,
+      "name": "HARPER COLLINS PUBLISHERS (3002754)PREPAY(CALCARD)",
+      "pierceItems": 15
+    },
+    {
+      "vendorId": 313,
+      "name": "MBS WHOLESALE (3001520)",
+      "pierceItems": 15
+    },
+    {
+      "vendorId": 94,
+      "name": "MJ SOFFE CO.",
+      "pierceItems": 15
+    },
+    {
+      "vendorId": 412,
+      "name": "ROOM IT UP",
+      "pierceItems": 15
+    },
+    {
+      "vendorId": 362,
+      "name": "TLC SPORTSWEAR INC (3003619)",
+      "pierceItems": 15
+    },
+    {
+      "vendorId": 1054,
+      "name": "AMERICAN TECHNICAL PUBLISHERS (1009061)",
+      "pierceItems": 14
+    },
+    {
+      "vendorId": 120,
+      "name": "CHARLES DUMONT & SONS (3000688)",
+      "pierceItems": 14
+    },
+    {
+      "vendorId": 1852,
+      "name": "CLASSIC DIST & BEV GROUP (3008605)",
+      "pierceItems": 14
+    },
+    {
+      "vendorId": 210,
+      "name": "EMC PARADIGM (1000750)",
+      "pierceItems": 14
+    },
+    {
+      "vendorId": 1487,
+      "name": "EMOBII, INC. (1019672)",
+      "pierceItems": 14
+    },
+    {
+      "vendorId": 133,
+      "name": "EXACLAIR, INC.",
+      "pierceItems": 14
+    },
+    {
+      "vendorId": 1889,
+      "name": "JARDINE & ASSOCIATES (1022252)",
+      "pierceItems": 14
+    },
+    {
+      "vendorId": 1122,
+      "name": "JPT AMERICA INC. (1014146)",
+      "pierceItems": 14
+    },
+    {
+      "vendorId": 332,
+      "name": "LACC Physics Dept. (3013700)",
+      "pierceItems": 14
+    },
+    {
+      "vendorId": 510,
+      "name": "LAWTECH (3001324)",
+      "pierceItems": 14
+    },
+    {
+      "vendorId": 44,
+      "name": "LONGLEAF SERVICES (3009537)",
+      "pierceItems": 14
+    },
+    {
+      "vendorId": 1971,
+      "name": "PAPER LANTERN STORE",
+      "pierceItems": 14
+    },
+    {
+      "vendorId": 509,
+      "name": "ALEX INC.",
+      "pierceItems": 13
+    },
+    {
+      "vendorId": 225,
+      "name": "BAKER & TAYLOR/ JA MAJORS (3001111)",
+      "pierceItems": 13
+    },
+    {
+      "vendorId": 160,
+      "name": "CALIFORNIA PRINCETON FULFILLMENT SVC (3003066)",
+      "pierceItems": 13
+    },
+    {
+      "vendorId": 1670,
+      "name": "EN-R-G Foods, LLC (1020567)",
+      "pierceItems": 13
+    },
+    {
+      "vendorId": 58,
+      "name": "PEARSON DENTAL SUPPLIES",
+      "pierceItems": 13
+    },
+    {
+      "vendorId": 250,
+      "name": "PRINCETON UNIV PRESS",
+      "pierceItems": 13
+    },
+    {
+      "vendorId": 278,
+      "name": "SAMUEL FRENCH",
+      "pierceItems": 13
+    },
+    {
+      "vendorId": 534,
+      "name": "UNIVERSITY OF CALIFORNIA ANR (3013275)",
+      "pierceItems": 13
+    },
+    {
+      "vendorId": 1919,
+      "name": "AMERICAN SOLUTIONS INC (1016017)",
+      "pierceItems": 12
+    },
+    {
+      "vendorId": 328,
+      "name": "BROADVIEW PRESS- (LR%) (3009109)",
+      "pierceItems": 12
+    },
+    {
+      "vendorId": 260,
+      "name": "CREATIVE HOMEOWNER (3010434)",
+      "pierceItems": 12
+    },
+    {
+      "vendorId": 143,
+      "name": "FED EX (3004171)",
+      "pierceItems": 12
+    },
+    {
+      "vendorId": 86,
+      "name": "HAYDEN MCNEIL SPECIALTY PROD. (1019078)",
+      "pierceItems": 12
+    },
+    {
+      "vendorId": 1579,
+      "name": "HOME DEPOT",
+      "pierceItems": 12
+    },
+    {
+      "vendorId": 310,
+      "name": "HUGGER MUGGER (1001019)",
+      "pierceItems": 12
+    },
+    {
+      "vendorId": 1952,
+      "name": "KELLY SPICERS STORES (1022806)",
+      "pierceItems": 12
+    },
+    {
+      "vendorId": 276,
+      "name": "LA HARBOR COLLEGE BOOKSTORE",
+      "pierceItems": 12
+    },
+    {
+      "vendorId": 1809,
+      "name": "LAERDAL MEDICIAL CORP",
+      "pierceItems": 12
+    },
+    {
+      "vendorId": 1639,
+      "name": "NCS PEARSON, INC (1003945)",
+      "pierceItems": 12
+    },
+    {
+      "vendorId": 494,
+      "name": "POPULATION REF BUREAU (3003486)",
+      "pierceItems": 12
+    },
+    {
+      "vendorId": 1625,
+      "name": "RAFAEL DE LA FUENTE (5008261)",
+      "pierceItems": 12
+    },
+    {
+      "vendorId": 469,
+      "name": "SINGAPORE (1009371)",
+      "pierceItems": 12
+    },
+    {
+      "vendorId": 497,
+      "name": "(USE SAGE SAG001) CQ PRESS",
+      "pierceItems": 11
+    },
+    {
+      "vendorId": 916,
+      "name": "AKHIL INTERNATIONAL (1015435)",
+      "pierceItems": 11
+    },
+    {
+      "vendorId": 761,
+      "name": "AVERY (3003055)",
+      "pierceItems": 11
+    },
+    {
+      "vendorId": 1331,
+      "name": "BLOOM  DAILY PLANNERS- PLAN IT-3013417",
+      "pierceItems": 11
+    },
+    {
+      "vendorId": 1651,
+      "name": "CALIFORNIA FIESTA TAMALE INC",
+      "pierceItems": 11
+    },
+    {
+      "vendorId": 247,
+      "name": "CLAIRE FONTAINE",
+      "pierceItems": 11
+    },
+    {
+      "vendorId": 267,
+      "name": "DRAMATIST PLAY SERVICE (1000689)",
+      "pierceItems": 11
+    },
+    {
+      "vendorId": 519,
+      "name": "FARRAR",
+      "pierceItems": 11
+    },
+    {
+      "vendorId": 490,
+      "name": "HARVARD UNIVERSITY PRESS",
+      "pierceItems": 11
+    },
+    {
+      "vendorId": 309,
+      "name": "LA MISSION COLLEGE ITV",
+      "pierceItems": 11
+    },
+    {
+      "vendorId": 858,
+      "name": "NAKAJIMA USA",
+      "pierceItems": 11
+    },
+    {
+      "vendorId": 479,
+      "name": "NEW AMERICAN LIBRARY",
+      "pierceItems": 11
+    },
+    {
+      "vendorId": 1100,
+      "name": "PLAN-IT THE STUDENT MEDIA GROUP (3013417)",
+      "pierceItems": 11
+    },
+    {
+      "vendorId": 1263,
+      "name": "SDC PUBLICATIONS (1014985)",
+      "pierceItems": 11
+    },
+    {
+      "vendorId": 952,
+      "name": "SP RICHARDS",
+      "pierceItems": 11
+    },
+    {
+      "vendorId": 1693,
+      "name": "SUMMERLAND BAGS, LLC (1021205)",
+      "pierceItems": 11
+    },
+    {
+      "vendorId": 2233,
+      "name": "THIRD CROP LLC (1025456)",
+      "pierceItems": 11
+    },
+    {
+      "vendorId": 1649,
+      "name": "TOPHAT MONOCLE US CORP (3015981)",
+      "pierceItems": 11
+    },
+    {
+      "vendorId": 1278,
+      "name": "TROPICANA (3001656)",
+      "pierceItems": 11
+    },
+    {
+      "vendorId": 864,
+      "name": "UNIVERSITY OF CALIFORNIA PRESS",
+      "pierceItems": 11
+    },
+    {
+      "vendorId": 101,
+      "name": "(use KEN001) PARADIGM PUBLISHERS",
+      "pierceItems": 10
+    },
+    {
+      "vendorId": 503,
+      "name": "AMER PSYCH ASSN (3003482)",
+      "pierceItems": 10
+    },
+    {
+      "vendorId": 881,
+      "name": "AMERICAN  TECHNICAL  PUB, INC",
+      "pierceItems": 10
+    },
+    {
+      "vendorId": 1849,
+      "name": "AMERICAN INSTITUTE FOR CPCU (1012797)",
+      "pierceItems": 10
+    },
+    {
+      "vendorId": 376,
+      "name": "BROOKLYN BAGEL BAKERY",
+      "pierceItems": 10
+    },
+    {
+      "vendorId": 76,
+      "name": "DRAMATIC PUBLISHING (1000688)",
+      "pierceItems": 10
+    },
+    {
+      "vendorId": 2115,
+      "name": "FRANK GREEN (5013860)",
+      "pierceItems": 10
+    },
+    {
+      "vendorId": 264,
+      "name": "GUILFORD PRESS (1005097)PREPAY",
+      "pierceItems": 10
+    },
+    {
+      "vendorId": 415,
+      "name": "LION OFFICE PRODUCTS",
+      "pierceItems": 10
+    },
+    {
+      "vendorId": 1689,
+      "name": "MOBILE EDGE (3015210)",
+      "pierceItems": 10
+    },
+    {
+      "vendorId": 241,
+      "name": "NEIL ENTERPRISES (3003431)",
+      "pierceItems": 10
+    },
+    {
+      "vendorId": 1623,
+      "name": "PAPERMART (1020102)",
+      "pierceItems": 10
+    },
+    {
+      "vendorId": 105,
+      "name": "QUINTESSINCE PUB. COMPANY (3003338)",
+      "pierceItems": 10
+    },
+    {
+      "vendorId": 203,
+      "name": "TRI-LITERAL (1004227)",
+      "pierceItems": 10
+    },
+    {
+      "vendorId": 141,
+      "name": "UNIVERSITY OF TEXAS PRESS (3003668)",
+      "pierceItems": 10
+    },
+    {
+      "vendorId": 466,
+      "name": "COLLEGE PREPARATORY MATH (3013771)",
+      "pierceItems": 9
+    },
+    {
+      "vendorId": 283,
+      "name": "DAVIS DENTAL",
+      "pierceItems": 9
+    },
+    {
+      "vendorId": 676,
+      "name": "DORINA NEER (3000873)",
+      "pierceItems": 9
+    },
+    {
+      "vendorId": 87,
+      "name": "DR JOHN W . HERDMAN",
+      "pierceItems": 9
+    },
+    {
+      "vendorId": 417,
+      "name": "FLANIGAN FARMS",
+      "pierceItems": 9
+    },
+    {
+      "vendorId": 236,
+      "name": "FOCAL PRESS - USE TAYLOR & FRANCIS",
+      "pierceItems": 9
+    },
+    {
+      "vendorId": 1691,
+      "name": "HONORS GRADUATION(1019024)",
+      "pierceItems": 9
+    },
+    {
+      "vendorId": 1222,
+      "name": "HUMAN KINETICS PUBLISHING INC. (3008629)",
+      "pierceItems": 9
+    },
+    {
+      "vendorId": 2024,
+      "name": "JLM ENTERPRISES LLC (3016528)",
+      "pierceItems": 9
+    },
+    {
+      "vendorId": 474,
+      "name": "LEONARD",
+      "pierceItems": 9
+    },
+    {
+      "vendorId": 495,
+      "name": "NEW YORK UNIVERSITY PRESS (3010763)",
+      "pierceItems": 9
+    },
+    {
+      "vendorId": 1714,
+      "name": "POWER ELIXIR LLC (1020885)",
+      "pierceItems": 9
+    },
+    {
+      "vendorId": 501,
+      "name": "RAND-MC NALLY EDUC (3002638)",
+      "pierceItems": 9
+    },
+    {
+      "vendorId": 499,
+      "name": "ROCKWELL PUBLISHING (3006767)",
+      "pierceItems": 9
+    },
+    {
+      "vendorId": 538,
+      "name": "TRI-CE",
+      "pierceItems": 9
+    },
+    {
+      "vendorId": 1516,
+      "name": "UNITED IMAGING",
+      "pierceItems": 9
+    },
+    {
+      "vendorId": 2263,
+      "name": "URBANE CAFE (1025761)",
+      "pierceItems": 9
+    },
+    {
+      "vendorId": 1627,
+      "name": "AGHAEE BENYAMIN (3000119)",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 546,
+      "name": "AMERICAN PSYCHIATRIC PRESS (3000267)",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 13,
+      "name": "ARMENIAN OBSERVER (3010008)",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 821,
+      "name": "ASL INSIDE",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 1920,
+      "name": "CABRERA'S BALLOONS (1000368)",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 70,
+      "name": "CNS PRODUCTIONS (1011249)",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 1839,
+      "name": "COLLEGIATE PACIFIC (3010431)",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 259,
+      "name": "CREATIVE INTERNATIONAL HOLDINGS CORP",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 465,
+      "name": "CROZER",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 859,
+      "name": "DESIGN SOURCE USA (3000039)",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 240,
+      "name": "do not use SAGE",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 173,
+      "name": "evergreen",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 461,
+      "name": "EXCHANGE PRESS (3014855)",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 2045,
+      "name": "FIRESIDE IND DBA VIBE (5013240)",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 1536,
+      "name": "FRESH GRILL",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 1828,
+      "name": "GREAT LAKES SPORTS(1007610)",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 496,
+      "name": "INTERPRETING CONSOLIDATED (3005384)",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 689,
+      "name": "KINOKUNIYA OF SAN FRANCISCO (3001241)",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 579,
+      "name": "LULU PRESS, INC. (1010964)",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 1169,
+      "name": "MIKE HOLT ENTERPRISE, INC (1006947)",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 2129,
+      "name": "MYCHA LA LLC (1024915)",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 1448,
+      "name": "NIGHT OWLS PRESS LLC",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 1690,
+      "name": "RED ELIXIR, LLC (1020885)",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 110,
+      "name": "SILVER BRUSH LIMITED",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 113,
+      "name": "TCHOTCHKE'S",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 2168,
+      "name": "THIRD STREET SPORTSWEAR (1024987)",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 290,
+      "name": "TOPS ART SUPPLIES (3002224)",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 615,
+      "name": "X-TECH LASER PRINTING INC (3006080)",
+      "pierceItems": 8
+    },
+    {
+      "vendorId": 42,
+      "name": "(USE LEA004) L2 BRANDS LLC (1021232)",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 1973,
+      "name": "AMERICAN HEART ASSOCIATION",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 480,
+      "name": "ARI FARMS (3000352)",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 1824,
+      "name": "BIG SCREEN CUISINE",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 908,
+      "name": "BLUMBERG COMPANY",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 256,
+      "name": "DOUSE FOU001 FOUR POINT PRODUCTS",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 706,
+      "name": "EAST L.A. COLLEGE BOOKSTORE",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 222,
+      "name": "F&W PUBLICATIONS (3002831)",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 2099,
+      "name": "GANAHL LUMBER COMPANY (3000460",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 1872,
+      "name": "HARDWOODS SPECIALTY PRODUCTS (3016161)",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 43,
+      "name": "LEGAL BOOKS DISTRIBUTING (1004512)",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 428,
+      "name": "LEO ARRETIN",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 227,
+      "name": "LEXIS NEXIS",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 1676,
+      "name": "MILA WHOLESALE (1020638)",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 357,
+      "name": "MIRAGE BOTTLING CO",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 1256,
+      "name": "PHOTOGRAFX WORLDWIDE (3006335)",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 2229,
+      "name": "S DE ZILWA LLC (PIZZA EFFECT) (1025422)",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 208,
+      "name": "SCARECROW PRESS",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 77,
+      "name": "SCIENTIFICSZZZZ DIRECT INC.",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 1941,
+      "name": "SEE'S CANDY",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 1578,
+      "name": "SENTRY INDUSTRIES (1019643)",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 1561,
+      "name": "SNAK CLUB (3001991)",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 1931,
+      "name": "SOUTHWEST OFFSET PRINTING (1001943)",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 433,
+      "name": "STEEL ROSE EYEWEAR",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 808,
+      "name": "TJ PUBLISHERS (3002214)",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 354,
+      "name": "TWEAKED AUDIO",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 198,
+      "name": "WARNER BROS. PUB",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 1358,
+      "name": "WOLTERS KLUWER HEALTH(3002633)",
+      "pierceItems": 7
+    },
+    {
+      "vendorId": 197,
+      "name": "(USE MCG002) CREATE/PRIMUS PUBLISHING/MCGRAW HILL",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 527,
+      "name": "ALLIED BEVERAGES, INC.",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 26,
+      "name": "AMERICAN BANKING ASSOCIATION (3006526)",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 257,
+      "name": "BIC",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 1152,
+      "name": "BLUE GAVEL PRESS - SEE MANCOMM",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 734,
+      "name": "BVT PUBLISHING (3012229)",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 549,
+      "name": "CALIFORNIA DEPT OF EDUCATION (3006740)",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 612,
+      "name": "DM BASS PUBLICATIONS (3007671)",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 700,
+      "name": "DREAM MAKER PUBLISHING (3001995)",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 1810,
+      "name": "GST INC (1002412)",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 220,
+      "name": "HAMMOND WORLD ATLAS",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 1146,
+      "name": "HARTMAN PUBLISHING CO (1015363)",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 39,
+      "name": "HIGHER GROUND",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 1635,
+      "name": "KNOW-WEAR BY DP DESIGN (3014591)",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 1509,
+      "name": "LA METRO",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 321,
+      "name": "LA SOUTHWEST COLLEGE BOOKSTORE",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 2256,
+      "name": "LADY IN GOLD JEWELRY",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 1683,
+      "name": "MEDCO SPORTS MEDICINE(3002609)",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 393,
+      "name": "Moluin Rouge Bakery",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 352,
+      "name": "MUNDI WESTPORT CORP",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 1426,
+      "name": "NASCO (3001662)",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 970,
+      "name": "NATIONAL SOCIAL PRESS",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 628,
+      "name": "NEW CHEF FASHION (3003485)",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 1621,
+      "name": "NORTHEAST SALES & MARKETING (5010870)",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 246,
+      "name": "ORAL FIXATION",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 442,
+      "name": "PRO-ED (3003336)",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 261,
+      "name": "PTC DENTAL",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 925,
+      "name": "RATIONAL REASONING, LLC",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 226,
+      "name": "RESOURCES FOR INFANT EDUCARERS",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 999,
+      "name": "RETHINKING SCHOOLS (3011670)",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 233,
+      "name": "RID PUBLICATIONS (300660)",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 53,
+      "name": "SANNEAN PRESS",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 450,
+      "name": "SCHROFF DEVELOPMENT CORP. (1014985)",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 779,
+      "name": "USE PEN003 PENGUIN GROUP USA",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 1911,
+      "name": "VISUAL IDEAS (5012246)",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 588,
+      "name": "WING AERO PRODUCTS (3002551)",
+      "pierceItems": 6
+    },
+    {
+      "vendorId": 64,
+      "name": "(use ING001) INGRAM PUB SERVICES (INDIANA UNIV PR)",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 454,
+      "name": "***DO NOT USE***",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 2240,
+      "name": "ACCURATE DPS INC (1025499)",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 453,
+      "name": "ANYONE CAN ARTS",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 158,
+      "name": "BRASSELER USA",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 1418,
+      "name": "CORE MARK",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 381,
+      "name": "DREYER'S",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 138,
+      "name": "DREYER'S GRAND ICE CREAM (3000887)",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 187,
+      "name": "FAIRCHILD BOOKS/BLOOMSBURY PUBLISHING",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 33,
+      "name": "FJH MUSIC (3005662)",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 592,
+      "name": "IFSTA (3002828)",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 1650,
+      "name": "KAYLAVA COFFEE LLC (3014303)",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 281,
+      "name": "LA TRADE TECH BOOKSTORE",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 137,
+      "name": "LASZLO CSER (3004117)",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 45,
+      "name": "LYNNE RIENNER PUBLISHER- PREPAID (3001425)",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 1237,
+      "name": "NAWGAN PRODUCTS, LLC",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 394,
+      "name": "Nikola's Bakery",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 2054,
+      "name": "NORDIC COMPANY",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 219,
+      "name": "NOVA RESOURCES",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 1467,
+      "name": "PEETS COFFEE",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 1638,
+      "name": "PRUDENTIAL OVERALL SUPPLY",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 279,
+      "name": "TABERCO INC",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 2033,
+      "name": "TROPICAL FOODS, LLC (1023348)",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 1555,
+      "name": "U-VEND AMERICA INC (1019873)",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 116,
+      "name": "UNIVERSITY OF NEW MEXICO PRESS (3004648)",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 611,
+      "name": "VIA PROMOTIONALS (1023688)",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 1081,
+      "name": "WARDS SCIENCE- VWR (3010249)",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 649,
+      "name": "WORKMAN PUBLISHING (3012450)",
+      "pierceItems": 5
+    },
+    {
+      "vendorId": 1147,
+      "name": "A/C CONTRACTORS OF AMER (3002942)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 1441,
+      "name": "ADVANCE REASONING FORUM",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 167,
+      "name": "AMERICAN DIETETIC ASSOC(use member i.d. 331395)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 664,
+      "name": "AMERICAN HOTEL & LODGING EDU. INST. (1010931)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 1078,
+      "name": "AMERICAN MEDICAL ASSOCIATION (3002940)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 350,
+      "name": "ARTE PUBLICO PRESS/UNIV OF HOUSTON (3000370)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 1815,
+      "name": "BAUDVILLE",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 186,
+      "name": "BLACKWELL PUBLISHING",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 29,
+      "name": "BROADWAY PRESS-PREPAY (3000623)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 585,
+      "name": "C AND L DISTRIBUTIONS (1014665)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 516,
+      "name": "CAROLINA ACADEMIC PRESS (3005288)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 161,
+      "name": "CHAZ SPORTSWEAR (3000691)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 988,
+      "name": "CHENG & TSUI COMPANY (3003718)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 1986,
+      "name": "CHICK-FIL-A",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 1085,
+      "name": "COGNELLA DBA UNIVERSITY READERS (1023090)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 829,
+      "name": "CONNECT 4 EDUCATION (3007859)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 1182,
+      "name": "CRC PRESS INC",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 1246,
+      "name": "DELTA BIOLOGICALS (3003755)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 1366,
+      "name": "DIALECT ACCENT SPECIALIST INC (1018376)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 130,
+      "name": "EDITS",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 329,
+      "name": "FOUNDATION FOR CRITICAL THINKING(PREPAY) (3003250)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 599,
+      "name": "GALLAUDET UNIVERSITY PRESS",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 235,
+      "name": "GARRETT PUBLICATIONS COMPANY (3005370)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 512,
+      "name": "GENERAL PENCILS (3003383)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 1958,
+      "name": "GFXARTS(5002347)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 363,
+      "name": "GRAYSONS TUNE TOWN",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 85,
+      "name": "HARCOURT ARCHIEVE/ STECK VAUGHN (3000976)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 522,
+      "name": "HAZELDEN",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 439,
+      "name": "HEALTH COMMUNICATIONS INC (3002840)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 1014,
+      "name": "HEINEMANN (3000647)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 710,
+      "name": "HOUGHTON MIFFLIN HARCOURT (3001033)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 342,
+      "name": "IMAGINE INTERNATIONAL CORP",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 535,
+      "name": "INTELECOM (1001091)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 838,
+      "name": "ITD PRINT SOLUTIONS",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 426,
+      "name": "J AMERICA SPORTSWEAR (3001112)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 391,
+      "name": "JACK STOTLER WHOLESALE BAKERY DIST",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 228,
+      "name": "KERR DENTAL LABS",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 477,
+      "name": "KJOS",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 1868,
+      "name": "KONG & PARK (1021805)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 635,
+      "name": "LA PIERCE BOOKSTORE",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 644,
+      "name": "LAGUNA CLAY (3016060)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 786,
+      "name": "LAVC FOUNDATION/ANTHRO DEPT",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 1894,
+      "name": "LEGO",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 1462,
+      "name": "MARCUS WIENER PUBLISHERS",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 536,
+      "name": "MODERN LANGUAGE ASSOCIATION (3001603)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 49,
+      "name": "MUSIC SALES CORP.-use hal leonard",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 2248,
+      "name": "NATIONWIDE DISPLAYS INC(1025552)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 95,
+      "name": "NOLO PRESS (1003632)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 955,
+      "name": "O.L. CONSULTING CORP & PUB",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 1605,
+      "name": "OPENSTAX",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 212,
+      "name": "PLAIN VIEW (3007816)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 274,
+      "name": "POWER CS",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 287,
+      "name": "PROMARK LABELS",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 1533,
+      "name": "REYNOLDS ADVANCED (1013345)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 255,
+      "name": "RUSSELL ATHLETIC (3008955)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 54,
+      "name": "SCIENCE AIDE",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 569,
+      "name": "SCRIBNER BOOK CO",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 1143,
+      "name": "SHIPPING",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 936,
+      "name": "SMITH AND KRAUS PUBLISHERS",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 498,
+      "name": "SOFT DATA (3003326)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 448,
+      "name": "SOUTHWEST EDUC ENTERPRISES (3002588)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 483,
+      "name": "ST AUGUSTINE'S PRESS",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 1164,
+      "name": "STEPHEN D. DARLING (3002956)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 1075,
+      "name": "TY INC. (3002259)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 275,
+      "name": "UNITED DISTRIBUTORS (3003230)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 249,
+      "name": "UNIV NORTH CAROLINA PRESS",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 669,
+      "name": "W.H FREEMAN",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 554,
+      "name": "WEST LOS ANGELES COLLEGE BOOKSTORE",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 788,
+      "name": "WILEY",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 1475,
+      "name": "WORLD CLASS AWARDS(3014450) or(1014623)",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 1614,
+      "name": "WORLDPOINT ECC, INC.",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 912,
+      "name": "YALE UNIVERSITY PRESS",
+      "pierceItems": 4
+    },
+    {
+      "vendorId": 1692,
+      "name": "368 PRESS",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 5,
+      "name": "ABRIL BOOKSTORE (3003654)(CALCARD)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 204,
+      "name": "ACADEMIC SUCCESS PRESS",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 464,
+      "name": "ALPHA GROUP",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 1539,
+      "name": "AMERICAN COUNCIL ON EXERCISE (PREPAY)(CALCARD)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 177,
+      "name": "AMERICAN RED CROSS (3000615)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 2154,
+      "name": "AZTLAN TRADING INC (1024855)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 967,
+      "name": "BETTER OFFICE SUPPLY (3012470)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 553,
+      "name": "BOSTON ACADEMIC PUBLISHING (3014436)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 434,
+      "name": "CAFETERIA",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 248,
+      "name": "CANOTECK",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 1136,
+      "name": "CAPEHART CUTLERY (3000669)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 1628,
+      "name": "CENTURY SNACKS",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 126,
+      "name": "CHARLES C THOMAS PUB. (3000687)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 651,
+      "name": "CHESTNUT HEALTH SYSTEMS (3012655)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 1266,
+      "name": "COAST TO COAST (1000506)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 325,
+      "name": "DEJA",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 124,
+      "name": "DUKE UNIVERSITY PRESS (3005247)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 331,
+      "name": "EVAN KENDALL",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 1269,
+      "name": "FLORA DEPOT (3013660)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 2171,
+      "name": "FRANK & STEIN LLC (1025017)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 253,
+      "name": "HELIOPOLIS AKADEMEIA (3011094)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 438,
+      "name": "HUMBLE HOUSE PUBLISHING (3011873)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 38,
+      "name": "ILIO",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 1361,
+      "name": "IMPACT PUBLISHING,LLC (3012169)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 506,
+      "name": "INFOBASE PUBLISHING",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 1514,
+      "name": "JONES LUMBER (3001186)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 531,
+      "name": "JOSTENS (3001189)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 1950,
+      "name": "KADO PRINTING LLC (1022889)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 234,
+      "name": "KODANSHA INTERNATIONAL",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 1464,
+      "name": "LE NOUVEAU MOULIN BAKERY (1008809)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 2032,
+      "name": "LES SISTERS (1019807)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 1000,
+      "name": "M & M ENTERPRISE (3003937)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 46,
+      "name": "MEL BAY PUBLICATIONS, INC.(3001544)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 933,
+      "name": "MERCER TOOL CORP (3013253)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 1700,
+      "name": "METRO (1010685)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 2244,
+      "name": "NATIONWIDE DISPLAYS INC (1025552)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 504,
+      "name": "naturegraph pub",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 485,
+      "name": "O'HANLON",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 1200,
+      "name": "OFFICE CONNECTION (3009635)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 703,
+      "name": "OUTBACK FLASHLIGHTS",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 1647,
+      "name": "POSITIVE PROMOTIONS, INC(1001651)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 1804,
+      "name": "POST UP STAND (1018891)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 2130,
+      "name": "PRISMRBS LLC (10020752/3014781)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 514,
+      "name": "SCHOOL AGE NOTES",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 1686,
+      "name": "SHAYNA'S SWEET GARDEN, LLC (1020724)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 209,
+      "name": "SILVER SPRINGS PRESS",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 344,
+      "name": "SOUTH EASTERN BOOKS",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 100,
+      "name": "SPLASH (1005622)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 330,
+      "name": "STORM DUDS (3011878)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 1694,
+      "name": "SUNGLASSES UNLIMITED/MAJOR FRA(3009820)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 811,
+      "name": "TOMBOW",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 672,
+      "name": "UNIVERSITY OF ARIZONA PRESS (3009510)",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 266,
+      "name": "UNIVERSITY OF MICHIGAN PRESS",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 888,
+      "name": "VEND CATERING SUPPLY",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 414,
+      "name": "WILSON JONES",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 594,
+      "name": "WORD-WERX PUBLICATION",
+      "pierceItems": 3
+    },
+    {
+      "vendorId": 964,
+      "name": "(SOLIDPROFESSOR)INTERACTIVE APPLICATIONS (3012900)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 2101,
+      "name": "1010 WINE AND EVENTS (1023222)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 6,
+      "name": "ACADEMIC PRINTING-UCLA",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 493,
+      "name": "ADDISON-WESLEY/LONGMAN, INC.",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1874,
+      "name": "AED SUPERSTORE(1009217)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 969,
+      "name": "AMERICAN ALLIANCE MUSEUMS (3012875)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 176,
+      "name": "AMERICAN PAD & PAPER (3000265)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 826,
+      "name": "ANKO MARKETING CORP.",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 953,
+      "name": "APLOMB MEDIA",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 232,
+      "name": "ARMOND DALTON",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1858,
+      "name": "ASI VISUAL COLLABORATION SYSTEMS, LLC(1021702",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 118,
+      "name": "ASSESSMENT TECH. INSTITUTE (ATI) (3011041)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 185,
+      "name": "BAILLY SHOWCASE & FIXTURE CO.",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 2091,
+      "name": "BERRY MAN INC 1018264",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1335,
+      "name": "better office products (3000531)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1925,
+      "name": "BIMBO BAKERIES USA, INC. (1021371)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1910,
+      "name": "BLACKHAWK(3015526)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 218,
+      "name": "BOOK SOURCE (3002148)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1530,
+      "name": "BRAVIA FOODS (1019501)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1291,
+      "name": "BREADAN PUBLISHING (1018356)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 72,
+      "name": "BRUCE R COOK",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1373,
+      "name": "BYU ACADEMIC PUBLISHING (1018426)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 63,
+      "name": "CAMBRIDGE STRATFORD (3006833)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1622,
+      "name": "CAROLINA BIOLOGICAL SUPPLY COMPANY (3003170)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 508,
+      "name": "CENTER FOR CIVIC EDUCATION (3003385)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 517,
+      "name": "CERULEAN PUBLISHING",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 429,
+      "name": "CHICOBAG",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1290,
+      "name": "CITY LIGHTS",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1737,
+      "name": "CLEAR IMAGE PRINTING CO (1019675)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 272,
+      "name": "COLOMBIA MUSIC COMPANY",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 455,
+      "name": "COUNSELOR PUBLICATIONS (3004502)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 360,
+      "name": "CPP INC",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1959,
+      "name": "CREATIVE PLAY STORES LLC (1022934)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1634,
+      "name": "CROWN PROMOTIONS GROUP/PASADENA PROMOS(1022681)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 587,
+      "name": "DAILY JOURNAL (1000609)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 646,
+      "name": "DAVID CHANDLER COMPANY",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 959,
+      "name": "DEAF LIFE PRESS",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1716,
+      "name": "DIGITAL ED (1020841)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1913,
+      "name": "DIGITAL RIVER INC (1010203)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 907,
+      "name": "DOUGLAS SIMMS STENHOUSE",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 661,
+      "name": "DREAM PRODUCTS, LLC",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1909,
+      "name": "EVERYTABLE PBC(1022226)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 492,
+      "name": "EXCELLENCE INEDUCATION PULICATIONS(3003120",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 606,
+      "name": "FARMER BROTHERS (3000930)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 2006,
+      "name": "FEEDTW, INC(1021923)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1255,
+      "name": "FIND YOUR SMILE , INC. (3013572)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1657,
+      "name": "FLATWORLD (do not use) use FLA002",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 430,
+      "name": "FOR BARE FEET",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1728,
+      "name": "FREEBIRDS(1020202)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 440,
+      "name": "GALT PUBLISHING (3002987)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 502,
+      "name": "GLASSFORD PRESS",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1891,
+      "name": "GLOBAL LYCEUM INC (1022086)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 83,
+      "name": "GOLDEN ERA BOOKS (3009850)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 387,
+      "name": "Good Mood Food Adam Monks#494",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1701,
+      "name": "GREAT RIVER LEARNING (1020817)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1985,
+      "name": "GREEN THUMB NURSERY (1010826)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 237,
+      "name": "GREEN, JUDY",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 435,
+      "name": "GROSSO",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 221,
+      "name": "HANGING LOOSE",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 643,
+      "name": "HANSEN HOUSE PUBLISHING",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 473,
+      "name": "HANSON HOUSE MUSIC",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 32,
+      "name": "HARRY ABRAMS/TIME WARNER",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1017,
+      "name": "HENRY SCHEIN (3000999)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 190,
+      "name": "HIPPOCRENE BOOKS INC (3003883)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 526,
+      "name": "HOMEMADE HARVEY",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 544,
+      "name": "IMAGING RESOURCES",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1394,
+      "name": "INTEGRATED IMAGE",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 884,
+      "name": "IQ LEARNING SYSTEMS",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1965,
+      "name": "JAYSOND LLANORA MICLAT (1022913)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 268,
+      "name": "JOHN BENJAMIN PUB COMPANY (3010270)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 471,
+      "name": "JOHN BUONAMASSA",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 668,
+      "name": "KALEE PASEK (3006635)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1007,
+      "name": "KELLISHAN INSTITUTE HEALTHCARE (3012616)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 458,
+      "name": "LAND DESIGN PUBLISHING",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1807,
+      "name": "LANDEND BUSINESS OUTFITTER",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 772,
+      "name": "LAVC REPROGRAPHICS",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 785,
+      "name": "LEADERSHIP COMMUNICATIONS",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1090,
+      "name": "LEXJET",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1923,
+      "name": "LOGIC COURSE ADVENTURE(LCA)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1873,
+      "name": "LUMEN, INC (3015847)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 505,
+      "name": "M.E.SHARPE",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 960,
+      "name": "MCBRIDE, DAN (3000750)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1336,
+      "name": "MCGRAW",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 929,
+      "name": "MCLIP",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 809,
+      "name": "MODERN SIGN PRESS (3001611)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 338,
+      "name": "MONSOON",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1926,
+      "name": "NATIONAL RESTAURANT ASSOCIATION LLC(3012097)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 965,
+      "name": "NATIONAL SOCIAL SCIENCE PRESS (3011037)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 987,
+      "name": "NEIL KJOS MUSIC CO (3003333)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1615,
+      "name": "NEW DOMAIN, LLC",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 484,
+      "name": "NICHOLAS HABIB PUBL",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1114,
+      "name": "ONCOURSE LEARNING (3013491)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 862,
+      "name": "PAN PACIFIC PLASTIC (1005155)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 148,
+      "name": "PARTNERSHIP (3006631)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 191,
+      "name": "PBD INC",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1607,
+      "name": "PHILADELPHIA PRESS (1020135)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 52,
+      "name": "POLARIS PUBLISHING (3002826)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 487,
+      "name": "POTTER'S PUB",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1398,
+      "name": "PREMIUM QUALITY DISTRIBUTORS, LLC.",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1368,
+      "name": "PROFESSIONAL BINDING PRODUCTS,INC (3002910)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 580,
+      "name": "PUBLISHERS GROUP WEST",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 468,
+      "name": "QUICK AND EASY PUBLICATIONS (3002827)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 773,
+      "name": "RED MOON PRESS",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1732,
+      "name": "REFRIGERATION SUPPLIES DISTRIBUTOR (9000087)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 285,
+      "name": "RENFERT",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1626,
+      "name": "RESTAURANT DEPOT",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1501,
+      "name": "RITTENHOUSE BOOK DISTRIBUTORS (1019361)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 802,
+      "name": "ROCKETT HOUSE PUBLISHING (3002014)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1646,
+      "name": "SAMMY'S CAMERA (3002915)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 431,
+      "name": "SCHOOL SUPPLIES UNLIMITED",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 2029,
+      "name": "SCIENCE INTERACTIVE (1021978)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1960,
+      "name": "SCRIP-SAFE SECURITY PRODUCTS",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1575,
+      "name": "SENTIA PUBLISHING (1020430)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1311,
+      "name": "SFV SYMPHONY/EARTH MUSIC LTD",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1833,
+      "name": "SHARKY'S WOODFIRE MEX GRIL(3014242)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1325,
+      "name": "SHIREEN FAIZULLABHOY",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 807,
+      "name": "SIGN LANGUAGE INTERPRETING (3012760)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 958,
+      "name": "SINAUER ASSOCIATES, INC. (3003514)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 111,
+      "name": "SLOAN PULISHING (3010715)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1736,
+      "name": "SMART & FINAL",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 349,
+      "name": "SPECIALTY APPLIANCES",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 880,
+      "name": "STRATA PUBLISHING (3005801)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 242,
+      "name": "SUTTER",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1484,
+      "name": "TAKACH PRESS",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 591,
+      "name": "TESTOUT (3015987)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1731,
+      "name": "TEXTBOOK MEDIA PRESS (1020835)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1042,
+      "name": "THE CRITICAL THINKING COMPANY",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 476,
+      "name": "THEODORE PRESSER CO (3002184)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 876,
+      "name": "TOM SCHROEPPEL",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1645,
+      "name": "TOP TIER FULFILLMENT",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 443,
+      "name": "TRAFFORD PUBLISHING",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 871,
+      "name": "TRANSCENDER (3008779)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1432,
+      "name": "UC REGENTS",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 295,
+      "name": "UNIVERSITY FRAMES (3003235)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 937,
+      "name": "UNIVERSITY OF SACRAMENTO",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 200,
+      "name": "UNIVERSITY OF THE PACIFIC (PREPAY)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 667,
+      "name": "UPS FREIGHT (3009736)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1283,
+      "name": "USC BOOKSTORE",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1071,
+      "name": "VALORE BOOKS aka COLLEGE MARKETPLACE INC.",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 891,
+      "name": "VEDANTA PRESS (3005776)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 270,
+      "name": "VELAZQUEZ PRESS",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 2222,
+      "name": "VITALSOURCE TECHNOLOGIES (1025369)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 792,
+      "name": "WADSWORTH",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 244,
+      "name": "WALD IM",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1532,
+      "name": "WESTED",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1218,
+      "name": "WET INK PUBLICATIONS (3013502)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1349,
+      "name": "WINCRAFT",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1302,
+      "name": "WINKSHOP INC (1018144)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 601,
+      "name": "ZERO TO THREE (3004793)",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 1957,
+      "name": "ZYBOOKS",
+      "pierceItems": 2
+    },
+    {
+      "vendorId": 202,
+      "name": "(use XAN003) COPLEY PUB GROUP-XANEDU (3003217)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 846,
+      "name": "180 SNACKS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1968,
+      "name": "A RENTAL CONNECTION(1000008)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 879,
+      "name": "ABC-CLIO (3000059)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 335,
+      "name": "ABEBOOKS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 373,
+      "name": "ABI Allied Beverages, Inc.",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1296,
+      "name": "ACCENTE",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 650,
+      "name": "AILA PUBLICATIONS (1015057)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 245,
+      "name": "ALLCASION TRAVELWARE CO (3003934)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 327,
+      "name": "ALLIED BUSINESS SCHOOL (3000198)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 604,
+      "name": "ALSTAR CREATIONS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1013,
+      "name": "AMER HLTH INFO MGMNT ASSOC (3000252)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1060,
+      "name": "AMERICAN HOSPITAL ASSOCIATION",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 178,
+      "name": "AMSCO SCHOOL PUBLICATIONS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 770,
+      "name": "ANASTASIOS SIOUKAS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 277,
+      "name": "ANDREA ELECTRONICS CORPORATION",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1723,
+      "name": "ARAMARK (1002568)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 358,
+      "name": "ATTACHMENTS INTERNATIONAL",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1499,
+      "name": "AUNT LUTE BOOKS (3005985)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 857,
+      "name": "AVS GEAR",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 529,
+      "name": "BADGER CLOTHING (3012623)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 798,
+      "name": "BALLANTINE BOOKS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1131,
+      "name": "BASH UNIFORM SERVICES LLC (1017347)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1334,
+      "name": "BETTER WIPES INC. (1018145)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 320,
+      "name": "BETTER WORLD BOOKS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 2010,
+      "name": "BIG MAMAS & PAPAS PIZZA",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 875,
+      "name": "BJ ORCHIDS (3000174)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 865,
+      "name": "BLOOMSBURY PRESS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 196,
+      "name": "BOOK MART & COPY CENTER (3003344)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 265,
+      "name": "BRANDLER",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 303,
+      "name": "BURMINCO",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 708,
+      "name": "CALIFORNIA UNIVERSITY PRESS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1117,
+      "name": "CALLIHAN",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1553,
+      "name": "CAMPUS MARKETING SPECIALISTS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 2013,
+      "name": "CANOGA PARK GRILL/FRESH GRILL(1024641)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1669,
+      "name": "CARMA GAMES (1020634)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 163,
+      "name": "CAROLINA SEWN PRO. CORP",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1107,
+      "name": "CDI (3005949)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 68,
+      "name": "CHANNING L. BETE CO (3004710)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1633,
+      "name": "CI SOLUTIONS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 2104,
+      "name": "CITI KITCHEN/URBAN PALATE,LLC",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 286,
+      "name": "COLLETE",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 951,
+      "name": "COLORADO NUT CO (3000435)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 491,
+      "name": "COLUMBIA UNIVERSITY PRESS (3003033)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1812,
+      "name": "COOL PARTNERS, INC (1021171)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1524,
+      "name": "CPR SAVER (1015198)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 852,
+      "name": "CREATESPACE",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 380,
+      "name": "Custom Design Uniforms Co.",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1359,
+      "name": "CUTTER & BUCK (3013878)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 662,
+      "name": "DATABOOK PUBLISHING, INC.",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 459,
+      "name": "DLS PUBLISHING (3003222)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 2116,
+      "name": "DOING GOOD WORKS (3015242)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1086,
+      "name": "DRAWING FROM THE INSIDE OUT",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1378,
+      "name": "ELECTRONIX EXPRESS (1003962)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 819,
+      "name": "ELITE EYEWEAR",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 2011,
+      "name": "FLOOKYS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 683,
+      "name": "FOODJA (3014665) (1019472)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1972,
+      "name": "FORTUNE COOKIE GUY",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 2236,
+      "name": "FRESH CORN GRILL 1025264",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1976,
+      "name": "GENEVERSE ENERGY INC",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1178,
+      "name": "GLADIS C. J. MORENO (3009161)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 844,
+      "name": "GO PICNIC BRANDS, INC.",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 854,
+      "name": "GRAD CAPS MORTARBOARD DECALS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 711,
+      "name": "HALO BRANDED SOLUTIONS (3010039)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1556,
+      "name": "HAROUT HATIKYAN (5000174)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 2051,
+      "name": "HOLABIRD SPORTS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1531,
+      "name": "HOMEBOY BAKERY",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 389,
+      "name": "IKKSS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1118,
+      "name": "IMPACT PUBLISHERS, INC (3003894)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 2008,
+      "name": "IN N OUT",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 432,
+      "name": "INLAND PRODUCTS INC.",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1601,
+      "name": "ISLAND ADVERTISING (1001114)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 230,
+      "name": "IVOCLAR VIVADENT",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 336,
+      "name": "JADON LTD",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 367,
+      "name": "JAMES PUBLISHING (3005800)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 2096,
+      "name": "JASMINE THAI CUISINE (1023759)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1854,
+      "name": "JF VENTURES (1021681)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 2122,
+      "name": "JG NIPA HUT",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1814,
+      "name": "JONES SCHOO SUPPLY COMPANY(1017479)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1431,
+      "name": "JORDANO'S INC. EQUIPMENT & SUPPLIES",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 467,
+      "name": "KEY CURRICULUM PRESS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1944,
+      "name": "KIKKERLAND DESIGN INC (1022755)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 2089,
+      "name": "KYA SERVICES, LLC (LACCD#40565 (cb-3570)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 92,
+      "name": "LA KEYBOARD PROJECT (3001284)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 564,
+      "name": "LAISSEZ FAIRE BOOKS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 2255,
+      "name": "LI&S INC AMECI PIZZA & PASTA(1025777)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1103,
+      "name": "LICENSE PLATE FRAMES",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 282,
+      "name": "LINCOLN DENTAL (3001375)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1685,
+      "name": "LION CAFE",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 2050,
+      "name": "LULU'S RESTAURANT (1018363)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1961,
+      "name": "MAJESTIC DOCUMENT HOLDERS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1101,
+      "name": "MCM GROUP, INC.",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 307,
+      "name": "MEDS PUBLISHING",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 715,
+      "name": "MISSOURI ACHAELOGICAL SOCIETY",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 296,
+      "name": "MISSOURI BOOK CO. (3001520)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1896,
+      "name": "MORRILTON PACKING COMPANY INC(1022213)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1105,
+      "name": "MOULIN ROUGE BAKERY (1008809)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 542,
+      "name": "MUG WORLD",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1287,
+      "name": "MULLIGAN FFC",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 304,
+      "name": "NATIONAL BOOK NETWORK/CONTINUUM",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1442,
+      "name": "NATIONAL GIFT CARD CORP.(1018931)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 731,
+      "name": "NESTLE (3012170)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 2193,
+      "name": "NET32",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 2052,
+      "name": "OLIVE GARDEN ITALIAN RESTAURANT",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 348,
+      "name": "ORTHO CREATIONS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1982,
+      "name": "PANINI KABOB GRILL",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 2100,
+      "name": "PAPE MATERIAL HANDLING",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1447,
+      "name": "PEARSON CUST POD (3002659)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1206,
+      "name": "PETERINS PRESS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1477,
+      "name": "PIERCE COLLEGE FARM",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 326,
+      "name": "PLANET SAFE",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 427,
+      "name": "PLANET ZOO",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1924,
+      "name": "PLURAL PUBLISHING INC. (1023932)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1489,
+      "name": "POLY PAK (1005240)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1816,
+      "name": "POPCORNOPOLIS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1990,
+      "name": "PORTOS BAKERY & CAFE",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 539,
+      "name": "PRIDE SASH (3005480)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 775,
+      "name": "RICHARD BURNS C/O REGINA BOOKS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 199,
+      "name": "RJ PUBLISHING",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 356,
+      "name": "ROSEDOG BOOKS (DORRANCE PUB)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 343,
+      "name": "ROXBURY PUBLISHING CO",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 2074,
+      "name": "SAMS CLUB",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1196,
+      "name": "SAREM",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 207,
+      "name": "SCB DISTRIBUTORS (3004416)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 515,
+      "name": "SCHOLARS INTERNATIONAL PUB.",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 962,
+      "name": "SCIENTIFICS DIRECT INC (3012916)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 2030,
+      "name": "SHAMSHIRI RESTAURANT",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 573,
+      "name": "SHEFFIELD PUBLISHING CO.",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 366,
+      "name": "SIGN MEDIA INC (3011027)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 436,
+      "name": "STERK PUBLISHING",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 994,
+      "name": "TEACHING STRATEGIES (3011140)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1184,
+      "name": "TERRIFIC SCIENCE PRESS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1636,
+      "name": "TEXTILES FOR YOU (3011891)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 2107,
+      "name": "THE HONOR PROGRAM (THE HONOR CORD CO) (1024633)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1420,
+      "name": "THE LIFEGUARD STORE",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1486,
+      "name": "TIFFANY'S BAKERY",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1134,
+      "name": "TONY WILSON & ASSOCIATES (3013435)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1853,
+      "name": "TRULY GOOD FOODS (1021693)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 629,
+      "name": "TWIGGS (3008790)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1548,
+      "name": "TYCO INTEGRATED SEC (3013029)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 297,
+      "name": "UAI VENDING",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1324,
+      "name": "ULTRASERV (1017883)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1473,
+      "name": "UNIFLEX (3009860)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 211,
+      "name": "UNIVERSITY OF OKLAHOMA PRESS (3002546)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 365,
+      "name": "UNIVERSITY OF VIRGINIA PRESS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 627,
+      "name": "UNIVERSITY OF WASHINGTON (3002277)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1446,
+      "name": "UPTIME ENERGY",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1179,
+      "name": "URNER BARRY (3012227)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 938,
+      "name": "US  FLASH & tECHNOLOGIES",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 231,
+      "name": "USPS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1677,
+      "name": "UZUN",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 408,
+      "name": "Valentino's (3013769)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1617,
+      "name": "VERA BRADLEY (1020186)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 2057,
+      "name": "VITA SEA",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 2001,
+      "name": "WALMART.COM",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 793,
+      "name": "WEST PUB GP- (3007509)  THOMAS REUTERS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 243,
+      "name": "WINDOWS",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 647,
+      "name": "WLAC",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 1590,
+      "name": "WORLDWIDE EXPRESS(3012187)",
+      "pierceItems": 1
+    },
+    {
+      "vendorId": 188,
+      "name": "ZEBRA PEN",
+      "pierceItems": 1
+    }
+  ],
+  "dccs": [
+    {
+      "dccId": 1313290,
+      "deptNum": 20,
+      "classNum": 10,
+      "catNum": 10,
+      "deptName": "NOT USE=111010",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 3934812,
+      "deptNum": 60,
+      "classNum": 10,
+      "catNum": 92,
+      "deptName": "CAFE (PREPARED)",
+      "className": "Drinks",
+      "catName": "Carb"
+    },
+    {
+      "dccId": 3934760,
+      "deptNum": 60,
+      "classNum": 10,
+      "catNum": 40,
+      "deptName": "CAFE (PREPARED)",
+      "className": "Drinks",
+      "catName": "Chai"
+    },
+    {
+      "dccId": 3934811,
+      "deptNum": 60,
+      "classNum": 10,
+      "catNum": 91,
+      "deptName": "CAFE (PREPARED)",
+      "className": "Drinks",
+      "catName": "Choc"
+    },
+    {
+      "dccId": 3934740,
+      "deptNum": 60,
+      "classNum": 10,
+      "catNum": 20,
+      "deptName": "CAFE (PREPARED)",
+      "className": "Drinks",
+      "catName": "Cold"
+    },
+    {
+      "dccId": 3934750,
+      "deptNum": 60,
+      "classNum": 10,
+      "catNum": 30,
+      "deptName": "CAFE (PREPARED)",
+      "className": "Drinks",
+      "catName": "Expresso"
+    },
+    {
+      "dccId": 3934770,
+      "deptNum": 60,
+      "classNum": 10,
+      "catNum": 50,
+      "deptName": "CAFE (PREPARED)",
+      "className": "Drinks",
+      "catName": "Frappe"
+    },
+    {
+      "dccId": 3934730,
+      "deptNum": 60,
+      "classNum": 10,
+      "catNum": 10,
+      "deptName": "CAFE (PREPARED)",
+      "className": "Drinks",
+      "catName": "Hot"
+    },
+    {
+      "dccId": 3934790,
+      "deptNum": 60,
+      "classNum": 10,
+      "catNum": 70,
+      "deptName": "CAFE (PREPARED)",
+      "className": "Drinks",
+      "catName": "Juices"
+    },
+    {
+      "dccId": 3934780,
+      "deptNum": 60,
+      "classNum": 10,
+      "catNum": 60,
+      "deptName": "CAFE (PREPARED)",
+      "className": "Drinks",
+      "catName": "Latte"
+    },
+    {
+      "dccId": 3934810,
+      "deptNum": 60,
+      "classNum": 10,
+      "catNum": 90,
+      "deptName": "CAFE (PREPARED)",
+      "className": "Drinks",
+      "catName": "Milk"
+    },
+    {
+      "dccId": 3934813,
+      "deptNum": 60,
+      "classNum": 10,
+      "catNum": 93,
+      "deptName": "CAFE (PREPARED)",
+      "className": "Drinks",
+      "catName": "NON Carb"
+    },
+    {
+      "dccId": 3934814,
+      "deptNum": 60,
+      "classNum": 10,
+      "catNum": 94,
+      "deptName": "CAFE (PREPARED)",
+      "className": "Drinks",
+      "catName": "Syrup"
+    },
+    {
+      "dccId": 3934800,
+      "deptNum": 60,
+      "classNum": 10,
+      "catNum": 80,
+      "deptName": "CAFE (PREPARED)",
+      "className": "Drinks",
+      "catName": "Water"
+    },
+    {
+      "dccId": 3937320,
+      "deptNum": 60,
+      "classNum": 20,
+      "catNum": 40,
+      "deptName": "CAFE (PREPARED)",
+      "className": "Food",
+      "catName": "Bagel"
+    },
+    {
+      "dccId": 3937360,
+      "deptNum": 60,
+      "classNum": 20,
+      "catNum": 80,
+      "deptName": "CAFE (PREPARED)",
+      "className": "Food",
+      "catName": "Brkfst Bagel"
+    },
+    {
+      "dccId": 3937310,
+      "deptNum": 60,
+      "classNum": 20,
+      "catNum": 30,
+      "deptName": "CAFE (PREPARED)",
+      "className": "Food",
+      "catName": "Cereal"
+    },
+    {
+      "dccId": 3937330,
+      "deptNum": 60,
+      "classNum": 20,
+      "catNum": 50,
+      "deptName": "CAFE (PREPARED)",
+      "className": "Food",
+      "catName": "Chips"
+    },
+    {
+      "dccId": 3937340,
+      "deptNum": 60,
+      "classNum": 20,
+      "catNum": 60,
+      "deptName": "CAFE (PREPARED)",
+      "className": "Food",
+      "catName": "Fruit"
+    },
+    {
+      "dccId": 3937300,
+      "deptNum": 60,
+      "classNum": 20,
+      "catNum": 20,
+      "deptName": "CAFE (PREPARED)",
+      "className": "Food",
+      "catName": "Pastries"
+    },
+    {
+      "dccId": 3937350,
+      "deptNum": 60,
+      "classNum": 20,
+      "catNum": 70,
+      "deptName": "CAFE (PREPARED)",
+      "className": "Food",
+      "catName": "Pizza"
+    },
+    {
+      "dccId": 3937290,
+      "deptNum": 60,
+      "classNum": 20,
+      "catNum": 10,
+      "deptName": "CAFE (PREPARED)",
+      "className": "Food",
+      "catName": "Sandwiches"
+    },
+    {
+      "dccId": 3937370,
+      "deptNum": 60,
+      "classNum": 20,
+      "catNum": 90,
+      "deptName": "CAFE (PREPARED)",
+      "className": "Food",
+      "catName": "Soup"
+    },
+    {
+      "dccId": 3939850,
+      "deptNum": 60,
+      "classNum": 30,
+      "catNum": 10,
+      "deptName": "CAFE (PREPARED)",
+      "className": "Supplies",
+      "catName": "Mugs"
+    },
+    {
+      "dccId": 5253130,
+      "deptNum": 80,
+      "classNum": 40,
+      "catNum": 10,
+      "deptName": "CONSUMABLES",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 5253140,
+      "deptNum": 80,
+      "classNum": 40,
+      "catNum": 20,
+      "deptName": "CONSUMABLES",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 5245450,
+      "deptNum": 80,
+      "classNum": 10,
+      "catNum": 10,
+      "deptName": "CONSUMABLES",
+      "className": "NONTAX CONSUM",
+      "catName": "GEN NONTX CONSU"
+    },
+    {
+      "dccId": 5245460,
+      "deptNum": 80,
+      "classNum": 10,
+      "catNum": 20,
+      "deptName": "CONSUMABLES",
+      "className": "NONTAX CONSUM",
+      "catName": "NONTAX DRINKS"
+    },
+    {
+      "dccId": 5245455,
+      "deptNum": 80,
+      "classNum": 10,
+      "catNum": 15,
+      "deptName": "CONSUMABLES",
+      "className": "NONTAX CONSUM",
+      "catName": "NONTAX FOOD"
+    },
+    {
+      "dccId": 5250570,
+      "deptNum": 80,
+      "classNum": 30,
+      "catNum": 10,
+      "deptName": "CONSUMABLES",
+      "className": "SNAP APPROVED",
+      "catName": "BREAD/CEREAL"
+    },
+    {
+      "dccId": 5250580,
+      "deptNum": 80,
+      "classNum": 30,
+      "catNum": 20,
+      "deptName": "CONSUMABLES",
+      "className": "SNAP APPROVED",
+      "catName": "DAIRY"
+    },
+    {
+      "dccId": 5250590,
+      "deptNum": 80,
+      "classNum": 30,
+      "catNum": 30,
+      "deptName": "CONSUMABLES",
+      "className": "SNAP APPROVED",
+      "catName": "MEAT/POULTRY"
+    },
+    {
+      "dccId": 5250610,
+      "deptNum": 80,
+      "classNum": 30,
+      "catNum": 50,
+      "deptName": "CONSUMABLES",
+      "className": "SNAP APPROVED",
+      "catName": "SNACKS"
+    },
+    {
+      "dccId": 5250600,
+      "deptNum": 80,
+      "classNum": 30,
+      "catNum": 40,
+      "deptName": "CONSUMABLES",
+      "className": "SNAP APPROVED",
+      "catName": "VEGE/FRUIT"
+    },
+    {
+      "dccId": 5248010,
+      "deptNum": 80,
+      "classNum": 20,
+      "catNum": 10,
+      "deptName": "CONSUMABLES",
+      "className": "TAX CONSUM",
+      "catName": "GEN TAX CONSUM"
+    },
+    {
+      "dccId": 5248020,
+      "deptNum": 80,
+      "classNum": 20,
+      "catNum": 20,
+      "deptName": "CONSUMABLES",
+      "className": "TAX CONSUM",
+      "catName": "TAXED BEVERAGES"
+    },
+    {
+      "dccId": 5248015,
+      "deptNum": 80,
+      "classNum": 20,
+      "catNum": 15,
+      "deptName": "CONSUMABLES",
+      "className": "TAX CONSUM",
+      "catName": "TAXED FOOD"
+    },
+    {
+      "dccId": 5248025,
+      "deptNum": 80,
+      "classNum": 20,
+      "catNum": 25,
+      "deptName": "CONSUMABLES",
+      "className": "TAX CONSUM",
+      "catName": "TAXED SUNDRIES"
+    },
+    {
+      "dccId": 4917770,
+      "deptNum": 75,
+      "classNum": 10,
+      "catNum": 10,
+      "deptName": "DO NOT USE",
+      "className": "FRESH",
+      "catName": "GENERAL"
+    },
+    {
+      "dccId": 4920330,
+      "deptNum": 75,
+      "classNum": 20,
+      "catNum": 10,
+      "deptName": "DO NOT USE",
+      "className": "FROZEN",
+      "catName": "GENERAL"
+    },
+    {
+      "dccId": 5905930,
+      "deptNum": 90,
+      "classNum": 30,
+      "catNum": 10,
+      "deptName": "FREIGHT",
+      "className": "FEES",
+      "catName": "FEES"
+    },
+    {
+      "dccId": 5900810,
+      "deptNum": 90,
+      "classNum": 10,
+      "catNum": 10,
+      "deptName": "FREIGHT",
+      "className": "FREIGHT IN",
+      "catName": "FREIGHT IN"
+    },
+    {
+      "dccId": 5903370,
+      "deptNum": 90,
+      "classNum": 20,
+      "catNum": 10,
+      "deptName": "FREIGHT",
+      "className": "FREIGHT OUT",
+      "catName": "FREIGHT OUT RTN"
+    },
+    {
+      "dccId": 5903380,
+      "deptNum": 90,
+      "classNum": 20,
+      "catNum": 20,
+      "deptName": "FREIGHT",
+      "className": "FREIGHT OUT",
+      "catName": "WEB SHIPPING"
+    },
+    {
+      "dccId": 4000266,
+      "deptNum": 61,
+      "classNum": 10,
+      "catNum": 10,
+      "deptName": "Freud Sip\\Tax",
+      "className": "Drink",
+      "catName": "Cold"
+    },
+    {
+      "dccId": 4000276,
+      "deptNum": 61,
+      "classNum": 10,
+      "catNum": 20,
+      "deptName": "Freud Sip\\Tax",
+      "className": "Drink",
+      "catName": "Hot"
+    },
+    {
+      "dccId": 4002826,
+      "deptNum": 61,
+      "classNum": 20,
+      "catNum": 10,
+      "deptName": "Freud Sip\\Tax",
+      "className": "Food",
+      "catName": "Hot"
+    },
+    {
+      "dccId": 1977620,
+      "deptNum": 30,
+      "classNum": 45,
+      "catNum": 20,
+      "deptName": "GENERAL MERCH",
+      "className": "ART SUPPLIES",
+      "catName": "DRAWING SUPP"
+    },
+    {
+      "dccId": 1977610,
+      "deptNum": 30,
+      "classNum": 45,
+      "catNum": 10,
+      "deptName": "GENERAL MERCH",
+      "className": "ART SUPPLIES",
+      "catName": "GEN ART SUPP"
+    },
+    {
+      "dccId": 1977615,
+      "deptNum": 30,
+      "classNum": 45,
+      "catNum": 15,
+      "deptName": "GENERAL MERCH",
+      "className": "ART SUPPLIES",
+      "catName": "PAINTING SUPP"
+    },
+    {
+      "dccId": 1982730,
+      "deptNum": 30,
+      "classNum": 65,
+      "catNum": 10,
+      "deptName": "GENERAL MERCH",
+      "className": "ATHLETICS",
+      "catName": "EQUIPMENT"
+    },
+    {
+      "dccId": 1972495,
+      "deptNum": 30,
+      "classNum": 25,
+      "catNum": 15,
+      "deptName": "GENERAL MERCH",
+      "className": "BINDER,IMPRINT",
+      "catName": "3RING BND IMPRT"
+    },
+    {
+      "dccId": 1972490,
+      "deptNum": 30,
+      "classNum": 25,
+      "catNum": 10,
+      "deptName": "GENERAL MERCH",
+      "className": "BINDER,IMPRINT",
+      "catName": "GEN NTBK IMPRT"
+    },
+    {
+      "dccId": 1972505,
+      "deptNum": 30,
+      "classNum": 25,
+      "catNum": 25,
+      "deptName": "GENERAL MERCH",
+      "className": "BINDER,IMPRINT",
+      "catName": "PADFOLIO IMPRT"
+    },
+    {
+      "dccId": 1972500,
+      "deptNum": 30,
+      "classNum": 25,
+      "catNum": 20,
+      "deptName": "GENERAL MERCH",
+      "className": "BINDER,IMPRINT",
+      "catName": "SPIRAL IMPRINT"
+    },
+    {
+      "dccId": 1968650,
+      "deptNum": 30,
+      "classNum": 10,
+      "catNum": 10,
+      "deptName": "GENERAL MERCH",
+      "className": "GENERAL",
+      "catName": "GENERAL"
+    },
+    {
+      "dccId": 1976331,
+      "deptNum": 30,
+      "classNum": 40,
+      "catNum": 11,
+      "deptName": "GENERAL MERCH",
+      "className": "GRADUATION",
+      "catName": "ACCESSESORY"
+    },
+    {
+      "dccId": 1976345,
+      "deptNum": 30,
+      "classNum": 40,
+      "catNum": 25,
+      "deptName": "GENERAL MERCH",
+      "className": "GRADUATION",
+      "catName": "FAC RGLA SALES"
+    },
+    {
+      "dccId": 1976340,
+      "deptNum": 30,
+      "classNum": 40,
+      "catNum": 20,
+      "deptName": "GENERAL MERCH",
+      "className": "GRADUATION",
+      "catName": "FACULTY RENTALS"
+    },
+    {
+      "dccId": 1976332,
+      "deptNum": 30,
+      "classNum": 40,
+      "catNum": 12,
+      "deptName": "GENERAL MERCH",
+      "className": "GRADUATION",
+      "catName": "GIFT"
+    },
+    {
+      "dccId": 1976330,
+      "deptNum": 30,
+      "classNum": 40,
+      "catNum": 10,
+      "deptName": "GENERAL MERCH",
+      "className": "GRADUATION",
+      "catName": "GRADUATION GENL"
+    },
+    {
+      "dccId": 1976335,
+      "deptNum": 30,
+      "classNum": 40,
+      "catNum": 15,
+      "deptName": "GENERAL MERCH",
+      "className": "GRADUATION",
+      "catName": "STUDENT REGALIA"
+    },
+    {
+      "dccId": 1980170,
+      "deptNum": 30,
+      "classNum": 55,
+      "catNum": 10,
+      "deptName": "GENERAL MERCH",
+      "className": "GREETING CARDS",
+      "catName": "GEN GRT CARDS"
+    },
+    {
+      "dccId": 1972756,
+      "deptNum": 30,
+      "classNum": 26,
+      "catNum": 20,
+      "deptName": "GENERAL MERCH",
+      "className": "IMPRINTED GOODS",
+      "catName": "DEPT ORDERS"
+    },
+    {
+      "dccId": 1972746,
+      "deptNum": 30,
+      "classNum": 26,
+      "catNum": 10,
+      "deptName": "GENERAL MERCH",
+      "className": "IMPRINTED GOODS",
+      "catName": "GENERAL"
+    },
+    {
+      "dccId": 1972766,
+      "deptNum": 30,
+      "classNum": 26,
+      "catNum": 30,
+      "deptName": "GENERAL MERCH",
+      "className": "IMPRINTED GOODS",
+      "catName": "WRITING INSTRUM"
+    },
+    {
+      "dccId": 1971215,
+      "deptNum": 30,
+      "classNum": 20,
+      "catNum": 15,
+      "deptName": "GENERAL MERCH",
+      "className": "NOTE-BIND NO IM",
+      "catName": "3 RING BINDER"
+    },
+    {
+      "dccId": 1971230,
+      "deptNum": 30,
+      "classNum": 20,
+      "catNum": 30,
+      "deptName": "GENERAL MERCH",
+      "className": "NOTE-BIND NO IM",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 1971210,
+      "deptNum": 30,
+      "classNum": 20,
+      "catNum": 10,
+      "deptName": "GENERAL MERCH",
+      "className": "NOTE-BIND NO IM",
+      "catName": "GEN NTBK PLAIN"
+    },
+    {
+      "dccId": 1971225,
+      "deptNum": 30,
+      "classNum": 20,
+      "catNum": 25,
+      "deptName": "GENERAL MERCH",
+      "className": "NOTE-BIND NO IM",
+      "catName": "PADFOLIO PLAIN"
+    },
+    {
+      "dccId": 1971220,
+      "deptNum": 30,
+      "classNum": 20,
+      "catNum": 20,
+      "deptName": "GENERAL MERCH",
+      "className": "NOTE-BIND NO IM",
+      "catName": "SPIRAL PLAIN"
+    },
+    {
+      "dccId": 1978890,
+      "deptNum": 30,
+      "classNum": 50,
+      "catNum": 10,
+      "deptName": "GENERAL MERCH",
+      "className": "OFFICE PRODUCTS",
+      "catName": "GEN OFF PRODUCT"
+    },
+    {
+      "dccId": 1978895,
+      "deptNum": 30,
+      "classNum": 50,
+      "catNum": 15,
+      "deptName": "GENERAL MERCH",
+      "className": "OFFICE PRODUCTS",
+      "catName": "PLANNERS"
+    },
+    {
+      "dccId": 1973775,
+      "deptNum": 30,
+      "classNum": 30,
+      "catNum": 15,
+      "deptName": "GENERAL MERCH",
+      "className": "PAPER PRODUCTS",
+      "catName": "FILLER PAPER"
+    },
+    {
+      "dccId": 1973770,
+      "deptNum": 30,
+      "classNum": 30,
+      "catNum": 10,
+      "deptName": "GENERAL MERCH",
+      "className": "PAPER PRODUCTS",
+      "catName": "GENERAL PAPER"
+    },
+    {
+      "dccId": 1973780,
+      "deptNum": 30,
+      "classNum": 30,
+      "catNum": 20,
+      "deptName": "GENERAL MERCH",
+      "className": "PAPER PRODUCTS",
+      "catName": "PAPER PADS"
+    },
+    {
+      "dccId": 1975316,
+      "deptNum": 30,
+      "classNum": 36,
+      "catNum": 20,
+      "deptName": "GENERAL MERCH",
+      "className": "REUSABLE ITEMS",
+      "catName": "DEPT IMPRINT"
+    },
+    {
+      "dccId": 1975321,
+      "deptNum": 30,
+      "classNum": 36,
+      "catNum": 25,
+      "deptName": "GENERAL MERCH",
+      "className": "REUSABLE ITEMS",
+      "catName": "DRINKWARE"
+    },
+    {
+      "dccId": 1975306,
+      "deptNum": 30,
+      "classNum": 36,
+      "catNum": 10,
+      "deptName": "GENERAL MERCH",
+      "className": "REUSABLE ITEMS",
+      "catName": "GENERAL"
+    },
+    {
+      "dccId": 1975311,
+      "deptNum": 30,
+      "classNum": 36,
+      "catNum": 15,
+      "deptName": "GENERAL MERCH",
+      "className": "REUSABLE ITEMS",
+      "catName": "IMPRINTED"
+    },
+    {
+      "dccId": 1975085,
+      "deptNum": 30,
+      "classNum": 35,
+      "catNum": 45,
+      "deptName": "GENERAL MERCH",
+      "className": "SOFT GOODS",
+      "catName": "BACKPACKS"
+    },
+    {
+      "dccId": 1975075,
+      "deptNum": 30,
+      "classNum": 35,
+      "catNum": 35,
+      "deptName": "GENERAL MERCH",
+      "className": "SOFT GOODS",
+      "catName": "CAP/HAT"
+    },
+    {
+      "dccId": 1975105,
+      "deptNum": 30,
+      "classNum": 35,
+      "catNum": 65,
+      "deptName": "GENERAL MERCH",
+      "className": "SOFT GOODS",
+      "catName": "FOOTWEAR"
+    },
+    {
+      "dccId": 1975050,
+      "deptNum": 30,
+      "classNum": 35,
+      "catNum": 10,
+      "deptName": "GENERAL MERCH",
+      "className": "SOFT GOODS",
+      "catName": "GENERAL SFT GDS"
+    },
+    {
+      "dccId": 1975080,
+      "deptNum": 30,
+      "classNum": 35,
+      "catNum": 40,
+      "deptName": "GENERAL MERCH",
+      "className": "SOFT GOODS",
+      "catName": "JACKET"
+    },
+    {
+      "dccId": 1975110,
+      "deptNum": 30,
+      "classNum": 35,
+      "catNum": 70,
+      "deptName": "GENERAL MERCH",
+      "className": "SOFT GOODS",
+      "catName": "JERSEY"
+    },
+    {
+      "dccId": 1975095,
+      "deptNum": 30,
+      "classNum": 35,
+      "catNum": 55,
+      "deptName": "GENERAL MERCH",
+      "className": "SOFT GOODS",
+      "catName": "PANTS"
+    },
+    {
+      "dccId": 1975090,
+      "deptNum": 30,
+      "classNum": 35,
+      "catNum": 50,
+      "deptName": "GENERAL MERCH",
+      "className": "SOFT GOODS",
+      "catName": "SHIRT L/S"
+    },
+    {
+      "dccId": 1975070,
+      "deptNum": 30,
+      "classNum": 35,
+      "catNum": 30,
+      "deptName": "GENERAL MERCH",
+      "className": "SOFT GOODS",
+      "catName": "SHORTS"
+    },
+    {
+      "dccId": 1975065,
+      "deptNum": 30,
+      "classNum": 35,
+      "catNum": 25,
+      "deptName": "GENERAL MERCH",
+      "className": "SOFT GOODS",
+      "catName": "SWEATPANTS"
+    },
+    {
+      "dccId": 1975060,
+      "deptNum": 30,
+      "classNum": 35,
+      "catNum": 20,
+      "deptName": "GENERAL MERCH",
+      "className": "SOFT GOODS",
+      "catName": "SWEATSHIRTS"
+    },
+    {
+      "dccId": 1975055,
+      "deptNum": 30,
+      "classNum": 35,
+      "catNum": 15,
+      "deptName": "GENERAL MERCH",
+      "className": "SOFT GOODS",
+      "catName": "T-SHIRTS"
+    },
+    {
+      "dccId": 1975100,
+      "deptNum": 30,
+      "classNum": 35,
+      "catNum": 60,
+      "deptName": "GENERAL MERCH",
+      "className": "SOFT GOODS",
+      "catName": "UNIFORMS"
+    },
+    {
+      "dccId": 1981450,
+      "deptNum": 30,
+      "classNum": 60,
+      "catNum": 10,
+      "deptName": "GENERAL MERCH",
+      "className": "TRANSIT/BUS",
+      "catName": "TRANSIT/BUS"
+    },
+    {
+      "dccId": 1969930,
+      "deptNum": 30,
+      "classNum": 15,
+      "catNum": 10,
+      "deptName": "GENERAL MERCH",
+      "className": "WRITING INSTR",
+      "catName": "GENERAL WRITING"
+    },
+    {
+      "dccId": 2039583,
+      "deptNum": 31,
+      "classNum": 31,
+      "catNum": 31,
+      "deptName": "HANDOUTS",
+      "className": "HANDOUTS",
+      "catName": "HANDOUTS"
+    },
+    {
+      "dccId": 668220,
+      "deptNum": 10,
+      "classNum": 50,
+      "catNum": 60,
+      "deptName": "NEW TEXTBOOKS",
+      "className": "ACCESS CODE",
+      "catName": "EMAIL CODE"
+    },
+    {
+      "dccId": 668210,
+      "deptNum": 10,
+      "classNum": 50,
+      "catNum": 50,
+      "deptName": "NEW TEXTBOOKS",
+      "className": "ACCESS CODE",
+      "catName": "PRINTED ACCESS"
+    },
+    {
+      "dccId": 665610,
+      "deptNum": 10,
+      "classNum": 40,
+      "catNum": 10,
+      "deptName": "NEW TEXTBOOKS",
+      "className": "CD/VIDEO",
+      "catName": "VIDEO"
+    },
+    {
+      "dccId": 663050,
+      "deptNum": 10,
+      "classNum": 30,
+      "catNum": 10,
+      "deptName": "NEW TEXTBOOKS",
+      "className": "COURSE PACKS",
+      "catName": "COURSEPAKS"
+    },
+    {
+      "dccId": 670730,
+      "deptNum": 10,
+      "classNum": 60,
+      "catNum": 10,
+      "deptName": "NEW TEXTBOOKS",
+      "className": "E-BOOKS",
+      "catName": "E-BOOKS"
+    },
+    {
+      "dccId": 657934,
+      "deptNum": 10,
+      "classNum": 10,
+      "catNum": 14,
+      "deptName": "NEW TEXTBOOKS",
+      "className": "NEW TEXTBOOKS",
+      "catName": "NEW PRINTED OER"
+    },
+    {
+      "dccId": 660490,
+      "deptNum": 10,
+      "classNum": 20,
+      "catNum": 10,
+      "deptName": "NEW TEXTBOOKS",
+      "className": "NEW TRADE TEXT",
+      "catName": "NEW TRADE TEXT"
+    },
+    {
+      "dccId": 1248012,
+      "deptNum": 19,
+      "classNum": 11,
+      "catNum": 12,
+      "deptName": "NON-STORE RENT",
+      "className": "NEW LATE FEE",
+      "catName": "FALL 11"
+    },
+    {
+      "dccId": 1248010,
+      "deptNum": 19,
+      "classNum": 11,
+      "catNum": 10,
+      "deptName": "NON-STORE RENT",
+      "className": "NEW LATE FEE",
+      "catName": "SPRING 12"
+    },
+    {
+      "dccId": 1248011,
+      "deptNum": 19,
+      "classNum": 11,
+      "catNum": 11,
+      "deptName": "NON-STORE RENT",
+      "className": "NEW LATE FEE",
+      "catName": "SUMMER 11"
+    },
+    {
+      "dccId": 1248013,
+      "deptNum": 19,
+      "classNum": 11,
+      "catNum": 13,
+      "deptName": "NON-STORE RENT",
+      "className": "NEW LATE FEE",
+      "catName": "WINTER 12"
+    },
+    {
+      "dccId": 1247756,
+      "deptNum": 19,
+      "classNum": 10,
+      "catNum": 12,
+      "deptName": "NON-STORE RENT",
+      "className": "NEW RENTALS",
+      "catName": "FALL 11"
+    },
+    {
+      "dccId": 1247757,
+      "deptNum": 19,
+      "classNum": 10,
+      "catNum": 13,
+      "deptName": "NON-STORE RENT",
+      "className": "NEW RENTALS",
+      "catName": "FALL 12"
+    },
+    {
+      "dccId": 1247760,
+      "deptNum": 19,
+      "classNum": 10,
+      "catNum": 16,
+      "deptName": "NON-STORE RENT",
+      "className": "NEW RENTALS",
+      "catName": "FALL 2013"
+    },
+    {
+      "dccId": 1247754,
+      "deptNum": 19,
+      "classNum": 10,
+      "catNum": 10,
+      "deptName": "NON-STORE RENT",
+      "className": "NEW RENTALS",
+      "catName": "SPRING 12"
+    },
+    {
+      "dccId": 1247758,
+      "deptNum": 19,
+      "classNum": 10,
+      "catNum": 14,
+      "deptName": "NON-STORE RENT",
+      "className": "NEW RENTALS",
+      "catName": "SPRING 13"
+    },
+    {
+      "dccId": 1247755,
+      "deptNum": 19,
+      "classNum": 10,
+      "catNum": 11,
+      "deptName": "NON-STORE RENT",
+      "className": "NEW RENTALS",
+      "catName": "SUMMER 11"
+    },
+    {
+      "dccId": 1247759,
+      "deptNum": 19,
+      "classNum": 10,
+      "catNum": 15,
+      "deptName": "NON-STORE RENT",
+      "className": "NEW RENTALS",
+      "catName": "SUMMER 13"
+    },
+    {
+      "dccId": 1248268,
+      "deptNum": 19,
+      "classNum": 12,
+      "catNum": 12,
+      "deptName": "NON-STORE RENT",
+      "className": "REPLACE FEE",
+      "catName": "FALL 11"
+    },
+    {
+      "dccId": 1248266,
+      "deptNum": 19,
+      "classNum": 12,
+      "catNum": 10,
+      "deptName": "NON-STORE RENT",
+      "className": "REPLACE FEE",
+      "catName": "SPRING 12"
+    },
+    {
+      "dccId": 1248267,
+      "deptNum": 19,
+      "classNum": 12,
+      "catNum": 11,
+      "deptName": "NON-STORE RENT",
+      "className": "REPLACE FEE",
+      "catName": "SUMMER 11"
+    },
+    {
+      "dccId": 1248269,
+      "deptNum": 19,
+      "classNum": 12,
+      "catNum": 13,
+      "deptName": "NON-STORE RENT",
+      "className": "REPLACE FEE",
+      "catName": "WINTER 12"
+    },
+    {
+      "dccId": 1250572,
+      "deptNum": 19,
+      "classNum": 21,
+      "catNum": 12,
+      "deptName": "NON-STORE RENT",
+      "className": "USED LATE FEE",
+      "catName": "FALL 11"
+    },
+    {
+      "dccId": 1250570,
+      "deptNum": 19,
+      "classNum": 21,
+      "catNum": 10,
+      "deptName": "NON-STORE RENT",
+      "className": "USED LATE FEE",
+      "catName": "SPRING 12"
+    },
+    {
+      "dccId": 1250571,
+      "deptNum": 19,
+      "classNum": 21,
+      "catNum": 11,
+      "deptName": "NON-STORE RENT",
+      "className": "USED LATE FEE",
+      "catName": "SUMMER 11"
+    },
+    {
+      "dccId": 1250573,
+      "deptNum": 19,
+      "classNum": 21,
+      "catNum": 13,
+      "deptName": "NON-STORE RENT",
+      "className": "USED LATE FEE",
+      "catName": "WINTER 12"
+    },
+    {
+      "dccId": 1250316,
+      "deptNum": 19,
+      "classNum": 20,
+      "catNum": 12,
+      "deptName": "NON-STORE RENT",
+      "className": "USED RENTALS",
+      "catName": "FALL 11"
+    },
+    {
+      "dccId": 1250317,
+      "deptNum": 19,
+      "classNum": 20,
+      "catNum": 13,
+      "deptName": "NON-STORE RENT",
+      "className": "USED RENTALS",
+      "catName": "FALL 12"
+    },
+    {
+      "dccId": 1250320,
+      "deptNum": 19,
+      "classNum": 20,
+      "catNum": 16,
+      "deptName": "NON-STORE RENT",
+      "className": "USED RENTALS",
+      "catName": "FALL 2013"
+    },
+    {
+      "dccId": 1250314,
+      "deptNum": 19,
+      "classNum": 20,
+      "catNum": 10,
+      "deptName": "NON-STORE RENT",
+      "className": "USED RENTALS",
+      "catName": "SPRING 12"
+    },
+    {
+      "dccId": 1250318,
+      "deptNum": 19,
+      "classNum": 20,
+      "catNum": 14,
+      "deptName": "NON-STORE RENT",
+      "className": "USED RENTALS",
+      "catName": "SPRING 13"
+    },
+    {
+      "dccId": 1250315,
+      "deptNum": 19,
+      "classNum": 20,
+      "catNum": 11,
+      "deptName": "NON-STORE RENT",
+      "className": "USED RENTALS",
+      "catName": "SUMMER 11"
+    },
+    {
+      "dccId": 1250319,
+      "deptNum": 19,
+      "classNum": 20,
+      "catNum": 15,
+      "deptName": "NON-STORE RENT",
+      "className": "USED RENTALS",
+      "catName": "SUMMER 13"
+    },
+    {
+      "dccId": 1250828,
+      "deptNum": 19,
+      "classNum": 22,
+      "catNum": 12,
+      "deptName": "NON-STORE RENT",
+      "className": "USED RPLCE FEE",
+      "catName": "FALL 11"
+    },
+    {
+      "dccId": 1250826,
+      "deptNum": 19,
+      "classNum": 22,
+      "catNum": 10,
+      "deptName": "NON-STORE RENT",
+      "className": "USED RPLCE FEE",
+      "catName": "SPRING 12"
+    },
+    {
+      "dccId": 1250827,
+      "deptNum": 19,
+      "classNum": 22,
+      "catNum": 11,
+      "deptName": "NON-STORE RENT",
+      "className": "USED RPLCE FEE",
+      "catName": "SUMMER 11"
+    },
+    {
+      "dccId": 1250829,
+      "deptNum": 19,
+      "classNum": 22,
+      "catNum": 13,
+      "deptName": "NON-STORE RENT",
+      "className": "USED RPLCE FEE",
+      "catName": "WINTER 12"
+    },
+    {
+      "dccId": 2767882,
+      "deptNum": 42,
+      "classNum": 60,
+      "catNum": 10,
+      "deptName": "NOT USE=303510",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2770442,
+      "deptNum": 42,
+      "classNum": 70,
+      "catNum": 10,
+      "deptName": "NOT USE=303510",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2773002,
+      "deptNum": 42,
+      "classNum": 80,
+      "catNum": 10,
+      "deptName": "NOT USE=303510",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2755082,
+      "deptNum": 42,
+      "classNum": 10,
+      "catNum": 10,
+      "deptName": "NOT USE=303510",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2757642,
+      "deptNum": 42,
+      "classNum": 20,
+      "catNum": 10,
+      "deptName": "NOT USE=303510",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2760202,
+      "deptNum": 42,
+      "classNum": 30,
+      "catNum": 10,
+      "deptName": "NOT USE=303510",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2762762,
+      "deptNum": 42,
+      "classNum": 40,
+      "catNum": 10,
+      "deptName": "NOT USE=303510",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2765322,
+      "deptNum": 42,
+      "classNum": 50,
+      "catNum": 10,
+      "deptName": "NOT USE=303510",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2820618,
+      "deptNum": 43,
+      "classNum": 10,
+      "catNum": 10,
+      "deptName": "NOT USE=304010",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2823178,
+      "deptNum": 43,
+      "classNum": 20,
+      "catNum": 10,
+      "deptName": "NOT USE=304010",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2825738,
+      "deptNum": 43,
+      "classNum": 30,
+      "catNum": 10,
+      "deptName": "NOT USE=304010",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2828298,
+      "deptNum": 43,
+      "classNum": 40,
+      "catNum": 10,
+      "deptName": "NOT USE=304010",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2886154,
+      "deptNum": 44,
+      "classNum": 10,
+      "catNum": 10,
+      "deptName": "NOT USE=305510",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 3037952,
+      "deptNum": 46,
+      "classNum": 91,
+      "catNum": 0,
+      "deptName": "NOT USE=901010",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 3037696,
+      "deptNum": 46,
+      "classNum": 90,
+      "catNum": 0,
+      "deptName": "NOT USE=901010",
+      "className": "DO NOT USE",
+      "catName": "NOT USE"
+    },
+    {
+      "dccId": 3279370,
+      "deptNum": 50,
+      "classNum": 10,
+      "catNum": 10,
+      "deptName": "NOT USED-801010",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 3284500,
+      "deptNum": 50,
+      "classNum": 30,
+      "catNum": 20,
+      "deptName": "NOT USED-801010",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 3287050,
+      "deptNum": 50,
+      "classNum": 40,
+      "catNum": 10,
+      "deptName": "NOT USED-801010",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 3281930,
+      "deptNum": 50,
+      "classNum": 20,
+      "catNum": 10,
+      "deptName": "NOT USED-801010",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 3284490,
+      "deptNum": 50,
+      "classNum": 30,
+      "catNum": 10,
+      "deptName": "NOT USED-801010",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 3281940,
+      "deptNum": 50,
+      "classNum": 20,
+      "catNum": 20,
+      "deptName": "NOT USED-801010",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 4590100,
+      "deptNum": 70,
+      "classNum": 10,
+      "catNum": 20,
+      "deptName": "PEETS/ CAFE'",
+      "className": "BEV TAXABLE",
+      "catName": "COLD"
+    },
+    {
+      "dccId": 4590090,
+      "deptNum": 70,
+      "classNum": 10,
+      "catNum": 10,
+      "deptName": "PEETS/ CAFE'",
+      "className": "BEV TAXABLE",
+      "catName": "HOT"
+    },
+    {
+      "dccId": 4592660,
+      "deptNum": 70,
+      "classNum": 20,
+      "catNum": 20,
+      "deptName": "PEETS/ CAFE'",
+      "className": "FOOD TAXABLE",
+      "catName": "COLD"
+    },
+    {
+      "dccId": 4592650,
+      "deptNum": 70,
+      "classNum": 20,
+      "catNum": 10,
+      "deptName": "PEETS/ CAFE'",
+      "className": "FOOD TAXABLE",
+      "catName": "HOT"
+    },
+    {
+      "dccId": 6490634,
+      "deptNum": 99,
+      "classNum": 10,
+      "catNum": 10,
+      "deptName": "PENALTIES/FEES",
+      "className": "PENALTIES",
+      "catName": "PENALTIES"
+    },
+    {
+      "dccId": 6513507,
+      "deptNum": 99,
+      "classNum": 99,
+      "catNum": 99,
+      "deptName": "PENALTIES/FEES",
+      "className": "SYSTEM MAINT",
+      "catName": "MAINT EQUIP"
+    },
+    {
+      "dccId": 859660,
+      "deptNum": 13,
+      "classNum": 30,
+      "catNum": 12,
+      "deptName": "STORE RENTALS",
+      "className": "INSTORE RENTALS",
+      "catName": "FALL 11"
+    },
+    {
+      "dccId": 859658,
+      "deptNum": 13,
+      "classNum": 30,
+      "catNum": 10,
+      "deptName": "STORE RENTALS",
+      "className": "INSTORE RENTALS",
+      "catName": "SPRING 11"
+    },
+    {
+      "dccId": 859659,
+      "deptNum": 13,
+      "classNum": 30,
+      "catNum": 11,
+      "deptName": "STORE RENTALS",
+      "className": "INSTORE RENTALS",
+      "catName": "SUMMER 11"
+    },
+    {
+      "dccId": 859661,
+      "deptNum": 13,
+      "classNum": 30,
+      "catNum": 13,
+      "deptName": "STORE RENTALS",
+      "className": "INSTORE RENTALS",
+      "catName": "WINTER 12"
+    },
+    {
+      "dccId": 854796,
+      "deptNum": 13,
+      "classNum": 11,
+      "catNum": 12,
+      "deptName": "STORE RENTALS",
+      "className": "NEW LATE FEE",
+      "catName": "FALL 11"
+    },
+    {
+      "dccId": 854794,
+      "deptNum": 13,
+      "classNum": 11,
+      "catNum": 10,
+      "deptName": "STORE RENTALS",
+      "className": "NEW LATE FEE",
+      "catName": "SPRING 12"
+    },
+    {
+      "dccId": 854795,
+      "deptNum": 13,
+      "classNum": 11,
+      "catNum": 11,
+      "deptName": "STORE RENTALS",
+      "className": "NEW LATE FEE",
+      "catName": "SUMMER 11"
+    },
+    {
+      "dccId": 854797,
+      "deptNum": 13,
+      "classNum": 11,
+      "catNum": 13,
+      "deptName": "STORE RENTALS",
+      "className": "NEW LATE FEE",
+      "catName": "WINTER 12"
+    },
+    {
+      "dccId": 854540,
+      "deptNum": 13,
+      "classNum": 10,
+      "catNum": 12,
+      "deptName": "STORE RENTALS",
+      "className": "NEW RENTALS",
+      "catName": "FALL 11"
+    },
+    {
+      "dccId": 854538,
+      "deptNum": 13,
+      "classNum": 10,
+      "catNum": 10,
+      "deptName": "STORE RENTALS",
+      "className": "NEW RENTALS",
+      "catName": "SPRING 12"
+    },
+    {
+      "dccId": 854539,
+      "deptNum": 13,
+      "classNum": 10,
+      "catNum": 11,
+      "deptName": "STORE RENTALS",
+      "className": "NEW RENTALS",
+      "catName": "SUMMER 11"
+    },
+    {
+      "dccId": 854541,
+      "deptNum": 13,
+      "classNum": 10,
+      "catNum": 13,
+      "deptName": "STORE RENTALS",
+      "className": "NEW RENTALS",
+      "catName": "WINTER 12"
+    },
+    {
+      "dccId": 855052,
+      "deptNum": 13,
+      "classNum": 12,
+      "catNum": 12,
+      "deptName": "STORE RENTALS",
+      "className": "NEW REPLACE FEE",
+      "catName": "FALL 11"
+    },
+    {
+      "dccId": 855050,
+      "deptNum": 13,
+      "classNum": 12,
+      "catNum": 10,
+      "deptName": "STORE RENTALS",
+      "className": "NEW REPLACE FEE",
+      "catName": "SPRING 12"
+    },
+    {
+      "dccId": 855051,
+      "deptNum": 13,
+      "classNum": 12,
+      "catNum": 11,
+      "deptName": "STORE RENTALS",
+      "className": "NEW REPLACE FEE",
+      "catName": "SUMMER 11"
+    },
+    {
+      "dccId": 855053,
+      "deptNum": 13,
+      "classNum": 12,
+      "catNum": 13,
+      "deptName": "STORE RENTALS",
+      "className": "NEW REPLACE FEE",
+      "catName": "WINTER 12"
+    },
+    {
+      "dccId": 862476,
+      "deptNum": 13,
+      "classNum": 41,
+      "catNum": 12,
+      "deptName": "STORE RENTALS",
+      "className": "OE/OP LATE FEES",
+      "catName": "FALL 11"
+    },
+    {
+      "dccId": 862474,
+      "deptNum": 13,
+      "classNum": 41,
+      "catNum": 10,
+      "deptName": "STORE RENTALS",
+      "className": "OE/OP LATE FEES",
+      "catName": "SPRING 12"
+    },
+    {
+      "dccId": 862475,
+      "deptNum": 13,
+      "classNum": 41,
+      "catNum": 11,
+      "deptName": "STORE RENTALS",
+      "className": "OE/OP LATE FEES",
+      "catName": "SUMMER 11"
+    },
+    {
+      "dccId": 862477,
+      "deptNum": 13,
+      "classNum": 41,
+      "catNum": 13,
+      "deptName": "STORE RENTALS",
+      "className": "OE/OP LATE FEES",
+      "catName": "WINTER 12"
+    },
+    {
+      "dccId": 862220,
+      "deptNum": 13,
+      "classNum": 40,
+      "catNum": 12,
+      "deptName": "STORE RENTALS",
+      "className": "OE/OP RENTAL",
+      "catName": "FALL 11"
+    },
+    {
+      "dccId": 862221,
+      "deptNum": 13,
+      "classNum": 40,
+      "catNum": 13,
+      "deptName": "STORE RENTALS",
+      "className": "OE/OP RENTAL",
+      "catName": "FALL 12"
+    },
+    {
+      "dccId": 862218,
+      "deptNum": 13,
+      "classNum": 40,
+      "catNum": 10,
+      "deptName": "STORE RENTALS",
+      "className": "OE/OP RENTAL",
+      "catName": "SPRING 12"
+    },
+    {
+      "dccId": 862222,
+      "deptNum": 13,
+      "classNum": 40,
+      "catNum": 14,
+      "deptName": "STORE RENTALS",
+      "className": "OE/OP RENTAL",
+      "catName": "SPRING 13"
+    },
+    {
+      "dccId": 862219,
+      "deptNum": 13,
+      "classNum": 40,
+      "catNum": 11,
+      "deptName": "STORE RENTALS",
+      "className": "OE/OP RENTAL",
+      "catName": "SUMMER 11"
+    },
+    {
+      "dccId": 862223,
+      "deptNum": 13,
+      "classNum": 40,
+      "catNum": 15,
+      "deptName": "STORE RENTALS",
+      "className": "OE/OP RENTAL",
+      "catName": "SUMMER 13"
+    },
+    {
+      "dccId": 862732,
+      "deptNum": 13,
+      "classNum": 42,
+      "catNum": 12,
+      "deptName": "STORE RENTALS",
+      "className": "OE/OP RPLCE FEE",
+      "catName": "FALL 11"
+    },
+    {
+      "dccId": 862730,
+      "deptNum": 13,
+      "classNum": 42,
+      "catNum": 10,
+      "deptName": "STORE RENTALS",
+      "className": "OE/OP RPLCE FEE",
+      "catName": "SPRING 12"
+    },
+    {
+      "dccId": 862731,
+      "deptNum": 13,
+      "classNum": 42,
+      "catNum": 11,
+      "deptName": "STORE RENTALS",
+      "className": "OE/OP RPLCE FEE",
+      "catName": "SUMMER 11"
+    },
+    {
+      "dccId": 862733,
+      "deptNum": 13,
+      "classNum": 42,
+      "catNum": 13,
+      "deptName": "STORE RENTALS",
+      "className": "OE/OP RPLCE FEE",
+      "catName": "WINTER 12"
+    },
+    {
+      "dccId": 857356,
+      "deptNum": 13,
+      "classNum": 21,
+      "catNum": 12,
+      "deptName": "STORE RENTALS",
+      "className": "USED LATE FEE",
+      "catName": "FALL 11"
+    },
+    {
+      "dccId": 857354,
+      "deptNum": 13,
+      "classNum": 21,
+      "catNum": 10,
+      "deptName": "STORE RENTALS",
+      "className": "USED LATE FEE",
+      "catName": "SPRING 12"
+    },
+    {
+      "dccId": 857355,
+      "deptNum": 13,
+      "classNum": 21,
+      "catNum": 11,
+      "deptName": "STORE RENTALS",
+      "className": "USED LATE FEE",
+      "catName": "SUMMER 11"
+    },
+    {
+      "dccId": 857357,
+      "deptNum": 13,
+      "classNum": 21,
+      "catNum": 13,
+      "deptName": "STORE RENTALS",
+      "className": "USED LATE FEE",
+      "catName": "WINTER 12"
+    },
+    {
+      "dccId": 857100,
+      "deptNum": 13,
+      "classNum": 20,
+      "catNum": 12,
+      "deptName": "STORE RENTALS",
+      "className": "USED RENTALS",
+      "catName": "FALL 11"
+    },
+    {
+      "dccId": 857101,
+      "deptNum": 13,
+      "classNum": 20,
+      "catNum": 13,
+      "deptName": "STORE RENTALS",
+      "className": "USED RENTALS",
+      "catName": "FALL 12"
+    },
+    {
+      "dccId": 857104,
+      "deptNum": 13,
+      "classNum": 20,
+      "catNum": 16,
+      "deptName": "STORE RENTALS",
+      "className": "USED RENTALS",
+      "catName": "FALL 13"
+    },
+    {
+      "dccId": 857098,
+      "deptNum": 13,
+      "classNum": 20,
+      "catNum": 10,
+      "deptName": "STORE RENTALS",
+      "className": "USED RENTALS",
+      "catName": "SPRING 12"
+    },
+    {
+      "dccId": 857102,
+      "deptNum": 13,
+      "classNum": 20,
+      "catNum": 14,
+      "deptName": "STORE RENTALS",
+      "className": "USED RENTALS",
+      "catName": "SPRING 13"
+    },
+    {
+      "dccId": 857099,
+      "deptNum": 13,
+      "classNum": 20,
+      "catNum": 11,
+      "deptName": "STORE RENTALS",
+      "className": "USED RENTALS",
+      "catName": "SUMMER 11"
+    },
+    {
+      "dccId": 857103,
+      "deptNum": 13,
+      "classNum": 20,
+      "catNum": 15,
+      "deptName": "STORE RENTALS",
+      "className": "USED RENTALS",
+      "catName": "SUMMER 13"
+    },
+    {
+      "dccId": 857612,
+      "deptNum": 13,
+      "classNum": 22,
+      "catNum": 12,
+      "deptName": "STORE RENTALS",
+      "className": "USED RPLCE FEE",
+      "catName": "FALL 11"
+    },
+    {
+      "dccId": 857610,
+      "deptNum": 13,
+      "classNum": 22,
+      "catNum": 10,
+      "deptName": "STORE RENTALS",
+      "className": "USED RPLCE FEE",
+      "catName": "SPRING 12"
+    },
+    {
+      "dccId": 857611,
+      "deptNum": 13,
+      "classNum": 22,
+      "catNum": 11,
+      "deptName": "STORE RENTALS",
+      "className": "USED RPLCE FEE",
+      "catName": "SUMMER 11"
+    },
+    {
+      "dccId": 857613,
+      "deptNum": 13,
+      "classNum": 22,
+      "catNum": 13,
+      "deptName": "STORE RENTALS",
+      "className": "USED RPLCE FEE",
+      "catName": "WINTER 12"
+    },
+    {
+      "dccId": 855306,
+      "deptNum": 13,
+      "classNum": 13,
+      "catNum": 10,
+      "deptName": "STORE RENTALS",
+      "className": "WHLSL RENTAL",
+      "catName": "WHLSL RENTAL"
+    },
+    {
+      "dccId": 2625290,
+      "deptNum": 40,
+      "classNum": 15,
+      "catNum": 10,
+      "deptName": "STORE USE SUPP",
+      "className": "BOXES",
+      "catName": "BOXES"
+    },
+    {
+      "dccId": 2629130,
+      "deptNum": 40,
+      "classNum": 30,
+      "catNum": 10,
+      "deptName": "STORE USE SUPP",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2629140,
+      "deptNum": 40,
+      "classNum": 30,
+      "catNum": 20,
+      "deptName": "STORE USE SUPP",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2629150,
+      "deptNum": 40,
+      "classNum": 30,
+      "catNum": 30,
+      "deptName": "STORE USE SUPP",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2629160,
+      "deptNum": 40,
+      "classNum": 30,
+      "catNum": 40,
+      "deptName": "STORE USE SUPP",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2629386,
+      "deptNum": 40,
+      "classNum": 31,
+      "catNum": 10,
+      "deptName": "STORE USE SUPP",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2629396,
+      "deptNum": 40,
+      "classNum": 31,
+      "catNum": 20,
+      "deptName": "STORE USE SUPP",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2629406,
+      "deptNum": 40,
+      "classNum": 31,
+      "catNum": 30,
+      "deptName": "STORE USE SUPP",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2629416,
+      "deptNum": 40,
+      "classNum": 31,
+      "catNum": 40,
+      "deptName": "STORE USE SUPP",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2631690,
+      "deptNum": 40,
+      "classNum": 40,
+      "catNum": 10,
+      "deptName": "STORE USE SUPP",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2631700,
+      "deptNum": 40,
+      "classNum": 40,
+      "catNum": 20,
+      "deptName": "STORE USE SUPP",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2631710,
+      "deptNum": 40,
+      "classNum": 40,
+      "catNum": 30,
+      "deptName": "STORE USE SUPP",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2634250,
+      "deptNum": 40,
+      "classNum": 50,
+      "catNum": 10,
+      "deptName": "STORE USE SUPP",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2624010,
+      "deptNum": 40,
+      "classNum": 10,
+      "catNum": 10,
+      "deptName": "STORE USE SUPP",
+      "className": "GEN STORE USE",
+      "catName": "GN ST USE-SUPPY"
+    },
+    {
+      "dccId": 2626570,
+      "deptNum": 40,
+      "classNum": 20,
+      "catNum": 10,
+      "deptName": "STORE USE SUPP",
+      "className": "LABELS",
+      "catName": "LABELS"
+    },
+    {
+      "dccId": 2627855,
+      "deptNum": 40,
+      "classNum": 25,
+      "catNum": 15,
+      "deptName": "STORE USE SUPP",
+      "className": "STORE BAGS",
+      "catName": "GENERIC BAGS"
+    },
+    {
+      "dccId": 2627850,
+      "deptNum": 40,
+      "classNum": 25,
+      "catNum": 10,
+      "deptName": "STORE USE SUPP",
+      "className": "STORE BAGS",
+      "catName": "IMPRINTED BAGS"
+    },
+    {
+      "dccId": 5318666,
+      "deptNum": 81,
+      "classNum": 40,
+      "catNum": 10,
+      "deptName": "TECHNICAL",
+      "className": "CULINARY",
+      "catName": "GENERAL CULINAR"
+    },
+    {
+      "dccId": 5313556,
+      "deptNum": 81,
+      "classNum": 20,
+      "catNum": 20,
+      "deptName": "TECHNICAL",
+      "className": "DENTAL",
+      "catName": "DENTAL KIT"
+    },
+    {
+      "dccId": 5313546,
+      "deptNum": 81,
+      "classNum": 20,
+      "catNum": 10,
+      "deptName": "TECHNICAL",
+      "className": "DENTAL",
+      "catName": "GENERAL DENTAL"
+    },
+    {
+      "dccId": 5323796,
+      "deptNum": 81,
+      "classNum": 60,
+      "catNum": 20,
+      "deptName": "TECHNICAL",
+      "className": "ELECTRONICS",
+      "catName": "CALCULATORS"
+    },
+    {
+      "dccId": 5323786,
+      "deptNum": 81,
+      "classNum": 60,
+      "catNum": 10,
+      "deptName": "TECHNICAL",
+      "className": "ELECTRONICS",
+      "catName": "ELECTRONICS GEN"
+    },
+    {
+      "dccId": 5323806,
+      "deptNum": 81,
+      "classNum": 60,
+      "catNum": 30,
+      "deptName": "TECHNICAL",
+      "className": "ELECTRONICS",
+      "catName": "MAGNETIC MEDIA"
+    },
+    {
+      "dccId": 5310986,
+      "deptNum": 81,
+      "classNum": 10,
+      "catNum": 10,
+      "deptName": "TECHNICAL",
+      "className": "GENERAL TECH",
+      "catName": "GENERAL TECH"
+    },
+    {
+      "dccId": 5321226,
+      "deptNum": 81,
+      "classNum": 50,
+      "catNum": 10,
+      "deptName": "TECHNICAL",
+      "className": "HARDWARE",
+      "catName": "HARDWARE GEN"
+    },
+    {
+      "dccId": 5326346,
+      "deptNum": 81,
+      "classNum": 70,
+      "catNum": 10,
+      "deptName": "TECHNICAL",
+      "className": "MEDICAL",
+      "catName": "MEDICAL GENERAL"
+    },
+    {
+      "dccId": 5316106,
+      "deptNum": 81,
+      "classNum": 30,
+      "catNum": 10,
+      "deptName": "TECHNICAL",
+      "className": "PHOTO",
+      "catName": "GENERAL PHOTO"
+    },
+    {
+      "dccId": 5322506,
+      "deptNum": 81,
+      "classNum": 55,
+      "catNum": 10,
+      "deptName": "TECHNICAL",
+      "className": "SOFTWARE",
+      "catName": "SOFTWARE GEN"
+    },
+    {
+      "dccId": 5322516,
+      "deptNum": 81,
+      "classNum": 55,
+      "catNum": 20,
+      "deptName": "TECHNICAL",
+      "className": "SOFTWARE",
+      "catName": "SOFTWARE LIC"
+    },
+    {
+      "dccId": 796682,
+      "deptNum": 12,
+      "classNum": 40,
+      "catNum": 10,
+      "deptName": "TRADE BOOKS",
+      "className": "CALENDARS",
+      "catName": "CALENDARS"
+    },
+    {
+      "dccId": 801802,
+      "deptNum": 12,
+      "classNum": 60,
+      "catNum": 10,
+      "deptName": "TRADE BOOKS",
+      "className": "CHILDRENS",
+      "catName": "CHILDRENS"
+    },
+    {
+      "dccId": 794122,
+      "deptNum": 12,
+      "classNum": 30,
+      "catNum": 10,
+      "deptName": "TRADE BOOKS",
+      "className": "MEDICAL",
+      "catName": "MEDICAL"
+    },
+    {
+      "dccId": 799242,
+      "deptNum": 12,
+      "classNum": 50,
+      "catNum": 10,
+      "deptName": "TRADE BOOKS",
+      "className": "PERIODICALS",
+      "catName": "PERIODICALS"
+    },
+    {
+      "dccId": 791582,
+      "deptNum": 12,
+      "classNum": 20,
+      "catNum": 30,
+      "deptName": "TRADE BOOKS",
+      "className": "STUDY AIDS",
+      "catName": "BARCHART"
+    },
+    {
+      "dccId": 791562,
+      "deptNum": 12,
+      "classNum": 20,
+      "catNum": 10,
+      "deptName": "TRADE BOOKS",
+      "className": "STUDY AIDS",
+      "catName": "STUDY AIDS"
+    },
+    {
+      "dccId": 791572,
+      "deptNum": 12,
+      "classNum": 20,
+      "catNum": 20,
+      "deptName": "TRADE BOOKS",
+      "className": "STUDY AIDS",
+      "catName": "TEST AIDS"
+    },
+    {
+      "dccId": 789516,
+      "deptNum": 12,
+      "classNum": 12,
+      "catNum": 12,
+      "deptName": "TRADE BOOKS",
+      "className": "TRADE BOOKS",
+      "catName": "TRADE BOOKS"
+    },
+    {
+      "dccId": 789002,
+      "deptNum": 12,
+      "classNum": 10,
+      "catNum": 10,
+      "deptName": "TRADE BOOKS",
+      "className": "TRADE GENERAL",
+      "catName": "TRADE GENERAL"
+    },
+    {
+      "dccId": 2692106,
+      "deptNum": 41,
+      "classNum": 20,
+      "catNum": 10,
+      "deptName": "TRANSIT(954070)",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2692116,
+      "deptNum": 41,
+      "classNum": 20,
+      "catNum": 20,
+      "deptName": "TRANSIT(954070)",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2694666,
+      "deptNum": 41,
+      "classNum": 30,
+      "catNum": 10,
+      "deptName": "TRANSIT(954070)",
+      "className": "DO NOT USE",
+      "catName": "DO NOT USE"
+    },
+    {
+      "dccId": 2689546,
+      "deptNum": 41,
+      "classNum": 10,
+      "catNum": 10,
+      "deptName": "TRANSIT(954070)",
+      "className": "U-PASS",
+      "catName": "U-PASS STUDENT"
+    },
+    {
+      "dccId": 723723,
+      "deptNum": 11,
+      "classNum": 11,
+      "catNum": 11,
+      "deptName": "USED TEXT",
+      "className": "USED TRADE TEXT",
+      "catName": "USED TRADE"
+    },
+    {
+      "dccId": 2296330,
+      "deptNum": 35,
+      "classNum": 10,
+      "catNum": 10,
+      "deptName": "VENDING",
+      "className": "VENDING",
+      "catName": "VENDING MACHINE"
+    },
+    {
+      "dccId": 6233610,
+      "deptNum": 95,
+      "classNum": 30,
+      "catNum": 10,
+      "deptName": "WRITE OFF",
+      "className": "DONATION",
+      "catName": "CAMPUS EVNT DON"
+    },
+    {
+      "dccId": 6228490,
+      "deptNum": 95,
+      "classNum": 10,
+      "catNum": 10,
+      "deptName": "WRITE OFF",
+      "className": "GM WRITE OFF",
+      "catName": "GM NO VALUE"
+    },
+    {
+      "dccId": 6231060,
+      "deptNum": 95,
+      "classNum": 20,
+      "catNum": 20,
+      "deptName": "WRITE OFF",
+      "className": "TEXT WRITE OFF",
+      "catName": "NEW TEXT NO VAL"
+    }
+  ],
+  "taxTypes": [
+    {
+      "taxTypeId": 4,
+      "description": "STATE",
+      "pierceItems": 48517
+    },
+    {
+      "taxTypeId": 3,
+      "description": "NOT TAXABLE",
+      "pierceItems": 12863
+    },
+    {
+      "taxTypeId": 6,
+      "description": "9.75",
+      "pierceItems": 13
+    },
+    {
+      "taxTypeId": 7,
+      "description": "10.50% TAX",
+      "pierceItems": 2
+    }
+  ],
+  "tagTypes": [
+    {
+      "tagTypeId": 3,
+      "label": "LARGE w/Price/Color",
+      "subsystem": 1,
+      "pierceRows": 39027
+    },
+    {
+      "tagTypeId": 10000081,
+      "label": "Large w/ ISBN",
+      "subsystem": 2,
+      "pierceRows": 26151
+    },
+    {
+      "tagTypeId": 10000065,
+      "label": "Small w/Price Cat#",
+      "subsystem": 1,
+      "pierceRows": 7974
+    },
+    {
+      "tagTypeId": 10000141,
+      "label": "LARGE w/Price/Date",
+      "subsystem": 2,
+      "pierceRows": 7153
+    },
+    {
+      "tagTypeId": 10000059,
+      "label": "LARGE no Price",
+      "subsystem": 2,
+      "pierceRows": 6231
+    },
+    {
+      "tagTypeId": 10000142,
+      "label": "LARGE w/Prce/Date",
+      "subsystem": 3,
+      "pierceRows": 3912
+    },
+    {
+      "tagTypeId": 10000058,
+      "label": "BIN LABELS no Price",
+      "subsystem": 2,
+      "pierceRows": 3130
+    },
+    {
+      "tagTypeId": 10000121,
+      "label": "Small GM",
+      "subsystem": 1,
+      "pierceRows": 1565
+    },
+    {
+      "tagTypeId": 10000080,
+      "label": "Shelf Tag",
+      "subsystem": 1,
+      "pierceRows": 1279
+    },
+    {
+      "tagTypeId": 10000118,
+      "label": "Large Textbook",
+      "subsystem": 2,
+      "pierceRows": 801
+    },
+    {
+      "tagTypeId": 10000040,
+      "label": "LARGE w/Prce",
+      "subsystem": 3,
+      "pierceRows": 295
+    },
+    {
+      "tagTypeId": 1,
+      "label": "BIN LABELS w/ Price",
+      "subsystem": 1,
+      "pierceRows": 71
+    },
+    {
+      "tagTypeId": 10000049,
+      "label": "BIN LABELS w/ Price",
+      "subsystem": 4,
+      "pierceRows": 15
+    },
+    {
+      "tagTypeId": 10000125,
+      "label": "Shelf Tag w/SKU",
+      "subsystem": 1,
+      "pierceRows": 9
+    },
+    {
+      "tagTypeId": 10000119,
+      "label": "Large Tradebook",
+      "subsystem": 3,
+      "pierceRows": 3
+    },
+    {
+      "tagTypeId": 10000086,
+      "label": "LG w/ISBN no Price",
+      "subsystem": 2,
+      "pierceRows": 3
+    },
+    {
+      "tagTypeId": 10000102,
+      "label": "Shelf Tag",
+      "subsystem": 2,
+      "pierceRows": 3
+    },
+    {
+      "tagTypeId": 10000101,
+      "label": "SM w/price/cat#/com",
+      "subsystem": 1,
+      "pierceRows": 3
+    },
+    {
+      "tagTypeId": 10000069,
+      "label": "SMALL w/ Price",
+      "subsystem": 2,
+      "pierceRows": 3
+    },
+    {
+      "tagTypeId": 10000068,
+      "label": "LARGE DESC w/P wo/C",
+      "subsystem": 1,
+      "pierceRows": 2
+    },
+    {
+      "tagTypeId": 10000116,
+      "label": "Large No Barcode",
+      "subsystem": 1,
+      "pierceRows": 2
+    },
+    {
+      "tagTypeId": 10000138,
+      "label": "BIN LABELS ISBN",
+      "subsystem": 2,
+      "pierceRows": 1
+    },
+    {
+      "tagTypeId": 10000029,
+      "label": "BIN LABELS w/Price",
+      "subsystem": 2,
+      "pierceRows": 1
+    },
+    {
+      "tagTypeId": 10000117,
+      "label": "Large w/prc/cat#",
+      "subsystem": 1,
+      "pierceRows": 1
+    },
+    {
+      "tagTypeId": 10000103,
+      "label": "LG w/price/isbn/shlf",
+      "subsystem": 2,
+      "pierceRows": 1
+    },
+    {
+      "tagTypeId": 10000073,
+      "label": "LG w/price/shelf",
+      "subsystem": 2,
+      "pierceRows": 1
+    },
+    {
+      "tagTypeId": 10000146,
+      "label": "Small SKU / DCC",
+      "subsystem": 1,
+      "pierceRows": 1
+    },
+    {
+      "tagTypeId": 10000132,
+      "label": "Art Back Tag",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000129,
+      "label": "Art Barcode",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000131,
+      "label": "Art Barcode & Price",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000130,
+      "label": "Art Price",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000128,
+      "label": "Bin Label",
+      "subsystem": 2,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000043,
+      "label": "BIN LABELS no Price",
+      "subsystem": 3,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 5,
+      "label": "BIN LABELS no Price",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000052,
+      "label": "BIN LABELS no Price",
+      "subsystem": 4,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000135,
+      "label": "Bin Labels w/ ISBN",
+      "subsystem": 3,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000039,
+      "label": "BIN LABELS w/ Price",
+      "subsystem": 3,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000096,
+      "label": "BL n/p n/vm",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000114,
+      "label": "BL n/p n/vm",
+      "subsystem": 4,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000113,
+      "label": "BL w/p n/vm",
+      "subsystem": 4,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000095,
+      "label": "BL w/p n/vm",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000154,
+      "label": "GM Barcode Only",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000134,
+      "label": "Hangtag 1.5 X 2.7",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000149,
+      "label": "HangTag S Central",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000063,
+      "label": "HG TG no price/color",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000064,
+      "label": "HG TG w/Clr no prce",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000061,
+      "label": "HG TG w/Prce no Clr",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000066,
+      "label": "HG TG w/Price Cat #",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000062,
+      "label": "HG TG w/Price/Color",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000144,
+      "label": "Large 1 X 2",
+      "subsystem": 2,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000145,
+      "label": "Large 1 X 2",
+      "subsystem": 3,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000139,
+      "label": "Large Cat Only",
+      "subsystem": 3,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000120,
+      "label": "Large GM",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000147,
+      "label": "Large No Brcd Cnterd",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000051,
+      "label": "LARGE no Price",
+      "subsystem": 4,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000042,
+      "label": "LARGE no Price",
+      "subsystem": 3,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 4,
+      "label": "LARGE no Price/Color",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000153,
+      "label": "Large Text D/Crs/Sec",
+      "subsystem": 2,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000152,
+      "label": "Large Text W/Sec",
+      "subsystem": 2,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000122,
+      "label": "LARGE Title 2 lines",
+      "subsystem": 2,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000148,
+      "label": "Large Trade ISBN",
+      "subsystem": 3,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000137,
+      "label": "Large W/ recv date",
+      "subsystem": 3,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000022,
+      "label": "LARGE w/Clr no prce",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000050,
+      "label": "LARGE w/Prce",
+      "subsystem": 4,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 2,
+      "label": "LARGE w/Prce no Clr",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000030,
+      "label": "LARGE w/Price",
+      "subsystem": 2,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000140,
+      "label": "LG MinOrderQty",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000090,
+      "label": "LG n/p n/c n/vm",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000106,
+      "label": "LG n/p n/vm",
+      "subsystem": 4,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000088,
+      "label": "LG n/p w/c n/vm",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000089,
+      "label": "LG w/p n/c n/vm",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000105,
+      "label": "LG w/p n/vm",
+      "subsystem": 4,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000087,
+      "label": "LG w/p w/c n/vm",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000072,
+      "label": "LG w/prc/clr/shlf",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000084,
+      "label": "LG w/Prc/Clr/SKU",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000085,
+      "label": "LG w/Prc/NOClr/SKU",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000104,
+      "label": "LG w/price/isbn/shlf",
+      "subsystem": 3,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000074,
+      "label": "LG w/price/shelf",
+      "subsystem": 3,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000075,
+      "label": "LG w/price/shelf",
+      "subsystem": 4,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000127,
+      "label": "Shelf Tag",
+      "subsystem": 4,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000126,
+      "label": "Shelf Tag w/SKU",
+      "subsystem": 2,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000094,
+      "label": "SM n/p n/c n/vm",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000110,
+      "label": "SM n/p n/vm",
+      "subsystem": 4,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000092,
+      "label": "SM n/p w/c n/vm",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000093,
+      "label": "SM w/p n/c n/vm",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000109,
+      "label": "SM w/p n/vm",
+      "subsystem": 4,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000091,
+      "label": "SM w/p w/c n/vm",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000115,
+      "label": "SM w/prce/size",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000136,
+      "label": "SMALL GM w/Cat #",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000133,
+      "label": "SMALL Large Prce/Clr",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000046,
+      "label": "SMALL no price",
+      "subsystem": 3,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000054,
+      "label": "SMALL no price",
+      "subsystem": 4,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000034,
+      "label": "SMALL no Price",
+      "subsystem": 2,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000005,
+      "label": "SMALL no price/color",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000143,
+      "label": "Small Prc Cat# Date",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000025,
+      "label": "SMALL w/Clr no prce",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000044,
+      "label": "SMALL w/Prce",
+      "subsystem": 3,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000053,
+      "label": "SMALL w/Prce",
+      "subsystem": 4,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 6,
+      "label": "SMALL w/Prce no Clr",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000151,
+      "label": "SMALL w/Prce/Barcode",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000124,
+      "label": "SMALL w/Price Cat#",
+      "subsystem": 4,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000003,
+      "label": "SMALL w/Price/Color",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000150,
+      "label": "Trade Custom w/Price",
+      "subsystem": 3,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000076,
+      "label": "UNO Custom",
+      "subsystem": 1,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000077,
+      "label": "UNO Custom",
+      "subsystem": 2,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000078,
+      "label": "UNO Custom",
+      "subsystem": 3,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000079,
+      "label": "UNO Custom",
+      "subsystem": 4,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000083,
+      "label": "Varney's Cust w/Prce",
+      "subsystem": 2,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000082,
+      "label": "Varney's Custom",
+      "subsystem": 2,
+      "pierceRows": 0
+    },
+    {
+      "tagTypeId": 10000123,
+      "label": "WSU Hangtag",
+      "subsystem": 1,
+      "pierceRows": 0
+    }
+  ],
+  "inventoryStatusCodes": [
+    {
+      "statusCodeId": 2,
+      "label": "Active",
+      "pierceRows": 90773
+    },
+    {
+      "statusCodeId": 3,
+      "label": "Discontinue",
+      "pierceRows": 6037
+    },
+    {
+      "statusCodeId": 1,
+      "label": "New",
+      "pierceRows": 256
+    },
+    {
+      "statusCodeId": 5,
+      "label": "Non-Autogen",
+      "pierceRows": 0
+    }
+  ],
+  "packageTypes": [
+    {
+      "code": "EA",
+      "label": "Each",
+      "defaultQty": 1,
+      "pierceItems": 28394
+    },
+    {
+      "code": "CS",
+      "label": null,
+      "defaultQty": 0,
+      "pierceItems": 2734
+    },
+    {
+      "code": "BX",
+      "label": "Box",
+      "defaultQty": 0,
+      "pierceItems": 1985
+    },
+    {
+      "code": "PK",
+      "label": "Package",
+      "defaultQty": 0,
+      "pierceItems": 118
+    },
+    {
+      "code": "CT",
+      "label": "Carton",
+      "defaultQty": 0,
+      "pierceItems": 33
+    },
+    {
+      "code": "DZ",
+      "label": "Dozen",
+      "defaultQty": 12,
+      "pierceItems": 24
+    },
+    {
+      "code": "DS",
+      "label": null,
+      "defaultQty": 0,
+      "pierceItems": 23
+    },
+    {
+      "code": "JR",
+      "label": "Jar",
+      "defaultQty": 260,
+      "pierceItems": 18
+    },
+    {
+      "code": "RL",
+      "label": "Roll",
+      "defaultQty": 0,
+      "pierceItems": 7
+    },
+    {
+      "code": "TB",
+      "label": null,
+      "defaultQty": 1,
+      "pierceItems": 4
+    },
+    {
+      "code": "PD",
+      "label": null,
+      "defaultQty": 0,
+      "pierceItems": 0
+    },
+    {
+      "code": "YD",
+      "label": "Yard",
+      "defaultQty": 1,
+      "pierceItems": 0
+    }
+  ],
+  "bindings": [
+    {
+      "bindingId": 15,
+      "label": "PAPERBACK",
+      "pierceBooks": 6290
+    },
+    {
+      "bindingId": 0,
+      "label": "NONE",
+      "pierceBooks": 2356
+    },
+    {
+      "bindingId": 24,
+      "label": "DIGITAL CONTENT",
+      "pierceBooks": 1827
+    },
+    {
+      "bindingId": 9,
+      "label": "HARDBACK",
+      "pierceBooks": 1309
+    },
+    {
+      "bindingId": 11,
+      "label": "LOOSELEAF",
+      "pierceBooks": 389
+    },
+    {
+      "bindingId": 19,
+      "label": "SPIRAL",
+      "pierceBooks": 364
+    },
+    {
+      "bindingId": 10,
+      "label": "KIT/SET/PACKAGE",
+      "pierceBooks": 339
+    },
+    {
+      "bindingId": 3,
+      "label": "BOARD",
+      "pierceBooks": 109
+    },
+    {
+      "bindingId": 18,
+      "label": "SHRINK WRAPPED",
+      "pierceBooks": 106
+    },
+    {
+      "bindingId": 7,
+      "label": "COMPACT DISK",
+      "pierceBooks": 46
+    },
+    {
+      "bindingId": 5,
+      "label": "BOUND",
+      "pierceBooks": 36
+    },
+    {
+      "bindingId": 13,
+      "label": "NON-BOOK/STRANGE",
+      "pierceBooks": 16
+    },
+    {
+      "bindingId": 14,
+      "label": "PACKAGED & COLLATED",
+      "pierceBooks": 11
+    },
+    {
+      "bindingId": 1,
+      "label": "3 RING BINDER",
+      "pierceBooks": 10
+    },
+    {
+      "bindingId": 2,
+      "label": "AUDIO CASSETTE",
+      "pierceBooks": 8
+    },
+    {
+      "bindingId": 6,
+      "label": "CLOTH",
+      "pierceBooks": 3
+    },
+    {
+      "bindingId": 8,
+      "label": "DISKETTE",
+      "pierceBooks": 3
+    },
+    {
+      "bindingId": 20,
+      "label": "TRADEPAPER",
+      "pierceBooks": 3
+    },
+    {
+      "bindingId": 4,
+      "label": "BOOK WITH DISKETTE",
+      "pierceBooks": 1
+    },
+    {
+      "bindingId": 22,
+      "label": "CALENDAR",
+      "pierceBooks": 1
+    },
+    {
+      "bindingId": 17,
+      "label": "RECORD",
+      "pierceBooks": 1
+    },
+    {
+      "bindingId": 23,
+      "label": "MAGAZINE",
+      "pierceBooks": 0
+    },
+    {
+      "bindingId": 12,
+      "label": "MASSMARKET",
+      "pierceBooks": 0
+    },
+    {
+      "bindingId": 16,
+      "label": "POPUP/MECHANICAL",
+      "pierceBooks": 0
+    },
+    {
+      "bindingId": 25,
+      "label": "RENTAL",
+      "pierceBooks": 0
+    },
+    {
+      "bindingId": 21,
+      "label": "VIDEO TAPE",
+      "pierceBooks": 0
+    }
+  ],
+  "colors": [
+    {
+      "colorId": 2,
+      "label": "BLACK",
+      "pierceItems": 1907
+    },
+    {
+      "colorId": 71,
+      "label": "ASSORTED - MEAD",
+      "pierceItems": 1116
+    },
+    {
+      "colorId": 5,
+      "label": "WHITE",
+      "pierceItems": 653
+    },
+    {
+      "colorId": 3,
+      "label": "BLUE",
+      "pierceItems": 592
+    },
+    {
+      "colorId": 1,
+      "label": "RED",
+      "pierceItems": 574
+    },
+    {
+      "colorId": 6,
+      "label": "GREEN",
+      "pierceItems": 323
+    },
+    {
+      "colorId": 15,
+      "label": "PINK",
+      "pierceItems": 304
+    },
+    {
+      "colorId": 4,
+      "label": "PURPLE",
+      "pierceItems": 241
+    },
+    {
+      "colorId": 22,
+      "label": "NAVY",
+      "pierceItems": 171
+    },
+    {
+      "colorId": 17,
+      "label": "YELLOW",
+      "pierceItems": 160
+    },
+    {
+      "colorId": 302,
+      "label": "CHARCOAL",
+      "pierceItems": 148
+    },
+    {
+      "colorId": 11,
+      "label": "ORANGE",
+      "pierceItems": 131
+    },
+    {
+      "colorId": 13,
+      "label": "CLEAR",
+      "pierceItems": 110
+    },
+    {
+      "colorId": 10,
+      "label": "SILVER",
+      "pierceItems": 93
+    },
+    {
+      "colorId": 171,
+      "label": "GRAPHITE",
+      "pierceItems": 87
+    },
+    {
+      "colorId": 14,
+      "label": "BROWN",
+      "pierceItems": 76
+    },
+    {
+      "colorId": 292,
+      "label": "GRAY",
+      "pierceItems": 71
+    },
+    {
+      "colorId": 7,
+      "label": "COOL GREY",
+      "pierceItems": 64
+    },
+    {
+      "colorId": 78,
+      "label": "TURQUOISE",
+      "pierceItems": 55
+    },
+    {
+      "colorId": 245,
+      "label": "SCARLET",
+      "pierceItems": 54
+    },
+    {
+      "colorId": 127,
+      "label": "VIOLET",
+      "pierceItems": 52
+    },
+    {
+      "colorId": 69,
+      "label": "Multi",
+      "pierceItems": 44
+    },
+    {
+      "colorId": 327,
+      "label": "BLACK/WHITE",
+      "pierceItems": 41
+    },
+    {
+      "colorId": 142,
+      "label": "BURGUNDY",
+      "pierceItems": 38
+    },
+    {
+      "colorId": 1176,
+      "label": "GREY",
+      "pierceItems": 38
+    },
+    {
+      "colorId": 77,
+      "label": "LIME",
+      "pierceItems": 36
+    },
+    {
+      "colorId": 8,
+      "label": "MAROON",
+      "pierceItems": 32
+    },
+    {
+      "colorId": 149,
+      "label": "SKY BLUE",
+      "pierceItems": 31
+    },
+    {
+      "colorId": 238,
+      "label": "CRIMSON",
+      "pierceItems": 29
+    },
+    {
+      "colorId": 23,
+      "label": "TEAL",
+      "pierceItems": 28
+    },
+    {
+      "colorId": 25,
+      "label": "MAGENTA",
+      "pierceItems": 26
+    },
+    {
+      "colorId": 887,
+      "label": "GREY HEATHER",
+      "pierceItems": 24
+    },
+    {
+      "colorId": 995,
+      "label": "CHARCOAL HEATHER",
+      "pierceItems": 22
+    },
+    {
+      "colorId": 224,
+      "label": "HOT PINK",
+      "pierceItems": 22
+    },
+    {
+      "colorId": 138,
+      "label": "LIGHT GRAY",
+      "pierceItems": 22
+    },
+    {
+      "colorId": 87,
+      "label": "LILAC",
+      "pierceItems": 22
+    },
+    {
+      "colorId": 246,
+      "label": "FOREST GREEN",
+      "pierceItems": 21
+    },
+    {
+      "colorId": 9,
+      "label": "GOLD AND WHITE",
+      "pierceItems": 20
+    },
+    {
+      "colorId": 159,
+      "label": "LIGHT GREEN",
+      "pierceItems": 20
+    },
+    {
+      "colorId": 328,
+      "label": "UNIVERSITY RED",
+      "pierceItems": 20
+    },
+    {
+      "colorId": 1005,
+      "label": "ANTHRACITE",
+      "pierceItems": 19
+    },
+    {
+      "colorId": 73,
+      "label": "Black/Red",
+      "pierceItems": 19
+    },
+    {
+      "colorId": 293,
+      "label": "LIGHT BLUE",
+      "pierceItems": 19
+    },
+    {
+      "colorId": 175,
+      "label": "ROSE",
+      "pierceItems": 19
+    },
+    {
+      "colorId": 242,
+      "label": "SLATE",
+      "pierceItems": 19
+    },
+    {
+      "colorId": 426,
+      "label": "BLACK HEATHER",
+      "pierceItems": 18
+    },
+    {
+      "colorId": 177,
+      "label": "LEMON",
+      "pierceItems": 18
+    },
+    {
+      "colorId": 330,
+      "label": "NIGHTSHADE",
+      "pierceItems": 18
+    },
+    {
+      "colorId": 380,
+      "label": "CORAL",
+      "pierceItems": 17
+    },
+    {
+      "colorId": 150,
+      "label": "DARK BLUE",
+      "pierceItems": 17
+    },
+    {
+      "colorId": 303,
+      "label": "OXFORD",
+      "pierceItems": 17
+    },
+    {
+      "colorId": 296,
+      "label": "AQUA",
+      "pierceItems": 16
+    },
+    {
+      "colorId": 26,
+      "label": "BEIGE",
+      "pierceItems": 15
+    },
+    {
+      "colorId": 273,
+      "label": "MANILA",
+      "pierceItems": 15
+    },
+    {
+      "colorId": 335,
+      "label": "RED/BLACK",
+      "pierceItems": 15
+    },
+    {
+      "colorId": 2636,
+      "label": "RISING SUN",
+      "pierceItems": 15
+    },
+    {
+      "colorId": 677,
+      "label": "DARK HEATHER",
+      "pierceItems": 14
+    },
+    {
+      "colorId": 178,
+      "label": "GRAPE",
+      "pierceItems": 14
+    },
+    {
+      "colorId": 88,
+      "label": "LAVENDER",
+      "pierceItems": 14
+    },
+    {
+      "colorId": 428,
+      "label": "SAGE",
+      "pierceItems": 14
+    },
+    {
+      "colorId": 279,
+      "label": "STAINLESS STEEL",
+      "pierceItems": 14
+    },
+    {
+      "colorId": 225,
+      "label": "BLUEBERRY",
+      "pierceItems": 13
+    },
+    {
+      "colorId": 122,
+      "label": "CANARY YELLOW",
+      "pierceItems": 13
+    },
+    {
+      "colorId": 2030,
+      "label": "DIESEL GREY",
+      "pierceItems": 13
+    },
+    {
+      "colorId": 845,
+      "label": "GRAY HEATHER",
+      "pierceItems": 13
+    },
+    {
+      "colorId": 163,
+      "label": "ROYAL",
+      "pierceItems": 13
+    },
+    {
+      "colorId": 226,
+      "label": "STRAWBERRY",
+      "pierceItems": 13
+    },
+    {
+      "colorId": 176,
+      "label": "TANGERINE",
+      "pierceItems": 13
+    },
+    {
+      "colorId": 311,
+      "label": "BRASS",
+      "pierceItems": 12
+    },
+    {
+      "colorId": 222,
+      "label": "BRICK RED",
+      "pierceItems": 12
+    },
+    {
+      "colorId": 174,
+      "label": "FUCHSIA",
+      "pierceItems": 12
+    },
+    {
+      "colorId": 2394,
+      "label": "HEATHER BURGANDY",
+      "pierceItems": 12
+    },
+    {
+      "colorId": 2461,
+      "label": "LIGHT GREY",
+      "pierceItems": 12
+    },
+    {
+      "colorId": 717,
+      "label": "OATMEAL",
+      "pierceItems": 12
+    },
+    {
+      "colorId": 155,
+      "label": "PERIWINKLE",
+      "pierceItems": 12
+    },
+    {
+      "colorId": 83,
+      "label": "SMOKE",
+      "pierceItems": 12
+    },
+    {
+      "colorId": 532,
+      "label": "ASH",
+      "pierceItems": 11
+    },
+    {
+      "colorId": 179,
+      "label": "MINT GREEN",
+      "pierceItems": 11
+    },
+    {
+      "colorId": 1042,
+      "label": "VINTAGE GRANITE",
+      "pierceItems": 11
+    },
+    {
+      "colorId": 2522,
+      "label": "ASSORTED",
+      "pierceItems": 10
+    },
+    {
+      "colorId": 936,
+      "label": "MINT",
+      "pierceItems": 10
+    },
+    {
+      "colorId": 154,
+      "label": "ORCHID",
+      "pierceItems": 10
+    },
+    {
+      "colorId": 61,
+      "label": "CYAN",
+      "pierceItems": 9
+    },
+    {
+      "colorId": 141,
+      "label": "FLORAL",
+      "pierceItems": 9
+    },
+    {
+      "colorId": 294,
+      "label": "IVORY",
+      "pierceItems": 9
+    },
+    {
+      "colorId": 1030,
+      "label": "RED HEATHER",
+      "pierceItems": 9
+    },
+    {
+      "colorId": 216,
+      "label": "TRANSPARENT",
+      "pierceItems": 9
+    },
+    {
+      "colorId": 552,
+      "label": "ARMY GREEN",
+      "pierceItems": 8
+    },
+    {
+      "colorId": 2031,
+      "label": "FOSSIL",
+      "pierceItems": 8
+    },
+    {
+      "colorId": 72,
+      "label": "OLIVE",
+      "pierceItems": 8
+    },
+    {
+      "colorId": 578,
+      "label": "SEPIA",
+      "pierceItems": 8
+    },
+    {
+      "colorId": 2637,
+      "label": "STONE BLUE",
+      "pierceItems": 8
+    },
+    {
+      "colorId": 21,
+      "label": "Walnut",
+      "pierceItems": 8
+    },
+    {
+      "colorId": 81,
+      "label": "BLUE/WHITE",
+      "pierceItems": 7
+    },
+    {
+      "colorId": 1647,
+      "label": "CARIBBEAN HEATHER",
+      "pierceItems": 7
+    },
+    {
+      "colorId": 156,
+      "label": "DARK GREY",
+      "pierceItems": 7
+    },
+    {
+      "colorId": 1154,
+      "label": "MARBLE GREY",
+      "pierceItems": 7
+    },
+    {
+      "colorId": 2292,
+      "label": "MARCH 28 7:30PM",
+      "pierceItems": 7
+    },
+    {
+      "colorId": 2295,
+      "label": "MARCH 29 2:00PM",
+      "pierceItems": 7
+    },
+    {
+      "colorId": 2301,
+      "label": "MAY 10 2:00PM",
+      "pierceItems": 7
+    },
+    {
+      "colorId": 2300,
+      "label": "MAY 9 7:30PM",
+      "pierceItems": 7
+    },
+    {
+      "colorId": 2226,
+      "label": "OCT 31 7:30PM",
+      "pierceItems": 7
+    },
+    {
+      "colorId": 389,
+      "label": "SAND",
+      "pierceItems": 7
+    },
+    {
+      "colorId": 1080,
+      "label": "WINE",
+      "pierceItems": 7
+    },
+    {
+      "colorId": 157,
+      "label": "AMETHYST",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 932,
+      "label": "ASPHALT",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 440,
+      "label": "AVOCADO GREEN",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 312,
+      "label": "BAMBOO",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 164,
+      "label": "BERRY",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 2533,
+      "label": "BLACK VINTAGE",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 1155,
+      "label": "BLACK/ HEATHER GREY",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 1153,
+      "label": "BLACK/GRAPHITE",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 942,
+      "label": "BLUE LAKE",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 270,
+      "label": "COBALT BLUE",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 95,
+      "label": "CRIMSON RED",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 386,
+      "label": "DARK GRAY",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 1118,
+      "label": "DARK MAROON",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 251,
+      "label": "EARTHTONE",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 597,
+      "label": "GREEN LIGHT",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 229,
+      "label": "LAVA",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 1174,
+      "label": "MARINE",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 855,
+      "label": "NAVY BLUE",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 165,
+      "label": "NEON",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 172,
+      "label": "PINK FUSION",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 856,
+      "label": "ROSE GOLD",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 1617,
+      "label": "ROSE HEATHER",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 536,
+      "label": "ROYAL BLUE",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 2098,
+      "label": "SAGE GREEN",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 250,
+      "label": "TAN",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 1646,
+      "label": "TEAL HEATHER",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 379,
+      "label": "VINTAGE BLACK",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 2532,
+      "label": "VINTAGE HEATHER",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 973,
+      "label": "VINTAGE RED",
+      "pierceItems": 6
+    },
+    {
+      "colorId": 1950,
+      "label": "ARCTIC BLUE",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 2248,
+      "label": "ATMOSPHERE",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 322,
+      "label": "BRIGHT WHITE",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 661,
+      "label": "BURGUNDY HEATHER",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 168,
+      "label": "BURNT SIENNA",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 381,
+      "label": "CINNAMON",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 123,
+      "label": "CREAM",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 408,
+      "label": "DARK GREEN",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 2232,
+      "label": "DEC 5 7:30PM",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 2432,
+      "label": "DUSTY PEACH",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 231,
+      "label": "EMERALD",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 298,
+      "label": "GIRAFFE",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 1102,
+      "label": "GOLD",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 1152,
+      "label": "HAZEL",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 398,
+      "label": "HEATHER",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 1433,
+      "label": "HEATHER GREY",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 371,
+      "label": "IRON GRAY",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 2230,
+      "label": "IRON GREY",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 252,
+      "label": "LEMON YELLOW",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 861,
+      "label": "LIGHT PINK",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 2472,
+      "label": "LILAC TIE DYE",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 341,
+      "label": "LIME GREEN",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 75,
+      "label": "LT.BLUE",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 1556,
+      "label": "MARBLE HEATHER",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 2296,
+      "label": "MARCH 30 2PM",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 2302,
+      "label": "MAY 11 2PM",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 1620,
+      "label": "MERLOT HEATHER",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 173,
+      "label": "MILITARY GREEN",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 243,
+      "label": "NATURAL",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 1619,
+      "label": "OLIVE HEATHER",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 854,
+      "label": "PACIFIC",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 695,
+      "label": "PASTEL",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 2442,
+      "label": "SAPPHIRE BLUE",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 329,
+      "label": "SCARLET/WHITE",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 2395,
+      "label": "STORM BLUE",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 99,
+      "label": "TERRA COTTA",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 125,
+      "label": "ULTRAMARINE BLUE",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 1361,
+      "label": "WISTERIA",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 300,
+      "label": "ZEBRA",
+      "pierceItems": 5
+    },
+    {
+      "colorId": 2495,
+      "label": "APRIL 4 7:30PM",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 114,
+      "label": "AQUAMARINE",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 792,
+      "label": "ASSORTED GLOW",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 201,
+      "label": "BLACK PINSTRIPE",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 79,
+      "label": "BLACK/BLUE",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 253,
+      "label": "BLACK/GREY",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 442,
+      "label": "BRILLANT BLUE",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 266,
+      "label": "BURNT UMBER",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 139,
+      "label": "CARMINE RED",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 102,
+      "label": "CHOCOLATE",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 313,
+      "label": "COPPER",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 101,
+      "label": "DARK BROWN",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 2243,
+      "label": "DEC 15 7PM",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 2428,
+      "label": "DEC 6 7:30PM",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 2429,
+      "label": "DEC 7 2:00PM",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 519,
+      "label": "FLUORESCENT ASSORTED",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 699,
+      "label": "FLUORESCENT YELLOW",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 1995,
+      "label": "FOREST HEATHER",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 334,
+      "label": "INDIGO",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 136,
+      "label": "INDIGO BLUE",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 272,
+      "label": "IVORY BLACK",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 297,
+      "label": "JAGUAR",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 257,
+      "label": "KHAKI",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 1033,
+      "label": "MAROON HEATHER",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 2498,
+      "label": "MAY 16 7:30PM",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 2304,
+      "label": "MAY 17 2:00PM",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 332,
+      "label": "MEADOW",
+      "pierceItems": 4
+    },
+    {
+      "colorId": 2473,
+      "label": "MINT SORBET",
+      "pierceItems": 4
+    }
+  ]
+}

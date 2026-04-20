@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ItemRefSelects } from "@/components/products/item-ref-selects";
-import { productApi, type PrismRefs } from "@/domains/product/api-client";
 import type { BulkEditTransform, PricingMode } from "@/domains/bulk-edit/types";
+import { useProductRefDirectory } from "@/domains/product/vendor-directory";
 
 interface TransformPanelProps {
   transform: BulkEditTransform;
@@ -19,11 +18,9 @@ interface TransformPanelProps {
 type PricingModeKey = PricingMode["mode"];
 
 export function TransformPanel({ transform, onChange, onPreview, previewing, disabled }: TransformPanelProps) {
-  const [refs, setRefs] = useState<PrismRefs | null>(null);
-
-  useEffect(() => {
-    productApi.refs().then(setRefs).catch(() => {});
-  }, []);
+  const { refs, loading, available } = useProductRefDirectory();
+  const refsUnavailable = !loading && !available;
+  const refsLoading = loading && !available;
 
   const mode = transform.pricing.mode;
 
@@ -73,6 +70,16 @@ export function TransformPanel({ transform, onChange, onPreview, previewing, dis
       <div className="rounded border border-destructive/30 bg-destructive/5 p-3">
         <h3 className="text-sm font-medium">District-wide Catalog <span className="font-normal text-muted-foreground">- affects all 17 LACCD locations</span></h3>
         <p className="mt-1 text-xs text-muted-foreground">Leave a field empty to skip that change.</p>
+        {refsLoading ? (
+          <div role="status" aria-live="polite" className="mt-2 rounded border border-amber-300/70 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-800/70 dark:bg-amber-950/30 dark:text-amber-200">
+            Loading catalog reference data...
+          </div>
+        ) : null}
+        {refsUnavailable ? (
+          <div role="alert" aria-live="polite" className="mt-2 rounded border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+            Reference data is unavailable right now. Catalog lookup controls are disabled until Prism recovers.
+          </div>
+        ) : null}
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <ItemRefSelects
             refs={refs}
@@ -90,7 +97,7 @@ export function TransformPanel({ transform, onChange, onPreview, previewing, dis
               });
             }}
             bulkMode
-            disabled={disabled}
+            disabled={disabled || refsLoading || refsUnavailable}
           />
         </div>
       </div>

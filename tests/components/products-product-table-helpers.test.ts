@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  formatVendorDisplay,
   getProductAnalyticsDisplay,
   getProductDisplaySaleDate,
   hasProductAnalyticsReady,
@@ -28,5 +29,9 @@ describe("product table helpers", () => {
       aggregates_ready: true,
       sales_aggregates_computed_at: null,
     }, 0)).toBe("0");
+  });
+
+  it("uses a neutral vendor fallback when the label is missing", () => {
+    expect(formatVendorDisplay(null)).toBe("Vendor unavailable");
   });
 });

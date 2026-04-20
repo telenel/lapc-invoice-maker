@@ -13,8 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ItemRefSelects } from "./item-ref-selects";
-import { productApi, type PrismRefs } from "@/domains/product/api-client";
+import { productApi } from "@/domains/product/api-client";
 import type { GmItemPatch, TextbookPatch, ItemSnapshot } from "@/domains/product/types";
+import { useProductRefDirectory } from "@/domains/product/vendor-directory";
 
 interface EditItemDialogProps {
   open: boolean;
@@ -59,16 +60,12 @@ export function EditItemDialog({ open, onOpenChange, items, onSaved }: EditItemD
   const isBulk = items.length > 1;
   const hasTextbook = items.some((i) => i.isTextbook);
   const narrow = hasTextbook; // mixed or all-textbook → narrow mode
-  const [refs, setRefs] = useState<PrismRefs | null>(null);
+  const { refs, loading: refsLoading, available: refsAvailable } = useProductRefDirectory();
   const [form, setForm] = useState<FormState>({});
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Load refs once
-  useEffect(() => {
-    if (!open || refs) return;
-    productApi.refs().then(setRefs).catch((e) => setError(String(e)));
-  }, [open, refs]);
+  const refsUnavailable = !refsLoading && !refsAvailable;
+  const refsControlsDisabled = refsLoading || refsUnavailable;
 
   // Reset form when items change
   useEffect(() => {
@@ -269,14 +266,27 @@ export function EditItemDialog({ open, onOpenChange, items, onSaved }: EditItemD
           </div>
 
           {!narrow && (
-            <ItemRefSelects
-              refs={refs}
-              vendorId={form.vendorId ?? ""}
-              dccId={form.dccId ?? ""}
-              itemTaxTypeId={form.itemTaxTypeId ?? ""}
-              onChange={(field, value) => update(field, value)}
-              bulkMode={isBulk}
-            />
+            <div className="space-y-2 sm:col-span-2">
+              {refsLoading ? (
+                <div role="status" aria-live="polite" className="rounded border border-amber-300/70 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-800/70 dark:bg-amber-950/30 dark:text-amber-200">
+                  Loading reference data...
+                </div>
+              ) : null}
+              {refsUnavailable ? (
+                <div role="alert" aria-live="polite" className="rounded border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+                  Reference data is unavailable right now. Vendor, department/class, and tax type lookups are disabled until Prism recovers.
+                </div>
+              ) : null}
+              <ItemRefSelects
+                refs={refs}
+                vendorId={form.vendorId ?? ""}
+                dccId={form.dccId ?? ""}
+                itemTaxTypeId={form.itemTaxTypeId ?? ""}
+                onChange={(field, value) => update(field, value)}
+                bulkMode={isBulk}
+                disabled={refsControlsDisabled}
+              />
+            </div>
           )}
 
           {!narrow && (

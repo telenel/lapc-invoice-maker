@@ -1,18 +1,47 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { productApi, type PrismVendorRef } from "./api-client";
+import { productApi, type PrismRefs, type PrismVendorRef } from "./api-client";
+import { EMPTY_REFS, buildProductRefMaps } from "./ref-data";
 
-type DirectoryState = {
+export interface ProductRefDirectoryState {
+  refs: PrismRefs | null;
+  lookups: ReturnType<typeof buildProductRefMaps>;
   vendors: PrismVendorRef[];
   byId: Map<number, string>;
   loading: boolean;
   available: boolean;
-};
+}
+
+type DirectoryState = ProductRefDirectoryState;
+const EMPTY_DIRECTORY_LOOKUPS = buildProductRefMaps(EMPTY_REFS);
+
+function createUnavailableDirectoryState(loading: boolean): DirectoryState {
+  return {
+    refs: null,
+    lookups: EMPTY_DIRECTORY_LOOKUPS,
+    vendors: [],
+    byId: new Map(),
+    loading,
+    available: false,
+  };
+}
 
 let cached: DirectoryState | null = null;
 let pending: Promise<DirectoryState> | null = null;
 const listeners = new Set<(state: DirectoryState) => void>();
+
+function buildState(refs: PrismRefs): DirectoryState {
+  const lookups = buildProductRefMaps(refs);
+  return {
+    refs,
+    lookups,
+    vendors: refs.vendors,
+    byId: lookups.vendorNames,
+    loading: false,
+    available: true,
+  };
+}
 
 function emit(state: DirectoryState) {
   cached = state;
@@ -34,25 +63,12 @@ async function load(): Promise<DirectoryState> {
   pending = productApi
     .refs()
     .then((refs) => {
-      const byId = new Map<number, string>(
-        refs.vendors.map((v) => [v.vendorId, v.name]),
-      );
-      const state: DirectoryState = {
-        vendors: refs.vendors,
-        byId,
-        loading: false,
-        available: true,
-      };
+      const state = buildState(refs);
       emit(state);
       return state;
     })
     .catch(() => {
-      const state: DirectoryState = {
-        vendors: [],
-        byId: new Map(),
-        loading: false,
-        available: false,
-      };
+      const state = createUnavailableDirectoryState(false);
       // Emit so any mounted consumers unblock from the loading spinner, but
       // clear the module cache so the next load() triggers a real retry.
       cached = null;
@@ -75,20 +91,11 @@ async function load(): Promise<DirectoryState> {
 }
 
 /**
- * React hook that returns a cached vendor directory ({ id → name }) sourced
- * from the Prism-backed `/api/products/refs` endpoint. Gracefully degrades to
- * `{ available: false }` when Prism is unreachable.
+ * React hook that returns the cached product refs directory sourced from the
+ * Prism-backed `/api/products/refs` endpoint.
  */
-export function useVendorDirectory(): DirectoryState {
-  const [state, setState] = useState<DirectoryState>(
-    () =>
-      cached ?? {
-        vendors: [],
-        byId: new Map(),
-        loading: true,
-        available: false,
-      },
-  );
+export function useProductRefDirectory(): DirectoryState {
+  const [state, setState] = useState<DirectoryState>(() => cached ?? createUnavailableDirectoryState(true));
 
   useEffect(() => {
     let mounted = true;
@@ -105,11 +112,16 @@ export function useVendorDirectory(): DirectoryState {
     };
   }, []);
 
-  // Retry is scheduled inside `load()` itself (module-level timer), so we
-  // don't need a per-component effect — that used to stall after a second
-  // consecutive failure because the effect deps never changed.
-
   return state;
+}
+
+/**
+ * React hook that returns the cached vendor directory ({ id → name }) sourced
+ * from the Prism-backed `/api/products/refs` endpoint. Gracefully degrades to
+ * `{ available: false }` when Prism is unreachable.
+ */
+export function useVendorDirectory(): DirectoryState {
+  return useProductRefDirectory();
 }
 
 /** Format a vendor_id into "Name · #id" when name is known, else "#id". */

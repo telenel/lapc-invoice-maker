@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import type { SelectedProduct } from "@/domains/product/types";
 import { openBarcodePrintWindow } from "./barcode-print-view";
 import { productApi } from "@/domains/product/api-client";
+import { useVendorDirectory } from "@/domains/product/vendor-directory";
 
 interface ProductActionBarProps {
   selected: Map<number, SelectedProduct>;
@@ -35,6 +36,7 @@ export function ProductActionBar({
   onBulkEdit,
 }: ProductActionBarProps) {
   const router = useRouter();
+  const { byId: vendorNames } = useVendorDirectory();
   const [discontinuing, setDiscontinuing] = useState(false);
 
   function handleCreateInvoice() {
@@ -48,7 +50,10 @@ export function ProductActionBar({
   }
 
   function handlePrintBarcodes() {
-    const items = Array.from(selected.values());
+    const items = Array.from(selected.values()).map((item) => ({
+      ...item,
+      vendorLabel: vendorNames.get(item.vendorId) ?? null,
+    }));
     openBarcodePrintWindow(items);
   }
 

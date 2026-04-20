@@ -11,6 +11,7 @@ import { MarginBar } from "./margin-bar";
 import { useVendorDirectory } from "@/domains/product/vendor-directory";
 import { useHiddenColumns } from "./use-hidden-columns";
 import { COLUMN_PRIORITY } from "@/domains/product/constants";
+import { formatLookupLabel } from "@/domains/product/ref-data";
 import "./product-table.css";
 
 /**
@@ -119,6 +120,10 @@ function formatRelativeUpdated(date: string | null | undefined): string {
   return `${years}y ago`;
 }
 
+export function formatVendorDisplay(vendorLabel: string | null | undefined): string {
+  return formatLookupLabel(vendorLabel ?? null, "Vendor unavailable");
+}
+
 function SortHeader({
   field,
   label,
@@ -204,7 +209,7 @@ export function ProductTable({
   suppressEmptyState = false,
 }: ProductTableProps) {
   void onHideColumn;
-  const { byId: vendorsById, available: vendorsAvailable } = useVendorDirectory();
+  const { byId: vendorsById } = useVendorDirectory();
   // Observe the wrapper width so the hidden-count badge reflects what the
   // @container queries actually suppress.
   const { ref: wrapperRef, summary: hiddenSummary } = useHiddenColumns();
@@ -520,28 +525,13 @@ export function ProductTable({
                         </td>
                         <td className="px-2.5 py-1.5 whitespace-nowrap">
                           {(() => {
-                            const name = vendorsById.get(product.vendor_id);
-                            if (name) {
-                              return (
-                                <span className="inline-flex items-baseline gap-1.5 max-w-[180px]">
-                                  <span
-                                    className="text-[11.5px] text-foreground truncate"
-                                    title={name}
-                                  >
-                                    {name}
-                                  </span>
-                                  <span className="font-mono tnum text-[10px] text-muted-foreground shrink-0">
-                                    #{product.vendor_id}
-                                  </span>
-                                </span>
-                              );
-                            }
+                            const name = formatVendorDisplay(vendorsById.get(product.vendor_id));
                             return (
                               <span
-                                className="font-mono tnum text-[11.5px] text-muted-foreground"
-                                title={vendorsAvailable ? undefined : "Vendor directory unavailable — Prism unreachable"}
+                                className="text-[11.5px] text-foreground"
+                                title={name}
                               >
-                                #{product.vendor_id}
+                                {name}
                               </span>
                             );
                           })()}
