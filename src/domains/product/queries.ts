@@ -59,13 +59,18 @@ export function buildProductQueryPlan(filters: ProductFilters): {
     || filters.minMargin !== ""
     || filters.maxMargin !== ""
     || filters.sortBy === "margin"
-    || hasLastSaleProductFilters(filters);
+    || hasLastSaleProductFilters(filters)
+    || filters.editedSinceSync;
   const source = needsDerived ? "products_with_derived" : "products";
   const lastSaleField = needsDerived ? "effective_last_sale_date" : "last_sale_date";
 
   let sortField = filters.sortBy;
   let ascending = filters.sortDir !== "desc";
   if (filters.sortBy === "days_since_sale") {
+    // days_since_sale is the INVERSE of last_sale_date. To keep the UI arrow
+    // consistent with the rendered column (asc = smallest days first), we
+    // sort by the underlying date with the inverted direction. That's why
+    // the header passes sortDir through raw — it already matches the column.
     sortField = lastSaleField;
     ascending = !ascending;
   } else if (filters.sortBy === "last_sale_date" && needsDerived) {
@@ -109,8 +114,14 @@ function buildTsquery(input: string): string | null {
   return tokens.map((w) => `'${w}'`).join(" & ");
 }
 
+export interface SearchProductsOptions {
+  /** When true, the query skips selecting row data and returns only the count. */
+  countOnly?: boolean;
+}
+
 export async function searchProducts(
-  filters: ProductFilters
+  filters: ProductFilters,
+  options: SearchProductsOptions = {},
 ): Promise<ProductSearchResult> {
   const client = getSupabaseBrowserClient();
   const from = (filters.page - 1) * PAGE_SIZE;
@@ -118,7 +129,10 @@ export async function searchProducts(
   const plan = buildProductQueryPlan(filters);
   let query = client
     .from(plan.source)
-    .select("*", { count: "exact" })
+    .select(options.countOnly ? "sku" : "*", {
+      count: "exact",
+      head: !!options.countOnly,
+    })
     .in("item_type", TAB_ITEM_TYPES[filters.tab]);
 
   // Full-text search on description + prefix match on identifiers
@@ -233,7 +247,7 @@ export async function searchProducts(
     query = query.gte("updated_at", threshold);
   }
   if (filters.editedSinceSync) {
-    query = query.filter("updated_at", "gt", "synced_at");
+    query = query.eq("edited_since_sync", true);
   }
 
   // Status
@@ -304,8 +318,10 @@ export async function searchProducts(
     query = query.lte("stock_coverage_days", Number(filters.maxStockCoverageDays));
   }
 
-  const sortField = ALLOWED_DERIVED_SORT_FIELDS.has(plan.sortField) ? plan.sortField : "sku";
-  query = query.order(sortField, { ascending: plan.ascending, nullsFirst: false }).range(from, to);
+  if (!options.countOnly) {
+    const sortField = ALLOWED_DERIVED_SORT_FIELDS.has(plan.sortField) ? plan.sortField : "sku";
+    query = query.order(sortField, { ascending: plan.ascending, nullsFirst: false }).range(from, to);
+  }
 
   const { data, count, error } = await query;
 
@@ -313,7 +329,7 @@ export async function searchProducts(
     throw new Error(error.message);
   }
 
-  const products = (data ?? []) as Product[];
+  const products = options.countOnly ? [] : ((data ?? []) as Product[]);
 
   return {
     products,

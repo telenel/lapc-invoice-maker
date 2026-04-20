@@ -80,7 +80,7 @@ export const OPTIONAL_COLUMNS = [
 
 export type OptionalColumnKey = typeof OPTIONAL_COLUMNS[number];
 
-export const DEFAULT_COLUMN_SET: OptionalColumnKey[] = ["units_1y", "dcc"];
+export const DEFAULT_COLUMN_SET: OptionalColumnKey[] = ["units_1y", "dcc", "margin"];
 
 export const COLUMN_LABELS: Record<OptionalColumnKey, string> = {
   dcc: "DCC",
@@ -116,4 +116,6 @@ export const PRESET_GROUPS = [
   { value: "recent-activity", label: "Recent",       icon: "📝" },
 ] as const;
 
-export const COLUMN_PREFS_STORAGE_KEY = "products:columns:v1";
+// Bumped to v2 when the default column set gained "margin" — prior v1 payloads
+// would pin existing browsers to the old defaults, hiding the Margin column.
+export const COLUMN_PREFS_STORAGE_KEY = "products:columns:v2";

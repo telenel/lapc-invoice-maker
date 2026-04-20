@@ -62,4 +62,15 @@ describe("buildProductQueryPlan", () => {
       ascending: false,
     });
   });
+
+  it("routes edited-since-sync filters through the derived view", () => {
+    const plan = buildProductQueryPlan({
+      ...EMPTY_FILTERS,
+      editedSinceSync: true,
+    });
+
+    expect(plan).toMatchObject({
+      source: "products_with_derived",
+    });
+  });
 });

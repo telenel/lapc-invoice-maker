@@ -1,14 +1,69 @@
 "use client";
 
-import { useState } from "react";
-import { ChevronDownIcon, FilterIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { ProductFiltersExtended } from "./product-filters-extended";
-import { EMPTY_FILTERS } from "@/domains/product/constants";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { ChevronDownIcon, SearchIcon, XIcon } from "lucide-react";
+import { useVendorDirectory } from "@/domains/product/vendor-directory";
 import type { ProductFilters } from "@/domains/product/types";
+
+/**
+ * Count active filters across the full ProductFilters shape. Used for badge totals
+ * in pieces of UI (e.g. a compact filter toggle) that do not render the rail.
+ */
+export function getProductActiveFilterCount(filters: ProductFilters): number {
+  let count = 0;
+  const str = (v: string | null | undefined) => (v ?? "").toString().trim() !== "";
+  const bool = (v: boolean | null | undefined) => !!v;
+
+  if (str(filters.minPrice)) count++;
+  if (str(filters.maxPrice)) count++;
+  if (str(filters.vendorId)) count++;
+  if (bool(filters.hasBarcode)) count++;
+  if (str(filters.lastSaleDateFrom)) count++;
+  if (str(filters.lastSaleDateTo)) count++;
+  if (filters.tab === "textbooks") {
+    if (str(filters.author)) count++;
+    if (bool(filters.hasIsbn)) count++;
+    if (str(filters.edition)) count++;
+  }
+  if (filters.tab === "merchandise") {
+    if (str(filters.catalogNumber)) count++;
+    if (str(filters.productType)) count++;
+  }
+  if (str(filters.minStock)) count++;
+  if (str(filters.maxStock)) count++;
+  if (str(filters.deptNum)) count++;
+  if (str(filters.classNum)) count++;
+  if (str(filters.catNum)) count++;
+  if (bool(filters.missingBarcode)) count++;
+  if (bool(filters.missingIsbn)) count++;
+  if (bool(filters.missingTitle)) count++;
+  if (bool(filters.retailBelowCost)) count++;
+  if (bool(filters.zeroPrice)) count++;
+  if (str(filters.minMargin)) count++;
+  if (str(filters.maxMargin)) count++;
+  if (filters.lastSaleWithin) count++;
+  if (bool(filters.lastSaleNever)) count++;
+  if (filters.lastSaleOlderThan) count++;
+  if (filters.editedWithin) count++;
+  if (bool(filters.editedSinceSync)) count++;
+  if (filters.discontinued) count++;
+  if (filters.itemType) count++;
+  if (str(filters.minUnitsSold)) count++;
+  if (str(filters.maxUnitsSold)) count++;
+  if (filters.unitsSoldWindow) count++;
+  if (str(filters.minRevenue)) count++;
+  if (str(filters.maxRevenue)) count++;
+  if (filters.revenueWindow) count++;
+  if (str(filters.minTxns)) count++;
+  if (str(filters.maxTxns)) count++;
+  if (filters.txnsWindow) count++;
+  if (bool(filters.neverSoldLifetime)) count++;
+  if (filters.firstSaleWithin) count++;
+  if (filters.trendDirection) count++;
+  if (str(filters.maxStockCoverageDays)) count++;
+  return count;
+}
 
 interface ProductFiltersBarProps {
   filters: ProductFilters;
@@ -16,56 +71,302 @@ interface ProductFiltersBarProps {
   onClear: () => void;
 }
 
-export function getProductActiveFilterCount(filters: ProductFilters): number {
-  return [
-    filters.minPrice,
-    filters.maxPrice,
-    filters.vendorId,
-    filters.hasBarcode,
-    filters.lastSaleDateFrom,
-    filters.lastSaleDateTo,
-    filters.tab === "textbooks" && filters.author,
-    filters.tab === "textbooks" && filters.hasIsbn,
-    filters.tab === "textbooks" && filters.edition,
-    filters.tab === "merchandise" && filters.catalogNumber,
-    filters.tab === "merchandise" && filters.productType,
-    // Extended filters — count only when non-default
-    filters.minStock !== EMPTY_FILTERS.minStock && filters.minStock,
-    filters.maxStock !== EMPTY_FILTERS.maxStock && filters.maxStock,
-    filters.deptNum !== EMPTY_FILTERS.deptNum && filters.deptNum,
-    filters.classNum !== EMPTY_FILTERS.classNum && filters.classNum,
-    filters.catNum !== EMPTY_FILTERS.catNum && filters.catNum,
-    filters.missingBarcode,
-    filters.missingIsbn,
-    filters.missingTitle,
-    filters.retailBelowCost,
-    filters.zeroPrice,
-    filters.minMargin !== EMPTY_FILTERS.minMargin && filters.minMargin,
-    filters.maxMargin !== EMPTY_FILTERS.maxMargin && filters.maxMargin,
-    filters.lastSaleWithin !== EMPTY_FILTERS.lastSaleWithin &&
-      filters.lastSaleWithin,
-    filters.lastSaleNever,
-    filters.lastSaleOlderThan !== EMPTY_FILTERS.lastSaleOlderThan &&
-      filters.lastSaleOlderThan,
-    filters.editedWithin !== EMPTY_FILTERS.editedWithin && filters.editedWithin,
-    filters.editedSinceSync,
-    filters.discontinued !== EMPTY_FILTERS.discontinued && filters.discontinued,
-    filters.itemType !== EMPTY_FILTERS.itemType && filters.itemType,
-    filters.minUnitsSold !== EMPTY_FILTERS.minUnitsSold && filters.minUnitsSold,
-    filters.maxUnitsSold !== EMPTY_FILTERS.maxUnitsSold && filters.maxUnitsSold,
-    filters.unitsSoldWindow !== EMPTY_FILTERS.unitsSoldWindow && filters.unitsSoldWindow,
-    filters.minRevenue !== EMPTY_FILTERS.minRevenue && filters.minRevenue,
-    filters.maxRevenue !== EMPTY_FILTERS.maxRevenue && filters.maxRevenue,
-    filters.revenueWindow !== EMPTY_FILTERS.revenueWindow && filters.revenueWindow,
-    filters.minTxns !== EMPTY_FILTERS.minTxns && filters.minTxns,
-    filters.maxTxns !== EMPTY_FILTERS.maxTxns && filters.maxTxns,
-    filters.txnsWindow !== EMPTY_FILTERS.txnsWindow && filters.txnsWindow,
-    filters.neverSoldLifetime,
-    filters.firstSaleWithin !== EMPTY_FILTERS.firstSaleWithin && filters.firstSaleWithin,
-    filters.trendDirection !== EMPTY_FILTERS.trendDirection && filters.trendDirection,
-    filters.maxStockCoverageDays !== EMPTY_FILTERS.maxStockCoverageDays &&
-      filters.maxStockCoverageDays,
-  ].filter(Boolean).length;
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="pt-3 pb-1 text-[11px] font-semibold tracking-[-0.005em] text-muted-foreground">
+      {children}
+    </div>
+  );
+}
+
+function RailInput({
+  value,
+  onChange,
+  placeholder,
+  mono = false,
+  icon,
+  type = "text",
+  inputMode,
+  ariaLabel,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  mono?: boolean;
+  icon?: React.ReactNode;
+  type?: string;
+  inputMode?: "numeric" | "decimal" | "text";
+  ariaLabel: string;
+}) {
+  return (
+    <div className="flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1.5 text-xs focus-within:ring-2 focus-within:ring-ring focus-within:border-ring">
+      {icon ? <span className="text-muted-foreground inline-flex shrink-0">{icon}</span> : null}
+      <input
+        aria-label={ariaLabel}
+        type={type}
+        inputMode={inputMode}
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={`flex-1 min-w-0 border-none outline-none bg-transparent text-foreground p-0 text-xs ${
+          mono ? "font-mono" : ""
+        }`}
+      />
+    </div>
+  );
+}
+
+function ToggleRow({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: (next: boolean) => void;
+  label: string;
+}) {
+  return (
+    <label className="flex items-center gap-2 py-0.5 cursor-pointer text-xs text-foreground select-none">
+      <span
+        onClick={(e) => {
+          e.preventDefault();
+          onChange(!checked);
+        }}
+        className={`inline-flex items-center justify-center w-3.5 h-3.5 rounded-[3px] border transition-all ${
+          checked
+            ? "bg-primary border-primary text-primary-foreground"
+            : "bg-card border-border hover:border-muted-foreground"
+        }`}
+      >
+        {checked ? (
+          <svg
+            width="10"
+            height="10"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="3.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="m5 12 5 5 9-11" />
+          </svg>
+        ) : null}
+      </span>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="sr-only"
+      />
+      <span className="flex-1">{label}</span>
+    </label>
+  );
+}
+
+function VendorSelect({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+}) {
+  const { vendors, byId, loading, available } = useVendorDirectory();
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
+
+  const recomputeRect = () => {
+    if (triggerRef.current) setTriggerRect(triggerRef.current.getBoundingClientRect());
+  };
+
+  // Keep the portalled popover aligned with the trigger as the rail scrolls,
+  // the window resizes, or any ancestor scrolls.
+  useLayoutEffect(() => {
+    if (!open) return;
+    recomputeRect();
+    const update = () => recomputeRect();
+    window.addEventListener("scroll", update, true);
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", update);
+    };
+  }, [open]);
+
+  // Close on outside click (checks both the trigger shell and the portalled
+  // popover since they live in different DOM subtrees).
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (rootRef.current?.contains(t)) return;
+      if (popoverRef.current?.contains(t)) return;
+      setOpen(false);
+    };
+    window.addEventListener("mousedown", handler);
+    return () => window.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  const selected = useMemo(() => {
+    if (!value) return { label: "", knownName: false };
+    const id = Number(value);
+    if (!Number.isFinite(id)) return { label: value, knownName: false };
+    const name = byId.get(id);
+    return name
+      ? { label: name, knownName: true }
+      : { label: `#${id}`, knownName: false };
+  }, [value, byId]);
+
+  const filtered = useMemo(() => {
+    if (!query.trim()) return vendors.slice(0, 60);
+    const q = query.trim().toLowerCase();
+    return vendors
+      .filter((v) => v.name.toLowerCase().includes(q) || String(v.vendorId).includes(q))
+      .slice(0, 60);
+  }, [vendors, query]);
+
+  // Only drop to the numeric fallback when we've CONFIRMED Prism is
+  // unreachable — not while the first refs() request is still in flight.
+  // Otherwise fresh mounts on a healthy Prism flash the degraded input.
+  // Strip non-digits before persisting so the downstream Number() coercion
+  // in searchProducts() can't produce NaN and crash the query.
+  if (!loading && !available) {
+    return (
+      <RailInput
+        ariaLabel="Vendor ID"
+        value={value}
+        onChange={(v) => onChange(v.replace(/\D+/g, ""))}
+        placeholder="Vendor ID…"
+        icon={<SearchIcon className="size-3" aria-hidden="true" />}
+        mono
+        inputMode="numeric"
+        type="text"
+      />
+    );
+  }
+
+  return (
+    <div ref={rootRef} className="relative">
+      {/* Toggle button and clear button are siblings inside a shared shell so
+          we don't nest interactive controls. The shell renders the border, and
+          each button owns its own click target. */}
+      <div
+        ref={triggerRef}
+        className="flex w-full items-center gap-1 rounded-md border border-border bg-card px-1.5 py-1 text-xs focus-within:ring-2 focus-within:ring-ring focus-within:border-ring"
+      >
+        <button
+          type="button"
+          onClick={() => setOpen((o) => !o)}
+          aria-haspopup="listbox"
+          aria-expanded={open}
+          className="flex flex-1 min-w-0 items-center gap-1.5 rounded-[3px] bg-transparent px-1 py-0.5 text-left focus:outline-none"
+        >
+          <SearchIcon
+            className="size-3 text-muted-foreground shrink-0"
+            aria-hidden="true"
+          />
+          <span className="flex-1 min-w-0 truncate text-foreground">
+            {selected.label ? (
+              <span className="inline-flex items-baseline gap-1">
+                <span>{selected.label}</span>
+                {selected.knownName && value ? (
+                  <span className="font-mono tnum text-[10px] text-muted-foreground">
+                    #{value}
+                  </span>
+                ) : null}
+              </span>
+            ) : (
+              <span className="text-muted-foreground">Any vendor</span>
+            )}
+          </span>
+          <ChevronDownIcon
+            className={`size-3 text-muted-foreground transition-transform ${
+              open ? "rotate-180" : ""
+            }`}
+            aria-hidden="true"
+          />
+        </button>
+        {value ? (
+          <button
+            type="button"
+            aria-label="Clear vendor"
+            onClick={() => onChange("")}
+            className="inline-flex items-center justify-center rounded-[3px] p-0.5 text-muted-foreground hover:text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <XIcon className="size-3" aria-hidden="true" />
+          </button>
+        ) : null}
+      </div>
+
+      {open && triggerRect && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              ref={popoverRef}
+              role="listbox"
+              className="fixed z-[60] rounded-md border border-border bg-card shadow-[0_10px_30px_-8px_color-mix(in_oklch,var(--foreground)_25%,transparent)]"
+              style={{
+                top: triggerRect.bottom + 4,
+                left: triggerRect.left,
+                width: triggerRect.width,
+              }}
+            >
+              <div className="p-1.5 border-b border-border">
+                <div className="flex items-center gap-1.5 rounded-md border border-border bg-card px-2 py-1">
+                  <SearchIcon
+                    className="size-3 text-muted-foreground shrink-0"
+                    aria-hidden="true"
+                  />
+                  <input
+                    autoFocus
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search vendors…"
+                    className="flex-1 min-w-0 border-none outline-none bg-transparent text-foreground text-xs"
+                  />
+                </div>
+              </div>
+              <ul className="max-h-[240px] overflow-auto py-1">
+                {filtered.length === 0 ? (
+                  <li className="px-2.5 py-2 text-[11px] text-muted-foreground">
+                    No vendors match &ldquo;{query}&rdquo;.
+                  </li>
+                ) : (
+                  filtered.map((v) => {
+                    const isSelected = String(v.vendorId) === value;
+                    return (
+                      <li key={v.vendorId}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onChange(String(v.vendorId));
+                            setOpen(false);
+                            setQuery("");
+                          }}
+                          className={`flex w-full items-baseline justify-between gap-2 px-2.5 py-1 text-[11.5px] text-left hover:bg-accent ${
+                            isSelected ? "bg-primary/10 text-primary" : "text-foreground"
+                          }`}
+                        >
+                          <span className="truncate">{v.name}</span>
+                          <span className="font-mono tnum text-[10px] text-muted-foreground shrink-0">
+                            #{v.vendorId}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })
+                )}
+              </ul>
+            </div>,
+            document.body,
+          )
+        : null}
+    </div>
+  );
 }
 
 export function ProductFiltersBar({
@@ -73,204 +374,172 @@ export function ProductFiltersBar({
   onChange,
   onClear,
 }: ProductFiltersBarProps) {
-  const [open, setOpen] = useState(false);
-
-  function set(key: keyof ProductFilters, value: string | boolean) {
+  function set<K extends keyof ProductFilters>(key: K, value: ProductFilters[K]) {
     onChange({ ...filters, [key]: value, page: 1 });
   }
 
-  const activeCount = getProductActiveFilterCount(filters);
+  function toggleRecent(next: boolean) {
+    if (next) {
+      // Use the relative window so saved views / bookmarks don't decay as
+      // the calendar advances. Clear every conflicting sale-state filter
+      // (date bounds, lastSaleNever, lastSaleOlderThan) so the shortcut
+      // can't form an impossible conjunction that returns zero rows.
+      onChange({
+        ...filters,
+        lastSaleWithin: "30d",
+        lastSaleDateFrom: "",
+        lastSaleDateTo: "",
+        lastSaleNever: false,
+        lastSaleOlderThan: "",
+        page: 1,
+      });
+    } else {
+      onChange({ ...filters, lastSaleWithin: "", page: 1 });
+    }
+  }
+
+  const recentActive = filters.lastSaleWithin === "30d";
 
   return (
-    <div className="space-y-3">
-      {/* Search row — always visible */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-        <div className="grid gap-1.5 flex-1">
-          <Label htmlFor="product-search" className="sr-only">Search</Label>
-          <Input
-            id="product-search"
-            name="search"
-            placeholder={
-              filters.tab === "textbooks"
-                ? "Search textbooks by title, author, ISBN, SKU..."
-                : "Search merchandise by description, barcode, catalog #, SKU..."
-            }
-            value={filters.search}
-            onChange={(e) => set("search", e.target.value)}
-          />
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setOpen((o) => !o)}
-          className="w-full shrink-0 gap-1.5 sm:w-auto"
+    <aside
+      className="w-[232px] shrink-0 sticky top-3 self-start max-h-[calc(100vh-24px)] overflow-y-auto rounded-[10px] border border-border bg-card px-3.5 py-3 text-xs shadow-[0_1px_0_color-mix(in_oklch,var(--border)_55%,transparent),0_2px_8px_-2px_color-mix(in_oklch,var(--foreground)_6%,transparent)]"
+      aria-label="Product filters"
+    >
+      <div className="flex items-center justify-between mb-1">
+        <div className="text-xs font-semibold text-foreground">Filters</div>
+        <button
+          onClick={onClear}
+          className="bg-transparent border-none text-muted-foreground text-[11px] cursor-pointer p-0 hover:text-foreground"
+          type="button"
         >
-          <FilterIcon className="size-3.5" />
-          Filters
-          {activeCount > 0 && (
-            <Badge
-              variant="secondary"
-              className="ml-0.5 px-1.5 py-0 text-[10px] font-bold rounded-full"
-            >
-              {activeCount}
-            </Badge>
-          )}
-          <ChevronDownIcon
-            className={`size-3.5 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-          />
-        </Button>
+          Clear
+        </button>
       </div>
 
-      {/* Collapsible filter panel */}
-      {open && (
-        <div className="space-y-3 rounded-xl border border-border/50 bg-card p-4 shadow-sm animate-in fade-in-0 slide-in-from-top-1 duration-200">
-          {/* Shared filters */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="grid gap-1.5">
-              <Label htmlFor="pf-min-price">Min Price</Label>
-              <Input
-                id="pf-min-price"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
-                value={filters.minPrice}
-                onChange={(e) => set("minPrice", e.target.value)}
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="pf-max-price">Max Price</Label>
-              <Input
-                id="pf-max-price"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
-                value={filters.maxPrice}
-                onChange={(e) => set("maxPrice", e.target.value)}
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="pf-vendor">Vendor ID</Label>
-              <Input
-                id="pf-vendor"
-                type="number"
-                placeholder="e.g. 21"
-                value={filters.vendorId}
-                onChange={(e) => set("vendorId", e.target.value)}
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <Label>&nbsp;</Label>
-              <Button
-                variant={filters.hasBarcode ? "default" : "outline"}
-                size="sm"
-                className="h-9 w-full"
-                onClick={() => set("hasBarcode", !filters.hasBarcode)}
-              >
-                Has Barcode
-              </Button>
-            </div>
+      <SectionTitle>Price range</SectionTitle>
+      <div className="flex gap-1.5">
+        <RailInput
+          ariaLabel="Minimum price"
+          value={filters.minPrice}
+          onChange={(v) => set("minPrice", v)}
+          placeholder="Min"
+          mono
+          type="number"
+          inputMode="decimal"
+        />
+        <RailInput
+          ariaLabel="Maximum price"
+          value={filters.maxPrice}
+          onChange={(v) => set("maxPrice", v)}
+          placeholder="Max"
+          mono
+          type="number"
+          inputMode="decimal"
+        />
+      </div>
+
+      <SectionTitle>Data quality</SectionTitle>
+      <div className="flex flex-col gap-0.5">
+        <div className="flex items-center gap-1.5">
+          <div className="flex-1">
+            <ToggleRow
+              label="Has stock on hand"
+              checked={filters.minStock === "1"}
+              onChange={(v) => set("minStock", v ? "1" : "")}
+            />
           </div>
-
-          {/* Date range */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="grid gap-1.5">
-              <Label htmlFor="pf-sale-from">Last Sale From</Label>
-              <Input
-                id="pf-sale-from"
-                type="date"
-                value={filters.lastSaleDateFrom}
-                onChange={(e) => set("lastSaleDateFrom", e.target.value)}
-              />
-            </div>
-            <div className="grid gap-1.5">
-              <Label htmlFor="pf-sale-to">Last Sale To</Label>
-              <Input
-                id="pf-sale-to"
-                type="date"
-                value={filters.lastSaleDateTo}
-                onChange={(e) => set("lastSaleDateTo", e.target.value)}
-              />
-            </div>
-
-            {/* Textbook-only filters */}
-            {filters.tab === "textbooks" && (
-              <>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="pf-author">Author</Label>
-                  <Input
-                    id="pf-author"
-                    placeholder="e.g. HUXLEY"
-                    value={filters.author}
-                    onChange={(e) => set("author", e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="pf-edition">Edition</Label>
-                  <Input
-                    id="pf-edition"
-                    placeholder="e.g. 7"
-                    value={filters.edition}
-                    onChange={(e) => set("edition", e.target.value)}
-                  />
-                </div>
-              </>
-            )}
-
-            {/* Merchandise-only filters */}
-            {filters.tab === "merchandise" && (
-              <>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="pf-catalog">Catalog #</Label>
-                  <Input
-                    id="pf-catalog"
-                    placeholder="e.g. 37655"
-                    value={filters.catalogNumber}
-                    onChange={(e) => set("catalogNumber", e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-1.5">
-                  <Label htmlFor="pf-type">Product Type</Label>
-                  <Input
-                    id="pf-type"
-                    placeholder="e.g. CAPPED"
-                    value={filters.productType}
-                    onChange={(e) => set("productType", e.target.value)}
-                  />
-                </div>
-              </>
-            )}
-
-            {/* Has ISBN toggle — textbook only */}
-            {filters.tab === "textbooks" && (
-              <div className="grid gap-1.5">
-                <Label>&nbsp;</Label>
-                <Button
-                  variant={filters.hasIsbn ? "default" : "outline"}
-                  size="sm"
-                  className="h-9 w-full"
-                  onClick={() => set("hasIsbn", !filters.hasIsbn)}
-                >
-                  Has ISBN
-                </Button>
-              </div>
-            )}
-          </div>
-
-          {/* Extended filter sub-sections */}
-          <ProductFiltersExtended
-            filters={filters}
-            onChange={(patch) => onChange({ ...filters, ...patch, page: 1 })}
-          />
-
-          <div className="flex justify-end">
-            <Button variant="outline" size="sm" onClick={onClear}>
-              Clear Filters
-            </Button>
-          </div>
+          {filters.minStock === "1" ? (
+            <span
+              className="shrink-0 text-[9.5px] font-semibold tracking-[0.02em] text-muted-foreground/70"
+              title="Default filter applied on fresh page loads. Uncheck to see everything."
+            >
+              default
+            </span>
+          ) : null}
         </div>
-      )}
-    </div>
+        <ToggleRow
+          label="Has barcode"
+          checked={filters.hasBarcode}
+          onChange={(v) => set("hasBarcode", v)}
+        />
+        {filters.tab === "textbooks" ? (
+          <ToggleRow
+            label="Has ISBN"
+            checked={filters.hasIsbn}
+            onChange={(v) => set("hasIsbn", v)}
+          />
+        ) : null}
+        <ToggleRow
+          label="Sold in last 30 days"
+          checked={recentActive}
+          onChange={toggleRecent}
+        />
+      </div>
+
+      <SectionTitle>Vendor</SectionTitle>
+      <VendorSelect
+        value={filters.vendorId}
+        onChange={(v) => set("vendorId", v)}
+      />
+
+      <SectionTitle>Last sale</SectionTitle>
+      <div className="flex flex-col gap-1.5">
+        <RailInput
+          ariaLabel="Last sale from"
+          value={filters.lastSaleDateFrom}
+          onChange={(v) => set("lastSaleDateFrom", v)}
+          placeholder="From"
+          type="date"
+        />
+        <RailInput
+          ariaLabel="Last sale to"
+          value={filters.lastSaleDateTo}
+          onChange={(v) => set("lastSaleDateTo", v)}
+          placeholder="To"
+          type="date"
+        />
+      </div>
+
+      {filters.tab === "textbooks" ? (
+        <>
+          <SectionTitle>Textbook</SectionTitle>
+          <div className="flex flex-col gap-1.5">
+            <RailInput
+              ariaLabel="Author"
+              value={filters.author}
+              onChange={(v) => set("author", v)}
+              placeholder="Author"
+            />
+            <RailInput
+              ariaLabel="Edition"
+              value={filters.edition}
+              onChange={(v) => set("edition", v)}
+              placeholder="Edition"
+            />
+          </div>
+        </>
+      ) : null}
+
+      {filters.tab === "merchandise" ? (
+        <>
+          <SectionTitle>Merchandise</SectionTitle>
+          <div className="flex flex-col gap-1.5">
+            <RailInput
+              ariaLabel="Catalog number"
+              value={filters.catalogNumber}
+              onChange={(v) => set("catalogNumber", v)}
+              placeholder="Catalog #"
+              mono
+            />
+            <RailInput
+              ariaLabel="Product type"
+              value={filters.productType}
+              onChange={(v) => set("productType", v)}
+              placeholder="Product type"
+            />
+          </div>
+        </>
+      ) : null}
+    </aside>
   );
 }
