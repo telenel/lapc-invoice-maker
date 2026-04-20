@@ -86,7 +86,7 @@ export async function createGmItem(input: CreateGmItemInput): Promise<CreatedIte
   await transaction.begin();
 
   try {
-    const inventoryRows =
+    const inventoryRows: CreateInventoryInput[] =
       input.inventory && input.inventory.length > 0
         ? input.inventory
         : [{ locationId: PIERCE_LOCATION_ID, retail: input.retail, cost: input.cost }];
