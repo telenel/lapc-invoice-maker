@@ -37,6 +37,15 @@ export interface EditItemDialogV2Props extends EditItemDialogProps {
 }
 
 type FormState = {
+  title: string;
+  author: string;
+  isbn: string;
+  edition: string;
+  bindingId: string;
+  imprint: string;
+  copyright: string;
+  textStatusId: string;
+  statusDate: string;
   description: string;
   barcode: string;
   vendorId: string;
@@ -66,6 +75,15 @@ type FormState = {
 };
 
 const EMPTY_FORM: FormState = {
+  title: "",
+  author: "",
+  isbn: "",
+  edition: "",
+  bindingId: "",
+  imprint: "",
+  copyright: "",
+  textStatusId: "",
+  statusDate: "",
   description: "",
   barcode: "",
   vendorId: "",
@@ -228,6 +246,15 @@ function toFormState(
   const primaryCost = getPrimaryInventoryField(detail, primaryLocationId, "cost");
 
   return {
+    title: detail?.title ?? "",
+    author: detail?.author ?? "",
+    isbn: detail?.isbn ?? "",
+    edition: detail?.edition ?? "",
+    bindingId: detail?.bindingId != null ? String(detail.bindingId) : "",
+    imprint: detail?.imprint ?? "",
+    copyright: detail?.copyright ?? "",
+    textStatusId: detail?.textStatusId != null ? String(detail.textStatusId) : "",
+    statusDate: detail?.statusDate ? detail.statusDate.slice(0, 10) : "",
     description: detail?.description ?? item?.description ?? "",
     barcode: detail?.barcode ?? item?.barcode ?? "",
     vendorId: detail?.vendorId ? String(detail.vendorId) : item?.vendorId ? String(item.vendorId) : "",
@@ -312,10 +339,11 @@ function buildLegacyCompatiblePatch(form: FormState, baseline: FormState, isBulk
   return patch;
 }
 
-function buildV2Patch(form: FormState, baseline: FormState, isBulk: boolean): ProductEditPatchV2 {
+function buildV2Patch(form: FormState, baseline: FormState, isBulk: boolean, isTextbookRow: boolean): ProductEditPatchV2 {
   const rawPatch = buildPatch(baseline as Record<string, unknown>, form as Record<string, unknown>);
   const item: NonNullable<ProductEditPatchV2["item"]> = {};
   const gm: NonNullable<ProductEditPatchV2["gm"]> = {};
+  const textbook: NonNullable<ProductEditPatchV2["textbook"]> = {};
 
   for (const [key, value] of Object.entries(rawPatch)) {
     if (isBulk && value === "") continue;
@@ -362,9 +390,22 @@ function buildV2Patch(form: FormState, baseline: FormState, isBulk: boolean): Pr
     }
   }
 
+  if (isTextbookRow) {
+    if (rawPatch.title !== undefined) textbook.title = optionalString(String(rawPatch.title), isBulk);
+    if (rawPatch.author !== undefined) textbook.author = optionalString(String(rawPatch.author), isBulk);
+    if (rawPatch.isbn !== undefined) textbook.isbn = optionalString(String(rawPatch.isbn), isBulk);
+    if (rawPatch.edition !== undefined) textbook.edition = optionalString(String(rawPatch.edition), isBulk);
+    if (rawPatch.bindingId !== undefined) textbook.bindingId = rawPatch.bindingId === "" ? null : Number(rawPatch.bindingId);
+    if (rawPatch.imprint !== undefined) textbook.imprint = optionalString(String(rawPatch.imprint), isBulk);
+    if (rawPatch.copyright !== undefined) textbook.copyright = optionalString(String(rawPatch.copyright), isBulk);
+    if (rawPatch.textStatusId !== undefined) textbook.textStatusId = rawPatch.textStatusId === "" ? null : Number(rawPatch.textStatusId);
+    if (rawPatch.statusDate !== undefined) textbook.statusDate = optionalString(String(rawPatch.statusDate), isBulk);
+  }
+
   return {
     item: hasPatchFields(item) ? item : undefined,
     gm: hasPatchFields(gm) ? gm : undefined,
+    textbook: hasPatchFields(textbook) ? textbook : undefined,
   };
 }
 
@@ -571,6 +612,7 @@ export function EditItemDialogV2({
 
   const refsUnavailable = !refsLoading && !refsAvailable;
   const refsControlsDisabled = refsLoading || refsUnavailable;
+  const isTextbookRow = !isBulk && (detail?.itemType === "textbook" || detail?.itemType === "used_textbook" || items[0]?.isTextbook === true);
   const baselineForm = useMemo(
     () => (isBulk ? EMPTY_FORM : toFormState(items[0], detail, resolvedPrimaryLocationId)),
     [detail, isBulk, items, resolvedPrimaryLocationId],
@@ -717,12 +759,13 @@ export function EditItemDialogV2({
       isBulk,
     );
     const v2Patch = {
-      ...buildV2Patch(form, baselineForm, isBulk),
+      ...buildV2Patch(form, baselineForm, isBulk, isTextbookRow),
       inventory: inventoryPatch,
     };
     const hasV2Changes =
       hasPatchFields(v2Patch.item ?? {}) ||
       hasPatchFields(v2Patch.gm ?? {}) ||
+      hasPatchFields(v2Patch.textbook ?? {}) ||
       (v2Patch.inventory?.length ?? 0) > 0;
 
     if (!hasV2Changes) {
@@ -778,6 +821,44 @@ export function EditItemDialogV2({
   const idFor = (field: string) => `edit-v2-${uid}-${field}`;
   const activeInventory = inventoryByLocation[activeInventoryLocation];
 
+  function BindingSelectField({
+    id,
+    label,
+    value,
+    onChange,
+    disabled = false,
+  }: {
+    id: string;
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    disabled?: boolean;
+  }) {
+    const options = refs?.bindings ?? [];
+    const selectedOption = options.find((option) => String(option.bindingId) === value);
+    const fallbackLabel = selectedOption?.label ?? (value !== "" ? `Binding #${value}` : null);
+    return (
+      <Field id={id} label={label}>
+        <Select value={value} onValueChange={onChange} disabled={disabled}>
+          <SelectTrigger id={id} className="w-full">
+            <SelectValue placeholder={isBulk ? "Leave unchanged" : "Select…"}>
+              {fallbackLabel}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent className="min-w-[var(--anchor-width)]">
+            <SelectItem value="__clear__">Clear selection</SelectItem>
+            {!selectedOption && value !== "" ? <SelectItem value={value}>Binding #{value}</SelectItem> : null}
+            {options.map((option) => (
+              <SelectItem key={option.bindingId} value={String(option.bindingId)}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-[58rem]">
@@ -798,7 +879,7 @@ export function EditItemDialogV2({
 
         {refsUnavailable ? (
           <div role="alert" aria-live="polite" className="mx-6 mt-6 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-3 text-sm text-destructive">
-            Reference data is unavailable right now. Vendor, department / class, tax type, tag type, status code, package type, and color lookups are disabled until Prism recovers.
+            Reference data is unavailable right now. Vendor, department / class, tax type, tag type, status code, package type, color, and binding lookups are disabled until Prism recovers.
           </div>
         ) : null}
 
@@ -815,65 +896,156 @@ export function EditItemDialogV2({
               <TabsTrigger value="more">More</TabsTrigger>
               <TabsTrigger value="advanced">Advanced</TabsTrigger>
               {!isBulk ? <TabsTrigger value="inventory">Inventory</TabsTrigger> : null}
+              {isTextbookRow ? <TabsTrigger value="textbook">Textbook</TabsTrigger> : null}
             </TabsList>
 
             <TabsContent value="primary" className="space-y-4 pt-1">
-              <Section title="Core item fields" description="Merchandise-safe fields that already write through the current edit path.">
-                {!isBulk ? (
+              <Section
+                title={isTextbookRow ? "Textbook item fields" : "Core item fields"}
+                description={
+                  isTextbookRow
+                    ? "Textbook rows keep the high-frequency bibliographic fields up front."
+                    : "Merchandise-safe fields that already write through the current edit path."
+                }
+              >
+                {!isBulk && !isTextbookRow ? (
                   <p className="text-sm text-muted-foreground">
                     Retail and cost in this tab write to the current primary page location: {INVENTORY_LOCATION_LABELS[resolvedPrimaryLocationId]}.
                   </p>
                 ) : null}
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field id={idFor("description")} label="Description">
-                    <Input
-                      id={idFor("description")}
-                      value={form.description}
-                      onChange={(event) => update("description", event.target.value)}
-                      disabled={isBulk}
-                      placeholder={isBulk ? "Leave unchanged (per-item)…" : ""}
-                    />
-                  </Field>
-                  <Field id={idFor("barcode")} label="Barcode">
-                    <Input
-                      id={idFor("barcode")}
-                      value={form.barcode}
-                      onChange={(event) => update("barcode", event.target.value)}
-                      disabled={isBulk}
-                      placeholder={isBulk ? "Leave unchanged (per-item)…" : ""}
-                    />
-                  </Field>
-
-                  <ItemRefSelectField
-                    id={idFor("vendor")}
-                    refs={refs}
-                    kind="vendor"
-                    label="Vendor"
-                    value={form.vendorId}
-                    onChange={(value) => update("vendorId", value)}
-                    disabled={refsControlsDisabled}
-                    bulkMode={isBulk}
-                  />
-                  <ItemRefSelectField
-                    id={idFor("dcc")}
-                    refs={refs}
-                    kind="dcc"
-                    label="Department / Class"
-                    value={form.dccId}
-                    onChange={(value) => update("dccId", value)}
-                    disabled={refsControlsDisabled}
-                    bulkMode={isBulk}
-                  />
-                  <ItemRefSelectField
-                    id={idFor("taxType")}
-                    refs={refs}
-                    kind="taxType"
-                    label="Tax Type"
-                    value={form.itemTaxTypeId}
-                    onChange={(value) => update("itemTaxTypeId", value)}
-                    disabled={refsControlsDisabled}
-                    bulkMode={isBulk}
-                  />
+                  {isTextbookRow ? (
+                    <>
+                      <Field id={idFor("title")} label="Title">
+                        <Input
+                          id={idFor("title")}
+                          value={form.title}
+                          onChange={(event) => update("title", event.target.value)}
+                          placeholder={isBulk ? "Leave unchanged (per-item)…" : ""}
+                        />
+                      </Field>
+                      <Field id={idFor("author")} label="Author">
+                        <Input
+                          id={idFor("author")}
+                          value={form.author}
+                          onChange={(event) => update("author", event.target.value)}
+                          placeholder={isBulk ? "Leave unchanged (per-item)…" : ""}
+                        />
+                      </Field>
+                      <Field id={idFor("isbn")} label="ISBN">
+                        <Input
+                          id={idFor("isbn")}
+                          value={form.isbn}
+                          onChange={(event) => update("isbn", event.target.value)}
+                          placeholder={isBulk ? "Leave unchanged (per-item)…" : ""}
+                        />
+                      </Field>
+                      <Field id={idFor("edition")} label="Edition">
+                        <Input
+                          id={idFor("edition")}
+                          value={form.edition}
+                          onChange={(event) => update("edition", event.target.value)}
+                          placeholder={isBulk ? "Leave unchanged (per-item)…" : ""}
+                        />
+                      </Field>
+                      <BindingSelectField
+                        id={idFor("binding")}
+                        label="Binding"
+                        value={form.bindingId}
+                        onChange={(value) => update("bindingId", value === "__clear__" ? "" : value)}
+                        disabled={refsControlsDisabled}
+                      />
+                      <Field id={idFor("barcode")} label="Barcode">
+                        <Input
+                          id={idFor("barcode")}
+                          value={form.barcode}
+                          onChange={(event) => update("barcode", event.target.value)}
+                          placeholder={isBulk ? "Leave unchanged (per-item)…" : ""}
+                        />
+                      </Field>
+                      <ItemRefSelectField
+                        id={idFor("vendor")}
+                        refs={refs}
+                        kind="vendor"
+                        label="Vendor"
+                        value={form.vendorId}
+                        onChange={(value) => update("vendorId", value)}
+                        disabled={refsControlsDisabled}
+                        bulkMode={isBulk}
+                      />
+                      <ItemRefSelectField
+                        id={idFor("dcc")}
+                        refs={refs}
+                        kind="dcc"
+                        label="Department / Class"
+                        value={form.dccId}
+                        onChange={(value) => update("dccId", value)}
+                        disabled={refsControlsDisabled}
+                        bulkMode={isBulk}
+                      />
+                      <ItemRefSelectField
+                        id={idFor("taxType")}
+                        refs={refs}
+                        kind="taxType"
+                        label="Tax Type"
+                        value={form.itemTaxTypeId}
+                        onChange={(value) => update("itemTaxTypeId", value)}
+                        disabled={refsControlsDisabled}
+                        bulkMode={isBulk}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <Field id={idFor("description")} label="Description">
+                        <Input
+                          id={idFor("description")}
+                          value={form.description}
+                          onChange={(event) => update("description", event.target.value)}
+                          disabled={isBulk}
+                          placeholder={isBulk ? "Leave unchanged (per-item)…" : ""}
+                        />
+                      </Field>
+                      <Field id={idFor("barcode")} label="Barcode">
+                        <Input
+                          id={idFor("barcode")}
+                          value={form.barcode}
+                          onChange={(event) => update("barcode", event.target.value)}
+                          disabled={isBulk}
+                          placeholder={isBulk ? "Leave unchanged (per-item)…" : ""}
+                        />
+                      </Field>
+                      <ItemRefSelectField
+                        id={idFor("vendor")}
+                        refs={refs}
+                        kind="vendor"
+                        label="Vendor"
+                        value={form.vendorId}
+                        onChange={(value) => update("vendorId", value)}
+                        disabled={refsControlsDisabled}
+                        bulkMode={isBulk}
+                      />
+                      <ItemRefSelectField
+                        id={idFor("dcc")}
+                        refs={refs}
+                        kind="dcc"
+                        label="Department / Class"
+                        value={form.dccId}
+                        onChange={(value) => update("dccId", value)}
+                        disabled={refsControlsDisabled}
+                        bulkMode={isBulk}
+                      />
+                      <ItemRefSelectField
+                        id={idFor("taxType")}
+                        refs={refs}
+                        kind="taxType"
+                        label="Tax Type"
+                        value={form.itemTaxTypeId}
+                        onChange={(value) => update("itemTaxTypeId", value)}
+                        disabled={refsControlsDisabled}
+                        bulkMode={isBulk}
+                      />
+                    </>
+                  )}
 
                   <Field id={idFor("retail")} label="Retail">
                     <Input
@@ -899,30 +1071,30 @@ export function EditItemDialogV2({
                       placeholder={isBulk ? "Leave unchanged…" : ""}
                     />
                   </Field>
-                  <Field id={idFor("catalogNumber")} label="Catalog #">
-                    <Input
-                      id={idFor("catalogNumber")}
-                      value={form.catalogNumber}
-                      onChange={(event) => update("catalogNumber", event.target.value)}
-                      placeholder={isBulk ? "Leave unchanged…" : ""}
-                    />
-                  </Field>
-                  <Field id={idFor("comment")} label="Comment">
-                    <Textarea
-                      id={idFor("comment")}
-                      value={form.comment}
-                      onChange={(event) => update("comment", event.target.value)}
-                      placeholder={isBulk ? "Leave unchanged…" : ""}
-                      className="min-h-24"
-                    />
-                  </Field>
+                  {isTextbookRow ? null : (
+                    <>
+                      <Field id={idFor("catalogNumber")} label="Catalog #">
+                        <Input
+                          id={idFor("catalogNumber")}
+                          value={form.catalogNumber}
+                          onChange={(event) => update("catalogNumber", event.target.value)}
+                          placeholder={isBulk ? "Leave unchanged…" : ""}
+                        />
+                      </Field>
+                      <Field id={idFor("comment")} label="Comment">
+                        <Textarea
+                          id={idFor("comment")}
+                          value={form.comment}
+                          onChange={(event) => update("comment", event.target.value)}
+                          placeholder={isBulk ? "Leave unchanged…" : ""}
+                          className="min-h-24"
+                        />
+                      </Field>
+                    </>
+                  )}
                 </div>
 
-                <ReadOnlyCheckbox
-                  checked={form.fDiscontinue}
-                  label="Discontinue item"
-                  onCheckedChange={(checked) => update("fDiscontinue", checked)}
-                />
+                <ReadOnlyCheckbox checked={form.fDiscontinue} label="Discontinue item" onCheckedChange={(checked) => update("fDiscontinue", checked)} />
               </Section>
             </TabsContent>
 
@@ -1176,6 +1348,52 @@ export function EditItemDialogV2({
                     <Button type="button" variant="outline" size="sm" onClick={() => copyInventoryField("statusCodeId")}>
                       Copy status code to other locations
                     </Button>
+                  </div>
+                </Section>
+              </TabsContent>
+            ) : null}
+
+            {isTextbookRow ? (
+              <TabsContent value="textbook" className="space-y-4 pt-1">
+                <Section title="Textbook metadata" description="Lower-frequency textbook fields stay in their own tab.">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field id={idFor("imprint")} label="Imprint">
+                      <Input
+                        id={idFor("imprint")}
+                        value={form.imprint}
+                        onChange={(event) => update("imprint", event.target.value)}
+                        placeholder={isBulk ? "Leave unchanged…" : ""}
+                      />
+                    </Field>
+                    <Field id={idFor("copyright")} label="Copyright">
+                      <Input
+                        id={idFor("copyright")}
+                        value={form.copyright}
+                        onChange={(event) => update("copyright", event.target.value)}
+                        placeholder={isBulk ? "Leave unchanged…" : ""}
+                      />
+                    </Field>
+                    <Field id={idFor("textStatusId")} label="Text Status">
+                      <Input
+                        id={idFor("textStatusId")}
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={form.textStatusId}
+                        onChange={(event) => update("textStatusId", event.target.value)}
+                        placeholder={isBulk ? "Leave unchanged…" : ""}
+                      />
+                    </Field>
+                    <Field id={idFor("statusDate")} label="Status Date">
+                      <Input
+                        id={idFor("statusDate")}
+                        type="date"
+                        value={form.statusDate}
+                        onChange={(event) => update("statusDate", event.target.value)}
+                        placeholder={isBulk ? "Leave unchanged…" : ""}
+                      />
+                    </Field>
+                    <ReadOnlyValueField id={idFor("bookKey")} label="Book Key" value={detail?.bookKey ?? "—"} />
                   </div>
                 </Section>
               </TabsContent>
