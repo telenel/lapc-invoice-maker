@@ -623,8 +623,10 @@ export function EditItemDialogV2({
 
         for (const key of EDITABLE_INVENTORY_FIELDS) {
           if (dirtyFields.has(key)) continue;
-          if (mergedLocation[key] !== nextLocation[key]) {
-            mergedLocation[key] = nextLocation[key];
+          const mergedInventoryFields = mergedLocation as Pick<InventoryFormState, InventoryFieldKey>;
+          const nextValue = nextLocation[key];
+          if (mergedInventoryFields[key] !== nextValue) {
+            mergedInventoryFields[key] = nextValue;
             changed = true;
           }
         }
