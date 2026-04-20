@@ -509,7 +509,7 @@ function hasWritableInventoryFields(patch: InventoryPatchPerLocation[] | undefin
 }
 
 function normalizeV2Patch(patch: z.infer<typeof v2PatchSchema>): ProductEditPatchV2 {
-  if (hasWritableInventoryFields(patch.inventory)) {
+  if (patch.inventory !== undefined) {
     return {
       item: patch.item,
       gm: patch.gm,

@@ -302,6 +302,36 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
     expect(mockUpsert).not.toHaveBeenCalled();
   });
 
+  it("does not fall back to primaryInventory when an explicit empty inventory array is present", async () => {
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          patch: {
+            inventory: [],
+            primaryInventory: {
+              retail: 14.25,
+              cost: 7.5,
+            },
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: "PATCH body must include at least one writable field.",
+    });
+    expect(prismMocks.updateGmItem).not.toHaveBeenCalled();
+    expect(prismMocks.updateTextbookPricing).not.toHaveBeenCalled();
+    expect(mockUpsert).not.toHaveBeenCalled();
+  });
+
   it("rejects typed v2 requests when the target SKU is a textbook", async () => {
     mockMaybeSingle.mockResolvedValueOnce({
       data: { item_type: "textbook" },
