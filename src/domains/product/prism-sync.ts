@@ -1,12 +1,12 @@
 /**
- * Prism -> Supabase pull sync. Reads Item + Inventory from Prism, hash-compares
- * against the products mirror, and upserts only changed rows. Idempotent.
+ * Prism -> Supabase pull sync. Reads Item + Inventory from Prism and upserts
+ * into both the products (global, per-SKU) and product_inventory (per-location)
+ * tables. Idempotent.
  *
- * Pierce-scoped: INNER JOIN on Inventory.LocationID = 2 restricts the pull to
- * SKUs that Pierce actually stocks (~61k of the 195k district-wide Item master).
- * After the pull we delete any products rows whose SKU wasn't seen this run —
- * that's how items going out of Pierce stock (or pre-Pierce-scoping mirror
- * leftovers) get reaped.
+ * Multi-location: INNER JOIN on Inventory.LocationID IN (2, 3, 4) covers
+ * PIER, PCOP, and PFS. Each (SKU, LocationID) pair lands in product_inventory.
+ * The PIER slice of retail/cost/stock is denormalized into products for UI
+ * backwards-compat until the UI reads from product_inventory directly.
  *
  * Classification: Prism's Item.TypeID is New(1)/Used(2), NOT textbook/GM.
  * Real type comes from whether a child row exists in Textbook or GeneralMerchandise.
@@ -15,10 +15,11 @@
  *
  * Textbook metadata (title/author/isbn/edition) comes from the Textbook table,
  * GM descriptions from GeneralMerchandise. Stock level comes from Inventory.
+ *
+ * Reap (deleting stale SKUs/inventory rows) is handled in P1.9. For now, the
+ * sync is additive-only — safe but does not prune rows that leave Pierce stock.
  */
-import crypto from "crypto";
 import { getPrismPool, sql } from "@/lib/prism";
-import { PIERCE_LOCATION_ID } from "./prism-server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 // Global (per-SKU) fields — written to the products table.
@@ -116,33 +117,6 @@ export interface PrismInventoryRow {
   createDate: Date | null;
 }
 
-function hashRow(r: PrismItemRow): string {
-  const canonical = JSON.stringify([
-    r.sku,
-    r.description ?? "",
-    r.title ?? "",
-    r.author ?? "",
-    r.isbn ?? "",
-    r.edition ?? "",
-    r.barcode ?? "",
-    r.vendorId ?? 0,
-    r.dccId ?? 0,
-    r.itemTaxTypeId ?? 0,
-    r.itemType,
-    r.fDiscontinue,
-    r.retail ?? 0,
-    r.cost ?? 0,
-    r.stockOnHand ?? 0,
-    r.deptNum ?? 0,
-    r.classNum ?? 0,
-    r.catNum ?? 0,
-    r.deptName ?? "",
-    r.className ?? "",
-    r.catName ?? "",
-    r.lastSaleDate?.toISOString() ?? "",
-  ]);
-  return crypto.createHash("sha256").update(canonical).digest("hex").slice(0, 16);
-}
 
 export interface PullSyncResult {
   scanned: number;
@@ -150,9 +124,6 @@ export interface PullSyncResult {
   removed: number;
   durationMs: number;
 }
-
-const DELETE_CHUNK_SIZE = 1000;
-const HASH_READ_PAGE_SIZE = 1000;
 
 // ---------------------------------------------------------------------------
 // Raw shape returned by buildPrismPullPageQuery. Matches the SELECT list.
@@ -372,6 +343,115 @@ export function shredRecordset(
   return { items: Array.from(itemsBySku.values()), inventory };
 }
 
+/**
+ * Build the upsert payload for the products table (global fields + the
+ * PIER-compat pricing triad). If pierInventory is null, the compat
+ * columns are written NULL.
+ */
+export function buildProductsUpsertPayload(
+  item: PrismItemRow,
+  pierInventory: PrismInventoryRow | null,
+): Record<string, unknown> {
+  return {
+    sku: item.sku,
+    item_type: item.itemType,
+    description: item.description,
+    title: item.title,
+    author: item.author,
+    isbn: item.isbn,
+    edition: item.edition,
+    binding_id: item.binding_id,
+    binding_label: item.binding_label,
+    imprint: item.imprint,
+    copyright: item.copyright,
+    used_sku: item.usedSku,
+    text_status_id: item.textStatusId,
+    status_date: item.statusDate,
+    type_textbook: item.typeTextbook,
+    book_key: item.bookKey,
+    barcode: item.barcode,
+    vendor_id: item.vendorId,
+    alt_vendor_id: item.altVendorId,
+    mfg_id: item.mfgId,
+    dcc_id: item.dccId,
+    used_dcc_id: item.usedDccId,
+    item_tax_type_id: item.itemTaxTypeId,
+    item_tax_type_label: item.itemTaxTypeLabel,
+    tx_comment: item.txComment,
+    weight: item.weight,
+    style_id: item.styleId,
+    item_season_code_id: item.itemSeasonCodeId,
+    f_list_price_flag: !!item.fListPriceFlag,
+    f_perishable: !!item.fPerishable,
+    f_id_required: !!item.fIdRequired,
+    min_order_qty_item: item.minOrderQtyItem,
+    type_gm: item.typeGm,
+    size: item.size,
+    size_id: item.sizeId,
+    catalog_number: item.catalogNumber,
+    package_type: item.packageType,
+    package_type_label: item.packageTypeLabel,
+    units_per_pack: item.unitsPerPack,
+    order_increment: item.orderIncrement,
+    image_url: item.imageUrl,
+    use_scale_interface: !!item.useScaleInterface,
+    tare: item.tare,
+    dept_num: item.deptNum,
+    class_num: item.classNum,
+    cat_num: item.catNum,
+    dept_name: item.deptName,
+    class_name: item.className,
+    cat_name: item.catName,
+    discontinued: item.fDiscontinue === 1,
+    retail_price: pierInventory?.retail ?? null,
+    cost: pierInventory?.cost ?? null,
+    stock_on_hand: pierInventory?.stockOnHand ?? null,
+    last_sale_date: pierInventory?.lastSaleDate ?? null,
+    synced_at: new Date().toISOString(),
+  };
+}
+
+export function buildProductInventoryUpsertPayload(
+  inv: PrismInventoryRow,
+): Record<string, unknown> {
+  return {
+    sku: inv.sku,
+    location_id: inv.locationId,
+    location_abbrev: inv.locationAbbrev,
+    retail_price: inv.retail,
+    cost: inv.cost,
+    expected_cost: inv.expectedCost,
+    stock_on_hand: inv.stockOnHand,
+    tag_type_id: inv.tagTypeId,
+    tag_type_label: inv.tagTypeLabel,
+    status_code_id: inv.statusCodeId,
+    status_code_label: inv.statusCodeLabel,
+    tax_type_override_id: inv.taxTypeOverrideId,
+    disc_code_id: inv.discCodeId,
+    min_stock: inv.minStock,
+    max_stock: inv.maxStock,
+    auto_order_qty: inv.autoOrderQty,
+    min_order_qty: inv.minOrderQty,
+    hold_qty: inv.holdQty,
+    reserved_qty: inv.reservedQty,
+    rental_qty: inv.rentalQty,
+    est_sales: inv.estSales,
+    est_sales_locked: !!inv.estSalesLocked,
+    royalty_cost: inv.royaltyCost,
+    min_royalty_cost: inv.minRoyaltyCost,
+    f_inv_list_price_flag: !!inv.fInvListPriceFlag,
+    f_tx_want_list_flag: !!inv.fTxWantListFlag,
+    f_tx_buyback_list_flag: !!inv.fTxBuybackListFlag,
+    f_rent_only: !!inv.fRentOnly,
+    f_no_returns: !!inv.fNoReturns,
+    text_comment_inv: inv.textCommentInv,
+    last_sale_date: inv.lastSaleDate,
+    last_inventory_date: inv.lastInventoryDate,
+    create_date: inv.createDate,
+    synced_at: new Date().toISOString(),
+  };
+}
+
 export function buildPrismPullPageQuery(): string {
   return `
         SELECT TOP (@pageSize)
@@ -503,36 +583,17 @@ function coerceEpochZeroDate(d: Date | null | undefined): Date | null {
   return d.getTime() > 0 ? d : null;
 }
 
-// Supabase PostgREST caps anonymous `.select()` results at a configured max
-// (default 1000). Without pagination the mirror-hash map was truncated and
-// the reap step quietly left ~134k stale rows behind on 2026-04-17. Always
-// paginate this read with `.range()`.
-async function loadExistingHashes(
-  supabase: ReturnType<typeof getSupabaseAdminClient>,
-): Promise<Map<number, string | null>> {
-  const map = new Map<number, string | null>();
-  let from = 0;
-  while (true) {
-    const to = from + HASH_READ_PAGE_SIZE - 1;
-    const { data, error } = await supabase
-      .from("products")
-      .select("sku, sync_hash")
-      .order("sku", { ascending: true })
-      .range(from, to);
-    if (error) throw new Error(`Supabase hash read failed: ${error.message}`);
-    if (!data || data.length === 0) break;
-    for (const r of data) {
-      map.set((r as { sku: number }).sku, (r as { sync_hash: string | null }).sync_hash);
-    }
-    if (data.length < HASH_READ_PAGE_SIZE) break;
-    from += HASH_READ_PAGE_SIZE;
-  }
-  return map;
-}
-
 /**
- * Run one full-catalog pull. Paginates Prism reads with a SKU cursor to
- * avoid loading the ~61k Pierce-stocked rows into memory at once.
+ * Run one full-catalog pull. Paginates Prism reads with a (sku, locationId)
+ * cursor to avoid loading the ~180k Pierce-stocked (sku×location) rows into
+ * memory at once.
+ *
+ * Writes to two tables on each page:
+ *   1. products — global (per-SKU) fields + PIER-compat pricing snapshot.
+ *   2. product_inventory — one row per (SKU, LocationID).
+ *
+ * Reap (deleting rows that left Pierce stock) is a P1.9 concern. This phase
+ * is intentionally additive-only — safe but not self-cleaning.
  */
 export async function runPrismPull(options: {
   pageSize?: number;
@@ -546,139 +607,72 @@ export async function runPrismPull(options: {
   const pool = await getPrismPool();
   const supabase = getSupabaseAdminClient();
 
-  const existingHashes = await loadExistingHashes(supabase);
+  // Phase 1: reap integration lands in P1.9. For now, allocate the bookkeeping.
   const seenSkus = new Set<number>();
+  const seenInventoryKeys = new Set<string>();
 
-  // Paginate Prism with SKU cursor (SKU is the PK, monotonically increasing)
   let lastSku = 0;
+  let lastLoc = 0;
   while (true) {
     const result = await pool
       .request()
-      .input("loc", sql.Int, PIERCE_LOCATION_ID)
       .input("cursor", sql.Int, lastSku)
+      .input("lastLoc", sql.Int, lastLoc)
       .input("pageSize", sql.Int, pageSize)
-      .query<{
-        SKU: number;
-        Description: string | null;
-        Title: string | null;
-        Author: string | null;
-        ISBN: string | null;
-        Edition: string | null;
-        BarCode: string | null;
-        VendorID: number | null;
-        DCCID: number | null;
-        ItemTaxTypeID: number | null;
-        ItemType: string;
-        fDiscontinue: number | null;
-        Retail: number | null;
-        Cost: number | null;
-        StockOnHand: number | null;
-        LastSaleDate: Date | null;
-        DeptNum: number | null;
-        ClassNum: number | null;
-        CatNum: number | null;
-        DeptName: string | null;
-        ClassName: string | null;
-        CatName: string | null;
-      }>(buildPrismPullPageQuery());
+      .query<PrismPullRecord>(buildPrismPullPageQuery());
 
     if (result.recordset.length === 0) break;
 
-    const toUpsert: Array<Record<string, unknown>> = [];
-    for (const raw of result.recordset) {
-      scanned += 1;
-      seenSkus.add(raw.SKU);
-      const row: PrismItemRow = {
-        sku: raw.SKU,
-        description: raw.Description && raw.Description.length > 0 ? raw.Description : null,
-        title: raw.Title && raw.Title.length > 0 ? raw.Title : null,
-        author: raw.Author && raw.Author.length > 0 ? raw.Author : null,
-        isbn: raw.ISBN && raw.ISBN.length > 0 ? raw.ISBN : null,
-        edition: raw.Edition && raw.Edition.length > 0 ? raw.Edition : null,
-        barcode: raw.BarCode && raw.BarCode.length > 0 ? raw.BarCode : null,
-        vendorId: raw.VendorID,
-        dccId: raw.DCCID,
-        itemTaxTypeId: raw.ItemTaxTypeID,
-        itemType: raw.ItemType,
-        fDiscontinue: raw.fDiscontinue === 1 ? 1 : 0,
-        retail: raw.Retail != null ? Number(raw.Retail) : null,
-        cost: raw.Cost != null ? Number(raw.Cost) : null,
-        stockOnHand: raw.StockOnHand != null ? Number(raw.StockOnHand) : null,
-        lastSaleDate: coerceEpochZeroDate(raw.LastSaleDate ?? null),
-        deptNum: raw.DeptNum,
-        classNum: raw.ClassNum,
-        catNum: raw.CatNum,
-        deptName: raw.DeptName && raw.DeptName.length > 0 ? raw.DeptName : null,
-        className: raw.ClassName && raw.ClassName.length > 0 ? raw.ClassName : null,
-        catName: raw.CatName && raw.CatName.length > 0 ? raw.CatName : null,
-      };
-      const newHash = hashRow(row);
-      if (existingHashes.get(row.sku) === newHash) continue;
+    const { items, inventory } = shredRecordset(result.recordset);
 
-      toUpsert.push({
-        sku: row.sku,
-        description: row.description,
-        title: row.title,
-        author: row.author,
-        isbn: row.isbn,
-        edition: row.edition,
-        barcode: row.barcode,
-        vendor_id: row.vendorId,
-        dcc_id: row.dccId,
-        item_tax_type_id: row.itemTaxTypeId,
-        item_type: row.itemType,
-        discontinued: row.fDiscontinue === 1,
-        retail_price: row.retail,
-        cost: row.cost,
-        stock_on_hand: row.stockOnHand,
-        last_sale_date: row.lastSaleDate?.toISOString() ?? null,
-        dept_num: row.deptNum,
-        class_num: row.classNum,
-        cat_num: row.catNum,
-        dept_name: row.deptName,
-        class_name: row.className,
-        cat_name: row.catName,
-        sync_hash: newHash,
-        synced_at: new Date().toISOString(),
-      });
+    // Index inventory by sku for PIER-compat column lookup on products
+    const invBySku = new Map<number, PrismInventoryRow>();
+    for (const inv of inventory) {
+      seenSkus.add(inv.sku);
+      seenInventoryKeys.add(`${inv.sku}:${inv.locationId}`);
+      if (inv.locationId === 2) invBySku.set(inv.sku, inv);
     }
 
-    if (toUpsert.length > 0) {
-      const { error: upsertErr } = await supabase.from("products").upsert(toUpsert);
-      if (upsertErr) {
-        throw new Error(`Supabase upsert failed: ${upsertErr.message}`);
-      }
-      updated += toUpsert.length;
+    const productsUpsert = items.map((item) =>
+      buildProductsUpsertPayload(item, invBySku.get(item.sku) ?? null),
+    );
+    if (productsUpsert.length > 0) {
+      const { error: prodErr } = await supabase
+        .from("products")
+        .upsert(productsUpsert, { onConflict: "sku" });
+      if (prodErr) throw new Error(`Supabase products upsert failed: ${prodErr.message}`);
     }
 
-    lastSku = result.recordset[result.recordset.length - 1].SKU;
-    options.onProgress?.(scanned);
+    const inventoryUpsert = inventory.map(buildProductInventoryUpsertPayload);
+    if (inventoryUpsert.length > 0) {
+      const { error: invErr } = await supabase
+        .from("product_inventory")
+        .upsert(inventoryUpsert, { onConflict: "sku,location_id" });
+      if (invErr) throw new Error(`Supabase product_inventory upsert failed: ${invErr.message}`);
+    }
+
+    scanned += result.recordset.length;
+    updated += productsUpsert.length + inventoryUpsert.length;
+
+    const lastRow = result.recordset[result.recordset.length - 1];
+    lastSku = lastRow.SKU;
+    lastLoc = lastRow.LocationID;
+
+    if (options.onProgress) options.onProgress(scanned);
 
     if (result.recordset.length < pageSize) break;
   }
 
-  // Reap rows whose SKU wasn't in Pierce stock this run. Includes both
-  // legitimately discontinued items and — on the first post-fix sync —
-  // the ~134k district-wide leftovers that the old LEFT-JOIN sync pulled.
-  const staleSkus: number[] = [];
-  existingHashes.forEach((_, sku) => {
-    if (!seenSkus.has(sku)) staleSkus.push(sku);
-  });
-
-  let removed = 0;
-  for (let i = 0; i < staleSkus.length; i += DELETE_CHUNK_SIZE) {
-    const chunk = staleSkus.slice(i, i + DELETE_CHUNK_SIZE);
-    const { error: delErr } = await supabase.from("products").delete().in("sku", chunk);
-    if (delErr) {
-      throw new Error(`Supabase stale-delete failed: ${delErr.message}`);
-    }
-    removed += chunk.length;
-  }
+  // Reap is a P1.9 concern — Phase 1 deliberately skips it here. The sets
+  // above (seenSkus, seenInventoryKeys) are allocated so P1.9 can wire them
+  // in without restructuring this function.
+  void seenSkus;
+  void seenInventoryKeys;
 
   return {
     scanned,
     updated,
-    removed,
+    removed: 0,
     durationMs: Date.now() - started,
   };
 }

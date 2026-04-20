@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { PrismItemRow, PrismInventoryRow } from "@/domains/product/prism-sync";
-import { shredRecordset } from "@/domains/product/prism-sync";
+import {
+  shredRecordset,
+  buildProductsUpsertPayload,
+  buildProductInventoryUpsertPayload,
+} from "@/domains/product/prism-sync";
 
 describe("Prism sync row types", () => {
   it("PrismItemRow carries only global (per-SKU) fields", () => {
@@ -227,5 +231,127 @@ describe("shredRecordset", () => {
     ];
     const { inventory } = shredRecordset(recordset as never);
     expect(inventory[0].lastSaleDate).toBeNull();
+  });
+});
+
+describe("buildProductsUpsertPayload", () => {
+  const baseItem: PrismItemRow = {
+    sku: 123,
+    description: "Widget",
+    title: null,
+    author: null,
+    isbn: null,
+    edition: null,
+    binding_id: null,
+    binding_label: null,
+    imprint: null,
+    copyright: null,
+    usedSku: null,
+    textStatusId: null,
+    statusDate: null,
+    typeTextbook: null,
+    bookKey: null,
+    barcode: "WID100",
+    vendorId: 100,
+    altVendorId: null,
+    mfgId: null,
+    dccId: 1010,
+    usedDccId: null,
+    itemTaxTypeId: 4,
+    itemTaxTypeLabel: "STATE",
+    itemType: "general_merchandise",
+    fDiscontinue: 0 as 0 | 1,
+    txComment: null,
+    weight: null,
+    styleId: null,
+    itemSeasonCodeId: null,
+    fListPriceFlag: 0 as 0 | 1,
+    fPerishable: 0 as 0 | 1,
+    fIdRequired: 0 as 0 | 1,
+    minOrderQtyItem: null,
+    typeGm: null,
+    size: null,
+    sizeId: null,
+    catalogNumber: "WID-100",
+    packageType: "EA",
+    packageTypeLabel: "Each",
+    unitsPerPack: null,
+    orderIncrement: 1,
+    imageUrl: null,
+    useScaleInterface: 0 as 0 | 1,
+    tare: null,
+    deptNum: 10,
+    classNum: 10,
+    catNum: 20,
+    deptName: "Drinks",
+    className: "Bottled",
+    catName: "Sodas",
+  };
+
+  const basePierInventory: PrismInventoryRow = {
+    sku: 123,
+    locationId: 2 as 2 | 3 | 4,
+    locationAbbrev: "PIER",
+    retail: 2.99,
+    cost: 1.1,
+    expectedCost: null,
+    stockOnHand: 25,
+    tagTypeId: 3,
+    tagTypeLabel: "LARGE w/Price/Color",
+    statusCodeId: 2,
+    statusCodeLabel: "Active",
+    taxTypeOverrideId: 2,
+    discCodeId: null,
+    minStock: null,
+    maxStock: null,
+    autoOrderQty: null,
+    minOrderQty: null,
+    holdQty: null,
+    reservedQty: null,
+    rentalQty: null,
+    estSales: 0,
+    estSalesLocked: 0 as 0 | 1,
+    royaltyCost: null,
+    minRoyaltyCost: null,
+    fInvListPriceFlag: 1 as 0 | 1,
+    fTxWantListFlag: 0 as 0 | 1,
+    fTxBuybackListFlag: 0 as 0 | 1,
+    fRentOnly: 0 as 0 | 1,
+    fNoReturns: 0 as 0 | 1,
+    textCommentInv: null,
+    lastSaleDate: new Date("2026-04-01T00:00:00Z"),
+    lastInventoryDate: null,
+    createDate: null,
+  };
+
+  it("products payload carries global fields plus the PIER price/stock snapshot", () => {
+    const payload = buildProductsUpsertPayload(baseItem, basePierInventory);
+    expect(payload.sku).toBe(123);
+    expect(payload.description).toBe("Widget");
+    expect(payload.item_tax_type_label).toBe("STATE");
+    expect(payload.binding_label).toBeNull();
+    expect(payload.retail_price).toBe(2.99);
+    expect(payload.cost).toBe(1.1);
+    expect(payload.stock_on_hand).toBe(25);
+    expect(payload.last_sale_date).toEqual(new Date("2026-04-01T00:00:00Z"));
+  });
+
+  it("products payload uses NULL compat fields when no PIER inventory row exists", () => {
+    const payload = buildProductsUpsertPayload(baseItem, null);
+    expect(payload.retail_price).toBeNull();
+    expect(payload.cost).toBeNull();
+    expect(payload.stock_on_hand).toBeNull();
+    expect(payload.last_sale_date).toBeNull();
+  });
+
+  it("product_inventory payload carries all per-location fields", () => {
+    const payload = buildProductInventoryUpsertPayload(basePierInventory);
+    expect(payload.sku).toBe(123);
+    expect(payload.location_id).toBe(2);
+    expect(payload.location_abbrev).toBe("PIER");
+    expect(payload.retail_price).toBe(2.99);
+    expect(payload.tag_type_label).toBe("LARGE w/Price/Color");
+    expect(payload.f_inv_list_price_flag).toBe(true);
+    expect(payload.f_rent_only).toBe(false);
   });
 });
