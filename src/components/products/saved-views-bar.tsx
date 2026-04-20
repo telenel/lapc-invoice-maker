@@ -51,26 +51,36 @@ export function SavedViewsBar({
 
   useEffect(() => {
     let cancelled = false;
-    // Re-fires whenever refreshToken changes so the bar picks up save/delete
-    // mutations from the parent without a full component remount.
-    listViews()
-      .then((r) => {
-        if (cancelled) return;
-        const nextSystem = r.system.length > 0 ? r.system : SYSTEM_PRESET_VIEWS;
-        setSystem(nextSystem);
-        setMine(r.mine);
-        setLoadError(null);
-        onViewsResolved?.([...nextSystem, ...r.mine]);
-      })
-      .catch((err) => {
-        if (cancelled) return;
-        // Keep the last-known system + user arrays so a transient API hiccup
-        // doesn't wipe the custom view chips or orphan the currently-active
-        // preset. Surface the failure as a muted inline indicator instead.
-        setLoadError(err instanceof Error ? err.message : "Could not load saved views.");
-      });
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const attempt = () => {
+      // Re-fires whenever refreshToken changes so the bar picks up save /
+      // delete mutations from the parent without a full component remount.
+      listViews()
+        .then((r) => {
+          if (cancelled) return;
+          const nextSystem = r.system.length > 0 ? r.system : SYSTEM_PRESET_VIEWS;
+          setSystem(nextSystem);
+          setMine(r.mine);
+          setLoadError(null);
+          onViewsResolved?.([...nextSystem, ...r.mine]);
+        })
+        .catch((err) => {
+          if (cancelled) return;
+          // Keep the last-known system + user arrays so a transient API
+          // hiccup doesn't wipe the custom view chips or orphan the
+          // currently-active preset. Surface the failure as a muted inline
+          // indicator and retry after 30s so a deleted/renamed view can't
+          // linger forever if the refresh itself keeps failing.
+          setLoadError(err instanceof Error ? err.message : "Could not load saved views.");
+          retryTimer = setTimeout(attempt, 30_000);
+        });
+    };
+
+    attempt();
     return () => {
       cancelled = true;
+      if (retryTimer) clearTimeout(retryTimer);
     };
   }, [onViewsResolved, refreshToken]);
 

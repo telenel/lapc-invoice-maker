@@ -41,30 +41,14 @@ export default function ProductsPage() {
     const params = new URLSearchParams();
     searchParams.forEach((value, key) => params.set(key, value));
     const parsed = parseFiltersFromSearchParams(params);
-    // Fresh loads (no explicit filter values) default to "in stock" so users
-    // don't immediately see discontinued/out-of-stock clutter. We compare the
-    // parsed filter state to EMPTY_FILTERS (ignoring tab/page/sort/view),
-    // which is tolerant of unknown query params like utm_* or share tags — a
-    // URL carrying only tracking params still gets the in-stock default.
-    const TRANSPORT_KEYS = new Set([
-      "tab",
-      "page",
-      "sortBy",
-      "sortDir",
-    ]);
-    const hasExplicitFilter = (Object.keys(EMPTY_FILTERS) as Array<keyof ProductFilters>).some(
-      (k) => !TRANSPORT_KEYS.has(k) && parsed[k] !== EMPTY_FILTERS[k],
-    );
-    // Skip the stock default whenever the URL carries a `view=` param. The
-    // view is authoritative (system or custom, with or without filters), and
-    // we can't verify a custom slug synchronously at init time. For stale or
-    // invalid slugs the restoration effect resolves to "not found" once the
-    // views list loads — the user can clear the broken param manually or the
-    // deletion handler's router.replace cleans it up. Avoiding the default
-    // injection here is strictly better than flashing pre-filtered results
-    // for a legitimate custom empty view.
-    const isRestoringView = params.get("view") !== null;
-    if (!isRestoringView && !hasExplicitFilter && parsed.minStock === "") {
+    // The in-stock baseline is a catalog default, not a user-composed
+    // filter. Apply it unless the URL explicitly carries a `minStock` param
+    // — "no stock filter" is encoded by omitting the param or passing
+    // `minStock=0`. This makes presets and custom saved views that simply
+    // don't care about stock inherit the baseline (matching the normal
+    // /products landing behavior), while still letting a user say "show
+    // everything" with an explicit `minStock=0`.
+    if (!params.has("minStock") && parsed.minStock === "") {
       return { ...parsed, minStock: "1" };
     }
     return parsed;
