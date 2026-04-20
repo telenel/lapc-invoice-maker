@@ -20,7 +20,16 @@ vi.mock("@/domains/product/vendor-directory", () => ({
     byId: new Map<number, string>(),
   }),
   useProductRefDirectory: () => ({
-    refs: null,
+    refs: {
+      vendors: [],
+      dccs: [],
+      taxTypes: [{ taxTypeId: 4, description: "STATE" }],
+      tagTypes: [],
+      statusCodes: [],
+      packageTypes: [],
+      colors: [],
+      bindings: [],
+    },
     lookups: {
       taxTypeLabels: new Map([[4, "STATE"]]),
     },
@@ -373,6 +382,20 @@ describe("product table variance trigger", () => {
 
     expect(screen.getByRole("columnheader", { name: /tax type/i })).toBeTruthy();
     expect(screen.getByRole("columnheader", { name: /disc/i })).toBeTruthy();
+  });
+
+  it("changing tax type does not toggle row selection", async () => {
+    const user = userEvent.setup();
+    const onToggle = vi.fn();
+
+    renderEditableTable(onToggle);
+
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: /tax type for sku 101/i }),
+      "4",
+    );
+
+    expect(onToggle).not.toHaveBeenCalled();
   });
 
   it("clicking blank space in an inline-edit cell still selects the row", async () => {

@@ -306,7 +306,7 @@ function TaxTypeCell({
   }
 
   return (
-    <td className="px-2.5 py-1.5" onClick={(event) => event.stopPropagation()}>
+    <td className="px-2.5 py-1.5">
       <select
         aria-label={`Tax type for SKU ${product.sku}`}
         value={currentValue}
