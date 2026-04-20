@@ -130,37 +130,49 @@ vi.mock("@/components/products/product-table", () => ({
     inlineEdit,
     primaryLocationId,
     products,
+    tab,
   }: {
     inlineEdit?: {
       editingCell: { sku: number; field: string } | null;
       draftValue: string;
       pendingSave: boolean;
-      startEdit: (sku: number, field: string, currentValue: string) => void;
+      startEdit: (
+        sku: number,
+        field: string,
+        currentValue: string,
+        fieldOrder?: string[],
+      ) => void;
       setDraftValue: (value: string) => void;
       commitEdit: () => Promise<void>;
       cancelEdit: () => void;
       moveToNextEditableCell: (direction: "next" | "previous") => Promise<void>;
     };
     primaryLocationId?: number;
+    tab: "textbooks" | "merchandise";
     products: Array<{ sku: number; retail_price: number; cost: number; barcode: string | null }>;
   }) => {
     const fieldConfig = [
-      {
-        field: "retail",
-        label: "Retail",
-        currentValue: (product: { sku: number; retail_price: number }) => String(product.retail_price),
-      },
       {
         field: "cost",
         label: "Cost",
         currentValue: (product: { sku: number; cost: number }) => String(product.cost),
       },
       {
-        field: "barcode",
-        label: "Barcode",
-        currentValue: (product: { sku: number; barcode: string | null }) => product.barcode ?? "",
+        field: "retail",
+        label: "Retail",
+        currentValue: (product: { sku: number; retail_price: number }) => String(product.retail_price),
       },
+      ...(tab === "merchandise"
+        ? [
+            {
+              field: "barcode",
+              label: "Barcode",
+              currentValue: (product: { sku: number; barcode: string | null }) => product.barcode ?? "",
+            },
+          ]
+        : []),
     ] as const;
+    const fieldOrder = fieldConfig.map(({ field }) => field);
 
     return (
       <div data-testid="product-table">
@@ -200,7 +212,14 @@ vi.mock("@/components/products/product-table", () => ({
                         ) : (
                           <button
                             type="button"
-                            onClick={() => inlineEdit.startEdit(product.sku, field, currentValue(product))}
+                            onClick={() =>
+                              inlineEdit.startEdit(
+                                product.sku,
+                                field,
+                                currentValue(product),
+                                fieldOrder,
+                              )
+                            }
                           >
                             {`Edit ${label.toLowerCase()} for SKU ${product.sku}`}
                           </button>
@@ -358,6 +377,7 @@ describe("ProductsPage inline edit controller wiring", () => {
 
   it("commits barcode edits with the v2 item patch and tabs to the next visible row field", async () => {
     const user = userEvent.setup();
+    searchParamsState = new URLSearchParams("tab=merchandise");
 
     useProductSearchMock.mockReturnValue({
       data: {
@@ -435,5 +455,94 @@ describe("ProductsPage inline edit controller wiring", () => {
     expect(
       await screen.findByRole("textbox", { name: /cost editor for sku 1002/i }),
     ).toHaveValue("11.75");
+  });
+
+  it("tabs from textbook retail to the next row cost without landing in a hidden barcode field", async () => {
+    const user = userEvent.setup();
+
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [
+          makeProductRow({
+            sku: 1001,
+            item_type: "textbook",
+            title: "Physics I",
+            isbn: "9780131103627",
+            barcode: null,
+            retail_price: 39.99,
+            cost: 18.25,
+            selected_inventories: [
+              {
+                locationId: 2,
+                locationAbbrev: "PIER",
+                retailPrice: 39.99,
+                cost: 18.25,
+                stockOnHand: 12,
+                lastSaleDate: null,
+              },
+            ],
+          }),
+          makeProductRow({
+            sku: 1002,
+            item_type: "textbook",
+            title: "Physics II",
+            isbn: "9780131101630",
+            barcode: null,
+            retail_price: 41.5,
+            cost: 19.75,
+            selected_inventories: [
+              {
+                locationId: 2,
+                locationAbbrev: "PIER",
+                retailPrice: 41.5,
+                cost: 19.75,
+                stockOnHand: 12,
+                lastSaleDate: null,
+              },
+            ],
+          }),
+        ],
+        total: 2,
+        page: 1,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    updateMock.mockResolvedValue({ sku: 1001, appliedFields: ["primaryInventory.retail"] });
+
+    render(<ProductsPage />);
+
+    await screen.findByTestId("product-table");
+
+    await user.click(screen.getByRole("button", { name: /edit retail for sku 1001/i }));
+
+    const editor = screen.getByRole("textbox", { name: /retail editor for sku 1001/i });
+    await user.clear(editor);
+    await user.type(editor, "44.99{tab}");
+
+    await waitFor(() => {
+      expect(updateMock).toHaveBeenCalledWith(1001, {
+        mode: "v2",
+        patch: {
+          primaryInventory: {
+            retail: 44.99,
+          },
+        },
+        baseline: expect.objectContaining({
+          sku: 1001,
+          barcode: null,
+          retail: 39.99,
+          cost: 18.25,
+          fDiscontinue: 0,
+        }),
+      });
+    });
+
+    expect(
+      await screen.findByRole("textbox", { name: /cost editor for sku 1002/i }),
+    ).toHaveValue("19.75");
+    expect(screen.queryByRole("textbox", { name: /barcode editor for sku 1001/i })).toBeNull();
+    expect(screen.queryByRole("textbox", { name: /barcode editor for sku 1002/i })).toBeNull();
   });
 });

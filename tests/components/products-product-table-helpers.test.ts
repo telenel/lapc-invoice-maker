@@ -354,6 +354,22 @@ describe("product table variance trigger", () => {
     expect(screen.getByRole("textbox", { name: /retail editor for sku 101/i })).toBeTruthy();
   });
 
+  it("clicking blank space in an inline-edit cell still selects the row", async () => {
+    const user = userEvent.setup();
+    const onToggle = vi.fn();
+
+    renderEditableTable(onToggle);
+
+    const retailButton = screen.getByRole("button", { name: /edit retail for sku 101/i });
+    const retailCell = retailButton.closest("td");
+    expect(retailCell).not.toBeNull();
+
+    await user.click(retailCell as HTMLTableCellElement);
+
+    expect(onToggle).toHaveBeenCalledTimes(1);
+    expect(onToggle).toHaveBeenCalledWith(expect.objectContaining({ sku: 101 }));
+  });
+
   it("esc closes the retail editor without selecting the row", async () => {
     const user = userEvent.setup();
     const onToggle = vi.fn();

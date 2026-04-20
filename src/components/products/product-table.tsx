@@ -184,6 +184,7 @@ function InlineEditableCell({
   label,
   displayValue,
   currentValue,
+  fieldOrder,
   badge,
   inlineEdit,
   align = "left",
@@ -195,6 +196,7 @@ function InlineEditableCell({
   label: string;
   displayValue: string;
   currentValue: string;
+  fieldOrder: readonly ProductInlineEditableField[];
   badge?: ReactNode;
   inlineEdit?: ProductInlineEditController;
   align?: "left" | "right";
@@ -239,7 +241,7 @@ function InlineEditableCell({
       type="button"
       onClick={(e) => {
         e.stopPropagation();
-        inlineEdit.startEdit(product.sku, field, currentValue);
+        inlineEdit.startEdit(product.sku, field, currentValue, fieldOrder);
       }}
       aria-label={`Edit ${label.toLowerCase()} for SKU ${product.sku}`}
       title="Click to edit"
@@ -254,7 +256,7 @@ function InlineEditableCell({
   );
 
   return (
-    <td className={className} onClick={(e) => e.stopPropagation()}>
+    <td className={className}>
       <div className={`flex items-center gap-1.5 ${align === "right" ? "justify-end" : "justify-start"}`}>
         {valueNode}
         {badge ?? null}
@@ -426,6 +428,8 @@ export function ProductTable({
   // Observe the wrapper width so the hidden-count badge reflects what the
   // @container queries actually suppress.
   const { ref: wrapperRef, summary: hiddenSummary } = useHiddenColumns();
+  const inlineFieldOrder: readonly ProductInlineEditableField[] =
+    tab === "textbooks" ? ["cost", "retail"] : ["cost", "retail", "barcode"];
   const activeOptionalColumns = useMemo(() => visibleColumns ?? [], [visibleColumns]);
   useEffect(() => {
     if (!onHiddenChange) return;
@@ -779,6 +783,7 @@ export function ProductTable({
                           label="Cost"
                           displayValue={formatCurrency(costValue)}
                           currentValue={getInlineEditValue(product, resolvedPrimaryLocationId, "cost")}
+                          fieldOrder={inlineFieldOrder}
                           badge={
                             costBadge ? (
                               <LocationVariancePopover
@@ -800,6 +805,7 @@ export function ProductTable({
                           label="Retail"
                           displayValue={formatCurrency(retailValue)}
                           currentValue={getInlineEditValue(product, resolvedPrimaryLocationId, "retail")}
+                          fieldOrder={inlineFieldOrder}
                           badge={
                             retailBadge ? (
                               <LocationVariancePopover
@@ -875,6 +881,7 @@ export function ProductTable({
                             label="Barcode"
                             displayValue={getInlineEditDisplayValue(product, resolvedPrimaryLocationId, "barcode")}
                             currentValue={getInlineEditValue(product, resolvedPrimaryLocationId, "barcode")}
+                            fieldOrder={inlineFieldOrder}
                             inlineEdit={inlineEdit}
                             className="px-2.5 py-1.5"
                           />

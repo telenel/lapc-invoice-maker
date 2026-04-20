@@ -30,7 +30,12 @@ export interface ProductInlineEditController {
   pendingSave: boolean;
   primaryLocationId: ProductLocationId;
   rowsBySku: Map<number, ProductInlineEditRowBaseline>;
-  startEdit: (sku: number, field: ProductInlineEditableField, currentValue: string) => void;
+  startEdit: (
+    sku: number,
+    field: ProductInlineEditableField,
+    currentValue: string,
+    fieldOrder?: readonly ProductInlineEditableField[],
+  ) => void;
   cancelEdit: () => void;
   commitEdit: () => Promise<void>;
   moveToNextEditableCell: (direction: "next" | "previous") => Promise<void>;
@@ -42,6 +47,17 @@ const EDITABLE_FIELD_ORDER: ProductInlineEditableField[] = [
   "retail",
   "barcode",
 ];
+
+function normalizeFieldOrder(
+  field: ProductInlineEditableField,
+  fieldOrder?: readonly ProductInlineEditableField[],
+): readonly ProductInlineEditableField[] {
+  if (!fieldOrder || fieldOrder.length === 0) return EDITABLE_FIELD_ORDER;
+
+  const uniqueFields = fieldOrder.filter((candidate, index) => fieldOrder.indexOf(candidate) === index);
+  if (!uniqueFields.includes(field)) return EDITABLE_FIELD_ORDER;
+  return uniqueFields;
+}
 
 function getCellValue(row: ProductInlineEditRowBaseline, field: ProductInlineEditableField): string {
   switch (field) {
@@ -90,10 +106,17 @@ export function useProductInlineEdit({
   );
 
   const rowOrder = useMemo(() => rows.map((row) => row.sku), [rows]);
+  const [activeFieldOrder, setActiveFieldOrder] = useState<readonly ProductInlineEditableField[]>(EDITABLE_FIELD_ORDER);
 
   const startEdit = useCallback(
-    (sku: number, field: ProductInlineEditableField, currentValue: string) => {
+    (
+      sku: number,
+      field: ProductInlineEditableField,
+      currentValue: string,
+      fieldOrder?: readonly ProductInlineEditableField[],
+    ) => {
       if (pendingSave) return;
+      setActiveFieldOrder(normalizeFieldOrder(field, fieldOrder));
       setEditingCell({ sku, field });
       setDraftValue(currentValue);
     },
@@ -220,28 +243,28 @@ export function useProductInlineEdit({
       const rowIndex = rowOrder.indexOf(activeCell.sku);
       if (rowIndex === -1) return;
 
-      const fieldIndex = EDITABLE_FIELD_ORDER.indexOf(activeCell.field);
+      const fieldIndex = activeFieldOrder.indexOf(activeCell.field);
       if (fieldIndex === -1) return;
 
       let nextCell: ProductInlineEditCell | null = null;
       if (direction === "next") {
-        const nextField = EDITABLE_FIELD_ORDER[fieldIndex + 1];
+        const nextField = activeFieldOrder[fieldIndex + 1];
         if (nextField) {
           nextCell = { sku: activeCell.sku, field: nextField };
         } else {
           const nextSku = rowOrder[rowIndex + 1];
           if (nextSku != null) {
-            nextCell = { sku: nextSku, field: EDITABLE_FIELD_ORDER[0] };
+            nextCell = { sku: nextSku, field: activeFieldOrder[0] };
           }
         }
       } else {
-        const prevField = EDITABLE_FIELD_ORDER[fieldIndex - 1];
+        const prevField = activeFieldOrder[fieldIndex - 1];
         if (prevField) {
           nextCell = { sku: activeCell.sku, field: prevField };
         } else {
           const prevSku = rowOrder[rowIndex - 1];
           if (prevSku != null) {
-            nextCell = { sku: prevSku, field: EDITABLE_FIELD_ORDER[EDITABLE_FIELD_ORDER.length - 1] };
+            nextCell = { sku: prevSku, field: activeFieldOrder[activeFieldOrder.length - 1] };
           }
         }
       }
@@ -253,7 +276,7 @@ export function useProductInlineEdit({
       setEditingCell(nextCell);
       setDraftValue(getCellValue(nextRow, nextCell.field));
     },
-    [editingCell, rowsBySku, rowOrder, saveCurrentEdit],
+    [activeFieldOrder, editingCell, rowsBySku, rowOrder, saveCurrentEdit],
   );
 
   const commitEdit = useCallback(async () => {
