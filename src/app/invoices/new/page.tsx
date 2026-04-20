@@ -12,14 +12,18 @@ import { CATALOG_ITEMS_STORAGE_KEY } from "@/domains/product/constants";
 import type { SelectedProduct } from "@/domains/product/types";
 import { formatDateLong as formatDate } from "@/lib/formatters";
 
-function readCatalogItems(): { sku: string; description: string; quantity: number; unitPrice: number; costPrice: number }[] | undefined {
+function hasRetailPrice(product: SelectedProduct): product is SelectedProduct & { retailPrice: number } {
+  return product.retailPrice != null;
+}
+
+function readCatalogItems(): { sku: string; description: string; quantity: number; unitPrice: number; costPrice: number | null }[] | undefined {
   if (typeof window === "undefined") return undefined;
   try {
     const raw = sessionStorage.getItem(CATALOG_ITEMS_STORAGE_KEY);
     if (!raw) return undefined;
     sessionStorage.removeItem(CATALOG_ITEMS_STORAGE_KEY);
     const items = JSON.parse(raw) as SelectedProduct[];
-    return items.map((item) => ({
+    return items.filter(hasRetailPrice).map((item) => ({
       sku: String(item.sku),
       description: item.description.toUpperCase(),
       quantity: 1,
@@ -32,14 +36,16 @@ function readCatalogItems(): { sku: string; description: string; quantity: numbe
 }
 
 function mapProductsToItems(products: SelectedProduct[]) {
-  return products.map((p) => ({
+  return products
+    .filter(hasRetailPrice)
+    .map((p) => ({
     sku: String(p.sku),
     description: p.description.toUpperCase(),
     unitPrice: p.retailPrice,
     costPrice: p.cost,
     quantity: 1,
     isTaxable: true,
-  }));
+    }));
 }
 
 export default function NewInvoicePage() {

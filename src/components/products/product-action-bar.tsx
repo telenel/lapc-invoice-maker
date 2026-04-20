@@ -38,6 +38,13 @@ export function ProductActionBar({
   const router = useRouter();
   const { byId: vendorNames } = useVendorDirectory();
   const [discontinuing, setDiscontinuing] = useState(false);
+  const selectedItems = Array.from(selected.values());
+  const missingRetailPriceCount = selectedItems.filter((item) => item.retailPrice == null).length;
+  const missingEditPricingCount = selectedItems.filter(
+    (item) => item.retailPrice == null || item.cost == null,
+  ).length;
+  const hasMissingRetailPrice = missingRetailPriceCount > 0;
+  const hasMissingEditPricing = missingEditPricingCount > 0;
 
   function handleCreateInvoice() {
     saveToSession();
@@ -52,7 +59,7 @@ export function ProductActionBar({
   function handlePrintBarcodes() {
     const items = Array.from(selected.values()).map((item) => ({
       ...item,
-      vendorLabel: vendorNames.get(item.vendorId) ?? null,
+      vendorLabel: item.vendorId != null ? (vendorNames.get(item.vendorId) ?? null) : null,
     }));
     openBarcodePrintWindow(items);
   }
@@ -105,59 +112,89 @@ export function ProductActionBar({
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
           className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
         >
-          <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium">
+          <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium">
                 {selectedCount} item{selectedCount !== 1 ? "s" : ""} selected
-              </span>
-              <button
-                onClick={onClear}
-                className="text-xs text-muted-foreground hover:text-foreground underline"
-              >
-                Clear
-              </button>
-            </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={handlePrintBarcodes}>
-                <PrinterIcon className="mr-1.5 size-3.5" />
-                Print Barcodes
-              </Button>
-              {prismAvailable ? (
+                </span>
+                <button
+                  onClick={onClear}
+                  className="text-xs text-muted-foreground hover:text-foreground underline"
+                >
+                  Clear
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={handlePrintBarcodes}>
+                  <PrinterIcon className="mr-1.5 size-3.5" />
+                  Print Barcodes
+                </Button>
+                {prismAvailable ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleDiscontinue}
+                    disabled={discontinuing}
+                    className="border-destructive/30 text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2Icon className="mr-1.5 size-3.5" />
+                    {discontinuing ? "Discontinuing…" : "Discontinue"}
+                  </Button>
+                ) : null}
+                {prismAvailable && onEditClick ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={onEditClick}
+                    disabled={hasMissingEditPricing}
+                  >
+                    Edit
+                  </Button>
+                ) : null}
+                {prismAvailable && onBulkEdit ? (
+                  <Button size="sm" variant="outline" onClick={onBulkEdit}>
+                    Bulk Edit
+                  </Button>
+                ) : null}
+                {prismAvailable && onHardDeleteClick ? (
+                  <Button size="sm" variant="outline" onClick={onHardDeleteClick} className="border-destructive/30 text-destructive hover:bg-destructive/10">
+                    Delete
+                  </Button>
+                ) : null}
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={handleDiscontinue}
-                  disabled={discontinuing}
-                  className="border-destructive/30 text-destructive hover:bg-destructive/10"
+                  onClick={handleCreateQuote}
+                  disabled={hasMissingRetailPrice}
                 >
-                  <Trash2Icon className="mr-1.5 size-3.5" />
-                  {discontinuing ? "Discontinuing…" : "Discontinue"}
+                  <FileTextIcon className="mr-1.5 size-3.5" />
+                  Create Quote
                 </Button>
-              ) : null}
-              {prismAvailable && onEditClick ? (
-                <Button size="sm" variant="outline" onClick={onEditClick}>
-                  Edit
+                <Button
+                  size="sm"
+                  onClick={handleCreateInvoice}
+                  disabled={hasMissingRetailPrice}
+                >
+                  <FileTextIcon className="mr-1.5 size-3.5" />
+                  Create Invoice
                 </Button>
-              ) : null}
-              {prismAvailable && onBulkEdit ? (
-                <Button size="sm" variant="outline" onClick={onBulkEdit}>
-                  Bulk Edit
-                </Button>
-              ) : null}
-              {prismAvailable && onHardDeleteClick ? (
-                <Button size="sm" variant="outline" onClick={onHardDeleteClick} className="border-destructive/30 text-destructive hover:bg-destructive/10">
-                  Delete
-                </Button>
-              ) : null}
-              <Button size="sm" variant="outline" onClick={handleCreateQuote}>
-                <FileTextIcon className="mr-1.5 size-3.5" />
-                Create Quote
-              </Button>
-              <Button size="sm" onClick={handleCreateInvoice}>
-                <FileTextIcon className="mr-1.5 size-3.5" />
-                Create Invoice
-              </Button>
+              </div>
             </div>
+            {hasMissingRetailPrice || hasMissingEditPricing ? (
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                {hasMissingRetailPrice ? (
+                  <span>
+                    {missingRetailPriceCount} selected item{missingRetailPriceCount !== 1 ? "s are" : " is"} missing retail price, so invoice and quote creation are unavailable.
+                  </span>
+                ) : null}
+                {prismAvailable && onEditClick && hasMissingEditPricing ? (
+                  <span>
+                    {missingEditPricingCount} selected item{missingEditPricingCount !== 1 ? "s are" : " is"} missing retail or cost, so edit is unavailable.
+                  </span>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </motion.div>
       )}

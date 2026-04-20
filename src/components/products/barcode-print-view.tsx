@@ -25,8 +25,8 @@ export function buildBarcodePrintHtml(items: SelectedProduct[]): string {
           <span>Vendor: ${escapeHtml(formatVendorLabel(item.vendorLabel))}</span>
           ${item.author ? `<span>Author: ${escapeHtml(item.author)}</span>` : ""}
           ${item.edition ? `<span>Edition: ${escapeHtml(item.edition)}</span>` : ""}
-          <span>Retail: $${item.retailPrice.toFixed(2)}</span>
-          <span>Cost: $${item.cost.toFixed(2)}</span>
+          <span>Retail: ${item.retailPrice != null ? `$${item.retailPrice.toFixed(2)}` : "Unavailable"}</span>
+          <span>Cost: ${item.cost != null ? `$${item.cost.toFixed(2)}` : "Unavailable"}</span>
         </div>
       </div>
       <div class="barcode-cell">

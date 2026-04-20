@@ -7,6 +7,7 @@ import { EMPTY_FILTERS } from "@/domains/product/constants";
 
 describe("EMPTY_FILTERS", () => {
   it.each([
+    "locationIds",
     "minStock", "maxStock", "deptNum", "classNum", "catNum",
     "missingBarcode", "missingIsbn", "missingTitle",
     "retailBelowCost", "zeroPrice",

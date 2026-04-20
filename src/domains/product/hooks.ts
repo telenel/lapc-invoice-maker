@@ -5,18 +5,18 @@ import { toast } from "sonner";
 import { searchProducts } from "./queries";
 import { CATALOG_ITEMS_STORAGE_KEY } from "./constants";
 import type {
-  Product,
+  ProductBrowseRow,
+  ProductBrowseSearchResult,
   ProductFilters,
-  ProductSearchResult,
   SelectedProduct,
 } from "./types";
 
 // ---------------------------------------------------------------------------
-// useProductSearch — debounced search with Supabase
+// useProductSearch — debounced search through the authenticated browse route
 // ---------------------------------------------------------------------------
 
 export function useProductSearch(filters: ProductFilters) {
-  const [data, setData] = useState<ProductSearchResult | null>(null);
+  const [data, setData] = useState<ProductBrowseSearchResult | null>(null);
   const [loading, setLoading] = useState(true);
   const deferredSearch = useDeferredValue(filters.search);
 
@@ -49,12 +49,12 @@ export function useProductSearch(filters: ProductFilters) {
 // useProductSelection — multi-select cart persisted across tabs/pages
 // ---------------------------------------------------------------------------
 
-function productToSelected(product: Product): SelectedProduct {
+function productToSelected(product: ProductBrowseRow): SelectedProduct {
   return {
     sku: product.sku,
     description: (product.title ?? product.description ?? "").toUpperCase(),
-    retailPrice: Number(product.retail_price),
-    cost: Number(product.cost),
+    retailPrice: product.retail_price,
+    cost: product.cost,
     barcode: product.barcode,
     author: product.author,
     title: product.title,
@@ -71,7 +71,7 @@ export function useProductSelection() {
     () => new Map()
   );
 
-  const toggle = useCallback((product: Product) => {
+  const toggle = useCallback((product: ProductBrowseRow) => {
     setSelected((prev) => {
       const next = new Map(prev);
       if (next.has(product.sku)) {
@@ -83,7 +83,7 @@ export function useProductSelection() {
     });
   }, []);
 
-  const toggleAll = useCallback((products: Product[]) => {
+  const toggleAll = useCallback((products: ProductBrowseRow[]) => {
     setSelected((prev) => {
       const next = new Map(prev);
       const allOnPage = products.every((p) => next.has(p.sku));

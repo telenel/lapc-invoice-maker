@@ -8,18 +8,22 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { searchProducts } from "@/domains/product/queries";
 import { TABS, EMPTY_FILTERS } from "@/domains/product/constants";
-import type { Product, ProductTab, SelectedProduct } from "@/domains/product/types";
+import type {
+  ProductBrowseRow,
+  ProductTab,
+  SelectedProduct,
+} from "@/domains/product/types";
 
 // ---------------------------------------------------------------------------
 // Helper: convert raw product row to SelectedProduct shape
 // ---------------------------------------------------------------------------
 
-function productToSelected(product: Product): SelectedProduct {
+function productToSelected(product: ProductBrowseRow): SelectedProduct {
   return {
     sku: product.sku,
     description: (product.title ?? product.description ?? "").toUpperCase(),
-    retailPrice: Number(product.retail_price),
-    cost: Number(product.cost),
+    retailPrice: product.retail_price,
+    cost: product.cost,
     barcode: product.barcode,
     author: product.author,
     title: product.title,
@@ -35,14 +39,14 @@ function productToSelected(product: Product): SelectedProduct {
 // Helper: derive display name and subtitle for a product row
 // ---------------------------------------------------------------------------
 
-function getDisplayName(product: Product): string {
+function getDisplayName(product: ProductBrowseRow): string {
   const raw = product.item_type === "textbook"
     ? (product.title ?? product.description ?? "")
     : (product.description ?? product.title ?? "");
   return raw.toUpperCase();
 }
 
-function getSubtitle(product: Product): string {
+function getSubtitle(product: ProductBrowseRow): string {
   if (product.item_type === "textbook") {
     const parts: string[] = [];
     if (product.author) parts.push(product.author);
@@ -64,6 +68,10 @@ export interface ProductSearchPanelProps {
   onAddProducts: (products: SelectedProduct[]) => void;
 }
 
+function canAddBrowseRowToLineItems(product: ProductBrowseRow): boolean {
+  return product.retail_price != null;
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -75,7 +83,7 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
   const [selected, setSelected] = useState<Map<number, SelectedProduct>>(
     () => new Map()
   );
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductBrowseRow[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -133,7 +141,9 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
   }, []);
 
   // Selection helpers
-  const toggleProduct = useCallback((product: Product) => {
+  const toggleProduct = useCallback((product: ProductBrowseRow) => {
+    if (!canAddBrowseRowToLineItems(product)) return;
+
     setSelected((prev) => {
       const next = new Map(prev);
       if (next.has(product.sku)) {
@@ -223,18 +233,22 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
           <ul className="divide-y pb-16">
             {products.map((product) => {
               const isChecked = selected.has(product.sku);
+              const selectable = canAddBrowseRowToLineItems(product);
               return (
                 <li
                   key={product.sku}
                   className={[
-                    "flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-muted/40 transition-colors",
+                    "flex items-center gap-3 px-3 py-2.5 transition-colors",
+                    selectable ? "cursor-pointer hover:bg-muted/40" : "cursor-not-allowed opacity-70",
                     isChecked ? "bg-primary/5" : "",
                   ].join(" ")}
                   onClick={() => toggleProduct(product)}
+                  data-disabled={!selectable ? "" : undefined}
                 >
                   <Checkbox
                     tabIndex={-1}
                     checked={isChecked}
+                    disabled={!selectable}
                     onCheckedChange={() => toggleProduct(product)}
                     onClick={(e) => e.stopPropagation()}
                     aria-label={`Select SKU ${product.sku}`}
@@ -247,10 +261,11 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
                     <p className="text-[11px] text-muted-foreground truncate leading-tight mt-0.5">
                       SKU {product.sku}
                       {getSubtitle(product) ? ` · ${getSubtitle(product)}` : ""}
+                      {!selectable ? " · Price unavailable" : ""}
                     </p>
                   </div>
                   <span className="text-xs font-medium text-right shrink-0">
-                    ${Number(product.retail_price).toFixed(2)}
+                    {selectable ? `$${Number(product.retail_price).toFixed(2)}` : "Price unavailable"}
                   </span>
                 </li>
               );

@@ -29,9 +29,17 @@ import { SaveViewDialog } from "@/components/products/save-view-dialog";
 import { DeleteViewDialog } from "@/components/products/delete-view-dialog";
 import { ColumnVisibilityToggle, type ColumnVisibilityHandle } from "@/components/products/column-visibility-toggle";
 import { PierceAssuranceBadge } from "@/components/products/pierce-assurance-badge";
+import { LocationPicker } from "@/components/products/location-picker";
 import { productApi } from "@/domains/product/api-client";
 import { SYSTEM_PRESET_VIEWS } from "@/domains/product/presets";
 import { shouldApplyDefaultMinStock } from "@/domains/product/page-defaults";
+import type { ProductLocationId } from "@/domains/product/location-filters";
+
+function getLocationLabel(locationId: ProductLocationId): "PIER" | "PCOP" | "PFS" {
+  if (locationId === 3) return "PCOP";
+  if (locationId === 4) return "PFS";
+  return "PIER";
+}
 
 export default function ProductsPage() {
   const router = useRouter();
@@ -148,6 +156,22 @@ export default function ProductsPage() {
     isSelected,
     saveToSession,
   } = useProductSelection();
+  const editableSelectedItems = Array.from(selected.values())
+    .filter(
+      (product): product is typeof product & { retailPrice: number; cost: number } =>
+        product.retailPrice != null && product.cost != null,
+    )
+    .map((product) => ({
+      sku: product.sku,
+      barcode: product.barcode ?? null,
+      retail: product.retailPrice,
+      cost: product.cost,
+      fDiscontinue: 0 as 0 | 1,
+      description: product.description ?? "",
+      vendorId: product.vendorId ?? undefined,
+      dccId: undefined,
+      isTextbook: product.itemType === "textbook",
+    }));
 
   const updateFilters = useCallback(
     (next: ProductFilters, extras: { view?: string } = {}) => {
@@ -230,6 +254,10 @@ export default function ProductsPage() {
     updateFilters(next);
   }
 
+  function handleLocationChange(locationIds: ProductLocationId[]) {
+    handleFilterChange({ ...filters, locationIds, page: 1 });
+  }
+
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-6 md:px-5">
       {/* Header */}
@@ -292,20 +320,24 @@ export default function ProductsPage() {
         }}
       />
 
+      <div className="page-enter page-enter-2 mb-2 rounded-[10px] border border-border bg-card px-3 py-2 shadow-[0_1px_0_color-mix(in_oklch,var(--border)_55%,transparent),0_2px_8px_-2px_color-mix(in_oklch,var(--foreground)_6%,transparent)]">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="min-w-0">
+            <div className="text-[11px] font-semibold tracking-[-0.005em] text-muted-foreground">
+              Location scope
+            </div>
+            <div className="text-[11px] text-muted-foreground/80">
+              Primary location follows canonical order; current primary is {getLocationLabel(filters.locationIds[0])}.
+            </div>
+          </div>
+          <LocationPicker value={filters.locationIds} onChange={handleLocationChange} />
+        </div>
+      </div>
+
       <EditItemDialog
         open={editOpen}
         onOpenChange={setEditOpen}
-        items={Array.from(selected.values()).map((p) => ({
-          sku: p.sku,
-          barcode: p.barcode ?? null,
-          retail: p.retailPrice ?? 0,
-          cost: p.cost ?? 0,
-          fDiscontinue: 0 as 0 | 1,
-          description: p.description ?? "",
-          vendorId: p.vendorId ?? undefined,
-          dccId: undefined,
-          isTextbook: p.itemType === "textbook",
-        }))}
+        items={editableSelectedItems}
         onSaved={() => {
           setEditOpen(false);
           refetch();

@@ -1,3 +1,23 @@
+import type { ProductLocationId } from "./location-filters";
+
+export type ProductLocationAbbrev = "PIER" | "PCOP" | "PFS";
+
+export interface ProductLocationSlice {
+  locationId: ProductLocationId;
+  locationAbbrev: ProductLocationAbbrev;
+  retailPrice: number | null;
+  cost: number | null;
+  stockOnHand: number | null;
+  lastSaleDate: string | null;
+}
+
+export interface ProductLocationVariance {
+  retailPriceVaries: boolean;
+  costVaries: boolean;
+  stockVaries: boolean;
+  lastSaleDateVaries: boolean;
+}
+
 /** Raw product row from Supabase products table */
 export interface Product {
   sku: number;
@@ -43,10 +63,23 @@ export interface Product {
   sales_aggregates_computed_at: string | null;
   effective_last_sale_date?: string | null;
   aggregates_ready?: boolean;
+  edited_since_sync?: boolean;
   margin_ratio?: number | null;
   stock_coverage_days?: number | null;
   trend_direction?: "accelerating" | "decelerating" | "steady" | null;
   discontinued: boolean | null;
+}
+
+export interface ProductBrowseRow extends Omit<Product, "retail_price" | "cost" | "vendor_id" | "dcc_id" | "color_id"> {
+  retail_price: number | null;
+  cost: number | null;
+  vendor_id: number | null;
+  dcc_id: number | null;
+  color_id: number | null;
+  primary_location_id: ProductLocationId | null;
+  primary_location_abbrev: ProductLocationAbbrev | null;
+  selected_inventories: ProductLocationSlice[];
+  location_variance: ProductLocationVariance;
 }
 
 export type ProductTab = "textbooks" | "merchandise";
@@ -54,6 +87,7 @@ export type ProductTab = "textbooks" | "merchandise";
 export interface ProductFilters {
   search: string;
   tab: ProductTab;
+  locationIds: ProductLocationId[];
   minPrice: string;
   maxPrice: string;
   vendorId: string;
@@ -130,8 +164,15 @@ export type ProductSortField =
   | "margin"
   | "days_since_sale";
 
-export interface ProductSearchResult {
-  products: Product[];
+export interface ProductBrowseSearchResult {
+  products: ProductBrowseRow[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+export interface ProductBrowseCountResult {
+  products: [];
   total: number;
   page: number;
   pageSize: number;
@@ -141,15 +182,15 @@ export interface ProductSearchResult {
 export interface SelectedProduct {
   sku: number;
   description: string;
-  retailPrice: number;
-  cost: number;
+  retailPrice: number | null;
+  cost: number | null;
   barcode: string | null;
   author: string | null;
   title: string | null;
   isbn: string | null;
   edition: string | null;
   catalogNumber: string | null;
-  vendorId: number;
+  vendorId: number | null;
   vendorLabel?: string | null;
   itemType: string;
 }

@@ -1,4 +1,5 @@
 import type { ProductFilters, ProductTab } from "./types";
+import { cloneProductLocationIds, DEFAULT_PRODUCT_LOCATION_IDS } from "./location-filters";
 
 export const PAGE_SIZE = 50;
 
@@ -16,6 +17,7 @@ export const TAB_ITEM_TYPES: Record<ProductTab, string[]> = {
 export const EMPTY_FILTERS: ProductFilters = {
   search: "",
   tab: "textbooks",
+  locationIds: cloneProductLocationIds(DEFAULT_PRODUCT_LOCATION_IDS),
   minPrice: "",
   maxPrice: "",
   vendorId: "",
