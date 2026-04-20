@@ -595,28 +595,28 @@ export function computeReapSet(
   seen: Set<string>,
 ): { inventoryToDelete: Set<string>; skusWithNoLocations: Set<number> } {
   const inventoryToDelete = new Set<string>();
-  for (const key of existing) {
+  existing.forEach((key) => {
     if (!seen.has(key)) inventoryToDelete.add(key);
-  }
+  });
 
   const remainingBySku = new Map<number, number>();
-  for (const key of existing) {
+  existing.forEach((key) => {
     if (!inventoryToDelete.has(key)) {
       const sku = Number(key.split(":")[0]);
       remainingBySku.set(sku, (remainingBySku.get(sku) ?? 0) + 1);
     }
-  }
+  });
 
   const skusWithNoLocations = new Set<number>();
   const skusInExisting = new Set<number>();
-  for (const key of existing) {
+  existing.forEach((key) => {
     skusInExisting.add(Number(key.split(":")[0]));
-  }
-  for (const sku of skusInExisting) {
+  });
+  skusInExisting.forEach((sku) => {
     if ((remainingBySku.get(sku) ?? 0) === 0) {
       skusWithNoLocations.add(sku);
     }
-  }
+  });
 
   return { inventoryToDelete, skusWithNoLocations };
 }
