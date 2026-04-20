@@ -1,53 +1,56 @@
 # Git Workflow
 
-This repo is optimized for working across multiple local machines and AI agents without branch drift.
+This repo is optimized for multi-machine and multi-agent handoffs without branch drift.
 
-## Core Rules
+## Core rules
 
 - GitHub is the source of truth. Local branches are disposable caches.
-- One task maps to one short-lived branch and one PR.
+- One task gets one short-lived branch and one PR.
 - One branch has one active writer at a time.
-- Once a PR exists, that branch is only for review fixes. New scope goes on a new branch.
+- Once a PR exists, that branch is for review fixes only.
 - Always push before switching machines.
 
-## One-Time Setup Per Machine
+## One-time setup per machine
 
-From the repo root:
+From repo root:
 
 ```bash
 npm install
 npm run git:bootstrap
 ```
 
-That configures:
+That sets repo-local git safety defaults and, unless `--repo-only` is passed, the same defaults globally:
 
-- repo-local hooks
+- `core.hooksPath=hooks`
 - `pull.ff=only`
 - `fetch.prune=true`
 - `rerere.enabled=true`
 - `merge.conflictStyle=zdiff3`
 - `push.autoSetupRemote=true`
 
-Use `npm run git:bootstrap -- --repo-only` if you do not want the machine-wide git settings.
+Use:
 
-## Start New Work
+```bash
+npm run git:bootstrap -- --repo-only
+```
 
-Use a fresh branch from a fresh `main`:
+if you do not want the global git writes.
+
+## Start new work
 
 ```bash
 npm run git:start-branch -- feat/your-topic
 ```
 
-That script:
+The script:
 
+- requires a clean working tree
 - fetches `origin --prune`
-- fast-forwards `main`
-- creates a new branch from the updated `main`
-- blocks if the branch name already exists locally or on GitHub
+- fast-forwards local `main` from `origin/main`
+- blocks if the branch already exists locally or on GitHub
+- creates the new branch from fresh `main`
 
-## Resume Existing Work On Another Machine
-
-Do not trust the local copy of an existing branch. Re-sync it from GitHub first:
+## Resume existing work on another machine
 
 ```bash
 npm run git:resume-branch -- feat/your-topic
@@ -55,47 +58,91 @@ npm run git:resume-branch -- feat/your-topic
 
 The safe default:
 
+- requires a clean working tree
 - fetches `origin --prune`
+- requires `origin/<branch>` to exist
 - switches to the branch
-- resets to `origin/<branch>` when the local copy is simply behind
-- blocks if this machine has local-only commits or diverged history
+- hard-resets to `origin/<branch>` if the local copy is only behind
+- blocks on divergence or local-only commits
 
-If GitHub is intentionally the source of truth and you want to discard this machine's local copy:
+If GitHub should intentionally replace the local copy:
 
 ```bash
 npm run git:resume-branch -- --discard-local feat/your-topic
 ```
 
-## Publish Work
-
-Before opening a PR:
+## Validate before pushing
 
 ```bash
 npm run ship-check
+```
+
+`ship-check` is strict by design:
+
+- the tree must be completely clean
+- no staged changes
+- no unstaged changes
+- no untracked files
+
+If deploy metadata files appear locally, they are ignored by `.gitignore`, but any other stray files will still block the command.
+
+`ship-check` runs:
+
+1. `npm run lint`
+2. `npm test`
+3. `npm run build`
+4. writes a `HEAD` stamp to `.git/laportal/ship-check.env`
+
+## Open the PR
+
+```bash
 npm run git:publish-pr
 ```
 
-After the PR is open:
+Current requirements:
 
-- do not continue feature work on that branch
-- only push review fixes with `CR_FIX=1 git push`
-- put any new idea or scope change on a new branch from fresh `main`
+- `gh` must be installed and authenticated
+- working tree must be clean
+- branch must not be `main`
+- `ship-check` stamp must match the current `HEAD`
+- the branch must not already have an open PR
 
-## What The Hook Blocks
+The script then:
 
-The tracked `pre-push` hook blocks pushes when:
+1. `git push -u origin <branch>`
+2. `gh pr create --fill --base main --head <branch>`
 
-- `ship-check` has not been run on the current `HEAD`
-- the branch has an open PR and you are not doing an explicit review-fix push
-- the remote branch moved and this machine has stale tracking data
-- the push would not be a fast-forward of the current remote branch tip
+## After the PR exists
 
-This is intentional. It forces clean handoffs between machines.
+Do not keep developing on that branch.
 
-## AI Agent Rules
+Only push follow-up review fixes with:
 
-- Codex and Claude should both read this workflow before editing repo code.
-- Agents must not develop on the same branch from two machines at the same time.
-- Agents should start new work with `npm run git:start-branch -- <branch>`.
-- Agents should resume remote work with `npm run git:resume-branch -- <branch>`.
-- Agents should treat GitHub as authoritative once work has been pushed.
+```bash
+CR_FIX=1 git push
+```
+
+If `AUTOMERGE_PAT` is configured in GitHub, qualifying PRs targeting `main` get GitHub native auto-merge enabled automatically.
+
+## What the pre-push hook blocks
+
+The tracked `hooks/pre-push` hook runs on feature branches and blocks pushes when:
+
+- no `ship-check` stamp exists
+- the `ship-check` stamp does not match `HEAD`
+- the local tracking ref is stale
+- the push would not be a fast-forward of the remote branch tip
+- the branch already has an open PR and `CR_FIX=1` is not set
+
+Notes:
+
+- the hook does not enforce these checks on `main`
+- the open-PR check is skipped if `gh` is unavailable
+
+## Agent rules
+
+- Read this file before editing repo code.
+- Do not have two writers working on the same branch at the same time.
+- Start new work with `npm run git:start-branch -- <branch>`.
+- Resume existing remote work with `npm run git:resume-branch -- <branch>`.
+- Treat GitHub as authoritative once work has been pushed.

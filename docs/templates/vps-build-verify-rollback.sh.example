@@ -43,6 +43,13 @@ run_smoke_checks() {
   DEPLOY_SMOKE_BASE_URL="$SMOKE_BASE_URL" ./scripts/deploy-smoke-check.sh
 }
 
+run_preflight_checks() {
+  docker compose run --rm --no-deps --entrypoint sh app -lc '
+    ./node_modules/.bin/prisma migrate deploy &&
+    ./scripts/your-invariant-check.sh
+  '
+}
+
 cd "$PROJECT_DIR"
 
 PREV_COMMIT=$(git rev-parse HEAD)
@@ -70,6 +77,7 @@ TARGET_COMMIT=$(git rev-parse FETCH_HEAD)
 
 if [ -n "$EXPECTED_SHA" ] && [ "$TARGET_COMMIT" != "$EXPECTED_SHA" ]; then
   echo "Fetched $TARGET_COMMIT, expected $EXPECTED_SHA"
+  append_deploy_log "sha_mismatch" "fetched $TARGET_COMMIT but expected $EXPECTED_SHA"
   exit 1
 fi
 
@@ -80,8 +88,10 @@ BUILD_SHA=$(git rev-parse --short HEAD)
 BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 export BUILD_SHA BUILD_TIME
 
-live_before_sha=$(extract_json_string_field "$(fetch_live_version)" "buildSha")
-if [ "$live_before_sha" = "$BUILD_SHA" ]; then
+live_before_body=$(fetch_live_version)
+live_before_sha=$(extract_json_string_field "$live_before_body" "buildSha")
+live_before_status=$(extract_json_string_field "$live_before_body" "status")
+if [ "$live_before_status" = "ok" ] && [ "$live_before_sha" = "$BUILD_SHA" ]; then
   if run_smoke_checks; then
     echo "$NEW_COMMIT" > .last-good-commit
     append_deploy_log "skip" "live app already serving $BUILD_SHA and smoke checks passed"
@@ -89,8 +99,23 @@ if [ "$live_before_sha" = "$BUILD_SHA" ]; then
   fi
 fi
 
-docker compose build app
-docker compose up -d --remove-orphans
+if ! docker compose build app; then
+  git reset --hard "$PREV_COMMIT"
+  append_deploy_log "build_failed" "docker compose build failed"
+  exit 1
+fi
+
+if ! run_preflight_checks; then
+  git reset --hard "$PREV_COMMIT"
+  append_deploy_log "preflight_failed" "migration/invariant preflight failed before container replacement"
+  exit 1
+fi
+
+if ! docker compose up -d --remove-orphans; then
+  append_deploy_log "up_failed" "docker compose up failed"
+  rollback_deploy "$ROLLBACK_COMMIT" || true
+  exit 1
+fi
 
 sleep "$VERIFY_INITIAL_SLEEP"
 for i in $(seq 1 "$VERIFY_ATTEMPTS"); do
@@ -98,7 +123,11 @@ for i in $(seq 1 "$VERIFY_ATTEMPTS"); do
   status=$(extract_json_string_field "$body" "status")
   deployed_sha=$(extract_json_string_field "$body" "buildSha")
   if [ "$status" = "ok" ] && [ "$deployed_sha" = "$BUILD_SHA" ]; then
-    run_smoke_checks
+    if ! run_smoke_checks; then
+      append_deploy_log "smoke_failed" "smoke checks failed for $BUILD_SHA"
+      rollback_deploy "$ROLLBACK_COMMIT" || true
+      exit 1
+    fi
     echo "$NEW_COMMIT" > .last-good-commit
     append_deploy_log "success" "live app is serving $BUILD_SHA and smoke checks passed"
     exit 0

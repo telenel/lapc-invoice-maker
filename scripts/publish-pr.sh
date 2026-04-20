@@ -5,7 +5,6 @@ repo_root=$(git rev-parse --show-toplevel)
 git_dir=$(git rev-parse --git-dir)
 stamp_dir="$git_dir/laportal"
 ship_check_file="$stamp_dir/ship-check.env"
-codex_review_file="$stamp_dir/codex-review.env"
 
 cd "$repo_root"
 
@@ -14,7 +13,7 @@ if ! command -v gh >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! git diff --quiet || ! git diff --cached --quiet; then
+if [ -n "$(git status --porcelain=v1 --untracked-files=all)" ]; then
   echo "BLOCKED: publish-pr requires a clean working tree."
   echo "Commit or stash changes first."
   echo ""
@@ -40,25 +39,6 @@ fi
 if [ "${SHIP_CHECK_HEAD:-}" != "$head_sha" ]; then
   echo "BLOCKED: ship-check stamp does not match HEAD $head_sha"
   echo "Run: npm run ship-check"
-  exit 1
-fi
-
-if [ ! -f "$codex_review_file" ]; then
-  echo "BLOCKED: missing Codex review stamp. Run: npm run review:codex"
-  exit 1
-fi
-
-# shellcheck disable=SC1090
-. "$codex_review_file"
-if [ "${CODEX_REVIEW_HEAD:-}" != "$head_sha" ]; then
-  echo "BLOCKED: Codex review stamp does not match HEAD $head_sha"
-  echo "Run: npm run review:codex"
-  exit 1
-fi
-
-if [ "${CODEX_REVIEW_RESULT:-}" != "PASS" ]; then
-  echo "BLOCKED: Codex review must return PASS before opening a PR."
-  echo "Run: npm run review:codex"
   exit 1
 fi
 

@@ -1,42 +1,45 @@
 # Hotfix Workflow
 
-Use this lane for small production fixes that need to move faster than the full PR -> CI -> webhook path.
+Use this lane for small production fixes that need to ship faster than the normal branch -> PR -> merge -> deploy path.
 
-This is not a bypass of build safety. The hotfix lane still:
+This is a faster entry point, not a weaker deploy path.
 
-- runs local preflight checks
-- deploys through the existing build-first VPS script
-- verifies the live `/api/version` response
-- runs lightweight route smoke checks on the VPS
+The hotfix lane still:
+
+- runs local preflight checks unless explicitly skipped
 - pins the exact remote SHA before SSH
-- rolls back automatically on remote deploy failure
+- uses the same VPS deploy engine as normal deploys
+- verifies `/api/version`
+- runs smoke checks
+- rolls back automatically on post-swap failure
 
-## Allowed Use
-
-Good candidates:
+## Good use cases
 
 - public page bugs
 - small API logic fixes
 - UI regressions
 - copy/validation fixes
+- narrow production patches that do not change infra assumptions
 
-Do not use this lane for:
+## Do not use this lane for
 
-- Prisma migrations
+- migration-led changes
 - env var changes
 - Dockerfile/base image changes
 - infrastructure changes
 - large refactors
 
+Note: the remote deploy path still runs pending Prisma migrations and repo-specific invariant checks as a safety preflight. The rule above means you should not choose the hotfix lane for changes whose primary purpose is schema or infra rollout.
+
 ## Setup
 
-Create a local `.env.hotfix` from [.env.hotfix.example](/Users/montalvo/lapc-invoice-maker/.env.hotfix.example):
+Create a local `.env.hotfix` from the repo example:
 
 ```bash
 cp .env.hotfix.example .env.hotfix
 ```
 
-Required values:
+Required:
 
 - `HOTFIX_SSH_HOST`
 
@@ -50,7 +53,7 @@ Common optional values:
 
 ## Commands
 
-Run the reduced local validation:
+Run reduced local validation:
 
 ```bash
 npm run hotfix:preflight
@@ -62,7 +65,7 @@ Run preflight with a focused test command:
 HOTFIX_TEST_COMMAND='npm test -- src/__tests__/public-quote-view.test.tsx' npm run hotfix:preflight
 ```
 
-Deploy a pushed branch or tag directly to the VPS:
+Deploy a pushed branch or tag:
 
 ```bash
 npm run hotfix:deploy -- hotfix/my-fix-branch
@@ -86,17 +89,43 @@ Skip local preflight if you already ran it:
 npm run hotfix:deploy -- --skip-preflight hotfix/my-fix-branch
 ```
 
-## How It Works
+## What `hotfix:preflight` does
 
-1. `scripts/hotfix-deploy.sh` checks that the target branch or tag exists on `origin`.
-2. If you are deploying your current branch, it blocks when local commits have not been pushed yet.
-3. It runs `scripts/hotfix-preflight.sh` unless `--skip-preflight` is used.
-4. It SSHes to the VPS and runs `scripts/deploy-webhook.sh <ref>`.
-5. The VPS fetches that ref, verifies that it still resolves to the exact SHA selected locally, resets to that commit, skips only if the live app already reports that SHA and smoke checks pass, otherwise builds the app image, runs Prisma migrations as a preflight step, replaces the container only after those migrations succeed, verifies `/api/version`, runs smoke checks, and rolls back automatically if post-swap verification fails.
+- `npm run lint`
+- optional focused test command from args or `HOTFIX_TEST_COMMAND`
+- `npm run build`
+
+Unlike `ship-check`, this preflight does not require a totally clean working tree.
+
+## What `hotfix:deploy` does
+
+1. loads `.env.hotfix` if present
+2. resolves the target ref on `origin`
+3. if you are deploying the current branch, blocks if local commits have not been pushed
+4. runs `hotfix:preflight` unless `--skip-preflight` is used
+5. SSHes to the VPS and runs `scripts/deploy-webhook.sh <ref>` with `DEPLOY_CHANNEL=hotfix` and the exact remote SHA
+6. waits for `/api/version` to report the expected short SHA
+
+## Remote deploy behavior
+
+`scripts/deploy-webhook.sh` is the real deployment engine used by both normal and hotfix deploys.
+
+It:
+
+1. fetches the target ref
+2. rejects the deploy if the fetched SHA does not match the pinned expected SHA
+3. skips rebuild only if the live app already serves that SHA and smoke checks pass
+4. otherwise builds the candidate image
+5. runs pre-swap migration/invariant checks in the candidate image:
+   - `prisma migrate deploy`
+   - `node scripts/check-products-derived-view.mjs`
+6. swaps containers only after the preflight succeeds
+7. verifies `/api/version`
+8. runs `scripts/deploy-smoke-check.sh`
+9. rolls back on post-swap failure
 
 ## Notes
 
-- The remote deploy script now accepts a target ref. Without one, it still defaults to `main`.
-- Hotfix deploys are intentionally branch/tag based. Push the exact ref you want live before deploying. The local script captures the remote SHA first, and the VPS refuses to deploy if the ref moves before fetch.
-- Every remote deploy outcome is appended to `.deploy-history.log` on the VPS for auditability.
-- `npm run ship-check` remains the normal branch validation path for PRs and regular deploys.
+- Hotfix deploys are intentionally branch/tag based. Push the exact ref you want live before deploying.
+- Every deploy outcome is appended to `.deploy-history.log` on the VPS.
+- `npm run ship-check` remains the normal validation path for regular PR work.

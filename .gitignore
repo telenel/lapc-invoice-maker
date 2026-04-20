@@ -34,6 +34,8 @@ yarn-error.log*
 # claude code local state
 .claude/
 .claude.local.md
+/.deploy-history.log
+/.last-good-commit
 
 # vercel
 .vercel

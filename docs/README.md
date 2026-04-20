@@ -1,30 +1,43 @@
 # Documentation Index
 
-Use this page as the entry point for LAPortal documentation.
+Start here for current LAPortal docs.
 
-## Start Here
+## Core docs
 
-- [../README.md](../README.md) — repo-level quick start
-- [PROJECT-OVERVIEW.md](PROJECT-OVERVIEW.md) — current architecture, stack, and application behavior
-- [DEPLOYMENT-STANDARD.md](DEPLOYMENT-STANDARD.md) — deployment contract, guardrails, and reusable templates
+- `../README.md` — repo quick start and high-level workflow summary
+- `PROJECT-OVERVIEW.md` — current architecture, route/domain map, and platform behavior
+- `SUPABASE-MIGRATION-STATUS.md` — current Supabase/platform status and verification commands
 
-## Operations
+## Developer workflow
 
-- [GIT-WORKFLOW.md](GIT-WORKFLOW.md) — multi-machine branch workflow and handoff rules
-- [HOTFIX-WORKFLOW.md](HOTFIX-WORKFLOW.md) — fast SHA-pinned SSH hotfix lane
-- [SUPABASE-MIGRATION-STATUS.md](SUPABASE-MIGRATION-STATUS.md) — infrastructure and migration status
-- [PRINT-SHOP-PRICING.md](PRINT-SHOP-PRICING.md) — pricing reference
+- `GIT-WORKFLOW.md` — enforced branch, push, and PR rules
+- `HOTFIX-WORKFLOW.md` — fast SSH hotfix lane using the same VPS deploy engine
+- `DEPLOYMENT-STANDARD.md` — reusable exact-SHA deploy contract and guardrails
 
-## Reusable Templates
+## Operational references
 
-- [templates/github-vps-sha-pinned-deploy.yml.example](templates/github-vps-sha-pinned-deploy.yml.example) — GitHub Actions deploy template
-- [templates/vps-build-verify-rollback.sh.example](templates/vps-build-verify-rollback.sh.example) — VPS deploy script template
-- [templates/deploy-smoke-check.sh.example](templates/deploy-smoke-check.sh.example) — Route smoke-check template
+- `PRINT-SHOP-PRICING.md` — pricing reference
+- `performance-testing.md` — Lighthouse/perf workflow notes
+- `prism/SCHEMA.md` — Prism-side schema notes
 
-## Working / Historical Material
+## Agent-facing docs
 
-These directories are useful, but they are not the primary source of truth for current production behavior.
+- `../AGENTS.md` — short repo guidance for agentic tools
+- `../CLAUDE.md` — same guidance for Claude Code
+- `ai/WORKFLOW.md` — AI handoff workflow and durable infra rules
+- `ai/SUPABASE-HANDOFF.md` — Supabase-specific handoff notes
+- `ai/PROJECT-CONTEXT.md` — historical project context
 
-- [ai/](ai/) — AI handoff and session notes
-- [superpowers/specs/](superpowers/specs/) — feature design specs
-- [superpowers/plans/](superpowers/plans/) — implementation plans
+## Templates
+
+- `templates/github-vps-sha-pinned-deploy.yml.example` — GitHub Actions deploy template
+- `templates/vps-build-verify-rollback.sh.example` — VPS deploy script template
+- `templates/deploy-smoke-check.sh.example` — smoke-check template
+
+## Working / historical material
+
+These are useful references, not the primary source of truth for current production behavior:
+
+- `superpowers/specs/` — feature design specs
+- `superpowers/plans/` — implementation plans
+- `ai/SESSION-LOG.md` — session notes

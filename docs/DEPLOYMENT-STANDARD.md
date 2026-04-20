@@ -1,87 +1,105 @@
 # Deployment Standard
 
-This is the deployment contract to use across repos when the goal is:
+Use this contract for repos that need fast, exact, rollback-safe VPS deploys.
 
-- fast deploys
-- exact accountability
-- safe rollback
-- no ambiguity about what is actually live
+## Non-negotiables
 
-## Non-Negotiables
+1. Deploy an exact SHA, not a moving branch tip.
+2. Make the running app report immutable build identity.
+3. Skip only when the live app already reports the target SHA and smoke checks pass.
+4. Run pre-swap migration/invariant checks before replacing the live container.
+5. Verify the live app after restart before declaring success.
+6. Record every deploy attempt in an append-only log.
+7. Roll back automatically on post-swap failure.
 
-1. Deploy an exact SHA, not a moving branch.
-2. Make the running image report its own build identity.
-3. Skip only when the live app already reports the target SHA.
-4. Verify the live app after restart before declaring success.
-5. Record every deploy attempt in an append-only audit log.
-6. Run at least one lightweight route smoke check before declaring success or skip.
-
-## Failure Modes This Prevents
+## Failure modes this prevents
 
 - repo checkout says one SHA while the container still serves another
-- `/api/version` claims a manually edited SHA instead of the image actually serving traffic
-- GitHub verifies one commit but the server deploys a later `main`
-- “no changes detected” skips when the repo moved but the container did not
-- deploy verifies the right SHA but a critical route is still broken
+- `/api/version` reports a stale or hand-edited SHA
+- GitHub validates one commit but the server deploys a later branch tip
+- the app restarts onto a bad schema state because migrations were only attempted during startup
+- smoke checks silently regress while the app still reports the target SHA
 
-## Standard Flow
+## Standard flow
 
 ### Normal `main` deploy
 
 1. CI validates the exact Git SHA.
-2. GitHub deploys over SSH with that exact SHA pinned.
-3. VPS fetches that ref and refuses to continue if it does not match the pinned SHA.
-4. VPS builds the image, recreates the container, verifies the live SHA, and logs the outcome.
-5. On verification failure, VPS rolls back to the last known-good commit.
+2. GitHub deploys that SHA over SSH when possible.
+3. The VPS fetches the target ref and rejects the deploy if it does not resolve to the pinned SHA.
+4. The VPS builds the candidate image.
+5. The VPS runs pre-swap migration/invariant checks inside the candidate image.
+6. Only then does the VPS replace the live container.
+7. The VPS verifies `/api/version`, runs smoke checks, logs the result, and rolls back if post-swap verification fails.
 
 ### Hotfix deploy
 
 1. Local reduced preflight runs.
-2. Local script resolves the remote SHA first.
-3. SSH deploy passes that SHA to the VPS.
-4. VPS uses the same build / verify / rollback path as normal deploys.
+2. The local script resolves the remote SHA first.
+3. SSH deploy passes that exact SHA to the VPS.
+4. The VPS uses the same build -> preflight -> swap -> verify -> rollback path.
 
-## Required Runtime Contract
+## Required runtime contract
 
-Every app should expose a lightweight endpoint like `/api/version` returning:
+Every app should expose a small endpoint like `/api/version`:
 
 ```json
 {
   "status": "ok",
   "buildSha": "abc1234",
-  "buildTime": "2026-04-08T03:31:36Z"
+  "buildTime": "2026-04-19T03:31:36Z"
 }
 ```
 
-That value should come from immutable runtime build metadata baked into the image or container environment, not from a manually edited file.
+That data should come from immutable build metadata baked into the image or runtime env, not from a manually edited file.
 
-## Required VPS Script Behavior
+## Required VPS script behavior
 
 The remote deploy script should:
 
 1. fetch the target ref
-2. compare fetched commit to the expected SHA
-3. export `BUILD_SHA` and `BUILD_TIME`
-4. build the app image
-5. recreate the container
-6. poll the live version endpoint until the target SHA is reported
-7. run lightweight smoke checks against critical routes
-8. rollback on any failure after image replacement
-9. append an audit record with actor, channel, ref, expected SHA, deployed SHA, and outcome
+2. compare the fetched commit to the expected SHA when one is provided
+3. export runtime build metadata such as `BUILD_SHA` and `BUILD_TIME`
+4. skip only when the live app already serves the target SHA and smoke checks pass
+5. otherwise build the candidate image
+6. run migration preflight before the live container is replaced
+7. run any repo-specific invariant checks needed to prove the candidate image is safe
+8. replace the live container only after that preflight succeeds
+9. poll the live version endpoint until the target SHA is reported
+10. run lightweight smoke checks
+11. roll back on any failure after image replacement
+12. append an audit record with actor/channel/ref/expected SHA/result
 
-## Required Smoke Checks
+## Migration and invariant preflight
 
-Every repo should define a tiny smoke set that is fast enough to run on every deploy:
+Do not rely on container startup to be the first place migrations run.
+
+Preferred pattern:
+
+```bash
+docker compose build app
+docker compose run --rm --no-deps --entrypoint sh app -lc '
+  ./node_modules/.bin/prisma migrate deploy &&
+  node ./scripts/check-products-derived-view.mjs
+'
+docker compose up -d --remove-orphans
+```
+
+Swap in your repo-specific invariant checks as needed.
+
+## Required smoke checks
+
+Every repo should define a tiny smoke set fast enough to run on every deploy:
 
 - one version/health endpoint
-- one public or unauthenticated page
-- one route that proves the latest bundle is being served
+- one public or unauthenticated route
+- one route that proves the latest bundle/feature surface is serving correctly
 
-If the smoke checks fail when the live app already reports the target SHA, do not silently skip. Either rebuild the same SHA to self-heal or fail loudly so the operator sees that the live app is unhealthy.
+If the live app already reports the target SHA but smoke checks fail, do not silently skip. Rebuild that SHA to self-heal or fail loudly.
 
-## Required GitHub Secrets
+## Required GitHub secrets
 
-For exact-SHA GitHub deploys, each repo should define:
+For SSH exact-SHA deploys:
 
 - `DEPLOY_SSH_HOST`
 - `DEPLOY_SSH_USER`
@@ -89,10 +107,10 @@ For exact-SHA GitHub deploys, each repo should define:
 - `DEPLOY_SSH_KEY`
 - `DEPLOY_REMOTE_PROJECT_DIR`
 
-Fallback webhook deploys are acceptable only as a temporary compatibility path. They are weaker because they do not inherently guarantee exact-SHA execution unless the receiver explicitly forwards the pinned SHA.
+Fallback webhook deploys are compatibility-only. They should forward the expected SHA explicitly if they are kept at all.
 
-## Reusable Templates
+## Reusable templates
 
-- [GitHub VPS Deploy Workflow Template](templates/github-vps-sha-pinned-deploy.yml.example)
-- [VPS Build Verify Rollback Script Template](templates/vps-build-verify-rollback.sh.example)
-- [Route Smoke Check Template](templates/deploy-smoke-check.sh.example)
+- `templates/github-vps-sha-pinned-deploy.yml.example`
+- `templates/vps-build-verify-rollback.sh.example`
+- `templates/deploy-smoke-check.sh.example`
