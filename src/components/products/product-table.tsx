@@ -124,6 +124,11 @@ export function formatVendorDisplay(vendorLabel: string | null | undefined): str
   return formatLookupLabel(vendorLabel ?? null, "Vendor unavailable");
 }
 
+export function formatLocationVarianceBadge(varies: boolean, selectedCount: number): string | null {
+  if (!varies || selectedCount <= 1) return null;
+  return `+${selectedCount - 1} varies`;
+}
+
 function SortHeader({
   field,
   label,
