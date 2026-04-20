@@ -59,7 +59,8 @@ export function buildProductQueryPlan(filters: ProductFilters): {
     || filters.minMargin !== ""
     || filters.maxMargin !== ""
     || filters.sortBy === "margin"
-    || hasLastSaleProductFilters(filters);
+    || hasLastSaleProductFilters(filters)
+    || filters.editedSinceSync;
   const source = needsDerived ? "products_with_derived" : "products";
   const lastSaleField = needsDerived ? "effective_last_sale_date" : "last_sale_date";
 
@@ -246,7 +247,7 @@ export async function searchProducts(
     query = query.gte("updated_at", threshold);
   }
   if (filters.editedSinceSync) {
-    query = query.filter("updated_at", "gt", "synced_at");
+    query = query.eq("edited_since_sync", true);
   }
 
   // Status

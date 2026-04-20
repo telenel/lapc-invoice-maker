@@ -4,7 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon, SearchIcon } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import type { Product, ProductTab } from "@/domains/product/types";
 import { PAGE_SIZE, type OptionalColumnKey } from "@/domains/product/constants";
 import { MarginBar } from "./margin-bar";
@@ -208,7 +208,7 @@ export function ProductTable({
   // Observe the wrapper width so the hidden-count badge reflects what the
   // @container queries actually suppress.
   const { ref: wrapperRef, summary: hiddenSummary } = useHiddenColumns();
-  const activeOptionalColumns = visibleColumns ?? [];
+  const activeOptionalColumns = useMemo(() => visibleColumns ?? [], [visibleColumns]);
   useEffect(() => {
     if (!onHiddenChange) return;
     const hiddenTierSet = new Set(hiddenSummary.tiers);
