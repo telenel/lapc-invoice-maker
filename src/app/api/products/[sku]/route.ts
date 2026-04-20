@@ -427,17 +427,17 @@ const inventoryPatchPerLocationSchema = z.object({
 
 const inventoryPatchArraySchema = z.array(inventoryPatchPerLocationSchema).superRefine((entries, ctx) => {
   const seen = new Set<number>();
-  for (const [index, entry] of entries.entries()) {
+  entries.forEach((entry, index) => {
     if (seen.has(entry.locationId)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: "Duplicate inventory locationId entries are not allowed.",
         path: [index, "locationId"],
       });
-      continue;
+      return;
     }
     seen.add(entry.locationId);
-  }
+  });
 });
 
 const legacyPatchFieldsSchema = z.object({
