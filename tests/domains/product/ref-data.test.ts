@@ -13,6 +13,7 @@ import {
 import { loadCommittedProductRefSnapshot } from "@/domains/product/ref-data-server";
 
 const queryLog: string[] = [];
+const productApiCreateMock = vi.fn();
 
 vi.mock("@/lib/prism", () => {
   const request = {
@@ -37,8 +38,96 @@ vi.mock("@/domains/product/vendor-directory", () => ({
   useProductRefDirectory: vi.fn(),
 }));
 
+vi.mock("@/components/products/item-ref-selects", () => ({
+  ItemRefSelects: ({
+    vendorId,
+    dccId,
+    itemTaxTypeId,
+    onChange,
+  }: {
+    vendorId: string;
+    dccId: string;
+    itemTaxTypeId: string;
+    onChange: (field: "vendorId" | "dccId" | "itemTaxTypeId", value: string) => void;
+  }) =>
+    React.createElement(
+      "div",
+      {},
+      React.createElement("label", { htmlFor: "vendor-test" }, "Vendor"),
+      React.createElement("input", {
+        id: "vendor-test",
+        "aria-label": "Vendor",
+        value: vendorId,
+        onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
+          onChange("vendorId", event.target.value),
+      }),
+      React.createElement("label", { htmlFor: "dcc-test" }, "Department / Class"),
+      React.createElement("input", {
+        id: "dcc-test",
+        "aria-label": "Department / Class",
+        value: dccId,
+        onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
+          onChange("dccId", event.target.value),
+      }),
+      React.createElement("label", { htmlFor: "tax-test" }, "Tax Type"),
+      React.createElement("input", {
+        id: "tax-test",
+        "aria-label": "Tax Type",
+        value: itemTaxTypeId,
+        onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
+          onChange("itemTaxTypeId", event.target.value),
+      }),
+    ),
+  ItemRefSelectField: ({
+    value,
+    label,
+    kind,
+    onChange,
+  }: {
+    value: string;
+    label?: string;
+    kind?: "vendor" | "dcc" | "taxType";
+    onChange: (value: string) => void;
+  }) => {
+    const resolvedLabel =
+      label ??
+      (kind === "vendor"
+        ? "Vendor"
+        : kind === "dcc"
+          ? "Department / Class"
+          : "Tax Type");
+    const id = `${resolvedLabel.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-field`;
+    return React.createElement(
+      "div",
+      {},
+      React.createElement("label", { htmlFor: id }, resolvedLabel),
+      React.createElement("input", {
+        id,
+        "aria-label": resolvedLabel,
+        value,
+        onChange: (event: React.ChangeEvent<HTMLInputElement>) =>
+          onChange(event.target.value),
+      }),
+    );
+  },
+}));
+
+vi.mock("@/domains/product/api-client", async () => {
+  const actual = await vi.importActual<typeof import("@/domains/product/api-client")>(
+    "@/domains/product/api-client",
+  );
+  return {
+    ...actual,
+    productApi: {
+      ...actual.productApi,
+      create: productApiCreateMock,
+    },
+  };
+});
+
 beforeEach(() => {
   queryLog.length = 0;
+  productApiCreateMock.mockReset();
 });
 
 describe("product ref data helpers", () => {
@@ -268,8 +357,208 @@ describe("product ref data helpers", () => {
 
     expect(screen.getByRole("alert").textContent).toContain("Reference data is unavailable right now");
     expect(screen.getByLabelText(/Description/i)).toBeTruthy();
-    expect(screen.getByLabelText(/Barcode/i)).toBeTruthy();
+    expect(screen.getByRole("button", { name: /More fields/i })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Create item" }).hasAttribute("disabled")).toBe(true);
+  });
+
+  it("shows the short GM create form by default and moves optional fields behind expand", async () => {
+    const { NewItemDialog } = await import("@/components/products/new-item-dialog");
+    const { useProductRefDirectory } = await import("@/domains/product/vendor-directory");
+
+    vi.mocked(useProductRefDirectory).mockReturnValue({
+      refs: {
+        vendors: [{ vendorId: 21, name: "PENS ETC (3001795)", pierceItems: 12 }],
+        dccs: [{ dccId: 1313290, deptNum: 20, classNum: 10, catNum: 10, deptName: "Clothing", className: "Hoodies", catName: null, pierceItems: 8 }],
+        taxTypes: [{ taxTypeId: 6, description: "TAXABLE", pierceItems: 20 }],
+        tagTypes: [],
+        statusCodes: [],
+        packageTypes: [],
+        colors: [],
+        bindings: [],
+      },
+      lookups: buildProductRefMaps({
+        vendors: [],
+        dccs: [],
+        taxTypes: [],
+        tagTypes: [],
+        statusCodes: [],
+        packageTypes: [],
+        colors: [],
+        bindings: [],
+      }),
+      vendors: [],
+      byId: new Map(),
+      loading: false,
+      available: true,
+    });
+
+    render(
+      React.createElement(NewItemDialog, {
+        open: true,
+        onOpenChange: () => {},
+      }),
+    );
+
+    expect(screen.getByLabelText(/Description/i)).toBeTruthy();
+    expect(screen.getByLabelText(/^Vendor$/i)).toBeTruthy();
+    expect(screen.getByLabelText(/Department \/ Class/i)).toBeTruthy();
+    expect(screen.getByLabelText(/Retail/i)).toBeTruthy();
+    expect(screen.getByLabelText(/Cost/i)).toBeTruthy();
+
+    expect(screen.queryByLabelText(/Barcode/i)).toBeNull();
+    expect(screen.queryByLabelText(/Tax Type/i)).toBeNull();
+    expect(screen.queryByLabelText(/Catalog #/i)).toBeNull();
+    expect(screen.queryByLabelText(/Comment/i)).toBeNull();
+
+    expect(screen.getByLabelText("PIER").getAttribute("aria-checked")).toBe("true");
+    expect(screen.getByLabelText("PCOP").getAttribute("aria-checked")).toBe("false");
+    expect(screen.getByLabelText("PFS").getAttribute("aria-checked")).toBe("false");
+    expect(screen.getByLabelText("PIER").getAttribute("aria-disabled")).toBe("true");
+
+    fireEvent.click(screen.getByRole("button", { name: /More fields/i }));
+
+    expect(screen.getByLabelText(/Barcode/i)).toBeTruthy();
+    expect(screen.getByLabelText(/Tax Type/i)).toBeTruthy();
+    expect(screen.getByLabelText(/Catalog #/i)).toBeTruthy();
+    expect(screen.getByLabelText(/Internal note/i)).toBeTruthy();
+  });
+
+  it("sends inventory rows for the selected locations and supports copy from PIER", async () => {
+    const { NewItemDialog } = await import("@/components/products/new-item-dialog");
+    const { useProductRefDirectory } = await import("@/domains/product/vendor-directory");
+
+    productApiCreateMock.mockResolvedValue({
+      sku: 12345,
+      description: "Pierce mug",
+      vendorId: 21,
+      dccId: 1313290,
+      barcode: null,
+      retail: 19.99,
+      cost: 8.5,
+    });
+
+    vi.mocked(useProductRefDirectory).mockReturnValue({
+      refs: {
+        vendors: [],
+        dccs: [],
+        taxTypes: [],
+        tagTypes: [],
+        statusCodes: [],
+        packageTypes: [],
+        colors: [],
+        bindings: [],
+      },
+      lookups: buildProductRefMaps({
+        vendors: [],
+        dccs: [],
+        taxTypes: [],
+        tagTypes: [],
+        statusCodes: [],
+        packageTypes: [],
+        colors: [],
+        bindings: [],
+      }),
+      vendors: [],
+      byId: new Map(),
+      loading: false,
+      available: true,
+    });
+
+    render(
+      React.createElement(NewItemDialog, {
+        open: true,
+        onOpenChange: () => {},
+      }),
+    );
+
+    fireEvent.change(screen.getByLabelText(/Description/i), {
+      target: { value: "Pierce mug" },
+    });
+    fireEvent.change(screen.getByLabelText(/^Vendor$/i), {
+      target: { value: "21" },
+    });
+    fireEvent.change(screen.getByLabelText(/Department \/ Class/i), {
+      target: { value: "1313290" },
+    });
+    fireEvent.change(screen.getByLabelText(/Retail/i), {
+      target: { value: "19.99" },
+    });
+    fireEvent.change(screen.getByLabelText(/Cost/i), {
+      target: { value: "8.50" },
+    });
+
+    fireEvent.click(screen.getByLabelText("PCOP"));
+    fireEvent.change(screen.getByLabelText(/PCOP Retail/i), {
+      target: { value: "24.99" },
+    });
+    fireEvent.change(screen.getByLabelText(/PCOP Cost/i), {
+      target: { value: "11.25" },
+    });
+
+    fireEvent.click(screen.getByLabelText("PFS"));
+    fireEvent.click(screen.getByRole("button", { name: /Copy from PIER to PFS/i }));
+
+    fireEvent.click(screen.getByRole("button", { name: "Create item" }));
+
+    expect(productApiCreateMock).toHaveBeenCalledWith({
+      description: "Pierce mug",
+      vendorId: 21,
+      dccId: 1313290,
+      itemTaxTypeId: 6,
+      barcode: null,
+      catalogNumber: null,
+      comment: null,
+      retail: 19.99,
+      cost: 8.5,
+      inventory: [
+        { locationId: 2, retail: 19.99, cost: 8.5 },
+        { locationId: 3, retail: 24.99, cost: 11.25 },
+        { locationId: 4, retail: 19.99, cost: 8.5 },
+      ],
+    });
+  });
+
+  it("keeps PIER selected even if someone tries to toggle it off", async () => {
+    const { NewItemDialog } = await import("@/components/products/new-item-dialog");
+    const { useProductRefDirectory } = await import("@/domains/product/vendor-directory");
+
+    vi.mocked(useProductRefDirectory).mockReturnValue({
+      refs: {
+        vendors: [],
+        dccs: [],
+        taxTypes: [],
+        tagTypes: [],
+        statusCodes: [],
+        packageTypes: [],
+        colors: [],
+        bindings: [],
+      },
+      lookups: buildProductRefMaps({
+        vendors: [],
+        dccs: [],
+        taxTypes: [],
+        tagTypes: [],
+        statusCodes: [],
+        packageTypes: [],
+        colors: [],
+        bindings: [],
+      }),
+      vendors: [],
+      byId: new Map(),
+      loading: false,
+      available: true,
+    });
+
+    render(
+      React.createElement(NewItemDialog, {
+        open: true,
+        onOpenChange: () => {},
+      }),
+    );
+
+    fireEvent.click(screen.getByLabelText("PIER"));
+
+    expect(screen.getByLabelText("PIER").getAttribute("aria-checked")).toBe("true");
   });
 
   it("builds Pierce-wide live ref queries with usage-count semantics", async () => {

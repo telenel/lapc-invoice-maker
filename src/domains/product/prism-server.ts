@@ -7,11 +7,11 @@
  *
  * Authoritative reference: ~/memory/reference_prism_database.md
  *
- * Pierce-only by default — we hardcode LocationID=2 (PIER) for inventory rows
- * because that's the laportal's bookstore. If multi-location support is needed
- * later, accept LocationID as a parameter.
+ * The create flow always writes a canonical Pierce inventory row (LocationID=2)
+ * and can optionally add extra rows for PCOP/PFS in the same transaction.
  */
 import { getPrismPool, sql } from "@/lib/prism";
+import type { ProductLocationAbbrev, ProductLocationId } from "./types";
 import {
   normalizePackageTypeLabel,
   type PrismBindingRef,
@@ -26,6 +26,17 @@ import {
 
 export const PIERCE_LOCATION_ID = 2;
 const PIERCE_LOCATION_IDS = "(2, 3, 4)";
+const LOCATION_ABBREV_BY_ID: Record<ProductLocationId, ProductLocationAbbrev> = {
+  2: "PIER",
+  3: "PCOP",
+  4: "PFS",
+};
+
+export interface CreateInventoryInput {
+  locationId: ProductLocationId;
+  retail: number;
+  cost: number;
+}
 
 export interface CreateGmItemInput {
   description: string;
@@ -40,9 +51,10 @@ export interface CreateGmItemInput {
   imageUrl?: string | null;
   unitsPerPack?: number;
   packageType?: string | null;
-  // Inventory at Pierce (LocationID=2)
+  // Canonical Pierce inventory row mirrored back into products.retail_price/cost.
   retail: number;
   cost: number;
+  inventory?: CreateInventoryInput[];
 }
 
 export interface CreatedItem {
@@ -53,12 +65,18 @@ export interface CreatedItem {
   barcode: string | null;
   retail: number;
   cost: number;
+  inventory: Array<{
+    locationId: ProductLocationId;
+    locationAbbrev: ProductLocationAbbrev;
+    retail: number;
+    cost: number;
+  }>;
 }
 
 /**
  * Create a new General Merchandise item end-to-end:
  *   1. EXEC P_Item_Add_GM → creates Item + ItemMaster + GeneralMerchandise rows, returns new SKU
- *   2. INSERT into Inventory for Pierce with retail/cost
+ *   2. INSERT one Inventory row per requested location, always including Pierce
  *
  * Wrapped in a transaction so a failed inventory insert rolls back the item creation.
  */
@@ -68,6 +86,11 @@ export async function createGmItem(input: CreateGmItemInput): Promise<CreatedIte
   await transaction.begin();
 
   try {
+    const inventoryRows =
+      input.inventory && input.inventory.length > 0
+        ? input.inventory
+        : [{ locationId: PIERCE_LOCATION_ID, retail: input.retail, cost: input.cost }];
+
     // Step 1: P_Item_Add_GM
     const addRequest = transaction.request();
     addRequest.input("MfgId", sql.Int, input.mfgId ?? input.vendorId);
@@ -95,17 +118,23 @@ export async function createGmItem(input: CreateGmItemInput): Promise<CreatedIte
       throw new Error("P_Item_Add_GM did not return a valid SKU");
     }
 
-    // Step 2: INSERT into Inventory
-    const invRequest = transaction.request();
-    invRequest.input("sku", sql.Int, newSku);
-    invRequest.input("locationId", sql.Numeric(8, 0), PIERCE_LOCATION_ID);
-    invRequest.input("retail", sql.Money, input.retail);
-    invRequest.input("cost", sql.Money, input.cost);
-    await invRequest.query(
-      "INSERT INTO Inventory (SKU, LocationID, Retail, Cost) VALUES (@sku, @locationId, @retail, @cost)",
-    );
+    // Step 2: INSERT one row per requested location into Inventory
+    for (const inventoryRow of inventoryRows) {
+      const invRequest = transaction.request();
+      invRequest.input("sku", sql.Int, newSku);
+      invRequest.input("locationId", sql.Numeric(8, 0), inventoryRow.locationId);
+      invRequest.input("retail", sql.Money, inventoryRow.retail);
+      invRequest.input("cost", sql.Money, inventoryRow.cost);
+      await invRequest.query(
+        "INSERT INTO Inventory (SKU, LocationID, Retail, Cost) VALUES (@sku, @locationId, @retail, @cost)",
+      );
+    }
 
     await transaction.commit();
+
+    const primaryInventory =
+      inventoryRows.find((row) => row.locationId === PIERCE_LOCATION_ID) ??
+      inventoryRows[0];
 
     return {
       sku: newSku,
@@ -113,8 +142,14 @@ export async function createGmItem(input: CreateGmItemInput): Promise<CreatedIte
       vendorId: input.vendorId,
       dccId: input.dccId,
       barcode: input.barcode ?? null,
-      retail: input.retail,
-      cost: input.cost,
+      retail: primaryInventory?.retail ?? input.retail,
+      cost: primaryInventory?.cost ?? input.cost,
+      inventory: inventoryRows.map((row) => ({
+        locationId: row.locationId,
+        locationAbbrev: LOCATION_ABBREV_BY_ID[row.locationId],
+        retail: row.retail,
+        cost: row.cost,
+      })),
     };
   } catch (err) {
     try { await transaction.rollback(); } catch { /* swallow */ }
