@@ -35,6 +35,14 @@ const FEATURED_PRESET_SLUGS = [
   "data-missing-barcode",
 ];
 
+export function getSavedViewsErrorFallback() {
+  return {
+    system: SYSTEM_PRESET_VIEWS,
+    mine: [] as SavedView[],
+    resolved: SYSTEM_PRESET_VIEWS,
+  };
+}
+
 export function SavedViewsBar({
   activeSlug,
   activeId,
@@ -67,12 +75,15 @@ export function SavedViewsBar({
         })
         .catch((err) => {
           if (cancelled) return;
-          // Keep the last-known system + user arrays so a transient API
-          // hiccup doesn't wipe the custom view chips or orphan the
-          // currently-active preset. Surface the failure as a muted inline
-          // indicator and retry after 30s so a deleted/renamed view can't
-          // linger forever if the refresh itself keeps failing.
+          const fallback = getSavedViewsErrorFallback();
+          // Fall back to system presets immediately so a failed refresh after
+          // save/delete can't leave stale custom views rendered or reapplicable
+          // from the parent's resolved cache. The retry still gives the API a
+          // chance to recover without a full remount.
+          setSystem(fallback.system);
+          setMine(fallback.mine);
           setLoadError(err instanceof Error ? err.message : "Could not load saved views.");
+          onViewsResolved?.(fallback.resolved);
           retryTimer = setTimeout(attempt, 30_000);
         });
     };

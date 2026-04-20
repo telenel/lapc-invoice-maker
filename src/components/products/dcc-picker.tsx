@@ -12,6 +12,25 @@ interface Props {
   onChange: (patch: { deptNum?: string; classNum?: string; catNum?: string }) => void;
 }
 
+export function getPartialDccPatch(
+  query: string,
+): { deptNum?: string; classNum?: string; catNum?: string } | null {
+  const trimmed = query.trim();
+  if (!trimmed) {
+    return { deptNum: "", classNum: "", catNum: "" };
+  }
+  if (!/^[\d.]+$/.test(trimmed)) {
+    return null;
+  }
+
+  const parts = trimmed.split(".");
+  return {
+    deptNum: parts[0] ?? "",
+    classNum: parts[1] ?? "",
+    catNum: parts[2] ?? "",
+  };
+}
+
 export function findExactDccMatch(
   items: DccListItem[] | null,
   query: string,
@@ -23,6 +42,31 @@ export function findExactDccMatch(
     items.find((it) => `${it.deptNum}.${it.classNum ?? ""}.${it.catNum ?? ""}` === trimmed)
     ?? null
   );
+}
+
+export function findCommittedDccMatch(
+  items: DccListItem[] | null,
+  query: string,
+): DccListItem | null {
+  const exact = findExactDccMatch(items, query);
+  if (exact) return exact;
+  if (!items) return null;
+
+  const trimmed = query.trim();
+  if (!trimmed || /^[\d.]+$/.test(trimmed)) {
+    return null;
+  }
+
+  const lowered = trimmed.toLowerCase();
+  const matches = items.filter((it) =>
+    [it.deptName, it.className, it.catName]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+      .includes(lowered),
+  );
+
+  return matches.length === 1 ? matches[0] : null;
 }
 
 export function DccPicker({ deptNum, classNum, catNum, onChange }: Props) {
@@ -119,10 +163,17 @@ export function DccPicker({ deptNum, classNum, catNum, onChange }: Props) {
         list="dcc-picker-list"
         placeholder="10.10.20 or drinks…"
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={(e) => {
+          const next = e.target.value;
+          setQuery(next);
+          const patch = getPartialDccPatch(next);
+          if (patch) {
+            onChange(patch);
+          }
+        }}
         onBlur={() => {
-          const exact = findExactDccMatch(items, query);
-          if (exact) pick(exact);
+          const committed = findCommittedDccMatch(items, query);
+          if (committed) pick(committed);
         }}
         spellCheck={false}
         autoComplete="off"
