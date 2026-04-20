@@ -1,3 +1,5 @@
+import type { ProductLocationId } from "./location-filters";
+
 /** Raw product row from Supabase products table */
 export interface Product {
   sku: number;
@@ -54,6 +56,7 @@ export type ProductTab = "textbooks" | "merchandise";
 export interface ProductFilters {
   search: string;
   tab: ProductTab;
+  locationIds: ProductLocationId[];
   minPrice: string;
   maxPrice: string;
   vendorId: string;

@@ -1,5 +1,10 @@
 import { EMPTY_FILTERS, OPTIONAL_COLUMNS } from "./constants";
 import type { OptionalColumnKey } from "./constants";
+import {
+  DEFAULT_PRODUCT_LOCATION_IDS,
+  parseProductLocationIdsParam,
+  serializeProductLocationIdsParam,
+} from "./location-filters";
 import type {
   ProductFilters,
   ProductTab,
@@ -87,10 +92,11 @@ export function parseFiltersFromSearchParams(params: URLSearchParams): ProductFi
 
   const page = Number(params.get("page") ?? "1");
   out.page = Number.isFinite(page) && page >= 1 ? Math.floor(page) : 1;
+  out.locationIds = parseProductLocationIdsParam(params.get("loc"));
 
   // Log unknown keys once per parse so schema drift is visible in console
   // without throwing. EMPTY_FILTERS is the allow-list.
-  const known = new Set<string>([...Object.keys(EMPTY_FILTERS), "view", "q"]);
+  const known = new Set<string>([...Object.keys(EMPTY_FILTERS), "view", "q", "loc"]);
   const seenKeys: string[] = [];
   params.forEach((_, key) => {
     if (seenKeys.indexOf(key) === -1) seenKeys.push(key);
@@ -116,12 +122,19 @@ export function serializeFiltersToSearchParams(
 ): URLSearchParams {
   const params = new URLSearchParams();
   const defaults = EMPTY_FILTERS as unknown as Record<string, unknown>;
+  const defaultLoc = serializeProductLocationIdsParam(DEFAULT_PRODUCT_LOCATION_IDS);
 
   for (const [key, value] of Object.entries(filters)) {
+    if (key === "locationIds") continue;
     const def = defaults[key];
     if (value === def) continue;
     if (value === "" || value === false || value === null || value === undefined) continue;
     params.set(key, String(value));
+  }
+
+  const loc = serializeProductLocationIdsParam(filters.locationIds);
+  if (loc !== defaultLoc) {
+    params.set("loc", loc);
   }
 
   if (extras.view) params.set("view", extras.view);

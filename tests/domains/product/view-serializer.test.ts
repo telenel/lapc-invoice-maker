@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_FILTERS } from "@/domains/product/constants";
+import { DEFAULT_PRODUCT_LOCATION_IDS } from "@/domains/product/location-filters";
 import { SYSTEM_PRESET_VIEWS } from "@/domains/product/presets";
 import type { ProductFilters } from "@/domains/product/types";
 import {
@@ -26,6 +27,21 @@ describe("serializeFiltersToSearchParams", () => {
     const filters: ProductFilters = { ...EMPTY_FILTERS };
     const params = serializeFiltersToSearchParams(filters, { view: "dead-never-sold" });
     expect(params.get("view")).toBe("dead-never-sold");
+  });
+
+  it("serializes locationIds to the loc param in canonical order", () => {
+    const filters: ProductFilters = { ...EMPTY_FILTERS, locationIds: [4, 2] };
+    const params = serializeFiltersToSearchParams(filters);
+
+    expect(params.get("loc")).toBe("2,4");
+    expect(params.get("locationIds")).toBeNull();
+  });
+
+  it("does not emit loc when locationIds are at the defaults", () => {
+    const filters: ProductFilters = { ...EMPTY_FILTERS, locationIds: DEFAULT_PRODUCT_LOCATION_IDS };
+    const params = serializeFiltersToSearchParams(filters);
+
+    expect(params.get("loc")).toBeNull();
   });
 });
 
@@ -56,6 +72,33 @@ describe("parseFiltersFromSearchParams", () => {
 
     const roundtripped = parseFiltersFromSearchParams(serializeFiltersToSearchParams(filters));
     expect(roundtripped).toEqual(filters);
+  });
+
+  it("round-trips loc through ProductFilters.locationIds", () => {
+    const filters: ProductFilters = {
+      ...EMPTY_FILTERS,
+      tab: "merchandise",
+      locationIds: [4, 2],
+    };
+
+    const roundtripped = parseFiltersFromSearchParams(serializeFiltersToSearchParams(filters));
+    expect(roundtripped).toEqual({ ...filters, locationIds: [2, 4] });
+  });
+
+  it("falls back to the default locationIds when loc is invalid", () => {
+    const out = parseFiltersFromSearchParams(makeParams({ loc: "99,pierce" }));
+    expect(out.locationIds).toEqual(DEFAULT_PRODUCT_LOCATION_IDS);
+  });
+
+  it("parses valid loc values without disturbing other filters", () => {
+    const out = parseFiltersFromSearchParams(makeParams({
+      loc: "4,2",
+      tab: "merchandise",
+      minPrice: "5",
+    }));
+    expect(out.locationIds).toEqual([2, 4]);
+    expect(out.tab).toBe("merchandise");
+    expect(out.minPrice).toBe("5");
   });
 
   it("coerces boolean keys from 'true'/'false'", () => {
