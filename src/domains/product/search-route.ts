@@ -5,8 +5,8 @@ import {
   normalizeProductLocationIds,
   type ProductLocationId,
 } from "./location-filters";
+import { buildProductQueryPlan } from "./queries";
 import type {
-  Product,
   ProductBrowseRow,
   ProductBrowseSearchResult,
   ProductFilters,
@@ -17,12 +17,10 @@ import type {
 
 export interface ProductInventorySliceRow extends ProductLocationSlice {}
 
-interface ProductBrowseQueryPlan {
-  lastSaleField: "primary_last_sale_date" | "primary_effective_last_sale_date";
-  requireAggregatesReady: boolean;
-  sortField: string;
-  ascending: boolean;
-}
+type ProductBrowseBase = Omit<
+  ProductBrowseRow,
+  "primary_location_id" | "primary_location_abbrev" | "selected_inventories" | "location_variance"
+>;
 
 interface ProductBrowseBaseRow {
   sku: number | string | bigint;
@@ -109,7 +107,7 @@ export function buildProductLocationVariance(
 }
 
 export function buildProductBrowseRow(
-  base: Product,
+  base: ProductBrowseBase,
   slices: ReadonlyArray<ProductInventorySliceRow>,
   locationIds: ReadonlyArray<ProductLocationId>,
 ): ProductBrowseRow {
@@ -132,59 +130,6 @@ export function buildProductBrowseRow(
     primary_location_abbrev: primarySlice?.locationAbbrev ?? null,
     selected_inventories: selectedInventories,
     location_variance: buildProductLocationVariance(slices),
-  };
-}
-
-function hasAnalyticsProductFilters(filters: ProductFilters): boolean {
-  return (
-    (filters.unitsSoldWindow !== "" && (filters.minUnitsSold !== "" || filters.maxUnitsSold !== ""))
-    || (filters.revenueWindow !== "" && (filters.minRevenue !== "" || filters.maxRevenue !== ""))
-    || (filters.txnsWindow !== "" && (filters.minTxns !== "" || filters.maxTxns !== ""))
-    || filters.neverSoldLifetime
-    || filters.firstSaleWithin !== ""
-  );
-}
-
-function hasLastSaleProductFilters(filters: ProductFilters): boolean {
-  return (
-    filters.lastSaleDateFrom !== ""
-    || filters.lastSaleDateTo !== ""
-    || filters.lastSaleWithin !== ""
-    || filters.lastSaleNever
-    || filters.lastSaleOlderThan !== ""
-    || filters.sortBy === "last_sale_date"
-    || filters.sortBy === "days_since_sale"
-  );
-}
-
-function buildBrowseQueryPlan(filters: ProductFilters): ProductBrowseQueryPlan {
-  const requireAggregatesReady = hasAnalyticsProductFilters(filters)
-    || filters.trendDirection !== ""
-    || filters.maxStockCoverageDays !== "";
-  const needsDerived = requireAggregatesReady
-    || filters.minMargin !== ""
-    || filters.maxMargin !== ""
-    || filters.sortBy === "margin"
-    || hasLastSaleProductFilters(filters)
-    || filters.editedSinceSync;
-  const lastSaleField = needsDerived ? "primary_effective_last_sale_date" : "primary_last_sale_date";
-
-  let sortField = filters.sortBy;
-  let ascending = filters.sortDir !== "desc";
-  if (filters.sortBy === "days_since_sale") {
-    sortField = lastSaleField;
-    ascending = !ascending;
-  } else if (filters.sortBy === "last_sale_date") {
-    sortField = lastSaleField;
-  } else if (filters.sortBy === "margin") {
-    sortField = "margin_ratio";
-  }
-
-  return {
-    lastSaleField,
-    requireAggregatesReady,
-    sortField,
-    ascending,
   };
 }
 
@@ -247,15 +192,16 @@ function buildFilteredBrowseQuery(filters: ProductFilters): {
   const locationIds = normalizeProductLocationIds(filters.locationIds);
   const primaryLocationId = getPrimaryProductLocationId(locationIds);
   const itemTypes = TAB_ITEM_TYPES[filters.tab];
-  const plan = buildBrowseQueryPlan(filters);
+  const basePlan = buildProductQueryPlan(filters);
   const from = (filters.page - 1) * PAGE_SIZE;
   const builder = createSqlBuilder();
   const primaryLastSaleExpr = "pi.last_sale_date";
   const primaryEffectiveLastSaleExpr =
     "COALESCE(pi.last_sale_date, pwd.effective_last_sale_date, pwd.last_sale_date_computed, pwd.last_sale_date)";
-  const lastSaleExpr = plan.lastSaleField === "primary_effective_last_sale_date"
+  const lastSaleExpr = basePlan.lastSaleField === "effective_last_sale_date"
     ? primaryEffectiveLastSaleExpr
     : primaryLastSaleExpr;
+  const sourceTable = basePlan.source === "products_with_derived" ? "products_with_derived" : "products";
 
   const conditions: string[] = [
     `pwd.item_type IN (${addList(builder, itemTypes)})`,
@@ -350,7 +296,7 @@ function buildFilteredBrowseQuery(filters: ProductFilters): {
     }
   }
 
-  if (plan.requireAggregatesReady) conditions.push("pwd.aggregates_ready = true");
+  if (basePlan.requireAggregatesReady) conditions.push("pwd.aggregates_ready = true");
 
   const unitsSoldColumn = windowColumnSql(filters.unitsSoldWindow, {
     "30d": "pwd.units_sold_30d",
@@ -414,7 +360,7 @@ function buildFilteredBrowseQuery(filters: ProductFilters): {
         pi.stock_on_hand AS primary_stock_on_hand,
         pi.last_sale_date AS primary_last_sale_date,
         ${primaryEffectiveLastSaleExpr} AS primary_effective_last_sale_date
-      FROM products_with_derived pwd
+      FROM ${sourceTable} pwd
       INNER JOIN visible_skus visible ON visible.sku = pwd.sku
       LEFT JOIN product_inventory pi
         ON pi.sku = pwd.sku
@@ -450,15 +396,27 @@ function buildFilteredBrowseQuery(filters: ProductFilters): {
     updated_at: "\"updated_at\"",
     dept_num: "\"dept_num\"",
     margin_ratio: "\"margin_ratio\"",
-  } as Record<string, string>)[plan.sortField] ?? "\"sku\"";
-  const sortDirectionSql = plan.ascending ? "ASC" : "DESC";
+  } as Record<string, string>)[
+    basePlan.sortField === "effective_last_sale_date"
+      ? "primary_effective_last_sale_date"
+      : basePlan.sortField === "last_sale_date"
+        ? "primary_last_sale_date"
+        : basePlan.sortField
+  ] ?? "\"sku\"";
+  const sortDirectionSql = basePlan.ascending ? "ASC" : "DESC";
   const secondarySortDirectionSql = new Set([
     "retail_price",
     "cost",
     "stock_on_hand",
     "primary_last_sale_date",
     "primary_effective_last_sale_date",
-  ]).has(plan.sortField)
+  ]).has(
+    basePlan.sortField === "effective_last_sale_date"
+      ? "primary_effective_last_sale_date"
+      : basePlan.sortField === "last_sale_date"
+        ? "primary_last_sale_date"
+        : basePlan.sortField,
+  )
     ? "ASC"
     : sortDirectionSql;
   const orderBySql = `${sortFieldSql} ${sortDirectionSql} NULLS LAST, "sku" ${secondarySortDirectionSql}`;
@@ -532,7 +490,7 @@ export async function searchProductBrowseRows(
 
   const products = baseRows.map((row) => {
     const sku = toNumber(row.sku);
-    const base: Product = {
+    const base: ProductBrowseBase = {
       sku,
       barcode: row.barcode,
       item_type: row.item_type,
@@ -541,14 +499,14 @@ export async function searchProductBrowseRows(
       title: row.title,
       isbn: row.isbn,
       edition: row.edition,
-      retail_price: toNumber(row.retail_price),
-      cost: toNumber(row.cost),
+      retail_price: toNullableNumber(row.retail_price),
+      cost: toNullableNumber(row.cost),
       stock_on_hand: toNullableInteger(row.stock_on_hand),
       catalog_number: row.catalog_number,
-      vendor_id: toNumber(row.vendor_id),
-      dcc_id: toNumber(row.dcc_id),
+      vendor_id: toNullableInteger(row.vendor_id),
+      dcc_id: toNullableInteger(row.dcc_id),
       product_type: row.product_type,
-      color_id: toNumber(row.color_id),
+      color_id: toNullableInteger(row.color_id),
       created_at: toNullableIsoString(row.created_at),
       updated_at: toIsoString(row.updated_at),
       last_sale_date: toNullableIsoString(row.last_sale_date),

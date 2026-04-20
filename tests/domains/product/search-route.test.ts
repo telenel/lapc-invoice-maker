@@ -17,7 +17,7 @@ import {
   searchProductBrowseRows,
   type ProductInventorySliceRow,
 } from "@/domains/product/search-route";
-import type { Product, ProductBrowseRow } from "@/domains/product/types";
+import type { Product, ProductBrowseRow, ProductBrowseSearchResult } from "@/domains/product/types";
 
 function buildBaseProduct(overrides: Partial<Product> = {}): Product {
   return {
@@ -218,7 +218,29 @@ describe("searchProductBrowseRows", () => {
     vi.clearAllMocks();
   });
 
-  it("returns browse rows built from the selected-location slices and counts visible SKUs", async () => {
+  function mockSearchQueryRows(
+    baseRowOverrides: Partial<Record<string, unknown>> = {},
+    inventoryRows: Array<Record<string, unknown>> = [
+      {
+        sku: 101,
+        location_id: 2,
+        location_abbrev: "PIER",
+        retail_price: 19.99,
+        cost: 8.5,
+        stock_on_hand: 10,
+        last_sale_date: new Date("2026-04-18T00:00:00.000Z"),
+      },
+      {
+        sku: 101,
+        location_id: 3,
+        location_abbrev: "PCOP",
+        retail_price: 21.99,
+        cost: 9.25,
+        stock_on_hand: 4,
+        last_sale_date: new Date("2026-04-17T00:00:00.000Z"),
+      },
+    ],
+  ) {
     prismaMock.$queryRawUnsafe
       .mockResolvedValueOnce([
         {
@@ -268,29 +290,16 @@ describe("searchProductBrowseRows", () => {
           margin_ratio: 0.5747,
           stock_coverage_days: 25,
           trend_direction: "steady",
+          discontinued: false,
+          ...baseRowOverrides,
         },
       ])
       .mockResolvedValueOnce([{ total: 1n }])
-      .mockResolvedValueOnce([
-        {
-          sku: 101,
-          location_id: 2,
-          location_abbrev: "PIER",
-          retail_price: 19.99,
-          cost: 8.5,
-          stock_on_hand: 10,
-          last_sale_date: new Date("2026-04-18T00:00:00.000Z"),
-        },
-        {
-          sku: 101,
-          location_id: 3,
-          location_abbrev: "PCOP",
-          retail_price: 21.99,
-          cost: 9.25,
-          stock_on_hand: 4,
-          last_sale_date: new Date("2026-04-17T00:00:00.000Z"),
-        },
-      ]);
+      .mockResolvedValueOnce(inventoryRows);
+  }
+
+  it("returns browse rows built from the selected-location slices and counts visible SKUs", async () => {
+    mockSearchQueryRows();
 
     const result = await searchProductBrowseRows({
       ...EMPTY_FILTERS,
@@ -324,5 +333,74 @@ describe("searchProductBrowseRows", () => {
         lastSaleDateVaries: true,
       },
     });
+  });
+
+  it("uses the non-derived products source for simple browse queries", async () => {
+    mockSearchQueryRows();
+
+    await searchProductBrowseRows({
+      ...EMPTY_FILTERS,
+      tab: "merchandise",
+      locationIds: [2, 3],
+      search: "mug",
+      sortBy: "retail_price",
+    });
+
+    const sql = prismaMock.$queryRawUnsafe.mock.calls[0]?.[0];
+    expect(typeof sql).toBe("string");
+    expect(sql).toContain("FROM products pwd");
+    expect(sql).not.toContain("FROM products_with_derived pwd");
+  });
+
+  it("uses the derived source when the browse query needs derived semantics", async () => {
+    mockSearchQueryRows();
+
+    await searchProductBrowseRows({
+      ...EMPTY_FILTERS,
+      tab: "merchandise",
+      locationIds: [2, 3],
+      sortBy: "days_since_sale",
+      editedSinceSync: true,
+    });
+
+    const sql = prismaMock.$queryRawUnsafe.mock.calls[0]?.[0];
+    expect(typeof sql).toBe("string");
+    expect(sql).toContain("FROM products_with_derived pwd");
+  });
+
+  it("preserves nullable ids and nullable price fields instead of coercing them to zero", async () => {
+    mockSearchQueryRows(
+      {
+        retail_price: null,
+        cost: null,
+        vendor_id: null,
+        dcc_id: null,
+        color_id: null,
+      },
+      [
+        {
+          sku: 101,
+          location_id: 2,
+          location_abbrev: "PIER",
+          retail_price: null,
+          cost: null,
+          stock_on_hand: 10,
+          last_sale_date: new Date("2026-04-18T00:00:00.000Z"),
+        },
+      ],
+    );
+
+    const result = await searchProductBrowseRows({
+      ...EMPTY_FILTERS,
+      tab: "merchandise",
+      locationIds: [2],
+    });
+
+    const row = result.products[0] as ProductBrowseSearchResult["products"][number];
+    expect(row.retail_price).toBeNull();
+    expect(row.cost).toBeNull();
+    expect(row.vendor_id).toBeNull();
+    expect(row.dcc_id).toBeNull();
+    expect(row.color_id).toBeNull();
   });
 });

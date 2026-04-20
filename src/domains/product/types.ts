@@ -70,7 +70,12 @@ export interface Product {
   discontinued: boolean | null;
 }
 
-export interface ProductBrowseRow extends Product {
+export interface ProductBrowseRow extends Omit<Product, "retail_price" | "cost" | "vendor_id" | "dcc_id" | "color_id"> {
+  retail_price: number | null;
+  cost: number | null;
+  vendor_id: number | null;
+  dcc_id: number | null;
+  color_id: number | null;
   primary_location_id: ProductLocationId | null;
   primary_location_abbrev: ProductLocationAbbrev | null;
   selected_inventories: ProductLocationSlice[];
