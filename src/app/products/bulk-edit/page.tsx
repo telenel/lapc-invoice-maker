@@ -7,31 +7,32 @@ import { Button } from "@/components/ui/button";
 import { BulkEditSidebar } from "@/components/bulk-edit/bulk-edit-sidebar";
 import { SelectionPanel } from "@/components/bulk-edit/selection-panel";
 import { TransformPanel } from "@/components/bulk-edit/transform-panel";
-import { PreviewPanel } from "@/components/bulk-edit/preview-panel";
 import { AuditLogList } from "@/components/bulk-edit/audit-log-list";
 import { SaveSearchDialog } from "@/components/bulk-edit/save-search-dialog";
-import { CommitConfirmDialog } from "@/components/bulk-edit/commit-confirm-dialog";
 import { SyncDatabaseButton } from "@/components/products/sync-database-button";
 import { productApi } from "@/domains/product/api-client";
 import type {
+  BulkEditFieldEditRequest,
+  BulkEditFieldPreview,
   BulkEditSelection,
-  BulkEditTransform,
-  PreviewResult,
   ProductFilters,
 } from "@/domains/bulk-edit/types";
 
 const EMPTY_SELECTION: BulkEditSelection = { scope: "pierce" };
-const EMPTY_TRANSFORM: BulkEditTransform = { pricing: { mode: "none" }, catalog: {} };
+const EMPTY_TRANSFORM: BulkEditFieldEditRequest["transform"] = {
+  fieldIds: [],
+  inventoryScope: null,
+  values: {},
+};
 
 export default function BulkEditPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [selection, setSelection] = useState<BulkEditSelection>(EMPTY_SELECTION);
-  const [transform, setTransform] = useState<BulkEditTransform>(EMPTY_TRANSFORM);
-  const [preview, setPreview] = useState<PreviewResult | null>(null);
+  const [transform, setTransform] = useState<BulkEditFieldEditRequest["transform"]>(EMPTY_TRANSFORM);
+  const [preview, setPreview] = useState<BulkEditFieldPreview | null>(null);
   const [previewing, setPreviewing] = useState(false);
   const [committing, setCommitting] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
   const [sidebarKey, setSidebarKey] = useState(0);
   const [matchingCount, setMatchingCount] = useState<number | null>(null);
@@ -52,7 +53,7 @@ export default function BulkEditPage() {
     setPreviewing(true);
     setError(null);
     try {
-      const result = await productApi.bulkEditDryRun({ selection, transform });
+      const result = await productApi.bulkEditFieldDryRun({ selection, transform });
       if ("errors" in result) {
         setError((result.errors as Array<{ message: string }>).map((e) => e.message).join("; "));
         setPreview(null);
@@ -72,7 +73,7 @@ export default function BulkEditPage() {
     setCommitting(true);
     setError(null);
     try {
-      const result = await productApi.bulkEditCommit({ selection, transform });
+      const result = await productApi.bulkEditFieldCommit({ selection, transform });
       if ("errors" in result) {
         setError((result.errors as Array<{ message: string }>).map((e) => e.message).join("; "));
         return;
@@ -81,7 +82,6 @@ export default function BulkEditPage() {
       setSelection(EMPTY_SELECTION);
       setTransform(EMPTY_TRANSFORM);
       setPreview(null);
-      setConfirmOpen(false);
       router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -92,6 +92,16 @@ export default function BulkEditPage() {
 
   function handleLoadFilter(f: ProductFilters) {
     setSelection({ scope: selection.scope, filter: f });
+    setPreview(null);
+  }
+
+  function handleSelectionChange(next: BulkEditSelection) {
+    setSelection(next);
+    setPreview(null);
+  }
+
+  function handleTransformChange(next: BulkEditFieldEditRequest["transform"]) {
+    setTransform(next);
     setPreview(null);
   }
 
@@ -116,25 +126,95 @@ export default function BulkEditPage() {
         <div className="space-y-6">
           <SelectionPanel
             selection={selection}
-            onChange={setSelection}
+            onChange={handleSelectionChange}
             matchingCount={matchingCount}
             onSaveSearch={() => setSaveOpen(true)}
           />
 
           <TransformPanel
             transform={transform}
-            onChange={setTransform}
+            onChange={handleTransformChange}
             onPreview={runPreview}
             previewing={previewing}
             disabled={committing}
           />
 
-          <PreviewPanel
-            preview={preview}
-            previewing={previewing}
-            onCommit={() => setConfirmOpen(true)}
-            committing={committing}
-          />
+          <section aria-labelledby="preview-heading" className="space-y-3 rounded border p-4">
+            <h2 id="preview-heading" className="text-base font-semibold">3. Preview & Commit</h2>
+
+            {previewing ? (
+              <div role="status" aria-live="polite" className="py-8 text-center text-sm text-muted-foreground">
+                Building preview...
+              </div>
+            ) : !preview ? (
+              <p className="text-sm text-muted-foreground">
+                Pick fields and values, then run a preview to inspect the Phase 8 patch summary before committing.
+              </p>
+            ) : (
+              <>
+                <div className="flex flex-wrap gap-6 rounded bg-muted/40 px-4 py-3 text-sm">
+                  <div>
+                    <div className="text-muted-foreground">Rows</div>
+                    <div className="tabular-nums font-medium">
+                      {preview.totals.rowCount.toLocaleString()} matching row{preview.totals.rowCount === 1 ? "" : "s"}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground">Field changes</div>
+                    <div className="tabular-nums font-medium">
+                      {preview.totals.changedFieldCount.toLocaleString()} field change{preview.totals.changedFieldCount === 1 ? "" : "s"}
+                    </div>
+                  </div>
+                </div>
+
+                {preview.warnings.length > 0 ? (
+                  <div role="alert" aria-live="polite" className="rounded border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+                    <div className="font-medium">{preview.warnings.length} warning{preview.warnings.length === 1 ? "" : "s"}</div>
+                    <ul className="mt-1 list-disc space-y-0.5 pl-5">
+                      {preview.warnings.map((warning, index) => <li key={index}>{warning.message}</li>)}
+                    </ul>
+                  </div>
+                ) : null}
+
+                <div className="space-y-3 rounded border p-3">
+                  {preview.rows.slice(0, 8).map((row) => (
+                    <div key={row.sku} className="rounded border border-muted/70 px-3 py-2">
+                      <div className="flex flex-wrap items-baseline justify-between gap-2">
+                        <div>
+                          <span className="font-mono text-xs text-muted-foreground">SKU {row.sku}</span>
+                          <div className="font-medium">{row.description}</div>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {row.changedFields.length} field change{row.changedFields.length === 1 ? "" : "s"}
+                        </span>
+                      </div>
+                      <ul className="mt-2 space-y-1 text-sm">
+                        {row.cells.map((cell) => (
+                          <li key={cell.fieldId} className="flex flex-wrap items-baseline gap-2">
+                            <span className="font-medium">{cell.label}</span>
+                            <span className="text-muted-foreground">{cell.beforeLabel}</span>
+                            <span aria-hidden="true">→</span>
+                            <span className={cell.changed ? "font-medium" : "text-muted-foreground"}>{cell.afterLabel}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                  {preview.rows.length > 8 ? (
+                    <p className="text-xs text-muted-foreground">
+                      Showing 8 of {preview.rows.length} preview rows. Task 5 will expand the result surface.
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="flex justify-end">
+                  <Button onClick={actuallyCommit} disabled={committing || preview.totals.rowCount === 0}>
+                    {committing ? "Applying..." : `Commit ${preview.totals.rowCount} Change${preview.totals.rowCount === 1 ? "" : "s"}`}
+                  </Button>
+                </div>
+              </>
+            )}
+          </section>
 
           {error ? (
             <p role="alert" aria-live="polite" className="rounded border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
@@ -156,13 +236,6 @@ export default function BulkEditPage() {
         onOpenChange={setSaveOpen}
         currentFilter={(selection.filter ?? {}) as Record<string, unknown>}
         onSaved={() => setSidebarKey((k) => k + 1)}
-      />
-      <CommitConfirmDialog
-        open={confirmOpen}
-        onOpenChange={setConfirmOpen}
-        preview={preview}
-        onConfirm={actuallyCommit}
-        submitting={committing}
       />
     </div>
   );

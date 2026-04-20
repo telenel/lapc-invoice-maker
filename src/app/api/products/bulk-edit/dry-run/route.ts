@@ -82,7 +82,7 @@ const selectionSchema = z.object({
 const fieldBodySchema = z.object({
   selection: selectionSchema,
   transform: z.object({
-    fieldIds: z.array(z.enum(BULK_EDIT_FIELD_IDS)).min(1),
+    fieldIds: z.array(z.enum(BULK_EDIT_FIELD_IDS)).min(1).max(5),
     inventoryScope: z.union([z.literal("primary"), z.literal("all"), z.literal(2), z.literal(3), z.literal(4), z.null()]),
     values: z.object(BULK_EDIT_VALUES_SHAPE).strict(),
   }),

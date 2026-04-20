@@ -156,6 +156,42 @@ describe("POST /api/products/bulk-edit/dry-run", () => {
     expect(supabaseMocks.getSupabaseAdminClient).not.toHaveBeenCalled();
   });
 
+  it("rejects requests that select more than five fields", async () => {
+    const dryRunRoute = await loadRouteModule();
+
+    const response = await dryRunRoute.POST(
+      new NextRequest("http://localhost/api/products/bulk-edit/dry-run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          selection: { skus: [101], scope: "pierce" },
+          transform: {
+            fieldIds: ["description", "vendorId", "dccId", "barcode", "retail", "cost"],
+            inventoryScope: 2,
+            values: {
+              description: "Updated description",
+              vendorId: 21,
+              dccId: 100,
+              barcode: "111222333444",
+              retail: 12.5,
+              cost: 6.25,
+            },
+          },
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: expect.objectContaining({
+        fieldErrors: expect.objectContaining({
+          transform: [expect.stringContaining("<=5")],
+        }),
+      }),
+    });
+    expect(supabaseMocks.getSupabaseAdminClient).not.toHaveBeenCalled();
+  });
+
   it("rejects unknown transform value keys that are not real Phase 8 field ids", async () => {
     const dryRunRoute = await loadRouteModule();
 

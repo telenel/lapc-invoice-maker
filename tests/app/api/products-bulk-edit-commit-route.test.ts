@@ -219,6 +219,43 @@ describe("POST /api/products/bulk-edit/commit", () => {
     }));
   });
 
+  it("rejects commit requests that select more than five fields", async () => {
+    const commitRoute = await loadRouteModule();
+
+    const response = await commitRoute.POST(
+      new NextRequest("http://localhost/api/products/bulk-edit/commit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", cookie: "next-auth.session-token=test" },
+        body: JSON.stringify({
+          selection: { skus: [101], scope: "pierce" },
+          transform: {
+            fieldIds: ["description", "vendorId", "dccId", "barcode", "retail", "cost"],
+            inventoryScope: 2,
+            values: {
+              description: "Updated description",
+              vendorId: 21,
+              dccId: 100,
+              barcode: "111222333444",
+              retail: 12.5,
+              cost: 6.25,
+            },
+          },
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: expect.objectContaining({
+        fieldErrors: expect.objectContaining({
+          transform: [expect.stringContaining("<=5")],
+        }),
+      }),
+    });
+    expect(productPatchRouteMocks.PATCH).not.toHaveBeenCalled();
+    expect(prismaMocks.bulkEditRun.create).not.toHaveBeenCalled();
+  });
+
   it("normalizes nested PATCH conflicts into structured errors for callers", async () => {
     productPatchRouteMocks.PATCH.mockResolvedValueOnce(
       NextResponse.json(
