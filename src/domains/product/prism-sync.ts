@@ -21,29 +21,99 @@ import { getPrismPool, sql } from "@/lib/prism";
 import { PIERCE_LOCATION_ID } from "./prism-server";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
-interface PrismItemRow {
+// Global (per-SKU) fields — written to the products table.
+export interface PrismItemRow {
   sku: number;
+  // Textbook metadata (nullable for non-textbook items)
   description: string | null;
   title: string | null;
   author: string | null;
   isbn: string | null;
   edition: string | null;
+  binding_id: number | null;
+  binding_label: string | null;
+  imprint: string | null;
+  copyright: string | null;
+  usedSku: number | null;
+  textStatusId: number | null;
+  statusDate: Date | null;
+  typeTextbook: string | null;
+  bookKey: string | null;
+  // Item table (global)
   barcode: string | null;
   vendorId: number | null;
+  altVendorId: number | null;
+  mfgId: number | null;
   dccId: number | null;
+  usedDccId: number | null;
   itemTaxTypeId: number | null;
+  itemTaxTypeLabel: string | null;
   itemType: string;
   fDiscontinue: 0 | 1;
-  retail: number | null;
-  cost: number | null;
-  stockOnHand: number | null;
-  lastSaleDate: Date | null;
+  txComment: string | null;
+  weight: number | null;
+  styleId: number | null;
+  itemSeasonCodeId: number | null;
+  fListPriceFlag: 0 | 1;
+  fPerishable: 0 | 1;
+  fIdRequired: 0 | 1;
+  minOrderQtyItem: number | null;
+  // GM (global, present when item_type = general_merchandise)
+  typeGm: string | null;
+  size: string | null;
+  sizeId: number | null;
+  catalogNumber: string | null;
+  packageType: string | null;
+  packageTypeLabel: string | null;
+  unitsPerPack: number | null;
+  orderIncrement: number;
+  imageUrl: string | null;
+  useScaleInterface: 0 | 1;
+  tare: number | null;
+  // DCC labels (pre-existing)
   deptNum: number | null;
   classNum: number | null;
   catNum: number | null;
   deptName: string | null;
   className: string | null;
   catName: string | null;
+}
+
+// Per-location fields — one row per (SKU, LocationID) in {2, 3, 4}.
+export interface PrismInventoryRow {
+  sku: number;
+  locationId: 2 | 3 | 4;
+  locationAbbrev: string;
+  retail: number | null;
+  cost: number | null;
+  expectedCost: number | null;
+  stockOnHand: number | null;
+  tagTypeId: number | null;
+  tagTypeLabel: string | null;
+  statusCodeId: number | null;
+  statusCodeLabel: string | null;
+  taxTypeOverrideId: number | null;
+  discCodeId: number | null;
+  minStock: number | null;
+  maxStock: number | null;
+  autoOrderQty: number | null;
+  minOrderQty: number | null;
+  holdQty: number | null;
+  reservedQty: number | null;
+  rentalQty: number | null;
+  estSales: number | null;
+  estSalesLocked: 0 | 1;
+  royaltyCost: number | null;
+  minRoyaltyCost: number | null;
+  fInvListPriceFlag: 0 | 1;
+  fTxWantListFlag: 0 | 1;
+  fTxBuybackListFlag: 0 | 1;
+  fRentOnly: 0 | 1;
+  fNoReturns: 0 | 1;
+  textCommentInv: string | null;
+  lastSaleDate: Date | null;
+  lastInventoryDate: Date | null;
+  createDate: Date | null;
 }
 
 function hashRow(r: PrismItemRow): string {
