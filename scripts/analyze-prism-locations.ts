@@ -73,10 +73,6 @@ async function main() {
   for (const a of inv.recordset) {
     console.log(`  LocationID ${a.LocationID}: inv_rows=${a.inv_rows?.toLocaleString() ?? 0}, distinctSkus=${a.distinct_skus?.toLocaleString() ?? 0}`);
   }
-  const activity = { recordset: [] };
-  for (const a of activity.recordset) {
-    console.log(`  LocationID ${a.LocationID}: inv=${a.inv_rows.toLocaleString()} skus, distinctSkus=${a.distinct_skus.toLocaleString()}, lastTxn=${a.last_txn?.toISOString() ?? 'never'}, txns90d=${a.txns_last_90d}`);
-  }
 
   process.exit(0);
 }
