@@ -434,11 +434,28 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
     expect(mockProductInventoryUpsert).not.toHaveBeenCalled();
   });
 
-  it("rejects typed v2 requests when the target SKU is a textbook", async () => {
+  it("routes textbook-only v2 patches through updateTextbookPricing and mirrors textbook fields", async () => {
     mockMaybeSingle.mockResolvedValueOnce({
       data: { item_type: "textbook" },
       error: null,
     });
+    prismMocks.updateTextbookPricing.mockResolvedValueOnce({
+      sku: 1001,
+      appliedFields: [
+        "barcode",
+        "fDiscontinue",
+        "author",
+        "title",
+        "isbn",
+        "edition",
+        "bindingId",
+        "imprint",
+        "copyright",
+        "textStatusId",
+        "statusDate",
+      ],
+    });
+
     const productDetailRoute = await loadRouteModule();
 
     const response = await productDetailRoute.PATCH(
@@ -446,9 +463,24 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
         method: "PATCH",
         body: JSON.stringify({
           mode: "v2",
+          baseline: {
+            sku: 1001,
+            barcode: "123456789012",
+            retail: 11.99,
+            cost: 5.5,
+            fDiscontinue: 0,
+          },
           patch: {
-            item: {
-              vendorId: 17,
+            textbook: {
+              author: "Jane Doe",
+              title: "Intro Biology",
+              isbn: "9781234567890",
+              edition: "3",
+              bindingId: 15,
+              imprint: "PEARSON",
+              copyright: "26",
+              textStatusId: 7,
+              statusDate: "2026-04-20",
             },
           },
         }),
@@ -457,14 +489,112 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
       { params: Promise.resolve({ sku: "1001" }) },
     );
 
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({
-      error: "V2 PATCH does not support textbook SKUs. Use the legacy textbook-safe payload.",
-    });
+    expect(response.status).toBe(200);
+    expect(prismMocks.updateTextbookPricing).toHaveBeenCalledWith(
+      1001,
+      {
+        textbook: {
+          author: "Jane Doe",
+          title: "Intro Biology",
+          isbn: "9781234567890",
+          edition: "3",
+          bindingId: 15,
+          imprint: "PEARSON",
+          copyright: "26",
+          textStatusId: 7,
+          statusDate: "2026-04-20",
+        },
+      },
+      {
+        sku: 1001,
+        barcode: "123456789012",
+        retail: 11.99,
+        cost: 5.5,
+        fDiscontinue: 0,
+      },
+    );
     expect(prismMocks.updateGmItem).not.toHaveBeenCalled();
-    expect(prismMocks.updateTextbookPricing).not.toHaveBeenCalled();
-    expect(mockProductsUpsert).not.toHaveBeenCalled();
+    expect(mockProductsUpsert).toHaveBeenCalledWith(expect.objectContaining({
+      sku: 1001,
+      author: "Jane Doe",
+      title: "Intro Biology",
+      isbn: "9781234567890",
+      edition: "3",
+      binding_id: 15,
+      imprint: "PEARSON",
+      copyright: "26",
+      text_status_id: 7,
+      status_date: "2026-04-20",
+      barcode: "123456789012",
+      retail_price: 12.99,
+      cost: 6.25,
+      discontinued: false,
+      synced_at: expect.any(String),
+    }));
     expect(mockProductInventoryUpsert).not.toHaveBeenCalled();
+  });
+
+  it("ignores textbook fields for GM v2 patches when mirroring to products", async () => {
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          baseline: {
+            sku: 1001,
+            barcode: "123456789012",
+            retail: 11.99,
+            cost: 5.5,
+            fDiscontinue: 0,
+          },
+          patch: {
+            item: {
+              vendorId: 17,
+            },
+            textbook: {
+              title: "Should not mirror to GM",
+            },
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(prismMocks.updateGmItem).toHaveBeenCalledWith(
+      1001,
+      {
+        item: {
+          vendorId: 17,
+        },
+        textbook: {
+          title: "Should not mirror to GM",
+        },
+      },
+      {
+        sku: 1001,
+        barcode: "123456789012",
+        retail: 11.99,
+        cost: 5.5,
+        fDiscontinue: 0,
+      },
+    );
+    expect(prismMocks.updateTextbookPricing).not.toHaveBeenCalled();
+    expect(mockProductsUpsert).toHaveBeenCalledWith(expect.objectContaining({
+      sku: 1001,
+      vendor_id: 17,
+      barcode: "123456789012",
+      retail_price: 12.99,
+      cost: 6.25,
+      discontinued: false,
+      synced_at: expect.any(String),
+    }));
+    expect(mockProductsUpsert).not.toHaveBeenCalledWith(expect.objectContaining({
+      title: "Should not mirror to GM",
+    }));
   });
 
   it("rejects empty typed patches instead of dispatching a no-op update", async () => {

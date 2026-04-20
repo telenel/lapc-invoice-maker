@@ -433,6 +433,18 @@ const gmDetailsPatchSchema = z.object({
   imageUrl: z.string().max(128).nullable().optional(),
 });
 
+const textbookDetailsPatchSchema = z.object({
+  author: z.string().max(128).nullable().optional(),
+  title: z.string().max(128).nullable().optional(),
+  isbn: z.string().max(20).nullable().optional(),
+  edition: z.string().max(20).nullable().optional(),
+  bindingId: z.number().int().positive().nullable().optional(),
+  imprint: z.string().max(50).nullable().optional(),
+  copyright: z.string().max(16).nullable().optional(),
+  textStatusId: z.number().int().positive().nullable().optional(),
+  statusDate: z.string().max(32).nullable().optional(),
+});
+
 const primaryInventoryPatchSchema = z.object({
   retail: z.number().nonnegative().nullable().optional(),
   cost: z.number().nonnegative().nullable().optional(),
@@ -496,6 +508,7 @@ const legacyPatchSchema = z.object({
 const v2PatchSchema = z.object({
   item: itemPatchSchema.optional(),
   gm: gmDetailsPatchSchema.optional(),
+  textbook: textbookDetailsPatchSchema.optional(),
   inventory: inventoryPatchArraySchema.optional(),
   primaryInventory: primaryInventoryPatchSchema.optional(),
 });
@@ -522,6 +535,7 @@ function hasAnyWritablePatchFields(patch: ProductEditPatchV2): boolean {
   return (
     hasWritableFields(patch.item) ||
     hasWritableFields(patch.gm) ||
+    hasWritableFields(patch.textbook) ||
     hasWritableInventoryFields(patch.inventory)
   );
 }
@@ -549,6 +563,7 @@ function normalizeV2Patch(patch: z.infer<typeof v2PatchSchema>): ProductEditPatc
     return {
       item: patch.item,
       gm: patch.gm,
+      textbook: patch.textbook,
       inventory: patch.inventory,
     };
   }
@@ -561,6 +576,7 @@ function normalizeV2Patch(patch: z.infer<typeof v2PatchSchema>): ProductEditPatc
   return {
     item: patch.item,
     gm: patch.gm,
+    textbook: patch.textbook,
     inventory: hasWritableFields(primaryInventory)
       ? [
           {
@@ -645,6 +661,7 @@ function buildLegacyMirrorPayload(
   sku: number,
   patch: ProductEditPatchV2,
   snapshot: ItemSnapshot | null,
+  includeTextbookFields: boolean,
 ): Record<string, unknown> {
   const payload: Record<string, unknown> = {
     sku,
@@ -661,6 +678,17 @@ function buildLegacyMirrorPayload(
   if (patch.gm?.imageUrl !== undefined) payload.image_url = patch.gm.imageUrl;
   if (patch.gm?.unitsPerPack !== undefined) payload.units_per_pack = patch.gm.unitsPerPack;
   if (patch.gm?.packageType !== undefined) payload.package_type = patch.gm.packageType;
+  if (includeTextbookFields) {
+    if (patch.textbook?.author !== undefined) payload.author = patch.textbook.author;
+    if (patch.textbook?.title !== undefined) payload.title = patch.textbook.title;
+    if (patch.textbook?.isbn !== undefined) payload.isbn = patch.textbook.isbn;
+    if (patch.textbook?.edition !== undefined) payload.edition = patch.textbook.edition;
+    if (patch.textbook?.bindingId !== undefined) payload.binding_id = patch.textbook.bindingId;
+    if (patch.textbook?.imprint !== undefined) payload.imprint = patch.textbook.imprint;
+    if (patch.textbook?.copyright !== undefined) payload.copyright = patch.textbook.copyright;
+    if (patch.textbook?.textStatusId !== undefined) payload.text_status_id = patch.textbook.textStatusId;
+    if (patch.textbook?.statusDate !== undefined) payload.status_date = patch.textbook.statusDate;
+  }
 
   if (snapshot) {
     payload.barcode = snapshot.barcode;
@@ -734,6 +762,7 @@ export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: Rout
 
   try {
     const supabase = getSupabaseAdminClient();
+    let itemType: string | null = null;
 
     if (normalized.data.isV2) {
       const { data: kindRow, error: kindError } = await supabase
@@ -749,22 +778,20 @@ export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: Rout
       if (!kindRow) {
         return NextResponse.json({ error: "Item not found" }, { status: 404 });
       }
-      if (TEXTBOOK_ITEM_TYPES.has(kindRow.item_type ?? "")) {
-        return NextResponse.json(
-          { error: "V2 PATCH does not support textbook SKUs. Use the legacy textbook-safe payload." },
-          { status: 400 },
-        );
-      }
+      itemType = kindRow.item_type;
     }
 
-    const result = normalized.data.isTextbook
+    const isTextbookRow = normalized.data.isTextbook || TEXTBOOK_ITEM_TYPES.has(itemType ?? "");
+    const result = isTextbookRow
       ? await updateTextbookPricing(sku, normalized.data.patch, normalized.data.baseline)
       : await updateGmItem(sku, normalized.data.patch, normalized.data.baseline);
 
     // Non-blocking Supabase mirror
     try {
       const snap = await getItemSnapshot(sku);
-      await supabase.from("products").upsert(buildLegacyMirrorPayload(sku, normalized.data.patch, snap));
+      await supabase.from("products").upsert(
+        buildLegacyMirrorPayload(sku, normalized.data.patch, snap, isTextbookRow),
+      );
       const inventoryMirrorPayload = buildInventoryMirrorPayload(sku, normalized.data.patch.inventory);
       if (inventoryMirrorPayload.length > 0) {
         await supabase.from("product_inventory").upsert(inventoryMirrorPayload);

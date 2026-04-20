@@ -11,6 +11,7 @@ import { getPrismPool, sql } from "@/lib/prism";
 import type {
   GmItemPatch,
   TextbookPatch,
+  TextbookDetailsPatch,
   ItemSnapshot,
   ProductEditPatchV2,
   ItemPatch,
@@ -64,12 +65,13 @@ export type ProductUpdaterInput = GmItemPatch | TextbookPatch | ProductEditPatch
 interface ProductWriteBuckets {
   item: ItemPatch;
   gm: GmDetailsPatch;
+  textbook: TextbookDetailsPatch;
   inventory: InventoryPatchPerLocation[];
   primaryInventory: PrimaryInventoryPatch;
 }
 
 function isV2UpdaterInput(patch: ProductUpdaterInput): patch is ProductEditPatchV2 {
-  return "item" in patch || "gm" in patch || "inventory" in patch || "primaryInventory" in patch;
+  return "item" in patch || "gm" in patch || "textbook" in patch || "inventory" in patch || "primaryInventory" in patch;
 }
 
 function normalizeUpdaterInput(patch: ProductUpdaterInput): ProductWriteBuckets {
@@ -77,6 +79,7 @@ function normalizeUpdaterInput(patch: ProductUpdaterInput): ProductWriteBuckets 
     return {
       item: { ...(patch.item ?? {}) },
       gm: { ...(patch.gm ?? {}) },
+      textbook: { ...(patch.textbook ?? {}) },
       inventory: patch.inventory ?? [],
       primaryInventory: { ...(patch.primaryInventory ?? {}) },
     };
@@ -99,6 +102,7 @@ function normalizeUpdaterInput(patch: ProductUpdaterInput): ProductWriteBuckets 
       unitsPerPack: "unitsPerPack" in patch ? patch.unitsPerPack : undefined,
       imageUrl: "imageUrl" in patch ? patch.imageUrl : undefined,
     },
+    textbook: {},
     inventory: [],
     primaryInventory: {
       retail: patch.retail,
@@ -418,6 +422,7 @@ export async function updateTextbookPricing(
     const normalizedPatch = normalizeUpdaterInput(patch);
     const applied: string[] = [];
     const itemSet: string[] = [];
+    const textbookSet: string[] = [];
 
     if (normalizedPatch.item.barcode !== undefined) {
       itemSet.push("BarCode = @barcode");
@@ -428,12 +433,86 @@ export async function updateTextbookPricing(
       applied.push("fDiscontinue");
     }
 
+    if (normalizedPatch.textbook.author !== undefined) {
+      textbookSet.push("Author = @author");
+      applied.push("author");
+    }
+    if (normalizedPatch.textbook.title !== undefined) {
+      textbookSet.push("Title = @title");
+      applied.push("title");
+    }
+    if (normalizedPatch.textbook.isbn !== undefined) {
+      textbookSet.push("ISBN = @isbn");
+      applied.push("isbn");
+    }
+    if (normalizedPatch.textbook.edition !== undefined) {
+      textbookSet.push("Edition = @edition");
+      applied.push("edition");
+    }
+    if (normalizedPatch.textbook.bindingId !== undefined) {
+      textbookSet.push("BindingID = @bindingId");
+      applied.push("bindingId");
+    }
+    if (normalizedPatch.textbook.imprint !== undefined) {
+      textbookSet.push("Imprint = @imprint");
+      applied.push("imprint");
+    }
+    if (normalizedPatch.textbook.copyright !== undefined) {
+      textbookSet.push("Copyright = @copyright");
+      applied.push("copyright");
+    }
+    if (normalizedPatch.textbook.textStatusId !== undefined) {
+      textbookSet.push("TextStatusID = @textStatusId");
+      applied.push("textStatusId");
+    }
+    if (normalizedPatch.textbook.statusDate !== undefined) {
+      textbookSet.push("StatusDate = @statusDate");
+      applied.push("statusDate");
+    }
+
     if (itemSet.length > 0) {
       await transaction.request()
         .input("sku", sql.Int, sku)
         .input("barcode", sql.VarChar(20), normalizedPatch.item.barcode ?? "")
         .input("fDiscontinue", sql.TinyInt, normalizedPatch.item.fDiscontinue ?? 0)
         .query(`UPDATE Item SET ${itemSet.join(", ")} WHERE SKU = @sku`);
+    }
+    if (textbookSet.length > 0) {
+      const textbookReq = transaction.request().input("sku", sql.Int, sku);
+
+      if (normalizedPatch.textbook.author !== undefined) {
+        textbookReq.input("author", sql.VarChar(128), normalizedPatch.textbook.author ?? null);
+      }
+      if (normalizedPatch.textbook.title !== undefined) {
+        textbookReq.input("title", sql.VarChar(128), normalizedPatch.textbook.title ?? null);
+      }
+      if (normalizedPatch.textbook.isbn !== undefined) {
+        textbookReq.input("isbn", sql.VarChar(20), normalizedPatch.textbook.isbn ?? null);
+      }
+      if (normalizedPatch.textbook.edition !== undefined) {
+        textbookReq.input("edition", sql.VarChar(20), normalizedPatch.textbook.edition ?? null);
+      }
+      if (normalizedPatch.textbook.bindingId !== undefined) {
+        textbookReq.input("bindingId", sql.Int, normalizedPatch.textbook.bindingId);
+      }
+      if (normalizedPatch.textbook.imprint !== undefined) {
+        textbookReq.input("imprint", sql.VarChar(50), normalizedPatch.textbook.imprint ?? null);
+      }
+      if (normalizedPatch.textbook.copyright !== undefined) {
+        textbookReq.input("copyright", sql.VarChar(16), normalizedPatch.textbook.copyright ?? null);
+      }
+      if (normalizedPatch.textbook.textStatusId !== undefined) {
+        textbookReq.input("textStatusId", sql.Int, normalizedPatch.textbook.textStatusId);
+      }
+      if (normalizedPatch.textbook.statusDate !== undefined) {
+        textbookReq.input(
+          "statusDate",
+          sql.DateTime,
+          normalizedPatch.textbook.statusDate ? new Date(normalizedPatch.textbook.statusDate) : null,
+        );
+      }
+
+      await textbookReq.query(`UPDATE Textbook SET ${textbookSet.join(", ")} WHERE SKU = @sku`);
     }
     for (const inventoryPatch of getInventoryPatches(normalizedPatch)) {
       if (!hasInventoryWriteFields(inventoryPatch)) {
