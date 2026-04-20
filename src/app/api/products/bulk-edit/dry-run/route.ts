@@ -119,34 +119,8 @@ const legacyBodySchema = z.object({
 
 type LegacySelection = z.infer<typeof selectionSchema>;
 
-type ProductFilterQuery = {
-  ilike: (column: string, pattern: string) => ProductFilterQuery;
-  eq: (column: string, value: unknown) => ProductFilterQuery;
-  gte: (column: string, value: unknown) => ProductFilterQuery;
-  lte: (column: string, value: unknown) => ProductFilterQuery;
-  not: (column: string, operator: string, value: unknown) => ProductFilterQuery;
-  is: (column: string, value: unknown) => ProductFilterQuery;
-};
-
 function isFieldPickerTransform(value: unknown): value is BulkEditFieldPickerRequest {
   return value !== null && typeof value === "object" && Array.isArray((value as { fieldIds?: unknown }).fieldIds);
-}
-
-function applySelectionFilters(
-  query: ProductFilterQuery,
-  selection: LegacySelection,
-) {
-  if (selection.filter?.q) query = query.ilike("description", `%${selection.filter.q}%`);
-  if (selection.filter?.vendorId !== undefined) query = query.eq("vendor_id", selection.filter.vendorId);
-  if (selection.filter?.dccId !== undefined) query = query.eq("dcc_id", selection.filter.dccId);
-  if (selection.filter?.itemType) query = query.eq("item_type", selection.filter.itemType);
-  if (selection.filter?.minRetail !== undefined) query = query.gte("retail_price", selection.filter.minRetail);
-  if (selection.filter?.maxRetail !== undefined) query = query.lte("retail_price", selection.filter.maxRetail);
-  if (selection.filter?.hasBarcode !== undefined) {
-    query = selection.filter.hasBarcode ? query.not("barcode", "is", null) : query.is("barcode", null);
-  }
-
-  return query;
 }
 
 type SourceProductRow = {
@@ -279,7 +253,15 @@ async function loadSourceRows(
   }
 
   if (request.filter) {
-    query = applySelectionFilters(query, request);
+    if (request.filter.q) query = query.ilike("description", `%${request.filter.q}%`);
+    if (request.filter.vendorId !== undefined) query = query.eq("vendor_id", request.filter.vendorId);
+    if (request.filter.dccId !== undefined) query = query.eq("dcc_id", request.filter.dccId);
+    if (request.filter.itemType) query = query.eq("item_type", request.filter.itemType);
+    if (request.filter.minRetail !== undefined) query = query.gte("retail_price", request.filter.minRetail);
+    if (request.filter.maxRetail !== undefined) query = query.lte("retail_price", request.filter.maxRetail);
+    if (request.filter.hasBarcode !== undefined) {
+      query = request.filter.hasBarcode ? query.not("barcode", "is", null) : query.is("barcode", null);
+    }
   }
 
   const productResult = await query.limit(2000).eq("discontinued", false);
@@ -387,7 +369,15 @@ async function loadLegacySourceRows(
     };
   }
 
-  query = applySelectionFilters(query, selection);
+  if (selection.filter?.q) query = query.ilike("description", `%${selection.filter.q}%`);
+  if (selection.filter?.vendorId !== undefined) query = query.eq("vendor_id", selection.filter.vendorId);
+  if (selection.filter?.dccId !== undefined) query = query.eq("dcc_id", selection.filter.dccId);
+  if (selection.filter?.itemType) query = query.eq("item_type", selection.filter.itemType);
+  if (selection.filter?.minRetail !== undefined) query = query.gte("retail_price", selection.filter.minRetail);
+  if (selection.filter?.maxRetail !== undefined) query = query.lte("retail_price", selection.filter.maxRetail);
+  if (selection.filter?.hasBarcode !== undefined) {
+    query = selection.filter.hasBarcode ? query.not("barcode", "is", null) : query.is("barcode", null);
+  }
   const productResult = await query.limit(2000);
   if (productResult.error) {
     console.error("bulk-edit dry-run: legacy products select failed:", productResult.error);
