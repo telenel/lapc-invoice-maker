@@ -393,7 +393,7 @@ export function EditItemDialog({ open, onOpenChange, items, onSaved }: EditItemD
               <Label htmlFor={idFor("fDiscontinue")}>Status</Label>
               <Select
                 value={form.fDiscontinue ?? ""}
-                onValueChange={(value) => update("fDiscontinue", value)}
+                onValueChange={(value) => update("fDiscontinue", value ?? "")}
                 disabled={saving}
               >
                 <SelectTrigger id={idFor("fDiscontinue")}>
