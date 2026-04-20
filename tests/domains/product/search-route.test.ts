@@ -368,6 +368,31 @@ describe("searchProductBrowseRows", () => {
     expect(sql).toContain("FROM products_with_derived pwd");
   });
 
+  it("supports a true count-only path that skips browse-row and inventory queries", async () => {
+    prismaMock.$queryRawUnsafe.mockResolvedValueOnce([{ total: 9n }]);
+
+    const result = await searchProductBrowseRows(
+      {
+        ...EMPTY_FILTERS,
+        tab: "merchandise",
+        locationIds: [2, 3],
+        search: "mug",
+      },
+      { countOnly: true },
+    );
+
+    expect(prismaMock.$queryRawUnsafe).toHaveBeenCalledTimes(1);
+    const sql = prismaMock.$queryRawUnsafe.mock.calls[0]?.[0];
+    expect(typeof sql).toBe("string");
+    expect(sql).toContain("SELECT COUNT(*) AS total");
+    expect(result).toEqual({
+      products: [],
+      total: 9,
+      page: 1,
+      pageSize: PAGE_SIZE,
+    });
+  });
+
   it("preserves nullable ids and nullable price fields instead of coercing them to zero", async () => {
     mockSearchQueryRows(
       {

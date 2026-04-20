@@ -87,6 +87,22 @@ describe("GET /api/products/search", () => {
         locationIds: [3, 4],
         page: 2,
       }),
+      { countOnly: false },
+    );
+  });
+
+  it("forwards countOnly requests to the server search path", async () => {
+    await GET(
+      new NextRequest("http://localhost/api/products/search?tab=merchandise&loc=3,4&page=2&countOnly=true"),
+    );
+
+    expect(searchProductBrowseRows).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tab: "merchandise",
+        locationIds: [3, 4],
+        page: 2,
+      }),
+      { countOnly: true },
     );
   });
 });

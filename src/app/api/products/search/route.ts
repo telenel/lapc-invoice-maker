@@ -6,8 +6,12 @@ import { parseFiltersFromSearchParams } from "@/domains/product/view-serializer"
 export const dynamic = "force-dynamic";
 
 export const GET = withAuth(async (req: NextRequest) => {
-  const filters = parseFiltersFromSearchParams(req.nextUrl.searchParams);
-  const result = await searchProductBrowseRows(filters);
+  const params = new URLSearchParams(req.nextUrl.searchParams);
+  const countOnly = params.get("countOnly") === "true";
+  params.delete("countOnly");
+
+  const filters = parseFiltersFromSearchParams(params);
+  const result = await searchProductBrowseRows(filters, { countOnly });
 
   return NextResponse.json(result, {
     headers: {

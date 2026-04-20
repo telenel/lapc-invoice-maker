@@ -1,14 +1,19 @@
 "use client";
 
-import { PAGE_SIZE } from "./constants";
 export { buildProductQueryPlan, hasAnalyticsProductFilters } from "./query-plan";
-import type { ProductFilters, ProductSearchResult } from "./types";
+import type {
+  ProductBrowseCountResult,
+  ProductBrowseSearchResult,
+  ProductFilters,
+} from "./types";
 import { serializeFiltersToSearchParams } from "./view-serializer";
 
 export interface SearchProductsOptions {
   /** When true, the query skips selecting row data and returns only the count. */
   countOnly?: boolean;
 }
+
+type ProductRouteSearchResult = ProductBrowseSearchResult | ProductBrowseCountResult;
 
 async function readSearchError(response: Response): Promise<string> {
   try {
@@ -24,9 +29,20 @@ async function readSearchError(response: Response): Promise<string> {
 
 export async function searchProducts(
   filters: ProductFilters,
+  options: { countOnly: true },
+): Promise<ProductBrowseCountResult>;
+export async function searchProducts(
+  filters: ProductFilters,
+  options?: SearchProductsOptions,
+): Promise<ProductBrowseSearchResult>;
+export async function searchProducts(
+  filters: ProductFilters,
   options: SearchProductsOptions = {},
-): Promise<ProductSearchResult> {
+): Promise<ProductRouteSearchResult> {
   const params = serializeFiltersToSearchParams(filters);
+  if (options.countOnly) {
+    params.set("countOnly", "true");
+  }
   const query = params.toString();
   const url = query ? `/api/products/search?${query}` : "/api/products/search";
 
@@ -38,16 +54,11 @@ export async function searchProducts(
     throw new Error(await readSearchError(response));
   }
 
-  const result = await response.json() as ProductSearchResult;
+  const result = await response.json() as ProductRouteSearchResult;
 
   if (!options.countOnly) {
     return result;
   }
 
-  return {
-    products: [],
-    total: result.total,
-    page: result.page ?? filters.page,
-    pageSize: result.pageSize ?? PAGE_SIZE,
-  };
+  return result as ProductBrowseCountResult;
 }

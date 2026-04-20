@@ -8,25 +8,29 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { searchProducts } from "@/domains/product/queries";
 import { TABS, EMPTY_FILTERS } from "@/domains/product/constants";
-import type { Product, ProductTab, SelectedProduct } from "@/domains/product/types";
+import type {
+  ProductBrowseRow,
+  ProductTab,
+  SelectedProduct,
+} from "@/domains/product/types";
 
 // ---------------------------------------------------------------------------
 // Helper: convert raw product row to SelectedProduct shape
 // ---------------------------------------------------------------------------
 
-function productToSelected(product: Product): SelectedProduct {
+function productToSelected(product: ProductBrowseRow): SelectedProduct {
   return {
     sku: product.sku,
     description: (product.title ?? product.description ?? "").toUpperCase(),
-    retailPrice: Number(product.retail_price),
-    cost: Number(product.cost),
+    retailPrice: Number(product.retail_price ?? 0),
+    cost: Number(product.cost ?? 0),
     barcode: product.barcode,
     author: product.author,
     title: product.title,
     isbn: product.isbn,
     edition: product.edition,
     catalogNumber: product.catalog_number,
-    vendorId: product.vendor_id,
+    vendorId: product.vendor_id ?? 0,
     itemType: product.item_type,
   };
 }
@@ -35,14 +39,14 @@ function productToSelected(product: Product): SelectedProduct {
 // Helper: derive display name and subtitle for a product row
 // ---------------------------------------------------------------------------
 
-function getDisplayName(product: Product): string {
+function getDisplayName(product: ProductBrowseRow): string {
   const raw = product.item_type === "textbook"
     ? (product.title ?? product.description ?? "")
     : (product.description ?? product.title ?? "");
   return raw.toUpperCase();
 }
 
-function getSubtitle(product: Product): string {
+function getSubtitle(product: ProductBrowseRow): string {
   if (product.item_type === "textbook") {
     const parts: string[] = [];
     if (product.author) parts.push(product.author);
@@ -75,7 +79,7 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
   const [selected, setSelected] = useState<Map<number, SelectedProduct>>(
     () => new Map()
   );
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductBrowseRow[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -133,7 +137,7 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
   }, []);
 
   // Selection helpers
-  const toggleProduct = useCallback((product: Product) => {
+  const toggleProduct = useCallback((product: ProductBrowseRow) => {
     setSelected((prev) => {
       const next = new Map(prev);
       if (next.has(product.sku)) {

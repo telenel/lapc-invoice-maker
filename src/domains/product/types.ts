@@ -164,15 +164,15 @@ export type ProductSortField =
   | "margin"
   | "days_since_sale";
 
-export interface ProductSearchResult {
-  products: Product[];
+export interface ProductBrowseSearchResult {
+  products: ProductBrowseRow[];
   total: number;
   page: number;
   pageSize: number;
 }
 
-export interface ProductBrowseSearchResult {
-  products: ProductBrowseRow[];
+export interface ProductBrowseCountResult {
+  products: [];
   total: number;
   page: number;
   pageSize: number;

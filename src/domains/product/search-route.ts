@@ -7,6 +7,7 @@ import {
 } from "./location-filters";
 import { buildProductQueryPlan } from "./query-plan";
 import type {
+  ProductBrowseCountResult,
   ProductBrowseRow,
   ProductBrowseSearchResult,
   ProductFilters,
@@ -15,7 +16,7 @@ import type {
   ProductLocationVariance,
 } from "./types";
 
-export interface ProductInventorySliceRow extends ProductLocationSlice {}
+export type ProductInventorySliceRow = ProductLocationSlice;
 
 type ProductBrowseBase = Omit<
   ProductBrowseRow,
@@ -86,6 +87,10 @@ interface ProductInventoryQueryRow {
 interface SqlBuilder {
   params: unknown[];
   add: (value: unknown) => string;
+}
+
+export interface SearchProductBrowseRowsOptions {
+  countOnly?: boolean;
 }
 
 function hasVariedValue<T>(values: ReadonlyArray<T | null>): boolean {
@@ -437,9 +442,36 @@ function buildFilteredBrowseQuery(filters: ProductFilters): {
 
 export async function searchProductBrowseRows(
   filters: ProductFilters,
-): Promise<ProductBrowseSearchResult> {
+  options: { countOnly: true },
+): Promise<ProductBrowseCountResult>;
+export async function searchProductBrowseRows(
+  filters: ProductFilters,
+  options?: SearchProductBrowseRowsOptions,
+): Promise<ProductBrowseSearchResult>;
+export async function searchProductBrowseRows(
+  filters: ProductFilters,
+  options: SearchProductBrowseRowsOptions = {},
+): Promise<ProductBrowseSearchResult | ProductBrowseCountResult> {
   const locationIds = normalizeProductLocationIds(filters.locationIds);
   const { cteSql, params, orderBySql, from } = buildFilteredBrowseQuery(filters);
+
+  if (options.countOnly) {
+    const totalRows = await prisma.$queryRawUnsafe<Array<{ total: bigint | number | string }>>(
+      `
+        ${cteSql}
+        SELECT COUNT(*) AS total
+        FROM filtered
+      `,
+      ...params,
+    );
+
+    return {
+      products: [],
+      total: toNumber(totalRows[0]?.total ?? 0),
+      page: filters.page,
+      pageSize: PAGE_SIZE,
+    };
+  }
 
   const baseRows = await prisma.$queryRawUnsafe<ProductBrowseBaseRow[]>(
     `

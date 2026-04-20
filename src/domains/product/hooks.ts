@@ -6,8 +6,8 @@ import { searchProducts } from "./queries";
 import { CATALOG_ITEMS_STORAGE_KEY } from "./constants";
 import type {
   Product,
+  ProductBrowseSearchResult,
   ProductFilters,
-  ProductSearchResult,
   SelectedProduct,
 } from "./types";
 
@@ -16,7 +16,7 @@ import type {
 // ---------------------------------------------------------------------------
 
 export function useProductSearch(filters: ProductFilters) {
-  const [data, setData] = useState<ProductSearchResult | null>(null);
+  const [data, setData] = useState<ProductBrowseSearchResult | null>(null);
   const [loading, setLoading] = useState(true);
   const deferredSearch = useDeferredValue(filters.search);
 

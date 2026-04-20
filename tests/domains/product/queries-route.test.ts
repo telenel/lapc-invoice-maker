@@ -73,7 +73,7 @@ describe("searchProducts route client", () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: true,
       json: async () => ({
-        products: [{ sku: 202 }],
+        products: [],
         total: 7,
         page: 1,
         pageSize: PAGE_SIZE,
@@ -90,8 +90,11 @@ describe("searchProducts route client", () => {
 
     expect(fetch).toHaveBeenCalledTimes(1);
     const [url] = vi.mocked(fetch).mock.calls[0]!;
-    expect(String(url)).toMatch(/^\/api\/products\/search(?:\?|$)/);
+    const requestUrl = new URL(String(url), "http://localhost");
+    expect(requestUrl.pathname).toBe("/api/products/search");
+    expect(requestUrl.searchParams.get("countOnly")).toBe("true");
     expect(supabaseBrowserMock).not.toHaveBeenCalled();
+    expect(result.products).toEqual([]);
     expect(result.total).toBe(7);
   });
 });
