@@ -101,6 +101,20 @@ type InventoryFieldKey =
   | "fTxBuybackListFlag"
   | "fNoReturns";
 
+const EDITABLE_INVENTORY_FIELDS = [
+  "retail",
+  "cost",
+  "expectedCost",
+  "tagTypeId",
+  "statusCodeId",
+  "estSales",
+  "estSalesLocked",
+  "fInvListPriceFlag",
+  "fTxWantListFlag",
+  "fTxBuybackListFlag",
+  "fNoReturns",
+] as const satisfies readonly InventoryFieldKey[];
+
 type InventoryFormState = {
   retail: string;
   cost: string;
@@ -118,6 +132,7 @@ type InventoryFormState = {
 };
 
 type InventoryStateByLocation = Record<InventoryLocationId, InventoryFormState>;
+type DirtyInventoryFields = Record<InventoryLocationId, Set<InventoryFieldKey>>;
 
 const EMPTY_INVENTORY_LOCATION: InventoryFormState = {
   retail: "",
@@ -146,6 +161,14 @@ function makeEmptyInventoryState(): InventoryStateByLocation {
     2: { ...EMPTY_INVENTORY_LOCATION },
     3: { ...EMPTY_INVENTORY_LOCATION },
     4: { ...EMPTY_INVENTORY_LOCATION },
+  };
+}
+
+function makeEmptyDirtyInventoryFields(): DirtyInventoryFields {
+  return {
+    2: new Set<InventoryFieldKey>(),
+    3: new Set<InventoryFieldKey>(),
+    4: new Set<InventoryFieldKey>(),
   };
 }
 
@@ -501,6 +524,7 @@ export function EditItemDialogV2({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dirtyFieldsRef = useRef<Set<keyof FormState>>(new Set());
+  const dirtyInventoryFieldsRef = useRef<DirtyInventoryFields>(makeEmptyDirtyInventoryFields());
   const hydratedSelectionRef = useRef<string | null>(null);
 
   const refsUnavailable = !refsLoading && !refsAvailable;
@@ -515,6 +539,7 @@ export function EditItemDialogV2({
     if (!open) {
       hydratedSelectionRef.current = null;
       dirtyFieldsRef.current.clear();
+      dirtyInventoryFieldsRef.current = makeEmptyDirtyInventoryFields();
       setActiveInventoryLocation(2);
       return;
     }
@@ -525,6 +550,7 @@ export function EditItemDialogV2({
     if (hydratedSelectionRef.current !== selectionKey) {
       hydratedSelectionRef.current = selectionKey;
       dirtyFieldsRef.current.clear();
+      dirtyInventoryFieldsRef.current = makeEmptyDirtyInventoryFields();
       setForm(nextForm);
       setInventoryByLocation(nextInventory);
       setActiveInventoryLocation(2);
@@ -549,12 +575,47 @@ export function EditItemDialogV2({
 
       return changed ? (merged as FormState) : current;
     });
+
+    setInventoryByLocation((current) => {
+      let changed = false;
+      const merged = {
+        2: { ...current[2] },
+        3: { ...current[3] },
+        4: { ...current[4] },
+      };
+
+      for (const locationId of INVENTORY_LOCATION_IDS) {
+        const dirtyFields = dirtyInventoryFieldsRef.current[locationId];
+        const nextLocation = nextInventory[locationId];
+        const mergedLocation = merged[locationId];
+
+        for (const key of EDITABLE_INVENTORY_FIELDS) {
+          if (dirtyFields.has(key)) continue;
+          if (mergedLocation[key] !== nextLocation[key]) {
+            mergedLocation[key] = nextLocation[key];
+            changed = true;
+          }
+        }
+
+        if (mergedLocation.stockOnHand !== nextLocation.stockOnHand) {
+          mergedLocation.stockOnHand = nextLocation.stockOnHand;
+          changed = true;
+        }
+        if (mergedLocation.lastSaleDate !== nextLocation.lastSaleDate) {
+          mergedLocation.lastSaleDate = nextLocation.lastSaleDate;
+          changed = true;
+        }
+      }
+
+      return changed ? merged : current;
+    });
   }, [detail, isBulk, items, open, selectionKey]);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     dirtyFieldsRef.current.add(key);
     setForm((current) => ({ ...current, [key]: value }));
     if (key === "retail" || key === "cost") {
+      dirtyInventoryFieldsRef.current[2].add(key);
       setInventoryByLocation((current) => ({
         ...current,
         2: {
@@ -570,6 +631,9 @@ export function EditItemDialogV2({
       dirtyFieldsRef.current.add(key);
       setForm((current) => ({ ...current, [key]: value }));
     }
+    if (EDITABLE_INVENTORY_FIELDS.includes(key as InventoryFieldKey)) {
+      dirtyInventoryFieldsRef.current[locationId].add(key as InventoryFieldKey);
+    }
     setInventoryByLocation((current) => ({
       ...current,
       [locationId]: {
@@ -584,6 +648,10 @@ export function EditItemDialogV2({
     if (field === "retail" || field === "cost") {
       dirtyFieldsRef.current.add(field);
       setForm((formState) => ({ ...formState, [field]: sourceValue }));
+    }
+    for (const locationId of INVENTORY_LOCATION_IDS) {
+      if (locationId === activeInventoryLocation) continue;
+      dirtyInventoryFieldsRef.current[locationId].add(field);
     }
 
     setInventoryByLocation((current) => {

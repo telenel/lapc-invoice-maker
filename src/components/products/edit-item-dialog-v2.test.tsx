@@ -456,6 +456,162 @@ describe("EditItemDialogV2", () => {
     expect(screen.getByLabelText("Barcode")).toHaveValue(baseDetail.barcode);
   });
 
+  it("hydrates inventory state when detail finishes loading after the dialog opens", async () => {
+    await mockDirectoryState({
+      refs: {
+        vendors: [
+          { vendorId: 21, name: "PENS ETC (3001795)", pierceItems: 50 },
+          { vendorId: 22, name: "ALT VENDOR", pierceItems: 5 },
+        ],
+        dccs: [
+          { dccId: 1313290, deptNum: 111010, classNum: null, catNum: null, deptName: "NOT USE=111010", className: "DO NOT USE", catName: null, pierceItems: 30 },
+          { dccId: 1802, deptNum: 222000, classNum: null, catNum: null, deptName: "USED DCC", className: null, catName: null, pierceItems: 10 },
+        ],
+        taxTypes: [{ taxTypeId: 4, description: "STATE", pierceItems: 40 }],
+        tagTypes: [{ tagTypeId: 7, label: "CLEARANCE", subsystem: 1, pierceRows: 3 }],
+        statusCodes: [{ statusCodeId: 11, label: "ACTIVE", pierceRows: 7 }],
+        packageTypes: [{ code: "EA", label: "Each", defaultQty: 1, pierceItems: 25 }],
+        colors: [{ colorId: 2, label: "BLACK", pierceItems: 18 }],
+        bindings: [],
+      },
+      lookups: {
+        vendorNames: new Map([
+          [21, "PENS ETC (3001795)"],
+          [22, "ALT VENDOR"],
+        ]),
+        taxTypeLabels: new Map([[4, "STATE"]]),
+        tagTypeLabels: new Map([[7, "CLEARANCE"]]),
+        statusCodeLabels: new Map([[11, "ACTIVE"]]),
+        packageTypeLabels: new Map([["EA", "Each"]]),
+        colorLabels: new Map([[2, "BLACK"]]),
+        bindingLabels: new Map(),
+      },
+    });
+    const user = userEvent.setup();
+
+    const { rerender } = render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: null,
+            retail: 0,
+            cost: 0,
+            fDiscontinue: 0,
+            description: "Pending description",
+          },
+        ]}
+        detail={null}
+        detailLoading
+      />,
+    );
+
+    rerender(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: baseDetail.retail ?? 0,
+            cost: baseDetail.cost ?? 0,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+          },
+        ]}
+        detail={{
+          ...baseDetail,
+          inventoryByLocation: [
+            baseDetail.inventoryByLocation[0],
+            {
+              ...baseDetail.inventoryByLocation[1],
+              retail: 42.5,
+              cost: 21.25,
+              expectedCost: 20.5,
+              tagTypeId: 7,
+              statusCodeId: 11,
+            },
+            baseDetail.inventoryByLocation[2],
+          ],
+        }}
+        detailLoading={false}
+      />,
+    );
+
+    await user.click(screen.getByRole("tab", { name: "Inventory" }));
+    await user.click(screen.getByRole("button", { name: "PCOP" }));
+
+    expect(screen.getByLabelText("Retail")).toHaveValue(42.5);
+    expect(screen.getByLabelText("Cost")).toHaveValue(21.25);
+  });
+
+  it("does not clobber in-progress inventory edits when detail hydration finishes", async () => {
+    await mockDirectoryState();
+    const user = userEvent.setup();
+
+    const { rerender } = render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: null,
+            retail: 0,
+            cost: 0,
+            fDiscontinue: 0,
+            description: "Pending description",
+          },
+        ]}
+        detail={null}
+        detailLoading
+      />,
+    );
+
+    await user.click(screen.getByRole("tab", { name: "Inventory" }));
+    await user.click(screen.getByRole("button", { name: "PCOP" }));
+
+    const retailInput = screen.getByLabelText("Retail");
+    await user.clear(retailInput);
+    await user.type(retailInput, "55.5");
+
+    rerender(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: baseDetail.retail ?? 0,
+            cost: baseDetail.cost ?? 0,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+          },
+        ]}
+        detail={{
+          ...baseDetail,
+          inventoryByLocation: [
+            baseDetail.inventoryByLocation[0],
+            {
+              ...baseDetail.inventoryByLocation[1],
+              retail: 42.5,
+              cost: 21.25,
+            },
+            baseDetail.inventoryByLocation[2],
+          ],
+        }}
+        detailLoading={false}
+      />,
+    );
+
+    expect(screen.getByLabelText("Retail")).toHaveValue(55.5);
+    expect(screen.getByLabelText("Cost")).toHaveValue(21.25);
+  });
+
   it("keeps current ref-backed IDs visible when refs are unavailable", async () => {
     await mockDirectoryState({
       refs: null,
