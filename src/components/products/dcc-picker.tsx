@@ -31,6 +31,19 @@ export function getPartialDccPatch(
   };
 }
 
+export function getSanitizedFallbackDccPatch(query: string): {
+  deptNum?: string;
+  classNum?: string;
+  catNum?: string;
+} {
+  const [deptNum = "", classNum = "", catNum = ""] = query
+    .split(".")
+    .slice(0, 3)
+    .map((part) => part.replace(/\D+/g, ""));
+
+  return { deptNum, classNum, catNum };
+}
+
 export function findExactDccMatch(
   items: DccListItem[] | null,
   query: string,
@@ -136,13 +149,9 @@ export function DccPicker({ deptNum, classNum, catNum, onChange }: Props) {
           placeholder="10.10.20"
           value={query}
           onChange={(e) => {
-            setQuery(e.target.value);
-            const parts = e.target.value.split(".");
-            onChange({
-              deptNum: parts[0] ?? "",
-              classNum: parts[1] ?? "",
-              catNum: parts[2] ?? "",
-            });
+            const next = e.target.value;
+            setQuery(next);
+            onChange(getSanitizedFallbackDccPatch(next));
           }}
           spellCheck={false}
           autoComplete="off"

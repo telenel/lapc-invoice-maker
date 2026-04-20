@@ -3,6 +3,7 @@ import {
   findCommittedDccMatch,
   findExactDccMatch,
   getPartialDccPatch,
+  getSanitizedFallbackDccPatch,
 } from "@/components/products/dcc-picker";
 
 describe("findExactDccMatch", () => {
@@ -29,6 +30,19 @@ describe("findExactDccMatch", () => {
       catNum: "",
     });
     expect(getPartialDccPatch("drinks")).toBeNull();
+  });
+
+  it("sanitizes fallback DCC input before updating filters", () => {
+    expect(getSanitizedFallbackDccPatch("10a.2b.30c")).toEqual({
+      deptNum: "10",
+      classNum: "2",
+      catNum: "30",
+    });
+    expect(getSanitizedFallbackDccPatch("drinks")).toEqual({
+      deptNum: "",
+      classNum: "",
+      catNum: "",
+    });
   });
 
   it("only auto-commits a unique name match on blur", () => {
