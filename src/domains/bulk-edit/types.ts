@@ -155,6 +155,11 @@ export interface BulkEditRequest {
   transform: BulkEditTransform;
 }
 
+export interface BulkEditFieldEditRequest {
+  selection: BulkEditSelection;
+  transform: BulkEditFieldPickerRequest;
+}
+
 /** Row values that the transform engine operates on. Pulled from Supabase mirror. */
 export interface BulkEditSourceRow {
   sku: number;
@@ -216,6 +221,7 @@ export interface BulkEditValidationError {
   code:
     | "EMPTY_SELECTION"
     | "NO_OP_TRANSFORM"
+    | "MISSING_INVENTORY_SCOPE"
     | "INVALID_MARGIN"
     | "INVALID_PERCENT"
     | "INVALID_RETAIL"

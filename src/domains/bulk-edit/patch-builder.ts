@@ -2,9 +2,6 @@ import type { BulkEditFieldId, BulkEditFieldPickerRequest, BulkEditFieldValue, B
 import type { InventoryPatchPerLocation, ProductEditPatchV2 } from "@/domains/product/types";
 import type { ProductLocationId } from "@/domains/product/location-filters";
 
-const ITEM_FIELD_IDS = new Set<BulkEditFieldId>(["barcode", "vendorId", "dccId", "itemTaxTypeId", "fDiscontinue"]);
-const GM_FIELD_IDS = new Set<BulkEditFieldId>(["description", "catalogNumber", "packageType", "unitsPerPack"]);
-const TEXTBOOK_FIELD_IDS = new Set<BulkEditFieldId>(["title", "author", "isbn", "edition", "bindingId"]);
 const INVENTORY_FIELD_IDS = new Set<BulkEditFieldId>([
   "retail",
   "cost",
