@@ -17,6 +17,12 @@ export type {
   PrismVendorRef,
   PrismDccRef,
   PrismTaxTypeRef,
+  PrismTagTypeRef,
+  PrismStatusCodeRef,
+  PrismPackageTypeRef,
+  PrismColorRef,
+  PrismBindingRef,
+  PrismRefs,
 } from "./ref-data";
 import type {
   BulkEditRequest,
@@ -28,12 +34,6 @@ export interface PrismHealth {
   available: boolean;
   configured: boolean;
   reason: string | null;
-}
-
-export interface PrismRefs {
-  vendors: PrismVendorRef[];
-  dccs: PrismDccRef[];
-  taxTypes: PrismTaxTypeRef[];
 }
 
 export interface CreateItemInput {
