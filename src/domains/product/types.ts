@@ -1,5 +1,7 @@
 import type { ProductLocationId } from "./location-filters";
 
+export type { ProductLocationId } from "./location-filters";
+
 export type ProductLocationAbbrev = "PIER" | "PCOP" | "PFS";
 
 export interface ProductLocationSlice {
