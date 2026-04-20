@@ -52,7 +52,7 @@ type ProductEditDetailRow = {
 
 type ProductInventoryEditDetailRow = {
   location_id: ProductLocationId;
-  location_abbrev: ProductLocationAbbrev;
+  location_abbrev: string | null;
   retail_price: number | null;
   cost: number | null;
   expected_cost: number | null;
@@ -177,9 +177,11 @@ function toProductEditDetails(row: ProductEditDetailRow): ProductEditDetails {
 function toProductInventoryEditDetails(
   row: ProductInventoryEditDetailRow,
 ): ProductInventoryEditDetails {
+  const locationAbbrev = PRODUCT_INVENTORY_LOCATION_ABBREV_BY_ID[row.location_id];
+
   return {
     locationId: row.location_id,
-    locationAbbrev: row.location_abbrev,
+    locationAbbrev,
     retail: row.retail_price,
     cost: row.cost,
     expectedCost: row.expected_cost,
