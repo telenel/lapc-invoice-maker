@@ -12,7 +12,7 @@ import type {
 } from "./types";
 
 // ---------------------------------------------------------------------------
-// useProductSearch — debounced search with Supabase
+// useProductSearch — debounced search through the authenticated browse route
 // ---------------------------------------------------------------------------
 
 export function useProductSearch(filters: ProductFilters) {
