@@ -13,6 +13,7 @@ import type {
   BatchCreateRow,
   BatchValidationError,
   ProductEditDetails,
+  ProductEditPatchV2,
 } from "./types";
 import type { PrismRefs } from "./ref-data";
 export type {
@@ -59,6 +60,18 @@ export interface CreatedItem {
   barcode: string | null;
   retail: number;
   cost: number;
+}
+
+export interface LegacyUpdateBody {
+  patch: GmItemPatch | TextbookPatch;
+  isTextbook?: boolean;
+  baseline?: ItemSnapshot;
+}
+
+export interface V2UpdateBody {
+  mode: "v2";
+  patch: ProductEditPatchV2;
+  baseline?: ItemSnapshot;
 }
 
 async function parseError(response: Response): Promise<string> {
@@ -112,11 +125,7 @@ export const productApi = {
 
   async update(
     sku: number,
-    body: {
-      patch: GmItemPatch | TextbookPatch;
-      isTextbook?: boolean;
-      baseline?: ItemSnapshot;
-    },
+    body: LegacyUpdateBody | V2UpdateBody,
   ): Promise<{ sku: number; appliedFields: string[] }> {
     const res = await fetch(`/api/products/${sku}`, {
       method: "PATCH",

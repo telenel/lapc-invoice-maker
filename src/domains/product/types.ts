@@ -213,6 +213,39 @@ export interface GmItemPatch {
   fDiscontinue?: 0 | 1;
 }
 
+/** Fields that live on Prism Item rows for single-item edits. */
+export interface ItemPatch {
+  barcode?: string | null;
+  vendorId?: number;
+  dccId?: number;
+  itemTaxTypeId?: number;
+  comment?: string | null;
+  weight?: number;
+  fDiscontinue?: 0 | 1;
+}
+
+/** Fields that live on Prism GeneralMerchandise rows for single-item edits. */
+export interface GmDetailsPatch {
+  description?: string;
+  catalogNumber?: string | null;
+  packageType?: string | null;
+  unitsPerPack?: number;
+  imageUrl?: string | null;
+}
+
+/** Fields that live on Prism Inventory for the Pierce location. */
+export interface PrimaryInventoryPatch {
+  retail?: number;
+  cost?: number;
+}
+
+/** Typed write contract for the single-item editor. */
+export interface ProductEditPatchV2 {
+  item?: ItemPatch;
+  gm?: GmDetailsPatch;
+  primaryInventory?: PrimaryInventoryPatch;
+}
+
 /** Narrow patch for textbook rows — only fields that live on Item/Inventory. */
 export interface TextbookPatch {
   barcode?: string | null;

@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { withAdmin } from "@/domains/shared/auth";
-import type { ItemSnapshot, ProductEditDetails } from "@/domains/product/types";
+import type {
+  ItemSnapshot,
+  ProductEditDetails,
+  ProductEditPatchV2,
+  ItemPatch,
+  GmDetailsPatch,
+  PrimaryInventoryPatch,
+} from "@/domains/product/types";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
@@ -232,32 +239,138 @@ const snapshotSchema = z.object({
   fDiscontinue: z.union([z.literal(0), z.literal(1)]),
 });
 
-const patchSchema = z.object({
-  isTextbook: z.boolean().optional(),
-  baseline: snapshotSchema.optional(),
-  patch: z.object({
-    description: z.string().min(1).max(128).optional(),
-    vendorId: z.number().int().positive().optional(),
-    dccId: z.number().int().positive().optional(),
-    itemTaxTypeId: z.number().int().positive().optional(),
-    barcode: z.string().max(20).nullable().optional(),
-    catalogNumber: z.string().max(30).nullable().optional(),
-    comment: z.string().max(25).nullable().optional(),
-    weight: z.number().nonnegative().optional(),
-    imageUrl: z.string().max(128).nullable().optional(),
-    unitsPerPack: z.number().int().positive().optional(),
-    packageType: z.string().max(3).nullable().optional(),
-    retail: z.number().nonnegative().optional(),
-    cost: z.number().nonnegative().optional(),
-    fDiscontinue: z.union([z.literal(0), z.literal(1)]).optional(),
-  }),
+const itemPatchSchema = z.object({
+  barcode: z.string().max(20).nullable().optional(),
+  vendorId: z.number().int().positive().optional(),
+  dccId: z.number().int().positive().optional(),
+  itemTaxTypeId: z.number().int().positive().optional(),
+  comment: z.string().max(25).nullable().optional(),
+  weight: z.number().nonnegative().optional(),
+  fDiscontinue: z.union([z.literal(0), z.literal(1)]).optional(),
 });
 
-type ProductPatchInput = z.infer<typeof patchSchema>["patch"];
+const gmDetailsPatchSchema = z.object({
+  description: z.string().min(1).max(128).optional(),
+  catalogNumber: z.string().max(30).nullable().optional(),
+  packageType: z.string().max(3).nullable().optional(),
+  unitsPerPack: z.number().int().positive().optional(),
+  imageUrl: z.string().max(128).nullable().optional(),
+});
+
+const primaryInventoryPatchSchema = z.object({
+  retail: z.number().nonnegative().optional(),
+  cost: z.number().nonnegative().optional(),
+});
+
+const legacyPatchFieldsSchema = z.object({
+  description: z.string().min(1).max(128).optional(),
+  vendorId: z.number().int().positive().optional(),
+  dccId: z.number().int().positive().optional(),
+  itemTaxTypeId: z.number().int().positive().optional(),
+  barcode: z.string().max(20).nullable().optional(),
+  catalogNumber: z.string().max(30).nullable().optional(),
+  comment: z.string().max(25).nullable().optional(),
+  weight: z.number().nonnegative().optional(),
+  imageUrl: z.string().max(128).nullable().optional(),
+  unitsPerPack: z.number().int().positive().optional(),
+  packageType: z.string().max(3).nullable().optional(),
+  retail: z.number().nonnegative().optional(),
+  cost: z.number().nonnegative().optional(),
+  fDiscontinue: z.union([z.literal(0), z.literal(1)]).optional(),
+});
+
+const legacyPatchSchema = z.object({
+  isTextbook: z.boolean().optional(),
+  baseline: snapshotSchema.optional(),
+  patch: legacyPatchFieldsSchema,
+});
+
+const v2PatchSchema = z.object({
+  item: itemPatchSchema.optional(),
+  gm: gmDetailsPatchSchema.optional(),
+  primaryInventory: primaryInventoryPatchSchema.optional(),
+});
+
+const v2BodySchema = z.object({
+  mode: z.literal("v2"),
+  baseline: snapshotSchema.optional(),
+  patch: v2PatchSchema,
+});
+
+type LegacyPatchInput = z.infer<typeof legacyPatchFieldsSchema>;
+type NormalizedUpdateCommand = {
+  baseline?: ItemSnapshot;
+  isTextbook: boolean;
+  patch: ProductEditPatchV2;
+};
+
+function hasWritableFields<T extends object>(patch: T | undefined): patch is T {
+  return Object.values(patch ?? {}).some((value) => value !== undefined);
+}
+
+function normalizeLegacyPatch(patch: LegacyPatchInput): ProductEditPatchV2 {
+  const item: ItemPatch = {
+    barcode: patch.barcode,
+    vendorId: patch.vendorId,
+    dccId: patch.dccId,
+    itemTaxTypeId: patch.itemTaxTypeId,
+    comment: patch.comment,
+    weight: patch.weight,
+    fDiscontinue: patch.fDiscontinue,
+  };
+  const gm: GmDetailsPatch = {
+    description: patch.description,
+    catalogNumber: patch.catalogNumber,
+    packageType: patch.packageType,
+    unitsPerPack: patch.unitsPerPack,
+    imageUrl: patch.imageUrl,
+  };
+  const primaryInventory: PrimaryInventoryPatch = {
+    retail: patch.retail,
+    cost: patch.cost,
+  };
+
+  return {
+    item: hasWritableFields(item) ? item : undefined,
+    gm: hasWritableFields(gm) ? gm : undefined,
+    primaryInventory: hasWritableFields(primaryInventory) ? primaryInventory : undefined,
+  };
+}
+
+function normalizePatchBody(body: unknown): { success: true; data: NormalizedUpdateCommand } | { success: false; error: unknown } {
+  if (body && typeof body === "object" && "mode" in body && (body as { mode?: unknown }).mode === "v2") {
+    const parsed = v2BodySchema.safeParse(body);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.flatten() };
+    }
+    return {
+      success: true,
+      data: {
+        baseline: parsed.data.baseline,
+        isTextbook: false,
+        patch: parsed.data.patch,
+      },
+    };
+  }
+
+  const parsed = legacyPatchSchema.safeParse(body);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.flatten() };
+  }
+
+  return {
+    success: true,
+    data: {
+      baseline: parsed.data.baseline,
+      isTextbook: parsed.data.isTextbook === true,
+      patch: normalizeLegacyPatch(parsed.data.patch),
+    },
+  };
+}
 
 function buildLegacyMirrorPayload(
   sku: number,
-  patch: ProductPatchInput,
+  patch: ProductEditPatchV2,
   snapshot: ItemSnapshot | null,
 ): Record<string, unknown> {
   const payload: Record<string, unknown> = {
@@ -265,16 +378,16 @@ function buildLegacyMirrorPayload(
     synced_at: new Date().toISOString(),
   };
 
-  if (patch.description !== undefined) payload.description = patch.description;
-  if (patch.vendorId !== undefined) payload.vendor_id = patch.vendorId;
-  if (patch.dccId !== undefined) payload.dcc_id = patch.dccId;
-  if (patch.itemTaxTypeId !== undefined) payload.item_tax_type_id = patch.itemTaxTypeId;
-  if (patch.catalogNumber !== undefined) payload.catalog_number = patch.catalogNumber;
-  if (patch.comment !== undefined) payload.tx_comment = patch.comment;
-  if (patch.weight !== undefined) payload.weight = patch.weight;
-  if (patch.imageUrl !== undefined) payload.image_url = patch.imageUrl;
-  if (patch.unitsPerPack !== undefined) payload.units_per_pack = patch.unitsPerPack;
-  if (patch.packageType !== undefined) payload.package_type = patch.packageType;
+  if (patch.gm?.description !== undefined) payload.description = patch.gm.description;
+  if (patch.item?.vendorId !== undefined) payload.vendor_id = patch.item.vendorId;
+  if (patch.item?.dccId !== undefined) payload.dcc_id = patch.item.dccId;
+  if (patch.item?.itemTaxTypeId !== undefined) payload.item_tax_type_id = patch.item.itemTaxTypeId;
+  if (patch.gm?.catalogNumber !== undefined) payload.catalog_number = patch.gm.catalogNumber;
+  if (patch.item?.comment !== undefined) payload.tx_comment = patch.item.comment;
+  if (patch.item?.weight !== undefined) payload.weight = patch.item.weight;
+  if (patch.gm?.imageUrl !== undefined) payload.image_url = patch.gm.imageUrl;
+  if (patch.gm?.unitsPerPack !== undefined) payload.units_per_pack = patch.gm.unitsPerPack;
+  if (patch.gm?.packageType !== undefined) payload.package_type = patch.gm.packageType;
 
   if (snapshot) {
     payload.barcode = snapshot.barcode;
@@ -282,10 +395,10 @@ function buildLegacyMirrorPayload(
     payload.cost = snapshot.cost;
     payload.discontinued = snapshot.fDiscontinue === 1;
   } else {
-    if (patch.barcode !== undefined) payload.barcode = patch.barcode;
-    if (patch.retail !== undefined) payload.retail_price = patch.retail;
-    if (patch.cost !== undefined) payload.cost = patch.cost;
-    if (patch.fDiscontinue !== undefined) payload.discontinued = patch.fDiscontinue === 1;
+    if (patch.item?.barcode !== undefined) payload.barcode = patch.item.barcode;
+    if (patch.primaryInventory?.retail !== undefined) payload.retail_price = patch.primaryInventory.retail;
+    if (patch.primaryInventory?.cost !== undefined) payload.cost = patch.primaryInventory.cost;
+    if (patch.item?.fDiscontinue !== undefined) payload.discontinued = patch.item.fDiscontinue === 1;
   }
 
   return payload;
@@ -307,21 +420,21 @@ export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: Rout
   if (!body) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
-  const parsed = patchSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  const normalized = normalizePatchBody(body);
+  if (!normalized.success) {
+    return NextResponse.json({ error: normalized.error }, { status: 400 });
   }
 
   try {
-    const result = parsed.data.isTextbook
-      ? await updateTextbookPricing(sku, parsed.data.patch, parsed.data.baseline)
-      : await updateGmItem(sku, parsed.data.patch, parsed.data.baseline);
+    const result = normalized.data.isTextbook
+      ? await updateTextbookPricing(sku, normalized.data.patch, normalized.data.baseline)
+      : await updateGmItem(sku, normalized.data.patch, normalized.data.baseline);
 
     // Non-blocking Supabase mirror
     try {
       const supabase = getSupabaseAdminClient();
       const snap = await getItemSnapshot(sku);
-      await supabase.from("products").upsert(buildLegacyMirrorPayload(sku, parsed.data.patch, snap));
+      await supabase.from("products").upsert(buildLegacyMirrorPayload(sku, normalized.data.patch, snap));
     } catch (mirrorErr) {
       console.warn(`[PATCH /api/products/${sku}] mirror failed:`, mirrorErr);
     }

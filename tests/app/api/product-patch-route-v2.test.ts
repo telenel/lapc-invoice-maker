@@ -1,0 +1,154 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { NextRequest } from "next/server";
+
+const nextAuthMocks = vi.hoisted(() => ({
+  getServerSession: vi.fn(),
+}));
+
+const supabaseMocks = vi.hoisted(() => ({
+  getSupabaseAdminClient: vi.fn(),
+}));
+
+const prismMocks = vi.hoisted(() => ({
+  isPrismConfigured: vi.fn(),
+  updateGmItem: vi.fn(),
+  updateTextbookPricing: vi.fn(),
+  getItemSnapshot: vi.fn(),
+}));
+
+vi.mock("next-auth", () => nextAuthMocks);
+vi.mock("@/lib/auth", () => ({
+  authOptions: {},
+}));
+vi.mock("@/lib/supabase/admin", () => supabaseMocks);
+
+const mockUpsert = vi.fn();
+const mockFrom = vi.fn(() => ({
+  upsert: mockUpsert,
+}));
+
+function mockDefaultPrismModules() {
+  vi.doMock("@/lib/prism", () => ({
+    isPrismConfigured: prismMocks.isPrismConfigured,
+  }));
+  vi.doMock("@/domains/product/prism-server", () => ({
+    discontinueItem: vi.fn(),
+    deleteTestItem: vi.fn(),
+  }));
+  vi.doMock("@/domains/product/prism-updates", () => ({
+    updateGmItem: prismMocks.updateGmItem,
+    updateTextbookPricing: prismMocks.updateTextbookPricing,
+    getItemSnapshot: prismMocks.getItemSnapshot,
+  }));
+}
+
+async function loadRouteModule() {
+  return import("@/app/api/products/[sku]/route");
+}
+
+describe("PATCH /api/products/[sku] v2 payloads", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
+    mockDefaultPrismModules();
+
+    nextAuthMocks.getServerSession.mockResolvedValue({
+      user: { id: "admin-1", role: "admin" },
+    });
+    supabaseMocks.getSupabaseAdminClient.mockReturnValue({
+      from: mockFrom,
+    });
+    prismMocks.isPrismConfigured.mockReturnValue(true);
+    prismMocks.updateGmItem.mockResolvedValue({
+      sku: 1001,
+      appliedFields: [
+        "vendorId",
+        "comment",
+        "description",
+        "catalogNumber",
+        "retail",
+        "cost",
+      ],
+    });
+    prismMocks.getItemSnapshot.mockResolvedValue({
+      sku: 1001,
+      barcode: "123456789012",
+      retail: 12.99,
+      cost: 6.25,
+      fDiscontinue: 0,
+    });
+    mockUpsert.mockResolvedValue({ error: null });
+  });
+
+  it("accepts a typed v2 payload and normalizes write buckets before dispatch", async () => {
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          baseline: {
+            sku: 1001,
+            barcode: "123456789012",
+            retail: 11.99,
+            cost: 5.5,
+            fDiscontinue: 0,
+          },
+          patch: {
+            item: {
+              vendorId: 17,
+              comment: "Promo",
+            },
+            gm: {
+              description: "Notebook",
+              catalogNumber: "ABC-1",
+            },
+            primaryInventory: {
+              retail: 12.99,
+              cost: 6.25,
+            },
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(prismMocks.updateGmItem).toHaveBeenCalledWith(
+      1001,
+      {
+        item: {
+          vendorId: 17,
+          comment: "Promo",
+        },
+        gm: {
+          description: "Notebook",
+          catalogNumber: "ABC-1",
+        },
+        primaryInventory: {
+          retail: 12.99,
+          cost: 6.25,
+        },
+      },
+      {
+        sku: 1001,
+        barcode: "123456789012",
+        retail: 11.99,
+        cost: 5.5,
+        fDiscontinue: 0,
+      },
+    );
+    expect(mockUpsert).toHaveBeenCalledWith(expect.objectContaining({
+      sku: 1001,
+      vendor_id: 17,
+      tx_comment: "Promo",
+      description: "Notebook",
+      catalog_number: "ABC-1",
+      retail_price: 12.99,
+      cost: 6.25,
+      synced_at: expect.any(String),
+    }));
+  });
+});
