@@ -154,6 +154,224 @@ export interface PullSyncResult {
 const DELETE_CHUNK_SIZE = 1000;
 const HASH_READ_PAGE_SIZE = 1000;
 
+// ---------------------------------------------------------------------------
+// Raw shape returned by buildPrismPullPageQuery. Matches the SELECT list.
+// Labels are still whitespace-padded as returned from Prism's CHAR columns
+// — we trim in shredRecordset.
+// ---------------------------------------------------------------------------
+interface PrismPullRecord {
+  SKU: number;
+  LocationID: number;
+  LocationAbbrev: string;
+  Description: string | null;
+  TypeGm: string | null;
+  Size: string | null;
+  SizeID: number | null;
+  GmColor: number;
+  CatalogNumber: string | null;
+  PackageType: string | null;
+  PackageTypeLabel: string | null;
+  UnitsPerPack: number | null;
+  GmWeight: number | null;
+  ImageURL: string | null;
+  OrderIncrement: number;
+  UseScaleInterface: 0 | 1;
+  Tare: number | null;
+  MfgID: number;
+  AltVendorID: number;
+  Title: string | null;
+  Author: string | null;
+  ISBN: string | null;
+  Edition: string | null;
+  BindingID: number | null;
+  Imprint: string | null;
+  Copyright: string | null;
+  UsedSKU: number | null;
+  TextStatusID: number | null;
+  StatusDate: Date | null;
+  TypeTextbook: string | null;
+  BookKey: string | null;
+  BindingLabel: string | null;
+  BarCode: string | null;
+  VendorID: number | null;
+  DCCID: number | null;
+  UsedDCCID: number | null;
+  ItemTaxTypeID: number | null;
+  ItemTaxTypeLabel: string | null;
+  TxComment: string | null;
+  ItemWeight: number | null;
+  StyleID: number | null;
+  ItemSeasonCodeID: number | null;
+  fListPriceFlag: 0 | 1;
+  fPerishable: 0 | 1;
+  fIDRequired: 0 | 1;
+  MinOrderQtyItem: number | null;
+  ItemType: string;
+  fDiscontinue: 0 | 1;
+  DeptNum: number | null;
+  ClassNum: number | null;
+  CatNum: number | null;
+  DeptName: string | null;
+  ClassName: string | null;
+  CatName: string | null;
+  Retail: number | null;
+  Cost: number | null;
+  ExpectedCost: number | null;
+  StockOnHand: number | null;
+  TagTypeID: number | null;
+  TagTypeLabel: string | null;
+  StatusCodeID: number | null;
+  StatusCodeLabel: string | null;
+  TaxTypeOverrideID: number | null;
+  InvDiscCodeID: number | null;
+  InvMinStock: number | null;
+  InvMaxStock: number | null;
+  InvAutoOrderQty: number | null;
+  InvMinOrderQty: number | null;
+  ReservedQty: number | null;
+  RentalQty: number | null;
+  EstSales: number;
+  EstSalesLocked: 0 | 1;
+  RoyaltyCost: number | null;
+  MinRoyaltyCost: number | null;
+  fInvListPriceFlag: 0 | 1;
+  fTXWantListFlag: 0 | 1;
+  fTXBuybackListFlag: 0 | 1;
+  fRentOnly: 0 | 1;
+  fNoReturns: 0 | 1;
+  TextCommentInv: string | null;
+  LastSaleDate: Date | null;
+  LastInventoryDate: Date | null;
+  InvCreateDate: Date | null;
+}
+
+function trimOrNull(s: string | null | undefined): string | null {
+  if (s == null) return null;
+  const t = s.trim();
+  return t.length === 0 ? null : t;
+}
+
+/**
+ * Split a Prism recordset (one row per (sku, location_id)) into:
+ *   - items: one PrismItemRow per distinct SKU (first occurrence wins).
+ *   - inventory: one PrismInventoryRow per input row.
+ *
+ * Throws if any row carries LocationID 5 (PBO) — the query already filters
+ * to IN (2, 3, 4), so this is a belt-and-suspenders defense.
+ */
+export function shredRecordset(
+  recordset: PrismPullRecord[],
+): { items: PrismItemRow[]; inventory: PrismInventoryRow[] } {
+  const itemsBySku = new Map<number, PrismItemRow>();
+  const inventory: PrismInventoryRow[] = [];
+
+  for (const raw of recordset) {
+    if (raw.LocationID === 5) {
+      throw new Error(
+        `LocationID 5 (PBO) encountered in Prism recordset — excluded by hard rule`,
+      );
+    }
+    if (raw.LocationID !== 2 && raw.LocationID !== 3 && raw.LocationID !== 4) {
+      throw new Error(
+        `Unexpected LocationID ${raw.LocationID} in Pierce pull — expected 2, 3, or 4`,
+      );
+    }
+
+    if (!itemsBySku.has(raw.SKU)) {
+      itemsBySku.set(raw.SKU, {
+        sku: raw.SKU,
+        description: trimOrNull(raw.Description),
+        title: trimOrNull(raw.Title),
+        author: trimOrNull(raw.Author),
+        isbn: trimOrNull(raw.ISBN),
+        edition: trimOrNull(raw.Edition),
+        binding_id: raw.BindingID,
+        binding_label: trimOrNull(raw.BindingLabel),
+        imprint: trimOrNull(raw.Imprint),
+        copyright: trimOrNull(raw.Copyright),
+        usedSku: raw.UsedSKU,
+        textStatusId: raw.TextStatusID,
+        statusDate: raw.StatusDate,
+        typeTextbook: trimOrNull(raw.TypeTextbook),
+        bookKey: trimOrNull(raw.BookKey),
+        barcode: trimOrNull(raw.BarCode),
+        vendorId: raw.VendorID,
+        altVendorId: raw.AltVendorID && raw.AltVendorID > 0 ? raw.AltVendorID : null,
+        mfgId: raw.MfgID && raw.MfgID > 0 ? raw.MfgID : null,
+        dccId: raw.DCCID,
+        usedDccId: raw.UsedDCCID,
+        itemTaxTypeId: raw.ItemTaxTypeID,
+        itemTaxTypeLabel: trimOrNull(raw.ItemTaxTypeLabel),
+        itemType: raw.ItemType,
+        fDiscontinue: raw.fDiscontinue === 1 ? 1 : 0,
+        txComment: trimOrNull(raw.TxComment),
+        weight: raw.ItemWeight != null ? Number(raw.ItemWeight) : null,
+        styleId: raw.StyleID,
+        itemSeasonCodeId: raw.ItemSeasonCodeID,
+        fListPriceFlag: raw.fListPriceFlag === 1 ? 1 : 0,
+        fPerishable: raw.fPerishable === 1 ? 1 : 0,
+        fIdRequired: raw.fIDRequired === 1 ? 1 : 0,
+        minOrderQtyItem: raw.MinOrderQtyItem,
+        typeGm: trimOrNull(raw.TypeGm),
+        size: trimOrNull(raw.Size),
+        sizeId: raw.SizeID,
+        catalogNumber: trimOrNull(raw.CatalogNumber),
+        packageType: trimOrNull(raw.PackageType),
+        packageTypeLabel: trimOrNull(raw.PackageTypeLabel),
+        unitsPerPack: raw.UnitsPerPack,
+        orderIncrement: raw.OrderIncrement ?? 1,
+        imageUrl: trimOrNull(raw.ImageURL),
+        useScaleInterface: raw.UseScaleInterface === 1 ? 1 : 0,
+        tare: raw.Tare != null ? Number(raw.Tare) : null,
+        deptNum: raw.DeptNum,
+        classNum: raw.ClassNum,
+        catNum: raw.CatNum,
+        deptName: trimOrNull(raw.DeptName),
+        className: trimOrNull(raw.ClassName),
+        catName: trimOrNull(raw.CatName),
+      });
+    }
+
+    inventory.push({
+      sku: raw.SKU,
+      locationId: raw.LocationID as 2 | 3 | 4,
+      locationAbbrev: trimOrNull(raw.LocationAbbrev) ?? "",
+      retail: raw.Retail != null ? Number(raw.Retail) : null,
+      cost: raw.Cost != null ? Number(raw.Cost) : null,
+      expectedCost: raw.ExpectedCost != null ? Number(raw.ExpectedCost) : null,
+      stockOnHand: raw.StockOnHand != null ? Number(raw.StockOnHand) : null,
+      tagTypeId: raw.TagTypeID,
+      tagTypeLabel: trimOrNull(raw.TagTypeLabel),
+      statusCodeId: raw.StatusCodeID,
+      statusCodeLabel: trimOrNull(raw.StatusCodeLabel),
+      taxTypeOverrideId: raw.TaxTypeOverrideID,
+      discCodeId: raw.InvDiscCodeID,
+      minStock: raw.InvMinStock,
+      maxStock: raw.InvMaxStock,
+      autoOrderQty: raw.InvAutoOrderQty,
+      minOrderQty: raw.InvMinOrderQty,
+      holdQty: null,
+      reservedQty: raw.ReservedQty,
+      rentalQty: raw.RentalQty,
+      estSales: raw.EstSales,
+      estSalesLocked: raw.EstSalesLocked === 1 ? 1 : 0,
+      royaltyCost: raw.RoyaltyCost != null ? Number(raw.RoyaltyCost) : null,
+      minRoyaltyCost: raw.MinRoyaltyCost != null ? Number(raw.MinRoyaltyCost) : null,
+      fInvListPriceFlag: raw.fInvListPriceFlag === 1 ? 1 : 0,
+      fTxWantListFlag: raw.fTXWantListFlag === 1 ? 1 : 0,
+      fTxBuybackListFlag: raw.fTXBuybackListFlag === 1 ? 1 : 0,
+      fRentOnly: raw.fRentOnly === 1 ? 1 : 0,
+      fNoReturns: raw.fNoReturns === 1 ? 1 : 0,
+      textCommentInv: trimOrNull(raw.TextCommentInv),
+      lastSaleDate: coerceEpochZeroDate(raw.LastSaleDate),
+      lastInventoryDate: raw.LastInventoryDate,
+      createDate: raw.InvCreateDate,
+    });
+  }
+
+  return { items: Array.from(itemsBySku.values()), inventory };
+}
+
 export function buildPrismPullPageQuery(): string {
   return `
         SELECT TOP (@pageSize)
