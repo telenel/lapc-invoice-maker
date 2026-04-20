@@ -20,9 +20,9 @@ CREATE TABLE IF NOT EXISTS "product_inventory" (
   -- Label columns (denormalized from Prism ref tables each sync)
   "tag_type_id"             INTEGER,
   "tag_type_label"          TEXT,
-  "status_code_id"          SMALLINT,
+  "status_code_id"          INTEGER,
   "status_code_label"       TEXT,
-  "tax_type_override_id"    SMALLINT,
+  "tax_type_override_id"    INTEGER,
   "disc_code_id"            INTEGER,
 
   -- Reorder / stocking controls
