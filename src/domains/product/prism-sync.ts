@@ -177,6 +177,7 @@ export function buildPrismPullPageQuery(): string {
           gm.UseScaleInterface,
           gm.Tare,
           gm.MfgID,
+          gm.AlternateVendorID              AS AltVendorID,
 
           -- Textbook (NULL for GM rows)
           LTRIM(RTRIM(tb.Title))            AS Title,
@@ -195,7 +196,6 @@ export function buildPrismPullPageQuery(): string {
           -- Item (global)
           LTRIM(RTRIM(i.BarCode))           AS BarCode,
           i.VendorID,
-          i.AltVendorID,
           i.DCCID,
           i.UsedDCCID,
           i.ItemTaxTypeID,

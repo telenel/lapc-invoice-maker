@@ -34,7 +34,7 @@ describe("buildPrismPullPageQuery", () => {
   it("emits every Item + GM + Textbook global column we store in products", () => {
     const sql = buildPrismPullPageQuery();
     for (const col of [
-      "i.AltVendorID",
+      "gm.AlternateVendorID",
       "gm.MfgID",
       "i.StyleID",
       "i.fListPriceFlag",
