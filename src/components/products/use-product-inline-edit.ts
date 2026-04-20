@@ -41,7 +41,6 @@ const EDITABLE_FIELD_ORDER: ProductInlineEditableField[] = [
   "cost",
   "retail",
   "barcode",
-  "discontinue",
 ];
 
 function getCellValue(row: ProductInlineEditRowBaseline, field: ProductInlineEditableField): string {

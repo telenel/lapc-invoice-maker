@@ -144,36 +144,74 @@ vi.mock("@/components/products/product-table", () => ({
     primaryLocationId?: number;
     products: Array<{ sku: number; retail_price: number; cost: number; barcode: string | null }>;
   }) => {
-    const product = products[0];
+    const fieldConfig = [
+      {
+        field: "retail",
+        label: "Retail",
+        currentValue: (product: { sku: number; retail_price: number }) => String(product.retail_price),
+      },
+      {
+        field: "cost",
+        label: "Cost",
+        currentValue: (product: { sku: number; cost: number }) => String(product.cost),
+      },
+      {
+        field: "barcode",
+        label: "Barcode",
+        currentValue: (product: { sku: number; barcode: string | null }) => product.barcode ?? "",
+      },
+    ] as const;
 
     return (
       <div data-testid="product-table">
         <span data-testid="primary-location">{String(primaryLocationId ?? "none")}</span>
         {inlineEdit ? (
-          <>
-            <button
-              type="button"
-              onClick={() => inlineEdit.startEdit(product.sku, "retail", String(product.retail_price))}
-            >
-              Edit retail for SKU 1001
-            </button>
-            {inlineEdit.editingCell?.sku === product.sku && inlineEdit.editingCell.field === "retail" ? (
-              <input
-                aria-label="Retail editor for SKU 1001"
-                value={inlineEdit.draftValue}
-                onChange={(e) => inlineEdit.setDraftValue(e.target.value)}
-                onKeyDown={async (e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    await inlineEdit.commitEdit();
-                  }
-                  if (e.key === "Escape") {
-                    inlineEdit.cancelEdit();
-                  }
-                }}
-              />
-            ) : null}
-          </>
+          <table>
+            <tbody>
+              {products.map((product) => (
+                <tr key={product.sku}>
+                  <th scope="row">{`SKU ${product.sku}`}</th>
+                  {fieldConfig.map(({ field, label, currentValue }) => {
+                    const isEditing =
+                      inlineEdit.editingCell?.sku === product.sku &&
+                      inlineEdit.editingCell.field === field;
+
+                    return (
+                      <td key={field}>
+                        {isEditing ? (
+                          <input
+                            aria-label={`${label} editor for SKU ${product.sku}`}
+                            value={inlineEdit.draftValue}
+                            onChange={(e) => inlineEdit.setDraftValue(e.target.value)}
+                            onKeyDown={async (e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                await inlineEdit.commitEdit();
+                              }
+                              if (e.key === "Escape") {
+                                inlineEdit.cancelEdit();
+                              }
+                              if (e.key === "Tab") {
+                                e.preventDefault();
+                                await inlineEdit.moveToNextEditableCell(e.shiftKey ? "previous" : "next");
+                              }
+                            }}
+                          />
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => inlineEdit.startEdit(product.sku, field, currentValue(product))}
+                          >
+                            {`Edit ${label.toLowerCase()} for SKU ${product.sku}`}
+                          </button>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         ) : (
           <div data-testid="inline-edit-missing">inline-edit seam missing</div>
         )}
@@ -316,5 +354,86 @@ describe("ProductsPage inline edit controller wiring", () => {
       });
       expect(refetchMock).toHaveBeenCalled();
     });
+  });
+
+  it("commits barcode edits with the v2 item patch and tabs to the next visible row field", async () => {
+    const user = userEvent.setup();
+
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [
+          makeProductRow({
+            sku: 1001,
+            barcode: "123456789012",
+            retail_price: 39.99,
+            cost: 18.25,
+            selected_inventories: [
+              {
+                locationId: 2,
+                locationAbbrev: "PIER",
+                retailPrice: 39.99,
+                cost: 18.25,
+                stockOnHand: 12,
+                lastSaleDate: null,
+              },
+            ],
+          }),
+          makeProductRow({
+            sku: 1002,
+            barcode: "987654321098",
+            retail_price: 24.5,
+            cost: 11.75,
+            selected_inventories: [
+              {
+                locationId: 2,
+                locationAbbrev: "PIER",
+                retailPrice: 24.5,
+                cost: 11.75,
+                stockOnHand: 8,
+                lastSaleDate: null,
+              },
+            ],
+          }),
+        ],
+        total: 2,
+        page: 1,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    updateMock.mockResolvedValue({ sku: 1001, appliedFields: ["item.barcode"] });
+
+    render(<ProductsPage />);
+
+    await screen.findByTestId("product-table");
+
+    await user.click(screen.getByRole("button", { name: /edit barcode for sku 1001/i }));
+
+    const editor = screen.getByRole("textbox", { name: /barcode editor for sku 1001/i });
+    await user.clear(editor);
+    await user.type(editor, "111222333444{tab}");
+
+    await waitFor(() => {
+      expect(updateMock).toHaveBeenCalledWith(1001, {
+        mode: "v2",
+        patch: {
+          item: {
+            barcode: "111222333444",
+          },
+        },
+        baseline: expect.objectContaining({
+          sku: 1001,
+          barcode: "123456789012",
+          retail: 39.99,
+          cost: 18.25,
+          fDiscontinue: 0,
+        }),
+      });
+    });
+
+    expect(
+      await screen.findByRole("textbox", { name: /cost editor for sku 1002/i }),
+    ).toHaveValue("11.75");
   });
 });
