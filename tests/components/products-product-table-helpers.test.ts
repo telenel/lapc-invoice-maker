@@ -97,9 +97,8 @@ describe("product table helpers", () => {
 });
 
 describe("product table variance trigger", () => {
-  it("opens the retail popover from the varies badge", async () => {
-    const user = userEvent.setup();
-    const product = {
+  function makeVariedProduct(): ProductBrowseRow {
+    return {
       sku: 101,
       barcode: null,
       item_type: "textbook",
@@ -174,22 +173,31 @@ describe("product table variance trigger", () => {
         lastSaleDateVaries: false,
       },
     } as ProductBrowseRow;
+  }
 
+  function renderTable(onToggle: ReturnType<typeof vi.fn>) {
     render(React.createElement(ProductTable, {
       tab: "textbooks",
-      products: [product],
+      products: [makeVariedProduct()],
       total: 1,
       page: 1,
       loading: false,
       sortBy: "sku",
       sortDir: "asc",
       isSelected: () => false,
-      onToggle: () => {},
+      onToggle,
       onToggleAll: () => {},
       onPageChange: () => {},
       onSort: () => {},
       visibleColumns: [],
     }));
+  }
+
+  it("opens the retail popover from the varies badge without selecting the row", async () => {
+    const user = userEvent.setup();
+    const onToggle = vi.fn();
+
+    renderTable(onToggle);
 
     const tableWrap = document.querySelector(".product-table-wrap");
     expect(tableWrap).not.toBeNull();
@@ -201,8 +209,29 @@ describe("product table variance trigger", () => {
 
     await user.click(trigger);
 
+    expect(onToggle).not.toHaveBeenCalled();
     expect(await screen.findByText("PIER")).toBeTruthy();
     expect(await screen.findByText("PCOP")).toBeTruthy();
     expect(await screen.findByText("$21.99")).toBeTruthy();
+  });
+
+  it("opens the retail popover from the mobile card badge without selecting the row", async () => {
+    const user = userEvent.setup();
+    const onToggle = vi.fn();
+
+    renderTable(onToggle);
+
+    const mobileWrap = document.querySelector(".md\\:hidden");
+    expect(mobileWrap).not.toBeNull();
+
+    const trigger = within(mobileWrap as HTMLElement).getByRole("button", {
+      name: /retail values vary across locations/i,
+    });
+
+    await user.click(trigger);
+
+    expect(onToggle).not.toHaveBeenCalled();
+    expect(await screen.findByText("PIER")).toBeTruthy();
+    expect(await screen.findByText("PCOP")).toBeTruthy();
   });
 });
