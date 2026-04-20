@@ -169,16 +169,18 @@ function LocationVariancePopover({
 }) {
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          onClick={(event) => event.stopPropagation()}
-          aria-label={`${label} values vary across locations`}
-          className="inline-flex shrink-0 items-center rounded-full border border-border px-2 py-0.5 text-[10px] font-medium text-muted-foreground transition-colors hover:text-foreground"
-        >
-          {badge}
-        </button>
-      </PopoverTrigger>
+      <PopoverTrigger
+        render={
+          <button
+            type="button"
+            onClick={(event) => event.stopPropagation()}
+            aria-label={`${label} values vary across locations`}
+            className="inline-flex shrink-0 items-center rounded-full border border-border px-2 py-0.5 text-[10px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {badge}
+          </button>
+        }
+      />
       <PopoverContent align="end" className="w-44 p-2">
         <div className="space-y-1.5">
           {getLocationValueRows(slices, field).map((row) => (
