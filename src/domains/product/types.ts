@@ -239,10 +239,27 @@ export interface PrimaryInventoryPatch {
   cost?: number;
 }
 
+/** Fields that live on Prism Inventory for a single location-aware write. */
+export interface InventoryPatchPerLocation {
+  locationId: ProductLocationId;
+  retail?: number;
+  cost?: number;
+  expectedCost?: number;
+  tagTypeId?: number;
+  statusCodeId?: number;
+  estSales?: number;
+  estSalesLocked?: boolean;
+  fInvListPriceFlag?: boolean;
+  fTxWantListFlag?: boolean;
+  fTxBuybackListFlag?: boolean;
+  fNoReturns?: boolean;
+}
+
 /** Typed write contract for the single-item editor. */
 export interface ProductEditPatchV2 {
   item?: ItemPatch;
   gm?: GmDetailsPatch;
+  inventory?: InventoryPatchPerLocation[];
   primaryInventory?: PrimaryInventoryPatch;
 }
 

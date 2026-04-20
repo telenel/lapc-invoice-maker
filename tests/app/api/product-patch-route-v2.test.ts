@@ -142,10 +142,13 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
           description: "Notebook",
           catalogNumber: "ABC-1",
         },
-        primaryInventory: {
-          retail: 12.99,
-          cost: 6.25,
-        },
+        inventory: [
+          {
+            locationId: 2,
+            retail: 12.99,
+            cost: 6.25,
+          },
+        ],
       },
       {
         sku: 1001,
@@ -165,6 +168,138 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
       cost: 6.25,
       synced_at: expect.any(String),
     }));
+  });
+
+  it("accepts typed per-location inventory patches and forwards each location unchanged", async () => {
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          baseline: {
+            sku: 1001,
+            barcode: "123456789012",
+            retail: 11.99,
+            cost: 5.5,
+            fDiscontinue: 0,
+          },
+          patch: {
+            item: {
+              vendorId: 17,
+            },
+            inventory: [
+              {
+                locationId: 3,
+                retail: 14.25,
+                cost: 7.5,
+                tagTypeId: 17,
+                statusCodeId: 3,
+              },
+              {
+                locationId: 4,
+                retail: 15.0,
+                cost: 8.0,
+              },
+            ],
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(prismMocks.updateGmItem).toHaveBeenCalledWith(
+      1001,
+      {
+        item: {
+          vendorId: 17,
+        },
+        inventory: [
+          {
+            locationId: 3,
+            retail: 14.25,
+            cost: 7.5,
+            tagTypeId: 17,
+            statusCodeId: 3,
+          },
+          {
+            locationId: 4,
+            retail: 15,
+            cost: 8,
+          },
+        ],
+      },
+      {
+        sku: 1001,
+        barcode: "123456789012",
+        retail: 11.99,
+        cost: 5.5,
+        fDiscontinue: 0,
+      },
+    );
+  });
+
+  it("rejects per-location inventory patches that target invalid locations", async () => {
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          patch: {
+            inventory: [
+              {
+                locationId: 5,
+                retail: 14.25,
+              },
+            ],
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(prismMocks.updateGmItem).not.toHaveBeenCalled();
+    expect(prismMocks.updateTextbookPricing).not.toHaveBeenCalled();
+    expect(mockUpsert).not.toHaveBeenCalled();
+  });
+
+  it("rejects duplicate per-location inventory patches in a single payload", async () => {
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          patch: {
+            inventory: [
+              {
+                locationId: 3,
+                retail: 14.25,
+              },
+              {
+                locationId: 3,
+                retail: 15.25,
+              },
+            ],
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(prismMocks.updateGmItem).not.toHaveBeenCalled();
+    expect(prismMocks.updateTextbookPricing).not.toHaveBeenCalled();
+    expect(mockUpsert).not.toHaveBeenCalled();
   });
 
   it("rejects typed v2 requests when the target SKU is a textbook", async () => {

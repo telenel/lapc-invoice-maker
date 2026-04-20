@@ -6,6 +6,7 @@ import type {
   ProductEditDetails,
   ProductEditPatchV2,
   ProductInventoryEditDetails,
+  InventoryPatchPerLocation,
   ProductLocationAbbrev,
   ItemPatch,
   GmDetailsPatch,
@@ -401,6 +402,38 @@ const primaryInventoryPatchSchema = z.object({
   cost: z.number().nonnegative().optional(),
 });
 
+const inventoryPatchLocationIdSchema = z.union([z.literal(2), z.literal(3), z.literal(4)]);
+
+const inventoryPatchPerLocationSchema = z.object({
+  locationId: inventoryPatchLocationIdSchema,
+  retail: z.number().nonnegative().optional(),
+  cost: z.number().nonnegative().optional(),
+  expectedCost: z.number().nonnegative().optional(),
+  tagTypeId: z.number().int().positive().optional(),
+  statusCodeId: z.number().int().positive().optional(),
+  estSales: z.number().optional(),
+  estSalesLocked: z.boolean().optional(),
+  fInvListPriceFlag: z.boolean().optional(),
+  fTxWantListFlag: z.boolean().optional(),
+  fTxBuybackListFlag: z.boolean().optional(),
+  fNoReturns: z.boolean().optional(),
+});
+
+const inventoryPatchArraySchema = z.array(inventoryPatchPerLocationSchema).superRefine((entries, ctx) => {
+  const seen = new Set<number>();
+  for (const [index, entry] of entries.entries()) {
+    if (seen.has(entry.locationId)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Duplicate inventory locationId entries are not allowed.",
+        path: [index, "locationId"],
+      });
+      continue;
+    }
+    seen.add(entry.locationId);
+  }
+});
+
 const legacyPatchFieldsSchema = z.object({
   description: z.string().min(1).max(128).optional(),
   vendorId: z.number().int().positive().optional(),
@@ -427,6 +460,7 @@ const legacyPatchSchema = z.object({
 const v2PatchSchema = z.object({
   item: itemPatchSchema.optional(),
   gm: gmDetailsPatchSchema.optional(),
+  inventory: inventoryPatchArraySchema.optional(),
   primaryInventory: primaryInventoryPatchSchema.optional(),
 });
 
@@ -449,7 +483,57 @@ function hasWritableFields<T extends object>(patch: T | undefined): patch is T {
 }
 
 function hasAnyWritablePatchFields(patch: ProductEditPatchV2): boolean {
-  return hasWritableFields(patch.item) || hasWritableFields(patch.gm) || hasWritableFields(patch.primaryInventory);
+  return (
+    hasWritableFields(patch.item) ||
+    hasWritableFields(patch.gm) ||
+    hasWritableInventoryFields(patch.inventory)
+  );
+}
+
+function hasWritableInventoryFields(patch: InventoryPatchPerLocation[] | undefined): boolean {
+  return (patch ?? []).some((entry) =>
+    [
+      entry.retail,
+      entry.cost,
+      entry.expectedCost,
+      entry.tagTypeId,
+      entry.statusCodeId,
+      entry.estSales,
+      entry.estSalesLocked,
+      entry.fInvListPriceFlag,
+      entry.fTxWantListFlag,
+      entry.fTxBuybackListFlag,
+      entry.fNoReturns,
+    ].some((value) => value !== undefined),
+  );
+}
+
+function normalizeV2Patch(patch: z.infer<typeof v2PatchSchema>): ProductEditPatchV2 {
+  if (hasWritableInventoryFields(patch.inventory)) {
+    return {
+      item: patch.item,
+      gm: patch.gm,
+      inventory: patch.inventory,
+    };
+  }
+
+  const primaryInventory: PrimaryInventoryPatch = {
+    retail: patch.primaryInventory?.retail,
+    cost: patch.primaryInventory?.cost,
+  };
+
+  return {
+    item: patch.item,
+    gm: patch.gm,
+    inventory: hasWritableFields(primaryInventory)
+      ? [
+          {
+            locationId: 2,
+            ...primaryInventory,
+          },
+        ]
+      : undefined,
+  };
 }
 
 function normalizeLegacyPatch(patch: LegacyPatchInput): ProductEditPatchV2 {
@@ -477,7 +561,14 @@ function normalizeLegacyPatch(patch: LegacyPatchInput): ProductEditPatchV2 {
   return {
     item: hasWritableFields(item) ? item : undefined,
     gm: hasWritableFields(gm) ? gm : undefined,
-    primaryInventory: hasWritableFields(primaryInventory) ? primaryInventory : undefined,
+    inventory: hasWritableFields(primaryInventory)
+      ? [
+          {
+            locationId: 2,
+            ...primaryInventory,
+          },
+        ]
+      : undefined,
   };
 }
 
@@ -492,7 +583,7 @@ function normalizePatchBody(body: unknown): { success: true; data: NormalizedUpd
       data: {
         baseline: parsed.data.baseline,
         isTextbook: false,
-        patch: parsed.data.patch,
+        patch: normalizeV2Patch(parsed.data.patch),
         isV2: true,
       },
     };
@@ -542,8 +633,9 @@ function buildLegacyMirrorPayload(
     payload.discontinued = snapshot.fDiscontinue === 1;
   } else {
     if (patch.item?.barcode !== undefined) payload.barcode = patch.item.barcode;
-    if (patch.primaryInventory?.retail !== undefined) payload.retail_price = patch.primaryInventory.retail;
-    if (patch.primaryInventory?.cost !== undefined) payload.cost = patch.primaryInventory.cost;
+    const pierceInventoryPatch = patch.inventory?.find((entry) => entry.locationId === 2) ?? patch.primaryInventory;
+    if (pierceInventoryPatch?.retail !== undefined) payload.retail_price = pierceInventoryPatch.retail;
+    if (pierceInventoryPatch?.cost !== undefined) payload.cost = pierceInventoryPatch.cost;
     if (patch.item?.fDiscontinue !== undefined) payload.discontinued = patch.item.fDiscontinue === 1;
   }
 
