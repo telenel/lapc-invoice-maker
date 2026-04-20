@@ -29,6 +29,7 @@ describe("resolveEditDialogMode", () => {
         featureFlagEnabled: true,
         override: null,
         hasTextbookSelection: false,
+        selectionCount: 1,
       }),
     ).toBe("v2");
   });
@@ -39,6 +40,7 @@ describe("resolveEditDialogMode", () => {
         featureFlagEnabled: true,
         override: "legacy",
         hasTextbookSelection: false,
+        selectionCount: 1,
       }),
     ).toBe("legacy");
   });
@@ -49,16 +51,29 @@ describe("resolveEditDialogMode", () => {
         featureFlagEnabled: false,
         override: "v2",
         hasTextbookSelection: false,
+        selectionCount: 1,
       }),
     ).toBe("v2");
   });
 
-  it("forces legacy for textbook selections", () => {
+  it("routes single textbook selections to v2", () => {
     expect(
       resolveEditDialogMode({
         featureFlagEnabled: true,
         override: null,
         hasTextbookSelection: true,
+        selectionCount: 1,
+      }),
+    ).toBe("v2");
+  });
+
+  it("keeps multi-select textbook edits on the legacy path", () => {
+    expect(
+      resolveEditDialogMode({
+        featureFlagEnabled: true,
+        override: null,
+        hasTextbookSelection: true,
+        selectionCount: 2,
       }),
     ).toBe("legacy");
   });

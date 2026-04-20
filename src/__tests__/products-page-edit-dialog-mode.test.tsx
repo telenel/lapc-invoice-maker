@@ -476,7 +476,7 @@ describe("ProductsPage edit dialog mode integration", () => {
     expect(screen.getByText("selected-cost:null")).toBeInTheDocument();
   });
 
-  it("keeps textbook selections on the legacy path even when the flag is on", async () => {
+  it("routes single textbook selections to v2 when the flag is on", async () => {
     const user = userEvent.setup();
 
     useProductSelectionMock.mockReturnValue({
@@ -503,14 +503,14 @@ describe("ProductsPage edit dialog mode integration", () => {
     await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
 
     await waitFor(() => {
-      expect(screen.getByText("dialog:legacy")).toBeInTheDocument();
+      expect(screen.getByText("dialog:v2")).toBeInTheDocument();
     });
 
-    expect(screen.queryByText("dialog:v2")).not.toBeInTheDocument();
-    expect(detailMock).not.toHaveBeenCalled();
+    expect(screen.queryByText("dialog:legacy")).not.toBeInTheDocument();
+    expect(detailMock).toHaveBeenCalledWith(2001);
   });
 
-  it("keeps used textbook selections on the legacy path even when the flag is on", async () => {
+  it("routes single used textbook selections to v2 when the flag is on", async () => {
     const user = userEvent.setup();
 
     useProductSelectionMock.mockReturnValue({
@@ -525,6 +525,48 @@ describe("ProductsPage edit dialog mode integration", () => {
         ],
       ]),
       selectedCount: 1,
+      toggle: vi.fn(),
+      toggleAll: vi.fn(),
+      clear: vi.fn(),
+      isSelected: vi.fn(),
+      saveToSession: vi.fn(),
+    });
+
+    render(<ProductsPage />);
+
+    await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("dialog:v2")).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText("dialog:legacy")).not.toBeInTheDocument();
+    expect(detailMock).toHaveBeenCalledWith(2001);
+  });
+
+  it("keeps mixed or bulk textbook selections on the legacy path", async () => {
+    const user = userEvent.setup();
+
+    useProductSelectionMock.mockReturnValue({
+      selected: new Map([
+        [
+          1001,
+          makeSelectedProduct({
+            sku: 1001,
+            description: "Pierce Hoodie",
+            itemType: "general_merchandise",
+          }),
+        ],
+        [
+          2001,
+          makeSelectedProduct({
+            sku: 2001,
+            description: "Chemistry 101",
+            itemType: "textbook",
+          }),
+        ],
+      ]),
+      selectedCount: 2,
       toggle: vi.fn(),
       toggleAll: vi.fn(),
       clear: vi.fn(),

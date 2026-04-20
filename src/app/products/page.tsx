@@ -193,6 +193,7 @@ export default function ProductsPage() {
     featureFlagEnabled: process.env.NEXT_PUBLIC_PRODUCTS_EDIT_DIALOG_V2 === "true",
     override: editDialogOverride ?? null,
     hasTextbookSelection: selectedItems.some((product) => isTextbookItemType(product.itemType)),
+    selectionCount: selectedItems.length,
   });
   const allowMissingEditPricing = editDialogMode === "v2" && selectedItems.length === 1;
   const saveScopedSelectionToSession = useCallback(() => {

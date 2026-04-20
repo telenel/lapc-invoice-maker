@@ -7,6 +7,8 @@ import {
   HashIcon,
   Loader2Icon,
   ArrowRightIcon,
+  ChevronDownIcon,
+  CopyIcon,
 } from "lucide-react";
 import {
   Dialog,
@@ -25,9 +27,10 @@ import {
   productApi,
   type CreatedItem,
 } from "@/domains/product/api-client";
-import { ItemRefSelects } from "./item-ref-selects";
+import { ItemRefSelectField } from "./item-ref-selects";
 import { computeMargin } from "./batch-add-grid";
 import { useProductRefDirectory } from "@/domains/product/vendor-directory";
+import type { ProductLocationId } from "@/domains/product/types";
 
 interface NewItemDialogProps {
   open: boolean;
@@ -47,6 +50,11 @@ interface FormState {
   cost: string;
 }
 
+interface LocationPricingState {
+  retail: string;
+  cost: string;
+}
+
 const EMPTY_FORM: FormState = {
   description: "",
   vendorId: "",
@@ -57,6 +65,29 @@ const EMPTY_FORM: FormState = {
   comment: "",
   retail: "",
   cost: "",
+};
+
+const EMPTY_LOCATION_PRICING: LocationPricingState = {
+  retail: "",
+  cost: "",
+};
+
+const LOCATION_OPTIONS = [
+  { id: 2 as const, abbrev: "PIER", label: "Pierce" },
+  { id: 3 as const, abbrev: "PCOP", label: "PCOP" },
+  { id: 4 as const, abbrev: "PFS", label: "PFS" },
+];
+
+const DEFAULT_SELECTED_LOCATIONS: Record<ProductLocationId, boolean> = {
+  2: true,
+  3: false,
+  4: false,
+};
+
+const DEFAULT_LOCATION_PRICING: Record<ProductLocationId, LocationPricingState> = {
+  2: { ...EMPTY_LOCATION_PRICING },
+  3: { ...EMPTY_LOCATION_PRICING },
+  4: { ...EMPTY_LOCATION_PRICING },
 };
 
 // Keyed by MarginTone. Tailwind classes are statically written so the JIT
@@ -95,6 +126,13 @@ const MARGIN_LABEL: Record<
 export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogProps) {
   const { refs, loading: refsLoading, available: refsAvailable } = useProductRefDirectory();
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [expanded, setExpanded] = useState(false);
+  const [selectedLocations, setSelectedLocations] = useState<Record<ProductLocationId, boolean>>(
+    DEFAULT_SELECTED_LOCATIONS,
+  );
+  const [locationPricing, setLocationPricing] = useState<
+    Record<ProductLocationId, LocationPricingState>
+  >(DEFAULT_LOCATION_PRICING);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [createAnother, setCreateAnother] = useState(false);
@@ -105,6 +143,9 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
   useEffect(() => {
     if (!open) {
       setForm(EMPTY_FORM);
+      setExpanded(false);
+      setSelectedLocations(DEFAULT_SELECTED_LOCATIONS);
+      setLocationPricing(DEFAULT_LOCATION_PRICING);
       setError(null);
     }
   }, [open]);
@@ -113,6 +154,61 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
     setForm((prev) => ({ ...prev, [field]: value }));
   }, []);
 
+  const updateLocationPricing = useCallback(
+    (
+      locationId: ProductLocationId,
+      field: keyof LocationPricingState,
+      value: string,
+    ) => {
+      setLocationPricing((prev) => ({
+        ...prev,
+        [locationId]: {
+          ...prev[locationId],
+          [field]: value,
+        },
+      }));
+    },
+    [],
+  );
+
+  const toggleLocation = useCallback((locationId: ProductLocationId, checked: boolean) => {
+    if (locationId === 2 && !checked) {
+      return;
+    }
+    setSelectedLocations((prev) => ({
+      ...prev,
+      [locationId]: checked,
+    }));
+  }, []);
+
+  const copyPierPricing = useCallback((locationId: ProductLocationId) => {
+    setLocationPricing((prev) => ({
+      ...prev,
+      [locationId]: {
+        retail: form.retail,
+        cost: form.cost,
+      },
+    }));
+  }, [form.cost, form.retail]);
+
+  const selectedLocationIds = LOCATION_OPTIONS
+    .filter((location) => selectedLocations[location.id])
+    .map((location) => location.id);
+  const hasSelectedLocation = selectedLocationIds.length > 0;
+  const hasCanonicalPier = selectedLocations[2];
+  const nonPierSelections = LOCATION_OPTIONS.filter(
+    (location) => location.id !== 2 && selectedLocations[location.id],
+  );
+  const nonPierPricingValid = nonPierSelections.every((location) => {
+    const pricing = locationPricing[location.id];
+    return (
+      pricing.retail !== "" &&
+      pricing.cost !== "" &&
+      Number(pricing.retail) >= 0 &&
+      Number(pricing.cost) >= 0
+    );
+  });
+
   const formValid =
     form.description.trim().length > 0 &&
     form.vendorId !== "" &&
@@ -120,13 +216,30 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
     form.retail !== "" &&
     form.cost !== "" &&
     Number(form.retail) >= 0 &&
-    Number(form.cost) >= 0;
+    Number(form.cost) >= 0 &&
+    hasSelectedLocation &&
+    hasCanonicalPier &&
+    nonPierPricingValid;
 
   const submit = useCallback(async () => {
     if (!formValid || saving || !refs || refsLoading || refsUnavailable) return;
     setError(null);
     setSaving(true);
     try {
+      const inventory = selectedLocationIds.map((locationId) => {
+        if (locationId === 2) {
+          return {
+            locationId,
+            retail: Number(form.retail),
+            cost: Number(form.cost),
+          };
+        }
+        return {
+          locationId,
+          retail: Number(locationPricing[locationId].retail),
+          cost: Number(locationPricing[locationId].cost),
+        };
+      });
       const created = await productApi.create({
         description: form.description.trim(),
         vendorId: Number(form.vendorId),
@@ -137,6 +250,7 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
         comment: form.comment.trim() || null,
         retail: Number(form.retail),
         cost: Number(form.cost),
+        inventory,
       });
       onCreated?.(created);
       toast.success(`Created SKU ${created.sku}`, {
@@ -151,6 +265,9 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
           dccId: prev.dccId,
           itemTaxTypeId: prev.itemTaxTypeId,
         }));
+        setExpanded(false);
+        setSelectedLocations(DEFAULT_SELECTED_LOCATIONS);
+        setLocationPricing(DEFAULT_LOCATION_PRICING);
         requestAnimationFrame(() => descriptionRef.current?.focus());
       } else {
         onOpenChange(false);
@@ -160,7 +277,19 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
     } finally {
       setSaving(false);
     }
-  }, [form, formValid, saving, refs, refsLoading, refsUnavailable, createAnother, onCreated, onOpenChange]);
+  }, [
+    createAnother,
+    form,
+    formValid,
+    locationPricing,
+    onCreated,
+    onOpenChange,
+    refs,
+    refsLoading,
+    refsUnavailable,
+    saving,
+    selectedLocationIds,
+  ]);
 
   // ⌘/Ctrl+Enter submits from anywhere in the dialog
   useEffect(() => {
@@ -267,42 +396,6 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
                     </span>
                   </div>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="barcode">
-                      Barcode{" "}
-                      <OptionalHint />
-                    </Label>
-                    <Input
-                      id="barcode"
-                      name="barcode"
-                      autoComplete="off"
-                      spellCheck={false}
-                      value={form.barcode}
-                      onChange={(e) => update("barcode", e.target.value)}
-                      maxLength={20}
-                      placeholder="UPC / EAN"
-                      className="font-mono"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="catalogNumber">
-                      Catalog #{" "}
-                      <OptionalHint />
-                    </Label>
-                    <Input
-                      id="catalogNumber"
-                      name="catalogNumber"
-                      autoComplete="off"
-                      spellCheck={false}
-                      value={form.catalogNumber}
-                      onChange={(e) => update("catalogNumber", e.target.value)}
-                      maxLength={30}
-                      placeholder="Vendor part #"
-                      className="font-mono"
-                    />
-                  </div>
-                </div>
               </section>
 
               {/* Classification */}
@@ -310,22 +403,25 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
                 aria-labelledby="new-item-classification"
                 className="space-y-3"
               >
-                <SectionHeading
-                  id="new-item-classification"
-                  hint="Tax defaults to 9.75% CA standard"
-                >
+                <SectionHeading id="new-item-classification">
                   Classification
                 </SectionHeading>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <ItemRefSelects
+                  <ItemRefSelectField
+                    id="vendor-select"
                     refs={refs}
-                    vendorId={form.vendorId}
-                    dccId={form.dccId}
-                    itemTaxTypeId={form.itemTaxTypeId}
+                    kind="vendor"
+                    value={form.vendorId}
                     disabled={refsLoading || refsUnavailable}
-                    onChange={(field, value) =>
-                      setForm((f) => ({ ...f, [field]: value }))
-                    }
+                    onChange={(value) => update("vendorId", value)}
+                  />
+                  <ItemRefSelectField
+                    id="dcc-select"
+                    refs={refs}
+                    kind="dcc"
+                    value={form.dccId}
+                    disabled={refsLoading || refsUnavailable}
+                    onChange={(value) => update("dccId", value)}
                   />
                 </div>
               </section>
@@ -335,47 +431,213 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
                 <SectionHeading id="new-item-pricing">Pricing</SectionHeading>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <MoneyField
-                    id="cost"
-                    label="Cost"
-                    required
-                    value={form.cost}
-                    onChange={(v) => update("cost", v)}
-                  />
-                  <MoneyField
                     id="retail"
                     label="Retail"
                     required
                     value={form.retail}
                     onChange={(v) => update("retail", v)}
                   />
+                  <MoneyField
+                    id="cost"
+                    label="Cost"
+                    required
+                    value={form.cost}
+                    onChange={(v) => update("cost", v)}
+                  />
                 </div>
               </section>
 
-              {/* Comment */}
-              <section
-                aria-labelledby="new-item-comment"
-                className="space-y-3"
-              >
-                <SectionHeading id="new-item-comment">
-                  Internal note
+              <section aria-labelledby="new-item-locations" className="space-y-3">
+                <SectionHeading
+                  id="new-item-locations"
+                  hint="PIER defaults on. Select at least one location."
+                >
+                  Locations
                 </SectionHeading>
-                <div className="space-y-1.5">
-                  <Label htmlFor="comment">
-                    Comment{" "}
-                    <span className="text-xs font-normal text-muted-foreground">
-                      (max 25 chars, staff only)
-                    </span>
-                  </Label>
-                  <Input
-                    id="comment"
-                    name="comment"
-                    autoComplete="off"
-                    value={form.comment}
-                    onChange={(e) => update("comment", e.target.value)}
-                    maxLength={25}
-                    placeholder="e.g. fall run, reorder"
-                  />
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {LOCATION_OPTIONS.map((location) => (
+                    <label
+                      key={location.id}
+                      className={cn(
+                        "flex items-start gap-3 rounded-lg border px-3 py-3 text-sm",
+                        selectedLocations[location.id]
+                          ? "border-foreground/20 bg-muted/40"
+                          : "border-border bg-background",
+                      )}
+                    >
+                      <Checkbox
+                        checked={selectedLocations[location.id]}
+                        disabled={location.id === 2}
+                        onCheckedChange={(checked) =>
+                          toggleLocation(location.id, checked === true)
+                        }
+                        aria-label={location.abbrev}
+                        className="mt-0.5"
+                      />
+                      <span className="leading-tight">
+                        <span className="block font-medium">{location.abbrev}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {location.label}
+                        </span>
+                      </span>
+                    </label>
+                  ))}
                 </div>
+                {!hasSelectedLocation ? (
+                  <p className="text-xs text-destructive">
+                    Select at least one location before creating the item.
+                  </p>
+                ) : null}
+                {!hasCanonicalPier ? (
+                  <p className="text-xs text-destructive">
+                    PIER is required because the create flow mirrors Pierce pricing
+                    into the canonical product row.
+                  </p>
+                ) : null}
+
+                {nonPierSelections.length > 0 ? (
+                  <div className="space-y-3">
+                    {nonPierSelections.map((location) => (
+                      <div
+                        key={location.id}
+                        className="rounded-lg border border-border/80 bg-muted/20 p-3"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <div className="text-sm font-medium">
+                              {location.abbrev} pricing
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              Retail and cost for this location only.
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyPierPricing(location.id)}
+                          >
+                            <CopyIcon aria-hidden />
+                            {`Copy from PIER to ${location.abbrev}`}
+                          </Button>
+                        </div>
+                        <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                          <MoneyField
+                            id={`${location.abbrev.toLowerCase()}-retail`}
+                            label={`${location.abbrev} Retail`}
+                            required
+                            value={locationPricing[location.id].retail}
+                            onChange={(value) =>
+                              updateLocationPricing(location.id, "retail", value)
+                            }
+                          />
+                          <MoneyField
+                            id={`${location.abbrev.toLowerCase()}-cost`}
+                            label={`${location.abbrev} Cost`}
+                            required
+                            value={locationPricing[location.id].cost}
+                            onChange={(value) =>
+                              updateLocationPricing(location.id, "cost", value)
+                            }
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </section>
+
+              <section aria-labelledby="new-item-optional" className="space-y-3">
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between rounded-lg border border-border/80 px-3 py-2 text-left"
+                  aria-expanded={expanded}
+                  aria-controls="new-item-optional-fields"
+                  onClick={() => setExpanded((prev) => !prev)}
+                >
+                  <span>
+                    <span className="block text-sm font-medium">More fields</span>
+                    <span className="text-xs text-muted-foreground">
+                      Barcode, tax type, catalog number, and internal note.
+                    </span>
+                  </span>
+                  <ChevronDownIcon
+                    aria-hidden
+                    className={cn(
+                      "size-4 text-muted-foreground transition-transform",
+                      expanded ? "rotate-180" : "rotate-0",
+                    )}
+                  />
+                </button>
+
+                {expanded ? (
+                  <div id="new-item-optional-fields" className="space-y-4">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="barcode">
+                          Barcode <OptionalHint />
+                        </Label>
+                        <Input
+                          id="barcode"
+                          name="barcode"
+                          autoComplete="off"
+                          spellCheck={false}
+                          value={form.barcode}
+                          onChange={(e) => update("barcode", e.target.value)}
+                          maxLength={20}
+                          placeholder="UPC / EAN"
+                          className="font-mono"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="catalogNumber">
+                          Catalog # <OptionalHint />
+                        </Label>
+                        <Input
+                          id="catalogNumber"
+                          name="catalogNumber"
+                          autoComplete="off"
+                          spellCheck={false}
+                          value={form.catalogNumber}
+                          onChange={(e) => update("catalogNumber", e.target.value)}
+                          maxLength={30}
+                          placeholder="Vendor part #"
+                          className="font-mono"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <ItemRefSelectField
+                          id="taxTypeExpanded"
+                          refs={refs}
+                          kind="taxType"
+                          value={form.itemTaxTypeId}
+                          disabled={refsLoading || refsUnavailable}
+                          label="Tax Type"
+                          onChange={(value) => update("itemTaxTypeId", value)}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="comment">
+                          Internal note{" "}
+                          <span className="text-xs font-normal text-muted-foreground">
+                            (max 25 chars, staff only)
+                          </span>
+                        </Label>
+                        <Input
+                          id="comment"
+                          name="comment"
+                          autoComplete="off"
+                          value={form.comment}
+                          onChange={(e) => update("comment", e.target.value)}
+                          maxLength={25}
+                          placeholder="e.g. fall run, reorder"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
               </section>
 
               {error ? (

@@ -103,6 +103,24 @@ const baseDetail: ProductEditDetails = {
   ],
 };
 
+function buildTextbookDetail(): ProductEditDetails {
+  return {
+    ...baseDetail,
+    itemType: "textbook",
+    description: "Intro Biology",
+    author: "Jane Doe",
+    title: "Intro Biology",
+    isbn: "9781234567890",
+    edition: "3",
+    bindingId: 15,
+    imprint: "PEARSON",
+    copyright: "26",
+    textStatusId: 7,
+    statusDate: "2026-04-20",
+    bookKey: "BK-1001",
+  };
+}
+
 async function mockDirectoryState(overrides: Partial<ReturnType<typeof import("@/domains/product/vendor-directory")["useProductRefDirectory"]>> = {}) {
   const { useProductRefDirectory } = await import("@/domains/product/vendor-directory");
 
@@ -182,6 +200,111 @@ describe("EditItemDialogV2", () => {
     expect(screen.queryByLabelText(/Author/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/ISBN/i)).not.toBeInTheDocument();
     expect(screen.queryByLabelText(/Binding/i)).not.toBeInTheDocument();
+  });
+
+  it("renders textbook-aware primary fields and a Textbook tab for single textbook items", async () => {
+    await mockDirectoryState({
+      refs: {
+        vendors: [
+          { vendorId: 21, name: "PENS ETC (3001795)", pierceItems: 50 },
+          { vendorId: 22, name: "ALT VENDOR", pierceItems: 5 },
+        ],
+        dccs: [
+          { dccId: 1313290, deptNum: 111010, classNum: null, catNum: null, deptName: "NOT USE=111010", className: "DO NOT USE", catName: null, pierceItems: 30 },
+          { dccId: 1802, deptNum: 222000, classNum: null, catNum: null, deptName: "USED DCC", className: null, catName: null, pierceItems: 10 },
+        ],
+        taxTypes: [{ taxTypeId: 4, description: "STATE", pierceItems: 40 }],
+        tagTypes: [],
+        statusCodes: [],
+        packageTypes: [{ code: "EA", label: "Each", defaultQty: 1, pierceItems: 25 }],
+        colors: [],
+        bindings: [
+          { bindingId: 15, label: "Hardcover", pierceBooks: 12 },
+          { bindingId: 16, label: "Paperback", pierceBooks: 8 },
+        ],
+      },
+      lookups: {
+        vendorNames: new Map([
+          [21, "PENS ETC (3001795)"],
+          [22, "ALT VENDOR"],
+        ]),
+        taxTypeLabels: new Map([[4, "STATE"]]),
+        tagTypeLabels: new Map(),
+        statusCodeLabels: new Map(),
+        packageTypeLabels: new Map([["EA", "Each"]]),
+        colorLabels: new Map(),
+        bindingLabels: new Map([
+          [15, "Hardcover"],
+          [16, "Paperback"],
+        ]),
+      },
+    });
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 42.5,
+            cost: 21.25,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+            isTextbook: true,
+          },
+        ]}
+        detail={buildTextbookDetail()}
+      />,
+    );
+
+    expect(screen.getByLabelText("Title")).toBeInTheDocument();
+    expect(screen.getByLabelText("Author")).toBeInTheDocument();
+    expect(screen.getByLabelText("ISBN")).toBeInTheDocument();
+    expect(screen.getByLabelText("Edition")).toBeInTheDocument();
+    expect(screen.getByLabelText("Binding")).toBeInTheDocument();
+    expect(screen.getByLabelText("Barcode")).toBeInTheDocument();
+    expect(screen.getByLabelText("Vendor")).toBeInTheDocument();
+    expect(screen.getByLabelText("Department / Class")).toBeInTheDocument();
+    expect(screen.getByLabelText("Tax Type")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Textbook" })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("tab", { name: "Textbook" }));
+    expect(screen.getByLabelText("Imprint")).toBeInTheDocument();
+    expect(screen.getByLabelText("Copyright")).toBeInTheDocument();
+    expect(screen.getByLabelText("Text Status")).toBeInTheDocument();
+    expect(screen.getByLabelText("Status Date")).toBeInTheDocument();
+    expect(screen.getByLabelText("Book Key")).toBeInTheDocument();
+  });
+
+  it("preserves the current binding value when binding refs are unavailable", async () => {
+    await mockDirectoryState({
+      refs: null,
+      loading: false,
+      available: false,
+    });
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 42.5,
+            cost: 21.25,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+            isTextbook: true,
+          },
+        ]}
+        detail={buildTextbookDetail()}
+      />,
+    );
+
+    expect(screen.getByText("Binding #15")).toBeInTheDocument();
   });
 
   it("shows the inventory tab for a single GM item and reveals PCOP inventory values", async () => {
@@ -824,5 +947,129 @@ describe("EditItemDialogV2", () => {
 
     expect(productApiMocks.update).not.toHaveBeenCalled();
     expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("sends changed textbook fields through the v2 textbook bucket", async () => {
+    await mockDirectoryState({
+      refs: {
+        vendors: [
+          { vendorId: 21, name: "PENS ETC (3001795)", pierceItems: 50 },
+          { vendorId: 22, name: "ALT VENDOR", pierceItems: 5 },
+        ],
+        dccs: [
+          { dccId: 1313290, deptNum: 111010, classNum: null, catNum: null, deptName: "NOT USE=111010", className: "DO NOT USE", catName: null, pierceItems: 30 },
+          { dccId: 1802, deptNum: 222000, classNum: null, catNum: null, deptName: "USED DCC", className: null, catName: null, pierceItems: 10 },
+        ],
+        taxTypes: [{ taxTypeId: 4, description: "STATE", pierceItems: 40 }],
+        tagTypes: [],
+        statusCodes: [],
+        packageTypes: [{ code: "EA", label: "Each", defaultQty: 1, pierceItems: 25 }],
+        colors: [],
+        bindings: [
+          { bindingId: 15, label: "Hardcover", pierceBooks: 12 },
+          { bindingId: 16, label: "Paperback", pierceBooks: 8 },
+        ],
+      },
+      lookups: {
+        vendorNames: new Map([
+          [21, "PENS ETC (3001795)"],
+          [22, "ALT VENDOR"],
+        ]),
+        taxTypeLabels: new Map([[4, "STATE"]]),
+        tagTypeLabels: new Map(),
+        statusCodeLabels: new Map(),
+        packageTypeLabels: new Map([["EA", "Each"]]),
+        colorLabels: new Map(),
+        bindingLabels: new Map([
+          [15, "Hardcover"],
+          [16, "Paperback"],
+        ]),
+      },
+    });
+    productApiMocks.update.mockResolvedValue({ sku: 1001, appliedFields: [] });
+    const user = userEvent.setup();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 42.5,
+            cost: 21.25,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+            isTextbook: true,
+          },
+        ]}
+        detail={buildTextbookDetail()}
+      />,
+    );
+
+    await user.clear(screen.getByLabelText("Title"));
+    await user.type(screen.getByLabelText("Title"), "Updated title");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(productApiMocks.update).toHaveBeenCalledWith(
+      1001,
+      expect.objectContaining({
+        mode: "v2",
+        patch: expect.objectContaining({
+          textbook: expect.objectContaining({
+            title: "Updated title",
+          }),
+        }),
+      }),
+    );
+  });
+
+  it("constrains textbook text status to positive integers in the UI", async () => {
+    await mockDirectoryState({
+      refs: {
+        vendors: [{ vendorId: 21, name: "PENS ETC (3001795)", pierceItems: 50 }],
+        dccs: [
+          { dccId: 1313290, deptNum: 111010, classNum: null, catNum: null, deptName: "NOT USE=111010", className: "DO NOT USE", catName: null, pierceItems: 30 },
+        ],
+        taxTypes: [{ taxTypeId: 4, description: "STATE", pierceItems: 40 }],
+        tagTypes: [],
+        statusCodes: [],
+        packageTypes: [],
+        colors: [],
+        bindings: [{ bindingId: 15, label: "Hardcover", pierceBooks: 12 }],
+      },
+      lookups: {
+        vendorNames: new Map([[21, "PENS ETC (3001795)"]]),
+        taxTypeLabels: new Map([[4, "STATE"]]),
+        tagTypeLabels: new Map(),
+        statusCodeLabels: new Map(),
+        packageTypeLabels: new Map(),
+        colorLabels: new Map(),
+        bindingLabels: new Map([[15, "Hardcover"]]),
+      },
+    });
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 42.5,
+            cost: 21.25,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+            isTextbook: true,
+          },
+        ]}
+        detail={buildTextbookDetail()}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("tab", { name: "Textbook" }));
+    expect(screen.getByLabelText("Text Status")).toHaveAttribute("min", "1");
   });
 });

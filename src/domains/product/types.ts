@@ -1,5 +1,7 @@
 import type { ProductLocationId } from "./location-filters";
 
+export type { ProductLocationId } from "./location-filters";
+
 export type ProductLocationAbbrev = "PIER" | "PCOP" | "PFS";
 
 export interface ProductLocationSlice {
@@ -233,6 +235,19 @@ export interface GmDetailsPatch {
   imageUrl?: string | null;
 }
 
+/** Fields that live on Prism Textbook rows for single-item edits. */
+export interface TextbookDetailsPatch {
+  author?: string | null;
+  title?: string | null;
+  isbn?: string | null;
+  edition?: string | null;
+  bindingId?: number | null;
+  imprint?: string | null;
+  copyright?: string | null;
+  textStatusId?: number | null;
+  statusDate?: string | null;
+}
+
 /** Fields that live on Prism Inventory for the Pierce location. */
 export interface PrimaryInventoryPatch {
   retail?: number | null;
@@ -259,6 +274,7 @@ export interface InventoryPatchPerLocation {
 export interface ProductEditPatchV2 {
   item?: ItemPatch;
   gm?: GmDetailsPatch;
+  textbook?: TextbookDetailsPatch;
   inventory?: InventoryPatchPerLocation[];
   primaryInventory?: PrimaryInventoryPatch;
 }
@@ -285,6 +301,16 @@ export interface ProductEditDetails {
   sku: number;
   itemType: string;
   description: string | null;
+  author?: string | null;
+  title?: string | null;
+  isbn?: string | null;
+  edition?: string | null;
+  bindingId?: number | null;
+  imprint?: string | null;
+  copyright?: string | null;
+  textStatusId?: number | null;
+  statusDate?: string | null;
+  bookKey?: string | null;
   barcode: string | null;
   vendorId: number | null;
   dccId: number | null;

@@ -16,6 +16,7 @@ import type {
   ProductEditPatchV2,
 } from "./types";
 import type { PrismRefs } from "./ref-data";
+import type { ProductLocationId, ProductLocationAbbrev } from "./types";
 export type {
   PrismVendorRef,
   PrismDccRef,
@@ -50,6 +51,13 @@ export interface CreateItemInput {
   comment?: string | null;
   retail: number;
   cost: number;
+  inventory?: CreateInventoryInput[];
+}
+
+export interface CreateInventoryInput {
+  locationId: ProductLocationId;
+  retail: number;
+  cost: number;
 }
 
 export interface CreatedItem {
@@ -60,6 +68,12 @@ export interface CreatedItem {
   barcode: string | null;
   retail: number;
   cost: number;
+  inventory?: Array<{
+    locationId: ProductLocationId;
+    locationAbbrev: ProductLocationAbbrev;
+    retail: number;
+    cost: number;
+  }>;
 }
 
 export interface LegacyUpdateBody {
