@@ -447,52 +447,137 @@ describe("ProductsPage inline edit controller wiring", () => {
     expect(retailEditor).toHaveFocus();
   });
 
-  it("commits barcode edits with the v2 item patch and tabs to the next visible row field", async () => {
+  it("uses item-level pricing as the inline baseline when the primary slice is missing", async () => {
     const user = userEvent.setup();
-    searchParamsState = new URLSearchParams("tab=merchandise");
 
     useProductSearchMock.mockReturnValue({
       data: {
         products: [
           makeProductRow({
             sku: 1001,
-            barcode: "123456789012",
             retail_price: 39.99,
             cost: 18.25,
             selected_inventories: [
               {
-                locationId: 2,
-                locationAbbrev: "PIER",
-                retailPrice: 39.99,
-                cost: 18.25,
-                stockOnHand: 12,
-                lastSaleDate: null,
-              },
-            ],
-          }),
-          makeProductRow({
-            sku: 1002,
-            barcode: "987654321098",
-            retail_price: 24.5,
-            cost: 11.75,
-            selected_inventories: [
-              {
-                locationId: 2,
-                locationAbbrev: "PIER",
-                retailPrice: 24.5,
-                cost: 11.75,
+                locationId: 3,
+                locationAbbrev: "PCOP",
+                retailPrice: 41.5,
+                cost: 19.75,
                 stockOnHand: 8,
                 lastSaleDate: null,
               },
             ],
           }),
         ],
-        total: 2,
+        total: 1,
         page: 1,
         pageSize: 50,
       },
       loading: false,
       refetch: refetchMock,
+    });
+
+    render(<ProductsPage />);
+
+    await screen.findByTestId("product-table");
+
+    await user.click(screen.getByRole("button", { name: /edit cost for sku 1001/i }));
+
+    const editor = screen.getByRole("textbox", { name: /cost editor for sku 1001/i });
+    await user.clear(editor);
+    await user.type(editor, "10.25{enter}");
+
+    await waitFor(() => {
+      expect(updateMock).toHaveBeenCalledWith(1001, {
+        mode: "v2",
+        patch: {
+          primaryInventory: {
+            cost: 10.25,
+          },
+        },
+        baseline: expect.objectContaining({
+          sku: 1001,
+          retail: 39.99,
+          cost: 18.25,
+        }),
+      });
+    });
+  });
+
+  it("commits barcode edits with the v2 item patch and tabs to the next visible row field", async () => {
+    const user = userEvent.setup();
+    searchParamsState = new URLSearchParams("tab=merchandise");
+
+    let liveProducts = [
+      makeProductRow({
+        sku: 1001,
+        barcode: "123456789012",
+        retail_price: 39.99,
+        cost: 18.25,
+        selected_inventories: [
+          {
+            locationId: 2,
+            locationAbbrev: "PIER",
+            retailPrice: 39.99,
+            cost: 18.25,
+            stockOnHand: 12,
+            lastSaleDate: null,
+          },
+        ],
+      }),
+      makeProductRow({
+        sku: 1002,
+        barcode: "987654321098",
+        retail_price: 24.5,
+        cost: 11.75,
+        selected_inventories: [
+          {
+            locationId: 2,
+            locationAbbrev: "PIER",
+            retailPrice: 24.5,
+            cost: 11.75,
+            stockOnHand: 8,
+            lastSaleDate: null,
+          },
+        ],
+      }),
+    ];
+    let currentSearchData = {
+      products: liveProducts,
+      total: liveProducts.length,
+      page: 1,
+      pageSize: 50,
+    };
+    useProductSearchMock.mockImplementation(() => ({
+      data: currentSearchData,
+      loading: false,
+      refetch: refetchMock,
+    }));
+    refetchMock.mockImplementation(async () => {
+      liveProducts = [
+        makeProductRow({
+          sku: 1001,
+          barcode: "111222333444",
+          retail_price: 39.99,
+          cost: 18.25,
+          selected_inventories: [
+            {
+              locationId: 2,
+              locationAbbrev: "PIER",
+              retailPrice: 39.99,
+              cost: 18.25,
+              stockOnHand: 12,
+              lastSaleDate: null,
+            },
+          ],
+        }),
+        liveProducts[1],
+      ];
+      currentSearchData = {
+        ...currentSearchData,
+        products: liveProducts,
+        total: liveProducts.length,
+      };
     });
     updateMock.mockResolvedValue({ sku: 1001, appliedFields: ["item.barcode"] });
 
@@ -581,54 +666,85 @@ describe("ProductsPage inline edit controller wiring", () => {
   it("tabs from textbook retail to the next row cost without landing in a hidden barcode field", async () => {
     const user = userEvent.setup();
 
-    useProductSearchMock.mockReturnValue({
-      data: {
-        products: [
-          makeProductRow({
-            sku: 1001,
-            item_type: "textbook",
-            title: "Physics I",
-            isbn: "9780131103627",
-            barcode: null,
-            retail_price: 39.99,
+    let liveProducts = [
+      makeProductRow({
+        sku: 1001,
+        item_type: "textbook",
+        title: "Physics I",
+        isbn: "9780131103627",
+        barcode: null,
+        retail_price: 39.99,
+        cost: 18.25,
+        selected_inventories: [
+          {
+            locationId: 2,
+            locationAbbrev: "PIER",
+            retailPrice: 39.99,
             cost: 18.25,
-            selected_inventories: [
-              {
-                locationId: 2,
-                locationAbbrev: "PIER",
-                retailPrice: 39.99,
-                cost: 18.25,
-                stockOnHand: 12,
-                lastSaleDate: null,
-              },
-            ],
-          }),
-          makeProductRow({
-            sku: 1002,
-            item_type: "textbook",
-            title: "Physics II",
-            isbn: "9780131101630",
-            barcode: null,
-            retail_price: 41.5,
-            cost: 19.75,
-            selected_inventories: [
-              {
-                locationId: 2,
-                locationAbbrev: "PIER",
-                retailPrice: 41.5,
-                cost: 19.75,
-                stockOnHand: 12,
-                lastSaleDate: null,
-              },
-            ],
-          }),
+            stockOnHand: 12,
+            lastSaleDate: null,
+          },
         ],
-        total: 2,
-        page: 1,
-        pageSize: 50,
-      },
+      }),
+      makeProductRow({
+        sku: 1002,
+        item_type: "textbook",
+        title: "Physics II",
+        isbn: "9780131101630",
+        barcode: null,
+        retail_price: 41.5,
+        cost: 19.75,
+        selected_inventories: [
+          {
+            locationId: 2,
+            locationAbbrev: "PIER",
+            retailPrice: 41.5,
+            cost: 19.75,
+            stockOnHand: 12,
+            lastSaleDate: null,
+          },
+        ],
+      }),
+    ];
+    let currentSearchData = {
+      products: liveProducts,
+      total: liveProducts.length,
+      page: 1,
+      pageSize: 50,
+    };
+    useProductSearchMock.mockImplementation(() => ({
+      data: currentSearchData,
       loading: false,
       refetch: refetchMock,
+    }));
+    refetchMock.mockImplementation(async () => {
+      liveProducts = [
+        makeProductRow({
+          sku: 1001,
+          item_type: "textbook",
+          title: "Physics I",
+          isbn: "9780131103627",
+          barcode: null,
+          retail_price: 44.99,
+          cost: 18.25,
+          selected_inventories: [
+            {
+              locationId: 2,
+              locationAbbrev: "PIER",
+              retailPrice: 44.99,
+              cost: 18.25,
+              stockOnHand: 12,
+              lastSaleDate: null,
+            },
+          ],
+        }),
+        liveProducts[1],
+      ];
+      currentSearchData = {
+        ...currentSearchData,
+        products: liveProducts,
+        total: liveProducts.length,
+      };
     });
     updateMock.mockResolvedValue({ sku: 1001, appliedFields: ["primaryInventory.retail"] });
 
@@ -670,54 +786,85 @@ describe("ProductsPage inline edit controller wiring", () => {
   it("shift-tabs from the first editable cell of a row to the previous row retail editor", async () => {
     const user = userEvent.setup();
 
-    useProductSearchMock.mockReturnValue({
-      data: {
-        products: [
-          makeProductRow({
-            sku: 1001,
-            item_type: "textbook",
-            title: "Physics I",
-            isbn: "9780131103627",
-            barcode: null,
-            retail_price: 39.99,
+    let liveProducts = [
+      makeProductRow({
+        sku: 1001,
+        item_type: "textbook",
+        title: "Physics I",
+        isbn: "9780131103627",
+        barcode: null,
+        retail_price: 39.99,
+        cost: 18.25,
+        selected_inventories: [
+          {
+            locationId: 2,
+            locationAbbrev: "PIER",
+            retailPrice: 39.99,
             cost: 18.25,
-            selected_inventories: [
-              {
-                locationId: 2,
-                locationAbbrev: "PIER",
-                retailPrice: 39.99,
-                cost: 18.25,
-                stockOnHand: 12,
-                lastSaleDate: null,
-              },
-            ],
-          }),
-          makeProductRow({
-            sku: 1002,
-            item_type: "textbook",
-            title: "Physics II",
-            isbn: "9780131101630",
-            barcode: null,
-            retail_price: 41.5,
-            cost: 19.75,
-            selected_inventories: [
-              {
-                locationId: 2,
-                locationAbbrev: "PIER",
-                retailPrice: 41.5,
-                cost: 19.75,
-                stockOnHand: 12,
-                lastSaleDate: null,
-              },
-            ],
-          }),
+            stockOnHand: 12,
+            lastSaleDate: null,
+          },
         ],
-        total: 2,
-        page: 1,
-        pageSize: 50,
-      },
+      }),
+      makeProductRow({
+        sku: 1002,
+        item_type: "textbook",
+        title: "Physics II",
+        isbn: "9780131101630",
+        barcode: null,
+        retail_price: 41.5,
+        cost: 19.75,
+        selected_inventories: [
+          {
+            locationId: 2,
+            locationAbbrev: "PIER",
+            retailPrice: 41.5,
+            cost: 19.75,
+            stockOnHand: 12,
+            lastSaleDate: null,
+          },
+        ],
+      }),
+    ];
+    let currentSearchData = {
+      products: liveProducts,
+      total: liveProducts.length,
+      page: 1,
+      pageSize: 50,
+    };
+    useProductSearchMock.mockImplementation(() => ({
+      data: currentSearchData,
       loading: false,
       refetch: refetchMock,
+    }));
+    refetchMock.mockImplementation(async () => {
+      liveProducts = [
+        liveProducts[0],
+        makeProductRow({
+          sku: 1002,
+          item_type: "textbook",
+          title: "Physics II",
+          isbn: "9780131101630",
+          barcode: null,
+          retail_price: 41.5,
+          cost: 20.25,
+          selected_inventories: [
+            {
+              locationId: 2,
+              locationAbbrev: "PIER",
+              retailPrice: 41.5,
+              cost: 20.25,
+              stockOnHand: 12,
+              lastSaleDate: null,
+            },
+          ],
+        }),
+      ];
+      currentSearchData = {
+        ...currentSearchData,
+        products: liveProducts,
+        total: liveProducts.length,
+      };
     });
     updateMock.mockResolvedValue({ sku: 1002, appliedFields: ["primaryInventory.cost"] });
 

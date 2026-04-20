@@ -70,16 +70,18 @@ function buildInlineEditRows(
   primaryLocationId: ProductLocationId,
 ): ProductInlineEditRowBaseline[] {
   return products.map((product) => {
-    const primaryInventory = product.selected_inventories.find(
+    const selectedInventories = product.selected_inventories ?? [];
+    const primaryInventory = selectedInventories.find(
       (inventory) => inventory.locationId === primaryLocationId,
     );
+    const allowItemLevelFallback = primaryInventory == null;
 
     return {
       sku: product.sku,
       barcode: product.barcode,
       itemTaxTypeId: product.itemTaxTypeId,
-      retail: primaryInventory?.retailPrice ?? product.retail_price ?? null,
-      cost: primaryInventory?.cost ?? product.cost ?? null,
+      retail: primaryInventory?.retailPrice ?? (allowItemLevelFallback ? product.retail_price ?? null : null),
+      cost: primaryInventory?.cost ?? (allowItemLevelFallback ? product.cost ?? null : null),
       fDiscontinue: product.discontinued ? 1 : 0,
     };
   });

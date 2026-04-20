@@ -26,6 +26,15 @@ export interface ProductInlineEditRowBaseline {
   fDiscontinue: 0 | 1;
 }
 
+interface PendingInlineNavigation {
+  activeCell: ProductInlineEditCell;
+  direction: "next" | "previous";
+  fieldOrder: readonly ProductInlineEditableField[];
+  rowOrderSnapshot: readonly number[];
+  savedValue: string | null;
+  waitForFreshRows: boolean;
+}
+
 export interface ProductInlineEditController {
   editingCell: ProductInlineEditCell | null;
   draftValue: string;
@@ -81,6 +90,33 @@ function getCellValue(row: ProductInlineEditRowBaseline, field: ProductInlineEdi
   }
 }
 
+function normalizeDraftValue(field: ProductInlineEditableField, rawValue: string): string | null {
+  const currentValue = rawValue.trim();
+
+  switch (field) {
+    case "retail":
+    case "cost": {
+      if (currentValue.length === 0) return null;
+      const parsed = Number(currentValue);
+      return Number.isNaN(parsed) ? null : String(parsed);
+    }
+    case "barcode":
+      return currentValue.length === 0 ? "" : currentValue;
+    case "taxType": {
+      if (currentValue.length === 0) return null;
+      const parsed = Number(currentValue);
+      return Number.isNaN(parsed) || parsed <= 0 ? null : String(parsed);
+    }
+    case "discontinue":
+      return currentValue === "1" || currentValue.toLowerCase() === "true" ? "1" : "0";
+  }
+}
+
+function hasSameRowOrder(left: readonly number[], right: readonly number[]): boolean {
+  if (left.length !== right.length) return false;
+  return left.every((value, index) => value === right[index]);
+}
+
 function buildBaseline(row: ProductInlineEditRowBaseline): Pick<
   ProductInlineEditRowBaseline,
   "sku" | "barcode" | "itemTaxTypeId" | "retail" | "cost" | "fDiscontinue"
@@ -109,6 +145,7 @@ export function useProductInlineEdit({
   const [editingCell, setEditingCell] = useState<ProductInlineEditCell | null>(null);
   const [draftValue, setDraftValue] = useState("");
   const [pendingSave, setPendingSave] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState<PendingInlineNavigation | null>(null);
   const [optimisticRowsBySku, setOptimisticRowsBySku] = useState<
     Map<number, Partial<ProductInlineEditRowBaseline>>
   >(new Map());
@@ -171,6 +208,7 @@ export function useProductInlineEdit({
       fieldOrder?: readonly ProductInlineEditableField[],
     ) => {
       if (pendingSave) return;
+      setPendingNavigation(null);
       setActiveFieldOrder(normalizeFieldOrder(field, fieldOrder));
       setEditingCell({ sku, field });
       setDraftValue(currentValue);
@@ -180,6 +218,7 @@ export function useProductInlineEdit({
 
   const cancelEdit = useCallback(() => {
     if (pendingSave) return;
+    setPendingNavigation(null);
     setEditingCell(null);
     setDraftValue("");
   }, [pendingSave]);
@@ -313,6 +352,63 @@ export function useProductInlineEdit({
     return committed;
   }, [draftValue, editingCell, pendingSave, persistField]);
 
+  useEffect(() => {
+    if (!pendingNavigation || pendingSave || editingCell) return;
+
+    if (pendingNavigation.waitForFreshRows) {
+      const rowOrderChanged = !hasSameRowOrder(rowOrder, pendingNavigation.rowOrderSnapshot);
+      const refreshedRow = rowsBySku.get(pendingNavigation.activeCell.sku);
+      const refreshedValue = refreshedRow
+        ? getCellValue(refreshedRow, pendingNavigation.activeCell.field)
+        : null;
+
+      if (!rowOrderChanged && refreshedValue !== pendingNavigation.savedValue) {
+        return;
+      }
+    }
+
+    const fieldOrder = normalizeFieldOrder(
+      pendingNavigation.activeCell.field,
+      pendingNavigation.fieldOrder,
+    );
+    const rowIndex = rowOrder.indexOf(pendingNavigation.activeCell.sku);
+    const fieldIndex = fieldOrder.indexOf(pendingNavigation.activeCell.field);
+
+    setPendingNavigation(null);
+    if (rowIndex === -1 || fieldIndex === -1) return;
+
+    let nextCell: ProductInlineEditCell | null = null;
+    if (pendingNavigation.direction === "next") {
+      const nextField = fieldOrder[fieldIndex + 1];
+      if (nextField) {
+        nextCell = { sku: pendingNavigation.activeCell.sku, field: nextField };
+      } else {
+        const nextSku = rowOrder[rowIndex + 1];
+        if (nextSku != null) {
+          nextCell = { sku: nextSku, field: fieldOrder[0] };
+        }
+      }
+    } else {
+      const prevField = fieldOrder[fieldIndex - 1];
+      if (prevField) {
+        nextCell = { sku: pendingNavigation.activeCell.sku, field: prevField };
+      } else {
+        const prevSku = rowOrder[rowIndex - 1];
+        if (prevSku != null) {
+          nextCell = { sku: prevSku, field: fieldOrder[fieldOrder.length - 1] };
+        }
+      }
+    }
+
+    if (!nextCell) return;
+    const nextRow = rowsBySku.get(nextCell.sku);
+    if (!nextRow) return;
+
+    setActiveFieldOrder(fieldOrder);
+    setEditingCell(nextCell);
+    setDraftValue(getCellValue(nextRow, nextCell.field));
+  }, [editingCell, pendingNavigation, pendingSave, rowOrder, rowsBySku]);
+
   const saveField = useCallback(async (
     sku: number,
     field: ProductInlineEditableField,
@@ -371,46 +467,37 @@ export function useProductInlineEdit({
       const activeCell = editingCell;
       if (!activeCell) return;
 
-      const committed = await saveCurrentEdit();
-      if (!committed) return;
-
-      const rowIndex = rowOrder.indexOf(activeCell.sku);
-      if (rowIndex === -1) return;
-
-      const fieldIndex = activeFieldOrder.indexOf(activeCell.field);
+      const fieldOrder = activeFieldOrder;
+      const fieldIndex = fieldOrder.indexOf(activeCell.field);
       if (fieldIndex === -1) return;
 
-      let nextCell: ProductInlineEditCell | null = null;
-      if (direction === "next") {
-        const nextField = activeFieldOrder[fieldIndex + 1];
-        if (nextField) {
-          nextCell = { sku: activeCell.sku, field: nextField };
-        } else {
-          const nextSku = rowOrder[rowIndex + 1];
-          if (nextSku != null) {
-            nextCell = { sku: nextSku, field: activeFieldOrder[0] };
-          }
-        }
-      } else {
-        const prevField = activeFieldOrder[fieldIndex - 1];
-        if (prevField) {
-          nextCell = { sku: activeCell.sku, field: prevField };
-        } else {
-          const prevSku = rowOrder[rowIndex - 1];
-          if (prevSku != null) {
-            nextCell = { sku: prevSku, field: activeFieldOrder[activeFieldOrder.length - 1] };
-          }
-        }
+      const currentRow = rowsBySku.get(activeCell.sku);
+      const originalValue = currentRow
+        ? getCellValue(currentRow, activeCell.field)
+        : draftValue.trim();
+      const savedValue = normalizeDraftValue(activeCell.field, draftValue);
+      const waitForFreshRows =
+        ((direction === "next" && fieldOrder[fieldIndex + 1] == null)
+          || (direction === "previous" && fieldOrder[fieldIndex - 1] == null))
+        && savedValue != null
+        && savedValue !== originalValue;
+
+      const committed = await saveCurrentEdit();
+      if (!committed) {
+        setPendingNavigation(null);
+        return;
       }
 
-      if (!nextCell) return;
-      const nextRow = rowsBySku.get(nextCell.sku);
-      if (!nextRow) return;
-
-      setEditingCell(nextCell);
-      setDraftValue(getCellValue(nextRow, nextCell.field));
+      setPendingNavigation({
+        activeCell,
+        direction,
+        fieldOrder,
+        rowOrderSnapshot: rowOrder,
+        savedValue,
+        waitForFreshRows,
+      });
     },
-    [activeFieldOrder, editingCell, rowsBySku, rowOrder, saveCurrentEdit],
+    [activeFieldOrder, draftValue, editingCell, rowOrder, rowsBySku, saveCurrentEdit],
   );
 
   const commitEdit = useCallback(async () => {
