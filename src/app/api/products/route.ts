@@ -8,6 +8,18 @@ import type { ProductLocationAbbrev, ProductLocationId } from "@/domains/product
 
 export const dynamic = "force-dynamic";
 
+interface RawInventoryRow {
+  locationId?: unknown;
+  retail?: unknown;
+  cost?: unknown;
+}
+
+interface RawCreateItemBody {
+  retail?: unknown;
+  cost?: unknown;
+  inventory?: RawInventoryRow[];
+}
+
 const LOCATION_ABBREV_BY_ID: Record<ProductLocationId, ProductLocationAbbrev> = {
   2: "PIER",
   3: "PCOP",
@@ -93,8 +105,10 @@ export const POST = withAdmin(async (request: NextRequest) => {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
+  const rawBody = body as RawCreateItemBody;
+
   const retailResult = parseRequiredNonNegativeNumber(
-    (body as { retail?: unknown }).retail,
+    rawBody.retail,
     "Retail",
   );
   if (!retailResult.ok) {
@@ -102,7 +116,7 @@ export const POST = withAdmin(async (request: NextRequest) => {
   }
 
   const costResult = parseRequiredNonNegativeNumber(
-    (body as { cost?: unknown }).cost,
+    rawBody.cost,
     "Cost",
   );
   if (!costResult.ok) {
@@ -115,11 +129,11 @@ export const POST = withAdmin(async (request: NextRequest) => {
     cost: number;
   }> | undefined;
 
-  if (Array.isArray(body.inventory)) {
+  if (Array.isArray(rawBody.inventory)) {
     normalizedInventory = [];
     let hasPierRow = false;
 
-    const hasOutOfScopeLocation = body.inventory.some((row) => {
+    const hasOutOfScopeLocation = rawBody.inventory.some((row: RawInventoryRow) => {
       const locationId = typeof row?.locationId === "string"
         ? Number(row.locationId)
         : row?.locationId;
@@ -132,7 +146,7 @@ export const POST = withAdmin(async (request: NextRequest) => {
       );
     }
 
-    for (const row of body.inventory) {
+    for (const row of rawBody.inventory) {
       const locationId = typeof row?.locationId === "string"
         ? Number(row.locationId)
         : row?.locationId;
