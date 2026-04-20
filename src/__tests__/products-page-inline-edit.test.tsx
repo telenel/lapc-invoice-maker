@@ -200,6 +200,7 @@ vi.mock("@/components/products/product-table", () => ({
                       <td key={field}>
                         {isEditing ? (
                           <input
+                            autoFocus
                             aria-label={`${label} editor for SKU ${product.sku}`}
                             value={inlineEdit.draftValue}
                             onChange={(e) => inlineEdit.setDraftValue(e.target.value)}
@@ -406,6 +407,44 @@ describe("ProductsPage inline edit controller wiring", () => {
       });
       expect(refetchMock).toHaveBeenCalled();
     });
+  });
+
+  it("saves cost edits and tabs to the retail editor on the same row", async () => {
+    const user = userEvent.setup();
+
+    render(<ProductsPage />);
+
+    await screen.findByTestId("product-table");
+
+    await user.click(screen.getByRole("button", { name: /edit cost for sku 1001/i }));
+
+    const editor = screen.getByRole("textbox", { name: /cost editor for sku 1001/i });
+    await user.clear(editor);
+    await user.type(editor, "10.25{tab}");
+
+    await waitFor(() => {
+      expect(updateMock).toHaveBeenCalledWith(1001, {
+        mode: "v2",
+        patch: {
+          primaryInventory: {
+            cost: 10.25,
+          },
+        },
+        baseline: expect.objectContaining({
+          sku: 1001,
+          barcode: "123456789012",
+          retail: 39.99,
+          cost: 18.25,
+          fDiscontinue: 0,
+        }),
+      });
+    });
+
+    const retailEditor = await screen.findByRole("textbox", {
+      name: /retail editor for sku 1001/i,
+    });
+    expect(retailEditor).toHaveValue("39.99");
+    expect(retailEditor).toHaveFocus();
   });
 
   it("commits barcode edits with the v2 item patch and tabs to the next visible row field", async () => {
@@ -626,5 +665,95 @@ describe("ProductsPage inline edit controller wiring", () => {
     ).toHaveValue("19.75");
     expect(screen.queryByRole("textbox", { name: /barcode editor for sku 1001/i })).toBeNull();
     expect(screen.queryByRole("textbox", { name: /barcode editor for sku 1002/i })).toBeNull();
+  });
+
+  it("shift-tabs from the first editable cell of a row to the previous row retail editor", async () => {
+    const user = userEvent.setup();
+
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [
+          makeProductRow({
+            sku: 1001,
+            item_type: "textbook",
+            title: "Physics I",
+            isbn: "9780131103627",
+            barcode: null,
+            retail_price: 39.99,
+            cost: 18.25,
+            selected_inventories: [
+              {
+                locationId: 2,
+                locationAbbrev: "PIER",
+                retailPrice: 39.99,
+                cost: 18.25,
+                stockOnHand: 12,
+                lastSaleDate: null,
+              },
+            ],
+          }),
+          makeProductRow({
+            sku: 1002,
+            item_type: "textbook",
+            title: "Physics II",
+            isbn: "9780131101630",
+            barcode: null,
+            retail_price: 41.5,
+            cost: 19.75,
+            selected_inventories: [
+              {
+                locationId: 2,
+                locationAbbrev: "PIER",
+                retailPrice: 41.5,
+                cost: 19.75,
+                stockOnHand: 12,
+                lastSaleDate: null,
+              },
+            ],
+          }),
+        ],
+        total: 2,
+        page: 1,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    updateMock.mockResolvedValue({ sku: 1002, appliedFields: ["primaryInventory.cost"] });
+
+    render(<ProductsPage />);
+
+    await screen.findByTestId("product-table");
+
+    await user.click(screen.getByRole("button", { name: /edit cost for sku 1002/i }));
+
+    const editor = screen.getByRole("textbox", { name: /cost editor for sku 1002/i });
+    await user.clear(editor);
+    await user.type(editor, "20.25");
+    await user.keyboard("{Shift>}{Tab}{/Shift}");
+
+    await waitFor(() => {
+      expect(updateMock).toHaveBeenCalledWith(1002, {
+        mode: "v2",
+        patch: {
+          primaryInventory: {
+            cost: 20.25,
+          },
+        },
+        baseline: expect.objectContaining({
+          sku: 1002,
+          barcode: null,
+          retail: 41.5,
+          cost: 19.75,
+          fDiscontinue: 0,
+        }),
+      });
+    });
+
+    const previousRowEditor = await screen.findByRole("textbox", {
+      name: /retail editor for sku 1001/i,
+    });
+    expect(previousRowEditor).toHaveValue("39.99");
+    expect(previousRowEditor).toHaveFocus();
   });
 });
