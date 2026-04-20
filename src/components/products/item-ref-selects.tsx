@@ -28,7 +28,7 @@ export interface ItemRefSelectsProps {
   layout?: "stacked" | "inline";
 }
 
-type ItemRefSelectKind = "vendor" | "dcc" | "taxType" | "packageType" | "color";
+type ItemRefSelectKind = "vendor" | "dcc" | "taxType" | "tagType" | "statusCode" | "packageType" | "color";
 
 const FIELD_CONFIG: Record<
   ItemRefSelectKind,
@@ -37,6 +37,8 @@ const FIELD_CONFIG: Record<
   vendor: { label: "Vendor", inlineLabel: "Vendor", optionsKey: "vendors" },
   dcc: { label: "Department / Class", inlineLabel: "Department / Class", optionsKey: "dccs" },
   taxType: { label: "Tax Type", inlineLabel: "Tax Type", optionsKey: "taxTypes" },
+  tagType: { label: "Tag Type", inlineLabel: "Tag Type", optionsKey: "tagTypes" },
+  statusCode: { label: "Status Code", inlineLabel: "Status Code", optionsKey: "statusCodes" },
   packageType: { label: "Package Type", inlineLabel: "Package Type", optionsKey: "packageTypes" },
   color: { label: "Color", inlineLabel: "Color", optionsKey: "colors" },
 };

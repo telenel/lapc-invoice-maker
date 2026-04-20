@@ -175,6 +175,154 @@ describe("EditItemDialogV2", () => {
     expect(screen.queryByLabelText(/Binding/i)).not.toBeInTheDocument();
   });
 
+  it("shows the inventory tab for a single GM item and reveals PCOP inventory values", async () => {
+    await mockDirectoryState({
+      refs: {
+        vendors: [
+          { vendorId: 21, name: "PENS ETC (3001795)", pierceItems: 50 },
+          { vendorId: 22, name: "ALT VENDOR", pierceItems: 5 },
+        ],
+        dccs: [
+          { dccId: 1313290, deptNum: 111010, classNum: null, catNum: null, deptName: "NOT USE=111010", className: "DO NOT USE", catName: null, pierceItems: 30 },
+          { dccId: 1802, deptNum: 222000, classNum: null, catNum: null, deptName: "USED DCC", className: null, catName: null, pierceItems: 10 },
+        ],
+        taxTypes: [{ taxTypeId: 4, description: "STATE", pierceItems: 40 }],
+        tagTypes: [
+          { tagTypeId: 7, label: "CLEARANCE", subsystem: 1, pierceRows: 3 },
+          { tagTypeId: 8, label: "PROMO", subsystem: 1, pierceRows: 4 },
+        ],
+        statusCodes: [
+          { statusCodeId: 11, label: "ACTIVE", pierceRows: 7 },
+          { statusCodeId: 12, label: "HOLD", pierceRows: 2 },
+        ],
+        packageTypes: [{ code: "EA", label: "Each", defaultQty: 1, pierceItems: 25 }],
+        colors: [{ colorId: 2, label: "BLACK", pierceItems: 18 }],
+        bindings: [],
+      },
+      lookups: {
+        vendorNames: new Map([
+          [21, "PENS ETC (3001795)"],
+          [22, "ALT VENDOR"],
+        ]),
+        taxTypeLabels: new Map([[4, "STATE"]]),
+        tagTypeLabels: new Map([
+          [7, "CLEARANCE"],
+          [8, "PROMO"],
+        ]),
+        statusCodeLabels: new Map([
+          [11, "ACTIVE"],
+          [12, "HOLD"],
+        ]),
+        packageTypeLabels: new Map([["EA", "Each"]]),
+        colorLabels: new Map([[2, "BLACK"]]),
+        bindingLabels: new Map(),
+      },
+    });
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: baseDetail.retail ?? 0,
+            cost: baseDetail.cost ?? 0,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+          },
+        ]}
+        detail={{
+          ...baseDetail,
+          inventoryByLocation: [
+            baseDetail.inventoryByLocation[0],
+            {
+              ...baseDetail.inventoryByLocation[1],
+              retail: 42.5,
+              cost: 21.25,
+              expectedCost: 20.5,
+              stockOnHand: 8,
+              lastSaleDate: "2026-04-15",
+              tagTypeId: 7,
+              statusCodeId: 11,
+              estSales: 13,
+              estSalesLocked: true,
+              fInvListPriceFlag: true,
+              fTxWantListFlag: false,
+              fTxBuybackListFlag: true,
+              fNoReturns: false,
+            },
+            baseDetail.inventoryByLocation[2],
+          ],
+        }}
+      />,
+    );
+
+    expect(screen.getByRole("tab", { name: "Inventory" })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("tab", { name: "Inventory" }));
+    await userEvent.click(screen.getByRole("button", { name: "PCOP" }));
+
+    expect(screen.getByLabelText("Retail")).toHaveValue(42.5);
+    expect(screen.getByLabelText("Cost")).toHaveValue(21.25);
+  });
+
+  it("copies the active retail value to PIER and PFS from PCOP", async () => {
+    await mockDirectoryState();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: baseDetail.retail ?? 0,
+            cost: baseDetail.cost ?? 0,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+          },
+        ]}
+        detail={{
+          ...baseDetail,
+          inventoryByLocation: [
+            {
+              ...baseDetail.inventoryByLocation[0],
+              retail: 39.99,
+              cost: 19.5,
+            },
+            {
+              ...baseDetail.inventoryByLocation[1],
+              retail: 42.5,
+              cost: 21.25,
+            },
+            {
+              ...baseDetail.inventoryByLocation[2],
+              retail: 18,
+              cost: 9,
+            },
+          ],
+        }}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("tab", { name: "Inventory" }));
+    await userEvent.click(screen.getByRole("button", { name: "PCOP" }));
+
+    const retailInput = screen.getByLabelText("Retail");
+    await userEvent.clear(retailInput);
+    await userEvent.type(retailInput, "55.5");
+
+    await userEvent.click(screen.getByRole("button", { name: "Copy retail to other locations" }));
+    await userEvent.click(screen.getByRole("button", { name: "PIER" }));
+    expect(screen.getByLabelText("Retail")).toHaveValue(55.5);
+
+    await userEvent.click(screen.getByRole("button", { name: "PFS" }));
+    expect(screen.getByLabelText("Retail")).toHaveValue(55.5);
+  });
+
   it("shows the refs-unavailable alert while keeping the form visible", async () => {
     await mockDirectoryState({
       refs: null,
