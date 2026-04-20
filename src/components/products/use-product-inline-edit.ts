@@ -117,6 +117,14 @@ function hasSameRowOrder(left: readonly number[], right: readonly number[]): boo
   return left.every((value, index) => value === right[index]);
 }
 
+function setOverlayValue<Key extends keyof ProductInlineEditRowBaseline>(
+  target: Partial<ProductInlineEditRowBaseline>,
+  key: Key,
+  value: ProductInlineEditRowBaseline[Key],
+) {
+  target[key] = value;
+}
+
 function buildBaseline(row: ProductInlineEditRowBaseline): Pick<
   ProductInlineEditRowBaseline,
   "sku" | "barcode" | "itemTaxTypeId" | "retail" | "cost" | "fDiscontinue"
@@ -173,8 +181,9 @@ export function useProductInlineEdit({
 
         const pendingOverlay: Partial<ProductInlineEditRowBaseline> = {};
         (Object.keys(overlay) as Array<keyof ProductInlineEditRowBaseline>).forEach((key) => {
-          if (overlay[key] !== baseRow[key]) {
-            pendingOverlay[key] = overlay[key];
+          const overlayValue = overlay[key];
+          if (overlayValue !== undefined && overlayValue !== baseRow[key]) {
+            setOverlayValue(pendingOverlay, key, overlayValue);
           }
         });
 
