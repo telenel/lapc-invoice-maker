@@ -243,6 +243,14 @@ function buildInventoryByLocation(
   });
 }
 
+function narrowInventoryDetailRows(rows: unknown): ProductInventoryEditDetailRow[] {
+  if (!Array.isArray(rows)) {
+    return [];
+  }
+
+  return rows.filter(isProductInventoryEditDetailRow);
+}
+
 async function loadDeleteDeps() {
   const [{ isPrismConfigured }, { discontinueItem, deleteTestItem }] = await Promise.all([
     import("@/lib/prism"),
@@ -290,8 +298,7 @@ export const GET = withAdmin(async (_request: NextRequest, _session, ctx?: Route
       .select(PRODUCT_INVENTORY_SELECT)
       .eq("sku", sku)
       .in("location_id", PRODUCT_INVENTORY_LOCATION_IDS);
-    const rawInventoryRows = Array.isArray(inventoryResult.data) ? inventoryResult.data : [];
-    const inventoryRows = rawInventoryRows.filter(isProductInventoryEditDetailRow);
+    const inventoryRows = narrowInventoryDetailRows(inventoryResult.data);
     const inventoryError = inventoryResult.error;
 
     if (inventoryError) {
