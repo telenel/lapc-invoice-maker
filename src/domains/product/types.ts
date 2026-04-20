@@ -150,6 +150,7 @@ export interface SelectedProduct {
   edition: string | null;
   catalogNumber: string | null;
   vendorId: number;
+  vendorLabel?: string | null;
   itemType: string;
 }
 
