@@ -122,12 +122,21 @@ const legacyBodySchema = z.object({
 
 type LegacySelection = z.infer<typeof selectionSchema>;
 
+type ProductFilterQuery = {
+  ilike: (column: string, pattern: string) => ProductFilterQuery;
+  eq: (column: string, value: unknown) => ProductFilterQuery;
+  gte: (column: string, value: unknown) => ProductFilterQuery;
+  lte: (column: string, value: unknown) => ProductFilterQuery;
+  not: (column: string, operator: string, value: unknown) => ProductFilterQuery;
+  is: (column: string, value: unknown) => ProductFilterQuery;
+};
+
 function isFieldPickerTransform(value: unknown): value is BulkEditFieldPickerRequest {
   return value !== null && typeof value === "object" && Array.isArray((value as { fieldIds?: unknown }).fieldIds);
 }
 
 function applySelectionFilters(
-  query: any,
+  query: ProductFilterQuery,
   selection: LegacySelection,
 ) {
   if (selection.filter?.q) query = query.ilike("description", `%${selection.filter.q}%`);
