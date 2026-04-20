@@ -433,6 +433,19 @@ function buildInventoryPatch(
   return patch.length > 0 ? patch : undefined;
 }
 
+function syncInventoryField<K extends InventoryFieldKey>(
+  target: InventoryFormState,
+  source: InventoryFormState,
+  key: K,
+): boolean {
+  if (target[key] === source[key]) {
+    return false;
+  }
+
+  target[key] = source[key];
+  return true;
+}
+
 function Section({
   title,
   description,
@@ -623,10 +636,7 @@ export function EditItemDialogV2({
 
         for (const key of EDITABLE_INVENTORY_FIELDS) {
           if (dirtyFields.has(key)) continue;
-          const mergedInventoryFields = mergedLocation as Pick<InventoryFormState, InventoryFieldKey>;
-          const nextValue = nextLocation[key];
-          if (mergedInventoryFields[key] !== nextValue) {
-            mergedInventoryFields[key] = nextValue;
+          if (syncInventoryField(mergedLocation, nextLocation, key)) {
             changed = true;
           }
         }
