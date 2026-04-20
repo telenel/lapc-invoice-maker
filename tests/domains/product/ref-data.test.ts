@@ -276,8 +276,9 @@ describe("product ref data helpers", () => {
     render(
       React.createElement(TransformPanel, {
         transform: {
-          pricing: { mode: "none" },
-          catalog: {},
+          fieldIds: ["vendorId"],
+          inventoryScope: null,
+          values: {},
         } as never,
         onChange: () => {},
         onPreview: () => {},
