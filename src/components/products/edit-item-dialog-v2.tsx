@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { productApi } from "@/domains/product/api-client";
-import type { ProductEditDetails } from "@/domains/product/types";
+import type { ProductEditDetails, ProductEditPatchV2 } from "@/domains/product/types";
 import { useProductRefDirectory } from "@/domains/product/vendor-directory";
 import type { EditItemDialogProps } from "./edit-item-dialog-legacy";
 import { buildPatch } from "./edit-item-dialog-legacy";
@@ -122,6 +122,10 @@ function optionalString(value: string, isBulk: boolean): string | null | undefin
   return isBulk ? undefined : null;
 }
 
+function hasPatchFields<T extends object>(value: T): boolean {
+  return Object.values(value).some((entry) => entry !== undefined);
+}
+
 function buildLegacyCompatiblePatch(form: FormState, baseline: FormState, isBulk: boolean) {
   const rawPatch = buildPatch(baseline as Record<string, unknown>, form as Record<string, unknown>);
   const patch: Record<string, unknown> = {};
@@ -166,6 +170,70 @@ function buildLegacyCompatiblePatch(form: FormState, baseline: FormState, isBulk
   }
 
   return patch;
+}
+
+function buildV2Patch(form: FormState, baseline: FormState, isBulk: boolean): ProductEditPatchV2 {
+  const rawPatch = buildPatch(baseline as Record<string, unknown>, form as Record<string, unknown>);
+  const item: NonNullable<ProductEditPatchV2["item"]> = {};
+  const gm: NonNullable<ProductEditPatchV2["gm"]> = {};
+  const primaryInventory: NonNullable<ProductEditPatchV2["primaryInventory"]> = {};
+
+  for (const [key, value] of Object.entries(rawPatch)) {
+    if (isBulk && value === "") continue;
+
+    switch (key) {
+      case "description":
+        gm.description = String(value);
+        break;
+      case "barcode":
+        item.barcode = value === "" ? null : String(value);
+        break;
+      case "vendorId":
+        item.vendorId = value === "" ? undefined : Number(value);
+        break;
+      case "dccId":
+        item.dccId = value === "" ? undefined : Number(value);
+        break;
+      case "itemTaxTypeId":
+        item.itemTaxTypeId = value === "" ? undefined : Number(value);
+        break;
+      case "unitsPerPack":
+        gm.unitsPerPack = value === "" ? undefined : Number(value);
+        break;
+      case "retail":
+        primaryInventory.retail = Number(value);
+        break;
+      case "cost":
+        primaryInventory.cost = Number(value);
+        break;
+      case "weight":
+        item.weight = Number(value);
+        break;
+      case "catalogNumber":
+        gm.catalogNumber = optionalString(String(value), isBulk);
+        break;
+      case "comment":
+        item.comment = optionalString(String(value), isBulk);
+        break;
+      case "imageUrl":
+        gm.imageUrl = optionalString(String(value), isBulk);
+        break;
+      case "packageType":
+        gm.packageType = optionalString(String(value), isBulk);
+        break;
+      case "fDiscontinue":
+        item.fDiscontinue = value ? 1 : 0;
+        break;
+      default:
+        break;
+    }
+  }
+
+  return {
+    item: hasPatchFields(item) ? item : undefined,
+    gm: hasPatchFields(gm) ? gm : undefined,
+    primaryInventory: hasPatchFields(primaryInventory) ? primaryInventory : undefined,
+  };
 }
 
 function Section({
@@ -281,24 +349,64 @@ export function EditItemDialogV2({
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const dirtyFieldsRef = useRef<Set<keyof FormState>>(new Set());
+  const hydratedSelectionRef = useRef<string | null>(null);
 
   const refsUnavailable = !refsLoading && !refsAvailable;
   const refsControlsDisabled = refsLoading || refsUnavailable;
   const baselineForm = useMemo(() => (isBulk ? EMPTY_FORM : toFormState(items[0], detail)), [detail, isBulk, items]);
+  const selectionKey = isBulk
+    ? `bulk:${items.map((item) => item.sku).join(",")}`
+    : `single:${items[0]?.sku ?? "none"}`;
 
   useEffect(() => {
-    if (!open) return;
-    setForm(isBulk ? EMPTY_FORM : toFormState(items[0], detail));
-    setError(null);
-  }, [detail, isBulk, items, open]);
+    if (!open) {
+      hydratedSelectionRef.current = null;
+      dirtyFieldsRef.current.clear();
+      return;
+    }
+
+    const nextForm = isBulk ? EMPTY_FORM : toFormState(items[0], detail);
+
+    if (hydratedSelectionRef.current !== selectionKey) {
+      hydratedSelectionRef.current = selectionKey;
+      dirtyFieldsRef.current.clear();
+      setForm(nextForm);
+      setError(null);
+      return;
+    }
+
+    if (isBulk) return;
+
+    setForm((current) => {
+      let changed = false;
+      const merged = { ...current };
+
+      for (const key of Object.keys(EMPTY_FORM) as Array<keyof FormState>) {
+        if (dirtyFieldsRef.current.has(key)) continue;
+        if (merged[key] !== nextForm[key]) {
+          merged[key] = nextForm[key];
+          changed = true;
+        }
+      }
+
+      return changed ? merged : current;
+    });
+  }, [detail, isBulk, items, open, selectionKey]);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
+    dirtyFieldsRef.current.add(key);
     setForm((current) => ({ ...current, [key]: value }));
   }
 
   async function handleSave() {
-    const patch = buildLegacyCompatiblePatch(form, baselineForm, isBulk);
-    if (Object.keys(patch).length === 0) {
+    const v2Patch = buildV2Patch(form, baselineForm, isBulk);
+    const hasV2Changes =
+      hasPatchFields(v2Patch.item ?? {}) ||
+      hasPatchFields(v2Patch.gm ?? {}) ||
+      hasPatchFields(v2Patch.primaryInventory ?? {});
+
+    if (!hasV2Changes) {
       onOpenChange(false);
       return;
     }
@@ -310,8 +418,8 @@ export function EditItemDialogV2({
       if (items.length === 1) {
         const item = items[0];
         await productApi.update(item.sku, {
-          patch,
-          isTextbook: !!item.isTextbook,
+          mode: "v2",
+          patch: v2Patch,
           baseline: {
             sku: item.sku,
             barcode: item.barcode,
@@ -321,11 +429,12 @@ export function EditItemDialogV2({
           },
         });
       } else {
+        const legacyPatch = buildLegacyCompatiblePatch(form, baselineForm, true);
         const result = await productApi.batch({
           action: "update",
           rows: items.map((item) => ({
             sku: item.sku,
-            patch,
+            patch: legacyPatch,
             isTextbook: !!item.isTextbook,
           })),
         });

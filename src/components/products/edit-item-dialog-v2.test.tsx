@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/vitest";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { ProductEditDetails } from "@/domains/product/types";
 import { EditItemDialogV2 } from "./edit-item-dialog-v2";
@@ -202,5 +203,90 @@ describe("EditItemDialogV2", () => {
     );
 
     expect(screen.getByText(/Fields left blank won't be changed/i)).toBeInTheDocument();
+  });
+
+  it("does not clobber in-progress edits when detail hydration finishes", async () => {
+    await mockDirectoryState();
+    const user = userEvent.setup();
+
+    const { rerender } = render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: null,
+            retail: 0,
+            cost: 0,
+            fDiscontinue: 0,
+            description: "Pending description",
+          },
+        ]}
+        detail={null}
+        detailLoading
+      />,
+    );
+
+    const description = screen.getByLabelText("Description");
+    await user.clear(description);
+    await user.type(description, "User typed description");
+
+    rerender(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: null,
+            retail: 0,
+            cost: 0,
+            fDiscontinue: 0,
+            description: "Pending description",
+          },
+        ]}
+        detail={baseDetail}
+        detailLoading={false}
+      />,
+    );
+
+    expect(screen.getByLabelText("Description")).toHaveValue("User typed description");
+    expect(screen.getByLabelText("Barcode")).toHaveValue(baseDetail.barcode);
+  });
+
+  it("keeps current ref-backed IDs visible when refs are unavailable", async () => {
+    await mockDirectoryState({
+      refs: null,
+      vendors: [],
+      byId: new Map(),
+      loading: false,
+      available: false,
+    });
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: baseDetail.retail ?? 0,
+            cost: baseDetail.cost ?? 0,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+            vendorId: baseDetail.vendorId ?? undefined,
+            dccId: baseDetail.dccId ?? undefined,
+            itemTaxTypeId: baseDetail.itemTaxTypeId ?? undefined,
+          },
+        ]}
+        detail={baseDetail}
+      />,
+    );
+
+    expect(screen.getByLabelText("Vendor")).toHaveTextContent("21");
+    expect(screen.getByLabelText("Department / Class")).toHaveTextContent("1313290");
+    expect(screen.getByLabelText("Tax Type")).toHaveTextContent("4");
   });
 });
