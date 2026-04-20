@@ -35,6 +35,12 @@ import { SYSTEM_PRESET_VIEWS } from "@/domains/product/presets";
 import { shouldApplyDefaultMinStock } from "@/domains/product/page-defaults";
 import type { ProductLocationId } from "@/domains/product/location-filters";
 
+function getLocationLabel(locationId: ProductLocationId): "PIER" | "PCOP" | "PFS" {
+  if (locationId === 3) return "PCOP";
+  if (locationId === 4) return "PFS";
+  return "PIER";
+}
+
 export default function ProductsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -321,7 +327,7 @@ export default function ProductsPage() {
               Location scope
             </div>
             <div className="text-[11px] text-muted-foreground/80">
-              Primary inventory follows the first selected location.
+              Primary location follows canonical order; current primary is {getLocationLabel(filters.locationIds[0])}.
             </div>
           </div>
           <LocationPicker value={filters.locationIds} onChange={handleLocationChange} />
