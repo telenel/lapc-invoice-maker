@@ -211,6 +211,18 @@ export interface GmItemPatch {
   imageUrl?: string | null;
   unitsPerPack?: number;
   packageType?: string | null;
+  altVendorId?: number;
+  mfgId?: number;
+  size?: string | null;
+  colorId?: number;
+  styleId?: number;
+  itemSeasonCodeId?: number;
+  orderIncrement?: number;
+  fListPriceFlag?: 0 | 1;
+  fPerishable?: 0 | 1;
+  fIdRequired?: 0 | 1;
+  minOrderQtyItem?: number;
+  usedDccId?: number;
   retail?: number;
   cost?: number;
   fDiscontinue?: 0 | 1;
@@ -224,6 +236,13 @@ export interface ItemPatch {
   itemTaxTypeId?: number;
   comment?: string | null;
   weight?: number;
+  usedDccId?: number;
+  styleId?: number;
+  itemSeasonCodeId?: number;
+  fListPriceFlag?: boolean;
+  fPerishable?: boolean;
+  fIdRequired?: boolean;
+  minOrderQtyItem?: number;
   fDiscontinue?: 0 | 1;
 }
 
@@ -234,6 +253,13 @@ export interface GmDetailsPatch {
   packageType?: string | null;
   unitsPerPack?: number;
   imageUrl?: string | null;
+  altVendorId?: number;
+  mfgId?: number;
+  size?: string | null;
+  colorId?: number;
+  orderIncrement?: number;
+  useScaleInterface?: boolean;
+  tare?: number | null;
 }
 
 /** Fields that live on Prism Textbook rows for single-item edits. */

@@ -130,6 +130,9 @@ export function FieldValueEditor({
 
 function isBooleanField(fieldId: BulkEditFieldId): boolean {
   return [
+    "fListPriceFlag",
+    "fPerishable",
+    "fIdRequired",
     "fInvListPriceFlag",
     "fTxWantListFlag",
     "fTxBuybackListFlag",
@@ -140,6 +143,12 @@ function isBooleanField(fieldId: BulkEditFieldId): boolean {
 
 function isNumericField(fieldId: BulkEditFieldId): boolean {
   return [
+    "weight",
+    "mfgId",
+    "styleId",
+    "itemSeasonCodeId",
+    "orderIncrement",
+    "minOrderQtyItem",
     "unitsPerPack",
     "retail",
     "cost",
@@ -164,8 +173,12 @@ function getSelectOptions(fieldId: BulkEditFieldId, refs: PrismRefs | null): Arr
       return refs.tagTypes.map((row) => ({ value: String(row.tagTypeId), label: row.label }));
     case "statusCodeId":
       return refs.statusCodes.map((row) => ({ value: String(row.statusCodeId), label: row.label }));
+    case "usedDccId":
+      return refs.dccs.map((row) => ({ value: String(row.dccId), label: formatDccLabel(row) }));
     case "packageType":
       return refs.packageTypes.map((row) => ({ value: row.code, label: normalizePackageTypeLabel(row) }));
+    case "colorId":
+      return refs.colors.map((row) => ({ value: String(row.colorId), label: row.label }));
     default:
       return [];
   }

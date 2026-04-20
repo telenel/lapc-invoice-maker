@@ -169,10 +169,14 @@ function formatFieldPreviewValue(
       return refs.vendorNames.get(Number(value)) ?? formatLookupFallback(value);
     case "dccId":
       return refs.dccLabels.get(Number(value)) ?? formatLookupFallback(value);
+    case "usedDccId":
+      return refs.dccLabels.get(Number(value)) ?? formatLookupFallback(value);
     case "itemTaxTypeId":
       return refs.taxTypeLabels.get(Number(value)) ?? formatLookupFallback(value);
     case "bindingId":
       return refs.bindingLabels.get(Number(value)) ?? formatLookupFallback(value);
+    case "colorId":
+      return refs.colorLabels.get(Number(value)) ?? formatLookupFallback(value);
     case "tagTypeId":
       return refs.tagTypeLabels.get(Number(value)) ?? formatLookupFallback(value);
     case "statusCodeId":
@@ -201,8 +205,26 @@ function getSelectedFieldValue(
     case "dccId":
     case "itemTaxTypeId":
       return hasOwnPatchField(patch.item, fieldId) ? patch.item?.[fieldId] ?? null : row[fieldId];
+    case "usedDccId":
+      return hasOwnPatchField(patch.item, "usedDccId") ? patch.item?.usedDccId ?? null : row.usedDccId ?? null;
     case "fDiscontinue":
       return hasOwnPatchField(patch.item, "fDiscontinue") ? patch.item?.fDiscontinue ?? 0 : row.fDiscontinue;
+    case "comment":
+      return hasOwnPatchField(patch.item, "comment") ? patch.item?.comment ?? null : row.comment ?? null;
+    case "weight":
+      return hasOwnPatchField(patch.item, "weight") ? patch.item?.weight ?? null : row.weight ?? null;
+    case "styleId":
+      return hasOwnPatchField(patch.item, "styleId") ? patch.item?.styleId ?? null : row.styleId ?? null;
+    case "itemSeasonCodeId":
+      return hasOwnPatchField(patch.item, "itemSeasonCodeId") ? patch.item?.itemSeasonCodeId ?? null : row.itemSeasonCodeId ?? null;
+    case "minOrderQtyItem":
+      return hasOwnPatchField(patch.item, "minOrderQtyItem") ? patch.item?.minOrderQtyItem ?? null : row.minOrderQtyItem ?? null;
+    case "fListPriceFlag":
+      return hasOwnPatchField(patch.item, "fListPriceFlag") ? patch.item?.fListPriceFlag ?? false : row.fListPriceFlag ?? false;
+    case "fPerishable":
+      return hasOwnPatchField(patch.item, "fPerishable") ? patch.item?.fPerishable ?? false : row.fPerishable ?? false;
+    case "fIdRequired":
+      return hasOwnPatchField(patch.item, "fIdRequired") ? patch.item?.fIdRequired ?? false : row.fIdRequired ?? false;
     case "description":
       return hasOwnPatchField(patch.gm, "description") ? patch.gm?.description ?? null : row.description;
     case "catalogNumber":
@@ -211,6 +233,18 @@ function getSelectedFieldValue(
       return hasOwnPatchField(patch.gm, "packageType") ? patch.gm?.packageType ?? null : row.packageType ?? null;
     case "unitsPerPack":
       return hasOwnPatchField(patch.gm, "unitsPerPack") ? patch.gm?.unitsPerPack ?? null : row.unitsPerPack ?? null;
+    case "imageUrl":
+      return hasOwnPatchField(patch.gm, "imageUrl") ? patch.gm?.imageUrl ?? null : row.imageUrl ?? null;
+    case "altVendorId":
+      return hasOwnPatchField(patch.gm, "altVendorId") ? patch.gm?.altVendorId ?? null : row.altVendorId ?? null;
+    case "mfgId":
+      return hasOwnPatchField(patch.gm, "mfgId") ? patch.gm?.mfgId ?? null : row.mfgId ?? null;
+    case "size":
+      return hasOwnPatchField(patch.gm, "size") ? patch.gm?.size ?? null : row.size ?? null;
+    case "colorId":
+      return hasOwnPatchField(patch.gm, "colorId") ? patch.gm?.colorId ?? null : row.colorId ?? null;
+    case "orderIncrement":
+      return hasOwnPatchField(patch.gm, "orderIncrement") ? patch.gm?.orderIncrement ?? null : row.orderIncrement ?? null;
     case "title":
       return hasOwnPatchField(patch.textbook, "title") ? patch.textbook?.title ?? null : row.title ?? null;
     case "author":

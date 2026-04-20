@@ -23,10 +23,10 @@ describe("buildPatch", () => {
 });
 
 describe("resolveEditDialogMode", () => {
-  it("resolves v2 when enabled and no override or textbook selection exists", () => {
+  it("resolves v2 for standard merchandise edits without requiring a feature flag", () => {
     expect(
       resolveEditDialogMode({
-        featureFlagEnabled: true,
+        featureFlagEnabled: false,
         override: null,
         hasTextbookSelection: false,
         selectionCount: 1,
@@ -67,14 +67,14 @@ describe("resolveEditDialogMode", () => {
     ).toBe("v2");
   });
 
-  it("keeps multi-select textbook edits on the legacy path", () => {
+  it("routes multi-select textbook edits to v2 so the shared parity surface stays consistent", () => {
     expect(
       resolveEditDialogMode({
-        featureFlagEnabled: true,
+        featureFlagEnabled: false,
         override: null,
         hasTextbookSelection: true,
         selectionCount: 2,
       }),
-    ).toBe("legacy");
+    ).toBe("v2");
   });
 });

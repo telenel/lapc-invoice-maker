@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { BulkEditSidebar } from "@/components/bulk-edit/bulk-edit-sidebar";
 import { CommitConfirmDialog } from "@/components/bulk-edit/commit-confirm-dialog";
 import { SelectionPanel } from "@/components/bulk-edit/selection-panel";
+import type { BulkEditSelectionSummaryItem } from "@/components/bulk-edit/selection-panel";
 import { TransformPanel } from "@/components/bulk-edit/transform-panel";
 import { PreviewPanel } from "@/components/bulk-edit/preview-panel";
 import { AuditLogList } from "@/components/bulk-edit/audit-log-list";
@@ -42,6 +43,9 @@ export default function BulkEditPage() {
   const [matchingCount, setMatchingCount] = useState<number | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedItems, setSelectedItems] = useState<BulkEditSelectionSummaryItem[]>([]);
+  const [selectedItemsLoading, setSelectedItemsLoading] = useState(false);
+  const [selectedItemsError, setSelectedItemsError] = useState<string | null>(null);
 
   useEffect(() => {
     const raw = searchParams.get("preloadSkus");
@@ -51,6 +55,52 @@ export default function BulkEditPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const skus = selection.skus ?? [];
+    if (skus.length === 0) {
+      setSelectedItems([]);
+      setSelectedItemsLoading(false);
+      setSelectedItemsError(null);
+      return;
+    }
+
+    let cancelled = false;
+    setSelectedItemsLoading(true);
+    setSelectedItemsError(null);
+
+    productApi
+      .editContext(skus)
+      .then((result) => {
+        if (cancelled) return;
+        const items = (result.items ?? [])
+          .map((item) => item.summary)
+          .filter((summary): summary is NonNullable<typeof summary> => summary != null && typeof summary.sku === "number")
+          .map((summary) => ({
+            sku: summary.sku,
+            displayName: summary.displayName?.trim() || `SKU ${summary.sku}`,
+            barcode: summary.barcode ?? null,
+            vendorLabel: summary.vendorLabel ?? null,
+            dccLabel: summary.dccLabel ?? null,
+            typeLabel: summary.typeLabel ?? "Item",
+          }));
+        setSelectedItems(items);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setSelectedItems([]);
+        setSelectedItemsError(err instanceof Error ? err.message : String(err));
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setSelectedItemsLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selection.skus]);
 
   const runPreview = useCallback(async () => {
     setPreviewing(true);
@@ -138,6 +188,9 @@ export default function BulkEditPage() {
             onChange={handleSelectionChange}
             matchingCount={matchingCount}
             onSaveSearch={() => setSaveOpen(true)}
+            selectedItems={selectedItems}
+            selectedItemsLoading={selectedItemsLoading}
+            selectedItemsError={selectedItemsError}
           />
 
           <TransformPanel

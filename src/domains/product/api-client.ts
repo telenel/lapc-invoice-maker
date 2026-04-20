@@ -15,6 +15,7 @@ import type {
   ProductEditDetails,
   ProductEditPatchV2,
 } from "./types";
+import type { ProductEditContextResponse } from "@/app/api/products/edit-context/route";
 import type { PrismRefs } from "./ref-data";
 import type { ProductLocationId, ProductLocationAbbrev } from "./types";
 export type {
@@ -201,6 +202,17 @@ export const productApi = {
     const res = await fetch(`/api/products/${sku}`, { cache: "no-store" });
     if (!res.ok) throw new Error(await parseError(res));
     return (await res.json()) as ProductEditDetails;
+  },
+
+  async editContext(skus: number[]): Promise<ProductEditContextResponse> {
+    const res = await fetch("/api/products/edit-context", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ skus }),
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error(await parseError(res));
+    return (await res.json()) as ProductEditContextResponse;
   },
 
   async update(

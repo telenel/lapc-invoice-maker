@@ -30,9 +30,21 @@ export type BulkEditFieldId =
   | "dccId"
   | "barcode"
   | "itemTaxTypeId"
+  | "comment"
   | "catalogNumber"
   | "packageType"
   | "unitsPerPack"
+  | "weight"
+  | "imageUrl"
+  | "altVendorId"
+  | "mfgId"
+  | "size"
+  | "colorId"
+  | "styleId"
+  | "itemSeasonCodeId"
+  | "orderIncrement"
+  | "usedDccId"
+  | "minOrderQtyItem"
   | "title"
   | "author"
   | "isbn"
@@ -44,6 +56,9 @@ export type BulkEditFieldId =
   | "tagTypeId"
   | "statusCodeId"
   | "estSales"
+  | "fListPriceFlag"
+  | "fPerishable"
+  | "fIdRequired"
   | "fInvListPriceFlag"
   | "fTxWantListFlag"
   | "fTxBuybackListFlag"
@@ -173,6 +188,21 @@ export interface BulkEditSourceRow {
   itemTaxTypeId: number | null;
   itemType: "textbook" | "used_textbook" | "general_merchandise" | null;
   fDiscontinue: 0 | 1;
+  comment?: string | null;
+  weight?: number | null;
+  imageUrl?: string | null;
+  altVendorId?: number | null;
+  mfgId?: number | null;
+  size?: string | null;
+  colorId?: number | null;
+  styleId?: number | null;
+  itemSeasonCodeId?: number | null;
+  orderIncrement?: number | null;
+  usedDccId?: number | null;
+  minOrderQtyItem?: number | null;
+  fListPriceFlag?: boolean;
+  fPerishable?: boolean;
+  fIdRequired?: boolean;
   title?: string | null;
   author?: string | null;
   isbn?: string | null;

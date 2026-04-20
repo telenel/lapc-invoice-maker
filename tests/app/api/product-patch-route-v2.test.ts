@@ -258,6 +258,79 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
     );
   });
 
+  it("accepts expanded item and GM fields in the V2 payload and mirrors them to products", async () => {
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          patch: {
+            item: {
+              usedDccId: 1802,
+              styleId: 44,
+              itemSeasonCodeId: 77,
+              fListPriceFlag: true,
+              fPerishable: true,
+              fIdRequired: true,
+              minOrderQtyItem: 5,
+            },
+            gm: {
+              altVendorId: 22,
+              mfgId: 91,
+              size: "XL",
+              colorId: 2,
+              orderIncrement: 6,
+            },
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(prismMocks.updateGmItem).toHaveBeenCalledWith(
+      1001,
+      {
+        item: {
+          usedDccId: 1802,
+          styleId: 44,
+          itemSeasonCodeId: 77,
+          fListPriceFlag: true,
+          fPerishable: true,
+          fIdRequired: true,
+          minOrderQtyItem: 5,
+        },
+        gm: {
+          altVendorId: 22,
+          mfgId: 91,
+          size: "XL",
+          colorId: 2,
+          orderIncrement: 6,
+        },
+      },
+      undefined,
+    );
+    expect(mockProductsUpsert).toHaveBeenCalledWith(expect.objectContaining({
+      sku: 1001,
+      used_dcc_id: 1802,
+      style_id: 44,
+      item_season_code_id: 77,
+      f_list_price_flag: true,
+      f_perishable: true,
+      f_id_required: true,
+      min_order_qty_item: 5,
+      alt_vendor_id: 22,
+      mfg_id: 91,
+      size: "XL",
+      color_id: 2,
+      order_increment: 6,
+      synced_at: expect.any(String),
+    }));
+  });
+
   it("accepts nullable inventory clears and forwards nulls unchanged", async () => {
     const productDetailRoute = await loadRouteModule();
     prismMocks.getItemSnapshot.mockResolvedValueOnce({

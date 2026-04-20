@@ -538,6 +538,45 @@ describe("EditItemDialogV2", () => {
     expect(screen.getByText(/Fields left blank won't be changed/i)).toBeInTheDocument();
   });
 
+  it("shows a persistent selected-item summary for multi-item edits", async () => {
+    await mockDirectoryState();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: "111222333444",
+            retail: 19.99,
+            cost: 9.5,
+            fDiscontinue: 0,
+            description: "Pierce Hoodie",
+          },
+          {
+            sku: 1002,
+            barcode: "555666777888",
+            retail: 29.99,
+            cost: 12.5,
+            fDiscontinue: 0,
+            description: "Pierce Mug",
+            isTextbook: true,
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByText("Selected items")).toBeInTheDocument();
+    expect(screen.getByText("2 items will receive the same shared field updates.")).toBeInTheDocument();
+    expect(screen.getByText("SKU 1001")).toBeInTheDocument();
+    expect(screen.getByText("Pierce Hoodie")).toBeInTheDocument();
+    expect(screen.getByText("111222333444")).toBeInTheDocument();
+    expect(screen.getByText("SKU 1002")).toBeInTheDocument();
+    expect(screen.getByText("Pierce Mug")).toBeInTheDocument();
+    expect(screen.getByText("Textbook")).toBeInTheDocument();
+  });
+
   it("does not clobber in-progress edits when detail hydration finishes", async () => {
     await mockDirectoryState();
     const user = userEvent.setup();
@@ -947,6 +986,132 @@ describe("EditItemDialogV2", () => {
 
     expect(productApiMocks.update).not.toHaveBeenCalled();
     expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it("sends expanded More and Advanced fields through the V2 item and GM buckets", async () => {
+    await mockDirectoryState();
+    productApiMocks.update.mockResolvedValue({ sku: 1001, appliedFields: [] });
+    const user = userEvent.setup();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: baseDetail.retail ?? 0,
+            cost: baseDetail.cost ?? 0,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+          },
+        ]}
+        detail={baseDetail}
+      />,
+    );
+
+    await user.click(screen.getByRole("tab", { name: "More" }));
+    await user.clear(screen.getByLabelText("Manufacturer ID"));
+    await user.type(screen.getByLabelText("Manufacturer ID"), "91");
+    await user.clear(screen.getByLabelText("Size"));
+    await user.type(screen.getByLabelText("Size"), "XL");
+    await user.clear(screen.getByLabelText("Style ID"));
+    await user.type(screen.getByLabelText("Style ID"), "44");
+    await user.clear(screen.getByLabelText("Season Code"));
+    await user.type(screen.getByLabelText("Season Code"), "77");
+    await user.clear(screen.getByLabelText("Order Increment"));
+    await user.type(screen.getByLabelText("Order Increment"), "6");
+
+    await user.click(screen.getByRole("tab", { name: "Advanced" }));
+    await user.click(screen.getByLabelText("Perishable"));
+    await user.click(screen.getByText("Enabled"));
+    await user.clear(screen.getByLabelText("Min Order Qty"));
+    await user.type(screen.getByLabelText("Min Order Qty"), "5");
+
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(productApiMocks.update).toHaveBeenCalledWith(
+      1001,
+      expect.objectContaining({
+        mode: "v2",
+        patch: expect.objectContaining({
+          item: expect.objectContaining({
+            styleId: 44,
+            itemSeasonCodeId: 77,
+            fPerishable: true,
+            minOrderQtyItem: 5,
+          }),
+          gm: expect.objectContaining({
+            mfgId: 91,
+            size: "XL",
+            orderIncrement: 6,
+          }),
+        }),
+      }),
+    );
+  });
+
+  it("uses typed V2 updates for each selected SKU in multi-item edits", async () => {
+    await mockDirectoryState();
+    productApiMocks.update.mockClear();
+    productApiMocks.update.mockResolvedValue({ sku: 1001, appliedFields: [] });
+    const user = userEvent.setup();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: "111222333444",
+            retail: 19.99,
+            cost: 9.5,
+            fDiscontinue: 0,
+            description: "Pierce Hoodie",
+          },
+          {
+            sku: 1002,
+            barcode: "555666777888",
+            retail: 29.99,
+            cost: 12.5,
+            fDiscontinue: 0,
+            description: "Pierce Mug",
+          },
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole("tab", { name: "More" }));
+    await user.type(screen.getByLabelText("Order Increment"), "3");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(productApiMocks.update).toHaveBeenCalledTimes(2);
+    expect(productApiMocks.update).toHaveBeenNthCalledWith(
+      1,
+      1001,
+      expect.objectContaining({
+        mode: "v2",
+        patch: expect.objectContaining({
+          gm: expect.objectContaining({
+            orderIncrement: 3,
+          }),
+        }),
+      }),
+    );
+    expect(productApiMocks.update).toHaveBeenNthCalledWith(
+      2,
+      1002,
+      expect.objectContaining({
+        mode: "v2",
+        patch: expect.objectContaining({
+          gm: expect.objectContaining({
+            orderIncrement: 3,
+          }),
+        }),
+      }),
+    );
   });
 
   it("sends changed textbook fields through the v2 textbook bucket", async () => {

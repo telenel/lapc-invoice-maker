@@ -293,52 +293,6 @@ function hasPatchFields<T extends object>(value: T): boolean {
   return Object.values(value).some((entry) => entry !== undefined);
 }
 
-function buildLegacyCompatiblePatch(form: FormState, baseline: FormState, isBulk: boolean) {
-  const rawPatch = buildPatch(baseline as Record<string, unknown>, form as Record<string, unknown>);
-  const patch: Record<string, unknown> = {};
-
-  for (const [key, value] of Object.entries(rawPatch)) {
-    if (isBulk && value === "") continue;
-
-    switch (key) {
-      case "description":
-        patch.description = value;
-        break;
-      case "barcode":
-        patch.barcode = value;
-        break;
-      case "vendorId":
-      case "dccId":
-      case "itemTaxTypeId":
-      case "unitsPerPack":
-        patch[key] = value === "" ? undefined : Number(value);
-        break;
-      case "retail":
-      case "cost":
-      case "weight":
-        patch[key] = Number(value);
-        break;
-      case "catalogNumber":
-      case "comment":
-      case "imageUrl":
-      case "packageType":
-        patch[key] = optionalString(String(value), isBulk);
-        break;
-      case "fDiscontinue":
-        patch.fDiscontinue = value ? 1 : 0;
-        break;
-      default:
-        break;
-    }
-  }
-
-  for (const key of Object.keys(patch)) {
-    if (patch[key] === undefined) delete patch[key];
-  }
-
-  return patch;
-}
-
 function buildV2Patch(form: FormState, baseline: FormState, isBulk: boolean, isTextbookRow: boolean): ProductEditPatchV2 {
   const rawPatch = buildPatch(baseline as Record<string, unknown>, form as Record<string, unknown>);
   const item: NonNullable<ProductEditPatchV2["item"]> = {};
@@ -364,8 +318,32 @@ function buildV2Patch(form: FormState, baseline: FormState, isBulk: boolean, isT
       case "itemTaxTypeId":
         item.itemTaxTypeId = value === "" ? undefined : Number(value);
         break;
+      case "altVendorId":
+        gm.altVendorId = value === "" ? undefined : Number(value);
+        break;
+      case "mfgId":
+        gm.mfgId = value === "" ? undefined : Number(value);
+        break;
+      case "colorId":
+        gm.colorId = value === "" ? undefined : Number(value);
+        break;
+      case "styleId":
+        item.styleId = value === "" ? undefined : Number(value);
+        break;
+      case "itemSeasonCodeId":
+        item.itemSeasonCodeId = value === "" ? undefined : Number(value);
+        break;
+      case "usedDccId":
+        item.usedDccId = value === "" ? undefined : Number(value);
+        break;
       case "unitsPerPack":
         gm.unitsPerPack = value === "" ? undefined : Number(value);
+        break;
+      case "orderIncrement":
+        gm.orderIncrement = value === "" ? undefined : Number(value);
+        break;
+      case "minOrderQtyItem":
+        item.minOrderQtyItem = value === "" ? undefined : Number(value);
         break;
       case "weight":
         item.weight = Number(value);
@@ -381,6 +359,18 @@ function buildV2Patch(form: FormState, baseline: FormState, isBulk: boolean, isT
         break;
       case "packageType":
         gm.packageType = optionalString(String(value), isBulk);
+        break;
+      case "size":
+        gm.size = optionalString(String(value), isBulk);
+        break;
+      case "fListPriceFlag":
+        item.fListPriceFlag = Boolean(value);
+        break;
+      case "fPerishable":
+        item.fPerishable = Boolean(value);
+        break;
+      case "fIdRequired":
+        item.fIdRequired = Boolean(value);
         break;
       case "fDiscontinue":
         item.fDiscontinue = value ? 1 : 0;
@@ -521,6 +511,46 @@ function Field({
       <Label htmlFor={id}>{label}</Label>
       {children}
     </div>
+  );
+}
+
+function SelectedItemsSummary({
+  items,
+}: {
+  items: EditItemDialogProps["items"];
+}) {
+  const title = items.length === 1 ? "Selected item" : "Selected items";
+  const subtitle =
+    items.length === 1
+      ? "Review the item identity before saving changes."
+      : `${items.length} items will receive the same shared field updates.`;
+
+  return (
+    <Section title={title} description={subtitle}>
+      <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
+        {items.map((item) => {
+          const typeLabel = item.isTextbook ? "Textbook" : "Merchandise";
+          const displayName = item.description?.trim() || `SKU ${item.sku}`;
+
+          return (
+            <div key={item.sku} className="rounded-lg border border-border/60 bg-background/70 px-3 py-2.5 text-sm">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <div>
+                  <div className="font-mono text-xs text-muted-foreground">SKU {item.sku}</div>
+                  <div className="font-medium text-foreground">{displayName}</div>
+                </div>
+                <span className="rounded bg-muted px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  {typeLabel}
+                </span>
+              </div>
+              <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                {item.barcode ? <span>{item.barcode}</span> : null}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Section>
   );
 }
 
@@ -792,19 +822,21 @@ export function EditItemDialogV2({
           },
         });
       } else {
-        const legacyPatch = buildLegacyCompatiblePatch(form, baselineForm, true);
-        const result = await productApi.batch({
-          action: "update",
-          rows: items.map((item) => ({
-            sku: item.sku,
-            patch: legacyPatch,
-            isTextbook: !!item.isTextbook,
-          })),
-        });
-        if ("errors" in result && result.errors.length > 0) {
-          setError(result.errors.map((entry) => `Row ${entry.rowIndex + 1}: ${entry.message}`).join("; "));
-          return;
-        }
+        await Promise.all(
+          items.map((item) =>
+            productApi.update(item.sku, {
+              mode: "v2",
+              patch: v2Patch,
+              baseline: {
+                sku: item.sku,
+                barcode: item.barcode,
+                retail: item.retail,
+                cost: item.cost,
+                fDiscontinue: item.fDiscontinue,
+              },
+            }),
+          ),
+        );
       }
 
       onSaved?.(items.map((item) => item.sku));
@@ -895,6 +927,8 @@ export function EditItemDialogV2({
 
         <div className="max-h-[calc(92vh-12rem)] overflow-y-auto px-6 py-5">
           <Tabs defaultValue="primary" className="gap-4">
+            <SelectedItemsSummary items={items} />
+
             <TabsList variant="line" className="w-full justify-start border-b border-border/70 px-0">
               <TabsTrigger value="primary">Primary</TabsTrigger>
               <TabsTrigger value="more">More</TabsTrigger>
@@ -1154,10 +1188,28 @@ export function EditItemDialogV2({
                     label="Alt Vendor"
                     value={form.altVendorId}
                     onChange={(value) => update("altVendorId", value)}
-                    disabled
+                    disabled={refsControlsDisabled}
+                    bulkMode={isBulk}
                   />
-                  <ReadOnlyValueField id={idFor("manufacturer")} label="Manufacturer" value={form.mfgId} />
-                  <ReadOnlyValueField id={idFor("size")} label="Size" value={form.size} />
+                  <Field id={idFor("manufacturer")} label="Manufacturer ID">
+                    <Input
+                      id={idFor("manufacturer")}
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={form.mfgId}
+                      onChange={(event) => update("mfgId", event.target.value)}
+                      placeholder={isBulk ? "Leave unchanged…" : ""}
+                    />
+                  </Field>
+                  <Field id={idFor("size")} label="Size">
+                    <Input
+                      id={idFor("size")}
+                      value={form.size}
+                      onChange={(event) => update("size", event.target.value)}
+                      placeholder={isBulk ? "Leave unchanged…" : ""}
+                    />
+                  </Field>
                   <ItemRefSelectField
                     id={idFor("color")}
                     refs={refs}
@@ -1165,40 +1217,78 @@ export function EditItemDialogV2({
                     label="Color"
                     value={form.colorId}
                     onChange={(value) => update("colorId", value)}
-                    disabled
+                    disabled={refsControlsDisabled}
+                    bulkMode={isBulk}
                   />
-                  <ReadOnlyValueField id={idFor("style")} label="Style" value={form.styleId} />
-                  <ReadOnlyValueField id={idFor("season")} label="Season" value={form.itemSeasonCodeId} />
-                  <ReadOnlyValueField id={idFor("orderIncrement")} label="Order Increment" value={form.orderIncrement} />
+                  <Field id={idFor("style")} label="Style ID">
+                    <Input
+                      id={idFor("style")}
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={form.styleId}
+                      onChange={(event) => update("styleId", event.target.value)}
+                      placeholder={isBulk ? "Leave unchanged…" : ""}
+                    />
+                  </Field>
+                  <Field id={idFor("season")} label="Season Code">
+                    <Input
+                      id={idFor("season")}
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={form.itemSeasonCodeId}
+                      onChange={(event) => update("itemSeasonCodeId", event.target.value)}
+                      placeholder={isBulk ? "Leave unchanged…" : ""}
+                    />
+                  </Field>
+                  <Field id={idFor("orderIncrement")} label="Order Increment">
+                    <Input
+                      id={idFor("orderIncrement")}
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={form.orderIncrement}
+                      onChange={(event) => update("orderIncrement", event.target.value)}
+                      placeholder={isBulk ? "Leave unchanged…" : ""}
+                    />
+                  </Field>
                 </div>
               </Section>
             </TabsContent>
 
             <TabsContent value="advanced" className="space-y-4 pt-1">
-              <Section title="Advanced flags" description="These rare item-level fields are visible now and remain read-only until the Phase 5 wiring pass.">
+              <Section title="Advanced flags" description="Rare item-level controls stay out of the way, but they now save through the same V2 patch contract as the primary fields.">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <BooleanSelectField
                     id={idFor("listFlag")}
                     label="List Price Flag"
                     value={form.fListPriceFlag}
                     onChange={(value) => update("fListPriceFlag", value)}
-                    disabled
                   />
                   <BooleanSelectField
                     id={idFor("perishable")}
                     label="Perishable"
                     value={form.fPerishable}
                     onChange={(value) => update("fPerishable", value)}
-                    disabled
                   />
                   <BooleanSelectField
                     id={idFor("idRequired")}
                     label="ID Required"
                     value={form.fIdRequired}
                     onChange={(value) => update("fIdRequired", value)}
-                    disabled
                   />
-                  <ReadOnlyValueField id={idFor("minOrderQty")} label="Min Order Qty" value={form.minOrderQtyItem} />
+                  <Field id={idFor("minOrderQty")} label="Min Order Qty">
+                    <Input
+                      id={idFor("minOrderQty")}
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={form.minOrderQtyItem}
+                      onChange={(event) => update("minOrderQtyItem", event.target.value)}
+                      placeholder={isBulk ? "Leave unchanged…" : ""}
+                    />
+                  </Field>
                   <ItemRefSelectField
                     id={idFor("usedDcc")}
                     refs={refs}
@@ -1206,7 +1296,8 @@ export function EditItemDialogV2({
                     label="Used DCC"
                     value={form.usedDccId}
                     onChange={(value) => update("usedDccId", value)}
-                    disabled
+                    disabled={refsControlsDisabled}
+                    bulkMode={isBulk}
                   />
                 </div>
               </Section>

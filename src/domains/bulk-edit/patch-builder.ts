@@ -202,11 +202,52 @@ function applyFieldToPatch(
       }
       break;
     }
+    case "usedDccId":
+    case "styleId":
+    case "itemSeasonCodeId":
+    case "minOrderQtyItem": {
+      const currentValue = row[fieldId] ?? null;
+      const nextValue = normalizeRequiredNumberValue(value);
+      if (nextValue !== undefined && nextValue !== currentValue) {
+        patch.item[fieldId] = nextValue;
+        setChangedField(changedFields, fieldId);
+      }
+      break;
+    }
     case "fDiscontinue": {
       const currentValue = row.fDiscontinue;
       const nextValue = normalizeBooleanValue(value) ? 1 : 0;
       if (nextValue !== currentValue) {
         patch.item.fDiscontinue = nextValue;
+        setChangedField(changedFields, fieldId);
+      }
+      break;
+    }
+    case "fListPriceFlag":
+    case "fPerishable":
+    case "fIdRequired": {
+      const currentValue = row[fieldId] ?? false;
+      const nextValue = normalizeBooleanValue(value);
+      if (nextValue !== currentValue) {
+        patch.item[fieldId] = nextValue;
+        setChangedField(changedFields, fieldId);
+      }
+      break;
+    }
+    case "comment": {
+      const currentValue = row.comment ?? null;
+      const nextValue = normalizeTextValue(value);
+      if (nextValue !== undefined && nextValue !== currentValue) {
+        patch.item.comment = nextValue;
+        setChangedField(changedFields, fieldId);
+      }
+      break;
+    }
+    case "weight": {
+      const currentValue = row.weight ?? null;
+      const nextValue = normalizeRequiredNumberValue(value);
+      if (nextValue !== undefined && nextValue !== currentValue) {
+        patch.item.weight = nextValue;
         setChangedField(changedFields, fieldId);
       }
       break;
@@ -224,6 +265,28 @@ function applyFieldToPatch(
     case "packageType": {
       const currentValue = row[fieldId];
       const nextValue = normalizeTextValue(value);
+      if (nextValue !== undefined && nextValue !== currentValue) {
+        patch.gm[fieldId] = nextValue;
+        setChangedField(changedFields, fieldId);
+      }
+      break;
+    }
+    case "imageUrl":
+    case "size": {
+      const currentValue = row[fieldId] ?? null;
+      const nextValue = normalizeTextValue(value);
+      if (nextValue !== undefined && nextValue !== currentValue) {
+        patch.gm[fieldId] = nextValue;
+        setChangedField(changedFields, fieldId);
+      }
+      break;
+    }
+    case "altVendorId":
+    case "mfgId":
+    case "colorId":
+    case "orderIncrement": {
+      const currentValue = row[fieldId] ?? null;
+      const nextValue = normalizeRequiredNumberValue(value);
       if (nextValue !== undefined && nextValue !== currentValue) {
         patch.gm[fieldId] = nextValue;
         setChangedField(changedFields, fieldId);

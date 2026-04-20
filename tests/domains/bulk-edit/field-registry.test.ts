@@ -5,6 +5,7 @@ import {
   bulkEditFieldRegistry,
   getBulkEditFieldDefinition,
 } from "@/domains/bulk-edit/field-registry";
+import { productEditableFieldRegistry } from "@/domains/product/editable-fields";
 
 describe("bulkEditFieldRegistry", () => {
   it("keeps every registry key aligned with the embedded field id", () => {
@@ -37,6 +38,7 @@ describe("bulkEditFieldRegistry", () => {
       "vendorId",
       "itemTaxTypeId",
       "catalogNumber",
+      "comment",
       "fDiscontinue",
     ]);
 
@@ -56,9 +58,24 @@ describe("bulkEditFieldRegistry", () => {
     expect(bulkEditFieldPickerSections[2]?.fields.map((field) => field.id)).toEqual([
       "packageType",
       "unitsPerPack",
+      "weight",
+      "imageUrl",
+      "altVendorId",
+      "mfgId",
+      "size",
+      "colorId",
+      "orderIncrement",
     ]);
 
-    expect(bulkEditFieldPickerSections[3]?.fields).toEqual([]);
+    expect(bulkEditFieldPickerSections[3]?.fields.map((field) => field.id)).toEqual([
+      "styleId",
+      "itemSeasonCodeId",
+      "usedDccId",
+      "minOrderQtyItem",
+      "fListPriceFlag",
+      "fPerishable",
+      "fIdRequired",
+    ]);
   });
 
   it("flattens picker fields in the same order and supports id lookup", () => {
@@ -74,6 +91,7 @@ describe("bulkEditFieldRegistry", () => {
       "vendorId",
       "itemTaxTypeId",
       "catalogNumber",
+      "comment",
       "fDiscontinue",
       "retail",
       "cost",
@@ -87,6 +105,20 @@ describe("bulkEditFieldRegistry", () => {
       "fNoReturns",
       "packageType",
       "unitsPerPack",
+      "weight",
+      "imageUrl",
+      "altVendorId",
+      "mfgId",
+      "size",
+      "colorId",
+      "orderIncrement",
+      "styleId",
+      "itemSeasonCodeId",
+      "usedDccId",
+      "minOrderQtyItem",
+      "fListPriceFlag",
+      "fPerishable",
+      "fIdRequired",
     ]);
 
     expect(getBulkEditFieldDefinition("vendorId")).toBe(bulkEditFieldRegistry.vendorId);
@@ -94,27 +126,30 @@ describe("bulkEditFieldRegistry", () => {
   });
 
   it("marks inventory fields as location-aware and keeps their fill-rate hints", () => {
-    expect(bulkEditFieldRegistry.retail).toEqual({
+    expect(bulkEditFieldRegistry.retail).toMatchObject({
       id: "retail",
       label: "Retail",
       group: "inventory",
       fillRateLabel: "98.4% / 98.9%",
+      locationAware: true,
       requiresLocation: true,
     });
 
-    expect(bulkEditFieldRegistry.expectedCost).toEqual({
+    expect(bulkEditFieldRegistry.expectedCost).toMatchObject({
       id: "expectedCost",
       label: "Expected Cost",
       group: "inventory",
       fillRateLabel: "39.6% / 81.9%",
+      locationAware: true,
       requiresLocation: true,
     });
 
-    expect(bulkEditFieldRegistry.fTxWantListFlag).toEqual({
+    expect(bulkEditFieldRegistry.fTxWantListFlag).toMatchObject({
       id: "fTxWantListFlag",
       label: "Want List",
       group: "inventory",
       fillRateLabel: "4.9% / 76.2%",
+      locationAware: true,
       requiresLocation: true,
     });
   });
@@ -125,24 +160,49 @@ describe("bulkEditFieldRegistry", () => {
       label: "Description",
       group: "primary",
       fillRateLabel: "100.0%",
+      locationAware: false,
       requiresLocation: false,
     });
 
-    expect(bulkEditFieldRegistry.packageType).toEqual({
+    expect(bulkEditFieldRegistry.packageType).toMatchObject({
       id: "packageType",
       label: "Package Type",
       group: "more",
       fillRateLabel: "100.0%",
+      locationAware: false,
       requiresLocation: false,
+      refSource: "packageTypes",
       refOptionKey: "packageTypes",
     });
 
-    expect(bulkEditFieldRegistry.unitsPerPack).toEqual({
+    expect(bulkEditFieldRegistry.unitsPerPack).toMatchObject({
       id: "unitsPerPack",
       label: "Units per Pack",
       group: "more",
       fillRateLabel: "15.0%",
+      locationAware: false,
       requiresLocation: false,
     });
+
+    expect(bulkEditFieldRegistry.colorId).toMatchObject({
+      id: "colorId",
+      label: "Color",
+      group: "more",
+      refSource: "colors",
+      refOptionKey: "colors",
+    });
+
+    expect(bulkEditFieldRegistry.fListPriceFlag).toMatchObject({
+      id: "fListPriceFlag",
+      label: "List Price Flag",
+      group: "advanced",
+      locationAware: false,
+      requiresLocation: false,
+    });
+  });
+
+  it("reuses the shared product editable-field catalog", () => {
+    expect(bulkEditFieldRegistry.retail).toBe(productEditableFieldRegistry.retail as typeof bulkEditFieldRegistry.retail);
+    expect(bulkEditFieldRegistry.vendorId).toBe(productEditableFieldRegistry.vendorId as typeof bulkEditFieldRegistry.vendorId);
   });
 });

@@ -7,14 +7,34 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { BulkEditSelection, ProductFilters } from "@/domains/bulk-edit/types";
 
+export interface BulkEditSelectionSummaryItem {
+  sku: number;
+  displayName: string;
+  barcode: string | null;
+  vendorLabel: string | null;
+  dccLabel: string | null;
+  typeLabel: string;
+}
+
 interface SelectionPanelProps {
   selection: BulkEditSelection;
   onChange: (next: BulkEditSelection) => void;
   matchingCount: number | null;
   onSaveSearch: () => void;
+  selectedItems?: BulkEditSelectionSummaryItem[];
+  selectedItemsLoading?: boolean;
+  selectedItemsError?: string | null;
 }
 
-export function SelectionPanel({ selection, onChange, matchingCount, onSaveSearch }: SelectionPanelProps) {
+export function SelectionPanel({
+  selection,
+  onChange,
+  matchingCount,
+  onSaveSearch,
+  selectedItems = [],
+  selectedItemsLoading = false,
+  selectedItemsError = null,
+}: SelectionPanelProps) {
   const [pasteValue, setPasteValue] = useState("");
 
   function setFilter<K extends keyof ProductFilters>(key: K, value: ProductFilters[K] | undefined) {
@@ -164,6 +184,56 @@ export function SelectionPanel({ selection, onChange, matchingCount, onSaveSearc
           </Button>
         </div>
       </details>
+
+      {selection.skus?.length ? (
+        <div className="space-y-2 rounded border border-muted bg-muted/20 p-3">
+          <div className="flex items-baseline justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-medium">Selected items</h3>
+              <p className="text-xs text-muted-foreground">
+                {selectedItems.length > 0
+                  ? `${selectedItems.length} item${selectedItems.length === 1 ? "" : "s"} resolved from the current SKU selection.`
+                  : `${selection.skus.length} SKU${selection.skus.length === 1 ? "" : "s"} selected.`}
+              </p>
+            </div>
+          </div>
+
+          {selectedItemsLoading ? (
+            <p role="status" className="text-sm text-muted-foreground">
+              Resolving selected item identities…
+            </p>
+          ) : null}
+
+          {selectedItemsError ? (
+            <p role="alert" className="text-sm text-destructive">
+              {selectedItemsError}
+            </p>
+          ) : null}
+
+          {!selectedItemsLoading && !selectedItemsError && selectedItems.length > 0 ? (
+            <div className="max-h-56 space-y-2 overflow-y-auto pr-1">
+              {selectedItems.map((item) => (
+                <div key={item.sku} className="rounded border bg-background px-3 py-2 text-sm">
+                  <div className="flex flex-wrap items-baseline justify-between gap-2">
+                    <div>
+                      <div className="font-mono text-xs text-muted-foreground">SKU {item.sku}</div>
+                      <div className="font-medium">{item.displayName}</div>
+                    </div>
+                    <span className="rounded bg-muted px-2 py-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      {item.typeLabel}
+                    </span>
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                    {item.barcode ? <span>{item.barcode}</span> : null}
+                    {item.vendorLabel ? <span>{item.vendorLabel}</span> : null}
+                    {item.dccLabel ? <span>{item.dccLabel}</span> : null}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" size="sm" onClick={clear}>Clear</Button>

@@ -10,6 +10,7 @@ const {
   bulkEditDryRunMock,
   bulkEditFieldCommitMock,
   bulkEditFieldDryRunMock,
+  editContextMock,
   listBulkEditRunsMock,
   refreshMock,
   refsDirectoryMock,
@@ -19,6 +20,7 @@ const {
   bulkEditDryRunMock: vi.fn(),
   bulkEditFieldCommitMock: vi.fn(),
   bulkEditFieldDryRunMock: vi.fn(),
+  editContextMock: vi.fn(),
   listBulkEditRunsMock: vi.fn(),
   refreshMock: vi.fn(),
   refsDirectoryMock: vi.fn(),
@@ -42,6 +44,7 @@ vi.mock("@/domains/product/api-client", () => ({
     bulkEditCommit: bulkEditCommitMock,
     bulkEditFieldDryRun: bulkEditFieldDryRunMock,
     bulkEditFieldCommit: bulkEditFieldCommitMock,
+    editContext: editContextMock,
     listBulkEditRuns: listBulkEditRunsMock,
   },
 }));
@@ -129,8 +132,39 @@ describe("BulkEditPage Phase 8 field picker flow", () => {
     bulkEditCommitMock.mockReset();
     bulkEditFieldDryRunMock.mockReset();
     bulkEditFieldCommitMock.mockReset();
+    editContextMock.mockReset();
     listBulkEditRunsMock.mockResolvedValue({ items: [], total: 0 });
     toastSuccessMock.mockReset();
+    editContextMock.mockResolvedValue({
+      items: [
+        {
+          sku: 101,
+          itemType: "general_merchandise",
+          summary: {
+            sku: 101,
+            displayName: "Pierce Hoodie",
+            barcode: "111222333444",
+            vendorLabel: "Acme Books",
+            dccLabel: "Books / Sci-Fi",
+            typeLabel: "Merchandise",
+          },
+          inventoryByLocation: [],
+        },
+        {
+          sku: 202,
+          itemType: "textbook",
+          summary: {
+            sku: 202,
+            displayName: "Biology 101",
+            barcode: "999888777666",
+            vendorLabel: "Campus Texts",
+            dccLabel: "Texts / Biology",
+            typeLabel: "Textbook",
+          },
+          inventoryByLocation: [],
+        },
+      ],
+    });
     refsDirectoryMock.mockReturnValue({
       refs: {
         vendors: [{ vendorId: 21, name: "Acme Books", pierceItems: 12 }],
@@ -184,6 +218,22 @@ describe("BulkEditPage Phase 8 field picker flow", () => {
 
     expect(screen.getByText("Selected 5 of 5 fields")).toBeInTheDocument();
     expect(screen.getByLabelText("Select Cost")).toBeDisabled();
+  });
+
+  it("resolves preload SKUs into a selected-item identity tray", async () => {
+    render(<BulkEditPage />);
+
+    await waitFor(() => {
+      expect(editContextMock).toHaveBeenCalledWith([101, 202]);
+    });
+
+    expect(screen.getByText("Selected items")).toBeInTheDocument();
+    expect(screen.getByText("Pierce Hoodie")).toBeInTheDocument();
+    expect(screen.getByText("Biology 101")).toBeInTheDocument();
+    expect(screen.getByText("Acme Books")).toBeInTheDocument();
+    expect(screen.getByText("Campus Texts")).toBeInTheDocument();
+    expect(screen.getByText("SKU 101")).toBeInTheDocument();
+    expect(screen.getByText("SKU 202")).toBeInTheDocument();
   });
 
   it("renders matching value editors and inventory scope only when a location-aware field is selected", async () => {
