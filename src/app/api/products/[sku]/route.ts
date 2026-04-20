@@ -290,9 +290,8 @@ export const GET = withAdmin(async (_request: NextRequest, _session, ctx?: Route
       .select(PRODUCT_INVENTORY_SELECT)
       .eq("sku", sku)
       .in("location_id", PRODUCT_INVENTORY_LOCATION_IDS);
-    const inventoryRows: ProductInventoryEditDetailRow[] = Array.isArray(inventoryResult.data)
-      ? inventoryResult.data.filter(isProductInventoryEditDetailRow)
-      : [];
+    const rawInventoryRows = Array.isArray(inventoryResult.data) ? inventoryResult.data : [];
+    const inventoryRows = rawInventoryRows.filter(isProductInventoryEditDetailRow);
     const inventoryError = inventoryResult.error;
 
     if (inventoryError) {
