@@ -20,7 +20,6 @@ import {
   normalizeProductLocationIds,
   type ProductLocationId,
 } from "@/domains/product/location-filters";
-import { getSelectedProductCacheKey } from "@/domains/product/selected-products";
 import type { ProductEditDetails, ProductEditPatchV2, SelectedProduct } from "@/domains/product/types";
 import { useProductRefDirectory } from "@/domains/product/vendor-directory";
 import type { EditItemDialogProps, SavedScopedItemsOptions } from "../edit-item-dialog-legacy";
@@ -365,10 +364,17 @@ export function EditItemDialogV2({
       const detailInventoryByLocation = new Map(
         (detail?.inventoryByLocation ?? []).map((inventory) => [inventory.locationId, inventory] as const),
       );
+      const liveDetailLocationIds = new Set(
+        (detail?.inventoryByLocation ?? []).map((inventory) => inventory.locationId),
+      );
       const itemCacheLocationIds = new Set<ProductLocationId>(cacheLocationIds);
       if (hasGlobalFieldChanges) {
         for (const knownScopedItem of Array.from(knownScopedItemsByKey?.values() ?? [])) {
-          if (knownScopedItem.sku === item.sku && knownScopedItem.pricingLocationId != null) {
+          if (
+            knownScopedItem.sku === item.sku &&
+            knownScopedItem.pricingLocationId != null &&
+            liveDetailLocationIds.has(knownScopedItem.pricingLocationId)
+          ) {
             itemCacheLocationIds.add(knownScopedItem.pricingLocationId);
           }
         }
@@ -377,32 +383,21 @@ export function EditItemDialogV2({
       for (const locationId of Array.from(itemCacheLocationIds)) {
         const inventoryPatch = v2Patch.inventory?.find((entry) => entry.locationId === locationId);
         const inventoryDetail = detailInventoryByLocation.get(locationId);
-        const knownScopedItem =
-          hasGlobalFieldChanges
-            ? (
-              (() => {
-                const cacheKey = getSelectedProductCacheKey(item.sku, locationId);
-                return cacheKey != null
-                  ? (knownScopedItemsByKey?.get(cacheKey) ?? null)
-                  : null;
-              })()
-            )
-            : null;
         const knownRetail =
           inventoryPatch?.retail !== undefined
             ? (inventoryPatch.retail ?? null)
             : (
               locationId === resolvedPrimaryLocationId
-                ? (item.retail ?? inventoryDetail?.retail ?? knownScopedItem?.retailPrice ?? null)
-                : (inventoryDetail?.retail ?? knownScopedItem?.retailPrice ?? null)
+                ? (item.retail ?? inventoryDetail?.retail ?? null)
+                : (inventoryDetail?.retail ?? null)
             );
         const knownCost =
           inventoryPatch?.cost !== undefined
             ? (inventoryPatch.cost ?? null)
             : (
               locationId === resolvedPrimaryLocationId
-                ? (item.cost ?? inventoryDetail?.cost ?? knownScopedItem?.cost ?? null)
-                : (inventoryDetail?.cost ?? knownScopedItem?.cost ?? null)
+                ? (item.cost ?? inventoryDetail?.cost ?? null)
+                : (inventoryDetail?.cost ?? null)
             );
         const hasKnownRetail =
           inventoryPatch?.retail !== undefined ||

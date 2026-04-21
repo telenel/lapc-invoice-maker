@@ -1638,7 +1638,7 @@ describe("EditItemDialogV2", () => {
     ]);
   });
 
-  it("fans out global barcode edits to other known cached scopes", async () => {
+  it("fans out global barcode edits to other known cached scopes with live detail", async () => {
     productApiMocks.update.mockResolvedValue({ sku: 1001, appliedFields: ["item:barcode"] });
     const onSavedScopedItems = vi.fn();
     await mockDirectoryState();
@@ -1660,7 +1660,14 @@ describe("EditItemDialogV2", () => {
             itemType: "general_merchandise",
           },
         ]}
-        detail={null}
+        detail={{
+          ...baseDetail,
+          inventoryByLocation: [
+            { ...baseDetail.inventoryByLocation[0], locationId: 2, retail: 39.99, cost: 19.5 },
+            { ...baseDetail.inventoryByLocation[1], locationId: 3, retail: 30, cost: 15 },
+            baseDetail.inventoryByLocation[2],
+          ],
+        }}
         knownScopedItemsByKey={new Map([
           [
             "1001:3",
