@@ -1016,6 +1016,11 @@ describe("ProductsPage edit dialog mode integration", () => {
 
   it("drops non-sticky saved scoped values after a divergent visible refetch", async () => {
     const user = userEvent.setup();
+    let resolveRefetch: (() => void) | null = null;
+    const refetchPromise = new Promise<void>((resolve) => {
+      resolveRefetch = resolve;
+    });
+    refetchMock.mockReturnValue(refetchPromise);
     searchParamsState = new URLSearchParams("tab=merchandise&loc=4");
     const staleVisibleRow = {
       sku: 1001,
@@ -1085,6 +1090,20 @@ describe("ProductsPage edit dialog mode integration", () => {
     await waitFor(() => {
       expect(screen.queryByText("dialog:v2")).not.toBeInTheDocument();
     });
+
+    await user.click(screen.getByRole("button", { name: "Save selection snapshot" }));
+    expect(JSON.parse(sessionStorage.getItem(CATALOG_ITEMS_STORAGE_KEY) ?? "[]")).toMatchObject([
+      {
+        sku: 1001,
+        retailPrice: 44.99,
+        cost: 22.25,
+        barcode: "999888777000",
+        fDiscontinue: 1,
+      },
+    ]);
+
+    resolveRefetch?.();
+    await refetchPromise;
 
     useProductSearchMock.mockReturnValue({
       data: {

@@ -20,6 +20,7 @@ import {
   normalizeProductLocationIds,
   type ProductLocationId,
 } from "@/domains/product/location-filters";
+import { getSelectedProductCacheKey } from "@/domains/product/selected-products";
 import type { ProductEditDetails, ProductEditPatchV2, SelectedProduct } from "@/domains/product/types";
 import { useProductRefDirectory } from "@/domains/product/vendor-directory";
 import type { EditItemDialogProps, SavedScopedItemsOptions } from "../edit-item-dialog-legacy";
@@ -74,6 +75,7 @@ export function EditItemDialogV2({
   items,
   onSaved,
   onSavedScopedItems,
+  knownScopedItemsByKey,
   detail = null,
   detailLoading = false,
   locationIds = [...DEFAULT_PRODUCT_LOCATION_IDS],
@@ -344,12 +346,17 @@ export function EditItemDialogV2({
     const itemPatch = v2Patch.item;
     const gmPatch = v2Patch.gm;
     const textbookPatch = v2Patch.textbook;
+    const hasGlobalFieldChanges =
+      hasPatchFields(itemPatch ?? {}) ||
+      hasPatchFields(gmPatch ?? {}) ||
+      hasPatchFields(textbookPatch ?? {});
     const cacheLocationIds = new Set<ProductLocationId>([resolvedPrimaryLocationId]);
     for (const inventoryPatch of v2Patch.inventory ?? []) {
       cacheLocationIds.add(inventoryPatch.locationId);
     }
 
-    return items.flatMap((item) => {
+    const savedItems: SelectedProduct[] = [];
+    for (const item of items) {
       const nextTitle =
         textbookPatch?.title !== undefined
           ? (textbookPatch.title ?? null)
@@ -358,25 +365,44 @@ export function EditItemDialogV2({
       const detailInventoryByLocation = new Map(
         (detail?.inventoryByLocation ?? []).map((inventory) => [inventory.locationId, inventory] as const),
       );
+      const itemCacheLocationIds = new Set<ProductLocationId>(cacheLocationIds);
+      if (hasGlobalFieldChanges) {
+        for (const knownScopedItem of Array.from(knownScopedItemsByKey?.values() ?? [])) {
+          if (knownScopedItem.sku === item.sku && knownScopedItem.pricingLocationId != null) {
+            itemCacheLocationIds.add(knownScopedItem.pricingLocationId);
+          }
+        }
+      }
 
-      return Array.from(cacheLocationIds).map((locationId) => {
+      for (const locationId of Array.from(itemCacheLocationIds)) {
         const inventoryPatch = v2Patch.inventory?.find((entry) => entry.locationId === locationId);
         const inventoryDetail = detailInventoryByLocation.get(locationId);
+        const knownScopedItem =
+          hasGlobalFieldChanges
+            ? (
+              (() => {
+                const cacheKey = getSelectedProductCacheKey(item.sku, locationId);
+                return cacheKey != null
+                  ? (knownScopedItemsByKey?.get(cacheKey) ?? null)
+                  : null;
+              })()
+            )
+            : null;
         const knownRetail =
           inventoryPatch?.retail !== undefined
             ? (inventoryPatch.retail ?? null)
             : (
               locationId === resolvedPrimaryLocationId
-                ? (item.retail ?? inventoryDetail?.retail ?? null)
-                : (inventoryDetail?.retail ?? null)
+                ? (item.retail ?? inventoryDetail?.retail ?? knownScopedItem?.retailPrice ?? null)
+                : (inventoryDetail?.retail ?? knownScopedItem?.retailPrice ?? null)
             );
         const knownCost =
           inventoryPatch?.cost !== undefined
             ? (inventoryPatch.cost ?? null)
             : (
               locationId === resolvedPrimaryLocationId
-                ? (item.cost ?? inventoryDetail?.cost ?? null)
-                : (inventoryDetail?.cost ?? null)
+                ? (item.cost ?? inventoryDetail?.cost ?? knownScopedItem?.cost ?? null)
+                : (inventoryDetail?.cost ?? knownScopedItem?.cost ?? null)
             );
         const hasKnownRetail =
           inventoryPatch?.retail !== undefined ||
@@ -385,10 +411,10 @@ export function EditItemDialogV2({
           inventoryPatch?.cost !== undefined ||
           knownCost != null;
         if (!hasKnownRetail || !hasKnownCost) {
-          return null;
+          continue;
         }
 
-        return {
+        savedItems.push({
           sku: item.sku,
           description: nextDescription,
           retailPrice: knownRetail,
@@ -424,9 +450,11 @@ export function EditItemDialogV2({
             itemPatch?.fDiscontinue !== undefined
               ? itemPatch.fDiscontinue
               : item.fDiscontinue,
-        };
-      }).filter((savedItem): savedItem is SelectedProduct => savedItem !== null);
-    });
+        });
+      }
+    }
+
+    return savedItems;
   }
 
   async function handleSave() {

@@ -117,10 +117,45 @@ function buildInlineEditRows(
 type SavedScopedSelectionEntry = {
   product: SelectedProduct;
   retainUntilMatch: boolean;
+  pendingRefetch: boolean;
 };
 
 function getSelectedProductCacheSku(cacheKey: string): number {
   return Number(cacheKey.split(":", 1)[0]);
+}
+
+function shouldUseSavedScopedSelection(
+  entry: SavedScopedSelectionEntry | null,
+  liveScopedSelection: SelectedProduct | null,
+  primaryLocationId: ProductLocationId,
+): boolean {
+  if (entry == null) {
+    return false;
+  }
+  if (liveScopedSelection == null) {
+    return true;
+  }
+  if (liveScopedSelection.pricingLocationId !== primaryLocationId) {
+    return true;
+  }
+  if (entry.pendingRefetch || entry.retainUntilMatch) {
+    return true;
+  }
+  return selectedProductsEqual(entry.product, liveScopedSelection);
+}
+
+function shouldDropSavedScopedSelection(
+  entry: SavedScopedSelectionEntry,
+  liveScopedSelection: SelectedProduct | null,
+  primaryLocationId: ProductLocationId,
+): boolean {
+  if (liveScopedSelection == null || liveScopedSelection.pricingLocationId !== primaryLocationId) {
+    return false;
+  }
+  if (selectedProductsEqual(entry.product, liveScopedSelection)) {
+    return true;
+  }
+  return !entry.pendingRefetch && !entry.retainUntilMatch;
 }
 
 export default function ProductsPage() {
@@ -252,7 +287,7 @@ export default function ProductsPage() {
     setScopedSelectionCache((current) => {
       let changed = false;
       const next = new Map(current);
-      for (const cacheKey of current.keys()) {
+      for (const cacheKey of Array.from(current.keys())) {
         if (selectedSkus.has(getSelectedProductCacheSku(cacheKey))) {
           continue;
         }
@@ -265,7 +300,7 @@ export default function ProductsPage() {
     setSavedScopedSelectionCache((current) => {
       let changed = false;
       const next = new Map(current);
-      for (const cacheKey of current.keys()) {
+      for (const cacheKey of Array.from(current.keys())) {
         if (selectedSkus.has(getSelectedProductCacheSku(cacheKey))) {
           continue;
         }
@@ -286,13 +321,12 @@ export default function ProductsPage() {
         const savedScopedSelectionEntry =
           cacheKey != null ? (savedScopedSelectionCache.get(cacheKey) ?? null) : null;
         const savedScopedSelection =
-          savedScopedSelectionEntry != null &&
-          (
-            liveScopedSelection?.pricingLocationId !== primaryLocationId ||
-            savedScopedSelectionEntry.retainUntilMatch ||
-            selectedProductsEqual(savedScopedSelectionEntry.product, liveScopedSelection)
+          shouldUseSavedScopedSelection(
+            savedScopedSelectionEntry,
+            liveScopedSelection,
+            primaryLocationId,
           )
-            ? savedScopedSelectionEntry.product
+            ? (savedScopedSelectionEntry?.product ?? null)
             : null;
         const canUseScopedSelectionCache =
           liveScopedSelection == null || liveScopedSelection.pricingLocationId === primaryLocationId;
@@ -353,7 +387,7 @@ export default function ProductsPage() {
         }
         const savedSelection = next.get(cacheKey);
         if (savedSelection) {
-          if (selectedProductsEqual(savedSelection.product, scopedSelection) || !savedSelection.retainUntilMatch) {
+          if (shouldDropSavedScopedSelection(savedSelection, scopedSelection, primaryLocationId)) {
             next.delete(cacheKey);
             changed = true;
           }
@@ -393,13 +427,12 @@ export default function ProductsPage() {
           ? (
             (() => {
               const savedScopedSelectionEntry = savedScopedSelectionCache.get(cacheKey) ?? null;
-              return savedScopedSelectionEntry != null &&
-                (
-                  liveScopedSelection?.pricingLocationId !== primaryLocationId ||
-                  savedScopedSelectionEntry.retainUntilMatch ||
-                  selectedProductsEqual(savedScopedSelectionEntry.product, liveScopedSelection)
-                )
-                ? savedScopedSelectionEntry.product
+              return shouldUseSavedScopedSelection(
+                savedScopedSelectionEntry,
+                liveScopedSelection,
+                primaryLocationId,
+              )
+                ? (savedScopedSelectionEntry?.product ?? null)
                 : null;
             })()
           )
@@ -493,16 +526,16 @@ export default function ProductsPage() {
   const knownScopedItemsByKey = useMemo(() => {
     const next = new Map<string, SelectedProduct>();
 
-    for (const product of selected.values()) {
+    for (const product of Array.from(selected.values())) {
       const cacheKey = getSelectedProductCacheKey(product.sku, product.pricingLocationId);
       if (cacheKey != null) {
         next.set(cacheKey, product);
       }
     }
-    for (const [cacheKey, product] of scopedSelectionCache.entries()) {
+    for (const [cacheKey, product] of Array.from(scopedSelectionCache.entries())) {
       next.set(cacheKey, product);
     }
-    for (const [cacheKey, entry] of savedScopedSelectionCache.entries()) {
+    for (const [cacheKey, entry] of Array.from(savedScopedSelectionCache.entries())) {
       next.set(cacheKey, entry.product);
     }
 
@@ -725,11 +758,13 @@ export default function ProductsPage() {
               const cachedItem = next.get(cacheKey);
               if (
                 !cachedItem ||
+                cachedItem.pendingRefetch !== true ||
                 cachedItem.retainUntilMatch !== retainUntilMatch ||
                 !selectedProductsEqual(cachedItem.product, item)
               ) {
                 next.set(cacheKey, {
                   product: item,
+                  pendingRefetch: true,
                   retainUntilMatch,
                 });
                 changed = true;
@@ -738,9 +773,26 @@ export default function ProductsPage() {
             return changed ? next : current;
           });
         }}
-        onSaved={() => {
+        onSaved={(skus) => {
           setEditOpen(false);
-          refetch();
+          const savedSkus = new Set(skus);
+          void Promise.resolve(refetch()).finally(() => {
+            setSavedScopedSelectionCache((current) => {
+              let changed = false;
+              const next = new Map(current);
+              for (const [cacheKey, entry] of Array.from(current.entries())) {
+                if (!savedSkus.has(getSelectedProductCacheSku(cacheKey)) || !entry.pendingRefetch) {
+                  continue;
+                }
+                next.set(cacheKey, {
+                  ...entry,
+                  pendingRefetch: false,
+                });
+                changed = true;
+              }
+              return changed ? next : current;
+            });
+          });
         }}
       />
 

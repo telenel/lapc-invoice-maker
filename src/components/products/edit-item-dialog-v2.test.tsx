@@ -1638,6 +1638,80 @@ describe("EditItemDialogV2", () => {
     ]);
   });
 
+  it("fans out global barcode edits to other known cached scopes", async () => {
+    productApiMocks.update.mockResolvedValue({ sku: 1001, appliedFields: ["item:barcode"] });
+    const onSavedScopedItems = vi.fn();
+    await mockDirectoryState();
+    const user = userEvent.setup();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 39.99,
+            cost: 19.5,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
+            itemType: "general_merchandise",
+          },
+        ]}
+        detail={null}
+        knownScopedItemsByKey={new Map([
+          [
+            "1001:3",
+            {
+              sku: 1001,
+              description: "PIERCE HOODIE",
+              retailPrice: 30,
+              cost: 15,
+              pricingLocationId: 3,
+              barcode: baseDetail.barcode,
+              author: null,
+              title: null,
+              isbn: null,
+              edition: null,
+              catalogNumber: baseDetail.catalogNumber,
+              vendorId: baseDetail.vendorId,
+              itemType: "general_merchandise",
+              fDiscontinue: 0,
+            },
+          ],
+        ])}
+        onSavedScopedItems={onSavedScopedItems}
+      />,
+    );
+
+    await user.clear(screen.getByLabelText("Barcode"));
+    await user.type(screen.getByLabelText("Barcode"), "999111222333");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(onSavedScopedItems).toHaveBeenCalledTimes(1));
+    expect(onSavedScopedItems).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sku: 1001,
+          pricingLocationId: 2,
+          retailPrice: 39.99,
+          cost: 19.5,
+          barcode: "999111222333",
+        }),
+        expect.objectContaining({
+          sku: 1001,
+          pricingLocationId: 3,
+          retailPrice: 30,
+          cost: 15,
+          barcode: "999111222333",
+        }),
+      ]),
+      { retainUntilMatch: false },
+    );
+  });
+
   it("does not persist null scoped pricing for non-pricing saves when the current scope has no inventory slice", async () => {
     productApiMocks.update.mockResolvedValue({ sku: 1001, appliedFields: ["catalogNumber"] });
     const onSavedScopedItems = vi.fn();
