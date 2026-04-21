@@ -101,14 +101,13 @@ function buildInlineEditRows(
     const primaryInventory = selectedInventories.find(
       (inventory) => inventory.locationId === primaryLocationId,
     );
-    const allowItemLevelFallback = primaryInventory == null;
 
     return {
       sku: product.sku,
       barcode: product.barcode,
       itemTaxTypeId: product.itemTaxTypeId,
-      retail: primaryInventory?.retailPrice ?? (allowItemLevelFallback ? product.retail_price ?? null : null),
-      cost: primaryInventory?.cost ?? (allowItemLevelFallback ? product.cost ?? null : null),
+      retail: primaryInventory?.retailPrice ?? null,
+      cost: primaryInventory?.cost ?? null,
       fDiscontinue: product.discontinued ? 1 : 0,
     };
   });
@@ -162,6 +161,9 @@ function shouldUseSavedScopedSelection(
   if (selectedProductsEqual(entry.product, liveScopedSelection)) {
     return true;
   }
+  if (entry.pendingRefetchToken == null && entry.retainUntilMatch && entry.retainedLiveSignature == null) {
+    return false;
+  }
   if (entry.pendingRefetchToken != null) {
     return entry.retainedLiveSignature == null || entry.retainedLiveSignature === liveSignature;
   }
@@ -188,6 +190,9 @@ function shouldDropSavedScopedSelection(
   const liveSignature = getSelectedProductSignature(liveScopedSelection);
   if (entry.pendingRefetchToken != null) {
     return entry.retainedLiveSignature != null && entry.retainedLiveSignature !== liveSignature;
+  }
+  if (entry.retainUntilMatch && entry.retainedLiveSignature == null) {
+    return true;
   }
   if (!entry.retainUntilMatch) {
     return true;
@@ -428,19 +433,6 @@ export default function ProductsPage() {
               next.delete(cacheKey);
               changed = true;
             }
-            continue;
-          }
-          if (
-            savedSelection.retainUntilMatch &&
-            savedSelection.pendingRefetchToken == null &&
-            savedSelection.retainedLiveSignature == null &&
-            !selectedProductsEqual(savedSelection.product, scopedSelection)
-          ) {
-            next.set(cacheKey, {
-              ...savedSelection,
-              retainedLiveSignature: getSelectedProductSignature(scopedSelection),
-            });
-            changed = true;
             continue;
           }
           if (shouldDropSavedScopedSelection(savedSelection, scopedSelection, primaryLocationId)) {
