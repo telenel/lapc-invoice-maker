@@ -145,7 +145,13 @@ export function NewItemDialog({
   const { refs, loading: refsLoading, available: refsAvailable } = useProductRefDirectory();
   const locationScopeKey = locationIds.join(",");
   const resolvedLocationIds = useMemo(
-    () => normalizeProductLocationIds(locationIds),
+    () =>
+      normalizeProductLocationIds(
+        locationScopeKey
+          .split(",")
+          .filter((value) => value.length > 0)
+          .map((value) => Number(value)),
+      ),
     [locationScopeKey],
   );
   const resolvedPrimaryLocationId = useMemo(
