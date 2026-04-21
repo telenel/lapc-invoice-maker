@@ -146,6 +146,10 @@ async function mockDirectoryState(overrides: Partial<ReturnType<typeof import("@
         [21, "PENS ETC (3001795)"],
         [22, "ALT VENDOR"],
       ]),
+      dccLabels: new Map([
+        [1313290, "NOT USE=111010 / DO NOT USE"],
+        [1802, "USED DCC"],
+      ]),
       taxTypeLabels: new Map([[4, "STATE"]]),
       tagTypeLabels: new Map(),
       statusCodeLabels: new Map(),
@@ -183,6 +187,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
         detail={baseDetail}
@@ -229,6 +234,10 @@ describe("EditItemDialogV2", () => {
           [21, "PENS ETC (3001795)"],
           [22, "ALT VENDOR"],
         ]),
+        dccLabels: new Map([
+          [1313290, "NOT USE=111010 / DO NOT USE"],
+          [1802, "USED DCC"],
+        ]),
         taxTypeLabels: new Map([[4, "STATE"]]),
         tagTypeLabels: new Map(),
         statusCodeLabels: new Map(),
@@ -253,6 +262,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
             isTextbook: true,
           },
         ]}
@@ -298,6 +308,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
             isTextbook: true,
           },
         ]}
@@ -343,6 +354,10 @@ describe("EditItemDialogV2", () => {
           [21, "PENS ETC (3001795)"],
           [22, "ALT VENDOR"],
         ]),
+        dccLabels: new Map([
+          [1313290, "NOT USE=111010 / DO NOT USE"],
+          [1802, "USED DCC"],
+        ]),
         taxTypeLabels: new Map([[4, "STATE"]]),
         tagTypeLabels: new Map([
           [7, "CLEARANCE"],
@@ -370,6 +385,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
         detail={{
@@ -422,6 +438,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
         detail={{
@@ -483,6 +500,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
         detail={baseDetail}
@@ -507,6 +525,7 @@ describe("EditItemDialogV2", () => {
             retail: 0,
             cost: 0,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Pending",
           },
         ]}
@@ -528,6 +547,7 @@ describe("EditItemDialogV2", () => {
             retail: 0,
             cost: 0,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "One",
           },
           {
@@ -536,6 +556,7 @@ describe("EditItemDialogV2", () => {
             retail: 0,
             cost: 0,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Two",
           },
         ]}
@@ -559,6 +580,7 @@ describe("EditItemDialogV2", () => {
             retail: 19.99,
             cost: 9.5,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Pierce Hoodie",
           },
           {
@@ -567,6 +589,7 @@ describe("EditItemDialogV2", () => {
             retail: 29.99,
             cost: 12.5,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Pierce Mug",
             isTextbook: true,
           },
@@ -599,6 +622,7 @@ describe("EditItemDialogV2", () => {
             retail: 0,
             cost: 0,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Pending description",
           },
         ]}
@@ -622,6 +646,7 @@ describe("EditItemDialogV2", () => {
             retail: 0,
             cost: 0,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Pending description",
           },
         ]}
@@ -657,6 +682,10 @@ describe("EditItemDialogV2", () => {
           [21, "PENS ETC (3001795)"],
           [22, "ALT VENDOR"],
         ]),
+        dccLabels: new Map([
+          [1313290, "NOT USE=111010 / DO NOT USE"],
+          [1802, "USED DCC"],
+        ]),
         taxTypeLabels: new Map([[4, "STATE"]]),
         tagTypeLabels: new Map([[7, "CLEARANCE"]]),
         statusCodeLabels: new Map([[11, "ACTIVE"]]),
@@ -678,6 +707,7 @@ describe("EditItemDialogV2", () => {
             retail: 0,
             cost: 0,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Pending description",
           },
         ]}
@@ -698,6 +728,7 @@ describe("EditItemDialogV2", () => {
             cost: baseDetail.cost ?? 0,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
         detail={{
@@ -741,6 +772,7 @@ describe("EditItemDialogV2", () => {
             retail: 0,
             cost: 0,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Pending description",
           },
         ]}
@@ -768,6 +800,7 @@ describe("EditItemDialogV2", () => {
             cost: baseDetail.cost ?? 0,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
         detail={{
@@ -811,6 +844,7 @@ describe("EditItemDialogV2", () => {
             cost: baseDetail.cost ?? 0,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
             vendorId: baseDetail.vendorId ?? undefined,
             dccId: baseDetail.dccId ?? undefined,
             itemTaxTypeId: baseDetail.itemTaxTypeId ?? undefined,
@@ -848,6 +882,10 @@ describe("EditItemDialogV2", () => {
           [21, "PENS ETC (3001795)"],
           [22, "ALT VENDOR"],
         ]),
+        dccLabels: new Map([
+          [1313290, "NOT USE=111010 / DO NOT USE"],
+          [1802, "USED DCC"],
+        ]),
         taxTypeLabels: new Map([[4, "STATE"]]),
         tagTypeLabels: new Map([[7, "CLEARANCE"]]),
         statusCodeLabels: new Map([[11, "ACTIVE"]]),
@@ -871,6 +909,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
         detail={{
@@ -960,6 +999,7 @@ describe("EditItemDialogV2", () => {
             cost: baseDetail.cost ?? 0,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
         detail={baseDetail}
@@ -990,6 +1030,7 @@ describe("EditItemDialogV2", () => {
             cost: baseDetail.cost ?? 0,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
         detail={baseDetail}
@@ -1019,6 +1060,7 @@ describe("EditItemDialogV2", () => {
             cost: baseDetail.cost ?? 0,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
         detail={baseDetail}
@@ -1092,6 +1134,7 @@ describe("EditItemDialogV2", () => {
             retail: 19.99,
             cost: 9.5,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Pierce Hoodie",
           },
           {
@@ -1100,6 +1143,7 @@ describe("EditItemDialogV2", () => {
             retail: 29.99,
             cost: 12.5,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Pierce Mug",
           },
         ]}
@@ -1166,9 +1210,9 @@ describe("EditItemDialogV2", () => {
         onOpenChange={onOpenChange}
         onSaved={onSaved}
         items={[
-          { sku: 1001, barcode: "a", retail: 1, cost: 1, fDiscontinue: 0, description: "A" },
-          { sku: 1002, barcode: "b", retail: 2, cost: 2, fDiscontinue: 0, description: "B" },
-          { sku: 1003, barcode: "c", retail: 3, cost: 3, fDiscontinue: 0, description: "C" },
+          { sku: 1001, barcode: "a", retail: 1, cost: 1, fDiscontinue: 0, primaryLocationId: 2, description: "A" },
+          { sku: 1002, barcode: "b", retail: 2, cost: 2, fDiscontinue: 0, primaryLocationId: 2, description: "B" },
+          { sku: 1003, barcode: "c", retail: 3, cost: 3, fDiscontinue: 0, primaryLocationId: 2, description: "C" },
         ]}
       />,
     );
@@ -1220,8 +1264,8 @@ describe("EditItemDialogV2", () => {
     const onOpenChange = vi.fn();
 
     const items = [
-      { sku: 1001, barcode: "a", retail: 1, cost: 1, fDiscontinue: 0, description: "A" },
-      { sku: 1002, barcode: "b", retail: 2, cost: 2, fDiscontinue: 0, description: "B" },
+      { sku: 1001, barcode: "a", retail: 1, cost: 1, fDiscontinue: 0 as const, primaryLocationId: 2 as const, description: "A" },
+      { sku: 1002, barcode: "b", retail: 2, cost: 2, fDiscontinue: 0 as const, primaryLocationId: 2 as const, description: "B" },
     ];
 
     const { rerender } = render(
@@ -1259,8 +1303,8 @@ describe("EditItemDialogV2", () => {
         open
         onOpenChange={vi.fn()}
         items={[
-          { sku: 1001, barcode: "a", retail: 1, cost: 1, fDiscontinue: 0, description: "A" },
-          { sku: 1002, barcode: "b", retail: 2, cost: 2, fDiscontinue: 0, description: "B" },
+          { sku: 1001, barcode: "a", retail: 1, cost: 1, fDiscontinue: 0, primaryLocationId: 2, description: "A" },
+          { sku: 1002, barcode: "b", retail: 2, cost: 2, fDiscontinue: 0, primaryLocationId: 2, description: "B" },
         ]}
       />,
     );
@@ -1302,6 +1346,10 @@ describe("EditItemDialogV2", () => {
           [21, "PENS ETC (3001795)"],
           [22, "ALT VENDOR"],
         ]),
+        dccLabels: new Map([
+          [1313290, "NOT USE=111010 / DO NOT USE"],
+          [1802, "USED DCC"],
+        ]),
         taxTypeLabels: new Map([[4, "STATE"]]),
         tagTypeLabels: new Map(),
         statusCodeLabels: new Map(),
@@ -1328,6 +1376,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
             isTextbook: true,
           },
         ]}
@@ -1368,6 +1417,7 @@ describe("EditItemDialogV2", () => {
       },
       lookups: {
         vendorNames: new Map([[21, "PENS ETC (3001795)"]]),
+        dccLabels: new Map([[1313290, "NOT USE=111010 / DO NOT USE"]]),
         taxTypeLabels: new Map([[4, "STATE"]]),
         tagTypeLabels: new Map(),
         statusCodeLabels: new Map(),
@@ -1389,6 +1439,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
             isTextbook: true,
           },
         ]}
@@ -1417,6 +1468,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
       />,
@@ -1443,6 +1495,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
       />,
@@ -1468,6 +1521,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
             isTextbook: true,
           },
         ]}
@@ -1495,6 +1549,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
           {
             sku: 1002,
@@ -1502,6 +1557,7 @@ describe("EditItemDialogV2", () => {
             retail: 5.25,
             cost: 2.1,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Second item",
           },
         ]}
@@ -1530,6 +1586,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
       />,
@@ -1554,6 +1611,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
       />,
@@ -1589,6 +1647,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: "GM item",
+            primaryLocationId: 2,
           },
           {
             sku: 2002,
@@ -1596,6 +1655,7 @@ describe("EditItemDialogV2", () => {
             retail: 80,
             cost: 40,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Textbook item",
             isTextbook: true,
           },
@@ -1624,6 +1684,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: "First GM",
+            primaryLocationId: 2,
           },
           {
             sku: 1002,
@@ -1631,6 +1692,7 @@ describe("EditItemDialogV2", () => {
             retail: 5.25,
             cost: 2.1,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Second GM",
           },
         ]}
@@ -1659,6 +1721,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
       />,
