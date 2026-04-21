@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { productApi } from "@/domains/product/api-client";
@@ -32,6 +33,7 @@ import {
   EDITABLE_INVENTORY_FIELDS,
   EMPTY_FORM,
   INVENTORY_LOCATION_IDS,
+  INVENTORY_LOCATION_LABELS,
   type DirtyInventoryFields,
   type FormState,
   type InventoryFieldKey,
@@ -41,9 +43,7 @@ import {
   makeEmptyDirtyInventoryFields,
   makeEmptyInventoryState,
 } from "./state/types";
-import { AdvancedTabContent } from "./tabs/advanced-tab";
 import { InventoryTabContent } from "./tabs/inventory-tab";
-import { MoreTabContent } from "./tabs/more-tab";
 import { PrimaryTabContent } from "./tabs/primary-tab";
 import { TextbookTabContent } from "./tabs/textbook-tab";
 
@@ -93,6 +93,12 @@ export function EditItemDialogV2({
   const refsUnavailable = !refsLoading && !refsAvailable;
   const refsControlsDisabled = refsLoading || refsUnavailable;
   const isTextbookRow = !isBulk && (detail?.itemType === "textbook" || detail?.itemType === "used_textbook" || items[0]?.isTextbook === true);
+  const mixedBulkSelection = useMemo(() => {
+    if (!isBulk) return null;
+    const textbookCount = items.filter((item) => item.isTextbook === true).length;
+    const gmCount = items.length - textbookCount;
+    return textbookCount > 0 && gmCount > 0 ? { textbookCount, gmCount } : null;
+  }, [isBulk, items]);
   const baselineForm = useMemo(
     () => (isBulk ? EMPTY_FORM : toFormState(items[0], detail, resolvedPrimaryLocationId)),
     [detail, isBulk, items, resolvedPrimaryLocationId],
@@ -312,14 +318,34 @@ export function EditItemDialogV2({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-[58rem]">
-        <DialogHeader className="border-b bg-muted/30 px-6 py-5">
-          <DialogTitle className="text-[1.2rem] font-semibold tracking-tight">{dialogTitle}</DialogTitle>
-          <DialogDescription>
-            {isBulk
-              ? "Fields left blank won't be changed. Fill only the shared values you want to apply across the selected items."
-              : "Phase 5 adds the inventory editor alongside the GM and shared item fields."}
-          </DialogDescription>
+      <DialogContent className="gap-0 overflow-hidden p-0 sm:max-w-[72rem]">
+        <DialogHeader className="border-b bg-muted/30 px-6 py-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0 space-y-1">
+              <DialogTitle className="text-[1.25rem] font-semibold tracking-tight">{dialogTitle}</DialogTitle>
+              <DialogDescription>
+                {isBulk
+                  ? "Fields left blank won't be changed. Fill only the shared values to apply across the selected items."
+                  : "Edit item fields — writes to Prism on save."}
+              </DialogDescription>
+              {!isBulk ? (
+                <p className="text-xs text-muted-foreground">
+                  Primary location:{" "}
+                  <span className="font-medium text-foreground">
+                    {INVENTORY_LOCATION_LABELS[resolvedPrimaryLocationId]}
+                  </span>
+                </p>
+              ) : null}
+            </div>
+            <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+              {isBulk ? <Badge variant="secondary">Bulk</Badge> : null}
+              {isTextbookRow ? (
+                <Badge variant="secondary">Textbook</Badge>
+              ) : !isBulk ? (
+                <Badge variant="outline">GM</Badge>
+              ) : null}
+            </div>
+          </div>
         </DialogHeader>
 
         {detailLoading && !isBulk ? (
@@ -340,14 +366,12 @@ export function EditItemDialogV2({
           </div>
         ) : null}
 
-        <div className="max-h-[calc(92vh-12rem)] overflow-y-auto px-6 py-5">
+        <div className="max-h-[calc(92dvh-10rem)] overflow-y-auto px-6 py-5">
           <Tabs defaultValue="primary" className="gap-4">
             <SelectedItemsSummary items={items} />
 
             <TabsList variant="line" className="w-full justify-start border-b border-border/70 px-0">
               <TabsTrigger value="primary">Primary</TabsTrigger>
-              <TabsTrigger value="more">More</TabsTrigger>
-              <TabsTrigger value="advanced">Advanced</TabsTrigger>
               {!isBulk ? <TabsTrigger value="inventory">Inventory</TabsTrigger> : null}
               {isTextbookRow ? <TabsTrigger value="textbook">Textbook</TabsTrigger> : null}
             </TabsList>
@@ -361,24 +385,7 @@ export function EditItemDialogV2({
               refs={refs}
               refsControlsDisabled={refsControlsDisabled}
               resolvedPrimaryLocationId={resolvedPrimaryLocationId}
-            />
-
-            <MoreTabContent
-              form={form}
-              update={update}
-              idFor={idFor}
-              isBulk={isBulk}
-              refs={refs}
-              refsControlsDisabled={refsControlsDisabled}
-            />
-
-            <AdvancedTabContent
-              form={form}
-              update={update}
-              idFor={idFor}
-              isBulk={isBulk}
-              refs={refs}
-              refsControlsDisabled={refsControlsDisabled}
+              mixedBulkSelection={mixedBulkSelection}
             />
 
             {!isBulk ? (

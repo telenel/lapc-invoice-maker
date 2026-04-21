@@ -55,6 +55,12 @@ export interface ItemRefSelectFieldProps {
   disabled?: boolean;
   size?: "default" | "sm";
   allowClear?: boolean;
+  /**
+   * Optional muted hint shown beneath the select when refs are unavailable
+   * (i.e. `refs === null`). Lets callers explain why the dropdown is empty
+   * without scattering that copy across every ref-select site.
+   */
+  unavailableHint?: string;
 }
 
 const CLEAR_SELECT_VALUE = "__clear__";
@@ -71,11 +77,13 @@ export function ItemRefSelectField({
   disabled = false,
   size = "default",
   allowClear = false,
+  unavailableHint,
 }: ItemRefSelectFieldProps) {
   const options = buildProductRefSelectOptions(refs)[FIELD_CONFIG[kind].optionsKey];
   const resolvedPlaceholder = placeholder ?? (bulkMode ? "Leave unchanged" : "Select…");
   const triggerClass = "w-full";
   const contentClass = "min-w-[var(--anchor-width)] sm:min-w-80 max-w-[min(32rem,90vw)]";
+  const showHint = unavailableHint != null && refs === null;
 
   return (
     <div className="space-y-1.5">
@@ -97,6 +105,7 @@ export function ItemRefSelectField({
           ))}
         </SelectContent>
       </Select>
+      {showHint ? <p className="text-xs text-muted-foreground">{unavailableHint}</p> : null}
     </div>
   );
 }
