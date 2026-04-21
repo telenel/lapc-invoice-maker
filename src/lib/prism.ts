@@ -11,14 +11,33 @@
  * false in that environment so the UI can hide write features cleanly.
  */
 import sql, { type ConnectionPool, type IResult } from "mssql";
+import { LOS_ANGELES_TIME_ZONE, zonedDateTimeToUtc } from "./date-utils";
 
 let poolPromise: Promise<ConnectionPool> | null = null;
 
-function getConfig(): sql.config | null {
-  const server = process.env.PRISM_SERVER;
-  const user = process.env.PRISM_USER;
-  const password = process.env.PRISM_PASSWORD;
-  const database = process.env.PRISM_DATABASE ?? "prism";
+function padDatePart(value: number): string {
+  return String(value).padStart(2, "0");
+}
+
+export function prismSqlDateToUtc(date: Date, timeZone = LOS_ANGELES_TIME_ZONE): Date {
+  if (Number.isNaN(date.getTime())) {
+    throw new Error("Invalid Prism datetime");
+  }
+
+  const normalized = zonedDateTimeToUtc(
+    `${date.getUTCFullYear()}-${padDatePart(date.getUTCMonth() + 1)}-${padDatePart(date.getUTCDate())}`,
+    `${padDatePart(date.getUTCHours())}:${padDatePart(date.getUTCMinutes())}`,
+    timeZone,
+  );
+  normalized.setUTCSeconds(normalized.getUTCSeconds() + date.getUTCSeconds(), date.getUTCMilliseconds());
+  return normalized;
+}
+
+export function buildPrismConfigFromEnv(env: Record<string, string | undefined> = process.env): sql.config | null {
+  const server = env.PRISM_SERVER;
+  const user = env.PRISM_USER;
+  const password = env.PRISM_PASSWORD;
+  const database = env.PRISM_DATABASE ?? "prism";
 
   if (!server || !user || !password) return null;
 
@@ -31,11 +50,18 @@ function getConfig(): sql.config | null {
       encrypt: false,
       trustServerCertificate: true,
       enableArithAbort: true,
+      // Prism stores LA wall-clock datetimes without timezone metadata.
+      // Keep the raw clock fields intact so the sync layer can normalize them explicitly.
+      useUTC: true,
     },
     connectionTimeout: 10_000,
     requestTimeout: 30_000,
     pool: { max: 10, min: 0, idleTimeoutMillis: 30_000 },
   };
+}
+
+function getConfig(): sql.config | null {
+  return buildPrismConfigFromEnv();
 }
 
 /** Returns true if Prism env vars are configured. Does not actually connect. */

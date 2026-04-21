@@ -6,7 +6,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { ConnectionPool } from "mssql";
-import { sql } from "@/lib/prism";
+import { prismSqlDateToUtc, sql } from "@/lib/prism";
 import { PIERCE_LOCATION_ID } from "./prism-server";
 import { runAggregateRecompute } from "./sales-aggregates";
 
@@ -82,7 +82,7 @@ export async function runSalesTxnSync(deps: {
   for (const r of rows) {
     const tid = Number((r as { TransactionID: number | string }).TransactionID);
     if (tid > maxTxnId) maxTxnId = tid;
-    const pd = (r as { ProcessDate: Date }).ProcessDate;
+    const pd = prismSqlDateToUtc((r as { ProcessDate: Date }).ProcessDate);
     if (!maxProcessDate || pd > maxProcessDate) maxProcessDate = pd;
   }
 
@@ -151,8 +151,8 @@ function toSupabaseRow(r: Record<string, unknown>) {
     f_invoiced:      cast.FInvoiced,
     tran_total:      cast.TranTotal,
     tax_total:       cast.TaxTotal,
-    process_date:    cast.ProcessDate.toISOString(),
-    create_date:     cast.CreateDate?.toISOString() ?? null,
-    dtl_create_date: cast.DtlCreateDate?.toISOString() ?? null,
+    process_date:    prismSqlDateToUtc(cast.ProcessDate).toISOString(),
+    create_date:     cast.CreateDate ? prismSqlDateToUtc(cast.CreateDate).toISOString() : null,
+    dtl_create_date: cast.DtlCreateDate ? prismSqlDateToUtc(cast.DtlCreateDate).toISOString() : null,
   };
 }
