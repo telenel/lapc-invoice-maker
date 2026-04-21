@@ -1174,9 +1174,14 @@ describe("EditItemDialogV2", () => {
         const alert = screen.queryByRole("alert");
         expect(alert).not.toBeNull();
       });
-      // Error message should mention row 2 and SKU 102 so operators can act
+      // Error message should mention both the row number and the SKU so
+      // operators know which of the N selected rows tripped the conflict.
       const alert = screen.getByRole("alert");
-      expect(alert.textContent).toMatch(/row 2|SKU 102|102/i);
+      expect(alert.textContent).toMatch(/row 2/i);
+      expect(alert.textContent).toMatch(/SKU 102/i);
+      // And it should guide retry-in-place (not "close the dialog") because
+      // the batch is atomic — zero rows committed, baselines are still fresh.
+      expect(alert.textContent).toMatch(/click save again|retry/i);
       expect(onSaved).not.toHaveBeenCalled();
       expect(onOpenChange).not.toHaveBeenCalledWith(false);
       // Save button re-enables as soon as the save promise settles
