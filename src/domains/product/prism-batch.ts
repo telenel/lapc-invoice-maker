@@ -15,7 +15,6 @@ import type {
   BatchUpdateRowWithBaseline,
   BatchValidationError,
   GmItemPatch,
-  TextbookPatch,
 } from "./types";
 import { PIERCE_LOCATION_ID } from "./prism-server";
 import { applyItemPatchInTransaction } from "./prism-updates";

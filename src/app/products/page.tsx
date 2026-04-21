@@ -239,7 +239,7 @@ export default function ProductsPage() {
         return [sku, scopedRow ? productToScopedSelected(scopedRow) : product];
       }),
     );
-  }, [data?.products, primaryLocationId, selected]);
+  }, [data?.products, selected]);
   const selectedItems = Array.from(scopedSelected.values());
   useEffect(() => {
     const visibleSelectedRows = (data?.products ?? []).filter((product) => selected.has(product.sku));
