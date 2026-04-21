@@ -125,6 +125,7 @@ export function buildProductBrowseRow(
   const primarySlice = slices.find((slice) => slice.locationId === primaryLocationId) ?? null;
   const selectedInventories = slices.map((slice) => ({ ...slice }));
   const { primary_location_requested_id: _primaryLocationRequestedId, ...publicBase } = base;
+  void _primaryLocationRequestedId;
   const requestedPrimaryRowMissingFromLiveSlices =
     primarySlice == null && base.primary_location_requested_id != null;
 
