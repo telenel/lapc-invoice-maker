@@ -32,6 +32,7 @@ function productToSelected(product: ProductBrowseRow): SelectedProduct {
     catalogNumber: product.catalog_number,
     vendorId: product.vendor_id,
     itemType: product.item_type,
+    fDiscontinue: product.discontinued ? 1 : 0,
   };
 }
 

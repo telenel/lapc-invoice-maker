@@ -187,6 +187,7 @@ export interface SelectedProduct {
   description: string;
   retailPrice: number | null;
   cost: number | null;
+  pricingLocationId?: ProductLocationId | null;
   barcode: string | null;
   author: string | null;
   title: string | null;
@@ -196,6 +197,7 @@ export interface SelectedProduct {
   vendorId: number | null;
   vendorLabel?: string | null;
   itemType: string;
+  fDiscontinue?: 0 | 1;
 }
 
 /** Fields editable on a GM item. Every field is optional — only present fields are applied. */
@@ -322,6 +324,12 @@ export interface ItemSnapshot {
   retail: number | null;
   cost: number | null;
   fDiscontinue: 0 | 1;
+  /**
+   * Which location's `Retail` / `Cost` the snapshot describes. Required when
+   * used as a write baseline — tells the server which Inventory row to SELECT
+   * for the concurrency check instead of hard-coding PIER.
+   */
+  primaryLocationId: ProductLocationId;
 }
 
 /** Rich single-item snapshot used to hydrate the edit dialog without storing full browse state. */
@@ -404,6 +412,7 @@ export interface BatchValidationError {
     | "CATALOG_TOO_LONG"
     | "IMAGE_URL_TOO_LONG"
     | "HAS_HISTORY"
+    | "MISSING_INVENTORY_ROW"
     | "TEXTBOOK_NOT_SUPPORTED";
   message: string;
 }
@@ -432,6 +441,18 @@ export interface BatchCreateRow {
 export interface BatchUpdateRow {
   sku: number;
   patch: GmItemPatch | TextbookPatch;
+}
+
+/**
+ * Row shape the batch endpoint needs when callers want atomic, baseline-checked
+ * updates. Distinct from `BatchUpdateRow` which is used by the legacy shape-
+ * validation pass (no baseline).
+ */
+export interface BatchUpdateRowWithBaseline {
+  sku: number;
+  isTextbook?: boolean;
+  patch: GmItemPatch | TextbookPatch | ProductEditPatchV2;
+  baseline: ItemSnapshot;
 }
 
 export interface BatchValidationResponse {

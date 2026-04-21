@@ -24,6 +24,7 @@ describe("EditItemDialogLegacy", () => {
             retail: null,
             cost: null,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Used chemistry",
             isTextbook: true,
           },

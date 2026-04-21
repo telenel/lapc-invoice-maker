@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { PAGE_SIZE, TAB_ITEM_TYPES } from "./constants";
+import { INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT } from "./inventory-mirror-state";
 import {
   getPrimaryProductLocationId,
   normalizeProductLocationIds,
@@ -21,7 +22,9 @@ export type ProductInventorySliceRow = ProductLocationSlice;
 type ProductBrowseBase = Omit<
   ProductBrowseRow,
   "primary_location_id" | "primary_location_abbrev" | "selected_inventories" | "location_variance"
->;
+> & {
+  primary_location_requested_id?: ProductLocationId | null;
+};
 
 interface ProductBrowseBaseRow {
   sku: number | string | bigint;
@@ -73,6 +76,7 @@ interface ProductBrowseBaseRow {
   stock_coverage_days: unknown;
   trend_direction: "accelerating" | "decelerating" | "steady" | null;
   discontinued: boolean | null;
+  primary_location_requested_id?: ProductLocationId | null;
 }
 
 interface ProductInventoryQueryRow {
@@ -120,18 +124,28 @@ export function buildProductBrowseRow(
   const primaryLocationId = getPrimaryProductLocationId(locationIds);
   const primarySlice = slices.find((slice) => slice.locationId === primaryLocationId) ?? null;
   const selectedInventories = slices.map((slice) => ({ ...slice }));
+  const { primary_location_requested_id: _primaryLocationRequestedId, ...publicBase } = base;
+  void _primaryLocationRequestedId;
+  const requestedPrimaryRowMissingFromLiveSlices =
+    primarySlice == null && base.primary_location_requested_id != null;
 
   return {
-    ...base,
+    ...publicBase,
     retail_price: primarySlice?.retailPrice ?? base.retail_price,
     cost: primarySlice?.cost ?? base.cost,
     stock_on_hand: primarySlice ? primarySlice.stockOnHand : base.stock_on_hand,
     last_sale_date: primarySlice ? primarySlice.lastSaleDate : base.last_sale_date,
     effective_last_sale_date:
       primarySlice?.lastSaleDate ??
-      base.effective_last_sale_date ??
-      base.last_sale_date_computed ??
-      base.last_sale_date,
+      (
+        requestedPrimaryRowMissingFromLiveSlices
+          ? (base.effective_last_sale_date ?? null)
+          : (
+            base.effective_last_sale_date ??
+            base.last_sale_date_computed ??
+            base.last_sale_date
+          )
+      ),
     primary_location_id: primarySlice?.locationId ?? null,
     primary_location_abbrev: primarySlice?.locationAbbrev ?? null,
     selected_inventories: selectedInventories,
@@ -205,12 +219,19 @@ function buildFilteredBrowseQuery(filters: ProductFilters): {
   const baseEffectiveLastSaleExpr = sourceTable === "products_with_derived"
     ? "pwd.effective_last_sale_date"
     : "COALESCE(pwd.last_sale_date_computed, pwd.last_sale_date)";
-  const emittedRetailExpr = "COALESCE(pi.retail_price, pwd.retail_price)";
-  const emittedCostExpr = "COALESCE(pi.cost, pwd.cost)";
-  const emittedStockExpr = "COALESCE(pi.stock_on_hand, pwd.stock_on_hand)";
-  const emittedLastSaleExpr = "COALESCE(pi.last_sale_date, pwd.last_sale_date)";
+  // When a selected location row was explicitly invalidated, keep the SKU
+  // visible but surface null primary values instead of silently falling back
+  // to the legacy PIER-denormalized columns.
+  const emittedRetailExpr =
+    "COALESCE(pi.retail_price, CASE WHEN pi_scope.location_id IS NULL THEN pwd.retail_price END)";
+  const emittedCostExpr =
+    "COALESCE(pi.cost, CASE WHEN pi_scope.location_id IS NULL THEN pwd.cost END)";
+  const emittedStockExpr =
+    "COALESCE(pi.stock_on_hand, CASE WHEN pi_scope.location_id IS NULL THEN pwd.stock_on_hand END)";
+  const emittedLastSaleExpr =
+    "COALESCE(pi.last_sale_date, CASE WHEN pi_scope.location_id IS NULL THEN pwd.last_sale_date END)";
   const emittedEffectiveLastSaleExpr =
-    `COALESCE(pi.last_sale_date, ${baseEffectiveLastSaleExpr}, pwd.last_sale_date_computed, pwd.last_sale_date)`;
+    `COALESCE(pi.last_sale_date, CASE WHEN pi_scope.location_id IS NULL THEN ${baseEffectiveLastSaleExpr} END)`;
   const lastSaleExpr = basePlan.lastSaleField === "effective_last_sale_date"
     ? emittedEffectiveLastSaleExpr
     : emittedLastSaleExpr;
@@ -356,6 +377,7 @@ function buildFilteredBrowseQuery(filters: ProductFilters): {
 
   const visibleLocationList = addList(builder, locationIds);
   const primaryLocationParam = builder.add(primaryLocationId);
+  const invalidatedInventorySyncedAtParam = builder.add(INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT);
   const cteSql = `
     WITH visible_skus AS (
       SELECT DISTINCT inv.sku
@@ -365,6 +387,7 @@ function buildFilteredBrowseQuery(filters: ProductFilters): {
     filtered AS (
       SELECT
         pwd.*,
+        pi_scope.location_id AS primary_location_requested_id,
         pi.location_id AS primary_location_inventory_id,
         pi.location_abbrev AS primary_location_inventory_abbrev,
         ${emittedRetailExpr} AS primary_retail_price,
@@ -374,9 +397,13 @@ function buildFilteredBrowseQuery(filters: ProductFilters): {
         ${emittedEffectiveLastSaleExpr} AS primary_effective_last_sale_date
       FROM ${sourceTable} pwd
       INNER JOIN visible_skus visible ON visible.sku = pwd.sku
+      LEFT JOIN product_inventory pi_scope
+        ON pi_scope.sku = pwd.sku
+        AND pi_scope.location_id = ${primaryLocationParam}
       LEFT JOIN product_inventory pi
         ON pi.sku = pwd.sku
         AND pi.location_id = ${primaryLocationParam}
+        AND pi.synced_at > ${invalidatedInventorySyncedAtParam}
       WHERE ${conditions.join(" AND ")}
     )
   `;
@@ -506,10 +533,12 @@ export async function searchProductBrowseRows(
         FROM product_inventory
         WHERE sku IN (${pageSkus.map((_, index) => `$${index + 1}`).join(", ")})
           AND location_id IN (${locationIds.map((_, index) => `$${pageSkus.length + index + 1}`).join(", ")})
+          AND synced_at > $${pageSkus.length + locationIds.length + 1}
         ORDER BY sku ASC, location_id ASC
       `,
       ...pageSkus,
       ...locationIds,
+      INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT,
     );
 
   const slicesBySku = new Map<number, ProductInventorySliceRow[]>();
@@ -579,6 +608,7 @@ export async function searchProductBrowseRows(
       stock_coverage_days: toNullableNumber(row.stock_coverage_days),
       trend_direction: row.trend_direction,
       discontinued: row.discontinued,
+      primary_location_requested_id: row.primary_location_requested_id ?? null,
     };
 
     return buildProductBrowseRow(base, slicesBySku.get(sku) ?? [], locationIds);

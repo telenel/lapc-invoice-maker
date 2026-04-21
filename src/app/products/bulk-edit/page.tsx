@@ -143,7 +143,15 @@ export default function BulkEditPage() {
       }
 
       const successMessage = `Applied ${fieldSummary} to ${result.successCount} item${result.successCount === 1 ? "" : "s"}.`;
+      const mirrorWarning = (result.mirrorErrors?.length ?? 0) > 0
+        ? `Saved in Prism, but the browse mirror did not refresh for SKU ${result.mirrorErrors!.map((entry) => entry.sku).join(", ")}. Search results may stay stale until the next sync.`
+        : result.mirrorRefreshDeferred === true
+          ? "Saved in Prism. The browse mirror is refreshing in the background, so browse data may stay stale briefly."
+        : null;
       toast.success(successMessage);
+      if (mirrorWarning) {
+        toast.error(mirrorWarning);
+      }
       setToastMessage(successMessage);
       setConfirmOpen(false);
       setSelection(EMPTY_SELECTION);

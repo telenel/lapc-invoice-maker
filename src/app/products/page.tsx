@@ -36,6 +36,11 @@ import { productApi } from "@/domains/product/api-client";
 import { SYSTEM_PRESET_VIEWS } from "@/domains/product/presets";
 import { shouldApplyDefaultMinStock } from "@/domains/product/page-defaults";
 import {
+  browseRowToSelectedProduct,
+  getSelectedProductCacheKey,
+  selectedProductsEqual,
+} from "@/domains/product/selected-products";
+import {
   getPrimaryProductLocationId,
   serializeProductLocationIdsParam,
   type ProductLocationId,
@@ -52,20 +57,38 @@ function isTextbookItemType(itemType: string): boolean {
   return itemType === "textbook" || itemType === "used_textbook";
 }
 
-function productToScopedSelected(product: ProductBrowseRow): SelectedProduct {
+function actionBarItemToSelectedProduct(item: {
+  sku: number;
+  description: string;
+  retail: number | null;
+  cost: number | null;
+  primaryLocationId: ProductLocationId;
+  barcode: string | null;
+  author?: string | null;
+  title?: string | null;
+  isbn?: string | null;
+  edition?: string | null;
+  catalogNumber?: string | null;
+  vendorId?: number | null;
+  itemType?: string;
+  isTextbook?: boolean;
+  fDiscontinue: 0 | 1;
+}): SelectedProduct {
   return {
-    sku: product.sku,
-    description: (product.title ?? product.description ?? "").toUpperCase(),
-    retailPrice: product.retail_price,
-    cost: product.cost,
-    barcode: product.barcode,
-    author: product.author,
-    title: product.title,
-    isbn: product.isbn,
-    edition: product.edition,
-    catalogNumber: product.catalog_number,
-    vendorId: product.vendor_id,
-    itemType: product.item_type,
+    sku: item.sku,
+    description: item.description,
+    retailPrice: item.retail,
+    cost: item.cost,
+    pricingLocationId: item.primaryLocationId,
+    barcode: item.barcode,
+    author: item.author ?? null,
+    title: item.title ?? null,
+    isbn: item.isbn ?? null,
+    edition: item.edition ?? null,
+    catalogNumber: item.catalogNumber ?? null,
+    vendorId: item.vendorId ?? null,
+    itemType: item.itemType ?? (item.isTextbook ? "textbook" : "general_merchandise"),
+    fDiscontinue: item.fDiscontinue,
   };
 }
 
@@ -78,17 +101,103 @@ function buildInlineEditRows(
     const primaryInventory = selectedInventories.find(
       (inventory) => inventory.locationId === primaryLocationId,
     );
-    const allowItemLevelFallback = primaryInventory == null;
 
     return {
       sku: product.sku,
       barcode: product.barcode,
       itemTaxTypeId: product.itemTaxTypeId,
-      retail: primaryInventory?.retailPrice ?? (allowItemLevelFallback ? product.retail_price ?? null : null),
-      cost: primaryInventory?.cost ?? (allowItemLevelFallback ? product.cost ?? null : null),
+      retail: primaryInventory?.retailPrice ?? null,
+      cost: primaryInventory?.cost ?? null,
       fDiscontinue: product.discontinued ? 1 : 0,
     };
   });
+}
+
+type SavedScopedSelectionEntry = {
+  product: SelectedProduct;
+  retainUntilMatch: boolean;
+  pendingRefetchToken: number | null;
+  retainedLiveSignature: string | null;
+};
+
+function getSelectedProductCacheSku(cacheKey: string): number {
+  return Number(cacheKey.split(":", 1)[0]);
+}
+
+function getSelectedProductSignature(product: SelectedProduct): string {
+  return JSON.stringify([
+    product.sku,
+    product.description,
+    product.retailPrice,
+    product.cost,
+    product.pricingLocationId,
+    product.barcode,
+    product.author,
+    product.title,
+    product.isbn,
+    product.edition,
+    product.catalogNumber,
+    product.vendorId,
+    product.itemType,
+    product.fDiscontinue,
+  ]);
+}
+
+function shouldUseSavedScopedSelection(
+  entry: SavedScopedSelectionEntry | null,
+  liveScopedSelection: SelectedProduct | null,
+  primaryLocationId: ProductLocationId,
+): boolean {
+  if (entry == null) {
+    return false;
+  }
+  if (liveScopedSelection == null) {
+    return true;
+  }
+  if (liveScopedSelection.pricingLocationId !== primaryLocationId) {
+    return entry.pendingRefetchToken != null && entry.retainedLiveSignature == null;
+  }
+  const liveSignature = getSelectedProductSignature(liveScopedSelection);
+  if (selectedProductsEqual(entry.product, liveScopedSelection)) {
+    return true;
+  }
+  if (entry.pendingRefetchToken == null && entry.retainUntilMatch && entry.retainedLiveSignature == null) {
+    return false;
+  }
+  if (entry.pendingRefetchToken != null) {
+    return entry.retainedLiveSignature == null || entry.retainedLiveSignature === liveSignature;
+  }
+  if (!entry.retainUntilMatch) {
+    return false;
+  }
+  return entry.retainedLiveSignature == null || entry.retainedLiveSignature === liveSignature;
+}
+
+function shouldDropSavedScopedSelection(
+  entry: SavedScopedSelectionEntry,
+  liveScopedSelection: SelectedProduct | null,
+  primaryLocationId: ProductLocationId,
+): boolean {
+  if (liveScopedSelection == null) {
+    return false;
+  }
+  if (liveScopedSelection.pricingLocationId !== primaryLocationId) {
+    return entry.pendingRefetchToken == null || entry.retainedLiveSignature != null;
+  }
+  if (selectedProductsEqual(entry.product, liveScopedSelection)) {
+    return true;
+  }
+  const liveSignature = getSelectedProductSignature(liveScopedSelection);
+  if (entry.pendingRefetchToken != null) {
+    return entry.retainedLiveSignature != null && entry.retainedLiveSignature !== liveSignature;
+  }
+  if (entry.retainUntilMatch && entry.retainedLiveSignature == null) {
+    return true;
+  }
+  if (!entry.retainUntilMatch) {
+    return true;
+  }
+  return entry.retainedLiveSignature != null && entry.retainedLiveSignature !== liveSignature;
 }
 
 export default function ProductsPage() {
@@ -206,38 +315,291 @@ export default function ProductsPage() {
     clear,
     isSelected,
   } = useProductSelection();
+  const primaryLocationId = getPrimaryProductLocationId(filters.locationIds);
+  const [scopedSelectionCache, setScopedSelectionCache] = useState<Map<string, SelectedProduct>>(
+    () => new Map(),
+  );
+  const [savedScopedSelectionCache, setSavedScopedSelectionCache] = useState<
+    Map<string, SavedScopedSelectionEntry>
+  >(() => new Map());
+  const nextSavedScopedSelectionTokenRef = useRef(0);
+  const pendingSaveTokenRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const selectedSkus = new Set(selected.keys());
+
+    setScopedSelectionCache((current) => {
+      let changed = false;
+      const next = new Map(current);
+      for (const cacheKey of Array.from(current.keys())) {
+        if (selectedSkus.has(getSelectedProductCacheSku(cacheKey))) {
+          continue;
+        }
+        next.delete(cacheKey);
+        changed = true;
+      }
+      return changed ? next : current;
+    });
+
+    setSavedScopedSelectionCache((current) => {
+      let changed = false;
+      const next = new Map(current);
+      for (const cacheKey of Array.from(current.keys())) {
+        if (selectedSkus.has(getSelectedProductCacheSku(cacheKey))) {
+          continue;
+        }
+        next.delete(cacheKey);
+        changed = true;
+      }
+      return changed ? next : current;
+    });
+  }, [selected]);
+
   const scopedSelected = useMemo(() => {
     const scopedRowsBySku = new Map((data?.products ?? []).map((product) => [product.sku, product]));
     return new Map(
       Array.from(selected.entries()).map(([sku, product]) => {
         const scopedRow = scopedRowsBySku.get(sku);
-        return [sku, scopedRow ? productToScopedSelected(scopedRow) : product];
+        const liveScopedSelection = scopedRow ? browseRowToSelectedProduct(scopedRow) : null;
+        const cacheKey = getSelectedProductCacheKey(sku, primaryLocationId);
+        const savedScopedSelectionEntry =
+          cacheKey != null ? (savedScopedSelectionCache.get(cacheKey) ?? null) : null;
+        const savedScopedSelection =
+          shouldUseSavedScopedSelection(
+            savedScopedSelectionEntry,
+            liveScopedSelection,
+            primaryLocationId,
+          )
+            ? (savedScopedSelectionEntry?.product ?? null)
+            : null;
+        const canUseScopedSelectionCache =
+          liveScopedSelection == null || liveScopedSelection.pricingLocationId === primaryLocationId;
+        const cachedScopedSelection =
+          savedScopedSelection ??
+          (
+            canUseScopedSelectionCache
+              ? (cacheKey != null ? (scopedSelectionCache.get(cacheKey) ?? null) : null)
+              : null
+          );
+        if (cachedScopedSelection) {
+          return [sku, cachedScopedSelection];
+        }
+        return [sku, liveScopedSelection ?? product];
       }),
     );
-  }, [data?.products, selected]);
+  }, [data?.products, primaryLocationId, savedScopedSelectionCache, scopedSelectionCache, selected]);
   const selectedItems = Array.from(scopedSelected.values());
+  useEffect(() => {
+    const visibleSelectedRows = (data?.products ?? []).filter((product) => selected.has(product.sku));
+    if (visibleSelectedRows.length === 0) return;
+
+    setScopedSelectionCache((current) => {
+      let changed = false;
+      const next = new Map(current);
+      for (const product of visibleSelectedRows) {
+        const scopedSelection = browseRowToSelectedProduct(product);
+        const currentScopeCacheKey = getSelectedProductCacheKey(product.sku, primaryLocationId);
+        if (scopedSelection.pricingLocationId !== primaryLocationId) {
+          if (currentScopeCacheKey != null && next.delete(currentScopeCacheKey)) {
+            changed = true;
+          }
+          continue;
+        }
+        const cacheKey = currentScopeCacheKey;
+        if (cacheKey == null) {
+          continue;
+        }
+        const cachedSelection = next.get(cacheKey);
+        if (!cachedSelection || !selectedProductsEqual(cachedSelection, scopedSelection)) {
+          next.set(cacheKey, scopedSelection);
+          changed = true;
+        }
+      }
+      return changed ? next : current;
+    });
+    setSavedScopedSelectionCache((current) => {
+      let changed = false;
+      const next = new Map(current);
+      for (const product of visibleSelectedRows) {
+        const scopedSelection = browseRowToSelectedProduct(product);
+        const cacheKey = getSelectedProductCacheKey(product.sku, primaryLocationId);
+        if (cacheKey == null) {
+          continue;
+        }
+        const savedSelection = next.get(cacheKey);
+        if (savedSelection) {
+          if (scopedSelection.pricingLocationId !== primaryLocationId) {
+            if (shouldDropSavedScopedSelection(savedSelection, scopedSelection, primaryLocationId)) {
+              next.delete(cacheKey);
+              changed = true;
+            }
+            continue;
+          }
+          if (shouldDropSavedScopedSelection(savedSelection, scopedSelection, primaryLocationId)) {
+            next.delete(cacheKey);
+            changed = true;
+          }
+        }
+      }
+      return changed ? next : current;
+    });
+  }, [data?.products, primaryLocationId, selected]);
   const editDialogMode = resolveEditDialogMode({
     featureFlagEnabled: process.env.NEXT_PUBLIC_PRODUCTS_EDIT_DIALOG_V2 === "true",
     override: editDialogOverride ?? null,
     hasTextbookSelection: selectedItems.some((product) => isTextbookItemType(product.itemType)),
     selectionCount: selectedItems.length,
   });
-  const allowMissingEditPricing = editDialogMode === "v2" && selectedItems.length === 1;
+  // Separate edit baselines from catalog handoff. The server's concurrency
+  // SELECT does `LEFT JOIN Inventory ON LocationID = @loc` and reads
+  // `inv.Retail` / `inv.Cost`, which is NULL when no Inventory row exists at
+  // that location, so edit baselines must stay strict to the current scope.
+  // The browse route still exposes a fallback `retail_price` / `cost` even
+  // when the current scope has no slice; invoice/quote/barcode handoff should
+  // preserve that visible fallback for on-page selections, but never reuse an
+  // off-page stale price unless it was captured or saved in the active scope.
+  // Successful saves seed a per-scope cache so action-bar/session/edit payloads
+  // keep the confirmed values even while the mirror catches up.
+  const browseRowsBySku = new Map((data?.products ?? []).map((p) => [p.sku, p] as const));
+  const selectionStates = selectedItems
+    .map((product) => {
+      const browseRow = browseRowsBySku.get(product.sku);
+      const liveScopedSelection = browseRow != null ? browseRowToSelectedProduct(browseRow) : null;
+      const browseRowHasCurrentScope = liveScopedSelection?.pricingLocationId === primaryLocationId;
+      const primarySlice = browseRow?.selected_inventories?.find(
+        (inv) => inv.locationId === primaryLocationId,
+      );
+      const cacheKey = getSelectedProductCacheKey(product.sku, primaryLocationId);
+      const confirmedScopedSelection =
+        cacheKey != null
+          ? (
+            (() => {
+              const savedScopedSelectionEntry = savedScopedSelectionCache.get(cacheKey) ?? null;
+              return shouldUseSavedScopedSelection(
+                savedScopedSelectionEntry,
+                liveScopedSelection,
+                primaryLocationId,
+              )
+                ? (savedScopedSelectionEntry?.product ?? null)
+                : null;
+            })()
+          )
+          : null;
+      const cachedScopedSelection =
+        confirmedScopedSelection ??
+        (
+          cacheKey != null && (browseRow == null || browseRowHasCurrentScope)
+            ? (scopedSelectionCache.get(cacheKey) ?? null)
+            : null
+        );
+      const persistedScopedSelection =
+        cachedScopedSelection ??
+        (
+          !browseRow &&
+          product.pricingLocationId != null &&
+          product.pricingLocationId === primaryLocationId
+            ? product
+            : null
+        );
+      const visibleScopedSelection = liveScopedSelection;
+      const scopedDescriptor = cachedScopedSelection ?? visibleScopedSelection ?? persistedScopedSelection;
+      const retail = cachedScopedSelection?.retailPrice ??
+        (
+          browseRow != null && visibleScopedSelection != null
+            ? (primarySlice?.retailPrice ?? null)
+            : (persistedScopedSelection?.retailPrice ?? null)
+        );
+      const cost = cachedScopedSelection?.cost ??
+        (
+          browseRow != null && visibleScopedSelection != null
+            ? (primarySlice?.cost ?? null)
+            : (persistedScopedSelection?.cost ?? null)
+        );
+      const actionBarRetail = cachedScopedSelection?.retailPrice ??
+        (
+          browseRow != null
+            ? (browseRow.retail_price ?? null)
+            : (persistedScopedSelection?.retailPrice ?? null)
+        );
+      const actionBarCost = cachedScopedSelection?.cost ??
+        (
+          browseRow != null
+            ? (browseRow.cost ?? null)
+            : (persistedScopedSelection?.cost ?? null)
+        );
+      const sharedItem = {
+        sku: product.sku,
+        barcode: scopedDescriptor?.barcode ?? null,
+        fDiscontinue: scopedDescriptor?.fDiscontinue ?? 0,
+        description: scopedDescriptor?.description ?? product.description ?? "",
+        author: scopedDescriptor?.author ?? product.author ?? null,
+        title: scopedDescriptor?.title ?? product.title ?? null,
+        isbn: scopedDescriptor?.isbn ?? product.isbn ?? null,
+        edition: scopedDescriptor?.edition ?? product.edition ?? null,
+        vendorId: scopedDescriptor?.vendorId ?? undefined,
+        dccId: undefined,
+        isTextbook: isTextbookItemType(scopedDescriptor?.itemType ?? product.itemType),
+        itemType: scopedDescriptor?.itemType ?? product.itemType,
+        primaryLocationId,
+        catalogNumber: scopedDescriptor?.catalogNumber ?? undefined,
+      };
+
+      return {
+        hasScopedBaseline:
+          browseRow != null || cachedScopedSelection != null || persistedScopedSelection != null,
+        editItem: {
+          ...sharedItem,
+          retail,
+          cost,
+        },
+        actionBarItem: {
+          ...sharedItem,
+          retail: actionBarRetail,
+          cost: actionBarCost,
+        },
+      };
+    });
+  const editableSelectedItems = selectionStates.map((entry) => entry.editItem);
+  const actionBarSelected = useMemo(
+    () =>
+      new Map(
+        selectionStates.map(({ actionBarItem }) => [
+          actionBarItem.sku,
+          actionBarItemToSelectedProduct(actionBarItem),
+        ] as const),
+      ),
+    [selectionStates],
+  );
+  const actionBarSelectedItems = Array.from(actionBarSelected.values());
+  const knownScopedItemsByKey = useMemo(() => {
+    const next = new Map<string, SelectedProduct>();
+
+    for (const product of Array.from(selected.values())) {
+      const cacheKey = getSelectedProductCacheKey(product.sku, product.pricingLocationId);
+      if (cacheKey != null) {
+        next.set(cacheKey, product);
+      }
+    }
+    for (const [cacheKey, product] of Array.from(scopedSelectionCache.entries())) {
+      next.set(cacheKey, product);
+    }
+    for (const [cacheKey, entry] of Array.from(savedScopedSelectionCache.entries())) {
+      next.set(cacheKey, entry.product);
+    }
+
+    return next;
+  }, [savedScopedSelectionCache, scopedSelectionCache, selected]);
   const saveScopedSelectionToSession = useCallback(() => {
-    sessionStorage.setItem(CATALOG_ITEMS_STORAGE_KEY, JSON.stringify(selectedItems));
-  }, [selectedItems]);
-  const editableSelectedItems = selectedItems
-    .map((product) => ({
-      sku: product.sku,
-      barcode: product.barcode ?? null,
-      retail: product.retailPrice,
-      cost: product.cost,
-      fDiscontinue: 0 as 0 | 1,
-      description: product.description ?? "",
-      vendorId: product.vendorId ?? undefined,
-      dccId: undefined,
-      isTextbook: isTextbookItemType(product.itemType),
-    }));
+    sessionStorage.setItem(CATALOG_ITEMS_STORAGE_KEY, JSON.stringify(actionBarSelectedItems));
+  }, [actionBarSelectedItems]);
+  const allowMissingEditPricing =
+    editDialogMode === "v2" &&
+    selectionStates.length > 0 &&
+    selectionStates.every((entry) => entry.hasScopedBaseline);
+  const editPricingItems = selectionStates.map(({ editItem }) => ({
+    retailPrice: editItem.retail,
+    cost: editItem.cost,
+  }));
 
   const updateFilters = useCallback(
     (next: ProductFilters, extras: { view?: string } = {}) => {
@@ -324,7 +686,6 @@ export default function ProductsPage() {
     handleFilterChange({ ...filters, locationIds, page: 1 });
   }
 
-  const primaryLocationId = getPrimaryProductLocationId(filters.locationIds);
   const inlineEditRows = useMemo(
     () => buildInlineEditRows(data?.products ?? [], primaryLocationId),
     [data?.products, primaryLocationId],
@@ -332,7 +693,9 @@ export default function ProductsPage() {
   const inlineEdit = useProductInlineEdit({
     rows: inlineEditRows,
     primaryLocationId,
-    onSaveSuccess: refetch,
+    onSaveSuccess: async () => {
+      await refetch();
+    },
   });
 
   return (
@@ -426,11 +789,85 @@ export default function ProductsPage() {
         onOpenChange={setEditOpen}
         editDialogOverride={editDialogOverride}
         items={editableSelectedItems}
+        knownScopedItemsByKey={knownScopedItemsByKey}
         locationIds={filters.locationIds}
         primaryLocationId={primaryLocationId}
-        onSaved={() => {
+        onSavedScopedItems={(savedItems, options) => {
+          const saveToken = nextSavedScopedSelectionTokenRef.current + 1;
+          nextSavedScopedSelectionTokenRef.current = saveToken;
+          pendingSaveTokenRef.current = saveToken;
+          setSavedScopedSelectionCache((current) => {
+            let changed = false;
+            const next = new Map(current);
+            const retainUntilMatch = options?.retainUntilMatch === true;
+            for (const item of savedItems) {
+              const cacheLocationId = item.pricingLocationId ?? primaryLocationId;
+              const cacheKey = getSelectedProductCacheKey(
+                item.sku,
+                cacheLocationId,
+              );
+              if (cacheKey == null) {
+                continue;
+              }
+              const browseRow = browseRowsBySku.get(item.sku);
+              const liveBrowseSelection =
+                browseRow != null
+                  ? browseRowToSelectedProduct(browseRow)
+                  : null;
+              const retainedLiveSignature =
+                liveBrowseSelection?.pricingLocationId === cacheLocationId
+                  ? getSelectedProductSignature(liveBrowseSelection)
+                  : null;
+              const cachedItem = next.get(cacheKey);
+              if (
+                !cachedItem ||
+                cachedItem.pendingRefetchToken !== saveToken ||
+                cachedItem.retainUntilMatch !== retainUntilMatch ||
+                cachedItem.retainedLiveSignature !== retainedLiveSignature ||
+                !selectedProductsEqual(cachedItem.product, item)
+              ) {
+                next.set(cacheKey, {
+                  product: item,
+                  pendingRefetchToken: saveToken,
+                  retainUntilMatch,
+                  retainedLiveSignature,
+                });
+                changed = true;
+              }
+            }
+            return changed ? next : current;
+          });
+        }}
+        onSaved={(skus) => {
           setEditOpen(false);
-          refetch();
+          const savedSkus = new Set(skus);
+          const saveToken = pendingSaveTokenRef.current;
+          pendingSaveTokenRef.current = null;
+          void Promise.resolve(refetch())
+            .then((didRefresh) => {
+              if (!didRefresh || saveToken == null) {
+                return;
+              }
+              setSavedScopedSelectionCache((current) => {
+                let changed = false;
+                const next = new Map(current);
+                for (const [cacheKey, entry] of Array.from(current.entries())) {
+                  if (
+                    !savedSkus.has(getSelectedProductCacheSku(cacheKey)) ||
+                    entry.pendingRefetchToken !== saveToken
+                  ) {
+                    continue;
+                  }
+                  next.set(cacheKey, {
+                    ...entry,
+                    pendingRefetchToken: null,
+                  });
+                  changed = true;
+                }
+                return changed ? next : current;
+              });
+            })
+            .catch(() => undefined);
         }}
       />
 
@@ -666,8 +1103,9 @@ export default function ProductsPage() {
 
       {/* Action bar */}
       <ProductActionBar
-        selected={scopedSelected}
+        selected={actionBarSelected}
         selectedCount={selectedCount}
+        editPricingItems={editPricingItems}
         onClear={clear}
         saveToSession={saveScopedSelectionToSession}
         prismAvailable={prismAvailable}

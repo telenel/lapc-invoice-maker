@@ -5,9 +5,11 @@
  * the verify-then-assume pattern from deleteTestItem to dodge the Item-table
  * trigger rowcount quirks.
  *
- * Pierce-only by default — Inventory writes target LocationID=2 (PIER).
+ * Pierce-only by default for legacy callers. Location-aware concurrency and
+ * mirror reads can override the snapshot location per request.
  */
 import { getPrismPool, sql } from "@/lib/prism";
+import type { Transaction } from "mssql";
 import type {
   GmItemPatch,
   TextbookPatch,
@@ -18,15 +20,31 @@ import type {
   GmDetailsPatch,
   InventoryPatchPerLocation,
   PrimaryInventoryPatch,
+  ProductLocationId,
 } from "./types";
 import { PIERCE_LOCATION_ID } from "./prism-server";
 
-export async function getItemSnapshot(sku: number): Promise<ItemSnapshot | null> {
+export interface ApplyItemPatchInput {
+  sku: number;
+  isTextbook: boolean;
+  patch: ProductUpdaterInput;
+  baseline?: ItemSnapshot;
+}
+
+export interface ApplyItemPatchResult {
+  sku: number;
+  appliedFields: string[];
+}
+
+export async function getItemSnapshot(
+  sku: number,
+  primaryLocationId: ProductLocationId = PIERCE_LOCATION_ID,
+): Promise<ItemSnapshot | null> {
   const pool = await getPrismPool();
   const result = await pool
     .request()
     .input("sku", sql.Int, sku)
-    .input("loc", sql.Int, PIERCE_LOCATION_ID)
+    .input("loc", sql.Int, primaryLocationId)
     .query<{
       SKU: number;
       BarCode: string | null;
@@ -55,7 +73,87 @@ export async function getItemSnapshot(sku: number): Promise<ItemSnapshot | null>
     retail: row.Retail == null ? null : Number(row.Retail),
     cost: row.Cost == null ? null : Number(row.Cost),
     fDiscontinue: (row.fDiscontinue === 1 ? 1 : 0) as 0 | 1,
+    primaryLocationId,
   };
+}
+
+export interface InventoryMirrorSnapshotRow {
+  locationId: ProductLocationId;
+  retail: number | null;
+  cost: number | null;
+  expectedCost: number | null;
+  tagTypeId: number | null;
+  statusCodeId: number | null;
+  estSales: number | null;
+  estSalesLocked: boolean;
+  fInvListPriceFlag: boolean;
+  fTxWantListFlag: boolean;
+  fTxBuybackListFlag: boolean;
+  fNoReturns: boolean;
+}
+
+export async function getInventoryMirrorSnapshotRows(
+  sku: number,
+  locationIds: ProductLocationId[],
+): Promise<InventoryMirrorSnapshotRow[]> {
+  const uniqueLocationIds = Array.from(new Set(locationIds));
+  if (uniqueLocationIds.length === 0) {
+    return [];
+  }
+
+  const pool = await getPrismPool();
+  const request = pool.request().input("sku", sql.Int, sku);
+  const locationParams = uniqueLocationIds.map((locationId, index) => {
+    const name = `loc${index}`;
+    request.input(name, sql.Int, locationId);
+    return `@${name}`;
+  });
+
+  const result = await request.query<{
+    LocationID: ProductLocationId;
+    Retail: number | null;
+    Cost: number | null;
+    ExpectedCost: number | null;
+    TagTypeID: number | null;
+    StatusCodeID: number | null;
+    EstSales: number | null;
+    EstSalesLocked: boolean | null;
+    fInvListPriceFlag: boolean | null;
+    fTxWantListFlag: boolean | null;
+    fTxBuybackListFlag: boolean | null;
+    fNoReturns: boolean | null;
+  }>(`
+    SELECT inv.LocationID,
+           inv.Retail,
+           inv.Cost,
+           inv.ExpectedCost,
+           inv.TagTypeID,
+           inv.StatusCodeID,
+           inv.EstSales,
+           inv.EstSalesLocked,
+           inv.fInvListPriceFlag,
+           inv.fTxWantListFlag,
+           inv.fTxBuybackListFlag,
+           inv.fNoReturns
+    FROM Inventory inv
+    WHERE inv.SKU = @sku
+      AND inv.LocationID IN (${locationParams.join(", ")})
+  `);
+
+  return result.recordset.map((row) => ({
+    locationId: row.LocationID,
+    retail: row.Retail == null ? null : Number(row.Retail),
+    cost: row.Cost == null ? null : Number(row.Cost),
+    expectedCost: row.ExpectedCost == null ? null : Number(row.ExpectedCost),
+    tagTypeId: row.TagTypeID == null ? null : Number(row.TagTypeID),
+    statusCodeId: row.StatusCodeID == null ? null : Number(row.StatusCodeID),
+    estSales: row.EstSales == null ? null : Number(row.EstSales),
+    estSalesLocked: row.EstSalesLocked === true,
+    fInvListPriceFlag: row.fInvListPriceFlag === true,
+    fTxWantListFlag: row.fTxWantListFlag === true,
+    fTxBuybackListFlag: row.fTxBuybackListFlag === true,
+    fNoReturns: row.fNoReturns === true,
+  }));
 }
 
 interface UpdateGmItemResult {
@@ -65,7 +163,7 @@ interface UpdateGmItemResult {
 
 export type ProductUpdaterInput = GmItemPatch | TextbookPatch | ProductEditPatchV2;
 
-interface ProductWriteBuckets {
+export interface ProductWriteBuckets {
   item: ItemPatch;
   gm: GmDetailsPatch;
   textbook: TextbookDetailsPatch;
@@ -77,7 +175,7 @@ function isV2UpdaterInput(patch: ProductUpdaterInput): patch is ProductEditPatch
   return "item" in patch || "gm" in patch || "textbook" in patch || "inventory" in patch || "primaryInventory" in patch;
 }
 
-function normalizeUpdaterInput(patch: ProductUpdaterInput): ProductWriteBuckets {
+export function normalizeUpdaterInput(patch: ProductUpdaterInput): ProductWriteBuckets {
   if (isV2UpdaterInput(patch)) {
     return {
       item: { ...(patch.item ?? {}) },
@@ -142,7 +240,7 @@ function hasInventoryWriteFields(patch: InventoryPatchPerLocation): boolean {
   ].some((value) => value !== undefined);
 }
 
-function getInventoryPatches(normalizedPatch: ProductWriteBuckets): InventoryPatchPerLocation[] {
+export function getInventoryPatches(normalizedPatch: ProductWriteBuckets): InventoryPatchPerLocation[] {
   if (normalizedPatch.inventory.length > 0) {
     return normalizedPatch.inventory;
   }
@@ -160,80 +258,358 @@ function getInventoryPatches(normalizedPatch: ProductWriteBuckets): InventoryPat
   ];
 }
 
-/**
- * Update a GM item. Only fields present in `patch` are written. Runs in a
- * transaction. Uses the verify-then-assume pattern from deleteTestItem:
- * we SELECT the row first to confirm it exists (giving us a pre-image),
- * then run the UPDATEs. Item triggers break @@ROWCOUNT, so if the
- * transaction commits we assume the update landed.
- */
-export async function updateGmItem(
+function buildMissingInventoryRowError(
   sku: number,
-  patch: ProductUpdaterInput,
-  expectedSnapshot?: ItemSnapshot,
-): Promise<UpdateGmItemResult> {
-  const pool = await getPrismPool();
-  const transaction = pool.transaction();
-  await transaction.begin();
+  locationId: ProductLocationId,
+): Error & { code: string; sku: number; locationId: ProductLocationId } {
+  const err = new Error(`SKU ${sku} does not have an Inventory row at location ${locationId}`) as Error & {
+    code: string;
+    sku: number;
+    locationId: ProductLocationId;
+  };
+  err.code = "MISSING_INVENTORY_ROW";
+  err.sku = sku;
+  err.locationId = locationId;
+  return err;
+}
 
-  try {
-    // Verify row exists + optional concurrency check
-    const check = await transaction
-      .request()
-      .input("sku", sql.Int, sku)
-      .input("loc", sql.Int, PIERCE_LOCATION_ID)
-      .query<{
-        BarCode: string | null;
-        ItemTaxTypeID: number | null;
-        Retail: number | null;
-        Cost: number | null;
-        fDiscontinue: number | null;
-      }>(`
-        SELECT LTRIM(RTRIM(i.BarCode)) AS BarCode,
-               i.ItemTaxTypeID,
-               inv.Retail, inv.Cost, i.fDiscontinue
-        FROM Item i
-        LEFT JOIN Inventory inv ON inv.SKU = i.SKU AND inv.LocationID = @loc
-        WHERE i.SKU = @sku
-      `);
-    const current = check.recordset[0];
-    if (!current) {
-      throw new Error(`Item SKU ${sku} not found`);
+function getAffectedRowCount(result: { rowsAffected?: number[] } | null | undefined): number {
+  if (!Array.isArray(result?.rowsAffected)) {
+    // Test doubles and some lightweight wrappers omit `rowsAffected`. Treat
+    // that as "unknown but non-zero" so existing transaction tests can keep
+    // exercising the happy path without reproducing the full mssql result
+    // envelope.
+    return 1;
+  }
+
+  return result.rowsAffected.reduce((total, count) => total + count, 0);
+}
+
+/**
+ * Apply a single item's patch inside an already-open Prism transaction.
+ * Shared by `updateGmItem` / `updateTextbookPricing` (each wraps this with
+ * its own tx lifecycle) and `batchUpdateItems` (one outer tx, many calls).
+ *
+ * Concurrency SELECT binds `@loc` to `baseline.primaryLocationId` when
+ * supplied; falls back to `PIERCE_LOCATION_ID` for legacy callers that
+ * don't provide a baseline at all. Callers sending a baseline MUST include
+ * `primaryLocationId` — the Zod schema on both PATCH surfaces enforces it.
+ *
+ * On concurrency mismatch, throws `Error` with `code = "CONCURRENT_MODIFICATION"`
+ * and `current: ItemSnapshot` echoing the row the server actually saw
+ * (including the `primaryLocationId` that drove the read).
+ */
+export async function applyItemPatchInTransaction(
+  transaction: Transaction,
+  input: ApplyItemPatchInput,
+): Promise<ApplyItemPatchResult> {
+  const { sku, isTextbook, patch, baseline } = input;
+  const concurrencyLocationId = baseline?.primaryLocationId ?? PIERCE_LOCATION_ID;
+
+  // Verify row exists + optional concurrency check
+  const check = await transaction
+    .request()
+    .input("sku", sql.Int, sku)
+    .input("loc", sql.Int, concurrencyLocationId)
+    .query<{
+      BarCode: string | null;
+      ItemTaxTypeID: number | null;
+      Retail: number | null;
+      Cost: number | null;
+      fDiscontinue: number | null;
+    }>(`
+      SELECT LTRIM(RTRIM(i.BarCode)) AS BarCode,
+             i.ItemTaxTypeID,
+             inv.Retail, inv.Cost, i.fDiscontinue
+      FROM Item i
+      LEFT JOIN Inventory inv ON inv.SKU = i.SKU AND inv.LocationID = @loc
+      WHERE i.SKU = @sku
+    `);
+  const current = check.recordset[0];
+  if (!current) {
+    throw new Error(`Item SKU ${sku} not found`);
+  }
+
+  if (baseline) {
+    const currentBarcode = current.BarCode && current.BarCode.length > 0 ? current.BarCode : null;
+    const currentTaxTypeId = current.ItemTaxTypeID == null ? null : Number(current.ItemTaxTypeID);
+    const currentRetail = current.Retail == null ? null : Number(current.Retail);
+    const currentCost = current.Cost == null ? null : Number(current.Cost);
+    const currentFDisc = (current.fDiscontinue === 1 ? 1 : 0) as 0 | 1;
+    if (
+      currentBarcode !== baseline.barcode ||
+      (baseline.itemTaxTypeId !== undefined &&
+        currentTaxTypeId !== baseline.itemTaxTypeId) ||
+      currentRetail !== baseline.retail ||
+      currentCost !== baseline.cost ||
+      currentFDisc !== baseline.fDiscontinue
+    ) {
+      const err = new Error("CONCURRENT_MODIFICATION") as Error & { code: string; current: ItemSnapshot };
+      err.code = "CONCURRENT_MODIFICATION";
+      err.current = {
+        sku,
+        barcode: currentBarcode,
+        itemTaxTypeId: currentTaxTypeId,
+        retail: currentRetail,
+        cost: currentCost,
+        fDiscontinue: currentFDisc,
+        primaryLocationId: concurrencyLocationId as ProductLocationId,
+      };
+      throw err;
+    }
+  }
+
+  const normalizedPatch = normalizeUpdaterInput(patch);
+  const applied: string[] = [];
+
+  if (isTextbook) {
+    const itemSet: string[] = [];
+    const textbookSet: string[] = [];
+
+    if (normalizedPatch.item.barcode !== undefined) {
+      itemSet.push("BarCode = @barcode");
+      applied.push("barcode");
+    }
+    if (normalizedPatch.item.itemTaxTypeId !== undefined) {
+      itemSet.push("ItemTaxTypeID = @taxId");
+      applied.push("itemTaxTypeId");
+    }
+    if (normalizedPatch.item.comment !== undefined) {
+      itemSet.push("txComment = @comment");
+      applied.push("comment");
+    }
+    if (normalizedPatch.item.weight !== undefined) {
+      itemSet.push("Weight = @weight");
+      applied.push("weight");
+    }
+    if (normalizedPatch.item.usedDccId !== undefined) {
+      itemSet.push("UsedDCCID = @usedDccId");
+      applied.push("usedDccId");
+    }
+    if (normalizedPatch.item.styleId !== undefined) {
+      itemSet.push("StyleID = @styleId");
+      applied.push("styleId");
+    }
+    if (normalizedPatch.item.itemSeasonCodeId !== undefined) {
+      itemSet.push("ItemSeasonCodeID = @itemSeasonCodeId");
+      applied.push("itemSeasonCodeId");
+    }
+    if (normalizedPatch.item.fListPriceFlag !== undefined) {
+      itemSet.push("fListPriceFlag = @fListPriceFlag");
+      applied.push("fListPriceFlag");
+    }
+    if (normalizedPatch.item.fPerishable !== undefined) {
+      itemSet.push("fPerishable = @fPerishable");
+      applied.push("fPerishable");
+    }
+    if (normalizedPatch.item.fIdRequired !== undefined) {
+      itemSet.push("fIDRequired = @fIdRequired");
+      applied.push("fIdRequired");
+    }
+    if (normalizedPatch.item.minOrderQtyItem !== undefined) {
+      itemSet.push("MinOrderQty = @minOrderQtyItem");
+      applied.push("minOrderQtyItem");
+    }
+    if (normalizedPatch.item.fDiscontinue !== undefined) {
+      itemSet.push("fDiscontinue = @fDiscontinue");
+      applied.push("fDiscontinue");
     }
 
-    if (expectedSnapshot) {
-      const currentBarcode = current.BarCode && current.BarCode.length > 0 ? current.BarCode : null;
-      const currentTaxTypeId = current.ItemTaxTypeID == null ? null : Number(current.ItemTaxTypeID);
-      const currentRetail = current.Retail == null ? null : Number(current.Retail);
-      const currentCost = current.Cost == null ? null : Number(current.Cost);
-      const currentFDisc = (current.fDiscontinue === 1 ? 1 : 0) as 0 | 1;
-      if (
-        currentBarcode !== expectedSnapshot.barcode ||
-        (expectedSnapshot.itemTaxTypeId !== undefined &&
-          currentTaxTypeId !== expectedSnapshot.itemTaxTypeId) ||
-        currentRetail !== expectedSnapshot.retail ||
-        currentCost !== expectedSnapshot.cost ||
-        currentFDisc !== expectedSnapshot.fDiscontinue
-      ) {
-        const err = new Error("CONCURRENT_MODIFICATION") as Error & { code: string; current: ItemSnapshot };
-        err.code = "CONCURRENT_MODIFICATION";
-        err.current = {
-          sku,
-          barcode: currentBarcode,
-          itemTaxTypeId: currentTaxTypeId,
-          retail: currentRetail,
-          cost: currentCost,
-          fDiscontinue: currentFDisc,
-        };
-        throw err;
+    if (normalizedPatch.textbook.author !== undefined) {
+      textbookSet.push("Author = @author");
+      applied.push("author");
+    }
+    if (normalizedPatch.textbook.title !== undefined) {
+      textbookSet.push("Title = @title");
+      applied.push("title");
+    }
+    if (normalizedPatch.textbook.isbn !== undefined) {
+      textbookSet.push("ISBN = @isbn");
+      applied.push("isbn");
+    }
+    if (normalizedPatch.textbook.edition !== undefined) {
+      textbookSet.push("Edition = @edition");
+      applied.push("edition");
+    }
+    if (normalizedPatch.textbook.bindingId !== undefined) {
+      textbookSet.push("BindingID = @bindingId");
+      applied.push("bindingId");
+    }
+    if (normalizedPatch.textbook.imprint !== undefined) {
+      textbookSet.push("Imprint = @imprint");
+      applied.push("imprint");
+    }
+    if (normalizedPatch.textbook.copyright !== undefined) {
+      textbookSet.push("Copyright = @copyright");
+      applied.push("copyright");
+    }
+    if (normalizedPatch.textbook.textStatusId !== undefined) {
+      textbookSet.push("TextStatusID = @textStatusId");
+      applied.push("textStatusId");
+    }
+    if (normalizedPatch.textbook.statusDate !== undefined) {
+      textbookSet.push("StatusDate = @statusDate");
+      applied.push("statusDate");
+    }
+
+    if (itemSet.length > 0) {
+      const itemReq = transaction.request().input("sku", sql.Int, sku);
+      if (normalizedPatch.item.barcode !== undefined) {
+        itemReq.input("barcode", sql.VarChar(20), normalizedPatch.item.barcode ?? "");
+      }
+      if (normalizedPatch.item.itemTaxTypeId !== undefined) {
+        itemReq.input("taxId", sql.Int, normalizedPatch.item.itemTaxTypeId);
+      }
+      if (normalizedPatch.item.comment !== undefined) {
+        itemReq.input("comment", sql.VarChar(25), normalizedPatch.item.comment ?? "");
+      }
+      if (normalizedPatch.item.weight !== undefined) {
+        itemReq.input("weight", sql.Decimal(9, 4), normalizedPatch.item.weight);
+      }
+      if (normalizedPatch.item.usedDccId !== undefined) {
+        itemReq.input("usedDccId", sql.Int, normalizedPatch.item.usedDccId);
+      }
+      if (normalizedPatch.item.styleId !== undefined) {
+        itemReq.input("styleId", sql.Int, normalizedPatch.item.styleId);
+      }
+      if (normalizedPatch.item.itemSeasonCodeId !== undefined) {
+        itemReq.input("itemSeasonCodeId", sql.Int, normalizedPatch.item.itemSeasonCodeId);
+      }
+      if (normalizedPatch.item.fListPriceFlag !== undefined) {
+        itemReq.input("fListPriceFlag", sql.Bit, normalizedPatch.item.fListPriceFlag);
+      }
+      if (normalizedPatch.item.fPerishable !== undefined) {
+        itemReq.input("fPerishable", sql.Bit, normalizedPatch.item.fPerishable);
+      }
+      if (normalizedPatch.item.fIdRequired !== undefined) {
+        itemReq.input("fIdRequired", sql.Bit, normalizedPatch.item.fIdRequired);
+      }
+      if (normalizedPatch.item.minOrderQtyItem !== undefined) {
+        itemReq.input("minOrderQtyItem", sql.Int, normalizedPatch.item.minOrderQtyItem);
+      }
+      if (normalizedPatch.item.fDiscontinue !== undefined) {
+        itemReq.input("fDiscontinue", sql.TinyInt, normalizedPatch.item.fDiscontinue);
+      }
+      await itemReq.query(`UPDATE Item SET ${itemSet.join(", ")} WHERE SKU = @sku`);
+    }
+    if (textbookSet.length > 0) {
+      const textbookReq = transaction.request().input("sku", sql.Int, sku);
+
+      if (normalizedPatch.textbook.author !== undefined) {
+        textbookReq.input("author", sql.VarChar(128), normalizedPatch.textbook.author ?? null);
+      }
+      if (normalizedPatch.textbook.title !== undefined) {
+        textbookReq.input("title", sql.VarChar(128), normalizedPatch.textbook.title ?? null);
+      }
+      if (normalizedPatch.textbook.isbn !== undefined) {
+        textbookReq.input("isbn", sql.VarChar(20), normalizedPatch.textbook.isbn ?? null);
+      }
+      if (normalizedPatch.textbook.edition !== undefined) {
+        textbookReq.input("edition", sql.VarChar(20), normalizedPatch.textbook.edition ?? null);
+      }
+      if (normalizedPatch.textbook.bindingId !== undefined) {
+        textbookReq.input("bindingId", sql.Int, normalizedPatch.textbook.bindingId);
+      }
+      if (normalizedPatch.textbook.imprint !== undefined) {
+        textbookReq.input("imprint", sql.VarChar(50), normalizedPatch.textbook.imprint ?? null);
+      }
+      if (normalizedPatch.textbook.copyright !== undefined) {
+        textbookReq.input("copyright", sql.VarChar(16), normalizedPatch.textbook.copyright ?? null);
+      }
+      if (normalizedPatch.textbook.textStatusId !== undefined) {
+        textbookReq.input("textStatusId", sql.Int, normalizedPatch.textbook.textStatusId);
+      }
+      if (normalizedPatch.textbook.statusDate !== undefined) {
+        textbookReq.input(
+          "statusDate",
+          sql.DateTime,
+          normalizedPatch.textbook.statusDate ? new Date(normalizedPatch.textbook.statusDate) : null,
+        );
+      }
+
+      await textbookReq.query(`UPDATE Textbook SET ${textbookSet.join(", ")} WHERE SKU = @sku`);
+    }
+    for (const inventoryPatch of getInventoryPatches(normalizedPatch)) {
+      if (!hasInventoryWriteFields(inventoryPatch)) {
+        continue;
+      }
+
+      const inventorySet: string[] = [];
+      const inventoryReq = transaction.request().input("sku", sql.Int, sku).input("loc", sql.Int, inventoryPatch.locationId);
+
+      if (inventoryPatch.retail !== undefined) {
+        inventoryReq.input("retail", sql.Money, inventoryPatch.retail);
+        inventorySet.push("Retail = @retail");
+        applied.push(`inventory:${inventoryPatch.locationId}:retail`);
+      }
+      if (inventoryPatch.cost !== undefined) {
+        inventoryReq.input("cost", sql.Money, inventoryPatch.cost);
+        inventorySet.push("Cost = @cost");
+        applied.push(`inventory:${inventoryPatch.locationId}:cost`);
+      }
+      if (inventoryPatch.expectedCost !== undefined) {
+        inventoryReq.input("expectedCost", sql.Money, inventoryPatch.expectedCost);
+        inventorySet.push("ExpectedCost = @expectedCost");
+        applied.push(`inventory:${inventoryPatch.locationId}:expectedCost`);
+      }
+      if (inventoryPatch.tagTypeId !== undefined) {
+        inventoryReq.input("tagTypeId", sql.Int, inventoryPatch.tagTypeId);
+        inventorySet.push("TagTypeID = @tagTypeId");
+        applied.push(`inventory:${inventoryPatch.locationId}:tagTypeId`);
+      }
+      if (inventoryPatch.statusCodeId !== undefined) {
+        inventoryReq.input("statusCodeId", sql.Int, inventoryPatch.statusCodeId);
+        inventorySet.push("StatusCodeID = @statusCodeId");
+        applied.push(`inventory:${inventoryPatch.locationId}:statusCodeId`);
+      }
+      if (inventoryPatch.estSales !== undefined) {
+        inventoryReq.input("estSales", sql.Decimal(9, 4), inventoryPatch.estSales);
+        inventorySet.push("EstSales = @estSales");
+        applied.push(`inventory:${inventoryPatch.locationId}:estSales`);
+      }
+      if (inventoryPatch.estSalesLocked !== undefined) {
+        inventoryReq.input("estSalesLocked", sql.Bit, inventoryPatch.estSalesLocked);
+        inventorySet.push("EstSalesLocked = @estSalesLocked");
+        applied.push(`inventory:${inventoryPatch.locationId}:estSalesLocked`);
+      }
+      if (inventoryPatch.fInvListPriceFlag !== undefined) {
+        inventoryReq.input("fInvListPriceFlag", sql.Bit, inventoryPatch.fInvListPriceFlag);
+        inventorySet.push("fInvListPriceFlag = @fInvListPriceFlag");
+        applied.push(`inventory:${inventoryPatch.locationId}:fInvListPriceFlag`);
+      }
+      if (inventoryPatch.fTxWantListFlag !== undefined) {
+        inventoryReq.input("fTxWantListFlag", sql.Bit, inventoryPatch.fTxWantListFlag);
+        inventorySet.push("fTxWantListFlag = @fTxWantListFlag");
+        applied.push(`inventory:${inventoryPatch.locationId}:fTxWantListFlag`);
+      }
+      if (inventoryPatch.fTxBuybackListFlag !== undefined) {
+        inventoryReq.input("fTxBuybackListFlag", sql.Bit, inventoryPatch.fTxBuybackListFlag);
+        inventorySet.push("fTxBuybackListFlag = @fTxBuybackListFlag");
+        applied.push(`inventory:${inventoryPatch.locationId}:fTxBuybackListFlag`);
+      }
+      if (inventoryPatch.fNoReturns !== undefined) {
+        inventoryReq.input("fNoReturns", sql.Bit, inventoryPatch.fNoReturns);
+        inventorySet.push("fNoReturns = @fNoReturns");
+        applied.push(`inventory:${inventoryPatch.locationId}:fNoReturns`);
+      }
+
+      if (inventorySet.length > 0) {
+        const result = await inventoryReq.query(
+          `UPDATE Inventory SET ${inventorySet.join(", ")} WHERE SKU = @sku AND LocationID = @loc`,
+        );
+        const affectedRows = getAffectedRowCount(result);
+        if (affectedRows === 0) {
+          throw buildMissingInventoryRowError(sku, inventoryPatch.locationId);
+        }
       }
     }
-
-    const normalizedPatch = normalizeUpdaterInput(patch);
-    const applied: string[] = [];
+  } else {
     const itemSet: string[] = [];
     const gmSet: string[] = [];
-    const req = transaction.request().input("sku", sql.Int, sku).input("loc", sql.Int, PIERCE_LOCATION_ID);
+    // `req` is used only for Item and GeneralMerchandise UPDATEs, both
+    // `WHERE SKU = @sku`. Inventory writes build a separate `inventoryReq`
+    // below with their own `@loc`. No `@loc` needed here.
+    const req = transaction.request().input("sku", sql.Int, sku);
 
     if (normalizedPatch.item.barcode !== undefined) {
       req.input("barcode", sql.VarChar(20), normalizedPatch.item.barcode ?? "");
@@ -460,12 +836,44 @@ export async function updateGmItem(
       }
 
       if (inventorySet.length > 0) {
-        await inventoryReq.query(`UPDATE Inventory SET ${inventorySet.join(", ")} WHERE SKU = @sku AND LocationID = @loc`);
+        const result = await inventoryReq.query(
+          `UPDATE Inventory SET ${inventorySet.join(", ")} WHERE SKU = @sku AND LocationID = @loc`,
+        );
+        const affectedRows = getAffectedRowCount(result);
+        if (affectedRows === 0) {
+          throw buildMissingInventoryRowError(sku, inventoryPatch.locationId);
+        }
       }
     }
+  }
 
+  return { sku, appliedFields: applied };
+}
+
+/**
+ * Update a GM item. Only fields present in `patch` are written. Runs in a
+ * transaction. Uses the verify-then-assume pattern from deleteTestItem:
+ * we SELECT the row first to confirm it exists (giving us a pre-image),
+ * then run the UPDATEs. Item triggers break @@ROWCOUNT, so if the
+ * transaction commits we assume the update landed.
+ */
+export async function updateGmItem(
+  sku: number,
+  patch: ProductUpdaterInput,
+  expectedSnapshot?: ItemSnapshot,
+): Promise<UpdateGmItemResult> {
+  const pool = await getPrismPool();
+  const transaction = pool.transaction();
+  await transaction.begin();
+  try {
+    const result = await applyItemPatchInTransaction(transaction, {
+      sku,
+      isTextbook: false,
+      patch,
+      baseline: expectedSnapshot,
+    });
     await transaction.commit();
-    return { sku, appliedFields: applied };
+    return result;
   } catch (err) {
     try { await transaction.rollback(); } catch { /* swallow */ }
     throw err;
@@ -485,290 +893,15 @@ export async function updateTextbookPricing(
   const pool = await getPrismPool();
   const transaction = pool.transaction();
   await transaction.begin();
-
   try {
-    const check = await transaction
-      .request()
-      .input("sku", sql.Int, sku)
-      .input("loc", sql.Int, PIERCE_LOCATION_ID)
-      .query<{
-        BarCode: string | null;
-        ItemTaxTypeID: number | null;
-        Retail: number | null;
-        Cost: number | null;
-        fDiscontinue: number | null;
-      }>(`
-        SELECT LTRIM(RTRIM(i.BarCode)) AS BarCode,
-               i.ItemTaxTypeID,
-               inv.Retail, inv.Cost, i.fDiscontinue
-        FROM Item i
-        LEFT JOIN Inventory inv ON inv.SKU = i.SKU AND inv.LocationID = @loc
-        WHERE i.SKU = @sku
-      `);
-    const current = check.recordset[0];
-    if (!current) {
-      throw new Error(`Item SKU ${sku} not found`);
-    }
-
-    if (expectedSnapshot) {
-      const currentBarcode = current.BarCode && current.BarCode.length > 0 ? current.BarCode : null;
-      const currentTaxTypeId = current.ItemTaxTypeID == null ? null : Number(current.ItemTaxTypeID);
-      const currentRetail = current.Retail == null ? null : Number(current.Retail);
-      const currentCost = current.Cost == null ? null : Number(current.Cost);
-      const currentFDisc = (current.fDiscontinue === 1 ? 1 : 0) as 0 | 1;
-      if (
-        currentBarcode !== expectedSnapshot.barcode ||
-        (expectedSnapshot.itemTaxTypeId !== undefined &&
-          currentTaxTypeId !== expectedSnapshot.itemTaxTypeId) ||
-        currentRetail !== expectedSnapshot.retail ||
-        currentCost !== expectedSnapshot.cost ||
-        currentFDisc !== expectedSnapshot.fDiscontinue
-      ) {
-        const err = new Error("CONCURRENT_MODIFICATION") as Error & { code: string };
-        err.code = "CONCURRENT_MODIFICATION";
-        throw err;
-      }
-    }
-
-    const normalizedPatch = normalizeUpdaterInput(patch);
-    const applied: string[] = [];
-    const itemSet: string[] = [];
-    const textbookSet: string[] = [];
-
-    if (normalizedPatch.item.barcode !== undefined) {
-      itemSet.push("BarCode = @barcode");
-      applied.push("barcode");
-    }
-    if (normalizedPatch.item.itemTaxTypeId !== undefined) {
-      itemSet.push("ItemTaxTypeID = @taxId");
-      applied.push("itemTaxTypeId");
-    }
-    if (normalizedPatch.item.comment !== undefined) {
-      itemSet.push("txComment = @comment");
-      applied.push("comment");
-    }
-    if (normalizedPatch.item.weight !== undefined) {
-      itemSet.push("Weight = @weight");
-      applied.push("weight");
-    }
-    if (normalizedPatch.item.usedDccId !== undefined) {
-      itemSet.push("UsedDCCID = @usedDccId");
-      applied.push("usedDccId");
-    }
-    if (normalizedPatch.item.styleId !== undefined) {
-      itemSet.push("StyleID = @styleId");
-      applied.push("styleId");
-    }
-    if (normalizedPatch.item.itemSeasonCodeId !== undefined) {
-      itemSet.push("ItemSeasonCodeID = @itemSeasonCodeId");
-      applied.push("itemSeasonCodeId");
-    }
-    if (normalizedPatch.item.fListPriceFlag !== undefined) {
-      itemSet.push("fListPriceFlag = @fListPriceFlag");
-      applied.push("fListPriceFlag");
-    }
-    if (normalizedPatch.item.fPerishable !== undefined) {
-      itemSet.push("fPerishable = @fPerishable");
-      applied.push("fPerishable");
-    }
-    if (normalizedPatch.item.fIdRequired !== undefined) {
-      itemSet.push("fIDRequired = @fIdRequired");
-      applied.push("fIdRequired");
-    }
-    if (normalizedPatch.item.minOrderQtyItem !== undefined) {
-      itemSet.push("MinOrderQty = @minOrderQtyItem");
-      applied.push("minOrderQtyItem");
-    }
-    if (normalizedPatch.item.fDiscontinue !== undefined) {
-      itemSet.push("fDiscontinue = @fDiscontinue");
-      applied.push("fDiscontinue");
-    }
-
-    if (normalizedPatch.textbook.author !== undefined) {
-      textbookSet.push("Author = @author");
-      applied.push("author");
-    }
-    if (normalizedPatch.textbook.title !== undefined) {
-      textbookSet.push("Title = @title");
-      applied.push("title");
-    }
-    if (normalizedPatch.textbook.isbn !== undefined) {
-      textbookSet.push("ISBN = @isbn");
-      applied.push("isbn");
-    }
-    if (normalizedPatch.textbook.edition !== undefined) {
-      textbookSet.push("Edition = @edition");
-      applied.push("edition");
-    }
-    if (normalizedPatch.textbook.bindingId !== undefined) {
-      textbookSet.push("BindingID = @bindingId");
-      applied.push("bindingId");
-    }
-    if (normalizedPatch.textbook.imprint !== undefined) {
-      textbookSet.push("Imprint = @imprint");
-      applied.push("imprint");
-    }
-    if (normalizedPatch.textbook.copyright !== undefined) {
-      textbookSet.push("Copyright = @copyright");
-      applied.push("copyright");
-    }
-    if (normalizedPatch.textbook.textStatusId !== undefined) {
-      textbookSet.push("TextStatusID = @textStatusId");
-      applied.push("textStatusId");
-    }
-    if (normalizedPatch.textbook.statusDate !== undefined) {
-      textbookSet.push("StatusDate = @statusDate");
-      applied.push("statusDate");
-    }
-
-    if (itemSet.length > 0) {
-      const itemReq = transaction.request().input("sku", sql.Int, sku);
-      if (normalizedPatch.item.barcode !== undefined) {
-        itemReq.input("barcode", sql.VarChar(20), normalizedPatch.item.barcode ?? "");
-      }
-      if (normalizedPatch.item.itemTaxTypeId !== undefined) {
-        itemReq.input("taxId", sql.Int, normalizedPatch.item.itemTaxTypeId);
-      }
-      if (normalizedPatch.item.comment !== undefined) {
-        itemReq.input("comment", sql.VarChar(25), normalizedPatch.item.comment ?? "");
-      }
-      if (normalizedPatch.item.weight !== undefined) {
-        itemReq.input("weight", sql.Decimal(9, 4), normalizedPatch.item.weight);
-      }
-      if (normalizedPatch.item.usedDccId !== undefined) {
-        itemReq.input("usedDccId", sql.Int, normalizedPatch.item.usedDccId);
-      }
-      if (normalizedPatch.item.styleId !== undefined) {
-        itemReq.input("styleId", sql.Int, normalizedPatch.item.styleId);
-      }
-      if (normalizedPatch.item.itemSeasonCodeId !== undefined) {
-        itemReq.input("itemSeasonCodeId", sql.Int, normalizedPatch.item.itemSeasonCodeId);
-      }
-      if (normalizedPatch.item.fListPriceFlag !== undefined) {
-        itemReq.input("fListPriceFlag", sql.Bit, normalizedPatch.item.fListPriceFlag);
-      }
-      if (normalizedPatch.item.fPerishable !== undefined) {
-        itemReq.input("fPerishable", sql.Bit, normalizedPatch.item.fPerishable);
-      }
-      if (normalizedPatch.item.fIdRequired !== undefined) {
-        itemReq.input("fIdRequired", sql.Bit, normalizedPatch.item.fIdRequired);
-      }
-      if (normalizedPatch.item.minOrderQtyItem !== undefined) {
-        itemReq.input("minOrderQtyItem", sql.Int, normalizedPatch.item.minOrderQtyItem);
-      }
-      if (normalizedPatch.item.fDiscontinue !== undefined) {
-        itemReq.input("fDiscontinue", sql.TinyInt, normalizedPatch.item.fDiscontinue ?? 0);
-      }
-      await itemReq.query(`UPDATE Item SET ${itemSet.join(", ")} WHERE SKU = @sku`);
-    }
-    if (textbookSet.length > 0) {
-      const textbookReq = transaction.request().input("sku", sql.Int, sku);
-
-      if (normalizedPatch.textbook.author !== undefined) {
-        textbookReq.input("author", sql.VarChar(128), normalizedPatch.textbook.author ?? null);
-      }
-      if (normalizedPatch.textbook.title !== undefined) {
-        textbookReq.input("title", sql.VarChar(128), normalizedPatch.textbook.title ?? null);
-      }
-      if (normalizedPatch.textbook.isbn !== undefined) {
-        textbookReq.input("isbn", sql.VarChar(20), normalizedPatch.textbook.isbn ?? null);
-      }
-      if (normalizedPatch.textbook.edition !== undefined) {
-        textbookReq.input("edition", sql.VarChar(20), normalizedPatch.textbook.edition ?? null);
-      }
-      if (normalizedPatch.textbook.bindingId !== undefined) {
-        textbookReq.input("bindingId", sql.Int, normalizedPatch.textbook.bindingId);
-      }
-      if (normalizedPatch.textbook.imprint !== undefined) {
-        textbookReq.input("imprint", sql.VarChar(50), normalizedPatch.textbook.imprint ?? null);
-      }
-      if (normalizedPatch.textbook.copyright !== undefined) {
-        textbookReq.input("copyright", sql.VarChar(16), normalizedPatch.textbook.copyright ?? null);
-      }
-      if (normalizedPatch.textbook.textStatusId !== undefined) {
-        textbookReq.input("textStatusId", sql.Int, normalizedPatch.textbook.textStatusId);
-      }
-      if (normalizedPatch.textbook.statusDate !== undefined) {
-        textbookReq.input(
-          "statusDate",
-          sql.DateTime,
-          normalizedPatch.textbook.statusDate ? new Date(normalizedPatch.textbook.statusDate) : null,
-        );
-      }
-
-      await textbookReq.query(`UPDATE Textbook SET ${textbookSet.join(", ")} WHERE SKU = @sku`);
-    }
-    for (const inventoryPatch of getInventoryPatches(normalizedPatch)) {
-      if (!hasInventoryWriteFields(inventoryPatch)) {
-        continue;
-      }
-
-      const inventorySet: string[] = [];
-      const inventoryReq = transaction.request().input("sku", sql.Int, sku).input("loc", sql.Int, inventoryPatch.locationId);
-
-      if (inventoryPatch.retail !== undefined) {
-        inventoryReq.input("retail", sql.Money, inventoryPatch.retail);
-        inventorySet.push("Retail = @retail");
-        applied.push(`inventory:${inventoryPatch.locationId}:retail`);
-      }
-      if (inventoryPatch.cost !== undefined) {
-        inventoryReq.input("cost", sql.Money, inventoryPatch.cost);
-        inventorySet.push("Cost = @cost");
-        applied.push(`inventory:${inventoryPatch.locationId}:cost`);
-      }
-      if (inventoryPatch.expectedCost !== undefined) {
-        inventoryReq.input("expectedCost", sql.Money, inventoryPatch.expectedCost);
-        inventorySet.push("ExpectedCost = @expectedCost");
-        applied.push(`inventory:${inventoryPatch.locationId}:expectedCost`);
-      }
-      if (inventoryPatch.tagTypeId !== undefined) {
-        inventoryReq.input("tagTypeId", sql.Int, inventoryPatch.tagTypeId);
-        inventorySet.push("TagTypeID = @tagTypeId");
-        applied.push(`inventory:${inventoryPatch.locationId}:tagTypeId`);
-      }
-      if (inventoryPatch.statusCodeId !== undefined) {
-        inventoryReq.input("statusCodeId", sql.Int, inventoryPatch.statusCodeId);
-        inventorySet.push("StatusCodeID = @statusCodeId");
-        applied.push(`inventory:${inventoryPatch.locationId}:statusCodeId`);
-      }
-      if (inventoryPatch.estSales !== undefined) {
-        inventoryReq.input("estSales", sql.Decimal(9, 4), inventoryPatch.estSales);
-        inventorySet.push("EstSales = @estSales");
-        applied.push(`inventory:${inventoryPatch.locationId}:estSales`);
-      }
-      if (inventoryPatch.estSalesLocked !== undefined) {
-        inventoryReq.input("estSalesLocked", sql.Bit, inventoryPatch.estSalesLocked);
-        inventorySet.push("EstSalesLocked = @estSalesLocked");
-        applied.push(`inventory:${inventoryPatch.locationId}:estSalesLocked`);
-      }
-      if (inventoryPatch.fInvListPriceFlag !== undefined) {
-        inventoryReq.input("fInvListPriceFlag", sql.Bit, inventoryPatch.fInvListPriceFlag);
-        inventorySet.push("fInvListPriceFlag = @fInvListPriceFlag");
-        applied.push(`inventory:${inventoryPatch.locationId}:fInvListPriceFlag`);
-      }
-      if (inventoryPatch.fTxWantListFlag !== undefined) {
-        inventoryReq.input("fTxWantListFlag", sql.Bit, inventoryPatch.fTxWantListFlag);
-        inventorySet.push("fTxWantListFlag = @fTxWantListFlag");
-        applied.push(`inventory:${inventoryPatch.locationId}:fTxWantListFlag`);
-      }
-      if (inventoryPatch.fTxBuybackListFlag !== undefined) {
-        inventoryReq.input("fTxBuybackListFlag", sql.Bit, inventoryPatch.fTxBuybackListFlag);
-        inventorySet.push("fTxBuybackListFlag = @fTxBuybackListFlag");
-        applied.push(`inventory:${inventoryPatch.locationId}:fTxBuybackListFlag`);
-      }
-      if (inventoryPatch.fNoReturns !== undefined) {
-        inventoryReq.input("fNoReturns", sql.Bit, inventoryPatch.fNoReturns);
-        inventorySet.push("fNoReturns = @fNoReturns");
-        applied.push(`inventory:${inventoryPatch.locationId}:fNoReturns`);
-      }
-
-      if (inventorySet.length > 0) {
-        await inventoryReq.query(`UPDATE Inventory SET ${inventorySet.join(", ")} WHERE SKU = @sku AND LocationID = @loc`);
-      }
-    }
-
+    const result = await applyItemPatchInTransaction(transaction, {
+      sku,
+      isTextbook: true,
+      patch,
+      baseline: expectedSnapshot,
+    });
     await transaction.commit();
-    return { sku, appliedFields: applied };
+    return result;
   } catch (err) {
     try { await transaction.rollback(); } catch { /* swallow */ }
     throw err;

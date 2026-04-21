@@ -56,3 +56,4 @@ skills-lock.json
 test-results/
 e2e/.auth/
 playwright-report/
+graphify-out*
