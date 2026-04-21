@@ -304,7 +304,13 @@ describe("EditItemDialogV2", () => {
       />,
     );
 
-    expect(screen.getByText("Binding #15")).toBeInTheDocument();
+    // Trigger displays the fallback label for an unresolved binding id.
+    // (Portal content may also render the same label — we pin to the trigger
+    // explicitly to avoid coupling the assertion to Base UI's portal-mount
+    // behavior, which can differ based on component identity stability.)
+    const selectValue = document.querySelector('[data-slot="select-value"]');
+    expect(selectValue).not.toBeNull();
+    expect(selectValue?.textContent).toContain("Binding #15");
   });
 
   it("shows the inventory tab for a single GM item and reveals PCOP inventory values", async () => {
