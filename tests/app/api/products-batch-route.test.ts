@@ -227,6 +227,16 @@ describe("POST /api/products/batch", () => {
     expect(response.status).toBe(409);
     const json = await response.json();
     expect(json).toMatchObject({ error: "CONCURRENT_MODIFICATION", rowIndex: 1, sku: 202 });
+    // The route narrows `current` to known ItemSnapshot fields so future
+    // domain-layer changes can't accidentally leak richer objects to the client.
+    expect(json.current).toMatchObject({
+      sku: 202,
+      barcode: "X",
+      retail: 5,
+      cost: 2,
+      fDiscontinue: 0,
+      primaryLocationId: 3,
+    });
   });
 
   it("returns 200 with updated skus on happy path", async () => {

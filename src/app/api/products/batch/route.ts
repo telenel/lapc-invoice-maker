@@ -45,12 +45,17 @@ const bodySchema = z.discriminatedUnion("action", [
       sku: z.number().int().positive(),
       isTextbook: z.boolean().optional(),
       patch: z.record(z.string(), z.unknown()),
+      // Matches the single-item PATCH's `snapshotSchema` constraints
+      // (nonnegative retail/cost, positive tax-type id) so the two routes
+      // don't disagree on what a valid baseline looks like. `primaryLocationId`
+      // is required here (the batch path is always V2) while the single-item
+      // route accepts it as optional with a PIER default for V1-legacy compat.
       baseline: z.object({
         sku: z.number().int().positive(),
         barcode: z.string().nullable(),
-        itemTaxTypeId: z.number().int().nullable().optional(),
-        retail: z.number().nullable(),
-        cost: z.number().nullable(),
+        itemTaxTypeId: z.number().int().positive().nullable().optional(),
+        retail: z.number().nonnegative().nullable(),
+        cost: z.number().nonnegative().nullable(),
         fDiscontinue: z.union([z.literal(0), z.literal(1)]),
         primaryLocationId: z.union([z.literal(2), z.literal(3), z.literal(4)]),
       }),
@@ -134,8 +139,23 @@ export const POST = withAdmin(async (request: NextRequest) => {
       } catch (err) {
         if (err instanceof Error && (err as Error & { code?: string }).code === "CONCURRENT_MODIFICATION") {
           const e = err as Error & { rowIndex?: number; sku?: number; current?: unknown };
+          // Narrow the `current` echo to known ItemSnapshot fields so future
+          // domain code that accidentally attaches richer objects (e.g. a full
+          // DB row with internal columns) can't leak to the client.
+          const rawCurrent = e.current as Record<string, unknown> | null | undefined;
+          const current = rawCurrent
+            ? {
+                sku: rawCurrent.sku,
+                barcode: rawCurrent.barcode,
+                itemTaxTypeId: rawCurrent.itemTaxTypeId,
+                retail: rawCurrent.retail,
+                cost: rawCurrent.cost,
+                fDiscontinue: rawCurrent.fDiscontinue,
+                primaryLocationId: rawCurrent.primaryLocationId,
+              }
+            : null;
           return NextResponse.json(
-            { error: "CONCURRENT_MODIFICATION", rowIndex: e.rowIndex ?? null, sku: e.sku ?? null, current: e.current ?? null },
+            { error: "CONCURRENT_MODIFICATION", rowIndex: e.rowIndex ?? null, sku: e.sku ?? null, current },
             { status: 409 },
           );
         }
