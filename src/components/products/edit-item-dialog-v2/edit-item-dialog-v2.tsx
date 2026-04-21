@@ -386,19 +386,23 @@ export function EditItemDialogV2({
         const knownRetail =
           inventoryPatch?.retail !== undefined
             ? (inventoryPatch.retail ?? null)
-            : (
-              locationId === resolvedPrimaryLocationId
-                ? (item.retail ?? inventoryDetail?.retail ?? null)
-                : (inventoryDetail?.retail ?? null)
-            );
+            : inventoryDetail
+              ? (inventoryDetail.retail ?? null)
+              : (
+                locationId === resolvedPrimaryLocationId
+                  ? (item.retail ?? null)
+                  : null
+              );
         const knownCost =
           inventoryPatch?.cost !== undefined
             ? (inventoryPatch.cost ?? null)
-            : (
-              locationId === resolvedPrimaryLocationId
-                ? (item.cost ?? inventoryDetail?.cost ?? null)
-                : (inventoryDetail?.cost ?? null)
-            );
+            : inventoryDetail
+              ? (inventoryDetail.cost ?? null)
+              : (
+                locationId === resolvedPrimaryLocationId
+                  ? (item.cost ?? null)
+                  : null
+              );
         const hasKnownRetail =
           inventoryPatch?.retail !== undefined ||
           knownRetail != null;

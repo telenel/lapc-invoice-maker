@@ -837,29 +837,31 @@ export default function ProductsPage() {
           const savedSkus = new Set(skus);
           const saveToken = pendingSaveTokenRef.current;
           pendingSaveTokenRef.current = null;
-          void Promise.resolve(refetch()).then((didRefresh) => {
-            if (!didRefresh || saveToken == null) {
-              return;
-            }
-            setSavedScopedSelectionCache((current) => {
-              let changed = false;
-              const next = new Map(current);
-              for (const [cacheKey, entry] of Array.from(current.entries())) {
-                if (
-                  !savedSkus.has(getSelectedProductCacheSku(cacheKey)) ||
-                  entry.pendingRefetchToken !== saveToken
-                ) {
-                  continue;
-                }
-                next.set(cacheKey, {
-                  ...entry,
-                  pendingRefetchToken: null,
-                });
-                changed = true;
+          void Promise.resolve(refetch())
+            .catch(() => undefined)
+            .finally(() => {
+              if (saveToken == null) {
+                return;
               }
-              return changed ? next : current;
+              setSavedScopedSelectionCache((current) => {
+                let changed = false;
+                const next = new Map(current);
+                for (const [cacheKey, entry] of Array.from(current.entries())) {
+                  if (
+                    !savedSkus.has(getSelectedProductCacheSku(cacheKey)) ||
+                    entry.pendingRefetchToken !== saveToken
+                  ) {
+                    continue;
+                  }
+                  next.set(cacheKey, {
+                    ...entry,
+                    pendingRefetchToken: null,
+                  });
+                  changed = true;
+                }
+                return changed ? next : current;
+              });
             });
-          });
         }}
       />
 

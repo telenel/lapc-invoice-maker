@@ -1568,6 +1568,59 @@ describe("EditItemDialogV2", () => {
     );
   });
 
+  it("prefers hydrated detail pricing over stale incoming item pricing for non-pricing saves", async () => {
+    productApiMocks.update.mockResolvedValue({ sku: 1001, appliedFields: ["item:barcode"] });
+    const onSavedScopedItems = vi.fn();
+    await mockDirectoryState();
+    const user = userEvent.setup();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 39.99,
+            cost: 19.5,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
+            itemType: "general_merchandise",
+          },
+        ]}
+        detail={{
+          ...baseDetail,
+          inventoryByLocation: [
+            { ...baseDetail.inventoryByLocation[0], locationId: 2, retail: 41.99, cost: 21.5 },
+            baseDetail.inventoryByLocation[1],
+            baseDetail.inventoryByLocation[2],
+          ],
+        }}
+        onSavedScopedItems={onSavedScopedItems}
+      />,
+    );
+
+    await user.clear(screen.getByLabelText("Barcode"));
+    await user.type(screen.getByLabelText("Barcode"), "999111222333");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(onSavedScopedItems).toHaveBeenCalledTimes(1));
+    expect(onSavedScopedItems).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sku: 1001,
+          pricingLocationId: 2,
+          retailPrice: 41.99,
+          cost: 21.5,
+          barcode: "999111222333",
+        }),
+      ]),
+      { retainUntilMatch: false },
+    );
+  });
+
   it("does not reuse known scoped pricing for touched secondary locations when detail hydration is unavailable", async () => {
     productApiMocks.update.mockResolvedValue({ sku: 1001, appliedFields: ["inventory"] });
     const onSavedScopedItems = vi.fn();
