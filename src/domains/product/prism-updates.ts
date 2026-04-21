@@ -378,7 +378,7 @@ export async function applyItemPatchInTransaction(
         itemReq.input("minOrderQtyItem", sql.Int, normalizedPatch.item.minOrderQtyItem);
       }
       if (normalizedPatch.item.fDiscontinue !== undefined) {
-        itemReq.input("fDiscontinue", sql.TinyInt, normalizedPatch.item.fDiscontinue ?? 0);
+        itemReq.input("fDiscontinue", sql.TinyInt, normalizedPatch.item.fDiscontinue);
       }
       await itemReq.query(`UPDATE Item SET ${itemSet.join(", ")} WHERE SKU = @sku`);
     }
@@ -490,7 +490,10 @@ export async function applyItemPatchInTransaction(
   } else {
     const itemSet: string[] = [];
     const gmSet: string[] = [];
-    const req = transaction.request().input("sku", sql.Int, sku).input("loc", sql.Int, PIERCE_LOCATION_ID);
+    // `req` is used only for Item and GeneralMerchandise UPDATEs, both
+    // `WHERE SKU = @sku`. Inventory writes build a separate `inventoryReq`
+    // below with their own `@loc`. No `@loc` needed here.
+    const req = transaction.request().input("sku", sql.Int, sku);
 
     if (normalizedPatch.item.barcode !== undefined) {
       req.input("barcode", sql.VarChar(20), normalizedPatch.item.barcode ?? "");
