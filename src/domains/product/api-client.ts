@@ -275,7 +275,7 @@ export const productApi = {
   async batch(
     body:
       | { action: "create"; rows: BatchCreateRow[] }
-      | { action: "update"; rows: { sku: number; patch: GmItemPatch | TextbookPatch; isTextbook?: boolean }[] }
+      | { action: "update"; rows: Array<{ sku: number; patch: GmItemPatch | TextbookPatch | ProductEditPatchV2; isTextbook?: boolean; baseline: ItemSnapshot }> }
       | { action: "discontinue"; skus: number[] }
       | { action: "hard-delete"; skus: number[] },
   ): Promise<{ action: string; count: number; skus: number[] } | { errors: BatchValidationError[] }> {
@@ -284,7 +284,21 @@ export const productApi = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    if (res.status === 400 || res.status === 409) {
+    if (res.status === 409) {
+      const data = await res.json();
+      const err = new Error("CONCURRENT_MODIFICATION") as Error & {
+        code: string;
+        rowIndex?: number | null;
+        sku?: number | null;
+        current?: unknown;
+      };
+      err.code = "CONCURRENT_MODIFICATION";
+      err.rowIndex = data?.rowIndex ?? null;
+      err.sku = data?.sku ?? null;
+      err.current = data?.current ?? null;
+      throw err;
+    }
+    if (res.status === 400) {
       const data = await res.json();
       if (data.errors) return { errors: data.errors };
     }
