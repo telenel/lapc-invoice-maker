@@ -182,11 +182,17 @@ export async function batchUpdateItems(
         updated.push(row.sku);
       } catch (err) {
         // Attach rowIndex + sku so the route can shape a precise 409 payload.
-        if (err instanceof Error) {
-          (err as Error & { rowIndex?: number; sku?: number }).rowIndex = i;
-          (err as Error & { rowIndex?: number; sku?: number }).sku = row.sku;
+        // Wrap non-Error throws (drivers rarely produce these, but defensive)
+        // so the annotation always reaches the route layer — if the caller
+        // can't tell which row failed, the dialog can't show a useful
+        // message.
+        const annotated = err instanceof Error ? err : new Error(String(err));
+        (annotated as Error & { rowIndex?: number; sku?: number; cause?: unknown }).rowIndex = i;
+        (annotated as Error & { rowIndex?: number; sku?: number; cause?: unknown }).sku = row.sku;
+        if (!(err instanceof Error)) {
+          (annotated as Error & { cause?: unknown }).cause = err;
         }
-        throw err;
+        throw annotated;
       }
     }
     await transaction.commit();
