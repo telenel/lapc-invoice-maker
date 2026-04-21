@@ -8,6 +8,7 @@ const {
   detailMock,
   healthMock,
   legacyDialogMock,
+  newItemDialogMock,
   refetchMock,
   replaceMock,
   searchProductsMock,
@@ -18,6 +19,7 @@ const {
   detailMock: vi.fn(),
   healthMock: vi.fn(),
   legacyDialogMock: vi.fn(),
+  newItemDialogMock: vi.fn(),
   refetchMock: vi.fn(),
   replaceMock: vi.fn(),
   searchProductsMock: vi.fn(),
@@ -95,7 +97,20 @@ vi.mock("@/components/products/product-action-bar", () => ({
 }));
 
 vi.mock("@/components/products/new-item-dialog", () => ({
-  NewItemDialog: () => null,
+  NewItemDialog: newItemDialogMock.mockImplementation(
+    ({
+      locationIds,
+      primaryLocationId,
+    }: {
+      locationIds?: number[];
+      primaryLocationId?: number;
+    }) => (
+      <div data-testid="new-item-dialog-props">
+        <span>{`new-item-location-ids:${locationIds?.join(",") ?? "none"}`}</span>
+        <span>{`new-item-primary-location:${primaryLocationId ?? "none"}`}</span>
+      </div>
+    ),
+  ),
 }));
 
 vi.mock("@/components/products/hard-delete-dialog", () => ({
@@ -294,6 +309,7 @@ describe("ProductsPage edit dialog mode integration", () => {
     detailMock.mockReset();
     healthMock.mockReset();
     legacyDialogMock.mockClear();
+    newItemDialogMock.mockClear();
     refetchMock.mockReset();
     replaceMock.mockReset();
     searchProductsMock.mockReset();
@@ -341,6 +357,8 @@ describe("ProductsPage edit dialog mode integration", () => {
     expect(screen.getByText("detail-sku:1001")).toBeInTheDocument();
     expect(screen.getByText("location-ids:2,3,4")).toBeInTheDocument();
     expect(screen.getByText("primary-location:2")).toBeInTheDocument();
+    expect(screen.getByText("new-item-location-ids:2,3,4")).toBeInTheDocument();
+    expect(screen.getByText("new-item-primary-location:2")).toBeInTheDocument();
     expect(screen.queryByText("dialog:legacy")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Save v2 dialog" }));
@@ -365,6 +383,8 @@ describe("ProductsPage edit dialog mode integration", () => {
 
     expect(screen.getByText("location-ids:3,4")).toBeInTheDocument();
     expect(screen.getByText("primary-location:3")).toBeInTheDocument();
+    expect(screen.getByText("new-item-location-ids:3,4")).toBeInTheDocument();
+    expect(screen.getByText("new-item-primary-location:3")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Save v2 dialog" }));
 
@@ -423,6 +443,8 @@ describe("ProductsPage edit dialog mode integration", () => {
     expect(detailMock).toHaveBeenCalledWith(1001);
     expect(screen.getByText("location-ids:4")).toBeInTheDocument();
     expect(screen.getByText("primary-location:4")).toBeInTheDocument();
+    expect(screen.getByText("new-item-location-ids:4")).toBeInTheDocument();
+    expect(screen.getByText("new-item-primary-location:4")).toBeInTheDocument();
   });
 
   it("re-derives selected pricing from the current scoped browse row", () => {

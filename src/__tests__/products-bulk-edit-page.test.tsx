@@ -236,6 +236,18 @@ describe("BulkEditPage Phase 8 field picker flow", () => {
     expect(screen.getByText("SKU 202")).toBeInTheDocument();
   });
 
+  it("shows the inherited location scope for inventory edits", () => {
+    searchParamsState = new URLSearchParams("preloadSkus=101,202&loc=3,4");
+
+    render(<BulkEditPage />);
+
+    expect(screen.getByText(/primary location: PCOP/i)).toBeInTheDocument();
+    expect(screen.getByText(/current scope: PCOP, PFS/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/inventory field edits apply only to the selected inventory scope for these locations/i),
+    ).toBeInTheDocument();
+  });
+
   it("renders matching value editors and inventory scope only when a location-aware field is selected", async () => {
     const user = userEvent.setup();
 

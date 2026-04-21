@@ -422,6 +422,11 @@ export interface BatchCreateRow {
   unitsPerPack?: number;
   retail: number;
   cost: number;
+  inventory?: Array<{
+    locationId: ProductLocationId;
+    retail: number;
+    cost: number;
+  }>;
 }
 
 export interface BatchUpdateRow {

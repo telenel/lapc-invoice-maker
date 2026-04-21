@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import {
   DatabaseIcon,
@@ -27,6 +27,13 @@ import {
   productApi,
   type CreatedItem,
 } from "@/domains/product/api-client";
+import {
+  DEFAULT_PRODUCT_LOCATION_IDS,
+  formatProductLocationList,
+  getPrimaryProductLocationId,
+  normalizeProductLocationIds,
+  PRODUCT_LOCATION_ABBREV_BY_ID,
+} from "@/domains/product/location-filters";
 import { ItemRefSelectField } from "./item-ref-selects";
 import { computeMargin } from "./batch-add-grid";
 import { useProductRefDirectory } from "@/domains/product/vendor-directory";
@@ -36,6 +43,8 @@ interface NewItemDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated?: (item: CreatedItem) => void;
+  locationIds?: ProductLocationId[];
+  primaryLocationId?: ProductLocationId;
 }
 
 interface FormState {
@@ -78,17 +87,20 @@ const LOCATION_OPTIONS = [
   { id: 4 as const, abbrev: "PFS", label: "PFS" },
 ];
 
-const DEFAULT_SELECTED_LOCATIONS: Record<ProductLocationId, boolean> = {
-  2: true,
-  3: false,
-  4: false,
-};
-
 const DEFAULT_LOCATION_PRICING: Record<ProductLocationId, LocationPricingState> = {
   2: { ...EMPTY_LOCATION_PRICING },
   3: { ...EMPTY_LOCATION_PRICING },
   4: { ...EMPTY_LOCATION_PRICING },
 };
+
+function buildSelectedLocations(locationIds: readonly ProductLocationId[]): Record<ProductLocationId, boolean> {
+  const scopedLocationIds = normalizeProductLocationIds([2, ...locationIds]);
+  return {
+    2: scopedLocationIds.includes(2),
+    3: scopedLocationIds.includes(3),
+    4: scopedLocationIds.includes(4),
+  };
+}
 
 // Keyed by MarginTone. Tailwind classes are statically written so the JIT
 // picks them up.
@@ -123,12 +135,37 @@ const MARGIN_LABEL: Record<
   idle: null,
 };
 
-export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogProps) {
+export function NewItemDialog({
+  open,
+  onOpenChange,
+  onCreated,
+  locationIds = [...DEFAULT_PRODUCT_LOCATION_IDS],
+  primaryLocationId,
+}: NewItemDialogProps) {
   const { refs, loading: refsLoading, available: refsAvailable } = useProductRefDirectory();
+  const locationScopeKey = locationIds.join(",");
+  const resolvedLocationIds = useMemo(
+    () =>
+      normalizeProductLocationIds(
+        locationScopeKey
+          .split(",")
+          .filter((value) => value.length > 0)
+          .map((value) => Number(value)),
+      ),
+    [locationScopeKey],
+  );
+  const resolvedPrimaryLocationId = useMemo(
+    () => primaryLocationId ?? getPrimaryProductLocationId(resolvedLocationIds),
+    [primaryLocationId, resolvedLocationIds],
+  );
+  const scopedSelectedLocations = useMemo(
+    () => buildSelectedLocations(resolvedLocationIds),
+    [resolvedLocationIds],
+  );
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [expanded, setExpanded] = useState(false);
   const [selectedLocations, setSelectedLocations] = useState<Record<ProductLocationId, boolean>>(
-    DEFAULT_SELECTED_LOCATIONS,
+    scopedSelectedLocations,
   );
   const [locationPricing, setLocationPricing] = useState<
     Record<ProductLocationId, LocationPricingState>
@@ -144,11 +181,11 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
     if (!open) {
       setForm(EMPTY_FORM);
       setExpanded(false);
-      setSelectedLocations(DEFAULT_SELECTED_LOCATIONS);
+      setSelectedLocations(scopedSelectedLocations);
       setLocationPricing(DEFAULT_LOCATION_PRICING);
       setError(null);
     }
-  }, [open]);
+  }, [open, scopedSelectedLocations]);
 
   const update = useCallback(<K extends keyof FormState>(field: K, value: FormState[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -266,7 +303,7 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
           itemTaxTypeId: prev.itemTaxTypeId,
         }));
         setExpanded(false);
-        setSelectedLocations(DEFAULT_SELECTED_LOCATIONS);
+        setSelectedLocations(scopedSelectedLocations);
         setLocationPricing(DEFAULT_LOCATION_PRICING);
         requestAnimationFrame(() => descriptionRef.current?.focus());
       } else {
@@ -289,6 +326,7 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
     refsUnavailable,
     saving,
     selectedLocationIds,
+    scopedSelectedLocations,
   ]);
 
   // ⌘/Ctrl+Enter submits from anywhere in the dialog
@@ -368,6 +406,15 @@ export function NewItemDialog({ open, onOpenChange, onCreated }: NewItemDialogPr
                     mirror back into the LAPortal catalog.
                   </span>
                 </div>
+              </div>
+
+              <div className="rounded-md border border-border/70 bg-muted/25 px-3 py-2.5 text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">
+                  Primary location: {PRODUCT_LOCATION_ABBREV_BY_ID[resolvedPrimaryLocationId]}
+                </span>{" "}
+                <span>
+                  · Current scope: {formatProductLocationList(resolvedLocationIds)} · New-item save writes the canonical PIER row and any scoped location rows selected below.
+                </span>
               </div>
 
               {/* Identity */}

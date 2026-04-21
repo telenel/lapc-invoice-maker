@@ -15,6 +15,12 @@ import { AuditLogList } from "@/components/bulk-edit/audit-log-list";
 import { SaveSearchDialog } from "@/components/bulk-edit/save-search-dialog";
 import { SyncDatabaseButton } from "@/components/products/sync-database-button";
 import { productApi } from "@/domains/product/api-client";
+import {
+  formatProductLocationList,
+  getPrimaryProductLocationId,
+  parseProductLocationIdsParam,
+  PRODUCT_LOCATION_ABBREV_BY_ID,
+} from "@/domains/product/location-filters";
 import type {
   BulkEditFieldEditRequest,
   BulkEditFieldPreview,
@@ -32,6 +38,8 @@ const EMPTY_TRANSFORM: BulkEditFieldEditRequest["transform"] = {
 export default function BulkEditPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const locationIds = parseProductLocationIdsParam(searchParams.get("loc"));
+  const primaryLocationId = getPrimaryProductLocationId(locationIds);
   const [selection, setSelection] = useState<BulkEditSelection>(EMPTY_SELECTION);
   const [transform, setTransform] = useState<BulkEditFieldEditRequest["transform"]>(EMPTY_TRANSFORM);
   const [preview, setPreview] = useState<BulkEditFieldPreview | null>(null);
@@ -183,6 +191,15 @@ export default function BulkEditPage() {
         <BulkEditSidebar onLoadFilter={handleLoadFilter} refreshKey={sidebarKey} />
 
         <div className="space-y-6">
+          <div className="rounded-lg border border-border/70 bg-muted/25 px-4 py-3 text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">
+              Primary location: {PRODUCT_LOCATION_ABBREV_BY_ID[primaryLocationId]}
+            </span>{" "}
+            <span>
+              · Current scope: {formatProductLocationList(locationIds)} · Inventory field edits apply only to the selected inventory scope for these locations.
+            </span>
+          </div>
+
           <SelectionPanel
             selection={selection}
             onChange={handleSelectionChange}

@@ -39,6 +39,14 @@ import {
 import { cn } from "@/lib/utils";
 import { productApi, type PrismRefs } from "@/domains/product/api-client";
 import type { BatchCreateRow, BatchValidationError } from "@/domains/product/types";
+import {
+  DEFAULT_PRODUCT_LOCATION_IDS,
+  formatProductLocationList,
+  getPrimaryProductLocationId,
+  normalizeProductLocationIds,
+  PRODUCT_LOCATION_ABBREV_BY_ID,
+  type ProductLocationId,
+} from "@/domains/product/location-filters";
 import { useProductRefDirectory } from "@/domains/product/vendor-directory";
 import { ItemRefSelects } from "./item-ref-selects";
 
@@ -114,7 +122,11 @@ function emptyRow(): GridRow {
   return Object.fromEntries(INPUTTABLE_COLS.map((c) => [c.key, ""])) as GridRow;
 }
 
-function toBatchRow(r: GridRow, defaults: DefaultsState): BatchCreateRow | null {
+function toBatchRow(
+  r: GridRow,
+  defaults: DefaultsState,
+  locationIds: readonly ProductLocationId[],
+): BatchCreateRow | null {
   function v(key: string): string {
     const own = r[key]?.trim();
     if (own) return own;
@@ -133,6 +145,11 @@ function toBatchRow(r: GridRow, defaults: DefaultsState): BatchCreateRow | null 
     comment: (r.comment?.trim() || null) as string | null,
     retail: Number(r.retail) || 0,
     cost: Number(r.cost) || 0,
+    inventory: locationIds.map((locationId) => ({
+      locationId,
+      retail: Number(r.retail) || 0,
+      cost: Number(r.cost) || 0,
+    })),
   };
 }
 
@@ -185,10 +202,21 @@ function toneForAvg(pct: number): MarginTone {
 
 interface BatchAddGridProps {
   onSubmitted?: (skus: number[]) => void;
+  locationIds?: ProductLocationId[];
+  primaryLocationId?: ProductLocationId;
 }
 
-export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
+export function BatchAddGrid({
+  onSubmitted,
+  locationIds = [...DEFAULT_PRODUCT_LOCATION_IDS],
+  primaryLocationId,
+}: BatchAddGridProps) {
   const { refs, loading: refsLoading, available: refsAvailable } = useProductRefDirectory();
+  const inheritedLocationIds = useMemo(
+    () => normalizeProductLocationIds([2, ...locationIds]),
+    [locationIds],
+  );
+  const resolvedPrimaryLocationId = primaryLocationId ?? getPrimaryProductLocationId(locationIds);
   const [rows, setRows] = useState<GridRow[]>(() => [emptyRow(), emptyRow(), emptyRow()]);
   const [defaults, setDefaults] = useState<DefaultsState>(EMPTY_DEFAULTS);
   const [errors, setErrors] = useState<BatchValidationError[]>([]);
@@ -294,8 +322,10 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
   }
 
   const rowsToBatch = useCallback((): BatchCreateRow[] => {
-    return rows.map((r) => toBatchRow(r, defaults)).filter((r): r is BatchCreateRow => r !== null);
-  }, [rows, defaults]);
+    return rows
+      .map((r) => toBatchRow(r, defaults, inheritedLocationIds))
+      .filter((r): r is BatchCreateRow => r !== null);
+  }, [defaults, inheritedLocationIds, rows]);
 
   const handleValidate = useCallback(async () => {
     if (refsUnavailable) {
@@ -483,6 +513,15 @@ export function BatchAddGrid({ onSubmitted }: BatchAddGridProps) {
           Couldn&apos;t load vendor / department / tax lookups. Lookup fields are disabled until Prism recovers.
         </div>
       ) : null}
+
+      <div className="rounded-lg border border-border/70 bg-muted/20 px-3 py-2 text-xs text-muted-foreground">
+        <span className="font-medium text-foreground">
+          Primary location: {PRODUCT_LOCATION_ABBREV_BY_ID[resolvedPrimaryLocationId]}
+        </span>{" "}
+        <span>
+          · Selected inventory rows: {formatProductLocationList(inheritedLocationIds)} · Batch-add submit writes the row retail/cost to each listed location.
+        </span>
+      </div>
 
       {/* Paste hint + hidden-column affordance */}
       <div className="flex items-center gap-2.5 border-b border-dashed pb-3 text-xs text-muted-foreground">
