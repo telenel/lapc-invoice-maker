@@ -32,7 +32,7 @@ export function AdvancedTabContent({
     <TabsContent value="advanced" className="space-y-4 pt-1">
       <Section
         title="Advanced flags"
-        description="Rare item-level controls stay out of the way, but they now save through the same V2 patch contract as the primary fields."
+        description="Rare item-level controls — apply to all locations."
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <BooleanSelectField

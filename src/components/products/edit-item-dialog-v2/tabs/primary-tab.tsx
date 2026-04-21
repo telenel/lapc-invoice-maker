@@ -36,6 +36,7 @@ export function PrimaryTabContent({
   refsControlsDisabled: boolean;
   resolvedPrimaryLocationId: InventoryLocationId;
 }) {
+  const primaryLocationLabel = INVENTORY_LOCATION_LABELS[resolvedPrimaryLocationId];
   return (
     <TabsContent value="primary" className="space-y-4 pt-1">
       <Section
@@ -46,11 +47,6 @@ export function PrimaryTabContent({
             : "Merchandise-safe fields that already write through the current edit path."
         }
       >
-        {!isBulk && !isTextbookRow ? (
-          <p className="text-sm text-muted-foreground">
-            Retail and cost in this tab write to the current primary page location: {INVENTORY_LOCATION_LABELS[resolvedPrimaryLocationId]}.
-          </p>
-        ) : null}
         <div className="grid gap-4 sm:grid-cols-2">
           {isTextbookRow ? (
             <>
@@ -101,6 +97,7 @@ export function PrimaryTabContent({
                   value={form.barcode}
                   onChange={(event) => update("barcode", event.target.value)}
                   placeholder={isBulk ? "Leave unchanged (per-item)…" : ""}
+                  className="font-mono text-xs"
                 />
               </Field>
               <ItemRefSelectField
@@ -152,6 +149,7 @@ export function PrimaryTabContent({
                   onChange={(event) => update("barcode", event.target.value)}
                   disabled={isBulk}
                   placeholder={isBulk ? "Leave unchanged (per-item)…" : ""}
+                  className="font-mono text-xs"
                 />
               </Field>
               <ItemRefSelectField
@@ -187,7 +185,7 @@ export function PrimaryTabContent({
             </>
           )}
 
-          <Field id={idFor("retail")} label="Retail">
+          <Field id={idFor("retail")} label={isBulk ? "Retail" : `Retail (${primaryLocationLabel})`}>
             <Input
               id={idFor("retail")}
               type="number"
@@ -197,9 +195,10 @@ export function PrimaryTabContent({
               value={form.retail}
               onChange={(event) => update("retail", event.target.value)}
               placeholder={isBulk ? "Leave unchanged…" : ""}
+              className="tabular-nums"
             />
           </Field>
-          <Field id={idFor("cost")} label="Cost">
+          <Field id={idFor("cost")} label={isBulk ? "Cost" : `Cost (${primaryLocationLabel})`}>
             <Input
               id={idFor("cost")}
               type="number"
@@ -209,6 +208,7 @@ export function PrimaryTabContent({
               value={form.cost}
               onChange={(event) => update("cost", event.target.value)}
               placeholder={isBulk ? "Leave unchanged…" : ""}
+              className="tabular-nums"
             />
           </Field>
           {isTextbookRow ? null : (

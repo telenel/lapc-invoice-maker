@@ -402,8 +402,8 @@ describe("EditItemDialogV2", () => {
     await userEvent.click(screen.getByRole("tab", { name: "Inventory" }));
     await userEvent.click(screen.getByRole("button", { name: "PCOP" }));
 
-    expect(screen.getByLabelText("Retail")).toHaveValue(42.5);
-    expect(screen.getByLabelText("Cost")).toHaveValue(21.25);
+    expect(screen.getByLabelText(/^Retail(\s|$)/)).toHaveValue(42.5);
+    expect(screen.getByLabelText(/^Cost(\s|$)/)).toHaveValue(21.25);
   });
 
   it("copies the active retail value to PIER and PFS from PCOP", async () => {
@@ -449,16 +449,16 @@ describe("EditItemDialogV2", () => {
     await userEvent.click(screen.getByRole("tab", { name: "Inventory" }));
     await userEvent.click(screen.getByRole("button", { name: "PCOP" }));
 
-    const retailInput = screen.getByLabelText("Retail");
+    const retailInput = screen.getByLabelText(/^Retail(\s|$)/);
     await userEvent.clear(retailInput);
     await userEvent.type(retailInput, "55.5");
 
     await userEvent.click(screen.getByRole("button", { name: "Copy retail to other locations" }));
     await userEvent.click(screen.getByRole("button", { name: "PIER" }));
-    expect(screen.getByLabelText("Retail")).toHaveValue(55.5);
+    expect(screen.getByLabelText(/^Retail(\s|$)/)).toHaveValue(55.5);
 
     await userEvent.click(screen.getByRole("button", { name: "PFS" }));
-    expect(screen.getByLabelText("Retail")).toHaveValue(55.5);
+    expect(screen.getByLabelText(/^Retail(\s|$)/)).toHaveValue(55.5);
   });
 
   it("shows the refs-unavailable alert while keeping the form visible", async () => {
@@ -721,8 +721,8 @@ describe("EditItemDialogV2", () => {
     await user.click(screen.getByRole("tab", { name: "Inventory" }));
     await user.click(screen.getByRole("button", { name: "PCOP" }));
 
-    expect(screen.getByLabelText("Retail")).toHaveValue(42.5);
-    expect(screen.getByLabelText("Cost")).toHaveValue(21.25);
+    expect(screen.getByLabelText(/^Retail(\s|$)/)).toHaveValue(42.5);
+    expect(screen.getByLabelText(/^Cost(\s|$)/)).toHaveValue(21.25);
   });
 
   it("does not clobber in-progress inventory edits when detail hydration finishes", async () => {
@@ -751,7 +751,7 @@ describe("EditItemDialogV2", () => {
     await user.click(screen.getByRole("tab", { name: "Inventory" }));
     await user.click(screen.getByRole("button", { name: "PCOP" }));
 
-    const retailInput = screen.getByLabelText("Retail");
+    const retailInput = screen.getByLabelText(/^Retail(\s|$)/);
     await user.clear(retailInput);
     await user.type(retailInput, "55.5");
 
@@ -785,8 +785,8 @@ describe("EditItemDialogV2", () => {
       />,
     );
 
-    expect(screen.getByLabelText("Retail")).toHaveValue(55.5);
-    expect(screen.getByLabelText("Cost")).toHaveValue(21.25);
+    expect(screen.getByLabelText(/^Retail(\s|$)/)).toHaveValue(55.5);
+    expect(screen.getByLabelText(/^Cost(\s|$)/)).toHaveValue(21.25);
   });
 
   it("keeps current ref-backed IDs visible when refs are unavailable", async () => {
@@ -895,11 +895,11 @@ describe("EditItemDialogV2", () => {
       />,
     );
 
-    expect(screen.getByLabelText("Retail")).toHaveValue(42.5);
-    expect(screen.getByLabelText("Cost")).toHaveValue(21.25);
+    expect(screen.getByLabelText(/^Retail(\s|$)/)).toHaveValue(42.5);
+    expect(screen.getByLabelText(/^Cost(\s|$)/)).toHaveValue(21.25);
 
-    await user.clear(screen.getByLabelText("Retail"));
-    await user.clear(screen.getByLabelText("Cost"));
+    await user.clear(screen.getByLabelText(/^Retail(\s|$)/));
+    await user.clear(screen.getByLabelText(/^Cost(\s|$)/));
 
     await user.click(screen.getByRole("tab", { name: "Inventory" }));
 
@@ -960,8 +960,8 @@ describe("EditItemDialogV2", () => {
       />,
     );
 
-    expect(screen.getByLabelText("Retail")).toHaveValue(null);
-    expect(screen.getByLabelText("Cost")).toHaveValue(null);
+    expect(screen.getByLabelText(/^Retail(\s|$)/)).toHaveValue(null);
+    expect(screen.getByLabelText(/^Cost(\s|$)/)).toHaveValue(null);
   });
 
   it("keeps a pristine single-item dialog on the no-op save path", async () => {
@@ -1242,5 +1242,144 @@ describe("EditItemDialogV2", () => {
 
     await userEvent.click(screen.getByRole("tab", { name: "Textbook" }));
     expect(screen.getByLabelText("Text Status")).toHaveAttribute("min", "1");
+  });
+
+  // --- Phase 2 visual polish ------------------------------------------------
+
+  it("keeps internal phase notes out of the dialog's user-facing copy", async () => {
+    await mockDirectoryState();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 42.5,
+            cost: 21.25,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+          },
+        ]}
+      />,
+    );
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.textContent ?? "").not.toMatch(/Phase \d/);
+    expect(dialog.textContent ?? "").not.toMatch(/V2 patch contract/i);
+    expect(dialog.textContent ?? "").not.toMatch(/parity-only/i);
+  });
+
+  it("renders money inputs with tabular-nums and the barcode with font-mono for legibility", async () => {
+    await mockDirectoryState();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 42.5,
+            cost: 21.25,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByLabelText(/^Retail(\s|$)/)).toHaveClass("tabular-nums");
+    expect(screen.getByLabelText(/^Cost(\s|$)/)).toHaveClass("tabular-nums");
+    expect(screen.getByLabelText("Barcode")).toHaveClass("font-mono");
+  });
+
+  it("shows a Textbook mode badge and a Primary-location subtitle in the header for a single textbook", async () => {
+    await mockDirectoryState();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 42.5,
+            cost: 21.25,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+            isTextbook: true,
+          },
+        ]}
+        detail={buildTextbookDetail()}
+      />,
+    );
+
+    const header = screen.getByRole("dialog").querySelector('[data-slot="dialog-header"]');
+    expect(header?.textContent ?? "").toContain("Textbook");
+    expect(header?.textContent ?? "").toMatch(/Primary location[:\s]+PIER/i);
+  });
+
+  it("shows a Bulk scope badge when editing multiple items and no location subtitle in bulk mode", async () => {
+    await mockDirectoryState();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 42.5,
+            cost: 21.25,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+          },
+          {
+            sku: 1002,
+            barcode: "9998887770001",
+            retail: 5.25,
+            cost: 2.1,
+            fDiscontinue: 0,
+            description: "Second item",
+          },
+        ]}
+      />,
+    );
+
+    const header = screen.getByRole("dialog").querySelector('[data-slot="dialog-header"]');
+    expect(header?.textContent ?? "").toContain("Bulk");
+    // Bulk mode edits all selected items per-row; a single primary location
+    // does not apply. The subtitle should be absent.
+    expect(header?.textContent ?? "").not.toMatch(/Primary location/i);
+  });
+
+  it("suffixes the Primary retail/cost labels with the active primary location", async () => {
+    await mockDirectoryState();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 42.5,
+            cost: 21.25,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByLabelText(/Retail\s*\(PIER\)/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Cost\s*\(PIER\)/)).toBeInTheDocument();
   });
 });

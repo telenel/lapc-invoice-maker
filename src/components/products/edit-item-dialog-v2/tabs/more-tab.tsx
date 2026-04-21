@@ -31,7 +31,7 @@ export function MoreTabContent({
     <TabsContent value="more" className="space-y-4 pt-1">
       <Section
         title="Packaging and merchandising"
-        description="Writeable fields stay active. Phase 4 parity-only fields are surfaced read-only until their patch wiring lands."
+        description="Secondary fields — package type, size, color, weight, alternate vendor."
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <ItemRefSelectField
