@@ -1,16 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import dynamic from "next/dynamic";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { AnalyticsResponse } from "@/domains/analytics/types";
 import { getDateKeyInLosAngeles, shiftDateKey } from "@/lib/date-utils";
-
-const CategoryChart = dynamic(() => import("./category-chart").then((m) => m.CategoryChart), { ssr: false });
-const MonthlyTotalsChart = dynamic(() => import("./monthly-totals-chart").then((m) => m.MonthlyTotalsChart), { ssr: false });
-const DepartmentSpendChart = dynamic(() => import("./department-spend-chart").then((m) => m.DepartmentSpendChart), { ssr: false });
-const InvoiceTrendChart = dynamic(() => import("./invoice-trend-chart").then((m) => m.InvoiceTrendChart), { ssr: false });
-const UserChart = dynamic(() => import("./user-chart").then((m) => m.UserChart), { ssr: false });
+import { FinanceDashboard } from "./finance-dashboard";
+import { OperationsDashboard } from "./operations-dashboard";
 
 function getDefaultDateRange() {
   const dateTo = getDateKeyInLosAngeles();
@@ -18,6 +14,24 @@ function getDefaultDateRange() {
     dateFrom: shiftDateKey(dateTo, { years: -1 }),
     dateTo,
   };
+}
+
+function LoadingSkeleton() {
+  return (
+    <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+      {[1, 2, 3, 4].map((index) => (
+        <Card key={index}>
+          <CardHeader>
+            <div className="h-5 w-40 motion-safe:animate-pulse rounded bg-muted" />
+            <div className="h-4 w-64 motion-safe:animate-pulse rounded bg-muted" />
+          </CardHeader>
+          <CardContent>
+            <div className="h-[260px] motion-safe:animate-pulse rounded bg-muted" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
 }
 
 export function AnalyticsDashboard({
@@ -38,6 +52,7 @@ export function AnalyticsDashboard({
   const skippedInitialFetchRef = useRef(initialData !== null);
   const initialRangeKey = `${initialDateFrom ?? defaults.dateFrom}|${initialDateTo ?? defaults.dateTo}`;
   const currentRangeKey = `${dateFrom}|${dateTo}`;
+  const hasOperations = Boolean(data && (data as Partial<AnalyticsResponse>).operations);
 
   useEffect(() => {
     if (skippedInitialFetchRef.current && currentRangeKey === initialRangeKey) {
@@ -68,11 +83,17 @@ export function AnalyticsDashboard({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <h1 className="text-2xl font-bold text-balance sm:text-3xl">Analytics</h1>
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold text-balance sm:text-3xl">Analytics</h1>
+          <p className="max-w-3xl text-sm text-muted-foreground">
+            Switch between finance tracking and day-to-day operations insights. The new operations view is read-only and grounded in the current Supabase mirror.
+          </p>
+        </div>
+
         <div className="grid w-full gap-3 sm:w-auto sm:grid-flow-col sm:auto-cols-max sm:items-end">
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-muted-foreground font-medium" htmlFor="dateFrom">
+            <label className="text-xs font-medium text-muted-foreground" htmlFor="dateFrom">
               From
             </label>
             <input
@@ -85,7 +106,7 @@ export function AnalyticsDashboard({
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-muted-foreground font-medium" htmlFor="dateTo">
+            <label className="text-xs font-medium text-muted-foreground" htmlFor="dateTo">
               To
             </label>
             <input
@@ -107,117 +128,23 @@ export function AnalyticsDashboard({
       )}
 
       {loading ? (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <Card key={i}>
-              <CardHeader>
-                <div className="h-5 w-40 motion-safe:animate-pulse rounded bg-muted" />
-              </CardHeader>
-              <CardContent>
-                <div className="h-[300px] motion-safe:animate-pulse rounded bg-muted" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <LoadingSkeleton />
       ) : data ? (
-        <div className="flex flex-col gap-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Finalized Total</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{data.summary.finalizedTotal.toLocaleString("en-US", { style: "currency", currency: "USD" })}</p>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {data.summary.finalizedCount} finalized document{data.summary.finalizedCount !== 1 ? "s" : ""}
-                </p>
-              </CardContent>
-            </Card>
+        <Tabs defaultValue={hasOperations ? "operations" : "finance"} className="gap-6">
+          <TabsList variant="default" className="w-fit">
+            {hasOperations ? <TabsTrigger value="operations">Operations</TabsTrigger> : null}
+            <TabsTrigger value="finance">Finance</TabsTrigger>
+          </TabsList>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Expected Total</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{data.summary.expectedTotal.toLocaleString("en-US", { style: "currency", currency: "USD" })}</p>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {data.summary.expectedCount} open document{data.summary.expectedCount !== 1 ? "s" : ""}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Combined Total</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{data.summary.total.toLocaleString("en-US", { style: "currency", currency: "USD" })}</p>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Finalized plus active pipeline
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Tracked Documents</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold">{data.summary.count}</p>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Included invoices and active quotes
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Documents by Category</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <CategoryChart data={data.byCategory} />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Monthly Totals</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <MonthlyTotalsChart data={data.byMonth} />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Department Totals</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <DepartmentSpendChart data={data.byDepartment} />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Document Trend</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <InvoiceTrendChart data={data.trend} />
-            </CardContent>
-          </Card>
-
-          <Card className="md:col-span-2">
-            <CardHeader>
-              <CardTitle>Totals by User</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <UserChart data={data.byUser} />
-            </CardContent>
-          </Card>
-          </div>
-        </div>
+          {hasOperations ? (
+            <TabsContent value="operations">
+              <OperationsDashboard data={data.operations} />
+            </TabsContent>
+          ) : null}
+          <TabsContent value="finance">
+            <FinanceDashboard data={data} />
+          </TabsContent>
+        </Tabs>
       ) : null}
     </div>
   );

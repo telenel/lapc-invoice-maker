@@ -128,6 +128,119 @@ import { StaffTable } from "@/components/staff/staff-table";
 import { QuickPickTable } from "@/components/quick-picks/quick-pick-table";
 import { AnalyticsDashboard } from "@/components/analytics/analytics-dashboard";
 import { RequisitionFilters } from "@/components/textbook-requisitions/requisition-filters";
+import type { OperationsAnalytics } from "@/domains/analytics/types";
+
+const bootstrapOperationsData: OperationsAnalytics = {
+  overview: {
+    revenue: 9450,
+    units: 312,
+    receipts: 118,
+    averageBasket: 80.08,
+    deadStockCost: 1820,
+    lowStockHighDemandCount: 2,
+    reorderBreachCount: 5,
+    lastSyncStartedAt: "2026-03-31T23:10:00.000Z",
+    lastSyncStatus: "ok",
+    txnsAdded: 128,
+  },
+  highlights: [
+    {
+      title: "Thursday carries the heaviest store traffic",
+      detail: "Thursday produced the most receipts in this range.",
+      tone: "warning",
+    },
+  ],
+  salesPatterns: {
+    monthly: [
+      { month: "2026-01", revenue: 2800, units: 92, receipts: 33, discountRate: 0.03 },
+    ],
+    weekdays: [
+      { day: "Thursday", revenue: 2600, receipts: 31 },
+    ],
+    hourly: [],
+    hourlyAvailable: false,
+    hourlyFallbackMessage: "Time-of-day traffic is unavailable because the mirrored sales timestamps only resolve to a single effective hour right now.",
+  },
+  productPerformance: {
+    topSelling: [
+      {
+        sku: 101,
+        description: "College Algebra",
+        department: "Textbooks",
+        units: 40,
+        revenue: 1280,
+        lastSaleDate: "2026-03-28T00:00:00.000Z",
+        trendDirection: "accelerating",
+      },
+    ],
+    topRevenue: [
+      {
+        sku: 404,
+        description: "Campus Hoodie",
+        department: "Merchandise",
+        units: 18,
+        revenue: 1620,
+        lastSaleDate: "2026-03-25T00:00:00.000Z",
+        trendDirection: "steady",
+      },
+    ],
+    accelerating: [],
+    decelerating: [],
+    newItems: [],
+    categoryMix: [
+      { category: "Textbooks", revenue: 6120, units: 184 },
+    ],
+    revenueConcentration: {
+      topProductShare: 0.17,
+      skuCountFor80Percent: 14,
+      totalSkuCount: 62,
+      percentOfSkusFor80Percent: 22.6,
+    },
+  },
+  inventoryHealth: {
+    deadStockCost: 1820,
+    lowStockHighDemandCount: 2,
+    reorderBreachesByLocation: [
+      { location: "PIER", count: 3 },
+    ],
+    staleInventoryByLocation: [
+      {
+        location: "PIER",
+        fresh30d: 36,
+        stale31To90d: 12,
+        stale91To365d: 8,
+        staleOver365d: 4,
+        neverSold: 2,
+      },
+    ],
+    deadInventory: [],
+    slowMoving: [],
+    lowStockHighDemand: [],
+  },
+  copyTech: {
+    summary: {
+      invoiceRevenue: 2400,
+      quoteRevenue: 1800,
+      invoiceCount: 6,
+      quoteCount: 4,
+    },
+    monthly: [
+      { month: "2026-01", invoiceRevenue: 800, quoteRevenue: 500, invoiceCount: 2, quoteCount: 1 },
+    ],
+    serviceMix: [
+      { service: "COPY", revenue: 900, quantity: 450 },
+    ],
+    topRequesters: [
+      { name: "Library", revenue: 1300, invoiceCount: 2, quoteCount: 1 },
+    ],
+    limitations: [
+      "CopyTech POS sales are not yet mirrored into Supabase, so this section uses LAPortal invoices and print quotes instead.",
+    ],
+  },
+  limitations: [
+    "Store sales trends reflect the mirrored Pierce POS feed only.",
+  ],
+};
 
 describe("Main Nav Page Bootstraps", () => {
   const fetchMock = vi.fn();
@@ -372,11 +485,73 @@ describe("Main Nav Page Bootstraps", () => {
             expectedCount: 2,
             expectedTotal: 120,
           }],
+          operations: bootstrapOperationsData,
         }}
       />,
     );
 
     expect(screen.getByRole("heading", { name: /Analytics/i })).toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("renders an operations tab from bootstrap data without fetching on mount", () => {
+    render(
+      <AnalyticsDashboard
+        initialDateFrom="2025-04-12"
+        initialDateTo="2026-04-12"
+        initialData={{
+          summary: {
+            count: 3,
+            total: 180,
+            finalizedCount: 1,
+            finalizedTotal: 60,
+            expectedCount: 2,
+            expectedTotal: 120,
+          },
+          byCategory: [{
+            category: "Print",
+            count: 3,
+            total: 180,
+            finalizedCount: 1,
+            finalizedTotal: 60,
+            expectedCount: 2,
+            expectedTotal: 120,
+          }],
+          byMonth: [{
+            month: "2026-04",
+            count: 3,
+            total: 180,
+            finalizedCount: 1,
+            finalizedTotal: 60,
+            expectedCount: 2,
+            expectedTotal: 120,
+          }],
+          byDepartment: [{
+            department: "Bookstore",
+            count: 3,
+            total: 180,
+            finalizedCount: 1,
+            finalizedTotal: 60,
+            expectedCount: 2,
+            expectedTotal: 120,
+          }],
+          trend: [{ month: "2026-04", count: 3, finalizedCount: 1, expectedCount: 2 }],
+          byUser: [{
+            user: "Mia",
+            count: 3,
+            total: 180,
+            finalizedCount: 1,
+            finalizedTotal: 60,
+            expectedCount: 2,
+            expectedTotal: 120,
+          }],
+          operations: bootstrapOperationsData,
+        }}
+      />,
+    );
+
+    expect(screen.getByRole("tab", { name: /Operations/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Monthly CopyTech trend/i })).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
