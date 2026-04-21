@@ -1260,7 +1260,7 @@ describe("ProductsPage edit dialog mode integration", () => {
     expect(screen.getByText("item-fDiscontinue:1")).toBeInTheDocument();
   });
 
-  it("falls back to live scoped values when the post-save refetch fails", async () => {
+  it("keeps confirmed saved scoped values when the post-save refetch fails", async () => {
     const user = userEvent.setup();
     refetchMock.mockResolvedValue(false);
     searchParamsState = new URLSearchParams("tab=merchandise&loc=4");
@@ -1346,18 +1346,18 @@ describe("ProductsPage edit dialog mode integration", () => {
     view.rerender(<ProductsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText("selected-retail:41.99")).toBeInTheDocument();
+      expect(screen.getByText("selected-retail:44.99")).toBeInTheDocument();
     });
-    expect(screen.getByText("selected-cost:21.5")).toBeInTheDocument();
+    expect(screen.getByText("selected-cost:22.25")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Save selection snapshot" }));
     expect(JSON.parse(sessionStorage.getItem(CATALOG_ITEMS_STORAGE_KEY) ?? "[]")).toMatchObject([
       {
         sku: 1001,
-        retailPrice: 41.99,
-        cost: 21.5,
-        barcode: "123456789012",
-        fDiscontinue: 0,
+        retailPrice: 44.99,
+        cost: 22.25,
+        barcode: "999888777000",
+        fDiscontinue: 1,
       },
     ]);
 
@@ -1367,10 +1367,10 @@ describe("ProductsPage edit dialog mode integration", () => {
       expect(screen.getByText("dialog:v2")).toBeInTheDocument();
     });
 
-    expect(screen.getByText("item-retail:41.99")).toBeInTheDocument();
-    expect(screen.getByText("item-cost:21.5")).toBeInTheDocument();
-    expect(screen.getByText("item-barcode:123456789012")).toBeInTheDocument();
-    expect(screen.getByText("item-fDiscontinue:0")).toBeInTheDocument();
+    expect(screen.getByText("item-retail:44.99")).toBeInTheDocument();
+    expect(screen.getByText("item-cost:22.25")).toBeInTheDocument();
+    expect(screen.getByText("item-barcode:999888777000")).toBeInTheDocument();
+    expect(screen.getByText("item-fDiscontinue:1")).toBeInTheDocument();
   });
 
   it("yields to later same-scope live data after a failed post-save refetch", async () => {
@@ -1474,9 +1474,9 @@ describe("ProductsPage edit dialog mode integration", () => {
     view.rerender(<ProductsPage />);
 
     await waitFor(() => {
-      expect(screen.getByText("selected-retail:41.99")).toBeInTheDocument();
+      expect(screen.getByText("selected-retail:44.99")).toBeInTheDocument();
     });
-    expect(screen.getByText("selected-cost:21.5")).toBeInTheDocument();
+    expect(screen.getByText("selected-cost:22.25")).toBeInTheDocument();
 
     useProductSearchMock.mockReturnValue({
       data: {
@@ -1662,7 +1662,7 @@ describe("ProductsPage edit dialog mode integration", () => {
     expect(screen.getByText("item-fDiscontinue:1")).toBeInTheDocument();
   });
 
-  it("keeps saved current-scope values when the live row temporarily loses that scope", async () => {
+  it("drops saved current-scope values when a later successful fetch loses that scope", async () => {
     const user = userEvent.setup();
     searchParamsState = new URLSearchParams("tab=merchandise&loc=4");
     const liveScopedRow = {
@@ -1753,17 +1753,19 @@ describe("ProductsPage edit dialog mode integration", () => {
     });
     view.rerender(<ProductsPage />);
 
-    expect(screen.getByText("selected-retail:44.99")).toBeInTheDocument();
-    expect(screen.getByText("selected-cost:22.25")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Create Quote" })).toBeEnabled();
-    expect(screen.getByRole("button", { name: "Create Invoice" })).toBeEnabled();
+    await waitFor(() => {
+      expect(screen.getByText("selected-retail:null")).toBeInTheDocument();
+    });
+    expect(screen.getByText("selected-cost:null")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Create Quote" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Create Invoice" })).toBeDisabled();
 
     await user.click(screen.getByRole("button", { name: "Save selection snapshot" }));
     expect(JSON.parse(sessionStorage.getItem(CATALOG_ITEMS_STORAGE_KEY) ?? "[]")).toMatchObject([
       {
         sku: 1001,
-        retailPrice: 44.99,
-        cost: 22.25,
+        retailPrice: null,
+        cost: null,
       },
     ]);
   });

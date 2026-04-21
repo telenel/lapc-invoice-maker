@@ -1204,12 +1204,12 @@ describe("EditItemDialogV2", () => {
       batch.mockRestore();
     });
 
-    it("surfaces batch mirror drift as a toast while still closing after Prism save", async () => {
+    it("surfaces deferred batch mirror refresh as a toast while still closing after Prism save", async () => {
       const batch = vi.spyOn(productApiMocks, "batch").mockResolvedValue({
         action: "update",
         count: 2,
         skus: [101, 102],
-        mirrorErrors: [{ sku: 101, message: "snapshot failed" }],
+        mirrorRefreshDeferred: true,
       });
       const onSaved = vi.fn();
       const onOpenChange = vi.fn();
@@ -1234,7 +1234,7 @@ describe("EditItemDialogV2", () => {
       expect(onSaved).toHaveBeenCalledWith([101, 102]);
       expect(onOpenChange).toHaveBeenCalledWith(false);
       expect(toastMocks.error).toHaveBeenCalledWith(
-        "Saved in Prism, but the product mirror did not refresh for SKU 101. Browse data may stay stale until the next sync.",
+        "Saved in Prism. The browse mirror is refreshing in the background, so browse data may stay stale briefly.",
       );
 
       batch.mockRestore();

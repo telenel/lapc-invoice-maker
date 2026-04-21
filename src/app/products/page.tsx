@@ -156,21 +156,19 @@ function shouldUseSavedScopedSelection(
     return true;
   }
   if (liveScopedSelection.pricingLocationId !== primaryLocationId) {
+    return entry.pendingRefetchToken != null && entry.retainedLiveSignature == null;
+  }
+  const liveSignature = getSelectedProductSignature(liveScopedSelection);
+  if (selectedProductsEqual(entry.product, liveScopedSelection)) {
     return true;
   }
   if (entry.pendingRefetchToken != null) {
-    return true;
-  }
-  if (selectedProductsEqual(entry.product, liveScopedSelection)) {
-    return true;
+    return entry.retainedLiveSignature == null || entry.retainedLiveSignature === liveSignature;
   }
   if (!entry.retainUntilMatch) {
     return false;
   }
-  return (
-    entry.retainedLiveSignature == null ||
-    entry.retainedLiveSignature === getSelectedProductSignature(liveScopedSelection)
-  );
+  return entry.retainedLiveSignature == null || entry.retainedLiveSignature === liveSignature;
 }
 
 function shouldDropSavedScopedSelection(
@@ -178,22 +176,23 @@ function shouldDropSavedScopedSelection(
   liveScopedSelection: SelectedProduct | null,
   primaryLocationId: ProductLocationId,
 ): boolean {
-  if (liveScopedSelection == null || liveScopedSelection.pricingLocationId !== primaryLocationId) {
+  if (liveScopedSelection == null) {
     return false;
+  }
+  if (liveScopedSelection.pricingLocationId !== primaryLocationId) {
+    return entry.pendingRefetchToken == null || entry.retainedLiveSignature != null;
   }
   if (selectedProductsEqual(entry.product, liveScopedSelection)) {
     return true;
   }
+  const liveSignature = getSelectedProductSignature(liveScopedSelection);
   if (entry.pendingRefetchToken != null) {
-    return false;
+    return entry.retainedLiveSignature != null && entry.retainedLiveSignature !== liveSignature;
   }
   if (!entry.retainUntilMatch) {
     return true;
   }
-  return (
-    entry.retainedLiveSignature != null &&
-    entry.retainedLiveSignature !== getSelectedProductSignature(liveScopedSelection)
-  );
+  return entry.retainedLiveSignature != null && entry.retainedLiveSignature !== liveSignature;
 }
 
 export default function ProductsPage() {
@@ -418,15 +417,19 @@ export default function ProductsPage() {
       const next = new Map(current);
       for (const product of visibleSelectedRows) {
         const scopedSelection = browseRowToSelectedProduct(product);
-        if (scopedSelection.pricingLocationId !== primaryLocationId) {
-          continue;
-        }
         const cacheKey = getSelectedProductCacheKey(product.sku, primaryLocationId);
         if (cacheKey == null) {
           continue;
         }
         const savedSelection = next.get(cacheKey);
         if (savedSelection) {
+          if (scopedSelection.pricingLocationId !== primaryLocationId) {
+            if (shouldDropSavedScopedSelection(savedSelection, scopedSelection, primaryLocationId)) {
+              next.delete(cacheKey);
+              changed = true;
+            }
+            continue;
+          }
           if (
             savedSelection.retainUntilMatch &&
             savedSelection.pendingRefetchToken == null &&
@@ -806,25 +809,36 @@ export default function ProductsPage() {
             const next = new Map(current);
             const retainUntilMatch = options?.retainUntilMatch === true;
             for (const item of savedItems) {
+              const cacheLocationId = item.pricingLocationId ?? primaryLocationId;
               const cacheKey = getSelectedProductCacheKey(
                 item.sku,
-                item.pricingLocationId ?? primaryLocationId,
+                cacheLocationId,
               );
               if (cacheKey == null) {
                 continue;
               }
+              const browseRow = browseRowsBySku.get(item.sku);
+              const liveBrowseSelection =
+                browseRow != null
+                  ? browseRowToSelectedProduct(browseRow)
+                  : null;
+              const retainedLiveSignature =
+                liveBrowseSelection?.pricingLocationId === cacheLocationId
+                  ? getSelectedProductSignature(liveBrowseSelection)
+                  : null;
               const cachedItem = next.get(cacheKey);
               if (
                 !cachedItem ||
                 cachedItem.pendingRefetchToken !== saveToken ||
                 cachedItem.retainUntilMatch !== retainUntilMatch ||
+                cachedItem.retainedLiveSignature !== retainedLiveSignature ||
                 !selectedProductsEqual(cachedItem.product, item)
               ) {
                 next.set(cacheKey, {
                   product: item,
                   pendingRefetchToken: saveToken,
                   retainUntilMatch,
-                  retainedLiveSignature: null,
+                  retainedLiveSignature,
                 });
                 changed = true;
               }
@@ -838,9 +852,8 @@ export default function ProductsPage() {
           const saveToken = pendingSaveTokenRef.current;
           pendingSaveTokenRef.current = null;
           void Promise.resolve(refetch())
-            .catch(() => undefined)
-            .finally(() => {
-              if (saveToken == null) {
+            .then((didRefresh) => {
+              if (!didRefresh || saveToken == null) {
                 return;
               }
               setSavedScopedSelectionCache((current) => {
@@ -861,7 +874,8 @@ export default function ProductsPage() {
                 }
                 return changed ? next : current;
               });
-            });
+            })
+            .catch(() => undefined);
         }}
       />
 

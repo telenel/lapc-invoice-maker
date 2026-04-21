@@ -34,6 +34,12 @@ type MirrorError = {
   message: string;
 };
 
+type BatchUpdateMirrorRow = {
+  sku: number;
+  patch: Record<string, unknown>;
+  isTextbook?: boolean;
+};
+
 function getSupabaseErrorMessage(
   result: { error?: { message?: string | null } | null } | null | undefined,
   fallback: string,
@@ -104,6 +110,91 @@ async function mapWithConcurrencyLimit<T, R>(
   const workerCount = Math.min(limit, items.length);
   await Promise.all(Array.from({ length: workerCount }, () => runWorker()));
   return results;
+}
+
+async function collectBatchUpdateMirrorWarnings(
+  rows: readonly BatchUpdateMirrorRow[],
+): Promise<MirrorError[]> {
+  if (rows.length === 0) {
+    return [];
+  }
+
+  const supabase = getSupabaseAdminClient();
+  const mirrorResults = await mapWithConcurrencyLimit(rows, 4, async (row) => {
+    const rowErrors: string[] = [];
+
+    try {
+      const snapshot = await getItemSnapshot(row.sku, 2);
+      const productMirrorResult = await supabase.from("products").upsert(
+        buildProductMirrorPayload(row.sku, row.patch, snapshot, !!row.isTextbook),
+      );
+      const productMirrorError = getSupabaseErrorMessage(
+        productMirrorResult,
+        `Failed to mirror products row for SKU ${row.sku}`,
+      );
+      if (productMirrorError) {
+        rowErrors.push(productMirrorError);
+      }
+    } catch (productMirrorErr) {
+      rowErrors.push(
+        productMirrorErr instanceof Error ? productMirrorErr.message : String(productMirrorErr),
+      );
+      console.warn(`[batch update] products mirror failed for SKU ${row.sku}:`, productMirrorErr);
+    }
+
+    try {
+      const touchedLocationIds = Array.from(new Set(
+        getInventoryPatches(normalizeUpdaterInput(row.patch)).map(
+          (entry) => entry.locationId,
+        ),
+      ));
+      const inventoryMirrorRows = await getInventoryMirrorSnapshotRows(row.sku, touchedLocationIds);
+      const missingLocationIds = getMissingInventoryMirrorLocationIds(
+        touchedLocationIds,
+        inventoryMirrorRows,
+      );
+      const inventoryRows = buildInventoryMirrorPayload(row.sku, inventoryMirrorRows);
+      if (inventoryRows.length > 0) {
+        const inventoryMirrorResult = await supabase.from("product_inventory").upsert(inventoryRows, {
+          onConflict: "sku,location_id",
+        });
+        const inventoryMirrorError = getSupabaseErrorMessage(
+          inventoryMirrorResult,
+          `Failed to mirror product_inventory rows for SKU ${row.sku}`,
+        );
+        if (inventoryMirrorError) {
+          rowErrors.push(inventoryMirrorError);
+        }
+      }
+      if (missingLocationIds.length > 0) {
+        rowErrors.push(formatInventoryMirrorMissingMessage(row.sku, missingLocationIds));
+        const inventoryInvalidateError = await invalidateMissingInventoryMirrorRows(
+          supabase,
+          row.sku,
+          missingLocationIds,
+        );
+        if (inventoryInvalidateError) {
+          rowErrors.push(inventoryInvalidateError);
+        }
+      }
+    } catch (inventoryMirrorErr) {
+      rowErrors.push(
+        inventoryMirrorErr instanceof Error ? inventoryMirrorErr.message : String(inventoryMirrorErr),
+      );
+      console.warn(`[batch update] inventory mirror failed for SKU ${row.sku}:`, inventoryMirrorErr);
+    }
+
+    if (rowErrors.length === 0) {
+      return null;
+    }
+
+    return {
+      sku: row.sku,
+      message: rowErrors.join("; "),
+    };
+  });
+
+  return mirrorResults.filter((result): result is MirrorError => result !== null);
 }
 
 const bodySchema = z.discriminatedUnion("action", [
@@ -224,96 +315,23 @@ export const POST = withAdmin(async (request: NextRequest) => {
           isTextbook: !!r.isTextbook,
           baseline: r.baseline,
         })));
-        let mirrorErrors: MirrorError[] = [];
-        try {
-          const supabase = getSupabaseAdminClient();
-          const mirrorResults = await mapWithConcurrencyLimit(parsed.data.rows, 4, async (row) => {
-            const rowErrors: string[] = [];
-
-            try {
-              const snapshot = await getItemSnapshot(row.sku, 2);
-              const productMirrorResult = await supabase.from("products").upsert(
-                buildProductMirrorPayload(row.sku, row.patch, snapshot, !!row.isTextbook),
-              );
-              const productMirrorError = getSupabaseErrorMessage(
-                productMirrorResult,
-                `Failed to mirror products row for SKU ${row.sku}`,
-              );
-              if (productMirrorError) {
-                rowErrors.push(productMirrorError);
-              }
-            } catch (productMirrorErr) {
-              rowErrors.push(
-                productMirrorErr instanceof Error ? productMirrorErr.message : String(productMirrorErr),
-              );
-              console.warn(`[batch update] products mirror failed for SKU ${row.sku}:`, productMirrorErr);
+        // Keep the success path bound to the Prism transaction. Mirror refresh
+        // is best-effort follow-up work, so callers get a fast 200 once Prism
+        // commits and the browse mirror catches up in the background.
+        void collectBatchUpdateMirrorWarnings(parsed.data.rows)
+          .then((mirrorErrors) => {
+            if (mirrorErrors.length > 0) {
+              console.warn("[batch update] deferred mirror refresh reported warnings:", mirrorErrors);
             }
-
-            try {
-              const touchedLocationIds = Array.from(new Set(
-                getInventoryPatches(normalizeUpdaterInput(row.patch)).map(
-                  (entry) => entry.locationId,
-                ),
-              ));
-              const inventoryMirrorRows = await getInventoryMirrorSnapshotRows(row.sku, touchedLocationIds);
-              const missingLocationIds = getMissingInventoryMirrorLocationIds(
-                touchedLocationIds,
-                inventoryMirrorRows,
-              );
-              const inventoryRows = buildInventoryMirrorPayload(row.sku, inventoryMirrorRows);
-              if (inventoryRows.length > 0) {
-                const inventoryMirrorResult = await supabase.from("product_inventory").upsert(inventoryRows, {
-                  onConflict: "sku,location_id",
-                });
-                const inventoryMirrorError = getSupabaseErrorMessage(
-                  inventoryMirrorResult,
-                  `Failed to mirror product_inventory rows for SKU ${row.sku}`,
-                );
-                if (inventoryMirrorError) {
-                  rowErrors.push(inventoryMirrorError);
-                }
-              }
-              if (missingLocationIds.length > 0) {
-                rowErrors.push(formatInventoryMirrorMissingMessage(row.sku, missingLocationIds));
-                const inventoryInvalidateError = await invalidateMissingInventoryMirrorRows(
-                  supabase,
-                  row.sku,
-                  missingLocationIds,
-                );
-                if (inventoryInvalidateError) {
-                  rowErrors.push(inventoryInvalidateError);
-                }
-              }
-            } catch (inventoryMirrorErr) {
-              rowErrors.push(
-                inventoryMirrorErr instanceof Error ? inventoryMirrorErr.message : String(inventoryMirrorErr),
-              );
-              console.warn(`[batch update] inventory mirror failed for SKU ${row.sku}:`, inventoryMirrorErr);
-            }
-
-            if (rowErrors.length === 0) {
-              return null;
-            }
-
-            return {
-              sku: row.sku,
-              message: rowErrors.join("; "),
-            };
+          })
+          .catch((mirrorErr) => {
+            console.warn("[batch update] deferred mirror refresh failed:", mirrorErr);
           });
-          mirrorErrors = mirrorResults.filter((result): result is MirrorError => result !== null);
-        } catch (mirrorErr) {
-          console.warn("[batch update] mirror failed:", mirrorErr);
-          const message = mirrorErr instanceof Error ? mirrorErr.message : String(mirrorErr);
-          mirrorErrors = parsed.data.rows.map((row) => ({
-            sku: row.sku,
-            message,
-          }));
-        }
         return NextResponse.json({
           action: "update",
           count: skus.length,
           skus,
-          mirrorErrors: mirrorErrors.length > 0 ? mirrorErrors : undefined,
+          mirrorRefreshDeferred: true,
         });
       } catch (err) {
         if (err instanceof Error && (err as Error & { code?: string }).code === "CONCURRENT_MODIFICATION") {

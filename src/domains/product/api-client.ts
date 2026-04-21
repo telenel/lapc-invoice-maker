@@ -48,6 +48,14 @@ export interface BatchMirrorError {
   message: string;
 }
 
+export interface BatchUpdateResponse {
+  action: string;
+  count: number;
+  skus: number[];
+  mirrorErrors?: BatchMirrorError[];
+  mirrorRefreshDeferred?: boolean;
+}
+
 export interface CreateItemInput {
   description: string;
   vendorId: number;
@@ -284,7 +292,7 @@ export const productApi = {
       | { action: "discontinue"; skus: number[] }
       | { action: "hard-delete"; skus: number[] },
   ): Promise<
-    | { action: string; count: number; skus: number[]; mirrorErrors?: BatchMirrorError[] }
+    | BatchUpdateResponse
     | { errors: BatchValidationError[] }
   > {
     const res = await fetch("/api/products/batch", {

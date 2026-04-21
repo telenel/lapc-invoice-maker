@@ -63,9 +63,17 @@ export interface EditItemDialogV2Props extends EditItemDialogProps {
   primaryLocationId?: ProductLocationId;
 }
 
-function formatMirrorWarning(mirrorErrors?: Array<{ sku: number }>): string | null {
-  if ((mirrorErrors?.length ?? 0) === 0) return null;
-  return `Saved in Prism, but the product mirror did not refresh for SKU ${mirrorErrors!.map((entry) => entry.sku).join(", ")}. Browse data may stay stale until the next sync.`;
+function formatMirrorWarning(
+  mirrorErrors?: Array<{ sku: number }>,
+  mirrorRefreshDeferred = false,
+): string | null {
+  if ((mirrorErrors?.length ?? 0) > 0) {
+    return `Saved in Prism, but the product mirror did not refresh for SKU ${mirrorErrors!.map((entry) => entry.sku).join(", ")}. Browse data may stay stale until the next sync.`;
+  }
+  if (mirrorRefreshDeferred) {
+    return "Saved in Prism. The browse mirror is refreshing in the background, so browse data may stay stale briefly.";
+  }
+  return null;
 }
 
 export function EditItemDialogV2({
@@ -307,7 +315,10 @@ export function EditItemDialogV2({
     }
     return {
       validationError: null,
-      mirrorWarning: "mirrorErrors" in result ? formatMirrorWarning(result.mirrorErrors) : null,
+      mirrorWarning:
+        "mirrorErrors" in result || "mirrorRefreshDeferred" in result
+          ? formatMirrorWarning(result.mirrorErrors, result.mirrorRefreshDeferred === true)
+          : null,
     };
   }
 

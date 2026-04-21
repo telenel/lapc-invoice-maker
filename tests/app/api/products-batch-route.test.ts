@@ -83,6 +83,11 @@ async function loadRouteModule() {
   return import("@/app/api/products/batch/route");
 }
 
+async function flushDeferredMirrorRefresh() {
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
 describe("POST /api/products/batch", () => {
   beforeEach(() => {
     vi.resetModules();
@@ -340,7 +345,12 @@ describe("POST /api/products/batch", () => {
       body: JSON.stringify(body),
     }));
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ action: "update", count: 2, skus: [101, 202] });
+    expect(await response.json()).toMatchObject({
+      action: "update",
+      count: 2,
+      skus: [101, 202],
+      mirrorRefreshDeferred: true,
+    });
   });
 
   it("mirrors batch updates back into products and product_inventory using each row's primary location", async () => {
@@ -392,6 +402,13 @@ describe("POST /api/products/batch", () => {
     }));
 
     expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      action: "update",
+      count: 2,
+      skus: [101, 202],
+      mirrorRefreshDeferred: true,
+    });
+    await flushDeferredMirrorRefresh();
     expect(prismUpdateMocks.getItemSnapshot).toHaveBeenNthCalledWith(1, 101, 2);
     expect(prismUpdateMocks.getItemSnapshot).toHaveBeenNthCalledWith(2, 202, 2);
     expect(mockProductsUpsert.mock.calls).toEqual(expect.arrayContaining([
@@ -426,6 +443,7 @@ describe("POST /api/products/batch", () => {
   });
 
   it("continues mirroring later rows when one batch-update mirror snapshot fails", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     prismBatchMocks.validateBatchUpdateAgainstPrism.mockResolvedValue([]);
     prismBatchMocks.batchUpdateItems.mockResolvedValue([101, 202]);
     prismUpdateMocks.getItemSnapshot
@@ -466,6 +484,13 @@ describe("POST /api/products/batch", () => {
     }));
 
     expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      action: "update",
+      count: 2,
+      skus: [101, 202],
+      mirrorRefreshDeferred: true,
+    });
+    await flushDeferredMirrorRefresh();
     expect(prismUpdateMocks.getItemSnapshot).toHaveBeenNthCalledWith(1, 101, 2);
     expect(prismUpdateMocks.getItemSnapshot).toHaveBeenNthCalledWith(2, 202, 2);
     expect(mockProductsUpsert).toHaveBeenCalledTimes(1);
@@ -475,16 +500,15 @@ describe("POST /api/products/batch", () => {
       retail_price: 12.99,
       cost: 6.25,
     }));
-    const json = await response.json();
-    expect(json).toMatchObject({
-      action: "update",
-      count: 2,
-      skus: [101, 202],
-      mirrorErrors: [{ sku: 101, message: "snapshot failed" }],
-    });
+    expect(warn).toHaveBeenCalledWith(
+      "[batch update] deferred mirror refresh reported warnings:",
+      [{ sku: 101, message: "snapshot failed" }],
+    );
+    warn.mockRestore();
   });
 
-  it("reports Supabase mirror upsert errors in the batch update response", async () => {
+  it("logs Supabase mirror upsert errors during deferred batch update refresh", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     prismBatchMocks.validateBatchUpdateAgainstPrism.mockResolvedValue([]);
     prismBatchMocks.batchUpdateItems.mockResolvedValue([101]);
     prismUpdateMocks.getItemSnapshot.mockResolvedValue({
@@ -518,6 +542,13 @@ describe("POST /api/products/batch", () => {
     }));
 
     expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      action: "update",
+      count: 1,
+      skus: [101],
+      mirrorRefreshDeferred: true,
+    });
+    await flushDeferredMirrorRefresh();
     expect(mockProductsUpsert).toHaveBeenCalledWith(expect.objectContaining({
       sku: 101,
       vendor_id: 17,
@@ -530,15 +561,15 @@ describe("POST /api/products/batch", () => {
         cost: 21.5,
       }),
     ], { onConflict: "sku,location_id" });
-    await expect(response.json()).resolves.toMatchObject({
-      action: "update",
-      count: 1,
-      skus: [101],
-      mirrorErrors: [{ sku: 101, message: "products mirror failed" }],
-    });
+    expect(warn).toHaveBeenCalledWith(
+      "[batch update] deferred mirror refresh reported warnings:",
+      [{ sku: 101, message: "products mirror failed" }],
+    );
+    warn.mockRestore();
   });
 
   it("invalidates stale mirrored rows when Prism omits a touched location snapshot", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     prismBatchMocks.validateBatchUpdateAgainstPrism.mockResolvedValue([]);
     prismBatchMocks.batchUpdateItems.mockResolvedValue([101]);
     prismUpdateMocks.getInventoryMirrorSnapshotRows.mockResolvedValueOnce([]);
@@ -561,6 +592,13 @@ describe("POST /api/products/batch", () => {
     }));
 
     expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      action: "update",
+      count: 1,
+      skus: [101],
+      mirrorRefreshDeferred: true,
+    });
+    await flushDeferredMirrorRefresh();
     expect(mockProductInventoryUpsert).not.toHaveBeenCalled();
     expect(mockProductInventoryUpdate).toHaveBeenCalledTimes(1);
     expect(mockProductInventoryUpdate).toHaveBeenCalledWith({
@@ -568,20 +606,20 @@ describe("POST /api/products/batch", () => {
     });
     expect(mockProductInventoryUpdateEq).toHaveBeenCalledWith("sku", 101);
     expect(mockProductInventoryUpdateIn).toHaveBeenCalledWith("location_id", [3]);
-    await expect(response.json()).resolves.toMatchObject({
-      action: "update",
-      count: 1,
-      skus: [101],
-      mirrorErrors: [
+    expect(warn).toHaveBeenCalledWith(
+      "[batch update] deferred mirror refresh reported warnings:",
+      [
         {
           sku: 101,
           message: "Inventory mirror snapshot for SKU 101 omitted PCOP; browse data may stay stale until the next sync.",
         },
       ],
-    });
+    );
+    warn.mockRestore();
   });
 
-  it("surfaces batch-level mirror setup failures for every updated row", async () => {
+  it("logs batch-level mirror setup failures after returning the update response", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     prismBatchMocks.validateBatchUpdateAgainstPrism.mockResolvedValue([]);
     prismBatchMocks.batchUpdateItems.mockResolvedValue([101, 202]);
     supabaseMocks.getSupabaseAdminClient.mockImplementation(() => {
@@ -606,11 +644,14 @@ describe("POST /api/products/batch", () => {
       action: "update",
       count: 2,
       skus: [101, 202],
-      mirrorErrors: [
-        { sku: 101, message: "supabase unavailable" },
-        { sku: 202, message: "supabase unavailable" },
-      ],
+      mirrorRefreshDeferred: true,
     });
+    await flushDeferredMirrorRefresh();
+    expect(warn).toHaveBeenCalledWith(
+      "[batch update] deferred mirror refresh failed:",
+      expect.any(Error),
+    );
+    warn.mockRestore();
   });
 
   it("keeps legacy batch create callers working when inventory is absent", async () => {
