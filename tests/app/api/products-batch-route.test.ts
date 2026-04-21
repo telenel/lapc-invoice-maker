@@ -537,7 +537,7 @@ describe("POST /api/products/batch", () => {
     });
   });
 
-  it("records mirror drift when Prism omits a touched location snapshot", async () => {
+  it("deletes stale product_inventory rows when Prism omits a touched location snapshot", async () => {
     prismBatchMocks.validateBatchUpdateAgainstPrism.mockResolvedValue([]);
     prismBatchMocks.batchUpdateItems.mockResolvedValue([101]);
     prismUpdateMocks.getInventoryMirrorSnapshotRows.mockResolvedValueOnce([]);
@@ -561,17 +561,13 @@ describe("POST /api/products/batch", () => {
 
     expect(response.status).toBe(200);
     expect(mockProductInventoryUpsert).not.toHaveBeenCalled();
-    expect(mockProductInventoryDelete).not.toHaveBeenCalled();
+    expect(mockProductInventoryDelete).toHaveBeenCalledTimes(1);
+    expect(mockProductInventoryDeleteEq).toHaveBeenCalledWith("sku", 101);
+    expect(mockProductInventoryDeleteIn).toHaveBeenCalledWith("location_id", [3]);
     await expect(response.json()).resolves.toMatchObject({
       action: "update",
       count: 1,
       skus: [101],
-      mirrorErrors: [
-        {
-          sku: 101,
-          message: "Inventory mirror snapshot for SKU 101 omitted PCOP; browse data may stay stale until the next sync.",
-        },
-      ],
     });
   });
 

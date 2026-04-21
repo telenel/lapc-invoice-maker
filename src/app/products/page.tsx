@@ -467,18 +467,6 @@ export default function ProductsPage() {
             ? (primarySlice?.cost ?? null)
             : (persistedScopedSelection?.cost ?? null)
         );
-      const actionBarRetail = cachedScopedSelection?.retailPrice ??
-        (
-          browseRow != null
-            ? (browseRow.retail_price ?? null)
-            : (persistedScopedSelection?.retailPrice ?? null)
-        );
-      const actionBarCost = cachedScopedSelection?.cost ??
-        (
-          browseRow != null
-            ? (browseRow.cost ?? null)
-            : (persistedScopedSelection?.cost ?? null)
-        );
       const sharedItem = {
         sku: product.sku,
         barcode: scopedDescriptor?.barcode ?? null,
@@ -506,8 +494,8 @@ export default function ProductsPage() {
         },
         actionBarItem: {
           ...sharedItem,
-          retail: actionBarRetail,
-          cost: actionBarCost,
+          retail,
+          cost,
         },
       };
     });
@@ -645,7 +633,9 @@ export default function ProductsPage() {
   const inlineEdit = useProductInlineEdit({
     rows: inlineEditRows,
     primaryLocationId,
-    onSaveSuccess: refetch,
+    onSaveSuccess: async () => {
+      await refetch();
+    },
   });
 
   return (
@@ -776,7 +766,10 @@ export default function ProductsPage() {
         onSaved={(skus) => {
           setEditOpen(false);
           const savedSkus = new Set(skus);
-          void Promise.resolve(refetch()).finally(() => {
+          void Promise.resolve(refetch()).then((didRefresh) => {
+            if (!didRefresh) {
+              return;
+            }
             setSavedScopedSelectionCache((current) => {
               let changed = false;
               const next = new Map(current);

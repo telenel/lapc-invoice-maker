@@ -41,17 +41,24 @@ function getSupabaseErrorMessage(
   return typeof message === "string" && message.length > 0 ? message : (result?.error ? fallback : null);
 }
 
-function formatInventoryMirrorLocationList(locationIds: ProductLocationId[]): string {
-  return locationIds
-    .map((locationId) => PRODUCT_LOCATION_ABBREV_BY_ID[locationId] ?? `Location ${locationId}`)
-    .join(", ");
-}
-
-function formatInventoryMirrorMissingMessage(
+async function deleteMissingInventoryMirrorRows(
+  supabase: ReturnType<typeof getSupabaseAdminClient>,
   sku: number,
   locationIds: ProductLocationId[],
-): string {
-  return `Inventory mirror snapshot for SKU ${sku} omitted ${formatInventoryMirrorLocationList(locationIds)}; browse data may stay stale until the next sync.`;
+): Promise<string | null> {
+  if (locationIds.length === 0) {
+    return null;
+  }
+
+  const deleteResult = await supabase
+    .from("product_inventory")
+    .delete()
+    .eq("sku", sku)
+    .in("location_id", locationIds);
+  return getSupabaseErrorMessage(
+    deleteResult,
+    `Failed to delete stale product_inventory rows for SKU ${sku}`,
+  );
 }
 
 async function mapWithConcurrencyLimit<T, R>(
@@ -251,7 +258,14 @@ export const POST = withAdmin(async (request: NextRequest) => {
                 }
               }
               if (missingLocationIds.length > 0) {
-                rowErrors.push(formatInventoryMirrorMissingMessage(row.sku, missingLocationIds));
+                const inventoryDeleteError = await deleteMissingInventoryMirrorRows(
+                  supabase,
+                  row.sku,
+                  missingLocationIds,
+                );
+                if (inventoryDeleteError) {
+                  rowErrors.push(inventoryDeleteError);
+                }
               }
             } catch (inventoryMirrorErr) {
               rowErrors.push(

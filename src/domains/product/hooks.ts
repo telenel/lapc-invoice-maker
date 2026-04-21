@@ -31,9 +31,11 @@ export function useProductSearch(filters: ProductFilters) {
     try {
       const result = await searchProducts(effectiveFilters);
       setData(result);
+      return true;
     } catch (e) {
       const message = e instanceof Error ? e.message : "Failed to search products";
       toast.error(message);
+      return false;
     } finally {
       setLoading(false);
     }

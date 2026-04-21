@@ -434,6 +434,7 @@ describe("ProductsPage edit dialog mode integration", () => {
 
     healthMock.mockResolvedValue({ available: true });
     detailMock.mockResolvedValue(makeDetail());
+    refetchMock.mockResolvedValue(true);
     searchProductsMock.mockResolvedValue({ products: [], total: 0, page: 1, pageSize: 50 });
     useProductSearchMock.mockReturnValue({
       data: { products: [], total: 42, page: 1, pageSize: 50 },
@@ -777,10 +778,12 @@ describe("ProductsPage edit dialog mode integration", () => {
 
     render(<ProductsPage />);
 
-    expect(screen.getByText("selected-retail:39.99")).toBeInTheDocument();
-    expect(screen.getByText("selected-cost:19.5")).toBeInTheDocument();
+    expect(screen.getByText("selected-retail:null")).toBeInTheDocument();
+    expect(screen.getByText("selected-cost:null")).toBeInTheDocument();
     expect(screen.getByText("edit-retail:null")).toBeInTheDocument();
     expect(screen.getByText("edit-cost:null")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Create Quote" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Create Invoice" })).toBeDisabled();
 
     const editButton = screen.getByRole("button", { name: "Open edit dialog" });
     expect(editButton).toBeEnabled();
@@ -798,8 +801,8 @@ describe("ProductsPage edit dialog mode integration", () => {
     expect(JSON.parse(sessionStorage.getItem(CATALOG_ITEMS_STORAGE_KEY) ?? "[]")).toMatchObject([
       {
         sku: 1001,
-        retailPrice: 39.99,
-        cost: 19.5,
+        retailPrice: null,
+        cost: null,
       },
     ]);
   });
@@ -1016,8 +1019,8 @@ describe("ProductsPage edit dialog mode integration", () => {
 
   it("drops non-sticky saved scoped values after a divergent visible refetch", async () => {
     const user = userEvent.setup();
-    let resolveRefetch: (() => void) | null = null;
-    const refetchPromise = new Promise<void>((resolve) => {
+    let resolveRefetch: ((value: boolean) => void) | null = null;
+    const refetchPromise = new Promise<boolean>((resolve) => {
       resolveRefetch = resolve;
     });
     refetchMock.mockReturnValue(refetchPromise);
@@ -1102,7 +1105,7 @@ describe("ProductsPage edit dialog mode integration", () => {
       },
     ]);
 
-    resolveRefetch?.();
+    resolveRefetch?.(true);
     await refetchPromise;
 
     useProductSearchMock.mockReturnValue({
@@ -1210,6 +1213,117 @@ describe("ProductsPage edit dialog mode integration", () => {
     });
 
     await user.click(screen.getByRole("button", { name: "Save scoped v2 dialog with mirror warning" }));
+
+    await waitFor(() => {
+      expect(screen.queryByText("dialog:v2")).not.toBeInTheDocument();
+    });
+
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [staleVisibleRow],
+        total: 1,
+        page: 1,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    view.rerender(<ProductsPage />);
+
+    expect(screen.getByText("selected-retail:44.99")).toBeInTheDocument();
+    expect(screen.getByText("selected-cost:22.25")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Save selection snapshot" }));
+    expect(JSON.parse(sessionStorage.getItem(CATALOG_ITEMS_STORAGE_KEY) ?? "[]")).toMatchObject([
+      {
+        sku: 1001,
+        retailPrice: 44.99,
+        cost: 22.25,
+        barcode: "999888777000",
+        fDiscontinue: 1,
+      },
+    ]);
+
+    await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("dialog:v2")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("item-retail:44.99")).toBeInTheDocument();
+    expect(screen.getByText("item-cost:22.25")).toBeInTheDocument();
+    expect(screen.getByText("item-barcode:999888777000")).toBeInTheDocument();
+    expect(screen.getByText("item-fDiscontinue:1")).toBeInTheDocument();
+  });
+
+  it("keeps saved scoped values when the post-save refetch fails", async () => {
+    const user = userEvent.setup();
+    refetchMock.mockResolvedValue(false);
+    searchParamsState = new URLSearchParams("tab=merchandise&loc=4");
+    const staleVisibleRow = {
+      sku: 1001,
+      description: "Pierce Hoodie",
+      title: null,
+      retail_price: 41.99,
+      cost: 21.5,
+      primary_location_id: 4,
+      selected_inventories: [
+        {
+          locationId: 4,
+          retailPrice: 41.99,
+          cost: 21.5,
+        },
+      ],
+      barcode: "123456789012",
+      author: null,
+      isbn: null,
+      edition: null,
+      catalog_number: "HD-1001",
+      vendor_id: 21,
+      item_type: "general_merchandise",
+      discontinued: false,
+    } as never;
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [staleVisibleRow],
+        total: 1,
+        page: 1,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    useProductSelectionMock.mockReturnValue({
+      selected: new Map([
+        [
+          1001,
+          makeSelectedProduct({
+            retailPrice: 39.99,
+            cost: 19.5,
+            pricingLocationId: 2,
+            barcode: "123456789012",
+            fDiscontinue: 0,
+          }),
+        ],
+      ]),
+      selectedCount: 1,
+      toggle: vi.fn(),
+      toggleAll: vi.fn(),
+      refreshVisibleSelections: vi.fn(),
+      clear: vi.fn(),
+      isSelected: vi.fn(),
+      saveToSession: vi.fn(),
+    });
+
+    const view = render(<ProductsPage />);
+
+    await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("dialog:v2")).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: "Save scoped v2 dialog" }));
 
     await waitFor(() => {
       expect(screen.queryByText("dialog:v2")).not.toBeInTheDocument();
