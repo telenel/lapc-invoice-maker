@@ -87,12 +87,6 @@ const LOCATION_OPTIONS = [
   { id: 4 as const, abbrev: "PFS", label: "PFS" },
 ];
 
-const DEFAULT_SELECTED_LOCATIONS: Record<ProductLocationId, boolean> = {
-  2: true,
-  3: false,
-  4: false,
-};
-
 const DEFAULT_LOCATION_PRICING: Record<ProductLocationId, LocationPricingState> = {
   2: { ...EMPTY_LOCATION_PRICING },
   3: { ...EMPTY_LOCATION_PRICING },
