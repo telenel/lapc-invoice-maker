@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EMPTY_FILTERS, PAGE_SIZE } from "@/domains/product/constants";
+import { INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT } from "@/domains/product/inventory-mirror-state";
 
 const { prismaMock } = vi.hoisted(() => ({
   prismaMock: {
@@ -335,6 +336,96 @@ describe("searchProductBrowseRows", () => {
     });
   });
 
+  it("keeps invalidated primary rows visible without falling back to legacy PIER values", async () => {
+    mockSearchQueryRows(
+      {
+        retail_price: null,
+        cost: null,
+        stock_on_hand: null,
+        last_sale_date: null,
+        effective_last_sale_date: null,
+        primary_location_requested_id: 3,
+      },
+      [
+        {
+          sku: 101,
+          location_id: 4,
+          location_abbrev: "PFS",
+          retail_price: 18.5,
+          cost: 6.25,
+          stock_on_hand: 1,
+          last_sale_date: new Date("2026-04-05T00:00:00.000Z"),
+        },
+      ],
+    );
+
+    const result = await searchProductBrowseRows({
+      ...EMPTY_FILTERS,
+      tab: "merchandise",
+      locationIds: [3, 4],
+      sortBy: "retail_price",
+    });
+
+    expect(result.products[0]).toMatchObject({
+      primary_location_id: null,
+      primary_location_abbrev: null,
+      retail_price: null,
+      cost: null,
+      stock_on_hand: null,
+      last_sale_date: null,
+      effective_last_sale_date: null,
+    });
+    expect(result.products[0]?.selected_inventories.map((slice) => slice.locationId)).toEqual([4]);
+
+    const browseSql = prismaMock.$queryRawUnsafe.mock.calls[0]?.[0];
+    expect(typeof browseSql).toBe("string");
+    expect(browseSql).not.toContain("inv.synced_at >");
+    expect(browseSql).toContain("pi.synced_at >");
+    expect(prismaMock.$queryRawUnsafe.mock.calls[0]?.slice(1)).toContain(
+      INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT,
+    );
+
+    const inventorySql = prismaMock.$queryRawUnsafe.mock.calls[2]?.[0];
+    expect(typeof inventorySql).toBe("string");
+    expect(inventorySql).toContain("AND synced_at >");
+    expect(prismaMock.$queryRawUnsafe.mock.calls[2]?.slice(1)).toContain(
+      INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT,
+    );
+  });
+
+  it("keeps selected-location SKUs visible even when every selected slice is invalidated", async () => {
+    mockSearchQueryRows(
+      {
+        retail_price: null,
+        cost: null,
+        stock_on_hand: null,
+        last_sale_date: null,
+        effective_last_sale_date: null,
+        primary_location_requested_id: 3,
+      },
+      [],
+    );
+
+    const result = await searchProductBrowseRows({
+      ...EMPTY_FILTERS,
+      tab: "merchandise",
+      locationIds: [3],
+      sortBy: "retail_price",
+    });
+
+    expect(result.products).toHaveLength(1);
+    expect(result.products[0]).toMatchObject({
+      primary_location_id: null,
+      primary_location_abbrev: null,
+      retail_price: null,
+      cost: null,
+      stock_on_hand: null,
+      last_sale_date: null,
+      effective_last_sale_date: null,
+      selected_inventories: [],
+    });
+  });
+
   it("uses the non-derived products source for simple browse queries", async () => {
     mockSearchQueryRows();
 
@@ -462,9 +553,9 @@ describe("searchProductBrowseRows", () => {
 
     const sql = prismaMock.$queryRawUnsafe.mock.calls[0]?.[0];
     expect(typeof sql).toBe("string");
-    expect(sql).toContain("COALESCE(pi.retail_price, pwd.retail_price)");
-    expect(sql).toContain("COALESCE(pi.stock_on_hand, pwd.stock_on_hand)");
-    expect(sql).toContain("COALESCE(pi.last_sale_date, pwd.last_sale_date)");
+    expect(sql).toContain("COALESCE(pi.retail_price, CASE WHEN pi_scope.location_id IS NULL THEN pwd.retail_price END)");
+    expect(sql).toContain("COALESCE(pi.stock_on_hand, CASE WHEN pi_scope.location_id IS NULL THEN pwd.stock_on_hand END)");
+    expect(sql).toContain("COALESCE(pi.last_sale_date, CASE WHEN pi_scope.location_id IS NULL THEN pwd.last_sale_date END)");
     expect(result.products[0]).toMatchObject({
       retail_price: 15.5,
       stock_on_hand: 9,

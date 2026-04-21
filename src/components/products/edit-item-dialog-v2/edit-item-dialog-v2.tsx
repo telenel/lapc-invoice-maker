@@ -13,15 +13,16 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { productApi } from "@/domains/product/api-client";
+import { toast } from "sonner";
 import {
   DEFAULT_PRODUCT_LOCATION_IDS,
   getPrimaryProductLocationId,
   normalizeProductLocationIds,
   type ProductLocationId,
 } from "@/domains/product/location-filters";
-import type { ProductEditDetails } from "@/domains/product/types";
+import type { ProductEditDetails, ProductEditPatchV2, SelectedProduct } from "@/domains/product/types";
 import { useProductRefDirectory } from "@/domains/product/vendor-directory";
-import type { EditItemDialogProps } from "../edit-item-dialog-legacy";
+import type { EditItemDialogProps, SavedScopedItemsOptions } from "../edit-item-dialog-legacy";
 import { SelectedItemsSummary } from "./components/selected-items-summary";
 import { buildInventoryPatch, buildV2Patch, hasPatchFields } from "./state/form-builders";
 import {
@@ -62,11 +63,26 @@ export interface EditItemDialogV2Props extends EditItemDialogProps {
   primaryLocationId?: ProductLocationId;
 }
 
+function formatMirrorWarning(
+  mirrorErrors?: Array<{ sku: number }>,
+  mirrorRefreshDeferred = false,
+): string | null {
+  if ((mirrorErrors?.length ?? 0) > 0) {
+    return `Saved in Prism, but the product mirror did not refresh for SKU ${mirrorErrors!.map((entry) => entry.sku).join(", ")}. Browse data may stay stale until the next sync.`;
+  }
+  if (mirrorRefreshDeferred) {
+    return "Saved in Prism. The browse mirror is refreshing in the background, so browse data may stay stale briefly.";
+  }
+  return null;
+}
+
 export function EditItemDialogV2({
   open,
   onOpenChange,
   items,
   onSaved,
+  onSavedScopedItems,
+  knownScopedItemsByKey,
   detail = null,
   detailLoading = false,
   locationIds = [...DEFAULT_PRODUCT_LOCATION_IDS],
@@ -242,6 +258,215 @@ export function EditItemDialogV2({
     });
   }
 
+  async function saveSingleItem(v2Patch: ProductEditPatchV2): Promise<{ mirrorWarning: string | null }> {
+    const item = items[0];
+    // Source retail/cost from whatever `resolvedPrimaryLocationId` resolves to
+    // (PIER/PCOP/PFS). Falls back to `item.retail` / `item.cost` (which already
+    // reflects the browse row's primary-location values) if the detail slice
+    // isn't loaded yet. Server's concurrency SELECT uses
+    // `baseline.primaryLocationId` as `@loc`, so client and server read the
+    // same row.
+    const primarySlice = detail?.inventoryByLocation.find(
+      (entry) => entry.locationId === resolvedPrimaryLocationId,
+    );
+    const result = await productApi.update(item.sku, {
+      mode: "v2",
+      patch: v2Patch,
+      baseline: {
+        sku: item.sku,
+        barcode: detail?.barcode ?? item.barcode,
+        retail: primarySlice?.retail ?? item.retail,
+        cost: primarySlice?.cost ?? item.cost,
+        fDiscontinue: item.fDiscontinue,
+        primaryLocationId: resolvedPrimaryLocationId,
+      },
+    });
+    return { mirrorWarning: formatMirrorWarning(result.mirrorErrors) };
+  }
+
+  async function saveBulk(
+    v2Patch: ProductEditPatchV2,
+  ): Promise<{ validationError: string | null; mirrorWarning: string | null }> {
+    // Atomic bulk save: ONE server call wraps all rows in one Prism
+    // transaction. Zero partial-commit hazard — either every row commits
+    // or none do. Any failure throws; caller's catch surfaces the error
+    // and leaves the dialog open so the operator can retry in place.
+    const result = await productApi.batch({
+      action: "update",
+      rows: items.map((item) => ({
+        sku: item.sku,
+        isTextbook: item.isTextbook ?? false,
+        patch: v2Patch,
+        baseline: {
+          sku: item.sku,
+          barcode: item.barcode,
+          retail: item.retail,
+          cost: item.cost,
+          fDiscontinue: item.fDiscontinue,
+          primaryLocationId: resolvedPrimaryLocationId,
+        },
+      })),
+    });
+    if ("errors" in result && result.errors.length > 0) {
+      return {
+        validationError: `Validation failed: ${result.errors.map((e) => `${e.field}: ${e.message}`).join("; ")}`,
+        mirrorWarning: null,
+      };
+    }
+    return {
+      validationError: null,
+      mirrorWarning:
+        "mirrorErrors" in result || "mirrorRefreshDeferred" in result
+          ? formatMirrorWarning(result.mirrorErrors, result.mirrorRefreshDeferred === true)
+          : null,
+    };
+  }
+
+  function formatSaveError(err: unknown): string {
+    const e = err as Error & { code?: string; rowIndex?: number | null; sku?: number | null };
+    if (e.code === "CONCURRENT_MODIFICATION") {
+      // Bulk path — zero rows committed on failure because the batch is
+      // atomic, so retry-in-place is safe after the conflict clears. No
+      // need to close and reopen.
+      if (e.rowIndex != null && e.sku != null) {
+        return (
+          `Row ${e.rowIndex + 1} (SKU ${e.sku}) was modified by someone else since you opened this dialog. ` +
+          `No changes were saved. Wait for the conflict to clear and click Save again.`
+        );
+      }
+      // Bulk with no row-level detail (unusual — annotation lost upstream).
+      // Still safe to retry in place because the batch is atomic.
+      if (isBulk) {
+        return (
+          `Another user modified one of the selected items since you opened this dialog. ` +
+          `No changes were saved. Wait for the conflict to clear and click Save again.`
+        );
+      }
+      // Single-item path — the dialog's `detail` snapshot is now stale, so
+      // the operator has to close and reopen to refresh it before retry.
+      return (
+        `This item was modified by someone else since you opened this dialog. ` +
+        `No changes were saved. Close and reopen this dialog to see the latest values, then retry.`
+      );
+    }
+    return err instanceof Error ? err.message : String(err);
+  }
+
+  function buildSavedScopedItems(v2Patch: ProductEditPatchV2): SelectedProduct[] {
+    const itemPatch = v2Patch.item;
+    const gmPatch = v2Patch.gm;
+    const textbookPatch = v2Patch.textbook;
+    const hasGlobalFieldChanges =
+      hasPatchFields(itemPatch ?? {}) ||
+      hasPatchFields(gmPatch ?? {}) ||
+      hasPatchFields(textbookPatch ?? {});
+    const cacheLocationIds = new Set<ProductLocationId>([resolvedPrimaryLocationId]);
+    for (const inventoryPatch of v2Patch.inventory ?? []) {
+      cacheLocationIds.add(inventoryPatch.locationId);
+    }
+
+    const savedItems: SelectedProduct[] = [];
+    for (const item of items) {
+      const nextTitle =
+        textbookPatch?.title !== undefined
+          ? (textbookPatch.title ?? null)
+          : (item.title ?? null);
+      const nextDescription = (nextTitle ?? gmPatch?.description ?? item.description ?? "").toUpperCase();
+      const detailInventoryByLocation = new Map(
+        (detail?.inventoryByLocation ?? []).map((inventory) => [inventory.locationId, inventory] as const),
+      );
+      const liveDetailLocationIds = new Set(
+        (detail?.inventoryByLocation ?? []).map((inventory) => inventory.locationId),
+      );
+      const itemCacheLocationIds = new Set<ProductLocationId>(cacheLocationIds);
+      if (hasGlobalFieldChanges) {
+        for (const knownScopedItem of Array.from(knownScopedItemsByKey?.values() ?? [])) {
+          if (
+            knownScopedItem.sku === item.sku &&
+            knownScopedItem.pricingLocationId != null &&
+            liveDetailLocationIds.has(knownScopedItem.pricingLocationId)
+          ) {
+            itemCacheLocationIds.add(knownScopedItem.pricingLocationId);
+          }
+        }
+      }
+
+      for (const locationId of Array.from(itemCacheLocationIds)) {
+        const inventoryPatch = v2Patch.inventory?.find((entry) => entry.locationId === locationId);
+        const inventoryDetail = detailInventoryByLocation.get(locationId);
+        const knownRetail =
+          inventoryPatch?.retail !== undefined
+            ? (inventoryPatch.retail ?? null)
+            : inventoryDetail
+              ? (inventoryDetail.retail ?? null)
+              : (
+                locationId === resolvedPrimaryLocationId
+                  ? (item.retail ?? null)
+                  : null
+              );
+        const knownCost =
+          inventoryPatch?.cost !== undefined
+            ? (inventoryPatch.cost ?? null)
+            : inventoryDetail
+              ? (inventoryDetail.cost ?? null)
+              : (
+                locationId === resolvedPrimaryLocationId
+                  ? (item.cost ?? null)
+                  : null
+              );
+        const hasKnownRetail =
+          inventoryPatch?.retail !== undefined ||
+          knownRetail != null;
+        const hasKnownCost =
+          inventoryPatch?.cost !== undefined ||
+          knownCost != null;
+        if (!hasKnownRetail || !hasKnownCost) {
+          continue;
+        }
+
+        savedItems.push({
+          sku: item.sku,
+          description: nextDescription,
+          retailPrice: knownRetail,
+          cost: knownCost,
+          pricingLocationId: locationId,
+          barcode:
+            itemPatch?.barcode !== undefined
+              ? (itemPatch.barcode ?? null)
+              : (item.barcode ?? null),
+          author:
+            textbookPatch?.author !== undefined
+              ? (textbookPatch.author ?? null)
+              : (item.author ?? null),
+          title: nextTitle,
+          isbn:
+            textbookPatch?.isbn !== undefined
+              ? (textbookPatch.isbn ?? null)
+              : (item.isbn ?? null),
+          edition:
+            textbookPatch?.edition !== undefined
+              ? (textbookPatch.edition ?? null)
+              : (item.edition ?? null),
+          catalogNumber:
+            gmPatch?.catalogNumber !== undefined
+              ? (gmPatch.catalogNumber ?? null)
+              : (item.catalogNumber ?? null),
+          vendorId:
+            itemPatch?.vendorId !== undefined
+              ? (itemPatch.vendorId ?? null)
+              : (item.vendorId ?? null),
+          itemType: item.itemType ?? (item.isTextbook ? "textbook" : "general_merchandise"),
+          fDiscontinue:
+            itemPatch?.fDiscontinue !== undefined
+              ? itemPatch.fDiscontinue
+              : item.fDiscontinue,
+        });
+      }
+    }
+
+    return savedItems;
+  }
+
   async function handleSave() {
     const inventoryPatch = buildInventoryPatch(
       form,
@@ -251,7 +476,7 @@ export function EditItemDialogV2({
       resolvedPrimaryLocationId,
       isBulk,
     );
-    const v2Patch = {
+    const v2Patch: ProductEditPatchV2 = {
       ...buildV2Patch(form, baselineForm, isBulk, isTextbookRow),
       inventory: inventoryPatch,
     };
@@ -270,42 +495,30 @@ export function EditItemDialogV2({
     setError(null);
 
     try {
+      let mirrorWarning: string | null = null;
       if (items.length === 1) {
-        const item = items[0];
-        const pierceInventoryBaseline = detail?.inventoryByLocation.find((entry) => entry.locationId === 2);
-        await productApi.update(item.sku, {
-          mode: "v2",
-          patch: v2Patch,
-          baseline: {
-            sku: item.sku,
-            barcode: detail?.barcode ?? item.barcode,
-            retail: pierceInventoryBaseline?.retail ?? item.retail,
-            cost: pierceInventoryBaseline?.cost ?? item.cost,
-            fDiscontinue: item.fDiscontinue,
-          },
-        });
+        ({ mirrorWarning } = await saveSingleItem(v2Patch));
       } else {
-        await Promise.all(
-          items.map((item) =>
-            productApi.update(item.sku, {
-              mode: "v2",
-              patch: v2Patch,
-              baseline: {
-                sku: item.sku,
-                barcode: item.barcode,
-                retail: item.retail,
-                cost: item.cost,
-                fDiscontinue: item.fDiscontinue,
-              },
-            }),
-          ),
-        );
+        const bulkResult = await saveBulk(v2Patch);
+        const { validationError } = bulkResult;
+        if (validationError) {
+          setError(validationError);
+          return;
+        }
+        mirrorWarning = bulkResult.mirrorWarning;
+      }
+      if (mirrorWarning) {
+        toast.error(mirrorWarning);
       }
 
+      const savedScopedItemsOptions: SavedScopedItemsOptions = {
+        retainUntilMatch: mirrorWarning != null,
+      };
+      onSavedScopedItems?.(buildSavedScopedItems(v2Patch), savedScopedItemsOptions);
       onSaved?.(items.map((item) => item.sku));
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      setError(formatSaveError(err));
     } finally {
       setSaving(false);
     }
@@ -417,7 +630,10 @@ export function EditItemDialogV2({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancel
           </Button>
-          <Button onClick={() => void handleSave()} disabled={saving || detailLoading}>
+          <Button
+            onClick={() => void handleSave()}
+            disabled={saving || detailLoading}
+          >
             {saving ? "Saving…" : "Save changes"}
           </Button>
         </DialogFooter>

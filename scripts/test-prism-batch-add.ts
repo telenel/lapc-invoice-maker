@@ -47,7 +47,7 @@ async function main() {
     console.log("✓ all rows visible");
 
     // Exercise the batch-update path: set every retail to 99.99
-    await batchUpdateItems(skus.map((sku) => ({ sku, patch: { retail: 99.99 }, isTextbook: false })));
+    await batchUpdateItems(skus.map((sku) => ({ sku, patch: { retail: 99.99 }, isTextbook: false, baseline: { sku, barcode: null, retail: null, cost: null, fDiscontinue: 0 as 0 | 1, primaryLocationId: 2 as const } })));
     const checkReq = pool.request();
     skus.forEach((s, i) => checkReq.input(`s${i}`, sql.Int, s));
     const priced = await checkReq.query<{ SKU: number; Retail: number }>(

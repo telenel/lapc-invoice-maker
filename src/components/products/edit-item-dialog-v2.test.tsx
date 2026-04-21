@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ProductEditDetails } from "@/domains/product/types";
 import { EditItemDialogV2 } from "./edit-item-dialog-v2";
 
@@ -10,8 +10,16 @@ const productApiMocks = vi.hoisted(() => ({
   batch: vi.fn(),
 }));
 
+const toastMocks = vi.hoisted(() => ({
+  error: vi.fn(),
+}));
+
 vi.mock("@/domains/product/api-client", () => ({
   productApi: productApiMocks,
+}));
+
+vi.mock("sonner", () => ({
+  toast: toastMocks,
 }));
 
 vi.mock("@/domains/product/vendor-directory", () => ({
@@ -146,6 +154,10 @@ async function mockDirectoryState(overrides: Partial<ReturnType<typeof import("@
         [21, "PENS ETC (3001795)"],
         [22, "ALT VENDOR"],
       ]),
+      dccLabels: new Map([
+        [1313290, "NOT USE=111010 / DO NOT USE"],
+        [1802, "USED DCC"],
+      ]),
       taxTypeLabels: new Map([[4, "STATE"]]),
       tagTypeLabels: new Map(),
       statusCodeLabels: new Map(),
@@ -168,6 +180,12 @@ async function mockDirectoryState(overrides: Partial<ReturnType<typeof import("@
 }
 
 describe("EditItemDialogV2", () => {
+  beforeEach(() => {
+    productApiMocks.update.mockReset();
+    productApiMocks.batch.mockReset();
+    toastMocks.error.mockReset();
+  });
+
   it("renders the phase 4 GM tabs with label-backed selects and no textbook-only fields", async () => {
     await mockDirectoryState();
 
@@ -183,6 +201,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
         detail={baseDetail}
@@ -229,6 +248,10 @@ describe("EditItemDialogV2", () => {
           [21, "PENS ETC (3001795)"],
           [22, "ALT VENDOR"],
         ]),
+        dccLabels: new Map([
+          [1313290, "NOT USE=111010 / DO NOT USE"],
+          [1802, "USED DCC"],
+        ]),
         taxTypeLabels: new Map([[4, "STATE"]]),
         tagTypeLabels: new Map(),
         statusCodeLabels: new Map(),
@@ -253,6 +276,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
             isTextbook: true,
           },
         ]}
@@ -298,6 +322,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
             isTextbook: true,
           },
         ]}
@@ -343,6 +368,10 @@ describe("EditItemDialogV2", () => {
           [21, "PENS ETC (3001795)"],
           [22, "ALT VENDOR"],
         ]),
+        dccLabels: new Map([
+          [1313290, "NOT USE=111010 / DO NOT USE"],
+          [1802, "USED DCC"],
+        ]),
         taxTypeLabels: new Map([[4, "STATE"]]),
         tagTypeLabels: new Map([
           [7, "CLEARANCE"],
@@ -370,6 +399,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
         detail={{
@@ -422,6 +452,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
         detail={{
@@ -483,6 +514,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
         detail={baseDetail}
@@ -507,6 +539,7 @@ describe("EditItemDialogV2", () => {
             retail: 0,
             cost: 0,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Pending",
           },
         ]}
@@ -528,6 +561,7 @@ describe("EditItemDialogV2", () => {
             retail: 0,
             cost: 0,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "One",
           },
           {
@@ -536,6 +570,7 @@ describe("EditItemDialogV2", () => {
             retail: 0,
             cost: 0,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Two",
           },
         ]}
@@ -559,6 +594,7 @@ describe("EditItemDialogV2", () => {
             retail: 19.99,
             cost: 9.5,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Pierce Hoodie",
           },
           {
@@ -567,6 +603,7 @@ describe("EditItemDialogV2", () => {
             retail: 29.99,
             cost: 12.5,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Pierce Mug",
             isTextbook: true,
           },
@@ -599,6 +636,7 @@ describe("EditItemDialogV2", () => {
             retail: 0,
             cost: 0,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Pending description",
           },
         ]}
@@ -622,6 +660,7 @@ describe("EditItemDialogV2", () => {
             retail: 0,
             cost: 0,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Pending description",
           },
         ]}
@@ -657,6 +696,10 @@ describe("EditItemDialogV2", () => {
           [21, "PENS ETC (3001795)"],
           [22, "ALT VENDOR"],
         ]),
+        dccLabels: new Map([
+          [1313290, "NOT USE=111010 / DO NOT USE"],
+          [1802, "USED DCC"],
+        ]),
         taxTypeLabels: new Map([[4, "STATE"]]),
         tagTypeLabels: new Map([[7, "CLEARANCE"]]),
         statusCodeLabels: new Map([[11, "ACTIVE"]]),
@@ -678,6 +721,7 @@ describe("EditItemDialogV2", () => {
             retail: 0,
             cost: 0,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Pending description",
           },
         ]}
@@ -698,6 +742,7 @@ describe("EditItemDialogV2", () => {
             cost: baseDetail.cost ?? 0,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
         detail={{
@@ -741,6 +786,7 @@ describe("EditItemDialogV2", () => {
             retail: 0,
             cost: 0,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Pending description",
           },
         ]}
@@ -768,6 +814,7 @@ describe("EditItemDialogV2", () => {
             cost: baseDetail.cost ?? 0,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
         detail={{
@@ -811,6 +858,7 @@ describe("EditItemDialogV2", () => {
             cost: baseDetail.cost ?? 0,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
             vendorId: baseDetail.vendorId ?? undefined,
             dccId: baseDetail.dccId ?? undefined,
             itemTaxTypeId: baseDetail.itemTaxTypeId ?? undefined,
@@ -848,6 +896,10 @@ describe("EditItemDialogV2", () => {
           [21, "PENS ETC (3001795)"],
           [22, "ALT VENDOR"],
         ]),
+        dccLabels: new Map([
+          [1313290, "NOT USE=111010 / DO NOT USE"],
+          [1802, "USED DCC"],
+        ]),
         taxTypeLabels: new Map([[4, "STATE"]]),
         tagTypeLabels: new Map([[7, "CLEARANCE"]]),
         statusCodeLabels: new Map([[11, "ACTIVE"]]),
@@ -871,6 +923,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
         detail={{
@@ -912,6 +965,8 @@ describe("EditItemDialogV2", () => {
 
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
+    // Baseline now uses the resolved primary location (PCOP, locationId 3)
+    // so the server's concurrency SELECT reads the matching Inventory row.
     expect(productApiMocks.update).toHaveBeenCalledWith(
       1001,
       expect.objectContaining({
@@ -919,9 +974,10 @@ describe("EditItemDialogV2", () => {
         baseline: {
           sku: 1001,
           barcode: baseDetail.barcode,
-          retail: 39.99,
-          cost: 19.5,
+          retail: 42.5,
+          cost: 21.25,
           fDiscontinue: baseDetail.fDiscontinue,
+          primaryLocationId: 3,
         },
         patch: {
           inventory: [
@@ -953,6 +1009,7 @@ describe("EditItemDialogV2", () => {
             cost: baseDetail.cost ?? 0,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
         detail={baseDetail}
@@ -983,6 +1040,7 @@ describe("EditItemDialogV2", () => {
             cost: baseDetail.cost ?? 0,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
         detail={baseDetail}
@@ -1012,6 +1070,7 @@ describe("EditItemDialogV2", () => {
             cost: baseDetail.cost ?? 0,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
         detail={baseDetail}
@@ -1032,7 +1091,12 @@ describe("EditItemDialogV2", () => {
 
     await user.click(screen.getByRole("button", { name: /Advanced\b/i }));
     await user.click(screen.getByLabelText("Perishable"));
-    await user.click(screen.getByText("Enabled"));
+    // With Accordion now keepMounted, multiple Select triggers render their
+    // "Enabled" selected-value text simultaneously. Target the actual open
+    // dropdown option by role instead of matching the plain text.
+    const enabledOption = screen.getAllByRole("option", { name: "Enabled" }).at(-1);
+    expect(enabledOption).not.toBeUndefined();
+    await user.click(enabledOption!);
     await user.clear(screen.getByLabelText("Min Order Qty"));
     await user.type(screen.getByLabelText("Min Order Qty"), "5");
 
@@ -1059,66 +1123,215 @@ describe("EditItemDialogV2", () => {
     );
   });
 
-  it("uses typed V2 updates for each selected SKU in multi-item edits", async () => {
-    await mockDirectoryState();
-    productApiMocks.update.mockClear();
-    productApiMocks.update.mockResolvedValue({ sku: 1001, appliedFields: [] });
-    const user = userEvent.setup();
+  describe("bulk save path (atomic)", () => {
+    it("calls productApi.batch exactly once with all rows carrying baseline + primaryLocationId", async () => {
+      const batch = vi.spyOn(productApiMocks, "batch").mockResolvedValue({ action: "update", count: 2, skus: [101, 102] });
+      const onSaved = vi.fn();
+      await mockDirectoryState();
+      render(
+        <EditItemDialogV2
+          open
+          onOpenChange={vi.fn()}
+          items={[
+            { sku: 101, barcode: "AAA", retail: 10, cost: 5, fDiscontinue: 0, isTextbook: false, primaryLocationId: 3 },
+            { sku: 102, barcode: "BBB", retail: 20, cost: 8, fDiscontinue: 0, isTextbook: false, primaryLocationId: 3 },
+          ]}
+          primaryLocationId={3}
+          onSaved={onSaved}
+        />,
+      );
 
-    render(
-      <EditItemDialogV2
-        open
-        onOpenChange={vi.fn()}
-        items={[
-          {
+      // Type something into the shared catalog-number field and save
+      const catalogInput = screen.getByLabelText(/catalog #/i);
+      await userEvent.type(catalogInput, "CAT-X");
+      await userEvent.click(screen.getByRole("button", { name: /save/i }));
+
+      await waitFor(() => expect(batch).toHaveBeenCalledTimes(1));
+      const [call] = batch.mock.calls[0];
+      expect(call.action).toBe("update");
+      expect(call.rows).toHaveLength(2);
+      for (const row of call.rows) {
+        expect(row.baseline.primaryLocationId).toBe(3);
+      }
+      expect(onSaved).toHaveBeenCalledWith([101, 102]);
+
+      batch.mockRestore();
+    });
+
+    it("keeps dialog open and does not call onSaved when batch throws CONCURRENT_MODIFICATION", async () => {
+      const err = Object.assign(new Error("CONCURRENT_MODIFICATION"), {
+        code: "CONCURRENT_MODIFICATION",
+        rowIndex: 1,
+        sku: 102,
+      });
+      const batch = vi.spyOn(productApiMocks, "batch").mockRejectedValue(err);
+      const onSaved = vi.fn();
+      const onOpenChange = vi.fn();
+      await mockDirectoryState();
+      render(
+        <EditItemDialogV2
+          open
+          onOpenChange={onOpenChange}
+          items={[
+            { sku: 101, barcode: "AAA", retail: 10, cost: 5, fDiscontinue: 0, isTextbook: false, primaryLocationId: 2 },
+            { sku: 102, barcode: "BBB", retail: 20, cost: 8, fDiscontinue: 0, isTextbook: false, primaryLocationId: 2 },
+          ]}
+          primaryLocationId={2}
+          onSaved={onSaved}
+        />,
+      );
+
+      await userEvent.type(screen.getByLabelText(/catalog #/i), "CAT-X");
+      await userEvent.click(screen.getByRole("button", { name: /save/i }));
+
+      await waitFor(() => {
+        const alert = screen.queryByRole("alert");
+        expect(alert).not.toBeNull();
+      });
+      // Error message should mention both the row number and the SKU so
+      // operators know which of the N selected rows tripped the conflict.
+      const alert = screen.getByRole("alert");
+      expect(alert.textContent).toMatch(/row 2/i);
+      expect(alert.textContent).toMatch(/SKU 102/i);
+      // And it should guide retry-in-place (not "close the dialog") because
+      // the batch is atomic — zero rows committed, baselines are still fresh.
+      expect(alert.textContent).toMatch(/click save again|retry/i);
+      expect(onSaved).not.toHaveBeenCalled();
+      expect(onOpenChange).not.toHaveBeenCalledWith(false);
+      // Save button re-enables as soon as the save promise settles
+      expect(screen.getByRole("button", { name: /save/i })).not.toBeDisabled();
+
+      batch.mockRestore();
+    });
+
+    it("surfaces deferred batch mirror refresh as a toast while still closing after Prism save", async () => {
+      const batch = vi.spyOn(productApiMocks, "batch").mockResolvedValue({
+        action: "update",
+        count: 2,
+        skus: [101, 102],
+        mirrorRefreshDeferred: true,
+      });
+      const onSaved = vi.fn();
+      const onOpenChange = vi.fn();
+      await mockDirectoryState();
+      render(
+        <EditItemDialogV2
+          open
+          onOpenChange={onOpenChange}
+          items={[
+            { sku: 101, barcode: "AAA", retail: 10, cost: 5, fDiscontinue: 0, isTextbook: false, primaryLocationId: 3 },
+            { sku: 102, barcode: "BBB", retail: 20, cost: 8, fDiscontinue: 0, isTextbook: false, primaryLocationId: 3 },
+          ]}
+          primaryLocationId={3}
+          onSaved={onSaved}
+        />,
+      );
+
+      await userEvent.type(screen.getByLabelText(/catalog #/i), "CAT-X");
+      await userEvent.click(screen.getByRole("button", { name: /save/i }));
+
+      await waitFor(() => expect(batch).toHaveBeenCalledTimes(1));
+      expect(onSaved).toHaveBeenCalledWith([101, 102]);
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+      expect(toastMocks.error).toHaveBeenCalledWith(
+        "Saved in Prism. The browse mirror is refreshing in the background, so browse data may stay stale briefly.",
+      );
+
+      batch.mockRestore();
+    });
+  });
+
+  describe("single-item save (primary-location-aware baseline)", () => {
+    it("sources baseline retail/cost from the resolved primary location slice", async () => {
+      productApiMocks.update.mockClear();
+      const update = vi.spyOn(productApiMocks, "update").mockResolvedValue({ sku: 101, appliedFields: ["catalogNumber"] });
+      await mockDirectoryState();
+      // detail has two location slices with different retail/cost.
+      // primaryLocationId=3 (PCOP) means the baseline should pick the PCOP slice.
+      const detail: ProductEditDetails = {
+        ...baseDetail,
+        sku: 101,
+        barcode: "AAA",
+        inventoryByLocation: [
+          { ...baseDetail.inventoryByLocation[0], locationId: 2, retail: 10, cost: 5 },   // PIER — NOT what we want
+          { ...baseDetail.inventoryByLocation[1], locationId: 3, retail: 30, cost: 15 }, // PCOP — the resolved primary
+          { ...baseDetail.inventoryByLocation[2], locationId: 4, retail: null, cost: null },
+        ],
+      };
+      render(
+        <EditItemDialogV2
+          open
+          onOpenChange={vi.fn()}
+          items={[{ sku: 101, barcode: "AAA", retail: 30, cost: 15, fDiscontinue: 0, isTextbook: false, primaryLocationId: 3 }]}
+          primaryLocationId={3}
+          detail={detail}
+        />,
+      );
+
+      await userEvent.type(screen.getByLabelText(/catalog #/i), "CAT-X");
+      await userEvent.click(screen.getByRole("button", { name: /save/i }));
+
+      await waitFor(() => expect(update).toHaveBeenCalledTimes(1));
+      const call = update.mock.calls[0][1];
+      expect(call.baseline.primaryLocationId).toBe(3);
+      expect(call.baseline.retail).toBe(30);
+      expect(call.baseline.cost).toBe(15);
+
+      update.mockRestore();
+    });
+
+    it("surfaces single-item mirror drift as a toast while still closing after Prism save", async () => {
+      const update = vi.spyOn(productApiMocks, "update").mockResolvedValue({
+        sku: 1001,
+        appliedFields: ["catalogNumber"],
+        mirrorErrors: [{ sku: 1001, message: "snapshot failed" }],
+      });
+      const onSaved = vi.fn();
+      const onSavedScopedItems = vi.fn();
+      const onOpenChange = vi.fn();
+      await mockDirectoryState();
+
+      render(
+        <EditItemDialogV2
+          open
+          onOpenChange={onOpenChange}
+          items={[
+            {
+              sku: 1001,
+              barcode: baseDetail.barcode,
+              retail: baseDetail.retail ?? 0,
+              cost: baseDetail.cost ?? 0,
+              fDiscontinue: baseDetail.fDiscontinue,
+              description: baseDetail.description ?? undefined,
+              primaryLocationId: 2,
+            },
+          ]}
+          detail={baseDetail}
+          onSaved={onSaved}
+          onSavedScopedItems={onSavedScopedItems}
+        />,
+      );
+
+      await userEvent.type(screen.getByLabelText(/catalog #/i), "CAT-X");
+      await userEvent.click(screen.getByRole("button", { name: /save/i }));
+
+      await waitFor(() => expect(update).toHaveBeenCalledTimes(1));
+      expect(onSaved).toHaveBeenCalledWith([1001]);
+      expect(onSavedScopedItems).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
             sku: 1001,
-            barcode: "111222333444",
-            retail: 19.99,
-            cost: 9.5,
-            fDiscontinue: 0,
-            description: "Pierce Hoodie",
-          },
-          {
-            sku: 1002,
-            barcode: "555666777888",
-            retail: 29.99,
-            cost: 12.5,
-            fDiscontinue: 0,
-            description: "Pierce Mug",
-          },
-        ]}
-      />,
-    );
-
-    await user.click(screen.getByRole("button", { name: /More\b/i }));
-    await user.type(screen.getByLabelText("Order Increment"), "3");
-    await user.click(screen.getByRole("button", { name: "Save changes" }));
-
-    expect(productApiMocks.update).toHaveBeenCalledTimes(2);
-    expect(productApiMocks.update).toHaveBeenNthCalledWith(
-      1,
-      1001,
-      expect.objectContaining({
-        mode: "v2",
-        patch: expect.objectContaining({
-          gm: expect.objectContaining({
-            orderIncrement: 3,
           }),
-        }),
-      }),
-    );
-    expect(productApiMocks.update).toHaveBeenNthCalledWith(
-      2,
-      1002,
-      expect.objectContaining({
-        mode: "v2",
-        patch: expect.objectContaining({
-          gm: expect.objectContaining({
-            orderIncrement: 3,
-          }),
-        }),
-      }),
-    );
+        ]),
+        { retainUntilMatch: true },
+      );
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+      expect(toastMocks.error).toHaveBeenCalledWith(
+        "Saved in Prism, but the product mirror did not refresh for SKU 1001. Browse data may stay stale until the next sync.",
+      );
+
+      update.mockRestore();
+    });
   });
 
   it("sends changed textbook fields through the v2 textbook bucket", async () => {
@@ -1147,6 +1360,10 @@ describe("EditItemDialogV2", () => {
           [21, "PENS ETC (3001795)"],
           [22, "ALT VENDOR"],
         ]),
+        dccLabels: new Map([
+          [1313290, "NOT USE=111010 / DO NOT USE"],
+          [1802, "USED DCC"],
+        ]),
         taxTypeLabels: new Map([[4, "STATE"]]),
         tagTypeLabels: new Map(),
         statusCodeLabels: new Map(),
@@ -1173,6 +1390,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
             isTextbook: true,
           },
         ]}
@@ -1197,6 +1415,400 @@ describe("EditItemDialogV2", () => {
     );
   });
 
+  it("preserves untouched textbook metadata in saved scoped items and refreshes description from title edits", async () => {
+    productApiMocks.update.mockResolvedValue({ sku: 1001, appliedFields: ["title"] });
+    const onSavedScopedItems = vi.fn();
+    await mockDirectoryState({
+      refs: {
+        vendors: [
+          { vendorId: 21, name: "PENS ETC (3001795)", pierceItems: 50 },
+          { vendorId: 22, name: "ALT VENDOR", pierceItems: 5 },
+        ],
+        dccs: [
+          { dccId: 1313290, deptNum: 111010, classNum: null, catNum: null, deptName: "NOT USE=111010", className: "DO NOT USE", catName: null, pierceItems: 30 },
+          { dccId: 1802, deptNum: 222000, classNum: null, catNum: null, deptName: "USED DCC", className: null, catName: null, pierceItems: 10 },
+        ],
+        taxTypes: [{ taxTypeId: 4, description: "STATE", pierceItems: 40 }],
+        tagTypes: [],
+        statusCodes: [],
+        packageTypes: [{ code: "EA", label: "Each", defaultQty: 1, pierceItems: 25 }],
+        colors: [],
+        bindings: [
+          { bindingId: 15, label: "Hardcover", pierceBooks: 12 },
+          { bindingId: 16, label: "Paperback", pierceBooks: 8 },
+        ],
+      },
+      lookups: {
+        vendorNames: new Map([
+          [21, "PENS ETC (3001795)"],
+          [22, "ALT VENDOR"],
+        ]),
+        dccLabels: new Map([
+          [1313290, "NOT USE=111010 / DO NOT USE"],
+          [1802, "USED DCC"],
+        ]),
+        taxTypeLabels: new Map([[4, "STATE"]]),
+        tagTypeLabels: new Map(),
+        statusCodeLabels: new Map(),
+        packageTypeLabels: new Map([["EA", "Each"]]),
+        colorLabels: new Map(),
+        bindingLabels: new Map([
+          [15, "Hardcover"],
+          [16, "Paperback"],
+        ]),
+      },
+    });
+    const user = userEvent.setup();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 42.5,
+            cost: 21.25,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: "INTRO BIOLOGY",
+            primaryLocationId: 2,
+            isTextbook: true,
+            author: "Jane Doe",
+            title: "Intro Biology",
+            isbn: "9781234567890",
+            edition: "3",
+            itemType: "textbook",
+          },
+        ]}
+        detail={buildTextbookDetail()}
+        onSavedScopedItems={onSavedScopedItems}
+      />,
+    );
+
+    await user.clear(screen.getByLabelText("Title"));
+    await user.type(screen.getByLabelText("Title"), "Updated Biology");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(onSavedScopedItems).toHaveBeenCalledTimes(1));
+    expect(onSavedScopedItems).toHaveBeenCalledWith([
+      expect.objectContaining({
+        sku: 1001,
+        description: "UPDATED BIOLOGY",
+        title: "Updated Biology",
+        author: "Jane Doe",
+        isbn: "9781234567890",
+        edition: "3",
+        itemType: "textbook",
+      }),
+    ], { retainUntilMatch: false });
+  });
+
+  it("returns saved scoped items for every touched inventory location", async () => {
+    productApiMocks.update.mockResolvedValue({ sku: 1001, appliedFields: ["inventory"] });
+    const onSavedScopedItems = vi.fn();
+    await mockDirectoryState();
+    const user = userEvent.setup();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 39.99,
+            cost: 19.5,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
+            itemType: "general_merchandise",
+          },
+        ]}
+        detail={{
+          ...baseDetail,
+          inventoryByLocation: [
+            { ...baseDetail.inventoryByLocation[0], locationId: 2, retail: 39.99, cost: 19.5 },
+            { ...baseDetail.inventoryByLocation[1], locationId: 3, retail: 30, cost: 15 },
+            { ...baseDetail.inventoryByLocation[2], locationId: 4, retail: null, cost: null },
+          ],
+        }}
+        onSavedScopedItems={onSavedScopedItems}
+      />,
+    );
+
+    await user.click(screen.getByRole("tab", { name: "Inventory" }));
+    await user.click(screen.getByRole("button", { name: "PCOP" }));
+    const pcopRetailInput = document.getElementById("edit-v2-1001-inventory-3-retail");
+    if (!(pcopRetailInput instanceof HTMLInputElement)) {
+      throw new Error("PCOP retail input not found");
+    }
+    await user.clear(pcopRetailInput);
+    await user.type(pcopRetailInput, "45.25");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(onSavedScopedItems).toHaveBeenCalledTimes(1));
+    expect(onSavedScopedItems).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sku: 1001,
+          pricingLocationId: 2,
+          retailPrice: 39.99,
+          cost: 19.5,
+        }),
+        expect.objectContaining({
+          sku: 1001,
+          pricingLocationId: 3,
+          retailPrice: 45.25,
+          cost: 15,
+        }),
+      ]),
+      { retainUntilMatch: false },
+    );
+  });
+
+  it("prefers hydrated detail pricing over stale incoming item pricing for non-pricing saves", async () => {
+    productApiMocks.update.mockResolvedValue({ sku: 1001, appliedFields: ["item:barcode"] });
+    const onSavedScopedItems = vi.fn();
+    await mockDirectoryState();
+    const user = userEvent.setup();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 39.99,
+            cost: 19.5,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
+            itemType: "general_merchandise",
+          },
+        ]}
+        detail={{
+          ...baseDetail,
+          inventoryByLocation: [
+            { ...baseDetail.inventoryByLocation[0], locationId: 2, retail: 41.99, cost: 21.5 },
+            baseDetail.inventoryByLocation[1],
+            baseDetail.inventoryByLocation[2],
+          ],
+        }}
+        onSavedScopedItems={onSavedScopedItems}
+      />,
+    );
+
+    await user.clear(screen.getByLabelText("Barcode"));
+    await user.type(screen.getByLabelText("Barcode"), "999111222333");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(onSavedScopedItems).toHaveBeenCalledTimes(1));
+    expect(onSavedScopedItems).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sku: 1001,
+          pricingLocationId: 2,
+          retailPrice: 41.99,
+          cost: 21.5,
+          barcode: "999111222333",
+        }),
+      ]),
+      { retainUntilMatch: false },
+    );
+  });
+
+  it("does not reuse known scoped pricing for touched secondary locations when detail hydration is unavailable", async () => {
+    productApiMocks.update.mockResolvedValue({ sku: 1001, appliedFields: ["inventory"] });
+    const onSavedScopedItems = vi.fn();
+    await mockDirectoryState();
+    const user = userEvent.setup();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 39.99,
+            cost: 19.5,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
+            itemType: "general_merchandise",
+          },
+        ]}
+        detail={null}
+        knownScopedItemsByKey={new Map([
+          [
+            "1001:3",
+            {
+              sku: 1001,
+              description: "PIERCE HOODIE",
+              retailPrice: 30,
+              cost: 15,
+              pricingLocationId: 3,
+              barcode: baseDetail.barcode,
+              author: null,
+              title: null,
+              isbn: null,
+              edition: null,
+              catalogNumber: baseDetail.catalogNumber,
+              vendorId: baseDetail.vendorId,
+              itemType: "general_merchandise",
+              fDiscontinue: 0,
+            },
+          ],
+        ])}
+        onSavedScopedItems={onSavedScopedItems}
+      />,
+    );
+
+    await user.click(screen.getByRole("tab", { name: "Inventory" }));
+    await user.click(screen.getByRole("button", { name: "PCOP" }));
+    await user.click(screen.getByLabelText("No Returns"));
+    const enabledOption = screen.getAllByRole("option", { name: "Enabled" }).at(-1);
+    expect(enabledOption).not.toBeUndefined();
+    await user.click(enabledOption!);
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(onSavedScopedItems).toHaveBeenCalledTimes(1));
+    const [savedItems, options] = onSavedScopedItems.mock.calls[0] ?? [];
+    expect(options).toEqual({ retainUntilMatch: false });
+    expect(savedItems).toHaveLength(1);
+    expect(savedItems).toEqual([
+      expect.objectContaining({
+        sku: 1001,
+        pricingLocationId: 2,
+        retailPrice: 39.99,
+        cost: 19.5,
+      }),
+    ]);
+  });
+
+  it("fans out global barcode edits to other known cached scopes with live detail", async () => {
+    productApiMocks.update.mockResolvedValue({ sku: 1001, appliedFields: ["item:barcode"] });
+    const onSavedScopedItems = vi.fn();
+    await mockDirectoryState();
+    const user = userEvent.setup();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 39.99,
+            cost: 19.5,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
+            itemType: "general_merchandise",
+          },
+        ]}
+        detail={{
+          ...baseDetail,
+          inventoryByLocation: [
+            { ...baseDetail.inventoryByLocation[0], locationId: 2, retail: 39.99, cost: 19.5 },
+            { ...baseDetail.inventoryByLocation[1], locationId: 3, retail: 30, cost: 15 },
+            baseDetail.inventoryByLocation[2],
+          ],
+        }}
+        knownScopedItemsByKey={new Map([
+          [
+            "1001:3",
+            {
+              sku: 1001,
+              description: "PIERCE HOODIE",
+              retailPrice: 30,
+              cost: 15,
+              pricingLocationId: 3,
+              barcode: baseDetail.barcode,
+              author: null,
+              title: null,
+              isbn: null,
+              edition: null,
+              catalogNumber: baseDetail.catalogNumber,
+              vendorId: baseDetail.vendorId,
+              itemType: "general_merchandise",
+              fDiscontinue: 0,
+            },
+          ],
+        ])}
+        onSavedScopedItems={onSavedScopedItems}
+      />,
+    );
+
+    await user.clear(screen.getByLabelText("Barcode"));
+    await user.type(screen.getByLabelText("Barcode"), "999111222333");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(onSavedScopedItems).toHaveBeenCalledTimes(1));
+    expect(onSavedScopedItems).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sku: 1001,
+          pricingLocationId: 2,
+          retailPrice: 39.99,
+          cost: 19.5,
+          barcode: "999111222333",
+        }),
+        expect.objectContaining({
+          sku: 1001,
+          pricingLocationId: 3,
+          retailPrice: 30,
+          cost: 15,
+          barcode: "999111222333",
+        }),
+      ]),
+      { retainUntilMatch: false },
+    );
+  });
+
+  it("does not persist null scoped pricing for non-pricing saves when the current scope has no inventory slice", async () => {
+    productApiMocks.update.mockResolvedValue({ sku: 1001, appliedFields: ["catalogNumber"] });
+    const onSavedScopedItems = vi.fn();
+    await mockDirectoryState();
+    const user = userEvent.setup();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: null,
+            cost: null,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+            primaryLocationId: 3,
+            itemType: "general_merchandise",
+            catalogNumber: baseDetail.catalogNumber ?? undefined,
+          },
+        ]}
+        primaryLocationId={3}
+        detail={baseDetail}
+        onSavedScopedItems={onSavedScopedItems}
+      />,
+    );
+
+    await user.clear(screen.getByLabelText(/catalog #/i));
+    await user.type(screen.getByLabelText(/catalog #/i), "CAT-X");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(onSavedScopedItems).toHaveBeenCalledTimes(1));
+    expect(onSavedScopedItems).toHaveBeenCalledWith([], { retainUntilMatch: false });
+  });
+
   it("constrains textbook text status to positive integers in the UI", async () => {
     await mockDirectoryState({
       refs: {
@@ -1213,6 +1825,7 @@ describe("EditItemDialogV2", () => {
       },
       lookups: {
         vendorNames: new Map([[21, "PENS ETC (3001795)"]]),
+        dccLabels: new Map([[1313290, "NOT USE=111010 / DO NOT USE"]]),
         taxTypeLabels: new Map([[4, "STATE"]]),
         tagTypeLabels: new Map(),
         statusCodeLabels: new Map(),
@@ -1234,6 +1847,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
             isTextbook: true,
           },
         ]}
@@ -1262,6 +1876,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
       />,
@@ -1288,6 +1903,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
       />,
@@ -1313,6 +1929,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
             isTextbook: true,
           },
         ]}
@@ -1340,6 +1957,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
           {
             sku: 1002,
@@ -1347,6 +1965,7 @@ describe("EditItemDialogV2", () => {
             retail: 5.25,
             cost: 2.1,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Second item",
           },
         ]}
@@ -1375,6 +1994,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
       />,
@@ -1399,6 +2019,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
       />,
@@ -1434,6 +2055,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: "GM item",
+            primaryLocationId: 2,
           },
           {
             sku: 2002,
@@ -1441,6 +2063,7 @@ describe("EditItemDialogV2", () => {
             retail: 80,
             cost: 40,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Textbook item",
             isTextbook: true,
           },
@@ -1469,6 +2092,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: "First GM",
+            primaryLocationId: 2,
           },
           {
             sku: 1002,
@@ -1476,6 +2100,7 @@ describe("EditItemDialogV2", () => {
             retail: 5.25,
             cost: 2.1,
             fDiscontinue: 0,
+            primaryLocationId: 2,
             description: "Second GM",
           },
         ]}
@@ -1504,6 +2129,7 @@ describe("EditItemDialogV2", () => {
             cost: 21.25,
             fDiscontinue: baseDetail.fDiscontinue,
             description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
           },
         ]}
       />,

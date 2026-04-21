@@ -1,19 +1,23 @@
 /**
- * Batch writes to Prism — all wrapped in single transactions so failures
- * roll back the entire batch. Pre-validation (FK existence, duplicate-barcode
- * against live Prism) is in validateBatchAgainstPrism; shape validation is
- * in batch-validation.ts.
+ * Batch writes to Prism. `batchCreateGmItems`, `batchHardDeleteItems`, and
+ * `batchUpdateItems` each run under a single Prism transaction — any row-
+ * level failure rolls back every row in the batch. `batchUpdateItems` also
+ * accepts per-row `baseline` snapshots for optimistic concurrency; failures
+ * throw with `code: "CONCURRENT_MODIFICATION"` and `rowIndex`.
+ *
+ * Pre-validation (FK existence, duplicate-barcode against live Prism) is in
+ * validateBatchAgainstPrism; shape validation is in batch-validation.ts.
  */
 import { getPrismPool, sql } from "@/lib/prism";
 import type {
   BatchCreateRow,
   BatchUpdateRow,
+  BatchUpdateRowWithBaseline,
   BatchValidationError,
   GmItemPatch,
-  TextbookPatch,
 } from "./types";
 import { PIERCE_LOCATION_ID } from "./prism-server";
-import { updateGmItem, updateTextbookPricing } from "./prism-updates";
+import { applyItemPatchInTransaction } from "./prism-updates";
 import { hasTransactionHistory } from "./prism-delete";
 import { validateBatchCreateShape, validateBatchUpdateShape } from "./batch-validation";
 
@@ -146,31 +150,56 @@ export async function batchCreateGmItems(rows: BatchCreateRow[]): Promise<number
 }
 
 /**
- * Apply N edits in one transaction. Each row can be a GM patch or a textbook
- * patch; caller has already classified them. This runs updateGmItem /
- * updateTextbookPricing inline WITHOUT their internal transactions (we own
- * the outer one). To keep things simple we call them directly — they each
- * open their own transaction, which SQL Server supports as nested pseudo-
- * transactions on the same connection, but it's cleaner to short-circuit.
+ * Apply N item edits in ONE Prism transaction. Each row's baseline is
+ * checked inside the transaction before its UPDATE; any throw (concurrency
+ * mismatch or SQL failure) rolls back every row. Caller gets zero
+ * partial-commit hazard.
  *
- * Implementation note: we don't pass expectedSnapshot here — batch edits
- * come from the grid UI, not an open dialog, so there's no baseline to
- * compare against. Callers wanting concurrency protection should use the
- * single-item update path.
+ * Concurrency errors carry `code: "CONCURRENT_MODIFICATION"`, `rowIndex`
+ * (the index of the row that failed, 0-based), `sku`, and `current` (the
+ * ItemSnapshot the server actually saw).
  */
 export async function batchUpdateItems(
-  rows: { sku: number; patch: GmItemPatch | TextbookPatch; isTextbook: boolean }[],
+  rows: BatchUpdateRowWithBaseline[],
 ): Promise<number[]> {
-  const updatedSkus: number[] = [];
-  for (const row of rows) {
-    if (row.isTextbook) {
-      await updateTextbookPricing(row.sku, row.patch as TextbookPatch);
-    } else {
-      await updateGmItem(row.sku, row.patch as GmItemPatch);
+  if (rows.length === 0) return [];
+  const pool = await getPrismPool();
+  const transaction = pool.transaction();
+  await transaction.begin();
+
+  const updated: number[] = [];
+  try {
+    for (let i = 0; i < rows.length; i += 1) {
+      const row = rows[i];
+      try {
+        await applyItemPatchInTransaction(transaction, {
+          sku: row.sku,
+          isTextbook: row.isTextbook ?? false,
+          patch: row.patch,
+          baseline: row.baseline,
+        });
+        updated.push(row.sku);
+      } catch (err) {
+        // Attach rowIndex + sku so the route can shape a precise 409 payload.
+        // Wrap non-Error throws (drivers rarely produce these, but defensive)
+        // so the annotation always reaches the route layer — if the caller
+        // can't tell which row failed, the dialog can't show a useful
+        // message.
+        const annotated = err instanceof Error ? err : new Error(String(err));
+        (annotated as Error & { rowIndex?: number; sku?: number; cause?: unknown }).rowIndex = i;
+        (annotated as Error & { rowIndex?: number; sku?: number; cause?: unknown }).sku = row.sku;
+        if (!(err instanceof Error)) {
+          (annotated as Error & { cause?: unknown }).cause = err;
+        }
+        throw annotated;
+      }
     }
-    updatedSkus.push(row.sku);
+    await transaction.commit();
+    return updated;
+  } catch (err) {
+    try { await transaction.rollback(); } catch { /* swallow */ }
+    throw err;
   }
-  return updatedSkus;
 }
 
 /**

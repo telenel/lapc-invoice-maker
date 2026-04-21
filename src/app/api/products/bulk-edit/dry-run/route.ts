@@ -4,6 +4,7 @@ import { buildBulkFieldPreview } from "@/domains/bulk-edit/preview-builder";
 import { bulkEditFieldRegistry } from "@/domains/bulk-edit/field-registry";
 import { validateTransform } from "@/domains/bulk-edit/transform-engine";
 import { buildPreview } from "@/domains/bulk-edit/preview-builder";
+import { filterLiveProductInventoryRows } from "@/domains/product/inventory-mirror-state";
 import { loadCommittedProductRefSnapshot } from "@/domains/product/ref-data-server";
 import type {
   BulkEditFieldEditRequest,
@@ -71,6 +72,7 @@ const PRODUCT_INVENTORY_SELECT = [
   "f_tx_want_list_flag",
   "f_tx_buyback_list_flag",
   "f_no_returns",
+  "synced_at",
 ].join(", ");
 
 const BULK_EDIT_FIELD_IDS = Object.keys(bulkEditFieldRegistry) as [BulkEditFieldId, ...BulkEditFieldId[]];
@@ -188,6 +190,7 @@ type SourceInventoryRow = {
   f_tx_want_list_flag: boolean | null;
   f_tx_buyback_list_flag: boolean | null;
   f_no_returns: boolean | null;
+  synced_at?: string | null;
 };
 
 function isProductRow(value: unknown): value is SourceProductRow {
@@ -327,7 +330,7 @@ async function loadInventoryRows(
   }
 
   const rawInventoryRows = Array.isArray(inventoryResult.data) ? (inventoryResult.data as unknown[]) : [];
-  const inventoryRows = rawInventoryRows.filter(isInventoryRow);
+  const inventoryRows = filterLiveProductInventoryRows(rawInventoryRows.filter(isInventoryRow));
   const inventoryBySku = new Map<number, BulkEditSourceInventoryRow[]>();
 
   for (const inventoryRow of inventoryRows) {

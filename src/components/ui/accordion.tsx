@@ -7,6 +7,15 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 function Accordion({ className, ...props }: AccordionPrimitive.Root.Props) {
+  // Deliberately leaves `keepMounted` at Base UI's default (false). That
+  // unmounts collapsed panel subtrees, removing their focusable inputs
+  // from the tab order and the accessibility tree — important here
+  // because the More / Advanced panels contain many form inputs that
+  // would otherwise stay keyboard-reachable when visually closed.
+  //
+  // Callers that need content persistence across open/close can opt in
+  // explicitly via `<Accordion keepMounted>` — the primary edit dialog
+  // does not need this because form state lifts to the parent.
   return (
     <AccordionPrimitive.Root
       data-slot="accordion"
@@ -63,7 +72,11 @@ function AccordionContent({
     <AccordionPrimitive.Panel
       data-slot="accordion-content"
       className={cn(
-        "overflow-hidden text-sm transition-[height] duration-200 data-[panel-open]:h-[var(--accordion-panel-height)] h-0",
+        // Panel emits `data-open` (or `data-closed`) from Base UI's
+        // collapsible state mapping — NOT `data-panel-open`, which only
+        // shows up on the Trigger element. Keying the height transition
+        // to `data-open` is what actually reveals the content on click.
+        "overflow-hidden text-sm transition-[height] duration-200 h-0 data-[open]:h-[var(--accordion-panel-height)]",
         className,
       )}
       {...props}

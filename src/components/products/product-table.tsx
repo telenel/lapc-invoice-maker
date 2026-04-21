@@ -211,6 +211,7 @@ function InlineEditableCell({
   fieldOrder,
   badge,
   inlineEdit,
+  editable = true,
   align = "left",
   className,
   inputClassName,
@@ -223,6 +224,7 @@ function InlineEditableCell({
   fieldOrder: readonly ProductInlineEditableField[];
   badge?: ReactNode;
   inlineEdit?: ProductInlineEditController;
+  editable?: boolean;
   align?: "left" | "right";
   className?: string;
   inputClassName?: string;
@@ -260,7 +262,7 @@ function InlineEditableCell({
         inputClassName ?? ""
       } ${align === "right" ? "text-right" : "text-left"}`}
     />
-  ) : inlineEdit ? (
+  ) : inlineEdit && editable ? (
     <button
       type="button"
       onClick={(e) => {
@@ -831,6 +833,7 @@ export function ProductTable({
                       product,
                       resolvedPrimaryLocationId,
                     );
+                    const canInlineEditScopedPricing = primarySlice != null;
                     const costValue = primarySlice?.cost ?? product.cost;
                     const retailValue = primarySlice?.retailPrice ?? product.retail_price;
                     const metaParts: string[] = [];
@@ -917,6 +920,7 @@ export function ProductTable({
                             ) : null
                           }
                           inlineEdit={inlineEdit}
+                          editable={canInlineEditScopedPricing}
                           align="right"
                           className="px-2.5 py-1.5 text-right"
                           inputClassName="min-w-[92px]"
@@ -939,6 +943,7 @@ export function ProductTable({
                             ) : null
                           }
                           inlineEdit={inlineEdit}
+                          editable={canInlineEditScopedPricing}
                           align="right"
                           className="px-2.5 py-1.5 text-right"
                           inputClassName="min-w-[92px]"

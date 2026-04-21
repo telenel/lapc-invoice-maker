@@ -125,10 +125,13 @@ function setOverlayValue<Key extends keyof ProductInlineEditRowBaseline>(
   target[key] = value;
 }
 
-function buildBaseline(row: ProductInlineEditRowBaseline): Pick<
+function buildBaseline(
+  row: ProductInlineEditRowBaseline,
+  primaryLocationId: ProductLocationId,
+): Pick<
   ProductInlineEditRowBaseline,
   "sku" | "barcode" | "itemTaxTypeId" | "retail" | "cost" | "fDiscontinue"
-> {
+> & { primaryLocationId: ProductLocationId } {
   return {
     sku: row.sku,
     barcode: row.barcode,
@@ -136,6 +139,7 @@ function buildBaseline(row: ProductInlineEditRowBaseline): Pick<
     retail: row.retail,
     cost: row.cost,
     fDiscontinue: row.fDiscontinue,
+    primaryLocationId,
   };
 }
 
@@ -244,7 +248,7 @@ export function useProductInlineEdit({
       return true;
     }
 
-    const baseline = buildBaseline(row);
+    const baseline = buildBaseline(row, primaryLocationId);
     const currentValue = rawValue.trim();
     const originalValue = getCellValue(row, field);
 
@@ -347,7 +351,7 @@ export function useProductInlineEdit({
     } finally {
       setPendingSave(false);
     }
-  }, [onSaveSuccess, pendingSave, rowsBySku]);
+  }, [onSaveSuccess, pendingSave, primaryLocationId, rowsBySku]);
 
   const saveCurrentEdit = useCallback(async () => {
     const activeCell = editingCell;

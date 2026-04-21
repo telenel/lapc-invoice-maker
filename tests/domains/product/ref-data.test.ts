@@ -244,6 +244,7 @@ describe("product ref data helpers", () => {
             cost: 5,
             fDiscontinue: 0,
             description: "Example",
+            primaryLocationId: 2 as const,
           },
         ],
       }),
