@@ -1,10 +1,18 @@
 "use client";
 
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { TabsContent } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import type { PrismRefs } from "@/domains/product/api-client";
 import { ItemRefSelectField } from "../../item-ref-selects";
+import { AdvancedFields } from "../components/advanced-fields";
+import { MoreFields } from "../components/more-fields";
 import { Section } from "../components/section";
 import { BindingSelectField } from "../fields/binding-select";
 import { Field, ReadOnlyCheckbox } from "../fields/field";
@@ -240,6 +248,35 @@ export function PrimaryTabContent({
           onCheckedChange={(checked) => update("fDiscontinue", checked)}
         />
       </Section>
+
+      <Accordion className="rounded-xl border border-border/60 bg-background/50 px-4">
+        <AccordionItem value="more">
+          <AccordionTrigger>More — packaging, size, color, weight</AccordionTrigger>
+          <AccordionContent>
+            <MoreFields
+              form={form}
+              update={update}
+              idFor={idFor}
+              isBulk={isBulk}
+              refs={refs}
+              refsControlsDisabled={refsControlsDisabled}
+            />
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="advanced">
+          <AccordionTrigger>Advanced — rare flags and overrides</AccordionTrigger>
+          <AccordionContent>
+            <AdvancedFields
+              form={form}
+              update={update}
+              idFor={idFor}
+              isBulk={isBulk}
+              refs={refs}
+              refsControlsDisabled={refsControlsDisabled}
+            />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </TabsContent>
   );
 }

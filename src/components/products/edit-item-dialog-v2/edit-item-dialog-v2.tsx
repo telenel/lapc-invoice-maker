@@ -43,9 +43,7 @@ import {
   makeEmptyDirtyInventoryFields,
   makeEmptyInventoryState,
 } from "./state/types";
-import { AdvancedTabContent } from "./tabs/advanced-tab";
 import { InventoryTabContent } from "./tabs/inventory-tab";
-import { MoreTabContent } from "./tabs/more-tab";
 import { PrimaryTabContent } from "./tabs/primary-tab";
 import { TextbookTabContent } from "./tabs/textbook-tab";
 
@@ -368,8 +366,6 @@ export function EditItemDialogV2({
 
             <TabsList variant="line" className="w-full justify-start border-b border-border/70 px-0">
               <TabsTrigger value="primary">Primary</TabsTrigger>
-              <TabsTrigger value="more">More</TabsTrigger>
-              <TabsTrigger value="advanced">Advanced</TabsTrigger>
               {!isBulk ? <TabsTrigger value="inventory">Inventory</TabsTrigger> : null}
               {isTextbookRow ? <TabsTrigger value="textbook">Textbook</TabsTrigger> : null}
             </TabsList>
@@ -383,24 +379,6 @@ export function EditItemDialogV2({
               refs={refs}
               refsControlsDisabled={refsControlsDisabled}
               resolvedPrimaryLocationId={resolvedPrimaryLocationId}
-            />
-
-            <MoreTabContent
-              form={form}
-              update={update}
-              idFor={idFor}
-              isBulk={isBulk}
-              refs={refs}
-              refsControlsDisabled={refsControlsDisabled}
-            />
-
-            <AdvancedTabContent
-              form={form}
-              update={update}
-              idFor={idFor}
-              isBulk={isBulk}
-              refs={refs}
-              refsControlsDisabled={refsControlsDisabled}
             />
 
             {!isBulk ? (

@@ -190,8 +190,9 @@ describe("EditItemDialogV2", () => {
     );
 
     expect(screen.getByRole("tab", { name: "Primary" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "More" })).toBeInTheDocument();
-    expect(screen.getByRole("tab", { name: "Advanced" })).toBeInTheDocument();
+    // Phase 2: More and Advanced are now in-place disclosures inside Primary.
+    expect(screen.getByRole("button", { name: /More\b/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Advanced\b/i })).toBeInTheDocument();
 
     expect(screen.getByLabelText("Vendor")).toBeInTheDocument();
     expect(screen.getByLabelText("Department / Class")).toBeInTheDocument();
@@ -1017,7 +1018,7 @@ describe("EditItemDialogV2", () => {
       />,
     );
 
-    await user.click(screen.getByRole("tab", { name: "More" }));
+    await user.click(screen.getByRole("button", { name: /More\b/i }));
     await user.clear(screen.getByLabelText("Manufacturer ID"));
     await user.type(screen.getByLabelText("Manufacturer ID"), "91");
     await user.clear(screen.getByLabelText("Size"));
@@ -1029,7 +1030,7 @@ describe("EditItemDialogV2", () => {
     await user.clear(screen.getByLabelText("Order Increment"));
     await user.type(screen.getByLabelText("Order Increment"), "6");
 
-    await user.click(screen.getByRole("tab", { name: "Advanced" }));
+    await user.click(screen.getByRole("button", { name: /Advanced\b/i }));
     await user.click(screen.getByLabelText("Perishable"));
     await user.click(screen.getByText("Enabled"));
     await user.clear(screen.getByLabelText("Min Order Qty"));
@@ -1089,7 +1090,7 @@ describe("EditItemDialogV2", () => {
       />,
     );
 
-    await user.click(screen.getByRole("tab", { name: "More" }));
+    await user.click(screen.getByRole("button", { name: /More\b/i }));
     await user.type(screen.getByLabelText("Order Increment"), "3");
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
@@ -1381,5 +1382,40 @@ describe("EditItemDialogV2", () => {
 
     expect(screen.getByLabelText(/Retail\s*\(PIER\)/)).toBeInTheDocument();
     expect(screen.getByLabelText(/Cost\s*\(PIER\)/)).toBeInTheDocument();
+  });
+
+  it("drops More and Advanced from the tab list and exposes them as in-place disclosures inside Primary", async () => {
+    await mockDirectoryState();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 42.5,
+            cost: 21.25,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+          },
+        ]}
+      />,
+    );
+
+    // Tab list: Primary + Inventory only (no More, no Advanced).
+    expect(screen.queryByRole("tab", { name: "More" })).toBeNull();
+    expect(screen.queryByRole("tab", { name: "Advanced" })).toBeNull();
+    expect(screen.getByRole("tab", { name: "Primary" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Inventory" })).toBeInTheDocument();
+
+    // Disclosures are present in the Primary tab as accordion triggers.
+    expect(
+      screen.getByRole("button", { name: /More\b.*packaging/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Advanced\b.*flags/i }),
+    ).toBeInTheDocument();
   });
 });
