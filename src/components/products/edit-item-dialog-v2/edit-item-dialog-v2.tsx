@@ -93,6 +93,12 @@ export function EditItemDialogV2({
   const refsUnavailable = !refsLoading && !refsAvailable;
   const refsControlsDisabled = refsLoading || refsUnavailable;
   const isTextbookRow = !isBulk && (detail?.itemType === "textbook" || detail?.itemType === "used_textbook" || items[0]?.isTextbook === true);
+  const mixedBulkSelection = useMemo(() => {
+    if (!isBulk) return null;
+    const textbookCount = items.filter((item) => item.isTextbook === true).length;
+    const gmCount = items.length - textbookCount;
+    return textbookCount > 0 && gmCount > 0 ? { textbookCount, gmCount } : null;
+  }, [isBulk, items]);
   const baselineForm = useMemo(
     () => (isBulk ? EMPTY_FORM : toFormState(items[0], detail, resolvedPrimaryLocationId)),
     [detail, isBulk, items, resolvedPrimaryLocationId],
@@ -379,6 +385,7 @@ export function EditItemDialogV2({
               refs={refs}
               refsControlsDisabled={refsControlsDisabled}
               resolvedPrimaryLocationId={resolvedPrimaryLocationId}
+              mixedBulkSelection={mixedBulkSelection}
             />
 
             {!isBulk ? (

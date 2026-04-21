@@ -34,6 +34,7 @@ export function PrimaryTabContent({
   refs,
   refsControlsDisabled,
   resolvedPrimaryLocationId,
+  mixedBulkSelection = null,
 }: {
   form: FormState;
   update: <K extends keyof FormState>(key: K, value: FormState[K]) => void;
@@ -43,10 +44,22 @@ export function PrimaryTabContent({
   refs: PrismRefs | null;
   refsControlsDisabled: boolean;
   resolvedPrimaryLocationId: InventoryLocationId;
+  mixedBulkSelection?: { textbookCount: number; gmCount: number } | null;
 }) {
   const primaryLocationLabel = INVENTORY_LOCATION_LABELS[resolvedPrimaryLocationId];
   return (
     <TabsContent value="primary" className="space-y-4 pt-1">
+      {mixedBulkSelection ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="rounded-lg border border-amber-300/70 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-800/70 dark:bg-amber-950/30 dark:text-amber-200"
+        >
+          <span className="font-medium">Mixed selection</span> — {mixedBulkSelection.textbookCount} textbook
+          {mixedBulkSelection.textbookCount === 1 ? "" : "s"} and {mixedBulkSelection.gmCount} merchandise item
+          {mixedBulkSelection.gmCount === 1 ? "" : "s"}. Textbook-specific fields are hidden; edit textbooks individually to change title, author, ISBN, edition, or binding.
+        </div>
+      ) : null}
       <Section
         title={isTextbookRow ? "Textbook item fields" : "Core item fields"}
         description={
@@ -55,17 +68,19 @@ export function PrimaryTabContent({
             : "Merchandise-safe fields that already write through the current edit path."
         }
       >
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {isTextbookRow ? (
             <>
-              <Field id={idFor("title")} label="Title">
-                <Input
-                  id={idFor("title")}
-                  value={form.title}
-                  onChange={(event) => update("title", event.target.value)}
-                  placeholder={isBulk ? "Leave unchanged (per-item)…" : ""}
-                />
-              </Field>
+              <div className="col-span-full">
+                <Field id={idFor("title")} label="Title">
+                  <Input
+                    id={idFor("title")}
+                    value={form.title}
+                    onChange={(event) => update("title", event.target.value)}
+                    placeholder={isBulk ? "Leave unchanged (per-item)…" : ""}
+                  />
+                </Field>
+              </div>
               <Field id={idFor("author")} label="Author">
                 <Input
                   id={idFor("author")}
@@ -117,6 +132,7 @@ export function PrimaryTabContent({
                 onChange={(value) => update("vendorId", value)}
                 disabled={refsControlsDisabled}
                 bulkMode={isBulk}
+                unavailableHint="Vendor labels unavailable — connect to Prism."
               />
               <ItemRefSelectField
                 id={idFor("dcc")}
@@ -127,6 +143,7 @@ export function PrimaryTabContent({
                 onChange={(value) => update("dccId", value)}
                 disabled={refsControlsDisabled}
                 bulkMode={isBulk}
+                unavailableHint="Department labels unavailable — connect to Prism."
               />
               <ItemRefSelectField
                 id={idFor("taxType")}
@@ -137,19 +154,56 @@ export function PrimaryTabContent({
                 onChange={(value) => update("itemTaxTypeId", value)}
                 disabled={refsControlsDisabled}
                 bulkMode={isBulk}
+                unavailableHint="Tax type labels unavailable — connect to Prism."
               />
             </>
           ) : (
             <>
-              <Field id={idFor("description")} label="Description">
-                <Input
-                  id={idFor("description")}
-                  value={form.description}
-                  onChange={(event) => update("description", event.target.value)}
-                  disabled={isBulk}
-                  placeholder={isBulk ? "Leave unchanged (per-item)…" : ""}
-                />
-              </Field>
+              {/* Per spec: Description → Vendor → DCC → Tax Type → Barcode → (Retail/Cost later). */}
+              <div className="col-span-full">
+                <Field id={idFor("description")} label="Description">
+                  <Input
+                    id={idFor("description")}
+                    value={form.description}
+                    onChange={(event) => update("description", event.target.value)}
+                    disabled={isBulk}
+                    placeholder={isBulk ? "Leave unchanged (per-item)…" : ""}
+                  />
+                </Field>
+              </div>
+              <ItemRefSelectField
+                id={idFor("vendor")}
+                refs={refs}
+                kind="vendor"
+                label="Vendor"
+                value={form.vendorId}
+                onChange={(value) => update("vendorId", value)}
+                disabled={refsControlsDisabled}
+                bulkMode={isBulk}
+                unavailableHint="Vendor labels unavailable — connect to Prism."
+              />
+              <ItemRefSelectField
+                id={idFor("dcc")}
+                refs={refs}
+                kind="dcc"
+                label="Department / Class"
+                value={form.dccId}
+                onChange={(value) => update("dccId", value)}
+                disabled={refsControlsDisabled}
+                bulkMode={isBulk}
+                unavailableHint="Department labels unavailable — connect to Prism."
+              />
+              <ItemRefSelectField
+                id={idFor("taxType")}
+                refs={refs}
+                kind="taxType"
+                label="Tax Type"
+                value={form.itemTaxTypeId}
+                onChange={(value) => update("itemTaxTypeId", value)}
+                disabled={refsControlsDisabled}
+                bulkMode={isBulk}
+                unavailableHint="Tax type labels unavailable — connect to Prism."
+              />
               <Field id={idFor("barcode")} label="Barcode">
                 <Input
                   id={idFor("barcode")}
@@ -160,36 +214,6 @@ export function PrimaryTabContent({
                   className="font-mono text-xs"
                 />
               </Field>
-              <ItemRefSelectField
-                id={idFor("vendor")}
-                refs={refs}
-                kind="vendor"
-                label="Vendor"
-                value={form.vendorId}
-                onChange={(value) => update("vendorId", value)}
-                disabled={refsControlsDisabled}
-                bulkMode={isBulk}
-              />
-              <ItemRefSelectField
-                id={idFor("dcc")}
-                refs={refs}
-                kind="dcc"
-                label="Department / Class"
-                value={form.dccId}
-                onChange={(value) => update("dccId", value)}
-                disabled={refsControlsDisabled}
-                bulkMode={isBulk}
-              />
-              <ItemRefSelectField
-                id={idFor("taxType")}
-                refs={refs}
-                kind="taxType"
-                label="Tax Type"
-                value={form.itemTaxTypeId}
-                onChange={(value) => update("itemTaxTypeId", value)}
-                disabled={refsControlsDisabled}
-                bulkMode={isBulk}
-              />
             </>
           )}
 
@@ -229,15 +253,17 @@ export function PrimaryTabContent({
                   placeholder={isBulk ? "Leave unchanged…" : ""}
                 />
               </Field>
-              <Field id={idFor("comment")} label="Comment">
-                <Textarea
-                  id={idFor("comment")}
-                  value={form.comment}
-                  onChange={(event) => update("comment", event.target.value)}
-                  placeholder={isBulk ? "Leave unchanged…" : ""}
-                  className="min-h-24"
-                />
-              </Field>
+              <div className="col-span-full">
+                <Field id={idFor("comment")} label="Comment">
+                  <Textarea
+                    id={idFor("comment")}
+                    value={form.comment}
+                    onChange={(event) => update("comment", event.target.value)}
+                    placeholder={isBulk ? "Leave unchanged…" : ""}
+                    className="min-h-24"
+                  />
+                </Field>
+              </div>
             </>
           )}
         </div>

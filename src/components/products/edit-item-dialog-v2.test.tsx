@@ -1418,4 +1418,100 @@ describe("EditItemDialogV2", () => {
       screen.getByRole("button", { name: /Advanced\b.*flags/i }),
     ).toBeInTheDocument();
   });
+
+  it("shows a mixed-selection warning in bulk mode when Textbook + GM items are selected together", async () => {
+    await mockDirectoryState();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 42.5,
+            cost: 21.25,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: "GM item",
+          },
+          {
+            sku: 2002,
+            barcode: "9781234567890",
+            retail: 80,
+            cost: 40,
+            fDiscontinue: 0,
+            description: "Textbook item",
+            isTextbook: true,
+          },
+        ]}
+      />,
+    );
+
+    const warning = screen.getByRole("status");
+    expect(warning).toBeInTheDocument();
+    expect(warning.textContent ?? "").toMatch(/mixed selection/i);
+    expect(warning.textContent ?? "").toMatch(/textbook/i);
+  });
+
+  it("does not show the mixed-selection warning in a homogeneous bulk (all GM)", async () => {
+    await mockDirectoryState();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 42.5,
+            cost: 21.25,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: "First GM",
+          },
+          {
+            sku: 1002,
+            barcode: "9998887770001",
+            retail: 5.25,
+            cost: 2.1,
+            fDiscontinue: 0,
+            description: "Second GM",
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.queryByText(/mixed selection/i)).toBeNull();
+  });
+
+  it("shows a per-field 'labels unavailable' hint beneath each ref-backed select when refs are down", async () => {
+    await mockDirectoryState({
+      refs: null,
+      loading: false,
+      available: false,
+    });
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 42.5,
+            cost: 21.25,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+          },
+        ]}
+      />,
+    );
+
+    // Three ref-backed selects in the GM Primary: Vendor, Department/Class,
+    // Tax Type. Each should render the muted hint.
+    const hints = screen.getAllByText(/connect to Prism/i);
+    expect(hints.length).toBeGreaterThanOrEqual(3);
+  });
 });

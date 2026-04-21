@@ -29,7 +29,7 @@ export function MoreFields({
   refsControlsDisabled: boolean;
 }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       <ItemRefSelectField
         id={idFor("packageType")}
         refs={refs}
