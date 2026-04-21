@@ -23,12 +23,7 @@ import type { ProductEditDetails } from "@/domains/product/types";
 import { useProductRefDirectory } from "@/domains/product/vendor-directory";
 import type { EditItemDialogProps } from "../edit-item-dialog-legacy";
 import { SelectedItemsSummary } from "./components/selected-items-summary";
-import {
-  buildInventoryPatch,
-  buildLegacyBulkPatch,
-  buildV2Patch,
-  hasPatchFields,
-} from "./state/form-builders";
+import { buildInventoryPatch, buildV2Patch, hasPatchFields } from "./state/form-builders";
 import {
   syncInventoryField,
   toFormState,
@@ -298,32 +293,66 @@ export function EditItemDialogV2({
           },
         });
       } else {
-        // Bulk save goes through the server's transactional `productApi.batch`
-        // endpoint so the whole selection commits atomically. The previous
-        // `Promise.all` of per-item v2 PATCH requests risked half-committed
-        // selections when one item failed after others had already resolved
-        // (Codex adversarial review on PR #229).
+        // Bulk save: apply the v2 patch row-by-row, SEQUENTIALLY, stopping
+        // on first failure. Trade-offs vs. the alternatives:
         //
-        // V2's per-location inventory editor is hidden in bulk mode anyway,
-        // so we flatten the dirty fields into the legacy GmItemPatch /
-        // TextbookPatch shape the batch endpoint accepts. Item type is
-        // applied per row based on `items[i].isTextbook`.
-        const anyTextbook = items.some((item) => item.isTextbook === true);
-        const bulkPatch = buildLegacyBulkPatch(form, baselineForm, anyTextbook);
-        const result = await productApi.batch({
-          action: "update",
-          rows: items.map((item) => ({
-            sku: item.sku,
-            patch: bulkPatch,
-            isTextbook: item.isTextbook === true,
-          })),
-        });
-        if ("errors" in result && result.errors.length > 0) {
-          setError(
-            result.errors
-              .map((err) => `Row ${err.rowIndex + 1}: ${err.message}`)
-              .join("; "),
-          );
+        // - Parallel Promise.all (the pre-hotfix behavior) could leave a
+        //   scattershot partial commit: rows 1,3,5 succeed while 2,4 fail
+        //   and the user can't tell what actually landed.
+        // - `productApi.batch` is *not* transactional on the server
+        //   (`prism-batch.ts` loops with separate transactions) and the
+        //   batch endpoint explicitly punts optimistic-concurrency
+        //   checking to the single-item path. Routing bulk through batch
+        //   would lose 409 protection entirely.
+        //
+        // Sequential per-row v2 PATCH with a `baseline` on every call:
+        // - retains 409 optimistic-concurrency for every row;
+        // - stops the moment anything breaks, so at most ONE row can
+        //   "half-commit" (the one that failed mid-way), everything after
+        //   is never attempted;
+        // - reports back a crisp "saved N of M, failed at row R (SKU S)"
+        //   message plus calls `onSaved` with the list that actually
+        //   committed so the grid refreshes those rows deterministically.
+        //
+        // A transactional batch endpoint with baseline-aware row checks
+        // would be strictly better and is the right long-term fix; it is
+        // out of scope for this hotfix (live regression on main).
+        const savedSkus: number[] = [];
+        let failureMessage: string | null = null;
+        for (const item of items) {
+          try {
+            await productApi.update(item.sku, {
+              mode: "v2",
+              patch: v2Patch,
+              baseline: {
+                sku: item.sku,
+                barcode: item.barcode,
+                retail: item.retail,
+                cost: item.cost,
+                fDiscontinue: item.fDiscontinue,
+              },
+            });
+            savedSkus.push(item.sku);
+          } catch (err) {
+            const reason = err instanceof Error ? err.message : String(err);
+            const rowIndex = items.indexOf(item);
+            const remaining = items.length - savedSkus.length - 1;
+            failureMessage =
+              `Saved ${savedSkus.length} of ${items.length}. ` +
+              `Row ${rowIndex + 1} (SKU ${item.sku}) failed: ${reason}. ` +
+              `${remaining} row${remaining === 1 ? "" : "s"} not attempted.`;
+            break;
+          }
+        }
+
+        if (failureMessage != null) {
+          // Tell the parent about the rows that DID commit so it can
+          // refresh those grid cells; leave the dialog open with the
+          // failure summary so the operator can retry the remainder.
+          if (savedSkus.length > 0) {
+            onSaved?.(savedSkus);
+          }
+          setError(failureMessage);
           return;
         }
       }

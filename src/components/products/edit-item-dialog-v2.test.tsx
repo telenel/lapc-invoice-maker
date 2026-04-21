@@ -1069,16 +1069,14 @@ describe("EditItemDialogV2", () => {
     );
   });
 
-  it("routes multi-item edits through the transactional batch endpoint (not per-row PATCHes)", async () => {
-    // Bulk save must be atomic: a failure on one item can't leave earlier
-    // rows committed. Prior to the Phase 2 hotfix this path fired N
-    // parallel `productApi.update` PATCHes via Promise.all — partial
-    // commits on failure. Fix: call `productApi.batch({ action: 'update' })`
-    // once, server-side transaction covers the whole selection.
+  it("applies bulk edits sequentially per-row with v2 patch + baseline for 409 concurrency", async () => {
+    // Bulk save must (a) NOT lose 409 optimistic-concurrency protection and
+    // (b) minimize partial-commit damage on failure. Sequential per-row v2
+    // PATCH with stop-on-first-error: every row carries its own baseline,
+    // and any failure halts the remainder instead of scattershot-applying.
     await mockDirectoryState();
     productApiMocks.update.mockClear();
-    productApiMocks.batch.mockClear();
-    productApiMocks.batch.mockResolvedValue({ action: "update", count: 2, skus: [1001, 1002] });
+    productApiMocks.update.mockResolvedValue({ sku: 0, appliedFields: [] });
     const user = userEvent.setup();
 
     render(
@@ -1110,46 +1108,65 @@ describe("EditItemDialogV2", () => {
     await user.type(screen.getByLabelText("Order Increment"), "3");
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
-    // No per-row update calls; exactly one batch call with both SKUs.
-    expect(productApiMocks.update).not.toHaveBeenCalled();
-    expect(productApiMocks.batch).toHaveBeenCalledTimes(1);
-    expect(productApiMocks.batch).toHaveBeenCalledWith({
-      action: "update",
-      rows: [
-        expect.objectContaining({
+    expect(productApiMocks.update).toHaveBeenCalledTimes(2);
+    expect(productApiMocks.update).toHaveBeenNthCalledWith(
+      1,
+      1001,
+      expect.objectContaining({
+        mode: "v2",
+        patch: expect.objectContaining({
+          gm: expect.objectContaining({ orderIncrement: 3 }),
+        }),
+        baseline: expect.objectContaining({
           sku: 1001,
-          isTextbook: false,
-          patch: expect.objectContaining({ orderIncrement: 3 }),
+          barcode: "111222333444",
+          retail: 19.99,
+          cost: 9.5,
+          fDiscontinue: 0,
         }),
-        expect.objectContaining({
+      }),
+    );
+    expect(productApiMocks.update).toHaveBeenNthCalledWith(
+      2,
+      1002,
+      expect.objectContaining({
+        mode: "v2",
+        patch: expect.objectContaining({
+          gm: expect.objectContaining({ orderIncrement: 3 }),
+        }),
+        baseline: expect.objectContaining({
           sku: 1002,
-          isTextbook: false,
-          patch: expect.objectContaining({ orderIncrement: 3 }),
+          barcode: "555666777888",
+          retail: 29.99,
+          cost: 12.5,
+          fDiscontinue: 0,
         }),
-      ],
-    });
+      }),
+    );
   });
 
-  it("surfaces per-row errors from a failed bulk batch and keeps the dialog open", async () => {
+  it("stops on the first bulk-save failure, never attempts later rows, and reports partial progress", async () => {
+    // Core guarantee: if row 2 of 3 fails, row 3 must NEVER be called. This
+    // caps the blast radius to a single mid-flight row and gives the
+    // operator a precise "saved N of M" summary so they can retry.
     await mockDirectoryState();
     productApiMocks.update.mockClear();
-    productApiMocks.batch.mockClear();
-    productApiMocks.batch.mockResolvedValue({
-      errors: [
-        { rowIndex: 0, message: "Invalid vendor" },
-        { rowIndex: 1, message: "Barcode conflict" },
-      ],
-    });
+    productApiMocks.update
+      .mockResolvedValueOnce({ sku: 1001, appliedFields: [] })
+      .mockRejectedValueOnce(new Error("Invalid vendor"));
     const onOpenChange = vi.fn();
+    const onSaved = vi.fn();
     const user = userEvent.setup();
 
     render(
       <EditItemDialogV2
         open
         onOpenChange={onOpenChange}
+        onSaved={onSaved}
         items={[
           { sku: 1001, barcode: "a", retail: 1, cost: 1, fDiscontinue: 0, description: "A" },
           { sku: 1002, barcode: "b", retail: 2, cost: 2, fDiscontinue: 0, description: "B" },
+          { sku: 1003, barcode: "c", retail: 3, cost: 3, fDiscontinue: 0, description: "C" },
         ]}
       />,
     );
@@ -1158,12 +1175,57 @@ describe("EditItemDialogV2", () => {
     await user.type(screen.getByLabelText("Order Increment"), "5");
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
-    // Dialog stays open (onOpenChange(false) not called), error summary
-    // combines both rows' messages with a 1-based row prefix.
+    // Exactly TWO calls: row 1 (success) + row 2 (failure). Row 3 never
+    // reached, so stale data there cannot be overwritten.
+    expect(productApiMocks.update).toHaveBeenCalledTimes(2);
+    expect(productApiMocks.update).toHaveBeenNthCalledWith(1, 1001, expect.anything());
+    expect(productApiMocks.update).toHaveBeenNthCalledWith(2, 1002, expect.anything());
+
+    // Parent is told about the ONE sku that committed (1001) so the grid
+    // can refresh that row deterministically. Dialog stays open.
+    expect(onSaved).toHaveBeenCalledWith([1001]);
     expect(onOpenChange).not.toHaveBeenCalledWith(false);
+
     const error = await screen.findByRole("alert");
-    expect(error.textContent ?? "").toContain("Row 1: Invalid vendor");
-    expect(error.textContent ?? "").toContain("Row 2: Barcode conflict");
+    expect(error.textContent ?? "").toMatch(/Saved 1 of 3/);
+    expect(error.textContent ?? "").toMatch(/Row 2.*SKU 1002/);
+    expect(error.textContent ?? "").toMatch(/Invalid vendor/);
+    expect(error.textContent ?? "").toMatch(/1 row not attempted/);
+  });
+
+  it("propagates a 409 CONCURRENT_MODIFICATION error from the first failing bulk row", async () => {
+    // The per-row `baseline` must still trigger the 409 concurrency path on
+    // the server; the hotfix's sequential loop preserves that protection
+    // exactly where the prior `productApi.batch` switch would have lost it.
+    await mockDirectoryState();
+    productApiMocks.update.mockClear();
+    const concurrencyError = Object.assign(new Error("CONCURRENT_MODIFICATION"), {
+      code: "CONCURRENT_MODIFICATION",
+      current: { retail: 99 },
+    });
+    productApiMocks.update.mockRejectedValueOnce(concurrencyError);
+    const user = userEvent.setup();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          { sku: 1001, barcode: "a", retail: 1, cost: 1, fDiscontinue: 0, description: "A" },
+          { sku: 1002, barcode: "b", retail: 2, cost: 2, fDiscontinue: 0, description: "B" },
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /More\b/i }));
+    await user.type(screen.getByLabelText("Order Increment"), "7");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    // Single attempt, second row never touched.
+    expect(productApiMocks.update).toHaveBeenCalledTimes(1);
+    const error = await screen.findByRole("alert");
+    expect(error.textContent ?? "").toMatch(/CONCURRENT_MODIFICATION/);
+    expect(error.textContent ?? "").toMatch(/Saved 0 of 2/);
   });
 
   it("sends changed textbook fields through the v2 textbook bucket", async () => {
