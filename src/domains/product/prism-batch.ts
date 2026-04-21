@@ -97,6 +97,9 @@ export async function batchCreateGmItems(rows: BatchCreateRow[]): Promise<number
       const inventoryRows = input.inventory && input.inventory.length > 0
         ? input.inventory
         : [{ locationId: PIERCE_LOCATION_ID, retail: input.retail, cost: input.cost }];
+      const canonicalInventoryRows = inventoryRows.some((row) => row.locationId === PIERCE_LOCATION_ID)
+        ? inventoryRows
+        : [{ locationId: PIERCE_LOCATION_ID, retail: input.retail, cost: input.cost }, ...inventoryRows];
 
       const addReq = transaction.request();
       addReq.input("MfgId", sql.Int, input.vendorId);
@@ -122,7 +125,7 @@ export async function batchCreateGmItems(rows: BatchCreateRow[]): Promise<number
         throw new Error(`P_Item_Add_GM did not return a valid SKU for row "${input.description}"`);
       }
 
-      for (const inventoryRow of inventoryRows) {
+      for (const inventoryRow of canonicalInventoryRows) {
         await transaction.request()
           .input("sku", sql.Int, newSku)
           .input("loc", sql.Numeric(8, 0), inventoryRow.locationId)

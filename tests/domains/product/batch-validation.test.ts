@@ -71,6 +71,26 @@ describe("validateBatchCreateShape", () => {
     ]);
     expect(errors.map((e) => e.rowIndex).sort()).toEqual([1, 2]);
   });
+
+  it("requires the canonical PIER inventory row when inventory is provided", () => {
+    const errors = validateBatchCreateShape([
+      row({
+        inventory: [
+          { locationId: 3, retail: 10, cost: 5 },
+          { locationId: 4, retail: 10, cost: 5 },
+        ],
+      }),
+    ]);
+
+    expect(errors).toContainEqual(
+      expect.objectContaining({
+        rowIndex: 0,
+        field: "inventory",
+        code: "MISSING_REQUIRED",
+        message: "Inventory must include the canonical PIER row",
+      }),
+    );
+  });
 });
 
 describe("validateBatchUpdateShape", () => {

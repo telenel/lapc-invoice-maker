@@ -740,6 +740,74 @@ describe("product ref data helpers", () => {
     expect(screen.getByLabelText("PIER").getAttribute("aria-checked")).toBe("true");
   });
 
+  it("does not re-enter a reset loop when closed dialog props rerender with the same scope", async () => {
+    const { NewItemDialog } = await import("@/components/products/new-item-dialog");
+    const { useProductRefDirectory } = await import("@/domains/product/vendor-directory");
+
+    vi.mocked(useProductRefDirectory).mockReturnValue({
+      refs: {
+        vendors: [],
+        dccs: [],
+        taxTypes: [],
+        tagTypes: [],
+        statusCodes: [],
+        packageTypes: [],
+        colors: [],
+        bindings: [],
+      },
+      lookups: buildProductRefMaps({
+        vendors: [],
+        dccs: [],
+        taxTypes: [],
+        tagTypes: [],
+        statusCodes: [],
+        packageTypes: [],
+        colors: [],
+        bindings: [],
+      }),
+      vendors: [],
+      byId: new Map(),
+      loading: false,
+      available: true,
+    });
+
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    try {
+      const { rerender } = render(
+        React.createElement(NewItemDialog, {
+          open: false,
+          onOpenChange: () => {},
+          locationIds: [3, 4],
+          primaryLocationId: 3,
+        }),
+      );
+
+      rerender(
+        React.createElement(NewItemDialog, {
+          open: false,
+          onOpenChange: () => {},
+          locationIds: [3, 4],
+          primaryLocationId: 3,
+        }),
+      );
+      rerender(
+        React.createElement(NewItemDialog, {
+          open: false,
+          onOpenChange: () => {},
+          locationIds: [3, 4],
+          primaryLocationId: 3,
+        }),
+      );
+
+      expect(consoleErrorSpy).not.toHaveBeenCalledWith(
+        expect.stringContaining("Maximum update depth exceeded"),
+      );
+    } finally {
+      consoleErrorSpy.mockRestore();
+    }
+  });
+
   it("builds Pierce-wide live ref queries with usage-count semantics", async () => {
     const {
       listBindings,

@@ -64,6 +64,14 @@ export function validateBatchCreateShape(rows: BatchCreateRow[]): BatchValidatio
           errors.push({ rowIndex: i, field: "inventory", code: "NEGATIVE_COST", message: "Inventory cost must be ≥ 0" });
         }
       }
+      if (!seenLocations.has(2)) {
+        errors.push({
+          rowIndex: i,
+          field: "inventory",
+          code: "MISSING_REQUIRED",
+          message: "Inventory must include the canonical PIER row",
+        });
+      }
     }
   }
 

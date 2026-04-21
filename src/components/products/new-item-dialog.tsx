@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import {
   DatabaseIcon,
@@ -143,9 +143,19 @@ export function NewItemDialog({
   primaryLocationId,
 }: NewItemDialogProps) {
   const { refs, loading: refsLoading, available: refsAvailable } = useProductRefDirectory();
-  const resolvedLocationIds = normalizeProductLocationIds(locationIds);
-  const resolvedPrimaryLocationId = primaryLocationId ?? getPrimaryProductLocationId(resolvedLocationIds);
-  const scopedSelectedLocations = buildSelectedLocations(resolvedLocationIds);
+  const locationScopeKey = locationIds.join(",");
+  const resolvedLocationIds = useMemo(
+    () => normalizeProductLocationIds(locationIds),
+    [locationScopeKey],
+  );
+  const resolvedPrimaryLocationId = useMemo(
+    () => primaryLocationId ?? getPrimaryProductLocationId(resolvedLocationIds),
+    [primaryLocationId, resolvedLocationIds],
+  );
+  const scopedSelectedLocations = useMemo(
+    () => buildSelectedLocations(resolvedLocationIds),
+    [resolvedLocationIds],
+  );
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [expanded, setExpanded] = useState(false);
   const [selectedLocations, setSelectedLocations] = useState<Record<ProductLocationId, boolean>>(
