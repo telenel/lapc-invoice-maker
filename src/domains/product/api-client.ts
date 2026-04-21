@@ -286,17 +286,26 @@ export const productApi = {
     });
     if (res.status === 409) {
       const data = await res.json();
-      const err = new Error("CONCURRENT_MODIFICATION") as Error & {
-        code: string;
-        rowIndex?: number | null;
-        sku?: number | null;
-        current?: unknown;
-      };
-      err.code = "CONCURRENT_MODIFICATION";
-      err.rowIndex = data?.rowIndex ?? null;
-      err.sku = data?.sku ?? null;
-      err.current = data?.current ?? null;
-      throw err;
+      // Route layer emits 409 for two distinct cases:
+      //   action=update → { error: "CONCURRENT_MODIFICATION", rowIndex, sku, current }
+      //   action=hard-delete → { errors: [{ code: "HAS_HISTORY", ... }] }
+      // Discriminate so callers can distinguish concurrency conflicts from
+      // validation-style errors.
+      if (data?.error === "CONCURRENT_MODIFICATION") {
+        const err = new Error("CONCURRENT_MODIFICATION") as Error & {
+          code: string;
+          rowIndex?: number | null;
+          sku?: number | null;
+          current?: unknown;
+        };
+        err.code = "CONCURRENT_MODIFICATION";
+        err.rowIndex = data?.rowIndex ?? null;
+        err.sku = data?.sku ?? null;
+        err.current = data?.current ?? null;
+        throw err;
+      }
+      if (data?.errors) return { errors: data.errors };
+      throw new Error(data?.error ?? `HTTP 409`);
     }
     if (res.status === 400) {
       const data = await res.json();
