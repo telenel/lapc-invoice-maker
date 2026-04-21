@@ -272,14 +272,20 @@ export function EditItemDialogV2({
     try {
       if (items.length === 1) {
         const item = items[0];
-        // Concurrency baseline must match the row the Primary tab is
-        // actually editing. Previously this was hard-coded to
-        // locationId === 2 (PIER), so PCOP- or PFS-scoped pages would send
-        // a precondition against the wrong inventory row. Using
-        // `resolvedPrimaryLocationId` keeps the baseline aligned with the
-        // scope the dialog inherits from the products page.
-        const primaryInventoryBaseline = detail?.inventoryByLocation.find(
-          (entry) => entry.locationId === resolvedPrimaryLocationId,
+        // Concurrency baseline intentionally snapshots Pierce (locationId 2).
+        // The server's concurrency check in `prism-updates.ts` hard-codes
+        // `PIERCE_LOCATION_ID = 2` in its `SELECT inv.Retail, inv.Cost FROM
+        // Inventory WHERE LocationID = @loc` query, then compares those
+        // values against `baseline.retail` / `baseline.cost`. Sending a
+        // PCOP or PFS snapshot here would guarantee a false
+        // CONCURRENT_MODIFICATION 409 on non-PIER product pages.
+        //
+        // Making this truly primary-location-aware requires teaching the
+        // server's concurrency check to honor `resolvedPrimaryLocationId`
+        // too — tracked as a follow-up; keeping client + server aligned
+        // on PIER is the safe shipping choice.
+        const pierceInventoryBaseline = detail?.inventoryByLocation.find(
+          (entry) => entry.locationId === 2,
         );
         await productApi.update(item.sku, {
           mode: "v2",
@@ -287,8 +293,8 @@ export function EditItemDialogV2({
           baseline: {
             sku: item.sku,
             barcode: detail?.barcode ?? item.barcode,
-            retail: primaryInventoryBaseline?.retail ?? item.retail,
-            cost: primaryInventoryBaseline?.cost ?? item.cost,
+            retail: pierceInventoryBaseline?.retail ?? item.retail,
+            cost: pierceInventoryBaseline?.cost ?? item.cost,
             fDiscontinue: item.fDiscontinue,
           },
         });
@@ -346,12 +352,16 @@ export function EditItemDialogV2({
         }
 
         if (failureMessage != null) {
-          // Tell the parent about the rows that DID commit so it can
-          // refresh those grid cells; leave the dialog open with the
-          // failure summary so the operator can retry the remainder.
-          if (savedSkus.length > 0) {
-            onSaved?.(savedSkus);
-          }
+          // Do NOT call `onSaved` on partial failure. Callers (see
+          // `src/app/products/page.tsx`) wire `onSaved` to
+          // `setEditOpen(false) + refetch()`, so invoking it here would
+          // dismiss the dialog and erase the error context before the
+          // operator can read it. Leaving the dialog open with the
+          // summary preserves retry context; the grid refetches on the
+          // next natural interaction (close/reopen or an explicit
+          // refresh). If the grid needs to refresh the committed rows
+          // specifically, add an `onPartialSaved` callback — tracked as
+          // a follow-up.
           setError(failureMessage);
           return;
         }

@@ -6,19 +6,19 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-function Accordion({
-  className,
-  keepMounted = true,
-  ...props
-}: AccordionPrimitive.Root.Props) {
+function Accordion({ className, ...props }: AccordionPrimitive.Root.Props) {
+  // Deliberately leaves `keepMounted` at Base UI's default (false). That
+  // unmounts collapsed panel subtrees, removing their focusable inputs
+  // from the tab order and the accessibility tree — important here
+  // because the More / Advanced panels contain many form inputs that
+  // would otherwise stay keyboard-reachable when visually closed.
+  //
+  // Callers that need content persistence across open/close can opt in
+  // explicitly via `<Accordion keepMounted>` — the primary edit dialog
+  // does not need this because form state lifts to the parent.
   return (
     <AccordionPrimitive.Root
       data-slot="accordion"
-      // Default to keepMounted so panel subtrees stay in the DOM (hidden
-      // via data-closed) when collapsed. This preserves any inner form
-      // state, keeps the content in-page search / screen-reader indexes,
-      // and makes the height transition testable without flakiness.
-      keepMounted={keepMounted}
       className={cn("flex w-full flex-col", className)}
       {...props}
     />

@@ -912,11 +912,13 @@ describe("EditItemDialogV2", () => {
 
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
-    // Concurrency baseline must reflect the primary location the dialog was
-    // opened against (PCOP = locationId 3 here), NOT always PIER. Prior to
-    // the Phase 2 regression fix this test pinned the buggy PIER-only
-    // behavior; keeping the assertion aligned with `primaryLocationId={3}`
-    // is the point of the fix.
+    // Concurrency baseline sends the PIER snapshot (retail 39.99, cost
+    // 19.5) even though the dialog was opened with `primaryLocationId={3}`
+    // (PCOP). This matches the server's concurrency check in
+    // `prism-updates.ts`, which hard-codes `PIERCE_LOCATION_ID = 2` in its
+    // SELECT, so sending a PCOP baseline would produce false 409s.
+    // Aligning both sides on a primary-location-aware baseline requires
+    // a coordinated server + client change — tracked as a follow-up.
     expect(productApiMocks.update).toHaveBeenCalledWith(
       1001,
       expect.objectContaining({
@@ -924,8 +926,8 @@ describe("EditItemDialogV2", () => {
         baseline: {
           sku: 1001,
           barcode: baseDetail.barcode,
-          retail: 42.5,
-          cost: 21.25,
+          retail: 39.99,
+          cost: 19.5,
           fDiscontinue: baseDetail.fDiscontinue,
         },
         patch: {
@@ -1181,9 +1183,12 @@ describe("EditItemDialogV2", () => {
     expect(productApiMocks.update).toHaveBeenNthCalledWith(1, 1001, expect.anything());
     expect(productApiMocks.update).toHaveBeenNthCalledWith(2, 1002, expect.anything());
 
-    // Parent is told about the ONE sku that committed (1001) so the grid
-    // can refresh that row deterministically. Dialog stays open.
-    expect(onSaved).toHaveBeenCalledWith([1001]);
+    // `onSaved` must NOT fire on partial failure. The products page wires
+    // `onSaved` to `setEditOpen(false) + refetch()`, so invoking it here
+    // would dismiss the dialog and hide the error summary before the
+    // operator sees it. A dedicated `onPartialSaved` callback is tracked
+    // as a follow-up; for now we keep the dialog open with the summary.
+    expect(onSaved).not.toHaveBeenCalled();
     expect(onOpenChange).not.toHaveBeenCalledWith(false);
 
     const error = await screen.findByRole("alert");

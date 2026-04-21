@@ -20,8 +20,13 @@ import {
  */
 describe("Accordion", () => {
   function renderFixture() {
+    // `keepMounted` is opt-in at call sites that need collapsed content to
+    // remain in the DOM — these assertions query the panel directly, so we
+    // mount persistently here to make the test deterministic. Real product
+    // callers (edit dialog) keep Base UI's default unmount-on-close so
+    // collapsed form inputs don't leak into keyboard nav or screen readers.
     render(
-      <Accordion>
+      <Accordion keepMounted>
         <AccordionItem value="alpha">
           <AccordionTrigger>Alpha trigger</AccordionTrigger>
           <AccordionContent>
