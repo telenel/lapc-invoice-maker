@@ -55,6 +55,13 @@ export function AnalyticsDashboard({
   const hasOperations = Boolean(data && (data as Partial<AnalyticsResponse>).operations);
 
   useEffect(() => {
+    if (dateFrom && dateTo && dateFrom > dateTo) {
+      setData(null);
+      setLoading(false);
+      setError("dateFrom must be less than or equal to dateTo");
+      return;
+    }
+
     if (skippedInitialFetchRef.current && currentRangeKey === initialRangeKey) {
       skippedInitialFetchRef.current = false;
       return;

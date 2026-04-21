@@ -49,14 +49,8 @@ export function MonthlySalesPatternsChart({
             if (name === "units") {
               return [Number(value).toLocaleString("en-US"), "Units"];
             }
-            if (name === "receipts") {
-              return [Number(value).toLocaleString("en-US"), "Receipts"];
-            }
-            if (name === "discountRate") {
-              return [`${Math.round(Number(value) * 100)}%`, "Discount rate"];
-            }
 
-            return [value, item?.name ?? ""];
+            return [value, item?.name ?? name];
           }}
         />
         <Bar yAxisId="revenue" dataKey="revenue" fill="#0f766e" radius={[6, 6, 0, 0]} />
