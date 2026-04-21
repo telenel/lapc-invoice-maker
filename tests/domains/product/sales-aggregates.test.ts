@@ -25,17 +25,54 @@ describe("sales-aggregates", () => {
     expect(buildAggregateRecomputeSql()).toContain("dtl_f_status <> 1");
   });
 
-  it("runAggregateRecompute returns affected SKU count from RPC result", async () => {
-    const rpc = vi.fn().mockResolvedValue({ data: 10659, error: null });
-    const client = { rpc } as unknown as Parameters<typeof runAggregateRecompute>[0];
-    const result = await runAggregateRecompute(client);
-    expect(result).toBe(10659);
-    expect(rpc).toHaveBeenCalledWith("recompute_product_sales_aggregates");
+  it("buildAggregateRecomputeSql scopes the update to a SKU batch", () => {
+    expect(buildAggregateRecomputeSql()).toContain("sku = ANY($1::bigint[])");
+    expect(buildAggregateRecomputeSql()).toContain("SELECT COUNT(*)::int AS affected FROM updated");
   });
 
-  it("runAggregateRecompute throws on RPC error", async () => {
-    const rpc = vi.fn().mockResolvedValue({ data: null, error: { message: "boom" } });
-    const client = { rpc } as unknown as Parameters<typeof runAggregateRecompute>[0];
-    await expect(runAggregateRecompute(client)).rejects.toThrow(/boom/);
+  it("runAggregateRecompute walks sale-active SKU batches and totals the affected rows", async () => {
+    const query = vi.fn()
+      .mockResolvedValueOnce({ rows: [{ sku: "10" }, { sku: "12" }] })
+      .mockResolvedValueOnce({ rows: [{ affected: 2 }] })
+      .mockResolvedValueOnce({ rows: [{ sku: "30" }] })
+      .mockResolvedValueOnce({ rows: [{ affected: 1 }] })
+      .mockResolvedValueOnce({ rows: [] });
+
+    const result = await runAggregateRecompute({
+      db: { query },
+      batchSize: 2,
+    });
+
+    expect(result).toBe(3);
+    expect(query).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining("SELECT sku"),
+      [0, 2],
+    );
+    expect(query).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining("sku = ANY($1::bigint[])"),
+      [["10", "12"]],
+    );
+    expect(query).toHaveBeenNthCalledWith(
+      3,
+      expect.stringContaining("SELECT sku"),
+      ["12", 2],
+    );
+    expect(query).toHaveBeenNthCalledWith(
+      4,
+      expect.stringContaining("sku = ANY($1::bigint[])"),
+      [["30"]],
+    );
+  });
+
+  it("runAggregateRecompute throws when a batch query fails", async () => {
+    const query = vi.fn().mockRejectedValue(new Error("boom"));
+
+    await expect(
+      runAggregateRecompute({
+        db: { query },
+      }),
+    ).rejects.toThrow(/boom/);
   });
 });
