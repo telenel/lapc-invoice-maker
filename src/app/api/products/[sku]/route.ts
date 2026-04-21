@@ -14,6 +14,10 @@ import type {
 } from "@/domains/product/types";
 import type { ProductLocationId } from "@/domains/product/location-filters";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import {
+  buildInventoryMirrorPayloadFromPatch,
+  buildProductMirrorPayload,
+} from "@/domains/product/mirror-payloads";
 
 export const dynamic = "force-dynamic";
 
@@ -703,89 +707,23 @@ function buildLegacyMirrorPayload(
   snapshot: ItemSnapshot | null,
   includeTextbookFields: boolean,
 ): Record<string, unknown> {
-  const payload: Record<string, unknown> = {
-    sku,
-    synced_at: new Date().toISOString(),
-  };
-
-  if (patch.gm?.description !== undefined) payload.description = patch.gm.description;
-  if (patch.item?.vendorId !== undefined) payload.vendor_id = patch.item.vendorId;
-  if (patch.item?.dccId !== undefined) payload.dcc_id = patch.item.dccId;
-  if (patch.item?.itemTaxTypeId !== undefined) payload.item_tax_type_id = patch.item.itemTaxTypeId;
-  if (patch.gm?.catalogNumber !== undefined) payload.catalog_number = patch.gm.catalogNumber;
-  if (patch.item?.comment !== undefined) payload.tx_comment = patch.item.comment;
-  if (patch.item?.weight !== undefined) payload.weight = patch.item.weight;
-  if (patch.item?.usedDccId !== undefined) payload.used_dcc_id = patch.item.usedDccId;
-  if (patch.item?.styleId !== undefined) payload.style_id = patch.item.styleId;
-  if (patch.item?.itemSeasonCodeId !== undefined) payload.item_season_code_id = patch.item.itemSeasonCodeId;
-  if (patch.item?.fListPriceFlag !== undefined) payload.f_list_price_flag = patch.item.fListPriceFlag;
-  if (patch.item?.fPerishable !== undefined) payload.f_perishable = patch.item.fPerishable;
-  if (patch.item?.fIdRequired !== undefined) payload.f_id_required = patch.item.fIdRequired;
-  if (patch.item?.minOrderQtyItem !== undefined) payload.min_order_qty_item = patch.item.minOrderQtyItem;
-  if (patch.gm?.imageUrl !== undefined) payload.image_url = patch.gm.imageUrl;
-  if (patch.gm?.unitsPerPack !== undefined) payload.units_per_pack = patch.gm.unitsPerPack;
-  if (patch.gm?.packageType !== undefined) payload.package_type = patch.gm.packageType;
-  if (patch.gm?.altVendorId !== undefined) payload.alt_vendor_id = patch.gm.altVendorId;
-  if (patch.gm?.mfgId !== undefined) payload.mfg_id = patch.gm.mfgId;
-  if (patch.gm?.size !== undefined) payload.size = patch.gm.size;
-  if (patch.gm?.colorId !== undefined) payload.color_id = patch.gm.colorId;
-  if (patch.gm?.orderIncrement !== undefined) payload.order_increment = patch.gm.orderIncrement;
-  if (includeTextbookFields) {
-    if (patch.textbook?.author !== undefined) payload.author = patch.textbook.author;
-    if (patch.textbook?.title !== undefined) payload.title = patch.textbook.title;
-    if (patch.textbook?.isbn !== undefined) payload.isbn = patch.textbook.isbn;
-    if (patch.textbook?.edition !== undefined) payload.edition = patch.textbook.edition;
-    if (patch.textbook?.bindingId !== undefined) payload.binding_id = patch.textbook.bindingId;
-    if (patch.textbook?.imprint !== undefined) payload.imprint = patch.textbook.imprint;
-    if (patch.textbook?.copyright !== undefined) payload.copyright = patch.textbook.copyright;
-    if (patch.textbook?.textStatusId !== undefined) payload.text_status_id = patch.textbook.textStatusId;
-    if (patch.textbook?.statusDate !== undefined) payload.status_date = patch.textbook.statusDate;
-  }
-
-  if (snapshot) {
-    payload.barcode = snapshot.barcode;
-    payload.retail_price = snapshot.retail;
-    payload.cost = snapshot.cost;
-    payload.discontinued = snapshot.fDiscontinue === 1;
-  } else {
-    if (patch.item?.barcode !== undefined) payload.barcode = patch.item.barcode;
-    const pierceInventoryPatch = patch.inventory?.find((entry) => entry.locationId === 2) ?? patch.primaryInventory;
-    if (pierceInventoryPatch?.retail !== undefined) payload.retail_price = pierceInventoryPatch.retail;
-    if (pierceInventoryPatch?.cost !== undefined) payload.cost = pierceInventoryPatch.cost;
-    if (patch.item?.fDiscontinue !== undefined) payload.discontinued = patch.item.fDiscontinue === 1;
-  }
-
-  return payload;
+  return buildProductMirrorPayload(sku, patch, snapshot, includeTextbookFields);
 }
 
 function buildInventoryMirrorPayload(
   sku: number,
-  inventory: ReadonlyArray<InventoryPatchPerLocation> | undefined,
+  patch: ProductEditPatchV2,
 ): Record<string, unknown>[] {
-  const syncedAt = new Date().toISOString();
+  return buildInventoryMirrorPayloadFromPatch(sku, patch);
+}
 
-  return (inventory ?? []).map((entry) => {
-    const payload: Record<string, unknown> = {
-      sku,
-      location_id: entry.locationId,
-      location_abbrev: PRODUCT_INVENTORY_LOCATION_ABBREV_BY_ID[entry.locationId],
-      synced_at: syncedAt,
-    };
-
-    if (entry.retail !== undefined) payload.retail_price = entry.retail;
-    if (entry.cost !== undefined) payload.cost = entry.cost;
-    if (entry.expectedCost !== undefined) payload.expected_cost = entry.expectedCost;
-    if (entry.tagTypeId !== undefined) payload.tag_type_id = entry.tagTypeId;
-    if (entry.statusCodeId !== undefined) payload.status_code_id = entry.statusCodeId;
-    if (entry.estSales !== undefined) payload.est_sales = entry.estSales;
-    if (entry.estSalesLocked !== undefined) payload.est_sales_locked = entry.estSalesLocked;
-    if (entry.fInvListPriceFlag !== undefined) payload.f_inv_list_price_flag = entry.fInvListPriceFlag;
-    if (entry.fTxWantListFlag !== undefined) payload.f_tx_want_list_flag = entry.fTxWantListFlag;
-    if (entry.fTxBuybackListFlag !== undefined) payload.f_tx_buyback_list_flag = entry.fTxBuybackListFlag;
-    if (entry.fNoReturns !== undefined) payload.f_no_returns = entry.fNoReturns;
-
-    return payload;
-  });
+function getSupabaseMirrorError(
+  result: { error?: { message?: string | null } | null } | null | undefined,
+  fallback: string,
+): Error | null {
+  const message = result?.error?.message;
+  if (!result?.error) return null;
+  return new Error(typeof message === "string" && message.length > 0 ? message : fallback);
 }
 
 export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: RouteCtx) => {
@@ -840,13 +778,25 @@ export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: Rout
 
     // Non-blocking Supabase mirror
     try {
-      const snap = await getItemSnapshot(sku);
-      await supabase.from("products").upsert(
+      // `products` keeps the PIER-denormalized fallback row; location-specific
+      // pricing lives in `product_inventory`.
+      const snap = await getItemSnapshot(sku, 2);
+      const productMirrorResult = await supabase.from("products").upsert(
         buildLegacyMirrorPayload(sku, normalized.data.patch, snap, isTextbookRow),
       );
-      const inventoryMirrorPayload = buildInventoryMirrorPayload(sku, normalized.data.patch.inventory);
+      const productMirrorError = getSupabaseMirrorError(
+        productMirrorResult,
+        `Failed to mirror products row for SKU ${sku}`,
+      );
+      if (productMirrorError) throw productMirrorError;
+      const inventoryMirrorPayload = buildInventoryMirrorPayload(sku, normalized.data.patch);
       if (inventoryMirrorPayload.length > 0) {
-        await supabase.from("product_inventory").upsert(inventoryMirrorPayload);
+        const inventoryMirrorResult = await supabase.from("product_inventory").upsert(inventoryMirrorPayload);
+        const inventoryMirrorError = getSupabaseMirrorError(
+          inventoryMirrorResult,
+          `Failed to mirror product_inventory rows for SKU ${sku}`,
+        );
+        if (inventoryMirrorError) throw inventoryMirrorError;
       }
     } catch (mirrorErr) {
       console.warn(`[PATCH /api/products/${sku}] mirror failed:`, mirrorErr);

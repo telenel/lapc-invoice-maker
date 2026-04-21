@@ -187,6 +187,7 @@ export interface SelectedProduct {
   description: string;
   retailPrice: number | null;
   cost: number | null;
+  pricingLocationId?: ProductLocationId | null;
   barcode: string | null;
   author: string | null;
   title: string | null;
@@ -196,6 +197,7 @@ export interface SelectedProduct {
   vendorId: number | null;
   vendorLabel?: string | null;
   itemType: string;
+  fDiscontinue?: 0 | 1;
 }
 
 /** Fields editable on a GM item. Every field is optional — only present fields are applied. */

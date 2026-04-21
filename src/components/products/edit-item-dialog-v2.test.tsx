@@ -1,7 +1,7 @@
 import "@testing-library/jest-dom/vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ProductEditDetails } from "@/domains/product/types";
 import { EditItemDialogV2 } from "./edit-item-dialog-v2";
 
@@ -10,8 +10,16 @@ const productApiMocks = vi.hoisted(() => ({
   batch: vi.fn(),
 }));
 
+const toastMocks = vi.hoisted(() => ({
+  error: vi.fn(),
+}));
+
 vi.mock("@/domains/product/api-client", () => ({
   productApi: productApiMocks,
+}));
+
+vi.mock("sonner", () => ({
+  toast: toastMocks,
 }));
 
 vi.mock("@/domains/product/vendor-directory", () => ({
@@ -172,6 +180,12 @@ async function mockDirectoryState(overrides: Partial<ReturnType<typeof import("@
 }
 
 describe("EditItemDialogV2", () => {
+  beforeEach(() => {
+    productApiMocks.update.mockReset();
+    productApiMocks.batch.mockReset();
+    toastMocks.error.mockReset();
+  });
+
   it("renders the phase 4 GM tabs with label-backed selects and no textbook-only fields", async () => {
     await mockDirectoryState();
 
@@ -1186,6 +1200,42 @@ describe("EditItemDialogV2", () => {
       expect(onOpenChange).not.toHaveBeenCalledWith(false);
       // Save button re-enables as soon as the save promise settles
       expect(screen.getByRole("button", { name: /save/i })).not.toBeDisabled();
+
+      batch.mockRestore();
+    });
+
+    it("surfaces batch mirror drift as a toast while still closing after Prism save", async () => {
+      const batch = vi.spyOn(productApiMocks, "batch").mockResolvedValue({
+        action: "update",
+        count: 2,
+        skus: [101, 102],
+        mirrorErrors: [{ sku: 101, message: "snapshot failed" }],
+      });
+      const onSaved = vi.fn();
+      const onOpenChange = vi.fn();
+      await mockDirectoryState();
+      render(
+        <EditItemDialogV2
+          open
+          onOpenChange={onOpenChange}
+          items={[
+            { sku: 101, barcode: "AAA", retail: 10, cost: 5, fDiscontinue: 0, isTextbook: false, primaryLocationId: 3 },
+            { sku: 102, barcode: "BBB", retail: 20, cost: 8, fDiscontinue: 0, isTextbook: false, primaryLocationId: 3 },
+          ]}
+          primaryLocationId={3}
+          onSaved={onSaved}
+        />,
+      );
+
+      await userEvent.type(screen.getByLabelText(/catalog #/i), "CAT-X");
+      await userEvent.click(screen.getByRole("button", { name: /save/i }));
+
+      await waitFor(() => expect(batch).toHaveBeenCalledTimes(1));
+      expect(onSaved).toHaveBeenCalledWith([101, 102]);
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+      expect(toastMocks.error).toHaveBeenCalledWith(
+        "Saved in Prism, but the product mirror did not refresh for SKU 101. Browse data may stay stale until the next sync.",
+      );
 
       batch.mockRestore();
     });

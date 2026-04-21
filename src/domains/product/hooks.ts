@@ -55,6 +55,7 @@ function productToSelected(product: ProductBrowseRow): SelectedProduct {
     description: (product.title ?? product.description ?? "").toUpperCase(),
     retailPrice: product.retail_price,
     cost: product.cost,
+    pricingLocationId: product.primary_location_id ?? 2,
     barcode: product.barcode,
     author: product.author,
     title: product.title,
@@ -63,6 +64,7 @@ function productToSelected(product: ProductBrowseRow): SelectedProduct {
     catalogNumber: product.catalog_number,
     vendorId: product.vendor_id,
     itemType: product.item_type,
+    fDiscontinue: product.discontinued ? 1 : 0,
   };
 }
 

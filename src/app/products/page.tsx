@@ -58,6 +58,7 @@ function productToScopedSelected(product: ProductBrowseRow): SelectedProduct {
     description: (product.title ?? product.description ?? "").toUpperCase(),
     retailPrice: product.retail_price,
     cost: product.cost,
+    pricingLocationId: product.primary_location_id ?? 2,
     barcode: product.barcode,
     author: product.author,
     title: product.title,
@@ -66,7 +67,27 @@ function productToScopedSelected(product: ProductBrowseRow): SelectedProduct {
     catalogNumber: product.catalog_number,
     vendorId: product.vendor_id,
     itemType: product.item_type,
+    fDiscontinue: product.discontinued ? 1 : 0,
   };
+}
+
+function selectedProductsEqual(left: SelectedProduct, right: SelectedProduct): boolean {
+  return (
+    left.sku === right.sku &&
+    left.description === right.description &&
+    left.retailPrice === right.retailPrice &&
+    left.cost === right.cost &&
+    left.pricingLocationId === right.pricingLocationId &&
+    left.barcode === right.barcode &&
+    left.author === right.author &&
+    left.title === right.title &&
+    left.isbn === right.isbn &&
+    left.edition === right.edition &&
+    left.catalogNumber === right.catalogNumber &&
+    left.vendorId === right.vendorId &&
+    left.itemType === right.itemType &&
+    left.fDiscontinue === right.fDiscontinue
+  );
 }
 
 function buildInlineEditRows(
@@ -206,6 +227,10 @@ export default function ProductsPage() {
     clear,
     isSelected,
   } = useProductSelection();
+  const primaryLocationId = getPrimaryProductLocationId(filters.locationIds);
+  const [scopedSelectionCache, setScopedSelectionCache] = useState<Map<string, SelectedProduct>>(
+    () => new Map(),
+  );
   const scopedSelected = useMemo(() => {
     const scopedRowsBySku = new Map((data?.products ?? []).map((product) => [product.sku, product]));
     return new Map(
@@ -214,8 +239,27 @@ export default function ProductsPage() {
         return [sku, scopedRow ? productToScopedSelected(scopedRow) : product];
       }),
     );
-  }, [data?.products, selected]);
+  }, [data?.products, primaryLocationId, selected]);
   const selectedItems = Array.from(scopedSelected.values());
+  useEffect(() => {
+    const visibleSelectedRows = (data?.products ?? []).filter((product) => selected.has(product.sku));
+    if (visibleSelectedRows.length === 0) return;
+
+    setScopedSelectionCache((current) => {
+      let changed = false;
+      const next = new Map(current);
+      for (const product of visibleSelectedRows) {
+        const scopedSelection = productToScopedSelected(product);
+        const cacheKey = `${product.sku}:${scopedSelection.pricingLocationId ?? primaryLocationId}`;
+        const cachedSelection = next.get(cacheKey);
+        if (!cachedSelection || !selectedProductsEqual(cachedSelection, scopedSelection)) {
+          next.set(cacheKey, scopedSelection);
+          changed = true;
+        }
+      }
+      return changed ? next : current;
+    });
+  }, [data?.products, primaryLocationId, selected]);
   const editDialogMode = resolveEditDialogMode({
     featureFlagEnabled: process.env.NEXT_PUBLIC_PRODUCTS_EDIT_DIALOG_V2 === "true",
     override: editDialogOverride ?? null,
@@ -226,16 +270,14 @@ export default function ProductsPage() {
   const saveScopedSelectionToSession = useCallback(() => {
     sessionStorage.setItem(CATALOG_ITEMS_STORAGE_KEY, JSON.stringify(selectedItems));
   }, [selectedItems]);
-  const primaryLocationId = getPrimaryProductLocationId(filters.locationIds);
-  // Look up each selection's browse row so we can source baseline retail/cost
-  // from the primary-location slice directly. The server's concurrency SELECT
-  // does `LEFT JOIN Inventory ON LocationID = @loc` and reads `inv.Retail` /
-  // `inv.Cost` — which is NULL when no Inventory row exists at that location.
-  // If we sent the browse row's item-level `retail_price` fallback here, the
-  // client baseline would be 39.99 while the server reads NULL → false 409
-  // on any item that has no Inventory row at the scoped primary location.
-  // Mirror the server read exactly: slice value (which may itself be null) or
-  // null. No item-level fallback for baseline purposes.
+  // Keep the persisted selection snapshot intact for invoice/quote handoff and
+  // barcode printing, but derive a location-scoped copy for edit baselines.
+  // The server's concurrency SELECT does `LEFT JOIN Inventory ON LocationID =
+  // @loc` and reads `inv.Retail` / `inv.Cost`, which is NULL when no Inventory
+  // row exists at that location. If we reused an off-page selection's stale
+  // persisted price for edit baselines, the client could send 39.99 while the
+  // server reads NULL and trigger a false 409. So edits only reuse persisted
+  // pricing when the stored selection was captured from the same location scope.
   const browseRowsBySku = new Map((data?.products ?? []).map((p) => [p.sku, p] as const));
   const editableSelectedItems = selectedItems
     .map((product) => {
@@ -243,17 +285,35 @@ export default function ProductsPage() {
       const primarySlice = browseRow?.selected_inventories?.find(
         (inv) => inv.locationId === primaryLocationId,
       );
+      const cachedScopedSelection = scopedSelectionCache.get(`${product.sku}:${primaryLocationId}`);
+      const persistedScopedSelection =
+        cachedScopedSelection ??
+        (
+          !browseRow &&
+          product.pricingLocationId != null &&
+          product.pricingLocationId === primaryLocationId
+            ? product
+            : null
+        );
+      const scopedDescriptor = browseRow ? productToScopedSelected(browseRow) : persistedScopedSelection;
       return {
         sku: product.sku,
-        barcode: product.barcode ?? null,
-        retail: primarySlice?.retailPrice ?? null,
-        cost: primarySlice?.cost ?? null,
-        fDiscontinue: 0 as 0 | 1,
-        description: product.description ?? "",
-        vendorId: product.vendorId ?? undefined,
+        barcode: scopedDescriptor?.barcode ?? null,
+        retail: browseRow
+          ? (primarySlice?.retailPrice ?? null)
+          : (persistedScopedSelection?.retailPrice ?? null),
+        cost: browseRow
+          ? (primarySlice?.cost ?? null)
+          : (persistedScopedSelection?.cost ?? null),
+        fDiscontinue: browseRow
+          ? (browseRow.discontinued ? 1 : 0)
+          : (persistedScopedSelection?.fDiscontinue ?? 0),
+        description: scopedDescriptor?.description ?? product.description ?? "",
+        vendorId: scopedDescriptor?.vendorId ?? undefined,
         dccId: undefined,
-        isTextbook: isTextbookItemType(product.itemType),
+        isTextbook: isTextbookItemType(scopedDescriptor?.itemType ?? product.itemType),
         primaryLocationId,
+        catalogNumber: scopedDescriptor?.catalogNumber ?? null,
       };
     });
 
@@ -445,6 +505,21 @@ export default function ProductsPage() {
         items={editableSelectedItems}
         locationIds={filters.locationIds}
         primaryLocationId={primaryLocationId}
+        onSavedScopedItems={(savedItems) => {
+          setScopedSelectionCache((current) => {
+            let changed = false;
+            const next = new Map(current);
+            for (const item of savedItems) {
+              const cacheKey = `${item.sku}:${item.pricingLocationId ?? primaryLocationId}`;
+              const cachedItem = next.get(cacheKey);
+              if (!cachedItem || !selectedProductsEqual(cachedItem, item)) {
+                next.set(cacheKey, item);
+                changed = true;
+              }
+            }
+            return changed ? next : current;
+          });
+        }}
         onSaved={() => {
           setEditOpen(false);
           refetch();

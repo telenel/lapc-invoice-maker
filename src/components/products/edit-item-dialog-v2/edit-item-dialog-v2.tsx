@@ -13,13 +13,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { productApi } from "@/domains/product/api-client";
+import { toast } from "sonner";
 import {
   DEFAULT_PRODUCT_LOCATION_IDS,
   getPrimaryProductLocationId,
   normalizeProductLocationIds,
   type ProductLocationId,
 } from "@/domains/product/location-filters";
-import type { ProductEditDetails, ProductEditPatchV2 } from "@/domains/product/types";
+import type { ProductEditDetails, ProductEditPatchV2, SelectedProduct } from "@/domains/product/types";
 import { useProductRefDirectory } from "@/domains/product/vendor-directory";
 import type { EditItemDialogProps } from "../edit-item-dialog-legacy";
 import { SelectedItemsSummary } from "./components/selected-items-summary";
@@ -67,6 +68,7 @@ export function EditItemDialogV2({
   onOpenChange,
   items,
   onSaved,
+  onSavedScopedItems,
   detail = null,
   detailLoading = false,
   locationIds = [...DEFAULT_PRODUCT_LOCATION_IDS],
@@ -267,7 +269,9 @@ export function EditItemDialogV2({
     });
   }
 
-  async function saveBulk(v2Patch: ProductEditPatchV2): Promise<string | null> {
+  async function saveBulk(
+    v2Patch: ProductEditPatchV2,
+  ): Promise<{ validationError: string | null; mirrorWarning: string | null }> {
     // Atomic bulk save: ONE server call wraps all rows in one Prism
     // transaction. Zero partial-commit hazard — either every row commits
     // or none do. Any failure throws; caller's catch surfaces the error
@@ -289,9 +293,18 @@ export function EditItemDialogV2({
       })),
     });
     if ("errors" in result && result.errors.length > 0) {
-      return `Validation failed: ${result.errors.map((e) => `${e.field}: ${e.message}`).join("; ")}`;
+      return {
+        validationError: `Validation failed: ${result.errors.map((e) => `${e.field}: ${e.message}`).join("; ")}`,
+        mirrorWarning: null,
+      };
     }
-    return null;
+    return {
+      validationError: null,
+      mirrorWarning:
+        "mirrorErrors" in result && (result.mirrorErrors?.length ?? 0) > 0
+          ? `Saved in Prism, but the product mirror did not refresh for SKU ${result.mirrorErrors!.map((entry) => entry.sku).join(", ")}. Browse data may stay stale until the next sync.`
+          : null,
+    };
   }
 
   function formatSaveError(err: unknown): string {
@@ -322,6 +335,62 @@ export function EditItemDialogV2({
       );
     }
     return err instanceof Error ? err.message : String(err);
+  }
+
+  function buildSavedScopedItems(v2Patch: ProductEditPatchV2): SelectedProduct[] {
+    const primaryLocationPatch = v2Patch.inventory?.find(
+      (entry) => entry.locationId === resolvedPrimaryLocationId,
+    );
+    const itemPatch = v2Patch.item;
+    const gmPatch = v2Patch.gm;
+    const textbookPatch = v2Patch.textbook;
+
+    return items.map((item) => ({
+      sku: item.sku,
+      description: gmPatch?.description ?? item.description ?? "",
+      retailPrice:
+        primaryLocationPatch?.retail !== undefined
+          ? (primaryLocationPatch.retail ?? null)
+          : (item.retail ?? null),
+      cost:
+        primaryLocationPatch?.cost !== undefined
+          ? (primaryLocationPatch.cost ?? null)
+          : (item.cost ?? null),
+      pricingLocationId: resolvedPrimaryLocationId,
+      barcode:
+        itemPatch?.barcode !== undefined
+          ? (itemPatch.barcode ?? null)
+          : (item.barcode ?? null),
+      author:
+        textbookPatch?.author !== undefined
+          ? (textbookPatch.author ?? null)
+          : null,
+      title:
+        textbookPatch?.title !== undefined
+          ? (textbookPatch.title ?? null)
+          : null,
+      isbn:
+        textbookPatch?.isbn !== undefined
+          ? (textbookPatch.isbn ?? null)
+          : null,
+      edition:
+        textbookPatch?.edition !== undefined
+          ? (textbookPatch.edition ?? null)
+          : null,
+      catalogNumber:
+        gmPatch?.catalogNumber !== undefined
+          ? (gmPatch.catalogNumber ?? null)
+          : (item.catalogNumber ?? null),
+      vendorId:
+        itemPatch?.vendorId !== undefined
+          ? (itemPatch.vendorId ?? null)
+          : (item.vendorId ?? null),
+      itemType: item.isTextbook ? "textbook" : "general_merchandise",
+      fDiscontinue:
+        itemPatch?.fDiscontinue !== undefined
+          ? itemPatch.fDiscontinue
+          : item.fDiscontinue,
+    }));
   }
 
   async function handleSave() {
@@ -355,13 +424,17 @@ export function EditItemDialogV2({
       if (items.length === 1) {
         await saveSingleItem(v2Patch);
       } else {
-        const validationError = await saveBulk(v2Patch);
+        const { validationError, mirrorWarning } = await saveBulk(v2Patch);
         if (validationError) {
           setError(validationError);
           return;
         }
+        if (mirrorWarning) {
+          toast.error(mirrorWarning);
+        }
       }
 
+      onSavedScopedItems?.(buildSavedScopedItems(v2Patch));
       onSaved?.(items.map((item) => item.sku));
       onOpenChange(false);
     } catch (err) {

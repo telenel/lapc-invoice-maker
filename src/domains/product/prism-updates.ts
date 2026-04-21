@@ -5,7 +5,8 @@
  * the verify-then-assume pattern from deleteTestItem to dodge the Item-table
  * trigger rowcount quirks.
  *
- * Pierce-only by default — Inventory writes target LocationID=2 (PIER).
+ * Pierce-only by default for legacy callers. Location-aware concurrency and
+ * mirror reads can override the snapshot location per request.
  */
 import { getPrismPool, sql } from "@/lib/prism";
 import type { Transaction } from "mssql";
@@ -35,12 +36,15 @@ export interface ApplyItemPatchResult {
   appliedFields: string[];
 }
 
-export async function getItemSnapshot(sku: number): Promise<ItemSnapshot | null> {
+export async function getItemSnapshot(
+  sku: number,
+  primaryLocationId: ProductLocationId = PIERCE_LOCATION_ID,
+): Promise<ItemSnapshot | null> {
   const pool = await getPrismPool();
   const result = await pool
     .request()
     .input("sku", sql.Int, sku)
-    .input("loc", sql.Int, PIERCE_LOCATION_ID)
+    .input("loc", sql.Int, primaryLocationId)
     .query<{
       SKU: number;
       BarCode: string | null;
@@ -69,8 +73,87 @@ export async function getItemSnapshot(sku: number): Promise<ItemSnapshot | null>
     retail: row.Retail == null ? null : Number(row.Retail),
     cost: row.Cost == null ? null : Number(row.Cost),
     fDiscontinue: (row.fDiscontinue === 1 ? 1 : 0) as 0 | 1,
-    primaryLocationId: PIERCE_LOCATION_ID,
+    primaryLocationId,
   };
+}
+
+export interface InventoryMirrorSnapshotRow {
+  locationId: ProductLocationId;
+  retail: number | null;
+  cost: number | null;
+  expectedCost: number | null;
+  tagTypeId: number | null;
+  statusCodeId: number | null;
+  estSales: number | null;
+  estSalesLocked: boolean;
+  fInvListPriceFlag: boolean;
+  fTxWantListFlag: boolean;
+  fTxBuybackListFlag: boolean;
+  fNoReturns: boolean;
+}
+
+export async function getInventoryMirrorSnapshotRows(
+  sku: number,
+  locationIds: ProductLocationId[],
+): Promise<InventoryMirrorSnapshotRow[]> {
+  const uniqueLocationIds = Array.from(new Set(locationIds));
+  if (uniqueLocationIds.length === 0) {
+    return [];
+  }
+
+  const pool = await getPrismPool();
+  const request = pool.request().input("sku", sql.Int, sku);
+  const locationParams = uniqueLocationIds.map((locationId, index) => {
+    const name = `loc${index}`;
+    request.input(name, sql.Int, locationId);
+    return `@${name}`;
+  });
+
+  const result = await request.query<{
+    LocationID: ProductLocationId;
+    Retail: number | null;
+    Cost: number | null;
+    ExpectedCost: number | null;
+    TagTypeID: number | null;
+    StatusCodeID: number | null;
+    EstSales: number | null;
+    EstSalesLocked: boolean | null;
+    fInvListPriceFlag: boolean | null;
+    fTxWantListFlag: boolean | null;
+    fTxBuybackListFlag: boolean | null;
+    fNoReturns: boolean | null;
+  }>(`
+    SELECT inv.LocationID,
+           inv.Retail,
+           inv.Cost,
+           inv.ExpectedCost,
+           inv.TagTypeID,
+           inv.StatusCodeID,
+           inv.EstSales,
+           inv.EstSalesLocked,
+           inv.fInvListPriceFlag,
+           inv.fTxWantListFlag,
+           inv.fTxBuybackListFlag,
+           inv.fNoReturns
+    FROM Inventory inv
+    WHERE inv.SKU = @sku
+      AND inv.LocationID IN (${locationParams.join(", ")})
+  `);
+
+  return result.recordset.map((row) => ({
+    locationId: row.LocationID,
+    retail: row.Retail == null ? null : Number(row.Retail),
+    cost: row.Cost == null ? null : Number(row.Cost),
+    expectedCost: row.ExpectedCost == null ? null : Number(row.ExpectedCost),
+    tagTypeId: row.TagTypeID == null ? null : Number(row.TagTypeID),
+    statusCodeId: row.StatusCodeID == null ? null : Number(row.StatusCodeID),
+    estSales: row.EstSales == null ? null : Number(row.EstSales),
+    estSalesLocked: row.EstSalesLocked === true,
+    fInvListPriceFlag: row.fInvListPriceFlag === true,
+    fTxWantListFlag: row.fTxWantListFlag === true,
+    fTxBuybackListFlag: row.fTxBuybackListFlag === true,
+    fNoReturns: row.fNoReturns === true,
+  }));
 }
 
 interface UpdateGmItemResult {
@@ -80,7 +163,7 @@ interface UpdateGmItemResult {
 
 export type ProductUpdaterInput = GmItemPatch | TextbookPatch | ProductEditPatchV2;
 
-interface ProductWriteBuckets {
+export interface ProductWriteBuckets {
   item: ItemPatch;
   gm: GmDetailsPatch;
   textbook: TextbookDetailsPatch;
@@ -92,7 +175,7 @@ function isV2UpdaterInput(patch: ProductUpdaterInput): patch is ProductEditPatch
   return "item" in patch || "gm" in patch || "textbook" in patch || "inventory" in patch || "primaryInventory" in patch;
 }
 
-function normalizeUpdaterInput(patch: ProductUpdaterInput): ProductWriteBuckets {
+export function normalizeUpdaterInput(patch: ProductUpdaterInput): ProductWriteBuckets {
   if (isV2UpdaterInput(patch)) {
     return {
       item: { ...(patch.item ?? {}) },
@@ -157,7 +240,7 @@ function hasInventoryWriteFields(patch: InventoryPatchPerLocation): boolean {
   ].some((value) => value !== undefined);
 }
 
-function getInventoryPatches(normalizedPatch: ProductWriteBuckets): InventoryPatchPerLocation[] {
+export function getInventoryPatches(normalizedPatch: ProductWriteBuckets): InventoryPatchPerLocation[] {
   if (normalizedPatch.inventory.length > 0) {
     return normalizedPatch.inventory;
   }

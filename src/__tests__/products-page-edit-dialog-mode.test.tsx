@@ -164,28 +164,60 @@ vi.mock("@/components/products/edit-item-dialog-v2", () => ({
   EditItemDialogV2: v2DialogMock.mockImplementation(
     ({
       open,
+      items,
       detail,
       detailLoading,
       locationIds,
       primaryLocationId,
       onSaved,
+      onSavedScopedItems,
     }: {
       open: boolean;
+      items?: Array<{
+        sku?: number;
+        retail?: number | null;
+        cost?: number | null;
+        barcode?: string | null;
+        fDiscontinue?: 0 | 1;
+      }>;
       detail?: { sku: number } | null;
       detailLoading?: boolean;
       locationIds?: number[];
       primaryLocationId?: number;
       onSaved?: (skus: number[]) => void;
+      onSavedScopedItems?: (items: SelectedProduct[]) => void;
     }) =>
       open ? (
         <div data-testid="v2-dialog">
           <span>dialog:v2</span>
           <span>{`detail-loading:${detailLoading === true ? "yes" : "no"}`}</span>
           <span>{`detail-sku:${detail?.sku ?? "none"}`}</span>
+          <span>{`item-retail:${items?.[0]?.retail ?? "null"}`}</span>
+          <span>{`item-cost:${items?.[0]?.cost ?? "null"}`}</span>
+          <span>{`item-barcode:${items?.[0]?.barcode ?? "null"}`}</span>
+          <span>{`item-fDiscontinue:${items?.[0]?.fDiscontinue ?? "null"}`}</span>
           <span>{`location-ids:${locationIds?.join(",") ?? "none"}`}</span>
           <span>{`primary-location:${primaryLocationId ?? "none"}`}</span>
           <button type="button" onClick={() => onSaved?.([1001])}>
             Save v2 dialog
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onSavedScopedItems?.([
+                makeSelectedProduct({
+                  sku: items?.[0]?.sku ?? 1001,
+                  retailPrice: 44.99,
+                  cost: 22.25,
+                  pricingLocationId: primaryLocationId ?? 2,
+                  barcode: "999888777000",
+                  fDiscontinue: 1,
+                }),
+              ]);
+              onSaved?.([items?.[0]?.sku ?? 1001]);
+            }}
+          >
+            Save scoped v2 dialog
           </button>
         </div>
       ) : null,
@@ -201,6 +233,7 @@ function makeSelectedProduct(overrides: Partial<SelectedProduct> = {}): Selected
     description: "Pierce Hoodie",
     retailPrice: 39.99,
     cost: 19.5,
+    pricingLocationId: 2,
     barcode: "123456789012",
     author: null,
     title: null,
@@ -209,6 +242,7 @@ function makeSelectedProduct(overrides: Partial<SelectedProduct> = {}): Selected
     catalogNumber: "HD-1001",
     vendorId: 21,
     itemType: "general_merchandise",
+    fDiscontinue: 0,
     ...overrides,
   };
 }
@@ -330,6 +364,7 @@ describe("ProductsPage edit dialog mode integration", () => {
       selectedCount: 1,
       toggle: vi.fn(),
       toggleAll: vi.fn(),
+      refreshVisibleSelections: vi.fn(),
       clear: vi.fn(),
       isSelected: vi.fn(),
       saveToSession: vi.fn(),
@@ -427,6 +462,7 @@ describe("ProductsPage edit dialog mode integration", () => {
       selectedCount: 1,
       toggle: vi.fn(),
       toggleAll: vi.fn(),
+      refreshVisibleSelections: vi.fn(),
       clear: vi.fn(),
       isSelected: vi.fn(),
       saveToSession: vi.fn(),
@@ -487,6 +523,7 @@ describe("ProductsPage edit dialog mode integration", () => {
       selectedCount: 1,
       toggle: vi.fn(),
       toggleAll: vi.fn(),
+      refreshVisibleSelections: vi.fn(),
       clear: vi.fn(),
       isSelected: vi.fn(),
       saveToSession: vi.fn(),
@@ -496,6 +533,281 @@ describe("ProductsPage edit dialog mode integration", () => {
 
     expect(screen.getByText("selected-retail:null")).toBeInTheDocument();
     expect(screen.getByText("selected-cost:null")).toBeInTheDocument();
+  });
+
+  it("preserves persisted selection pricing when the selected SKU is off the current browse page", () => {
+    searchParamsState = new URLSearchParams("tab=merchandise&loc=4&page=2");
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [],
+        total: 0,
+        page: 2,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    useProductSelectionMock.mockReturnValue({
+      selected: new Map([
+        [
+          1001,
+          makeSelectedProduct({
+            retailPrice: 39.99,
+            cost: 19.5,
+            pricingLocationId: 4,
+          }),
+        ],
+      ]),
+      selectedCount: 1,
+      toggle: vi.fn(),
+      toggleAll: vi.fn(),
+      refreshVisibleSelections: vi.fn(),
+      clear: vi.fn(),
+      isSelected: vi.fn(),
+      saveToSession: vi.fn(),
+    });
+
+    render(<ProductsPage />);
+
+    expect(screen.getByText("selected-retail:39.99")).toBeInTheDocument();
+    expect(screen.getByText("selected-cost:19.5")).toBeInTheDocument();
+  });
+
+  it("does not reuse off-page pricing from a different location scope in the edit baseline", async () => {
+    const user = userEvent.setup();
+    searchParamsState = new URLSearchParams("tab=merchandise&loc=4&page=2");
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [],
+        total: 0,
+        page: 2,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    useProductSelectionMock.mockReturnValue({
+      selected: new Map([
+        [
+          1001,
+          makeSelectedProduct({
+            retailPrice: 39.99,
+            cost: 19.5,
+            pricingLocationId: 2,
+          }),
+        ],
+      ]),
+      selectedCount: 1,
+      toggle: vi.fn(),
+      toggleAll: vi.fn(),
+      refreshVisibleSelections: vi.fn(),
+      clear: vi.fn(),
+      isSelected: vi.fn(),
+      saveToSession: vi.fn(),
+    });
+
+    render(<ProductsPage />);
+
+    expect(screen.getByText("selected-retail:39.99")).toBeInTheDocument();
+    expect(screen.getByText("selected-cost:19.5")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("dialog:v2")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("item-retail:null")).toBeInTheDocument();
+    expect(screen.getByText("item-cost:null")).toBeInTheDocument();
+  });
+
+  it("reuses the current scope baseline for off-page edits without overwriting the invoice snapshot", async () => {
+    const user = userEvent.setup();
+    searchParamsState = new URLSearchParams("tab=merchandise&loc=4");
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [
+          {
+            sku: 1001,
+            description: "Pierce Hoodie",
+            title: null,
+            retail_price: 41.99,
+            cost: 21.5,
+            primary_location_id: 4,
+            selected_inventories: [
+              {
+                locationId: 4,
+                retailPrice: 41.99,
+                cost: 21.5,
+              },
+            ],
+            barcode: "123456789012",
+            author: null,
+            isbn: null,
+            edition: null,
+            catalog_number: "HD-1001",
+            vendor_id: 21,
+            item_type: "general_merchandise",
+          } as never,
+        ],
+        total: 1,
+        page: 1,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    useProductSelectionMock.mockReturnValue({
+      selected: new Map([
+        [
+          1001,
+          makeSelectedProduct({
+            retailPrice: 39.99,
+            cost: 19.5,
+            pricingLocationId: 2,
+          }),
+        ],
+      ]),
+      selectedCount: 1,
+      toggle: vi.fn(),
+      toggleAll: vi.fn(),
+      refreshVisibleSelections: vi.fn(),
+      clear: vi.fn(),
+      isSelected: vi.fn(),
+      saveToSession: vi.fn(),
+    });
+
+    const view = render(<ProductsPage />);
+
+    expect(screen.getByText("selected-retail:41.99")).toBeInTheDocument();
+    expect(screen.getByText("selected-cost:21.5")).toBeInTheDocument();
+
+    searchParamsState = new URLSearchParams("tab=merchandise&loc=4&page=2");
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [],
+        total: 0,
+        page: 2,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    view.rerender(<ProductsPage />);
+
+    // Invoice / quote handoff still sees the original selection snapshot.
+    expect(screen.getByText("selected-retail:39.99")).toBeInTheDocument();
+    expect(screen.getByText("selected-cost:19.5")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("dialog:v2")).toBeInTheDocument();
+    });
+
+    // Off-page edit baselines still reuse the current-scope values we already saw.
+    expect(screen.getByText("item-retail:41.99")).toBeInTheDocument();
+    expect(screen.getByText("item-cost:21.5")).toBeInTheDocument();
+  });
+
+  it("reuses scoped barcode and discontinue updates for off-page reopen baselines after a save", async () => {
+    const user = userEvent.setup();
+
+    searchParamsState = new URLSearchParams("tab=merchandise&loc=4");
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [
+          {
+            sku: 1001,
+            description: "Pierce Hoodie",
+            title: null,
+            retail_price: 41.99,
+            cost: 21.5,
+            primary_location_id: 4,
+            selected_inventories: [
+              {
+                locationId: 4,
+                retailPrice: 41.99,
+                cost: 21.5,
+              },
+            ],
+            barcode: "123456789012",
+            author: null,
+            isbn: null,
+            edition: null,
+            catalog_number: "HD-1001",
+            vendor_id: 21,
+            item_type: "general_merchandise",
+            discontinued: false,
+          } as never,
+        ],
+        total: 1,
+        page: 1,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    useProductSelectionMock.mockReturnValue({
+      selected: new Map([
+        [
+          1001,
+          makeSelectedProduct({
+            retailPrice: 39.99,
+            cost: 19.5,
+            pricingLocationId: 2,
+            barcode: "123456789012",
+            fDiscontinue: 0,
+          }),
+        ],
+      ]),
+      selectedCount: 1,
+      toggle: vi.fn(),
+      toggleAll: vi.fn(),
+      refreshVisibleSelections: vi.fn(),
+      clear: vi.fn(),
+      isSelected: vi.fn(),
+      saveToSession: vi.fn(),
+    });
+
+    const view = render(<ProductsPage />);
+
+    searchParamsState = new URLSearchParams("tab=merchandise&loc=4&page=2");
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [],
+        total: 0,
+        page: 2,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    view.rerender(<ProductsPage />);
+
+    await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("dialog:v2")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("item-barcode:123456789012")).toBeInTheDocument();
+    expect(screen.getByText("item-fDiscontinue:0")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Save scoped v2 dialog" }));
+
+    await waitFor(() => {
+      expect(screen.queryByText("dialog:v2")).not.toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("dialog:v2")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("item-barcode:999888777000")).toBeInTheDocument();
+    expect(screen.getByText("item-fDiscontinue:1")).toBeInTheDocument();
   });
 
   it("routes single textbook selections to v2 when the flag is on", async () => {
@@ -515,6 +827,7 @@ describe("ProductsPage edit dialog mode integration", () => {
       selectedCount: 1,
       toggle: vi.fn(),
       toggleAll: vi.fn(),
+      refreshVisibleSelections: vi.fn(),
       clear: vi.fn(),
       isSelected: vi.fn(),
       saveToSession: vi.fn(),
@@ -549,6 +862,7 @@ describe("ProductsPage edit dialog mode integration", () => {
       selectedCount: 1,
       toggle: vi.fn(),
       toggleAll: vi.fn(),
+      refreshVisibleSelections: vi.fn(),
       clear: vi.fn(),
       isSelected: vi.fn(),
       saveToSession: vi.fn(),
@@ -591,6 +905,7 @@ describe("ProductsPage edit dialog mode integration", () => {
       selectedCount: 2,
       toggle: vi.fn(),
       toggleAll: vi.fn(),
+      refreshVisibleSelections: vi.fn(),
       clear: vi.fn(),
       isSelected: vi.fn(),
       saveToSession: vi.fn(),

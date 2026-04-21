@@ -52,11 +52,17 @@ function mockDefaultPrismModules() {
     discontinueItem: vi.fn(),
     deleteTestItem: vi.fn(),
   }));
-  vi.doMock("@/domains/product/prism-updates", () => ({
-    updateGmItem: prismMocks.updateGmItem,
-    updateTextbookPricing: prismMocks.updateTextbookPricing,
-    getItemSnapshot: prismMocks.getItemSnapshot,
-  }));
+  vi.doMock("@/domains/product/prism-updates", async () => {
+    const actual = await vi.importActual<typeof import("@/domains/product/prism-updates")>(
+      "@/domains/product/prism-updates",
+    );
+    return {
+      ...actual,
+      updateGmItem: prismMocks.updateGmItem,
+      updateTextbookPricing: prismMocks.updateTextbookPricing,
+      getItemSnapshot: prismMocks.getItemSnapshot,
+    };
+  });
 }
 
 async function loadRouteModule() {
@@ -667,6 +673,65 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
       sku: 1001,
       item_tax_type_id: 4,
     }));
+  });
+
+  it("reads the post-write mirror snapshot from the baseline primary location", async () => {
+    prismMocks.getItemSnapshot.mockResolvedValueOnce({
+      sku: 1001,
+      barcode: "123456789012",
+      itemTaxTypeId: 6,
+      retail: 12.99,
+      cost: 6.25,
+      fDiscontinue: 0,
+      primaryLocationId: 2,
+    });
+
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          baseline: {
+            sku: 1001,
+            barcode: "123456789012",
+            retail: 21.99,
+            cost: 10.5,
+            fDiscontinue: 0,
+            primaryLocationId: 3,
+          },
+          patch: {
+            inventory: [
+              {
+                locationId: 3,
+                retail: 24.99,
+                cost: 11.25,
+              },
+            ],
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(prismMocks.getItemSnapshot).toHaveBeenCalledWith(1001, 2);
+    expect(mockProductsUpsert).toHaveBeenCalledWith(expect.objectContaining({
+      sku: 1001,
+      retail_price: 12.99,
+      cost: 6.25,
+      barcode: "123456789012",
+    }));
+    expect(mockProductInventoryUpsert).toHaveBeenCalledWith([
+      expect.objectContaining({
+        sku: 1001,
+        location_id: 3,
+        retail_price: 24.99,
+        cost: 11.25,
+      }),
+    ]);
   });
 
   it("forwards tax-type baselines through textbook v2 patches", async () => {

@@ -670,7 +670,11 @@ export const POST = withAdmin(async (request: NextRequest, session) => {
     return NextResponse.json(batchJson ?? { error: "Batch commit failed" }, { status: batchResponse.status });
   }
 
-  const summary = `${preview.totals.rowCount} items — retail delta $${(preview.totals.pricingDeltaCents / 100).toFixed(2)}${preview.totals.districtChangeCount > 0 ? `, ${preview.totals.districtChangeCount} district changes` : ""}`;
+  const mirrorErrors = Array.isArray((batchJson as { mirrorErrors?: unknown } | null)?.mirrorErrors)
+    ? ((batchJson as { mirrorErrors?: Array<{ sku: number; message: string }> }).mirrorErrors ?? [])
+    : [];
+
+  const summary = `${preview.totals.rowCount} items — retail delta $${(preview.totals.pricingDeltaCents / 100).toFixed(2)}${preview.totals.districtChangeCount > 0 ? `, ${preview.totals.districtChangeCount} district changes` : ""}${mirrorErrors.length > 0 ? `, mirror stale for ${mirrorErrors.length} SKU${mirrorErrors.length === 1 ? "" : "s"}` : ""}`;
 
   const run = await prisma.bulkEditRun.create({
     data: {
@@ -690,6 +694,7 @@ export const POST = withAdmin(async (request: NextRequest, session) => {
     runId: run.id,
     successCount: batchRows.length,
     affectedSkus: batchRows.map((row) => row.sku),
+    mirrorErrors: mirrorErrors.length > 0 ? mirrorErrors : undefined,
   });
 });
 

@@ -18,6 +18,11 @@ const prismBatchMocks = vi.hoisted(() => ({
   validateBatchUpdateAgainstPrism: vi.fn(),
 }));
 
+const prismUpdateMocks = vi.hoisted(() => ({
+  getItemSnapshot: vi.fn(),
+  getInventoryMirrorSnapshotRows: vi.fn(),
+}));
+
 const prismDeleteMocks = vi.hoisted(() => ({
   hasTransactionHistory: vi.fn(),
 }));
@@ -35,6 +40,16 @@ vi.mock("@/lib/prism", () => ({
 }));
 vi.mock("@/domains/product/prism-batch", () => prismBatchMocks);
 vi.mock("@/domains/product/prism-delete", () => prismDeleteMocks);
+vi.mock("@/domains/product/prism-updates", async () => {
+  const actual = await vi.importActual<typeof import("@/domains/product/prism-updates")>(
+    "@/domains/product/prism-updates",
+  );
+  return {
+    ...actual,
+    getItemSnapshot: prismUpdateMocks.getItemSnapshot,
+    getInventoryMirrorSnapshotRows: prismUpdateMocks.getInventoryMirrorSnapshotRows,
+  };
+});
 vi.mock("@/lib/supabase/admin", () => supabaseMocks);
 
 const mockProductsUpsert = vi.fn();
@@ -74,7 +89,32 @@ describe("POST /api/products/batch", () => {
     prismLibMocks.isPrismConfigured.mockReturnValue(true);
     prismBatchMocks.validateBatchCreateAgainstPrism.mockResolvedValue([]);
     prismBatchMocks.batchCreateGmItems.mockResolvedValue([1001, 1002]);
+    prismBatchMocks.batchUpdateItems.mockResolvedValue([101, 202]);
     prismDeleteMocks.hasTransactionHistory.mockResolvedValue(new Set());
+    prismUpdateMocks.getItemSnapshot.mockResolvedValue({
+      sku: 101,
+      barcode: "X",
+      retail: 5,
+      cost: 2,
+      fDiscontinue: 0,
+      primaryLocationId: 2,
+    });
+    prismUpdateMocks.getInventoryMirrorSnapshotRows.mockImplementation(async (_sku, locationIds) =>
+      locationIds.map((locationId) => ({
+        locationId,
+        retail: locationId === 3 ? 41.99 : 5,
+        cost: locationId === 3 ? 21.5 : 2,
+        expectedCost: null,
+        tagTypeId: null,
+        statusCodeId: null,
+        estSales: null,
+        estSalesLocked: false,
+        fInvListPriceFlag: false,
+        fTxWantListFlag: false,
+        fTxBuybackListFlag: false,
+        fNoReturns: false,
+      })),
+    );
     supabaseMocks.getSupabaseAdminClient.mockReturnValue({
       from: mockFrom,
     });
@@ -258,6 +298,201 @@ describe("POST /api/products/batch", () => {
     }));
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ action: "update", count: 2, skus: [101, 202] });
+  });
+
+  it("mirrors batch updates back into products and product_inventory using each row's primary location", async () => {
+    prismBatchMocks.validateBatchUpdateAgainstPrism.mockResolvedValue([]);
+    prismBatchMocks.batchUpdateItems.mockResolvedValue([101, 202]);
+    prismUpdateMocks.getItemSnapshot
+      .mockResolvedValueOnce({
+        sku: 101,
+        barcode: "AAA",
+        retail: 39.99,
+        cost: 19.5,
+        fDiscontinue: 0,
+        primaryLocationId: 2,
+      })
+      .mockResolvedValueOnce({
+        sku: 202,
+        barcode: "BBB",
+        retail: 12.99,
+        cost: 6.25,
+        fDiscontinue: 1,
+        primaryLocationId: 2,
+      });
+
+    const { POST } = await loadRouteModule();
+    const body = {
+      action: "update",
+      rows: [
+        {
+          sku: 101,
+          patch: {
+            item: { vendorId: 17 },
+            inventory: [{ locationId: 3, retail: 41.99, cost: 21.5 }],
+          },
+          baseline: { sku: 101, barcode: "AAA", retail: 40, cost: 20, fDiscontinue: 0, primaryLocationId: 3 },
+        },
+        {
+          sku: 202,
+          patch: {
+            item: { fDiscontinue: 1 },
+          },
+          baseline: { sku: 202, barcode: "BBB", retail: 12.99, cost: 6.25, fDiscontinue: 0, primaryLocationId: 2 },
+        },
+      ],
+    };
+
+    const response = await POST(new NextRequest("http://localhost/api/products/batch", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }));
+
+    expect(response.status).toBe(200);
+    expect(prismUpdateMocks.getItemSnapshot).toHaveBeenNthCalledWith(1, 101, 2);
+    expect(prismUpdateMocks.getItemSnapshot).toHaveBeenNthCalledWith(2, 202, 2);
+    expect(mockProductsUpsert.mock.calls).toEqual(expect.arrayContaining([
+      [
+        expect.objectContaining({
+          sku: 101,
+          vendor_id: 17,
+          barcode: "AAA",
+          retail_price: 39.99,
+          cost: 19.5,
+          discontinued: false,
+        }),
+      ],
+      [
+        expect.objectContaining({
+          sku: 202,
+          barcode: "BBB",
+          retail_price: 12.99,
+          cost: 6.25,
+          discontinued: true,
+        }),
+      ],
+    ]));
+    expect(mockProductInventoryUpsert).toHaveBeenCalledWith([
+      expect.objectContaining({
+        sku: 101,
+        location_id: 3,
+        retail_price: 41.99,
+        cost: 21.5,
+      }),
+    ], { onConflict: "sku,location_id" });
+  });
+
+  it("continues mirroring later rows when one batch-update mirror snapshot fails", async () => {
+    prismBatchMocks.validateBatchUpdateAgainstPrism.mockResolvedValue([]);
+    prismBatchMocks.batchUpdateItems.mockResolvedValue([101, 202]);
+    prismUpdateMocks.getItemSnapshot
+      .mockRejectedValueOnce(new Error("snapshot failed"))
+      .mockResolvedValueOnce({
+        sku: 202,
+        barcode: "BBB",
+        retail: 12.99,
+        cost: 6.25,
+        fDiscontinue: 0,
+        primaryLocationId: 2,
+      });
+
+    const { POST } = await loadRouteModule();
+    const body = {
+      action: "update",
+      rows: [
+        {
+          sku: 101,
+          patch: {
+            inventory: [{ locationId: 3, retail: 41.99, cost: 21.5 }],
+          },
+          baseline: { sku: 101, barcode: "AAA", retail: 40, cost: 20, fDiscontinue: 0, primaryLocationId: 3 },
+        },
+        {
+          sku: 202,
+          patch: {
+            item: { vendorId: 17 },
+          },
+          baseline: { sku: 202, barcode: "BBB", retail: 12.99, cost: 6.25, fDiscontinue: 0, primaryLocationId: 2 },
+        },
+      ],
+    };
+
+    const response = await POST(new NextRequest("http://localhost/api/products/batch", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }));
+
+    expect(response.status).toBe(200);
+    expect(prismUpdateMocks.getItemSnapshot).toHaveBeenNthCalledWith(1, 101, 2);
+    expect(prismUpdateMocks.getItemSnapshot).toHaveBeenNthCalledWith(2, 202, 2);
+    expect(mockProductsUpsert).toHaveBeenCalledTimes(1);
+    expect(mockProductsUpsert).toHaveBeenCalledWith(expect.objectContaining({
+      sku: 202,
+      vendor_id: 17,
+      retail_price: 12.99,
+      cost: 6.25,
+    }));
+    const json = await response.json();
+    expect(json).toMatchObject({
+      action: "update",
+      count: 2,
+      skus: [101, 202],
+      mirrorErrors: [{ sku: 101, message: "snapshot failed" }],
+    });
+  });
+
+  it("reports Supabase mirror upsert errors in the batch update response", async () => {
+    prismBatchMocks.validateBatchUpdateAgainstPrism.mockResolvedValue([]);
+    prismBatchMocks.batchUpdateItems.mockResolvedValue([101]);
+    prismUpdateMocks.getItemSnapshot.mockResolvedValue({
+      sku: 101,
+      barcode: "AAA",
+      retail: 40,
+      cost: 20,
+      fDiscontinue: 0,
+      primaryLocationId: 2,
+    });
+    mockProductsUpsert.mockResolvedValueOnce({
+      error: { message: "products mirror failed" },
+    });
+
+    const { POST } = await loadRouteModule();
+    const response = await POST(new NextRequest("http://localhost/api/products/batch", {
+      method: "POST",
+      body: JSON.stringify({
+        action: "update",
+        rows: [
+          {
+            sku: 101,
+            patch: {
+              item: { vendorId: 17 },
+              inventory: [{ locationId: 3, retail: 41.99, cost: 21.5 }],
+            },
+            baseline: { sku: 101, barcode: "AAA", retail: 40, cost: 20, fDiscontinue: 0, primaryLocationId: 3 },
+          },
+        ],
+      }),
+    }));
+
+    expect(response.status).toBe(200);
+    expect(mockProductsUpsert).toHaveBeenCalledWith(expect.objectContaining({
+      sku: 101,
+      vendor_id: 17,
+    }));
+    expect(mockProductInventoryUpsert).toHaveBeenCalledWith([
+      expect.objectContaining({
+        sku: 101,
+        location_id: 3,
+        retail_price: 41.99,
+        cost: 21.5,
+      }),
+    ], { onConflict: "sku,location_id" });
+    await expect(response.json()).resolves.toMatchObject({
+      action: "update",
+      count: 1,
+      skus: [101],
+      mirrorErrors: [{ sku: 101, message: "products mirror failed" }],
+    });
   });
 
   it("keeps legacy batch create callers working when inventory is absent", async () => {

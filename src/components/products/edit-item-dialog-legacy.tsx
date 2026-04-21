@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ItemRefSelects } from "./item-ref-selects";
 import { productApi } from "@/domains/product/api-client";
-import type { GmItemPatch, TextbookPatch, ItemSnapshot } from "@/domains/product/types";
+import type { GmItemPatch, TextbookPatch, ItemSnapshot, SelectedProduct } from "@/domains/product/types";
 import { useProductRefDirectory } from "@/domains/product/vendor-directory";
 
 export interface EditItemDialogProps {
@@ -23,6 +23,7 @@ export interface EditItemDialogProps {
   /** Rows to edit. Pass as ItemSnapshot[] — one per selected SKU. */
   items: Array<ItemSnapshot & { description?: string; vendorId?: number; dccId?: number; itemTaxTypeId?: number; isTextbook?: boolean; comment?: string; catalogNumber?: string; packageType?: string; unitsPerPack?: number }>;
   onSaved?: (skus: number[]) => void;
+  onSavedScopedItems?: (items: SelectedProduct[]) => void;
 }
 
 type FormState = Partial<{

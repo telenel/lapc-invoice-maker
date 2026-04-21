@@ -364,6 +364,7 @@ describe("ProductsPage inline edit controller wiring", () => {
       selectedCount: 0,
       toggle: vi.fn(),
       toggleAll: vi.fn(),
+      refreshVisibleSelections: vi.fn(),
       clear: vi.fn(),
       isSelected: vi.fn(),
       saveToSession: vi.fn(),

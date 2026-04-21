@@ -14,8 +14,60 @@ import { hasTransactionHistory } from "@/domains/product/prism-delete";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import { PRODUCT_LOCATION_ABBREV_BY_ID } from "@/domains/product/location-filters";
 import type { ProductLocationId } from "@/domains/product/types";
+import {
+  getInventoryMirrorSnapshotRows,
+  getInventoryPatches,
+  getItemSnapshot,
+  normalizeUpdaterInput,
+} from "@/domains/product/prism-updates";
+import {
+  buildInventoryMirrorPayload,
+  buildProductMirrorPayload,
+} from "@/domains/product/mirror-payloads";
 
 export const dynamic = "force-dynamic";
+
+type MirrorError = {
+  sku: number;
+  message: string;
+};
+
+function getSupabaseErrorMessage(
+  result: { error?: { message?: string | null } | null } | null | undefined,
+  fallback: string,
+): string | null {
+  const message = result?.error?.message;
+  return typeof message === "string" && message.length > 0 ? message : (result?.error ? fallback : null);
+}
+
+async function mapWithConcurrencyLimit<T, R>(
+  items: readonly T[],
+  limit: number,
+  worker: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  if (items.length === 0) {
+    return [];
+  }
+
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+
+  async function runWorker() {
+    while (true) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+      if (currentIndex >= items.length) {
+        return;
+      }
+
+      results[currentIndex] = await worker(items[currentIndex] as T, currentIndex);
+    }
+  }
+
+  const workerCount = Math.min(limit, items.length);
+  await Promise.all(Array.from({ length: workerCount }, () => runWorker()));
+  return results;
+}
 
 const bodySchema = z.discriminatedUnion("action", [
   z.object({
@@ -135,7 +187,75 @@ export const POST = withAdmin(async (request: NextRequest) => {
           isTextbook: !!r.isTextbook,
           baseline: r.baseline,
         })));
-        return NextResponse.json({ action: "update", count: skus.length, skus });
+        let mirrorErrors: MirrorError[] = [];
+        try {
+          const supabase = getSupabaseAdminClient();
+          const mirrorResults = await mapWithConcurrencyLimit(parsed.data.rows, 4, async (row) => {
+            const rowErrors: string[] = [];
+
+            try {
+              const snapshot = await getItemSnapshot(row.sku, 2);
+              const productMirrorResult = await supabase.from("products").upsert(
+                buildProductMirrorPayload(row.sku, row.patch, snapshot, !!row.isTextbook),
+              );
+              const productMirrorError = getSupabaseErrorMessage(
+                productMirrorResult,
+                `Failed to mirror products row for SKU ${row.sku}`,
+              );
+              if (productMirrorError) {
+                rowErrors.push(productMirrorError);
+              }
+            } catch (productMirrorErr) {
+              rowErrors.push(
+                productMirrorErr instanceof Error ? productMirrorErr.message : String(productMirrorErr),
+              );
+              console.warn(`[batch update] products mirror failed for SKU ${row.sku}:`, productMirrorErr);
+            }
+
+            try {
+              const touchedLocationIds = getInventoryPatches(normalizeUpdaterInput(row.patch)).map(
+                (entry) => entry.locationId,
+              );
+              const inventoryMirrorRows = await getInventoryMirrorSnapshotRows(row.sku, touchedLocationIds);
+              const inventoryRows = buildInventoryMirrorPayload(row.sku, inventoryMirrorRows);
+              if (inventoryRows.length > 0) {
+                const inventoryMirrorResult = await supabase.from("product_inventory").upsert(inventoryRows, {
+                  onConflict: "sku,location_id",
+                });
+                const inventoryMirrorError = getSupabaseErrorMessage(
+                  inventoryMirrorResult,
+                  `Failed to mirror product_inventory rows for SKU ${row.sku}`,
+                );
+                if (inventoryMirrorError) {
+                  rowErrors.push(inventoryMirrorError);
+                }
+              }
+            } catch (inventoryMirrorErr) {
+              rowErrors.push(
+                inventoryMirrorErr instanceof Error ? inventoryMirrorErr.message : String(inventoryMirrorErr),
+              );
+              console.warn(`[batch update] inventory mirror failed for SKU ${row.sku}:`, inventoryMirrorErr);
+            }
+
+            if (rowErrors.length === 0) {
+              return null;
+            }
+
+            return {
+              sku: row.sku,
+              message: rowErrors.join("; "),
+            };
+          });
+          mirrorErrors = mirrorResults.filter((result): result is MirrorError => result !== null);
+        } catch (mirrorErr) {
+          console.warn("[batch update] mirror failed:", mirrorErr);
+        }
+        return NextResponse.json({
+          action: "update",
+          count: skus.length,
+          skus,
+          mirrorErrors: mirrorErrors.length > 0 ? mirrorErrors : undefined,
+        });
       } catch (err) {
         if (err instanceof Error && (err as Error & { code?: string }).code === "CONCURRENT_MODIFICATION") {
           const e = err as Error & { rowIndex?: number; sku?: number; current?: unknown };

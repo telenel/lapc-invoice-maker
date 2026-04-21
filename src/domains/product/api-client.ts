@@ -43,6 +43,11 @@ export interface PrismHealth {
   reason: string | null;
 }
 
+export interface BatchMirrorError {
+  sku: number;
+  message: string;
+}
+
 export interface CreateItemInput {
   description: string;
   vendorId: number;
@@ -278,7 +283,10 @@ export const productApi = {
       | { action: "update"; rows: Array<{ sku: number; patch: GmItemPatch | TextbookPatch | ProductEditPatchV2; isTextbook?: boolean; baseline: ItemSnapshot }> }
       | { action: "discontinue"; skus: number[] }
       | { action: "hard-delete"; skus: number[] },
-  ): Promise<{ action: string; count: number; skus: number[] } | { errors: BatchValidationError[] }> {
+  ): Promise<
+    | { action: string; count: number; skus: number[]; mirrorErrors?: BatchMirrorError[] }
+    | { errors: BatchValidationError[] }
+  > {
     const res = await fetch("/api/products/batch", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

@@ -263,9 +263,15 @@ export interface BulkEditValidationError {
   message: string;
 }
 
+export interface BulkEditMirrorError {
+  sku: number;
+  message: string;
+}
+
 /** Shape returned from commit-route on success. */
 export interface CommitResult {
   runId: string;
   successCount: number;
   affectedSkus: number[];
+  mirrorErrors?: BulkEditMirrorError[];
 }
