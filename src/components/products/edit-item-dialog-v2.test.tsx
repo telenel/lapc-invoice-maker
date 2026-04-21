@@ -1279,6 +1279,59 @@ describe("EditItemDialogV2", () => {
 
       update.mockRestore();
     });
+
+    it("surfaces single-item mirror drift as a toast while still closing after Prism save", async () => {
+      const update = vi.spyOn(productApiMocks, "update").mockResolvedValue({
+        sku: 1001,
+        appliedFields: ["catalogNumber"],
+        mirrorErrors: [{ sku: 1001, message: "snapshot failed" }],
+      });
+      const onSaved = vi.fn();
+      const onSavedScopedItems = vi.fn();
+      const onOpenChange = vi.fn();
+      await mockDirectoryState();
+
+      render(
+        <EditItemDialogV2
+          open
+          onOpenChange={onOpenChange}
+          items={[
+            {
+              sku: 1001,
+              barcode: baseDetail.barcode,
+              retail: baseDetail.retail ?? 0,
+              cost: baseDetail.cost ?? 0,
+              fDiscontinue: baseDetail.fDiscontinue,
+              description: baseDetail.description ?? undefined,
+              primaryLocationId: 2,
+            },
+          ]}
+          detail={baseDetail}
+          onSaved={onSaved}
+          onSavedScopedItems={onSavedScopedItems}
+        />,
+      );
+
+      await userEvent.type(screen.getByLabelText(/catalog #/i), "CAT-X");
+      await userEvent.click(screen.getByRole("button", { name: /save/i }));
+
+      await waitFor(() => expect(update).toHaveBeenCalledTimes(1));
+      expect(onSaved).toHaveBeenCalledWith([1001]);
+      expect(onSavedScopedItems).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            sku: 1001,
+          }),
+        ]),
+        { retainUntilMatch: true },
+      );
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+      expect(toastMocks.error).toHaveBeenCalledWith(
+        "Saved in Prism, but the product mirror did not refresh for SKU 1001. Browse data may stay stale until the next sync.",
+      );
+
+      update.mockRestore();
+    });
   });
 
   it("sends changed textbook fields through the v2 textbook bucket", async () => {
@@ -1360,6 +1413,266 @@ describe("EditItemDialogV2", () => {
         }),
       }),
     );
+  });
+
+  it("preserves untouched textbook metadata in saved scoped items and refreshes description from title edits", async () => {
+    productApiMocks.update.mockResolvedValue({ sku: 1001, appliedFields: ["title"] });
+    const onSavedScopedItems = vi.fn();
+    await mockDirectoryState({
+      refs: {
+        vendors: [
+          { vendorId: 21, name: "PENS ETC (3001795)", pierceItems: 50 },
+          { vendorId: 22, name: "ALT VENDOR", pierceItems: 5 },
+        ],
+        dccs: [
+          { dccId: 1313290, deptNum: 111010, classNum: null, catNum: null, deptName: "NOT USE=111010", className: "DO NOT USE", catName: null, pierceItems: 30 },
+          { dccId: 1802, deptNum: 222000, classNum: null, catNum: null, deptName: "USED DCC", className: null, catName: null, pierceItems: 10 },
+        ],
+        taxTypes: [{ taxTypeId: 4, description: "STATE", pierceItems: 40 }],
+        tagTypes: [],
+        statusCodes: [],
+        packageTypes: [{ code: "EA", label: "Each", defaultQty: 1, pierceItems: 25 }],
+        colors: [],
+        bindings: [
+          { bindingId: 15, label: "Hardcover", pierceBooks: 12 },
+          { bindingId: 16, label: "Paperback", pierceBooks: 8 },
+        ],
+      },
+      lookups: {
+        vendorNames: new Map([
+          [21, "PENS ETC (3001795)"],
+          [22, "ALT VENDOR"],
+        ]),
+        dccLabels: new Map([
+          [1313290, "NOT USE=111010 / DO NOT USE"],
+          [1802, "USED DCC"],
+        ]),
+        taxTypeLabels: new Map([[4, "STATE"]]),
+        tagTypeLabels: new Map(),
+        statusCodeLabels: new Map(),
+        packageTypeLabels: new Map([["EA", "Each"]]),
+        colorLabels: new Map(),
+        bindingLabels: new Map([
+          [15, "Hardcover"],
+          [16, "Paperback"],
+        ]),
+      },
+    });
+    const user = userEvent.setup();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 42.5,
+            cost: 21.25,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: "INTRO BIOLOGY",
+            primaryLocationId: 2,
+            isTextbook: true,
+            author: "Jane Doe",
+            title: "Intro Biology",
+            isbn: "9781234567890",
+            edition: "3",
+            itemType: "textbook",
+          },
+        ]}
+        detail={buildTextbookDetail()}
+        onSavedScopedItems={onSavedScopedItems}
+      />,
+    );
+
+    await user.clear(screen.getByLabelText("Title"));
+    await user.type(screen.getByLabelText("Title"), "Updated Biology");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(onSavedScopedItems).toHaveBeenCalledTimes(1));
+    expect(onSavedScopedItems).toHaveBeenCalledWith([
+      expect.objectContaining({
+        sku: 1001,
+        description: "UPDATED BIOLOGY",
+        title: "Updated Biology",
+        author: "Jane Doe",
+        isbn: "9781234567890",
+        edition: "3",
+        itemType: "textbook",
+      }),
+    ], { retainUntilMatch: false });
+  });
+
+  it("returns saved scoped items for every touched inventory location", async () => {
+    productApiMocks.update.mockResolvedValue({ sku: 1001, appliedFields: ["inventory"] });
+    const onSavedScopedItems = vi.fn();
+    await mockDirectoryState();
+    const user = userEvent.setup();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 39.99,
+            cost: 19.5,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
+            itemType: "general_merchandise",
+          },
+        ]}
+        detail={{
+          ...baseDetail,
+          inventoryByLocation: [
+            { ...baseDetail.inventoryByLocation[0], locationId: 2, retail: 39.99, cost: 19.5 },
+            { ...baseDetail.inventoryByLocation[1], locationId: 3, retail: 30, cost: 15 },
+            { ...baseDetail.inventoryByLocation[2], locationId: 4, retail: null, cost: null },
+          ],
+        }}
+        onSavedScopedItems={onSavedScopedItems}
+      />,
+    );
+
+    await user.click(screen.getByRole("tab", { name: "Inventory" }));
+    await user.click(screen.getByRole("button", { name: "PCOP" }));
+    const pcopRetailInput = document.getElementById("edit-v2-1001-inventory-3-retail");
+    if (!(pcopRetailInput instanceof HTMLInputElement)) {
+      throw new Error("PCOP retail input not found");
+    }
+    await user.clear(pcopRetailInput);
+    await user.type(pcopRetailInput, "45.25");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(onSavedScopedItems).toHaveBeenCalledTimes(1));
+    expect(onSavedScopedItems).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({
+          sku: 1001,
+          pricingLocationId: 2,
+          retailPrice: 39.99,
+          cost: 19.5,
+        }),
+        expect.objectContaining({
+          sku: 1001,
+          pricingLocationId: 3,
+          retailPrice: 45.25,
+          cost: 15,
+        }),
+      ]),
+      { retainUntilMatch: false },
+    );
+  });
+
+  it("does not reuse known scoped pricing for touched secondary locations when detail hydration is unavailable", async () => {
+    productApiMocks.update.mockResolvedValue({ sku: 1001, appliedFields: ["inventory"] });
+    const onSavedScopedItems = vi.fn();
+    await mockDirectoryState();
+    const user = userEvent.setup();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: 39.99,
+            cost: 19.5,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+            primaryLocationId: 2,
+            itemType: "general_merchandise",
+          },
+        ]}
+        detail={null}
+        knownScopedItemsByKey={new Map([
+          [
+            "1001:3",
+            {
+              sku: 1001,
+              description: "PIERCE HOODIE",
+              retailPrice: 30,
+              cost: 15,
+              pricingLocationId: 3,
+              barcode: baseDetail.barcode,
+              author: null,
+              title: null,
+              isbn: null,
+              edition: null,
+              catalogNumber: baseDetail.catalogNumber,
+              vendorId: baseDetail.vendorId,
+              itemType: "general_merchandise",
+              fDiscontinue: 0,
+            },
+          ],
+        ])}
+        onSavedScopedItems={onSavedScopedItems}
+      />,
+    );
+
+    await user.click(screen.getByRole("tab", { name: "Inventory" }));
+    await user.click(screen.getByRole("button", { name: "PCOP" }));
+    await user.click(screen.getByLabelText("No Returns"));
+    const enabledOption = screen.getAllByRole("option", { name: "Enabled" }).at(-1);
+    expect(enabledOption).not.toBeUndefined();
+    await user.click(enabledOption!);
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(onSavedScopedItems).toHaveBeenCalledTimes(1));
+    const [savedItems, options] = onSavedScopedItems.mock.calls[0] ?? [];
+    expect(options).toEqual({ retainUntilMatch: false });
+    expect(savedItems).toHaveLength(1);
+    expect(savedItems).toEqual([
+      expect.objectContaining({
+        sku: 1001,
+        pricingLocationId: 2,
+        retailPrice: 39.99,
+        cost: 19.5,
+      }),
+    ]);
+  });
+
+  it("does not persist null scoped pricing for non-pricing saves when the current scope has no inventory slice", async () => {
+    productApiMocks.update.mockResolvedValue({ sku: 1001, appliedFields: ["catalogNumber"] });
+    const onSavedScopedItems = vi.fn();
+    await mockDirectoryState();
+    const user = userEvent.setup();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={vi.fn()}
+        items={[
+          {
+            sku: 1001,
+            barcode: baseDetail.barcode,
+            retail: null,
+            cost: null,
+            fDiscontinue: baseDetail.fDiscontinue,
+            description: baseDetail.description ?? undefined,
+            primaryLocationId: 3,
+            itemType: "general_merchandise",
+            catalogNumber: baseDetail.catalogNumber ?? undefined,
+          },
+        ]}
+        primaryLocationId={3}
+        detail={baseDetail}
+        onSavedScopedItems={onSavedScopedItems}
+      />,
+    );
+
+    await user.clear(screen.getByLabelText(/catalog #/i));
+    await user.type(screen.getByLabelText(/catalog #/i), "CAT-X");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    await waitFor(() => expect(onSavedScopedItems).toHaveBeenCalledTimes(1));
+    expect(onSavedScopedItems).toHaveBeenCalledWith([], { retainUntilMatch: false });
   });
 
   it("constrains textbook text status to positive integers in the UI", async () => {

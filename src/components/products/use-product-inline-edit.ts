@@ -351,7 +351,7 @@ export function useProductInlineEdit({
     } finally {
       setPendingSave(false);
     }
-  }, [onSaveSuccess, pendingSave, rowsBySku]);
+  }, [onSaveSuccess, pendingSave, primaryLocationId, rowsBySku]);
 
   const saveCurrentEdit = useCallback(async () => {
     const activeCell = editingCell;

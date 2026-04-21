@@ -54,6 +54,9 @@ vi.mock("@/lib/supabase/admin", () => supabaseMocks);
 
 const mockProductsUpsert = vi.fn();
 const mockProductInventoryUpsert = vi.fn();
+const mockProductInventoryDeleteIn = vi.fn();
+const mockProductInventoryDeleteEq = vi.fn(() => ({ in: mockProductInventoryDeleteIn }));
+const mockProductInventoryDelete = vi.fn(() => ({ eq: mockProductInventoryDeleteEq }));
 const mockFrom = vi.fn((table: string) => {
   if (table === "products") {
     return {
@@ -65,6 +68,7 @@ const mockFrom = vi.fn((table: string) => {
   if (table === "product_inventory") {
     return {
       upsert: mockProductInventoryUpsert,
+      delete: mockProductInventoryDelete,
     };
   }
 
@@ -120,6 +124,7 @@ describe("POST /api/products/batch", () => {
     });
     mockProductsUpsert.mockResolvedValue({ error: null });
     mockProductInventoryUpsert.mockResolvedValue({ error: null });
+    mockProductInventoryDeleteIn.mockResolvedValue({ error: null });
   });
 
   it("forwards per-location inventory rows through batch create and mirrors product_inventory", async () => {
@@ -529,6 +534,76 @@ describe("POST /api/products/batch", () => {
       count: 1,
       skus: [101],
       mirrorErrors: [{ sku: 101, message: "products mirror failed" }],
+    });
+  });
+
+  it("records mirror drift when Prism omits a touched location snapshot", async () => {
+    prismBatchMocks.validateBatchUpdateAgainstPrism.mockResolvedValue([]);
+    prismBatchMocks.batchUpdateItems.mockResolvedValue([101]);
+    prismUpdateMocks.getInventoryMirrorSnapshotRows.mockResolvedValueOnce([]);
+
+    const { POST } = await loadRouteModule();
+    const response = await POST(new NextRequest("http://localhost/api/products/batch", {
+      method: "POST",
+      body: JSON.stringify({
+        action: "update",
+        rows: [
+          {
+            sku: 101,
+            patch: {
+              inventory: [{ locationId: 3, retail: 41.99, cost: 21.5 }],
+            },
+            baseline: { sku: 101, barcode: "AAA", retail: 40, cost: 20, fDiscontinue: 0, primaryLocationId: 3 },
+          },
+        ],
+      }),
+    }));
+
+    expect(response.status).toBe(200);
+    expect(mockProductInventoryUpsert).not.toHaveBeenCalled();
+    expect(mockProductInventoryDelete).not.toHaveBeenCalled();
+    await expect(response.json()).resolves.toMatchObject({
+      action: "update",
+      count: 1,
+      skus: [101],
+      mirrorErrors: [
+        {
+          sku: 101,
+          message: "Inventory mirror snapshot for SKU 101 omitted PCOP; browse data may stay stale until the next sync.",
+        },
+      ],
+    });
+  });
+
+  it("surfaces batch-level mirror setup failures for every updated row", async () => {
+    prismBatchMocks.validateBatchUpdateAgainstPrism.mockResolvedValue([]);
+    prismBatchMocks.batchUpdateItems.mockResolvedValue([101, 202]);
+    supabaseMocks.getSupabaseAdminClient.mockImplementation(() => {
+      throw new Error("supabase unavailable");
+    });
+
+    const { POST } = await loadRouteModule();
+    const response = await POST(new NextRequest("http://localhost/api/products/batch", {
+      method: "POST",
+      body: JSON.stringify({
+        action: "update",
+        rows: [101, 202].map((sku) => ({
+          sku,
+          patch: { item: { vendorId: 17 } },
+          baseline: { sku, barcode: "X", retail: 5, cost: 2, fDiscontinue: 0, primaryLocationId: 2 },
+        })),
+      }),
+    }));
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      action: "update",
+      count: 2,
+      skus: [101, 202],
+      mirrorErrors: [
+        { sku: 101, message: "supabase unavailable" },
+        { sku: 202, message: "supabase unavailable" },
+      ],
     });
   });
 

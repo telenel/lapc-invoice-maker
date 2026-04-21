@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useDeferredValue } from "react";
 import { toast } from "sonner";
 import { searchProducts } from "./queries";
 import { CATALOG_ITEMS_STORAGE_KEY } from "./constants";
+import { browseRowToSelectedProduct } from "./selected-products";
 import type {
   ProductBrowseRow,
   ProductBrowseSearchResult,
@@ -49,25 +50,6 @@ export function useProductSearch(filters: ProductFilters) {
 // useProductSelection — multi-select cart persisted across tabs/pages
 // ---------------------------------------------------------------------------
 
-function productToSelected(product: ProductBrowseRow): SelectedProduct {
-  return {
-    sku: product.sku,
-    description: (product.title ?? product.description ?? "").toUpperCase(),
-    retailPrice: product.retail_price,
-    cost: product.cost,
-    pricingLocationId: product.primary_location_id ?? 2,
-    barcode: product.barcode,
-    author: product.author,
-    title: product.title,
-    isbn: product.isbn,
-    edition: product.edition,
-    catalogNumber: product.catalog_number,
-    vendorId: product.vendor_id,
-    itemType: product.item_type,
-    fDiscontinue: product.discontinued ? 1 : 0,
-  };
-}
-
 export function useProductSelection() {
   const [selected, setSelected] = useState<Map<number, SelectedProduct>>(
     () => new Map()
@@ -79,7 +61,7 @@ export function useProductSelection() {
       if (next.has(product.sku)) {
         next.delete(product.sku);
       } else {
-        next.set(product.sku, productToSelected(product));
+        next.set(product.sku, browseRowToSelectedProduct(product));
       }
       return next;
     });
@@ -92,7 +74,7 @@ export function useProductSelection() {
       if (allOnPage) {
         products.forEach((p) => next.delete(p.sku));
       } else {
-        products.forEach((p) => next.set(p.sku, productToSelected(p)));
+        products.forEach((p) => next.set(p.sku, browseRowToSelectedProduct(p)));
       }
       return next;
     });

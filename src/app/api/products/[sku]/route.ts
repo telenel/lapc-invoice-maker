@@ -716,22 +716,48 @@ async function buildLegacyMirrorPayload(
   return buildProductMirrorPayload(sku, patch, snapshot, includeTextbookFields);
 }
 
-async function buildInventoryMirrorPayload(
+function formatInventoryMirrorLocationList(locationIds: ProductLocationId[]): string {
+  return locationIds
+    .map((locationId) => PRODUCT_INVENTORY_LOCATION_ABBREV_BY_ID[locationId] ?? `Location ${locationId}`)
+    .join(", ");
+}
+
+function formatInventoryMirrorMissingMessage(
+  sku: number,
+  locationIds: ProductLocationId[],
+): string {
+  return `Inventory mirror snapshot for SKU ${sku} omitted ${formatInventoryMirrorLocationList(locationIds)}; browse data may stay stale until the next sync.`;
+}
+
+async function buildInventoryMirrorRefresh(
   sku: number,
   patch: ProductEditPatchV2,
   getInventoryPatches: (patch: ProductWriteBuckets) => InventoryPatchPerLocation[],
   normalizeUpdaterInput: (patch: ProductEditPatchV2) => ProductWriteBuckets,
   getInventoryMirrorSnapshotRows: (sku: number, locationIds: ProductLocationId[]) => Promise<InventoryMirrorSnapshotRow[]>,
-): Promise<Record<string, unknown>[]> {
-  const { buildInventoryMirrorPayload: buildInventoryMirrorPayloadFromSnapshot } = await import("@/domains/product/mirror-payloads");
+): Promise<{
+  payload: Record<string, unknown>[];
+  missingLocationIds: ProductLocationId[];
+}> {
+  const {
+    buildInventoryMirrorPayload: buildInventoryMirrorPayloadFromSnapshot,
+    getMissingInventoryMirrorLocationIds,
+  } = await import("@/domains/product/mirror-payloads");
   const touchedLocationIds = Array.from(new Set(
     getInventoryPatches(normalizeUpdaterInput(patch)).map((entry) => entry.locationId),
   ));
   if (touchedLocationIds.length === 0) {
-    return [];
+    return {
+      payload: [],
+      missingLocationIds: [],
+    };
   }
   const snapshotRows = await getInventoryMirrorSnapshotRows(sku, touchedLocationIds);
-  return buildInventoryMirrorPayloadFromSnapshot(sku, snapshotRows);
+  const missingLocationIds = getMissingInventoryMirrorLocationIds(touchedLocationIds, snapshotRows);
+  return {
+    payload: buildInventoryMirrorPayloadFromSnapshot(sku, snapshotRows),
+    missingLocationIds,
+  };
 }
 
 function getSupabaseMirrorError(
@@ -801,6 +827,13 @@ export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: Rout
       ? await updateTextbookPricing(sku, normalized.data.patch, normalized.data.baseline)
       : await updateGmItem(sku, normalized.data.patch, normalized.data.baseline);
     const mirrorErrors: Array<{ sku: number; message: string }> = [];
+    const recordMirrorError = (mirrorErr: unknown) => {
+      console.warn(`[PATCH /api/products/${sku}] mirror failed:`, mirrorErr);
+      mirrorErrors.push({
+        sku,
+        message: mirrorErr instanceof Error ? mirrorErr.message : String(mirrorErr),
+      });
+    };
 
     // Non-blocking Supabase mirror
     try {
@@ -815,7 +848,15 @@ export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: Rout
         `Failed to mirror products row for SKU ${sku}`,
       );
       if (productMirrorError) throw productMirrorError;
-      const inventoryMirrorPayload = await buildInventoryMirrorPayload(
+    } catch (mirrorErr) {
+      recordMirrorError(mirrorErr);
+    }
+
+    try {
+      const {
+        payload: inventoryMirrorPayload,
+        missingLocationIds,
+      } = await buildInventoryMirrorRefresh(
         sku,
         normalized.data.patch,
         getInventoryPatches,
@@ -830,12 +871,11 @@ export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: Rout
         );
         if (inventoryMirrorError) throw inventoryMirrorError;
       }
+      if (missingLocationIds.length > 0) {
+        throw new Error(formatInventoryMirrorMissingMessage(sku, missingLocationIds));
+      }
     } catch (mirrorErr) {
-      console.warn(`[PATCH /api/products/${sku}] mirror failed:`, mirrorErr);
-      mirrorErrors.push({
-        sku,
-        message: mirrorErr instanceof Error ? mirrorErr.message : String(mirrorErr),
-      });
+      recordMirrorError(mirrorErr);
     }
 
     return NextResponse.json({

@@ -1,4 +1,7 @@
-import { PRODUCT_LOCATION_ABBREV_BY_ID } from "./location-filters";
+import {
+  PRODUCT_LOCATION_ABBREV_BY_ID,
+  type ProductLocationId,
+} from "./location-filters";
 import type {
   ItemSnapshot,
 } from "./types";
@@ -100,6 +103,16 @@ export function buildInventoryMirrorPayload(
 
     return payload;
   });
+}
+
+export function getMissingInventoryMirrorLocationIds(
+  requestedLocationIds: ProductLocationId[],
+  rows: InventoryMirrorSnapshotRow[],
+): ProductLocationId[] {
+  const returnedLocationIds = new Set(rows.map((row) => row.locationId));
+  return Array.from(new Set(requestedLocationIds)).filter(
+    (locationId) => !returnedLocationIds.has(locationId),
+  );
 }
 
 export function buildInventoryMirrorPayloadFromPatch(

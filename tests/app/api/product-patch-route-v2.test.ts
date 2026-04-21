@@ -28,6 +28,9 @@ const mockEq = vi.fn(() => ({ maybeSingle: mockMaybeSingle }));
 const mockSelect = vi.fn(() => ({ eq: mockEq }));
 const mockProductsUpsert = vi.fn();
 const mockProductInventoryUpsert = vi.fn();
+const mockProductInventoryDeleteIn = vi.fn();
+const mockProductInventoryDeleteEq = vi.fn(() => ({ in: mockProductInventoryDeleteIn }));
+const mockProductInventoryDelete = vi.fn(() => ({ eq: mockProductInventoryDeleteEq }));
 const mockFrom = vi.fn((table: string) => {
   if (table === "products") {
     return {
@@ -38,6 +41,7 @@ const mockFrom = vi.fn((table: string) => {
   if (table === "product_inventory") {
     return {
       upsert: mockProductInventoryUpsert,
+      delete: mockProductInventoryDelete,
     };
   }
   return {
@@ -126,6 +130,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
     );
     mockProductsUpsert.mockResolvedValue({ error: null });
     mockProductInventoryUpsert.mockResolvedValue({ error: null });
+    mockProductInventoryDeleteIn.mockResolvedValue({ error: null });
   });
 
   it("accepts a typed v2 payload and normalizes write buckets before dispatch", async () => {
@@ -816,6 +821,100 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
       sku: 1001,
       appliedFields: ["inventory:2:retail"],
       mirrorErrors: [{ sku: 1001, message: "snapshot failed" }],
+    });
+  });
+
+  it("returns a mirror warning when Prism omits a touched location snapshot", async () => {
+    prismMocks.updateGmItem.mockResolvedValueOnce({
+      sku: 1001,
+      appliedFields: ["inventory:3:retail"],
+    });
+    prismMocks.getInventoryMirrorSnapshotRows.mockResolvedValueOnce([]);
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          baseline: {
+            sku: 1001,
+            barcode: "123456789012",
+            retail: 21.99,
+            cost: 10.5,
+            fDiscontinue: 0,
+            primaryLocationId: 3,
+          },
+          patch: {
+            inventory: [
+              {
+                locationId: 3,
+                retail: 24.99,
+              },
+            ],
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockProductInventoryUpsert).not.toHaveBeenCalled();
+    expect(mockProductInventoryDelete).not.toHaveBeenCalled();
+    await expect(response.json()).resolves.toEqual({
+      sku: 1001,
+      appliedFields: ["inventory:3:retail"],
+      mirrorErrors: [
+        {
+          sku: 1001,
+          message: "Inventory mirror snapshot for SKU 1001 omitted PCOP; browse data may stay stale until the next sync.",
+        },
+      ],
+    });
+  });
+
+  it("still refreshes product_inventory when the products mirror upsert fails", async () => {
+    prismMocks.updateGmItem.mockResolvedValueOnce({
+      sku: 1001,
+      appliedFields: ["inventory:2:retail"],
+    });
+    mockProductsUpsert.mockResolvedValueOnce({
+      error: { message: "products mirror failed" },
+    });
+    mockProductInventoryUpsert.mockResolvedValueOnce({
+      error: null,
+    });
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          patch: {
+            primaryInventory: {
+              retail: 12.99,
+            },
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockProductInventoryUpsert).toHaveBeenCalledWith([
+      expect.objectContaining({
+        sku: 1001,
+        location_id: 2,
+        retail_price: 12.99,
+      }),
+    ]);
+    await expect(response.json()).resolves.toEqual({
+      sku: 1001,
+      appliedFields: ["inventory:2:retail"],
+      mirrorErrors: [{ sku: 1001, message: "products mirror failed" }],
     });
   });
 

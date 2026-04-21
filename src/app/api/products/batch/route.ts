@@ -23,6 +23,7 @@ import {
 import {
   buildInventoryMirrorPayload,
   buildProductMirrorPayload,
+  getMissingInventoryMirrorLocationIds,
 } from "@/domains/product/mirror-payloads";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +39,19 @@ function getSupabaseErrorMessage(
 ): string | null {
   const message = result?.error?.message;
   return typeof message === "string" && message.length > 0 ? message : (result?.error ? fallback : null);
+}
+
+function formatInventoryMirrorLocationList(locationIds: ProductLocationId[]): string {
+  return locationIds
+    .map((locationId) => PRODUCT_LOCATION_ABBREV_BY_ID[locationId] ?? `Location ${locationId}`)
+    .join(", ");
+}
+
+function formatInventoryMirrorMissingMessage(
+  sku: number,
+  locationIds: ProductLocationId[],
+): string {
+  return `Inventory mirror snapshot for SKU ${sku} omitted ${formatInventoryMirrorLocationList(locationIds)}; browse data may stay stale until the next sync.`;
 }
 
 async function mapWithConcurrencyLimit<T, R>(
@@ -213,10 +227,16 @@ export const POST = withAdmin(async (request: NextRequest) => {
             }
 
             try {
-              const touchedLocationIds = getInventoryPatches(normalizeUpdaterInput(row.patch)).map(
-                (entry) => entry.locationId,
-              );
+              const touchedLocationIds = Array.from(new Set(
+                getInventoryPatches(normalizeUpdaterInput(row.patch)).map(
+                  (entry) => entry.locationId,
+                ),
+              ));
               const inventoryMirrorRows = await getInventoryMirrorSnapshotRows(row.sku, touchedLocationIds);
+              const missingLocationIds = getMissingInventoryMirrorLocationIds(
+                touchedLocationIds,
+                inventoryMirrorRows,
+              );
               const inventoryRows = buildInventoryMirrorPayload(row.sku, inventoryMirrorRows);
               if (inventoryRows.length > 0) {
                 const inventoryMirrorResult = await supabase.from("product_inventory").upsert(inventoryRows, {
@@ -229,6 +249,9 @@ export const POST = withAdmin(async (request: NextRequest) => {
                 if (inventoryMirrorError) {
                   rowErrors.push(inventoryMirrorError);
                 }
+              }
+              if (missingLocationIds.length > 0) {
+                rowErrors.push(formatInventoryMirrorMissingMessage(row.sku, missingLocationIds));
               }
             } catch (inventoryMirrorErr) {
               rowErrors.push(
@@ -249,6 +272,11 @@ export const POST = withAdmin(async (request: NextRequest) => {
           mirrorErrors = mirrorResults.filter((result): result is MirrorError => result !== null);
         } catch (mirrorErr) {
           console.warn("[batch update] mirror failed:", mirrorErr);
+          const message = mirrorErr instanceof Error ? mirrorErr.message : String(mirrorErr);
+          mirrorErrors = parsed.data.rows.map((row) => ({
+            sku: row.sku,
+            message,
+          }));
         }
         return NextResponse.json({
           action: "update",

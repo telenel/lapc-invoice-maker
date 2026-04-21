@@ -93,11 +93,20 @@ vi.mock("@/components/products/product-action-bar", () => ({
     const editDisabled =
       !allowMissingEditPricing &&
       (editPricingItems ?? []).some((item) => item.retailPrice == null || item.cost == null);
+    const salesDisabled = (selected ? Array.from(selected.values()) : []).some(
+      (item) => item.retailPrice == null,
+    );
 
     return (
       <div>
         <button type="button" onClick={onEditClick} disabled={editDisabled}>
           Open edit dialog
+        </button>
+        <button type="button" disabled={salesDisabled}>
+          Create Quote
+        </button>
+        <button type="button" disabled={salesDisabled}>
+          Create Invoice
         </button>
         <button type="button" onClick={saveToSession}>
           Save selection snapshot
@@ -118,7 +127,7 @@ vi.mock("@/components/products/new-item-dialog", () => ({
       primaryLocationId,
     }: {
       locationIds?: number[];
-      primaryLocationId?: number;
+      primaryLocationId?: ProductLocationId;
     }) => (
       <div data-testid="new-item-dialog-props">
         <span>{`new-item-location-ids:${locationIds?.join(",") ?? "none"}`}</span>
@@ -157,7 +166,23 @@ vi.mock("@/components/products/column-visibility-toggle", () => ({
 }));
 
 vi.mock("@/components/products/location-picker", () => ({
-  LocationPicker: () => <div data-testid="location-picker" />,
+  LocationPicker: ({
+    onChange,
+  }: {
+    onChange?: (value: ProductLocationId[]) => void;
+  }) => (
+    <div data-testid="location-picker">
+      <button type="button" onClick={() => onChange?.([2])}>
+        scope:PIER
+      </button>
+      <button type="button" onClick={() => onChange?.([3])}>
+        scope:PCOP
+      </button>
+      <button type="button" onClick={() => onChange?.([4])}>
+        scope:PFS
+      </button>
+    </div>
+  ),
 }));
 
 vi.mock("@/components/products/edit-item-dialog-legacy", () => ({
@@ -198,9 +223,12 @@ vi.mock("@/components/products/edit-item-dialog-v2", () => ({
       detail?: { sku: number } | null;
       detailLoading?: boolean;
       locationIds?: number[];
-      primaryLocationId?: number;
+      primaryLocationId?: ProductLocationId;
       onSaved?: (skus: number[]) => void;
-      onSavedScopedItems?: (items: SelectedProduct[]) => void;
+      onSavedScopedItems?: (
+        items: SelectedProduct[],
+        options?: { retainUntilMatch?: boolean },
+      ) => void;
     }) =>
       open ? (
         <div data-testid="v2-dialog">
@@ -228,11 +256,47 @@ vi.mock("@/components/products/edit-item-dialog-v2", () => ({
                   barcode: "999888777000",
                   fDiscontinue: 1,
                 }),
-              ]);
+              ], { retainUntilMatch: false });
               onSaved?.([items?.[0]?.sku ?? 1001]);
             }}
           >
             Save scoped v2 dialog
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onSavedScopedItems?.([
+                makeSelectedProduct({
+                  sku: items?.[0]?.sku ?? 1001,
+                  retailPrice: 44.99,
+                  cost: 22.25,
+                  pricingLocationId: primaryLocationId ?? 2,
+                  barcode: "999888777000",
+                  fDiscontinue: 1,
+                }),
+              ], { retainUntilMatch: true });
+              onSaved?.([items?.[0]?.sku ?? 1001]);
+            }}
+          >
+            Save scoped v2 dialog with mirror warning
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              onSavedScopedItems?.([
+                makeSelectedProduct({
+                  sku: items?.[0]?.sku ?? 1001,
+                  retailPrice: 55.55,
+                  cost: 27.75,
+                  pricingLocationId: 3,
+                  barcode: "333222111000",
+                  fDiscontinue: 1,
+                }),
+              ], { retainUntilMatch: false });
+              onSaved?.([items?.[0]?.sku ?? 1001]);
+            }}
+          >
+            Save secondary scoped v2 dialog
           </button>
         </div>
       ) : null,
@@ -241,7 +305,7 @@ vi.mock("@/components/products/edit-item-dialog-v2", () => ({
 
 import ProductsPage from "@/app/products/page";
 import { CATALOG_ITEMS_STORAGE_KEY } from "@/domains/product/constants";
-import type { ProductEditDetails, SelectedProduct } from "@/domains/product/types";
+import type { ProductEditDetails, ProductLocationId, SelectedProduct } from "@/domains/product/types";
 
 function makeSelectedProduct(overrides: Partial<SelectedProduct> = {}): SelectedProduct {
   return {
@@ -639,8 +703,8 @@ describe("ProductsPage edit dialog mode integration", () => {
 
     render(<ProductsPage />);
 
-    expect(screen.getByText("selected-retail:39.99")).toBeInTheDocument();
-    expect(screen.getByText("selected-cost:19.5")).toBeInTheDocument();
+    expect(screen.getByText("selected-retail:null")).toBeInTheDocument();
+    expect(screen.getByText("selected-cost:null")).toBeInTheDocument();
     expect(screen.getByText("edit-retail:null")).toBeInTheDocument();
     expect(screen.getByText("edit-cost:null")).toBeInTheDocument();
 
@@ -649,6 +713,95 @@ describe("ProductsPage edit dialog mode integration", () => {
     await user.click(editButton);
 
     expect(screen.queryByText("dialog:v2")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Save selection snapshot" }));
+    expect(JSON.parse(sessionStorage.getItem(CATALOG_ITEMS_STORAGE_KEY) ?? "[]")).toMatchObject([
+      {
+        sku: 1001,
+        retailPrice: null,
+        cost: null,
+      },
+    ]);
+  });
+
+  it("keeps current-scope rows editable when the scope has no inventory slice yet", async () => {
+    const user = userEvent.setup();
+    searchParamsState = new URLSearchParams("tab=merchandise&loc=4");
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [
+          {
+            sku: 1001,
+            description: "Pierce Hoodie",
+            title: null,
+            retail_price: 39.99,
+            cost: 19.5,
+            primary_location_id: null,
+            selected_inventories: [],
+            barcode: "123456789012",
+            author: null,
+            isbn: null,
+            edition: null,
+            catalog_number: "HD-1001",
+            vendor_id: 21,
+            item_type: "general_merchandise",
+            discontinued: false,
+          } as never,
+        ],
+        total: 1,
+        page: 1,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    useProductSelectionMock.mockReturnValue({
+      selected: new Map([
+        [
+          1001,
+          makeSelectedProduct({
+            retailPrice: 39.99,
+            cost: 19.5,
+            pricingLocationId: 2,
+          }),
+        ],
+      ]),
+      selectedCount: 1,
+      toggle: vi.fn(),
+      toggleAll: vi.fn(),
+      refreshVisibleSelections: vi.fn(),
+      clear: vi.fn(),
+      isSelected: vi.fn(),
+      saveToSession: vi.fn(),
+    });
+
+    render(<ProductsPage />);
+
+    expect(screen.getByText("selected-retail:39.99")).toBeInTheDocument();
+    expect(screen.getByText("selected-cost:19.5")).toBeInTheDocument();
+    expect(screen.getByText("edit-retail:null")).toBeInTheDocument();
+    expect(screen.getByText("edit-cost:null")).toBeInTheDocument();
+
+    const editButton = screen.getByRole("button", { name: "Open edit dialog" });
+    expect(editButton).toBeEnabled();
+
+    await user.click(editButton);
+
+    await waitFor(() => {
+      expect(screen.getByText("dialog:v2")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("item-retail:null")).toBeInTheDocument();
+    expect(screen.getByText("item-cost:null")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Save selection snapshot" }));
+    expect(JSON.parse(sessionStorage.getItem(CATALOG_ITEMS_STORAGE_KEY) ?? "[]")).toMatchObject([
+      {
+        sku: 1001,
+        retailPrice: 39.99,
+        cost: 19.5,
+      },
+    ]);
   });
 
   it("reuses the current scope cache for off-page action-bar state and edit baselines", async () => {
@@ -858,6 +1011,532 @@ describe("ProductsPage edit dialog mode integration", () => {
     });
 
     expect(screen.getByText("item-barcode:999888777000")).toBeInTheDocument();
+    expect(screen.getByText("item-fDiscontinue:1")).toBeInTheDocument();
+  });
+
+  it("drops non-sticky saved scoped values after a divergent visible refetch", async () => {
+    const user = userEvent.setup();
+    searchParamsState = new URLSearchParams("tab=merchandise&loc=4");
+    const staleVisibleRow = {
+      sku: 1001,
+      description: "Pierce Hoodie",
+      title: null,
+      retail_price: 41.99,
+      cost: 21.5,
+      primary_location_id: 4,
+      selected_inventories: [
+        {
+          locationId: 4,
+          retailPrice: 41.99,
+          cost: 21.5,
+        },
+      ],
+      barcode: "123456789012",
+      author: null,
+      isbn: null,
+      edition: null,
+      catalog_number: "HD-1001",
+      vendor_id: 21,
+      item_type: "general_merchandise",
+      discontinued: false,
+    } as never;
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [staleVisibleRow],
+        total: 1,
+        page: 1,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    useProductSelectionMock.mockReturnValue({
+      selected: new Map([
+        [
+          1001,
+          makeSelectedProduct({
+            retailPrice: 39.99,
+            cost: 19.5,
+            pricingLocationId: 2,
+            barcode: "123456789012",
+            fDiscontinue: 0,
+          }),
+        ],
+      ]),
+      selectedCount: 1,
+      toggle: vi.fn(),
+      toggleAll: vi.fn(),
+      refreshVisibleSelections: vi.fn(),
+      clear: vi.fn(),
+      isSelected: vi.fn(),
+      saveToSession: vi.fn(),
+    });
+
+    const view = render(<ProductsPage />);
+
+    await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("dialog:v2")).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: "Save scoped v2 dialog" }));
+
+    await waitFor(() => {
+      expect(screen.queryByText("dialog:v2")).not.toBeInTheDocument();
+    });
+
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [staleVisibleRow],
+        total: 1,
+        page: 1,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    view.rerender(<ProductsPage />);
+
+    expect(screen.getByText("selected-retail:41.99")).toBeInTheDocument();
+    expect(screen.getByText("selected-cost:21.5")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Save selection snapshot" }));
+    expect(JSON.parse(sessionStorage.getItem(CATALOG_ITEMS_STORAGE_KEY) ?? "[]")).toMatchObject([
+      {
+        sku: 1001,
+        retailPrice: 41.99,
+        cost: 21.5,
+        barcode: "123456789012",
+        fDiscontinue: 0,
+      },
+    ]);
+
+    await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("dialog:v2")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("item-retail:41.99")).toBeInTheDocument();
+    expect(screen.getByText("item-cost:21.5")).toBeInTheDocument();
+    expect(screen.getByText("item-barcode:123456789012")).toBeInTheDocument();
+    expect(screen.getByText("item-fDiscontinue:0")).toBeInTheDocument();
+  });
+
+  it("keeps saved scoped values through a stale visible refetch when mirror lag is reported", async () => {
+    const user = userEvent.setup();
+    searchParamsState = new URLSearchParams("tab=merchandise&loc=4");
+    const staleVisibleRow = {
+      sku: 1001,
+      description: "Pierce Hoodie",
+      title: null,
+      retail_price: 41.99,
+      cost: 21.5,
+      primary_location_id: 4,
+      selected_inventories: [
+        {
+          locationId: 4,
+          retailPrice: 41.99,
+          cost: 21.5,
+        },
+      ],
+      barcode: "123456789012",
+      author: null,
+      isbn: null,
+      edition: null,
+      catalog_number: "HD-1001",
+      vendor_id: 21,
+      item_type: "general_merchandise",
+      discontinued: false,
+    } as never;
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [staleVisibleRow],
+        total: 1,
+        page: 1,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    useProductSelectionMock.mockReturnValue({
+      selected: new Map([
+        [
+          1001,
+          makeSelectedProduct({
+            retailPrice: 39.99,
+            cost: 19.5,
+            pricingLocationId: 2,
+            barcode: "123456789012",
+            fDiscontinue: 0,
+          }),
+        ],
+      ]),
+      selectedCount: 1,
+      toggle: vi.fn(),
+      toggleAll: vi.fn(),
+      refreshVisibleSelections: vi.fn(),
+      clear: vi.fn(),
+      isSelected: vi.fn(),
+      saveToSession: vi.fn(),
+    });
+
+    const view = render(<ProductsPage />);
+
+    await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("dialog:v2")).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: "Save scoped v2 dialog with mirror warning" }));
+
+    await waitFor(() => {
+      expect(screen.queryByText("dialog:v2")).not.toBeInTheDocument();
+    });
+
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [staleVisibleRow],
+        total: 1,
+        page: 1,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    view.rerender(<ProductsPage />);
+
+    expect(screen.getByText("selected-retail:44.99")).toBeInTheDocument();
+    expect(screen.getByText("selected-cost:22.25")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Save selection snapshot" }));
+    expect(JSON.parse(sessionStorage.getItem(CATALOG_ITEMS_STORAGE_KEY) ?? "[]")).toMatchObject([
+      {
+        sku: 1001,
+        retailPrice: 44.99,
+        cost: 22.25,
+        barcode: "999888777000",
+        fDiscontinue: 1,
+      },
+    ]);
+
+    await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("dialog:v2")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("item-retail:44.99")).toBeInTheDocument();
+    expect(screen.getByText("item-cost:22.25")).toBeInTheDocument();
+    expect(screen.getByText("item-barcode:999888777000")).toBeInTheDocument();
+    expect(screen.getByText("item-fDiscontinue:1")).toBeInTheDocument();
+  });
+
+  it("keeps saved current-scope values when the live row temporarily loses that scope", async () => {
+    const user = userEvent.setup();
+    searchParamsState = new URLSearchParams("tab=merchandise&loc=4");
+    const liveScopedRow = {
+      sku: 1001,
+      description: "Pierce Hoodie",
+      title: null,
+      retail_price: 41.99,
+      cost: 21.5,
+      primary_location_id: 4,
+      selected_inventories: [
+        {
+          locationId: 4,
+          retailPrice: 41.99,
+          cost: 21.5,
+        },
+      ],
+      barcode: "123456789012",
+      author: null,
+      isbn: null,
+      edition: null,
+      catalog_number: "HD-1001",
+      vendor_id: 21,
+      item_type: "general_merchandise",
+      discontinued: false,
+    } as never;
+    const lostScopeRow = {
+      ...liveScopedRow,
+      retail_price: null,
+      cost: null,
+      primary_location_id: null,
+      selected_inventories: [],
+    } as never;
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [liveScopedRow],
+        total: 1,
+        page: 1,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    useProductSelectionMock.mockReturnValue({
+      selected: new Map([
+        [
+          1001,
+          makeSelectedProduct({
+            retailPrice: 39.99,
+            cost: 19.5,
+            pricingLocationId: 2,
+            barcode: "123456789012",
+            fDiscontinue: 0,
+          }),
+        ],
+      ]),
+      selectedCount: 1,
+      toggle: vi.fn(),
+      toggleAll: vi.fn(),
+      refreshVisibleSelections: vi.fn(),
+      clear: vi.fn(),
+      isSelected: vi.fn(),
+      saveToSession: vi.fn(),
+    });
+
+    const view = render(<ProductsPage />);
+
+    await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("dialog:v2")).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: "Save scoped v2 dialog" }));
+
+    await waitFor(() => {
+      expect(screen.queryByText("dialog:v2")).not.toBeInTheDocument();
+    });
+
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [lostScopeRow],
+        total: 1,
+        page: 1,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    view.rerender(<ProductsPage />);
+
+    expect(screen.getByText("selected-retail:44.99")).toBeInTheDocument();
+    expect(screen.getByText("selected-cost:22.25")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Create Quote" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Create Invoice" })).toBeEnabled();
+
+    await user.click(screen.getByRole("button", { name: "Save selection snapshot" }));
+    expect(JSON.parse(sessionStorage.getItem(CATALOG_ITEMS_STORAGE_KEY) ?? "[]")).toMatchObject([
+      {
+        sku: 1001,
+        retailPrice: 44.99,
+        cost: 22.25,
+      },
+    ]);
+  });
+
+  it("drops browse-derived current-scope cache when the live row loses that scope", () => {
+    searchParamsState = new URLSearchParams("tab=merchandise&loc=4");
+    const liveScopedRow = {
+      sku: 1001,
+      description: "Pierce Hoodie",
+      title: null,
+      retail_price: 41.99,
+      cost: 21.5,
+      primary_location_id: 4,
+      selected_inventories: [
+        {
+          locationId: 4,
+          retailPrice: 41.99,
+          cost: 21.5,
+        },
+      ],
+      barcode: "123456789012",
+      author: null,
+      isbn: null,
+      edition: null,
+      catalog_number: "HD-1001",
+      vendor_id: 21,
+      item_type: "general_merchandise",
+      discontinued: false,
+    } as never;
+    const lostScopeRow = {
+      ...liveScopedRow,
+      retail_price: null,
+      cost: null,
+      primary_location_id: null,
+      selected_inventories: [],
+    } as never;
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [liveScopedRow],
+        total: 1,
+        page: 1,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    useProductSelectionMock.mockReturnValue({
+      selected: new Map([
+        [
+          1001,
+          makeSelectedProduct({
+            retailPrice: 39.99,
+            cost: 19.5,
+            pricingLocationId: 2,
+            barcode: "123456789012",
+            fDiscontinue: 0,
+          }),
+        ],
+      ]),
+      selectedCount: 1,
+      toggle: vi.fn(),
+      toggleAll: vi.fn(),
+      refreshVisibleSelections: vi.fn(),
+      clear: vi.fn(),
+      isSelected: vi.fn(),
+      saveToSession: vi.fn(),
+    });
+
+    const view = render(<ProductsPage />);
+
+    expect(screen.getByText("selected-retail:41.99")).toBeInTheDocument();
+    expect(screen.getByText("selected-cost:21.5")).toBeInTheDocument();
+
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [lostScopeRow],
+        total: 1,
+        page: 1,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    view.rerender(<ProductsPage />);
+
+    expect(screen.getByText("selected-retail:null")).toBeInTheDocument();
+    expect(screen.getByText("selected-cost:null")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Create Quote" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Create Invoice" })).toBeDisabled();
+  });
+
+  it("reuses saved non-primary location snapshots after switching scope off-page", async () => {
+    const user = userEvent.setup();
+    searchParamsState = new URLSearchParams("tab=merchandise&loc=2");
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [
+          {
+            sku: 1001,
+            description: "Pierce Hoodie",
+            title: null,
+            retail_price: 39.99,
+            cost: 19.5,
+            primary_location_id: 2,
+            selected_inventories: [
+              {
+                locationId: 2,
+                retailPrice: 39.99,
+                cost: 19.5,
+              },
+            ],
+            barcode: "123456789012",
+            author: null,
+            isbn: null,
+            edition: null,
+            catalog_number: "HD-1001",
+            vendor_id: 21,
+            item_type: "general_merchandise",
+            discontinued: false,
+          } as never,
+        ],
+        total: 1,
+        page: 1,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    useProductSelectionMock.mockReturnValue({
+      selected: new Map([
+        [
+          1001,
+          makeSelectedProduct({
+            retailPrice: 39.99,
+            cost: 19.5,
+            pricingLocationId: 2,
+            barcode: "123456789012",
+            fDiscontinue: 0,
+          }),
+        ],
+      ]),
+      selectedCount: 1,
+      toggle: vi.fn(),
+      toggleAll: vi.fn(),
+      refreshVisibleSelections: vi.fn(),
+      clear: vi.fn(),
+      isSelected: vi.fn(),
+      saveToSession: vi.fn(),
+    });
+
+    render(<ProductsPage />);
+
+    await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("dialog:v2")).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: "Save secondary scoped v2 dialog" }));
+
+    await waitFor(() => {
+      expect(screen.queryByText("dialog:v2")).not.toBeInTheDocument();
+    });
+
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [],
+        total: 0,
+        page: 2,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    await user.click(screen.getByRole("button", { name: "scope:PCOP" }));
+
+    expect(screen.getByText("selected-retail:55.55")).toBeInTheDocument();
+    expect(screen.getByText("selected-cost:27.75")).toBeInTheDocument();
+    expect(screen.getByText("edit-retail:55.55")).toBeInTheDocument();
+    expect(screen.getByText("edit-cost:27.75")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Save selection snapshot" }));
+    expect(JSON.parse(sessionStorage.getItem(CATALOG_ITEMS_STORAGE_KEY) ?? "[]")).toMatchObject([
+      {
+        sku: 1001,
+        retailPrice: 55.55,
+        cost: 27.75,
+        barcode: "333222111000",
+        fDiscontinue: 1,
+      },
+    ]);
+
+    await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("dialog:v2")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("item-retail:55.55")).toBeInTheDocument();
+    expect(screen.getByText("item-cost:27.75")).toBeInTheDocument();
+    expect(screen.getByText("item-barcode:333222111000")).toBeInTheDocument();
     expect(screen.getByText("item-fDiscontinue:1")).toBeInTheDocument();
   });
 

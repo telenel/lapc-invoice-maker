@@ -22,7 +22,7 @@ import {
 } from "@/domains/product/location-filters";
 import type { ProductEditDetails, ProductEditPatchV2, SelectedProduct } from "@/domains/product/types";
 import { useProductRefDirectory } from "@/domains/product/vendor-directory";
-import type { EditItemDialogProps } from "../edit-item-dialog-legacy";
+import type { EditItemDialogProps, SavedScopedItemsOptions } from "../edit-item-dialog-legacy";
 import { SelectedItemsSummary } from "./components/selected-items-summary";
 import { buildInventoryPatch, buildV2Patch, hasPatchFields } from "./state/form-builders";
 import {
@@ -61,6 +61,11 @@ export interface EditItemDialogV2Props extends EditItemDialogProps {
   detailLoading?: boolean;
   locationIds?: ProductLocationId[];
   primaryLocationId?: ProductLocationId;
+}
+
+function formatMirrorWarning(mirrorErrors?: Array<{ sku: number }>): string | null {
+  if ((mirrorErrors?.length ?? 0) === 0) return null;
+  return `Saved in Prism, but the product mirror did not refresh for SKU ${mirrorErrors!.map((entry) => entry.sku).join(", ")}. Browse data may stay stale until the next sync.`;
 }
 
 export function EditItemDialogV2({
@@ -244,7 +249,7 @@ export function EditItemDialogV2({
     });
   }
 
-  async function saveSingleItem(v2Patch: ProductEditPatchV2): Promise<void> {
+  async function saveSingleItem(v2Patch: ProductEditPatchV2): Promise<{ mirrorWarning: string | null }> {
     const item = items[0];
     // Source retail/cost from whatever `resolvedPrimaryLocationId` resolves to
     // (PIER/PCOP/PFS). Falls back to `item.retail` / `item.cost` (which already
@@ -255,7 +260,7 @@ export function EditItemDialogV2({
     const primarySlice = detail?.inventoryByLocation.find(
       (entry) => entry.locationId === resolvedPrimaryLocationId,
     );
-    await productApi.update(item.sku, {
+    const result = await productApi.update(item.sku, {
       mode: "v2",
       patch: v2Patch,
       baseline: {
@@ -267,6 +272,7 @@ export function EditItemDialogV2({
         primaryLocationId: resolvedPrimaryLocationId,
       },
     });
+    return { mirrorWarning: formatMirrorWarning(result.mirrorErrors) };
   }
 
   async function saveBulk(
@@ -300,10 +306,7 @@ export function EditItemDialogV2({
     }
     return {
       validationError: null,
-      mirrorWarning:
-        "mirrorErrors" in result && (result.mirrorErrors?.length ?? 0) > 0
-          ? `Saved in Prism, but the product mirror did not refresh for SKU ${result.mirrorErrors!.map((entry) => entry.sku).join(", ")}. Browse data may stay stale until the next sync.`
-          : null,
+      mirrorWarning: "mirrorErrors" in result ? formatMirrorWarning(result.mirrorErrors) : null,
     };
   }
 
@@ -338,59 +341,92 @@ export function EditItemDialogV2({
   }
 
   function buildSavedScopedItems(v2Patch: ProductEditPatchV2): SelectedProduct[] {
-    const primaryLocationPatch = v2Patch.inventory?.find(
-      (entry) => entry.locationId === resolvedPrimaryLocationId,
-    );
     const itemPatch = v2Patch.item;
     const gmPatch = v2Patch.gm;
     const textbookPatch = v2Patch.textbook;
+    const cacheLocationIds = new Set<ProductLocationId>([resolvedPrimaryLocationId]);
+    for (const inventoryPatch of v2Patch.inventory ?? []) {
+      cacheLocationIds.add(inventoryPatch.locationId);
+    }
 
-    return items.map((item) => ({
-      sku: item.sku,
-      description: gmPatch?.description ?? item.description ?? "",
-      retailPrice:
-        primaryLocationPatch?.retail !== undefined
-          ? (primaryLocationPatch.retail ?? null)
-          : (item.retail ?? null),
-      cost:
-        primaryLocationPatch?.cost !== undefined
-          ? (primaryLocationPatch.cost ?? null)
-          : (item.cost ?? null),
-      pricingLocationId: resolvedPrimaryLocationId,
-      barcode:
-        itemPatch?.barcode !== undefined
-          ? (itemPatch.barcode ?? null)
-          : (item.barcode ?? null),
-      author:
-        textbookPatch?.author !== undefined
-          ? (textbookPatch.author ?? null)
-          : null,
-      title:
+    return items.flatMap((item) => {
+      const nextTitle =
         textbookPatch?.title !== undefined
           ? (textbookPatch.title ?? null)
-          : null,
-      isbn:
-        textbookPatch?.isbn !== undefined
-          ? (textbookPatch.isbn ?? null)
-          : null,
-      edition:
-        textbookPatch?.edition !== undefined
-          ? (textbookPatch.edition ?? null)
-          : null,
-      catalogNumber:
-        gmPatch?.catalogNumber !== undefined
-          ? (gmPatch.catalogNumber ?? null)
-          : (item.catalogNumber ?? null),
-      vendorId:
-        itemPatch?.vendorId !== undefined
-          ? (itemPatch.vendorId ?? null)
-          : (item.vendorId ?? null),
-      itemType: item.isTextbook ? "textbook" : "general_merchandise",
-      fDiscontinue:
-        itemPatch?.fDiscontinue !== undefined
-          ? itemPatch.fDiscontinue
-          : item.fDiscontinue,
-    }));
+          : (item.title ?? null);
+      const nextDescription = (nextTitle ?? gmPatch?.description ?? item.description ?? "").toUpperCase();
+      const detailInventoryByLocation = new Map(
+        (detail?.inventoryByLocation ?? []).map((inventory) => [inventory.locationId, inventory] as const),
+      );
+
+      return Array.from(cacheLocationIds).map((locationId) => {
+        const inventoryPatch = v2Patch.inventory?.find((entry) => entry.locationId === locationId);
+        const inventoryDetail = detailInventoryByLocation.get(locationId);
+        const knownRetail =
+          inventoryPatch?.retail !== undefined
+            ? (inventoryPatch.retail ?? null)
+            : (
+              locationId === resolvedPrimaryLocationId
+                ? (item.retail ?? inventoryDetail?.retail ?? null)
+                : (inventoryDetail?.retail ?? null)
+            );
+        const knownCost =
+          inventoryPatch?.cost !== undefined
+            ? (inventoryPatch.cost ?? null)
+            : (
+              locationId === resolvedPrimaryLocationId
+                ? (item.cost ?? inventoryDetail?.cost ?? null)
+                : (inventoryDetail?.cost ?? null)
+            );
+        const hasKnownRetail =
+          inventoryPatch?.retail !== undefined ||
+          knownRetail != null;
+        const hasKnownCost =
+          inventoryPatch?.cost !== undefined ||
+          knownCost != null;
+        if (!hasKnownRetail || !hasKnownCost) {
+          return null;
+        }
+
+        return {
+          sku: item.sku,
+          description: nextDescription,
+          retailPrice: knownRetail,
+          cost: knownCost,
+          pricingLocationId: locationId,
+          barcode:
+            itemPatch?.barcode !== undefined
+              ? (itemPatch.barcode ?? null)
+              : (item.barcode ?? null),
+          author:
+            textbookPatch?.author !== undefined
+              ? (textbookPatch.author ?? null)
+              : (item.author ?? null),
+          title: nextTitle,
+          isbn:
+            textbookPatch?.isbn !== undefined
+              ? (textbookPatch.isbn ?? null)
+              : (item.isbn ?? null),
+          edition:
+            textbookPatch?.edition !== undefined
+              ? (textbookPatch.edition ?? null)
+              : (item.edition ?? null),
+          catalogNumber:
+            gmPatch?.catalogNumber !== undefined
+              ? (gmPatch.catalogNumber ?? null)
+              : (item.catalogNumber ?? null),
+          vendorId:
+            itemPatch?.vendorId !== undefined
+              ? (itemPatch.vendorId ?? null)
+              : (item.vendorId ?? null),
+          itemType: item.itemType ?? (item.isTextbook ? "textbook" : "general_merchandise"),
+          fDiscontinue:
+            itemPatch?.fDiscontinue !== undefined
+              ? itemPatch.fDiscontinue
+              : item.fDiscontinue,
+        };
+      }).filter((savedItem): savedItem is SelectedProduct => savedItem !== null);
+    });
   }
 
   async function handleSave() {
@@ -421,20 +457,26 @@ export function EditItemDialogV2({
     setError(null);
 
     try {
+      let mirrorWarning: string | null = null;
       if (items.length === 1) {
-        await saveSingleItem(v2Patch);
+        ({ mirrorWarning } = await saveSingleItem(v2Patch));
       } else {
-        const { validationError, mirrorWarning } = await saveBulk(v2Patch);
+        const bulkResult = await saveBulk(v2Patch);
+        const { validationError } = bulkResult;
         if (validationError) {
           setError(validationError);
           return;
         }
-        if (mirrorWarning) {
-          toast.error(mirrorWarning);
-        }
+        mirrorWarning = bulkResult.mirrorWarning;
+      }
+      if (mirrorWarning) {
+        toast.error(mirrorWarning);
       }
 
-      onSavedScopedItems?.(buildSavedScopedItems(v2Patch));
+      const savedScopedItemsOptions: SavedScopedItemsOptions = {
+        retainUntilMatch: mirrorWarning != null,
+      };
+      onSavedScopedItems?.(buildSavedScopedItems(v2Patch), savedScopedItemsOptions);
       onSaved?.(items.map((item) => item.sku));
       onOpenChange(false);
     } catch (err) {

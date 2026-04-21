@@ -36,6 +36,11 @@ import { productApi } from "@/domains/product/api-client";
 import { SYSTEM_PRESET_VIEWS } from "@/domains/product/presets";
 import { shouldApplyDefaultMinStock } from "@/domains/product/page-defaults";
 import {
+  browseRowToSelectedProduct,
+  getSelectedProductCacheKey,
+  selectedProductsEqual,
+} from "@/domains/product/selected-products";
+import {
   getPrimaryProductLocationId,
   serializeProductLocationIdsParam,
   type ProductLocationId,
@@ -52,42 +57,39 @@ function isTextbookItemType(itemType: string): boolean {
   return itemType === "textbook" || itemType === "used_textbook";
 }
 
-function productToScopedSelected(product: ProductBrowseRow): SelectedProduct {
+function actionBarItemToSelectedProduct(item: {
+  sku: number;
+  description: string;
+  retail: number | null;
+  cost: number | null;
+  primaryLocationId: ProductLocationId;
+  barcode: string | null;
+  author?: string | null;
+  title?: string | null;
+  isbn?: string | null;
+  edition?: string | null;
+  catalogNumber?: string | null;
+  vendorId?: number | null;
+  itemType?: string;
+  isTextbook?: boolean;
+  fDiscontinue: 0 | 1;
+}): SelectedProduct {
   return {
-    sku: product.sku,
-    description: (product.title ?? product.description ?? "").toUpperCase(),
-    retailPrice: product.retail_price,
-    cost: product.cost,
-    pricingLocationId: product.primary_location_id ?? 2,
-    barcode: product.barcode,
-    author: product.author,
-    title: product.title,
-    isbn: product.isbn,
-    edition: product.edition,
-    catalogNumber: product.catalog_number,
-    vendorId: product.vendor_id,
-    itemType: product.item_type,
-    fDiscontinue: product.discontinued ? 1 : 0,
+    sku: item.sku,
+    description: item.description,
+    retailPrice: item.retail,
+    cost: item.cost,
+    pricingLocationId: item.primaryLocationId,
+    barcode: item.barcode,
+    author: item.author ?? null,
+    title: item.title ?? null,
+    isbn: item.isbn ?? null,
+    edition: item.edition ?? null,
+    catalogNumber: item.catalogNumber ?? null,
+    vendorId: item.vendorId ?? null,
+    itemType: item.itemType ?? (item.isTextbook ? "textbook" : "general_merchandise"),
+    fDiscontinue: item.fDiscontinue,
   };
-}
-
-function selectedProductsEqual(left: SelectedProduct, right: SelectedProduct): boolean {
-  return (
-    left.sku === right.sku &&
-    left.description === right.description &&
-    left.retailPrice === right.retailPrice &&
-    left.cost === right.cost &&
-    left.pricingLocationId === right.pricingLocationId &&
-    left.barcode === right.barcode &&
-    left.author === right.author &&
-    left.title === right.title &&
-    left.isbn === right.isbn &&
-    left.edition === right.edition &&
-    left.catalogNumber === right.catalogNumber &&
-    left.vendorId === right.vendorId &&
-    left.itemType === right.itemType &&
-    left.fDiscontinue === right.fDiscontinue
-  );
 }
 
 function buildInlineEditRows(
@@ -110,6 +112,15 @@ function buildInlineEditRows(
       fDiscontinue: product.discontinued ? 1 : 0,
     };
   });
+}
+
+type SavedScopedSelectionEntry = {
+  product: SelectedProduct;
+  retainUntilMatch: boolean;
+};
+
+function getSelectedProductCacheSku(cacheKey: string): number {
+  return Number(cacheKey.split(":", 1)[0]);
 }
 
 export default function ProductsPage() {
@@ -231,19 +242,74 @@ export default function ProductsPage() {
   const [scopedSelectionCache, setScopedSelectionCache] = useState<Map<string, SelectedProduct>>(
     () => new Map(),
   );
+  const [savedScopedSelectionCache, setSavedScopedSelectionCache] = useState<
+    Map<string, SavedScopedSelectionEntry>
+  >(() => new Map());
+
+  useEffect(() => {
+    const selectedSkus = new Set(selected.keys());
+
+    setScopedSelectionCache((current) => {
+      let changed = false;
+      const next = new Map(current);
+      for (const cacheKey of current.keys()) {
+        if (selectedSkus.has(getSelectedProductCacheSku(cacheKey))) {
+          continue;
+        }
+        next.delete(cacheKey);
+        changed = true;
+      }
+      return changed ? next : current;
+    });
+
+    setSavedScopedSelectionCache((current) => {
+      let changed = false;
+      const next = new Map(current);
+      for (const cacheKey of current.keys()) {
+        if (selectedSkus.has(getSelectedProductCacheSku(cacheKey))) {
+          continue;
+        }
+        next.delete(cacheKey);
+        changed = true;
+      }
+      return changed ? next : current;
+    });
+  }, [selected]);
+
   const scopedSelected = useMemo(() => {
     const scopedRowsBySku = new Map((data?.products ?? []).map((product) => [product.sku, product]));
     return new Map(
       Array.from(selected.entries()).map(([sku, product]) => {
-        const cachedScopedSelection = scopedSelectionCache.get(`${sku}:${primaryLocationId}`);
+        const scopedRow = scopedRowsBySku.get(sku);
+        const liveScopedSelection = scopedRow ? browseRowToSelectedProduct(scopedRow) : null;
+        const cacheKey = getSelectedProductCacheKey(sku, primaryLocationId);
+        const savedScopedSelectionEntry =
+          cacheKey != null ? (savedScopedSelectionCache.get(cacheKey) ?? null) : null;
+        const savedScopedSelection =
+          savedScopedSelectionEntry != null &&
+          (
+            liveScopedSelection?.pricingLocationId !== primaryLocationId ||
+            savedScopedSelectionEntry.retainUntilMatch ||
+            selectedProductsEqual(savedScopedSelectionEntry.product, liveScopedSelection)
+          )
+            ? savedScopedSelectionEntry.product
+            : null;
+        const canUseScopedSelectionCache =
+          liveScopedSelection == null || liveScopedSelection.pricingLocationId === primaryLocationId;
+        const cachedScopedSelection =
+          savedScopedSelection ??
+          (
+            canUseScopedSelectionCache
+              ? (cacheKey != null ? (scopedSelectionCache.get(cacheKey) ?? null) : null)
+              : null
+          );
         if (cachedScopedSelection) {
           return [sku, cachedScopedSelection];
         }
-        const scopedRow = scopedRowsBySku.get(sku);
-        return [sku, scopedRow ? productToScopedSelected(scopedRow) : product];
+        return [sku, liveScopedSelection ?? product];
       }),
     );
-  }, [data?.products, primaryLocationId, scopedSelectionCache, selected]);
+  }, [data?.products, primaryLocationId, savedScopedSelectionCache, scopedSelectionCache, selected]);
   const selectedItems = Array.from(scopedSelected.values());
   useEffect(() => {
     const visibleSelectedRows = (data?.products ?? []).filter((product) => selected.has(product.sku));
@@ -253,12 +319,44 @@ export default function ProductsPage() {
       let changed = false;
       const next = new Map(current);
       for (const product of visibleSelectedRows) {
-        const scopedSelection = productToScopedSelected(product);
-        const cacheKey = `${product.sku}:${scopedSelection.pricingLocationId ?? primaryLocationId}`;
+        const scopedSelection = browseRowToSelectedProduct(product);
+        const currentScopeCacheKey = getSelectedProductCacheKey(product.sku, primaryLocationId);
+        if (scopedSelection.pricingLocationId !== primaryLocationId) {
+          if (currentScopeCacheKey != null && next.delete(currentScopeCacheKey)) {
+            changed = true;
+          }
+          continue;
+        }
+        const cacheKey = currentScopeCacheKey;
+        if (cacheKey == null) {
+          continue;
+        }
         const cachedSelection = next.get(cacheKey);
         if (!cachedSelection || !selectedProductsEqual(cachedSelection, scopedSelection)) {
           next.set(cacheKey, scopedSelection);
           changed = true;
+        }
+      }
+      return changed ? next : current;
+    });
+    setSavedScopedSelectionCache((current) => {
+      let changed = false;
+      const next = new Map(current);
+      for (const product of visibleSelectedRows) {
+        const scopedSelection = browseRowToSelectedProduct(product);
+        if (scopedSelection.pricingLocationId !== primaryLocationId) {
+          continue;
+        }
+        const cacheKey = getSelectedProductCacheKey(product.sku, primaryLocationId);
+        if (cacheKey == null) {
+          continue;
+        }
+        const savedSelection = next.get(cacheKey);
+        if (savedSelection) {
+          if (selectedProductsEqual(savedSelection.product, scopedSelection) || !savedSelection.retainUntilMatch) {
+            next.delete(cacheKey);
+            changed = true;
+          }
         }
       }
       return changed ? next : current;
@@ -270,27 +368,49 @@ export default function ProductsPage() {
     hasTextbookSelection: selectedItems.some((product) => isTextbookItemType(product.itemType)),
     selectionCount: selectedItems.length,
   });
-  const saveScopedSelectionToSession = useCallback(() => {
-    sessionStorage.setItem(CATALOG_ITEMS_STORAGE_KEY, JSON.stringify(selectedItems));
-  }, [selectedItems]);
-  // Keep the action bar/session handoff and the edit dialog on the same
-  // current-scope source of truth. The server's concurrency SELECT does
-  // `LEFT JOIN Inventory ON LocationID = @loc` and reads `inv.Retail` /
-  // `inv.Cost`, which is NULL when no Inventory row exists at that location.
-  // If we reused an off-page selection's stale persisted price for edit
-  // baselines, the client could send 39.99 while the server reads NULL and
-  // trigger a false 409. So edits only reuse persisted pricing when the stored
-  // selection was captured from the same location scope, and successful saves
-  // write that scoped snapshot back into the cache so invoice/quote/barcode
-  // handoff sees the same values immediately.
+  // Separate edit baselines from catalog handoff. The server's concurrency
+  // SELECT does `LEFT JOIN Inventory ON LocationID = @loc` and reads
+  // `inv.Retail` / `inv.Cost`, which is NULL when no Inventory row exists at
+  // that location, so edit baselines must stay strict to the current scope.
+  // The browse route still exposes a fallback `retail_price` / `cost` even
+  // when the current scope has no slice; invoice/quote/barcode handoff should
+  // preserve that visible fallback for on-page selections, but never reuse an
+  // off-page stale price unless it was captured or saved in the active scope.
+  // Successful saves seed a per-scope cache so action-bar/session/edit payloads
+  // keep the confirmed values even while the mirror catches up.
   const browseRowsBySku = new Map((data?.products ?? []).map((p) => [p.sku, p] as const));
-  const editableSelectionStates = selectedItems
+  const selectionStates = selectedItems
     .map((product) => {
       const browseRow = browseRowsBySku.get(product.sku);
+      const liveScopedSelection = browseRow != null ? browseRowToSelectedProduct(browseRow) : null;
+      const browseRowHasCurrentScope = liveScopedSelection?.pricingLocationId === primaryLocationId;
       const primarySlice = browseRow?.selected_inventories?.find(
         (inv) => inv.locationId === primaryLocationId,
       );
-      const cachedScopedSelection = scopedSelectionCache.get(`${product.sku}:${primaryLocationId}`);
+      const cacheKey = getSelectedProductCacheKey(product.sku, primaryLocationId);
+      const confirmedScopedSelection =
+        cacheKey != null
+          ? (
+            (() => {
+              const savedScopedSelectionEntry = savedScopedSelectionCache.get(cacheKey) ?? null;
+              return savedScopedSelectionEntry != null &&
+                (
+                  liveScopedSelection?.pricingLocationId !== primaryLocationId ||
+                  savedScopedSelectionEntry.retainUntilMatch ||
+                  selectedProductsEqual(savedScopedSelectionEntry.product, liveScopedSelection)
+                )
+                ? savedScopedSelectionEntry.product
+                : null;
+            })()
+          )
+          : null;
+      const cachedScopedSelection =
+        confirmedScopedSelection ??
+        (
+          cacheKey != null && (browseRow == null || browseRowHasCurrentScope)
+            ? (scopedSelectionCache.get(cacheKey) ?? null)
+            : null
+        );
       const persistedScopedSelection =
         cachedScopedSelection ??
         (
@@ -300,41 +420,104 @@ export default function ProductsPage() {
             ? product
             : null
         );
-      const scopedDescriptor = browseRow ? productToScopedSelected(browseRow) : persistedScopedSelection;
-      const retail = browseRow
-        ? (primarySlice?.retailPrice ?? null)
-        : (persistedScopedSelection?.retailPrice ?? null);
-      const cost = browseRow
-        ? (primarySlice?.cost ?? null)
-        : (persistedScopedSelection?.cost ?? null);
+      const visibleScopedSelection = liveScopedSelection;
+      const scopedDescriptor = cachedScopedSelection ?? visibleScopedSelection ?? persistedScopedSelection;
+      const retail = cachedScopedSelection?.retailPrice ??
+        (
+          browseRow != null && visibleScopedSelection != null
+            ? (primarySlice?.retailPrice ?? null)
+            : (persistedScopedSelection?.retailPrice ?? null)
+        );
+      const cost = cachedScopedSelection?.cost ??
+        (
+          browseRow != null && visibleScopedSelection != null
+            ? (primarySlice?.cost ?? null)
+            : (persistedScopedSelection?.cost ?? null)
+        );
+      const actionBarRetail = cachedScopedSelection?.retailPrice ??
+        (
+          browseRow != null
+            ? (browseRow.retail_price ?? null)
+            : (persistedScopedSelection?.retailPrice ?? null)
+        );
+      const actionBarCost = cachedScopedSelection?.cost ??
+        (
+          browseRow != null
+            ? (browseRow.cost ?? null)
+            : (persistedScopedSelection?.cost ?? null)
+        );
+      const sharedItem = {
+        sku: product.sku,
+        barcode: scopedDescriptor?.barcode ?? null,
+        fDiscontinue: scopedDescriptor?.fDiscontinue ?? 0,
+        description: scopedDescriptor?.description ?? product.description ?? "",
+        author: scopedDescriptor?.author ?? product.author ?? null,
+        title: scopedDescriptor?.title ?? product.title ?? null,
+        isbn: scopedDescriptor?.isbn ?? product.isbn ?? null,
+        edition: scopedDescriptor?.edition ?? product.edition ?? null,
+        vendorId: scopedDescriptor?.vendorId ?? undefined,
+        dccId: undefined,
+        isTextbook: isTextbookItemType(scopedDescriptor?.itemType ?? product.itemType),
+        itemType: scopedDescriptor?.itemType ?? product.itemType,
+        primaryLocationId,
+        catalogNumber: scopedDescriptor?.catalogNumber ?? undefined,
+      };
 
       return {
-        hasScopedBaseline: browseRow ? primarySlice != null : persistedScopedSelection != null,
-        item: {
-          sku: product.sku,
-          barcode: scopedDescriptor?.barcode ?? null,
+        hasScopedBaseline:
+          browseRow != null || cachedScopedSelection != null || persistedScopedSelection != null,
+        editItem: {
+          ...sharedItem,
           retail,
           cost,
-          fDiscontinue: browseRow
-            ? (browseRow.discontinued ? 1 : 0)
-            : (persistedScopedSelection?.fDiscontinue ?? 0),
-          description: scopedDescriptor?.description ?? product.description ?? "",
-          vendorId: scopedDescriptor?.vendorId ?? undefined,
-          dccId: undefined,
-          isTextbook: isTextbookItemType(scopedDescriptor?.itemType ?? product.itemType),
-          primaryLocationId,
-          catalogNumber: scopedDescriptor?.catalogNumber ?? undefined,
+        },
+        actionBarItem: {
+          ...sharedItem,
+          retail: actionBarRetail,
+          cost: actionBarCost,
         },
       };
     });
-  const editableSelectedItems = editableSelectionStates.map((entry) => entry.item);
+  const editableSelectedItems = selectionStates.map((entry) => entry.editItem);
+  const actionBarSelected = useMemo(
+    () =>
+      new Map(
+        selectionStates.map(({ actionBarItem }) => [
+          actionBarItem.sku,
+          actionBarItemToSelectedProduct(actionBarItem),
+        ] as const),
+      ),
+    [selectionStates],
+  );
+  const actionBarSelectedItems = Array.from(actionBarSelected.values());
+  const knownScopedItemsByKey = useMemo(() => {
+    const next = new Map<string, SelectedProduct>();
+
+    for (const product of selected.values()) {
+      const cacheKey = getSelectedProductCacheKey(product.sku, product.pricingLocationId);
+      if (cacheKey != null) {
+        next.set(cacheKey, product);
+      }
+    }
+    for (const [cacheKey, product] of scopedSelectionCache.entries()) {
+      next.set(cacheKey, product);
+    }
+    for (const [cacheKey, entry] of savedScopedSelectionCache.entries()) {
+      next.set(cacheKey, entry.product);
+    }
+
+    return next;
+  }, [savedScopedSelectionCache, scopedSelectionCache, selected]);
+  const saveScopedSelectionToSession = useCallback(() => {
+    sessionStorage.setItem(CATALOG_ITEMS_STORAGE_KEY, JSON.stringify(actionBarSelectedItems));
+  }, [actionBarSelectedItems]);
   const allowMissingEditPricing =
     editDialogMode === "v2" &&
-    editableSelectionStates.length === 1 &&
-    editableSelectionStates[0]?.hasScopedBaseline === true;
-  const editPricingItems = editableSelectionStates.map(({ item }) => ({
-    retailPrice: item.retail,
-    cost: item.cost,
+    selectionStates.length > 0 &&
+    selectionStates.every((entry) => entry.hasScopedBaseline);
+  const editPricingItems = selectionStates.map(({ editItem }) => ({
+    retailPrice: editItem.retail,
+    cost: editItem.cost,
   }));
 
   const updateFilters = useCallback(
@@ -523,17 +706,32 @@ export default function ProductsPage() {
         onOpenChange={setEditOpen}
         editDialogOverride={editDialogOverride}
         items={editableSelectedItems}
+        knownScopedItemsByKey={knownScopedItemsByKey}
         locationIds={filters.locationIds}
         primaryLocationId={primaryLocationId}
-        onSavedScopedItems={(savedItems) => {
-          setScopedSelectionCache((current) => {
+        onSavedScopedItems={(savedItems, options) => {
+          setSavedScopedSelectionCache((current) => {
             let changed = false;
             const next = new Map(current);
+            const retainUntilMatch = options?.retainUntilMatch === true;
             for (const item of savedItems) {
-              const cacheKey = `${item.sku}:${item.pricingLocationId ?? primaryLocationId}`;
+              const cacheKey = getSelectedProductCacheKey(
+                item.sku,
+                item.pricingLocationId ?? primaryLocationId,
+              );
+              if (cacheKey == null) {
+                continue;
+              }
               const cachedItem = next.get(cacheKey);
-              if (!cachedItem || !selectedProductsEqual(cachedItem, item)) {
-                next.set(cacheKey, item);
+              if (
+                !cachedItem ||
+                cachedItem.retainUntilMatch !== retainUntilMatch ||
+                !selectedProductsEqual(cachedItem.product, item)
+              ) {
+                next.set(cacheKey, {
+                  product: item,
+                  retainUntilMatch,
+                });
                 changed = true;
               }
             }
@@ -778,7 +976,7 @@ export default function ProductsPage() {
 
       {/* Action bar */}
       <ProductActionBar
-        selected={scopedSelected}
+        selected={actionBarSelected}
         selectedCount={selectedCount}
         editPricingItems={editPricingItems}
         onClear={clear}

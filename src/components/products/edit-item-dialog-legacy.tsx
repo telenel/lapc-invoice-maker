@@ -17,13 +17,33 @@ import { productApi } from "@/domains/product/api-client";
 import type { GmItemPatch, TextbookPatch, ItemSnapshot, SelectedProduct } from "@/domains/product/types";
 import { useProductRefDirectory } from "@/domains/product/vendor-directory";
 
+export type SavedScopedItemsOptions = {
+  retainUntilMatch?: boolean;
+};
+
 export interface EditItemDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Rows to edit. Pass as ItemSnapshot[] — one per selected SKU. */
-  items: Array<ItemSnapshot & { description?: string; vendorId?: number; dccId?: number; itemTaxTypeId?: number; isTextbook?: boolean; comment?: string; catalogNumber?: string; packageType?: string; unitsPerPack?: number }>;
+  items: Array<ItemSnapshot & {
+    description?: string;
+    vendorId?: number;
+    dccId?: number;
+    itemTaxTypeId?: number;
+    isTextbook?: boolean;
+    comment?: string;
+    catalogNumber?: string;
+    packageType?: string;
+    unitsPerPack?: number;
+    author?: string | null;
+    title?: string | null;
+    isbn?: string | null;
+    edition?: string | null;
+    itemType?: string;
+  }>;
   onSaved?: (skus: number[]) => void;
-  onSavedScopedItems?: (items: SelectedProduct[]) => void;
+  onSavedScopedItems?: (items: SelectedProduct[], options?: SavedScopedItemsOptions) => void;
+  knownScopedItemsByKey?: ReadonlyMap<string, SelectedProduct>;
 }
 
 type FormState = Partial<{
