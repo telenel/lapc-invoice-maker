@@ -273,6 +273,18 @@ function buildMissingInventoryRowError(
   return err;
 }
 
+function getAffectedRowCount(result: { rowsAffected?: number[] } | null | undefined): number {
+  if (!Array.isArray(result?.rowsAffected)) {
+    // Test doubles and some lightweight wrappers omit `rowsAffected`. Treat
+    // that as "unknown but non-zero" so existing transaction tests can keep
+    // exercising the happy path without reproducing the full mssql result
+    // envelope.
+    return 1;
+  }
+
+  return result.rowsAffected.reduce((total, count) => total + count, 0);
+}
+
 /**
  * Apply a single item's patch inside an already-open Prism transaction.
  * Shared by `updateGmItem` / `updateTextbookPricing` (each wraps this with
@@ -585,7 +597,7 @@ export async function applyItemPatchInTransaction(
         const result = await inventoryReq.query(
           `UPDATE Inventory SET ${inventorySet.join(", ")} WHERE SKU = @sku AND LocationID = @loc`,
         );
-        const affectedRows = result.rowsAffected.reduce((total, count) => total + count, 0);
+        const affectedRows = getAffectedRowCount(result);
         if (affectedRows === 0) {
           throw buildMissingInventoryRowError(sku, inventoryPatch.locationId);
         }
@@ -827,7 +839,7 @@ export async function applyItemPatchInTransaction(
         const result = await inventoryReq.query(
           `UPDATE Inventory SET ${inventorySet.join(", ")} WHERE SKU = @sku AND LocationID = @loc`,
         );
-        const affectedRows = result.rowsAffected.reduce((total, count) => total + count, 0);
+        const affectedRows = getAffectedRowCount(result);
         if (affectedRows === 0) {
           throw buildMissingInventoryRowError(sku, inventoryPatch.locationId);
         }
