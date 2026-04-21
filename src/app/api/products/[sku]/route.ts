@@ -14,6 +14,7 @@ import type {
 } from "@/domains/product/types";
 import type { ProductLocationId } from "@/domains/product/location-filters";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import type { InventoryMirrorSnapshotRow, ProductWriteBuckets } from "@/domains/product/prism-updates";
 
 export const dynamic = "force-dynamic";
 
@@ -291,12 +292,20 @@ async function loadDeleteDeps() {
 }
 
 async function loadPatchDeps() {
-  const [{ isPrismConfigured }, { updateGmItem, updateTextbookPricing, getItemSnapshot }] = await Promise.all([
+  const [{ isPrismConfigured }, { updateGmItem, updateTextbookPricing, getItemSnapshot, getInventoryMirrorSnapshotRows, getInventoryPatches, normalizeUpdaterInput }] = await Promise.all([
     import("@/lib/prism"),
     import("@/domains/product/prism-updates"),
   ]);
 
-  return { isPrismConfigured, updateGmItem, updateTextbookPricing, getItemSnapshot };
+  return {
+    isPrismConfigured,
+    updateGmItem,
+    updateTextbookPricing,
+    getItemSnapshot,
+    getInventoryMirrorSnapshotRows,
+    getInventoryPatches,
+    normalizeUpdaterInput,
+  };
 }
 
 export const GET = withAdmin(async (_request: NextRequest, _session, ctx?: RouteCtx) => {
@@ -710,9 +719,19 @@ async function buildLegacyMirrorPayload(
 async function buildInventoryMirrorPayload(
   sku: number,
   patch: ProductEditPatchV2,
+  getInventoryPatches: (patch: ProductWriteBuckets) => InventoryPatchPerLocation[],
+  normalizeUpdaterInput: (patch: ProductEditPatchV2) => ProductWriteBuckets,
+  getInventoryMirrorSnapshotRows: (sku: number, locationIds: ProductLocationId[]) => Promise<InventoryMirrorSnapshotRow[]>,
 ): Promise<Record<string, unknown>[]> {
-  const { buildInventoryMirrorPayloadFromPatch } = await import("@/domains/product/mirror-payloads");
-  return buildInventoryMirrorPayloadFromPatch(sku, patch);
+  const { buildInventoryMirrorPayload: buildInventoryMirrorPayloadFromSnapshot } = await import("@/domains/product/mirror-payloads");
+  const touchedLocationIds = Array.from(new Set(
+    getInventoryPatches(normalizeUpdaterInput(patch)).map((entry) => entry.locationId),
+  ));
+  if (touchedLocationIds.length === 0) {
+    return [];
+  }
+  const snapshotRows = await getInventoryMirrorSnapshotRows(sku, touchedLocationIds);
+  return buildInventoryMirrorPayloadFromSnapshot(sku, snapshotRows);
 }
 
 function getSupabaseMirrorError(
@@ -725,7 +744,15 @@ function getSupabaseMirrorError(
 }
 
 export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: RouteCtx) => {
-  const { isPrismConfigured, updateGmItem, updateTextbookPricing, getItemSnapshot } = await loadPatchDeps();
+  const {
+    isPrismConfigured,
+    updateGmItem,
+    updateTextbookPricing,
+    getItemSnapshot,
+    getInventoryMirrorSnapshotRows,
+    getInventoryPatches,
+    normalizeUpdaterInput,
+  } = await loadPatchDeps();
   if (!isPrismConfigured()) {
     return NextResponse.json({ error: "Prism is not configured in this environment." }, { status: 503 });
   }
@@ -773,6 +800,7 @@ export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: Rout
     const result = isTextbookRow
       ? await updateTextbookPricing(sku, normalized.data.patch, normalized.data.baseline)
       : await updateGmItem(sku, normalized.data.patch, normalized.data.baseline);
+    const mirrorErrors: Array<{ sku: number; message: string }> = [];
 
     // Non-blocking Supabase mirror
     try {
@@ -787,7 +815,13 @@ export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: Rout
         `Failed to mirror products row for SKU ${sku}`,
       );
       if (productMirrorError) throw productMirrorError;
-      const inventoryMirrorPayload = await buildInventoryMirrorPayload(sku, normalized.data.patch);
+      const inventoryMirrorPayload = await buildInventoryMirrorPayload(
+        sku,
+        normalized.data.patch,
+        getInventoryPatches,
+        normalizeUpdaterInput,
+        getInventoryMirrorSnapshotRows,
+      );
       if (inventoryMirrorPayload.length > 0) {
         const inventoryMirrorResult = await supabase.from("product_inventory").upsert(inventoryMirrorPayload);
         const inventoryMirrorError = getSupabaseMirrorError(
@@ -798,13 +832,33 @@ export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: Rout
       }
     } catch (mirrorErr) {
       console.warn(`[PATCH /api/products/${sku}] mirror failed:`, mirrorErr);
+      mirrorErrors.push({
+        sku,
+        message: mirrorErr instanceof Error ? mirrorErr.message : String(mirrorErr),
+      });
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json({
+      ...result,
+      mirrorErrors: mirrorErrors.length > 0 ? mirrorErrors : undefined,
+    });
   } catch (err) {
     if (err instanceof Error && (err as Error & { code?: string }).code === "CONCURRENT_MODIFICATION") {
       const current = (err as Error & { current?: unknown }).current;
       return NextResponse.json({ error: "CONCURRENT_MODIFICATION", current }, { status: 409 });
+    }
+    if (err instanceof Error && (err as Error & { code?: string; locationId?: ProductLocationId }).code === "MISSING_INVENTORY_ROW") {
+      const locationId = (err as Error & { locationId?: ProductLocationId }).locationId;
+      const locationLabel = locationId == null
+        ? "the selected location"
+        : (PRODUCT_INVENTORY_LOCATION_ABBREV_BY_ID[locationId] ?? `Location ${locationId}`);
+      return NextResponse.json(
+        {
+          error: "MISSING_INVENTORY_ROW",
+          message: `SKU ${sku} no longer has an inventory row at ${locationLabel}. Refresh and try again.`,
+        },
+        { status: 400 },
+      );
     }
     console.error(`PATCH /api/products/${sku} failed:`, err);
     return NextResponse.json(

@@ -279,6 +279,26 @@ export const POST = withAdmin(async (request: NextRequest) => {
             { status: 409 },
           );
         }
+        if (err instanceof Error && (err as Error & { code?: string; rowIndex?: number; sku?: number; locationId?: number }).code === "MISSING_INVENTORY_ROW") {
+          const e = err as Error & { rowIndex?: number; sku?: number; locationId?: number };
+          const locationId = e.locationId ?? null;
+          const locationLabel = locationId == null ? "the selected location" : `location ${locationId}`;
+          return NextResponse.json(
+            {
+              errors: [
+                {
+                  rowIndex: e.rowIndex ?? null,
+                  field: "inventory",
+                  code: "MISSING_INVENTORY_ROW",
+                  message: e.sku == null
+                    ? `One selected item no longer has an inventory row at ${locationLabel}. Refresh and try again.`
+                    : `SKU ${e.sku} no longer has an inventory row at ${locationLabel}. Refresh and try again.`,
+                },
+              ],
+            },
+            { status: 400 },
+          );
+        }
         throw err;
       }
     }

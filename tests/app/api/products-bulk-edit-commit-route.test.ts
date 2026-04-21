@@ -297,6 +297,45 @@ describe("POST /api/products/bulk-edit/commit", () => {
     expect(prismaMocks.bulkEditRun.create).not.toHaveBeenCalled();
   });
 
+  it("aggregates mirror warnings from nested PATCH responses", async () => {
+    productPatchRouteMocks.PATCH.mockResolvedValueOnce(
+      NextResponse.json({
+        sku: 101,
+        appliedFields: ["retail"],
+        mirrorErrors: [{ sku: 101, message: "snapshot failed" }],
+      }),
+    );
+    const commitRoute = await loadRouteModule();
+
+    const response = await commitRoute.POST(
+      new NextRequest("http://localhost/api/products/bulk-edit/commit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", cookie: "next-auth.session-token=test" },
+        body: JSON.stringify({
+          selection: { skus: [101], scope: "pierce" },
+          transform: {
+            fieldIds: ["retail"],
+            inventoryScope: 2,
+            values: { retail: 12.5 },
+          },
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      runId: "run-1",
+      successCount: 1,
+      affectedSkus: [101],
+      mirrorErrors: [{ sku: 101, message: "snapshot failed" }],
+    });
+    expect(prismaMocks.bulkEditRun.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        summary: "Applied Retail to 1 item, mirror stale for 1 SKU.",
+      }),
+    }));
+  });
+
   it("rejects malformed legacy transforms with 400 instead of crashing", async () => {
     const commitRoute = await loadRouteModule();
 

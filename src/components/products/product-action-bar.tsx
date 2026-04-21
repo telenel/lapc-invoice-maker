@@ -13,6 +13,7 @@ import { useVendorDirectory } from "@/domains/product/vendor-directory";
 interface ProductActionBarProps {
   selected: Map<number, SelectedProduct>;
   selectedCount: number;
+  editPricingItems?: Array<{ retailPrice: number | null; cost: number | null }>;
   onClear: () => void;
   saveToSession: () => void;
   /** When true, the Discontinue action is shown. Only when Prism is reachable. */
@@ -28,6 +29,7 @@ interface ProductActionBarProps {
 export function ProductActionBar({
   selected,
   selectedCount,
+  editPricingItems,
   onClear,
   saveToSession,
   prismAvailable = false,
@@ -41,8 +43,9 @@ export function ProductActionBar({
   const { byId: vendorNames } = useVendorDirectory();
   const [discontinuing, setDiscontinuing] = useState(false);
   const selectedItems = Array.from(selected.values());
+  const editPricingRows = editPricingItems ?? selectedItems;
   const missingRetailPriceCount = selectedItems.filter((item) => item.retailPrice == null).length;
-  const missingEditPricingCount = selectedItems.filter(
+  const missingEditPricingCount = editPricingRows.filter(
     (item) => item.retailPrice == null || item.cost == null,
   ).length;
   const hasMissingRetailPrice = missingRetailPriceCount > 0;

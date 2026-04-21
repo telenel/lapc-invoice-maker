@@ -279,6 +279,43 @@ describe("POST /api/products/batch", () => {
     });
   });
 
+  it("normalizes missing inventory rows into a structured 400 error", async () => {
+    prismBatchMocks.validateBatchUpdateAgainstPrism.mockResolvedValue([]);
+    prismBatchMocks.batchUpdateItems.mockRejectedValue(
+      Object.assign(new Error("Missing inventory row"), {
+        code: "MISSING_INVENTORY_ROW",
+        rowIndex: 1,
+        sku: 202,
+        locationId: 3,
+      }),
+    );
+
+    const { POST } = await loadRouteModule();
+    const response = await POST(new NextRequest("http://localhost/api/products/batch", {
+      method: "POST",
+      body: JSON.stringify({
+        action: "update",
+        rows: [101, 202].map((sku) => ({
+          sku,
+          patch: { retail: 11 },
+          baseline: { sku, barcode: "X", retail: 5, cost: 2, fDiscontinue: 0, primaryLocationId: 3 },
+        })),
+      }),
+    }));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      errors: [
+        {
+          rowIndex: 1,
+          field: "inventory",
+          code: "MISSING_INVENTORY_ROW",
+          message: "SKU 202 no longer has an inventory row at location 3. Refresh and try again.",
+        },
+      ],
+    });
+  });
+
   it("returns 200 with updated skus on happy path", async () => {
     prismBatchMocks.validateBatchUpdateAgainstPrism.mockResolvedValue([]);
     prismBatchMocks.batchUpdateItems.mockResolvedValue([101, 202]);

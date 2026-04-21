@@ -14,6 +14,7 @@ const prismMocks = vi.hoisted(() => ({
   updateGmItem: vi.fn(),
   updateTextbookPricing: vi.fn(),
   getItemSnapshot: vi.fn(),
+  getInventoryMirrorSnapshotRows: vi.fn(),
 }));
 
 vi.mock("next-auth", () => nextAuthMocks);
@@ -61,6 +62,7 @@ function mockDefaultPrismModules() {
       updateGmItem: prismMocks.updateGmItem,
       updateTextbookPricing: prismMocks.updateTextbookPricing,
       getItemSnapshot: prismMocks.getItemSnapshot,
+      getInventoryMirrorSnapshotRows: prismMocks.getInventoryMirrorSnapshotRows,
     };
   });
 }
@@ -106,6 +108,22 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
       fDiscontinue: 0,
       primaryLocationId: 2,
     });
+    prismMocks.getInventoryMirrorSnapshotRows.mockImplementation(async (_sku, locationIds) =>
+      locationIds.map((locationId) => ({
+        locationId,
+        retail: locationId === 2 ? 12.99 : locationId === 3 ? 14.25 : 15,
+        cost: locationId === 2 ? 6.25 : locationId === 3 ? 7.5 : 8,
+        expectedCost: null,
+        tagTypeId: locationId === 3 ? 17 : null,
+        statusCodeId: locationId === 3 ? 3 : null,
+        estSales: null,
+        estSalesLocked: false,
+        fInvListPriceFlag: false,
+        fTxWantListFlag: false,
+        fTxBuybackListFlag: false,
+        fNoReturns: false,
+      })),
+    );
     mockProductsUpsert.mockResolvedValue({ error: null });
     mockProductInventoryUpsert.mockResolvedValue({ error: null });
   });
@@ -351,6 +369,22 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
       cost: null,
       fDiscontinue: 0,
     });
+    prismMocks.getInventoryMirrorSnapshotRows.mockResolvedValueOnce([
+      {
+        locationId: 3,
+        retail: null,
+        cost: null,
+        expectedCost: null,
+        tagTypeId: null,
+        statusCodeId: null,
+        estSales: null,
+        estSalesLocked: false,
+        fInvListPriceFlag: false,
+        fTxWantListFlag: false,
+        fTxBuybackListFlag: false,
+        fNoReturns: false,
+      },
+    ]);
 
     const response = await productDetailRoute.PATCH(
       new NextRequest("http://localhost/api/products/1001", {
@@ -685,6 +719,22 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
       fDiscontinue: 0,
       primaryLocationId: 2,
     });
+    prismMocks.getInventoryMirrorSnapshotRows.mockResolvedValueOnce([
+      {
+        locationId: 3,
+        retail: 24.49,
+        cost: 11.1,
+        expectedCost: null,
+        tagTypeId: null,
+        statusCodeId: null,
+        estSales: null,
+        estSalesLocked: false,
+        fInvListPriceFlag: false,
+        fTxWantListFlag: false,
+        fTxBuybackListFlag: false,
+        fNoReturns: false,
+      },
+    ]);
 
     const productDetailRoute = await loadRouteModule();
 
@@ -718,6 +768,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
 
     expect(response.status).toBe(200);
     expect(prismMocks.getItemSnapshot).toHaveBeenCalledWith(1001, 2);
+    expect(prismMocks.getInventoryMirrorSnapshotRows).toHaveBeenCalledWith(1001, [3]);
     expect(mockProductsUpsert).toHaveBeenCalledWith(expect.objectContaining({
       sku: 1001,
       retail_price: 12.99,
@@ -728,10 +779,79 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
       expect.objectContaining({
         sku: 1001,
         location_id: 3,
-        retail_price: 24.99,
-        cost: 11.25,
+        retail_price: 24.49,
+        cost: 11.1,
       }),
     ]);
+  });
+
+  it("returns a non-blocking mirror warning when the inventory mirror refresh fails", async () => {
+    prismMocks.updateGmItem.mockResolvedValueOnce({
+      sku: 1001,
+      appliedFields: ["inventory:2:retail"],
+    });
+    mockProductInventoryUpsert.mockResolvedValueOnce({
+      error: { message: "snapshot failed" },
+    });
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          patch: {
+            primaryInventory: {
+              retail: 12.99,
+            },
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      sku: 1001,
+      appliedFields: ["inventory:2:retail"],
+      mirrorErrors: [{ sku: 1001, message: "snapshot failed" }],
+    });
+  });
+
+  it("returns 400 when Prism reports a missing location inventory row", async () => {
+    prismMocks.updateGmItem.mockRejectedValueOnce(
+      Object.assign(new Error("Missing inventory row"), {
+        code: "MISSING_INVENTORY_ROW",
+        locationId: 3,
+      }),
+    );
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          patch: {
+            inventory: [
+              {
+                locationId: 3,
+                retail: 14.25,
+              },
+            ],
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "MISSING_INVENTORY_ROW",
+      message: "SKU 1001 no longer has an inventory row at PCOP. Refresh and try again.",
+    });
   });
 
   it("forwards tax-type baselines through textbook v2 patches", async () => {

@@ -14,6 +14,7 @@ const {
   listBulkEditRunsMock,
   refreshMock,
   refsDirectoryMock,
+  toastErrorMock,
   toastSuccessMock,
 } = vi.hoisted(() => ({
   bulkEditCommitMock: vi.fn(),
@@ -24,6 +25,7 @@ const {
   listBulkEditRunsMock: vi.fn(),
   refreshMock: vi.fn(),
   refsDirectoryMock: vi.fn(),
+  toastErrorMock: vi.fn(),
   toastSuccessMock: vi.fn(),
 }));
 
@@ -82,6 +84,7 @@ vi.mock("@/components/products/sync-database-button", () => ({
 
 vi.mock("sonner", () => ({
   toast: {
+    error: toastErrorMock,
     success: toastSuccessMock,
   },
 }));
@@ -134,6 +137,7 @@ describe("BulkEditPage Phase 8 field picker flow", () => {
     bulkEditFieldCommitMock.mockReset();
     editContextMock.mockReset();
     listBulkEditRunsMock.mockResolvedValue({ items: [], total: 0 });
+    toastErrorMock.mockReset();
     toastSuccessMock.mockReset();
     editContextMock.mockResolvedValue({
       items: [
@@ -348,5 +352,36 @@ describe("BulkEditPage Phase 8 field picker flow", () => {
     expect(refreshMock).toHaveBeenCalled();
     expect(toastSuccessMock).toHaveBeenCalledWith("Applied Description and Retail to 1 item.");
     expect(screen.getByRole("status")).toHaveTextContent("Applied Description and Retail to 1 item.");
+  });
+
+  it("shows a stale-mirror warning when the field commit succeeds but mirror refresh fails", async () => {
+    const user = userEvent.setup();
+
+    bulkEditFieldDryRunMock.mockResolvedValue(makePreview());
+    bulkEditFieldCommitMock.mockResolvedValue({
+      runId: "run_12345678",
+      successCount: 1,
+      affectedSkus: [101],
+      mirrorErrors: [{ sku: 101, message: "snapshot failed" }],
+    });
+
+    render(<BulkEditPage />);
+
+    await user.click(screen.getByLabelText("Select Retail"));
+    await user.clear(screen.getByRole("spinbutton", { name: "Retail" }));
+    await user.type(screen.getByRole("spinbutton", { name: "Retail" }), "12.50");
+    await user.selectOptions(screen.getByLabelText("Inventory scope"), "all");
+
+    await user.click(screen.getByRole("button", { name: /preview/i }));
+    await waitFor(() => expect(bulkEditFieldDryRunMock).toHaveBeenCalledTimes(1));
+
+    await user.click(screen.getByRole("button", { name: /commit/i }));
+    await user.click(screen.getByRole("button", { name: "Apply Changes" }));
+
+    await waitFor(() => expect(bulkEditFieldCommitMock).toHaveBeenCalledTimes(1));
+    expect(toastSuccessMock).toHaveBeenCalledWith("Applied Description and Retail to 1 item.");
+    expect(toastErrorMock).toHaveBeenCalledWith(
+      "Saved in Prism, but the browse mirror did not refresh for SKU 101. Search results may stay stale until the next sync.",
+    );
   });
 });

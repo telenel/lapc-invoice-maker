@@ -258,7 +258,8 @@ export interface BulkEditValidationError {
     | "INVALID_RETAIL"
     | "INVALID_COST"
     | "INVALID_DCC"
-    | "INVALID_TAX_TYPE";
+    | "INVALID_TAX_TYPE"
+    | "MISSING_INVENTORY_ROW";
   field?: string;
   message: string;
 }

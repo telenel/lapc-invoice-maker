@@ -56,6 +56,7 @@ function mockDefaultPrismModules() {
     updateGmItem: prismMocks.updateGmItem,
     updateTextbookPricing: prismMocks.updateTextbookPricing,
     getItemSnapshot: prismMocks.getItemSnapshot,
+    getInventoryMirrorSnapshotRows: vi.fn().mockResolvedValue([]),
     normalizeUpdaterInput: (patch: unknown) => patch,
     getInventoryPatches: () => [],
   }));
@@ -182,6 +183,9 @@ describe("GET /api/products/[sku]", () => {
       },
       getItemSnapshot: () => {
         throw new Error("GET should not call getItemSnapshot");
+      },
+      getInventoryMirrorSnapshotRows: () => {
+        throw new Error("GET should not call getInventoryMirrorSnapshotRows");
       },
       normalizeUpdaterInput: (patch: unknown) => patch,
       getInventoryPatches: () => [],

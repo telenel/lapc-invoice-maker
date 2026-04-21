@@ -223,7 +223,7 @@ export const productApi = {
   async update(
     sku: number,
     body: LegacyUpdateBody | V2UpdateBody,
-  ): Promise<{ sku: number; appliedFields: string[] }> {
+  ): Promise<{ sku: number; appliedFields: string[]; mirrorErrors?: BatchMirrorError[] }> {
     const res = await fetch(`/api/products/${sku}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -238,7 +238,7 @@ export const productApi = {
     }
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.error ?? `HTTP ${res.status}`);
+      throw new Error(data.message ?? data.error ?? `HTTP ${res.status}`);
     }
     return res.json();
   },

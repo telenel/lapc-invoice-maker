@@ -266,7 +266,6 @@ export default function ProductsPage() {
     hasTextbookSelection: selectedItems.some((product) => isTextbookItemType(product.itemType)),
     selectionCount: selectedItems.length,
   });
-  const allowMissingEditPricing = editDialogMode === "v2" && selectedItems.length === 1;
   const saveScopedSelectionToSession = useCallback(() => {
     sessionStorage.setItem(CATALOG_ITEMS_STORAGE_KEY, JSON.stringify(selectedItems));
   }, [selectedItems]);
@@ -279,7 +278,7 @@ export default function ProductsPage() {
   // server reads NULL and trigger a false 409. So edits only reuse persisted
   // pricing when the stored selection was captured from the same location scope.
   const browseRowsBySku = new Map((data?.products ?? []).map((p) => [p.sku, p] as const));
-  const editableSelectedItems = selectedItems
+  const editableSelectionStates = selectedItems
     .map((product) => {
       const browseRow = browseRowsBySku.get(product.sku);
       const primarySlice = browseRow?.selected_inventories?.find(
@@ -296,26 +295,41 @@ export default function ProductsPage() {
             : null
         );
       const scopedDescriptor = browseRow ? productToScopedSelected(browseRow) : persistedScopedSelection;
+      const retail = browseRow
+        ? (primarySlice?.retailPrice ?? null)
+        : (persistedScopedSelection?.retailPrice ?? null);
+      const cost = browseRow
+        ? (primarySlice?.cost ?? null)
+        : (persistedScopedSelection?.cost ?? null);
+
       return {
-        sku: product.sku,
-        barcode: scopedDescriptor?.barcode ?? null,
-        retail: browseRow
-          ? (primarySlice?.retailPrice ?? null)
-          : (persistedScopedSelection?.retailPrice ?? null),
-        cost: browseRow
-          ? (primarySlice?.cost ?? null)
-          : (persistedScopedSelection?.cost ?? null),
-        fDiscontinue: browseRow
-          ? (browseRow.discontinued ? 1 : 0)
-          : (persistedScopedSelection?.fDiscontinue ?? 0),
-        description: scopedDescriptor?.description ?? product.description ?? "",
-        vendorId: scopedDescriptor?.vendorId ?? undefined,
-        dccId: undefined,
-        isTextbook: isTextbookItemType(scopedDescriptor?.itemType ?? product.itemType),
-        primaryLocationId,
-        catalogNumber: scopedDescriptor?.catalogNumber ?? undefined,
+        hasScopedBaseline: browseRow ? primarySlice != null : persistedScopedSelection != null,
+        item: {
+          sku: product.sku,
+          barcode: scopedDescriptor?.barcode ?? null,
+          retail,
+          cost,
+          fDiscontinue: browseRow
+            ? (browseRow.discontinued ? 1 : 0)
+            : (persistedScopedSelection?.fDiscontinue ?? 0),
+          description: scopedDescriptor?.description ?? product.description ?? "",
+          vendorId: scopedDescriptor?.vendorId ?? undefined,
+          dccId: undefined,
+          isTextbook: isTextbookItemType(scopedDescriptor?.itemType ?? product.itemType),
+          primaryLocationId,
+          catalogNumber: scopedDescriptor?.catalogNumber ?? undefined,
+        },
       };
     });
+  const editableSelectedItems = editableSelectionStates.map((entry) => entry.item);
+  const allowMissingEditPricing =
+    editDialogMode === "v2" &&
+    editableSelectionStates.length === 1 &&
+    editableSelectionStates[0]?.hasScopedBaseline === true;
+  const editPricingItems = editableSelectionStates.map(({ item }) => ({
+    retailPrice: item.retail,
+    cost: item.cost,
+  }));
 
   const updateFilters = useCallback(
     (next: ProductFilters, extras: { view?: string } = {}) => {
@@ -760,6 +774,7 @@ export default function ProductsPage() {
       <ProductActionBar
         selected={scopedSelected}
         selectedCount={selectedCount}
+        editPricingItems={editPricingItems}
         onClear={clear}
         saveToSession={saveScopedSelectionToSession}
         prismAvailable={prismAvailable}

@@ -258,6 +258,21 @@ export function getInventoryPatches(normalizedPatch: ProductWriteBuckets): Inven
   ];
 }
 
+function buildMissingInventoryRowError(
+  sku: number,
+  locationId: ProductLocationId,
+): Error & { code: string; sku: number; locationId: ProductLocationId } {
+  const err = new Error(`SKU ${sku} does not have an Inventory row at location ${locationId}`) as Error & {
+    code: string;
+    sku: number;
+    locationId: ProductLocationId;
+  };
+  err.code = "MISSING_INVENTORY_ROW";
+  err.sku = sku;
+  err.locationId = locationId;
+  return err;
+}
+
 /**
  * Apply a single item's patch inside an already-open Prism transaction.
  * Shared by `updateGmItem` / `updateTextbookPricing` (each wraps this with
@@ -567,7 +582,13 @@ export async function applyItemPatchInTransaction(
       }
 
       if (inventorySet.length > 0) {
-        await inventoryReq.query(`UPDATE Inventory SET ${inventorySet.join(", ")} WHERE SKU = @sku AND LocationID = @loc`);
+        const result = await inventoryReq.query(
+          `UPDATE Inventory SET ${inventorySet.join(", ")} WHERE SKU = @sku AND LocationID = @loc`,
+        );
+        const affectedRows = result.rowsAffected.reduce((total, count) => total + count, 0);
+        if (affectedRows === 0) {
+          throw buildMissingInventoryRowError(sku, inventoryPatch.locationId);
+        }
       }
     }
   } else {
@@ -803,7 +824,13 @@ export async function applyItemPatchInTransaction(
       }
 
       if (inventorySet.length > 0) {
-        await inventoryReq.query(`UPDATE Inventory SET ${inventorySet.join(", ")} WHERE SKU = @sku AND LocationID = @loc`);
+        const result = await inventoryReq.query(
+          `UPDATE Inventory SET ${inventorySet.join(", ")} WHERE SKU = @sku AND LocationID = @loc`,
+        );
+        const affectedRows = result.rowsAffected.reduce((total, count) => total + count, 0);
+        if (affectedRows === 0) {
+          throw buildMissingInventoryRowError(sku, inventoryPatch.locationId);
+        }
       }
     }
   }

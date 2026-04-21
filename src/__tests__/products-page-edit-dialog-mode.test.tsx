@@ -76,21 +76,31 @@ vi.mock("@/components/products/product-table", () => ({
 
 vi.mock("@/components/products/product-action-bar", () => ({
   ProductActionBar: ({
+    allowMissingEditPricing,
+    editPricingItems,
     onEditClick,
     selected,
   }: {
+    allowMissingEditPricing?: boolean;
+    editPricingItems?: Array<{ retailPrice: number | null; cost: number | null }>;
     onEditClick?: () => void;
     selected?: Map<number, { retailPrice: number | null; cost: number | null }>;
   }) => {
     const firstSelected = selected ? Array.from(selected.values())[0] : null;
+    const firstEditPricing = editPricingItems?.[0] ?? null;
+    const editDisabled =
+      !allowMissingEditPricing &&
+      (editPricingItems ?? []).some((item) => item.retailPrice == null || item.cost == null);
 
     return (
       <div>
-        <button type="button" onClick={onEditClick}>
+        <button type="button" onClick={onEditClick} disabled={editDisabled}>
           Open edit dialog
         </button>
         <span>{`selected-retail:${firstSelected?.retailPrice ?? "null"}`}</span>
         <span>{`selected-cost:${firstSelected?.cost ?? "null"}`}</span>
+        <span>{`edit-retail:${firstEditPricing?.retailPrice ?? "null"}`}</span>
+        <span>{`edit-cost:${firstEditPricing?.cost ?? "null"}`}</span>
       </div>
     );
   },
@@ -407,6 +417,16 @@ describe("ProductsPage edit dialog mode integration", () => {
     const user = userEvent.setup();
 
     searchParamsState = new URLSearchParams("tab=merchandise&loc=3,4");
+    useProductSelectionMock.mockReturnValue({
+      selected: new Map([[1001, makeSelectedProduct({ pricingLocationId: 3 })]]),
+      selectedCount: 1,
+      toggle: vi.fn(),
+      toggleAll: vi.fn(),
+      refreshVisibleSelections: vi.fn(),
+      clear: vi.fn(),
+      isSelected: vi.fn(),
+      saveToSession: vi.fn(),
+    });
 
     render(<ProductsPage />);
 
@@ -456,6 +476,7 @@ describe("ProductsPage edit dialog mode integration", () => {
           makeSelectedProduct({
             retailPrice: null,
             cost: null,
+            pricingLocationId: 4,
           }),
         ],
       ]),
@@ -481,6 +502,8 @@ describe("ProductsPage edit dialog mode integration", () => {
     expect(screen.getByText("primary-location:4")).toBeInTheDocument();
     expect(screen.getByText("new-item-location-ids:4")).toBeInTheDocument();
     expect(screen.getByText("new-item-primary-location:4")).toBeInTheDocument();
+    expect(screen.getByText("edit-retail:null")).toBeInTheDocument();
+    expect(screen.getByText("edit-cost:null")).toBeInTheDocument();
   });
 
   it("re-derives selected pricing from the current scoped browse row", () => {
@@ -573,7 +596,7 @@ describe("ProductsPage edit dialog mode integration", () => {
     expect(screen.getByText("selected-cost:19.5")).toBeInTheDocument();
   });
 
-  it("does not reuse off-page pricing from a different location scope in the edit baseline", async () => {
+  it("keeps edit disabled when an off-page selection has no current-scope baseline", async () => {
     const user = userEvent.setup();
     searchParamsState = new URLSearchParams("tab=merchandise&loc=4&page=2");
     useProductSearchMock.mockReturnValue({
@@ -610,15 +633,14 @@ describe("ProductsPage edit dialog mode integration", () => {
 
     expect(screen.getByText("selected-retail:39.99")).toBeInTheDocument();
     expect(screen.getByText("selected-cost:19.5")).toBeInTheDocument();
+    expect(screen.getByText("edit-retail:null")).toBeInTheDocument();
+    expect(screen.getByText("edit-cost:null")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
+    const editButton = screen.getByRole("button", { name: "Open edit dialog" });
+    expect(editButton).toBeDisabled();
+    await user.click(editButton);
 
-    await waitFor(() => {
-      expect(screen.getByText("dialog:v2")).toBeInTheDocument();
-    });
-
-    expect(screen.getByText("item-retail:null")).toBeInTheDocument();
-    expect(screen.getByText("item-cost:null")).toBeInTheDocument();
+    expect(screen.queryByText("dialog:v2")).not.toBeInTheDocument();
   });
 
   it("reuses the current scope baseline for off-page edits without overwriting the invoice snapshot", async () => {

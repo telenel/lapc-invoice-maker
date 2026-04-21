@@ -412,6 +412,7 @@ export interface BatchValidationError {
     | "CATALOG_TOO_LONG"
     | "IMAGE_URL_TOO_LONG"
     | "HAS_HISTORY"
+    | "MISSING_INVENTORY_ROW"
     | "TEXTBOOK_NOT_SUPPORTED";
   message: string;
 }

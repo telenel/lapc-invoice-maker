@@ -548,6 +548,7 @@ export const POST = withAdmin(async (request: NextRequest, session) => {
 
     const { PATCH: productPatchHandler } = await import("@/app/api/products/[sku]/route");
     const affectedSkus: number[] = [];
+    const mirrorErrors: Array<{ sku: number; message: string }> = [];
 
     for (const previewRow of changedRows) {
       const sourceRow = sourceRowsBySku.get(previewRow.sku);
@@ -571,11 +572,17 @@ export const POST = withAdmin(async (request: NextRequest, session) => {
       const nestedResponse = await productPatchHandler(nestedRequest, {
         params: Promise.resolve({ sku: String(previewRow.sku) }),
       });
+      const nestedBody = await nestedResponse.json().catch(() => null);
 
       if (!nestedResponse.ok) {
-        const nestedBody = await nestedResponse.json().catch(() => null);
         const normalizedFailure = normalizeNestedPatchFailure(nestedResponse.status, nestedBody);
         return NextResponse.json({ errors: normalizedFailure.errors }, { status: normalizedFailure.status });
+      }
+
+      if (Array.isArray((nestedBody as { mirrorErrors?: unknown } | null)?.mirrorErrors)) {
+        mirrorErrors.push(
+          ...((nestedBody as { mirrorErrors: Array<{ sku: number; message: string }> }).mirrorErrors ?? []),
+        );
       }
 
       affectedSkus.push(previewRow.sku);
@@ -584,6 +591,7 @@ export const POST = withAdmin(async (request: NextRequest, session) => {
     const hadDistrictChanges = changedRows.some((row) =>
       row.changedFields.includes("dccId") || row.changedFields.includes("itemTaxTypeId"),
     );
+    const summary = `Applied ${formatFieldLabelList(preview.changedFieldLabels)} to ${affectedSkus.length} item${affectedSkus.length === 1 ? "" : "s"}${mirrorErrors.length > 0 ? `, mirror stale for ${mirrorErrors.length} SKU${mirrorErrors.length === 1 ? "" : "s"}` : ""}.`;
 
     const run = await prisma.bulkEditRun.create({
       data: {
@@ -595,7 +603,7 @@ export const POST = withAdmin(async (request: NextRequest, session) => {
         skuCount: affectedSkus.length,
         pricingDeltaCents: BigInt(0),
         hadDistrictChanges,
-        summary: `Applied ${formatFieldLabelList(preview.changedFieldLabels)} to ${affectedSkus.length} item${affectedSkus.length === 1 ? "" : "s"}.`,
+        summary,
       },
     });
 
@@ -603,6 +611,7 @@ export const POST = withAdmin(async (request: NextRequest, session) => {
       runId: run.id,
       successCount: affectedSkus.length,
       affectedSkus,
+      mirrorErrors: mirrorErrors.length > 0 ? mirrorErrors : undefined,
     });
   }
 
