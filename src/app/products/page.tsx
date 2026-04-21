@@ -118,10 +118,30 @@ type SavedScopedSelectionEntry = {
   product: SelectedProduct;
   retainUntilMatch: boolean;
   pendingRefetchToken: number | null;
+  retainedLiveSignature: string | null;
 };
 
 function getSelectedProductCacheSku(cacheKey: string): number {
   return Number(cacheKey.split(":", 1)[0]);
+}
+
+function getSelectedProductSignature(product: SelectedProduct): string {
+  return JSON.stringify([
+    product.sku,
+    product.description,
+    product.retailPrice,
+    product.cost,
+    product.pricingLocationId,
+    product.barcode,
+    product.author,
+    product.title,
+    product.isbn,
+    product.edition,
+    product.catalogNumber,
+    product.vendorId,
+    product.itemType,
+    product.fDiscontinue,
+  ]);
 }
 
 function shouldUseSavedScopedSelection(
@@ -138,10 +158,19 @@ function shouldUseSavedScopedSelection(
   if (liveScopedSelection.pricingLocationId !== primaryLocationId) {
     return true;
   }
-  if (entry.pendingRefetchToken != null || entry.retainUntilMatch) {
+  if (entry.pendingRefetchToken != null) {
     return true;
   }
-  return selectedProductsEqual(entry.product, liveScopedSelection);
+  if (selectedProductsEqual(entry.product, liveScopedSelection)) {
+    return true;
+  }
+  if (!entry.retainUntilMatch) {
+    return false;
+  }
+  return (
+    entry.retainedLiveSignature == null ||
+    entry.retainedLiveSignature === getSelectedProductSignature(liveScopedSelection)
+  );
 }
 
 function shouldDropSavedScopedSelection(
@@ -155,7 +184,16 @@ function shouldDropSavedScopedSelection(
   if (selectedProductsEqual(entry.product, liveScopedSelection)) {
     return true;
   }
-  return entry.pendingRefetchToken == null && !entry.retainUntilMatch;
+  if (entry.pendingRefetchToken != null) {
+    return false;
+  }
+  if (!entry.retainUntilMatch) {
+    return true;
+  }
+  return (
+    entry.retainedLiveSignature != null &&
+    entry.retainedLiveSignature !== getSelectedProductSignature(liveScopedSelection)
+  );
 }
 
 export default function ProductsPage() {
@@ -389,6 +427,19 @@ export default function ProductsPage() {
         }
         const savedSelection = next.get(cacheKey);
         if (savedSelection) {
+          if (
+            savedSelection.retainUntilMatch &&
+            savedSelection.pendingRefetchToken == null &&
+            savedSelection.retainedLiveSignature == null &&
+            !selectedProductsEqual(savedSelection.product, scopedSelection)
+          ) {
+            next.set(cacheKey, {
+              ...savedSelection,
+              retainedLiveSignature: getSelectedProductSignature(scopedSelection),
+            });
+            changed = true;
+            continue;
+          }
           if (shouldDropSavedScopedSelection(savedSelection, scopedSelection, primaryLocationId)) {
             next.delete(cacheKey);
             changed = true;
@@ -773,6 +824,7 @@ export default function ProductsPage() {
                   product: item,
                   pendingRefetchToken: saveToken,
                   retainUntilMatch,
+                  retainedLiveSignature: null,
                 });
                 changed = true;
               }

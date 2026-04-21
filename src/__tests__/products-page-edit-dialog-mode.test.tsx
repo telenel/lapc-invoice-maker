@@ -1365,6 +1365,150 @@ describe("ProductsPage edit dialog mode integration", () => {
     expect(screen.getByText("item-fDiscontinue:1")).toBeInTheDocument();
   });
 
+  it("drops retained mirror-warning values after a later same-scope fetch returns different live data", async () => {
+    const user = userEvent.setup();
+    searchParamsState = new URLSearchParams("tab=merchandise&loc=4");
+    const staleVisibleRow = {
+      sku: 1001,
+      description: "Pierce Hoodie",
+      title: null,
+      retail_price: 41.99,
+      cost: 21.5,
+      primary_location_id: 4,
+      selected_inventories: [
+        {
+          locationId: 4,
+          retailPrice: 41.99,
+          cost: 21.5,
+        },
+      ],
+      barcode: "123456789012",
+      author: null,
+      isbn: null,
+      edition: null,
+      catalog_number: "HD-1001",
+      vendor_id: 21,
+      item_type: "general_merchandise",
+      discontinued: false,
+    } as never;
+    const refreshedVisibleRow = {
+      ...staleVisibleRow,
+      retail_price: 47.99,
+      cost: 23.5,
+      selected_inventories: [
+        {
+          locationId: 4,
+          retailPrice: 47.99,
+          cost: 23.5,
+        },
+      ],
+      barcode: "111222333444",
+      catalog_number: "HD-1001-LIVE",
+      discontinued: true,
+    } as never;
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [staleVisibleRow],
+        total: 1,
+        page: 1,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    useProductSelectionMock.mockReturnValue({
+      selected: new Map([
+        [
+          1001,
+          makeSelectedProduct({
+            retailPrice: 39.99,
+            cost: 19.5,
+            pricingLocationId: 2,
+            barcode: "123456789012",
+            fDiscontinue: 0,
+          }),
+        ],
+      ]),
+      selectedCount: 1,
+      toggle: vi.fn(),
+      toggleAll: vi.fn(),
+      refreshVisibleSelections: vi.fn(),
+      clear: vi.fn(),
+      isSelected: vi.fn(),
+      saveToSession: vi.fn(),
+    });
+
+    const view = render(<ProductsPage />);
+
+    await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("dialog:v2")).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("button", { name: "Save scoped v2 dialog with mirror warning" }));
+
+    await waitFor(() => {
+      expect(screen.queryByText("dialog:v2")).not.toBeInTheDocument();
+    });
+
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [staleVisibleRow],
+        total: 1,
+        page: 1,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    view.rerender(<ProductsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("selected-retail:44.99")).toBeInTheDocument();
+    });
+    expect(screen.getByText("selected-cost:22.25")).toBeInTheDocument();
+
+    useProductSearchMock.mockReturnValue({
+      data: {
+        products: [refreshedVisibleRow],
+        total: 1,
+        page: 1,
+        pageSize: 50,
+      },
+      loading: false,
+      refetch: refetchMock,
+    });
+    view.rerender(<ProductsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText("selected-retail:47.99")).toBeInTheDocument();
+    });
+    expect(screen.getByText("selected-cost:23.5")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Save selection snapshot" }));
+    expect(JSON.parse(sessionStorage.getItem(CATALOG_ITEMS_STORAGE_KEY) ?? "[]")).toMatchObject([
+      {
+        sku: 1001,
+        retailPrice: 47.99,
+        cost: 23.5,
+        barcode: "111222333444",
+        fDiscontinue: 1,
+      },
+    ]);
+
+    await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("dialog:v2")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("item-retail:47.99")).toBeInTheDocument();
+    expect(screen.getByText("item-cost:23.5")).toBeInTheDocument();
+    expect(screen.getByText("item-barcode:111222333444")).toBeInTheDocument();
+    expect(screen.getByText("item-fDiscontinue:1")).toBeInTheDocument();
+  });
+
   it("keeps saved current-scope values when the live row temporarily loses that scope", async () => {
     const user = userEvent.setup();
     searchParamsState = new URLSearchParams("tab=merchandise&loc=4");

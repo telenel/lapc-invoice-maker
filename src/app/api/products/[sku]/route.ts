@@ -769,6 +769,26 @@ function formatInventoryMirrorMissingMessage(
   return `Inventory mirror snapshot for SKU ${sku} omitted ${formatInventoryMirrorLocationList(locationIds)}; browse data may stay stale until the next sync.`;
 }
 
+async function deleteMissingInventoryMirrorRows(
+  supabase: ReturnType<typeof getSupabaseAdminClient>,
+  sku: number,
+  locationIds: ProductLocationId[],
+): Promise<Error | null> {
+  if (locationIds.length === 0) {
+    return null;
+  }
+
+  const deleteResult = await supabase
+    .from("product_inventory")
+    .delete()
+    .eq("sku", sku)
+    .in("location_id", locationIds);
+  return getSupabaseMirrorError(
+    deleteResult,
+    `Failed to delete stale product_inventory rows for SKU ${sku}`,
+  );
+}
+
 export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: RouteCtx) => {
   const {
     isPrismConfigured,
@@ -872,7 +892,15 @@ export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: Rout
         if (inventoryMirrorError) throw inventoryMirrorError;
       }
       if (missingLocationIds.length > 0) {
-        throw new Error(formatInventoryMirrorMissingMessage(sku, missingLocationIds));
+        const inventoryDeleteError = await deleteMissingInventoryMirrorRows(
+          supabase,
+          sku,
+          missingLocationIds,
+        );
+        if (inventoryDeleteError) {
+          recordMirrorError(inventoryDeleteError);
+        }
+        recordMirrorError(new Error(formatInventoryMirrorMissingMessage(sku, missingLocationIds)));
       }
     } catch (mirrorErr) {
       recordMirrorError(mirrorErr);

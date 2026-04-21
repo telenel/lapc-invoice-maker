@@ -824,7 +824,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
     });
   });
 
-  it("returns a mirror warning when Prism omits a touched location snapshot", async () => {
+  it("invalidates stale mirrored rows when Prism omits a touched location snapshot", async () => {
     prismMocks.updateGmItem.mockResolvedValueOnce({
       sku: 1001,
       appliedFields: ["inventory:3:retail"],
@@ -861,7 +861,9 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
 
     expect(response.status).toBe(200);
     expect(mockProductInventoryUpsert).not.toHaveBeenCalled();
-    expect(mockProductInventoryDelete).not.toHaveBeenCalled();
+    expect(mockProductInventoryDelete).toHaveBeenCalledTimes(1);
+    expect(mockProductInventoryDeleteEq).toHaveBeenCalledWith("sku", 1001);
+    expect(mockProductInventoryDeleteIn).toHaveBeenCalledWith("location_id", [3]);
     await expect(response.json()).resolves.toEqual({
       sku: 1001,
       appliedFields: ["inventory:3:retail"],
