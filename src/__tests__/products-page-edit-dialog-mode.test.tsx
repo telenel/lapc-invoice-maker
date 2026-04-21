@@ -544,7 +544,7 @@ describe("ProductsPage edit dialog mode integration", () => {
     expect(detailMock).toHaveBeenCalledWith(2001);
   });
 
-  it("keeps mixed or bulk textbook selections on the legacy path", async () => {
+  it("routes mixed or bulk textbook selections through v2 so shared fields stay on the parity path", async () => {
     const user = userEvent.setup();
 
     useProductSelectionMock.mockReturnValue({
@@ -579,11 +579,26 @@ describe("ProductsPage edit dialog mode integration", () => {
     await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
 
     await waitFor(() => {
-      expect(screen.getByText("dialog:legacy")).toBeInTheDocument();
+      expect(screen.getByText("dialog:v2")).toBeInTheDocument();
     });
 
-    expect(screen.queryByText("dialog:v2")).not.toBeInTheDocument();
-    expect(detailMock).not.toHaveBeenCalled();
+    expect(screen.queryByText("dialog:legacy")).not.toBeInTheDocument();
+  });
+
+  it("keeps merchandise selections on v2 even when the old feature flag is off", async () => {
+    const user = userEvent.setup();
+
+    process.env.NEXT_PUBLIC_PRODUCTS_EDIT_DIALOG_V2 = "false";
+
+    render(<ProductsPage />);
+
+    await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("dialog:v2")).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText("dialog:legacy")).not.toBeInTheDocument();
   });
 
   it("honors the legacy override even when the v2 flag is enabled", async () => {

@@ -423,6 +423,13 @@ const itemPatchSchema = z.object({
   itemTaxTypeId: z.number().int().positive().optional(),
   comment: z.string().max(25).nullable().optional(),
   weight: z.number().nonnegative().optional(),
+  usedDccId: z.number().int().positive().optional(),
+  styleId: z.number().int().positive().optional(),
+  itemSeasonCodeId: z.number().int().positive().optional(),
+  fListPriceFlag: z.boolean().optional(),
+  fPerishable: z.boolean().optional(),
+  fIdRequired: z.boolean().optional(),
+  minOrderQtyItem: z.number().int().positive().optional(),
   fDiscontinue: z.union([z.literal(0), z.literal(1)]).optional(),
 });
 
@@ -432,6 +439,11 @@ const gmDetailsPatchSchema = z.object({
   packageType: z.string().max(3).nullable().optional(),
   unitsPerPack: z.number().int().positive().optional(),
   imageUrl: z.string().max(128).nullable().optional(),
+  altVendorId: z.number().int().positive().optional(),
+  mfgId: z.number().int().positive().optional(),
+  size: z.string().max(15).nullable().optional(),
+  colorId: z.number().int().positive().optional(),
+  orderIncrement: z.number().int().positive().optional(),
 });
 
 const textbookDetailsPatchSchema = z.object({
@@ -676,9 +688,21 @@ function buildLegacyMirrorPayload(
   if (patch.gm?.catalogNumber !== undefined) payload.catalog_number = patch.gm.catalogNumber;
   if (patch.item?.comment !== undefined) payload.tx_comment = patch.item.comment;
   if (patch.item?.weight !== undefined) payload.weight = patch.item.weight;
+  if (patch.item?.usedDccId !== undefined) payload.used_dcc_id = patch.item.usedDccId;
+  if (patch.item?.styleId !== undefined) payload.style_id = patch.item.styleId;
+  if (patch.item?.itemSeasonCodeId !== undefined) payload.item_season_code_id = patch.item.itemSeasonCodeId;
+  if (patch.item?.fListPriceFlag !== undefined) payload.f_list_price_flag = patch.item.fListPriceFlag;
+  if (patch.item?.fPerishable !== undefined) payload.f_perishable = patch.item.fPerishable;
+  if (patch.item?.fIdRequired !== undefined) payload.f_id_required = patch.item.fIdRequired;
+  if (patch.item?.minOrderQtyItem !== undefined) payload.min_order_qty_item = patch.item.minOrderQtyItem;
   if (patch.gm?.imageUrl !== undefined) payload.image_url = patch.gm.imageUrl;
   if (patch.gm?.unitsPerPack !== undefined) payload.units_per_pack = patch.gm.unitsPerPack;
   if (patch.gm?.packageType !== undefined) payload.package_type = patch.gm.packageType;
+  if (patch.gm?.altVendorId !== undefined) payload.alt_vendor_id = patch.gm.altVendorId;
+  if (patch.gm?.mfgId !== undefined) payload.mfg_id = patch.gm.mfgId;
+  if (patch.gm?.size !== undefined) payload.size = patch.gm.size;
+  if (patch.gm?.colorId !== undefined) payload.color_id = patch.gm.colorId;
+  if (patch.gm?.orderIncrement !== undefined) payload.order_increment = patch.gm.orderIncrement;
   if (includeTextbookFields) {
     if (patch.textbook?.author !== undefined) payload.author = patch.textbook.author;
     if (patch.textbook?.title !== undefined) payload.title = patch.textbook.title;

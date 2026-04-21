@@ -33,8 +33,22 @@ const PRODUCT_SELECT = [
   "vendor_id",
   "dcc_id",
   "item_tax_type_id",
+  "tx_comment",
+  "weight",
+  "image_url",
+  "alt_vendor_id",
+  "mfg_id",
   "item_type",
   "discontinued",
+  "size",
+  "color_id",
+  "style_id",
+  "item_season_code_id",
+  "f_list_price_flag",
+  "f_perishable",
+  "f_id_required",
+  "min_order_qty_item",
+  "used_dcc_id",
   "title",
   "author",
   "isbn",
@@ -43,6 +57,7 @@ const PRODUCT_SELECT = [
   "catalog_number",
   "package_type",
   "units_per_pack",
+  "order_increment",
 ].join(", ");
 
 const PRODUCT_INVENTORY_SELECT = [
@@ -135,8 +150,22 @@ type SourceProductRow = {
   vendor_id: number | null;
   dcc_id: number | null;
   item_tax_type_id: number | null;
+  tx_comment: string | null;
+  weight: number | null;
+  image_url: string | null;
+  alt_vendor_id: number | null;
+  mfg_id: number | null;
   item_type: string | null;
   discontinued: boolean | null;
+  size: string | null;
+  color_id: number | null;
+  style_id: number | null;
+  item_season_code_id: number | null;
+  f_list_price_flag: boolean | null;
+  f_perishable: boolean | null;
+  f_id_required: boolean | null;
+  min_order_qty_item: number | null;
+  used_dcc_id: number | null;
   title: string | null;
   author: string | null;
   isbn: string | null;
@@ -145,6 +174,7 @@ type SourceProductRow = {
   catalog_number: string | null;
   package_type: string | null;
   units_per_pack: number | null;
+  order_increment: number | null;
 };
 
 type SourceInventoryRow = {
@@ -368,6 +398,21 @@ async function loadInventoryRows(
         itemTaxTypeId: row.item_tax_type_id,
         itemType: normalizeItemType(row.item_type),
         fDiscontinue: row.discontinued ? 1 : 0,
+        comment: row.tx_comment,
+        weight: row.weight,
+        imageUrl: row.image_url,
+        altVendorId: row.alt_vendor_id,
+        mfgId: row.mfg_id,
+        size: row.size,
+        colorId: row.color_id,
+        styleId: row.style_id,
+        itemSeasonCodeId: row.item_season_code_id,
+        orderIncrement: row.order_increment,
+        usedDccId: row.used_dcc_id,
+        minOrderQtyItem: row.min_order_qty_item,
+        fListPriceFlag: row.f_list_price_flag === true,
+        fPerishable: row.f_perishable === true,
+        fIdRequired: row.f_id_required === true,
         title: row.title,
         author: row.author,
         isbn: row.isbn,

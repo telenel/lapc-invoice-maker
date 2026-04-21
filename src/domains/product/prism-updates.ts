@@ -96,6 +96,13 @@ function normalizeUpdaterInput(patch: ProductUpdaterInput): ProductWriteBuckets 
       itemTaxTypeId: "itemTaxTypeId" in patch ? patch.itemTaxTypeId : undefined,
       comment: "comment" in patch ? patch.comment : undefined,
       weight: "weight" in patch ? patch.weight : undefined,
+      usedDccId: "usedDccId" in patch ? patch.usedDccId : undefined,
+      styleId: "styleId" in patch ? patch.styleId : undefined,
+      itemSeasonCodeId: "itemSeasonCodeId" in patch ? patch.itemSeasonCodeId : undefined,
+      fListPriceFlag: "fListPriceFlag" in patch ? patch.fListPriceFlag === 1 : undefined,
+      fPerishable: "fPerishable" in patch ? patch.fPerishable === 1 : undefined,
+      fIdRequired: "fIdRequired" in patch ? patch.fIdRequired === 1 : undefined,
+      minOrderQtyItem: "minOrderQtyItem" in patch ? patch.minOrderQtyItem : undefined,
       fDiscontinue: patch.fDiscontinue,
     },
     gm: {
@@ -104,6 +111,11 @@ function normalizeUpdaterInput(patch: ProductUpdaterInput): ProductWriteBuckets 
       packageType: "packageType" in patch ? patch.packageType : undefined,
       unitsPerPack: "unitsPerPack" in patch ? patch.unitsPerPack : undefined,
       imageUrl: "imageUrl" in patch ? patch.imageUrl : undefined,
+      altVendorId: "altVendorId" in patch ? patch.altVendorId : undefined,
+      mfgId: "mfgId" in patch ? patch.mfgId : undefined,
+      size: "size" in patch ? patch.size : undefined,
+      colorId: "colorId" in patch ? patch.colorId : undefined,
+      orderIncrement: "orderIncrement" in patch ? patch.orderIncrement : undefined,
     },
     textbook: {},
     inventory: [],
@@ -253,6 +265,41 @@ export async function updateGmItem(
       itemSet.push("Weight = @weight");
       applied.push("weight");
     }
+    if (normalizedPatch.item.usedDccId !== undefined) {
+      req.input("usedDccId", sql.Int, normalizedPatch.item.usedDccId);
+      itemSet.push("UsedDCCID = @usedDccId");
+      applied.push("usedDccId");
+    }
+    if (normalizedPatch.item.styleId !== undefined) {
+      req.input("styleId", sql.Int, normalizedPatch.item.styleId);
+      itemSet.push("StyleID = @styleId");
+      applied.push("styleId");
+    }
+    if (normalizedPatch.item.itemSeasonCodeId !== undefined) {
+      req.input("itemSeasonCodeId", sql.Int, normalizedPatch.item.itemSeasonCodeId);
+      itemSet.push("ItemSeasonCodeID = @itemSeasonCodeId");
+      applied.push("itemSeasonCodeId");
+    }
+    if (normalizedPatch.item.fListPriceFlag !== undefined) {
+      req.input("fListPriceFlag", sql.Bit, normalizedPatch.item.fListPriceFlag);
+      itemSet.push("fListPriceFlag = @fListPriceFlag");
+      applied.push("fListPriceFlag");
+    }
+    if (normalizedPatch.item.fPerishable !== undefined) {
+      req.input("fPerishable", sql.Bit, normalizedPatch.item.fPerishable);
+      itemSet.push("fPerishable = @fPerishable");
+      applied.push("fPerishable");
+    }
+    if (normalizedPatch.item.fIdRequired !== undefined) {
+      req.input("fIdRequired", sql.Bit, normalizedPatch.item.fIdRequired);
+      itemSet.push("fIDRequired = @fIdRequired");
+      applied.push("fIdRequired");
+    }
+    if (normalizedPatch.item.minOrderQtyItem !== undefined) {
+      req.input("minOrderQtyItem", sql.Int, normalizedPatch.item.minOrderQtyItem);
+      itemSet.push("MinOrderQty = @minOrderQtyItem");
+      applied.push("minOrderQtyItem");
+    }
     if (normalizedPatch.item.fDiscontinue !== undefined) {
       req.input("fDiscontinue", sql.TinyInt, normalizedPatch.item.fDiscontinue);
       itemSet.push("fDiscontinue = @fDiscontinue");
@@ -284,19 +331,69 @@ export async function updateGmItem(
       gmSet.push("ImageURL = @imageUrl");
       applied.push("imageUrl");
     }
+    if (normalizedPatch.gm.altVendorId !== undefined) {
+      req.input("altVendorId", sql.Int, normalizedPatch.gm.altVendorId);
+      gmSet.push("AlternateVendorID = @altVendorId");
+      applied.push("altVendorId");
+    }
+    if (normalizedPatch.gm.mfgId !== undefined) {
+      req.input("mfgId", sql.Int, normalizedPatch.gm.mfgId);
+      gmSet.push("MfgID = @mfgId");
+      applied.push("mfgId");
+    }
+    if (normalizedPatch.gm.size !== undefined) {
+      req.input("size", sql.VarChar(15), normalizedPatch.gm.size ?? "");
+      gmSet.push("Size = @size");
+      applied.push("size");
+    }
+    if (normalizedPatch.gm.colorId !== undefined) {
+      req.input("colorId", sql.Int, normalizedPatch.gm.colorId);
+      gmSet.push("Color = @colorId");
+      applied.push("colorId");
+    }
+    if (normalizedPatch.gm.orderIncrement !== undefined) {
+      req.input("orderIncrement", sql.Int, normalizedPatch.gm.orderIncrement);
+      gmSet.push("OrderIncrement = @orderIncrement");
+      applied.push("orderIncrement");
+    }
 
     if (itemSet.length > 0) {
       await req.query(`UPDATE Item SET ${itemSet.join(", ")} WHERE SKU = @sku`);
     }
     if (gmSet.length > 0) {
-      await transaction.request()
-        .input("sku", sql.Int, sku)
-        .input("description", sql.VarChar(128), normalizedPatch.gm.description ?? "")
-        .input("catalogNumber", sql.VarChar(30), normalizedPatch.gm.catalogNumber ?? "")
-        .input("packageType", sql.VarChar(3), normalizedPatch.gm.packageType ?? "")
-        .input("unitsPerPack", sql.SmallInt, normalizedPatch.gm.unitsPerPack ?? 1)
-        .input("imageUrl", sql.VarChar(128), normalizedPatch.gm.imageUrl ?? "")
-        .query(`UPDATE GeneralMerchandise SET ${gmSet.join(", ")} WHERE SKU = @sku`);
+      const gmReq = transaction.request().input("sku", sql.Int, sku);
+      if (normalizedPatch.gm.description !== undefined) {
+        gmReq.input("description", sql.VarChar(128), normalizedPatch.gm.description ?? "");
+      }
+      if (normalizedPatch.gm.catalogNumber !== undefined) {
+        gmReq.input("catalogNumber", sql.VarChar(30), normalizedPatch.gm.catalogNumber ?? "");
+      }
+      if (normalizedPatch.gm.packageType !== undefined) {
+        gmReq.input("packageType", sql.VarChar(3), normalizedPatch.gm.packageType ?? "");
+      }
+      if (normalizedPatch.gm.unitsPerPack !== undefined) {
+        gmReq.input("unitsPerPack", sql.SmallInt, normalizedPatch.gm.unitsPerPack ?? 1);
+      }
+      if (normalizedPatch.gm.imageUrl !== undefined) {
+        gmReq.input("imageUrl", sql.VarChar(128), normalizedPatch.gm.imageUrl ?? "");
+      }
+      if (normalizedPatch.gm.altVendorId !== undefined) {
+        gmReq.input("altVendorId", sql.Int, normalizedPatch.gm.altVendorId);
+      }
+      if (normalizedPatch.gm.mfgId !== undefined) {
+        gmReq.input("mfgId", sql.Int, normalizedPatch.gm.mfgId);
+      }
+      if (normalizedPatch.gm.size !== undefined) {
+        gmReq.input("size", sql.VarChar(15), normalizedPatch.gm.size ?? "");
+      }
+      if (normalizedPatch.gm.colorId !== undefined) {
+        gmReq.input("colorId", sql.Int, normalizedPatch.gm.colorId);
+      }
+      if (normalizedPatch.gm.orderIncrement !== undefined) {
+        gmReq.input("orderIncrement", sql.Int, normalizedPatch.gm.orderIncrement);
+      }
+
+      await gmReq.query(`UPDATE GeneralMerchandise SET ${gmSet.join(", ")} WHERE SKU = @sku`);
     }
     for (const inventoryPatch of getInventoryPatches(normalizedPatch)) {
       if (!hasInventoryWriteFields(inventoryPatch)) {
@@ -446,6 +543,42 @@ export async function updateTextbookPricing(
       itemSet.push("ItemTaxTypeID = @taxId");
       applied.push("itemTaxTypeId");
     }
+    if (normalizedPatch.item.comment !== undefined) {
+      itemSet.push("txComment = @comment");
+      applied.push("comment");
+    }
+    if (normalizedPatch.item.weight !== undefined) {
+      itemSet.push("Weight = @weight");
+      applied.push("weight");
+    }
+    if (normalizedPatch.item.usedDccId !== undefined) {
+      itemSet.push("UsedDCCID = @usedDccId");
+      applied.push("usedDccId");
+    }
+    if (normalizedPatch.item.styleId !== undefined) {
+      itemSet.push("StyleID = @styleId");
+      applied.push("styleId");
+    }
+    if (normalizedPatch.item.itemSeasonCodeId !== undefined) {
+      itemSet.push("ItemSeasonCodeID = @itemSeasonCodeId");
+      applied.push("itemSeasonCodeId");
+    }
+    if (normalizedPatch.item.fListPriceFlag !== undefined) {
+      itemSet.push("fListPriceFlag = @fListPriceFlag");
+      applied.push("fListPriceFlag");
+    }
+    if (normalizedPatch.item.fPerishable !== undefined) {
+      itemSet.push("fPerishable = @fPerishable");
+      applied.push("fPerishable");
+    }
+    if (normalizedPatch.item.fIdRequired !== undefined) {
+      itemSet.push("fIDRequired = @fIdRequired");
+      applied.push("fIdRequired");
+    }
+    if (normalizedPatch.item.minOrderQtyItem !== undefined) {
+      itemSet.push("MinOrderQty = @minOrderQtyItem");
+      applied.push("minOrderQtyItem");
+    }
     if (normalizedPatch.item.fDiscontinue !== undefined) {
       itemSet.push("fDiscontinue = @fDiscontinue");
       applied.push("fDiscontinue");
@@ -495,6 +628,33 @@ export async function updateTextbookPricing(
       }
       if (normalizedPatch.item.itemTaxTypeId !== undefined) {
         itemReq.input("taxId", sql.Int, normalizedPatch.item.itemTaxTypeId);
+      }
+      if (normalizedPatch.item.comment !== undefined) {
+        itemReq.input("comment", sql.VarChar(25), normalizedPatch.item.comment ?? "");
+      }
+      if (normalizedPatch.item.weight !== undefined) {
+        itemReq.input("weight", sql.Decimal(9, 4), normalizedPatch.item.weight);
+      }
+      if (normalizedPatch.item.usedDccId !== undefined) {
+        itemReq.input("usedDccId", sql.Int, normalizedPatch.item.usedDccId);
+      }
+      if (normalizedPatch.item.styleId !== undefined) {
+        itemReq.input("styleId", sql.Int, normalizedPatch.item.styleId);
+      }
+      if (normalizedPatch.item.itemSeasonCodeId !== undefined) {
+        itemReq.input("itemSeasonCodeId", sql.Int, normalizedPatch.item.itemSeasonCodeId);
+      }
+      if (normalizedPatch.item.fListPriceFlag !== undefined) {
+        itemReq.input("fListPriceFlag", sql.Bit, normalizedPatch.item.fListPriceFlag);
+      }
+      if (normalizedPatch.item.fPerishable !== undefined) {
+        itemReq.input("fPerishable", sql.Bit, normalizedPatch.item.fPerishable);
+      }
+      if (normalizedPatch.item.fIdRequired !== undefined) {
+        itemReq.input("fIdRequired", sql.Bit, normalizedPatch.item.fIdRequired);
+      }
+      if (normalizedPatch.item.minOrderQtyItem !== undefined) {
+        itemReq.input("minOrderQtyItem", sql.Int, normalizedPatch.item.minOrderQtyItem);
       }
       if (normalizedPatch.item.fDiscontinue !== undefined) {
         itemReq.input("fDiscontinue", sql.TinyInt, normalizedPatch.item.fDiscontinue ?? 0);
