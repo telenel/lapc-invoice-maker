@@ -469,6 +469,18 @@ export default function ProductsPage() {
             ? (primarySlice?.cost ?? null)
             : (persistedScopedSelection?.cost ?? null)
         );
+      const actionBarRetail = cachedScopedSelection?.retailPrice ??
+        (
+          browseRow != null
+            ? (browseRow.retail_price ?? null)
+            : (persistedScopedSelection?.retailPrice ?? null)
+        );
+      const actionBarCost = cachedScopedSelection?.cost ??
+        (
+          browseRow != null
+            ? (browseRow.cost ?? null)
+            : (persistedScopedSelection?.cost ?? null)
+        );
       const sharedItem = {
         sku: product.sku,
         barcode: scopedDescriptor?.barcode ?? null,
@@ -496,8 +508,8 @@ export default function ProductsPage() {
         },
         actionBarItem: {
           ...sharedItem,
-          retail,
-          cost,
+          retail: actionBarRetail,
+          cost: actionBarCost,
         },
       };
     });

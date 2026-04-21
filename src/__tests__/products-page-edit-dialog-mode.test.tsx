@@ -778,12 +778,10 @@ describe("ProductsPage edit dialog mode integration", () => {
 
     render(<ProductsPage />);
 
-    expect(screen.getByText("selected-retail:null")).toBeInTheDocument();
-    expect(screen.getByText("selected-cost:null")).toBeInTheDocument();
+    expect(screen.getByText("selected-retail:39.99")).toBeInTheDocument();
+    expect(screen.getByText("selected-cost:19.5")).toBeInTheDocument();
     expect(screen.getByText("edit-retail:null")).toBeInTheDocument();
     expect(screen.getByText("edit-cost:null")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Create Quote" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Create Invoice" })).toBeDisabled();
 
     const editButton = screen.getByRole("button", { name: "Open edit dialog" });
     expect(editButton).toBeEnabled();
@@ -801,8 +799,8 @@ describe("ProductsPage edit dialog mode integration", () => {
     expect(JSON.parse(sessionStorage.getItem(CATALOG_ITEMS_STORAGE_KEY) ?? "[]")).toMatchObject([
       {
         sku: 1001,
-        retailPrice: null,
-        cost: null,
+        retailPrice: 39.99,
+        cost: 19.5,
       },
     ]);
   });

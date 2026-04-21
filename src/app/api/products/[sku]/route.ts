@@ -756,27 +756,17 @@ function getSupabaseMirrorError(
   return new Error(typeof message === "string" && message.length > 0 ? message : fallback);
 }
 
-async function deleteMissingInventoryMirrorRows(
-  supabase: ReturnType<typeof getSupabaseAdminClient>,
+function formatInventoryMirrorLocationList(locationIds: ProductLocationId[]): string {
+  return locationIds
+    .map((locationId) => PRODUCT_INVENTORY_LOCATION_ABBREV_BY_ID[locationId] ?? `Location ${locationId}`)
+    .join(", ");
+}
+
+function formatInventoryMirrorMissingMessage(
   sku: number,
   locationIds: ProductLocationId[],
-): Promise<void> {
-  if (locationIds.length === 0) {
-    return;
-  }
-
-  const deleteResult = await supabase
-    .from("product_inventory")
-    .delete()
-    .eq("sku", sku)
-    .in("location_id", locationIds);
-  const deleteError = getSupabaseMirrorError(
-    deleteResult,
-    `Failed to delete stale product_inventory rows for SKU ${sku}`,
-  );
-  if (deleteError) {
-    throw deleteError;
-  }
+): string {
+  return `Inventory mirror snapshot for SKU ${sku} omitted ${formatInventoryMirrorLocationList(locationIds)}; browse data may stay stale until the next sync.`;
 }
 
 export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: RouteCtx) => {
@@ -882,7 +872,7 @@ export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: Rout
         if (inventoryMirrorError) throw inventoryMirrorError;
       }
       if (missingLocationIds.length > 0) {
-        await deleteMissingInventoryMirrorRows(supabase, sku, missingLocationIds);
+        throw new Error(formatInventoryMirrorMissingMessage(sku, missingLocationIds));
       }
     } catch (mirrorErr) {
       recordMirrorError(mirrorErr);
