@@ -227,19 +227,35 @@ export default function ProductsPage() {
     sessionStorage.setItem(CATALOG_ITEMS_STORAGE_KEY, JSON.stringify(selectedItems));
   }, [selectedItems]);
   const primaryLocationId = getPrimaryProductLocationId(filters.locationIds);
+  // Look up each selection's browse row so we can source baseline retail/cost
+  // from the primary-location slice directly. The server's concurrency SELECT
+  // does `LEFT JOIN Inventory ON LocationID = @loc` and reads `inv.Retail` /
+  // `inv.Cost` — which is NULL when no Inventory row exists at that location.
+  // If we sent the browse row's item-level `retail_price` fallback here, the
+  // client baseline would be 39.99 while the server reads NULL → false 409
+  // on any item that has no Inventory row at the scoped primary location.
+  // Mirror the server read exactly: slice value (which may itself be null) or
+  // null. No item-level fallback for baseline purposes.
+  const browseRowsBySku = new Map((data?.products ?? []).map((p) => [p.sku, p] as const));
   const editableSelectedItems = selectedItems
-    .map((product) => ({
-      sku: product.sku,
-      barcode: product.barcode ?? null,
-      retail: product.retailPrice,
-      cost: product.cost,
-      fDiscontinue: 0 as 0 | 1,
-      description: product.description ?? "",
-      vendorId: product.vendorId ?? undefined,
-      dccId: undefined,
-      isTextbook: isTextbookItemType(product.itemType),
-      primaryLocationId,
-    }));
+    .map((product) => {
+      const browseRow = browseRowsBySku.get(product.sku);
+      const primarySlice = browseRow?.selected_inventories?.find(
+        (inv) => inv.locationId === primaryLocationId,
+      );
+      return {
+        sku: product.sku,
+        barcode: product.barcode ?? null,
+        retail: primarySlice?.retailPrice ?? null,
+        cost: primarySlice?.cost ?? null,
+        fDiscontinue: 0 as 0 | 1,
+        description: product.description ?? "",
+        vendorId: product.vendorId ?? undefined,
+        dccId: undefined,
+        isTextbook: isTextbookItemType(product.itemType),
+        primaryLocationId,
+      };
+    });
 
   const updateFilters = useCallback(
     (next: ProductFilters, extras: { view?: string } = {}) => {

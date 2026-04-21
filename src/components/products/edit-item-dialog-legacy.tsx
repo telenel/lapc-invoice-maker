@@ -136,12 +136,12 @@ export function EditItemDialogLegacy({ open, onOpenChange, items, onSaved }: Edi
         await productApi.update(it.sku, {
           patch: patch as GmItemPatch | TextbookPatch,
           isTextbook: !!it.isTextbook,
-          baseline: { sku: it.sku, barcode: it.barcode, retail: it.retail, cost: it.cost, fDiscontinue: it.fDiscontinue, primaryLocationId: it.primaryLocationId ?? 2 },
+          baseline: { sku: it.sku, barcode: it.barcode, retail: it.retail, cost: it.cost, fDiscontinue: it.fDiscontinue, primaryLocationId: it.primaryLocationId },
         });
       } else {
         const result = await productApi.batch({
           action: "update",
-          rows: items.map((i) => ({ sku: i.sku, patch: patch as GmItemPatch | TextbookPatch, isTextbook: !!i.isTextbook, baseline: { sku: i.sku, barcode: i.barcode, retail: i.retail, cost: i.cost, fDiscontinue: i.fDiscontinue, primaryLocationId: i.primaryLocationId ?? 2 } })),
+          rows: items.map((i) => ({ sku: i.sku, patch: patch as GmItemPatch | TextbookPatch, isTextbook: !!i.isTextbook, baseline: { sku: i.sku, barcode: i.barcode, retail: i.retail, cost: i.cost, fDiscontinue: i.fDiscontinue, primaryLocationId: i.primaryLocationId } })),
         });
         if ("errors" in result && result.errors.length > 0) {
           setError(result.errors.map((e) => `Row ${e.rowIndex + 1}: ${e.message}`).join("; "));

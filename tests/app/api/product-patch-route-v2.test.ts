@@ -118,6 +118,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
             retail: 11.99,
             cost: 5.5,
             fDiscontinue: 0,
+            primaryLocationId: 2,
           },
           patch: {
             item: {
@@ -202,6 +203,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
             retail: 11.99,
             cost: 5.5,
             fDiscontinue: 0,
+            primaryLocationId: 2,
           },
           patch: {
             item: {
@@ -355,6 +357,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
             retail: 11.99,
             cost: 5.5,
             fDiscontinue: 0,
+            primaryLocationId: 2,
           },
           patch: {
             inventory: [
@@ -547,6 +550,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
             retail: 11.99,
             cost: 5.5,
             fDiscontinue: 0,
+            primaryLocationId: 2,
           },
           patch: {
             textbook: {
@@ -628,6 +632,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
             retail: 11.99,
             cost: 5.5,
             fDiscontinue: 0,
+            primaryLocationId: 2,
           },
           patch: {
             item: {
@@ -688,6 +693,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
             retail: 11.99,
             cost: 5.5,
             fDiscontinue: 0,
+            primaryLocationId: 2,
           },
           patch: {
             item: {
@@ -738,6 +744,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
             retail: 11.99,
             cost: 5.5,
             fDiscontinue: 0,
+            primaryLocationId: 2,
           },
           patch: {
             item: {

@@ -26,14 +26,20 @@ function makeFakePool(options: {
   onQuery: (sql: string) => unknown[];
   /** Mutated so tests can assert lifecycle. */
   lifecycle: { began: number; committed: number; rolledBack: number };
+  /** Every SQL string issued against the transaction, in order. Lets tests
+   *  assert that row-N's UPDATE was attempted inside the transaction before
+   *  a later row rolled everything back — i.e. the rollback actually did
+   *  work, it didn't just short-circuit before any UPDATE ran. */
+  sqlLog?: string[];
 }) {
-  const { onQuery, lifecycle } = options;
+  const { onQuery, lifecycle, sqlLog } = options;
   const makeRequest = () => {
     const req = {
       input: vi.fn().mockImplementation(() => req),
-      query: vi.fn().mockImplementation(async (sqlText: string) => ({
-        recordset: onQuery(sqlText),
-      })),
+      query: vi.fn().mockImplementation(async (sqlText: string) => {
+        sqlLog?.push(sqlText);
+        return { recordset: onQuery(sqlText) };
+      }),
       execute: vi.fn().mockResolvedValue({ recordsets: [[]] }),
     };
     return req;
@@ -55,11 +61,13 @@ describe("batchUpdateItems", () => {
 
   it("rolls back every row when the second row's baseline mismatches", async () => {
     const lifecycle = { began: 0, committed: 0, rolledBack: 0 };
+    const sqlLog: string[] = [];
 
     // Row 1's SELECT returns matching state; row 2's returns a different retail.
     let selectCount = 0;
     const pool = makeFakePool({
       lifecycle,
+      sqlLog,
       onQuery: (sqlText) => {
         if (!sqlText.includes("SELECT")) return [];
         selectCount += 1;
@@ -87,6 +95,14 @@ describe("batchUpdateItems", () => {
     expect(lifecycle.began).toBe(1);
     expect(lifecycle.committed).toBe(0);
     expect(lifecycle.rolledBack).toBe(1);
+    // Proves the invariant is delivered by rollback, not by short-circuit:
+    // row 1's UPDATE was issued inside the transaction (so would have
+    // persisted without rollback). Row 2's SELECT fires next, fails the
+    // concurrency check, and the outer catch rolls row 1's write back.
+    const row1UpdateIssued = sqlLog.some((q) => /UPDATE\s+Inventory/i.test(q));
+    const row2SelectIssued = sqlLog.filter((q) => /SELECT/i.test(q)).length >= 2;
+    expect(row1UpdateIssued).toBe(true);
+    expect(row2SelectIssued).toBe(true);
   });
 
   it("commits once when all baselines match", async () => {

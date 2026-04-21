@@ -297,15 +297,25 @@ export function EditItemDialogV2({
   function formatSaveError(err: unknown): string {
     const e = err as Error & { code?: string; rowIndex?: number | null; sku?: number | null };
     if (e.code === "CONCURRENT_MODIFICATION") {
-      // Because the batch is atomic, zero rows committed on failure — the
-      // operator can retry in place after the conflict clears, no need to
-      // close and reopen the dialog.
+      // Bulk path — zero rows committed on failure because the batch is
+      // atomic, so retry-in-place is safe after the conflict clears. No
+      // need to close and reopen.
       if (e.rowIndex != null && e.sku != null) {
         return (
           `Row ${e.rowIndex + 1} (SKU ${e.sku}) was modified by someone else since you opened this dialog. ` +
           `No changes were saved. Wait for the conflict to clear and click Save again.`
         );
       }
+      // Bulk with no row-level detail (unusual — annotation lost upstream).
+      // Still safe to retry in place because the batch is atomic.
+      if (isBulk) {
+        return (
+          `Another user modified one of the selected items since you opened this dialog. ` +
+          `No changes were saved. Wait for the conflict to clear and click Save again.`
+        );
+      }
+      // Single-item path — the dialog's `detail` snapshot is now stale, so
+      // the operator has to close and reopen to refresh it before retry.
       return (
         `This item was modified by someone else since you opened this dialog. ` +
         `No changes were saved. Close and reopen this dialog to see the latest values, then retry.`

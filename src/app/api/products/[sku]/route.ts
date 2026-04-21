@@ -407,6 +407,13 @@ export const DELETE = withAdmin(async (request: NextRequest, _session, ctx?: Rou
   }
 });
 
+// When a baseline is supplied, `primaryLocationId` is REQUIRED so the server's
+// concurrency SELECT reads the same Inventory row the client snapshotted.
+// Legacy V1 callers that send no baseline at all fall through unaffected
+// (baseline is .optional() on both v2 and legacy PATCH schemas). Partial
+// baselines that include retail/cost but omit primaryLocationId are rejected
+// at the Zod boundary to prevent silent PIER fallback on PCOP/PFS pages —
+// which is exactly the class of bug this fix exists to close.
 const snapshotSchema = z.object({
   sku: z.number().int().positive(),
   barcode: z.string().nullable(),
@@ -414,7 +421,7 @@ const snapshotSchema = z.object({
   retail: z.number().nonnegative().nullable(),
   cost: z.number().nonnegative().nullable(),
   fDiscontinue: z.union([z.literal(0), z.literal(1)]),
-  primaryLocationId: z.union([z.literal(2), z.literal(3), z.literal(4)]).optional(),
+  primaryLocationId: z.union([z.literal(2), z.literal(3), z.literal(4)]),
 });
 
 const itemPatchSchema = z.object({
@@ -640,8 +647,10 @@ function normalizeLegacyPatch(patch: LegacyPatchInput): ProductEditPatchV2 {
 
 type SnapshotInput = z.infer<typeof snapshotSchema>;
 
-/** Promote an optional-primaryLocationId Zod parse result to a full ItemSnapshot,
- *  defaulting to PIERCE (2) when the caller omits the field (backward compat). */
+/** Pass the Zod-parsed baseline through unchanged — the schema already
+ *  enforces every required field (including primaryLocationId) so no
+ *  coercion is needed. Returns undefined when the caller omitted the
+ *  entire baseline block (legacy V1 PATCH path). */
 function coerceBaseline(raw: SnapshotInput | undefined): ItemSnapshot | undefined {
   if (raw === undefined) return undefined;
   return {
@@ -651,7 +660,7 @@ function coerceBaseline(raw: SnapshotInput | undefined): ItemSnapshot | undefine
     retail: raw.retail,
     cost: raw.cost,
     fDiscontinue: raw.fDiscontinue,
-    primaryLocationId: raw.primaryLocationId ?? 2,
+    primaryLocationId: raw.primaryLocationId,
   };
 }
 
