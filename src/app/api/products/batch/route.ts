@@ -44,7 +44,16 @@ const bodySchema = z.discriminatedUnion("action", [
     rows: z.array(z.object({
       sku: z.number().int().positive(),
       isTextbook: z.boolean().optional(),
-      patch: z.record(z.string(), z.any()),
+      patch: z.record(z.string(), z.unknown()),
+      baseline: z.object({
+        sku: z.number().int().positive(),
+        barcode: z.string().nullable(),
+        itemTaxTypeId: z.number().int().nullable().optional(),
+        retail: z.number().nullable(),
+        cost: z.number().nullable(),
+        fDiscontinue: z.union([z.literal(0), z.literal(1)]),
+        primaryLocationId: z.union([z.literal(2), z.literal(3), z.literal(4)]),
+      }),
     })),
   }),
   z.object({
@@ -114,12 +123,24 @@ export const POST = withAdmin(async (request: NextRequest) => {
     if (parsed.data.action === "update") {
       const errors = await validateBatchUpdateAgainstPrism(parsed.data.rows.map((r) => ({ sku: r.sku, patch: r.patch })));
       if (errors.length > 0) return NextResponse.json({ errors }, { status: 400 });
-      const skus = await batchUpdateItems(parsed.data.rows.map((r) => ({
-        sku: r.sku,
-        patch: r.patch,
-        isTextbook: !!r.isTextbook,
-      })));
-      return NextResponse.json({ action: "update", count: skus.length, skus });
+      try {
+        const skus = await batchUpdateItems(parsed.data.rows.map((r) => ({
+          sku: r.sku,
+          patch: r.patch,
+          isTextbook: !!r.isTextbook,
+          baseline: r.baseline,
+        })));
+        return NextResponse.json({ action: "update", count: skus.length, skus });
+      } catch (err) {
+        if (err instanceof Error && (err as Error & { code?: string }).code === "CONCURRENT_MODIFICATION") {
+          const e = err as Error & { rowIndex?: number; sku?: number; current?: unknown };
+          return NextResponse.json(
+            { error: "CONCURRENT_MODIFICATION", rowIndex: e.rowIndex ?? null, sku: e.sku ?? null, current: e.current ?? null },
+            { status: 409 },
+          );
+        }
+        throw err;
+      }
     }
 
     if (parsed.data.action === "discontinue") {

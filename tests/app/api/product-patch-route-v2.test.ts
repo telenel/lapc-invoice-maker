@@ -165,6 +165,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
         retail: 11.99,
         cost: 5.5,
         fDiscontinue: 0,
+        primaryLocationId: 2,
       },
     );
     expect(mockProductsUpsert).toHaveBeenCalledWith(expect.objectContaining({
@@ -255,6 +256,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
         retail: 11.99,
         cost: 5.5,
         fDiscontinue: 0,
+        primaryLocationId: 2,
       },
     );
   });
@@ -395,6 +397,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
         retail: 11.99,
         cost: 5.5,
         fDiscontinue: 0,
+        primaryLocationId: 2,
       },
     );
     expect(mockProductsUpsert).toHaveBeenCalledWith(expect.objectContaining({
@@ -586,6 +589,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
         retail: 11.99,
         cost: 5.5,
         fDiscontinue: 0,
+        primaryLocationId: 2,
       },
     );
     expect(prismMocks.updateGmItem).not.toHaveBeenCalled();
@@ -651,6 +655,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
         retail: 11.99,
         cost: 5.5,
         fDiscontinue: 0,
+        primaryLocationId: 2,
       },
     );
     expect(mockProductsUpsert).toHaveBeenCalledWith(expect.objectContaining({
@@ -710,6 +715,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
         retail: 11.99,
         cost: 5.5,
         fDiscontinue: 0,
+        primaryLocationId: 2,
       },
     );
     expect(mockProductsUpsert).toHaveBeenCalledWith(expect.objectContaining({
@@ -764,6 +770,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
         retail: 11.99,
         cost: 5.5,
         fDiscontinue: 0,
+        primaryLocationId: 2,
       },
     );
     expect(prismMocks.updateTextbookPricing).not.toHaveBeenCalled();

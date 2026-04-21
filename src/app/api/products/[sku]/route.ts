@@ -414,6 +414,7 @@ const snapshotSchema = z.object({
   retail: z.number().nonnegative().nullable(),
   cost: z.number().nonnegative().nullable(),
   fDiscontinue: z.union([z.literal(0), z.literal(1)]),
+  primaryLocationId: z.union([z.literal(2), z.literal(3), z.literal(4)]).optional(),
 });
 
 const itemPatchSchema = z.object({
@@ -637,6 +638,23 @@ function normalizeLegacyPatch(patch: LegacyPatchInput): ProductEditPatchV2 {
   };
 }
 
+type SnapshotInput = z.infer<typeof snapshotSchema>;
+
+/** Promote an optional-primaryLocationId Zod parse result to a full ItemSnapshot,
+ *  defaulting to PIERCE (2) when the caller omits the field (backward compat). */
+function coerceBaseline(raw: SnapshotInput | undefined): ItemSnapshot | undefined {
+  if (raw === undefined) return undefined;
+  return {
+    sku: raw.sku,
+    barcode: raw.barcode,
+    itemTaxTypeId: raw.itemTaxTypeId,
+    retail: raw.retail,
+    cost: raw.cost,
+    fDiscontinue: raw.fDiscontinue,
+    primaryLocationId: raw.primaryLocationId ?? 2,
+  };
+}
+
 function normalizePatchBody(body: unknown): { success: true; data: NormalizedUpdateCommand } | { success: false; error: unknown } {
   if (body && typeof body === "object" && "mode" in body && (body as { mode?: unknown }).mode === "v2") {
     const parsed = v2BodySchema.safeParse(body);
@@ -646,7 +664,7 @@ function normalizePatchBody(body: unknown): { success: true; data: NormalizedUpd
     return {
       success: true,
       data: {
-        baseline: parsed.data.baseline,
+        baseline: coerceBaseline(parsed.data.baseline),
         isTextbook: false,
         patch: normalizeV2Patch(parsed.data.patch),
         isV2: true,
@@ -662,7 +680,7 @@ function normalizePatchBody(body: unknown): { success: true; data: NormalizedUpd
   return {
     success: true,
     data: {
-      baseline: parsed.data.baseline,
+      baseline: coerceBaseline(parsed.data.baseline),
       isTextbook: parsed.data.isTextbook === true,
       patch: normalizeLegacyPatch(parsed.data.patch),
       isV2: false,

@@ -189,6 +189,67 @@ describe("POST /api/products/batch", () => {
     );
   });
 
+  it("rejects an update row without a baseline", async () => {
+    const { POST } = await loadRouteModule();
+    const response = await POST(new NextRequest("http://localhost/api/products/batch", {
+      method: "POST",
+      body: JSON.stringify({
+        action: "update",
+        rows: [{ sku: 101, patch: { retail: 11 } }],
+      }),
+    }));
+    expect(response.status).toBe(400);
+  });
+
+  it("forwards CONCURRENT_MODIFICATION with rowIndex + sku as 409", async () => {
+    prismBatchMocks.validateBatchUpdateAgainstPrism.mockResolvedValue([]);
+    const err = Object.assign(new Error("CONCURRENT_MODIFICATION"), {
+      code: "CONCURRENT_MODIFICATION",
+      rowIndex: 1,
+      sku: 202,
+      current: { sku: 202, barcode: "X", retail: 5, cost: 2, fDiscontinue: 0, primaryLocationId: 3 },
+    });
+    prismBatchMocks.batchUpdateItems.mockRejectedValue(err);
+
+    const { POST } = await loadRouteModule();
+    const body = {
+      action: "update",
+      rows: [101, 202].map((sku) => ({
+        sku,
+        patch: { retail: 11 },
+        baseline: { sku, barcode: "X", retail: 5, cost: 2, fDiscontinue: 0, primaryLocationId: 3 },
+      })),
+    };
+    const response = await POST(new NextRequest("http://localhost/api/products/batch", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }));
+    expect(response.status).toBe(409);
+    const json = await response.json();
+    expect(json).toMatchObject({ error: "CONCURRENT_MODIFICATION", rowIndex: 1, sku: 202 });
+  });
+
+  it("returns 200 with updated skus on happy path", async () => {
+    prismBatchMocks.validateBatchUpdateAgainstPrism.mockResolvedValue([]);
+    prismBatchMocks.batchUpdateItems.mockResolvedValue([101, 202]);
+
+    const { POST } = await loadRouteModule();
+    const body = {
+      action: "update",
+      rows: [101, 202].map((sku) => ({
+        sku,
+        patch: { retail: 11 },
+        baseline: { sku, barcode: "X", retail: 5, cost: 2, fDiscontinue: 0, primaryLocationId: 2 },
+      })),
+    };
+    const response = await POST(new NextRequest("http://localhost/api/products/batch", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ action: "update", count: 2, skus: [101, 202] });
+  });
+
   it("keeps legacy batch create callers working when inventory is absent", async () => {
     const { POST } = await loadRouteModule();
 
