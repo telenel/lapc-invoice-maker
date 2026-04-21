@@ -1,4 +1,12 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+const { runAggregateRecomputeMock } = vi.hoisted(() => ({
+  runAggregateRecomputeMock: vi.fn(),
+}));
+
+vi.mock("@/domains/product/sales-aggregates", () => ({
+  runAggregateRecompute: runAggregateRecomputeMock,
+}));
+
 import { runSalesTxnSync } from "@/domains/product/sales-txn-sync";
 
 function makeMockSupabase(state: { last_transaction_id: number; backfill_completed_at: string | null }) {
@@ -20,7 +28,6 @@ function makeMockSupabase(state: { last_transaction_id: number; backfill_complet
         eq: async () => { stateUpdates.push({ table, patch }); return { error: null }; },
       }),
     }),
-    rpc: vi.fn().mockResolvedValue({ data: 42, error: null }),
   };
 
   return { client, upserted, stateUpdates };
@@ -39,6 +46,11 @@ function makeMockPrism(rows: Array<Record<string, unknown>>) {
 }
 
 describe("runSalesTxnSync", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    runAggregateRecomputeMock.mockResolvedValue(42);
+  });
+
   it("returns zero and flags skipped when backfill hasn't completed", async () => {
     const { client } = makeMockSupabase({ last_transaction_id: 0, backfill_completed_at: null });
     const prism = makeMockPrism([]);
@@ -77,7 +89,7 @@ describe("runSalesTxnSync", () => {
     ]);
     const result = await runSalesTxnSync({ supabase: client as never, prism: prism as never });
     expect(result.aggregatesUpdated).toBe(42);
-    expect(client.rpc).toHaveBeenCalledWith("recompute_product_sales_aggregates");
+    expect(runAggregateRecomputeMock).toHaveBeenCalledTimes(1);
   });
 
   it("skips aggregate recompute when zero rows added", async () => {
@@ -89,6 +101,6 @@ describe("runSalesTxnSync", () => {
     const result = await runSalesTxnSync({ supabase: client as never, prism: prism as never });
     expect(result.txnsAdded).toBe(0);
     expect(result.aggregatesUpdated).toBe(0);
-    expect(client.rpc).not.toHaveBeenCalled();
+    expect(runAggregateRecomputeMock).not.toHaveBeenCalled();
   });
 });

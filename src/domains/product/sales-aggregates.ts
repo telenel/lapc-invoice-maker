@@ -1,15 +1,36 @@
 /**
- * Aggregate-recompute helpers. The actual SQL lives in the
- * `recompute_product_sales_aggregates()` Postgres function created by the
- * Phase A migration. The exported `buildAggregateRecomputeSql` string mirror
- * is for tests that want to assert the column set without spinning up Postgres.
+ * Aggregate-recompute helpers. Every sync recomputes all sale-active SKUs so
+ * the rolling windows stay correct even when no new transactions arrive for a
+ * given product and older sales age out of the 30d/90d/1y buckets.
  */
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { Client } from "pg";
+
+const AGGREGATE_SKU_BATCH_SIZE = 500;
+
+const SALE_ACTIVE_SKU_BATCH_SQL = `
+  SELECT sku
+  FROM sales_transactions
+  WHERE dtl_f_status <> 1
+    AND sku > $1::bigint
+  GROUP BY sku
+  ORDER BY sku
+  LIMIT $2
+`;
+
+interface AggregateQueryResult<Row> {
+  rows: Row[];
+}
+
+export interface AggregateDbClient {
+  connect?(): Promise<unknown>;
+  end?(): Promise<unknown>;
+  query<Row extends Record<string, unknown> = Record<string, unknown>>(
+    text: string,
+    values?: unknown[],
+  ): Promise<AggregateQueryResult<Row>>;
+}
 
 export function buildAggregateRecomputeSql(): string {
-  // String mirror of the CREATE FUNCTION body. Kept in sync by tests —
-  // any column drift will break the "includes all 14 aggregate assignments"
-  // assertion and force the developer to update both.
   return `
     WITH rolled AS (
       SELECT
@@ -30,34 +51,106 @@ export function buildAggregateRecomputeSql(): string {
         MAX(process_date)                                                                    AS last_sale
       FROM sales_transactions
       WHERE dtl_f_status <> 1
+        AND sku = ANY($1::bigint[])
       GROUP BY sku
     )
-    UPDATE products p SET
-      units_sold_30d               = r.u30,
-      units_sold_90d               = r.u90,
-      units_sold_1y                = r.u1y,
-      units_sold_3y                = r.u3y,
-      units_sold_lifetime          = r.ulife,
-      revenue_30d                  = r.r30,
-      revenue_90d                  = r.r90,
-      revenue_1y                   = r.r1y,
-      revenue_3y                   = r.r3y,
-      revenue_lifetime             = r.rlife,
-      txns_1y                      = r.t1y,
-      txns_lifetime                = r.tlife,
-      first_sale_date_computed     = r.first_sale,
-      last_sale_date_computed      = r.last_sale,
-      sales_aggregates_computed_at = now()
-    FROM rolled r
-    WHERE p.sku = r.sku;
+    , updated AS (
+      UPDATE products p SET
+        units_sold_30d               = r.u30,
+        units_sold_90d               = r.u90,
+        units_sold_1y                = r.u1y,
+        units_sold_3y                = r.u3y,
+        units_sold_lifetime          = r.ulife,
+        revenue_30d                  = r.r30,
+        revenue_90d                  = r.r90,
+        revenue_1y                   = r.r1y,
+        revenue_3y                   = r.r3y,
+        revenue_lifetime             = r.rlife,
+        txns_1y                      = r.t1y,
+        txns_lifetime                = r.tlife,
+        first_sale_date_computed     = r.first_sale,
+        last_sale_date_computed      = r.last_sale,
+        sales_aggregates_computed_at = now()
+      FROM rolled r
+      WHERE p.sku = r.sku
+      RETURNING p.sku
+    )
+    SELECT COUNT(*)::int AS affected FROM updated;
   `;
 }
 
-/**
- * Invoke the Postgres function. Returns the number of product rows updated.
- */
-export async function runAggregateRecompute(client: SupabaseClient): Promise<number> {
-  const { data, error } = await client.rpc("recompute_product_sales_aggregates");
-  if (error) throw new Error(`Aggregate recompute failed: ${error.message}`);
-  return Number(data ?? 0);
+function getAggregateDatabaseUrl(): string {
+  const connectionString = process.env.DATABASE_URL ?? process.env.DIRECT_URL;
+  if (!connectionString) {
+    throw new Error("DATABASE_URL or DIRECT_URL must be configured");
+  }
+
+  return connectionString;
+}
+
+function createPgAggregateClient(connectionString: string): AggregateDbClient {
+  const pgClient = new Client({ connectionString });
+
+  return {
+    connect: async () => {
+      await pgClient.connect();
+    },
+    end: async () => {
+      await pgClient.end();
+    },
+    query: async <Row extends Record<string, unknown> = Record<string, unknown>>(
+      text: string,
+      values?: unknown[],
+    ) => {
+      const result = await pgClient.query(text, values);
+      return { rows: result.rows as Row[] };
+    },
+  };
+}
+
+export async function runAggregateRecompute(options: {
+  batchSize?: number;
+  db?: AggregateDbClient;
+} = {}): Promise<number> {
+  const { batchSize = AGGREGATE_SKU_BATCH_SIZE, db } = options;
+  if (batchSize < 1) {
+    throw new Error("Aggregate recompute batchSize must be at least 1");
+  }
+
+  const ownsDb = !db;
+  const client = db ?? createPgAggregateClient(getAggregateDatabaseUrl());
+
+  if (ownsDb) {
+    await client.connect?.();
+  }
+
+  try {
+    let totalAffected = 0;
+    let lastSku: string | number = 0;
+
+    while (true) {
+      const skuResult = await client.query(
+        SALE_ACTIVE_SKU_BATCH_SQL,
+        [lastSku, batchSize],
+      ) as AggregateQueryResult<{ sku: string }>;
+      const skuRows = skuResult.rows;
+      if (skuRows.length === 0) {
+        return totalAffected;
+      }
+
+      const skuBatch = skuRows.map((row) => row.sku);
+      const updatedResult = await client.query(
+        buildAggregateRecomputeSql(),
+        [skuBatch],
+      ) as AggregateQueryResult<{ affected: number | string }>;
+      const updatedRows = updatedResult.rows;
+
+      totalAffected += Number(updatedRows[0]?.affected ?? 0);
+      lastSku = skuBatch[skuBatch.length - 1];
+    }
+  } finally {
+    if (ownsDb) {
+      await client.end?.();
+    }
+  }
 }

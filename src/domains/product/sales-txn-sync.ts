@@ -91,7 +91,7 @@ export async function runSalesTxnSync(deps: {
   // both the insert (no-op due to ON CONFLICT) and the recompute. Without
   // this ordering, a recompute failure would leave aggregates stale with
   // no retry path since next sync sees zero new rows.
-  const aggregatesUpdated = await runAggregateRecompute(supabase);
+  const aggregatesUpdated = await runAggregateRecompute();
 
   const { count: totalRows } = await supabase
     .from("sales_transactions")
