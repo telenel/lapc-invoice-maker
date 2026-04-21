@@ -275,4 +275,5 @@ export interface CommitResult {
   successCount: number;
   affectedSkus: number[];
   mirrorErrors?: BulkEditMirrorError[];
+  mirrorRefreshDeferred?: boolean;
 }

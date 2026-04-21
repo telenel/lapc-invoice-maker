@@ -685,8 +685,10 @@ export const POST = withAdmin(async (request: NextRequest, session) => {
   const mirrorErrors = Array.isArray((batchJson as { mirrorErrors?: unknown } | null)?.mirrorErrors)
     ? ((batchJson as { mirrorErrors?: Array<{ sku: number; message: string }> }).mirrorErrors ?? [])
     : [];
+  const mirrorRefreshDeferred =
+    (batchJson as { mirrorRefreshDeferred?: unknown } | null)?.mirrorRefreshDeferred === true;
 
-  const summary = `${preview.totals.rowCount} items — retail delta $${(preview.totals.pricingDeltaCents / 100).toFixed(2)}${preview.totals.districtChangeCount > 0 ? `, ${preview.totals.districtChangeCount} district changes` : ""}${mirrorErrors.length > 0 ? `, mirror stale for ${mirrorErrors.length} SKU${mirrorErrors.length === 1 ? "" : "s"}` : ""}`;
+  const summary = `${preview.totals.rowCount} items — retail delta $${(preview.totals.pricingDeltaCents / 100).toFixed(2)}${preview.totals.districtChangeCount > 0 ? `, ${preview.totals.districtChangeCount} district changes` : ""}${mirrorErrors.length > 0 ? `, mirror stale for ${mirrorErrors.length} SKU${mirrorErrors.length === 1 ? "" : "s"}` : mirrorRefreshDeferred ? ", browse mirror refreshing in background" : ""}`;
 
   const run = await prisma.bulkEditRun.create({
     data: {
@@ -707,6 +709,7 @@ export const POST = withAdmin(async (request: NextRequest, session) => {
     successCount: batchRows.length,
     affectedSkus: batchRows.map((row) => row.sku),
     mirrorErrors: mirrorErrors.length > 0 ? mirrorErrors : undefined,
+    mirrorRefreshDeferred: mirrorRefreshDeferred || undefined,
   });
 });
 

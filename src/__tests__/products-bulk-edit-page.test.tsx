@@ -384,4 +384,35 @@ describe("BulkEditPage Phase 8 field picker flow", () => {
       "Saved in Prism, but the browse mirror did not refresh for SKU 101. Search results may stay stale until the next sync.",
     );
   });
+
+  it("shows a deferred-refresh warning when the field commit returns before browse data catches up", async () => {
+    const user = userEvent.setup();
+
+    bulkEditFieldDryRunMock.mockResolvedValue(makePreview());
+    bulkEditFieldCommitMock.mockResolvedValue({
+      runId: "run_12345678",
+      successCount: 1,
+      affectedSkus: [101],
+      mirrorRefreshDeferred: true,
+    });
+
+    render(<BulkEditPage />);
+
+    await user.click(screen.getByLabelText("Select Retail"));
+    await user.clear(screen.getByRole("spinbutton", { name: "Retail" }));
+    await user.type(screen.getByRole("spinbutton", { name: "Retail" }), "12.50");
+    await user.selectOptions(screen.getByLabelText("Inventory scope"), "all");
+
+    await user.click(screen.getByRole("button", { name: /preview/i }));
+    await waitFor(() => expect(bulkEditFieldDryRunMock).toHaveBeenCalledTimes(1));
+
+    await user.click(screen.getByRole("button", { name: /commit/i }));
+    await user.click(screen.getByRole("button", { name: "Apply Changes" }));
+
+    await waitFor(() => expect(bulkEditFieldCommitMock).toHaveBeenCalledTimes(1));
+    expect(toastSuccessMock).toHaveBeenCalledWith("Applied Description and Retail to 1 item.");
+    expect(toastErrorMock).toHaveBeenCalledWith(
+      "Saved in Prism. The browse mirror is refreshing in the background, so browse data may stay stale briefly.",
+    );
+  });
 });

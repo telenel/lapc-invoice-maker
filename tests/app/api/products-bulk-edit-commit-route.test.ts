@@ -19,6 +19,10 @@ const prismaMocks = vi.hoisted(() => ({
   },
 }));
 
+const batchRouteMocks = vi.hoisted(() => ({
+  POST: vi.fn(),
+}));
+
 const productPatchRouteMocks = vi.hoisted(() => ({
   PATCH: vi.fn(),
 }));
@@ -34,6 +38,7 @@ vi.mock("@/lib/prism", () => ({
 vi.mock("@/lib/prisma", () => ({
   prisma: prismaMocks,
 }));
+vi.mock("@/app/api/products/batch/route", () => batchRouteMocks);
 vi.mock("@/app/api/products/[sku]/route", () => productPatchRouteMocks);
 
 const mockProductsIn = vi.fn();
@@ -155,6 +160,9 @@ describe("POST /api/products/bulk-edit/commit", () => {
 
     productPatchRouteMocks.PATCH.mockResolvedValue(
       NextResponse.json({ sku: 101, appliedFields: ["retail", "tagTypeId", "fNoReturns"] }),
+    );
+    batchRouteMocks.POST.mockResolvedValue(
+      NextResponse.json({ action: "update", count: 1, skus: [101] }),
     );
     prismaMocks.bulkEditRun.create.mockResolvedValue({ id: "run-1" });
   });
@@ -358,5 +366,40 @@ describe("POST /api/products/bulk-edit/commit", () => {
     expect(supabaseMocks.getSupabaseAdminClient).not.toHaveBeenCalled();
     expect(productPatchRouteMocks.PATCH).not.toHaveBeenCalled();
     expect(prismaMocks.bulkEditRun.create).not.toHaveBeenCalled();
+  });
+
+  it("propagates deferred mirror refresh status from nested batch updates", async () => {
+    batchRouteMocks.POST.mockResolvedValueOnce(
+      NextResponse.json({ action: "update", count: 1, skus: [101], mirrorRefreshDeferred: true }),
+    );
+    const commitRoute = await loadRouteModule();
+
+    const response = await commitRoute.POST(
+      new NextRequest("http://localhost/api/products/bulk-edit/commit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", cookie: "next-auth.session-token=test" },
+        body: JSON.stringify({
+          selection: { skus: [101], scope: "pierce" },
+          transform: {
+            pricing: { mode: "absolute", retail: 12.5 },
+            catalog: {},
+          },
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      runId: "run-1",
+      successCount: 1,
+      affectedSkus: [101],
+      mirrorRefreshDeferred: true,
+    });
+    expect(batchRouteMocks.POST).toHaveBeenCalledTimes(1);
+    expect(prismaMocks.bulkEditRun.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        summary: expect.stringContaining("browse mirror refreshing in background"),
+      }),
+    }));
   });
 });
