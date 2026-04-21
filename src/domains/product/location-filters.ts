@@ -1,6 +1,11 @@
 export type ProductLocationId = 2 | 3 | 4;
 
 const CANONICAL_PRODUCT_LOCATION_IDS = [2, 3, 4] as const;
+export const PRODUCT_LOCATION_ABBREV_BY_ID: Record<ProductLocationId, "PIER" | "PCOP" | "PFS"> = {
+  2: "PIER",
+  3: "PCOP",
+  4: "PFS",
+};
 
 export const DEFAULT_PRODUCT_LOCATION_IDS: readonly ProductLocationId[] = CANONICAL_PRODUCT_LOCATION_IDS;
 
@@ -36,4 +41,8 @@ export function serializeProductLocationIdsParam(ids: readonly ProductLocationId
 
 export function getPrimaryProductLocationId(ids: readonly ProductLocationId[]): ProductLocationId {
   return normalizeProductLocationIds(ids)[0];
+}
+
+export function formatProductLocationList(ids: readonly number[]): string {
+  return normalizeProductLocationIds(ids).map((id) => PRODUCT_LOCATION_ABBREV_BY_ID[id]).join(", ");
 }

@@ -37,6 +37,34 @@ export function validateBatchCreateShape(rows: BatchCreateRow[]): BatchValidatio
     if (typeof r.cost !== "number" || r.cost < 0) {
       errors.push({ rowIndex: i, field: "cost", code: "NEGATIVE_COST", message: "Cost must be ≥ 0" });
     }
+    if (r.inventory) {
+      const seenLocations = new Set<number>();
+      for (const inventoryRow of r.inventory) {
+        if (inventoryRow.locationId !== 2 && inventoryRow.locationId !== 3 && inventoryRow.locationId !== 4) {
+          errors.push({
+            rowIndex: i,
+            field: "inventory",
+            code: "MISSING_REQUIRED",
+            message: `Inventory location ${inventoryRow.locationId} is out of scope`,
+          });
+        }
+        if (seenLocations.has(inventoryRow.locationId)) {
+          errors.push({
+            rowIndex: i,
+            field: "inventory",
+            code: "MISSING_REQUIRED",
+            message: `Duplicate inventory location ${inventoryRow.locationId}`,
+          });
+        }
+        seenLocations.add(inventoryRow.locationId);
+        if (typeof inventoryRow.retail !== "number" || inventoryRow.retail < 0) {
+          errors.push({ rowIndex: i, field: "inventory", code: "NEGATIVE_PRICE", message: "Inventory retail must be ≥ 0" });
+        }
+        if (typeof inventoryRow.cost !== "number" || inventoryRow.cost < 0) {
+          errors.push({ rowIndex: i, field: "inventory", code: "NEGATIVE_COST", message: "Inventory cost must be ≥ 0" });
+        }
+      }
+    }
   }
 
   // Duplicate barcodes within batch (ignore empty/null)

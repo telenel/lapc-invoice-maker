@@ -94,6 +94,10 @@ export async function batchCreateGmItems(rows: BatchCreateRow[]): Promise<number
 
   try {
     for (const input of rows) {
+      const inventoryRows = input.inventory && input.inventory.length > 0
+        ? input.inventory
+        : [{ locationId: PIERCE_LOCATION_ID, retail: input.retail, cost: input.cost }];
+
       const addReq = transaction.request();
       addReq.input("MfgId", sql.Int, input.vendorId);
       addReq.input("Description", sql.VarChar(128), input.description);
@@ -118,12 +122,14 @@ export async function batchCreateGmItems(rows: BatchCreateRow[]): Promise<number
         throw new Error(`P_Item_Add_GM did not return a valid SKU for row "${input.description}"`);
       }
 
-      await transaction.request()
-        .input("sku", sql.Int, newSku)
-        .input("loc", sql.Numeric(8, 0), PIERCE_LOCATION_ID)
-        .input("retail", sql.Money, input.retail)
-        .input("cost", sql.Money, input.cost)
-        .query("INSERT INTO Inventory (SKU, LocationID, Retail, Cost) VALUES (@sku, @loc, @retail, @cost)");
+      for (const inventoryRow of inventoryRows) {
+        await transaction.request()
+          .input("sku", sql.Int, newSku)
+          .input("loc", sql.Numeric(8, 0), inventoryRow.locationId)
+          .input("retail", sql.Money, inventoryRow.retail)
+          .input("cost", sql.Money, inventoryRow.cost)
+          .query("INSERT INTO Inventory (SKU, LocationID, Retail, Cost) VALUES (@sku, @loc, @retail, @cost)");
+      }
 
       createdSkus.push(newSku);
     }

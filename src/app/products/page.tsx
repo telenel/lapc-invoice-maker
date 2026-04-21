@@ -35,7 +35,11 @@ import { useProductInlineEdit, type ProductInlineEditRowBaseline } from "@/compo
 import { productApi } from "@/domains/product/api-client";
 import { SYSTEM_PRESET_VIEWS } from "@/domains/product/presets";
 import { shouldApplyDefaultMinStock } from "@/domains/product/page-defaults";
-import { getPrimaryProductLocationId, type ProductLocationId } from "@/domains/product/location-filters";
+import {
+  getPrimaryProductLocationId,
+  serializeProductLocationIdsParam,
+  type ProductLocationId,
+} from "@/domains/product/location-filters";
 import type { ProductBrowseRow, SelectedProduct } from "@/domains/product/types";
 
 function getLocationLabel(locationId: ProductLocationId): "PIER" | "PCOP" | "PFS" {
@@ -368,7 +372,11 @@ export default function ProductsPage() {
             variant="outline"
             disabled={!prismAvailable}
             title={prismAvailable ? undefined : "Prism is unreachable — write actions disabled"}
-            render={prismAvailable ? <Link href="/products/batch-add" /> : undefined}
+            render={
+              prismAvailable
+                ? <Link href={`/products/batch-add?loc=${serializeProductLocationIdsParam(filters.locationIds)}`} />
+                : undefined
+            }
           >
             Batch Add
           </Button>
@@ -377,7 +385,11 @@ export default function ProductsPage() {
             variant="outline"
             disabled={!prismAvailable}
             title={prismAvailable ? undefined : "Prism is unreachable — write actions disabled"}
-            render={prismAvailable ? <Link href="/products/bulk-edit" /> : undefined}
+            render={
+              prismAvailable
+                ? <Link href={`/products/bulk-edit?loc=${serializeProductLocationIdsParam(filters.locationIds)}`} />
+                : undefined
+            }
           >
             Bulk Edit
           </Button>
@@ -387,6 +399,8 @@ export default function ProductsPage() {
       <NewItemDialog
         open={newItemOpen}
         onOpenChange={setNewItemOpen}
+        locationIds={filters.locationIds}
+        primaryLocationId={primaryLocationId}
         onCreated={() => {
           // Refresh the list so the new item shows immediately (mirror is upserted server-side)
           refetch();

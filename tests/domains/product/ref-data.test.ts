@@ -14,6 +14,7 @@ import { loadCommittedProductRefSnapshot } from "@/domains/product/ref-data-serv
 
 const queryLog: string[] = [];
 const productApiCreateMock = vi.fn();
+const productApiBatchMock = vi.fn();
 
 vi.mock("@/lib/prism", () => {
   const request = {
@@ -120,6 +121,7 @@ vi.mock("@/domains/product/api-client", async () => {
     ...actual,
     productApi: {
       ...actual.productApi,
+      batch: productApiBatchMock,
       create: productApiCreateMock,
     },
   };
@@ -127,6 +129,7 @@ vi.mock("@/domains/product/api-client", async () => {
 
 beforeEach(() => {
   queryLog.length = 0;
+  productApiBatchMock.mockReset();
   productApiCreateMock.mockReset();
 });
 
@@ -403,8 +406,8 @@ describe("product ref data helpers", () => {
     expect(screen.getByLabelText(/Description/i)).toBeTruthy();
     expect(screen.getByLabelText(/^Vendor$/i)).toBeTruthy();
     expect(screen.getByLabelText(/Department \/ Class/i)).toBeTruthy();
-    expect(screen.getByLabelText(/Retail/i)).toBeTruthy();
-    expect(screen.getByLabelText(/Cost/i)).toBeTruthy();
+    expect(screen.getByLabelText(/^Retail\b/i)).toBeTruthy();
+    expect(screen.getByLabelText(/^Cost\b/i)).toBeTruthy();
 
     expect(screen.queryByLabelText(/Barcode/i)).toBeNull();
     expect(screen.queryByLabelText(/Tax Type/i)).toBeNull();
@@ -412,8 +415,8 @@ describe("product ref data helpers", () => {
     expect(screen.queryByLabelText(/Comment/i)).toBeNull();
 
     expect(screen.getByLabelText("PIER").getAttribute("aria-checked")).toBe("true");
-    expect(screen.getByLabelText("PCOP").getAttribute("aria-checked")).toBe("false");
-    expect(screen.getByLabelText("PFS").getAttribute("aria-checked")).toBe("false");
+    expect(screen.getByLabelText("PCOP").getAttribute("aria-checked")).toBe("true");
+    expect(screen.getByLabelText("PFS").getAttribute("aria-checked")).toBe("true");
     expect(screen.getByLabelText("PIER").getAttribute("aria-disabled")).toBe("true");
 
     fireEvent.click(screen.getByRole("button", { name: /More fields/i }));
@@ -481,14 +484,13 @@ describe("product ref data helpers", () => {
     fireEvent.change(screen.getByLabelText(/Department \/ Class/i), {
       target: { value: "1313290" },
     });
-    fireEvent.change(screen.getByLabelText(/Retail/i), {
+    fireEvent.change(screen.getByLabelText(/^Retail\b/i), {
       target: { value: "19.99" },
     });
-    fireEvent.change(screen.getByLabelText(/Cost/i), {
+    fireEvent.change(screen.getByLabelText(/^Cost\b/i), {
       target: { value: "8.50" },
     });
 
-    fireEvent.click(screen.getByLabelText("PCOP"));
     fireEvent.change(screen.getByLabelText(/PCOP Retail/i), {
       target: { value: "24.99" },
     });
@@ -496,7 +498,6 @@ describe("product ref data helpers", () => {
       target: { value: "11.25" },
     });
 
-    fireEvent.click(screen.getByLabelText("PFS"));
     fireEvent.click(screen.getByRole("button", { name: /Copy from PIER to PFS/i }));
 
     fireEvent.click(screen.getByRole("button", { name: "Create item" }));
@@ -515,6 +516,183 @@ describe("product ref data helpers", () => {
         { locationId: 2, retail: 19.99, cost: 8.5 },
         { locationId: 3, retail: 24.99, cost: 11.25 },
         { locationId: 4, retail: 19.99, cost: 8.5 },
+      ],
+    });
+  });
+
+  it("inherits the current location scope when opening the new-item dialog", async () => {
+    const { NewItemDialog } = await import("@/components/products/new-item-dialog");
+    const { useProductRefDirectory } = await import("@/domains/product/vendor-directory");
+
+    productApiCreateMock.mockResolvedValue({
+      sku: 12345,
+      description: "Pierce mug",
+      vendorId: 21,
+      dccId: 1313290,
+      barcode: null,
+      retail: 19.99,
+      cost: 8.5,
+    });
+
+    vi.mocked(useProductRefDirectory).mockReturnValue({
+      refs: {
+        vendors: [],
+        dccs: [],
+        taxTypes: [],
+        tagTypes: [],
+        statusCodes: [],
+        packageTypes: [],
+        colors: [],
+        bindings: [],
+      },
+      lookups: buildProductRefMaps({
+        vendors: [],
+        dccs: [],
+        taxTypes: [],
+        tagTypes: [],
+        statusCodes: [],
+        packageTypes: [],
+        colors: [],
+        bindings: [],
+      }),
+      vendors: [],
+      byId: new Map(),
+      loading: false,
+      available: true,
+    });
+
+    render(
+      React.createElement(NewItemDialog, {
+        open: true,
+        onOpenChange: () => {},
+        locationIds: [3, 4],
+        primaryLocationId: 3,
+      }),
+    );
+
+    expect(screen.getByText(/primary location: PCOP/i)).toBeTruthy();
+    expect(screen.getByText(/current scope: PCOP, PFS/i)).toBeTruthy();
+    expect(screen.getByLabelText("PIER").getAttribute("aria-checked")).toBe("true");
+    expect(screen.getByLabelText("PCOP").getAttribute("aria-checked")).toBe("true");
+    expect(screen.getByLabelText("PFS").getAttribute("aria-checked")).toBe("true");
+
+    fireEvent.change(screen.getByLabelText(/Description/i), {
+      target: { value: "Pierce mug" },
+    });
+    fireEvent.change(screen.getByLabelText(/^Vendor$/i), {
+      target: { value: "21" },
+    });
+    fireEvent.change(screen.getByLabelText(/Department \/ Class/i), {
+      target: { value: "1313290" },
+    });
+    fireEvent.change(screen.getByLabelText(/^Retail\b/i), {
+      target: { value: "19.99" },
+    });
+    fireEvent.change(screen.getByLabelText(/^Cost\b/i), {
+      target: { value: "8.50" },
+    });
+    fireEvent.change(screen.getByLabelText(/PCOP Retail/i), {
+      target: { value: "24.99" },
+    });
+    fireEvent.change(screen.getByLabelText(/PCOP Cost/i), {
+      target: { value: "11.25" },
+    });
+    fireEvent.change(screen.getByLabelText(/PFS Retail/i), {
+      target: { value: "21.99" },
+    });
+    fireEvent.change(screen.getByLabelText(/PFS Cost/i), {
+      target: { value: "10.25" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Create item" }));
+
+    expect(productApiCreateMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        inventory: [
+          { locationId: 2, retail: 19.99, cost: 8.5 },
+          { locationId: 3, retail: 24.99, cost: 11.25 },
+          { locationId: 4, retail: 21.99, cost: 10.25 },
+        ],
+      }),
+    );
+  });
+
+  it("submits batch-add rows with the inherited location scope inventory", async () => {
+    const { BatchAddGrid } = await import("@/components/products/batch-add-grid");
+    const { useProductRefDirectory } = await import("@/domains/product/vendor-directory");
+
+    productApiBatchMock.mockResolvedValue({
+      action: "create",
+      count: 1,
+      skus: [1001],
+    });
+
+    vi.mocked(useProductRefDirectory).mockReturnValue({
+      refs: {
+        vendors: [],
+        dccs: [],
+        taxTypes: [],
+        tagTypes: [],
+        statusCodes: [],
+        packageTypes: [],
+        colors: [],
+        bindings: [],
+      },
+      lookups: buildProductRefMaps({
+        vendors: [],
+        dccs: [],
+        taxTypes: [],
+        tagTypes: [],
+        statusCodes: [],
+        packageTypes: [],
+        colors: [],
+        bindings: [],
+      }),
+      vendors: [],
+      byId: new Map(),
+      loading: false,
+      available: true,
+    });
+
+    render(
+      React.createElement(BatchAddGrid, {
+        locationIds: [4],
+        primaryLocationId: 4,
+        onSubmitted: () => {},
+      }),
+    );
+
+    expect(screen.getByText(/primary location: PFS/i)).toBeTruthy();
+    expect(screen.getByText(/selected inventory rows: PIER, PFS/i)).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText("Description for row 1"), {
+      target: { value: "Pierce mug" },
+    });
+    fireEvent.change(screen.getByLabelText(/^Vendor$/i), {
+      target: { value: "21" },
+    });
+    fireEvent.change(screen.getByLabelText(/Department \/ Class/i), {
+      target: { value: "1313290" },
+    });
+    fireEvent.change(screen.getByLabelText("Retail for row 1"), {
+      target: { value: "19.99" },
+    });
+    fireEvent.change(screen.getByLabelText("Cost for row 1"), {
+      target: { value: "8.50" },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Submit/i }));
+
+    expect(productApiBatchMock).toHaveBeenCalledWith({
+      action: "create",
+      rows: [
+        expect.objectContaining({
+          description: "Pierce mug",
+          inventory: [
+            { locationId: 2, retail: 19.99, cost: 8.5 },
+            { locationId: 4, retail: 19.99, cost: 8.5 },
+          ],
+        }),
       ],
     });
   });

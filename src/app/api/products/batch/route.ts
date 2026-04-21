@@ -12,6 +12,8 @@ import {
 } from "@/domains/product/prism-batch";
 import { hasTransactionHistory } from "@/domains/product/prism-delete";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import { PRODUCT_LOCATION_ABBREV_BY_ID } from "@/domains/product/location-filters";
+import type { ProductLocationId } from "@/domains/product/types";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +32,11 @@ const bodySchema = z.discriminatedUnion("action", [
       unitsPerPack: z.number().int().optional(),
       retail: z.number(),
       cost: z.number(),
+      inventory: z.array(z.object({
+        locationId: z.union([z.literal(2), z.literal(3), z.literal(4)]),
+        retail: z.number(),
+        cost: z.number(),
+      })).optional(),
     })),
   }),
   z.object({
@@ -80,6 +87,24 @@ export const POST = withAdmin(async (request: NextRequest) => {
           dcc_id: row.dccId,
           synced_at: new Date().toISOString(),
         })));
+
+        const inventoryRows = parsed.data.rows.flatMap((row, i) => {
+          const sku = skus[i];
+          const rowInventory = row.inventory && row.inventory.length > 0
+            ? row.inventory
+            : [{ locationId: 2 as const, retail: row.retail, cost: row.cost }];
+          return rowInventory.map((inventoryRow) => ({
+            sku,
+            location_id: inventoryRow.locationId,
+            location_abbrev: PRODUCT_LOCATION_ABBREV_BY_ID[inventoryRow.locationId as ProductLocationId],
+            retail_price: inventoryRow.retail,
+            cost: inventoryRow.cost,
+          }));
+        });
+
+        if (inventoryRows.length > 0) {
+          await supabase.from("product_inventory").upsert(inventoryRows, { onConflict: "sku,location_id" });
+        }
       } catch (mirrorErr) {
         console.warn("[batch create] mirror failed:", mirrorErr);
       }
