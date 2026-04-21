@@ -98,6 +98,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
       retail: 12.99,
       cost: 6.25,
       fDiscontinue: 0,
+      primaryLocationId: 2,
     });
     mockProductsUpsert.mockResolvedValue({ error: null });
     mockProductInventoryUpsert.mockResolvedValue({ error: null });
