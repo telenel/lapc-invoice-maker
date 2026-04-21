@@ -6,10 +6,19 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-function Accordion({ className, ...props }: AccordionPrimitive.Root.Props) {
+function Accordion({
+  className,
+  keepMounted = true,
+  ...props
+}: AccordionPrimitive.Root.Props) {
   return (
     <AccordionPrimitive.Root
       data-slot="accordion"
+      // Default to keepMounted so panel subtrees stay in the DOM (hidden
+      // via data-closed) when collapsed. This preserves any inner form
+      // state, keeps the content in-page search / screen-reader indexes,
+      // and makes the height transition testable without flakiness.
+      keepMounted={keepMounted}
       className={cn("flex w-full flex-col", className)}
       {...props}
     />
@@ -63,7 +72,11 @@ function AccordionContent({
     <AccordionPrimitive.Panel
       data-slot="accordion-content"
       className={cn(
-        "overflow-hidden text-sm transition-[height] duration-200 data-[panel-open]:h-[var(--accordion-panel-height)] h-0",
+        // Panel emits `data-open` (or `data-closed`) from Base UI's
+        // collapsible state mapping — NOT `data-panel-open`, which only
+        // shows up on the Trigger element. Keying the height transition
+        // to `data-open` is what actually reveals the content on click.
+        "overflow-hidden text-sm transition-[height] duration-200 h-0 data-[open]:h-[var(--accordion-panel-height)]",
         className,
       )}
       {...props}

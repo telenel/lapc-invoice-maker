@@ -23,7 +23,12 @@ import type { ProductEditDetails } from "@/domains/product/types";
 import { useProductRefDirectory } from "@/domains/product/vendor-directory";
 import type { EditItemDialogProps } from "../edit-item-dialog-legacy";
 import { SelectedItemsSummary } from "./components/selected-items-summary";
-import { buildInventoryPatch, buildV2Patch, hasPatchFields } from "./state/form-builders";
+import {
+  buildInventoryPatch,
+  buildLegacyBulkPatch,
+  buildV2Patch,
+  hasPatchFields,
+} from "./state/form-builders";
 import {
   syncInventoryField,
   toFormState,
@@ -272,34 +277,55 @@ export function EditItemDialogV2({
     try {
       if (items.length === 1) {
         const item = items[0];
-        const pierceInventoryBaseline = detail?.inventoryByLocation.find((entry) => entry.locationId === 2);
+        // Concurrency baseline must match the row the Primary tab is
+        // actually editing. Previously this was hard-coded to
+        // locationId === 2 (PIER), so PCOP- or PFS-scoped pages would send
+        // a precondition against the wrong inventory row. Using
+        // `resolvedPrimaryLocationId` keeps the baseline aligned with the
+        // scope the dialog inherits from the products page.
+        const primaryInventoryBaseline = detail?.inventoryByLocation.find(
+          (entry) => entry.locationId === resolvedPrimaryLocationId,
+        );
         await productApi.update(item.sku, {
           mode: "v2",
           patch: v2Patch,
           baseline: {
             sku: item.sku,
             barcode: detail?.barcode ?? item.barcode,
-            retail: pierceInventoryBaseline?.retail ?? item.retail,
-            cost: pierceInventoryBaseline?.cost ?? item.cost,
+            retail: primaryInventoryBaseline?.retail ?? item.retail,
+            cost: primaryInventoryBaseline?.cost ?? item.cost,
             fDiscontinue: item.fDiscontinue,
           },
         });
       } else {
-        await Promise.all(
-          items.map((item) =>
-            productApi.update(item.sku, {
-              mode: "v2",
-              patch: v2Patch,
-              baseline: {
-                sku: item.sku,
-                barcode: item.barcode,
-                retail: item.retail,
-                cost: item.cost,
-                fDiscontinue: item.fDiscontinue,
-              },
-            }),
-          ),
-        );
+        // Bulk save goes through the server's transactional `productApi.batch`
+        // endpoint so the whole selection commits atomically. The previous
+        // `Promise.all` of per-item v2 PATCH requests risked half-committed
+        // selections when one item failed after others had already resolved
+        // (Codex adversarial review on PR #229).
+        //
+        // V2's per-location inventory editor is hidden in bulk mode anyway,
+        // so we flatten the dirty fields into the legacy GmItemPatch /
+        // TextbookPatch shape the batch endpoint accepts. Item type is
+        // applied per row based on `items[i].isTextbook`.
+        const anyTextbook = items.some((item) => item.isTextbook === true);
+        const bulkPatch = buildLegacyBulkPatch(form, baselineForm, anyTextbook);
+        const result = await productApi.batch({
+          action: "update",
+          rows: items.map((item) => ({
+            sku: item.sku,
+            patch: bulkPatch,
+            isTextbook: item.isTextbook === true,
+          })),
+        });
+        if ("errors" in result && result.errors.length > 0) {
+          setError(
+            result.errors
+              .map((err) => `Row ${err.rowIndex + 1}: ${err.message}`)
+              .join("; "),
+          );
+          return;
+        }
       }
 
       onSaved?.(items.map((item) => item.sku));

@@ -1,4 +1,4 @@
-import type { ProductEditPatchV2 } from "@/domains/product/types";
+import type { GmItemPatch, ProductEditPatchV2, TextbookPatch } from "@/domains/product/types";
 import { buildPatch } from "../../edit-item-dialog-legacy";
 import type {
   FormState,
@@ -135,6 +135,72 @@ export function buildV2Patch(
     gm: hasPatchFields(gm) ? gm : undefined,
     textbook: hasPatchFields(textbook) ? textbook : undefined,
   };
+}
+
+/**
+ * Flattens dirty form fields into the legacy `GmItemPatch` / `TextbookPatch`
+ * shape accepted by `productApi.batch({ action: "update", rows })`. Used for
+ * bulk saves so we route through the server's transactional batch endpoint
+ * instead of firing N parallel PATCH requests (Codex adversarial review on
+ * PR #229 flagged the partial-commit regression introduced when bulk was
+ * silently switched to `Promise.all` of per-item updates).
+ *
+ * Takes the same (form, baseline, isTextbookRow) inputs as `buildV2Patch`
+ * and produces a single flat object. Boolean flags are coerced to `0 | 1`
+ * to match the legacy contract.
+ */
+export function buildLegacyBulkPatch(
+  form: FormState,
+  baseline: FormState,
+  isTextbookRow: boolean,
+): GmItemPatch | TextbookPatch {
+  const rawPatch = buildPatch(baseline as Record<string, unknown>, form as Record<string, unknown>);
+  const patch: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(rawPatch)) {
+    // Bulk mode: skip fields the user didn't touch (empty string convention).
+    if (value === "") continue;
+
+    switch (key) {
+      case "vendorId":
+      case "dccId":
+      case "itemTaxTypeId":
+      case "altVendorId":
+      case "mfgId":
+      case "colorId":
+      case "styleId":
+      case "itemSeasonCodeId":
+      case "usedDccId":
+      case "unitsPerPack":
+      case "orderIncrement":
+      case "minOrderQtyItem":
+        patch[key] = Number(value);
+        break;
+      case "retail":
+      case "cost":
+      case "weight":
+        patch[key] = Number(value);
+        break;
+      case "barcode":
+        patch.barcode = value === "" ? null : String(value);
+        break;
+      case "fDiscontinue":
+      case "fListPriceFlag":
+      case "fPerishable":
+      case "fIdRequired":
+        patch[key] = value ? 1 : 0;
+        break;
+      default:
+        patch[key] = value;
+    }
+  }
+
+  if (isTextbookRow) {
+    // Textbook-specific fields already flow through `rawPatch` unchanged; no
+    // extra coercion needed beyond the generic case.
+  }
+
+  return patch as GmItemPatch | TextbookPatch;
 }
 
 /**

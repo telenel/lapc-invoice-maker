@@ -912,6 +912,11 @@ describe("EditItemDialogV2", () => {
 
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
+    // Concurrency baseline must reflect the primary location the dialog was
+    // opened against (PCOP = locationId 3 here), NOT always PIER. Prior to
+    // the Phase 2 regression fix this test pinned the buggy PIER-only
+    // behavior; keeping the assertion aligned with `primaryLocationId={3}`
+    // is the point of the fix.
     expect(productApiMocks.update).toHaveBeenCalledWith(
       1001,
       expect.objectContaining({
@@ -919,8 +924,8 @@ describe("EditItemDialogV2", () => {
         baseline: {
           sku: 1001,
           barcode: baseDetail.barcode,
-          retail: 39.99,
-          cost: 19.5,
+          retail: 42.5,
+          cost: 21.25,
           fDiscontinue: baseDetail.fDiscontinue,
         },
         patch: {
@@ -1032,7 +1037,12 @@ describe("EditItemDialogV2", () => {
 
     await user.click(screen.getByRole("button", { name: /Advanced\b/i }));
     await user.click(screen.getByLabelText("Perishable"));
-    await user.click(screen.getByText("Enabled"));
+    // With Accordion now keepMounted, multiple Select triggers render their
+    // "Enabled" selected-value text simultaneously. Target the actual open
+    // dropdown option by role instead of matching the plain text.
+    const enabledOption = screen.getAllByRole("option", { name: "Enabled" }).at(-1);
+    expect(enabledOption).not.toBeUndefined();
+    await user.click(enabledOption!);
     await user.clear(screen.getByLabelText("Min Order Qty"));
     await user.type(screen.getByLabelText("Min Order Qty"), "5");
 
@@ -1059,10 +1069,16 @@ describe("EditItemDialogV2", () => {
     );
   });
 
-  it("uses typed V2 updates for each selected SKU in multi-item edits", async () => {
+  it("routes multi-item edits through the transactional batch endpoint (not per-row PATCHes)", async () => {
+    // Bulk save must be atomic: a failure on one item can't leave earlier
+    // rows committed. Prior to the Phase 2 hotfix this path fired N
+    // parallel `productApi.update` PATCHes via Promise.all — partial
+    // commits on failure. Fix: call `productApi.batch({ action: 'update' })`
+    // once, server-side transaction covers the whole selection.
     await mockDirectoryState();
     productApiMocks.update.mockClear();
-    productApiMocks.update.mockResolvedValue({ sku: 1001, appliedFields: [] });
+    productApiMocks.batch.mockClear();
+    productApiMocks.batch.mockResolvedValue({ action: "update", count: 2, skus: [1001, 1002] });
     const user = userEvent.setup();
 
     render(
@@ -1094,31 +1110,60 @@ describe("EditItemDialogV2", () => {
     await user.type(screen.getByLabelText("Order Increment"), "3");
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
-    expect(productApiMocks.update).toHaveBeenCalledTimes(2);
-    expect(productApiMocks.update).toHaveBeenNthCalledWith(
-      1,
-      1001,
-      expect.objectContaining({
-        mode: "v2",
-        patch: expect.objectContaining({
-          gm: expect.objectContaining({
-            orderIncrement: 3,
-          }),
+    // No per-row update calls; exactly one batch call with both SKUs.
+    expect(productApiMocks.update).not.toHaveBeenCalled();
+    expect(productApiMocks.batch).toHaveBeenCalledTimes(1);
+    expect(productApiMocks.batch).toHaveBeenCalledWith({
+      action: "update",
+      rows: [
+        expect.objectContaining({
+          sku: 1001,
+          isTextbook: false,
+          patch: expect.objectContaining({ orderIncrement: 3 }),
         }),
-      }),
-    );
-    expect(productApiMocks.update).toHaveBeenNthCalledWith(
-      2,
-      1002,
-      expect.objectContaining({
-        mode: "v2",
-        patch: expect.objectContaining({
-          gm: expect.objectContaining({
-            orderIncrement: 3,
-          }),
+        expect.objectContaining({
+          sku: 1002,
+          isTextbook: false,
+          patch: expect.objectContaining({ orderIncrement: 3 }),
         }),
-      }),
+      ],
+    });
+  });
+
+  it("surfaces per-row errors from a failed bulk batch and keeps the dialog open", async () => {
+    await mockDirectoryState();
+    productApiMocks.update.mockClear();
+    productApiMocks.batch.mockClear();
+    productApiMocks.batch.mockResolvedValue({
+      errors: [
+        { rowIndex: 0, message: "Invalid vendor" },
+        { rowIndex: 1, message: "Barcode conflict" },
+      ],
+    });
+    const onOpenChange = vi.fn();
+    const user = userEvent.setup();
+
+    render(
+      <EditItemDialogV2
+        open
+        onOpenChange={onOpenChange}
+        items={[
+          { sku: 1001, barcode: "a", retail: 1, cost: 1, fDiscontinue: 0, description: "A" },
+          { sku: 1002, barcode: "b", retail: 2, cost: 2, fDiscontinue: 0, description: "B" },
+        ]}
+      />,
     );
+
+    await user.click(screen.getByRole("button", { name: /More\b/i }));
+    await user.type(screen.getByLabelText("Order Increment"), "5");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    // Dialog stays open (onOpenChange(false) not called), error summary
+    // combines both rows' messages with a 1-based row prefix.
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+    const error = await screen.findByRole("alert");
+    expect(error.textContent ?? "").toContain("Row 1: Invalid vendor");
+    expect(error.textContent ?? "").toContain("Row 2: Barcode conflict");
   });
 
   it("sends changed textbook fields through the v2 textbook bucket", async () => {
