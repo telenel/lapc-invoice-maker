@@ -79,11 +79,13 @@ vi.mock("@/components/products/product-action-bar", () => ({
     allowMissingEditPricing,
     editPricingItems,
     onEditClick,
+    saveToSession,
     selected,
   }: {
     allowMissingEditPricing?: boolean;
     editPricingItems?: Array<{ retailPrice: number | null; cost: number | null }>;
     onEditClick?: () => void;
+    saveToSession?: () => void;
     selected?: Map<number, { retailPrice: number | null; cost: number | null }>;
   }) => {
     const firstSelected = selected ? Array.from(selected.values())[0] : null;
@@ -96,6 +98,9 @@ vi.mock("@/components/products/product-action-bar", () => ({
       <div>
         <button type="button" onClick={onEditClick} disabled={editDisabled}>
           Open edit dialog
+        </button>
+        <button type="button" onClick={saveToSession}>
+          Save selection snapshot
         </button>
         <span>{`selected-retail:${firstSelected?.retailPrice ?? "null"}`}</span>
         <span>{`selected-cost:${firstSelected?.cost ?? "null"}`}</span>
@@ -235,6 +240,7 @@ vi.mock("@/components/products/edit-item-dialog-v2", () => ({
 }));
 
 import ProductsPage from "@/app/products/page";
+import { CATALOG_ITEMS_STORAGE_KEY } from "@/domains/product/constants";
 import type { ProductEditDetails, SelectedProduct } from "@/domains/product/types";
 
 function makeSelectedProduct(overrides: Partial<SelectedProduct> = {}): SelectedProduct {
@@ -350,6 +356,7 @@ describe("ProductsPage edit dialog mode integration", () => {
 
   beforeEach(() => {
     process.env.NEXT_PUBLIC_PRODUCTS_EDIT_DIALOG_V2 = "true";
+    sessionStorage.clear();
     detailMock.mockReset();
     healthMock.mockReset();
     legacyDialogMock.mockClear();
@@ -384,6 +391,7 @@ describe("ProductsPage edit dialog mode integration", () => {
 
   afterEach(() => {
     process.env.NEXT_PUBLIC_PRODUCTS_EDIT_DIALOG_V2 = originalFlag;
+    sessionStorage.clear();
     cleanup();
   });
 
@@ -643,7 +651,7 @@ describe("ProductsPage edit dialog mode integration", () => {
     expect(screen.queryByText("dialog:v2")).not.toBeInTheDocument();
   });
 
-  it("reuses the current scope baseline for off-page edits without overwriting the invoice snapshot", async () => {
+  it("reuses the current scope cache for off-page action-bar state and edit baselines", async () => {
     const user = userEvent.setup();
     searchParamsState = new URLSearchParams("tab=merchandise&loc=4");
     useProductSearchMock.mockReturnValue({
@@ -717,9 +725,17 @@ describe("ProductsPage edit dialog mode integration", () => {
     });
     view.rerender(<ProductsPage />);
 
-    // Invoice / quote handoff still sees the original selection snapshot.
-    expect(screen.getByText("selected-retail:39.99")).toBeInTheDocument();
-    expect(screen.getByText("selected-cost:19.5")).toBeInTheDocument();
+    expect(screen.getByText("selected-retail:41.99")).toBeInTheDocument();
+    expect(screen.getByText("selected-cost:21.5")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Save selection snapshot" }));
+    expect(JSON.parse(sessionStorage.getItem(CATALOG_ITEMS_STORAGE_KEY) ?? "[]")).toMatchObject([
+      {
+        sku: 1001,
+        retailPrice: 41.99,
+        cost: 21.5,
+      },
+    ]);
 
     await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
 
@@ -821,6 +837,19 @@ describe("ProductsPage edit dialog mode integration", () => {
     await waitFor(() => {
       expect(screen.queryByText("dialog:v2")).not.toBeInTheDocument();
     });
+
+    expect(screen.getByText("selected-retail:44.99")).toBeInTheDocument();
+    expect(screen.getByText("selected-cost:22.25")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Save selection snapshot" }));
+    expect(JSON.parse(sessionStorage.getItem(CATALOG_ITEMS_STORAGE_KEY) ?? "[]")).toMatchObject([
+      {
+        sku: 1001,
+        retailPrice: 44.99,
+        cost: 22.25,
+        barcode: "999888777000",
+        fDiscontinue: 1,
+      },
+    ]);
 
     await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
 

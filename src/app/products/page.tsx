@@ -235,11 +235,15 @@ export default function ProductsPage() {
     const scopedRowsBySku = new Map((data?.products ?? []).map((product) => [product.sku, product]));
     return new Map(
       Array.from(selected.entries()).map(([sku, product]) => {
+        const cachedScopedSelection = scopedSelectionCache.get(`${sku}:${primaryLocationId}`);
+        if (cachedScopedSelection) {
+          return [sku, cachedScopedSelection];
+        }
         const scopedRow = scopedRowsBySku.get(sku);
         return [sku, scopedRow ? productToScopedSelected(scopedRow) : product];
       }),
     );
-  }, [data?.products, selected]);
+  }, [data?.products, primaryLocationId, scopedSelectionCache, selected]);
   const selectedItems = Array.from(scopedSelected.values());
   useEffect(() => {
     const visibleSelectedRows = (data?.products ?? []).filter((product) => selected.has(product.sku));
@@ -269,14 +273,16 @@ export default function ProductsPage() {
   const saveScopedSelectionToSession = useCallback(() => {
     sessionStorage.setItem(CATALOG_ITEMS_STORAGE_KEY, JSON.stringify(selectedItems));
   }, [selectedItems]);
-  // Keep the persisted selection snapshot intact for invoice/quote handoff and
-  // barcode printing, but derive a location-scoped copy for edit baselines.
-  // The server's concurrency SELECT does `LEFT JOIN Inventory ON LocationID =
-  // @loc` and reads `inv.Retail` / `inv.Cost`, which is NULL when no Inventory
-  // row exists at that location. If we reused an off-page selection's stale
-  // persisted price for edit baselines, the client could send 39.99 while the
-  // server reads NULL and trigger a false 409. So edits only reuse persisted
-  // pricing when the stored selection was captured from the same location scope.
+  // Keep the action bar/session handoff and the edit dialog on the same
+  // current-scope source of truth. The server's concurrency SELECT does
+  // `LEFT JOIN Inventory ON LocationID = @loc` and reads `inv.Retail` /
+  // `inv.Cost`, which is NULL when no Inventory row exists at that location.
+  // If we reused an off-page selection's stale persisted price for edit
+  // baselines, the client could send 39.99 while the server reads NULL and
+  // trigger a false 409. So edits only reuse persisted pricing when the stored
+  // selection was captured from the same location scope, and successful saves
+  // write that scoped snapshot back into the cache so invoice/quote/barcode
+  // handoff sees the same values immediately.
   const browseRowsBySku = new Map((data?.products ?? []).map((p) => [p.sku, p] as const));
   const editableSelectionStates = selectedItems
     .map((product) => {
