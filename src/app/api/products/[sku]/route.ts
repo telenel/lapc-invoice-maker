@@ -14,10 +14,6 @@ import type {
 } from "@/domains/product/types";
 import type { ProductLocationId } from "@/domains/product/location-filters";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
-import {
-  buildInventoryMirrorPayloadFromPatch,
-  buildProductMirrorPayload,
-} from "@/domains/product/mirror-payloads";
 
 export const dynamic = "force-dynamic";
 
@@ -701,19 +697,21 @@ function normalizePatchBody(body: unknown): { success: true; data: NormalizedUpd
   };
 }
 
-function buildLegacyMirrorPayload(
+async function buildLegacyMirrorPayload(
   sku: number,
   patch: ProductEditPatchV2,
   snapshot: ItemSnapshot | null,
   includeTextbookFields: boolean,
-): Record<string, unknown> {
+): Promise<Record<string, unknown>> {
+  const { buildProductMirrorPayload } = await import("@/domains/product/mirror-payloads");
   return buildProductMirrorPayload(sku, patch, snapshot, includeTextbookFields);
 }
 
-function buildInventoryMirrorPayload(
+async function buildInventoryMirrorPayload(
   sku: number,
   patch: ProductEditPatchV2,
-): Record<string, unknown>[] {
+): Promise<Record<string, unknown>[]> {
+  const { buildInventoryMirrorPayloadFromPatch } = await import("@/domains/product/mirror-payloads");
   return buildInventoryMirrorPayloadFromPatch(sku, patch);
 }
 
@@ -782,14 +780,14 @@ export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: Rout
       // pricing lives in `product_inventory`.
       const snap = await getItemSnapshot(sku, 2);
       const productMirrorResult = await supabase.from("products").upsert(
-        buildLegacyMirrorPayload(sku, normalized.data.patch, snap, isTextbookRow),
+        await buildLegacyMirrorPayload(sku, normalized.data.patch, snap, isTextbookRow),
       );
       const productMirrorError = getSupabaseMirrorError(
         productMirrorResult,
         `Failed to mirror products row for SKU ${sku}`,
       );
       if (productMirrorError) throw productMirrorError;
-      const inventoryMirrorPayload = buildInventoryMirrorPayload(sku, normalized.data.patch);
+      const inventoryMirrorPayload = await buildInventoryMirrorPayload(sku, normalized.data.patch);
       if (inventoryMirrorPayload.length > 0) {
         const inventoryMirrorResult = await supabase.from("product_inventory").upsert(inventoryMirrorPayload);
         const inventoryMirrorError = getSupabaseMirrorError(

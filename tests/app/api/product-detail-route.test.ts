@@ -56,6 +56,8 @@ function mockDefaultPrismModules() {
     updateGmItem: prismMocks.updateGmItem,
     updateTextbookPricing: prismMocks.updateTextbookPricing,
     getItemSnapshot: prismMocks.getItemSnapshot,
+    normalizeUpdaterInput: (patch: unknown) => patch,
+    getInventoryPatches: () => [],
   }));
 }
 
@@ -171,9 +173,19 @@ describe("GET /api/products/[sku]", () => {
     vi.doMock("@/domains/product/prism-server", () => {
       throw new Error("GET should not import prism-server");
     });
-    vi.doMock("@/domains/product/prism-updates", () => {
-      throw new Error("GET should not import prism-updates");
-    });
+    vi.doMock("@/domains/product/prism-updates", () => ({
+      updateGmItem: () => {
+        throw new Error("GET should not call updateGmItem");
+      },
+      updateTextbookPricing: () => {
+        throw new Error("GET should not call updateTextbookPricing");
+      },
+      getItemSnapshot: () => {
+        throw new Error("GET should not call getItemSnapshot");
+      },
+      normalizeUpdaterInput: (patch: unknown) => patch,
+      getInventoryPatches: () => [],
+    }));
 
     const productDetailRoute = await loadRouteModule();
     const response = await productDetailRoute.GET(
