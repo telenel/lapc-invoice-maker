@@ -313,7 +313,7 @@ export default function ProductsPage() {
         dccId: undefined,
         isTextbook: isTextbookItemType(scopedDescriptor?.itemType ?? product.itemType),
         primaryLocationId,
-        catalogNumber: scopedDescriptor?.catalogNumber ?? null,
+        catalogNumber: scopedDescriptor?.catalogNumber ?? undefined,
       };
     });
 
