@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { ProductEditDetails } from "@/domains/product/types";
@@ -951,13 +951,8 @@ describe("EditItemDialogV2", () => {
 
     await user.click(screen.getByRole("button", { name: "Save changes" }));
 
-    // Concurrency baseline sends the PIER snapshot (retail 39.99, cost
-    // 19.5) even though the dialog was opened with `primaryLocationId={3}`
-    // (PCOP). This matches the server's concurrency check in
-    // `prism-updates.ts`, which hard-codes `PIERCE_LOCATION_ID = 2` in its
-    // SELECT, so sending a PCOP baseline would produce false 409s.
-    // Aligning both sides on a primary-location-aware baseline requires
-    // a coordinated server + client change — tracked as a follow-up.
+    // Baseline now uses the resolved primary location (PCOP, locationId 3)
+    // so the server's concurrency SELECT reads the matching Inventory row.
     expect(productApiMocks.update).toHaveBeenCalledWith(
       1001,
       expect.objectContaining({
@@ -965,9 +960,10 @@ describe("EditItemDialogV2", () => {
         baseline: {
           sku: 1001,
           barcode: baseDetail.barcode,
-          retail: 39.99,
-          cost: 19.5,
+          retail: 42.5,
+          cost: 21.25,
           fDiscontinue: baseDetail.fDiscontinue,
+          primaryLocationId: 3,
         },
         patch: {
           inventory: [
@@ -1113,211 +1109,121 @@ describe("EditItemDialogV2", () => {
     );
   });
 
-  it("applies bulk edits sequentially per-row with v2 patch + baseline for 409 concurrency", async () => {
-    // Bulk save must (a) NOT lose 409 optimistic-concurrency protection and
-    // (b) minimize partial-commit damage on failure. Sequential per-row v2
-    // PATCH with stop-on-first-error: every row carries its own baseline,
-    // and any failure halts the remainder instead of scattershot-applying.
-    await mockDirectoryState();
-    productApiMocks.update.mockClear();
-    productApiMocks.update.mockResolvedValue({ sku: 0, appliedFields: [] });
-    const user = userEvent.setup();
+  describe("bulk save path (atomic)", () => {
+    it("calls productApi.batch exactly once with all rows carrying baseline + primaryLocationId", async () => {
+      const batch = vi.spyOn(productApiMocks, "batch").mockResolvedValue({ action: "update", count: 2, skus: [101, 102] });
+      const onSaved = vi.fn();
+      await mockDirectoryState();
+      render(
+        <EditItemDialogV2
+          open
+          onOpenChange={vi.fn()}
+          items={[
+            { sku: 101, barcode: "AAA", retail: 10, cost: 5, fDiscontinue: 0, isTextbook: false, primaryLocationId: 3 },
+            { sku: 102, barcode: "BBB", retail: 20, cost: 8, fDiscontinue: 0, isTextbook: false, primaryLocationId: 3 },
+          ]}
+          primaryLocationId={3}
+          onSaved={onSaved}
+        />,
+      );
 
-    render(
-      <EditItemDialogV2
-        open
-        onOpenChange={vi.fn()}
-        items={[
-          {
-            sku: 1001,
-            barcode: "111222333444",
-            retail: 19.99,
-            cost: 9.5,
-            fDiscontinue: 0,
-            primaryLocationId: 2,
-            description: "Pierce Hoodie",
-          },
-          {
-            sku: 1002,
-            barcode: "555666777888",
-            retail: 29.99,
-            cost: 12.5,
-            fDiscontinue: 0,
-            primaryLocationId: 2,
-            description: "Pierce Mug",
-          },
-        ]}
-      />,
-    );
+      // Type something into the shared catalog-number field and save
+      const catalogInput = screen.getByLabelText(/catalog #/i);
+      await userEvent.type(catalogInput, "CAT-X");
+      await userEvent.click(screen.getByRole("button", { name: /save/i }));
 
-    await user.click(screen.getByRole("button", { name: /More\b/i }));
-    await user.type(screen.getByLabelText("Order Increment"), "3");
-    await user.click(screen.getByRole("button", { name: "Save changes" }));
+      await waitFor(() => expect(batch).toHaveBeenCalledTimes(1));
+      const [call] = batch.mock.calls[0];
+      expect(call.action).toBe("update");
+      expect(call.rows).toHaveLength(2);
+      for (const row of call.rows) {
+        expect(row.baseline.primaryLocationId).toBe(3);
+      }
+      expect(onSaved).toHaveBeenCalledWith([101, 102]);
 
-    expect(productApiMocks.update).toHaveBeenCalledTimes(2);
-    expect(productApiMocks.update).toHaveBeenNthCalledWith(
-      1,
-      1001,
-      expect.objectContaining({
-        mode: "v2",
-        patch: expect.objectContaining({
-          gm: expect.objectContaining({ orderIncrement: 3 }),
-        }),
-        baseline: expect.objectContaining({
-          sku: 1001,
-          barcode: "111222333444",
-          retail: 19.99,
-          cost: 9.5,
-          fDiscontinue: 0,
-        }),
-      }),
-    );
-    expect(productApiMocks.update).toHaveBeenNthCalledWith(
-      2,
-      1002,
-      expect.objectContaining({
-        mode: "v2",
-        patch: expect.objectContaining({
-          gm: expect.objectContaining({ orderIncrement: 3 }),
-        }),
-        baseline: expect.objectContaining({
-          sku: 1002,
-          barcode: "555666777888",
-          retail: 29.99,
-          cost: 12.5,
-          fDiscontinue: 0,
-        }),
-      }),
-    );
-  });
-
-  it("stops on the first bulk-save failure, never attempts later rows, and reports partial progress", async () => {
-    // Core guarantee: if row 2 of 3 fails, row 3 must NEVER be called. This
-    // caps the blast radius to a single mid-flight row and gives the
-    // operator a precise "saved N of M" summary so they can retry.
-    await mockDirectoryState();
-    productApiMocks.update.mockClear();
-    productApiMocks.update
-      .mockResolvedValueOnce({ sku: 1001, appliedFields: [] })
-      .mockRejectedValueOnce(new Error("Invalid vendor"));
-    const onOpenChange = vi.fn();
-    const onSaved = vi.fn();
-    const user = userEvent.setup();
-
-    render(
-      <EditItemDialogV2
-        open
-        onOpenChange={onOpenChange}
-        onSaved={onSaved}
-        items={[
-          { sku: 1001, barcode: "a", retail: 1, cost: 1, fDiscontinue: 0, primaryLocationId: 2, description: "A" },
-          { sku: 1002, barcode: "b", retail: 2, cost: 2, fDiscontinue: 0, primaryLocationId: 2, description: "B" },
-          { sku: 1003, barcode: "c", retail: 3, cost: 3, fDiscontinue: 0, primaryLocationId: 2, description: "C" },
-        ]}
-      />,
-    );
-
-    await user.click(screen.getByRole("button", { name: /More\b/i }));
-    await user.type(screen.getByLabelText("Order Increment"), "5");
-    await user.click(screen.getByRole("button", { name: "Save changes" }));
-
-    // Exactly TWO calls: row 1 (success) + row 2 (failure). Row 3 never
-    // reached, so stale data there cannot be overwritten.
-    expect(productApiMocks.update).toHaveBeenCalledTimes(2);
-    expect(productApiMocks.update).toHaveBeenNthCalledWith(1, 1001, expect.anything());
-    expect(productApiMocks.update).toHaveBeenNthCalledWith(2, 1002, expect.anything());
-
-    // `onSaved` must NOT fire on partial failure. The products page wires
-    // `onSaved` to `setEditOpen(false) + refetch()`, so invoking it here
-    // would dismiss the dialog and hide the error summary before the
-    // operator sees it. A dedicated `onPartialSaved` callback is tracked
-    // as a follow-up; for now we keep the dialog open with the summary.
-    expect(onSaved).not.toHaveBeenCalled();
-    expect(onOpenChange).not.toHaveBeenCalledWith(false);
-
-    const error = await screen.findByRole("alert");
-    expect(error.textContent ?? "").toMatch(/Saved 1 of 3/);
-    expect(error.textContent ?? "").toMatch(/Row 2.*SKU 1002/);
-    expect(error.textContent ?? "").toMatch(/Invalid vendor/);
-    expect(error.textContent ?? "").toMatch(/1 row not attempted/);
-    // Retry guidance points the operator at the recovery path — close +
-    // reopen, because the dialog's `detail` snapshot is now stale for
-    // the already-committed row.
-    expect(error.textContent ?? "").toMatch(/Close and reopen/i);
-
-    // Save is disabled post-partial-commit so an in-place retry cannot
-    // resend the stale baseline for row 1 (which would trip a false 409).
-    const saveButton = screen.getByRole("button", { name: "Save changes" });
-    expect(saveButton).toBeDisabled();
-  });
-
-  it("re-enables Save when the dialog closes and reopens with the same selection after a partial commit", async () => {
-    // The bulkPartialCommit guard must NOT persist across dialog open/close
-    // cycles — reopening rehydrates `detail` via editContext so the
-    // baseline is fresh and retry is safe again.
-    await mockDirectoryState();
-    productApiMocks.update.mockClear();
-    productApiMocks.update
-      .mockResolvedValueOnce({ sku: 1001, appliedFields: [] })
-      .mockRejectedValueOnce(new Error("boom"));
-    const user = userEvent.setup();
-    const onOpenChange = vi.fn();
-
-    const items = [
-      { sku: 1001, barcode: "a", retail: 1, cost: 1, fDiscontinue: 0 as const, primaryLocationId: 2 as const, description: "A" },
-      { sku: 1002, barcode: "b", retail: 2, cost: 2, fDiscontinue: 0 as const, primaryLocationId: 2 as const, description: "B" },
-    ];
-
-    const { rerender } = render(
-      <EditItemDialogV2 open onOpenChange={onOpenChange} items={items} />,
-    );
-
-    await user.click(screen.getByRole("button", { name: /More\b/i }));
-    await user.type(screen.getByLabelText("Order Increment"), "9");
-    await user.click(screen.getByRole("button", { name: "Save changes" }));
-
-    expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
-
-    // Simulate close + reopen (as a user would after seeing the error).
-    rerender(<EditItemDialogV2 open={false} onOpenChange={onOpenChange} items={items} />);
-    rerender(<EditItemDialogV2 open onOpenChange={onOpenChange} items={items} />);
-
-    expect(screen.getByRole("button", { name: "Save changes" })).toBeEnabled();
-  });
-
-  it("propagates a 409 CONCURRENT_MODIFICATION error from the first failing bulk row", async () => {
-    // The per-row `baseline` must still trigger the 409 concurrency path on
-    // the server; the hotfix's sequential loop preserves that protection
-    // exactly where the prior `productApi.batch` switch would have lost it.
-    await mockDirectoryState();
-    productApiMocks.update.mockClear();
-    const concurrencyError = Object.assign(new Error("CONCURRENT_MODIFICATION"), {
-      code: "CONCURRENT_MODIFICATION",
-      current: { retail: 99 },
+      batch.mockRestore();
     });
-    productApiMocks.update.mockRejectedValueOnce(concurrencyError);
-    const user = userEvent.setup();
 
-    render(
-      <EditItemDialogV2
-        open
-        onOpenChange={vi.fn()}
-        items={[
-          { sku: 1001, barcode: "a", retail: 1, cost: 1, fDiscontinue: 0, primaryLocationId: 2, description: "A" },
-          { sku: 1002, barcode: "b", retail: 2, cost: 2, fDiscontinue: 0, primaryLocationId: 2, description: "B" },
-        ]}
-      />,
-    );
+    it("keeps dialog open and does not call onSaved when batch throws CONCURRENT_MODIFICATION", async () => {
+      const err = Object.assign(new Error("CONCURRENT_MODIFICATION"), {
+        code: "CONCURRENT_MODIFICATION",
+        rowIndex: 1,
+        sku: 102,
+      });
+      const batch = vi.spyOn(productApiMocks, "batch").mockRejectedValue(err);
+      const onSaved = vi.fn();
+      const onOpenChange = vi.fn();
+      await mockDirectoryState();
+      render(
+        <EditItemDialogV2
+          open
+          onOpenChange={onOpenChange}
+          items={[
+            { sku: 101, barcode: "AAA", retail: 10, cost: 5, fDiscontinue: 0, isTextbook: false, primaryLocationId: 2 },
+            { sku: 102, barcode: "BBB", retail: 20, cost: 8, fDiscontinue: 0, isTextbook: false, primaryLocationId: 2 },
+          ]}
+          primaryLocationId={2}
+          onSaved={onSaved}
+        />,
+      );
 
-    await user.click(screen.getByRole("button", { name: /More\b/i }));
-    await user.type(screen.getByLabelText("Order Increment"), "7");
-    await user.click(screen.getByRole("button", { name: "Save changes" }));
+      await userEvent.type(screen.getByLabelText(/catalog #/i), "CAT-X");
+      await userEvent.click(screen.getByRole("button", { name: /save/i }));
 
-    // Single attempt, second row never touched.
-    expect(productApiMocks.update).toHaveBeenCalledTimes(1);
-    const error = await screen.findByRole("alert");
-    expect(error.textContent ?? "").toMatch(/CONCURRENT_MODIFICATION/);
-    expect(error.textContent ?? "").toMatch(/Saved 0 of 2/);
+      await waitFor(() => {
+        const alert = screen.queryByRole("alert");
+        expect(alert).not.toBeNull();
+      });
+      // Error message should mention row 2 and SKU 102 so operators can act
+      const alert = screen.getByRole("alert");
+      expect(alert.textContent).toMatch(/row 2|SKU 102|102/i);
+      expect(onSaved).not.toHaveBeenCalled();
+      expect(onOpenChange).not.toHaveBeenCalledWith(false);
+      // Save button re-enables as soon as the save promise settles
+      expect(screen.getByRole("button", { name: /save/i })).not.toBeDisabled();
+
+      batch.mockRestore();
+    });
+  });
+
+  describe("single-item save (primary-location-aware baseline)", () => {
+    it("sources baseline retail/cost from the resolved primary location slice", async () => {
+      productApiMocks.update.mockClear();
+      const update = vi.spyOn(productApiMocks, "update").mockResolvedValue({ sku: 101, appliedFields: ["catalogNumber"] });
+      await mockDirectoryState();
+      // detail has two location slices with different retail/cost.
+      // primaryLocationId=3 (PCOP) means the baseline should pick the PCOP slice.
+      const detail: ProductEditDetails = {
+        ...baseDetail,
+        sku: 101,
+        barcode: "AAA",
+        inventoryByLocation: [
+          { ...baseDetail.inventoryByLocation[0], locationId: 2, retail: 10, cost: 5 },   // PIER — NOT what we want
+          { ...baseDetail.inventoryByLocation[1], locationId: 3, retail: 30, cost: 15 }, // PCOP — the resolved primary
+          { ...baseDetail.inventoryByLocation[2], locationId: 4, retail: null, cost: null },
+        ],
+      };
+      render(
+        <EditItemDialogV2
+          open
+          onOpenChange={vi.fn()}
+          items={[{ sku: 101, barcode: "AAA", retail: 30, cost: 15, fDiscontinue: 0, isTextbook: false, primaryLocationId: 3 }]}
+          primaryLocationId={3}
+          detail={detail}
+        />,
+      );
+
+      await userEvent.type(screen.getByLabelText(/catalog #/i), "CAT-X");
+      await userEvent.click(screen.getByRole("button", { name: /save/i }));
+
+      await waitFor(() => expect(update).toHaveBeenCalledTimes(1));
+      const call = update.mock.calls[0][1];
+      expect(call.baseline.primaryLocationId).toBe(3);
+      expect(call.baseline.retail).toBe(30);
+      expect(call.baseline.cost).toBe(15);
+
+      update.mockRestore();
+    });
   });
 
   it("sends changed textbook fields through the v2 textbook bucket", async () => {

@@ -226,6 +226,7 @@ export default function ProductsPage() {
   const saveScopedSelectionToSession = useCallback(() => {
     sessionStorage.setItem(CATALOG_ITEMS_STORAGE_KEY, JSON.stringify(selectedItems));
   }, [selectedItems]);
+  const primaryLocationId = getPrimaryProductLocationId(filters.locationIds);
   const editableSelectedItems = selectedItems
     .map((product) => ({
       sku: product.sku,
@@ -237,6 +238,7 @@ export default function ProductsPage() {
       vendorId: product.vendorId ?? undefined,
       dccId: undefined,
       isTextbook: isTextbookItemType(product.itemType),
+      primaryLocationId,
     }));
 
   const updateFilters = useCallback(
@@ -324,7 +326,6 @@ export default function ProductsPage() {
     handleFilterChange({ ...filters, locationIds, page: 1 });
   }
 
-  const primaryLocationId = getPrimaryProductLocationId(filters.locationIds);
   const inlineEditRows = useMemo(
     () => buildInlineEditRows(data?.products ?? [], primaryLocationId),
     [data?.products, primaryLocationId],

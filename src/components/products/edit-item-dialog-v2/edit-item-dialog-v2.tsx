@@ -81,14 +81,6 @@ export function EditItemDialogV2({
   const [activeInventoryLocation, setActiveInventoryLocation] = useState<InventoryLocationId>(resolvedPrimaryLocationId);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Becomes true when a bulk save commits 1..N-1 rows then hits an error.
-  // Once partial, Save is disabled: the dialog's `detail` snapshot is stale
-  // for the already-committed rows, so an in-place retry would send a stale
-  // baseline and trip the server's CONCURRENT_MODIFICATION check. Force the
-  // operator to Cancel + reopen, which rehydrates `detail` cleanly via
-  // `productApi.editContext` and lets them retry the remainder. Resets when
-  // the dialog closes and reopens on a new selection (see effect below).
-  const [bulkPartialCommit, setBulkPartialCommit] = useState(false);
   const dirtyFieldsRef = useRef<Set<keyof FormState>>(new Set());
   const dirtyInventoryFieldsRef = useRef<DirtyInventoryFields>(makeEmptyDirtyInventoryFields());
   const hydratedSelectionRef = useRef<string | null>(null);
@@ -125,7 +117,6 @@ export function EditItemDialogV2({
       dirtyFieldsRef.current.clear();
       dirtyInventoryFieldsRef.current = makeEmptyDirtyInventoryFields();
       setActiveInventoryLocation(resolvedPrimaryLocationId);
-      setBulkPartialCommit(false);
       return;
     }
 
@@ -140,7 +131,6 @@ export function EditItemDialogV2({
       setInventoryByLocation(nextInventory);
       setActiveInventoryLocation(resolvedPrimaryLocationId);
       setError(null);
-      setBulkPartialCommit(false);
       return;
     }
 
@@ -282,20 +272,13 @@ export function EditItemDialogV2({
     try {
       if (items.length === 1) {
         const item = items[0];
-        // Concurrency baseline intentionally snapshots Pierce (locationId 2).
-        // The server's concurrency check in `prism-updates.ts` hard-codes
-        // `PIERCE_LOCATION_ID = 2` in its `SELECT inv.Retail, inv.Cost FROM
-        // Inventory WHERE LocationID = @loc` query, then compares those
-        // values against `baseline.retail` / `baseline.cost`. Sending a
-        // PCOP or PFS snapshot here would guarantee a false
-        // CONCURRENT_MODIFICATION 409 on non-PIER product pages.
-        //
-        // Making this truly primary-location-aware requires teaching the
-        // server's concurrency check to honor `resolvedPrimaryLocationId`
-        // too — tracked as a follow-up; keeping client + server aligned
-        // on PIER is the safe shipping choice.
-        const pierceInventoryBaseline = detail?.inventoryByLocation.find(
-          (entry) => entry.locationId === 2,
+        // Source retail/cost from whatever `resolvedPrimaryLocationId` resolves to
+        // (PIER/PCOP/PFS). Falls back to `item.retail` / `item.cost` (which already
+        // reflects the browse row's primary-location values) if the slice isn't
+        // loaded yet. Server's concurrency SELECT uses `baseline.primaryLocationId`
+        // as `@loc`, so client and server read the same row.
+        const primarySlice = detail?.inventoryByLocation.find(
+          (entry) => entry.locationId === resolvedPrimaryLocationId,
         );
         await productApi.update(item.sku, {
           mode: "v2",
@@ -303,88 +286,37 @@ export function EditItemDialogV2({
           baseline: {
             sku: item.sku,
             barcode: detail?.barcode ?? item.barcode,
-            retail: pierceInventoryBaseline?.retail ?? item.retail,
-            cost: pierceInventoryBaseline?.cost ?? item.cost,
+            retail: primarySlice?.retail ?? item.retail,
+            cost: primarySlice?.cost ?? item.cost,
             fDiscontinue: item.fDiscontinue,
+            primaryLocationId: resolvedPrimaryLocationId,
           },
         });
       } else {
-        // Bulk save: apply the v2 patch row-by-row, SEQUENTIALLY, stopping
-        // on first failure. Trade-offs vs. the alternatives:
-        //
-        // - Parallel Promise.all (the pre-hotfix behavior) could leave a
-        //   scattershot partial commit: rows 1,3,5 succeed while 2,4 fail
-        //   and the user can't tell what actually landed.
-        // - `productApi.batch` is *not* transactional on the server
-        //   (`prism-batch.ts` loops with separate transactions) and the
-        //   batch endpoint explicitly punts optimistic-concurrency
-        //   checking to the single-item path. Routing bulk through batch
-        //   would lose 409 protection entirely.
-        //
-        // Sequential per-row v2 PATCH with a `baseline` on every call:
-        // - retains 409 optimistic-concurrency for every row;
-        // - stops the moment anything breaks, so at most ONE row can
-        //   "half-commit" (the one that failed mid-way), everything after
-        //   is never attempted;
-        // - reports back a crisp "saved N of M, failed at row R (SKU S)"
-        //   message plus calls `onSaved` with the list that actually
-        //   committed so the grid refreshes those rows deterministically.
-        //
-        // A transactional batch endpoint with baseline-aware row checks
-        // would be strictly better and is the right long-term fix; it is
-        // out of scope for this hotfix (live regression on main).
-        const savedSkus: number[] = [];
-        let failureMessage: string | null = null;
-        for (const item of items) {
-          try {
-            await productApi.update(item.sku, {
-              mode: "v2",
-              patch: v2Patch,
-              baseline: {
-                sku: item.sku,
-                barcode: item.barcode,
-                retail: item.retail,
-                cost: item.cost,
-                fDiscontinue: item.fDiscontinue,
-              },
-            });
-            savedSkus.push(item.sku);
-          } catch (err) {
-            const reason = err instanceof Error ? err.message : String(err);
-            const rowIndex = items.indexOf(item);
-            const remaining = items.length - savedSkus.length - 1;
-            failureMessage =
-              `Saved ${savedSkus.length} of ${items.length}. ` +
-              `Row ${rowIndex + 1} (SKU ${item.sku}) failed: ${reason}. ` +
-              `${remaining} row${remaining === 1 ? "" : "s"} not attempted.`;
-            break;
-          }
-        }
-
-        if (failureMessage != null) {
-          // Do NOT call `onSaved` on partial failure: the products page
-          // wires that callback to `setEditOpen(false) + refetch()`,
-          // which would dismiss the dialog before the operator could
-          // read the summary.
-          //
-          // AND do NOT allow an in-place retry. The dialog's `detail`
-          // snapshot is now stale for the rows that already committed,
-          // so clicking Save again would resend those rows with the
-          // outdated baseline and guarantee a `CONCURRENT_MODIFICATION`
-          // 409. Instead: flip `bulkPartialCommit` to true, which
-          // disables Save. The operator must Cancel + reopen to
-          // rehydrate `detail` via `productApi.editContext` before
-          // retrying the remaining rows.
-          //
-          // A proper in-place recovery (optimistic per-row rehydration,
-          // partial-save callback, or a transactional batch endpoint)
-          // is tracked as a follow-up.
-          const retryGuidance =
-            savedSkus.length > 0
-              ? " Close and reopen this dialog to retry the remaining rows."
-              : "";
-          setError(failureMessage + retryGuidance);
-          setBulkPartialCommit(savedSkus.length > 0);
+        // Atomic bulk save: ONE server call wraps all rows in one Prism
+        // transaction. Zero partial-commit hazard — either every row
+        // commits or none do. Any failure throws; the catch below surfaces
+        // the error and leaves the dialog open for retry.
+        const result = await productApi.batch({
+          action: "update",
+          rows: items.map((item) => ({
+            sku: item.sku,
+            isTextbook: item.isTextbook ?? false,
+            patch: v2Patch,
+            baseline: {
+              sku: item.sku,
+              barcode: item.barcode,
+              retail: item.retail,
+              cost: item.cost,
+              fDiscontinue: item.fDiscontinue,
+              primaryLocationId: resolvedPrimaryLocationId,
+            },
+          })),
+        });
+        if ("errors" in result) {
+          setError(
+            `Validation failed: ${result.errors.map((e) => `${e.field}: ${e.message}`).join("; ")}`,
+          );
           return;
         }
       }
@@ -392,7 +324,15 @@ export function EditItemDialogV2({
       onSaved?.(items.map((item) => item.sku));
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      const e = err as Error & { code?: string; rowIndex?: number | null; sku?: number | null };
+      if (e.code === "CONCURRENT_MODIFICATION" && e.rowIndex != null && e.sku != null) {
+        setError(
+          `Row ${e.rowIndex + 1} (SKU ${e.sku}) has been modified since you opened this dialog. ` +
+          `No changes were saved. Close this dialog and retry to see the latest values.`,
+        );
+      } else {
+        setError(err instanceof Error ? err.message : String(err));
+      }
     } finally {
       setSaving(false);
     }
@@ -506,8 +446,7 @@ export function EditItemDialogV2({
           </Button>
           <Button
             onClick={() => void handleSave()}
-            disabled={saving || detailLoading || bulkPartialCommit}
-            title={bulkPartialCommit ? "Close and reopen to retry the remaining rows." : undefined}
+            disabled={saving || detailLoading}
           >
             {saving ? "Saving…" : "Save changes"}
           </Button>
