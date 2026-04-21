@@ -13,6 +13,10 @@ import type {
   PrimaryInventoryPatch,
 } from "@/domains/product/types";
 import type { ProductLocationId } from "@/domains/product/location-filters";
+import {
+  INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT,
+  filterLiveProductInventoryRows,
+} from "@/domains/product/inventory-mirror-state";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { InventoryMirrorSnapshotRow, ProductWriteBuckets } from "@/domains/product/prism-updates";
 
@@ -78,6 +82,7 @@ type ProductInventoryEditDetailRow = {
   f_tx_want_list_flag: boolean | null;
   f_tx_buyback_list_flag: boolean | null;
   f_no_returns: boolean | null;
+  synced_at?: string | null;
 };
 
 type ProductPatchKindRow = {
@@ -107,6 +112,7 @@ const PRODUCT_INVENTORY_SELECT = [
   "f_tx_want_list_flag",
   "f_tx_buyback_list_flag",
   "f_no_returns",
+  "synced_at",
 ].join(", ");
 
 const PRODUCT_EDIT_DETAIL_SELECT = [
@@ -337,7 +343,7 @@ export const GET = withAdmin(async (_request: NextRequest, _session, ctx?: Route
       .select(PRODUCT_INVENTORY_SELECT)
       .eq("sku", sku)
       .in("location_id", PRODUCT_INVENTORY_LOCATION_IDS);
-    const inventoryRows = narrowInventoryDetailRows(inventoryResult.data);
+    const inventoryRows = filterLiveProductInventoryRows(narrowInventoryDetailRows(inventoryResult.data));
     const inventoryError = inventoryResult.error;
 
     if (inventoryError) {
@@ -769,7 +775,7 @@ function formatInventoryMirrorMissingMessage(
   return `Inventory mirror snapshot for SKU ${sku} omitted ${formatInventoryMirrorLocationList(locationIds)}; browse data may stay stale until the next sync.`;
 }
 
-async function deleteMissingInventoryMirrorRows(
+async function invalidateMissingInventoryMirrorRows(
   supabase: ReturnType<typeof getSupabaseAdminClient>,
   sku: number,
   locationIds: ProductLocationId[],
@@ -778,14 +784,16 @@ async function deleteMissingInventoryMirrorRows(
     return null;
   }
 
-  const deleteResult = await supabase
+  const invalidateResult = await supabase
     .from("product_inventory")
-    .delete()
+    .update({
+      synced_at: INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT,
+    })
     .eq("sku", sku)
     .in("location_id", locationIds);
   return getSupabaseMirrorError(
-    deleteResult,
-    `Failed to delete stale product_inventory rows for SKU ${sku}`,
+    invalidateResult,
+    `Failed to invalidate stale product_inventory rows for SKU ${sku}`,
   );
 }
 
@@ -892,13 +900,13 @@ export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: Rout
         if (inventoryMirrorError) throw inventoryMirrorError;
       }
       if (missingLocationIds.length > 0) {
-        const inventoryDeleteError = await deleteMissingInventoryMirrorRows(
+        const inventoryInvalidateError = await invalidateMissingInventoryMirrorRows(
           supabase,
           sku,
           missingLocationIds,
         );
-        if (inventoryDeleteError) {
-          recordMirrorError(inventoryDeleteError);
+        if (inventoryInvalidateError) {
+          recordMirrorError(inventoryInvalidateError);
         }
         recordMirrorError(new Error(formatInventoryMirrorMissingMessage(sku, missingLocationIds)));
       }

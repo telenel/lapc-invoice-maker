@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { PAGE_SIZE, TAB_ITEM_TYPES } from "./constants";
+import { INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT } from "./inventory-mirror-state";
 import {
   getPrimaryProductLocationId,
   normalizeProductLocationIds,
@@ -356,11 +357,13 @@ function buildFilteredBrowseQuery(filters: ProductFilters): {
 
   const visibleLocationList = addList(builder, locationIds);
   const primaryLocationParam = builder.add(primaryLocationId);
+  const invalidatedInventorySyncedAtParam = builder.add(INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT);
   const cteSql = `
     WITH visible_skus AS (
       SELECT DISTINCT inv.sku
       FROM product_inventory inv
       WHERE inv.location_id IN (${visibleLocationList})
+        AND inv.synced_at > ${invalidatedInventorySyncedAtParam}
     ),
     filtered AS (
       SELECT
@@ -377,6 +380,7 @@ function buildFilteredBrowseQuery(filters: ProductFilters): {
       LEFT JOIN product_inventory pi
         ON pi.sku = pwd.sku
         AND pi.location_id = ${primaryLocationParam}
+        AND pi.synced_at > ${invalidatedInventorySyncedAtParam}
       WHERE ${conditions.join(" AND ")}
     )
   `;
@@ -506,10 +510,12 @@ export async function searchProductBrowseRows(
         FROM product_inventory
         WHERE sku IN (${pageSkus.map((_, index) => `$${index + 1}`).join(", ")})
           AND location_id IN (${locationIds.map((_, index) => `$${pageSkus.length + index + 1}`).join(", ")})
+          AND synced_at > $${pageSkus.length + locationIds.length + 1}
         ORDER BY sku ASC, location_id ASC
       `,
       ...pageSkus,
       ...locationIds,
+      INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT,
     );
 
   const slicesBySku = new Map<number, ProductInventorySliceRow[]>();

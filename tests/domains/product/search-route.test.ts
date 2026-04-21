@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EMPTY_FILTERS, PAGE_SIZE } from "@/domains/product/constants";
+import { INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT } from "@/domains/product/inventory-mirror-state";
 
 const { prismaMock } = vi.hoisted(() => ({
   prismaMock: {
@@ -333,6 +334,62 @@ describe("searchProductBrowseRows", () => {
         lastSaleDateVaries: true,
       },
     });
+  });
+
+  it("filters invalidated inventory rows out of scoped browse results", async () => {
+    mockSearchQueryRows(
+      {
+        retail_price: 15.5,
+        cost: 5.25,
+        stock_on_hand: 9,
+        last_sale_date: new Date("2026-04-08T00:00:00.000Z"),
+        effective_last_sale_date: new Date("2026-04-09T00:00:00.000Z"),
+      },
+      [
+        {
+          sku: 101,
+          location_id: 4,
+          location_abbrev: "PFS",
+          retail_price: 18.5,
+          cost: 6.25,
+          stock_on_hand: 1,
+          last_sale_date: new Date("2026-04-05T00:00:00.000Z"),
+        },
+      ],
+    );
+
+    const result = await searchProductBrowseRows({
+      ...EMPTY_FILTERS,
+      tab: "merchandise",
+      locationIds: [3, 4],
+      sortBy: "retail_price",
+    });
+
+    expect(result.products[0]).toMatchObject({
+      primary_location_id: null,
+      primary_location_abbrev: null,
+      retail_price: 15.5,
+      cost: 5.25,
+      stock_on_hand: 9,
+      last_sale_date: "2026-04-08T00:00:00.000Z",
+      effective_last_sale_date: "2026-04-09T00:00:00.000Z",
+    });
+    expect(result.products[0]?.selected_inventories.map((slice) => slice.locationId)).toEqual([4]);
+
+    const browseSql = prismaMock.$queryRawUnsafe.mock.calls[0]?.[0];
+    expect(typeof browseSql).toBe("string");
+    expect(browseSql).toContain("inv.synced_at >");
+    expect(browseSql).toContain("pi.synced_at >");
+    expect(prismaMock.$queryRawUnsafe.mock.calls[0]?.slice(1)).toContain(
+      INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT,
+    );
+
+    const inventorySql = prismaMock.$queryRawUnsafe.mock.calls[2]?.[0];
+    expect(typeof inventorySql).toBe("string");
+    expect(inventorySql).toContain("AND synced_at >");
+    expect(prismaMock.$queryRawUnsafe.mock.calls[2]?.slice(1)).toContain(
+      INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT,
+    );
   });
 
   it("uses the non-derived products source for simple browse queries", async () => {

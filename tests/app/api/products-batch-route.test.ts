@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT } from "@/domains/product/inventory-mirror-state";
 
 const nextAuthMocks = vi.hoisted(() => ({
   getServerSession: vi.fn(),
@@ -54,9 +55,9 @@ vi.mock("@/lib/supabase/admin", () => supabaseMocks);
 
 const mockProductsUpsert = vi.fn();
 const mockProductInventoryUpsert = vi.fn();
-const mockProductInventoryDeleteIn = vi.fn();
-const mockProductInventoryDeleteEq = vi.fn(() => ({ in: mockProductInventoryDeleteIn }));
-const mockProductInventoryDelete = vi.fn(() => ({ eq: mockProductInventoryDeleteEq }));
+const mockProductInventoryUpdateIn = vi.fn();
+const mockProductInventoryUpdateEq = vi.fn(() => ({ in: mockProductInventoryUpdateIn }));
+const mockProductInventoryUpdate = vi.fn(() => ({ eq: mockProductInventoryUpdateEq }));
 const mockFrom = vi.fn((table: string) => {
   if (table === "products") {
     return {
@@ -68,7 +69,7 @@ const mockFrom = vi.fn((table: string) => {
   if (table === "product_inventory") {
     return {
       upsert: mockProductInventoryUpsert,
-      delete: mockProductInventoryDelete,
+      update: mockProductInventoryUpdate,
     };
   }
 
@@ -124,7 +125,7 @@ describe("POST /api/products/batch", () => {
     });
     mockProductsUpsert.mockResolvedValue({ error: null });
     mockProductInventoryUpsert.mockResolvedValue({ error: null });
-    mockProductInventoryDeleteIn.mockResolvedValue({ error: null });
+    mockProductInventoryUpdateIn.mockResolvedValue({ error: null });
   });
 
   it("forwards per-location inventory rows through batch create and mirrors product_inventory", async () => {
@@ -561,9 +562,12 @@ describe("POST /api/products/batch", () => {
 
     expect(response.status).toBe(200);
     expect(mockProductInventoryUpsert).not.toHaveBeenCalled();
-    expect(mockProductInventoryDelete).toHaveBeenCalledTimes(1);
-    expect(mockProductInventoryDeleteEq).toHaveBeenCalledWith("sku", 101);
-    expect(mockProductInventoryDeleteIn).toHaveBeenCalledWith("location_id", [3]);
+    expect(mockProductInventoryUpdate).toHaveBeenCalledTimes(1);
+    expect(mockProductInventoryUpdate).toHaveBeenCalledWith({
+      synced_at: INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT,
+    });
+    expect(mockProductInventoryUpdateEq).toHaveBeenCalledWith("sku", 101);
+    expect(mockProductInventoryUpdateIn).toHaveBeenCalledWith("location_id", [3]);
     await expect(response.json()).resolves.toMatchObject({
       action: "update",
       count: 1,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT } from "@/domains/product/inventory-mirror-state";
 import { withAdmin } from "@/domains/shared/auth";
 import { isPrismConfigured } from "@/lib/prism";
 import {
@@ -54,7 +55,7 @@ function formatInventoryMirrorMissingMessage(
   return `Inventory mirror snapshot for SKU ${sku} omitted ${formatInventoryMirrorLocationList(locationIds)}; browse data may stay stale until the next sync.`;
 }
 
-async function deleteMissingInventoryMirrorRows(
+async function invalidateMissingInventoryMirrorRows(
   supabase: ReturnType<typeof getSupabaseAdminClient>,
   sku: number,
   locationIds: ProductLocationId[],
@@ -63,14 +64,16 @@ async function deleteMissingInventoryMirrorRows(
     return null;
   }
 
-  const deleteResult = await supabase
+  const invalidateResult = await supabase
     .from("product_inventory")
-    .delete()
+    .update({
+      synced_at: INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT,
+    })
     .eq("sku", sku)
     .in("location_id", locationIds);
   return getSupabaseErrorMessage(
-    deleteResult,
-    `Failed to delete stale product_inventory rows for SKU ${sku}`,
+    invalidateResult,
+    `Failed to invalidate stale product_inventory rows for SKU ${sku}`,
   );
 }
 
@@ -272,13 +275,13 @@ export const POST = withAdmin(async (request: NextRequest) => {
               }
               if (missingLocationIds.length > 0) {
                 rowErrors.push(formatInventoryMirrorMissingMessage(row.sku, missingLocationIds));
-                const inventoryDeleteError = await deleteMissingInventoryMirrorRows(
+                const inventoryInvalidateError = await invalidateMissingInventoryMirrorRows(
                   supabase,
                   row.sku,
                   missingLocationIds,
                 );
-                if (inventoryDeleteError) {
-                  rowErrors.push(inventoryDeleteError);
+                if (inventoryInvalidateError) {
+                  rowErrors.push(inventoryInvalidateError);
                 }
               }
             } catch (inventoryMirrorErr) {

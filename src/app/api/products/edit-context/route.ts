@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { filterLiveProductInventoryRows } from "@/domains/product/inventory-mirror-state";
 import { loadCommittedProductRefSnapshot } from "@/domains/product/ref-data-server";
 import type { ProductEditDetails, ProductInventoryEditDetails } from "@/domains/product/types";
 import type { ProductLocationId } from "@/domains/product/location-filters";
@@ -80,6 +81,7 @@ type ProductInventoryRow = {
   f_tx_want_list_flag: boolean | null;
   f_tx_buyback_list_flag: boolean | null;
   f_no_returns: boolean | null;
+  synced_at?: string | null;
 };
 
 function isProductEditContextRow(value: unknown): value is ProductEditContextRow {
@@ -177,6 +179,7 @@ const INVENTORY_SELECT = [
   "f_tx_want_list_flag",
   "f_tx_buyback_list_flag",
   "f_no_returns",
+  "synced_at",
 ].join(", ");
 
 function toProductEditDetails(row: ProductEditContextRow): ProductEditDetails {
@@ -292,7 +295,7 @@ export const POST = withAdmin(async (request: NextRequest) => {
     const rowBySku = new Map(rows.map((row) => [row.sku, row]));
     const vendorLabelById = new Map(refs.vendors.map((vendor) => [vendor.vendorId, vendor.name] as const));
     const rawInventoryRows = Array.isArray(inventoryResult.data) ? (inventoryResult.data as unknown[]) : [];
-    const inventoryRows = rawInventoryRows.filter(isProductInventoryRow);
+    const inventoryRows = filterLiveProductInventoryRows(rawInventoryRows.filter(isProductInventoryRow));
     const inventoryBySku = new Map<number, ProductInventoryEditDetails[]>();
 
     inventoryRows.forEach((row) => {
