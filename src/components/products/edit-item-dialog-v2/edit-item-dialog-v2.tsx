@@ -81,6 +81,14 @@ export function EditItemDialogV2({
   const [activeInventoryLocation, setActiveInventoryLocation] = useState<InventoryLocationId>(resolvedPrimaryLocationId);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Becomes true when a bulk save commits 1..N-1 rows then hits an error.
+  // Once partial, Save is disabled: the dialog's `detail` snapshot is stale
+  // for the already-committed rows, so an in-place retry would send a stale
+  // baseline and trip the server's CONCURRENT_MODIFICATION check. Force the
+  // operator to Cancel + reopen, which rehydrates `detail` cleanly via
+  // `productApi.editContext` and lets them retry the remainder. Resets when
+  // the dialog closes and reopens on a new selection (see effect below).
+  const [bulkPartialCommit, setBulkPartialCommit] = useState(false);
   const dirtyFieldsRef = useRef<Set<keyof FormState>>(new Set());
   const dirtyInventoryFieldsRef = useRef<DirtyInventoryFields>(makeEmptyDirtyInventoryFields());
   const hydratedSelectionRef = useRef<string | null>(null);
@@ -117,6 +125,7 @@ export function EditItemDialogV2({
       dirtyFieldsRef.current.clear();
       dirtyInventoryFieldsRef.current = makeEmptyDirtyInventoryFields();
       setActiveInventoryLocation(resolvedPrimaryLocationId);
+      setBulkPartialCommit(false);
       return;
     }
 
@@ -131,6 +140,7 @@ export function EditItemDialogV2({
       setInventoryByLocation(nextInventory);
       setActiveInventoryLocation(resolvedPrimaryLocationId);
       setError(null);
+      setBulkPartialCommit(false);
       return;
     }
 
@@ -352,17 +362,29 @@ export function EditItemDialogV2({
         }
 
         if (failureMessage != null) {
-          // Do NOT call `onSaved` on partial failure. Callers (see
-          // `src/app/products/page.tsx`) wire `onSaved` to
-          // `setEditOpen(false) + refetch()`, so invoking it here would
-          // dismiss the dialog and erase the error context before the
-          // operator can read it. Leaving the dialog open with the
-          // summary preserves retry context; the grid refetches on the
-          // next natural interaction (close/reopen or an explicit
-          // refresh). If the grid needs to refresh the committed rows
-          // specifically, add an `onPartialSaved` callback — tracked as
-          // a follow-up.
-          setError(failureMessage);
+          // Do NOT call `onSaved` on partial failure: the products page
+          // wires that callback to `setEditOpen(false) + refetch()`,
+          // which would dismiss the dialog before the operator could
+          // read the summary.
+          //
+          // AND do NOT allow an in-place retry. The dialog's `detail`
+          // snapshot is now stale for the rows that already committed,
+          // so clicking Save again would resend those rows with the
+          // outdated baseline and guarantee a `CONCURRENT_MODIFICATION`
+          // 409. Instead: flip `bulkPartialCommit` to true, which
+          // disables Save. The operator must Cancel + reopen to
+          // rehydrate `detail` via `productApi.editContext` before
+          // retrying the remaining rows.
+          //
+          // A proper in-place recovery (optimistic per-row rehydration,
+          // partial-save callback, or a transactional batch endpoint)
+          // is tracked as a follow-up.
+          const retryGuidance =
+            savedSkus.length > 0
+              ? " Close and reopen this dialog to retry the remaining rows."
+              : "";
+          setError(failureMessage + retryGuidance);
+          setBulkPartialCommit(savedSkus.length > 0);
           return;
         }
       }
@@ -482,7 +504,11 @@ export function EditItemDialogV2({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancel
           </Button>
-          <Button onClick={() => void handleSave()} disabled={saving || detailLoading}>
+          <Button
+            onClick={() => void handleSave()}
+            disabled={saving || detailLoading || bulkPartialCommit}
+            title={bulkPartialCommit ? "Close and reopen to retry the remaining rows." : undefined}
+          >
             {saving ? "Saving…" : "Save changes"}
           </Button>
         </DialogFooter>

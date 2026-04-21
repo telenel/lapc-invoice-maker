@@ -1196,6 +1196,49 @@ describe("EditItemDialogV2", () => {
     expect(error.textContent ?? "").toMatch(/Row 2.*SKU 1002/);
     expect(error.textContent ?? "").toMatch(/Invalid vendor/);
     expect(error.textContent ?? "").toMatch(/1 row not attempted/);
+    // Retry guidance points the operator at the recovery path — close +
+    // reopen, because the dialog's `detail` snapshot is now stale for
+    // the already-committed row.
+    expect(error.textContent ?? "").toMatch(/Close and reopen/i);
+
+    // Save is disabled post-partial-commit so an in-place retry cannot
+    // resend the stale baseline for row 1 (which would trip a false 409).
+    const saveButton = screen.getByRole("button", { name: "Save changes" });
+    expect(saveButton).toBeDisabled();
+  });
+
+  it("re-enables Save when the dialog closes and reopens with the same selection after a partial commit", async () => {
+    // The bulkPartialCommit guard must NOT persist across dialog open/close
+    // cycles — reopening rehydrates `detail` via editContext so the
+    // baseline is fresh and retry is safe again.
+    await mockDirectoryState();
+    productApiMocks.update.mockClear();
+    productApiMocks.update
+      .mockResolvedValueOnce({ sku: 1001, appliedFields: [] })
+      .mockRejectedValueOnce(new Error("boom"));
+    const user = userEvent.setup();
+    const onOpenChange = vi.fn();
+
+    const items = [
+      { sku: 1001, barcode: "a", retail: 1, cost: 1, fDiscontinue: 0, description: "A" },
+      { sku: 1002, barcode: "b", retail: 2, cost: 2, fDiscontinue: 0, description: "B" },
+    ];
+
+    const { rerender } = render(
+      <EditItemDialogV2 open onOpenChange={onOpenChange} items={items} />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /More\b/i }));
+    await user.type(screen.getByLabelText("Order Increment"), "9");
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+    expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
+
+    // Simulate close + reopen (as a user would after seeing the error).
+    rerender(<EditItemDialogV2 open={false} onOpenChange={onOpenChange} items={items} />);
+    rerender(<EditItemDialogV2 open onOpenChange={onOpenChange} items={items} />);
+
+    expect(screen.getByRole("button", { name: "Save changes" })).toBeEnabled();
   });
 
   it("propagates a 409 CONCURRENT_MODIFICATION error from the first failing bulk row", async () => {
