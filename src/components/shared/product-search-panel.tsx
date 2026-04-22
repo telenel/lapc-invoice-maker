@@ -199,19 +199,17 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
   }, []);
 
   const moveQuickPickChipFocus = useCallback((startIndex: number, direction: "next" | "previous") => {
-    const enabledIndexes = quickPickChipItems
-      .map((item, index) => (item.disabled ? null : index))
-      .filter((index): index is number => index != null);
-    if (enabledIndexes.length === 0) return;
+    if (quickPickChipItems.length === 0) return;
 
-    const currentPosition = enabledIndexes.indexOf(startIndex);
-    const fallbackIndex = enabledIndexes[0];
+    const allIndexes = quickPickChipItems.map((_, index) => index);
+    const currentPosition = allIndexes.indexOf(startIndex);
+    const fallbackIndex = allIndexes[0];
     const targetPosition = currentPosition === -1
       ? 0
       : direction === "next"
-        ? (currentPosition + 1) % enabledIndexes.length
-        : (currentPosition - 1 + enabledIndexes.length) % enabledIndexes.length;
-    const targetIndex = enabledIndexes[targetPosition] ?? fallbackIndex;
+        ? (currentPosition + 1) % allIndexes.length
+        : (currentPosition - 1 + allIndexes.length) % allIndexes.length;
+    const targetIndex = allIndexes[targetPosition] ?? fallbackIndex;
     chipRefs.current[targetIndex]?.focus();
   }, [quickPickChipItems]);
 
@@ -322,39 +320,38 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
         <div className="flex flex-wrap gap-2 border-b px-3 py-2">
           {quickPickChipItems.map((item, index) => {
             const active = item.slug == null ? sectionSlug == null : sectionSlug === item.slug;
-            const chipButton = (
-              <button
-                key={item.key}
-                ref={(node) => {
-                  chipRefs.current[index] = node;
-                }}
-                type="button"
-                disabled={item.disabled}
-                aria-pressed={active}
-                onClick={() => {
-                  if (item.disabled) return;
-                  handleQuickPickChipChange(item.slug);
-                }}
-                onKeyDown={(event) => handleQuickPickChipKeyDown(event, index, item.slug, item.disabled)}
-                className={[
-                  "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-                  active
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border bg-background text-muted-foreground hover:border-foreground/20 hover:text-foreground",
-                  item.disabled ? "cursor-not-allowed opacity-50 hover:border-border hover:text-muted-foreground" : "",
-                ].join(" ")}
-              >
-                {item.label}
-              </button>
-            );
-
-            if (!item.disabled) {
-              return chipButton;
-            }
-
+            const disabledHintId = item.disabled ? `quick-pick-chip-hint-${item.key}` : undefined;
             return (
-              <span key={item.key} title="No filters set">
-                {chipButton}
+              <span key={item.key}>
+                <button
+                  ref={(node) => {
+                    chipRefs.current[index] = node;
+                  }}
+                  type="button"
+                  aria-pressed={active}
+                  aria-disabled={item.disabled || undefined}
+                  aria-describedby={disabledHintId}
+                  title={item.disabled ? "No filters set" : undefined}
+                  onClick={() => {
+                    if (item.disabled) return;
+                    handleQuickPickChipChange(item.slug);
+                  }}
+                  onKeyDown={(event) => handleQuickPickChipKeyDown(event, index, item.slug, item.disabled)}
+                  className={[
+                    "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                    active
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-background text-muted-foreground hover:border-foreground/20 hover:text-foreground",
+                    item.disabled ? "cursor-not-allowed opacity-50 hover:border-border hover:text-muted-foreground" : "",
+                  ].join(" ")}
+                >
+                  {item.label}
+                </button>
+                {item.disabled ? (
+                  <span id={disabledHintId} className="sr-only">
+                    No filters set
+                  </span>
+                ) : null}
               </span>
             );
           })}

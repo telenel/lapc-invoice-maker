@@ -439,6 +439,15 @@ describe("ProductSearchPanel", () => {
     const sectionChip = screen.getByRole("button", { name: /CopyTech Services/i });
     expect(sectionChip).toHaveFocus();
 
+    await user.keyboard("{ArrowRight}");
+
+    const disabledChip = screen.getByRole("button", { name: /Empty Section/i });
+    expect(disabledChip).toHaveFocus();
+    expect(disabledChip).toHaveAccessibleDescription("No filters set");
+
+    await user.keyboard("{ArrowLeft}");
+    expect(sectionChip).toHaveFocus();
+
     await user.keyboard("{Enter}");
 
     await waitFor(() => {
@@ -462,7 +471,7 @@ describe("ProductSearchPanel", () => {
     });
   });
 
-  it("renders empty-scope sections as disabled chips with a No filters set tooltip", async () => {
+  it("renders empty-scope sections as focusable disabled chips with a No filters set explanation", async () => {
     const user = userEvent.setup();
     quickPickSectionMocks.useQuickPickSections.mockReturnValue({
       sections: [
@@ -499,6 +508,7 @@ describe("ProductSearchPanel", () => {
     const disabledChip = screen.getByRole("button", { name: /Empty Section/i });
 
     expect(tooltipTarget).toContainElement(disabledChip);
-    expect(disabledChip).toBeDisabled();
+    expect(disabledChip).toHaveAttribute("aria-disabled", "true");
+    expect(disabledChip).toHaveAccessibleDescription("No filters set");
   });
 });
