@@ -16,6 +16,8 @@ describe("findExactDccMatch", () => {
     expect(findExactDccMatch(items, "10.20.30")).toEqual(items[0]);
     expect(findExactDccMatch(items, "10-20-30")).toEqual(items[0]);
     expect(findExactDccMatch(items, "10 20 30")).toEqual(items[0]);
+    expect(findExactDccMatch(items, "10..30")).toBeNull();
+    expect(findExactDccMatch(items, "10--30")).toBeNull();
     expect(findExactDccMatch(items, "10.20")).toBeNull();
     expect(findExactDccMatch(items, "drinks")).toBeNull();
   });
@@ -36,6 +38,16 @@ describe("findExactDccMatch", () => {
       classNum: "20",
       catNum: "30",
     });
+    expect(getPartialDccPatch("10..30")).toEqual({
+      deptNum: "10",
+      classNum: "",
+      catNum: "30",
+    });
+    expect(getPartialDccPatch("10--30")).toEqual({
+      deptNum: "10",
+      classNum: "",
+      catNum: "30",
+    });
     expect(getPartialDccPatch("")).toEqual({
       deptNum: "",
       classNum: "",
@@ -50,6 +62,11 @@ describe("findExactDccMatch", () => {
       classNum: "2",
       catNum: "30",
     });
+    expect(getSanitizedFallbackDccPatch("10--30")).toEqual({
+      deptNum: "10",
+      classNum: "",
+      catNum: "30",
+    });
     expect(getSanitizedFallbackDccPatch("drinks")).toEqual({
       deptNum: "",
       classNum: "",
@@ -62,5 +79,6 @@ describe("findExactDccMatch", () => {
     expect(findCommittedDccMatch(items, "drinks")).toBeNull();
     expect(findCommittedDccMatch(items, "10.20.30")).toEqual(items[0]);
     expect(findCommittedDccMatch(items, "10-20-30")).toEqual(items[0]);
+    expect(findCommittedDccMatch(items, "10..30")).toBeNull();
   });
 });

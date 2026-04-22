@@ -12,13 +12,46 @@ interface Props {
   onChange: (patch: { deptNum?: string; classNum?: string; catNum?: string }) => void;
 }
 
-const DCC_PARTS_REGEX = /[\s.\-]+/;
-
-function splitDccParts(query: string): string[] | null {
+function splitDccPartsWithPositions(query: string): string[] | null {
   const trimmed = query.trim();
   if (!trimmed) return [];
   if (!/^[\d\s.\-]+$/.test(trimmed)) return null;
-  return trimmed.split(DCC_PARTS_REGEX).filter(Boolean);
+
+  return splitCompactDccParts(trimmed);
+}
+
+function splitCompactDccParts(query: string): string[] {
+  const compact = query.trim().replace(/\s*([.-])\s*/g, "$1");
+  if (!compact) return [];
+
+  const tokens = compact.match(/[^.\-\s]+|[.\-]|\s+/g) ?? [];
+  const parts: string[] = [];
+  let current = "";
+  let lastSeparatorWasExplicit = false;
+
+  for (const token of tokens) {
+    if (token === "." || token === "-") {
+      parts.push(current);
+      current = "";
+      lastSeparatorWasExplicit = true;
+      continue;
+    }
+
+    if (token.trim() === "") {
+      if (!lastSeparatorWasExplicit) {
+        parts.push(current);
+        current = "";
+      }
+      lastSeparatorWasExplicit = false;
+      continue;
+    }
+
+    current += token;
+    lastSeparatorWasExplicit = false;
+  }
+
+  parts.push(current);
+  return parts;
 }
 
 function formatDccParts(
@@ -32,8 +65,9 @@ function formatDccParts(
 }
 
 function normalizeDccQuery(query: string): string | null {
-  const parts = splitDccParts(query);
+  const parts = splitDccPartsWithPositions(query);
   if (parts === null) return null;
+  if (parts.some((part) => part === "")) return null;
   return formatDccParts(parts, ".");
 }
 
@@ -44,7 +78,7 @@ function getItemDccText(item: DccListItem, separator: "." | "-" = "."): string {
 export function getPartialDccPatch(
   query: string,
 ): { deptNum?: string; classNum?: string; catNum?: string } | null {
-  const parts = splitDccParts(query);
+  const parts = splitDccPartsWithPositions(query);
   if (parts === null) {
     return null;
   }
@@ -63,8 +97,8 @@ export function getSanitizedFallbackDccPatch(query: string): {
   classNum?: string;
   catNum?: string;
 } {
-  const [deptNum = "", classNum = "", catNum = ""] = query
-    .split(DCC_PARTS_REGEX)
+  const parts = splitCompactDccParts(query);
+  const [deptNum = "", classNum = "", catNum = ""] = parts
     .slice(0, 3)
     .map((part) => part.replace(/\D+/g, ""));
 
@@ -90,7 +124,7 @@ export function findCommittedDccMatch(
   if (!items) return null;
 
   const trimmed = query.trim();
-  if (!trimmed || normalizeDccQuery(trimmed) !== null) {
+  if (!trimmed || splitDccPartsWithPositions(trimmed) !== null) {
     return null;
   }
 
