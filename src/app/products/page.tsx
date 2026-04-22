@@ -57,6 +57,32 @@ function isTextbookItemType(itemType: string): boolean {
   return itemType === "textbook" || itemType === "used_textbook";
 }
 
+function buildFiltersForBrowseTab(
+  filters: ProductFilters,
+  tab: ProductTab,
+): ProductFilters {
+  if (tab === "quickPicks") {
+    const preserveSection = filters.tab === "quickPicks";
+    const sectionSlug = preserveSection ? filters.sectionSlug : undefined;
+
+    return {
+      ...filters,
+      tab,
+      page: 1,
+      sectionSlug,
+      allSections: preserveSection ? (filters.allSections ?? !sectionSlug) : true,
+    };
+  }
+
+  return {
+    ...filters,
+    tab,
+    page: 1,
+    sectionSlug: undefined,
+    allSections: false,
+  };
+}
+
 function actionBarItemToSelectedProduct(item: {
   sku: number;
   description: string;
@@ -276,10 +302,11 @@ export default function ProductsPage() {
   // Bumped after saveView / deleteView succeeds so the SavedViewsBar refetches.
   const [savedViewsRefresh, setSavedViewsRefresh] = useState(0);
 
-  // Track tab counts so both tabs always show their last-known count
+  // Track tab counts so every tab always shows its last-known count.
   const [tabCounts, setTabCounts] = useState<Record<ProductTab, number | null>>({
     textbooks: null,
     merchandise: null,
+    quickPicks: null,
   });
   useEffect(() => {
     if (data) {
@@ -291,13 +318,26 @@ export default function ProductsPage() {
   // always sees both totals under the current filter set.
   useEffect(() => {
     if (!data) return;
-    const otherTab: ProductTab = filters.tab === "textbooks" ? "merchandise" : "textbooks";
     let cancelled = false;
-    searchProducts({ ...filters, tab: otherTab, page: 1 }, { countOnly: true })
-      .then((r) => {
-        if (!cancelled) {
-          setTabCounts((prev) => ({ ...prev, [otherTab]: r.total }));
-        }
+    const inactiveTabs = TABS
+      .map((tab) => tab.value)
+      .filter((value) => value !== filters.tab);
+
+    Promise.all(
+      inactiveTabs.map(async (tab) => {
+        const result = await searchProducts(buildFiltersForBrowseTab(filters, tab), { countOnly: true });
+        return [tab, result.total] as const;
+      }),
+    )
+      .then((results) => {
+        if (cancelled) return;
+        setTabCounts((prev) => {
+          const next = { ...prev };
+          for (const [tab, total] of results) {
+            next[tab] = total;
+          }
+          return next;
+        });
       })
       .catch(() => {
         // Silent — stale count stays visible rather than showing a spinner.
@@ -638,7 +678,7 @@ export default function ProductsPage() {
   }, [viewParam, resolvedViews]);
 
   function handleTabChange(tab: ProductTab) {
-    updateFilters({ ...filters, tab, page: 1 });
+    updateFilters(buildFiltersForBrowseTab(filters, tab));
   }
 
   function handleSort(field: string) {

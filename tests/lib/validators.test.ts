@@ -4,7 +4,6 @@ import {
   invoiceItemSchema,
   invoiceCreateSchema,
   invoiceUpdateSchema,
-  quickPickSchema,
   savedLineItemSchema,
   categoryCreateSchema,
   categoryUpdateSchema,
@@ -318,56 +317,6 @@ describe("invoiceUpdateSchema", () => {
   it("accepts an empty object (fully partial)", () => {
     const result = invoiceUpdateSchema.safeParse({});
     expect(result.success).toBe(true);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// quickPickSchema
-// ---------------------------------------------------------------------------
-describe("quickPickSchema", () => {
-  it("validates a quick pick item", () => {
-    const result = quickPickSchema.safeParse({
-      department: "Student Services",
-      description: "Notebook",
-      defaultPrice: 5.99,
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it("rejects negative defaultPrice", () => {
-    const result = quickPickSchema.safeParse({
-      department: "Student Services",
-      description: "Notebook",
-      defaultPrice: -1,
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("accepts zero defaultPrice", () => {
-    const result = quickPickSchema.safeParse({
-      department: "Student Services",
-      description: "Free item",
-      defaultPrice: 0,
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it("rejects empty department", () => {
-    const result = quickPickSchema.safeParse({
-      department: "",
-      description: "Notebook",
-      defaultPrice: 5.99,
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects empty description", () => {
-    const result = quickPickSchema.safeParse({
-      department: "Math",
-      description: "",
-      defaultPrice: 5.99,
-    });
-    expect(result.success).toBe(false);
   });
 });
 

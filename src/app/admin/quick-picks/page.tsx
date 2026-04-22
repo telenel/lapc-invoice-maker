@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
+import { QuickPickSectionsPanel } from "@/components/admin/quick-pick-sections-panel";
 import { authOptions } from "@/lib/auth";
 
-export default async function QuickPicksPage() {
+export default async function AdminQuickPicksPage() {
   const session = await getServerSession(authOptions);
 
   if (!session?.user) {
@@ -13,5 +14,5 @@ export default async function QuickPicksPage() {
     redirect("/");
   }
 
-  redirect("/admin/settings?tab=quick-picks");
+  return <QuickPickSectionsPanel />;
 }

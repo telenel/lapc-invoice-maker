@@ -16,9 +16,6 @@ vi.mock("@/lib/prisma", () => ({
     invoiceItem: {
       deleteMany: vi.fn(),
     },
-    quickPickItem: {
-      updateMany: vi.fn(),
-    },
     savedLineItem: {
       updateMany: vi.fn(),
     },
@@ -559,22 +556,14 @@ describe("invoiceRepository", () => {
     });
   });
 
-  // ── incrementQuickPickUsage ───────────────────────────────────────────────
+  // ── incrementSavedLineItemUsage ───────────────────────────────────────────
 
-  describe("incrementQuickPickUsage", () => {
-    it("calls updateMany on both quickPickItem and savedLineItem", async () => {
-      mockPrisma.quickPickItem.updateMany.mockResolvedValue({ count: 1 } as never);
+  describe("incrementSavedLineItemUsage", () => {
+    it("calls updateMany on savedLineItem only", async () => {
       mockPrisma.savedLineItem.updateMany.mockResolvedValue({ count: 1 } as never);
 
-      await invoiceRepository.incrementQuickPickUsage("IT", ["Laptop", "Monitor"]);
+      await invoiceRepository.incrementSavedLineItemUsage("IT", ["Laptop", "Monitor"]);
 
-      expect(mockPrisma.quickPickItem.updateMany).toHaveBeenCalledWith({
-        where: {
-          OR: [{ department: "IT" }, { department: "__ALL__" }],
-          description: { in: ["Laptop", "Monitor"] },
-        },
-        data: { usageCount: { increment: 1 } },
-      });
       expect(mockPrisma.savedLineItem.updateMany).toHaveBeenCalledWith({
         where: {
           department: "IT",
@@ -585,9 +574,8 @@ describe("invoiceRepository", () => {
     });
 
     it("skips updates when descriptions array is empty", async () => {
-      await invoiceRepository.incrementQuickPickUsage("IT", []);
+      await invoiceRepository.incrementSavedLineItemUsage("IT", []);
 
-      expect(mockPrisma.quickPickItem.updateMany).not.toHaveBeenCalled();
       expect(mockPrisma.savedLineItem.updateMany).not.toHaveBeenCalled();
     });
   });

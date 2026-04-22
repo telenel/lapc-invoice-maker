@@ -66,7 +66,6 @@ const TABLE_LABELS: Record<string, string> = {
   invoices: "Invoices",
   invoiceItems: "Invoice Items",
   categories: "Categories",
-  quickPickItems: "Quick Pick Items",
   staffAccountNumbers: "Account Numbers",
   staffSignerHistory: "Signer History",
   savedLineItems: "Saved Line Items",

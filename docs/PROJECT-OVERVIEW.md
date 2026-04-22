@@ -45,13 +45,11 @@ See [docs/SUPABASE-MIGRATION-STATUS.md](SUPABASE-MIGRATION-STATUS.md) for the du
 src/
 ├── app/                   # Next.js App Router pages and API routes
 │   ├── api/               # Route handlers (admin, analytics, auth, categories,
-│   │   │                  #   invoices, notifications, quick-picks, quotes,
-│   │   │                  #   quotes/public, saved-items, setup, staff,
-│   │   │                  #   upload, user-quick-picks)
+│   │   │                  #   invoices, notifications, quotes, quotes/public,
+│   │   │                  #   saved-items, setup, staff, upload)
 │   ├── admin/
 │   ├── analytics/
 │   ├── invoices/
-│   ├── quick-picks/
 │   ├── quotes/
 │   ├── staff/
 │   └── setup/
@@ -68,7 +66,7 @@ src/
 │   ├── admin/
 │   ├── analytics/
 │   ├── dashboard/
-│   └── quick-picks/
+│   └── textbook-requisitions/
 │
 ├── domains/               # Domain module architecture (see section below)
 │   ├── shared/
@@ -85,9 +83,7 @@ src/
 │   ├── contact/           # types, repository, service (external people)
 │   ├── follow-up/         # account number follow-up series
 │   ├── calendar/
-│   ├── quick-picks/
 │   ├── saved-items/
-│   ├── user-quick-picks/
 │   └── upload/
 │
 ├── generated/             # Prisma generated client (do not edit)
@@ -209,13 +205,7 @@ src/domains/
 ├── category/
 │   └── api-client.ts
 │
-├── quick-picks/
-│   └── api-client.ts
-│
 ├── saved-items/
-│   └── api-client.ts
-│
-├── user-quick-picks/
 │   └── api-client.ts
 │
 └── upload/
@@ -262,9 +252,7 @@ src/domains/
 These domains encapsulate endpoint URLs and response parsing for smaller feature areas:
 
 - `category` — invoice/quote category listing
-- `quick-picks` — admin-managed quick pick items catalog
 - `saved-items` — admin saved line item catalog
-- `user-quick-picks` — per-user quick pick selections
 - `upload` — file upload handling
 
 ### Contact Domain
@@ -295,8 +283,6 @@ External people (vendors, customers, catering contacts) who are not Pierce Colle
 | `Event` | Calendar events with type (Meeting/Seminar/Vendor/Other), recurrence, reminders |
 | `Notification` | Real-time notifications for quote events and event reminders |
 | `SavedLineItem` | Admin-managed saved line items catalog |
-| `QuickPick` | Admin-managed quick pick items |
-| `UserQuickPick` | Per-user quick pick selections |
 | `Category` | Invoice/quote categories |
 
 ---
@@ -566,7 +552,6 @@ Vitest covers both domain/lib tests in `tests/` and component/integration tests 
 | `src/__tests__/inline-combobox.test.tsx` | Inline combobox component |
 | `src/__tests__/keyboard-mode.test.tsx` | Keyboard mode component |
 | `src/__tests__/line-items-keyboard.test.tsx` | Line items keyboard nav |
-| `src/__tests__/quick-pick-tax.test.tsx` | Quick pick tax calculation |
 | `src/__tests__/quote-lifecycle.test.ts` | Quote lifecycle integration |
 
 ### Commands

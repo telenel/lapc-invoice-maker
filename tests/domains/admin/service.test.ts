@@ -420,7 +420,6 @@ describe("adminService", () => {
         invoices: 25,
         invoiceItems: 80,
         categories: 5,
-        quickPickItems: 20,
         staffAccountNumbers: 15,
         staffSignerHistory: 8,
         savedLineItems: 12,

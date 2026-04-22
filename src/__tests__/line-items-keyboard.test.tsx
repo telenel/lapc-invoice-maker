@@ -9,11 +9,6 @@ vi.mock("sonner", () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
-// Mock lucide-react Star icon
-vi.mock("lucide-react", () => ({
-  Star: (props: Record<string, unknown>) => <svg data-testid="star-icon" {...props} />,
-}));
-
 // Mock InlineCombobox to render a simple input
 vi.mock("@/components/ui/inline-combobox", () => ({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -48,10 +43,6 @@ const defaultProps = {
   onAdd: vi.fn(),
   onRemove: vi.fn(),
   total: 10,
-  department: "Test Dept",
-  suggestions: [],
-  userPickDescriptions: new Set<string>(),
-  onTogglePick: vi.fn(),
 };
 
 describe("LineItems", () => {
@@ -112,6 +103,13 @@ describe("LineItems", () => {
 
     const removeBtn = screen.getByRole("button", { name: "Remove line item 1" });
     expect(removeBtn).toBeDisabled();
+  });
+
+  it("does not render the removed save controls", () => {
+    render(<LineItems {...defaultProps} />);
+
+    expect(screen.queryByRole("button", { name: "Save to quick picks" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Remove from quick picks" })).not.toBeInTheDocument();
   });
 
   it("keeps the cost input readable when margin pricing is enabled", () => {

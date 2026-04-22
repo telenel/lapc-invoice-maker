@@ -116,26 +116,6 @@ async function main() {
     });
   }
 
-  // Seed default global quick picks
-  // Remove legacy tax quick pick (replaced by proper tax system)
-  await prisma.quickPickItem.deleteMany({
-    where: { id: "default-ca-state-tax" },
-  });
-
-  const defaultQuickPicks = [
-    { id: "default-shipping-fee", department: "__ALL__", description: "Shipping Fee", defaultPrice: 0 },
-    { id: "default-service-fee", department: "__ALL__", description: "Service Fee", defaultPrice: 0 },
-  ];
-
-  for (const qp of defaultQuickPicks) {
-    await prisma.quickPickItem.upsert({
-      where: { id: qp.id },
-      update: {},
-      create: qp,
-    });
-  }
-  console.log("Seeded default quick picks");
-
   const printPricingConfig = await prisma.printPricingConfig.upsert({
     where: { id: "default" },
     update: {
@@ -234,6 +214,40 @@ async function main() {
     ],
   });
   console.log("Seeded print pricing configuration");
+
+  await prisma.quickPickSection.upsert({
+    where: { slug: "copytech-services" },
+    update: {
+      name: "CopyTech Services",
+      description: "In-house print shop services — copies, scans, binding, posters.",
+      icon: "Printer",
+      sortOrder: 0,
+      descriptionLike: null,
+      dccIds: [],
+      vendorIds: [],
+      itemType: null,
+      explicitSkus: [],
+      isGlobal: true,
+      includeDiscontinued: false,
+      createdByUserId: null,
+    },
+    create: {
+      name: "CopyTech Services",
+      slug: "copytech-services",
+      description: "In-house print shop services — copies, scans, binding, posters.",
+      icon: "Printer",
+      sortOrder: 0,
+      descriptionLike: null,
+      dccIds: [],
+      vendorIds: [],
+      itemType: null,
+      explicitSkus: [],
+      isGlobal: true,
+      includeDiscontinued: false,
+      createdByUserId: null,
+    },
+  });
+  console.log("Seeded quick pick sections");
 
   console.log("Seed complete");
 }

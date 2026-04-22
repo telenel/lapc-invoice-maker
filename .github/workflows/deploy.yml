@@ -13,30 +13,34 @@ on:
 
 permissions:
   contents: read
-  packages: write
+  packages: read
 
 concurrency:
   group: deploy-main
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  publish:
     if: >-
       ${{
         github.event_name == 'workflow_dispatch' ||
         (
           github.event.workflow_run.conclusion == 'success' &&
-          github.event.workflow_run.event == 'push' &&
+          (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') &&
           github.event.workflow_run.head_branch == 'main'
         )
       }}
     runs-on: ubuntu-latest
-    env:
-      DEPLOY_SSH_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
-      DEPLOY_SSH_USER: ${{ secrets.DEPLOY_SSH_USER }}
-      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-      DEPLOY_SSH_PORT: ${{ secrets.DEPLOY_SSH_PORT || '22' }}
-      DEPLOY_REMOTE_PROJECT_DIR: ${{ secrets.DEPLOY_REMOTE_PROJECT_DIR || '/opt/lapc-invoice-maker' }}
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      full_sha: ${{ steps.meta.outputs.full_sha }}
+      short_sha: ${{ steps.meta.outputs.short_sha }}
+      build_time: ${{ steps.meta.outputs.build_time }}
+      image_repository: ${{ steps.meta.outputs.image_repository }}
+      image: ${{ steps.meta.outputs.image }}
+      deploy_ref: ${{ steps.target.outputs.deploy_ref }}
     steps:
       - name: Resolve deploy target
         id: target
@@ -47,13 +51,15 @@ jobs:
         run: |
           if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
             ref="${INPUT_REF:-main}"
+            deploy_ref="$ref"
           else
             ref="$WORKFLOW_HEAD_SHA"
+            deploy_ref="$WORKFLOW_HEAD_SHA"
           fi
 
           {
             echo "checkout_ref=$ref"
-            echo "deploy_ref=${INPUT_REF:-${WORKFLOW_HEAD_BRANCH:-main}}"
+            echo "deploy_ref=$deploy_ref"
           } >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@v5
@@ -76,6 +82,16 @@ jobs:
             echo "image_repository=$image_repository"
             echo "image=$image"
           } >> "$GITHUB_OUTPUT"
+
+      - name: Require public build secrets
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$NEXT_PUBLIC_SUPABASE_URL" ] || [ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ]; then
+            echo "::error::NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be configured before building the deploy image."
+            exit 1
+          fi
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -103,6 +119,33 @@ jobs:
             NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
+  deploy:
+    if: >-
+      ${{
+        github.event_name == 'workflow_dispatch' ||
+        (
+          github.event.workflow_run.conclusion == 'success' &&
+          (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') &&
+          github.event.workflow_run.head_branch == 'main'
+        )
+      }}
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    env:
+      DEPLOY_SSH_HOST: ${{ secrets.DEPLOY_SSH_HOST }}
+      DEPLOY_SSH_USER: ${{ secrets.DEPLOY_SSH_USER }}
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      DEPLOY_SSH_PORT: ${{ secrets.DEPLOY_SSH_PORT || '22' }}
+      DEPLOY_REMOTE_PROJECT_DIR: ${{ secrets.DEPLOY_REMOTE_PROJECT_DIR || '/opt/lapc-invoice-maker' }}
+      EXPECTED_SHA: ${{ needs.publish.outputs.full_sha }}
+      DEPLOY_IMAGE: ${{ needs.publish.outputs.image }}
+      DEPLOY_REF: ${{ needs.publish.outputs.deploy_ref }}
+      GHCR_USERNAME: ${{ github.actor }}
+      GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
       - name: Require SSH deploy secrets
         run: |
           if [ -z "$DEPLOY_SSH_HOST" ] || [ -z "$DEPLOY_SSH_KEY" ]; then
@@ -118,12 +161,6 @@ jobs:
           ssh-keyscan -p "$DEPLOY_SSH_PORT" "$DEPLOY_SSH_HOST" >> ~/.ssh/known_hosts
 
       - name: Deploy exact image over SSH
-        env:
-          EXPECTED_SHA: ${{ steps.meta.outputs.full_sha }}
-          DEPLOY_IMAGE: ${{ steps.meta.outputs.image }}
-          DEPLOY_REF: ${{ steps.target.outputs.deploy_ref }}
-          GHCR_USERNAME: ${{ github.actor }}
-          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           quoted_project_dir=$(printf '%q' "$DEPLOY_REMOTE_PROJECT_DIR")
           quoted_deploy_ref=$(printf '%q' "$DEPLOY_REF")

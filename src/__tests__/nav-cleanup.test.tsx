@@ -3,8 +3,9 @@ import { cleanup, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { replaceMock, signOutMock } = vi.hoisted(() => ({
+const { replaceMock, pushMock, signOutMock } = vi.hoisted(() => ({
   replaceMock: vi.fn(),
+  pushMock: vi.fn(),
   signOutMock: vi.fn(),
 }));
 
@@ -32,7 +33,7 @@ let sessionState: {
 
 vi.mock("next/navigation", () => ({
   usePathname: () => pathnameState,
-  useRouter: () => ({ replace: replaceMock, push: vi.fn() }),
+  useRouter: () => ({ replace: replaceMock, push: pushMock }),
   useSearchParams: () => searchParamsState,
 }));
 
@@ -115,12 +116,6 @@ vi.mock("@/components/admin/quote-contact-settings", () => ({
   QuoteContactSettings: () => <div>general-settings-panel</div>,
 }));
 
-vi.mock("@/components/quick-picks/quick-pick-table", () => ({
-  QuickPickTable: ({ initialItems }: { initialItems?: unknown[] }) => (
-    <div>{`quick-picks-panel:${initialItems ? "bootstrapped" : "client"}`}</div>
-  ),
-}));
-
 vi.mock("@/components/ui/tabs", () => ({
   Tabs: ({ children }: { children: ReactNode }) => <div>{children}</div>,
   TabsList: ({ children }: { children: ReactNode }) => <div>{children}</div>,
@@ -193,20 +188,24 @@ describe("Nav cleanup", () => {
   });
 });
 
-describe("Admin panel quick picks", () => {
+describe("Admin panel tabs", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    searchParamsState = new URLSearchParams("tab=quick-picks");
+    searchParamsState = new URLSearchParams("tab=line-items");
   });
 
   afterEach(() => {
     cleanup();
   });
 
-  it("exposes quick picks inside the admin panel", () => {
+  it("keeps quick picks reachable from the admin panel", async () => {
+    searchParamsState = new URLSearchParams("tab=quick-picks");
     render(<SettingsPanel />);
 
-    expect(screen.getByRole("button", { name: "Quick Picks" })).toBeInTheDocument();
-    expect(screen.getByText("quick-picks-panel:client")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Quick Pick Sections" })).toBeInTheDocument();
+
+    await screen.getByRole("button", { name: "Open Quick Pick Sections" }).click();
+
+    expect(pushMock).toHaveBeenCalledWith("/admin/quick-picks");
   });
 });
