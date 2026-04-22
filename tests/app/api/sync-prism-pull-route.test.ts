@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
 vi.mock("next-auth", () => ({
@@ -44,6 +44,8 @@ import { runPrismPull } from "@/domains/product/prism-sync";
 import { runSalesTxnSync } from "@/domains/product/sales-txn-sync";
 import { POST } from "@/app/api/sync/prism-pull/route";
 
+const originalCronInternalSecret = process.env.CRON_INTERNAL_SECRET;
+
 describe("POST /api/sync/prism-pull", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -61,6 +63,81 @@ describe("POST /api/sync/prism-pull", () => {
     } as never);
     vi.mocked(getPrismPool).mockResolvedValue({} as never);
     vi.mocked(getSupabaseAdminClient).mockReturnValue({} as never);
+    vi.mocked(runSalesTxnSync).mockResolvedValue({
+      txnsAdded: 0,
+      aggregatesUpdated: 0,
+      durationMs: 80,
+    } as never);
+  });
+
+  afterEach(() => {
+    if (originalCronInternalSecret === undefined) {
+      delete process.env.CRON_INTERNAL_SECRET;
+      return;
+    }
+
+    process.env.CRON_INTERNAL_SECRET = originalCronInternalSecret;
+  });
+
+  it("returns 403 when the request has neither an admin session nor the cron secret", async () => {
+    vi.mocked(getServerSession).mockResolvedValue(null);
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/sync/prism-pull", { method: "POST" }),
+    );
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toMatchObject({ error: "Admin required" });
+    expect(prisma.syncRun.create).not.toHaveBeenCalled();
+    expect(runPrismPull).not.toHaveBeenCalled();
+  });
+
+  it("allows internal cron requests to run without loading a session", async () => {
+    process.env.CRON_INTERNAL_SECRET = "test-cron-secret";
+    vi.mocked(getServerSession).mockResolvedValue(null);
+
+    const response = await POST(
+      new NextRequest("http://localhost/api/sync/prism-pull", {
+        method: "POST",
+        headers: { "x-internal-cron-secret": "test-cron-secret" },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      runId: "run-1",
+      status: "ok",
+      scanned: 100,
+      updated: 25,
+      removed: 3,
+    });
+    expect(getServerSession).not.toHaveBeenCalled();
+    expect(prisma.syncRun.create).toHaveBeenCalledWith({
+      data: {
+        triggeredBy: "scheduled",
+        status: "running",
+      },
+    });
+    expect(runPrismPull).toHaveBeenCalledTimes(1);
+  });
+
+  it("still allows admin session requests without the cron secret", async () => {
+    const response = await POST(
+      new NextRequest("http://localhost/api/sync/prism-pull", { method: "POST" }),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      runId: "run-1",
+      status: "ok",
+    });
+    expect(getServerSession).toHaveBeenCalledTimes(1);
+    expect(prisma.syncRun.create).toHaveBeenCalledWith({
+      data: {
+        triggeredBy: "manual:admin-1",
+        status: "running",
+      },
+    });
   });
 
   it("marks the run partial when transaction sync is skipped", async () => {
