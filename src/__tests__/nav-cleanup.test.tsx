@@ -3,8 +3,9 @@ import { cleanup, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { replaceMock, signOutMock } = vi.hoisted(() => ({
+const { replaceMock, pushMock, signOutMock } = vi.hoisted(() => ({
   replaceMock: vi.fn(),
+  pushMock: vi.fn(),
   signOutMock: vi.fn(),
 }));
 
@@ -32,7 +33,7 @@ let sessionState: {
 
 vi.mock("next/navigation", () => ({
   usePathname: () => pathnameState,
-  useRouter: () => ({ replace: replaceMock, push: vi.fn() }),
+  useRouter: () => ({ replace: replaceMock, push: pushMock }),
   useSearchParams: () => searchParamsState,
 }));
 
@@ -197,10 +198,14 @@ describe("Admin panel tabs", () => {
     cleanup();
   });
 
-  it("drops quick picks from the admin panel tabs", () => {
+  it("keeps quick picks reachable from the admin panel", async () => {
+    searchParamsState = new URLSearchParams("tab=quick-picks");
     render(<SettingsPanel />);
 
-    expect(screen.queryByRole("button", { name: "Quick Picks" })).not.toBeInTheDocument();
-    expect(screen.getByText("line-items-panel")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Quick Pick Sections" })).toBeInTheDocument();
+
+    await screen.getByRole("button", { name: "Open Quick Pick Sections" }).click();
+
+    expect(pushMock).toHaveBeenCalledWith("/admin/quick-picks");
   });
 });
