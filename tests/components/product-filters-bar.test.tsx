@@ -4,9 +4,12 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { ProductFiltersBar } from "@/components/products/product-filters";
 import { EMPTY_FILTERS } from "@/domains/product/constants";
+import { EMPTY_REFS, buildProductRefMaps } from "@/domains/product/ref-data";
 
 vi.mock("@/domains/product/vendor-directory", () => ({
   useVendorDirectory: () => ({
+    refs: null,
+    lookups: buildProductRefMaps(EMPTY_REFS),
     vendors: [],
     byId: new Map<number, string>(),
     loading: false,
