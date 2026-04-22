@@ -146,6 +146,36 @@ describe("parseFiltersFromSearchParams", () => {
   });
 });
 
+describe("dccComposite filter", () => {
+  it("round-trips dccComposite through the URL", () => {
+    const filters: ProductFilters = { ...EMPTY_FILTERS, dccComposite: "30-10-10" };
+    const roundtripped = parseFiltersFromSearchParams(serializeFiltersToSearchParams(filters));
+    expect(roundtripped.dccComposite).toBe("30-10-10");
+  });
+
+  it("backfills dccComposite from legacy deptNum/classNum/catNum triple", () => {
+    const out = parseFiltersFromSearchParams(
+      makeParams({ deptNum: "30", classNum: "10", catNum: "10" }),
+    );
+    expect(out.dccComposite).toBe("30-10-10");
+    expect(out.deptNum).toBe("30");
+    expect(out.classNum).toBe("10");
+    expect(out.catNum).toBe("10");
+  });
+
+  it("does not backfill dccComposite when the triple is partial", () => {
+    const out = parseFiltersFromSearchParams(makeParams({ deptNum: "30", classNum: "10" }));
+    expect(out.dccComposite).toBe("");
+  });
+
+  it("parses explicit dccComposite without overwriting it from the legacy triple", () => {
+    const out = parseFiltersFromSearchParams(
+      makeParams({ dccComposite: "30-10-10", deptNum: "40", classNum: "20", catNum: "5" }),
+    );
+    expect(out.dccComposite).toBe("30-10-10");
+  });
+});
+
 describe("applyPreset", () => {
   const baseTextbook: ProductFilters = { ...EMPTY_FILTERS, tab: "textbooks", search: "calculus" };
   const baseMerch: ProductFilters = { ...EMPTY_FILTERS, tab: "merchandise", search: "" };

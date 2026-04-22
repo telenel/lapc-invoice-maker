@@ -186,6 +186,23 @@ function toNullableIsoString(value: Date | string | null): string | null {
   return toIsoString(value);
 }
 
+/**
+ * Parse a composite DCC code like "30-10-10" / "30.10.10" / "30 10 10" into
+ * its three integer segments. Returns null if the input doesn't look like a
+ * separator-joined triple. Digits-only input is intentionally excluded here
+ * because segment widths vary per bookstore; the search-handler uses a
+ * concat-based match for the digits-only case instead.
+ */
+export function parseDccComposite(raw: string): { dept: number; cls: number; cat: number } | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const parts = trimmed.split(/[\s.\-]+/).filter(Boolean);
+  if (parts.length !== 3) return null;
+  const [dept, cls, cat] = parts.map((p) => Number(p));
+  if (![dept, cls, cat].every((n) => Number.isInteger(n) && n >= 0)) return null;
+  return { dept, cls, cat };
+}
+
 function createSqlBuilder(): SqlBuilder {
   const params: unknown[] = [];
 
@@ -336,15 +353,39 @@ async function buildFilteredBrowseQuery(
 
   const searchTerm = filters.search.trim();
   if (searchTerm) {
-    if (/^\d+$/.test(searchTerm)) {
+    const composite = parseDccComposite(searchTerm);
+    if (composite) {
+      // Separator-joined DCC (e.g. "30-10-10"): exact-equality match on the
+      // individual segments — uses existing dept/class/cat indexes cheaply.
       conditions.push(
         `(
-          pwd.sku = ${builder.add(Number(searchTerm))}
-          OR pwd.barcode ILIKE ${builder.add(`${searchTerm}%`)}
-          OR pwd.isbn ILIKE ${builder.add(`${searchTerm}%`)}
-          OR pwd.catalog_number ILIKE ${builder.add(`${searchTerm}%`)}
+          pwd.dept_num = ${builder.add(composite.dept)}
+          AND pwd.class_num = ${builder.add(composite.cls)}
+          AND pwd.cat_num = ${builder.add(composite.cat)}
         )`,
       );
+    } else if (/^\d+$/.test(searchTerm)) {
+      const digitBranches: string[] = [
+        `pwd.sku = ${builder.add(Number(searchTerm))}`,
+        `pwd.barcode ILIKE ${builder.add(`${searchTerm}%`)}`,
+        `pwd.isbn ILIKE ${builder.add(`${searchTerm}%`)}`,
+        `pwd.catalog_number ILIKE ${builder.add(`${searchTerm}%`)}`,
+      ];
+      // 4-8 digit input plausibly encodes a DCC composite. Match against a
+      // runtime concat of dept/class/cat so variable widths still resolve:
+      //   "301010" matches (30,10,10) via exact unpadded concat
+      //   "030101" matches (3,1,1) via zero-padded 2-digit concat
+      // Performance is a sequential scan on the filtered set — acceptable at
+      // current scale; see issue notes for a generated-column follow-up.
+      if (searchTerm.length >= 4 && searchTerm.length <= 8) {
+        digitBranches.push(
+          `(pwd.dept_num::text || pwd.class_num::text || pwd.cat_num::text) = ${builder.add(searchTerm)}`,
+        );
+        digitBranches.push(
+          `(LPAD(pwd.dept_num::text, 2, '0') || LPAD(pwd.class_num::text, 2, '0') || LPAD(pwd.cat_num::text, 2, '0')) = ${builder.add(searchTerm)}`,
+        );
+      }
+      conditions.push(`(\n          ${digitBranches.join("\n          OR ")}\n        )`);
     } else {
       conditions.push(
         `(
@@ -367,9 +408,19 @@ async function buildFilteredBrowseQuery(
   if (filters.lastSaleDateTo) conditions.push(`${lastSaleExpr} <= ${builder.add(filters.lastSaleDateTo)}`);
   if (filters.minStock !== "") conditions.push(`${emittedStockExpr} >= ${builder.add(Number(filters.minStock))}`);
   if (filters.maxStock !== "") conditions.push(`${emittedStockExpr} <= ${builder.add(Number(filters.maxStock))}`);
-  if (filters.deptNum !== "") conditions.push(`pwd.dept_num = ${builder.add(Number(filters.deptNum))}`);
-  if (filters.classNum !== "") conditions.push(`pwd.class_num = ${builder.add(Number(filters.classNum))}`);
-  if (filters.catNum !== "") conditions.push(`pwd.cat_num = ${builder.add(Number(filters.catNum))}`);
+  const compositeFilter =
+    filters.dccComposite !== "" ? parseDccComposite(filters.dccComposite) : null;
+  if (compositeFilter) {
+    // dccComposite subsumes the dept/class/cat triple — emitting both would
+    // duplicate predicates (and be wrong when the backfill reader sets both).
+    conditions.push(`pwd.dept_num = ${builder.add(compositeFilter.dept)}`);
+    conditions.push(`pwd.class_num = ${builder.add(compositeFilter.cls)}`);
+    conditions.push(`pwd.cat_num = ${builder.add(compositeFilter.cat)}`);
+  } else {
+    if (filters.deptNum !== "") conditions.push(`pwd.dept_num = ${builder.add(Number(filters.deptNum))}`);
+    if (filters.classNum !== "") conditions.push(`pwd.class_num = ${builder.add(Number(filters.classNum))}`);
+    if (filters.catNum !== "") conditions.push(`pwd.cat_num = ${builder.add(Number(filters.catNum))}`);
+  }
   if (filters.missingBarcode) conditions.push("pwd.barcode IS NULL");
   if (filters.missingIsbn) conditions.push("pwd.isbn IS NULL");
   if (filters.missingTitle) {

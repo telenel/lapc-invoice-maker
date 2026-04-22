@@ -327,6 +327,72 @@ describe("POST /api/products/batch", () => {
     });
   });
 
+  it("rejects a create row missing dccId with a row-indexed 400 error", async () => {
+    const { POST } = await loadRouteModule();
+    const response = await POST(
+      new NextRequest("http://localhost/api/products/batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "create",
+          rows: [
+            {
+              description: "Pierce Hoodie",
+              vendorId: 21,
+              // dccId omitted
+              retail: 39.99,
+              cost: 19.5,
+            },
+          ],
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body).toEqual({
+      errors: [
+        expect.objectContaining({
+          rowIndex: 0,
+          field: "dccId",
+          code: "MISSING_REQUIRED",
+        }),
+      ],
+    });
+    expect(prismBatchMocks.batchCreateGmItems).not.toHaveBeenCalled();
+  });
+
+  it("rejects a create row with dccId=0 before hitting Prism validation", async () => {
+    const { POST } = await loadRouteModule();
+    const response = await POST(
+      new NextRequest("http://localhost/api/products/batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "create",
+          rows: [
+            {
+              description: "Pierce Hoodie",
+              vendorId: 21,
+              dccId: 0,
+              retail: 39.99,
+              cost: 19.5,
+            },
+          ],
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ rowIndex: 0, field: "dccId", code: "MISSING_REQUIRED" }),
+      ]),
+    );
+    expect(prismBatchMocks.batchCreateGmItems).not.toHaveBeenCalled();
+  });
+
   it("returns 200 with updated skus on happy path", async () => {
     prismBatchMocks.validateBatchUpdateAgainstPrism.mockResolvedValue([]);
     prismBatchMocks.batchUpdateItems.mockResolvedValue([101, 202]);

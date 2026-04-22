@@ -35,6 +35,7 @@ const TEXT_KEYS: (keyof ProductFilters)[] = [
   "search", "author", "edition", "catalogNumber", "productType",
   "lastSaleDateFrom", "lastSaleDateTo",
   "sectionSlug",
+  "dccComposite",
 ];
 
 const ENUM_KEYS: { [K in keyof ProductFilters]?: readonly ProductFilters[K][] } = {
@@ -119,6 +120,14 @@ export function parseFiltersFromSearchParams(params: URLSearchParams): ProductFi
   const legacyQ = params.get("q");
   if (legacyQ && !out.search) {
     out.search = legacyQ;
+  }
+
+  // Backfill: legacy saved views stored classification as deptNum/classNum/catNum
+  // separately. If the URL carries a full triple with no explicit dccComposite,
+  // derive one so the new chip and composite filter work without a destructive
+  // migration.
+  if (!out.dccComposite && out.deptNum && out.classNum && out.catNum) {
+    out.dccComposite = `${out.deptNum}-${out.classNum}-${out.catNum}`;
   }
 
   return out;

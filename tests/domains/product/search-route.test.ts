@@ -634,6 +634,81 @@ describe("searchProductBrowseRows", () => {
     expect(row.color_id).toBeNull();
   });
 
+  it("adds a DCC composite OR branch when search is a 4-8 digit code", async () => {
+    mockSearchQueryRows();
+
+    await searchProductBrowseRows({
+      ...EMPTY_FILTERS,
+      tab: "merchandise",
+      locationIds: [2, 3],
+      search: "301010",
+    });
+
+    const sql = prismaMock.$queryRawUnsafe.mock.calls[0]?.[0];
+    expect(typeof sql).toBe("string");
+    // Still matches existing numeric modes.
+    expect(sql).toContain("pwd.sku =");
+    expect(sql).toContain("pwd.barcode ILIKE");
+    // Adds composite DCC match against dept/class/cat concat.
+    expect(sql).toContain("pwd.dept_num::text");
+    expect(sql).toContain("pwd.class_num::text");
+    expect(sql).toContain("pwd.cat_num::text");
+  });
+
+  it("parses dashed DCC search into dept/class/cat equality conditions", async () => {
+    mockSearchQueryRows();
+
+    await searchProductBrowseRows({
+      ...EMPTY_FILTERS,
+      tab: "merchandise",
+      locationIds: [2, 3],
+      search: "30-10-10",
+    });
+
+    const sql = prismaMock.$queryRawUnsafe.mock.calls[0]?.[0];
+    expect(typeof sql).toBe("string");
+    expect(sql).toContain("pwd.dept_num =");
+    expect(sql).toContain("pwd.class_num =");
+    expect(sql).toContain("pwd.cat_num =");
+  });
+
+  it("does not trigger DCC composite matching for short numeric input", async () => {
+    mockSearchQueryRows();
+
+    await searchProductBrowseRows({
+      ...EMPTY_FILTERS,
+      tab: "merchandise",
+      locationIds: [2, 3],
+      search: "30",
+    });
+
+    const sql = prismaMock.$queryRawUnsafe.mock.calls[0]?.[0];
+    expect(typeof sql).toBe("string");
+    // Still uses existing numeric branch (SKU/barcode/isbn/catalog prefix).
+    expect(sql).toContain("pwd.sku =");
+    // But no composite concat for short inputs.
+    expect(sql).not.toContain("pwd.dept_num::text");
+  });
+
+  it("applies dccComposite filter by resolving it into segment equality predicates", async () => {
+    mockSearchQueryRows();
+
+    await searchProductBrowseRows({
+      ...EMPTY_FILTERS,
+      tab: "merchandise",
+      locationIds: [2, 3],
+      dccComposite: "30-10-10",
+    });
+
+    const sql = prismaMock.$queryRawUnsafe.mock.calls[0]?.[0];
+    expect(typeof sql).toBe("string");
+    expect(sql).toContain("pwd.dept_num =");
+    expect(sql).toContain("pwd.class_num =");
+    expect(sql).toContain("pwd.cat_num =");
+    const params = prismaMock.$queryRawUnsafe.mock.calls[0]?.slice(1);
+    expect(params).toEqual(expect.arrayContaining([30, 10, 10]));
+  });
+
   it("uses fallback expressions for primary-location filters and sorts when the primary slice is missing", async () => {
     mockSearchQueryRows(
       {
