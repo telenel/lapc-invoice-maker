@@ -74,6 +74,18 @@ describe("parseFiltersFromSearchParams", () => {
     expect(roundtripped).toEqual(filters);
   });
 
+  it("round-trips quick-pick section filters through the URL", () => {
+    const filters: ProductFilters = {
+      ...EMPTY_FILTERS,
+      tab: "quickPicks",
+      sectionSlug: "copytech-services",
+      allSections: true,
+    };
+
+    const roundtripped = parseFiltersFromSearchParams(serializeFiltersToSearchParams(filters));
+    expect(roundtripped).toEqual(filters);
+  });
+
   it("round-trips loc through ProductFilters.locationIds", () => {
     const filters: ProductFilters = {
       ...EMPTY_FILTERS,

@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useDeferredValue, useCallback } from "react";
+import { useState, useEffect, useDeferredValue, useCallback, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { SearchIcon, PackageIcon, PlusIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useQuickPickSections } from "@/domains/quick-pick-sections";
 import { searchProducts } from "@/domains/product/queries";
 import { TABS, EMPTY_FILTERS } from "@/domains/product/constants";
 import type {
@@ -13,6 +14,7 @@ import type {
   ProductTab,
   SelectedProduct,
 } from "@/domains/product/types";
+import type { QuickPickSectionDto } from "@/domains/quick-pick-sections";
 
 // ---------------------------------------------------------------------------
 // Helper: convert raw product row to SelectedProduct shape
@@ -73,6 +75,16 @@ function canAddBrowseRowToLineItems(product: ProductBrowseRow): boolean {
   return product.retail_price != null;
 }
 
+function isQuickPickSectionEmpty(section: QuickPickSectionDto): boolean {
+  return (
+    (section.descriptionLike?.trim() ?? "") === ""
+    && section.dccIds.length === 0
+    && section.vendorIds.length === 0
+    && section.itemType == null
+    && section.explicitSkus.length === 0
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -81,6 +93,7 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
   const [tab, setTab] = useState<ProductTab>("textbooks");
+  const [sectionSlug, setSectionSlug] = useState<string | null>(null);
   const [selected, setSelected] = useState<Map<number, SelectedProduct>>(
     () => new Map()
   );
@@ -88,6 +101,39 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const { sections, error: quickPickSectionsError } = useQuickPickSections();
+  const chipRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const isQuickPicksTab = tab === "quickPicks";
+  const quickPickSections = useMemo(
+    () => sections.map((section) => ({
+      ...section,
+      disabled: isQuickPickSectionEmpty(section),
+    })),
+    [sections],
+  );
+  const quickPickChipItems = useMemo(
+    () => [
+      {
+        key: "all",
+        label: "All Quick Picks",
+        slug: null,
+        disabled: false,
+      },
+      ...quickPickSections.map((section) => ({
+        key: section.id,
+        label: section.name,
+        slug: section.slug,
+        disabled: section.disabled,
+      })),
+    ],
+    [quickPickSections],
+  );
+
+  useEffect(() => {
+    if (quickPickSectionsError) {
+      toast.error(quickPickSectionsError.message);
+    }
+  }, [quickPickSectionsError]);
 
   // Fetch — replaces products on page 1, appends on subsequent pages
   useEffect(() => {
@@ -97,6 +143,8 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
       ...EMPTY_FILTERS,
       search: deferredSearch,
       tab,
+      sectionSlug: isQuickPicksTab ? (sectionSlug ?? undefined) : undefined,
+      allSections: isQuickPicksTab ? sectionSlug == null : false,
       page,
     };
 
@@ -123,7 +171,7 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
     return () => {
       cancelled = true;
     };
-  }, [deferredSearch, tab, page]);
+  }, [deferredSearch, isQuickPicksTab, page, sectionSlug, tab]);
 
   // Reset to page 1 whenever search or tab changes
   const handleSearchChange = useCallback(
@@ -137,9 +185,63 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
 
   const handleTabChange = useCallback((value: ProductTab) => {
     setTab(value);
+    if (value !== "quickPicks") {
+      setSectionSlug(null);
+    }
     setPage(1);
     setProducts([]);
   }, []);
+
+  const handleQuickPickChipChange = useCallback((nextSlug: string | null) => {
+    setSectionSlug((current) => (current === nextSlug ? null : nextSlug));
+    setPage(1);
+    setProducts([]);
+  }, []);
+
+  const moveQuickPickChipFocus = useCallback((startIndex: number, direction: "next" | "previous") => {
+    const enabledIndexes = quickPickChipItems
+      .map((item, index) => (item.disabled ? null : index))
+      .filter((index): index is number => index != null);
+    if (enabledIndexes.length === 0) return;
+
+    const currentPosition = enabledIndexes.indexOf(startIndex);
+    const fallbackIndex = enabledIndexes[0];
+    const targetPosition = currentPosition === -1
+      ? 0
+      : direction === "next"
+        ? (currentPosition + 1) % enabledIndexes.length
+        : (currentPosition - 1 + enabledIndexes.length) % enabledIndexes.length;
+    const targetIndex = enabledIndexes[targetPosition] ?? fallbackIndex;
+    chipRefs.current[targetIndex]?.focus();
+  }, [quickPickChipItems]);
+
+  const handleQuickPickChipKeyDown = useCallback((
+    event: React.KeyboardEvent<HTMLButtonElement>,
+    index: number,
+    slug: string | null,
+    disabled: boolean,
+  ) => {
+    if (event.key === "ArrowRight") {
+      event.preventDefault();
+      moveQuickPickChipFocus(index, "next");
+      return;
+    }
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      moveQuickPickChipFocus(index, "previous");
+      return;
+    }
+    if (event.key === "Escape") {
+      event.preventDefault();
+      handleQuickPickChipChange(null);
+      chipRefs.current[0]?.focus();
+      return;
+    }
+    if ((event.key === "Enter" || event.key === " ") && !disabled) {
+      event.preventDefault();
+      handleQuickPickChipChange(slug);
+    }
+  }, [handleQuickPickChipChange, moveQuickPickChipFocus]);
 
   // Selection helpers
   const toggleProduct = useCallback((product: ProductBrowseRow) => {
@@ -196,14 +298,16 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b">
+      <div className="flex border-b" role="tablist" aria-label="Product category">
         {TABS.map((t) => (
           <button
             key={t.value}
-            tabIndex={-1}
+            type="button"
+            role="tab"
+            aria-selected={tab === t.value}
             onClick={() => handleTabChange(t.value)}
             className={[
-              "flex-1 px-3 py-2 text-xs font-medium transition-colors",
+              "flex-1 px-3 py-2 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
               tab === t.value
                 ? "border-b-2 border-primary text-primary bg-primary/5"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
@@ -213,6 +317,49 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
           </button>
         ))}
       </div>
+
+      {isQuickPicksTab ? (
+        <div className="flex flex-wrap gap-2 border-b px-3 py-2">
+          {quickPickChipItems.map((item, index) => {
+            const active = item.slug == null ? sectionSlug == null : sectionSlug === item.slug;
+            const chipButton = (
+              <button
+                key={item.key}
+                ref={(node) => {
+                  chipRefs.current[index] = node;
+                }}
+                type="button"
+                disabled={item.disabled}
+                aria-pressed={active}
+                onClick={() => {
+                  if (item.disabled) return;
+                  handleQuickPickChipChange(item.slug);
+                }}
+                onKeyDown={(event) => handleQuickPickChipKeyDown(event, index, item.slug, item.disabled)}
+                className={[
+                  "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                  active
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-background text-muted-foreground hover:border-foreground/20 hover:text-foreground",
+                  item.disabled ? "cursor-not-allowed opacity-50 hover:border-border hover:text-muted-foreground" : "",
+                ].join(" ")}
+              >
+                {item.label}
+              </button>
+            );
+
+            if (!item.disabled) {
+              return chipButton;
+            }
+
+            return (
+              <span key={item.key} title="No filters set">
+                {chipButton}
+              </span>
+            );
+          })}
+        </div>
+      ) : null}
 
       {/* Product list */}
       <div className="max-h-[500px] overflow-y-auto scroll-pb-16">

@@ -77,17 +77,19 @@ describe("GET /api/products/search", () => {
 
   it("calls the server search function once with parsed filters", async () => {
     await GET(
-      new NextRequest("http://localhost/api/products/search?tab=merchandise&loc=3,4&page=2"),
+      new NextRequest("http://localhost/api/products/search?tab=quickPicks&loc=3,4&page=2&sectionSlug=copytech-services&allSections=true"),
     );
 
     expect(searchProductBrowseRows).toHaveBeenCalledTimes(1);
     expect(searchProductBrowseRows).toHaveBeenCalledWith(
       expect.objectContaining({
-        tab: "merchandise",
+        tab: "quickPicks",
         locationIds: [3, 4],
         page: 2,
+        sectionSlug: "copytech-services",
+        allSections: true,
       }),
-      { countOnly: false },
+      { countOnly: false, role: "user", userId: "u1" },
     );
   });
 
@@ -102,7 +104,7 @@ describe("GET /api/products/search", () => {
         locationIds: [3, 4],
         page: 2,
       }),
-      { countOnly: true },
+      { countOnly: true, role: "user", userId: "u1" },
     );
   });
 });

@@ -9,7 +9,6 @@ import {
 } from "./location-filters";
 import type {
   ProductFilters,
-  ProductTab,
   SavedView,
 } from "./types";
 
@@ -18,6 +17,7 @@ const BOOL_KEYS: (keyof ProductFilters)[] = [
   "missingBarcode", "missingIsbn", "missingTitle",
   "retailBelowCost", "zeroPrice",
   "lastSaleNever", "editedSinceSync", "neverSoldLifetime",
+  "allSections",
 ];
 
 const NUMERIC_STRING_KEYS: (keyof ProductFilters)[] = [
@@ -34,10 +34,11 @@ const NUMERIC_STRING_KEYS: (keyof ProductFilters)[] = [
 const TEXT_KEYS: (keyof ProductFilters)[] = [
   "search", "author", "edition", "catalogNumber", "productType",
   "lastSaleDateFrom", "lastSaleDateTo",
+  "sectionSlug",
 ];
 
 const ENUM_KEYS: { [K in keyof ProductFilters]?: readonly ProductFilters[K][] } = {
-  tab: ["textbooks", "merchandise"],
+  tab: ["textbooks", "merchandise", "quickPicks"],
   sortDir: ["asc", "desc"],
   lastSaleWithin: ["", "30d", "90d", "365d"],
   lastSaleOlderThan: ["", "2y", "5y"],
@@ -63,8 +64,8 @@ export function parseFiltersFromSearchParams(params: URLSearchParams): ProductFi
   const mut = out as unknown as Record<string, unknown>;
 
   const rawTab = params.get("tab");
-  if (rawTab === "textbooks" || rawTab === "merchandise") {
-    out.tab = rawTab as ProductTab;
+  if (rawTab === "textbooks" || rawTab === "merchandise" || rawTab === "quickPicks") {
+    out.tab = rawTab;
   }
 
   for (const key of BOOL_KEYS) {
