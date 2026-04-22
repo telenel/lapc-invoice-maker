@@ -75,6 +75,8 @@ npm run ship-check
 npm run git:publish-pr
 ```
 
+`npm run git:publish-pr` always checks for a `ship-check` stamp that matches the current `HEAD`. If `.git/laportal/codex-review.env` exists, the script also verifies that the review stamp matches `HEAD` and has `CODEX_REVIEW_RESULT=PASS`. If you want to require that extra review stamp before every PR publish, set `LAPORTAL_REQUIRE_CODEX_REVIEW=1` in your shell before running the command.
+
 After the PR is open:
 
 - do not continue feature work on that branch
