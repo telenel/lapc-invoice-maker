@@ -1,3 +1,4 @@
+import "@testing-library/jest-dom/vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -71,6 +72,23 @@ describe("QuickPickSectionsPanel", () => {
       isEmpty: false,
       productCount: 12,
       products: [],
+    });
+  });
+
+  it("prefills explicit SKUs from the initial handoff and opens the create dialog", async () => {
+    render(<QuickPickSectionsPanel initialExplicitSkus={[302, 101]} />);
+
+    expect(await screen.findByText("SKU 101")).toBeInTheDocument();
+    expect(screen.getByText("SKU 302")).toBeInTheDocument();
+
+    await pause(300);
+
+    await waitFor(() => {
+      expect(apiClientMocks.previewQuickPickSection).toHaveBeenCalledWith(
+        expect.objectContaining({
+          explicitSkus: [101, 302],
+        }),
+      );
     });
   });
 

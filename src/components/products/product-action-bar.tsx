@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileTextIcon, PrinterIcon, Trash2Icon } from "lucide-react";
+import { FileTextIcon, PrinterIcon, SparklesIcon, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SelectedProduct } from "@/domains/product/types";
 import { openBarcodePrintWindow } from "./barcode-print-view";
@@ -40,8 +41,10 @@ export function ProductActionBar({
   onBulkEdit,
 }: ProductActionBarProps) {
   const router = useRouter();
+  const { data: session } = useSession();
   const { byId: vendorNames } = useVendorDirectory();
   const [discontinuing, setDiscontinuing] = useState(false);
+  const canSaveToQuickPicks = (session?.user as { role?: string } | undefined)?.role === "admin";
   const selectedItems = Array.from(selected.values());
   const editPricingRows = editPricingItems ?? selectedItems;
   const missingRetailPriceCount = selectedItems.filter((item) => item.retailPrice == null).length;
@@ -60,6 +63,14 @@ export function ProductActionBar({
   function handleCreateQuote() {
     saveToSession();
     router.push("/quotes/new?from=catalog");
+  }
+
+  function handleSaveToQuickPicks() {
+    const skus = Array.from(selected.keys()).sort((left, right) => left - right);
+    if (skus.length === 0) return;
+
+    const query = new URLSearchParams({ skus: skus.join(",") });
+    router.push(`/admin/quick-picks?${query.toString()}`);
   }
 
   function handlePrintBarcodes() {
@@ -122,7 +133,7 @@ export function ProductActionBar({
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <span className="text-sm font-medium">
-                {selectedCount} item{selectedCount !== 1 ? "s" : ""} selected
+                  {selectedCount} item{selectedCount !== 1 ? "s" : ""} selected
                 </span>
                 <button
                   onClick={onClear}
@@ -136,6 +147,12 @@ export function ProductActionBar({
                   <PrinterIcon className="mr-1.5 size-3.5" />
                   Print Barcodes
                 </Button>
+                {canSaveToQuickPicks ? (
+                  <Button size="sm" variant="outline" onClick={handleSaveToQuickPicks}>
+                    <SparklesIcon className="mr-1.5 size-3.5" />
+                    Save to Quick Picks
+                  </Button>
+                ) : null}
                 {prismAvailable ? (
                   <Button
                     size="sm"
