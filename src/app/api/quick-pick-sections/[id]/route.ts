@@ -29,10 +29,7 @@ export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: Rout
   }
 
   try {
-    const updated = await updateQuickPickSection(id, {
-      ...parsed.data,
-      slug: parsed.data.slug ?? undefined,
-    });
+    const updated = await updateQuickPickSection(id, parsed.data);
 
     if (!updated) {
       return NextResponse.json({ error: "Section not found" }, { status: 404 });
