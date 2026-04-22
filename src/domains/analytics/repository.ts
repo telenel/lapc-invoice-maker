@@ -1,7 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { addDaysToDateKey, getDateKeyInLosAngeles, shiftDateKey, zonedDateTimeToUtc } from "@/lib/date-utils";
 import { buildIncludedFinanceWhere } from "@/domains/shared/finance";
+import { NON_MERCH_DEPT_NAMES, NON_MERCH_SKUS } from "@/domains/product/non-merch-skus";
 import type { AnalyticsDateRange, AnalyticsFilters, OperationsSnapshot } from "./types";
+
+// Bound-parameter arrays for the non-merchandise read filter. Uppercased once
+// here so the SQL `<> ALL(...)` comparisons are case-insensitive without a
+// per-row function call.
+const NON_MERCH_SKUS_PARAM: number[] = [...NON_MERCH_SKUS];
+const NON_MERCH_DEPT_NAMES_PARAM: string[] = NON_MERCH_DEPT_NAMES.map((name) => name.toUpperCase());
 
 type NumericLike = number | string | bigint | null | undefined;
 type DateLike = Date | string | null | undefined;
@@ -318,6 +325,8 @@ async function findTopProducts(range: AnalyticsDateRange, orderBy: "units" | "re
       WHERE st.location_id = 2
         AND st.dtl_f_status <> 1
         AND (st.process_date AT TIME ZONE 'America/Los_Angeles')::date BETWEEN $1::date AND $2::date
+        AND st.sku::integer NOT IN (SELECT UNNEST($3::int[]))
+        AND COALESCE(UPPER(TRIM(p.dept_name)), '') <> ALL($4::text[])
       GROUP BY st.sku
       HAVING COALESCE(SUM(st.ext_price), 0) > 0
       ORDER BY ${orderBy === "units" ? "units DESC, revenue DESC" : "revenue DESC, units DESC"}, st.sku ASC
@@ -325,6 +334,8 @@ async function findTopProducts(range: AnalyticsDateRange, orderBy: "units" | "re
     `,
     range.dateFrom,
     range.dateTo,
+    NON_MERCH_SKUS_PARAM,
+    NON_MERCH_DEPT_NAMES_PARAM,
   );
 
   return rows.map(toProductPerformanceRow);
@@ -350,10 +361,14 @@ async function findProductTrends(trendDirection: "accelerating" | "decelerating"
       FROM products_with_derived pwd
       WHERE pwd.trend_direction = $1
         AND COALESCE(pwd.units_sold_30d, 0) > 0
+        AND pwd.sku NOT IN (SELECT UNNEST($2::int[]))
+        AND COALESCE(UPPER(TRIM(pwd.dept_name)), '') <> ALL($3::text[])
       ORDER BY pwd.units_sold_30d DESC, pwd.revenue_30d DESC, pwd.sku ASC
       LIMIT 8
     `,
     trendDirection,
+    NON_MERCH_SKUS_PARAM,
+    NON_MERCH_DEPT_NAMES_PARAM,
   );
 
   return rows.map(toProductTrendRow);
@@ -378,10 +393,14 @@ async function findNewProducts() {
         pwd.trend_direction
       FROM products_with_derived pwd
       WHERE pwd.first_sale_date_computed >= $1::date
+        AND pwd.sku NOT IN (SELECT UNNEST($2::int[]))
+        AND COALESCE(UPPER(TRIM(pwd.dept_name)), '') <> ALL($3::text[])
       ORDER BY pwd.revenue_30d DESC, pwd.units_sold_30d DESC, pwd.sku ASC
       LIMIT 8
     `,
     getNewProductThresholdDate(),
+    NON_MERCH_SKUS_PARAM,
+    NON_MERCH_DEPT_NAMES_PARAM,
   );
 
   return rows.map(toProductTrendRow);
@@ -400,12 +419,16 @@ async function findCategoryMix(range: AnalyticsDateRange) {
       WHERE st.location_id = 2
         AND st.dtl_f_status <> 1
         AND (st.process_date AT TIME ZONE 'America/Los_Angeles')::date BETWEEN $1::date AND $2::date
+        AND st.sku::integer NOT IN (SELECT UNNEST($3::int[]))
+        AND COALESCE(UPPER(TRIM(p.dept_name)), '') <> ALL($4::text[])
       GROUP BY COALESCE(NULLIF(TRIM(p.dept_name), ''), 'Uncategorized')
       ORDER BY revenue DESC, category ASC
       LIMIT 8
     `,
     range.dateFrom,
     range.dateTo,
+    NON_MERCH_SKUS_PARAM,
+    NON_MERCH_DEPT_NAMES_PARAM,
   );
 
   return rows.map((row) => ({
@@ -421,15 +444,21 @@ async function findRevenueConcentration(range: AnalyticsDateRange) {
       SELECT
         COALESCE(SUM(st.ext_price), 0) AS revenue
       FROM sales_transactions st
+      LEFT JOIN products p
+        ON p.sku = st.sku::integer
       WHERE st.location_id = 2
         AND st.dtl_f_status <> 1
         AND (st.process_date AT TIME ZONE 'America/Los_Angeles')::date BETWEEN $1::date AND $2::date
+        AND st.sku::integer NOT IN (SELECT UNNEST($3::int[]))
+        AND COALESCE(UPPER(TRIM(p.dept_name)), '') <> ALL($4::text[])
       GROUP BY st.sku
       HAVING COALESCE(SUM(st.ext_price), 0) > 0
       ORDER BY revenue DESC
     `,
     range.dateFrom,
     range.dateTo,
+    NON_MERCH_SKUS_PARAM,
+    NON_MERCH_DEPT_NAMES_PARAM,
   );
 
   const revenues = rows.map((row) => toNumber(row.revenue)).filter((value) => value > 0);
