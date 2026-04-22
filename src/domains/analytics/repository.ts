@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { addDaysToDateKey, getDateKeyInLosAngeles, shiftDateKey, zonedDateTimeToUtc } from "@/lib/date-utils";
+import { NON_MERCH_DEPT_NAMES, NON_MERCH_SKUS } from "@/domains/product/non-merch-skus";
 import { buildIncludedFinanceWhere } from "@/domains/shared/finance";
 import type { AnalyticsDateRange, AnalyticsFilters, OperationsSnapshot } from "./types";
 
@@ -190,6 +191,28 @@ function getNewProductThresholdDate() {
   return shiftDateKey(getDateKeyInLosAngeles(), { days: -90 });
 }
 
+const NORMALIZED_NON_MERCH_DEPT_NAMES = [...NON_MERCH_DEPT_NAMES];
+
+function buildNonMerchandiseFilterSql({
+  skuColumn,
+  deptColumn,
+  categoryColumn,
+  skuParamIndex,
+  nameParamIndex,
+}: {
+  skuColumn: string;
+  deptColumn: string;
+  categoryColumn: string;
+  skuParamIndex: number;
+  nameParamIndex: number;
+}) {
+  return `
+        AND ${skuColumn} NOT IN (SELECT unnest($${skuParamIndex}::int[]))
+        AND COALESCE(UPPER(TRIM(${deptColumn})), '') NOT IN (SELECT unnest($${nameParamIndex}::text[]))
+        AND COALESCE(UPPER(TRIM(${categoryColumn})), '') NOT IN (SELECT unnest($${nameParamIndex}::text[]))
+  `;
+}
+
 async function findSalesSummary(range: AnalyticsDateRange) {
   const rows = await prisma.$queryRawUnsafe<SalesSummaryRow[]>(
     `
@@ -318,6 +341,13 @@ async function findTopProducts(range: AnalyticsDateRange, orderBy: "units" | "re
       WHERE st.location_id = 2
         AND st.dtl_f_status <> 1
         AND (st.process_date AT TIME ZONE 'America/Los_Angeles')::date BETWEEN $1::date AND $2::date
+${buildNonMerchandiseFilterSql({
+  skuColumn: "st.sku::integer",
+  deptColumn: "p.dept_name",
+  categoryColumn: "p.cat_name",
+  skuParamIndex: 3,
+  nameParamIndex: 4,
+})}
       GROUP BY st.sku
       HAVING COALESCE(SUM(st.ext_price), 0) > 0
       ORDER BY ${orderBy === "units" ? "units DESC, revenue DESC" : "revenue DESC, units DESC"}, st.sku ASC
@@ -325,6 +355,8 @@ async function findTopProducts(range: AnalyticsDateRange, orderBy: "units" | "re
     `,
     range.dateFrom,
     range.dateTo,
+    NON_MERCH_SKUS,
+    NORMALIZED_NON_MERCH_DEPT_NAMES,
   );
 
   return rows.map(toProductPerformanceRow);
@@ -350,10 +382,19 @@ async function findProductTrends(trendDirection: "accelerating" | "decelerating"
       FROM products_with_derived pwd
       WHERE pwd.trend_direction = $1
         AND COALESCE(pwd.units_sold_30d, 0) > 0
+${buildNonMerchandiseFilterSql({
+  skuColumn: "pwd.sku",
+  deptColumn: "pwd.dept_name",
+  categoryColumn: "pwd.cat_name",
+  skuParamIndex: 2,
+  nameParamIndex: 3,
+})}
       ORDER BY pwd.units_sold_30d DESC, pwd.revenue_30d DESC, pwd.sku ASC
       LIMIT 8
     `,
     trendDirection,
+    NON_MERCH_SKUS,
+    NORMALIZED_NON_MERCH_DEPT_NAMES,
   );
 
   return rows.map(toProductTrendRow);
@@ -378,10 +419,19 @@ async function findNewProducts() {
         pwd.trend_direction
       FROM products_with_derived pwd
       WHERE pwd.first_sale_date_computed >= $1::date
+${buildNonMerchandiseFilterSql({
+  skuColumn: "pwd.sku",
+  deptColumn: "pwd.dept_name",
+  categoryColumn: "pwd.cat_name",
+  skuParamIndex: 2,
+  nameParamIndex: 3,
+})}
       ORDER BY pwd.revenue_30d DESC, pwd.units_sold_30d DESC, pwd.sku ASC
       LIMIT 8
     `,
     getNewProductThresholdDate(),
+    NON_MERCH_SKUS,
+    NORMALIZED_NON_MERCH_DEPT_NAMES,
   );
 
   return rows.map(toProductTrendRow);
@@ -400,12 +450,21 @@ async function findCategoryMix(range: AnalyticsDateRange) {
       WHERE st.location_id = 2
         AND st.dtl_f_status <> 1
         AND (st.process_date AT TIME ZONE 'America/Los_Angeles')::date BETWEEN $1::date AND $2::date
+${buildNonMerchandiseFilterSql({
+  skuColumn: "st.sku::integer",
+  deptColumn: "p.dept_name",
+  categoryColumn: "p.cat_name",
+  skuParamIndex: 3,
+  nameParamIndex: 4,
+})}
       GROUP BY COALESCE(NULLIF(TRIM(p.dept_name), ''), 'Uncategorized')
       ORDER BY revenue DESC, category ASC
       LIMIT 8
     `,
     range.dateFrom,
     range.dateTo,
+    NON_MERCH_SKUS,
+    NORMALIZED_NON_MERCH_DEPT_NAMES,
   );
 
   return rows.map((row) => ({
@@ -421,15 +480,26 @@ async function findRevenueConcentration(range: AnalyticsDateRange) {
       SELECT
         COALESCE(SUM(st.ext_price), 0) AS revenue
       FROM sales_transactions st
+      LEFT JOIN products p
+        ON p.sku = st.sku::integer
       WHERE st.location_id = 2
         AND st.dtl_f_status <> 1
         AND (st.process_date AT TIME ZONE 'America/Los_Angeles')::date BETWEEN $1::date AND $2::date
+${buildNonMerchandiseFilterSql({
+  skuColumn: "st.sku::integer",
+  deptColumn: "p.dept_name",
+  categoryColumn: "p.cat_name",
+  skuParamIndex: 3,
+  nameParamIndex: 4,
+})}
       GROUP BY st.sku
       HAVING COALESCE(SUM(st.ext_price), 0) > 0
       ORDER BY revenue DESC
     `,
     range.dateFrom,
     range.dateTo,
+    NON_MERCH_SKUS,
+    NORMALIZED_NON_MERCH_DEPT_NAMES,
   );
 
   const revenues = rows.map((row) => toNumber(row.revenue)).filter((value) => value > 0);
