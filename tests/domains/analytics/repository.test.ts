@@ -43,4 +43,22 @@ describe("analyticsRepository", () => {
       }),
     );
   });
+
+  it("keeps zero-stock rows in reorder breach counts while filtering stock-only aggregates", async () => {
+    await analyticsRepository.findOperationsSnapshot({
+      dateFrom: "2026-01-01",
+      dateTo: "2026-01-31",
+    });
+
+    const inventorySummaryQuery = vi
+      .mocked(prisma.$queryRawUnsafe)
+      .mock.calls.map(([sql]) => sql)
+      .find((sql): sql is string => typeof sql === "string" && sql.includes("AS reorder_breach_count"));
+
+    expect(inventorySummaryQuery).toBeDefined();
+    expect(inventorySummaryQuery?.match(/COALESCE\(inv\.stock_on_hand, 0\) > 0/g)).toHaveLength(2);
+    expect(inventorySummaryQuery).not.toMatch(
+      /LEFT JOIN products p\s+ON p\.sku = inv\.sku\s+WHERE\s+COALESCE\(inv\.stock_on_hand,\s*0\)\s*>\s*0\b/,
+    );
+  });
 });

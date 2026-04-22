@@ -526,9 +526,13 @@ async function findInventorySummary() {
     `
       SELECT
         COALESCE(SUM(COALESCE(inv.cost, p.cost, 0) * GREATEST(COALESCE(inv.stock_on_hand, 0), 0))
-          FILTER (WHERE inv.last_sale_date IS NULL OR inv.last_sale_date < NOW() - interval '1 year'), 0) AS dead_stock_cost,
+          FILTER (
+            WHERE COALESCE(inv.stock_on_hand, 0) > 0
+              AND (inv.last_sale_date IS NULL OR inv.last_sale_date < NOW() - interval '1 year')
+          ), 0) AS dead_stock_cost,
         COUNT(*) FILTER (
           WHERE inv.location_id = 2
+            AND COALESCE(inv.stock_on_hand, 0) > 0
             AND COALESCE(inv.min_stock, 0) > 0
             AND COALESCE(inv.stock_on_hand, 0) < COALESCE(inv.min_stock, 0)
             AND COALESCE(p.units_sold_30d, 0) > 0
@@ -540,7 +544,6 @@ async function findInventorySummary() {
       FROM product_inventory inv
       LEFT JOIN products p
         ON p.sku = inv.sku
-      WHERE COALESCE(inv.stock_on_hand, 0) > 0
     `,
   );
 
