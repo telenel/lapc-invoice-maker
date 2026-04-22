@@ -10,7 +10,7 @@ vi.mock("@/domains/invoice/repository", () => ({
   restoreById: vi.fn(),
   finalize: vi.fn(),
   countAndSum: vi.fn(),
-  incrementQuickPickUsage: vi.fn(),
+  incrementSavedLineItemUsage: vi.fn(),
   countByCreator: vi.fn(),
 }));
 

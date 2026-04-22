@@ -7,14 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-/** Case-insensitive check so picks saved as "Coffee" still match "COFFEE". */
-function hasPickMatch(picks: Set<string>, description: string): boolean {
-  const upper = description.toUpperCase();
-  return Array.from(picks).some((p) => p.toUpperCase() === upper);
-}
 
 interface LineItemsProps {
   items: InvoiceItem[];
@@ -22,17 +15,10 @@ interface LineItemsProps {
   onAdd: () => void;
   onRemove: (index: number) => void;
   total: number;
-  department: string;
   /** Ref forwarded from parent so it can auto-focus the first description field */
   firstDescriptionRef?: React.RefObject<HTMLInputElement | null>;
-  /** Called when a quick-pick fills a row so we can focus its qty field */
+  /** Called when a helper fills a row so we can focus its qty field */
   focusQtyForRow?: (index: number) => void;
-  /** Autocomplete suggestions for description field */
-  suggestions?: { description: string; unitPrice: number }[];
-  /** Descriptions in user's quick picks (for star state) */
-  userPickDescriptions?: Set<string>;
-  /** Called when user stars/unstars a line item */
-  onTogglePick?: (description: string, unitPrice: number, department: string) => void;
   /** Indices of items that have had margin applied */
   marginAppliedIndices?: Set<number>;
   /** Whether margin pricing is enabled (quote mode) */
@@ -51,12 +37,6 @@ export function LineItems({
   onAdd,
   onRemove,
   total,
-  department,
-  // firstDescriptionRef and focusQtyForRow are accepted for API compatibility
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept for QuickPicks API compatibility until removal
-  suggestions = [],
-  userPickDescriptions = new Set<string>(),
-  onTogglePick,
   marginAppliedIndices = new Set<number>(),
   marginEnabled = false,
   itemsWithMargin,
@@ -161,30 +141,6 @@ export function LineItems({
               />
             </div>
             <div className="flex items-center gap-0.5 shrink-0">
-              {item.description.trim() !== "" && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => onTogglePick?.(item.description, item.unitPrice, department)}
-                  className={cn(
-                    hasPickMatch(userPickDescriptions, item.description)
-                      ? "text-amber-500 hover:text-amber-600"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                  aria-label={
-                    hasPickMatch(userPickDescriptions, item.description)
-                      ? "Remove from quick picks"
-                      : "Save to quick picks"
-                  }
-                >
-                  <Star
-                    className="h-3.5 w-3.5"
-                    fill={hasPickMatch(userPickDescriptions, item.description) ? "currentColor" : "none"}
-                    aria-hidden="true"
-                  />
-                </Button>
-              )}
               <Button
                 type="button"
                 variant="ghost"

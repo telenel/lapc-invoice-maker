@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useSearchParams, useRouter } from "next/navigation";
 import { UserManagement } from "./user-management";
@@ -10,9 +11,18 @@ import { LineItemManager } from "./line-item-manager";
 import { DbHealth } from "./db-health";
 import { AccountCodeManager } from "./account-code-manager";
 import { QuoteContactSettings } from "./quote-contact-settings";
-import { QuickPickTable } from "@/components/quick-picks/quick-pick-table";
 
-const VALID_TABS = ["users", "categories", "account-codes", "invoices", "quotes", "quick-picks", "line-items", "database", "general"];
+const VALID_TABS = [
+  "users",
+  "categories",
+  "account-codes",
+  "invoices",
+  "quotes",
+  "line-items",
+  "quick-picks",
+  "database",
+  "general",
+];
 
 export function SettingsPanel() {
   const searchParams = useSearchParams();
@@ -37,8 +47,8 @@ export function SettingsPanel() {
           <TabsTrigger value="account-codes">Account Numbers</TabsTrigger>
           <TabsTrigger value="invoices">Invoices</TabsTrigger>
           <TabsTrigger value="quotes">Quotes</TabsTrigger>
-          <TabsTrigger value="quick-picks">Quick Picks</TabsTrigger>
           <TabsTrigger value="line-items">Line Items</TabsTrigger>
+          <TabsTrigger value="quick-picks">Quick Pick Sections</TabsTrigger>
           <TabsTrigger value="database">Database</TabsTrigger>
           <TabsTrigger value="general">General Settings</TabsTrigger>
         </TabsList>
@@ -65,14 +75,22 @@ export function SettingsPanel() {
           <QuoteManager />
         </div>
       )}
-      {activeTab === "quick-picks" && (
-        <div className="border rounded-lg p-6">
-          <QuickPickTable />
-        </div>
-      )}
       {activeTab === "line-items" && (
         <div className="border rounded-lg p-6">
           <LineItemManager />
+        </div>
+      )}
+      {activeTab === "quick-picks" && (
+        <div className="border rounded-lg p-6 space-y-4">
+          <div className="space-y-2">
+            <h2 className="text-lg font-semibold tracking-tight">Quick Pick Sections</h2>
+            <p className="text-sm text-muted-foreground">
+              Manage quick-pick sections on the dedicated admin page.
+            </p>
+          </div>
+          <Button onClick={() => router.push("/admin/quick-picks")}>
+            Open Quick Pick Sections
+          </Button>
         </div>
       )}
       {activeTab === "database" && (

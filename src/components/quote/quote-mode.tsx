@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { ChevronDownIcon, ChevronRightIcon, InfoIcon } from "lucide-react";
+import { InfoIcon } from "lucide-react";
 import { toast } from "sonner";
 import { useAutoSave, loadDraft } from "@/lib/use-auto-save";
 import { DraftRecoveryBanner } from "@/components/ui/draft-recovery-banner";
@@ -33,10 +33,8 @@ import {
 import { StaffSelect } from "@/components/invoice/staff-select";
 import { AccountSelect } from "@/components/invoice/account-select";
 import { LineItems } from "@/components/invoice/line-items";
-import { QuickPickPanel } from "@/components/invoice/quick-pick-panel";
 import { CateringDetailsCard } from "@/components/quote/catering-details-card";
 import { useTaxCalculation } from "@/components/invoice/hooks/use-tax-calculation";
-import { cn } from "@/lib/utils";
 import { categoryApi } from "@/domains/category/api-client";
 import { templateApi } from "@/domains/template/api-client";
 import type { TemplateResponse } from "@/domains/template/types";
@@ -124,7 +122,6 @@ export function QuoteMode({
   const [categories, setCategories] = useState<Category[]>([]);
   const [templates, setTemplates] = useState<TemplateResponse[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [quickPicksOpen, setQuickPicksOpen] = useState(false);
   const [cateringOverride, setCateringOverride] = useState(false);
 
   // ---- Auto-save + draft recovery ----
@@ -205,25 +202,6 @@ export function QuoteMode({
       cancelled = true;
     };
   }, []);
-
-  // ---- Quick pick handler ----
-  function handleQuickPick(description: string, unitPrice: number) {
-    updateField("items", [
-      ...form.items,
-      {
-        _key: crypto.randomUUID(),
-        sku: null,
-        description,
-        quantity: 1,
-        unitPrice,
-        extendedPrice: unitPrice,
-        sortOrder: form.items.length,
-        isTaxable: true,
-        marginOverride: null,
-        costPrice: null,
-      },
-    ]);
-  }
 
   // ---- Validation + save ----
   function handleSave() {
@@ -662,23 +640,7 @@ export function QuoteMode({
       </div>
 
       {/* ============ PRICING ============ */}
-      <SectionDivider label="PRICING">
-        <button
-          type="button"
-          tabIndex={-1}
-          onClick={() => setQuickPicksOpen((prev) => !prev)}
-          className={cn(
-            "flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-          )}
-        >
-          {quickPicksOpen ? (
-            <ChevronDownIcon className="size-3.5" />
-          ) : (
-            <ChevronRightIcon className="size-3.5" />
-          )}
-          Quick Picks
-        </button>
-      </SectionDivider>
+      <SectionDivider label="PRICING" />
 
       <Card>
         <CardContent className="space-y-4 pt-5">
@@ -800,22 +762,12 @@ export function QuoteMode({
 
           <Separator />
 
-          {/* Quick Picks + Line Items */}
-          {quickPicksOpen && (
-            <QuickPickPanel
-              department={form.department}
-              onSelect={handleQuickPick}
-              currentSubtotal={total}
-            />
-          )}
-
           <LineItems
             items={form.items}
             onUpdate={updateItem}
             onAdd={addItem}
             onRemove={removeItem}
             total={total}
-            department={form.department}
             marginEnabled={form.marginEnabled}
             itemsWithMargin={itemsWithMargin}
             taxEnabled={form.taxEnabled}

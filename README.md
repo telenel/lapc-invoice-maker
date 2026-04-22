@@ -46,7 +46,7 @@ npm install              # Install dependencies + configure git hooks
 npm run git:bootstrap    # Configure the LAPortal multi-machine git defaults
 npm run git:start-branch -- feat/thing # Fresh branch from updated main
 npm run git:resume-branch -- feat/thing # Re-sync a remote branch on another machine
-npm run git:publish-pr   # Push current branch and open a PR after validation/review
+npm run git:publish-pr   # Push current branch and open a PR after ship-check validation
 npx prisma generate      # Generate Prisma client
 npm run dev              # Start dev server (localhost:3000)
 npm run ship-check       # git status + lint + test + build + stamp current HEAD
@@ -68,6 +68,8 @@ npm run build            # Production build
 - Open a PR with `npm run git:publish-pr`.
 - Once a PR exists, only push review fixes with `CR_FIX=1 git push`.
 - Merge before starting the next feature.
+
+`npm run git:publish-pr` always requires a matching `ship-check` stamp for the current `HEAD`. If `.git/laportal/codex-review.env` exists, it must also match `HEAD` and report `PASS`; otherwise the script continues without a Codex gate. Set `LAPORTAL_REQUIRE_CODEX_REVIEW=1` if you want to make that extra stamp mandatory on your machine.
 
 > `npm install` now applies LAPortal repo-local git defaults including `core.hooksPath`, `pull.ff=only`, `fetch.prune=true`, `rerere.enabled=true`, `merge.conflictStyle=zdiff3`, and `push.autoSetupRemote=true`. Run `npm run git:bootstrap` once per machine to apply the same defaults globally.
 

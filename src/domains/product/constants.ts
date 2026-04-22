@@ -6,10 +6,11 @@ export const PAGE_SIZE = 50;
 export const TABS: { value: ProductTab; label: string }[] = [
   { value: "textbooks", label: "Textbooks" },
   { value: "merchandise", label: "General Merchandise" },
+  { value: "quickPicks", label: "Quick Picks" },
 ];
 
 /** item_type values that map to each tab */
-export const TAB_ITEM_TYPES: Record<ProductTab, string[]> = {
+export const TAB_ITEM_TYPES: Record<Exclude<ProductTab, "quickPicks">, string[]> = {
   textbooks: ["textbook", "used_textbook"],
   merchandise: ["general_merchandise", "supplies", "other"],
 };
@@ -17,6 +18,8 @@ export const TAB_ITEM_TYPES: Record<ProductTab, string[]> = {
 export const EMPTY_FILTERS: ProductFilters = {
   search: "",
   tab: "textbooks",
+  sectionSlug: undefined,
+  allSections: false,
   locationIds: cloneProductLocationIds(DEFAULT_PRODUCT_LOCATION_IDS),
   minPrice: "",
   maxPrice: "",

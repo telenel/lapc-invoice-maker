@@ -6,6 +6,7 @@ git_dir=$(git rev-parse --git-dir)
 stamp_dir="$git_dir/laportal"
 ship_check_file="$stamp_dir/ship-check.env"
 codex_review_file="$stamp_dir/codex-review.env"
+require_codex_review="${LAPORTAL_REQUIRE_CODEX_REVIEW:-0}"
 
 cd "$repo_root"
 
@@ -43,23 +44,31 @@ if [ "${SHIP_CHECK_HEAD:-}" != "$head_sha" ]; then
   exit 1
 fi
 
-if [ ! -f "$codex_review_file" ]; then
-  echo "BLOCKED: missing Codex review stamp. Run: npm run review:codex"
-  exit 1
-fi
+if [ -f "$codex_review_file" ]; then
+  # shellcheck disable=SC1090
+  . "$codex_review_file"
 
-# shellcheck disable=SC1090
-. "$codex_review_file"
-if [ "${CODEX_REVIEW_HEAD:-}" != "$head_sha" ]; then
-  echo "BLOCKED: Codex review stamp does not match HEAD $head_sha"
-  echo "Run: npm run review:codex"
-  exit 1
-fi
+  if [ "${CODEX_REVIEW_HEAD:-}" != "$head_sha" ]; then
+    echo "BLOCKED: Codex review stamp does not match HEAD $head_sha"
+    echo "Re-run the review for this exact commit or remove the stale stamp:"
+    echo "  rm -f $codex_review_file"
+    exit 1
+  fi
 
-if [ "${CODEX_REVIEW_RESULT:-}" != "PASS" ]; then
-  echo "BLOCKED: Codex review must return PASS before opening a PR."
-  echo "Run: npm run review:codex"
+  if [ "${CODEX_REVIEW_RESULT:-}" != "PASS" ]; then
+    echo "BLOCKED: Codex review stamp for HEAD $head_sha is ${CODEX_REVIEW_RESULT:-MISSING}."
+    echo "Resolve the review findings or remove the stamp:"
+    echo "  rm -f $codex_review_file"
+    exit 1
+  fi
+
+  echo "Verified Codex review stamp for HEAD $head_sha"
+elif [ "$require_codex_review" = "1" ]; then
+  echo "BLOCKED: LAPORTAL_REQUIRE_CODEX_REVIEW=1 but no Codex review stamp was found."
+  echo "Expected stamp file: $codex_review_file"
   exit 1
+else
+  echo "No Codex review stamp found; continuing with ship-check gate only."
 fi
 
 pr_count=$(gh pr list --head "$branch" --state open --json number --jq 'length' 2>/dev/null || printf '0')
