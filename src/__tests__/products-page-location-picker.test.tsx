@@ -153,6 +153,7 @@ describe("ProductsPage location picker integration", () => {
       selectedCount: 0,
       toggle: vi.fn(),
       toggleAll: vi.fn(),
+      refreshVisibleSelections: vi.fn(),
       clear: vi.fn(),
       isSelected: vi.fn(),
       saveToSession: vi.fn(),

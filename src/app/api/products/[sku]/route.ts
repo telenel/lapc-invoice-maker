@@ -13,7 +13,12 @@ import type {
   PrimaryInventoryPatch,
 } from "@/domains/product/types";
 import type { ProductLocationId } from "@/domains/product/location-filters";
+import {
+  INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT,
+  filterLiveProductInventoryRows,
+} from "@/domains/product/inventory-mirror-state";
 import { getSupabaseAdminClient } from "@/lib/supabase/admin";
+import type { InventoryMirrorSnapshotRow, ProductWriteBuckets } from "@/domains/product/prism-updates";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +82,7 @@ type ProductInventoryEditDetailRow = {
   f_tx_want_list_flag: boolean | null;
   f_tx_buyback_list_flag: boolean | null;
   f_no_returns: boolean | null;
+  synced_at?: string | null;
 };
 
 type ProductPatchKindRow = {
@@ -106,6 +112,7 @@ const PRODUCT_INVENTORY_SELECT = [
   "f_tx_want_list_flag",
   "f_tx_buyback_list_flag",
   "f_no_returns",
+  "synced_at",
 ].join(", ");
 
 const PRODUCT_EDIT_DETAIL_SELECT = [
@@ -291,12 +298,20 @@ async function loadDeleteDeps() {
 }
 
 async function loadPatchDeps() {
-  const [{ isPrismConfigured }, { updateGmItem, updateTextbookPricing, getItemSnapshot }] = await Promise.all([
+  const [{ isPrismConfigured }, { updateGmItem, updateTextbookPricing, getItemSnapshot, getInventoryMirrorSnapshotRows, getInventoryPatches, normalizeUpdaterInput }] = await Promise.all([
     import("@/lib/prism"),
     import("@/domains/product/prism-updates"),
   ]);
 
-  return { isPrismConfigured, updateGmItem, updateTextbookPricing, getItemSnapshot };
+  return {
+    isPrismConfigured,
+    updateGmItem,
+    updateTextbookPricing,
+    getItemSnapshot,
+    getInventoryMirrorSnapshotRows,
+    getInventoryPatches,
+    normalizeUpdaterInput,
+  };
 }
 
 export const GET = withAdmin(async (_request: NextRequest, _session, ctx?: RouteCtx) => {
@@ -328,7 +343,7 @@ export const GET = withAdmin(async (_request: NextRequest, _session, ctx?: Route
       .select(PRODUCT_INVENTORY_SELECT)
       .eq("sku", sku)
       .in("location_id", PRODUCT_INVENTORY_LOCATION_IDS);
-    const inventoryRows = narrowInventoryDetailRows(inventoryResult.data);
+    const inventoryRows = filterLiveProductInventoryRows(narrowInventoryDetailRows(inventoryResult.data));
     const inventoryError = inventoryResult.error;
 
     if (inventoryError) {
@@ -407,6 +422,13 @@ export const DELETE = withAdmin(async (request: NextRequest, _session, ctx?: Rou
   }
 });
 
+// When a baseline is supplied, `primaryLocationId` is REQUIRED so the server's
+// concurrency SELECT reads the same Inventory row the client snapshotted.
+// Legacy V1 callers that send no baseline at all fall through unaffected
+// (baseline is .optional() on both v2 and legacy PATCH schemas). Partial
+// baselines that include retail/cost but omit primaryLocationId are rejected
+// at the Zod boundary to prevent silent PIER fallback on PCOP/PFS pages —
+// which is exactly the class of bug this fix exists to close.
 const snapshotSchema = z.object({
   sku: z.number().int().positive(),
   barcode: z.string().nullable(),
@@ -414,6 +436,7 @@ const snapshotSchema = z.object({
   retail: z.number().nonnegative().nullable(),
   cost: z.number().nonnegative().nullable(),
   fDiscontinue: z.union([z.literal(0), z.literal(1)]),
+  primaryLocationId: z.union([z.literal(2), z.literal(3), z.literal(4)]),
 });
 
 const itemPatchSchema = z.object({
@@ -637,6 +660,25 @@ function normalizeLegacyPatch(patch: LegacyPatchInput): ProductEditPatchV2 {
   };
 }
 
+type SnapshotInput = z.infer<typeof snapshotSchema>;
+
+/** Pass the Zod-parsed baseline through unchanged — the schema already
+ *  enforces every required field (including primaryLocationId) so no
+ *  coercion is needed. Returns undefined when the caller omitted the
+ *  entire baseline block (legacy V1 PATCH path). */
+function coerceBaseline(raw: SnapshotInput | undefined): ItemSnapshot | undefined {
+  if (raw === undefined) return undefined;
+  return {
+    sku: raw.sku,
+    barcode: raw.barcode,
+    itemTaxTypeId: raw.itemTaxTypeId,
+    retail: raw.retail,
+    cost: raw.cost,
+    fDiscontinue: raw.fDiscontinue,
+    primaryLocationId: raw.primaryLocationId,
+  };
+}
+
 function normalizePatchBody(body: unknown): { success: true; data: NormalizedUpdateCommand } | { success: false; error: unknown } {
   if (body && typeof body === "object" && "mode" in body && (body as { mode?: unknown }).mode === "v2") {
     const parsed = v2BodySchema.safeParse(body);
@@ -646,7 +688,7 @@ function normalizePatchBody(body: unknown): { success: true; data: NormalizedUpd
     return {
       success: true,
       data: {
-        baseline: parsed.data.baseline,
+        baseline: coerceBaseline(parsed.data.baseline),
         isTextbook: false,
         patch: normalizeV2Patch(parsed.data.patch),
         isV2: true,
@@ -662,7 +704,7 @@ function normalizePatchBody(body: unknown): { success: true; data: NormalizedUpd
   return {
     success: true,
     data: {
-      baseline: parsed.data.baseline,
+      baseline: coerceBaseline(parsed.data.baseline),
       isTextbook: parsed.data.isTextbook === true,
       patch: normalizeLegacyPatch(parsed.data.patch),
       isV2: false,
@@ -670,99 +712,101 @@ function normalizePatchBody(body: unknown): { success: true; data: NormalizedUpd
   };
 }
 
-function buildLegacyMirrorPayload(
+async function buildLegacyMirrorPayload(
   sku: number,
   patch: ProductEditPatchV2,
   snapshot: ItemSnapshot | null,
   includeTextbookFields: boolean,
-): Record<string, unknown> {
-  const payload: Record<string, unknown> = {
-    sku,
-    synced_at: new Date().toISOString(),
-  };
-
-  if (patch.gm?.description !== undefined) payload.description = patch.gm.description;
-  if (patch.item?.vendorId !== undefined) payload.vendor_id = patch.item.vendorId;
-  if (patch.item?.dccId !== undefined) payload.dcc_id = patch.item.dccId;
-  if (patch.item?.itemTaxTypeId !== undefined) payload.item_tax_type_id = patch.item.itemTaxTypeId;
-  if (patch.gm?.catalogNumber !== undefined) payload.catalog_number = patch.gm.catalogNumber;
-  if (patch.item?.comment !== undefined) payload.tx_comment = patch.item.comment;
-  if (patch.item?.weight !== undefined) payload.weight = patch.item.weight;
-  if (patch.item?.usedDccId !== undefined) payload.used_dcc_id = patch.item.usedDccId;
-  if (patch.item?.styleId !== undefined) payload.style_id = patch.item.styleId;
-  if (patch.item?.itemSeasonCodeId !== undefined) payload.item_season_code_id = patch.item.itemSeasonCodeId;
-  if (patch.item?.fListPriceFlag !== undefined) payload.f_list_price_flag = patch.item.fListPriceFlag;
-  if (patch.item?.fPerishable !== undefined) payload.f_perishable = patch.item.fPerishable;
-  if (patch.item?.fIdRequired !== undefined) payload.f_id_required = patch.item.fIdRequired;
-  if (patch.item?.minOrderQtyItem !== undefined) payload.min_order_qty_item = patch.item.minOrderQtyItem;
-  if (patch.gm?.imageUrl !== undefined) payload.image_url = patch.gm.imageUrl;
-  if (patch.gm?.unitsPerPack !== undefined) payload.units_per_pack = patch.gm.unitsPerPack;
-  if (patch.gm?.packageType !== undefined) payload.package_type = patch.gm.packageType;
-  if (patch.gm?.altVendorId !== undefined) payload.alt_vendor_id = patch.gm.altVendorId;
-  if (patch.gm?.mfgId !== undefined) payload.mfg_id = patch.gm.mfgId;
-  if (patch.gm?.size !== undefined) payload.size = patch.gm.size;
-  if (patch.gm?.colorId !== undefined) payload.color_id = patch.gm.colorId;
-  if (patch.gm?.orderIncrement !== undefined) payload.order_increment = patch.gm.orderIncrement;
-  if (includeTextbookFields) {
-    if (patch.textbook?.author !== undefined) payload.author = patch.textbook.author;
-    if (patch.textbook?.title !== undefined) payload.title = patch.textbook.title;
-    if (patch.textbook?.isbn !== undefined) payload.isbn = patch.textbook.isbn;
-    if (patch.textbook?.edition !== undefined) payload.edition = patch.textbook.edition;
-    if (patch.textbook?.bindingId !== undefined) payload.binding_id = patch.textbook.bindingId;
-    if (patch.textbook?.imprint !== undefined) payload.imprint = patch.textbook.imprint;
-    if (patch.textbook?.copyright !== undefined) payload.copyright = patch.textbook.copyright;
-    if (patch.textbook?.textStatusId !== undefined) payload.text_status_id = patch.textbook.textStatusId;
-    if (patch.textbook?.statusDate !== undefined) payload.status_date = patch.textbook.statusDate;
-  }
-
-  if (snapshot) {
-    payload.barcode = snapshot.barcode;
-    payload.retail_price = snapshot.retail;
-    payload.cost = snapshot.cost;
-    payload.discontinued = snapshot.fDiscontinue === 1;
-  } else {
-    if (patch.item?.barcode !== undefined) payload.barcode = patch.item.barcode;
-    const pierceInventoryPatch = patch.inventory?.find((entry) => entry.locationId === 2) ?? patch.primaryInventory;
-    if (pierceInventoryPatch?.retail !== undefined) payload.retail_price = pierceInventoryPatch.retail;
-    if (pierceInventoryPatch?.cost !== undefined) payload.cost = pierceInventoryPatch.cost;
-    if (patch.item?.fDiscontinue !== undefined) payload.discontinued = patch.item.fDiscontinue === 1;
-  }
-
-  return payload;
+): Promise<Record<string, unknown>> {
+  const { buildProductMirrorPayload } = await import("@/domains/product/mirror-payloads");
+  return buildProductMirrorPayload(sku, patch, snapshot, includeTextbookFields);
 }
 
-function buildInventoryMirrorPayload(
+async function buildInventoryMirrorRefresh(
   sku: number,
-  inventory: ReadonlyArray<InventoryPatchPerLocation> | undefined,
-): Record<string, unknown>[] {
-  const syncedAt = new Date().toISOString();
-
-  return (inventory ?? []).map((entry) => {
-    const payload: Record<string, unknown> = {
-      sku,
-      location_id: entry.locationId,
-      location_abbrev: PRODUCT_INVENTORY_LOCATION_ABBREV_BY_ID[entry.locationId],
-      synced_at: syncedAt,
+  patch: ProductEditPatchV2,
+  getInventoryPatches: (patch: ProductWriteBuckets) => InventoryPatchPerLocation[],
+  normalizeUpdaterInput: (patch: ProductEditPatchV2) => ProductWriteBuckets,
+  getInventoryMirrorSnapshotRows: (sku: number, locationIds: ProductLocationId[]) => Promise<InventoryMirrorSnapshotRow[]>,
+): Promise<{
+  payload: Record<string, unknown>[];
+  missingLocationIds: ProductLocationId[];
+}> {
+  const {
+    buildInventoryMirrorPayload: buildInventoryMirrorPayloadFromSnapshot,
+    getMissingInventoryMirrorLocationIds,
+  } = await import("@/domains/product/mirror-payloads");
+  const touchedLocationIds = Array.from(new Set(
+    getInventoryPatches(normalizeUpdaterInput(patch)).map((entry) => entry.locationId),
+  ));
+  if (touchedLocationIds.length === 0) {
+    return {
+      payload: [],
+      missingLocationIds: [],
     };
+  }
+  const snapshotRows = await getInventoryMirrorSnapshotRows(sku, touchedLocationIds);
+  const missingLocationIds = getMissingInventoryMirrorLocationIds(touchedLocationIds, snapshotRows);
+  return {
+    payload: buildInventoryMirrorPayloadFromSnapshot(sku, snapshotRows),
+    missingLocationIds,
+  };
+}
 
-    if (entry.retail !== undefined) payload.retail_price = entry.retail;
-    if (entry.cost !== undefined) payload.cost = entry.cost;
-    if (entry.expectedCost !== undefined) payload.expected_cost = entry.expectedCost;
-    if (entry.tagTypeId !== undefined) payload.tag_type_id = entry.tagTypeId;
-    if (entry.statusCodeId !== undefined) payload.status_code_id = entry.statusCodeId;
-    if (entry.estSales !== undefined) payload.est_sales = entry.estSales;
-    if (entry.estSalesLocked !== undefined) payload.est_sales_locked = entry.estSalesLocked;
-    if (entry.fInvListPriceFlag !== undefined) payload.f_inv_list_price_flag = entry.fInvListPriceFlag;
-    if (entry.fTxWantListFlag !== undefined) payload.f_tx_want_list_flag = entry.fTxWantListFlag;
-    if (entry.fTxBuybackListFlag !== undefined) payload.f_tx_buyback_list_flag = entry.fTxBuybackListFlag;
-    if (entry.fNoReturns !== undefined) payload.f_no_returns = entry.fNoReturns;
+function getSupabaseMirrorError(
+  result: { error?: { message?: string | null } | null } | null | undefined,
+  fallback: string,
+): Error | null {
+  const message = result?.error?.message;
+  if (!result?.error) return null;
+  return new Error(typeof message === "string" && message.length > 0 ? message : fallback);
+}
 
-    return payload;
-  });
+function formatInventoryMirrorLocationList(locationIds: ProductLocationId[]): string {
+  return locationIds
+    .map((locationId) => PRODUCT_INVENTORY_LOCATION_ABBREV_BY_ID[locationId] ?? `Location ${locationId}`)
+    .join(", ");
+}
+
+function formatInventoryMirrorMissingMessage(
+  sku: number,
+  locationIds: ProductLocationId[],
+): string {
+  return `Inventory mirror snapshot for SKU ${sku} omitted ${formatInventoryMirrorLocationList(locationIds)}; browse data may stay stale until the next sync.`;
+}
+
+async function invalidateMissingInventoryMirrorRows(
+  supabase: ReturnType<typeof getSupabaseAdminClient>,
+  sku: number,
+  locationIds: ProductLocationId[],
+): Promise<Error | null> {
+  if (locationIds.length === 0) {
+    return null;
+  }
+
+  const invalidateResult = await supabase
+    .from("product_inventory")
+    .update({
+      synced_at: INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT,
+    })
+    .eq("sku", sku)
+    .in("location_id", locationIds);
+  return getSupabaseMirrorError(
+    invalidateResult,
+    `Failed to invalidate stale product_inventory rows for SKU ${sku}`,
+  );
 }
 
 export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: RouteCtx) => {
-  const { isPrismConfigured, updateGmItem, updateTextbookPricing, getItemSnapshot } = await loadPatchDeps();
+  const {
+    isPrismConfigured,
+    updateGmItem,
+    updateTextbookPricing,
+    getItemSnapshot,
+    getInventoryMirrorSnapshotRows,
+    getInventoryPatches,
+    normalizeUpdaterInput,
+  } = await loadPatchDeps();
   if (!isPrismConfigured()) {
     return NextResponse.json({ error: "Prism is not configured in this environment." }, { status: 503 });
   }
@@ -810,26 +854,87 @@ export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: Rout
     const result = isTextbookRow
       ? await updateTextbookPricing(sku, normalized.data.patch, normalized.data.baseline)
       : await updateGmItem(sku, normalized.data.patch, normalized.data.baseline);
+    const mirrorErrors: Array<{ sku: number; message: string }> = [];
+    const recordMirrorError = (mirrorErr: unknown) => {
+      console.warn(`[PATCH /api/products/${sku}] mirror failed:`, mirrorErr);
+      mirrorErrors.push({
+        sku,
+        message: mirrorErr instanceof Error ? mirrorErr.message : String(mirrorErr),
+      });
+    };
 
     // Non-blocking Supabase mirror
     try {
-      const snap = await getItemSnapshot(sku);
-      await supabase.from("products").upsert(
-        buildLegacyMirrorPayload(sku, normalized.data.patch, snap, isTextbookRow),
+      // `products` keeps the PIER-denormalized fallback row; location-specific
+      // pricing lives in `product_inventory`.
+      const snap = await getItemSnapshot(sku, 2);
+      const productMirrorResult = await supabase.from("products").upsert(
+        await buildLegacyMirrorPayload(sku, normalized.data.patch, snap, isTextbookRow),
       );
-      const inventoryMirrorPayload = buildInventoryMirrorPayload(sku, normalized.data.patch.inventory);
-      if (inventoryMirrorPayload.length > 0) {
-        await supabase.from("product_inventory").upsert(inventoryMirrorPayload);
-      }
+      const productMirrorError = getSupabaseMirrorError(
+        productMirrorResult,
+        `Failed to mirror products row for SKU ${sku}`,
+      );
+      if (productMirrorError) throw productMirrorError;
     } catch (mirrorErr) {
-      console.warn(`[PATCH /api/products/${sku}] mirror failed:`, mirrorErr);
+      recordMirrorError(mirrorErr);
     }
 
-    return NextResponse.json(result);
+    try {
+      const {
+        payload: inventoryMirrorPayload,
+        missingLocationIds,
+      } = await buildInventoryMirrorRefresh(
+        sku,
+        normalized.data.patch,
+        getInventoryPatches,
+        normalizeUpdaterInput,
+        getInventoryMirrorSnapshotRows,
+      );
+      if (inventoryMirrorPayload.length > 0) {
+        const inventoryMirrorResult = await supabase.from("product_inventory").upsert(inventoryMirrorPayload);
+        const inventoryMirrorError = getSupabaseMirrorError(
+          inventoryMirrorResult,
+          `Failed to mirror product_inventory rows for SKU ${sku}`,
+        );
+        if (inventoryMirrorError) throw inventoryMirrorError;
+      }
+      if (missingLocationIds.length > 0) {
+        const inventoryInvalidateError = await invalidateMissingInventoryMirrorRows(
+          supabase,
+          sku,
+          missingLocationIds,
+        );
+        if (inventoryInvalidateError) {
+          recordMirrorError(inventoryInvalidateError);
+        }
+        recordMirrorError(new Error(formatInventoryMirrorMissingMessage(sku, missingLocationIds)));
+      }
+    } catch (mirrorErr) {
+      recordMirrorError(mirrorErr);
+    }
+
+    return NextResponse.json({
+      ...result,
+      mirrorErrors: mirrorErrors.length > 0 ? mirrorErrors : undefined,
+    });
   } catch (err) {
     if (err instanceof Error && (err as Error & { code?: string }).code === "CONCURRENT_MODIFICATION") {
       const current = (err as Error & { current?: unknown }).current;
       return NextResponse.json({ error: "CONCURRENT_MODIFICATION", current }, { status: 409 });
+    }
+    if (err instanceof Error && (err as Error & { code?: string; locationId?: ProductLocationId }).code === "MISSING_INVENTORY_ROW") {
+      const locationId = (err as Error & { locationId?: ProductLocationId }).locationId;
+      const locationLabel = locationId == null
+        ? "the selected location"
+        : (PRODUCT_INVENTORY_LOCATION_ABBREV_BY_ID[locationId] ?? `Location ${locationId}`);
+      return NextResponse.json(
+        {
+          error: "MISSING_INVENTORY_ROW",
+          message: `SKU ${sku} no longer has an inventory row at ${locationLabel}. Refresh and try again.`,
+        },
+        { status: 400 },
+      );
     }
     console.error(`PATCH /api/products/${sku} failed:`, err);
     return NextResponse.json(

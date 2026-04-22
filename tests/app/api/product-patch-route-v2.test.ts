@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
+import { INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT } from "@/domains/product/inventory-mirror-state";
 
 const nextAuthMocks = vi.hoisted(() => ({
   getServerSession: vi.fn(),
@@ -14,6 +15,7 @@ const prismMocks = vi.hoisted(() => ({
   updateGmItem: vi.fn(),
   updateTextbookPricing: vi.fn(),
   getItemSnapshot: vi.fn(),
+  getInventoryMirrorSnapshotRows: vi.fn(),
 }));
 
 vi.mock("next-auth", () => nextAuthMocks);
@@ -27,6 +29,9 @@ const mockEq = vi.fn(() => ({ maybeSingle: mockMaybeSingle }));
 const mockSelect = vi.fn(() => ({ eq: mockEq }));
 const mockProductsUpsert = vi.fn();
 const mockProductInventoryUpsert = vi.fn();
+const mockProductInventoryUpdateIn = vi.fn();
+const mockProductInventoryUpdateEq = vi.fn(() => ({ in: mockProductInventoryUpdateIn }));
+const mockProductInventoryUpdate = vi.fn(() => ({ eq: mockProductInventoryUpdateEq }));
 const mockFrom = vi.fn((table: string) => {
   if (table === "products") {
     return {
@@ -37,6 +42,7 @@ const mockFrom = vi.fn((table: string) => {
   if (table === "product_inventory") {
     return {
       upsert: mockProductInventoryUpsert,
+      update: mockProductInventoryUpdate,
     };
   }
   return {
@@ -52,11 +58,18 @@ function mockDefaultPrismModules() {
     discontinueItem: vi.fn(),
     deleteTestItem: vi.fn(),
   }));
-  vi.doMock("@/domains/product/prism-updates", () => ({
-    updateGmItem: prismMocks.updateGmItem,
-    updateTextbookPricing: prismMocks.updateTextbookPricing,
-    getItemSnapshot: prismMocks.getItemSnapshot,
-  }));
+  vi.doMock("@/domains/product/prism-updates", async () => {
+    const actual = await vi.importActual<typeof import("@/domains/product/prism-updates")>(
+      "@/domains/product/prism-updates",
+    );
+    return {
+      ...actual,
+      updateGmItem: prismMocks.updateGmItem,
+      updateTextbookPricing: prismMocks.updateTextbookPricing,
+      getItemSnapshot: prismMocks.getItemSnapshot,
+      getInventoryMirrorSnapshotRows: prismMocks.getInventoryMirrorSnapshotRows,
+    };
+  });
 }
 
 async function loadRouteModule() {
@@ -98,9 +111,27 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
       retail: 12.99,
       cost: 6.25,
       fDiscontinue: 0,
+      primaryLocationId: 2,
     });
+    prismMocks.getInventoryMirrorSnapshotRows.mockImplementation(async (_sku, locationIds) =>
+      locationIds.map((locationId) => ({
+        locationId,
+        retail: locationId === 2 ? 12.99 : locationId === 3 ? 14.25 : 15,
+        cost: locationId === 2 ? 6.25 : locationId === 3 ? 7.5 : 8,
+        expectedCost: null,
+        tagTypeId: locationId === 3 ? 17 : null,
+        statusCodeId: locationId === 3 ? 3 : null,
+        estSales: null,
+        estSalesLocked: false,
+        fInvListPriceFlag: false,
+        fTxWantListFlag: false,
+        fTxBuybackListFlag: false,
+        fNoReturns: false,
+      })),
+    );
     mockProductsUpsert.mockResolvedValue({ error: null });
     mockProductInventoryUpsert.mockResolvedValue({ error: null });
+    mockProductInventoryUpdateIn.mockResolvedValue({ error: null });
   });
 
   it("accepts a typed v2 payload and normalizes write buckets before dispatch", async () => {
@@ -117,6 +148,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
             retail: 11.99,
             cost: 5.5,
             fDiscontinue: 0,
+            primaryLocationId: 2,
           },
           patch: {
             item: {
@@ -164,6 +196,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
         retail: 11.99,
         cost: 5.5,
         fDiscontinue: 0,
+        primaryLocationId: 2,
       },
     );
     expect(mockProductsUpsert).toHaveBeenCalledWith(expect.objectContaining({
@@ -200,6 +233,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
             retail: 11.99,
             cost: 5.5,
             fDiscontinue: 0,
+            primaryLocationId: 2,
           },
           patch: {
             item: {
@@ -254,6 +288,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
         retail: 11.99,
         cost: 5.5,
         fDiscontinue: 0,
+        primaryLocationId: 2,
       },
     );
   });
@@ -340,6 +375,22 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
       cost: null,
       fDiscontinue: 0,
     });
+    prismMocks.getInventoryMirrorSnapshotRows.mockResolvedValueOnce([
+      {
+        locationId: 3,
+        retail: null,
+        cost: null,
+        expectedCost: null,
+        tagTypeId: null,
+        statusCodeId: null,
+        estSales: null,
+        estSalesLocked: false,
+        fInvListPriceFlag: false,
+        fTxWantListFlag: false,
+        fTxBuybackListFlag: false,
+        fNoReturns: false,
+      },
+    ]);
 
     const response = await productDetailRoute.PATCH(
       new NextRequest("http://localhost/api/products/1001", {
@@ -352,6 +403,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
             retail: 11.99,
             cost: 5.5,
             fDiscontinue: 0,
+            primaryLocationId: 2,
           },
           patch: {
             inventory: [
@@ -394,6 +446,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
         retail: 11.99,
         cost: 5.5,
         fDiscontinue: 0,
+        primaryLocationId: 2,
       },
     );
     expect(mockProductsUpsert).toHaveBeenCalledWith(expect.objectContaining({
@@ -543,6 +596,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
             retail: 11.99,
             cost: 5.5,
             fDiscontinue: 0,
+            primaryLocationId: 2,
           },
           patch: {
             textbook: {
@@ -585,6 +639,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
         retail: 11.99,
         cost: 5.5,
         fDiscontinue: 0,
+        primaryLocationId: 2,
       },
     );
     expect(prismMocks.updateGmItem).not.toHaveBeenCalled();
@@ -623,6 +678,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
             retail: 11.99,
             cost: 5.5,
             fDiscontinue: 0,
+            primaryLocationId: 2,
           },
           patch: {
             item: {
@@ -650,12 +706,257 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
         retail: 11.99,
         cost: 5.5,
         fDiscontinue: 0,
+        primaryLocationId: 2,
       },
     );
     expect(mockProductsUpsert).toHaveBeenCalledWith(expect.objectContaining({
       sku: 1001,
       item_tax_type_id: 4,
     }));
+  });
+
+  it("reads the post-write mirror snapshot from the baseline primary location", async () => {
+    prismMocks.getItemSnapshot.mockResolvedValueOnce({
+      sku: 1001,
+      barcode: "123456789012",
+      itemTaxTypeId: 6,
+      retail: 12.99,
+      cost: 6.25,
+      fDiscontinue: 0,
+      primaryLocationId: 2,
+    });
+    prismMocks.getInventoryMirrorSnapshotRows.mockResolvedValueOnce([
+      {
+        locationId: 3,
+        retail: 24.49,
+        cost: 11.1,
+        expectedCost: null,
+        tagTypeId: null,
+        statusCodeId: null,
+        estSales: null,
+        estSalesLocked: false,
+        fInvListPriceFlag: false,
+        fTxWantListFlag: false,
+        fTxBuybackListFlag: false,
+        fNoReturns: false,
+      },
+    ]);
+
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          baseline: {
+            sku: 1001,
+            barcode: "123456789012",
+            retail: 21.99,
+            cost: 10.5,
+            fDiscontinue: 0,
+            primaryLocationId: 3,
+          },
+          patch: {
+            inventory: [
+              {
+                locationId: 3,
+                retail: 24.99,
+                cost: 11.25,
+              },
+            ],
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(prismMocks.getItemSnapshot).toHaveBeenCalledWith(1001, 2);
+    expect(prismMocks.getInventoryMirrorSnapshotRows).toHaveBeenCalledWith(1001, [3]);
+    expect(mockProductsUpsert).toHaveBeenCalledWith(expect.objectContaining({
+      sku: 1001,
+      retail_price: 12.99,
+      cost: 6.25,
+      barcode: "123456789012",
+    }));
+    expect(mockProductInventoryUpsert).toHaveBeenCalledWith([
+      expect.objectContaining({
+        sku: 1001,
+        location_id: 3,
+        retail_price: 24.49,
+        cost: 11.1,
+      }),
+    ]);
+  });
+
+  it("returns a non-blocking mirror warning when the inventory mirror refresh fails", async () => {
+    prismMocks.updateGmItem.mockResolvedValueOnce({
+      sku: 1001,
+      appliedFields: ["inventory:2:retail"],
+    });
+    mockProductInventoryUpsert.mockResolvedValueOnce({
+      error: { message: "snapshot failed" },
+    });
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          patch: {
+            primaryInventory: {
+              retail: 12.99,
+            },
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      sku: 1001,
+      appliedFields: ["inventory:2:retail"],
+      mirrorErrors: [{ sku: 1001, message: "snapshot failed" }],
+    });
+  });
+
+  it("invalidates stale mirrored rows when Prism omits a touched location snapshot", async () => {
+    prismMocks.updateGmItem.mockResolvedValueOnce({
+      sku: 1001,
+      appliedFields: ["inventory:3:retail"],
+    });
+    prismMocks.getInventoryMirrorSnapshotRows.mockResolvedValueOnce([]);
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          baseline: {
+            sku: 1001,
+            barcode: "123456789012",
+            retail: 21.99,
+            cost: 10.5,
+            fDiscontinue: 0,
+            primaryLocationId: 3,
+          },
+          patch: {
+            inventory: [
+              {
+                locationId: 3,
+                retail: 24.99,
+              },
+            ],
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockProductInventoryUpsert).not.toHaveBeenCalled();
+    expect(mockProductInventoryUpdate).toHaveBeenCalledTimes(1);
+    expect(mockProductInventoryUpdate).toHaveBeenCalledWith({
+      synced_at: INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT,
+    });
+    expect(mockProductInventoryUpdateEq).toHaveBeenCalledWith("sku", 1001);
+    expect(mockProductInventoryUpdateIn).toHaveBeenCalledWith("location_id", [3]);
+    await expect(response.json()).resolves.toEqual({
+      sku: 1001,
+      appliedFields: ["inventory:3:retail"],
+      mirrorErrors: [
+        {
+          sku: 1001,
+          message: "Inventory mirror snapshot for SKU 1001 omitted PCOP; browse data may stay stale until the next sync.",
+        },
+      ],
+    });
+  });
+
+  it("still refreshes product_inventory when the products mirror upsert fails", async () => {
+    prismMocks.updateGmItem.mockResolvedValueOnce({
+      sku: 1001,
+      appliedFields: ["inventory:2:retail"],
+    });
+    mockProductsUpsert.mockResolvedValueOnce({
+      error: { message: "products mirror failed" },
+    });
+    mockProductInventoryUpsert.mockResolvedValueOnce({
+      error: null,
+    });
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          patch: {
+            primaryInventory: {
+              retail: 12.99,
+            },
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(mockProductInventoryUpsert).toHaveBeenCalledWith([
+      expect.objectContaining({
+        sku: 1001,
+        location_id: 2,
+        retail_price: 12.99,
+      }),
+    ]);
+    await expect(response.json()).resolves.toEqual({
+      sku: 1001,
+      appliedFields: ["inventory:2:retail"],
+      mirrorErrors: [{ sku: 1001, message: "products mirror failed" }],
+    });
+  });
+
+  it("returns 400 when Prism reports a missing location inventory row", async () => {
+    prismMocks.updateGmItem.mockRejectedValueOnce(
+      Object.assign(new Error("Missing inventory row"), {
+        code: "MISSING_INVENTORY_ROW",
+        locationId: 3,
+      }),
+    );
+    const productDetailRoute = await loadRouteModule();
+
+    const response = await productDetailRoute.PATCH(
+      new NextRequest("http://localhost/api/products/1001", {
+        method: "PATCH",
+        body: JSON.stringify({
+          mode: "v2",
+          patch: {
+            inventory: [
+              {
+                locationId: 3,
+                retail: 14.25,
+              },
+            ],
+          },
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      { params: Promise.resolve({ sku: "1001" }) },
+    );
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: "MISSING_INVENTORY_ROW",
+      message: "SKU 1001 no longer has an inventory row at PCOP. Refresh and try again.",
+    });
   });
 
   it("forwards tax-type baselines through textbook v2 patches", async () => {
@@ -682,6 +983,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
             retail: 11.99,
             cost: 5.5,
             fDiscontinue: 0,
+            primaryLocationId: 2,
           },
           patch: {
             item: {
@@ -709,6 +1011,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
         retail: 11.99,
         cost: 5.5,
         fDiscontinue: 0,
+        primaryLocationId: 2,
       },
     );
     expect(mockProductsUpsert).toHaveBeenCalledWith(expect.objectContaining({
@@ -731,6 +1034,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
             retail: 11.99,
             cost: 5.5,
             fDiscontinue: 0,
+            primaryLocationId: 2,
           },
           patch: {
             item: {
@@ -763,6 +1067,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
         retail: 11.99,
         cost: 5.5,
         fDiscontinue: 0,
+        primaryLocationId: 2,
       },
     );
     expect(prismMocks.updateTextbookPricing).not.toHaveBeenCalled();

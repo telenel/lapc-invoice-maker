@@ -43,6 +43,19 @@ export interface PrismHealth {
   reason: string | null;
 }
 
+export interface BatchMirrorError {
+  sku: number;
+  message: string;
+}
+
+export interface BatchUpdateResponse {
+  action: string;
+  count: number;
+  skus: number[];
+  mirrorErrors?: BatchMirrorError[];
+  mirrorRefreshDeferred?: boolean;
+}
+
 export interface CreateItemInput {
   description: string;
   vendorId: number;
@@ -218,7 +231,7 @@ export const productApi = {
   async update(
     sku: number,
     body: LegacyUpdateBody | V2UpdateBody,
-  ): Promise<{ sku: number; appliedFields: string[] }> {
+  ): Promise<{ sku: number; appliedFields: string[]; mirrorErrors?: BatchMirrorError[] }> {
     const res = await fetch(`/api/products/${sku}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -233,7 +246,7 @@ export const productApi = {
     }
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      throw new Error(data.error ?? `HTTP ${res.status}`);
+      throw new Error(data.message ?? data.error ?? `HTTP ${res.status}`);
     }
     return res.json();
   },
@@ -275,16 +288,42 @@ export const productApi = {
   async batch(
     body:
       | { action: "create"; rows: BatchCreateRow[] }
-      | { action: "update"; rows: { sku: number; patch: GmItemPatch | TextbookPatch; isTextbook?: boolean }[] }
+      | { action: "update"; rows: Array<{ sku: number; patch: GmItemPatch | TextbookPatch | ProductEditPatchV2; isTextbook?: boolean; baseline: ItemSnapshot }> }
       | { action: "discontinue"; skus: number[] }
       | { action: "hard-delete"; skus: number[] },
-  ): Promise<{ action: string; count: number; skus: number[] } | { errors: BatchValidationError[] }> {
+  ): Promise<
+    | BatchUpdateResponse
+    | { errors: BatchValidationError[] }
+  > {
     const res = await fetch("/api/products/batch", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
-    if (res.status === 400 || res.status === 409) {
+    if (res.status === 409) {
+      const data = await res.json();
+      // Route layer emits 409 for two distinct cases:
+      //   action=update → { error: "CONCURRENT_MODIFICATION", rowIndex, sku, current }
+      //   action=hard-delete → { errors: [{ code: "HAS_HISTORY", ... }] }
+      // Discriminate so callers can distinguish concurrency conflicts from
+      // validation-style errors.
+      if (data?.error === "CONCURRENT_MODIFICATION") {
+        const err = new Error("CONCURRENT_MODIFICATION") as Error & {
+          code: string;
+          rowIndex?: number | null;
+          sku?: number | null;
+          current?: unknown;
+        };
+        err.code = "CONCURRENT_MODIFICATION";
+        err.rowIndex = data?.rowIndex ?? null;
+        err.sku = data?.sku ?? null;
+        err.current = data?.current ?? null;
+        throw err;
+      }
+      if (data?.errors) return { errors: data.errors };
+      throw new Error(data?.error ?? `HTTP 409`);
+    }
+    if (res.status === 400) {
       const data = await res.json();
       if (data.errors) return { errors: data.errors };
     }

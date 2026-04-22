@@ -157,30 +157,60 @@ vi.mock("@/components/products/product-table", () => ({
       barcode: string | null;
       itemTaxTypeId?: number | null;
       discontinued?: boolean | null;
+      primary_location_id?: number | null;
+      selected_inventories?: Array<{
+        locationId: number;
+        retailPrice: number | null;
+        cost: number | null;
+      }>;
     }>;
   }) => {
-    const fieldConfig = [
-      {
-        field: "cost",
-        label: "Cost",
-        currentValue: (product: { sku: number; cost: number }) => String(product.cost),
-      },
-      {
-        field: "retail",
-        label: "Retail",
-        currentValue: (product: { sku: number; retail_price: number }) => String(product.retail_price),
-      },
-      ...(tab === "merchandise"
-        ? [
-            {
-              field: "barcode",
-              label: "Barcode",
-              currentValue: (product: { sku: number; barcode: string | null }) => product.barcode ?? "",
-            },
-          ]
-        : []),
-    ] as const;
-    const fieldOrder = fieldConfig.map(({ field }) => field);
+    const getFieldConfig = (product: {
+      sku: number;
+      retail_price: number;
+      cost: number;
+      barcode: string | null;
+      primary_location_id?: number | null;
+      selected_inventories?: Array<{
+        locationId: number;
+        retailPrice: number | null;
+        cost: number | null;
+      }>;
+    }) => {
+      const resolvedPrimaryLocationId = primaryLocationId ?? product.primary_location_id ?? null;
+      const hasPrimarySlice =
+        resolvedPrimaryLocationId != null &&
+        product.selected_inventories?.some(
+          (slice) => slice.locationId === resolvedPrimaryLocationId,
+        );
+
+      return [
+        ...(hasPrimarySlice
+          ? [
+              {
+                field: "cost",
+                label: "Cost",
+                currentValue: (row: { sku: number; cost: number }) => String(row.cost),
+              },
+              {
+                field: "retail",
+                label: "Retail",
+                currentValue: (row: { sku: number; retail_price: number }) =>
+                  String(row.retail_price),
+              },
+            ]
+          : []),
+        ...(tab === "merchandise"
+          ? [
+              {
+                field: "barcode",
+                label: "Barcode",
+                currentValue: (row: { sku: number; barcode: string | null }) => row.barcode ?? "",
+              },
+            ]
+          : []),
+      ] as const;
+    };
 
     return (
       <div data-testid="product-table">
@@ -189,9 +219,14 @@ vi.mock("@/components/products/product-table", () => ({
           <table>
             <tbody>
               {products.map((product) => (
-                <tr key={product.sku}>
-                  <th scope="row">{`SKU ${product.sku}`}</th>
-                  {fieldConfig.map(({ field, label, currentValue }) => {
+                (() => {
+                  const fieldConfig = getFieldConfig(product);
+                  const fieldOrder = fieldConfig.map(({ field }) => field);
+
+                  return (
+                    <tr key={product.sku}>
+                      <th scope="row">{`SKU ${product.sku}`}</th>
+                      {fieldConfig.map(({ field, label, currentValue }) => {
                     const isEditing =
                       inlineEdit.editingCell?.sku === product.sku &&
                       inlineEdit.editingCell.field === field;
@@ -235,32 +270,34 @@ vi.mock("@/components/products/product-table", () => ({
                         )}
                       </td>
                     );
-                  })}
-                  <td>
-                    <button
-                      type="button"
-                      aria-label={`Set tax type for SKU ${product.sku} to STATE`}
-                      onClick={() => inlineEdit.saveField(product.sku, "taxType", "4")}
-                    >
-                      {`Set tax type for SKU ${product.sku} to STATE`}
-                    </button>
-                  </td>
-                  <td>
-                    <button
-                      type="button"
-                      aria-label={`Toggle discontinue for SKU ${product.sku}`}
-                      onClick={() =>
-                        inlineEdit.saveField(
-                          product.sku,
-                          "discontinue",
-                          product.discontinued ? "0" : "1",
-                        )
-                      }
-                    >
-                      {`Toggle discontinue for SKU ${product.sku}`}
-                    </button>
-                  </td>
-                </tr>
+                      })}
+                      <td>
+                        <button
+                          type="button"
+                          aria-label={`Set tax type for SKU ${product.sku} to STATE`}
+                          onClick={() => inlineEdit.saveField(product.sku, "taxType", "4")}
+                        >
+                          {`Set tax type for SKU ${product.sku} to STATE`}
+                        </button>
+                      </td>
+                      <td>
+                        <button
+                          type="button"
+                          aria-label={`Toggle discontinue for SKU ${product.sku}`}
+                          onClick={() =>
+                            inlineEdit.saveField(
+                              product.sku,
+                              "discontinue",
+                              product.discontinued ? "0" : "1",
+                            )
+                          }
+                        >
+                          {`Toggle discontinue for SKU ${product.sku}`}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })()
               ))}
             </tbody>
           </table>
@@ -364,6 +401,7 @@ describe("ProductsPage inline edit controller wiring", () => {
       selectedCount: 0,
       toggle: vi.fn(),
       toggleAll: vi.fn(),
+      refreshVisibleSelections: vi.fn(),
       clear: vi.fn(),
       isSelected: vi.fn(),
       saveToSession: vi.fn(),
@@ -447,9 +485,7 @@ describe("ProductsPage inline edit controller wiring", () => {
     expect(retailEditor).toHaveFocus();
   });
 
-  it("uses item-level pricing as the inline baseline when the primary slice is missing", async () => {
-    const user = userEvent.setup();
-
+  it("does not offer inline pricing edits when the primary slice is missing", async () => {
     useProductSearchMock.mockReturnValue({
       data: {
         products: [
@@ -480,28 +516,9 @@ describe("ProductsPage inline edit controller wiring", () => {
     render(<ProductsPage />);
 
     await screen.findByTestId("product-table");
-
-    await user.click(screen.getByRole("button", { name: /edit cost for sku 1001/i }));
-
-    const editor = screen.getByRole("textbox", { name: /cost editor for sku 1001/i });
-    await user.clear(editor);
-    await user.type(editor, "10.25{enter}");
-
-    await waitFor(() => {
-      expect(updateMock).toHaveBeenCalledWith(1001, {
-        mode: "v2",
-        patch: {
-          primaryInventory: {
-            cost: 10.25,
-          },
-        },
-        baseline: expect.objectContaining({
-          sku: 1001,
-          retail: 39.99,
-          cost: 18.25,
-        }),
-      });
-    });
+    expect(screen.queryByRole("button", { name: /edit cost for sku 1001/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /edit retail for sku 1001/i })).not.toBeInTheDocument();
+    expect(updateMock).not.toHaveBeenCalled();
   });
 
   it("commits barcode edits with the v2 item patch and tabs to the next visible row field", async () => {

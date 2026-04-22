@@ -14,15 +14,36 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ItemRefSelects } from "./item-ref-selects";
 import { productApi } from "@/domains/product/api-client";
-import type { GmItemPatch, TextbookPatch, ItemSnapshot } from "@/domains/product/types";
+import type { GmItemPatch, TextbookPatch, ItemSnapshot, SelectedProduct } from "@/domains/product/types";
 import { useProductRefDirectory } from "@/domains/product/vendor-directory";
+
+export type SavedScopedItemsOptions = {
+  retainUntilMatch?: boolean;
+};
 
 export interface EditItemDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Rows to edit. Pass as ItemSnapshot[] — one per selected SKU. */
-  items: Array<ItemSnapshot & { description?: string; vendorId?: number; dccId?: number; itemTaxTypeId?: number; isTextbook?: boolean; comment?: string; catalogNumber?: string; packageType?: string; unitsPerPack?: number }>;
+  items: Array<ItemSnapshot & {
+    description?: string;
+    vendorId?: number;
+    dccId?: number;
+    itemTaxTypeId?: number;
+    isTextbook?: boolean;
+    comment?: string;
+    catalogNumber?: string;
+    packageType?: string;
+    unitsPerPack?: number;
+    author?: string | null;
+    title?: string | null;
+    isbn?: string | null;
+    edition?: string | null;
+    itemType?: string;
+  }>;
   onSaved?: (skus: number[]) => void;
+  onSavedScopedItems?: (items: SelectedProduct[], options?: SavedScopedItemsOptions) => void;
+  knownScopedItemsByKey?: ReadonlyMap<string, SelectedProduct>;
 }
 
 type FormState = Partial<{
@@ -136,12 +157,12 @@ export function EditItemDialogLegacy({ open, onOpenChange, items, onSaved }: Edi
         await productApi.update(it.sku, {
           patch: patch as GmItemPatch | TextbookPatch,
           isTextbook: !!it.isTextbook,
-          baseline: { sku: it.sku, barcode: it.barcode, retail: it.retail, cost: it.cost, fDiscontinue: it.fDiscontinue },
+          baseline: { sku: it.sku, barcode: it.barcode, retail: it.retail, cost: it.cost, fDiscontinue: it.fDiscontinue, primaryLocationId: it.primaryLocationId },
         });
       } else {
         const result = await productApi.batch({
           action: "update",
-          rows: items.map((i) => ({ sku: i.sku, patch: patch as GmItemPatch | TextbookPatch, isTextbook: !!i.isTextbook })),
+          rows: items.map((i) => ({ sku: i.sku, patch: patch as GmItemPatch | TextbookPatch, isTextbook: !!i.isTextbook, baseline: { sku: i.sku, barcode: i.barcode, retail: i.retail, cost: i.cost, fDiscontinue: i.fDiscontinue, primaryLocationId: i.primaryLocationId } })),
         });
         if ("errors" in result && result.errors.length > 0) {
           setError(result.errors.map((e) => `Row ${e.rowIndex + 1}: ${e.message}`).join("; "));

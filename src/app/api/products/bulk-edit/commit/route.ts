@@ -5,6 +5,7 @@ import { buildBulkFieldPreview } from "@/domains/bulk-edit/preview-builder";
 import { bulkEditFieldRegistry } from "@/domains/bulk-edit/field-registry";
 import { validateTransform } from "@/domains/bulk-edit/transform-engine";
 import { buildPreview } from "@/domains/bulk-edit/preview-builder";
+import { filterLiveProductInventoryRows } from "@/domains/product/inventory-mirror-state";
 import { loadCommittedProductRefSnapshot } from "@/domains/product/ref-data-server";
 import type {
   BulkEditFieldEditRequest,
@@ -74,6 +75,7 @@ const PRODUCT_INVENTORY_SELECT = [
   "f_tx_want_list_flag",
   "f_tx_buyback_list_flag",
   "f_no_returns",
+  "synced_at",
 ].join(", ");
 
 const BULK_EDIT_FIELD_IDS = Object.keys(bulkEditFieldRegistry) as [BulkEditFieldId, ...BulkEditFieldId[]];
@@ -191,6 +193,7 @@ type SourceInventoryRow = {
   f_tx_want_list_flag: boolean | null;
   f_tx_buyback_list_flag: boolean | null;
   f_no_returns: boolean | null;
+  synced_at?: string | null;
 };
 
 function isProductRow(value: unknown): value is SourceProductRow {
@@ -374,7 +377,7 @@ async function loadInventoryRows(
   }
 
   const rawInventoryRows = Array.isArray(inventoryResult.data) ? (inventoryResult.data as unknown[]) : [];
-  const inventoryRows = rawInventoryRows.filter(isInventoryRow);
+  const inventoryRows = filterLiveProductInventoryRows(rawInventoryRows.filter(isInventoryRow));
   const inventoryBySku = new Map<number, BulkEditSourceInventoryRow[]>();
 
   for (const inventoryRow of inventoryRows) {
@@ -548,6 +551,7 @@ export const POST = withAdmin(async (request: NextRequest, session) => {
 
     const { PATCH: productPatchHandler } = await import("@/app/api/products/[sku]/route");
     const affectedSkus: number[] = [];
+    const mirrorErrors: Array<{ sku: number; message: string }> = [];
 
     for (const previewRow of changedRows) {
       const sourceRow = sourceRowsBySku.get(previewRow.sku);
@@ -571,11 +575,17 @@ export const POST = withAdmin(async (request: NextRequest, session) => {
       const nestedResponse = await productPatchHandler(nestedRequest, {
         params: Promise.resolve({ sku: String(previewRow.sku) }),
       });
+      const nestedBody = await nestedResponse.json().catch(() => null);
 
       if (!nestedResponse.ok) {
-        const nestedBody = await nestedResponse.json().catch(() => null);
         const normalizedFailure = normalizeNestedPatchFailure(nestedResponse.status, nestedBody);
         return NextResponse.json({ errors: normalizedFailure.errors }, { status: normalizedFailure.status });
+      }
+
+      if (Array.isArray((nestedBody as { mirrorErrors?: unknown } | null)?.mirrorErrors)) {
+        mirrorErrors.push(
+          ...((nestedBody as { mirrorErrors: Array<{ sku: number; message: string }> }).mirrorErrors ?? []),
+        );
       }
 
       affectedSkus.push(previewRow.sku);
@@ -584,6 +594,7 @@ export const POST = withAdmin(async (request: NextRequest, session) => {
     const hadDistrictChanges = changedRows.some((row) =>
       row.changedFields.includes("dccId") || row.changedFields.includes("itemTaxTypeId"),
     );
+    const summary = `Applied ${formatFieldLabelList(preview.changedFieldLabels)} to ${affectedSkus.length} item${affectedSkus.length === 1 ? "" : "s"}${mirrorErrors.length > 0 ? `, mirror stale for ${mirrorErrors.length} SKU${mirrorErrors.length === 1 ? "" : "s"}` : ""}.`;
 
     const run = await prisma.bulkEditRun.create({
       data: {
@@ -595,7 +606,7 @@ export const POST = withAdmin(async (request: NextRequest, session) => {
         skuCount: affectedSkus.length,
         pricingDeltaCents: BigInt(0),
         hadDistrictChanges,
-        summary: `Applied ${formatFieldLabelList(preview.changedFieldLabels)} to ${affectedSkus.length} item${affectedSkus.length === 1 ? "" : "s"}.`,
+        summary,
       },
     });
 
@@ -603,6 +614,7 @@ export const POST = withAdmin(async (request: NextRequest, session) => {
       runId: run.id,
       successCount: affectedSkus.length,
       affectedSkus,
+      mirrorErrors: mirrorErrors.length > 0 ? mirrorErrors : undefined,
     });
   }
 
@@ -670,7 +682,13 @@ export const POST = withAdmin(async (request: NextRequest, session) => {
     return NextResponse.json(batchJson ?? { error: "Batch commit failed" }, { status: batchResponse.status });
   }
 
-  const summary = `${preview.totals.rowCount} items — retail delta $${(preview.totals.pricingDeltaCents / 100).toFixed(2)}${preview.totals.districtChangeCount > 0 ? `, ${preview.totals.districtChangeCount} district changes` : ""}`;
+  const mirrorErrors = Array.isArray((batchJson as { mirrorErrors?: unknown } | null)?.mirrorErrors)
+    ? ((batchJson as { mirrorErrors?: Array<{ sku: number; message: string }> }).mirrorErrors ?? [])
+    : [];
+  const mirrorRefreshDeferred =
+    (batchJson as { mirrorRefreshDeferred?: unknown } | null)?.mirrorRefreshDeferred === true;
+
+  const summary = `${preview.totals.rowCount} items — retail delta $${(preview.totals.pricingDeltaCents / 100).toFixed(2)}${preview.totals.districtChangeCount > 0 ? `, ${preview.totals.districtChangeCount} district changes` : ""}${mirrorErrors.length > 0 ? `, mirror stale for ${mirrorErrors.length} SKU${mirrorErrors.length === 1 ? "" : "s"}` : mirrorRefreshDeferred ? ", browse mirror refreshing in background" : ""}`;
 
   const run = await prisma.bulkEditRun.create({
     data: {
@@ -690,6 +708,8 @@ export const POST = withAdmin(async (request: NextRequest, session) => {
     runId: run.id,
     successCount: batchRows.length,
     affectedSkus: batchRows.map((row) => row.sku),
+    mirrorErrors: mirrorErrors.length > 0 ? mirrorErrors : undefined,
+    mirrorRefreshDeferred: mirrorRefreshDeferred || undefined,
   });
 });
 
