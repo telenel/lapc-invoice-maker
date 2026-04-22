@@ -55,7 +55,12 @@ export interface QuickPickSectionMutationInput extends QuickPickSectionFormValue
   createdByUserId?: string | null;
 }
 
-export type QuickPickSectionPatchInput = Partial<QuickPickSectionFormValues>;
+export type QuickPickSectionPatchInput = Partial<Omit<QuickPickSectionFormValues, "description" | "icon" | "descriptionLike" | "itemType">> & {
+  description?: string | null;
+  icon?: QuickPickSectionIconName | "" | null;
+  descriptionLike?: string | null;
+  itemType?: QuickPickSectionItemType | "" | null;
+};
 
 export interface QuickPickSectionDto {
   id: string;

@@ -32,10 +32,6 @@ export const PATCH = withAdmin(async (request: NextRequest, _session, ctx?: Rout
     const updated = await updateQuickPickSection(id, {
       ...parsed.data,
       slug: parsed.data.slug ?? undefined,
-      description: parsed.data.description ?? undefined,
-      icon: parsed.data.icon ?? undefined,
-      descriptionLike: parsed.data.descriptionLike ?? undefined,
-      itemType: parsed.data.itemType ?? undefined,
     });
 
     if (!updated) {

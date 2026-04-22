@@ -184,6 +184,54 @@ describe("quick pick sections routes", () => {
     });
   });
 
+  it("preserves explicit null clears on PATCH for admins", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "admin" },
+    });
+    serverMocks.updateQuickPickSection.mockResolvedValue({
+      id: "section-1",
+      name: "CopyTech Services",
+      slug: "copytech-services",
+      description: null,
+      icon: null,
+      sortOrder: 0,
+      descriptionLike: null,
+      dccIds: [],
+      vendorIds: [],
+      itemType: null,
+      explicitSkus: [],
+      isGlobal: true,
+      includeDiscontinued: false,
+      productCount: 12,
+      createdByUserId: null,
+      createdAt: "2026-04-22T08:00:00.000Z",
+      updatedAt: "2026-04-22T08:00:00.000Z",
+      scopeSummary: "Empty scope",
+    });
+
+    const response = await PATCH(
+      new NextRequest("http://localhost/api/quick-pick-sections/section-1", {
+        method: "PATCH",
+        body: JSON.stringify({
+          description: null,
+          icon: null,
+          descriptionLike: null,
+          itemType: null,
+        }),
+      }),
+      { params: Promise.resolve({ id: "section-1" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(serverMocks.updateQuickPickSection).toHaveBeenCalledWith("section-1", {
+      description: null,
+      icon: null,
+      descriptionLike: null,
+      itemType: null,
+      slug: undefined,
+    });
+  });
+
   it("returns 204 on DELETE for admins", async () => {
     getServerSessionMock.mockResolvedValue({
       user: { id: "admin-1", role: "admin" },

@@ -170,4 +170,23 @@ describe("QuickPickSectionsPanel", () => {
 
     expect(apiClientMocks.previewQuickPickSection).not.toHaveBeenCalled();
   });
+
+  it("keeps the edit dialog scrollable on short viewports", async () => {
+    const user = userEvent.setup();
+
+    render(<QuickPickSectionsPanel />);
+
+    await waitFor(() => {
+      expect(apiClientMocks.listQuickPickSections).toHaveBeenCalled();
+    });
+
+    await user.click(screen.getByRole("button", { name: /create section/i }));
+
+    const dialogTitle = await screen.findByText(/create quick pick section/i);
+    const dialogContent = dialogTitle.closest('[data-slot="dialog-content"]');
+
+    expect(dialogContent).not.toBeNull();
+    expect(dialogContent?.className).toContain("max-h-[90vh]");
+    expect(dialogContent?.className).toContain("overflow-y-auto");
+  });
 });
