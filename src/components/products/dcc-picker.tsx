@@ -12,18 +12,45 @@ interface Props {
   onChange: (patch: { deptNum?: string; classNum?: string; catNum?: string }) => void;
 }
 
+const DCC_PARTS_REGEX = /[\s.\-]+/;
+
+function splitDccParts(query: string): string[] | null {
+  const trimmed = query.trim();
+  if (!trimmed) return [];
+  if (!/^[\d\s.\-]+$/.test(trimmed)) return null;
+  return trimmed.split(DCC_PARTS_REGEX).filter(Boolean);
+}
+
+function formatDccParts(
+  parts: Array<string | number | null | undefined>,
+  separator: "." | "-" = ".",
+): string {
+  return parts
+    .filter((part): part is string | number => part !== "" && part !== null && part !== undefined)
+    .map(String)
+    .join(separator);
+}
+
+function normalizeDccQuery(query: string): string | null {
+  const parts = splitDccParts(query);
+  if (parts === null) return null;
+  return formatDccParts(parts, ".");
+}
+
+function getItemDccText(item: DccListItem, separator: "." | "-" = "."): string {
+  return formatDccParts([item.deptNum, item.classNum, item.catNum], separator);
+}
+
 export function getPartialDccPatch(
   query: string,
 ): { deptNum?: string; classNum?: string; catNum?: string } | null {
-  const trimmed = query.trim();
-  if (!trimmed) {
-    return { deptNum: "", classNum: "", catNum: "" };
-  }
-  if (!/^[\d.]+$/.test(trimmed)) {
+  const parts = splitDccParts(query);
+  if (parts === null) {
     return null;
   }
-
-  const parts = trimmed.split(".");
+  if (parts.length === 0) {
+    return { deptNum: "", classNum: "", catNum: "" };
+  }
   return {
     deptNum: parts[0] ?? "",
     classNum: parts[1] ?? "",
@@ -37,7 +64,7 @@ export function getSanitizedFallbackDccPatch(query: string): {
   catNum?: string;
 } {
   const [deptNum = "", classNum = "", catNum = ""] = query
-    .split(".")
+    .split(DCC_PARTS_REGEX)
     .slice(0, 3)
     .map((part) => part.replace(/\D+/g, ""));
 
@@ -49,12 +76,9 @@ export function findExactDccMatch(
   query: string,
 ): DccListItem | null {
   if (!items) return null;
-  const trimmed = query.trim();
-  if (!trimmed) return null;
-  return (
-    items.find((it) => `${it.deptNum}.${it.classNum ?? ""}.${it.catNum ?? ""}` === trimmed)
-    ?? null
-  );
+  const normalized = normalizeDccQuery(query);
+  if (!normalized) return null;
+  return items.find((it) => getItemDccText(it, ".") === normalized) ?? null;
 }
 
 export function findCommittedDccMatch(
@@ -66,7 +90,7 @@ export function findCommittedDccMatch(
   if (!items) return null;
 
   const trimmed = query.trim();
-  if (!trimmed || /^[\d.]+$/.test(trimmed)) {
+  if (!trimmed || normalizeDccQuery(trimmed) !== null) {
     return null;
   }
 
@@ -122,12 +146,13 @@ export function DccPicker({ deptNum, classNum, catNum, onChange }: Props) {
 
   const suggestions = useMemo(() => {
     if (!items || !query.trim()) return [];
-    const numeric = /^[\d.]+$/.test(query);
+    const normalizedCode = normalizeDccQuery(query);
+    const codeQuery = normalizedCode !== null && normalizedCode !== "";
     const q = query.toLowerCase();
     const filtered = items.filter((it) => {
-      const triple = `${it.deptNum}.${it.classNum ?? ""}.${it.catNum ?? ""}`;
+      const triple = getItemDccText(it, ".");
       const names = [it.deptName, it.className, it.catName].filter(Boolean).join(" ").toLowerCase();
-      return numeric ? triple.startsWith(query) : names.includes(q);
+      return codeQuery ? triple.startsWith(normalizedCode) : names.includes(q);
     });
     return filtered.slice(0, 12);
   }, [items, query]);
@@ -146,7 +171,7 @@ export function DccPicker({ deptNum, classNum, catNum, onChange }: Props) {
         <Label htmlFor="dcc-fallback">DCC</Label>
         <Input
           id="dcc-fallback"
-          placeholder="10.10.20"
+          placeholder="10-10-20"
           value={query}
           onChange={(e) => {
             const next = e.target.value;
@@ -158,7 +183,7 @@ export function DccPicker({ deptNum, classNum, catNum, onChange }: Props) {
           inputMode="numeric"
         />
         <p className="text-xs text-muted-foreground">
-          Name lookup unavailable — enter DCC as 10.10.20.
+          Name lookup unavailable — enter DCC as 10-10-20.
         </p>
       </div>
     );
@@ -170,7 +195,7 @@ export function DccPicker({ deptNum, classNum, catNum, onChange }: Props) {
       <Input
         id="dcc-picker"
         list="dcc-picker-list"
-        placeholder="10.10.20 or drinks…"
+        placeholder="10-10-20 or drinks…"
         value={query}
         onChange={(e) => {
           const next = e.target.value;
@@ -190,8 +215,8 @@ export function DccPicker({ deptNum, classNum, catNum, onChange }: Props) {
       <datalist id="dcc-picker-list">
         {suggestions.map((it) => (
           <option
-            key={`${it.deptNum}.${it.classNum ?? ""}.${it.catNum ?? ""}`}
-            value={`${it.deptNum}.${it.classNum ?? ""}.${it.catNum ?? ""}`}
+            key={getItemDccText(it, ".")}
+            value={getItemDccText(it, "-")}
           >
             {[it.deptName, it.className, it.catName].filter(Boolean).join(" › ")}
           </option>
@@ -203,5 +228,5 @@ export function DccPicker({ deptNum, classNum, catNum, onChange }: Props) {
 
 function deptNumToText(deptNum: string, classNum: string, catNum: string): string {
   if (!deptNum) return "";
-  return [deptNum, classNum, catNum].filter((p) => p !== "").join(".");
+  return formatDccParts([deptNum, classNum, catNum], "-");
 }

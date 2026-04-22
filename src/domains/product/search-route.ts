@@ -252,6 +252,14 @@ function buildFilteredBrowseQuery(filters: ProductFilters): {
   const lastSaleExpr = basePlan.lastSaleField === "effective_last_sale_date"
     ? emittedEffectiveLastSaleExpr
     : emittedLastSaleExpr;
+  const buildTextSearchCondition = (value: string) => `(
+    to_tsvector('simple', COALESCE(pwd.description, '')) @@ plainto_tsquery('simple', ${builder.add(value)})
+    OR pwd.title ILIKE ${builder.add(`%${value}%`)}
+    OR pwd.author ILIKE ${builder.add(`%${value}%`)}
+    OR pwd.isbn ILIKE ${builder.add(`%${value}%`)}
+    OR pwd.barcode ILIKE ${builder.add(`%${value}%`)}
+    OR pwd.catalog_number ILIKE ${builder.add(`%${value}%`)}
+  )`;
 
   const conditions: string[] = [
     `pwd.item_type IN (${addList(builder, itemTypes)})`,
@@ -261,13 +269,17 @@ function buildFilteredBrowseQuery(filters: ProductFilters): {
   if (searchTerm) {
     const composite = parseDccComposite(searchTerm);
     if (composite) {
-      // Separator-joined DCC (e.g. "30-10-10"): exact-equality match on the
-      // individual segments — uses existing dept/class/cat indexes cheaply.
+      // Separator-joined DCC (e.g. "30-10-10"): extend the existing text
+      // search branch with an exact dept/class/cat match instead of replacing
+      // it, so catalog-number and other text matches keep working.
       conditions.push(
         `(
-          pwd.dept_num = ${builder.add(composite.dept)}
-          AND pwd.class_num = ${builder.add(composite.cls)}
-          AND pwd.cat_num = ${builder.add(composite.cat)}
+          (
+            pwd.dept_num = ${builder.add(composite.dept)}
+            AND pwd.class_num = ${builder.add(composite.cls)}
+            AND pwd.cat_num = ${builder.add(composite.cat)}
+          )
+          OR ${buildTextSearchCondition(searchTerm)}
         )`,
       );
     } else if (/^\d+$/.test(searchTerm)) {
@@ -293,16 +305,7 @@ function buildFilteredBrowseQuery(filters: ProductFilters): {
       }
       conditions.push(`(\n          ${digitBranches.join("\n          OR ")}\n        )`);
     } else {
-      conditions.push(
-        `(
-          to_tsvector('simple', COALESCE(pwd.description, '')) @@ plainto_tsquery('simple', ${builder.add(searchTerm)})
-          OR pwd.title ILIKE ${builder.add(`%${searchTerm}%`)}
-          OR pwd.author ILIKE ${builder.add(`%${searchTerm}%`)}
-          OR pwd.isbn ILIKE ${builder.add(`%${searchTerm}%`)}
-          OR pwd.barcode ILIKE ${builder.add(`%${searchTerm}%`)}
-          OR pwd.catalog_number ILIKE ${builder.add(`%${searchTerm}%`)}
-        )`,
-      );
+      conditions.push(buildTextSearchCondition(searchTerm));
     }
   }
 

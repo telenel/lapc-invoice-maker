@@ -6,70 +6,103 @@ import { ChevronDownIcon, SearchIcon, XIcon } from "lucide-react";
 import { useVendorDirectory } from "@/domains/product/vendor-directory";
 import type { ProductFilters } from "@/domains/product/types";
 
+function hasFilterText(value: string | null | undefined): boolean {
+  return (value ?? "").toString().trim() !== "";
+}
+
+function hasFilterBool(value: boolean | null | undefined): boolean {
+  return !!value;
+}
+
 /**
  * Count active filters across the full ProductFilters shape. Used for badge totals
  * in pieces of UI (e.g. a compact filter toggle) that do not render the rail.
  */
 export function getProductActiveFilterCount(filters: ProductFilters): number {
   let count = 0;
-  const str = (v: string | null | undefined) => (v ?? "").toString().trim() !== "";
-  const bool = (v: boolean | null | undefined) => !!v;
 
-  if (str(filters.minPrice)) count++;
-  if (str(filters.maxPrice)) count++;
-  if (str(filters.vendorId)) count++;
-  if (bool(filters.hasBarcode)) count++;
-  if (str(filters.lastSaleDateFrom)) count++;
-  if (str(filters.lastSaleDateTo)) count++;
+  if (hasFilterText(filters.minPrice)) count++;
+  if (hasFilterText(filters.maxPrice)) count++;
+  if (hasFilterText(filters.vendorId)) count++;
+  if (hasFilterBool(filters.hasBarcode)) count++;
+  if (hasFilterText(filters.lastSaleDateFrom)) count++;
+  if (hasFilterText(filters.lastSaleDateTo)) count++;
   if (filters.tab === "textbooks") {
-    if (str(filters.author)) count++;
-    if (bool(filters.hasIsbn)) count++;
-    if (str(filters.edition)) count++;
+    if (hasFilterText(filters.author)) count++;
+    if (hasFilterBool(filters.hasIsbn)) count++;
+    if (hasFilterText(filters.edition)) count++;
   }
   if (filters.tab === "merchandise") {
-    if (str(filters.catalogNumber)) count++;
-    if (str(filters.productType)) count++;
+    if (hasFilterText(filters.catalogNumber)) count++;
+    if (hasFilterText(filters.productType)) count++;
   }
-  if (str(filters.minStock)) count++;
-  if (str(filters.maxStock)) count++;
-  if (str(filters.dccComposite)) {
+  if (hasFilterText(filters.minStock)) count++;
+  if (hasFilterText(filters.maxStock)) count++;
+  if (hasFilterText(filters.dccComposite)) {
     // Composite represents the whole dept/class/cat triple; count once and
     // suppress the segment counts so the badge doesn't double-bill one
     // logical filter.
     count++;
   } else {
-    if (str(filters.deptNum)) count++;
-    if (str(filters.classNum)) count++;
-    if (str(filters.catNum)) count++;
+    if (hasFilterText(filters.deptNum)) count++;
+    if (hasFilterText(filters.classNum)) count++;
+    if (hasFilterText(filters.catNum)) count++;
   }
-  if (bool(filters.missingBarcode)) count++;
-  if (bool(filters.missingIsbn)) count++;
-  if (bool(filters.missingTitle)) count++;
-  if (bool(filters.retailBelowCost)) count++;
-  if (bool(filters.zeroPrice)) count++;
-  if (str(filters.minMargin)) count++;
-  if (str(filters.maxMargin)) count++;
+  if (hasFilterBool(filters.missingBarcode)) count++;
+  if (hasFilterBool(filters.missingIsbn)) count++;
+  if (hasFilterBool(filters.missingTitle)) count++;
+  if (hasFilterBool(filters.retailBelowCost)) count++;
+  if (hasFilterBool(filters.zeroPrice)) count++;
+  if (hasFilterText(filters.minMargin)) count++;
+  if (hasFilterText(filters.maxMargin)) count++;
   if (filters.lastSaleWithin) count++;
-  if (bool(filters.lastSaleNever)) count++;
+  if (hasFilterBool(filters.lastSaleNever)) count++;
   if (filters.lastSaleOlderThan) count++;
   if (filters.editedWithin) count++;
-  if (bool(filters.editedSinceSync)) count++;
+  if (hasFilterBool(filters.editedSinceSync)) count++;
   if (filters.discontinued) count++;
   if (filters.itemType) count++;
-  if (str(filters.minUnitsSold)) count++;
-  if (str(filters.maxUnitsSold)) count++;
+  if (hasFilterText(filters.minUnitsSold)) count++;
+  if (hasFilterText(filters.maxUnitsSold)) count++;
   if (filters.unitsSoldWindow) count++;
-  if (str(filters.minRevenue)) count++;
-  if (str(filters.maxRevenue)) count++;
+  if (hasFilterText(filters.minRevenue)) count++;
+  if (hasFilterText(filters.maxRevenue)) count++;
   if (filters.revenueWindow) count++;
-  if (str(filters.minTxns)) count++;
-  if (str(filters.maxTxns)) count++;
+  if (hasFilterText(filters.minTxns)) count++;
+  if (hasFilterText(filters.maxTxns)) count++;
   if (filters.txnsWindow) count++;
-  if (bool(filters.neverSoldLifetime)) count++;
+  if (hasFilterBool(filters.neverSoldLifetime)) count++;
   if (filters.firstSaleWithin) count++;
   if (filters.trendDirection) count++;
-  if (str(filters.maxStockCoverageDays)) count++;
+  if (hasFilterText(filters.maxStockCoverageDays)) count++;
   return count;
+}
+
+function getProductActiveFilterChips(filters: ProductFilters): Array<{
+  key: string;
+  label: string;
+  clearPatch: Partial<ProductFilters>;
+}> {
+  const chips: Array<{
+    key: string;
+    label: string;
+    clearPatch: Partial<ProductFilters>;
+  }> = [];
+
+  if (hasFilterText(filters.dccComposite)) {
+    chips.push({
+      key: "dccComposite",
+      label: `DCC: ${filters.dccComposite}`,
+      clearPatch: {
+        dccComposite: "",
+        deptNum: "",
+        classNum: "",
+        catNum: "",
+      },
+    });
+  }
+
+  return chips;
 }
 
 interface ProductFiltersBarProps {
@@ -406,6 +439,7 @@ export function ProductFiltersBar({
   }
 
   const recentActive = filters.lastSaleWithin === "30d";
+  const activeChips = getProductActiveFilterChips(filters);
 
   return (
     <aside
@@ -422,6 +456,23 @@ export function ProductFiltersBar({
           Clear
         </button>
       </div>
+
+      {activeChips.length > 0 ? (
+        <div aria-label="Active filters" className="mb-2 flex flex-wrap gap-1.5">
+          {activeChips.map((chip) => (
+            <button
+              key={chip.key}
+              type="button"
+              onClick={() => onChange({ ...filters, ...chip.clearPatch, page: 1 })}
+              aria-label={`Clear ${chip.label} filter`}
+              className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-2 py-1 text-[10.5px] font-medium text-foreground transition-colors hover:border-muted-foreground/60 hover:bg-accent"
+            >
+              <span>{chip.label}</span>
+              <XIcon className="size-3 text-muted-foreground" aria-hidden="true" />
+            </button>
+          ))}
+        </div>
+      ) : null}
 
       <SectionTitle>Price range</SectionTitle>
       <div className="flex gap-1.5">
