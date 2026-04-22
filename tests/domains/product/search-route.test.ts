@@ -655,7 +655,7 @@ describe("searchProductBrowseRows", () => {
     expect(sql).toContain("pwd.cat_num::text");
   });
 
-  it("parses dashed DCC search into dept/class/cat equality conditions", async () => {
+  it("extends dashed DCC search with the existing text-search branches", async () => {
     mockSearchQueryRows();
 
     await searchProductBrowseRows({
@@ -663,6 +663,25 @@ describe("searchProductBrowseRows", () => {
       tab: "merchandise",
       locationIds: [2, 3],
       search: "30-10-10",
+    });
+
+    const sql = prismaMock.$queryRawUnsafe.mock.calls[0]?.[0];
+    expect(typeof sql).toBe("string");
+    expect(sql).toContain("pwd.dept_num =");
+    expect(sql).toContain("pwd.class_num =");
+    expect(sql).toContain("pwd.cat_num =");
+    expect(sql).toContain("pwd.catalog_number ILIKE");
+    expect(sql).toContain("to_tsvector('simple', COALESCE(pwd.description, ''))");
+  });
+
+  it("parses space-separated DCC search into dept/class/cat equality conditions", async () => {
+    mockSearchQueryRows();
+
+    await searchProductBrowseRows({
+      ...EMPTY_FILTERS,
+      tab: "merchandise",
+      locationIds: [2, 3],
+      search: "30 10 10",
     });
 
     const sql = prismaMock.$queryRawUnsafe.mock.calls[0]?.[0];
