@@ -10,6 +10,14 @@ interface ProductFiltersExtendedProps {
   onChange: (patch: Partial<ProductFilters>) => void;
 }
 
+function compositeSegments(filters: ProductFilters): { dept: string; cls: string; cat: string } {
+  if (filters.dccComposite) {
+    const [dept = "", cls = "", cat = ""] = filters.dccComposite.split("-");
+    return { dept, cls, cat };
+  }
+  return { dept: filters.deptNum, cls: filters.classNum, cat: filters.catNum };
+}
+
 export function getLastSaleNeverPatch(
   enabled: boolean,
 ): Partial<ProductFilters> {
@@ -81,10 +89,34 @@ export function ProductFiltersExtended({
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="grid gap-1.5">
             <DccPicker
-              deptNum={filters.deptNum}
-              classNum={filters.classNum}
-              catNum={filters.catNum}
-              onChange={onChange}
+              deptNum={compositeSegments(filters).dept}
+              classNum={compositeSegments(filters).cls}
+              catNum={compositeSegments(filters).cat}
+              onChange={(patch) => {
+                const current = compositeSegments(filters);
+                const dept = patch.deptNum ?? current.dept;
+                const cls = patch.classNum ?? current.cls;
+                const cat = patch.catNum ?? current.cat;
+                // A full triple becomes the canonical composite; clear the
+                // segment keys so we don't double-count or double-filter.
+                if (dept && cls && cat) {
+                  onChange({
+                    dccComposite: `${dept}-${cls}-${cat}`,
+                    deptNum: "",
+                    classNum: "",
+                    catNum: "",
+                  });
+                  return;
+                }
+                // Partial triple: keep the segment keys as the source of truth
+                // and drop any stale composite so predicates stay consistent.
+                onChange({
+                  dccComposite: "",
+                  deptNum: dept,
+                  classNum: cls,
+                  catNum: cat,
+                });
+              }}
             />
           </div>
         </div>

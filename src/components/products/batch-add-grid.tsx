@@ -77,8 +77,8 @@ const COLUMNS: BatchColumn[] = [
   { key: "retail",        label: "Retail",       kind: "money",  defaultWidth: 104, placeholder: "0.00", required: true },
   { key: "cost",          label: "Cost",         kind: "money",  defaultWidth: 104, placeholder: "0.00", required: true },
   { key: "margin",        label: "Margin",       kind: "margin", defaultWidth: 92 },
-  { key: "vendorId",      label: "Vendor",       kind: "ref",    defaultWidth: 170, ref: "vendor" },
-  { key: "dccId",         label: "Dept / Class", kind: "ref",    defaultWidth: 200, ref: "dcc" },
+  { key: "vendorId",      label: "Vendor",       kind: "ref",    defaultWidth: 170, ref: "vendor", required: true },
+  { key: "dccId",         label: "Dept / Class", kind: "ref",    defaultWidth: 200, ref: "dcc", required: true },
   { key: "itemTaxTypeId", label: "Tax",          kind: "ref",    defaultWidth: 140, ref: "tax" },
   { key: "barcode",       label: "Barcode",      kind: "text",   defaultWidth: 140, placeholder: "UPC", maxLength: 20 },
   { key: "catalogNumber", label: "Catalog #",    kind: "text",   defaultWidth: 128, placeholder: "vendor part #", maxLength: 30 },
@@ -390,12 +390,44 @@ export function BatchAddGrid({
     }
   }, [rowsToBatch, onSubmitted, refsUnavailable]);
 
+  const clientRequiredErrors = useMemo((): BatchValidationError[] => {
+    const out: BatchValidationError[] = [];
+    rows.forEach((r, i) => {
+      const description = r.description?.trim() ?? "";
+      if (!description) return;
+      for (const col of COLUMNS) {
+        if (!col.required) continue;
+        if (col.key === "description") continue;
+        const own = r[col.key]?.trim() ?? "";
+        const fromDefaults =
+          col.key in defaults ? (defaults[col.key as keyof DefaultsState] ?? "").trim() : "";
+        const value = own || fromDefaults;
+        const missing =
+          !value || (col.kind === "ref" && Number(value) === 0) || (col.kind === "money" && value === "");
+        if (missing) {
+          out.push({
+            rowIndex: i,
+            field: col.key,
+            code: "MISSING_REQUIRED",
+            message: `${col.label} is required`,
+          });
+        }
+      }
+    });
+    return out;
+  }, [rows, defaults]);
+
+  const allErrors = useMemo(
+    () => [...clientRequiredErrors, ...errors],
+    [clientRequiredErrors, errors],
+  );
+
   const cellError = useCallback(
     (rowIdx: number, key: string): string | null => {
-      const e = errors.find((x) => x.rowIndex === rowIdx && x.field === key);
+      const e = allErrors.find((x) => x.rowIndex === rowIdx && x.field === key);
       return e ? e.message : null;
     },
-    [errors],
+    [allErrors],
   );
 
   const batch = useMemo(() => rowsToBatch(), [rowsToBatch]);
@@ -412,7 +444,13 @@ export function BatchAddGrid({
   );
 
   const refsBlocked = refsLoading || refsUnavailable;
-  const canSubmit = !submitting && !refsLoading && !refsUnavailable && batch.length > 0 && errors.length === 0;
+  const canSubmit =
+    !submitting
+    && !refsLoading
+    && !refsUnavailable
+    && batch.length > 0
+    && errors.length === 0
+    && clientRequiredErrors.length === 0;
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -715,9 +753,9 @@ export function BatchAddGrid({
             className={MARGIN_TONE_CLASS[toneForAvg(summary.avgMargin)]}
           />
         ) : null}
-        {errors.length > 0 ? (
+        {allErrors.length > 0 ? (
           <span className="text-xs text-destructive" aria-live="polite">
-            {errors.length} error{errors.length === 1 ? "" : "s"}
+            {allErrors.length} error{allErrors.length === 1 ? "" : "s"}
           </span>
         ) : lastValidated === "clean" ? (
           <span className="text-xs text-emerald-600 dark:text-emerald-400" aria-live="polite">

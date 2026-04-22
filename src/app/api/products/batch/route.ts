@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
+import { z, ZodError } from "zod";
+import type { BatchValidationError } from "@/domains/product/types";
 import { INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT } from "@/domains/product/inventory-mirror-state";
 import { withAdmin } from "@/domains/shared/auth";
 import { isPrismConfigured } from "@/lib/prism";
@@ -197,13 +198,61 @@ async function collectBatchUpdateMirrorWarnings(
   return mirrorResults.filter((result): result is MirrorError => result !== null);
 }
 
+const ROW_FIELD_LABEL: Record<string, string> = {
+  description: "Description",
+  vendorId: "Vendor",
+  dccId: "DCC",
+  retail: "Retail",
+  cost: "Cost",
+  itemTaxTypeId: "Tax type",
+  barcode: "Barcode",
+  catalogNumber: "Catalog number",
+  comment: "Comment",
+};
+
+/**
+ * Translate a Zod failure on a create/update `rows[i].field` path into the
+ * row-indexed `BatchValidationError` envelope the batch UI already consumes.
+ * Returns an empty array if the failure is not row-scoped (e.g. top-level
+ * action mismatch), so the caller can fall back to the generic shape.
+ */
+function extractRowIndexedErrors(
+  error: ZodError,
+  body: unknown,
+): BatchValidationError[] {
+  const out: BatchValidationError[] = [];
+  const action = (body as { action?: unknown } | null)?.action;
+
+  for (const issue of error.issues) {
+    const [root, indexKey, fieldKey] = issue.path;
+    if (root !== "rows" || typeof indexKey !== "number" || typeof fieldKey !== "string") {
+      continue;
+    }
+    const label = ROW_FIELD_LABEL[fieldKey] ?? fieldKey;
+    const code: BatchValidationError["code"] =
+      issue.code === "too_small" && (fieldKey === "retail" || fieldKey === "cost")
+        ? (fieldKey === "retail" ? "NEGATIVE_PRICE" : "NEGATIVE_COST")
+        : "MISSING_REQUIRED";
+    out.push({
+      rowIndex: indexKey,
+      field: fieldKey,
+      code,
+      message: action === "create" && (fieldKey === "dccId" || fieldKey === "vendorId")
+        ? `${label} is required`
+        : issue.message || `${label} is invalid`,
+    });
+  }
+
+  return out;
+}
+
 const bodySchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("create"),
     rows: z.array(z.object({
       description: z.string(),
-      vendorId: z.number().int(),
-      dccId: z.number().int(),
+      vendorId: z.number().int().positive(),
+      dccId: z.number().int().positive(),
       itemTaxTypeId: z.number().int().optional(),
       barcode: z.string().nullable().optional(),
       catalogNumber: z.string().nullable().optional(),
@@ -259,7 +308,13 @@ export const POST = withAdmin(async (request: NextRequest) => {
   const body = await request.json().catch(() => null);
   if (!body) return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   const parsed = bodySchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  if (!parsed.success) {
+    const rowErrors = extractRowIndexedErrors(parsed.error, body);
+    if (rowErrors.length > 0) {
+      return NextResponse.json({ errors: rowErrors }, { status: 400 });
+    }
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
 
   try {
     if (parsed.data.action === "create") {

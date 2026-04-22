@@ -32,9 +32,16 @@ export function getProductActiveFilterCount(filters: ProductFilters): number {
   }
   if (str(filters.minStock)) count++;
   if (str(filters.maxStock)) count++;
-  if (str(filters.deptNum)) count++;
-  if (str(filters.classNum)) count++;
-  if (str(filters.catNum)) count++;
+  if (str(filters.dccComposite)) {
+    // Composite represents the whole dept/class/cat triple; count once and
+    // suppress the segment counts so the badge doesn't double-bill one
+    // logical filter.
+    count++;
+  } else {
+    if (str(filters.deptNum)) count++;
+    if (str(filters.classNum)) count++;
+    if (str(filters.catNum)) count++;
+  }
   if (bool(filters.missingBarcode)) count++;
   if (bool(filters.missingIsbn)) count++;
   if (bool(filters.missingTitle)) count++;
