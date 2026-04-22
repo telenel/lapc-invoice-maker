@@ -215,6 +215,40 @@ async function main() {
   });
   console.log("Seeded print pricing configuration");
 
+  await prisma.quickPickSection.upsert({
+    where: { slug: "copytech-services" },
+    update: {
+      name: "CopyTech Services",
+      description: "In-house print shop services — copies, scans, binding, posters.",
+      icon: "Printer",
+      sortOrder: 0,
+      descriptionLike: null,
+      dccIds: [],
+      vendorIds: [],
+      itemType: null,
+      explicitSkus: [],
+      isGlobal: true,
+      includeDiscontinued: false,
+      createdByUserId: null,
+    },
+    create: {
+      name: "CopyTech Services",
+      slug: "copytech-services",
+      description: "In-house print shop services — copies, scans, binding, posters.",
+      icon: "Printer",
+      sortOrder: 0,
+      descriptionLike: null,
+      dccIds: [],
+      vendorIds: [],
+      itemType: null,
+      explicitSkus: [],
+      isGlobal: true,
+      includeDiscontinued: false,
+      createdByUserId: null,
+    },
+  });
+  console.log("Seeded quick pick sections");
+
   console.log("Seed complete");
 }
 

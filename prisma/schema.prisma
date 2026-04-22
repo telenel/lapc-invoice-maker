@@ -652,6 +652,27 @@ model SavedSearch {
   @@map("saved_searches")
 }
 
+model QuickPickSection {
+  id                  String   @id @default(uuid())
+  name                String
+  slug                String   @unique
+  description         String?
+  icon                String?
+  sortOrder           Int      @default(0)
+  descriptionLike     String?
+  dccIds              Int[]    @default([])
+  vendorIds           Int[]    @default([])
+  itemType            String?
+  explicitSkus        Int[]    @default([])
+  isGlobal            Boolean  @default(true)
+  includeDiscontinued Boolean  @default(false)
+  createdByUserId     String?  @map("created_by_user_id")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@map("quick_pick_sections")
+}
+
 model BulkEditRun {
   id                  String   @id @default(uuid())
   createdAt           DateTime @default(now()) @map("created_at")
