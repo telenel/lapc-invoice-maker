@@ -3,8 +3,14 @@ name: CI
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
   pull_request:
     branches: [main]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
   # Safety net: allow manual re-run of CI for a given ref. Needed when a
   # merge push-event workflow didn't fire (e.g., the GITHUB_TOKEN auto-merge
   # attribution bug that skipped PR #175's deploy on 2026-04-18).
@@ -27,6 +33,7 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version: "1.24"
+          cache: false
 
       - name: Install actionlint
         run: go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.8
@@ -113,40 +120,13 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Detect validation-relevant changes
-        id: changes
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            relevant:
-              - '.github/workflows/**'
-              - 'hooks/**'
-              - 'package.json'
-              - 'package-lock.json'
-              - 'src/**'
-              - 'public/**'
-              - 'prisma/**'
-              - 'scripts/**'
-              - 'tests/**'
-              - 'next.config.*'
-              - 'postcss.config.*'
-              - 'tailwind.config.*'
-              - 'tsconfig.json'
-              - 'vitest.config.*'
-
-      - name: Skip docs-only validation
-        if: steps.changes.outputs.relevant != 'true'
-        run: echo "Docs-only change detected; skipping ship-check."
-
       - uses: actions/setup-node@v6
-        if: steps.changes.outputs.relevant == 'true'
         with:
           node-version: 22
           cache: npm
 
       - name: Restore Next.js build cache
-        if: steps.changes.outputs.relevant == 'true'
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .next/cache
           key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-${{ hashFiles('src/**/*.{js,jsx,ts,tsx,mdx}', 'public/**/*', 'prisma/**/*', 'next.config.*', 'postcss.config.*', 'tailwind.config.*', 'tsconfig.json') }}
@@ -154,9 +134,7 @@ jobs:
             ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
 
       - name: Install dependencies
-        if: steps.changes.outputs.relevant == 'true'
         run: npm ci && npx prisma generate
 
       - name: Run ship-check
-        if: steps.changes.outputs.relevant == 'true'
         run: npm run ship-check

@@ -18,7 +18,7 @@ Operations portal for Los Angeles Pierce College. Handles invoice drafting, fina
 | AI Assistant | Vercel AI SDK + Claude Haiku (streaming chat sidebar) |
 | Calendar | FullCalendar (catering + manual events + birthdays) |
 | Email | Power Automate webhook (shared mailbox) |
-| CI/CD | GitHub Actions (setup → lint/build/test parallel → deploy) |
+| CI/CD | GitHub Actions (CI → exact-SHA image publish → SSH deploy) |
 | Checks | GitHub Actions CI |
 | Scheduler | App cron with DB-backed job ledger, plus optional Supabase `pg_cron` via authenticated internal job routes |
 
@@ -596,16 +596,18 @@ GitHub Actions runs on every push to `main` and every PR targeting `main`:
 
 1. **`actionlint`** — validates GitHub Actions workflow syntax and common mistakes
 2. **`ship-check`** — runs the repo validation command (`npm run ship-check`) on Node 22 after `npm ci` and `npx prisma generate`
-3. **Auto-merge** (PRs to `main`) — after a 15-minute quiet period, merges the latest green PR head SHA once CodeRabbit has reviewed it or produced the latest commit; add `no-automerge` or `hold` to opt out
-4. **Deploy** (push to `main` only) — waits for the `CI` workflow to pass, then prefers an exact-SHA SSH deploy if deploy SSH secrets are configured; otherwise it falls back to the legacy HTTPS webhook path and polls `laportal.montalvo.io/api/version`
+3. **Auto-merge** (PRs to `main`) — enables GitHub native auto-merge when `AUTOMERGE_PAT` is configured so the PR merges as soon as required checks are green
+4. **Deploy** (successful `CI` on `main`, plus manual dispatch) — checks out the exact validated SHA, builds and publishes a GHCR image tagged with that full SHA, then SSHes to the VPS so the server can pull and start that exact image with short-lived GHCR credentials forwarded from the workflow
 
 Deployment is Docker Compose on montalvo.io behind Traefik. The VPS deploy script now:
 
 - fetches the target ref
 - verifies the expected SHA when one is provided
-- exports `BUILD_SHA` / `BUILD_TIME` for both build and runtime identity
+- resets the server checkout to the verified commit for auditability and rollback metadata
+- prefers an exact image pull when GitHub passes `DEPLOY_IMAGE`
+- exports `BUILD_SHA` / `BUILD_TIME` for runtime identity
 - skips only when the live app already reports the target SHA and smoke checks pass
-- rebuilds and recreates the container otherwise
+- falls back to a local Docker Compose build only for direct hotfix deploys that do not provide `DEPLOY_IMAGE`
 - runs lightweight route smoke checks before declaring success
 - appends an audit record for skip / success / rollback / failure outcomes
 - rolls back to `.last-good-commit` if live verification fails
