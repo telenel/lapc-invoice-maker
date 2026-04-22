@@ -479,11 +479,11 @@ export const invoiceService = {
       }
     }
 
-    // Increment quick pick and saved line item usage counts
+    // Increment saved line item usage counts
     const descriptions = invoice.items.map((item) => item.description);
     if (descriptions.length > 0) {
       postUpdates.push(
-        invoiceRepository.incrementQuickPickUsage(invoice.department, descriptions)
+        invoiceRepository.incrementSavedLineItemUsage(invoice.department, descriptions)
       );
     }
 

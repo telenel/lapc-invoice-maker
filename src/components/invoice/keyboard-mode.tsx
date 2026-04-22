@@ -28,7 +28,6 @@ import {
 import { InlineCombobox } from "@/components/ui/inline-combobox";
 import type { ComboboxItem } from "@/components/ui/inline-combobox";
 import { LineItems } from "./line-items";
-import { QuickPicksSidePanel } from "./quick-picks-side-panel";
 import { PrismcoreUpload } from "./prismcore-upload";
 import { PdfProgress } from "./pdf-progress";
 import { StaffSummaryEditor } from "./staff-summary-editor";
@@ -43,10 +42,8 @@ import type {
 import { staffApi } from "@/domains/staff/api-client";
 import type { StaffResponse, StaffDetailResponse } from "@/domains/staff/types";
 import { categoryApi } from "@/domains/category/api-client";
-import { userQuickPicksApi } from "@/domains/user-quick-picks/api-client";
 import { templateApi } from "@/domains/template/api-client";
 import type { TemplateResponse } from "@/domains/template/types";
-import { getQuickPickResources } from "./hooks/quick-pick-resource-cache";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -135,9 +132,6 @@ export function KeyboardMode({
   const [templates, setTemplates] = useState<TemplateResponse[]>([]);
   const [staffLoading, setStaffLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [suggestions, setSuggestions] = useState<{ description: string; unitPrice: number }[]>([]);
-  const [userPickDescriptions, setUserPickDescriptions] = useState<Set<string>>(() => new Set());
-  const [userPicks, setUserPicks] = useState<{ id: string; description: string; unitPrice: number; department: string }[]>([]);
   const [isMac, setIsMac] = useState(false);
 
   // ---- Auto-save + draft recovery ----
@@ -224,25 +218,6 @@ export function KeyboardMode({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ---- Autocomplete + user picks fetch ----
-  useEffect(() => {
-    if (!form.department) return;
-    let cancelled = false;
-
-    getQuickPickResources(form.department).then(({ quickPicks, savedItems, userPicks: cachedUserPicks }) => {
-      if (cancelled) return;
-      const combined = new Map<string, { description: string; unitPrice: number }>();
-      for (const p of quickPicks) combined.set(p.description, { description: p.description, unitPrice: Number(p.defaultPrice) });
-      for (const s of savedItems) combined.set(s.description, { description: s.description, unitPrice: Number(s.unitPrice) });
-      for (const u of cachedUserPicks) combined.set(u.description, { description: u.description, unitPrice: Number(u.unitPrice) });
-      setSuggestions(Array.from(combined.values()));
-      setUserPicks(cachedUserPicks);
-      setUserPickDescriptions(new Set(cachedUserPicks.map((p: { description: string }) => p.description)));
-    });
-
-    return () => { cancelled = true; };
-  }, [form.department]);
-
   // ---- Platform detection ----
   useEffect(() => {
     setIsMac(/Mac|iPhone|iPad|iPod/.test(navigator.userAgent));
@@ -279,53 +254,6 @@ export function KeyboardMode({
       return () => el.removeEventListener("keydown", handleKeyDown);
     }
   }, [handleGenerate]);
-
-  // ---- Quick pick handler ----
-  function handleQuickPick(description: string, unitPrice: number) {
-    updateField("items", [
-      ...form.items,
-      {
-        _key: crypto.randomUUID(),
-        sku: null,
-        description,
-        quantity: 1,
-        unitPrice,
-        extendedPrice: unitPrice,
-        sortOrder: form.items.length,
-        isTaxable: true,
-        marginOverride: null,
-        costPrice: null,
-      },
-    ]);
-  }
-
-  // ---- Star toggle handler ----
-  async function handleTogglePick(description: string, unitPrice: number, department: string) {
-    const dept = department || "__ALL__";
-    const descUpper = description.toUpperCase();
-    const existingPick = userPicks.find(
-      (p) => p.description.toUpperCase() === descUpper && (p.department === dept || p.department === department)
-    );
-    if (existingPick) {
-      await userQuickPicksApi.delete(existingPick.id);
-      setUserPicks((prev) => prev.filter((p) => p.id !== existingPick.id));
-      setUserPickDescriptions((prev) => {
-        const next = new Set(prev);
-        next.delete(existingPick.description);
-        return next;
-      });
-      toast.success(`"${description}" removed from quick picks`);
-    } else {
-      try {
-        const newPick = await userQuickPicksApi.create({ description, unitPrice, department: dept });
-        setUserPicks((prev) => [...prev, newPick]);
-        setUserPickDescriptions((prev) => new Set(prev).add(description));
-        toast.success(`"${description}" saved to quick picks`);
-      } catch {
-        toast.error("Failed to save quick pick");
-      }
-    }
-  }
 
   // ---- Save as Template ----
   async function handleSaveAsTemplate() {
@@ -600,20 +528,11 @@ export function KeyboardMode({
                 onAdd={addItem}
                 onRemove={removeItem}
                 total={total}
-                department={form.department}
-                suggestions={suggestions}
-                userPickDescriptions={userPickDescriptions}
-                onTogglePick={handleTogglePick}
                 marginEnabled={form.marginEnabled}
                 itemsWithMargin={itemsWithMargin}
                 taxEnabled={form.taxEnabled}
               />
             </div>
-            <QuickPicksSidePanel
-              department={form.department}
-              currentSubtotal={total}
-              onSelect={handleQuickPick}
-            />
           </div>
 
           {/* Notes */}

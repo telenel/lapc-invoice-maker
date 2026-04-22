@@ -75,12 +75,6 @@ export const invoiceUpdateSchema = invoiceCreateSchema.partial().extend({
   items: z.array(invoiceItemSchema).min(1).optional(),
 });
 
-export const quickPickSchema = z.object({
-  department: z.string().min(1, "Department is required"),
-  description: z.string().min(1, "Description is required"),
-  defaultPrice: z.number().min(0, "Price must be non-negative"),
-});
-
 export const savedLineItemSchema = z.object({
   department: z.string().min(1, "Department is required"),
   description: z.string().min(1, "Description is required"),

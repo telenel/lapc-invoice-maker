@@ -20,7 +20,6 @@ model User {
   updatedAt      DateTime        @updatedAt @map("updated_at")
   invoices       Invoice[]
   archivedInvoices Invoice[]     @relation("InvoiceArchiver")
-  userQuickPicks UserQuickPick[]
   notifications  Notification[]
   events         Event[]
   contacts       Contact[]       @relation("ContactCreator")
@@ -183,16 +182,6 @@ model InvoiceItem {
   @@map("invoice_items")
 }
 
-model QuickPickItem {
-  id           String  @id @default(uuid())
-  department   String
-  description  String
-  defaultPrice Decimal @map("default_price") @db.Decimal(10, 2)
-  usageCount   Int     @default(0) @map("usage_count")
-
-  @@map("quick_pick_items")
-}
-
 enum InvoiceStatus {
   DRAFT
   FINAL
@@ -287,21 +276,6 @@ model SavedLineItem {
 
   @@unique([department, description])
   @@map("saved_line_items")
-}
-
-model UserQuickPick {
-  id          String   @id @default(uuid())
-  userId      String   @map("user_id")
-  description String
-  unitPrice   Decimal  @map("unit_price") @db.Decimal(10, 2)
-  department  String
-  usageCount  Int      @default(0) @map("usage_count")
-  createdAt   DateTime @default(now()) @map("created_at")
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, department, description])
-  @@map("user_quick_picks")
 }
 
 model UserDraft {

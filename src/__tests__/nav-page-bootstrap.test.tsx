@@ -11,7 +11,6 @@ const {
   quoteListMock,
   badgeStatesMock,
   staffListPaginatedMock,
-  quickPicksListMock,
   getDistinctYearsMock,
 } = vi.hoisted(() => ({
   pushMock: vi.fn(),
@@ -21,7 +20,6 @@ const {
   quoteListMock: vi.fn(),
   badgeStatesMock: vi.fn(),
   staffListPaginatedMock: vi.fn(),
-  quickPicksListMock: vi.fn(),
   getDistinctYearsMock: vi.fn(),
 }));
 
@@ -83,13 +81,6 @@ vi.mock("@/domains/staff/api-client", () => ({
   },
 }));
 
-vi.mock("@/domains/quick-picks/api-client", () => ({
-  quickPicksApi: {
-    list: quickPicksListMock,
-    delete: vi.fn(),
-  },
-}));
-
 vi.mock("@/domains/textbook-requisition/api-client", () => ({
   requisitionApi: {
     getDistinctYears: getDistinctYearsMock,
@@ -118,14 +109,9 @@ vi.mock("@/components/staff/staff-form", () => ({
   StaffForm: ({ trigger }: { trigger: ReactNode }) => <>{trigger}</>,
 }));
 
-vi.mock("@/components/quick-picks/quick-pick-form", () => ({
-  QuickPickForm: ({ trigger }: { trigger: ReactNode }) => <>{trigger}</>,
-}));
-
 import { InvoiceTable } from "@/components/invoices/invoice-table";
 import { QuoteTable } from "@/components/quotes/quote-table";
 import { StaffTable } from "@/components/staff/staff-table";
-import { QuickPickTable } from "@/components/quick-picks/quick-pick-table";
 import { AnalyticsDashboard } from "@/components/analytics/analytics-dashboard";
 import { RequisitionFilters } from "@/components/textbook-requisitions/requisition-filters";
 import type { OperationsAnalytics } from "@/domains/analytics/types";
@@ -413,25 +399,6 @@ describe("Main Nav Page Bootstraps", () => {
 
     expect(screen.getAllByText(/Jane Doe/i)).toHaveLength(2);
     expect(staffListPaginatedMock).not.toHaveBeenCalled();
-  });
-
-  it("renders quick picks from bootstrap data without refetching", () => {
-    render(
-      <QuickPickTable
-        initialItems={[
-          {
-            id: "qp-1",
-            description: "Coffee Service",
-            department: "__ALL__",
-            defaultPrice: 55,
-            usageCount: 7,
-          },
-        ]}
-      />,
-    );
-
-    expect(screen.getAllByText(/Coffee Service/i)).toHaveLength(2);
-    expect(quickPicksListMock).not.toHaveBeenCalled();
   });
 
   it("renders analytics bootstrap data without fetching on mount", () => {

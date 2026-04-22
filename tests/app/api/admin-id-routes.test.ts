@@ -21,10 +21,6 @@ vi.mock("@/lib/prisma", () => ({
     category: {
       update: vi.fn(),
     },
-    quickPickItem: {
-      update: vi.fn(),
-      delete: vi.fn(),
-    },
     savedLineItem: {
       update: vi.fn(),
       delete: vi.fn(),
@@ -38,7 +34,6 @@ import { prisma } from "@/lib/prisma";
 import { GET as getStaff, PATCH as patchStaff, PUT as putStaff, DELETE as deleteStaff } from "@/app/api/staff/[id]/route";
 import { GET as getStaffAccountNumbers, POST as createStaffAccount } from "@/app/api/staff/[id]/account-numbers/route";
 import { DELETE as deleteCategory, PUT as updateCategory } from "@/app/api/categories/[id]/route";
-import { DELETE as deleteQuickPick, PUT as updateQuickPick } from "@/app/api/quick-picks/[id]/route";
 import { DELETE as deleteSavedLineItem, PUT as updateSavedLineItem } from "@/app/api/saved-items/[id]/route";
 
 describe("GET /api/staff/:id", () => {
@@ -341,72 +336,6 @@ describe("PUT /api/categories/:id", () => {
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({ error: "Invalid category id" });
     expect(prisma.category.update).not.toHaveBeenCalled();
-  });
-});
-
-describe("PUT /api/quick-picks/:id", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.mocked(getServerSession).mockResolvedValue({
-      user: { id: "admin-user", role: "admin" },
-    } as never);
-    vi.mocked(prisma.quickPickItem.update).mockResolvedValue({ id: "q1" } as never);
-  });
-
-  it("normalizes whitespace quick-pick ids", async () => {
-    const response = await updateQuickPick(
-      new NextRequest("http://localhost/api/quick-picks/%20q1%20", {
-        method: "PUT",
-        body: JSON.stringify({
-          description: "Quick",
-          defaultPrice: 5,
-          department: "IT",
-        }),
-        headers: { "Content-Type": "application/json" },
-      }),
-      { params: Promise.resolve({ id: "  q1  " }) },
-    );
-
-    expect(response.status).toBe(200);
-    expect(prisma.quickPickItem.update).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { id: "q1" } }),
-    );
-  });
-
-  it("rejects non-object quick-pick payloads", async () => {
-    const response = await updateQuickPick(
-      new NextRequest("http://localhost/api/quick-picks/q1", {
-        method: "PUT",
-        body: JSON.stringify("bad"),
-        headers: { "Content-Type": "application/json" },
-      }),
-      { params: Promise.resolve({ id: "q1" }) },
-    );
-
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({ error: "Invalid request body" });
-    expect(prisma.quickPickItem.update).not.toHaveBeenCalled();
-  });
-});
-
-describe("DELETE /api/quick-picks/:id", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.mocked(getServerSession).mockResolvedValue({
-      user: { id: "admin-user", role: "admin" },
-    } as never);
-    vi.mocked(prisma.quickPickItem.delete).mockResolvedValue({} as never);
-  });
-
-  it("rejects empty quick-pick id", async () => {
-    const response = await deleteQuickPick(
-      new NextRequest("http://localhost/api/quick-picks/%20", { method: "DELETE" }),
-      { params: Promise.resolve({ id: "   " }) },
-    );
-
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({ error: "Invalid quick pick id" });
-    expect(prisma.quickPickItem.delete).not.toHaveBeenCalled();
   });
 });
 
