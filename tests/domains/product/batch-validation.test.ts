@@ -18,6 +18,20 @@ describe("validateBatchCreateShape", () => {
     expect(validateBatchCreateShape([row()])).toEqual([]);
   });
 
+  it("flags missing dccId", () => {
+    const errors = validateBatchCreateShape([row({ dccId: 0 })]);
+    expect(errors).toContainEqual(
+      expect.objectContaining({ rowIndex: 0, field: "dccId", code: "MISSING_REQUIRED" }),
+    );
+  });
+
+  it("flags missing vendorId", () => {
+    const errors = validateBatchCreateShape([row({ vendorId: 0 })]);
+    expect(errors).toContainEqual(
+      expect.objectContaining({ rowIndex: 0, field: "vendorId", code: "MISSING_REQUIRED" }),
+    );
+  });
+
   it("flags missing description", () => {
     const errors = validateBatchCreateShape([row({ description: "" })]);
     expect(errors).toHaveLength(1);

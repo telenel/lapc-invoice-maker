@@ -116,6 +116,11 @@ export interface ProductFilters {
   deptNum: string;
   classNum: string;
   catNum: string;
+  /** Composite DCC code in dashed form (e.g. "30-10-10"). When set, resolves
+   * to dept/class/cat equality predicates and renders a single active-filter
+   * chip. Legacy segment filters (deptNum/classNum/catNum) still work for
+   * advanced drill-down. */
+  dccComposite: string;
   // Data quality
   missingBarcode: boolean;
   missingIsbn: boolean;

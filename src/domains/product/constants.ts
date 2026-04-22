@@ -38,6 +38,7 @@ export const EMPTY_FILTERS: ProductFilters = {
   deptNum: "",
   classNum: "",
   catNum: "",
+  dccComposite: "",
   missingBarcode: false,
   missingIsbn: false,
   missingTitle: false,
