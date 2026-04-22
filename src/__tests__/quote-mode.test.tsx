@@ -1,6 +1,5 @@
 import "@testing-library/jest-dom/vitest";
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { QuoteMode } from "@/components/quote/quote-mode";
 import type { QuoteFormData } from "@/components/quote/quote-form";
@@ -37,18 +36,6 @@ vi.mock("@/components/invoice/account-select", () => ({
 
 vi.mock("@/components/invoice/line-items", () => ({
   LineItems: () => <div>line items</div>,
-}));
-
-vi.mock("@/components/invoice/quick-pick-panel", () => ({
-  QuickPickPanel: ({
-    onSelect,
-  }: {
-    onSelect: (description: string, price: number) => void;
-  }) => (
-    <button type="button" onClick={() => onSelect("Shipping Fee", 42.5)}>
-      Add Shipping Fee
-    </button>
-  ),
 }));
 
 vi.mock("@/components/quote/catering-details-card", () => ({
@@ -150,8 +137,7 @@ describe("QuoteMode", () => {
     vi.clearAllMocks();
   });
 
-  it("appends a new item for quick picks instead of replacing blank rows", async () => {
-    const user = userEvent.setup();
+  it("does not render the legacy quick picks toggle", () => {
     const updateField = vi.fn();
     const form = makeForm();
 
@@ -172,19 +158,7 @@ describe("QuoteMode", () => {
       />,
     );
 
-    await user.click(screen.getByRole("button", { name: "Quick Picks" }));
-    await user.click(screen.getByRole("button", { name: "Add Shipping Fee" }));
-
-    expect(updateField).toHaveBeenCalledWith("items", [
-      expect.objectContaining({ description: "" }),
-      expect.objectContaining({ description: "Existing Item" }),
-      expect.objectContaining({
-        description: "Shipping Fee",
-        quantity: 1,
-        unitPrice: 42.5,
-        extendedPrice: 42.5,
-        sortOrder: 2,
-      }),
-    ]);
+    expect(screen.queryByRole("button", { name: "Quick Picks" })).not.toBeInTheDocument();
+    expect(updateField).not.toHaveBeenCalled();
   });
 });

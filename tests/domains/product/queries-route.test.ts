@@ -50,6 +50,33 @@ describe("searchProducts route client", () => {
     expect(supabaseBrowserMock).not.toHaveBeenCalled();
   });
 
+  it("serializes quick-pick section filters onto the authenticated route", async () => {
+    vi.mocked(fetch).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        products: [{ sku: 101 }],
+        total: 1,
+        page: 1,
+        pageSize: PAGE_SIZE,
+      }),
+    } as Response);
+
+    await searchProducts({
+      ...EMPTY_FILTERS,
+      tab: "quickPicks",
+      sectionSlug: "copytech-services",
+      allSections: true,
+    });
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    const [url] = vi.mocked(fetch).mock.calls[0]!;
+    const requestUrl = new URL(String(url), "http://localhost");
+
+    expect(requestUrl.searchParams.get("tab")).toBe("quickPicks");
+    expect(requestUrl.searchParams.get("sectionSlug")).toBe("copytech-services");
+    expect(requestUrl.searchParams.get("allSections")).toBe("true");
+  });
+
   it("uses no-store fetch caching for browse reads", async () => {
     vi.mocked(fetch).mockResolvedValue({
       ok: true,

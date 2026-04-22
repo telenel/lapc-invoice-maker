@@ -397,30 +397,18 @@ export async function countByCreator(status?: CreatorStatsStatus) {
   return { users };
 }
 
-/**
- * Increment usageCount on matching QuickPickItem and SavedLineItem records
- * for the given department and item descriptions.
- */
-export async function incrementQuickPickUsage(
+/** Increment usageCount on matching SavedLineItem records for the given department. */
+export async function incrementSavedLineItemUsage(
   department: string,
   descriptions: string[]
 ) {
   if (descriptions.length === 0) return;
 
-  await Promise.all([
-    prisma.quickPickItem.updateMany({
-      where: {
-        OR: [{ department }, { department: "__ALL__" }],
-        description: { in: descriptions },
-      },
-      data: { usageCount: { increment: 1 } },
-    }),
-    prisma.savedLineItem.updateMany({
-      where: {
-        department,
-        description: { in: descriptions },
-      },
-      data: { usageCount: { increment: 1 } },
-    }),
-  ]);
+  await prisma.savedLineItem.updateMany({
+    where: {
+      department,
+      description: { in: descriptions },
+    },
+    data: { usageCount: { increment: 1 } },
+  });
 }

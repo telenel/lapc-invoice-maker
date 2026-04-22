@@ -5,6 +5,9 @@ import { INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT } from "@/domains/product/inven
 const { prismaMock } = vi.hoisted(() => ({
   prismaMock: {
     $queryRawUnsafe: vi.fn(),
+    quickPickSection: {
+      findMany: vi.fn(),
+    },
   },
 }));
 
@@ -217,6 +220,7 @@ describe("buildProductBrowseRow", () => {
 describe("searchProductBrowseRows", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    prismaMock.quickPickSection.findMany.mockResolvedValue([]);
   });
 
   function mockSearchQueryRows(
@@ -482,6 +486,116 @@ describe("searchProductBrowseRows", () => {
       page: 1,
       pageSize: PAGE_SIZE,
     });
+  });
+
+  it("uses the configured quick-pick section predicate instead of tab item-type buckets", async () => {
+    prismaMock.quickPickSection.findMany.mockResolvedValue([
+      {
+        descriptionLike: "CT %",
+        dccIds: [],
+        vendorIds: [],
+        itemType: null,
+        explicitSkus: [],
+        includeDiscontinued: false,
+      },
+    ]);
+    mockSearchQueryRows();
+
+    await searchProductBrowseRows(
+      {
+        ...EMPTY_FILTERS,
+        tab: "quickPicks",
+        sectionSlug: "copytech-services",
+      },
+      { role: "user" },
+    );
+
+    expect(prismaMock.quickPickSection.findMany).toHaveBeenCalledWith({
+      where: {
+        isGlobal: true,
+        slug: "copytech-services",
+      },
+      select: {
+        descriptionLike: true,
+        dccIds: true,
+        vendorIds: true,
+        itemType: true,
+        explicitSkus: true,
+        includeDiscontinued: true,
+      },
+    });
+
+    const sql = prismaMock.$queryRawUnsafe.mock.calls[0]?.[0];
+    expect(typeof sql).toBe("string");
+    expect(sql).toContain("pwd.description ILIKE");
+    expect(sql).not.toContain("pwd.item_type IN (");
+  });
+
+  it("treats a stale quick-pick section slug as an empty result set", async () => {
+    prismaMock.quickPickSection.findMany.mockResolvedValue([]);
+
+    const result = await searchProductBrowseRows(
+      {
+        ...EMPTY_FILTERS,
+        tab: "quickPicks",
+        sectionSlug: "missing-section",
+      },
+      { role: "user" },
+    );
+
+    expect(prismaMock.$queryRawUnsafe).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      products: [],
+      total: 0,
+      page: 1,
+      pageSize: PAGE_SIZE,
+    });
+  });
+
+  it("unions all visible non-empty quick-pick sections for the quick-picks tab", async () => {
+    prismaMock.quickPickSection.findMany.mockResolvedValue([
+      {
+        descriptionLike: "CT %",
+        dccIds: [],
+        vendorIds: [],
+        itemType: null,
+        explicitSkus: [],
+        includeDiscontinued: false,
+      },
+      {
+        descriptionLike: null,
+        dccIds: [],
+        vendorIds: [],
+        itemType: null,
+        explicitSkus: [],
+        includeDiscontinued: false,
+      },
+      {
+        descriptionLike: null,
+        dccIds: [],
+        vendorIds: [],
+        itemType: null,
+        explicitSkus: [2501],
+        includeDiscontinued: true,
+      },
+    ]);
+    mockSearchQueryRows();
+
+    await searchProductBrowseRows(
+      {
+        ...EMPTY_FILTERS,
+        tab: "quickPicks",
+        allSections: true,
+      },
+      { role: "admin" },
+    );
+
+    const sql = prismaMock.$queryRawUnsafe.mock.calls[0]?.[0];
+    expect(typeof sql).toBe("string");
+    expect(sql).toContain("pwd.description ILIKE");
+    expect(sql).toContain("pwd.sku = ANY");
+    expect(sql).toContain("OR");
+    expect(sql).not.toContain("FALSE");
   });
 
   it("preserves nullable ids and nullable price fields instead of coercing them to zero", async () => {

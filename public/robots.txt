@@ -8,7 +8,6 @@ Disallow: /quotes/
 Disallow: /staff/
 Disallow: /calendar
 Disallow: /analytics
-Disallow: /quick-picks
 Disallow: /setup
 
 Sitemap: https://laportal.montalvo.io/sitemap.xml

@@ -85,11 +85,13 @@ export interface ProductBrowseRow extends Omit<Product, "retail_price" | "cost" 
   location_variance: ProductLocationVariance;
 }
 
-export type ProductTab = "textbooks" | "merchandise";
+export type ProductTab = "textbooks" | "merchandise" | "quickPicks";
 
 export interface ProductFilters {
   search: string;
   tab: ProductTab;
+  sectionSlug?: string;
+  allSections?: boolean;
   locationIds: ProductLocationId[];
   minPrice: string;
   maxPrice: string;

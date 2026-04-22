@@ -16,8 +16,18 @@ const { queriesMocks } = vi.hoisted(() => ({
   },
 }));
 
+const { quickPickSectionMocks } = vi.hoisted(() => ({
+  quickPickSectionMocks: {
+    useQuickPickSections: vi.fn(),
+  },
+}));
+
 vi.mock("@/domains/product/queries", () => ({
   searchProducts: queriesMocks.searchProducts,
+}));
+
+vi.mock("@/domains/quick-pick-sections", () => ({
+  useQuickPickSections: quickPickSectionMocks.useQuickPickSections,
 }));
 
 function buildBrowseProducts() {
@@ -146,6 +156,17 @@ function buildBrowseProducts() {
 describe("ProductSearchPanel", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    quickPickSectionMocks.useQuickPickSections.mockReturnValue({
+      sections: [],
+      loading: false,
+      error: null,
+    });
+    queriesMocks.searchProducts.mockResolvedValue({
+      total: 2,
+      products: buildBrowseProducts(),
+      page: 1,
+      pageSize: 50,
+    });
   });
 
   it("does not allow adding rows that are missing a retail price", async () => {
@@ -220,11 +241,6 @@ describe("ProductSearchPanel", () => {
   });
 
   it("reserves scroll clearance so the add button does not cover product rows", async () => {
-    queriesMocks.searchProducts.mockResolvedValueOnce({
-      total: 2,
-      products: buildBrowseProducts(),
-    });
-
     const { container } = render(<ProductSearchPanel onAddProducts={vi.fn()} />);
 
     await waitFor(() => {
@@ -238,5 +254,261 @@ describe("ProductSearchPanel", () => {
     expect(scrollRegion).toHaveClass("scroll-pb-16");
     expect(list).toHaveClass("pb-16");
     expect(addButton.parentElement).toHaveClass("sticky", "bottom-0", "z-10");
+  });
+
+  it("switches to the Quick Picks tab and toggles between a section chip and All Quick Picks", async () => {
+    const user = userEvent.setup();
+    quickPickSectionMocks.useQuickPickSections.mockReturnValue({
+      sections: [
+        {
+          id: "section-1",
+          name: "CopyTech Services",
+          slug: "copytech-services",
+          description: null,
+          icon: "Printer",
+          sortOrder: 0,
+          descriptionLike: "CT %",
+          dccIds: [],
+          vendorIds: [],
+          itemType: null,
+          explicitSkus: [],
+          isGlobal: true,
+          includeDiscontinued: false,
+          productCount: 12,
+          createdByUserId: null,
+          createdAt: "2026-04-22T08:00:00.000Z",
+          updatedAt: "2026-04-22T08:00:00.000Z",
+          scopeSummary: "Description like CT %",
+        },
+      ],
+      loading: false,
+      error: null,
+    });
+
+    render(<ProductSearchPanel onAddProducts={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(queriesMocks.searchProducts).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          tab: "textbooks",
+        }),
+      );
+    });
+
+    await user.click(screen.getByRole("tab", { name: /Quick Picks/i }));
+
+    await waitFor(() => {
+      expect(queriesMocks.searchProducts).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          tab: "quickPicks",
+          allSections: true,
+          sectionSlug: undefined,
+        }),
+      );
+    });
+
+    await user.click(screen.getByRole("button", { name: /CopyTech Services/i }));
+
+    await waitFor(() => {
+      expect(queriesMocks.searchProducts).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          tab: "quickPicks",
+          sectionSlug: "copytech-services",
+          allSections: false,
+        }),
+      );
+    });
+
+    await user.click(screen.getByRole("button", { name: /CopyTech Services/i }));
+
+    await waitFor(() => {
+      expect(queriesMocks.searchProducts).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          tab: "quickPicks",
+          sectionSlug: undefined,
+          allSections: true,
+        }),
+      );
+    });
+  });
+
+  it("composes free-text search with an active quick-pick section", async () => {
+    const user = userEvent.setup();
+    quickPickSectionMocks.useQuickPickSections.mockReturnValue({
+      sections: [
+        {
+          id: "section-1",
+          name: "CopyTech Services",
+          slug: "copytech-services",
+          description: null,
+          icon: "Printer",
+          sortOrder: 0,
+          descriptionLike: "CT %",
+          dccIds: [],
+          vendorIds: [],
+          itemType: null,
+          explicitSkus: [],
+          isGlobal: true,
+          includeDiscontinued: false,
+          productCount: 12,
+          createdByUserId: null,
+          createdAt: "2026-04-22T08:00:00.000Z",
+          updatedAt: "2026-04-22T08:00:00.000Z",
+          scopeSummary: "Description like CT %",
+        },
+      ],
+      loading: false,
+      error: null,
+    });
+
+    render(<ProductSearchPanel onAddProducts={vi.fn()} />);
+
+    await user.click(screen.getByRole("tab", { name: /Quick Picks/i }));
+    await user.click(screen.getByRole("button", { name: /CopyTech Services/i }));
+    await user.type(screen.getByPlaceholderText(/search products/i), "250");
+
+    await waitFor(() => {
+      expect(queriesMocks.searchProducts).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          tab: "quickPicks",
+          sectionSlug: "copytech-services",
+          search: "250",
+        }),
+      );
+    });
+  });
+
+  it("supports keyboard navigation across quick-pick chips", async () => {
+    const user = userEvent.setup();
+    quickPickSectionMocks.useQuickPickSections.mockReturnValue({
+      sections: [
+        {
+          id: "section-1",
+          name: "CopyTech Services",
+          slug: "copytech-services",
+          description: null,
+          icon: "Printer",
+          sortOrder: 0,
+          descriptionLike: "CT %",
+          dccIds: [],
+          vendorIds: [],
+          itemType: null,
+          explicitSkus: [],
+          isGlobal: true,
+          includeDiscontinued: false,
+          productCount: 12,
+          createdByUserId: null,
+          createdAt: "2026-04-22T08:00:00.000Z",
+          updatedAt: "2026-04-22T08:00:00.000Z",
+          scopeSummary: "Description like CT %",
+        },
+        {
+          id: "section-2",
+          name: "Empty Section",
+          slug: "empty-section",
+          description: null,
+          icon: "Printer",
+          sortOrder: 1,
+          descriptionLike: null,
+          dccIds: [],
+          vendorIds: [],
+          itemType: null,
+          explicitSkus: [],
+          isGlobal: true,
+          includeDiscontinued: false,
+          productCount: 0,
+          createdByUserId: null,
+          createdAt: "2026-04-22T08:00:00.000Z",
+          updatedAt: "2026-04-22T08:00:00.000Z",
+          scopeSummary: "No scope filters",
+        },
+      ],
+      loading: false,
+      error: null,
+    });
+
+    render(<ProductSearchPanel onAddProducts={vi.fn()} />);
+
+    await user.click(screen.getByRole("tab", { name: /Quick Picks/i }));
+
+    const allChip = screen.getByRole("button", { name: /All Quick Picks/i });
+    allChip.focus();
+
+    await user.keyboard("{ArrowRight}");
+
+    const sectionChip = screen.getByRole("button", { name: /CopyTech Services/i });
+    expect(sectionChip).toHaveFocus();
+
+    await user.keyboard("{ArrowRight}");
+
+    const disabledChip = screen.getByRole("button", { name: /Empty Section/i });
+    expect(disabledChip).toHaveFocus();
+    expect(disabledChip).toHaveAccessibleDescription("No filters set");
+
+    await user.keyboard("{ArrowLeft}");
+    expect(sectionChip).toHaveFocus();
+
+    await user.keyboard("{Enter}");
+
+    await waitFor(() => {
+      expect(queriesMocks.searchProducts).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          sectionSlug: "copytech-services",
+          allSections: false,
+        }),
+      );
+    });
+
+    await user.keyboard("{Escape}");
+
+    await waitFor(() => {
+      expect(queriesMocks.searchProducts).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          sectionSlug: undefined,
+          allSections: true,
+        }),
+      );
+    });
+  });
+
+  it("renders empty-scope sections as focusable disabled chips with a No filters set explanation", async () => {
+    const user = userEvent.setup();
+    quickPickSectionMocks.useQuickPickSections.mockReturnValue({
+      sections: [
+        {
+          id: "section-2",
+          name: "Empty Section",
+          slug: "empty-section",
+          description: null,
+          icon: "Printer",
+          sortOrder: 1,
+          descriptionLike: null,
+          dccIds: [],
+          vendorIds: [],
+          itemType: null,
+          explicitSkus: [],
+          isGlobal: true,
+          includeDiscontinued: false,
+          productCount: 0,
+          createdByUserId: null,
+          createdAt: "2026-04-22T08:00:00.000Z",
+          updatedAt: "2026-04-22T08:00:00.000Z",
+          scopeSummary: "No scope filters",
+        },
+      ],
+      loading: false,
+      error: null,
+    });
+
+    render(<ProductSearchPanel onAddProducts={vi.fn()} />);
+
+    await user.click(screen.getByRole("tab", { name: /Quick Picks/i }));
+
+    const tooltipTarget = screen.getByTitle("No filters set");
+    const disabledChip = screen.getByRole("button", { name: /Empty Section/i });
+
+    expect(tooltipTarget).toContainElement(disabledChip);
+    expect(disabledChip).toHaveAttribute("aria-disabled", "true");
+    expect(disabledChip).toHaveAccessibleDescription("No filters set");
   });
 });

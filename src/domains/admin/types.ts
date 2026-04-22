@@ -41,7 +41,6 @@ export interface DbHealthTables {
   invoices: number;
   invoiceItems: number;
   categories: number;
-  quickPickItems: number;
   staffAccountNumbers: number;
   staffSignerHistory: number;
   savedLineItems: number;

@@ -1,4 +1,8 @@
 import { prisma } from "@/lib/prisma";
+import {
+  computeEffectivePredicate,
+  type QuickPickSectionPredicateSource,
+} from "@/domains/quick-pick-sections/filters";
 import { PAGE_SIZE, TAB_ITEM_TYPES } from "./constants";
 import { INVALIDATED_PRODUCT_INVENTORY_SYNCED_AT } from "./inventory-mirror-state";
 import {
@@ -96,6 +100,8 @@ interface SqlBuilder {
 
 export interface SearchProductBrowseRowsOptions {
   countOnly?: boolean;
+  role?: string;
+  userId?: string | null;
 }
 
 function hasVariedValue<T>(values: ReadonlyArray<T | null>): boolean {
@@ -220,15 +226,93 @@ function windowColumnSql(
   return mapping[window] ?? null;
 }
 
-function buildFilteredBrowseQuery(filters: ProductFilters): {
-  cteSql: string;
-  params: unknown[];
-  orderBySql: string;
-  from: number;
-} {
+const QUICK_PICK_SECTION_SEARCH_SELECT = {
+  descriptionLike: true,
+  dccIds: true,
+  vendorIds: true,
+  itemType: true,
+  explicitSkus: true,
+  includeDiscontinued: true,
+} as const;
+
+type FilteredBrowseQuery =
+  | {
+    isEmpty: true;
+  }
+  | {
+    isEmpty: false;
+    cteSql: string;
+    params: unknown[];
+    orderBySql: string;
+    from: number;
+  };
+
+function isQuickPicksSectionSearchEnabled(filters: ProductFilters): boolean {
+  return filters.tab === "quickPicks";
+}
+
+async function loadQuickPickSectionsForBrowse(
+  filters: ProductFilters,
+  options: SearchProductBrowseRowsOptions,
+): Promise<QuickPickSectionPredicateSource[]> {
+  if (!isQuickPicksSectionSearchEnabled(filters)) {
+    return [];
+  }
+
+  const trimmedSectionSlug = filters.sectionSlug?.trim() ?? "";
+  const shouldUseAllSections = filters.allSections || trimmedSectionSlug.length === 0;
+  const visibilityWhere = options.role === "admin" ? {} : { isGlobal: true };
+
+  return prisma.quickPickSection.findMany({
+    where: trimmedSectionSlug
+      ? {
+          ...visibilityWhere,
+          slug: trimmedSectionSlug,
+        }
+      : shouldUseAllSections
+        ? visibilityWhere
+        : { id: { in: [] } },
+    select: QUICK_PICK_SECTION_SEARCH_SELECT,
+  });
+}
+
+function buildQuickPickSectionsCondition(
+  builder: SqlBuilder,
+  sections: ReadonlyArray<QuickPickSectionPredicateSource>,
+): string | null {
+  const sectionPredicates: string[] = [];
+
+  for (const section of sections) {
+    const predicate = computeEffectivePredicate(section);
+    if (predicate.isEmpty) {
+      continue;
+    }
+
+    const fragment = predicate.buildSql({
+      tableAlias: "pwd",
+      paramOffset: builder.params.length,
+    });
+    builder.params.push(...fragment.params);
+    sectionPredicates.push(`(${fragment.sql})`);
+  }
+
+  if (sectionPredicates.length === 0) {
+    return null;
+  }
+
+  if (sectionPredicates.length === 1) {
+    return sectionPredicates[0];
+  }
+
+  return `(${sectionPredicates.join(" OR ")})`;
+}
+
+async function buildFilteredBrowseQuery(
+  filters: ProductFilters,
+  options: SearchProductBrowseRowsOptions,
+): Promise<FilteredBrowseQuery> {
   const locationIds = normalizeProductLocationIds(filters.locationIds);
   const primaryLocationId = getPrimaryProductLocationId(locationIds);
-  const itemTypes = TAB_ITEM_TYPES[filters.tab];
   const basePlan = buildProductQueryPlan(filters);
   const from = (filters.page - 1) * PAGE_SIZE;
   const builder = createSqlBuilder();
@@ -253,9 +337,19 @@ function buildFilteredBrowseQuery(filters: ProductFilters): {
     ? emittedEffectiveLastSaleExpr
     : emittedLastSaleExpr;
 
-  const conditions: string[] = [
-    `pwd.item_type IN (${addList(builder, itemTypes)})`,
-  ];
+  const conditions: string[] = [];
+
+  if (filters.tab === "quickPicks") {
+    const sections = await loadQuickPickSectionsForBrowse(filters, options);
+    const quickPickCondition = buildQuickPickSectionsCondition(builder, sections);
+    if (!quickPickCondition) {
+      return { isEmpty: true };
+    }
+    conditions.push(quickPickCondition);
+  } else {
+    const itemTypes = TAB_ITEM_TYPES[filters.tab];
+    conditions.push(`pwd.item_type IN (${addList(builder, itemTypes)})`);
+  }
 
   const searchTerm = filters.search.trim();
   if (searchTerm) {
@@ -512,6 +606,7 @@ function buildFilteredBrowseQuery(filters: ProductFilters): {
   const orderBySql = `${sortFieldSql} ${sortDirectionSql} NULLS LAST, "sku" ${secondarySortDirectionSql}`;
 
   return {
+    isEmpty: false,
     cteSql,
     params: builder.params,
     orderBySql,
@@ -532,7 +627,18 @@ export async function searchProductBrowseRows(
   options: SearchProductBrowseRowsOptions = {},
 ): Promise<ProductBrowseSearchResult | ProductBrowseCountResult> {
   const locationIds = normalizeProductLocationIds(filters.locationIds);
-  const { cteSql, params, orderBySql, from } = buildFilteredBrowseQuery(filters);
+  const query = await buildFilteredBrowseQuery(filters, options);
+
+  if (query.isEmpty) {
+    return {
+      products: [],
+      total: 0,
+      page: filters.page,
+      pageSize: PAGE_SIZE,
+    };
+  }
+
+  const { cteSql, params, orderBySql, from } = query;
 
   if (options.countOnly) {
     const totalRows = await prisma.$queryRawUnsafe<Array<{ total: bigint | number | string }>>(
