@@ -13,6 +13,15 @@
 - Run `npm run ship-check` before handing off changes when the tree is clean enough for it.
 - If a repo script refuses to run because the tree is intentionally dirty, state that explicitly and run the nearest safe validation commands.
 
+## Agent CLI Hygiene
+
+- For non-interactive Claude or Codex runs, redirect stdin from `/dev/null` unless you intentionally want stdin appended to the prompt.
+- Keep planning prompts short and single-purpose. Split planning, implementation, and review into separate runs instead of one giant prompt.
+- Avoid bypass-permission flags in normal runs; work from a trusted repo root and use `--cd` or shell `cd` instead.
+- Treat `Reading additional input from stdin...` from Codex as a noisy CLI warning, not a failure, when the exit code and final output are correct.
+- Use `codex review --uncommitted` for the current working tree, or `codex review --base <branch>` when comparing against a branch tip.
+- Use the CLI exit code and final response as the success signal; do not treat startup stdin warnings as success or failure by themselves.
+
 ## Git Workflow
 
 - Read [docs/GIT-WORKFLOW.md](../GIT-WORKFLOW.md) before starting repo changes.

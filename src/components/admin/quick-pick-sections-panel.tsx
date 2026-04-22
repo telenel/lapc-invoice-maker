@@ -1,6 +1,6 @@
 "use client";
 
-import { useDeferredValue, useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useRef, useState } from "react";
 import {
   BadgePercentIcon,
   BookOpenIcon,
@@ -133,6 +133,11 @@ function buildFormValues(section?: QuickPickSectionDto | null): QuickPickSection
     isGlobal: section.isGlobal,
     includeDiscontinued: section.includeDiscontinued,
   };
+}
+
+function normalizeExplicitSkus(values: number[]): number[] {
+  return Array.from(new Set(values.filter((value) => Number.isInteger(value) && value > 0)))
+    .sort((left, right) => left - right);
 }
 
 function isEmptyScope(scope: QuickPickSectionScopeInput): boolean {
@@ -489,7 +494,7 @@ function SkuSearchAddField({
   );
 }
 
-export function QuickPickSectionsPanel() {
+export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialExplicitSkus?: number[] } = {}) {
   const [sections, setSections] = useState<QuickPickSectionDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -502,6 +507,7 @@ export function QuickPickSectionsPanel() {
   const [preview, setPreview] = useState<QuickPickSectionPreviewResult>(EMPTY_PREVIEW);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
+  const appliedInitialExplicitSkuKeyRef = useRef<string | null>(null);
 
   const previewInput: QuickPickSectionScopeInput = {
     descriptionLike: form.descriptionLike,
@@ -528,6 +534,21 @@ export function QuickPickSectionsPanel() {
   useEffect(() => {
     void loadSections();
   }, []);
+
+  useEffect(() => {
+    const initialKey = initialExplicitSkus.join(",");
+    if (initialKey === "") {
+      appliedInitialExplicitSkuKeyRef.current = null;
+      return;
+    }
+
+    if (dialogOpen || appliedInitialExplicitSkuKeyRef.current === initialKey) {
+      return;
+    }
+
+    appliedInitialExplicitSkuKeyRef.current = initialKey;
+    openCreateDialog(initialExplicitSkus);
+  }, [dialogOpen, initialExplicitSkus]);
 
   useEffect(() => {
     const parsedPreviewInput = JSON.parse(previewKey) as QuickPickSectionScopeInput;
@@ -577,10 +598,13 @@ export function QuickPickSectionsPanel() {
     };
   }, [dialogOpen, previewKey]);
 
-  function openCreateDialog() {
+  function openCreateDialog(prefillExplicitSkus: number[] = []) {
     setMode("create");
     setEditingSection(null);
-    setForm({ ...EMPTY_FORM });
+    setForm({
+      ...EMPTY_FORM,
+      explicitSkus: normalizeExplicitSkus(prefillExplicitSkus),
+    });
     setSlugDirty(false);
     setSaveError(null);
     setPreview(EMPTY_PREVIEW);
@@ -681,7 +705,9 @@ export function QuickPickSectionsPanel() {
             Configure the sections Marcos will use in the Product Catalog quick picks panel.
           </p>
         </div>
-        <Button onClick={openCreateDialog}>Create Section</Button>
+        <Button size="sm" variant="outline" onClick={() => openCreateDialog()}>
+          Create Section
+        </Button>
       </div>
 
       <Card>

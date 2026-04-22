@@ -1,13 +1,25 @@
 import "@testing-library/jest-dom/vitest";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductActionBar } from "./product-action-bar";
 
 const pushMock = vi.fn();
+let sessionRole: "admin" | "user" = "admin";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: pushMock,
+  }),
+}));
+
+vi.mock("next-auth/react", () => ({
+  useSession: () => ({
+    data: {
+      user: {
+        role: sessionRole,
+      },
+    },
   }),
 }));
 
@@ -28,7 +40,92 @@ vi.mock("./barcode-print-view", () => ({
   openBarcodePrintWindow: vi.fn(),
 }));
 
+beforeEach(() => {
+  pushMock.mockReset();
+  sessionRole = "admin";
+});
+
 describe("ProductActionBar", () => {
+  it("routes selected items to quick picks in ascending SKU order", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <ProductActionBar
+        selected={
+          new Map([
+            [202, {
+              sku: 202,
+              description: "Second item",
+              retailPrice: 24,
+              cost: 12,
+              barcode: null,
+              author: null,
+              title: null,
+              isbn: null,
+              edition: null,
+              catalogNumber: null,
+              vendorId: null,
+              itemType: "general_merchandise",
+            }],
+            [101, {
+              sku: 101,
+              description: "First item",
+              retailPrice: 18,
+              cost: 9,
+              barcode: null,
+              author: null,
+              title: null,
+              isbn: null,
+              edition: null,
+              catalogNumber: null,
+              vendorId: null,
+              itemType: "general_merchandise",
+            }],
+          ])
+        }
+        selectedCount={2}
+        onClear={vi.fn()}
+        saveToSession={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /Save to Quick Picks/i }));
+
+    expect(pushMock).toHaveBeenCalledWith("/admin/quick-picks?skus=101%2C202");
+  });
+
+  it("hides Save to Quick Picks for non-admin users", () => {
+    sessionRole = "user";
+
+    render(
+      <ProductActionBar
+        selected={
+          new Map([
+            [101, {
+              sku: 101,
+              description: "Visible item",
+              retailPrice: 18,
+              cost: 9,
+              barcode: null,
+              author: null,
+              title: null,
+              isbn: null,
+              edition: null,
+              catalogNumber: null,
+              vendorId: null,
+              itemType: "general_merchandise",
+            }],
+          ])
+        }
+        selectedCount={1}
+        onClear={vi.fn()}
+        saveToSession={vi.fn()}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: /Save to Quick Picks/i })).not.toBeInTheDocument();
+  });
+
   it("shows a visible explanation when selected rows are missing pricing required for downstream actions", () => {
     render(
       <ProductActionBar
