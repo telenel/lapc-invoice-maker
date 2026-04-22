@@ -85,11 +85,11 @@ COPY --from=builder /app/scripts/check-products-derived-view.mjs ./scripts/check
 # Prisma v7 generates client to src/generated/prisma (not node_modules/.prisma)
 COPY --from=builder /app/src/generated/prisma ./src/generated/prisma
 
-# Install prisma CLI for migrations at runtime, then copy dotenv on top
-# (prisma's npm install creates nested node_modules that swallows dotenv if installed together)
-RUN npm install --no-save prisma
-COPY --from=deps /app/node_modules/dotenv ./node_modules/dotenv
+# Copy the full dependency graph so Prisma CLI migrations can resolve their
+# transitive packages in the runtime image.
+COPY --from=deps /app/node_modules ./node_modules
 
+RUN chmod +x ./node_modules/.bin/prisma
 RUN chmod +x ./scripts/docker-entrypoint.sh
 RUN addgroup --system app && adduser --system --ingroup app app
 RUN mkdir -p data/pdfs public/uploads && chown -R app:app data public/uploads
