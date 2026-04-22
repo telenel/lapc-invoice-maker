@@ -6,6 +6,7 @@ import {
   listQuickPickSections,
   previewQuickPickSection,
   summarizeQuickPickSectionScope,
+  updateQuickPickSection,
 } from "@/domains/quick-pick-sections/server";
 
 const { prismaMocks } = vi.hoisted(() => ({
@@ -13,7 +14,9 @@ const { prismaMocks } = vi.hoisted(() => ({
     quickPickSection: {
       findMany: vi.fn(),
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       create: vi.fn(),
+      update: vi.fn(),
     },
     $queryRawUnsafe: vi.fn(),
   },
@@ -119,6 +122,65 @@ describe("quick pick sections server", () => {
         createdByUserId: "admin-1",
       }),
     ).rejects.toBeInstanceOf(QuickPickSectionSlugConflictError);
+  });
+
+  it("clears nullable fields on update instead of restoring the previous values", async () => {
+    prismaMocks.quickPickSection.findUnique.mockResolvedValue({
+      id: "section-1",
+      name: "CopyTech Services",
+      slug: "copytech-services",
+      description: "Old description",
+      icon: "Printer",
+      sortOrder: 0,
+      descriptionLike: "CT %",
+      dccIds: [],
+      vendorIds: [],
+      itemType: null,
+      explicitSkus: [],
+      isGlobal: true,
+      includeDiscontinued: false,
+      createdByUserId: null,
+      createdAt: new Date("2026-04-22T08:00:00.000Z"),
+      updatedAt: new Date("2026-04-22T08:00:00.000Z"),
+    });
+    prismaMocks.quickPickSection.update.mockResolvedValue({
+      id: "section-1",
+      name: "CopyTech Services",
+      slug: "copytech-services",
+      description: null,
+      icon: null,
+      sortOrder: 0,
+      descriptionLike: "CT %",
+      dccIds: [],
+      vendorIds: [],
+      itemType: null,
+      explicitSkus: [],
+      isGlobal: true,
+      includeDiscontinued: false,
+      createdByUserId: null,
+      createdAt: new Date("2026-04-22T08:00:00.000Z"),
+      updatedAt: new Date("2026-04-22T08:00:00.000Z"),
+    });
+    prismaMocks.$queryRawUnsafe.mockResolvedValueOnce([{ count: 12 }]);
+
+    const result = await updateQuickPickSection("section-1", {
+      description: "",
+      icon: "",
+    });
+
+    expect(prismaMocks.quickPickSection.update).toHaveBeenCalledWith({
+      where: { id: "section-1" },
+      data: expect.objectContaining({
+        description: null,
+        icon: null,
+      }),
+    });
+    expect(result).toEqual(
+      expect.objectContaining({
+        description: null,
+        icon: null,
+      }),
+    );
   });
 
   it("returns an empty disabled preview without querying products when the scope is blank", async () => {

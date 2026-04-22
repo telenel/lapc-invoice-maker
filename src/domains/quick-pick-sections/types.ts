@@ -1,6 +1,7 @@
 import type { ProductFilters } from "@/domains/product/types";
 
 export const QUICK_PICK_SECTION_ICON_NAMES = [
+  "Printer",
   "Package2",
   "BookOpen",
   "GraduationCap",
@@ -23,6 +24,14 @@ export const QUICK_PICK_SECTION_ITEM_TYPE_OPTIONS = [
 
 export type QuickPickSectionIconName = (typeof QUICK_PICK_SECTION_ICON_NAMES)[number];
 export type QuickPickSectionItemType = (typeof QUICK_PICK_SECTION_ITEM_TYPE_OPTIONS)[number];
+
+const QUICK_PICK_SECTION_ICON_NAME_SET = new Set<string>(QUICK_PICK_SECTION_ICON_NAMES);
+
+export function isQuickPickSectionIconName(
+  value: string | null | undefined,
+): value is QuickPickSectionIconName {
+  return typeof value === "string" && QUICK_PICK_SECTION_ICON_NAME_SET.has(value);
+}
 
 export interface QuickPickSectionScopeInput {
   descriptionLike: string;

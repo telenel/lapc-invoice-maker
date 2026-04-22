@@ -7,6 +7,7 @@ import {
   ClipboardListIcon,
   GraduationCapIcon,
   Package2Icon,
+  PrinterIcon,
   ShoppingBagIcon,
   SparklesIcon,
   StarIcon,
@@ -64,9 +65,13 @@ import {
   type QuickPickSectionFormValues,
   type QuickPickSectionPreviewProduct,
   type QuickPickSectionPreviewResult,
+  type QuickPickSectionScopeInput,
 } from "@/domains/quick-pick-sections/types";
 
+const PREVIEW_DEBOUNCE_MS = 250;
+
 const ICON_COMPONENTS = {
+  Printer: PrinterIcon,
   Package2: Package2Icon,
   BookOpen: BookOpenIcon,
   GraduationCap: GraduationCapIcon,
@@ -130,13 +135,13 @@ function buildFormValues(section?: QuickPickSectionDto | null): QuickPickSection
   };
 }
 
-function isEmptyScope(form: QuickPickSectionFormValues): boolean {
+function isEmptyScope(scope: QuickPickSectionScopeInput): boolean {
   return (
-    form.descriptionLike.trim() === ""
-    && form.dccIds.length === 0
-    && form.vendorIds.length === 0
-    && form.itemType === ""
-    && form.explicitSkus.length === 0
+    scope.descriptionLike.trim() === ""
+    && scope.dccIds.length === 0
+    && scope.vendorIds.length === 0
+    && (scope.itemType ?? "") === ""
+    && scope.explicitSkus.length === 0
   );
 }
 
@@ -154,7 +159,9 @@ function getRowTitle(product: QuickPickSectionPreviewProduct): string {
 }
 
 function IconSwatch({ name }: { name: QuickPickSectionFormValues["icon"] }) {
-  const Icon = name ? ICON_COMPONENTS[name] : Package2Icon;
+  const Icon = name && name in ICON_COMPONENTS
+    ? ICON_COMPONENTS[name as keyof typeof ICON_COMPONENTS]
+    : Package2Icon;
   return <Icon className="size-4 text-muted-foreground" aria-hidden="true" />;
 }
 
@@ -496,7 +503,7 @@ export function QuickPickSectionsPanel() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState<string | null>(null);
 
-  const previewInput = {
+  const previewInput: QuickPickSectionScopeInput = {
     descriptionLike: form.descriptionLike,
     dccIds: form.dccIds,
     vendorIds: form.vendorIds,
@@ -504,7 +511,7 @@ export function QuickPickSectionsPanel() {
     explicitSkus: form.explicitSkus,
     includeDiscontinued: form.includeDiscontinued,
   };
-  const deferredPreviewKey = useDeferredValue(JSON.stringify(previewInput));
+  const previewKey = JSON.stringify(previewInput);
 
   async function loadSections() {
     setLoading(true);
@@ -523,11 +530,14 @@ export function QuickPickSectionsPanel() {
   }, []);
 
   useEffect(() => {
+    const parsedPreviewInput = JSON.parse(previewKey) as QuickPickSectionScopeInput;
+
     if (!dialogOpen) {
+      setPreviewLoading(false);
       return;
     }
 
-    if (isEmptyScope(form)) {
+    if (isEmptyScope(parsedPreviewInput)) {
       setPreview(EMPTY_PREVIEW);
       setPreviewLoading(false);
       setPreviewError(null);
@@ -535,34 +545,37 @@ export function QuickPickSectionsPanel() {
     }
 
     let cancelled = false;
-    setPreviewLoading(true);
     setPreviewError(null);
+    const timer = window.setTimeout(() => {
+      setPreviewLoading(true);
 
-    quickPickSectionsApi
-      .previewQuickPickSection(JSON.parse(deferredPreviewKey) as typeof previewInput)
-      .then((result) => {
-        if (!cancelled) {
-          setPreview(result);
-        }
-      })
-      .catch((error) => {
-        if (!cancelled) {
-          setPreview(EMPTY_PREVIEW);
-          setPreviewError(
-            error instanceof Error ? error.message : "Failed to preview matching products.",
-          );
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setPreviewLoading(false);
-        }
-      });
+      quickPickSectionsApi
+        .previewQuickPickSection(parsedPreviewInput)
+        .then((result) => {
+          if (!cancelled) {
+            setPreview(result);
+          }
+        })
+        .catch((error) => {
+          if (!cancelled) {
+            setPreview(EMPTY_PREVIEW);
+            setPreviewError(
+              error instanceof Error ? error.message : "Failed to preview matching products.",
+            );
+          }
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setPreviewLoading(false);
+          }
+        });
+    }, PREVIEW_DEBOUNCE_MS);
 
     return () => {
       cancelled = true;
+      window.clearTimeout(timer);
     };
-  }, [dialogOpen, deferredPreviewKey, form]);
+  }, [dialogOpen, previewKey]);
 
   function openCreateDialog() {
     setMode("create");
@@ -596,6 +609,7 @@ export function QuickPickSectionsPanel() {
       setSaveError(null);
       setPreviewError(null);
       setPreview(EMPTY_PREVIEW);
+      setPreviewLoading(false);
     }
   }
 

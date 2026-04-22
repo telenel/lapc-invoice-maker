@@ -4,6 +4,7 @@ import { computeEffectivePredicate } from "./filters";
 import type {
   QuickPickSectionDto,
   QuickPickSectionFormValues,
+  QuickPickSectionIconName,
   QuickPickSectionMutationInput,
   QuickPickSectionPatchInput,
   QuickPickSectionPreviewProduct,
@@ -11,6 +12,7 @@ import type {
   QuickPickSectionScopeInput,
   QuickPickSectionItemType,
 } from "./types";
+import { isQuickPickSectionIconName } from "./types";
 
 interface CountRow {
   count: bigint | number | string;
@@ -151,6 +153,10 @@ function toPreviewProduct(row: PreviewRow): QuickPickSectionPreviewProduct {
   };
 }
 
+function normalizeIconName(value: string | null | undefined): QuickPickSectionIconName | null {
+  return isQuickPickSectionIconName(value) ? value : null;
+}
+
 async function countMatchingProducts(scope: QuickPickSectionScopeInput): Promise<number> {
   const predicate = computeEffectivePredicate(normalizeScopeInput(scope));
   if (predicate.isEmpty) {
@@ -252,7 +258,7 @@ async function toSectionDto(section: QuickPickSection): Promise<QuickPickSection
     name: section.name,
     slug: section.slug,
     description: section.description ?? null,
-    icon: section.icon as QuickPickSectionDto["icon"],
+    icon: normalizeIconName(section.icon),
     sortOrder: section.sortOrder,
     descriptionLike: section.descriptionLike ?? null,
     dccIds: [...section.dccIds],
@@ -344,8 +350,8 @@ export async function updateQuickPickSection(
       data: {
         name: normalized.name ?? existing.name,
         slug: nextSlug,
-        description: normalized.description ?? existing.description,
-        icon: normalized.icon ?? existing.icon,
+        description: normalized.description !== undefined ? normalized.description : existing.description,
+        icon: normalized.icon !== undefined ? normalized.icon : existing.icon,
         sortOrder: normalized.sortOrder ?? existing.sortOrder,
         descriptionLike:
           normalized.descriptionLike !== undefined

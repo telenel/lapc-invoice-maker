@@ -3,6 +3,10 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { QuickPickSectionsPanel } from "@/components/admin/quick-pick-sections-panel";
 
+async function pause(ms: number) {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 const { apiClientMocks } = vi.hoisted(() => ({
   apiClientMocks: {
     listQuickPickSections: vi.fn(),
@@ -70,6 +74,35 @@ describe("QuickPickSectionsPanel", () => {
     });
   });
 
+  it("renders seeded sections that still use the Printer icon", async () => {
+    apiClientMocks.listQuickPickSections.mockResolvedValue([
+      {
+        id: "section-1",
+        name: "CopyTech Services",
+        slug: "copytech-services",
+        description: "In-house print shop services",
+        icon: "Printer",
+        sortOrder: 0,
+        descriptionLike: "CT %",
+        dccIds: [],
+        vendorIds: [],
+        itemType: null,
+        explicitSkus: [],
+        isGlobal: true,
+        includeDiscontinued: false,
+        productCount: 12,
+        createdByUserId: null,
+        createdAt: "2026-04-22T08:00:00.000Z",
+        updatedAt: "2026-04-22T08:00:00.000Z",
+        scopeSummary: "Description like CT %",
+      },
+    ]);
+
+    render(<QuickPickSectionsPanel />);
+
+    expect(await screen.findByText("CopyTech Services")).not.toBeNull();
+  });
+
   it("shows the disabled empty-scope preview copy before any filters are configured", async () => {
     const user = userEvent.setup();
 
@@ -100,6 +133,10 @@ describe("QuickPickSectionsPanel", () => {
     await user.type(screen.getByLabelText(/name/i), "CopyTech Services");
     await user.type(screen.getByLabelText(/description like/i), "CT %");
 
+    expect(apiClientMocks.previewQuickPickSection).not.toHaveBeenCalled();
+
+    await pause(300);
+
     await waitFor(() => {
       expect(apiClientMocks.previewQuickPickSection).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -107,5 +144,30 @@ describe("QuickPickSectionsPanel", () => {
         }),
       );
     });
+  });
+
+  it("does not refresh the preview when only non-scope fields change", async () => {
+    const user = userEvent.setup();
+
+    render(<QuickPickSectionsPanel />);
+
+    await waitFor(() => {
+      expect(apiClientMocks.listQuickPickSections).toHaveBeenCalled();
+    });
+
+    await user.click(screen.getByRole("button", { name: /create section/i }));
+    await user.type(screen.getByLabelText(/description like/i), "CT %");
+    await pause(300);
+
+    await waitFor(() => {
+      expect(apiClientMocks.previewQuickPickSection).toHaveBeenCalledTimes(1);
+    });
+
+    apiClientMocks.previewQuickPickSection.mockClear();
+
+    await user.type(screen.getByLabelText(/name/i), "CopyTech Services");
+    await pause(300);
+
+    expect(apiClientMocks.previewQuickPickSection).not.toHaveBeenCalled();
   });
 });

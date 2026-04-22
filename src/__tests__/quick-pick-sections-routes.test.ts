@@ -141,6 +141,49 @@ describe("quick pick sections routes", () => {
     expect(response.status).toBe(403);
   });
 
+  it("accepts the seeded Printer icon on PATCH for admins", async () => {
+    getServerSessionMock.mockResolvedValue({
+      user: { id: "admin-1", role: "admin" },
+    });
+    serverMocks.updateQuickPickSection.mockResolvedValue({
+      id: "section-1",
+      name: "CopyTech Services",
+      slug: "copytech-services",
+      description: "In-house print shop services",
+      icon: "Printer",
+      sortOrder: 0,
+      descriptionLike: "CT %",
+      dccIds: [],
+      vendorIds: [],
+      itemType: null,
+      explicitSkus: [],
+      isGlobal: true,
+      includeDiscontinued: false,
+      productCount: 12,
+      createdByUserId: null,
+      createdAt: "2026-04-22T08:00:00.000Z",
+      updatedAt: "2026-04-22T08:00:00.000Z",
+      scopeSummary: "Description like CT %",
+    });
+
+    const response = await PATCH(
+      new NextRequest("http://localhost/api/quick-pick-sections/section-1", {
+        method: "PATCH",
+        body: JSON.stringify({ icon: "Printer" }),
+      }),
+      { params: Promise.resolve({ id: "section-1" }) },
+    );
+
+    expect(response.status).toBe(200);
+    expect(serverMocks.updateQuickPickSection).toHaveBeenCalledWith("section-1", {
+      icon: "Printer",
+      slug: undefined,
+      description: undefined,
+      descriptionLike: undefined,
+      itemType: undefined,
+    });
+  });
+
   it("returns 204 on DELETE for admins", async () => {
     getServerSessionMock.mockResolvedValue({
       user: { id: "admin-1", role: "admin" },
