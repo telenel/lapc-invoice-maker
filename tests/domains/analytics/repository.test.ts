@@ -57,6 +57,8 @@ describe("analyticsRepository", () => {
 
     expect(inventorySummaryQuery).toBeDefined();
     expect(inventorySummaryQuery?.match(/COALESCE\(inv\.stock_on_hand, 0\) > 0/g)).toHaveLength(2);
-    expect(inventorySummaryQuery).not.toContain("\n      WHERE COALESCE(inv.stock_on_hand, 0) > 0");
+    expect(inventorySummaryQuery).not.toMatch(
+      /LEFT JOIN products p\s+ON p\.sku = inv\.sku\s+WHERE\s+COALESCE\(inv\.stock_on_hand,\s*0\)\s*>\s*0\b/,
+    );
   });
 });
