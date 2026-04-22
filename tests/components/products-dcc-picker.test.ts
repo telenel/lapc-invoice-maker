@@ -1,10 +1,31 @@
-import { describe, expect, it } from "vitest";
+import "@testing-library/jest-dom/vitest";
+import { render, screen } from "@testing-library/react";
+import { createElement } from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  DccPicker,
   findCommittedDccMatch,
   findExactDccMatch,
   getPartialDccPatch,
   getSanitizedFallbackDccPatch,
 } from "@/components/products/dcc-picker";
+
+const loadDccListMock = vi.fn();
+
+vi.mock("@/domains/product/views-api", async () => {
+  const actual = await vi.importActual<typeof import("@/domains/product/views-api")>(
+    "@/domains/product/views-api",
+  );
+
+  return {
+    ...actual,
+    loadDccList: (...args: unknown[]) => loadDccListMock(...args),
+  };
+});
+
+beforeEach(() => {
+  loadDccListMock.mockReset();
+});
 
 describe("findExactDccMatch", () => {
   const items = [
@@ -80,5 +101,19 @@ describe("findExactDccMatch", () => {
     expect(findCommittedDccMatch(items, "10.20.30")).toEqual(items[0]);
     expect(findCommittedDccMatch(items, "10-20-30")).toEqual(items[0]);
     expect(findCommittedDccMatch(items, "10..30")).toBeNull();
+  });
+
+  it("uses a text keyboard for fallback composite DCC entry", async () => {
+    loadDccListMock.mockRejectedValueOnce(new Error("offline"));
+
+    render(createElement(DccPicker, {
+      deptNum: "",
+      classNum: "",
+      catNum: "",
+      onChange: vi.fn(),
+    }));
+
+    const input = await screen.findByLabelText("DCC");
+    expect(input).toHaveAttribute("inputmode", "text");
   });
 });

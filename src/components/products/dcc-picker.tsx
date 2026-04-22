@@ -214,7 +214,7 @@ export function DccPicker({ deptNum, classNum, catNum, onChange }: Props) {
           }}
           spellCheck={false}
           autoComplete="off"
-          inputMode="numeric"
+          inputMode="text"
         />
         <p className="text-xs text-muted-foreground">
           Name lookup unavailable — enter DCC as 10-10-20.
