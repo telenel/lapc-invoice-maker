@@ -474,6 +474,22 @@ describe("product table variance trigger", () => {
     expect(await screen.findByText("$21.99")).toBeTruthy();
   });
 
+  it("shows a stronger price edit affordance before opening the inline editor", async () => {
+    const user = userEvent.setup();
+    const onToggle = vi.fn();
+
+    renderEditableTable(onToggle);
+
+    const editCost = screen.getByRole("button", { name: /edit cost for sku 101/i });
+    expect(editCost).toHaveAttribute("title", "Edit cost");
+    expect(editCost).toHaveClass("min-w-[74px]");
+
+    await user.click(editCost);
+
+    const editor = screen.getByRole("textbox", { name: /cost editor for sku 101/i });
+    expect(editor).toHaveClass("min-w-[104px]");
+  });
+
   it("opens the retail popover from the mobile card badge without selecting the row", async () => {
     const user = userEvent.setup();
     const onToggle = vi.fn();

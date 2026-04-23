@@ -297,26 +297,28 @@ function VendorSelect({
           each button owns its own click target. */}
       <div
         ref={triggerRef}
-        className="flex w-full items-center gap-1 rounded-md border border-border bg-card px-1.5 py-1 text-xs focus-within:ring-2 focus-within:ring-ring focus-within:border-ring"
+        className={`flex w-full items-center gap-1.5 rounded-lg border bg-card px-2 py-1.5 text-xs transition-colors focus-within:border-ring focus-within:ring-2 focus-within:ring-ring ${
+          value ? "border-primary/35 bg-primary/[0.035]" : "border-border"
+        }`}
       >
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-haspopup="listbox"
           aria-expanded={open}
-          className="flex flex-1 min-w-0 items-center gap-1.5 rounded-[3px] bg-transparent px-1 py-0.5 text-left focus:outline-none"
+          className="flex min-w-0 flex-1 items-center gap-2 rounded-md bg-transparent px-1 py-0.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <SearchIcon
-            className="size-3 text-muted-foreground shrink-0"
+            className="size-3.5 text-muted-foreground shrink-0"
             aria-hidden="true"
           />
           <span className="flex-1 min-w-0 truncate text-foreground">
             {selected.label ? (
-              <span className="inline-flex items-baseline gap-1">
-                <span>{selected.label}</span>
+              <span className="flex min-w-0 flex-col leading-tight">
+                <span className="truncate font-medium">{selected.label}</span>
                 {selected.knownName && value ? (
-                  <span className="font-mono tnum text-[10px] text-muted-foreground">
-                    #{value}
+                  <span className="font-mono tnum text-[10px] text-muted-foreground/85">
+                    Vendor #{value}
                   </span>
                 ) : null}
               </span>
@@ -336,9 +338,10 @@ function VendorSelect({
             type="button"
             aria-label="Clear vendor"
             onClick={() => onChange("")}
-            className="inline-flex items-center justify-center rounded-[3px] p-0.5 text-muted-foreground hover:text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center justify-center rounded-full border border-border bg-card px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground transition-colors hover:border-muted-foreground/60 hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <XIcon className="size-3" aria-hidden="true" />
+            Clear
+            <XIcon className="ml-1 size-3" aria-hidden="true" />
           </button>
         ) : null}
       </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDownIcon, SparklesIcon, AlertCircleIcon } from "lucide-react";
+import { AlertCircleIcon, ChevronDownIcon, SearchIcon, SparklesIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { PRESET_GROUPS } from "@/domains/product/constants";
@@ -56,6 +56,7 @@ export function SavedViewsBar({
   const [mine, setMine] = useState<SavedView[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [presetsOpen, setPresetsOpen] = useState(false);
+  const [presetQuery, setPresetQuery] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -106,6 +107,37 @@ export function SavedViewsBar({
     return map;
   }, [system]);
 
+  const filteredByGroup = useMemo(() => {
+    const query = presetQuery.trim().toLowerCase();
+    if (!query) return byGroup;
+
+    const groupLabels = new Map(PRESET_GROUPS.map((group) => [group.value, group.label]));
+    const map = new Map<PresetGroup, SavedView[]>();
+    for (const { value } of PRESET_GROUPS) {
+      const items = byGroup.get(value) ?? [];
+      const groupLabel = groupLabels.get(value)?.toLowerCase() ?? "";
+      const matches = items.filter((view) => {
+        const haystack = [
+          view.name,
+          view.description ?? "",
+          view.slug ?? "",
+          groupLabel,
+        ].join(" ").toLowerCase();
+        return haystack.includes(query);
+      });
+      if (matches.length > 0) map.set(value, matches);
+    }
+    return map;
+  }, [byGroup, presetQuery]);
+
+  const filteredPresetCount = useMemo(() => {
+    let count = 0;
+    filteredByGroup.forEach((items) => {
+      count += items.length;
+    });
+    return count;
+  }, [filteredByGroup]);
+
   const featured = useMemo(() => {
     const bySlug = new Map(system.map((v) => [v.slug ?? "", v]));
     return FEATURED_PRESET_SLUGS
@@ -127,6 +159,10 @@ export function SavedViewsBar({
   }, [system, mine, activeSlug, activeId]);
 
   const presetCount = system.filter((v) => v.presetGroup).length;
+
+  useEffect(() => {
+    if (!presetsOpen) setPresetQuery("");
+  }, [presetsOpen]);
 
   return (
     <section
@@ -193,7 +229,7 @@ export function SavedViewsBar({
                 aria-pressed={active}
                 onClick={() => onPresetClick(v)}
                 title={v.description ?? v.name}
-                className={`rounded-full border px-2.5 py-0.5 text-[11.5px] font-medium transition-all duration-150 ease-out active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                className={`rounded-full border px-2.5 py-0.5 text-[11.5px] font-medium transition-colors duration-150 ease-out active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                   active
                     ? "bg-primary text-primary-foreground border-primary shadow-[0_1px_2px_color-mix(in_oklch,var(--primary)_30%,transparent)]"
                     : "bg-card border-border text-foreground hover:border-primary/40 hover:bg-primary/[0.04]"
@@ -208,7 +244,7 @@ export function SavedViewsBar({
         {/* Browse all */}
         <Popover open={presetsOpen} onOpenChange={setPresetsOpen}>
           <PopoverTrigger
-            className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/5 px-2 py-1 text-[11.5px] font-medium text-primary hover:bg-primary/10 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-all duration-150 ease-out"
+            className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/5 px-2 py-1 text-[11.5px] font-medium text-primary hover:bg-primary/10 active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors duration-150 ease-out"
             aria-label="Browse all presets"
           >
             Browse all
@@ -218,39 +254,68 @@ export function SavedViewsBar({
               aria-hidden="true"
             />
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-[560px] max-h-[480px] overflow-auto p-0">
-            <div className="p-3 border-b border-border flex items-center justify-between">
-              <div className="flex flex-col leading-tight">
-                <span className="text-[12px] font-semibold tracking-[-0.005em] text-foreground">
-                  All {presetCount} presets
-                </span>
-                <span className="text-[11px] text-muted-foreground">
-                  Curated filter shortcuts — stock, sales, pricing, data quality.
-                </span>
+          <PopoverContent align="start" className="w-[640px] max-w-[calc(100vw-2rem)] max-h-[520px] overflow-auto p-0">
+            <div className="p-3 border-b border-border flex flex-col gap-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-col leading-tight">
+                  <span className="text-[12px] font-semibold tracking-[-0.005em] text-foreground">
+                    All {presetCount} presets
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">
+                    Search by name, category, or workflow signal.
+                  </span>
+                </div>
+                {activePreset ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClearPreset();
+                      setPresetsOpen(false);
+                    }}
+                    className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer bg-transparent border-none p-0"
+                  >
+                    Clear
+                  </button>
+                ) : null}
               </div>
-              {activePreset ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    onClearPreset();
-                    setPresetsOpen(false);
-                  }}
-                  className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer bg-transparent border-none p-0"
-                >
-                  Clear
-                </button>
-              ) : null}
+              <div className="flex items-center gap-2 rounded-lg border border-border bg-secondary/35 px-2.5 py-1.5 focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30">
+                <SearchIcon className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                <input
+                  aria-label="Search presets"
+                  type="search"
+                  value={presetQuery}
+                  onChange={(event) => setPresetQuery(event.target.value)}
+                  placeholder="Search presets…"
+                  className="min-w-0 flex-1 border-none bg-transparent p-0 text-xs text-foreground outline-none placeholder:text-muted-foreground"
+                />
+                <span className="font-mono tnum text-[10.5px] text-muted-foreground">
+                  {filteredPresetCount}/{presetCount}
+                </span>
+                {presetQuery ? (
+                  <button
+                    type="button"
+                    aria-label="Clear preset search"
+                    onClick={() => setPresetQuery("")}
+                    className="inline-flex items-center justify-center rounded-md p-0.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <XIcon className="size-3" aria-hidden="true" />
+                  </button>
+                ) : null}
+              </div>
             </div>
-            <div className="p-2 flex flex-col gap-3">
+            <div aria-label="Preset browser results" className="p-2 flex flex-col gap-3">
               {PRESET_GROUPS.map(({ value, label }) => {
-                const items = byGroup.get(value) ?? [];
+                const items = filteredByGroup.get(value) ?? [];
                 if (items.length === 0) return null;
                 return (
-                  <div key={value} className="flex flex-col gap-1">
-                    <div className="px-1 text-[11px] font-semibold tracking-[-0.005em] text-muted-foreground">
+                  <div key={value} className="rounded-lg border border-border/70 bg-card/70 p-2">
+                    <div className="mb-1.5 flex items-center justify-between gap-3 px-1 text-[11px] font-semibold tracking-[-0.005em] text-muted-foreground">
                       {label}
+                      <span className="font-mono tnum text-[10px] font-normal">
+                        {items.length}
+                      </span>
                     </div>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
                       {items.map((v) => (
                         <PresetPill
                           key={v.id}
@@ -266,6 +331,11 @@ export function SavedViewsBar({
                   </div>
                 );
               })}
+              {filteredPresetCount === 0 ? (
+                <div className="rounded-lg border border-dashed border-border px-3 py-6 text-center text-[12px] text-muted-foreground">
+                  No presets match &ldquo;{presetQuery.trim()}&rdquo;.
+                </div>
+              ) : null}
             </div>
           </PopoverContent>
         </Popover>
@@ -307,14 +377,19 @@ function PresetPill({
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={`rounded-md border px-2 py-1 text-[11.5px] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring text-left ${
+      className={`flex min-w-0 flex-col rounded-md border px-2.5 py-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
         active
           ? "bg-primary/10 border-primary text-primary font-medium"
           : "bg-card border-border text-foreground hover:bg-accent"
       }`}
       title={view.description ?? view.name}
     >
-      {view.name}
+      <span className="truncate text-[11.5px] font-medium">{view.name}</span>
+      {view.description ? (
+        <span className="mt-0.5 truncate text-[10.5px] font-normal text-muted-foreground">
+          {view.description}
+        </span>
+      ) : null}
     </button>
   );
 }

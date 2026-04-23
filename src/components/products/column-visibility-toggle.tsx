@@ -21,6 +21,15 @@ export function resolveColumnVisibilityUpdate(
   return { base: next, runtime: null };
 }
 
+export function isLegacyDefaultColumnSet(visible: OptionalColumnKey[]): boolean {
+  return (
+    visible.length === 3 &&
+    visible.includes("units_1y") &&
+    visible.includes("dcc") &&
+    visible.includes("margin")
+  );
+}
+
 interface Props {
   runtimeOverride: OptionalColumnKey[] | null;
   onUserChange: (visible: OptionalColumnKey[]) => void;
@@ -40,9 +49,10 @@ export const ColumnVisibilityToggle = forwardRef<ColumnVisibilityHandle, Props>(
         if (!raw) return DEFAULT_COLUMN_SET;
         const parsed = JSON.parse(raw) as { visible?: string[] };
         if (!parsed?.visible) return DEFAULT_COLUMN_SET;
-        return parsed.visible.filter((k): k is OptionalColumnKey =>
+        const visible = parsed.visible.filter((k): k is OptionalColumnKey =>
           (OPTIONAL_COLUMNS as readonly string[]).includes(k),
         );
+        return isLegacyDefaultColumnSet(visible) ? DEFAULT_COLUMN_SET : visible;
       } catch {
         return DEFAULT_COLUMN_SET;
       }

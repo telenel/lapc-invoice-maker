@@ -4,7 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon, SearchIcon } from "lucide-react";
+import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon, PencilIcon, SearchIcon } from "lucide-react";
 import { useEffect, useMemo, type ReactNode } from "react";
 import type {
   ProductBrowseRow,
@@ -287,7 +287,7 @@ function InlineEditableCell({
           void inlineEdit.moveToNextEditableCell(e.shiftKey ? "previous" : "next");
         }
       }}
-      className={`h-7 min-w-[88px] rounded-md border border-border bg-background px-2 py-0 text-[11.5px] font-mono tnum text-foreground outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/30 ${
+      className={`h-8 min-w-[104px] rounded-md border border-ring bg-background px-2.5 py-0 text-[12px] font-mono tnum text-foreground outline-none transition-colors focus:ring-2 focus:ring-ring/30 ${
         inputClassName ?? ""
       } ${align === "right" ? "text-right" : "text-left"}`}
     />
@@ -299,12 +299,18 @@ function InlineEditableCell({
         inlineEdit.startEdit(product.sku, field, currentValue, fieldOrder);
       }}
       aria-label={`Edit ${label.toLowerCase()} for SKU ${product.sku}`}
-      title="Click to edit"
-      className={`inline-flex items-center rounded-[6px] px-1 py-0.5 text-[11.5px] font-mono tnum transition-colors hover:bg-accent/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+      title={`Edit ${label.toLowerCase()}`}
+      className={`group/inline-edit inline-flex min-w-[74px] items-center gap-1 rounded-[7px] border border-transparent px-1.5 py-1 text-[12px] font-mono tnum transition-colors hover:border-border hover:bg-accent/70 hover:text-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
         align === "right" ? "justify-end" : "justify-start"
       }`}
     >
       <span className="leading-none">{displayValue}</span>
+      {field === "cost" || field === "retail" ? (
+        <PencilIcon
+          className="size-3 shrink-0 text-muted-foreground opacity-55 transition-opacity group-hover/inline-edit:opacity-100"
+          aria-hidden="true"
+        />
+      ) : null}
     </button>
   ) : (
     <span className="font-mono tnum text-[11.5px] leading-none">{displayValue}</span>
@@ -655,7 +661,7 @@ export function ProductTable({
           optional-column hiding via `data-priority` at narrow widths. */}
       <div ref={wrapperRef} className="product-table-wrap hidden md:block">
         <div className="max-h-[62vh] overflow-auto">
-          <table className="product-table w-full border-collapse text-[12.5px]">
+          <table className="product-table w-full border-collapse text-[13px]">
             <thead>
               <tr>
                 <th className="w-8 px-0 pl-3 py-2 bg-card border-b border-border sticky top-0 z-[1]">
@@ -688,7 +694,7 @@ export function ProductTable({
                   sortBy={sortBy}
                   sortDir={sortDir}
                   onSort={onSort}
-                  width={110}
+                  width={150}
                 />
                 <SortHeader
                   field="cost"
@@ -698,7 +704,7 @@ export function ProductTable({
                   onSort={onSort}
                   align="right"
                   mono
-                  width={76}
+                  width={96}
                 />
                 <SortHeader
                   field="retail_price"
@@ -708,7 +714,7 @@ export function ProductTable({
                   onSort={onSort}
                   align="right"
                   mono
-                  width={86}
+                  width={104}
                 />
                 <SortHeader
                   field="stock_on_hand"
@@ -718,7 +724,7 @@ export function ProductTable({
                   onSort={onSort}
                   align="right"
                   mono
-                  width={72}
+                  width={86}
                 />
                 {showMargin ? (
                   <SortHeader
@@ -846,7 +852,7 @@ export function ProductTable({
             <tbody>
               {showSkeletonRows
                 ? Array.from({ length: 10 }).map((_, i) => (
-                    <tr key={`skeleton-${i}`} className="h-[34px]">
+                    <tr key={`skeleton-${i}`} className="h-[38px]">
                       {Array.from({ length: skeletonCols }).map((_, j) => (
                         <td key={j} className="px-2.5 py-1.5">
                           <div className="h-3 w-full animate-pulse rounded bg-muted" />
@@ -894,7 +900,7 @@ export function ProductTable({
                       <tr
                         key={product.sku}
                         onClick={() => onToggle(product)}
-                        className={`h-[34px] cursor-pointer transition-colors border-b border-border/50 ${
+                        className={`h-[38px] cursor-pointer transition-colors border-b border-border/50 ${
                           isUpdatingRows ? "opacity-70" : ""
                         } ${
                           sel
@@ -925,7 +931,7 @@ export function ProductTable({
                             {product.sku}
                           </span>
                         </td>
-                        <td className="px-2.5 py-1.5 max-w-[360px]">
+                        <td className="px-3 py-2 max-w-[420px]">
                           <div className="flex flex-col gap-px">
                             <span className="overflow-hidden text-ellipsis whitespace-nowrap text-foreground font-medium">
                               {primaryText}
@@ -937,14 +943,14 @@ export function ProductTable({
                             ) : null}
                           </div>
                         </td>
-                        <td className="px-2.5 py-1.5 whitespace-nowrap">
+                        <td className="px-3 py-2 whitespace-nowrap">
                           {(() => {
                             const name = formatVendorDisplay(
                               product.vendor_id != null ? vendorsById.get(product.vendor_id) : null,
                             );
                             return (
                               <span
-                                className="text-[11.5px] text-foreground"
+                                className="block max-w-[150px] truncate text-[12px] text-foreground"
                                 title={name}
                               >
                                 {name}
@@ -972,8 +978,8 @@ export function ProductTable({
                           inlineEdit={inlineEdit}
                           editable={canInlineEditScopedPricing}
                           align="right"
-                          className="px-2.5 py-1.5 text-right"
-                          inputClassName="min-w-[92px]"
+                          className="px-3 py-2 text-right"
+                          inputClassName="min-w-[104px]"
                         />
                         <InlineEditableCell
                           product={product}
@@ -995,10 +1001,10 @@ export function ProductTable({
                           inlineEdit={inlineEdit}
                           editable={canInlineEditScopedPricing}
                           align="right"
-                          className="px-2.5 py-1.5 text-right"
-                          inputClassName="min-w-[92px]"
+                          className="px-3 py-2 text-right"
+                          inputClassName="min-w-[104px]"
                         />
-                        <td className="px-2.5 py-1.5 text-right">
+                        <td className="px-3 py-2 text-right">
                           {(() => {
                             const stock = product.stock_on_hand;
                             const stockValue = stock == null ? "—" : stock.toLocaleString();
@@ -1032,7 +1038,7 @@ export function ProductTable({
                           })()}
                         </td>
                         {showMargin ? (
-                          <td data-priority="medium" className="px-2.5 py-1.5 text-right">
+                          <td data-priority="medium" className="px-3 py-2 text-right">
                             {costValue != null && retailValue != null ? (
                               <MarginBar
                                 cost={costValue}

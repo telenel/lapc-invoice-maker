@@ -86,7 +86,7 @@ export const OPTIONAL_COLUMNS = [
 
 export type OptionalColumnKey = typeof OPTIONAL_COLUMNS[number];
 
-export const DEFAULT_COLUMN_SET: OptionalColumnKey[] = ["units_1y", "dcc", "margin"];
+export const DEFAULT_COLUMN_SET: OptionalColumnKey[] = ["units_1y", "margin"];
 
 export const COLUMN_LABELS: Record<OptionalColumnKey, string> = {
   dcc: "DCC",
