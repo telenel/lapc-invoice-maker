@@ -73,10 +73,13 @@ export function ProductFiltersExtended({
               type="number"
               inputMode="numeric"
               min="0"
-              placeholder="0"
+              placeholder="No upper bound"
               value={filters.maxStock}
               onChange={(e) => onChange({ maxStock: e.target.value })}
             />
+            <p className="text-[11px] leading-4 text-muted-foreground">
+              Leave blank for no maximum.
+            </p>
           </div>
         </div>
       </section>

@@ -83,6 +83,20 @@ function buildFiltersForBrowseTab(
   };
 }
 
+function getTabCountBaseFilters(filters: ProductFilters): ProductFilters {
+  return {
+    ...filters,
+    tab: "textbooks",
+    page: 1,
+    sectionSlug: undefined,
+    allSections: false,
+  };
+}
+
+function getTabCountRefreshKey(filters: ProductFilters): string {
+  return JSON.stringify(getTabCountBaseFilters(filters));
+}
+
 function actionBarItemToSelectedProduct(item: {
   sku: number;
   description: string;
@@ -302,42 +316,30 @@ export default function ProductsPage() {
   // Bumped after saveView / deleteView succeeds so the SavedViewsBar refetches.
   const [savedViewsRefresh, setSavedViewsRefresh] = useState(0);
 
-  // Track tab counts so every tab always shows its last-known count.
+  // Track tab counts with a filter-scoped count request so inactive tabs never
+  // inherit the active tab's total during page/sort/category transitions.
   const [tabCounts, setTabCounts] = useState<Record<ProductTab, number | null>>({
     textbooks: null,
     merchandise: null,
     quickPicks: null,
   });
+  const tabCountRefreshKey = useMemo(() => getTabCountRefreshKey(filters), [filters]);
+  const tabCountBaseFilters = useMemo(() => getTabCountBaseFilters(filters), [tabCountRefreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const tabCountRequestRef = useRef(0);
   useEffect(() => {
-    if (data) {
-      setTabCounts((prev) => ({ ...prev, [filters.tab]: data.total }));
-    }
-  }, [data, filters.tab]);
-
-  // Inactive-tab count — fired whenever the active data resolves so the user
-  // always sees both totals under the current filter set.
-  useEffect(() => {
-    if (!data) return;
+    const requestId = tabCountRequestRef.current + 1;
+    tabCountRequestRef.current = requestId;
     let cancelled = false;
-    const inactiveTabs = TABS
-      .map((tab) => tab.value)
-      .filter((value) => value !== filters.tab);
 
     Promise.all(
-      inactiveTabs.map(async (tab) => {
-        const result = await searchProducts(buildFiltersForBrowseTab(filters, tab), { countOnly: true });
-        return [tab, result.total] as const;
+      TABS.map(async (tab) => {
+        const result = await searchProducts(buildFiltersForBrowseTab(tabCountBaseFilters, tab.value), { countOnly: true });
+        return [tab.value, result.total] as const;
       }),
     )
       .then((results) => {
-        if (cancelled) return;
-        setTabCounts((prev) => {
-          const next = { ...prev };
-          for (const [tab, total] of results) {
-            next[tab] = total;
-          }
-          return next;
-        });
+        if (cancelled || tabCountRequestRef.current !== requestId) return;
+        setTabCounts(Object.fromEntries(results) as Record<ProductTab, number>);
       })
       .catch(() => {
         // Silent — stale count stays visible rather than showing a spinner.
@@ -345,8 +347,7 @@ export default function ProductsPage() {
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
+  }, [tabCountBaseFilters]);
   const {
     selected,
     selectedCount,
@@ -429,6 +430,11 @@ export default function ProductsPage() {
     );
   }, [data?.products, primaryLocationId, savedScopedSelectionCache, scopedSelectionCache, selected]);
   const selectedItems = Array.from(scopedSelected.values());
+  const visibleSelectedCount = useMemo(
+    () => (data?.products ?? []).filter((product) => selected.has(product.sku)).length,
+    [data?.products, selected],
+  );
+  const offPageSelectedCount = Math.max(0, selectedCount - visibleSelectedCount);
   useEffect(() => {
     const visibleSelectedRows = (data?.products ?? []).filter((product) => selected.has(product.sku));
     if (visibleSelectedRows.length === 0) return;
@@ -1124,6 +1130,7 @@ export default function ProductsPage() {
             total={data?.total ?? 0}
             page={filters.page}
             loading={loading}
+            offPageSelectedCount={offPageSelectedCount}
             sortBy={filters.sortBy}
             sortDir={filters.sortDir}
             isSelected={isSelected}
@@ -1145,6 +1152,8 @@ export default function ProductsPage() {
       <ProductActionBar
         selected={actionBarSelected}
         selectedCount={selectedCount}
+        visibleSelectedCount={visibleSelectedCount}
+        offPageSelectedCount={offPageSelectedCount}
         editPricingItems={editPricingItems}
         onClear={clear}
         saveToSession={saveScopedSelectionToSession}

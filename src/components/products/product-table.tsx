@@ -69,6 +69,7 @@ interface ProductTableProps {
   total: number;
   page: number;
   loading: boolean;
+  offPageSelectedCount?: number;
   sortBy: string;
   sortDir: "asc" | "desc";
   isSelected: (sku: number) => boolean;
@@ -554,6 +555,7 @@ export function ProductTable({
   total,
   page,
   loading,
+  offPageSelectedCount = 0,
   sortBy,
   sortDir,
   isSelected,
@@ -601,6 +603,8 @@ export function ProductTable({
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
   const to = Math.min(page * PAGE_SIZE, total);
+  const showSkeletonRows = loading && products.length === 0;
+  const isUpdatingRows = loading && products.length > 0;
   const allOnPageSelected = products.length > 0 && products.every((p) => isSelected(p.sku));
   const someOnPageSelected =
     products.length > 0 && products.some((p) => isSelected(p.sku)) && !allOnPageSelected;
@@ -630,7 +634,23 @@ export function ProductTable({
   const skeletonCols = baseCols + optionalCols;
 
   return (
-    <div className="rounded-[10px] border border-border bg-card overflow-hidden shadow-[0_1px_0_color-mix(in_oklch,var(--border)_55%,transparent),0_2px_8px_-2px_color-mix(in_oklch,var(--foreground)_6%,transparent)]">
+    <div
+      className="rounded-[10px] border border-border bg-card overflow-hidden shadow-[0_1px_0_color-mix(in_oklch,var(--border)_55%,transparent),0_2px_8px_-2px_color-mix(in_oklch,var(--foreground)_6%,transparent)]"
+      aria-busy={loading}
+    >
+      {offPageSelectedCount > 0 ? (
+        <div className="border-b border-border bg-secondary/55 px-3 py-2 text-[11.5px] text-muted-foreground">
+          <span className="font-medium text-foreground">
+            {offPageSelectedCount} selected on another page.
+          </span>{" "}
+          Bulk actions include hidden selections until you clear them.
+        </div>
+      ) : null}
+      {isUpdatingRows ? (
+        <div className="border-b border-border bg-card px-3 py-1.5 text-[11px] text-muted-foreground">
+          Updating results while keeping the current rows visible.
+        </div>
+      ) : null}
       {/* Desktop table — wrapper owns the container-query context that drives
           optional-column hiding via `data-priority` at narrow widths. */}
       <div ref={wrapperRef} className="product-table-wrap hidden md:block">
@@ -824,7 +844,7 @@ export function ProductTable({
               </tr>
             </thead>
             <tbody>
-              {loading
+              {showSkeletonRows
                 ? Array.from({ length: 10 }).map((_, i) => (
                     <tr key={`skeleton-${i}`} className="h-[34px]">
                       {Array.from({ length: skeletonCols }).map((_, j) => (
@@ -875,6 +895,8 @@ export function ProductTable({
                         key={product.sku}
                         onClick={() => onToggle(product)}
                         className={`h-[34px] cursor-pointer transition-colors border-b border-border/50 ${
+                          isUpdatingRows ? "opacity-70" : ""
+                        } ${
                           sel
                             ? "bg-primary/[0.06]"
                             : zebra
@@ -1229,7 +1251,7 @@ export function ProductTable({
 
       {/* Mobile cards */}
       <div className="space-y-2 p-2 md:hidden">
-        {loading
+        {showSkeletonRows
           ? Array.from({ length: 5 }).map((_, i) => (
               <div key={`mobile-skeleton-${i}`} className="rounded-xl border p-3">
                 <div className="mb-2 h-4 w-3/4 animate-pulse rounded bg-muted" />
@@ -1366,6 +1388,8 @@ export function ProductTable({
                   key={product.sku}
                   data-testid={`product-card-${product.sku}`}
                   className={`relative rounded-xl border border-border/70 bg-card p-3 shadow-sm transition-colors ${
+                    isUpdatingRows ? "opacity-70" : ""
+                  } ${
                     sel ? "border-primary bg-primary/[0.05]" : ""
                   }`}
                 >

@@ -411,6 +411,31 @@ describe("product table variance trigger", () => {
     expect(screen.queryByRole("button", { name: /edit barcode for sku 101/i })).toBeNull();
   });
 
+  it("keeps existing rows visible during lightweight table refreshes", () => {
+    const onToggle = vi.fn();
+
+    render(React.createElement(ProductTable, {
+      tab: "textbooks",
+      products: [makeTextbookProduct()],
+      total: 1,
+      page: 1,
+      loading: true,
+      sortBy: "sku",
+      sortDir: "asc",
+      isSelected: () => false,
+      onToggle,
+      onToggleAll: () => {},
+      onPageChange: () => {},
+      onSort: () => {},
+      visibleColumns: [],
+      offPageSelectedCount: 1,
+    }));
+
+    expect(screen.getByText(/updating results/i)).toBeInTheDocument();
+    expect(screen.getAllByText("101").length).toBeGreaterThan(0);
+    expect(screen.getByText(/1 selected on another page/i)).toBeInTheDocument();
+  });
+
   it("clicking the barcode inline-edit button for SKU 202 does not toggle selection and opens the editor", async () => {
     const user = userEvent.setup();
     const onToggle = vi.fn();

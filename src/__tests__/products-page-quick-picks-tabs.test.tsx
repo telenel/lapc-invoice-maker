@@ -49,11 +49,19 @@ vi.mock("@/components/products/product-filters-extended", () => ({
 }));
 
 vi.mock("@/components/products/product-table", () => ({
-  ProductTable: ({ tab }: { tab: string }) => <div data-testid="product-table">{`tab:${tab}`}</div>,
+  ProductTable: ({ offPageSelectedCount, tab }: { offPageSelectedCount?: number; tab: string }) => (
+    <div data-testid="product-table">{`tab:${tab}; off-page:${offPageSelectedCount ?? 0}`}</div>
+  ),
 }));
 
 vi.mock("@/components/products/product-action-bar", () => ({
-  ProductActionBar: () => <div data-testid="action-bar" />,
+  ProductActionBar: ({
+    offPageSelectedCount,
+    visibleSelectedCount,
+  }: {
+    offPageSelectedCount?: number;
+    visibleSelectedCount?: number;
+  }) => <div data-testid="action-bar">{`visible:${visibleSelectedCount ?? 0}; off-page:${offPageSelectedCount ?? 0}`}</div>,
 }));
 
 vi.mock("@/components/products/new-item-dialog", () => ({
@@ -106,7 +114,7 @@ describe("ProductsPage quick-picks tab counts", () => {
     healthMock.mockResolvedValue({ available: true });
     searchProductsMock.mockImplementation(async (filters: { tab: string }) => ({
       products: [],
-      total: filters.tab === "textbooks" ? 7 : filters.tab === "merchandise" ? 9 : 0,
+      total: filters.tab === "textbooks" ? 7 : filters.tab === "merchandise" ? 9 : 12,
       page: 1,
       pageSize: 50,
     }));
@@ -151,5 +159,46 @@ describe("ProductsPage quick-picks tab counts", () => {
     expect(screen.getByRole("tab", { name: /Textbooks/i })).toHaveTextContent("7");
     expect(screen.getByRole("tab", { name: /General Merchandise/i })).toHaveTextContent("9");
     expect(screen.getByRole("tab", { name: /Quick Picks/i })).toHaveTextContent("12");
+  });
+
+  it("surfaces selected rows that are no longer visible on the current page", async () => {
+    useProductSearchMock.mockReturnValue({
+      data: { products: [], total: 50, page: 2, pageSize: 50 },
+      loading: false,
+      refetch: vi.fn(),
+    });
+    useProductSelectionMock.mockReturnValue({
+      selected: new Map([
+        [
+          101,
+          {
+            sku: 101,
+            description: "Off-page notebook",
+            retailPrice: 4.99,
+            cost: 2.5,
+            pricingLocationId: 2,
+            barcode: null,
+            author: null,
+            title: null,
+            isbn: null,
+            edition: null,
+            catalogNumber: null,
+            vendorId: null,
+            itemType: "general_merchandise",
+          },
+        ],
+      ]),
+      selectedCount: 1,
+      toggle: vi.fn(),
+      toggleAll: vi.fn(),
+      clear: vi.fn(),
+      isSelected: vi.fn(),
+      saveToSession: vi.fn(),
+    });
+
+    render(<ProductsPage />);
+
+    expect(screen.getByTestId("product-table")).toHaveTextContent("off-page:1");
+    expect(screen.getByTestId("action-bar")).toHaveTextContent("visible:0; off-page:1");
   });
 });
