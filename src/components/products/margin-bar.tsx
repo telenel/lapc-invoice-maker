@@ -3,15 +3,18 @@
 interface MarginBarProps {
   cost: number;
   retail: number;
+  showText?: boolean;
 }
 
-export function MarginBar({ cost, retail }: MarginBarProps) {
+export function MarginBar({ cost, retail, showText = true }: MarginBarProps) {
   if (!retail || retail <= 0) {
     return (
       <span className="inline-flex items-center gap-2 min-w-[92px] justify-end">
-        <span className="font-mono text-[11.5px] text-muted-foreground tnum w-[38px] text-right">
-          —
-        </span>
+        {showText ? (
+          <span className="font-mono text-[11.5px] text-muted-foreground tnum w-[38px] text-right">
+            —
+          </span>
+        ) : null}
         <span className="relative w-[46px] h-1 rounded-sm bg-muted overflow-hidden" />
       </span>
     );
@@ -27,9 +30,11 @@ export function MarginBar({ cost, retail }: MarginBarProps) {
 
   return (
     <span className="inline-flex items-center gap-2 min-w-[92px] justify-end">
-      <span className="font-mono text-[11.5px] text-muted-foreground tnum w-[38px] text-right">
-        {display}%
-      </span>
+      {showText ? (
+        <span className="font-mono text-[11.5px] text-muted-foreground tnum w-[38px] text-right">
+          {display}%
+        </span>
+      ) : null}
       <span className="relative w-[46px] h-1 rounded-sm bg-muted overflow-hidden">
         <span
           className="absolute inset-0 rounded-sm"
