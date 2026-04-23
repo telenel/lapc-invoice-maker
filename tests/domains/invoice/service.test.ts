@@ -99,7 +99,7 @@ describe("invoiceService", () => {
   // ── list ──────────────────────────────────────────────────────────────────
 
   describe("list", () => {
-    it("maps invoices to DTOs with ISO string dates and numeric totals", async () => {
+    it("maps invoices to DTOs with date-only business dates and numeric totals", async () => {
       mockRepo.findMany.mockResolvedValue({
         invoices: [mockInvoiceRow],
         total: 1,
@@ -115,7 +115,7 @@ describe("invoiceService", () => {
 
       const inv = result.invoices[0];
       expect(inv.id).toBe("inv1");
-      expect(inv.date).toBe(new Date("2026-01-15T00:00:00Z").toISOString());
+      expect(inv.date).toBe("2026-01-15");
       expect(inv.createdAt).toBe(new Date("2026-01-15T10:00:00Z").toISOString());
       expect(inv.totalAmount).toBe(150);
       expect(typeof inv.totalAmount).toBe("number");

@@ -173,8 +173,8 @@ describe("quoteService", () => {
       const q = result.quotes[0];
       expect(q.id).toBe("q1");
       expect(q.quoteNumber).toBe("Q-2026-0001");
-      expect(q.date).toBe("2026-01-15T00:00:00.000Z");
-      expect(q.expirationDate).toBe("2026-02-15T00:00:00.000Z");
+      expect(q.date).toBe("2026-01-15");
+      expect(q.expirationDate).toBe("2026-02-15");
       expect(q.totalAmount).toBe(150);
       expect(q.staff).toEqual({ id: "s1", name: "Alice", title: "Manager", department: "IT" });
       expect(q.items).toHaveLength(2);

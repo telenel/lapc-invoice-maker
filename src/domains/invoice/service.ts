@@ -5,7 +5,7 @@ import { pdfService } from "@/domains/pdf/service";
 import { pdfStorage } from "@/domains/pdf/storage";
 import { staffService } from "@/domains/staff/service";
 import { formatCurrency, formatDateFromDate } from "@/domains/shared/formatters";
-import { getDateKeyInLosAngeles } from "@/lib/date-utils";
+import { getDateKeyInLosAngeles, getDateOnlyKey } from "@/lib/date-utils";
 import { safePublishAll } from "@/lib/sse";
 import type {
   InvoiceResponse,
@@ -106,7 +106,7 @@ function toInvoiceResponse(invoice: NonNullable<InvoiceWithRelations>): InvoiceR
   return {
     id: invoice.id,
     invoiceNumber: invoice.invoiceNumber,
-    date: invoice.date.toISOString(),
+    date: getDateOnlyKey(invoice.date) ?? invoice.date.toISOString(),
     staffId: invoice.staffId ?? null,
     status: normalizeInvoiceStatus(invoice.status),
     type: invoice.type,

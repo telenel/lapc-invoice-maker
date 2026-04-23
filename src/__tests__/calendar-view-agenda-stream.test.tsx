@@ -1277,6 +1277,37 @@ describe("AgendaStreamView", () => {
     expect(screen.getByText("Week of May 4, 2026")).toBeTruthy();
   });
 
+  it("keeps UTC-midnight fullcalendar week starts on the selected business week", () => {
+    render(
+      <AgendaStreamView
+        dateProfile={{
+          currentRange: {
+            start: new Date("2026-04-20T00:00:00.000Z"),
+          },
+        } as ViewProps["dateProfile"]}
+        agendaEvents={[
+          {
+            ...buildAgendaEvents()[0],
+            id: "catering-apr-22",
+            calendarEventId: "catering-apr-22",
+            dateKey: "2026-04-22",
+            title: "Accepted Catering",
+            metadata: {
+              ...buildAgendaEvents()[0].metadata,
+              amount: 1250,
+            },
+          },
+        ]}
+        now={NON_MATCHING_NOW}
+      />,
+    );
+
+    expect(screen.getByText("Week of Apr 20, 2026")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Wednesday, April 22, 2026/i })).toBeTruthy();
+    expect(screen.getAllByText("1 events").length).toBeGreaterThan(0);
+    expect(screen.getByText("$1,250")).toBeTruthy();
+  });
+
   it("keeps all-day and off-hours events in cards while excluding them from the timeline display", async () => {
     const user = userEvent.setup();
 

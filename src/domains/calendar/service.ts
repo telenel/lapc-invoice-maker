@@ -18,7 +18,8 @@ export interface CalendarBootstrapData {
 function getWeekStartDateKey(date = new Date()): string {
   const currentDateKey = getDateKeyInLosAngeles(date);
   const dayOfWeek = fromDateKey(currentDateKey).getUTCDay();
-  return addDaysToDateKey(currentDateKey, -dayOfWeek);
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  return addDaysToDateKey(currentDateKey, mondayOffset);
 }
 
 export async function listCalendarEventsForRange(
