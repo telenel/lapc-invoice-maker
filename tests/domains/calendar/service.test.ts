@@ -19,7 +19,7 @@ vi.mock("@/domains/event/service", () => ({
 
 import { prisma } from "@/lib/prisma";
 import { eventService } from "@/domains/event/service";
-import { listCalendarEventsForRange } from "@/domains/calendar/service";
+import { getCalendarBootstrapData, listCalendarEventsForRange } from "@/domains/calendar/service";
 
 describe("calendar service", () => {
   beforeEach(() => {
@@ -40,6 +40,15 @@ describe("calendar service", () => {
           archivedAt: null,
         }),
       }),
+    );
+  });
+
+  it("bootstraps the desktop agenda range from the selected Monday business week", async () => {
+    await getCalendarBootstrapData(new Date("2026-04-22T19:00:00.000Z"));
+
+    expect(eventService.listForDateRange).toHaveBeenCalledWith(
+      new Date("2026-04-20T00:00:00.000Z"),
+      new Date("2026-04-27T00:00:00.000Z"),
     );
   });
 });

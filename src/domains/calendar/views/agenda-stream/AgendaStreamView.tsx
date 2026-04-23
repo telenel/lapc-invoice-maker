@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent, type MouseEvent a
 import type { SpecificViewContentArg } from "@fullcalendar/core";
 import { toast } from "sonner";
 import { MiniMonth } from "@/components/calendar/mini-month";
-import { addDaysToDateKey, fromDateKey, getDateKeyInLosAngeles } from "@/lib/date-utils";
+import { addDaysToDateKey, fromDateKey, getDateKeyInLosAngeles, toDateKey } from "@/lib/date-utils";
 import type { CalendarEventItem, EventType } from "@/domains/event/types";
 import type { AgendaLaneEvent, AgendaStreamDay, AgendaStreamEvent } from "./types";
 import {
@@ -93,7 +93,7 @@ function deriveWeekStart(
 
   const viewStart = dateProfile?.currentRange?.start;
   if (viewStart instanceof Date && !Number.isNaN(viewStart.getTime())) {
-    return toMondayDateKey(getDateKeyInLosAngeles(viewStart));
+    return toMondayDateKey(toDateKey(viewStart));
   }
 
   return toMondayDateKey(getDateKeyInLosAngeles(now));

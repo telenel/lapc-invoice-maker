@@ -164,10 +164,10 @@ describe("PublicQuoteView", () => {
     await screen.findByText("Payment Details");
     await user.click(screen.getByRole("button", { name: "Cash" }));
 
-    expect(screen.getByText("Cash Payments Are In-Store Only")).toBeInTheDocument();
+    expect(screen.getByText(/Cash payments must be completed in person/i)).toBeInTheDocument();
     expect(screen.getAllByText("6201 Winnetka Ave").length).toBeGreaterThan(0);
+    expect(screen.queryByRole("button", { name: "Got it" })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Got it" }));
     await user.click(screen.getByRole("button", { name: "Approve Quote" }));
 
     await waitFor(() => {
@@ -181,7 +181,56 @@ describe("PublicQuoteView", () => {
       );
     });
 
-    expect(screen.getByText(/Please follow the payment instructions below/i)).toBeInTheDocument();
+    expect(screen.getByText(/Payment method recorded: Cash/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Please follow the payment instructions below/i)).not.toBeInTheDocument();
+  });
+
+  it("keeps submit loading copy tied to the selected approval action", async () => {
+    vi.mocked(quoteApi.getPublicQuote).mockResolvedValueOnce({
+      id: "q1",
+      quoteNumber: "Q-1",
+      quoteStatus: "SENT",
+      paymentLinkAvailable: true,
+      responseLinkAvailable: true,
+      paymentMethod: null,
+      date: "2026-03-31",
+      expirationDate: null,
+      department: "IT",
+      category: "SUPPLIES",
+      notes: "",
+      totalAmount: 10,
+      recipientName: "Jane",
+      recipientEmail: "jane@example.com",
+      recipientOrg: "",
+      staff: null,
+      contact: null,
+      items: [],
+      isCateringEvent: false,
+      cateringDetails: null,
+      paymentDetailsResolved: false,
+    } as never);
+
+    let resolveResponse!: (value: { success: true; status: "DECLINED" }) => void;
+    vi.mocked(quoteApi.respondToPublicQuote).mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveResponse = resolve;
+      }) as never,
+    );
+
+    const user = userEvent.setup();
+    render(<PublicQuoteView token="token" />);
+
+    await screen.findByRole("button", { name: "Approve Quote" });
+    await user.click(screen.getByRole("button", { name: "Decline Quote" }));
+
+    expect(screen.getByRole("button", { name: "Approve Quote" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Declining..." })).toBeDisabled();
+    expect(screen.queryByText("Submitting...")).not.toBeInTheDocument();
+
+    resolveResponse({ success: true, status: "DECLINED" });
+    await waitFor(() => {
+      expect(screen.getByText("This quote has been declined.")).toBeInTheDocument();
+    });
   });
 
   it("shows saved offline payment guidance after the quote page is revisited", async () => {

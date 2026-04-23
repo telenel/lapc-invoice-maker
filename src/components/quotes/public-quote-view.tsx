@@ -24,10 +24,7 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { TimeSelect } from "@/components/ui/time-select";
-import {
-  PaymentMethodGuidanceCallout,
-  PaymentMethodGuidanceDialog,
-} from "@/components/quotes/payment-method-guidance";
+import { PaymentMethodGuidanceCallout } from "@/components/quotes/payment-method-guidance";
 import { quoteApi } from "@/domains/quote/api-client";
 import { getMissingCustomerCateringRequirements, normalizeQuoteTimeInput } from "@/domains/quote/catering";
 import {
@@ -98,12 +95,11 @@ export function PublicQuoteView({ token }: { token: string }) {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [responding, setResponding] = useState(false);
+  const [respondingAction, setRespondingAction] = useState<"ACCEPTED" | "DECLINED" | null>(null);
   const [responded, setResponded] = useState(false);
   const [cateringForm, setCateringForm] = useState<PublicCateringForm>(makeCateringForm(null));
   const [paymentMethod, setPaymentMethod] = useState<QuotePaymentMethod | "">("");
   const [sapAccountNumber, setSapAccountNumber] = useState("");
-  const [guidanceOpen, setGuidanceOpen] = useState(false);
   const viewIdRef = useRef<string | null>(null);
   const publicViewRegistrationRef = useRef<Promise<string | null> | null>(null);
   const pendingUnloadDurationRef = useRef<number | null>(null);
@@ -117,7 +113,6 @@ export function PublicQuoteView({ token }: { token: string }) {
     if (nextMethod !== "ACCOUNT_NUMBER") {
       setSapAccountNumber("");
     }
-    setGuidanceOpen(Boolean(getQuotePaymentMethodGuidance(nextMethod)));
   }
 
   // Fetch quote data and register view
@@ -129,7 +124,6 @@ export function PublicQuoteView({ token }: { token: string }) {
         setResponded(false);
         setPaymentMethod("");
         setSapAccountNumber("");
-        setGuidanceOpen(false);
         setCateringForm(makeCateringForm(null));
         viewIdRef.current = null;
         publicViewRegistrationRef.current = null;
@@ -198,7 +192,7 @@ export function PublicQuoteView({ token }: { token: string }) {
       return;
     }
 
-    setResponding(true);
+    setRespondingAction(response);
     try {
       const viewId = await getRegisteredViewId();
 
@@ -245,15 +239,13 @@ export function PublicQuoteView({ token }: { token: string }) {
       );
       toast.success(
         response === "ACCEPTED"
-          ? selectedPaymentGuidance
-            ? "Quote approved — please follow the payment instructions."
-            : "Quote approved!"
+          ? "Quote approved!"
           : "Quote declined",
       );
     } catch (err) {
       toast.error((err as Error).message ?? "Failed to submit response");
     } finally {
-      setResponding(false);
+      setRespondingAction(null);
     }
   }
 
@@ -343,6 +335,7 @@ export function PublicQuoteView({ token }: { token: string }) {
   const missingCateringRequirementSet = new Set(missingCateringRequirements);
   const hasMissingCateringRequirement = (requirement: string): boolean => missingCateringRequirementSet.has(requirement);
   const selectedPaymentGuidance = getQuotePaymentMethodGuidance(paymentMethod);
+  const selectedPaymentLabel = paymentMethod ? getQuotePaymentMethodLabel(paymentMethod) : "";
 
   return (
     <div className="min-h-screen bg-background">
@@ -919,20 +912,20 @@ export function PublicQuoteView({ token }: { token: string }) {
                   <Button
                     size="lg"
                     onClick={() => handleRespond("ACCEPTED")}
-                    disabled={responding || cateringRequiredMissing}
+                    disabled={respondingAction !== null || cateringRequiredMissing}
                     className="bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm min-w-[160px] h-12 text-base font-semibold"
                     title={cateringRequiredMissing ? "Fill in required event details above" : undefined}
                   >
-                    {responding ? "Submitting..." : "Approve Quote"}
+                    {respondingAction === "ACCEPTED" ? "Approving..." : "Approve Quote"}
                   </Button>
                   <Button
                     size="lg"
                     variant="destructive"
                     onClick={() => handleRespond("DECLINED")}
-                    disabled={responding}
+                    disabled={respondingAction !== null}
                     className="min-w-[160px] h-12 text-base shadow-sm"
                   >
-                    {responding ? "Submitting..." : "Decline Quote"}
+                    {respondingAction === "DECLINED" ? "Declining..." : "Decline Quote"}
                   </Button>
                 </div>
               </div>
@@ -960,13 +953,17 @@ export function PublicQuoteView({ token }: { token: string }) {
                 <p className="text-sm text-muted-foreground">
                   Your approval was received. Payment collection for this quote is now closed.
                 </p>
-              ) : quote.quoteStatus === "ACCEPTED" && selectedPaymentGuidance ? (
+              ) : quote.quoteStatus === "ACCEPTED" && selectedPaymentGuidance && !responded ? (
                 <div className="space-y-3">
                   <p className="text-sm text-muted-foreground">
                     This quote has been approved. Please follow the payment instructions below.
                   </p>
                   <PaymentMethodGuidanceCallout method={paymentMethod} className="mx-auto max-w-lg text-left" />
                 </div>
+              ) : quote.quoteStatus === "ACCEPTED" && selectedPaymentLabel ? (
+                <p className="text-sm text-muted-foreground">
+                  This quote has been approved. Payment method recorded: {selectedPaymentLabel}.
+                </p>
               ) : (
                 <p className="text-sm text-muted-foreground">
                   {quote.quoteStatus === "ACCEPTED"
@@ -990,11 +987,6 @@ export function PublicQuoteView({ token }: { token: string }) {
           </Card>
         )}
       </div>
-      <PaymentMethodGuidanceDialog
-        method={paymentMethod}
-        open={guidanceOpen}
-        onOpenChange={setGuidanceOpen}
-      />
     </div>
   );
 }

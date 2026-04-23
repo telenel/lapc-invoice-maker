@@ -48,6 +48,7 @@ export function ShareLinkDialog({
   quoteStatus,
 }: ShareLinkDialogProps) {
   const linkInputRef = useRef<HTMLInputElement>(null);
+  const autoCloseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
   const [toAddress, setToAddress] = useState(recipientEmail ?? "");
   const [sent, setSent] = useState(false);
@@ -61,10 +62,27 @@ export function ShareLinkDialog({
     setEmailLogs((prev) => [...prev, { timestamp: ts(), message, status }]);
   }, []);
 
+  const completeSuccessfulSend = useCallback(() => {
+    if (autoCloseTimerRef.current) {
+      clearTimeout(autoCloseTimerRef.current);
+      autoCloseTimerRef.current = null;
+    }
+    setEmailStep(null);
+    setEmailLogs([]);
+    setEmailError(undefined);
+    setSent(true);
+    toast.success("Email sent!");
+    onOpenChange(false);
+  }, [onOpenChange]);
+
   // Check email availability when dialog opens
   useEffect(() => {
     if (!open) {
       setSent(false);
+      if (autoCloseTimerRef.current) {
+        clearTimeout(autoCloseTimerRef.current);
+        autoCloseTimerRef.current = null;
+      }
       return;
     }
     setToAddress(recipientEmail ?? "");
@@ -81,6 +99,21 @@ export function ShareLinkDialog({
       cancelled = true;
     };
   }, [open, recipientEmail]);
+
+  useEffect(() => {
+    if (emailStep !== "done") return;
+
+    autoCloseTimerRef.current = setTimeout(() => {
+      completeSuccessfulSend();
+    }, 900);
+
+    return () => {
+      if (autoCloseTimerRef.current) {
+        clearTimeout(autoCloseTimerRef.current);
+        autoCloseTimerRef.current = null;
+      }
+    };
+  }, [completeSuccessfulSend, emailStep]);
 
   function handleCopy() {
     navigator.clipboard.writeText(shareUrl).then(() => {
@@ -182,13 +215,14 @@ export function ShareLinkDialog({
 
   function handleCloseProgress() {
     const wasDone = emailStep === "done";
+    if (wasDone) {
+      completeSuccessfulSend();
+      return;
+    }
+
     setEmailStep(null);
     setEmailLogs([]);
     setEmailError(undefined);
-    if (wasDone) {
-      setSent(true);
-      toast.success("Email sent!");
-    }
   }
 
   // Loading state
