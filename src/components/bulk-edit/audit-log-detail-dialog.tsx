@@ -43,7 +43,7 @@ export function AuditLogDetailDialog({ runId, open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="sm:max-w-2xl lg:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Bulk edit detail</DialogTitle>
           <DialogDescription>
