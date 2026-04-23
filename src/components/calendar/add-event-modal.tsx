@@ -187,7 +187,7 @@ export function AddEventModal({ event, onSave, onClose, trigger, defaultOpen = f
         {trigger}
       </div>
       <Dialog open={open} onOpenChange={(val) => { if (!val) closeModal(); else setOpen(val); }}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{isEdit ? "Edit Event" : "Add Event"}</DialogTitle>
           </DialogHeader>

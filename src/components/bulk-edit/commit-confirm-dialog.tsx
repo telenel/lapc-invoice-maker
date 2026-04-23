@@ -26,7 +26,7 @@ export function CommitConfirmDialog({ open, onOpenChange, preview, onConfirm, su
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Apply {rowCount} change{rowCount === 1 ? "" : "s"}?</DialogTitle>
           <DialogDescription>Review before committing. Changes are not undoable.</DialogDescription>

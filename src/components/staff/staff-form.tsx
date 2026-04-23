@@ -116,7 +116,7 @@ export function StaffForm({ staff, onSave, trigger }: StaffFormProps) {
         {trigger}
       </div>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>
               {isEdit ? "Edit Staff Member" : "Add Staff Member"}
