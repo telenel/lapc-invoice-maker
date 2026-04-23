@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { resolveColumnVisibilityUpdate } from "@/components/products/column-visibility-toggle";
+import {
+  isLegacyDefaultColumnSet,
+  resolveColumnVisibilityUpdate,
+} from "@/components/products/column-visibility-toggle";
+import { DEFAULT_COLUMN_SET } from "@/domains/product/constants";
 
 describe("resolveColumnVisibilityUpdate", () => {
   it("keeps persisted defaults unchanged when a preset runtime override is active", () => {
@@ -25,5 +29,16 @@ describe("resolveColumnVisibilityUpdate", () => {
 
     expect(result.base).toEqual(["units_1y", "revenue_1y"]);
     expect(result.runtime).toBeNull();
+  });
+
+  it("keeps the default Products table scan set lean", () => {
+    expect(DEFAULT_COLUMN_SET).toEqual(["units_1y", "margin"]);
+    expect(DEFAULT_COLUMN_SET).not.toContain("dcc");
+  });
+
+  it("detects the previous untouched default for localStorage migration", () => {
+    expect(isLegacyDefaultColumnSet(["units_1y", "dcc", "margin"])).toBe(true);
+    expect(isLegacyDefaultColumnSet(["dcc", "margin"])).toBe(false);
+    expect(isLegacyDefaultColumnSet(["units_1y", "dcc", "margin", "updated"])).toBe(false);
   });
 });

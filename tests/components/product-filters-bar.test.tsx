@@ -11,7 +11,7 @@ vi.mock("@/domains/product/vendor-directory", () => ({
     refs: null,
     lookups: buildProductRefMaps(EMPTY_REFS),
     vendors: [],
-    byId: new Map<number, string>(),
+    byId: new Map<number, string>([[21, "PENS ETC (3001795)"]]),
     loading: false,
     available: true,
   }),
@@ -56,5 +56,19 @@ describe("ProductFiltersBar", () => {
 
     expect(screen.getByText("Type or pick exact dates to narrow the last-sale window.")).toBeInTheDocument();
     expect(screen.getByText("Date range active")).toBeInTheDocument();
+  });
+
+  it("gives selected vendors room to read and a clear undo affordance", () => {
+    render(
+      <ProductFiltersBar
+        filters={{ ...EMPTY_FILTERS, vendorId: "21" }}
+        onChange={vi.fn()}
+        onClear={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("PENS ETC (3001795)")).toBeInTheDocument();
+    expect(screen.getByText("Vendor #21")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Clear vendor" })).toHaveTextContent("Clear");
   });
 });
