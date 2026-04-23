@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom/vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { QuickPickSectionsPanel } from "@/components/admin/quick-pick-sections-panel";
@@ -136,6 +136,132 @@ describe("QuickPickSectionsPanel", () => {
       screen.getByText("0 products match — chip will be disabled"),
     ).not.toBeNull();
     expect(apiClientMocks.previewQuickPickSection).not.toHaveBeenCalled();
+  });
+
+  it("renders Any item type in a fresh create dialog instead of the raw sentinel", async () => {
+    const user = userEvent.setup();
+
+    render(<QuickPickSectionsPanel />);
+
+    await waitFor(() => {
+      expect(apiClientMocks.listQuickPickSections).toHaveBeenCalled();
+    });
+
+    await user.click(screen.getByRole("button", { name: /create section/i }));
+
+    const itemTypeTrigger = screen.getByLabelText("Item type");
+    expect(itemTypeTrigger).toHaveTextContent("Any item type");
+    expect(itemTypeTrigger).not.toHaveTextContent("__any__");
+  });
+
+  it("keeps save disabled until the section has at least one real scope filter", async () => {
+    const user = userEvent.setup();
+
+    render(<QuickPickSectionsPanel />);
+
+    await waitFor(() => {
+      expect(apiClientMocks.listQuickPickSections).toHaveBeenCalled();
+    });
+
+    await user.click(screen.getByRole("button", { name: /create section/i }));
+    await user.type(screen.getByLabelText(/name/i), "CopyTech Services");
+
+    const dialog = screen.getByRole("dialog");
+    const saveButton = within(dialog).getByRole("button", { name: /create section/i });
+    expect(saveButton).toBeDisabled();
+
+    await user.type(screen.getByLabelText(/description like/i), "CT %");
+
+    expect(saveButton).not.toBeDisabled();
+  });
+
+  it("lets the availability label text toggle the checkbox state", async () => {
+    const user = userEvent.setup();
+
+    render(<QuickPickSectionsPanel />);
+
+    await waitFor(() => {
+      expect(apiClientMocks.listQuickPickSections).toHaveBeenCalled();
+    });
+
+    await user.click(screen.getByRole("button", { name: /create section/i }));
+
+    const globalCheckbox = screen.getByRole("checkbox", { name: /global section/i });
+    expect(globalCheckbox).toHaveAttribute("aria-checked", "true");
+
+    await user.click(screen.getByText("Global section", { selector: "label" }));
+
+    expect(globalCheckbox).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("shows include discontinued as a modifier without enabling save by itself", async () => {
+    const user = userEvent.setup();
+
+    render(<QuickPickSectionsPanel />);
+
+    await waitFor(() => {
+      expect(apiClientMocks.listQuickPickSections).toHaveBeenCalled();
+    });
+
+    await user.click(screen.getByRole("button", { name: /create section/i }));
+    await user.click(screen.getByText("Include discontinued products", { selector: "label" }));
+
+    expect(screen.getByText("Availability modifier")).toBeInTheDocument();
+    expect(screen.getByText("Includes discontinued")).toBeInTheDocument();
+    expect(screen.getByText(/0 rules active/i)).toBeInTheDocument();
+    expect(within(screen.getByRole("dialog")).getByRole("button", { name: /create section/i })).toBeDisabled();
+  });
+
+  it("allows editing legacy empty-scope sections without forcing a new scope rule", async () => {
+    const user = userEvent.setup();
+
+    const legacyEmptySection = {
+      id: "section-empty",
+      name: "Legacy Empty",
+      slug: "legacy-empty",
+      description: null,
+      icon: "Package2",
+      sortOrder: 0,
+      descriptionLike: null,
+      dccIds: [],
+      vendorIds: [],
+      itemType: null,
+      explicitSkus: [],
+      isGlobal: true,
+      includeDiscontinued: false,
+      productCount: 0,
+      createdByUserId: null,
+      createdAt: "2026-04-22T08:00:00.000Z",
+      updatedAt: "2026-04-22T08:00:00.000Z",
+      scopeSummary: "No scope filters",
+    };
+
+    apiClientMocks.listQuickPickSections.mockResolvedValue([legacyEmptySection]);
+    apiClientMocks.updateQuickPickSection.mockResolvedValue({
+      ...legacyEmptySection,
+      description: "Still legacy, now documented",
+    });
+
+    render(<QuickPickSectionsPanel />);
+
+    expect(await screen.findByText("Legacy Empty")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /edit/i }));
+
+    const saveButton = screen.getByRole("button", { name: /save changes/i });
+    expect(saveButton).not.toBeDisabled();
+
+    await user.type(screen.getByLabelText("Description"), "Still legacy, now documented");
+    await user.click(saveButton);
+
+    await waitFor(() => {
+      expect(apiClientMocks.updateQuickPickSection).toHaveBeenCalledWith(
+        "section-empty",
+        expect.objectContaining({
+          description: "Still legacy, now documented",
+        }),
+      );
+    });
   });
 
   it("refreshes the live preview when a scope field changes", async () => {

@@ -35,6 +35,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -150,6 +151,20 @@ function isEmptyScope(scope: QuickPickSectionScopeInput): boolean {
   );
 }
 
+function scopeInputFromSection(section: Pick<
+  QuickPickSectionDto,
+  "descriptionLike" | "dccIds" | "vendorIds" | "itemType" | "explicitSkus" | "includeDiscontinued"
+>): QuickPickSectionScopeInput {
+  return {
+    descriptionLike: section.descriptionLike ?? "",
+    dccIds: [...section.dccIds],
+    vendorIds: [...section.vendorIds],
+    itemType: section.itemType ?? "",
+    explicitSkus: [...section.explicitSkus],
+    includeDiscontinued: section.includeDiscontinued,
+  };
+}
+
 function formatItemTypeLabel(value: string): string {
   return value
     .split("_")
@@ -157,10 +172,48 @@ function formatItemTypeLabel(value: string): string {
     .join(" ");
 }
 
+function formatIconLabel(value: string): string {
+  return value
+    .replace(/([a-z])([A-Z0-9])/g, "$1 $2")
+    .replace(/([0-9])([A-Z])/g, "$1 $2");
+}
+
+function countPopulatedScopeFields(scope: QuickPickSectionScopeInput): number {
+  return [
+    scope.descriptionLike.trim() !== "",
+    scope.dccIds.length > 0,
+    scope.vendorIds.length > 0,
+    (scope.itemType ?? "") !== "",
+    scope.explicitSkus.length > 0,
+  ].filter(Boolean).length;
+}
+
 function getRowTitle(product: QuickPickSectionPreviewProduct): string {
   return product.itemType === "textbook"
     ? (product.title ?? product.description ?? "")
     : (product.description ?? product.title ?? "");
+}
+
+function buildScopeRuleSummary(scope: QuickPickSectionScopeInput): string[] {
+  const chips: string[] = [];
+
+  if (scope.descriptionLike.trim()) {
+    chips.push(`Description like ${scope.descriptionLike.trim()}`);
+  }
+  if (scope.dccIds.length > 0) {
+    chips.push(`${scope.dccIds.length} DCC${scope.dccIds.length === 1 ? "" : "s"}`);
+  }
+  if (scope.vendorIds.length > 0) {
+    chips.push(`${scope.vendorIds.length} vendor${scope.vendorIds.length === 1 ? "" : "s"}`);
+  }
+  if ((scope.itemType ?? "") !== "") {
+    chips.push(formatItemTypeLabel(scope.itemType ?? ""));
+  }
+  if (scope.explicitSkus.length > 0) {
+    chips.push(`${scope.explicitSkus.length} explicit SKU${scope.explicitSkus.length === 1 ? "" : "s"}`);
+  }
+
+  return chips;
 }
 
 function IconSwatch({ name }: { name: QuickPickSectionFormValues["icon"] }) {
@@ -518,6 +571,17 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
     includeDiscontinued: form.includeDiscontinued,
   };
   const previewKey = JSON.stringify(previewInput);
+  const scopeIsEmpty = isEmptyScope(previewInput);
+  const scopeRuleSummary = buildScopeRuleSummary(previewInput);
+  const availabilityModifiers = form.includeDiscontinued ? ["Includes discontinued"] : [];
+  const scopeRuleCount = countPopulatedScopeFields(previewInput);
+  const itemTypeTriggerLabel = form.itemType
+    ? formatItemTypeLabel(form.itemType)
+    : "Any item type";
+  const selectedIconName = form.icon || "Package2";
+  const editingSectionStartedEmpty = editingSection ? isEmptyScope(scopeInputFromSection(editingSection)) : false;
+  const canSaveLegacyEmptyScope = mode === "edit" && scopeIsEmpty && editingSectionStartedEmpty;
+  const saveDisabled = saving || form.name.trim() === "" || (scopeIsEmpty && !canSaveLegacyEmptyScope);
 
   async function loadSections() {
     setLoading(true);
@@ -775,180 +839,291 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={closeDialog}>
-        <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-h-[90vh] max-w-6xl overflow-y-auto p-0">
+          <DialogHeader className="border-b border-border px-6 py-5">
             <DialogTitle>{mode === "create" ? "Create quick pick section" : "Edit quick pick section"}</DialogTitle>
             <DialogDescription>
-              Scope fields combine into one OR predicate. Leaving the scope empty disables the chip.
+              Scope fields combine into one OR predicate. New sections need at least one scope rule, while legacy empty-scope sections can still be edited.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="grid gap-6 px-6 py-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(360px,0.9fr)]">
             <div className="space-y-5">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="quick-pick-name">Name</Label>
-                  <Input
-                    id="quick-pick-name"
-                    value={form.name}
-                    onChange={(event) => updateForm("name", event.target.value)}
-                    placeholder="CopyTech Services"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="quick-pick-slug">Slug</Label>
-                  <Input
-                    id="quick-pick-slug"
-                    value={form.slug}
-                    onChange={(event) => {
-                      setSlugDirty(true);
-                      updateForm("slug", event.target.value);
-                    }}
-                    placeholder="copytech-services"
-                  />
-                </div>
-                <div className="space-y-2 sm:col-span-2">
-                  <Label htmlFor="quick-pick-description">Description</Label>
-                  <Textarea
-                    id="quick-pick-description"
-                    value={form.description}
-                    onChange={(event) => updateForm("description", event.target.value)}
-                    placeholder="Optional help text for admins."
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="quick-pick-icon">Icon</Label>
-                  <Select
-                    value={form.icon || "Package2"}
-                    onValueChange={(value) => updateForm("icon", value as QuickPickSectionFormValues["icon"])}
-                  >
-                    <SelectTrigger id="quick-pick-icon" className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {QUICK_PICK_SECTION_ICON_NAMES.map((iconName) => (
-                        <SelectItem key={iconName} value={iconName}>
-                          {iconName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="quick-pick-sort-order">Sort order</Label>
-                  <Input
-                    id="quick-pick-sort-order"
-                    type="number"
-                    value={form.sortOrder}
-                    onChange={(event) => updateForm("sortOrder", Number(event.target.value) || 0)}
-                  />
-                </div>
-              </div>
+              <Card>
+                <CardHeader className="space-y-1">
+                  <CardTitle>Section details</CardTitle>
+                  <CardDescription>
+                    Set the label, icon, and admin-only metadata shown in the quick picks list.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="quick-pick-name">Name</Label>
+                    <Input
+                      id="quick-pick-name"
+                      value={form.name}
+                      onChange={(event) => updateForm("name", event.target.value)}
+                      placeholder="CopyTech Services"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="quick-pick-slug">Slug</Label>
+                    <Input
+                      id="quick-pick-slug"
+                      value={form.slug}
+                      onChange={(event) => {
+                        setSlugDirty(true);
+                        updateForm("slug", event.target.value);
+                      }}
+                      placeholder="copytech-services"
+                    />
+                  </div>
+                  <div className="space-y-2 sm:col-span-2">
+                    <Label htmlFor="quick-pick-description">Description</Label>
+                    <Textarea
+                      id="quick-pick-description"
+                      value={form.description}
+                      onChange={(event) => updateForm("description", event.target.value)}
+                      placeholder="Optional help text for admins."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="quick-pick-icon">Icon</Label>
+                    <Select
+                      value={selectedIconName}
+                      onValueChange={(value) => updateForm("icon", value as QuickPickSectionFormValues["icon"])}
+                    >
+                      <SelectTrigger id="quick-pick-icon" className="w-full">
+                        <SelectValue>{formatIconLabel(selectedIconName)}</SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {QUICK_PICK_SECTION_ICON_NAMES.map((iconName) => (
+                          <SelectItem key={iconName} value={iconName}>
+                            {formatIconLabel(iconName)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="quick-pick-sort-order">Sort order</Label>
+                    <Input
+                      id="quick-pick-sort-order"
+                      type="number"
+                      value={form.sortOrder}
+                      onChange={(event) => updateForm("sortOrder", Number(event.target.value) || 0)}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
-              <div className="grid gap-3 rounded-xl border border-border p-4 sm:grid-cols-2">
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={form.isGlobal}
-                    onChange={(event) => updateForm("isGlobal", event.target.checked)}
-                  />
-                  Global section
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={form.includeDiscontinued}
-                    onChange={(event) => updateForm("includeDiscontinued", event.target.checked)}
-                  />
-                  Include discontinued products
-                </label>
-              </div>
+              <Card>
+                <CardHeader className="space-y-1">
+                  <CardTitle>Availability</CardTitle>
+                  <CardDescription>
+                    Control who can see the section and whether discontinued items can still match.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-3 sm:grid-cols-2">
+                  <div className="flex items-start gap-3 rounded-xl border border-border px-4 py-3 text-sm">
+                    <Checkbox
+                      id="quick-pick-global-section"
+                      checked={form.isGlobal}
+                      onCheckedChange={(checked) => updateForm("isGlobal", checked === true)}
+                      aria-describedby="quick-pick-global-section-description"
+                    />
+                    <div className="space-y-1">
+                      <label htmlFor="quick-pick-global-section" className="block cursor-pointer font-medium text-foreground">
+                        Global section
+                      </label>
+                      <p id="quick-pick-global-section-description" className="text-muted-foreground">
+                        Visible to every signed-in user.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 rounded-xl border border-border px-4 py-3 text-sm">
+                    <Checkbox
+                      id="quick-pick-include-discontinued"
+                      checked={form.includeDiscontinued}
+                      onCheckedChange={(checked) => updateForm("includeDiscontinued", checked === true)}
+                      aria-describedby="quick-pick-include-discontinued-description"
+                    />
+                    <div className="space-y-1">
+                      <label htmlFor="quick-pick-include-discontinued" className="block cursor-pointer font-medium text-foreground">
+                        Include discontinued products
+                      </label>
+                      <p id="quick-pick-include-discontinued-description" className="text-muted-foreground">
+                        Keep old or retired catalog rows eligible for matching.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-              <div className="space-y-4 rounded-xl border border-border p-4">
-                <div>
-                  <h2 className="text-sm font-semibold">Scope builder</h2>
-                  <p className="text-xs text-muted-foreground">
-                    Matching uses OR logic across each populated scope field.
-                  </p>
-                </div>
+              <Card>
+                <CardHeader className="space-y-1">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <CardTitle>Scope builder</CardTitle>
+                      <CardDescription>
+                        Matching uses OR logic across every populated rule. Add at least one rule to enable save.
+                      </CardDescription>
+                    </div>
+                    <Badge variant={scopeRuleCount > 0 ? "secondary" : "outline"} className="rounded-full px-3 py-1 text-xs font-medium">
+                      {scopeRuleCount} {scopeRuleCount === 1 ? "rule" : "rules"} active
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3">
+                    <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                      Current configuration
+                    </p>
+                    {scopeRuleSummary.length > 0 ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {scopeRuleSummary.map((label) => (
+                          <Badge key={label} variant="secondary" className="rounded-full px-3 py-1 text-xs font-medium">
+                            {label}
+                          </Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        No matching rules yet. The section stays disabled until at least one scope field is populated.
+                      </p>
+                    )}
+                    {availabilityModifiers.length > 0 ? (
+                      <div className="mt-3 space-y-2">
+                        <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                          Availability modifier
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {availabilityModifiers.map((label) => (
+                            <Badge key={label} variant="outline" className="rounded-full px-3 py-1 text-xs font-medium">
+                              {label}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="quick-pick-description-like">Description like</Label>
-                  <Input
-                    id="quick-pick-description-like"
-                    value={form.descriptionLike}
-                    onChange={(event) => updateForm("descriptionLike", event.target.value)}
-                    placeholder='ILIKE example: CT %'
-                  />
-                </div>
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <div className="space-y-2 lg:col-span-2">
+                      <Label htmlFor="quick-pick-description-like">Description like</Label>
+                      <Input
+                        id="quick-pick-description-like"
+                        value={form.descriptionLike}
+                        onChange={(event) => updateForm("descriptionLike", event.target.value)}
+                        placeholder='ILIKE example: CT %'
+                      />
+                    </div>
 
-                <DccMultiSelect
-                  selectedIds={form.dccIds}
-                  onChange={(next) => updateForm("dccIds", next)}
-                />
+                    <div className="lg:col-span-2">
+                      <DccMultiSelect
+                        selectedIds={form.dccIds}
+                        onChange={(next) => updateForm("dccIds", next)}
+                      />
+                    </div>
 
-                <VendorMultiSelect
-                  selectedIds={form.vendorIds}
-                  onChange={(next) => updateForm("vendorIds", next)}
-                />
+                    <div className="lg:col-span-2">
+                      <VendorMultiSelect
+                        selectedIds={form.vendorIds}
+                        onChange={(next) => updateForm("vendorIds", next)}
+                      />
+                    </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="quick-pick-item-type">Item type</Label>
-                  <Select
-                    value={form.itemType || "__any__"}
-                    onValueChange={(value) =>
-                      updateForm("itemType", value === "__any__" ? "" : value as QuickPickSectionFormValues["itemType"])
-                    }
-                  >
-                    <SelectTrigger id="quick-pick-item-type" className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__any__">Any item type</SelectItem>
-                      {QUICK_PICK_SECTION_ITEM_TYPE_OPTIONS.map((itemType) => (
-                        <SelectItem key={itemType} value={itemType}>
-                          {formatItemTypeLabel(itemType)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                    <div className="space-y-2 lg:col-span-2">
+                      <Label htmlFor="quick-pick-item-type">Item type</Label>
+                      <Select
+                        value={form.itemType || "__any__"}
+                        onValueChange={(value) =>
+                          updateForm("itemType", value === "__any__" ? "" : value as QuickPickSectionFormValues["itemType"])
+                        }
+                      >
+                        <SelectTrigger id="quick-pick-item-type" className="w-full">
+                          <SelectValue placeholder="Any item type">
+                            {itemTypeTriggerLabel}
+                          </SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__any__">Any item type</SelectItem>
+                          {QUICK_PICK_SECTION_ITEM_TYPE_OPTIONS.map((itemType) => (
+                            <SelectItem key={itemType} value={itemType}>
+                              {formatItemTypeLabel(itemType)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                <SkuSearchAddField
-                  selectedSkus={form.explicitSkus}
-                  onChange={(next) => updateForm("explicitSkus", next)}
-                />
-              </div>
+                    <div className="lg:col-span-2">
+                      <SkuSearchAddField
+                        selectedSkus={form.explicitSkus}
+                        onChange={(next) => updateForm("explicitSkus", next)}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
-            <Card size="sm" className="h-fit">
-              <CardHeader>
-                <CardTitle>Live Preview</CardTitle>
-                <CardDescription>
-                  The preview shows the current match count and the first 20 catalog rows.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {isEmptyScope(form) ? (
-                  <p className="text-sm text-muted-foreground">
-                    0 products match — chip will be disabled
-                  </p>
-                ) : previewLoading ? (
-                  <p className="text-sm text-muted-foreground">Recounting matching products…</p>
-                ) : previewError ? (
-                  <p className="text-sm text-destructive">{previewError}</p>
-                ) : (
-                  <>
-                    <p className="text-sm font-medium">
-                      {preview.productCount.toLocaleString()} products currently match
-                    </p>
-                    {preview.products.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">No example rows matched.</p>
+            <div className="space-y-5 xl:sticky xl:top-0">
+              <Card size="sm" className="h-fit overflow-hidden">
+                <CardHeader className="space-y-3 border-b border-border bg-muted/20">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <CardTitle>Live preview</CardTitle>
+                      <CardDescription>
+                        Review the current match count and the first 20 catalog rows before saving.
+                      </CardDescription>
+                    </div>
+                    <Badge variant={scopeIsEmpty ? "outline" : "secondary"} className="rounded-full px-3 py-1 text-xs font-medium">
+                      {scopeIsEmpty ? "Disabled until scoped" : "Preview active"}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4 p-5">
+                  <div aria-live="polite" className="rounded-xl border border-border bg-background px-4 py-4">
+                    {scopeIsEmpty ? (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">0 products match — chip will be disabled</p>
+                        <p className="text-sm text-muted-foreground">
+                          Add a description pattern, DCC, vendor, item type, or explicit SKU to start previewing matches.
+                        </p>
+                      </div>
+                    ) : previewLoading ? (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">Recounting matching products…</p>
+                        <p className="text-sm text-muted-foreground">
+                          Updating the preview with your latest scope changes.
+                        </p>
+                      </div>
+                    ) : previewError ? (
+                      <p className="text-sm text-destructive">{previewError}</p>
                     ) : (
-                      <div className="rounded-lg border border-border">
-                        <ul className="divide-y">
+                      <div className="space-y-1">
+                        <p className="text-2xl font-semibold tracking-tight">
+                          {preview.productCount.toLocaleString()}
+                        </p>
+                        <p className="text-sm text-muted-foreground">products currently match this section</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {!scopeIsEmpty && !previewLoading && !previewError ? (
+                    preview.products.length === 0 ? (
+                      <div className="rounded-xl border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">
+                        No example rows matched.
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border border-border">
+                        <div className="border-b border-border px-4 py-3 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                          Example matches
+                        </div>
+                        <ul className="max-h-[420px] divide-y overflow-y-auto">
                           {preview.products.map((product) => (
-                            <li key={product.sku} className="px-3 py-2">
+                            <li key={product.sku} className="space-y-1 px-4 py-3">
                               <div className="text-sm font-medium">
                                 #{product.sku} · {getRowTitle(product) || "Untitled"}
                               </div>
@@ -961,26 +1136,40 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
                           ))}
                         </ul>
                       </div>
-                    )}
-                  </>
-                )}
-              </CardContent>
-            </Card>
+                    )
+                  ) : null}
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
-          {saveError ? <p className="text-sm text-destructive">{saveError}</p> : null}
+          <div className="border-t border-border px-6 py-5">
+            {saveError ? <p className="mb-4 text-sm text-destructive">{saveError}</p> : null}
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={saving || form.name.trim() === ""}
-            >
-              {saving ? "Saving…" : mode === "create" ? "Create section" : "Save changes"}
-            </Button>
-          </DialogFooter>
+            <DialogFooter className="items-center gap-3 sm:justify-between">
+              <p id="quick-pick-save-hint" className="text-sm text-muted-foreground">
+                {scopeIsEmpty
+                  ? canSaveLegacyEmptyScope
+                    ? "Legacy empty-scope sections can still be updated, but they stay disabled in quick picks until a scope rule is added."
+                    : mode === "edit"
+                      ? "Add at least one scope rule to keep this section active. Legacy empty-scope sections can still be updated, but scoped sections cannot be saved empty."
+                      : "Add at least one scope rule to enable save."
+                  : "This section will be enabled as soon as it has a name and at least one scope rule."}
+              </p>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSave}
+                  disabled={saveDisabled}
+                  aria-describedby="quick-pick-save-hint"
+                >
+                  {saving ? "Saving…" : mode === "create" ? "Create section" : "Save changes"}
+                </Button>
+              </div>
+            </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
