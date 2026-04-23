@@ -97,6 +97,14 @@ function formatCurrency(value: number | null | undefined): string {
   return `$${Number(value).toFixed(2)}`;
 }
 
+function getProductAnalyticsCurrencyDisplay(
+  product: Pick<ProductBrowseRow, "aggregates_ready" | "sales_aggregates_computed_at">,
+  value: number | null | undefined,
+): string {
+  if (!hasProductAnalyticsReady(product)) return "Pending";
+  return formatCurrency(value);
+}
+
 function formatSaleDate(date: string | null): string {
   if (!date) return "—";
   const d = new Date(date);
@@ -132,6 +140,26 @@ function formatRelativeUpdated(date: string | null | undefined): string {
 
 export function formatVendorDisplay(vendorLabel: string | null | undefined): string {
   return formatLookupLabel(vendorLabel ?? null, "Vendor unavailable");
+}
+
+function formatMarginDisplay(cost: number | null | undefined, retail: number | null | undefined): string {
+  if (cost == null || retail == null || Number.isNaN(cost) || Number.isNaN(retail) || retail <= 0) {
+    return "—";
+  }
+  return `${(((retail - cost) / retail) * 100).toFixed(1)}%`;
+}
+
+function formatDccNumber(product: Pick<ProductBrowseRow, "dept_num" | "class_num" | "cat_num">): string {
+  const segs = [product.dept_num, product.class_num, product.cat_num];
+  if (!segs.some((n) => n != null)) return "—";
+  return segs.map((n) => (n != null ? String(n) : "·")).join(".");
+}
+
+function formatDccDescription(product: Pick<ProductBrowseRow, "dept_name" | "class_name" | "cat_name">): string {
+  const names = [product.dept_name, product.class_name, product.cat_name].filter(
+    (n): n is string => typeof n === "string" && n.length > 0,
+  );
+  return names.length > 0 ? names.join(" · ") : "—";
 }
 
 function getPrimaryLocationSlice(
@@ -1200,11 +1228,11 @@ export function ProductTable({
       </div>
 
       {/* Mobile cards */}
-      <div className="space-y-2 md:hidden p-2">
+      <div className="space-y-2 p-2 md:hidden">
         {loading
           ? Array.from({ length: 5 }).map((_, i) => (
-              <div key={`mobile-skeleton-${i}`} className="rounded-lg border p-3">
-                <div className="h-4 w-3/4 animate-pulse rounded bg-muted mb-2" />
+              <div key={`mobile-skeleton-${i}`} className="rounded-xl border p-3">
+                <div className="mb-2 h-4 w-3/4 animate-pulse rounded bg-muted" />
                 <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
               </div>
             ))
@@ -1228,100 +1256,271 @@ export function ProductTable({
                 tab === "textbooks"
                   ? product.title ?? product.description ?? "—"
                   : product.description ?? "—";
+              const resolvedPrimaryLocationId = primaryLocationId ?? product.primary_location_id ?? null;
+              const primarySlice = getPrimaryLocationSlice(product, resolvedPrimaryLocationId);
+              const costValue = primarySlice?.cost ?? product.cost;
+              const retailValue = primarySlice?.retailPrice ?? product.retail_price;
+              const stockValue = primarySlice?.stockOnHand ?? product.stock_on_hand;
+              const vendorName = formatVendorDisplay(
+                product.vendor_id != null ? vendorsById.get(product.vendor_id) : null,
+              );
+              const taxTypeLabel = getTaxTypeDisplayLabel(product, inlineEdit, lookups.taxTypeLabels);
+              const statusLabel = product.discontinued ? "Discontinued" : "Live";
+              const dccNumber = formatDccNumber(product);
+              const dccDescription = formatDccDescription(product);
               const metaParts: string[] = [];
               if (product.author) metaParts.push(product.author);
               if (product.edition) metaParts.push(product.edition);
               if (product.catalog_number) metaParts.push(product.catalog_number);
+              if (product.product_type && tab === "merchandise") metaParts.push(product.product_type);
+
+              const detailItems: Array<{
+                label: string;
+                value: string;
+                valueClassName?: string;
+                subvalue?: string;
+                detail?: ReactNode;
+                detailTestId?: string;
+              }> = [
+                {
+                  label: "Last sale",
+                  value: formatSaleDate(getProductDisplaySaleDate(product) ?? null),
+                },
+                {
+                  label: "Tax type",
+                  value: taxTypeLabel,
+                },
+                {
+                  label: "Status",
+                  value: statusLabel,
+                  valueClassName:
+                    product.discontinued
+                      ? "text-amber-700 dark:text-amber-400"
+                      : "text-emerald-700 dark:text-emerald-400",
+                },
+              ];
+
+              if (showUnits) {
+                detailItems.push({
+                  label: "Units 1y",
+                  value: getProductAnalyticsDisplay(product, product.units_sold_1y),
+                });
+              }
+              if (showRevenue) {
+                detailItems.push({
+                  label: "Revenue 1y",
+                  value: getProductAnalyticsCurrencyDisplay(product, product.revenue_1y),
+                });
+              }
+              if (showTxns) {
+                detailItems.push({
+                  label: "Receipts 1y",
+                  value: getProductAnalyticsDisplay(product, product.txns_1y),
+                });
+              }
+              if (showDaysSinceSale) {
+                const ref =
+                  product.effective_last_sale_date ??
+                  product.last_sale_date_computed ??
+                  product.last_sale_date;
+                const parsed = ref ? new Date(ref) : null;
+                const daysSinceSale =
+                  !ref || !parsed || Number.isNaN(parsed.getTime()) || parsed.getFullYear() < 1990
+                    ? "Never"
+                    : `${Math.max(0, Math.floor((Date.now() - parsed.getTime()) / 86_400_000))}d`;
+                detailItems.push({
+                  label: "Days since sale",
+                  value: daysSinceSale,
+                });
+              }
+              if (showUpdated) {
+                detailItems.push({
+                  label: "Updated",
+                  value: formatRelativeUpdated(product.updated_at),
+                });
+              }
+              if (showDcc) {
+                detailItems.push({
+                  label: "DCC",
+                  value: dccNumber,
+                  subvalue: dccDescription !== "—" ? dccDescription : undefined,
+                });
+              }
+              if (showMargin) {
+                const hasMarginMetric =
+                  costValue != null &&
+                  retailValue != null &&
+                  !Number.isNaN(costValue) &&
+                  !Number.isNaN(retailValue) &&
+                  retailValue > 0;
+                detailItems.push({
+                  label: "Margin",
+                  value: formatMarginDisplay(costValue, retailValue),
+                  detail: hasMarginMetric ? <MarginBar cost={costValue} retail={retailValue} showText={false} /> : null,
+                  detailTestId: hasMarginMetric ? `product-card-margin-visual-${product.sku}` : undefined,
+                });
+              }
+
               return (
                 <div
                   key={product.sku}
-                  className={`rounded-lg border p-3 ${
-                    sel ? "border-primary bg-primary/5" : ""
+                  data-testid={`product-card-${product.sku}`}
+                  className={`relative rounded-xl border border-border/70 bg-card p-3 shadow-sm transition-colors ${
+                    sel ? "border-primary bg-primary/[0.05]" : ""
                   }`}
-                  onClick={() => onToggle(product)}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{primaryText}</p>
-                      <p className="text-xs text-muted-foreground">
-                        <span className="font-mono tnum">SKU {product.sku}</span>
-                        {metaParts.length > 0 ? ` · ${metaParts.join(" · ")}` : ""}
+                  <button
+                    type="button"
+                    aria-pressed={sel}
+                    aria-label={`Select ${primaryText}, SKU ${product.sku}`}
+                    className="absolute inset-0 z-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onToggle(product);
+                    }}
+                  />
+                  <div className="pointer-events-none relative z-10 flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center rounded-full border border-border bg-background px-2 py-0.5 font-mono text-[10.5px] font-medium tracking-[0.02em] text-muted-foreground">
+                          SKU {product.sku}
+                        </span>
+                        <span className="text-[11px] font-medium text-muted-foreground">
+                          {vendorName}
+                        </span>
+                      </div>
+                      <p className="line-clamp-2 text-[14px] font-semibold leading-5 text-foreground">
+                        {primaryText}
                       </p>
+                      {metaParts.length > 0 ? (
+                        <p className="text-[11px] leading-4 text-muted-foreground">{metaParts.join(" · ")}</p>
+                      ) : null}
                     </div>
-                    <div onClick={(e) => e.stopPropagation()}>
+                    <div className="shrink-0 pt-0.5">
                       <Checkbox
                         checked={sel}
-                        onCheckedChange={() => onToggle(product)}
-                        className="mt-0.5"
-                        aria-label={`Select SKU ${product.sku}`}
+                        className="pointer-events-none mt-0.5"
+                        aria-hidden="true"
+                        tabIndex={-1}
                       />
                     </div>
                   </div>
-                  <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                    <span className="inline-flex items-center gap-1.5 font-mono tnum font-medium">
-                      {formatCurrency(product.retail_price)}
-                      {retailBadge ? (
-                        <LocationVariancePopover
-                          badge={retailBadge}
-                          field="retailPrice"
-                          label="Retail"
-                          slices={selectedInventories}
-                        />
-                      ) : null}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 font-mono tnum text-muted-foreground">
-                      {formatCurrency(product.cost)}
-                      {costBadge ? (
-                        <LocationVariancePopover
-                          badge={costBadge}
-                          field="cost"
-                          label="Cost"
-                          slices={selectedInventories}
-                        />
-                      ) : null}
-                    </span>
-                    <span
-                      className={`inline-flex items-center gap-1.5 font-mono tnum ${
-                        product.stock_on_hand == null
-                          ? "text-muted-foreground/70"
-                          : product.stock_on_hand <= 0
-                            ? "text-muted-foreground"
-                            : product.stock_on_hand < 15
-                              ? "text-[color:var(--chart-4)] font-medium"
-                              : "text-foreground"
-                      }`}
-                    >
-                      {product.stock_on_hand == null
-                        ? "—"
-                        : `${product.stock_on_hand.toLocaleString()} in stock`}
-                      {stockBadge ? (
-                        <LocationVariancePopover
-                          badge={stockBadge}
-                          field="stockOnHand"
-                          label="Stock"
-                          slices={selectedInventories}
-                        />
-                      ) : null}
-                    </span>
-                    {showMargin ? (
-                      product.cost != null && product.retail_price != null ? (
-                        <MarginBar
-                          cost={product.cost}
-                          retail={product.retail_price}
-                        />
-                      ) : (
-                        <span className="font-mono tnum text-muted-foreground">—</span>
-                      )
-                    ) : null}
+
+                  <div className="pointer-events-none relative z-10 mt-3 grid grid-cols-3 gap-2">
+                    <div className="min-w-0 rounded-lg bg-secondary/45 px-2.5 py-2">
+                      <div className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+                        Retail
+                      </div>
+                      <div className="mt-1 flex min-w-0 items-center gap-1 text-[13px] font-semibold text-foreground">
+                        <span className="truncate font-mono tnum">{formatCurrency(retailValue)}</span>
+                        {retailBadge ? (
+                          <span
+                            className="pointer-events-auto"
+                            onClick={(event) => event.stopPropagation()}
+                            onPointerDown={(event) => event.stopPropagation()}
+                          >
+                            <LocationVariancePopover
+                              badge={retailBadge}
+                              field="retailPrice"
+                              label="Retail"
+                              slices={selectedInventories}
+                            />
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                    <div className="min-w-0 rounded-lg bg-secondary/45 px-2.5 py-2">
+                      <div className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+                        Cost
+                      </div>
+                      <div className="mt-1 flex min-w-0 items-center gap-1 text-[13px] text-foreground">
+                        <span className="truncate font-mono tnum">{formatCurrency(costValue)}</span>
+                        {costBadge ? (
+                          <span
+                            className="pointer-events-auto"
+                            onClick={(event) => event.stopPropagation()}
+                            onPointerDown={(event) => event.stopPropagation()}
+                          >
+                            <LocationVariancePopover
+                              badge={costBadge}
+                              field="cost"
+                              label="Cost"
+                              slices={selectedInventories}
+                            />
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                    <div className="min-w-0 rounded-lg bg-secondary/45 px-2.5 py-2">
+                      <div className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+                        Stock
+                      </div>
+                      <div
+                        className={`mt-1 flex min-w-0 items-center gap-1 text-[13px] ${
+                          stockValue == null
+                            ? "text-muted-foreground/70"
+                            : stockValue <= 0
+                              ? "text-muted-foreground"
+                              : stockValue < 15
+                                ? "font-medium text-[color:var(--chart-4)]"
+                                : "text-foreground"
+                        }`}
+                      >
+                        <span className="truncate font-mono tnum">
+                          {stockValue == null ? "—" : stockValue.toLocaleString()}
+                        </span>
+                        {stockBadge ? (
+                          <span
+                            className="pointer-events-auto"
+                            onClick={(event) => event.stopPropagation()}
+                            onPointerDown={(event) => event.stopPropagation()}
+                          >
+                            <LocationVariancePopover
+                              badge={stockBadge}
+                              field="stockOnHand"
+                              label="Stock"
+                              slices={selectedInventories}
+                            />
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
                   </div>
+
+                  <div className="pointer-events-none relative z-10 mt-3 grid grid-cols-2 gap-x-3 gap-y-2 rounded-lg border border-border/60 bg-background/70 p-2.5">
+                    {detailItems.map((item) => (
+                      <div key={item.label} className="min-w-0">
+                        <div className="text-[10px] font-medium uppercase tracking-[0.06em] text-muted-foreground">
+                          {item.label}
+                        </div>
+                        <div
+                          className={`mt-1 truncate text-[12px] font-medium ${item.valueClassName ?? "text-foreground"}`}
+                        >
+                          {item.value}
+                        </div>
+                        {item.detail ? (
+                          <div
+                            data-testid={item.detailTestId}
+                            className="mt-1 flex min-w-0 items-center"
+                          >
+                            {item.detail}
+                          </div>
+                        ) : null}
+                        {item.subvalue ? (
+                          <div className="truncate text-[10.5px] text-muted-foreground">{item.subvalue}</div>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+
                   {tab === "textbooks" ? (
                     product.isbn ? (
-                      <p className="mt-1 font-mono tnum text-[10.5px] text-muted-foreground">
+                      <p className="pointer-events-none relative z-10 mt-2 font-mono tnum text-[10.5px] text-muted-foreground">
                         ISBN {product.isbn}
                       </p>
                     ) : null
                   ) : product.barcode ? (
-                    <p className="mt-1 font-mono tnum text-[10.5px] text-muted-foreground">
+                    <p className="pointer-events-none relative z-10 mt-2 font-mono tnum text-[10.5px] text-muted-foreground">
                       {product.barcode}
                     </p>
                   ) : null}
