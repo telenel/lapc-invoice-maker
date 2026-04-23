@@ -847,121 +847,129 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-6 px-6 py-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(360px,0.9fr)]">
-            <div className="space-y-5">
-              <Card>
-                <CardHeader className="space-y-1">
-                  <CardTitle>Section details</CardTitle>
-                  <CardDescription>
-                    Set the label, icon, and admin-only metadata shown in the quick picks list.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="quick-pick-name">Name</Label>
-                    <Input
-                      id="quick-pick-name"
-                      value={form.name}
-                      onChange={(event) => updateForm("name", event.target.value)}
-                      placeholder="CopyTech Services"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="quick-pick-slug">Slug</Label>
-                    <Input
-                      id="quick-pick-slug"
-                      value={form.slug}
-                      onChange={(event) => {
-                        setSlugDirty(true);
-                        updateForm("slug", event.target.value);
-                      }}
-                      placeholder="copytech-services"
-                    />
-                  </div>
-                  <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor="quick-pick-description">Description</Label>
-                    <Textarea
-                      id="quick-pick-description"
-                      value={form.description}
-                      onChange={(event) => updateForm("description", event.target.value)}
-                      placeholder="Optional help text for admins."
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="quick-pick-icon">Icon</Label>
-                    <Select
-                      value={selectedIconName}
-                      onValueChange={(value) => updateForm("icon", value as QuickPickSectionFormValues["icon"])}
-                    >
-                      <SelectTrigger id="quick-pick-icon" className="w-full">
-                        <SelectValue>{formatIconLabel(selectedIconName)}</SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {QUICK_PICK_SECTION_ICON_NAMES.map((iconName) => (
-                          <SelectItem key={iconName} value={iconName}>
-                            {formatIconLabel(iconName)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="quick-pick-sort-order">Sort order</Label>
-                    <Input
-                      id="quick-pick-sort-order"
-                      type="number"
-                      value={form.sortOrder}
-                      onChange={(event) => updateForm("sortOrder", Number(event.target.value) || 0)}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="space-y-1">
-                  <CardTitle>Availability</CardTitle>
-                  <CardDescription>
-                    Control who can see the section and whether discontinued items can still match.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="grid gap-3 sm:grid-cols-2">
-                  <div className="flex items-start gap-3 rounded-xl border border-border px-4 py-3 text-sm">
-                    <Checkbox
-                      id="quick-pick-global-section"
-                      checked={form.isGlobal}
-                      onCheckedChange={(checked) => updateForm("isGlobal", checked === true)}
-                      aria-describedby="quick-pick-global-section-description"
-                    />
-                    <div className="space-y-1">
-                      <label htmlFor="quick-pick-global-section" className="block cursor-pointer font-medium text-foreground">
-                        Global section
-                      </label>
-                      <p id="quick-pick-global-section-description" className="text-muted-foreground">
-                        Visible to every signed-in user.
-                      </p>
+          <div
+            data-testid="quick-pick-editor-grid"
+            className="grid items-start gap-6 px-6 py-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(380px,0.95fr)] xl:gap-8"
+          >
+            <div className="space-y-6">
+              <div
+                data-testid="quick-pick-basics-grid"
+                className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)]"
+              >
+                <Card size="sm" className="border border-border/60 bg-background/95">
+                  <CardHeader className="space-y-1.5 border-b border-border/50 bg-muted/[0.12]">
+                    <CardTitle>Section details</CardTitle>
+                    <CardDescription>
+                      Set the label, icon, and admin-only metadata shown in the quick picks list.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid gap-4 pt-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="quick-pick-name">Name</Label>
+                      <Input
+                        id="quick-pick-name"
+                        value={form.name}
+                        onChange={(event) => updateForm("name", event.target.value)}
+                        placeholder="CopyTech Services"
+                      />
                     </div>
-                  </div>
-                  <div className="flex items-start gap-3 rounded-xl border border-border px-4 py-3 text-sm">
-                    <Checkbox
-                      id="quick-pick-include-discontinued"
-                      checked={form.includeDiscontinued}
-                      onCheckedChange={(checked) => updateForm("includeDiscontinued", checked === true)}
-                      aria-describedby="quick-pick-include-discontinued-description"
-                    />
-                    <div className="space-y-1">
-                      <label htmlFor="quick-pick-include-discontinued" className="block cursor-pointer font-medium text-foreground">
-                        Include discontinued products
-                      </label>
-                      <p id="quick-pick-include-discontinued-description" className="text-muted-foreground">
-                        Keep old or retired catalog rows eligible for matching.
-                      </p>
+                    <div className="space-y-2">
+                      <Label htmlFor="quick-pick-slug">Slug</Label>
+                      <Input
+                        id="quick-pick-slug"
+                        value={form.slug}
+                        onChange={(event) => {
+                          setSlugDirty(true);
+                          updateForm("slug", event.target.value);
+                        }}
+                        placeholder="copytech-services"
+                      />
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+                    <div className="space-y-2 sm:col-span-2">
+                      <Label htmlFor="quick-pick-description">Description</Label>
+                      <Textarea
+                        id="quick-pick-description"
+                        value={form.description}
+                        onChange={(event) => updateForm("description", event.target.value)}
+                        placeholder="Optional help text for admins."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="quick-pick-icon">Icon</Label>
+                      <Select
+                        value={selectedIconName}
+                        onValueChange={(value) => updateForm("icon", value as QuickPickSectionFormValues["icon"])}
+                      >
+                        <SelectTrigger id="quick-pick-icon" className="w-full">
+                          <SelectValue>{formatIconLabel(selectedIconName)}</SelectValue>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {QUICK_PICK_SECTION_ICON_NAMES.map((iconName) => (
+                            <SelectItem key={iconName} value={iconName}>
+                              {formatIconLabel(iconName)}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="quick-pick-sort-order">Sort order</Label>
+                      <Input
+                        id="quick-pick-sort-order"
+                        type="number"
+                        value={form.sortOrder}
+                        onChange={(event) => updateForm("sortOrder", Number(event.target.value) || 0)}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
 
-              <Card>
-                <CardHeader className="space-y-1">
+                <Card size="sm" className="border border-border/60 bg-muted/[0.18]">
+                  <CardHeader className="space-y-1.5 border-b border-border/50 bg-background/80">
+                    <CardTitle>Availability</CardTitle>
+                    <CardDescription>
+                      Control who can see the section and whether discontinued items can still match.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid gap-3 pt-4 sm:grid-cols-2 xl:grid-cols-1">
+                    <div className="flex items-start gap-3 rounded-xl border border-border bg-background/80 px-4 py-3 text-sm">
+                      <Checkbox
+                        id="quick-pick-global-section"
+                        checked={form.isGlobal}
+                        onCheckedChange={(checked) => updateForm("isGlobal", checked === true)}
+                        aria-describedby="quick-pick-global-section-description"
+                      />
+                      <div className="space-y-1">
+                        <label htmlFor="quick-pick-global-section" className="block cursor-pointer font-medium text-foreground">
+                          Global section
+                        </label>
+                        <p id="quick-pick-global-section-description" className="text-muted-foreground">
+                          Visible to every signed-in user.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 rounded-xl border border-border bg-background/80 px-4 py-3 text-sm">
+                      <Checkbox
+                        id="quick-pick-include-discontinued"
+                        checked={form.includeDiscontinued}
+                        onCheckedChange={(checked) => updateForm("includeDiscontinued", checked === true)}
+                        aria-describedby="quick-pick-include-discontinued-description"
+                      />
+                      <div className="space-y-1">
+                        <label htmlFor="quick-pick-include-discontinued" className="block cursor-pointer font-medium text-foreground">
+                          Include discontinued products
+                        </label>
+                        <p id="quick-pick-include-discontinued-description" className="text-muted-foreground">
+                          Keep old or retired catalog rows eligible for matching.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card className="border border-border/70 bg-gradient-to-b from-background to-muted/[0.18] shadow-[0_6px_24px_oklch(0.3_0.02_60_/_0.08),0_2px_8px_oklch(0.3_0.02_60_/_0.04)]">
+                <CardHeader className="space-y-2 border-b border-border/60 bg-muted/[0.18]">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <CardTitle>Scope builder</CardTitle>
@@ -974,8 +982,8 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3">
+                <CardContent className="space-y-5 pt-5">
+                  <div className="rounded-xl border border-dashed border-border bg-background/80 px-4 py-3 shadow-sm">
                     <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
                       Current configuration
                     </p>
@@ -1041,7 +1049,7 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
                           updateForm("itemType", value === "__any__" ? "" : value as QuickPickSectionFormValues["itemType"])
                         }
                       >
-                        <SelectTrigger id="quick-pick-item-type" className="w-full">
+                        <SelectTrigger id="quick-pick-item-type" className="w-full bg-background/90">
                           <SelectValue placeholder="Any item type">
                             {itemTypeTriggerLabel}
                           </SelectValue>
@@ -1068,7 +1076,7 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
               </Card>
             </div>
 
-            <div className="space-y-5 lg:sticky lg:top-0">
+            <div className="space-y-4 lg:sticky lg:top-6">
               <Card size="sm" className="h-fit overflow-hidden">
                 <CardHeader className="space-y-3 border-b border-border bg-muted/20">
                   <div className="flex items-start justify-between gap-3">
