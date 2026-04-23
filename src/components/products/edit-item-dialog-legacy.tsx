@@ -212,7 +212,7 @@ export function EditItemDialogLegacy({ open, onOpenChange, items, onSaved }: Edi
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="sm:max-w-2xl lg:max-w-3xl">
         <DialogHeader>
           <DialogTitle>{isBulk ? `Edit ${items.length} items` : `Edit SKU ${items[0]?.sku}`}</DialogTitle>
           <DialogDescription>
