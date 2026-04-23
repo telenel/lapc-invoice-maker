@@ -6,6 +6,7 @@ import { ProductSearchPanel } from "./product-search-panel";
 
 vi.mock("sonner", () => ({
   toast: {
+    success: vi.fn(),
     error: vi.fn(),
   },
 }));
@@ -192,7 +193,7 @@ describe("ProductSearchPanel", () => {
     });
 
     const checkbox = screen.getByRole("checkbox", { name: /Select SKU 10000099/i });
-    const addButton = screen.getByRole("button", { name: /Add to Line Items/i });
+    const addButton = screen.getByRole("button", { name: /Select Products First/i });
 
     expect(checkbox).toHaveAttribute("aria-disabled", "true");
     expect(screen.getAllByText("Price unavailable")).not.toHaveLength(0);
@@ -238,6 +239,7 @@ describe("ProductSearchPanel", () => {
         vendorId: null,
       }),
     ]);
+    expect(screen.getByText("1 product added to line items")).toBeInTheDocument();
   });
 
   it("reserves scroll clearance so the add button does not cover product rows", async () => {
@@ -249,7 +251,7 @@ describe("ProductSearchPanel", () => {
 
     const scrollRegion = container.querySelector("div.max-h-\\[500px\\].overflow-y-auto");
     const list = container.querySelector("ul.divide-y");
-    const addButton = screen.getByRole("button", { name: /Add to Line Items/i });
+    const addButton = screen.getByRole("button", { name: /Select Products First/i });
 
     expect(scrollRegion).toHaveClass("scroll-pb-16");
     expect(list).toHaveClass("pb-16");

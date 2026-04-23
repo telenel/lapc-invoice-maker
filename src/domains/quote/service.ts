@@ -28,7 +28,11 @@ import type {
 import type { StaffSummary } from "@/domains/staff/types";
 import type { ContactResponse } from "@/domains/contact/types";
 import type { ArchivedBySummary } from "@/domains/invoice/types";
-import { getMissingCustomerCateringRequirements, normalizeQuoteTimeInput } from "./catering";
+import {
+  getMissingCustomerCateringRequirements,
+  normalizeCateringDetails,
+  normalizeQuoteTimeInput,
+} from "./catering";
 import { normalizeQuotePaymentDetails } from "./payment";
 import { getQuotePaymentFollowUpBadgeState } from "./payment-follow-up";
 
@@ -189,7 +193,7 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
     creatorName: quote.creator.name,
     items,
     isCateringEvent: quote.isCateringEvent,
-    cateringDetails: quote.cateringDetails as CateringDetails | null,
+    cateringDetails: normalizeCateringDetails(quote.cateringDetails as CateringDetails | null),
     marginEnabled: quote.marginEnabled,
     marginPercent: quote.marginPercent != null ? Number(quote.marginPercent) : null,
     taxEnabled: quote.taxEnabled,

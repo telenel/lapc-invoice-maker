@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { InfoIcon } from "lucide-react";
 import { toast } from "sonner";
-import { useAutoSave, loadDraft } from "@/lib/use-auto-save";
+import { CREATE_PAGE_DRAFT_MAX_AGE_MS, useAutoSave, loadDraft } from "@/lib/use-auto-save";
 import { DraftRecoveryBanner } from "@/components/ui/draft-recovery-banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -71,7 +71,7 @@ interface QuoteModeProps {
   handleStaffSelect: (staff: StaffMember) => void;
   clearStaffSelection: () => void;
   staffAccountNumbers: StaffAccountNumber[];
-  saveQuote: (overrides?: Partial<QuoteFormData>) => Promise<void>;
+  saveQuote: (overrides?: Partial<QuoteFormData>) => Promise<boolean>;
   saving: boolean;
   existingId?: string;
 }
@@ -136,7 +136,9 @@ export function QuoteMode({
     }
 
     let cancelled = false;
-    void loadDraft<QuoteFormData>(routeKey, userId).then((entry) => {
+    void loadDraft<QuoteFormData>(routeKey, userId, {
+      maxAgeMs: existingId ? null : CREATE_PAGE_DRAFT_MAX_AGE_MS,
+    }).then((entry) => {
       if (!cancelled) {
         setDraftEntry(entry);
       }
@@ -145,7 +147,7 @@ export function QuoteMode({
     return () => {
       cancelled = true;
     };
-  }, [userId, routeKey]);
+  }, [existingId, userId, routeKey]);
 
   const getSaveOverrides = useCallback((): Partial<QuoteFormData> | undefined => {
     if (!form.isCateringEvent || cateringOverride) return undefined;
@@ -156,8 +158,9 @@ export function QuoteMode({
 
   // ---- Save wrapper that clears the draft on success ----
   const handleSaveQuote = useCallback(async () => {
-    await saveQuote(getSaveOverrides());
-    clearDraft();
+    if (await saveQuote(getSaveOverrides())) {
+      await clearDraft();
+    }
   }, [saveQuote, getSaveOverrides, clearDraft]);
 
   // ---- Tax calculation ----
@@ -664,15 +667,15 @@ export function QuoteMode({
             {form.marginEnabled && (
               <div className="flex items-center gap-1">
                 <Input
-                  type="number"
+                  type="text"
                   min={0}
                   max={100}
-                  step={1}
-                  value={form.marginPercent}
+                  value={String(Number(form.marginPercent || 0))}
                   onChange={(e) =>
-                    updateField("marginPercent", Number(e.target.value))
+                    updateField("marginPercent", Math.min(100, Math.max(0, Number(e.target.value) || 0)))
                   }
-                  className="w-20 h-7 text-sm"
+                  inputMode="numeric"
+                  className="w-20 h-7 text-sm tabular-nums"
                   aria-label="Margin percentage"
                 />
                 <span className="text-sm text-muted-foreground">%</span>

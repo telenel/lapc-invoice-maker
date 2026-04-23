@@ -97,6 +97,7 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
   const [selected, setSelected] = useState<Map<number, SelectedProduct>>(
     () => new Map()
   );
+  const [addedNotice, setAddedNotice] = useState<string | null>(null);
   const [products, setProducts] = useState<ProductBrowseRow[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -244,6 +245,7 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
   // Selection helpers
   const toggleProduct = useCallback((product: ProductBrowseRow) => {
     if (!canAddBrowseRowToLineItems(product)) return;
+    setAddedNotice(null);
 
     setSelected((prev) => {
       const next = new Map(prev);
@@ -260,6 +262,9 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
     const items = Array.from(selected.values());
     if (items.length === 0) return;
     onAddProducts(items);
+    const message = `${items.length} product${items.length === 1 ? "" : "s"} added to line items`;
+    setAddedNotice(message);
+    toast.success(message);
     setSelected(new Map());
   }, [selected, onAddProducts]);
 
@@ -440,16 +445,24 @@ export function ProductSearchPanel({ onAddProducts }: ProductSearchPanelProps) {
 
       {/* Sticky footer — Add button */}
       <div className="sticky bottom-0 z-10 border-t px-3 py-2.5 bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/90">
+        <div className="mb-2 min-h-4 text-center text-[11px] text-muted-foreground" aria-live="polite">
+          {addedNotice ?? (
+            selectedCount > 0
+              ? `${selectedCount} selected and ready to add`
+              : "Select one or more priced products to enable add"
+          )}
+        </div>
         <Button
           tabIndex={-1}
           className="w-full h-8 text-sm gap-1.5"
           disabled={selectedCount === 0}
           onClick={handleAdd}
+          aria-disabled={selectedCount === 0}
         >
           <PlusIcon className="size-3.5" />
           {selectedCount > 0
             ? `Add ${selectedCount} Selected`
-            : "Add to Line Items"}
+            : "Select Products First"}
         </Button>
       </div>
     </div>

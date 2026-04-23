@@ -132,5 +132,6 @@ describe("LineItems", () => {
     expect(costInput).not.toHaveClass("text-muted-foreground");
     expect(screen.getByText("Cost")).toBeInTheDocument();
     expect(screen.getByLabelText("Line item 1 charged price")).toHaveTextContent("$12.50");
+    expect(screen.getByText("Charged total: $12.50")).toBeInTheDocument();
   });
 });
