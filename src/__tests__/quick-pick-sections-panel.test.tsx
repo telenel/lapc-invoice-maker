@@ -75,6 +75,24 @@ describe("QuickPickSectionsPanel", () => {
     });
   });
 
+  it("opens the dialog at a desktop-appropriate width instead of inheriting the mobile sm:max-w-sm default", async () => {
+    const user = userEvent.setup();
+
+    render(<QuickPickSectionsPanel />);
+
+    await waitFor(() => {
+      expect(apiClientMocks.listQuickPickSections).toHaveBeenCalled();
+    });
+
+    await user.click(screen.getByRole("button", { name: /create section/i }));
+
+    const dialog = screen.getByRole("dialog");
+    const classList = dialog.className.split(/\s+/);
+    expect(classList).toEqual(expect.arrayContaining([expect.stringMatching(/^sm:max-w-/)]));
+    expect(classList).not.toContain("sm:max-w-sm");
+    expect(classList.some((name) => /^(lg|xl):max-w-/.test(name))).toBe(true);
+  });
+
   it("prefills explicit SKUs from the initial handoff and opens the create dialog", async () => {
     render(<QuickPickSectionsPanel initialExplicitSkus={[302, 101]} />);
 

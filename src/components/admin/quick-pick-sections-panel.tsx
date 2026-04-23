@@ -839,7 +839,7 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={closeDialog}>
-        <DialogContent className="max-h-[90vh] max-w-6xl overflow-y-auto p-0">
+        <DialogContent className="max-h-[90vh] overflow-y-auto p-0 sm:max-w-3xl lg:max-w-5xl xl:max-w-[min(calc(100%-2rem),80rem)]">
           <DialogHeader className="border-b border-border px-6 py-5">
             <DialogTitle>{mode === "create" ? "Create quick pick section" : "Edit quick pick section"}</DialogTitle>
             <DialogDescription>
