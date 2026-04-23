@@ -14,6 +14,8 @@ import { useVendorDirectory } from "@/domains/product/vendor-directory";
 interface ProductActionBarProps {
   selected: Map<number, SelectedProduct>;
   selectedCount: number;
+  visibleSelectedCount?: number;
+  offPageSelectedCount?: number;
   editPricingItems?: Array<{ retailPrice: number | null; cost: number | null }>;
   onClear: () => void;
   saveToSession: () => void;
@@ -30,6 +32,8 @@ interface ProductActionBarProps {
 export function ProductActionBar({
   selected,
   selectedCount,
+  visibleSelectedCount = selectedCount,
+  offPageSelectedCount = 0,
   editPricingItems,
   onClear,
   saveToSession,
@@ -135,6 +139,11 @@ export function ProductActionBar({
                 <span className="text-sm font-medium">
                   {selectedCount} item{selectedCount !== 1 ? "s" : ""} selected
                 </span>
+                {offPageSelectedCount > 0 ? (
+                  <span className="rounded-full border border-border bg-secondary px-2 py-0.5 text-[11px] text-muted-foreground">
+                    {visibleSelectedCount} on this page · {offPageSelectedCount} on another page
+                  </span>
+                ) : null}
                 <button
                   onClick={onClear}
                   className="text-xs text-muted-foreground hover:text-foreground underline"

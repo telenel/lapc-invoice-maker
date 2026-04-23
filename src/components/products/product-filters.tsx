@@ -440,6 +440,7 @@ export function ProductFiltersBar({
 
   const recentActive = filters.lastSaleWithin === "30d";
   const activeChips = getProductActiveFilterChips(filters);
+  const dateRangeActive = hasFilterText(filters.lastSaleDateFrom) || hasFilterText(filters.lastSaleDateTo);
 
   return (
     <aside
@@ -541,7 +542,16 @@ export function ProductFiltersBar({
       />
 
       <SectionTitle>Last sale</SectionTitle>
-      <div className="flex flex-col gap-1.5">
+      <div
+        className={`flex flex-col gap-1.5 rounded-lg border px-2 py-2 transition-colors ${
+          dateRangeActive
+            ? "border-primary/35 bg-primary/[0.04]"
+            : "border-border/70 bg-secondary/25"
+        }`}
+      >
+        <p className="text-[10.5px] leading-4 text-muted-foreground">
+          Type or pick exact dates to narrow the last-sale window.
+        </p>
         <RailInput
           ariaLabel="Last sale from"
           value={filters.lastSaleDateFrom}
@@ -556,6 +566,11 @@ export function ProductFiltersBar({
           placeholder="To"
           type="date"
         />
+        {dateRangeActive ? (
+          <p className="text-[10.5px] font-medium leading-4 text-primary">
+            Date range active
+          </p>
+        ) : null}
       </div>
 
       {filters.tab === "textbooks" ? (

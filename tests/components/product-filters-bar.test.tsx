@@ -44,4 +44,17 @@ describe("ProductFiltersBar", () => {
       page: 1,
     }));
   });
+
+  it("makes exact last-sale date filters discoverable and visibly active", () => {
+    render(
+      <ProductFiltersBar
+        filters={{ ...EMPTY_FILTERS, lastSaleDateFrom: "2026-04-01" }}
+        onChange={vi.fn()}
+        onClear={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByText("Type or pick exact dates to narrow the last-sale window.")).toBeInTheDocument();
+    expect(screen.getByText("Date range active")).toBeInTheDocument();
+  });
 });
