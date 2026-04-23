@@ -347,6 +347,7 @@ describe("QuickPickSectionsPanel", () => {
 
     const dialogTitle = await screen.findByText(/create quick pick section/i);
     const dialogContent = dialogTitle.closest('[data-slot="dialog-content"]');
+    const editorGrid = await screen.findByTestId("quick-pick-editor-grid");
 
     expect(dialogContent).not.toBeNull();
     // The DialogContent primitive defaults to `sm:max-w-sm`. The Quick Picks
@@ -354,10 +355,31 @@ describe("QuickPickSectionsPanel", () => {
     // (otherwise the desktop modal is clipped to ~384px).
     expect(dialogContent?.className).toMatch(/sm:max-w-(?:md|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl|\[)/);
 
-    // The two-column scope/preview layout should kick in by `lg:` so standard
-    // laptops (1024px+) get the side-by-side experience, not just `xl:` (1280px+).
-    const grid = dialogContent?.querySelector('[class*="grid-cols-"]');
-    expect(grid).not.toBeNull();
-    expect(grid?.className).toMatch(/lg:grid-cols-/);
+    // The top-level editor/preview shell should split by `lg:` so standard
+    // laptops (1024px+) get the side-by-side experience, not just `xl:`.
+    expect(editorGrid.className).toMatch(/lg:grid-cols-/);
+  });
+
+  it("treats metadata as secondary cards so the scope builder dominates the editor", async () => {
+    const user = userEvent.setup();
+
+    render(<QuickPickSectionsPanel />);
+
+    await waitFor(() => {
+      expect(apiClientMocks.listQuickPickSections).toHaveBeenCalled();
+    });
+
+    await user.click(screen.getByRole("button", { name: /create section/i }));
+
+    const metadataGrid = await screen.findByTestId("quick-pick-basics-grid");
+    const dialog = screen.getByRole("dialog");
+    const sectionDetailsCard = within(dialog).getByText("Section details").closest('[data-slot="card"]');
+    const availabilityCard = within(dialog).getByText("Availability").closest('[data-slot="card"]');
+    const scopeBuilderCard = within(dialog).getByText("Scope builder").closest('[data-slot="card"]');
+
+    expect(metadataGrid.className).toMatch(/xl:grid-cols-/);
+    expect(sectionDetailsCard).toHaveAttribute("data-size", "sm");
+    expect(availabilityCard).toHaveAttribute("data-size", "sm");
+    expect(scopeBuilderCard).toHaveAttribute("data-size", "default");
   });
 });
