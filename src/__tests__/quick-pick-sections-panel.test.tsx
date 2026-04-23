@@ -333,4 +333,31 @@ describe("QuickPickSectionsPanel", () => {
     expect(dialogContent?.className).toContain("max-h-[90vh]");
     expect(dialogContent?.className).toContain("overflow-y-auto");
   });
+
+  it("widens the create dialog on desktop breakpoints", async () => {
+    const user = userEvent.setup();
+
+    render(<QuickPickSectionsPanel />);
+
+    await waitFor(() => {
+      expect(apiClientMocks.listQuickPickSections).toHaveBeenCalled();
+    });
+
+    await user.click(screen.getByRole("button", { name: /create section/i }));
+
+    const dialogTitle = await screen.findByText(/create quick pick section/i);
+    const dialogContent = dialogTitle.closest('[data-slot="dialog-content"]');
+
+    expect(dialogContent).not.toBeNull();
+    // The DialogContent primitive defaults to `sm:max-w-sm`. The Quick Picks
+    // dialog must override that with a `sm:`-prefixed width larger than `sm`
+    // (otherwise the desktop modal is clipped to ~384px).
+    expect(dialogContent?.className).toMatch(/sm:max-w-(?:md|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl|\[)/);
+
+    // The two-column scope/preview layout should kick in by `lg:` so standard
+    // laptops (1024px+) get the side-by-side experience, not just `xl:` (1280px+).
+    const grid = dialogContent?.querySelector('[class*="grid-cols-"]');
+    expect(grid).not.toBeNull();
+    expect(grid?.className).toMatch(/lg:grid-cols-/);
+  });
 });

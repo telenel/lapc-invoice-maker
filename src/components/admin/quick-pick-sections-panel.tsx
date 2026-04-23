@@ -839,7 +839,7 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
       </Card>
 
       <Dialog open={dialogOpen} onOpenChange={closeDialog}>
-        <DialogContent className="max-h-[90vh] max-w-6xl overflow-y-auto p-0">
+        <DialogContent className="max-h-[90vh] overflow-y-auto p-0 sm:max-w-3xl lg:max-w-5xl xl:max-w-6xl">
           <DialogHeader className="border-b border-border px-6 py-5">
             <DialogTitle>{mode === "create" ? "Create quick pick section" : "Edit quick pick section"}</DialogTitle>
             <DialogDescription>
@@ -847,7 +847,7 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-6 px-6 py-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(360px,0.9fr)]">
+          <div className="grid gap-6 px-6 py-6 lg:grid-cols-[minmax(0,1.3fr)_minmax(360px,0.9fr)]">
             <div className="space-y-5">
               <Card>
                 <CardHeader className="space-y-1">
@@ -1068,7 +1068,7 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
               </Card>
             </div>
 
-            <div className="space-y-5 xl:sticky xl:top-0">
+            <div className="space-y-5 lg:sticky lg:top-0">
               <Card size="sm" className="h-fit overflow-hidden">
                 <CardHeader className="space-y-3 border-b border-border bg-muted/20">
                   <div className="flex items-start justify-between gap-3">
