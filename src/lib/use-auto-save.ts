@@ -4,6 +4,7 @@ import { useEffect, useRef, useCallback } from "react";
 import { userDraftApi } from "@/domains/user-draft/api-client";
 
 const SAVE_INTERVAL = 30_000; // 30 seconds
+export const CREATE_PAGE_DRAFT_MAX_AGE_MS = 12 * 60 * 60 * 1000;
 
 function getStableUserId(userId: string | null | undefined): string | null {
   if (!userId || userId === "anonymous") {
@@ -46,14 +47,14 @@ export function useAutoSave<T>(formState: T, routeKey: string, userId: string | 
     };
   }, [routeKey, stableUserId]);
 
-  const clearDraft = useCallback(() => {
+  const clearDraft = useCallback(async () => {
     initialStateRef.current = formStateRef.current;
     isDirtyRef.current = false;
     if (!stableUserId) {
       return;
     }
 
-    void userDraftApi.clear(routeKey).catch(() => {
+    await userDraftApi.clear(routeKey).catch(() => {
       // Draft clearing is non-critical after a successful save/discard.
     });
   }, [routeKey, stableUserId]);
@@ -64,6 +65,7 @@ export function useAutoSave<T>(formState: T, routeKey: string, userId: string | 
 export async function loadDraft<T>(
   routeKey: string,
   userId: string,
+  options: { maxAgeMs?: number | null } = {},
 ): Promise<{ data: T; savedAt: number } | null> {
   if (!getStableUserId(userId)) {
     return null;
@@ -75,9 +77,16 @@ export async function loadDraft<T>(
       return null;
     }
 
+    const savedAt = new Date(entry.savedAt).getTime();
+    const maxAgeMs = options.maxAgeMs ?? null;
+    if (maxAgeMs != null && Date.now() - savedAt > maxAgeMs) {
+      await userDraftApi.clear(routeKey).catch(() => {});
+      return null;
+    }
+
     return {
       data: entry.data,
-      savedAt: new Date(entry.savedAt).getTime(),
+      savedAt,
     };
   } catch {
     return null;

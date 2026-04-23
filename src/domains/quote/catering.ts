@@ -50,3 +50,18 @@ export function sanitizeCustomerProvidedCateringDetails(details: CateringDetails
     specialInstructions: "",
   };
 }
+
+export function normalizeCateringDetails(details: CateringDetails | null | undefined): CateringDetails | null {
+  if (!details) return null;
+
+  const specialInstructions = details.specialInstructions?.trim() ?? "";
+  const headcountText = details.headcount == null ? "" : String(details.headcount);
+
+  return {
+    ...details,
+    specialInstructions:
+      specialInstructions && specialInstructions === headcountText
+        ? ""
+        : specialInstructions,
+  };
+}

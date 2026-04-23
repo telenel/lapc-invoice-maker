@@ -5,10 +5,13 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { invoiceApi } from "@/domains/invoice/api-client";
 import type { InvoiceFormData } from "./use-invoice-form-state";
+import { prepareLineItemsForSubmit } from "../line-item-utils";
 
 export type GenerationStep = null | "saving" | "generating" | "done";
 
 function buildPayload(form: InvoiceFormData) {
+  const lineItems = prepareLineItemsForSubmit(form.items);
+
   return {
     invoiceNumber: form.invoiceNumber,
     date: form.date,
@@ -36,7 +39,7 @@ function buildPayload(form: InvoiceFormData) {
     marginPercent: form.marginEnabled ? form.marginPercent : undefined,
     taxEnabled: form.taxEnabled,
     taxRate: form.taxRate,
-    items: form.items.map((item, i) => {
+    items: lineItems.map((item, i) => {
       const cost = Number(item.costPrice ?? item.unitPrice);
       const effectiveMargin = item.marginOverride ?? form.marginPercent;
       const charged =
@@ -128,8 +131,10 @@ export function useInvoiceSave(form: InvoiceFormData, existingId?: string) {
         : await postDraft(form);
       toast.success("Draft saved");
       router.push(`/invoices/${id}`);
+      return true;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save draft");
+      return false;
     } finally {
       setSaving(false);
     }
@@ -161,11 +166,13 @@ export function useInvoiceSave(form: InvoiceFormData, existingId?: string) {
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
       router.push(`/invoices/${id}`);
+      return true;
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to finalize invoice"
       );
       setGenerationStep(null);
+      return false;
     } finally {
       setSaving(false);
     }

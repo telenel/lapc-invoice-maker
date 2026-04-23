@@ -7,6 +7,10 @@ import { staffApi } from "@/domains/staff/api-client";
 import type { StaffResponse, StaffDetailResponse, AccountNumberResponse } from "@/domains/staff/types";
 import type { CateringDetails } from "@/domains/quote/types";
 import { addDaysToDateKey, getDateKeyInLosAngeles } from "@/lib/date-utils";
+import {
+  appendLineItemsReplacingPlaceholders,
+  prepareLineItemsForSubmit,
+} from "@/components/invoice/line-item-utils";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -192,7 +196,7 @@ export function useQuoteForm(
   const addItems = useCallback(
     (newItems: Partial<QuoteItem>[]) => {
       setForm((prev) => {
-        const startSort = prev.items.length;
+        const startSort = prev.items.filter((item) => item.description.trim() || item.sku).length;
         const created = newItems.map((partial, i) => {
           const qty = partial.quantity ?? 1;
           const price = partial.unitPrice ?? 0;
@@ -209,7 +213,10 @@ export function useQuoteForm(
             costPrice: partial.costPrice ?? null,
           };
         });
-        return { ...prev, items: [...prev.items, ...created] };
+        return {
+          ...prev,
+          items: appendLineItemsReplacingPlaceholders(prev.items, created),
+        };
       });
     },
     []
@@ -405,6 +412,7 @@ export function useQuoteForm(
 
   function buildPayload(overrides?: Partial<QuoteFormData>) {
     const currentForm = { ...form, ...overrides };
+    const lineItems = prepareLineItemsForSubmit(currentForm.items);
 
     return {
       date: currentForm.date,
@@ -425,7 +433,7 @@ export function useQuoteForm(
       taxRate: currentForm.taxRate,
       isCateringEvent: currentForm.isCateringEvent,
       cateringDetails: currentForm.isCateringEvent ? currentForm.cateringDetails : undefined,
-      items: currentForm.items.map((item, i) => {
+      items: lineItems.map((item, i) => {
         const cost = Number(item.costPrice ?? item.unitPrice);
         const effectiveMargin = item.marginOverride ?? currentForm.marginPercent;
         const charged =
@@ -501,8 +509,10 @@ export function useQuoteForm(
       const id = existingId ? await putQuote(existingId, overrides) : await postQuote(overrides);
       toast.success("Quote saved");
       router.push(`/quotes/${id}`);
+      return true;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to save quote");
+      return false;
     } finally {
       setSaving(false);
     }

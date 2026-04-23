@@ -43,6 +43,8 @@ export function AccountSelect({
   const isNewAccount =
     value.trim() !== "" &&
     !accountNumbers.some((a) => a.accountCode === value.trim());
+  const selectedSavedAccount = accountNumbers.find((a) => a.accountCode === value.trim());
+  const pickerAccountNumbers = accountNumbers.filter((a) => a.accountCode !== value.trim());
 
   // Arrow-key navigation between chips
   function handleChipKeyDown(
@@ -65,13 +67,20 @@ export function AccountSelect({
       <Label>Account Number</Label>
 
       {/* Saved account chips */}
-      {accountNumbers.length > 0 && (
+      {selectedSavedAccount && (
+        <p className="text-xs text-muted-foreground">
+          Using a saved account{selectedSavedAccount.description ? ` (${selectedSavedAccount.description})` : ""}.
+          Edit the field below if this invoice needs a different number.
+        </p>
+      )}
+
+      {pickerAccountNumbers.length > 0 && (
         <div
           className="flex flex-wrap gap-1 mb-1"
           role="group"
-          aria-label="Saved account numbers"
+          aria-label="Choose another saved account number"
         >
-          {accountNumbers.map((acc, index) => (
+          {pickerAccountNumbers.map((acc, index) => (
             <button
               key={acc.id}
               ref={(el) => {
@@ -80,13 +89,8 @@ export function AccountSelect({
               type="button"
               onClick={() => onChange(acc.accountCode)}
               onKeyDown={(e) => handleChipKeyDown(e, index)}
-              className={`px-2 py-0.5 rounded text-xs border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                value === acc.accountCode
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-muted text-muted-foreground border-border hover:bg-accent"
-              }`}
+              className="px-2 py-0.5 rounded text-xs border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring bg-muted text-muted-foreground border-border hover:bg-accent"
               title={acc.description || undefined}
-              aria-pressed={value === acc.accountCode}
             >
               {acc.accountCode}
               {acc.description && (

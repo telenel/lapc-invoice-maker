@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { TAX_RATE } from "@/domains/invoice/constants";
 import { getDateKeyInLosAngeles } from "@/lib/date-utils";
+import { appendLineItemsReplacingPlaceholders } from "../line-item-utils";
 
 // ---------------------------------------------------------------------------
 // Types (re-exported so consumers can import from here)
@@ -180,7 +181,7 @@ export function useInvoiceFormState(initial?: Partial<InvoiceFormData>) {
   const addItems = useCallback(
     (newItems: Partial<InvoiceItem>[]) => {
       setForm((prev) => {
-        const startSort = prev.items.length;
+        const startSort = prev.items.filter((item) => item.description.trim() || item.sku).length;
         const created = newItems.map((partial, i) => {
           const qty = partial.quantity ?? 1;
           const price = partial.unitPrice ?? 0;
@@ -197,7 +198,10 @@ export function useInvoiceFormState(initial?: Partial<InvoiceFormData>) {
             costPrice: partial.costPrice ?? null,
           };
         });
-        return { ...prev, items: [...prev.items, ...created] };
+        return {
+          ...prev,
+          items: appendLineItemsReplacingPlaceholders(prev.items, created),
+        };
       });
     },
     []

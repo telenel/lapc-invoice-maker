@@ -205,8 +205,30 @@ export default function EditQuotePage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
-        <p className="text-muted-foreground">Loading quote…</p>
+      <div className="mx-auto max-w-7xl px-0 py-4 sm:px-4 sm:py-8" aria-busy="true">
+        <div className="mb-6 space-y-2">
+          <div className="skeleton h-8 w-44" />
+          <div className="skeleton h-4 w-64" />
+        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_380px]">
+          <div className="space-y-4">
+            {[0, 1, 2].map((section) => (
+              <div key={section} className="rounded-xl border border-border/40 bg-card p-5 space-y-3">
+                <div className="skeleton h-4 w-32" />
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="skeleton h-9 w-full" />
+                  <div className="skeleton h-9 w-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-xl border border-border/40 bg-card p-4 space-y-3">
+            <div className="skeleton h-5 w-36" />
+            {[0, 1, 2, 3].map((row) => (
+              <div key={row} className="skeleton h-12 w-full" />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

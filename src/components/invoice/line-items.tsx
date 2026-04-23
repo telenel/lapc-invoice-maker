@@ -46,6 +46,10 @@ export function LineItems({
   // Refs for qty fields so we can programmatically focus
   const qtyRefs = useRef<(HTMLInputElement | null)[]>([]);
   const addButtonRef = useRef<HTMLButtonElement | null>(null);
+  const displayedTotal =
+    marginEnabled && itemsWithMargin
+      ? itemsWithMargin.reduce((sum, item) => sum + Number(item.extendedPrice), 0)
+      : total;
 
   function handleAddItem() {
     onAdd();
@@ -119,8 +123,8 @@ export function LineItems({
               type="text"
               value={item.sku ?? ""}
               onChange={(e) => onUpdate(index, { sku: e.target.value || null })}
-              placeholder="SKU"
-              className="w-20 h-8 text-xs tabular-nums shrink-0"
+              placeholder="SKU / ISBN"
+              className="w-28 h-8 text-sm tabular-nums shrink-0"
               aria-label={`Line item ${index + 1} SKU`}
               tabIndex={-1}
             />
@@ -177,15 +181,14 @@ export function LineItems({
                 {marginEnabled ? "Cost" : "Price"}
               </Label>
               <Input
-                type="number"
+                type="text"
                 min={0}
-                step={0.01}
-                value={item.unitPrice}
-                onChange={(e) => onUpdate(index, { unitPrice: Number(e.target.value) })}
+                value={String(Number(item.unitPrice))}
+                onChange={(e) => onUpdate(index, { unitPrice: Number(e.target.value) || 0 })}
                 onKeyDown={(e) => handleUnitPriceKeyDown(e, index)}
                 name={`lineItem${index}UnitPrice`}
                 inputMode="decimal"
-                className="w-24 h-8 text-sm"
+                className="w-32 h-8 text-sm tabular-nums"
                 aria-label={`Line item ${index + 1} unit price`}
               />
             </div>
@@ -264,7 +267,7 @@ export function LineItems({
       {/* Total */}
       <div className="flex justify-end pt-2 border-t">
         <span className="text-sm font-semibold tabular-nums">
-          Total: ${Number(total).toFixed(2)}
+          {marginEnabled ? "Charged total" : "Total"}: ${Number(displayedTotal).toFixed(2)}
         </span>
       </div>
     </div>

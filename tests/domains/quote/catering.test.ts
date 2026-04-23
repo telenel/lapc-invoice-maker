@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { normalizeQuoteTimeInput, sanitizeCustomerProvidedCateringDetails } from "@/domains/quote/catering";
+import {
+  normalizeCateringDetails,
+  normalizeQuoteTimeInput,
+  sanitizeCustomerProvidedCateringDetails,
+} from "@/domains/quote/catering";
 
 describe("normalizeQuoteTimeInput", () => {
   it("normalizes 24-hour inputs", () => {
@@ -61,5 +65,50 @@ describe("sanitizeCustomerProvidedCateringDetails", () => {
       takedownInstructions: "",
       specialInstructions: "",
     });
+  });
+});
+
+describe("normalizeCateringDetails", () => {
+  it("clears special instructions when they only duplicate headcount", () => {
+    expect(
+      normalizeCateringDetails({
+        eventDate: "2026-04-07",
+        startTime: "13:30",
+        endTime: "15:00",
+        location: "Bookstore",
+        contactName: "Marcos A Montalvo",
+        contactPhone: "(818) 710-4236",
+        headcount: 120,
+        setupRequired: false,
+        takedownRequired: false,
+        specialInstructions: "120",
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        headcount: 120,
+        specialInstructions: "",
+      }),
+    );
+  });
+
+  it("preserves real special instructions", () => {
+    expect(
+      normalizeCateringDetails({
+        eventDate: "2026-04-07",
+        startTime: "13:30",
+        endTime: "15:00",
+        location: "Bookstore",
+        contactName: "Marcos A Montalvo",
+        contactPhone: "(818) 710-4236",
+        headcount: 120,
+        setupRequired: false,
+        takedownRequired: false,
+        specialInstructions: "Need extension cords",
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        specialInstructions: "Need extension cords",
+      }),
+    );
   });
 });
