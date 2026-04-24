@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { eventService } from "@/domains/event/service";
-import { Prisma } from "@/generated/prisma/client";
+import { Prisma, type QuoteStatus } from "@/generated/prisma/client";
 import { BIRTHDAY_COLOR, CATERING_COLOR, type CalendarEventItem } from "@/domains/event/types";
 import { addDaysToDateKey, fromDateKey, getDateKeyInLosAngeles } from "@/lib/date-utils";
 
@@ -22,6 +22,78 @@ function getWeekStartDateKey(date = new Date()): string {
   return addDaysToDateKey(currentDateKey, mondayOffset);
 }
 
+type CateringQuoteRow = {
+  id: string;
+  quoteNumber: string | null;
+  quoteStatus: QuoteStatus | null;
+  recipientName: string | null;
+  totalAmount: Prisma.Decimal | number | string | null;
+  cateringDetails: Prisma.JsonValue | null;
+};
+
+function eventStartDateKey(event: CalendarEventItem): string | null {
+  const start = event.start;
+  if (typeof start !== "string" || start.length < 10) {
+    return null;
+  }
+  return start.slice(0, 10);
+}
+
+function filterEventsForRange(
+  events: CalendarEventItem[],
+  start: string,
+  end: string,
+): CalendarEventItem[] {
+  return events.filter((event) => {
+    const dateKey = eventStartDateKey(event);
+    return dateKey != null && dateKey >= start && dateKey < end;
+  });
+}
+
+async function findCateringQuotesForRange(
+  start: string,
+  end: string,
+): Promise<CateringQuoteRow[]> {
+  if (typeof prisma.$queryRaw === "function") {
+    return prisma.$queryRaw<CateringQuoteRow[]>`
+      SELECT
+        id,
+        quote_number AS "quoteNumber",
+        quote_status AS "quoteStatus",
+        recipient_name AS "recipientName",
+        total_amount AS "totalAmount",
+        catering_details AS "cateringDetails"
+      FROM invoices
+      WHERE type = 'QUOTE'
+        AND is_catering_event = true
+        AND archived_at IS NULL
+        AND quote_status IN ('SENT', 'ACCEPTED')
+        AND catering_details IS NOT NULL
+        AND catering_details <> 'null'::jsonb
+        AND catering_details->>'eventDate' >= ${start}
+        AND catering_details->>'eventDate' < ${end}
+    `;
+  }
+
+  return prisma.invoice.findMany({
+    where: {
+      type: "QUOTE",
+      isCateringEvent: true,
+      archivedAt: null,
+      quoteStatus: { in: ["SENT", "ACCEPTED"] },
+      cateringDetails: { not: Prisma.JsonNull },
+    },
+    select: {
+      id: true,
+      quoteNumber: true,
+      quoteStatus: true,
+      recipientName: true,
+      totalAmount: true,
+      cateringDetails: true,
+    },
+  });
+}
+
 export async function listCalendarEventsForRange(
   start: string,
   end: string,
@@ -30,23 +102,7 @@ export async function listCalendarEventsForRange(
   const rangeEnd = fromDateKey(end);
 
   const [quotes, manualEvents, staffWithBirthdays] = await Promise.all([
-    prisma.invoice.findMany({
-      where: {
-        type: "QUOTE",
-        isCateringEvent: true,
-        archivedAt: null,
-        quoteStatus: { in: ["SENT", "ACCEPTED"] },
-        cateringDetails: { not: Prisma.JsonNull },
-      },
-      select: {
-        id: true,
-        quoteNumber: true,
-        quoteStatus: true,
-        recipientName: true,
-        totalAmount: true,
-        cateringDetails: true,
-      },
-    }),
+    findCateringQuotesForRange(start, end),
     eventService.listForDateRange(rangeStart, rangeEnd),
     prisma.staff.findMany({
       where: {
@@ -98,7 +154,7 @@ export async function listCalendarEventsForRange(
         quoteId: quote.id,
         quoteNumber: quote.quoteNumber,
         quoteStatus: quote.quoteStatus,
-        totalAmount: Number(quote.totalAmount),
+        totalAmount: Number(quote.totalAmount ?? 0),
         setupTime: (details.setupTime as string) || null,
         takedownTime: (details.takedownTime as string) || null,
       },
@@ -161,10 +217,8 @@ export async function getCalendarBootstrapData(
     start: desktopStart,
     end: addDaysToDateKey(desktopStart, 7),
   };
-  const [desktopEvents, mobileEvents] = await Promise.all([
-    listCalendarEventsForRange(desktopRange.start, desktopRange.end),
-    listCalendarEventsForRange(mobileRange.start, mobileRange.end),
-  ]);
+  const desktopEvents = await listCalendarEventsForRange(desktopRange.start, desktopRange.end);
+  const mobileEvents = filterEventsForRange(desktopEvents, mobileRange.start, mobileRange.end);
 
   return {
     desktop: {

@@ -156,7 +156,8 @@ model Invoice {
   quoteViews         QuoteView[]
   followUps          FollowUp[]
 
-  @@index([type, archivedAt])
+  @@index([type, archivedAt, createdAt(sort: Desc)])
+  @@index([type, archivedAt, date(sort: Desc)])
   @@index([createdBy, archivedAt])
   @@index([archivedBy, archivedAt])
   @@map("invoices")
@@ -179,6 +180,7 @@ model InvoiceItem {
 
   invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
+  @@index([invoiceId, sortOrder])
   @@map("invoice_items")
 }
 
@@ -238,6 +240,7 @@ model Event {
   createdAt         DateTime    @default(now()) @map("created_at")
   updatedAt         DateTime    @updatedAt @map("updated_at")
 
+  @@index([date])
   @@map("events")
 }
 

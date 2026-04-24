@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useDeferredValue } from "react";
+import { useState, useEffect, useCallback, useDeferredValue, useRef } from "react";
 import { toast } from "sonner";
 import { searchProducts } from "./queries";
 import { CATALOG_ITEMS_STORAGE_KEY } from "./constants";
@@ -25,25 +25,72 @@ export function useProductSearch(filters: ProductFilters) {
     ...filters,
     search: deferredSearch,
   };
+  const effectiveFiltersKey = JSON.stringify(effectiveFilters);
+  const requestSequenceRef = useRef(0);
+  const manualRefetchControllerRef = useRef<AbortController | null>(null);
 
   const refetch = useCallback(async () => {
+    manualRefetchControllerRef.current?.abort();
+    const controller = new AbortController();
+    manualRefetchControllerRef.current = controller;
+    const requestId = requestSequenceRef.current + 1;
+    requestSequenceRef.current = requestId;
     setLoading(true);
     try {
-      const result = await searchProducts(effectiveFilters);
+      const result = await searchProducts(effectiveFilters, { signal: controller.signal });
+      if (controller.signal.aborted || requestSequenceRef.current !== requestId) {
+        return false;
+      }
       setData(result);
       return true;
     } catch (e) {
+      if (controller.signal.aborted || requestSequenceRef.current !== requestId) {
+        return false;
+      }
       const message = e instanceof Error ? e.message : "Failed to search products";
       toast.error(message);
       return false;
     } finally {
-      setLoading(false);
+      if (manualRefetchControllerRef.current === controller) {
+        manualRefetchControllerRef.current = null;
+      }
+      if (!controller.signal.aborted && requestSequenceRef.current === requestId) {
+        setLoading(false);
+      }
     }
-  }, [JSON.stringify(effectiveFilters)]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [effectiveFiltersKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    refetch();
-  }, [refetch]);
+    return () => manualRefetchControllerRef.current?.abort();
+  }, []);
+
+  useEffect(() => {
+    manualRefetchControllerRef.current?.abort();
+    const controller = new AbortController();
+    const requestId = requestSequenceRef.current + 1;
+    requestSequenceRef.current = requestId;
+
+    async function runSearch() {
+      setLoading(true);
+      try {
+        const result = await searchProducts(effectiveFilters, { signal: controller.signal });
+        if (controller.signal.aborted || requestSequenceRef.current !== requestId) return;
+        setData(result);
+      } catch (e) {
+        if (controller.signal.aborted || requestSequenceRef.current !== requestId) return;
+        const message = e instanceof Error ? e.message : "Failed to search products";
+        toast.error(message);
+      } finally {
+        if (!controller.signal.aborted && requestSequenceRef.current === requestId) {
+          setLoading(false);
+        }
+      }
+    }
+
+    runSearch();
+    return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectiveFiltersKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { data, loading, refetch };
 }

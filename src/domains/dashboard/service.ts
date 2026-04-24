@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import type { Prisma } from "@/generated/prisma/client";
 import { addDaysToDateKey, getDateKeyInLosAngeles } from "@/lib/date-utils";
 import { listCalendarEventsForRange } from "@/domains/calendar/service";
 import { followUpRepository } from "@/domains/follow-up/repository";
@@ -57,27 +58,37 @@ function getFocusDateRanges(now = new Date()) {
 
 async function getDashboardPipeline(now = new Date()) {
   const endDateKey = getDateKeyInLosAngeles(now);
-  const ranges = Array.from({ length: 12 }, (_, index) => {
-    const endOffset = (11 - index) * 7;
-    const startOffset = endOffset + 6;
+  if (typeof prisma.$queryRaw !== "function") {
+    return Array.from({ length: 12 }, () => 0);
+  }
 
-    return {
-      dateFrom: addDaysToDateKey(endDateKey, -startOffset),
-      dateTo: addDaysToDateKey(endDateKey, -endOffset),
-    };
-  });
+  const rows = await prisma.$queryRaw<Array<{ bucket_index: number; total: Prisma.Decimal | number | string | null }>>`
+    WITH ranges AS (
+      SELECT generate_series(0, 11) AS bucket_index
+    )
+    SELECT
+      ranges.bucket_index::int AS bucket_index,
+      COALESCE(SUM(invoices.total_amount), 0) AS total
+    FROM ranges
+    LEFT JOIN invoices
+      ON invoices.type = 'INVOICE'
+      AND invoices.status = 'FINAL'
+      AND invoices.archived_at IS NULL
+      AND invoices.date >= (
+        ${endDateKey}::date - (((11 - ranges.bucket_index) * 7 + 6) * INTERVAL '1 day')
+      )::date
+      AND invoices.date <= (
+        ${endDateKey}::date - (((11 - ranges.bucket_index) * 7) * INTERVAL '1 day')
+      )::date
+    GROUP BY ranges.bucket_index
+    ORDER BY ranges.bucket_index ASC
+  `;
 
-  const weeklyTotals = await Promise.all(
-    ranges.map(({ dateFrom, dateTo }) =>
-      invoiceService.getStats({
-        status: "FINAL",
-        dateFrom,
-        dateTo,
-      }),
-    ),
-  );
-
-  return weeklyTotals.map((entry) => entry.sumTotalAmount);
+  const totals = Array.from({ length: 12 }, () => 0);
+  for (const row of rows) {
+    totals[row.bucket_index] = Number(row.total ?? 0);
+  }
+  return totals;
 }
 
 export async function getDashboardStatsData(now = new Date()): Promise<DashboardStatsData> {

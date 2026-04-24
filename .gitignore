@@ -34,6 +34,9 @@ yarn-error.log*
 # claude code local state
 .claude/
 .claude.local.md
+.codex/*
+!.codex/
+!.codex/hooks.json
 
 # vercel
 .vercel
@@ -56,4 +59,8 @@ skills-lock.json
 test-results/
 e2e/.auth/
 playwright-report/
-graphify-out*
+
+# graphify shared graph outputs are intended to be committed; caches and
+# full corpus snapshots are local/generated.
+graphify-out/cache/
+graphify-out/scoped-corpus.json

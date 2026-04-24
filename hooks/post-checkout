@@ -1,0 +1,34 @@
+#!/bin/sh
+# graphify-checkout-hook-start
+# Auto-rebuilds the knowledge graph (code only) when switching branches.
+# Installed by: graphify hook install
+
+PREV_HEAD=$1
+NEW_HEAD=$2
+BRANCH_SWITCH=$3
+
+# Only run on branch switches, not file checkouts
+if [ "$BRANCH_SWITCH" != "1" ]; then
+    exit 0
+fi
+
+# Only run if graphify-out/ exists (graph has been built before)
+if [ ! -d "graphify-out" ]; then
+    exit 0
+fi
+
+HOOK_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+. "$HOOK_DIR/_graphify-python.sh"
+
+echo "[graphify] Branch switched - rebuilding knowledge graph (code files)..."
+$GRAPHIFY_PYTHON -c "
+from graphify.watch import _rebuild_code
+from pathlib import Path
+import sys
+try:
+    _rebuild_code(Path('.'))
+except Exception as exc:
+    print(f'[graphify] Rebuild failed: {exc}')
+    sys.exit(1)
+"
+# graphify-checkout-hook-end

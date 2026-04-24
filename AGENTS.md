@@ -36,3 +36,14 @@ If a task appears to require a PRISM write, stop, state the exact operation you 
 - After a PR exists, only push review fixes with `CR_FIX=1 git push`.
 - Let CodeRabbit and CI review the PR.
 - Merge before starting the next feature.
+
+## graphify
+
+This project may have a graphify knowledge graph at `graphify-out/`.
+
+Rules:
+- Before answering architecture or codebase questions, check whether `graphify-out/graph.json` exists. If it does, prefer the graphify MCP tools and `graphify-out/GRAPH_REPORT.md` for god nodes and community structure before broad raw search.
+- If `graphify-out/wiki/index.md` exists, navigate it instead of reading raw files for orientation.
+- If the graph is missing or stale, do not block on graphify. Fall back to source-first inspection with `rg`, docs, and the actual files.
+- Treat graphify output as navigation help, not source of truth. Verify behavior against repo source before making or reviewing changes.
+- After modifying code files in this session, run `graphify update .` to keep the graph current when practical (AST-only, no API cost).
