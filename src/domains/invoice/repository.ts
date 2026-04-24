@@ -12,7 +12,22 @@ const listInclude = {
   contact: { select: { id: true, name: true, email: true, phone: true, org: true, department: true, title: true, notes: true, createdAt: true } },
   creator: { select: { id: true, name: true, username: true } },
   archiver: { select: { id: true, name: true } },
-  items: { orderBy: { sortOrder: "asc" as const } },
+  items: {
+    orderBy: { sortOrder: "asc" as const },
+    take: 1,
+    select: {
+      id: true,
+      description: true,
+      quantity: true,
+      unitPrice: true,
+      extendedPrice: true,
+      sortOrder: true,
+      isTaxable: true,
+      costPrice: true,
+      marginOverride: true,
+      sku: true,
+    },
+  },
   _count: { select: { items: true } },
 } as const;
 
@@ -363,37 +378,68 @@ export async function countByCreator(status?: CreatorStatsStatus) {
         ? undefined
         : "FINAL";
 
-  const invoices = await prisma.invoice.findMany({
-    where: {
-      type: "INVOICE",
-      ...(statusFilter ? { status: statusFilter } : {}),
-      createdAt: { gte: firstOfMonth },
-      archivedAt: null,
-    },
-    select: {
-      totalAmount: true,
-      creator: { select: { id: true, name: true } },
-    },
-  });
+  const where = {
+    type: "INVOICE",
+    ...(statusFilter ? { status: statusFilter } : {}),
+    createdAt: { gte: firstOfMonth },
+    archivedAt: null,
+  } satisfies Prisma.InvoiceWhereInput;
 
-  const userMap = new Map<string, { id: string; name: string; invoiceCount: number; totalAmount: number }>();
-  for (const inv of invoices) {
-    const key = inv.creator.id;
-    const existing = userMap.get(key);
-    if (existing) {
-      existing.invoiceCount++;
-      existing.totalAmount += Number(inv.totalAmount);
-    } else {
-      userMap.set(key, {
-        id: inv.creator.id,
-        name: inv.creator.name,
-        invoiceCount: 1,
-        totalAmount: Number(inv.totalAmount),
-      });
+  if (typeof prisma.invoice.groupBy !== "function") {
+    const invoices = await prisma.invoice.findMany({
+      where,
+      select: {
+        totalAmount: true,
+        creator: { select: { id: true, name: true } },
+      },
+    });
+
+    const byCreator = new Map<string, { id: string; name: string; invoiceCount: number; totalAmount: number }>();
+    for (const invoice of invoices) {
+      const creatorId = invoice.creator?.id ?? "unknown";
+      const current = byCreator.get(creatorId) ?? {
+        id: creatorId,
+        name: invoice.creator?.name ?? "Unknown",
+        invoiceCount: 0,
+        totalAmount: 0,
+      };
+      current.invoiceCount += 1;
+      current.totalAmount += Number(invoice.totalAmount ?? 0);
+      byCreator.set(creatorId, current);
     }
+
+    return {
+      users: Array.from(byCreator.values()).sort((a, b) => b.totalAmount - a.totalAmount),
+    };
   }
 
-  const users = Array.from(userMap.values()).sort((a, b) => b.totalAmount - a.totalAmount);
+  const stats = await prisma.invoice.groupBy({
+    by: ["createdBy"],
+    where,
+    _count: { _all: true },
+    _sum: { totalAmount: true },
+  });
+
+  if (stats.length === 0) {
+    return { users: [] };
+  }
+
+  const creatorIds = stats.map((entry) => entry.createdBy);
+  const creators = await prisma.user.findMany({
+    where: { id: { in: creatorIds } },
+    select: { id: true, name: true },
+  });
+  const creatorNames = new Map(creators.map((creator) => [creator.id, creator.name]));
+
+  const users = stats
+    .map((entry) => ({
+      id: entry.createdBy,
+      name: creatorNames.get(entry.createdBy) ?? "Unknown",
+      invoiceCount: entry._count._all,
+      totalAmount: Number(entry._sum.totalAmount ?? 0),
+    }))
+    .sort((a, b) => b.totalAmount - a.totalAmount);
+
   return { users };
 }
 

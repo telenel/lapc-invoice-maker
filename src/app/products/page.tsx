@@ -270,7 +270,11 @@ export default function ProductsPage() {
   // poll every 30s while unavailable so a transient health blip doesn't lock
   // write actions off for the rest of the SPA session.
   const [prismAvailable, setPrismAvailable] = useState(false);
+  const healthStartedRef = useRef(false);
   useEffect(() => {
+    if (!data || healthStartedRef.current) return;
+    healthStartedRef.current = true;
+
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
 
@@ -296,7 +300,7 @@ export default function ProductsPage() {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, []);
+  }, [data]);
 
   const [newItemOpen, setNewItemOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -327,27 +331,43 @@ export default function ProductsPage() {
   const tabCountBaseFilters = useMemo(() => getTabCountBaseFilters(filters), [tabCountRefreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
   const tabCountRequestRef = useRef(0);
   useEffect(() => {
+    if (data) {
+      setTabCounts((prev) => ({ ...prev, [filters.tab]: data.total }));
+    }
+  }, [data, filters.tab]);
+
+  useEffect(() => {
+    if (!data) return;
     const requestId = tabCountRequestRef.current + 1;
     tabCountRequestRef.current = requestId;
     let cancelled = false;
+    const controller = new AbortController();
 
-    Promise.all(
-      TABS.map(async (tab) => {
-        const result = await searchProducts(buildFiltersForBrowseTab(tabCountBaseFilters, tab.value), { countOnly: true });
-        return [tab.value, result.total] as const;
-      }),
-    )
-      .then((results) => {
-        if (cancelled || tabCountRequestRef.current !== requestId) return;
-        setTabCounts(Object.fromEntries(results) as Record<ProductTab, number>);
-      })
-      .catch(() => {
-        // Silent — stale count stays visible rather than showing a spinner.
-      });
+    const timer = setTimeout(() => {
+      Promise.all(
+        TABS.map(async (tab) => {
+          const result = await searchProducts(
+            buildFiltersForBrowseTab(tabCountBaseFilters, tab.value),
+            { countOnly: true, signal: controller.signal },
+          );
+          return [tab.value, result.total] as const;
+        }),
+      )
+        .then((results) => {
+          if (cancelled || tabCountRequestRef.current !== requestId) return;
+          setTabCounts(Object.fromEntries(results) as Record<ProductTab, number>);
+        })
+        .catch(() => {
+          // Silent — stale count stays visible rather than showing a spinner.
+        });
+    }, 750);
+
     return () => {
       cancelled = true;
+      controller.abort();
+      clearTimeout(timer);
     };
-  }, [tabCountBaseFilters]);
+  }, [data, tabCountBaseFilters]);
   const {
     selected,
     selectedCount,

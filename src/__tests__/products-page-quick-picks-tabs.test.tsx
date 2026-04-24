@@ -148,11 +148,11 @@ describe("ProductsPage quick-picks tab counts", () => {
     await waitFor(() => {
       expect(searchProductsMock).toHaveBeenCalledWith(
         expect.objectContaining({ tab: "textbooks" }),
-        { countOnly: true },
+        expect.objectContaining({ countOnly: true }),
       );
       expect(searchProductsMock).toHaveBeenCalledWith(
         expect.objectContaining({ tab: "merchandise" }),
-        { countOnly: true },
+        expect.objectContaining({ countOnly: true }),
       );
     });
 

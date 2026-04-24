@@ -80,6 +80,63 @@
         }
       },
       {
+        "id": "calendar",
+        "path": "/calendar",
+        "auth": true,
+        "thresholds": {
+          "categories": {
+            "performance": 0.17,
+            "accessibility": 0.93,
+            "best-practices": 0.95
+          },
+          "metrics": {
+            "largest-contentful-paint": 27000,
+            "total-blocking-time": 3200,
+            "cumulative-layout-shift": 0.8,
+            "interactive": 28000,
+            "server-response-time": 120
+          }
+        }
+      },
+      {
+        "id": "products",
+        "path": "/products",
+        "auth": true,
+        "thresholds": {
+          "categories": {
+            "performance": 0.36,
+            "accessibility": 0.93,
+            "best-practices": 0.95
+          },
+          "metrics": {
+            "largest-contentful-paint": 28000,
+            "total-blocking-time": 3200,
+            "cumulative-layout-shift": 0.2,
+            "interactive": 29000,
+            "server-response-time": 120
+          }
+        }
+      },
+      {
+        "id": "invoices",
+        "path": "/invoices",
+        "auth": true,
+        "thresholds": {
+          "categories": {
+            "performance": 0.38,
+            "accessibility": 0.93,
+            "best-practices": 0.95
+          },
+          "metrics": {
+            "largest-contentful-paint": 18000,
+            "total-blocking-time": 2600,
+            "cumulative-layout-shift": 0.2,
+            "interactive": 25000,
+            "server-response-time": 120
+          }
+        }
+      },
+      {
         "id": "admin-users",
         "path": "/admin/users",
         "auth": true,

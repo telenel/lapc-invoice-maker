@@ -25,6 +25,7 @@ export function useProductSearch(filters: ProductFilters) {
     ...filters,
     search: deferredSearch,
   };
+  const effectiveFiltersKey = JSON.stringify(effectiveFilters);
 
   const refetch = useCallback(async () => {
     setLoading(true);
@@ -39,11 +40,31 @@ export function useProductSearch(filters: ProductFilters) {
     } finally {
       setLoading(false);
     }
-  }, [JSON.stringify(effectiveFilters)]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [effectiveFiltersKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    refetch();
-  }, [refetch]);
+    const controller = new AbortController();
+
+    async function runSearch() {
+      setLoading(true);
+      try {
+        const result = await searchProducts(effectiveFilters, { signal: controller.signal });
+        setData(result);
+      } catch (e) {
+        if (controller.signal.aborted) return;
+        const message = e instanceof Error ? e.message : "Failed to search products";
+        toast.error(message);
+      } finally {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    runSearch();
+    return () => controller.abort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectiveFiltersKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { data, loading, refetch };
 }

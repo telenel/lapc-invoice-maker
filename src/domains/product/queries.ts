@@ -11,6 +11,7 @@ import { serializeFiltersToSearchParams } from "./view-serializer";
 export interface SearchProductsOptions {
   /** When true, the query skips selecting row data and returns only the count. */
   countOnly?: boolean;
+  signal?: AbortSignal;
 }
 
 type ProductRouteSearchResult = ProductBrowseSearchResult | ProductBrowseCountResult;
@@ -29,7 +30,7 @@ async function readSearchError(response: Response): Promise<string> {
 
 export async function searchProducts(
   filters: ProductFilters,
-  options: { countOnly: true },
+  options: SearchProductsOptions & { countOnly: true },
 ): Promise<ProductBrowseCountResult>;
 export async function searchProducts(
   filters: ProductFilters,
@@ -48,6 +49,7 @@ export async function searchProducts(
 
   const response = await fetch(url, {
     cache: "no-store",
+    signal: options.signal,
   });
 
   if (!response.ok) {
