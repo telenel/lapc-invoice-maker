@@ -156,7 +156,6 @@ model Invoice {
   quoteViews         QuoteView[]
   followUps          FollowUp[]
 
-  @@index([type, archivedAt])
   @@index([type, archivedAt, createdAt(sort: Desc)])
   @@index([type, archivedAt, date(sort: Desc)])
   @@index([createdBy, archivedAt])

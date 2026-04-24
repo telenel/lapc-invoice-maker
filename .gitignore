@@ -60,7 +60,7 @@ test-results/
 e2e/.auth/
 playwright-report/
 
-# graphify shared graph outputs are intended to be committed.
+# graphify shared graph outputs are intended to be committed; caches and
+# full corpus snapshots are local/generated.
 graphify-out/cache/
-graphify-out/manifest.json
-graphify-out/cost.json
+graphify-out/scoped-corpus.json

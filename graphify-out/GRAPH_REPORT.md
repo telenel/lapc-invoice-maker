@@ -1,7 +1,7 @@
 # Graph Report - /Users/montalvo/lapc-invoice-maker  (2026-04-23)
 
 ## Corpus Check
-- 821 files · ~685,555 words
+- 821 files · ~685,670 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -3629,11 +3629,11 @@ Nodes (0):
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Number()` connect `Community 2` to `Community 1`, `Community 3`, `Community 4`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 13`, `Community 14`, `Community 15`, `Community 18`, `Community 19`, `Community 22`, `Community 25`, `Community 26`, `Community 29`, `Community 32`, `Community 36`, `Community 40`?**
-  _High betweenness centrality (0.101) - this node is a cross-community bridge._
+  _High betweenness centrality (0.118) - this node is a cross-community bridge._
 - **Why does `Error()` connect `Community 4` to `Community 1`, `Community 2`, `Community 3`, `Community 6`, `Community 8`, `Community 10`, `Community 11`, `Community 13`, `Community 14`, `Community 15`, `Community 17`, `Community 30`?**
-  _High betweenness centrality (0.074) - this node is a cross-community bridge._
+  _High betweenness centrality (0.069) - this node is a cross-community bridge._
 - **Why does `GET()` connect `Community 8` to `Community 2`, `Community 3`, `Community 4`, `Community 6`, `Community 9`, `Community 10`, `Community 14`, `Community 15`, `Community 19`, `Community 22`, `Community 29`?**
-  _High betweenness centrality (0.049) - this node is a cross-community bridge._
+  _High betweenness centrality (0.029) - this node is a cross-community bridge._
 - **Are the 98 inferred relationships involving `Number()` (e.g. with `matchesFilter()` and `main()`) actually correct?**
   _`Number()` has 98 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 6 inferred relationships involving `Project Overview` (e.g. with `Supabase` and `PRISM`) actually correct?**

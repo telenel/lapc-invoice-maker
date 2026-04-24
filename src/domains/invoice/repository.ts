@@ -14,7 +14,6 @@ const listInclude = {
   archiver: { select: { id: true, name: true } },
   items: {
     orderBy: { sortOrder: "asc" as const },
-    take: 1,
     select: {
       id: true,
       description: true,

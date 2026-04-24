@@ -270,10 +270,15 @@ export default function ProductsPage() {
   // poll every 30s while unavailable so a transient health blip doesn't lock
   // write actions off for the rest of the SPA session.
   const [prismAvailable, setPrismAvailable] = useState(false);
-  const healthStartedRef = useRef(false);
+  const [healthReady, setHealthReady] = useState(false);
   useEffect(() => {
-    if (!data || healthStartedRef.current) return;
-    healthStartedRef.current = true;
+    if (data && !healthReady) {
+      setHealthReady(true);
+    }
+  }, [data, healthReady]);
+
+  useEffect(() => {
+    if (!healthReady) return;
 
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
@@ -300,7 +305,7 @@ export default function ProductsPage() {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [data]);
+  }, [healthReady]);
 
   const [newItemOpen, setNewItemOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -329,18 +334,21 @@ export default function ProductsPage() {
   });
   const tabCountRefreshKey = useMemo(() => getTabCountRefreshKey(filters), [filters]);
   const tabCountBaseFilters = useMemo(() => getTabCountBaseFilters(filters), [tabCountRefreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [tabCountsReady, setTabCountsReady] = useState(false);
   const tabCountRequestRef = useRef(0);
   useEffect(() => {
     if (data) {
       setTabCounts((prev) => ({ ...prev, [filters.tab]: data.total }));
+      if (!tabCountsReady) {
+        setTabCountsReady(true);
+      }
     }
-  }, [data, filters.tab]);
+  }, [data, filters.tab, tabCountsReady]);
 
   useEffect(() => {
-    if (!data) return;
+    if (!tabCountsReady) return;
     const requestId = tabCountRequestRef.current + 1;
     tabCountRequestRef.current = requestId;
-    let cancelled = false;
     const controller = new AbortController();
 
     const timer = setTimeout(() => {
@@ -354,7 +362,7 @@ export default function ProductsPage() {
         }),
       )
         .then((results) => {
-          if (cancelled || tabCountRequestRef.current !== requestId) return;
+          if (controller.signal.aborted || tabCountRequestRef.current !== requestId) return;
           setTabCounts(Object.fromEntries(results) as Record<ProductTab, number>);
         })
         .catch(() => {
@@ -363,11 +371,10 @@ export default function ProductsPage() {
     }, 750);
 
     return () => {
-      cancelled = true;
       controller.abort();
       clearTimeout(timer);
     };
-  }, [data, tabCountBaseFilters]);
+  }, [tabCountsReady, tabCountBaseFilters]);
   const {
     selected,
     selectedCount,
