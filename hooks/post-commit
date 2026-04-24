@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+branch=$(git symbolic-ref --short HEAD 2>/dev/null || true)
+[ -n "$branch" ] || exit 0
+[ "$branch" != "main" ] || exit 0
+
+count=$(git rev-list --count "$branch" --not --remotes 2>/dev/null || printf '0')
+case "$count" in
+  ''|*[!0-9]*) count=0 ;;
+esac
+
+if [ "$count" -gt 0 ]; then
+  cat <<EOF
+
+NOTICE: branch '$branch' now has $count local-only commit(s).
+Before switching tasks or machines, make this work visible:
+  npm run ship-check
+  npm run git:checkpoint
+
+EOF
+fi
