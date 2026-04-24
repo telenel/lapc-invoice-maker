@@ -102,6 +102,16 @@ case "$pr_count" in
 esac
 
 if [ "$pr_count" -gt 0 ]; then
+  if [ "$pr_count" -gt 1 ]; then
+    echo ""
+    echo "BLOCKED: Branch '$branch' has more than one open PR."
+    gh pr list --head "$branch" --state open --json number,title,url --jq '.[] | "#\(.number) \(.title) \(.url)"'
+    echo ""
+    echo "Close or reconcile duplicate PRs before pushing."
+    echo ""
+    exit 1
+  fi
+
   pr_info=$(gh pr list --head "$branch" --state open --json number,title,isDraft --jq '.[0] | "#\(.number) \(.title)"')
   pr_is_draft=$(gh pr list --head "$branch" --state open --json isDraft --jq '.[0].isDraft')
 
