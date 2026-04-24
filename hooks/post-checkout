@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+old_head="${1:-}"
+new_head="${2:-}"
+checkout_flag="${3:-}"
+
+[ -n "$old_head" ] || exit 0
+[ "$old_head" != "$new_head" ] || exit 0
+[ "$checkout_flag" = "1" ] || exit 0
+
+current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || true)
+warned=0
+
+while IFS= read -r branch; do
+  [ -n "$branch" ] || continue
+  [ "$branch" != "$current_branch" ] || continue
+
+  count=$(git rev-list --count "$branch" --not --remotes 2>/dev/null || printf '0')
+  case "$count" in
+    ''|*[!0-9]*) count=0 ;;
+  esac
+
+  if [ "$count" -gt 0 ]; then
+    if [ "$warned" -eq 0 ]; then
+      echo ""
+      echo "WARNING: you switched branches while leaving local-only commit(s) behind."
+      warned=1
+    fi
+    echo ""
+    echo "$branch has $count local-only commit(s):"
+    git log --oneline "$branch" --not --remotes --max-count=10 | sed 's/^/  /'
+  fi
+done < <(git for-each-ref --format='%(refname:short)' --points-at "$old_head" refs/heads)
+
+if [ "$warned" -eq 1 ]; then
+  cat <<'EOF'
+
+Make the work visible before continuing elsewhere:
+  npm run git:switch -- <branch>
+  npm run ship-check
+  npm run git:checkpoint
+
+Use `npm run git:status-ledger` to list all local-only branch commits.
+
+EOF
+fi

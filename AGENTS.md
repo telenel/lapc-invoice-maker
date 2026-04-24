@@ -27,6 +27,8 @@ If a task appears to require a PRISM write, stop, state the exact operation you 
 - Start each machine with `npm install` and `npm run git:bootstrap`.
 - Start each feature from fresh `main` with `npm run git:start-branch -- feat/thing`.
 - Resume an existing remote branch on another machine with `npm run git:resume-branch -- feat/thing`.
+- Switch branches with `npm run git:switch -- branch-name`; do not use raw `git switch` unless you are deliberately bypassing the local-only commit guard.
+- Use `npm run git:status-ledger` to audit local-only branch commits and stashes.
 - Use `npm run git:resume-branch -- --discard-local feat/thing` only when GitHub should overwrite the local branch copy.
 - Create one focused branch per concern.
 - Keep branches short-lived and do not stack branches.

@@ -12,6 +12,8 @@
     "git:bootstrap": "./scripts/bootstrap-machine.sh",
     "git:start-branch": "./scripts/start-branch.sh",
     "git:resume-branch": "./scripts/resume-branch.sh",
+    "git:switch": "./scripts/safe-switch.sh",
+    "git:status-ledger": "./scripts/status-ledger.sh",
     "git:checkpoint": "./scripts/checkpoint-branch.sh",
     "git:publish-pr": "./scripts/publish-pr.sh",
     "audit:perf": "node scripts/lighthouse-audit.mjs",

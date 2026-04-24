@@ -31,6 +31,23 @@ That configures:
 
 Use `npm run git:bootstrap -- --repo-only` if you do not want the machine-wide git settings.
 
+## Switch Work
+
+Use the safe switch wrapper instead of raw `git switch`:
+
+```bash
+npm run git:switch -- main
+npm run git:switch -- feat/your-topic
+```
+
+That script blocks when the current branch has commits that are not on any remote. Git itself has no pre-switch hook, so the repo also installs `post-commit` and `post-checkout` warnings that call out local-only commits when someone uses raw Git.
+
+To audit all local-only branch commits:
+
+```bash
+npm run git:status-ledger
+```
+
 ## Start New Work
 
 Use a fresh branch from a fresh `main`:
@@ -103,6 +120,8 @@ The tracked `pre-push` hook blocks pushes when:
 - the remote branch moved and this machine has stale tracking data
 - the push would not be a fast-forward of the current remote branch tip
 
+The tracked `post-commit` and `post-checkout` hooks warn when local-only commits are created or left behind.
+
 This is intentional. It forces clean handoffs between machines.
 
 ## AI Agent Rules
@@ -111,5 +130,6 @@ This is intentional. It forces clean handoffs between machines.
 - Agents must not develop on the same branch from two machines at the same time.
 - Agents should start new work with `npm run git:start-branch -- <branch>`.
 - Agents should resume remote work with `npm run git:resume-branch -- <branch>`.
+- Agents should switch branches with `npm run git:switch -- <branch>`.
 - Agents should treat GitHub as authoritative once work has been pushed.
 - Agents must not switch away from committed local work until it has been pushed with `npm run git:checkpoint`, published with `npm run git:publish-pr`, or explicitly parked in a named stash.
