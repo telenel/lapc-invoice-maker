@@ -7,7 +7,8 @@ This repo is optimized for working across multiple local machines and AI agents 
 - GitHub is the source of truth. Local branches are disposable caches.
 - One task maps to one short-lived branch and one PR.
 - One branch has one active writer at a time.
-- Once a PR exists, that branch is only for review fixes. New scope goes on a new branch.
+- Draft PRs are active-work handoffs. Ready PRs are review surfaces.
+- Once a PR is ready for review, that branch is only for review fixes. New scope goes on a new branch.
 - Always push before switching machines.
 
 ## One-Time Setup Per Machine
@@ -68,6 +69,15 @@ npm run git:resume-branch -- --discard-local feat/your-topic
 
 ## Publish Work
 
+After the first useful commit, checkpoint it to GitHub:
+
+```bash
+npm run ship-check
+npm run git:checkpoint
+```
+
+`npm run git:checkpoint` pushes the current branch and creates a draft PR if one does not exist. If a draft PR already exists, it pushes the new validated commit to that same draft PR. This is the standard way to avoid local-only commits when switching tasks or machines.
+
 Before opening a PR:
 
 ```bash
@@ -75,12 +85,13 @@ npm run ship-check
 npm run git:publish-pr
 ```
 
-`npm run git:publish-pr` always checks for a `ship-check` stamp that matches the current `HEAD`. If `.git/laportal/codex-review.env` exists, the script also verifies that the review stamp matches `HEAD` and has `CODEX_REVIEW_RESULT=PASS`. If you want to require that extra review stamp before every PR publish, set `LAPORTAL_REQUIRE_CODEX_REVIEW=1` in your shell before running the command.
+`npm run git:publish-pr` always checks for a `ship-check` stamp that matches the current `HEAD`. If a draft PR already exists for the branch, the script pushes the latest validated commit and marks that PR ready for review. If no PR exists, it pushes the branch and opens a ready PR. If `.git/laportal/codex-review.env` exists, the script also verifies that the review stamp matches `HEAD` and has `CODEX_REVIEW_RESULT=PASS`. If you want to require that extra review stamp before every PR publish, set `LAPORTAL_REQUIRE_CODEX_REVIEW=1` in your shell before running the command.
 
 After the PR is open:
 
 - do not continue feature work on that branch
-- only push review fixes with `CR_FIX=1 git push`
+- if the PR is draft, continue active work with `npm run ship-check && npm run git:checkpoint`
+- if the PR is ready, only push review fixes with `CR_FIX=1 git push`
 - put any new idea or scope change on a new branch from fresh `main`
 
 ## What The Hook Blocks
@@ -88,7 +99,7 @@ After the PR is open:
 The tracked `pre-push` hook blocks pushes when:
 
 - `ship-check` has not been run on the current `HEAD`
-- the branch has an open PR and you are not doing an explicit review-fix push
+- the branch has a ready PR and you are not doing an explicit review-fix push
 - the remote branch moved and this machine has stale tracking data
 - the push would not be a fast-forward of the current remote branch tip
 
@@ -101,3 +112,4 @@ This is intentional. It forces clean handoffs between machines.
 - Agents should start new work with `npm run git:start-branch -- <branch>`.
 - Agents should resume remote work with `npm run git:resume-branch -- <branch>`.
 - Agents should treat GitHub as authoritative once work has been pushed.
+- Agents must not switch away from committed local work until it has been pushed with `npm run git:checkpoint`, published with `npm run git:publish-pr`, or explicitly parked in a named stash.

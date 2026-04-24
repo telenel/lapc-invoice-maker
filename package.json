@@ -12,6 +12,7 @@
     "git:bootstrap": "./scripts/bootstrap-machine.sh",
     "git:start-branch": "./scripts/start-branch.sh",
     "git:resume-branch": "./scripts/resume-branch.sh",
+    "git:checkpoint": "./scripts/checkpoint-branch.sh",
     "git:publish-pr": "./scripts/publish-pr.sh",
     "audit:perf": "node scripts/lighthouse-audit.mjs",
     "audit:perf:all": "node scripts/lighthouse-audit.mjs --all-categories",

@@ -32,9 +32,11 @@ If a task appears to require a PRISM write, stop, state the exact operation you 
 - Create one focused branch per concern.
 - Keep branches short-lived and do not stack branches.
 - Commit often, but keep each commit scoped to the branch's one concern.
-- Run `npm run ship-check` before pushing.
-- Open the PR with `npm run git:publish-pr` when the work is ready for review.
-- After a PR exists, only push review fixes with `CR_FIX=1 git push`.
+- After the first useful commit, run `npm run ship-check` and `npm run git:checkpoint` to push the branch and create/update its draft PR before switching tasks.
+- Open or mark the PR ready with `npm run git:publish-pr` when the work is ready for review.
+- Draft PRs are active-work handoffs and may receive more checkpoint pushes.
+- Ready PRs are review surfaces; only push review fixes with `CR_FIX=1 git push`.
+- Never switch away from committed local work until it is checkpointed, published, or explicitly parked in a named stash.
 - Let CodeRabbit and CI review the PR.
 - Merge before starting the next feature.
 
