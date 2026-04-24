@@ -19795,12 +19795,21 @@
       "norm_label": "product-edit-context-api.test.ts"
     },
     {
+      "label": "dialog-width-regression.test.ts",
+      "file_type": "code",
+      "source_file": "/Users/montalvo/lapc-invoice-maker/src/__tests__/dialog-width-regression.test.ts",
+      "source_location": "L1",
+      "id": "users_montalvo_lapc_invoice_maker_src_tests_dialog_width_regression_test_ts",
+      "community": 532,
+      "norm_label": "dialog-width-regression.test.ts"
+    },
+    {
       "label": "chat-mobile-launcher.test.tsx",
       "file_type": "code",
       "source_file": "/Users/montalvo/lapc-invoice-maker/src/__tests__/chat-mobile-launcher.test.tsx",
       "source_location": "L1",
       "id": "users_montalvo_lapc_invoice_maker_src_tests_chat_mobile_launcher_test_tsx",
-      "community": 532,
+      "community": 533,
       "norm_label": "chat-mobile-launcher.test.tsx"
     },
     {
@@ -19809,7 +19818,7 @@
       "source_file": "/Users/montalvo/lapc-invoice-maker/src/__tests__/quote-lifecycle.test.ts",
       "source_location": "L1",
       "id": "users_montalvo_lapc_invoice_maker_src_tests_quote_lifecycle_test_ts",
-      "community": 533,
+      "community": 534,
       "norm_label": "quote-lifecycle.test.ts"
     },
     {
@@ -19818,7 +19827,7 @@
       "source_file": "/Users/montalvo/lapc-invoice-maker/src/__tests__/payment-details-form.test.tsx",
       "source_location": "L1",
       "id": "users_montalvo_lapc_invoice_maker_src_tests_payment_details_form_test_tsx",
-      "community": 534,
+      "community": 535,
       "norm_label": "payment-details-form.test.tsx"
     },
     {
@@ -19881,7 +19890,7 @@
       "source_file": "/Users/montalvo/lapc-invoice-maker/src/__tests__/nav-page-bootstrap.test.tsx",
       "source_location": "L1",
       "id": "users_montalvo_lapc_invoice_maker_src_tests_nav_page_bootstrap_test_tsx",
-      "community": 535,
+      "community": 536,
       "norm_label": "nav-page-bootstrap.test.tsx"
     },
     {
@@ -19890,7 +19899,7 @@
       "source_file": "/Users/montalvo/lapc-invoice-maker/src/__tests__/not-found.test.tsx",
       "source_location": "L1",
       "id": "users_montalvo_lapc_invoice_maker_src_tests_not_found_test_tsx",
-      "community": 536,
+      "community": 537,
       "norm_label": "not-found.test.tsx"
     },
     {
@@ -19935,7 +19944,7 @@
       "source_file": "/Users/montalvo/lapc-invoice-maker/src/__tests__/inline-combobox.test.tsx",
       "source_location": "L1",
       "id": "users_montalvo_lapc_invoice_maker_src_tests_inline_combobox_test_tsx",
-      "community": 537,
+      "community": 538,
       "norm_label": "inline-combobox.test.tsx"
     },
     {
@@ -19944,7 +19953,7 @@
       "source_file": "/Users/montalvo/lapc-invoice-maker/src/__tests__/site-icons.test.ts",
       "source_location": "L1",
       "id": "users_montalvo_lapc_invoice_maker_src_tests_site_icons_test_ts",
-      "community": 538,
+      "community": 539,
       "norm_label": "site-icons.test.ts"
     },
     {
@@ -19953,7 +19962,7 @@
       "source_file": "/Users/montalvo/lapc-invoice-maker/src/__tests__/quick-pick-sections-server.test.ts",
       "source_location": "L1",
       "id": "users_montalvo_lapc_invoice_maker_src_tests_quick_pick_sections_server_test_ts",
-      "community": 539,
+      "community": 540,
       "norm_label": "quick-pick-sections-server.test.ts"
     },
     {
@@ -19998,7 +20007,7 @@
       "source_file": "/Users/montalvo/lapc-invoice-maker/src/__tests__/staff-table-access.test.tsx",
       "source_location": "L1",
       "id": "users_montalvo_lapc_invoice_maker_src_tests_staff_table_access_test_tsx",
-      "community": 540,
+      "community": 541,
       "norm_label": "staff-table-access.test.tsx"
     },
     {
@@ -20025,7 +20034,7 @@
       "source_file": "/Users/montalvo/lapc-invoice-maker/src/__tests__/share-link-dialog.test.tsx",
       "source_location": "L1",
       "id": "users_montalvo_lapc_invoice_maker_src_tests_share_link_dialog_test_tsx",
-      "community": 541,
+      "community": 542,
       "norm_label": "share-link-dialog.test.tsx"
     },
     {
@@ -20034,7 +20043,7 @@
       "source_file": "/Users/montalvo/lapc-invoice-maker/src/__tests__/dialog-content-desktop-widths.test.ts",
       "source_location": "L1",
       "id": "users_montalvo_lapc_invoice_maker_src_tests_dialog_content_desktop_widths_test_ts",
-      "community": 542,
+      "community": 543,
       "norm_label": "dialog-content-desktop-widths.test.ts"
     },
     {
@@ -20043,7 +20052,7 @@
       "source_file": "/Users/montalvo/lapc-invoice-maker/src/__tests__/quote-access.test.ts",
       "source_location": "L1",
       "id": "users_montalvo_lapc_invoice_maker_src_tests_quote_access_test_ts",
-      "community": 543,
+      "community": 544,
       "norm_label": "quote-access.test.ts"
     },
     {
@@ -20052,7 +20061,7 @@
       "source_file": "/Users/montalvo/lapc-invoice-maker/src/__tests__/keyboard-mode.test.tsx",
       "source_location": "L1",
       "id": "users_montalvo_lapc_invoice_maker_src_tests_keyboard_mode_test_tsx",
-      "community": 544,
+      "community": 545,
       "norm_label": "keyboard-mode.test.tsx"
     },
     {
@@ -20079,7 +20088,7 @@
       "source_file": "/Users/montalvo/lapc-invoice-maker/src/__tests__/csv-export.test.ts",
       "source_location": "L1",
       "id": "users_montalvo_lapc_invoice_maker_src_tests_csv_export_test_ts",
-      "community": 545,
+      "community": 546,
       "norm_label": "csv-export.test.ts"
     },
     {
@@ -20790,7 +20799,7 @@
       "source_file": "/Users/montalvo/lapc-invoice-maker/src/lib/site-icons.ts",
       "source_location": "L1",
       "id": "users_montalvo_lapc_invoice_maker_src_lib_site_icons_ts",
-      "community": 546,
+      "community": 547,
       "norm_label": "site-icons.ts"
     },
     {
@@ -21204,7 +21213,7 @@
       "source_file": "/Users/montalvo/lapc-invoice-maker/src/lib/formatters.ts",
       "source_location": "L1",
       "id": "users_montalvo_lapc_invoice_maker_src_lib_formatters_ts",
-      "community": 547,
+      "community": 548,
       "norm_label": "formatters.ts"
     },
     {
@@ -21276,7 +21285,7 @@
       "source_file": "/Users/montalvo/lapc-invoice-maker/src/lib/auth.ts",
       "source_location": "L1",
       "id": "users_montalvo_lapc_invoice_maker_src_lib_auth_ts",
-      "community": 548,
+      "community": 549,
       "norm_label": "auth.ts"
     },
     {
@@ -21393,7 +21402,7 @@
       "source_file": "/Users/montalvo/lapc-invoice-maker/src/lib/themes.ts",
       "source_location": "L1",
       "id": "users_montalvo_lapc_invoice_maker_src_lib_themes_ts",
-      "community": 549,
+      "community": 550,
       "norm_label": "themes.ts"
     },
     {
@@ -45572,8 +45581,8 @@
       "source_file": "/Users/montalvo/lapc-invoice-maker/src/components/copytech/copytech-import-uploader.tsx",
       "source_location": "L90",
       "weight": 1.0,
-      "_src": "copytech_import_uploader_handlepreview",
-      "_tgt": "error_error",
+      "_src": "error_error",
+      "_tgt": "copytech_import_uploader_handlepreview",
       "source": "error_error",
       "target": "copytech_import_uploader_handlepreview"
     },
@@ -45584,8 +45593,8 @@
       "source_file": "/Users/montalvo/lapc-invoice-maker/src/components/copytech/copytech-import-uploader.tsx",
       "source_location": "L119",
       "weight": 1.0,
-      "_src": "copytech_import_uploader_handlecommit",
-      "_tgt": "error_error",
+      "_src": "error_error",
+      "_tgt": "copytech_import_uploader_handlecommit",
       "source": "error_error",
       "target": "copytech_import_uploader_handlecommit"
     },
@@ -47372,8 +47381,8 @@
       "source_file": "/Users/montalvo/lapc-invoice-maker/src/app/api/copytech/import/route.ts",
       "source_location": "L17",
       "weight": 1.0,
-      "_src": "route_readcsvfile",
-      "_tgt": "route_get",
+      "_src": "route_get",
+      "_tgt": "route_readcsvfile",
       "source": "route_get",
       "target": "route_readcsvfile"
     },

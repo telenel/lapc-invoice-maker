@@ -1,22 +1,20 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 repo_root=$(git rev-parse --show-toplevel)
 git_dir=$(git rev-parse --git-dir)
 stamp_dir="$git_dir/laportal"
 ship_check_file="$stamp_dir/ship-check.env"
-codex_review_file="$stamp_dir/codex-review.env"
-require_codex_review="${LAPORTAL_REQUIRE_CODEX_REVIEW:-0}"
 
 cd "$repo_root"
 
 if ! command -v gh >/dev/null 2>&1; then
-  echo "BLOCKED: gh CLI is required to publish a PR."
+  echo "BLOCKED: gh CLI is required to checkpoint branch work."
   exit 1
 fi
 
 if ! git diff --quiet || ! git diff --cached --quiet; then
-  echo "BLOCKED: publish-pr requires a clean working tree."
+  echo "BLOCKED: git:checkpoint requires a clean working tree."
   echo "Commit or stash changes first."
   echo ""
   git status --short --branch
@@ -25,7 +23,16 @@ fi
 
 branch=$(git symbolic-ref --short HEAD 2>/dev/null || true)
 if [ -z "$branch" ] || [ "$branch" = "main" ]; then
-  echo "BLOCKED: publish-pr must run from a non-main branch."
+  echo "BLOCKED: git:checkpoint must run from a non-main branch."
+  exit 1
+fi
+
+echo "==> git fetch origin --prune"
+git fetch origin --prune
+
+if [ "$(git rev-list --count origin/main..HEAD)" -eq 0 ]; then
+  echo "BLOCKED: branch '$branch' has no commits ahead of origin/main."
+  echo "Make a focused commit first, then run: npm run git:checkpoint"
   exit 1
 fi
 
@@ -42,33 +49,6 @@ if [ "${SHIP_CHECK_HEAD:-}" != "$head_sha" ]; then
   echo "BLOCKED: ship-check stamp does not match HEAD $head_sha"
   echo "Run: npm run ship-check"
   exit 1
-fi
-
-if [ -f "$codex_review_file" ]; then
-  # shellcheck disable=SC1090
-  . "$codex_review_file"
-
-  if [ "${CODEX_REVIEW_HEAD:-}" != "$head_sha" ]; then
-    echo "BLOCKED: Codex review stamp does not match HEAD $head_sha"
-    echo "Re-run the review for this exact commit or remove the stale stamp:"
-    echo "  rm -f $codex_review_file"
-    exit 1
-  fi
-
-  if [ "${CODEX_REVIEW_RESULT:-}" != "PASS" ]; then
-    echo "BLOCKED: Codex review stamp for HEAD $head_sha is ${CODEX_REVIEW_RESULT:-MISSING}."
-    echo "Resolve the review findings or remove the stamp:"
-    echo "  rm -f $codex_review_file"
-    exit 1
-  fi
-
-  echo "Verified Codex review stamp for HEAD $head_sha"
-elif [ "$require_codex_review" = "1" ]; then
-  echo "BLOCKED: LAPORTAL_REQUIRE_CODEX_REVIEW=1 but no Codex review stamp was found."
-  echo "Expected stamp file: $codex_review_file"
-  exit 1
-else
-  echo "No Codex review stamp found; continuing with ship-check gate only."
 fi
 
 pr_count=$(gh pr list --head "$branch" --state open --json number --jq 'length' 2>/dev/null || printf '0')
@@ -89,7 +69,8 @@ if [ "$pr_count" -eq 1 ]; then
 
   if [ "$pr_is_draft" != "true" ]; then
     echo "BLOCKED: branch '$branch' already has ready PR #$pr_number."
-    echo "Use CR_FIX=1 git push for follow-up review fixes."
+    echo "Ready PRs only accept explicit review-fix pushes:"
+    echo "  CR_FIX=1 git push"
     exit 1
   fi
 
@@ -97,10 +78,7 @@ if [ "$pr_count" -eq 1 ]; then
   git push -u origin "$branch"
 
   echo ""
-  echo "==> gh pr ready $pr_number"
-  gh pr ready "$pr_number"
-
-  echo ""
+  echo "Draft PR #$pr_number updated."
   gh pr view "$pr_number" --json url --jq '.url'
   exit 0
 fi
@@ -109,5 +87,5 @@ echo "==> git push -u origin $branch"
 git push -u origin "$branch"
 
 echo ""
-echo "==> gh pr create --fill --base main --head $branch"
-gh pr create --fill --base main --head "$branch"
+echo "==> gh pr create --draft --fill --base main --head $branch"
+gh pr create --draft --fill --base main --head "$branch"

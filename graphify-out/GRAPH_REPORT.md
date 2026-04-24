@@ -1,11 +1,11 @@
 # Graph Report - /Users/montalvo/lapc-invoice-maker  (2026-04-24)
 
 ## Corpus Check
-- 832 files · ~691,198 words
+- 833 files · ~691,689 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 2768 nodes · 3498 edges · 550 communities detected
+- 2769 nodes · 3498 edges · 551 communities detected
 - Extraction: 75% EXTRACTED · 25% INFERRED · 0% AMBIGUOUS · INFERRED: 867 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
@@ -560,6 +560,7 @@
 - [[_COMMUNITY_Community 547|Community 547]]
 - [[_COMMUNITY_Community 548|Community 548]]
 - [[_COMMUNITY_Community 549|Community 549]]
+- [[_COMMUNITY_Community 550|Community 550]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `Number()` - 103 edges
@@ -2787,6 +2788,10 @@ Nodes (0):
 Cohesion: 1.0
 Nodes (0): 
 
+### Community 550 - "Community 550"
+Cohesion: 1.0
+Nodes (0): 
+
 ## Knowledge Gaps
 - **302 isolated node(s):** `LAPortal`, `Features`, `Tech Stack`, `Architecture`, `Development` (+297 more)
   These have ≤1 connection - possible missing edges or undocumented components.
@@ -3618,52 +3623,54 @@ Nodes (0):
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 531`** (1 nodes): `product-edit-context-api.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 532`** (1 nodes): `chat-mobile-launcher.test.tsx`
+- **Thin community `Community 532`** (1 nodes): `dialog-width-regression.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 533`** (1 nodes): `quote-lifecycle.test.ts`
+- **Thin community `Community 533`** (1 nodes): `chat-mobile-launcher.test.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 534`** (1 nodes): `payment-details-form.test.tsx`
+- **Thin community `Community 534`** (1 nodes): `quote-lifecycle.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 535`** (1 nodes): `nav-page-bootstrap.test.tsx`
+- **Thin community `Community 535`** (1 nodes): `payment-details-form.test.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 536`** (1 nodes): `not-found.test.tsx`
+- **Thin community `Community 536`** (1 nodes): `nav-page-bootstrap.test.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 537`** (1 nodes): `inline-combobox.test.tsx`
+- **Thin community `Community 537`** (1 nodes): `not-found.test.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 538`** (1 nodes): `site-icons.test.ts`
+- **Thin community `Community 538`** (1 nodes): `inline-combobox.test.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 539`** (1 nodes): `quick-pick-sections-server.test.ts`
+- **Thin community `Community 539`** (1 nodes): `site-icons.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 540`** (1 nodes): `staff-table-access.test.tsx`
+- **Thin community `Community 540`** (1 nodes): `quick-pick-sections-server.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 541`** (1 nodes): `share-link-dialog.test.tsx`
+- **Thin community `Community 541`** (1 nodes): `staff-table-access.test.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 542`** (1 nodes): `dialog-content-desktop-widths.test.ts`
+- **Thin community `Community 542`** (1 nodes): `share-link-dialog.test.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 543`** (1 nodes): `quote-access.test.ts`
+- **Thin community `Community 543`** (1 nodes): `dialog-content-desktop-widths.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 544`** (1 nodes): `keyboard-mode.test.tsx`
+- **Thin community `Community 544`** (1 nodes): `quote-access.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 545`** (1 nodes): `csv-export.test.ts`
+- **Thin community `Community 545`** (1 nodes): `keyboard-mode.test.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 546`** (1 nodes): `site-icons.ts`
+- **Thin community `Community 546`** (1 nodes): `csv-export.test.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 547`** (1 nodes): `formatters.ts`
+- **Thin community `Community 547`** (1 nodes): `site-icons.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 548`** (1 nodes): `auth.ts`
+- **Thin community `Community 548`** (1 nodes): `formatters.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 549`** (1 nodes): `themes.ts`
+- **Thin community `Community 549`** (1 nodes): `auth.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 550`** (1 nodes): `themes.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `Number()` connect `Community 4` to `Community 1`, `Community 2`, `Community 5`, `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 13`, `Community 15`, `Community 16`, `Community 18`, `Community 19`, `Community 21`, `Community 25`?**
-  _High betweenness centrality (0.126) - this node is a cross-community bridge._
+  _High betweenness centrality (0.110) - this node is a cross-community bridge._
 - **Why does `Error()` connect `Community 7` to `Community 1`, `Community 2`, `Community 35`, `Community 4`, `Community 5`, `Community 6`, `Community 8`, `Community 10`, `Community 12`, `Community 13`, `Community 15`, `Community 16`, `Community 20`, `Community 28`?**
-  _High betweenness centrality (0.050) - this node is a cross-community bridge._
+  _High betweenness centrality (0.072) - this node is a cross-community bridge._
 - **Why does `GET()` connect `Community 8` to `Community 2`, `Community 4`, `Community 5`, `Community 6`, `Community 7`, `Community 10`, `Community 11`, `Community 12`, `Community 15`, `Community 19`?**
-  _High betweenness centrality (0.031) - this node is a cross-community bridge._
+  _High betweenness centrality (0.041) - this node is a cross-community bridge._
 - **Are the 101 inferred relationships involving `Number()` (e.g. with `matchesFilter()` and `main()`) actually correct?**
   _`Number()` has 101 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 6 inferred relationships involving `Project Overview` (e.g. with `Supabase` and `PRISM`) actually correct?**
