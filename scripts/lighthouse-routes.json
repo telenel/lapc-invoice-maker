@@ -85,14 +85,14 @@
         "auth": true,
         "thresholds": {
           "categories": {
-            "performance": 0.17,
+            "performance": 0.22,
             "accessibility": 0.93,
             "best-practices": 0.95
           },
           "metrics": {
             "largest-contentful-paint": 27000,
             "total-blocking-time": 3200,
-            "cumulative-layout-shift": 0.8,
+            "cumulative-layout-shift": 0.5,
             "interactive": 28000,
             "server-response-time": 120
           }
