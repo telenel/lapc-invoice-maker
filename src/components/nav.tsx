@@ -36,6 +36,7 @@ const links: NavLink[] = [
   { href: "/quotes", label: "Quotes" },
   { href: "/textbook-requisitions", label: "Requisitions", matchPrefix: "/textbook-requisitions" },
   { href: "/products", label: "Products" },
+  { href: "/copytech/import", label: "CopyTech", matchPrefix: "/copytech" },
   { href: "/calendar", label: "Calendar" },
   { href: "/staff", label: "Staff" },
 ];
