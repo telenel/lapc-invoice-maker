@@ -10,7 +10,7 @@ vi.mock("@/domains/invoice/service", () => ({
   },
 }));
 
-import { copyTechImportService } from "@/domains/copytech-import/service";
+import { CopyTechValidationError, copyTechImportService } from "@/domains/copytech-import/service";
 import { findProductsBySku } from "@/domains/copytech-import/repository";
 import { invoiceService } from "@/domains/invoice/service";
 
@@ -56,6 +56,7 @@ describe("copyTechImportService", () => {
 
     expect(preview.errors).toEqual([]);
     expect(preview.skippedRowCount).toBe(0);
+    expect(preview.erroredRowCount).toBe(0);
     expect(preview.invoiceCount).toBe(1);
     expect(preview.totalAmount).toBe(95.6);
     expect(preview.invoices[0]).toEqual(
@@ -93,6 +94,7 @@ describe("copyTechImportService", () => {
     expect(mockFindProductsBySku).toHaveBeenCalledWith([100234]);
     expect(preview.errors).toEqual([]);
     expect(preview.skippedRowCount).toBe(1);
+    expect(preview.erroredRowCount).toBe(0);
     expect(preview.validRowCount).toBe(1);
     expect(preview.invoiceCount).toBe(1);
     expect(preview.invoices[0].lineItems).toEqual([
@@ -121,7 +123,33 @@ describe("copyTechImportService", () => {
         message: "SKU 999999 was not found in the product catalog",
       }),
     ]);
+    expect(preview.erroredRowCount).toBe(1);
     expect(preview.invoiceCount).toBe(0);
+  });
+
+  it("counts chargeable rows with normalization errors in preview totals", async () => {
+    mockFindProductsBySku.mockResolvedValue(new Map([
+      [100234, {
+        sku: 100234,
+        description: "Color copies",
+        retailPrice: 0.43,
+        costPrice: 0.1,
+        itemTaxTypeId: null,
+        discontinued: false,
+      }],
+    ]));
+
+    const preview = await copyTechImportService.preview(csv([
+      "not-a-date,Library,12345,100234,120,Jane Smith,CT-1,,,",
+      "2026-03-31,Library,12345,100234,120,Jane Smith,CT-2,,,",
+      "not-a-date,Library,12345,,0,Jane Smith,CT-3,,,,FALSE,NOT_CHARGEABLE,80",
+    ]));
+
+    expect(preview.rowCount).toBe(3);
+    expect(preview.skippedRowCount).toBe(1);
+    expect(preview.erroredRowCount).toBe(1);
+    expect(preview.validRowCount).toBe(1);
+    expect(preview.rowCount).toBe(preview.skippedRowCount + preview.erroredRowCount + preview.validRowCount);
   });
 
   it("commits valid previews through invoiceService.create", async () => {
@@ -168,7 +196,7 @@ describe("copyTechImportService", () => {
 
     await expect(copyTechImportService.commit(csv([
       "2026-03-31,Library,12345,999999,1,Jane Smith,CT-1,,,",
-    ]), "user-1")).rejects.toMatchObject({ code: "VALIDATION" });
+    ]), "user-1")).rejects.toBeInstanceOf(CopyTechValidationError);
 
     expect(mockInvoiceService.create).not.toHaveBeenCalled();
   });

@@ -33,19 +33,40 @@ export const copyTechImportCsvFormat: CopyTechImportCsvFormat = {
 
 interface ParsedCsv {
   headers: string[];
-  records: Array<Record<string, string>>;
+  records: Array<{
+    rowNumber: number;
+    values: Record<string, string>;
+  }>;
   errors: CopyTechImportError[];
+}
+
+interface ParsedCsvRow {
+  cells: string[];
+  sourceLine: number;
+}
+
+interface ParsedCsvText {
+  rows: ParsedCsvRow[];
+  unterminatedQuoteLine: number | null;
 }
 
 function normalizeHeader(value: string): string {
   return value.trim().toLowerCase().replace(/[\s-]+/g, "_");
 }
 
-function parseCsvText(text: string): string[][] {
-  const rows: string[][] = [];
+function parseCsvText(text: string): ParsedCsvText {
+  const rows: ParsedCsvRow[] = [];
   let row: string[] = [];
   let field = "";
   let inQuotes = false;
+  let currentLine = 1;
+  let rowStartLine = 1;
+
+  function pushRow() {
+    rows.push({ cells: row, sourceLine: rowStartLine });
+    row = [];
+    rowStartLine = currentLine;
+  }
 
   for (let index = 0; index < text.length; index += 1) {
     const char = text[index];
@@ -58,6 +79,7 @@ function parseCsvText(text: string): string[][] {
       } else if (char === '"') {
         inQuotes = false;
       } else {
+        if (char === "\n") currentLine += 1;
         field += char;
       }
       continue;
@@ -70,8 +92,8 @@ function parseCsvText(text: string): string[][] {
       field = "";
     } else if (char === "\n") {
       row.push(field);
-      rows.push(row);
-      row = [];
+      currentLine += 1;
+      pushRow();
       field = "";
     } else if (char !== "\r") {
       field += char;
@@ -79,32 +101,45 @@ function parseCsvText(text: string): string[][] {
   }
 
   if (inQuotes) {
-    row.push(field);
-    rows.push(row);
-    return rows;
+    return {
+      rows: rows.filter((parsedRow) => parsedRow.cells.some((cell) => cell.trim().length > 0)),
+      unterminatedQuoteLine: rowStartLine,
+    };
   }
 
   if (field.length > 0 || row.length > 0) {
     row.push(field);
-    rows.push(row);
+    pushRow();
   }
 
-  return rows.filter((cells) => cells.some((cell) => cell.trim().length > 0));
+  return {
+    rows: rows.filter((parsedRow) => parsedRow.cells.some((cell) => cell.trim().length > 0)),
+    unterminatedQuoteLine: null,
+  };
 }
 
 export function parseCopyTechCsv(text: string): ParsedCsv {
-  const rows = parseCsvText(text);
+  const parsedText = parseCsvText(text);
+  const { rows } = parsedText;
   const errors: CopyTechImportError[] = [];
+
+  if (parsedText.unterminatedQuoteLine !== null) {
+    errors.push({
+      rowNumber: parsedText.unterminatedQuoteLine,
+      field: "file",
+      message: "CSV has an unterminated quoted field",
+    });
+  }
 
   if (rows.length === 0) {
     return {
       headers: [],
       records: [],
-      errors: [{ rowNumber: 1, field: "file", message: "CSV file is empty" }],
+      errors: errors.length > 0 ? errors : [{ rowNumber: 1, field: "file", message: "CSV file is empty" }],
     };
   }
 
-  const headers = rows[0].map(normalizeHeader);
+  const headers = rows[0].cells.map(normalizeHeader);
   const headerSet = new Set(headers);
 
   for (const required of COPYTECH_IMPORT_REQUIRED_HEADERS) {
@@ -120,27 +155,27 @@ export function parseCopyTechCsv(text: string): ParsedCsv {
   const dataRows = rows.slice(1);
   if (dataRows.length > MAX_ROWS) {
     errors.push({
-      rowNumber: MAX_ROWS + 2,
+      rowNumber: dataRows[MAX_ROWS]?.sourceLine ?? MAX_ROWS + 2,
       field: "file",
       message: `CSV imports are limited to ${MAX_ROWS} rows at a time`,
     });
   }
 
-  const records = dataRows.slice(0, MAX_ROWS).map((cells, rowIndex) => {
+  const records = dataRows.slice(0, MAX_ROWS).map((parsedRow) => {
     const record: Record<string, string> = {};
     headers.forEach((header, columnIndex) => {
-      record[header] = cells[columnIndex]?.trim() ?? "";
+      record[header] = parsedRow.cells[columnIndex]?.trim() ?? "";
     });
 
-    if (cells.length > headers.length) {
+    if (parsedRow.cells.length > headers.length) {
       errors.push({
-        rowNumber: rowIndex + 2,
+        rowNumber: parsedRow.sourceLine,
         field: "row",
         message: "Row has more cells than the header row",
       });
     }
 
-    return record;
+    return { rowNumber: parsedRow.sourceLine, values: record };
   });
 
   return { headers, records, errors };
@@ -191,8 +226,7 @@ export function normalizeCopyTechRows(text: string): {
   const normalized: CopyTechImportRowInput[] = [];
   const seenJobIds = new Map<string, number>();
 
-  parsed.records.forEach((record, index) => {
-    const rowNumber = index + 2;
+  parsed.records.forEach(({ rowNumber, values: record }) => {
     const invoiceDate = record.invoice_date ?? "";
     const department = record.department ?? "";
     const accountNumber = record.account_number ?? "";

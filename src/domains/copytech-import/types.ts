@@ -103,6 +103,7 @@ export interface CopyTechImportPreview {
   format: CopyTechImportCsvFormat;
   rowCount: number;
   skippedRowCount: number;
+  erroredRowCount: number;
   validRowCount: number;
   invoiceCount: number;
   totalAmount: number;

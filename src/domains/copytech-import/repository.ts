@@ -1,3 +1,4 @@
+import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { CopyTechProductSnapshot } from "./types";
 
@@ -22,15 +23,11 @@ export async function findProductsBySku(
   const uniqueSkus = Array.from(new Set(skus.filter((sku) => Number.isInteger(sku) && sku > 0)));
   if (uniqueSkus.length === 0) return new Map();
 
-  const placeholders = uniqueSkus.map((_, index) => `$${index + 1}`).join(", ");
-  const rows = await prisma.$queryRawUnsafe(
-    `
-      SELECT sku, description, retail_price, cost, item_tax_type_id, discontinued
-      FROM products
-      WHERE sku IN (${placeholders})
-    `,
-    ...uniqueSkus,
-  ) as ProductLookupRow[];
+  const rows = await prisma.$queryRaw<ProductLookupRow[]>`
+    SELECT sku, description, retail_price, cost, item_tax_type_id, discontinued
+    FROM products
+    WHERE sku IN (${Prisma.join(uniqueSkus)})
+  `;
 
   return new Map(
     rows.map((row) => {

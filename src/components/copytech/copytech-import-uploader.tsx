@@ -110,6 +110,8 @@ export function CopyTechImportUploader({ format }: CopyTechImportUploaderProps) 
       const result = await copyTechImportApi.commit(file);
       setPreview(result.preview);
       setCreatedInvoiceIds(result.createdInvoices.map((invoice) => invoice.id));
+      setFile(null);
+      if (inputRef.current) inputRef.current.value = "";
       toast.success(`${result.createdInvoices.length} draft invoice${result.createdInvoices.length === 1 ? "" : "s"} created.`);
     } catch (error) {
       const message = getErrorMessage(error);
@@ -216,9 +218,10 @@ export function CopyTechImportUploader({ format }: CopyTechImportUploaderProps) 
 
       {preview ? (
         <div className="space-y-5">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
             <Metric label="Rows" value={preview.rowCount.toLocaleString("en-US")} />
             <Metric label="Skipped" value={preview.skippedRowCount.toLocaleString("en-US")} />
+            <Metric label="Errors" value={preview.erroredRowCount.toLocaleString("en-US")} />
             <Metric label="Drafts" value={preview.invoiceCount.toLocaleString("en-US")} />
             <Metric label="Lines" value={preview.validRowCount.toLocaleString("en-US")} />
             <Metric label="Total" value={formatCurrency(preview.totalAmount)} />

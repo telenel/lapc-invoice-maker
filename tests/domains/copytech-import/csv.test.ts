@@ -30,7 +30,41 @@ describe("copytech import CSV parsing", () => {
       '2026-03-31,Library,12345,100234,1,"Poster, large format"',
     ].join("\n"));
 
-    expect(parsed.records[0].notes).toBe("Poster, large format");
+    expect(parsed.records[0].values.notes).toBe("Poster, large format");
+  });
+
+  it("reports unterminated quoted fields without accepting the partial row", () => {
+    const parsed = parseCopyTechCsv([
+      "invoice_date,department,account_number,sku,quantity,notes",
+      '2026-03-31,Library,12345,100234,1,"Poster notes',
+    ].join("\n"));
+
+    expect(parsed.records).toEqual([]);
+    expect(parsed.errors).toEqual([
+      expect.objectContaining({
+        rowNumber: 2,
+        field: "file",
+        message: "CSV has an unterminated quoted field",
+      }),
+    ]);
+  });
+
+  it("keeps validation row numbers aligned with source lines after blanks and multiline fields", () => {
+    const parsed = parseCopyTechCsv([
+      "invoice_date,department,account_number,sku,quantity,notes",
+      "",
+      '2026-03-31,Library,12345,100234,1,"line one',
+      'line two"',
+      "2026-03-31,Library,12345,100235,1,extra,unexpected",
+    ].join("\n"));
+
+    expect(parsed.records[0].rowNumber).toBe(3);
+    expect(parsed.errors).toEqual([
+      expect.objectContaining({
+        rowNumber: 5,
+        field: "row",
+      }),
+    ]);
   });
 
   it("reports missing required headers and invalid rows", () => {

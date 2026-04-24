@@ -13,6 +13,17 @@ import type {
   CopyTechResolvedLineItem,
 } from "./types";
 
+export class CopyTechValidationError extends Error {
+  readonly code = "VALIDATION";
+  readonly preview: CopyTechImportPreview;
+
+  constructor(preview: CopyTechImportPreview) {
+    super("CSV has validation errors");
+    this.name = "CopyTechValidationError";
+    this.preview = preview;
+  }
+}
+
 function roundMoney(value: number): number {
   return Math.round(value * 100) / 100;
 }
@@ -133,6 +144,7 @@ export const copyTechImportService = {
     const productsBySku = await findProductsBySku(skus);
     const groups = new Map<string, CopyTechInvoiceDraftPreview>();
     let validRowCount = 0;
+    let erroredRowCount = 0;
 
     for (const row of normalized.rows) {
       if (!row.chargeable) {
@@ -140,6 +152,7 @@ export const copyTechImportService = {
       }
 
       if (errors.some((error) => error.rowNumber === row.rowNumber)) {
+        erroredRowCount += 1;
         continue;
       }
 
@@ -150,11 +163,16 @@ export const copyTechImportService = {
           field: "sku",
           message: `SKU ${row.sku} was not found in the product catalog`,
         });
+        erroredRowCount += 1;
         continue;
       }
 
+      const errorCountBeforeLineItem = errors.length;
       const lineItem = toLineItem(row, product, errors, warnings);
-      if (!lineItem) continue;
+      if (!lineItem) {
+        if (errors.length > errorCountBeforeLineItem) erroredRowCount += 1;
+        continue;
+      }
 
       const groupKey = buildGroupKey(row);
       const group = groups.get(groupKey) ?? {
@@ -184,6 +202,7 @@ export const copyTechImportService = {
       format: copyTechImportCsvFormat,
       rowCount: normalized.rowCount,
       skippedRowCount,
+      erroredRowCount,
       validRowCount,
       invoiceCount: invoices.length,
       totalAmount: roundMoney(invoices.reduce((sum, invoice) => sum + invoice.totalAmount, 0)),
@@ -196,10 +215,7 @@ export const copyTechImportService = {
   async commit(csvText: string, creatorId: string): Promise<CopyTechImportCommitResult> {
     const preview = await this.preview(csvText);
     if (preview.errors.length > 0) {
-      throw Object.assign(new Error("CSV has validation errors"), {
-        code: "VALIDATION",
-        preview,
-      });
+      throw new CopyTechValidationError(preview);
     }
 
     const createdInvoices = [];

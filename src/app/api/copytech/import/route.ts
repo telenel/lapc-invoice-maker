@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { withAuth } from "@/domains/shared/auth";
-import { copyTechImportService } from "@/domains/copytech-import/service";
+import { CopyTechValidationError, copyTechImportService } from "@/domains/copytech-import/service";
 
 export const dynamic = "force-dynamic";
 
 const MAX_FILE_SIZE = 1 * 1024 * 1024;
+const MAX_MULTIPART_BODY_SIZE = MAX_FILE_SIZE + 64 * 1024;
 
 function isCsvFile(file: File): boolean {
   const name = file.name.toLowerCase();
@@ -13,6 +14,11 @@ function isCsvFile(file: File): boolean {
 }
 
 async function readCsvFile(req: NextRequest): Promise<{ csvText: string } | { response: NextResponse }> {
+  const contentLength = Number.parseInt(req.headers.get("content-length") ?? "", 10);
+  if (Number.isFinite(contentLength) && contentLength > MAX_MULTIPART_BODY_SIZE) {
+    return { response: NextResponse.json({ error: "CSV file size exceeds 1MB limit" }, { status: 413 }) };
+  }
+
   const formData = await req.formData().catch(() => null);
   if (!formData) {
     return { response: NextResponse.json({ error: "Expected multipart/form-data with a CSV file field named file" }, { status: 400 }) };
@@ -64,9 +70,9 @@ export const POST = withAuth(async (req: NextRequest, session) => {
       headers: { "Cache-Control": "private, no-store" },
     });
   } catch (err) {
-    if (err && typeof err === "object" && "code" in err && err.code === "VALIDATION") {
+    if (err instanceof CopyTechValidationError) {
       return NextResponse.json(
-        { error: "CSV has validation errors", preview: "preview" in err ? err.preview : undefined },
+        { error: "CSV has validation errors", preview: err.preview },
         { status: 422 },
       );
     }
@@ -74,4 +80,3 @@ export const POST = withAuth(async (req: NextRequest, session) => {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 });
-
