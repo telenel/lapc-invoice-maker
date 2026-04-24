@@ -37,7 +37,7 @@ fi
 echo "==> git fetch origin --prune"
 git fetch origin --prune
 
-if [ -n "$current_branch" ] && [ "$current_branch" != "main" ]; then
+if [ -n "$current_branch" ]; then
   local_only_count=$(git rev-list --count "$current_branch" --not --remotes 2>/dev/null || printf '0')
   case "$local_only_count" in
     ''|*[!0-9]*) local_only_count=0 ;;

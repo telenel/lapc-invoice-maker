@@ -15,7 +15,6 @@ warned=0
 while IFS= read -r branch; do
   [ -n "$branch" ] || continue
   [ "$branch" != "$current_branch" ] || continue
-  [ "$branch" != "main" ] || continue
 
   count=$(git rev-list --count "$branch" --not --remotes 2>/dev/null || printf '0')
   case "$count" in
