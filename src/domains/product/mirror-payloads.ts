@@ -19,9 +19,10 @@ export function buildProductMirrorPayload(
   includeTextbookFields: boolean,
 ): Record<string, unknown> {
   const normalizedPatch = normalizeUpdaterInput(patch);
+  const manualUpdatedAt = new Date().toISOString();
   const payload: Record<string, unknown> = {
     sku,
-    synced_at: new Date().toISOString(),
+    manual_updated_at: manualUpdatedAt,
   };
 
   if (normalizedPatch.gm.description !== undefined) payload.description = normalizedPatch.gm.description;

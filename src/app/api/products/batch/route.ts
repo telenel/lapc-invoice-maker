@@ -325,6 +325,7 @@ export const POST = withAdmin(async (request: NextRequest) => {
       // Non-blocking mirror
       try {
         const supabase = getSupabaseAdminClient();
+        const manualUpdatedAt = new Date().toISOString();
         await supabase.from("products").upsert(parsed.data.rows.map((row, i) => ({
           sku: skus[i],
           item_type: "general_merchandise",
@@ -334,7 +335,8 @@ export const POST = withAdmin(async (request: NextRequest) => {
           cost: row.cost,
           vendor_id: row.vendorId,
           dcc_id: row.dccId,
-          synced_at: new Date().toISOString(),
+          synced_at: manualUpdatedAt,
+          manual_updated_at: manualUpdatedAt,
         })));
 
         const inventoryRows = parsed.data.rows.flatMap((row, i) => {

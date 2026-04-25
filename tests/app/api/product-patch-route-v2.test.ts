@@ -207,7 +207,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
       catalog_number: "ABC-1",
       retail_price: 12.99,
       cost: 6.25,
-      synced_at: expect.any(String),
+      manual_updated_at: expect.any(String),
     }));
     expect(mockProductInventoryUpsert).toHaveBeenCalledWith([
       expect.objectContaining({
@@ -362,7 +362,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
       size: "XL",
       color_id: 2,
       order_increment: 6,
-      synced_at: expect.any(String),
+      manual_updated_at: expect.any(String),
     }));
   });
 
@@ -658,7 +658,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
       retail_price: 12.99,
       cost: 6.25,
       discontinued: false,
-      synced_at: expect.any(String),
+      manual_updated_at: expect.any(String),
     }));
     expect(mockProductInventoryUpsert).not.toHaveBeenCalled();
   });
@@ -1078,7 +1078,7 @@ describe("PATCH /api/products/[sku] v2 payloads", () => {
       retail_price: 12.99,
       cost: 6.25,
       discontinued: false,
-      synced_at: expect.any(String),
+      manual_updated_at: expect.any(String),
     }));
     expect(mockProductsUpsert).not.toHaveBeenCalledWith(expect.objectContaining({
       title: "Should not mirror to GM",

@@ -34,6 +34,32 @@ describe("buildProductQueryPlan", () => {
     });
   });
 
+  it("does not gate zero-sale aggregate filters on computed aggregate rows", () => {
+    const filters = {
+      ...EMPTY_FILTERS,
+      unitsSoldWindow: "1y" as const,
+      maxUnitsSold: "0",
+    };
+
+    expect(hasAnalyticsProductFilters(filters)).toBe(true);
+    expect(buildProductQueryPlan(filters)).toMatchObject({
+      source: "products_with_derived",
+      requireAggregatesReady: false,
+    });
+  });
+
+  it("does not gate never-sold lifetime filters on computed aggregate rows", () => {
+    const plan = buildProductQueryPlan({
+      ...EMPTY_FILTERS,
+      neverSoldLifetime: true,
+    });
+
+    expect(plan).toMatchObject({
+      source: "products_with_derived",
+      requireAggregatesReady: false,
+    });
+  });
+
   it("maps last-sale sorting to the effective computed date when derived data is needed", () => {
     const plan = buildProductQueryPlan({
       ...EMPTY_FILTERS,
@@ -67,6 +93,17 @@ describe("buildProductQueryPlan", () => {
     const plan = buildProductQueryPlan({
       ...EMPTY_FILTERS,
       editedSinceSync: true,
+    });
+
+    expect(plan).toMatchObject({
+      source: "products_with_derived",
+    });
+  });
+
+  it("routes recent-edited filters through the derived view", () => {
+    const plan = buildProductQueryPlan({
+      ...EMPTY_FILTERS,
+      editedWithin: "7d",
     });
 
     expect(plan).toMatchObject({

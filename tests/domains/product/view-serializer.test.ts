@@ -210,6 +210,22 @@ describe("applyPreset", () => {
     expect(result.filters.maxPrice).toBe("5");
   });
 
+  it("keeps used textbook presets on the textbook tab", () => {
+    const preset = SYSTEM_PRESET_VIEWS.find((v) => v.slug === "textbook-used-only")!;
+    const result = applyPreset(preset, baseMerch);
+    expect(result.filters.tab).toBe("textbooks");
+    expect(result.filters.itemType).toBe("used_textbook");
+  });
+
+  it("requires recent activity for faded textbook presets", () => {
+    const preset = SYSTEM_PRESET_VIEWS.find((v) => v.slug === "textbook-faded-this-year")!;
+    const result = applyPreset(preset, baseMerch);
+    expect(result.filters.tab).toBe("textbooks");
+    expect(result.filters.lastSaleWithin).toBe("365d");
+    expect(result.filters.unitsSoldWindow).toBe("30d");
+    expect(result.filters.maxUnitsSold).toBe("0");
+  });
+
   it("returns the preset column preferences (filtered to known optional keys)", () => {
     const preset = SYSTEM_PRESET_VIEWS.find((v) => v.slug === "dead-discontinued-with-stock")!;
     const result = applyPreset(preset, baseTextbook);

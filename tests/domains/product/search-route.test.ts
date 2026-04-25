@@ -43,6 +43,7 @@ function buildBaseProduct(overrides: Partial<Product> = {}): Product {
     color_id: 0,
     created_at: null,
     updated_at: "2026-04-20T00:00:00.000Z",
+    manual_updated_at: null,
     last_sale_date: "2026-04-18T00:00:00.000Z",
     synced_at: "2026-04-20T00:00:00.000Z",
     dept_num: null,
@@ -267,6 +268,7 @@ describe("searchProductBrowseRows", () => {
           color_id: 0,
           created_at: null,
           updated_at: new Date("2026-04-20T00:00:00.000Z"),
+          manual_updated_at: null,
           last_sale_date: new Date("2026-04-18T00:00:00.000Z"),
           synced_at: new Date("2026-04-20T00:00:00.000Z"),
           dept_num: 10,
@@ -461,6 +463,70 @@ describe("searchProductBrowseRows", () => {
     const sql = prismaMock.$queryRawUnsafe.mock.calls[0]?.[0];
     expect(typeof sql).toBe("string");
     expect(sql).toContain("FROM products_with_derived pwd");
+  });
+
+  it("does not require aggregate readiness for never-sold filters", async () => {
+    mockSearchQueryRows();
+
+    await searchProductBrowseRows({
+      ...EMPTY_FILTERS,
+      tab: "merchandise",
+      neverSoldLifetime: true,
+    });
+
+    const sql = prismaMock.$queryRawUnsafe.mock.calls[0]?.[0];
+    expect(typeof sql).toBe("string");
+    expect(sql).toContain("FROM products_with_derived pwd");
+    expect(sql).toContain("pwd.txns_lifetime = 0");
+    expect(sql).not.toContain("pwd.aggregates_ready = true");
+  });
+
+  it("does not require aggregate readiness for max-only sales filters", async () => {
+    mockSearchQueryRows();
+
+    await searchProductBrowseRows({
+      ...EMPTY_FILTERS,
+      tab: "merchandise",
+      unitsSoldWindow: "1y",
+      maxUnitsSold: "0",
+    });
+
+    const sql = prismaMock.$queryRawUnsafe.mock.calls[0]?.[0];
+    expect(typeof sql).toBe("string");
+    expect(sql).toContain("pwd.units_sold_1y <= ");
+    expect(sql).not.toContain("pwd.aggregates_ready = true");
+  });
+
+  it("requires aggregate readiness for positive sales filters", async () => {
+    mockSearchQueryRows();
+
+    await searchProductBrowseRows({
+      ...EMPTY_FILTERS,
+      tab: "merchandise",
+      unitsSoldWindow: "1y",
+      minUnitsSold: "1",
+    });
+
+    const sql = prismaMock.$queryRawUnsafe.mock.calls[0]?.[0];
+    expect(typeof sql).toBe("string");
+    expect(sql).toContain("pwd.units_sold_1y >= ");
+    expect(sql).toContain("pwd.aggregates_ready = true");
+  });
+
+  it("uses the manual edit timestamp for recent edited filters", async () => {
+    mockSearchQueryRows();
+
+    await searchProductBrowseRows({
+      ...EMPTY_FILTERS,
+      tab: "merchandise",
+      editedWithin: "7d",
+    });
+
+    const sql = prismaMock.$queryRawUnsafe.mock.calls[0]?.[0];
+    expect(typeof sql).toBe("string");
+    expect(sql).toContain("FROM products_with_derived pwd");
+    expect(sql).toContain("pwd.manual_updated_at >= ");
+    expect(sql).not.toContain("pwd.edited_since_sync = true");
   });
 
   it("supports a true count-only path that skips browse-row and inventory queries", async () => {

@@ -219,6 +219,7 @@ export const POST = withAdmin(async (request: NextRequest) => {
     // nightly sync will repair any drift.
     try {
       const supabase = getSupabaseAdminClient();
+      const manualUpdatedAt = new Date().toISOString();
       const { error: mirrorError } = await supabase
         .from("products")
         .upsert({
@@ -230,7 +231,8 @@ export const POST = withAdmin(async (request: NextRequest) => {
           cost: created.cost,
           vendor_id: created.vendorId,
           dcc_id: created.dccId,
-          synced_at: new Date().toISOString(),
+          synced_at: manualUpdatedAt,
+          manual_updated_at: manualUpdatedAt,
         });
       if (mirrorError) {
         console.warn("[POST /api/products] mirror failed:", mirrorError);

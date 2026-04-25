@@ -121,6 +121,8 @@ describe("POST /api/products", () => {
         item_type: "general_merchandise",
         retail_price: 19.99,
         cost: 8.5,
+        synced_at: expect.any(String),
+        manual_updated_at: expect.any(String),
       }),
     );
     expect(mockProductInventoryUpsert).toHaveBeenCalledWith(

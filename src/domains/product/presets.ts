@@ -128,7 +128,7 @@ export const SYSTEM_PRESETS: PresetSeed[] = [
   // 🎓 Textbook
   { slug: "textbook-used-only", name: "Used textbooks only", description: "Used-copy textbook SKUs.",
     presetGroup: "textbook", sortOrder: 10,
-    filter: { itemType: "used_textbook" },
+    filter: { tab: "textbooks", itemType: "used_textbook" },
     columnPreferences: { visible: ["units_1y"] } },
   { slug: "textbook-current-semester-active", name: "Textbook active this semester", description: "Textbook with 5+ units sold in the last 90 days.",
     presetGroup: "textbook", sortOrder: 20,
@@ -136,11 +136,11 @@ export const SYSTEM_PRESETS: PresetSeed[] = [
     columnPreferences: { visible: ["units_1y"] } },
   { slug: "textbook-used-moving", name: "Used textbooks moving", description: "Used-copy SKU with any sale in the last 90 days.",
     presetGroup: "textbook", sortOrder: 30,
-    filter: { itemType: "used_textbook", unitsSoldWindow: "90d", minUnitsSold: "1" },
+    filter: { tab: "textbooks", itemType: "used_textbook", unitsSoldWindow: "90d", minUnitsSold: "1" },
     columnPreferences: { visible: ["units_1y"] } },
   { slug: "textbook-faded-this-year", name: "Textbook faded (was active, now quiet)", description: "Textbooks with sales in last year but zero in last 30 days.",
     presetGroup: "textbook", sortOrder: 40,
-    filter: { tab: "textbooks", unitsSoldWindow: "30d", maxUnitsSold: "0" },
+    filter: { tab: "textbooks", lastSaleWithin: "365d", unitsSoldWindow: "30d", maxUnitsSold: "0" },
     columnPreferences: { visible: ["units_1y"] } },
 
   // 🔍 Data quality (kept)
