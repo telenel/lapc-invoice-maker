@@ -2,7 +2,7 @@
 
 Baseline date: 2026-04-23 America/Los_Angeles. Lighthouse reports are timestamped in UTC on 2026-04-24.
 
-This audit is source-grounded first. Graphify was used for orientation because `graphify-out/graph.json` exists, but every finding below was verified against repository files. No production writes were performed. PRISM was treated as read-only. Supabase/Postgres reads and local authenticated page loads were used for measurement.
+This audit is source-grounded first. Every finding below was verified against repository files. No production writes were performed. PRISM was treated as read-only. Supabase/Postgres reads and local authenticated page loads were used for measurement.
 
 ## Repo State
 
@@ -21,9 +21,7 @@ MM .gitignore
 M  AGENTS.md
 M  CLAUDE.md
 ?? .codex/
-?? .graphifyignore
 ?? .mcp.json
-?? graphify-out/
 ?? hooks/post-checkout
 ?? hooks/post-commit
 ```
@@ -55,7 +53,6 @@ Results:
   - `npm run lint`
   - `npm test`
   - `npm run build`
-  - `graphify update .`
 
 Local server and browser measurements:
 
