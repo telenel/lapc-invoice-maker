@@ -25,6 +25,9 @@ See [`../plan-cache-method.md`](../plan-cache-method.md) for the full methodolog
 | `TUI_Acct_Agency.sql` | UPDATE+INSERT trigger on `Acct_Agency`. Cursor over `inserted` joining `deleted` to detect transitions (e.g. textbook-validation toggle). Partially recovered. |
 | `TI_Acct_ARInvoice_Header.sql` | INSERT trigger on `Acct_ARInvoice_Header`. Cursor over `inserted` joining `Acct_Agency` for `AgencyNumber`. **Body inside the cursor loop is not yet cached** — only the `DECLARE CURSOR` and first `FETCH` are visible. |
 | `TI_ARInvoice_Detail.sql` | INSERT trigger on `Acct_ARInvoice_Detail`. Same pattern as the Header trigger: cursor over `inserted` joining `Acct_Agency` via `Acct_ARInvoice_Header`. Body inside the loop is similarly cache-evicted. |
+| `SP_RPT_AR_INVOICE.sql` | The proc Crystal Reports calls to fetch the data set behind a single AR invoice (the "open invoice → print → save as PDF" workflow). Returns a flat 47-column result set bound to a `.rpt` template. |
+| `SP_RPT_AR_INVOICE_REGISTER.sql` | Sibling: the AR invoice REGISTER report — a list-view of multiple invoices in a date / customer / agency range. |
+| `SP_RPT_AR_INVOICE_ADDTIONAL_INFOMATION.sql` | (sic — typo in proc name) Sub-report bound alongside `SP_RPT_AR_INVOICE`: aggregations like total items, total lines, tax-exempt YES/NO, discount calculations, joined to `prism_security.PrismUser` for the username. |
 
 ## Caveats and limits
 
