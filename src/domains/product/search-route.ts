@@ -50,6 +50,7 @@ interface ProductBrowseBaseRow {
   color_id: number | string | null;
   created_at: Date | string | null;
   updated_at: Date | string;
+  manual_updated_at: Date | string | null;
   last_sale_date: Date | string | null;
   synced_at: Date | string | null;
   dept_num: number | string | null;
@@ -452,7 +453,7 @@ async function buildFilteredBrowseQuery(
   }
   if (filters.editedWithin === "7d") {
     const threshold = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    conditions.push(`pwd.updated_at >= ${builder.add(threshold)}`);
+    conditions.push(`pwd.manual_updated_at >= ${builder.add(threshold)}`);
   }
   if (filters.editedSinceSync) conditions.push("pwd.edited_since_sync = true");
   if (filters.discontinued === "yes") {
@@ -738,6 +739,7 @@ export async function searchProductBrowseRows(
       color_id: toNullableInteger(row.color_id),
       created_at: toNullableIsoString(row.created_at),
       updated_at: toIsoString(row.updated_at),
+      manual_updated_at: toNullableIsoString(row.manual_updated_at),
       last_sale_date: toNullableIsoString(row.last_sale_date),
       synced_at: toNullableIsoString(row.synced_at) ?? toIsoString(row.updated_at),
       dept_num: toNullableInteger(row.dept_num),

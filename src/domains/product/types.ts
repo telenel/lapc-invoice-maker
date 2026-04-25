@@ -41,6 +41,7 @@ export interface Product {
   color_id: number;
   created_at: string | null;
   updated_at: string;
+  manual_updated_at?: string | null;
   last_sale_date: string | null;
   synced_at: string;
   dept_num: number | null;

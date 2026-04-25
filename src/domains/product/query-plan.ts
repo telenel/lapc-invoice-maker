@@ -18,6 +18,23 @@ export function hasAnalyticsProductFilters(filters: ProductFilters): boolean {
   );
 }
 
+function isPositiveNumericFilter(value: string): boolean {
+  if (value === "") return false;
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0;
+}
+
+function requiresAggregateReadiness(filters: ProductFilters): boolean {
+  return (
+    (filters.unitsSoldWindow !== "" && isPositiveNumericFilter(filters.minUnitsSold))
+    || (filters.revenueWindow !== "" && isPositiveNumericFilter(filters.minRevenue))
+    || (filters.txnsWindow !== "" && isPositiveNumericFilter(filters.minTxns))
+    || filters.firstSaleWithin !== ""
+    || filters.trendDirection !== ""
+    || filters.maxStockCoverageDays !== ""
+  );
+}
+
 function hasLastSaleProductFilters(filters: ProductFilters): boolean {
   return (
     filters.lastSaleDateFrom !== ""
@@ -31,14 +48,15 @@ function hasLastSaleProductFilters(filters: ProductFilters): boolean {
 }
 
 export function buildProductQueryPlan(filters: ProductFilters): ProductQueryPlan {
-  const requireAggregatesReady = hasAnalyticsProductFilters(filters)
+  const requireAggregatesReady = requiresAggregateReadiness(filters);
+  const needsDerived = hasAnalyticsProductFilters(filters)
     || filters.trendDirection !== ""
-    || filters.maxStockCoverageDays !== "";
-  const needsDerived = requireAggregatesReady
+    || filters.maxStockCoverageDays !== ""
     || filters.minMargin !== ""
     || filters.maxMargin !== ""
     || filters.sortBy === "margin"
     || hasLastSaleProductFilters(filters)
+    || filters.editedWithin !== ""
     || filters.editedSinceSync;
   const source = needsDerived ? "products_with_derived" : "products";
   const lastSaleField = needsDerived ? "effective_last_sale_date" : "last_sale_date";

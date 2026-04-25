@@ -12,7 +12,7 @@ const base = (p: Partial<Product>): Product => ({
   sku: 0, barcode: null, item_type: "general_merchandise", description: "x", author: null,
   title: null, isbn: null, edition: null, retail_price: 10, cost: 5, stock_on_hand: 10,
   catalog_number: null, vendor_id: 1, dcc_id: 1, product_type: null, color_id: 0,
-  created_at: null, updated_at: daysAgo(30), last_sale_date: daysAgo(30),
+  created_at: null, updated_at: daysAgo(30), manual_updated_at: null, last_sale_date: daysAgo(30),
   synced_at: daysAgo(30), dept_num: null, class_num: null, cat_num: null,
   dept_name: null, class_name: null, cat_name: null,
   units_sold_30d: 0,
@@ -51,8 +51,8 @@ const fixtures: Product[] = [
   base({ sku: 14, description: "Cheap merch", retail_price: 3, cost: 1 }),
   base({ sku: 15, description: "Thin margin", retail_price: 100, cost: 95 }),
   base({ sku: 16, description: "High margin", retail_price: 100, cost: 20 }),
-  base({ sku: 17, description: "Recently edited", updated_at: daysAgo(2) }),
-  base({ sku: 18, description: "Edited post-sync", updated_at: daysAgo(1), synced_at: daysAgo(5) }),
+  base({ sku: 17, description: "Recently edited", manual_updated_at: daysAgo(2) }),
+  base({ sku: 18, description: "Edited post-sync", manual_updated_at: daysAgo(1), synced_at: daysAgo(5) }),
   base({ sku: 19, item_type: "used_textbook", description: "Used copy" }),
   base({ sku: 20, description: "Top unit seller 30d", units_sold_30d: 200, units_sold_1y: 2000, units_sold_lifetime: 5000, txns_1y: 300, txns_lifetime: 1200, revenue_30d: 1000, revenue_1y: 9000, last_sale_date_computed: daysAgo(1) }),
   base({ sku: 21, description: "Revenue champ 1y", revenue_1y: 50000, units_sold_1y: 500, txns_1y: 300 }),
@@ -100,10 +100,12 @@ function matchesFilter(p: Product, f: ProductFilters): boolean {
     if (new Date(p.last_sale_date).getTime() >= now.getTime() - y * 365 * 86400000) return false;
   }
   if (f.editedWithin === "7d") {
-    if (new Date(p.updated_at).getTime() < now.getTime() - 7 * 86400000) return false;
+    if (!p.manual_updated_at) return false;
+    if (new Date(p.manual_updated_at).getTime() < now.getTime() - 7 * 86400000) return false;
   }
   if (f.editedSinceSync) {
-    if (new Date(p.updated_at).getTime() <= new Date(p.synced_at).getTime()) return false;
+    if (!p.manual_updated_at) return false;
+    if (new Date(p.manual_updated_at).getTime() <= new Date(p.synced_at).getTime()) return false;
   }
   if (f.discontinued === "yes" && !p.discontinued) return false;
   if (f.discontinued === "no" && p.discontinued) return false;

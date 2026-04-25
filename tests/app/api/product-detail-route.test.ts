@@ -624,7 +624,7 @@ describe("PATCH /api/products/[sku]", () => {
       retail_price: 19.95,
       cost: 8.5,
       discontinued: true,
-      synced_at: expect.any(String),
+      manual_updated_at: expect.any(String),
     }));
   });
 });

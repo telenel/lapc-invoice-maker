@@ -205,6 +205,24 @@ describe("POST /api/products/batch", () => {
         ],
       }),
     ]);
+    expect(mockProductsUpsert).toHaveBeenCalledWith([
+      expect.objectContaining({
+        sku: 1001,
+        item_type: "general_merchandise",
+        retail_price: 39.99,
+        cost: 19.5,
+        synced_at: expect.any(String),
+        manual_updated_at: expect.any(String),
+      }),
+      expect.objectContaining({
+        sku: 1002,
+        item_type: "general_merchandise",
+        retail_price: 12.99,
+        cost: 5.25,
+        synced_at: expect.any(String),
+        manual_updated_at: expect.any(String),
+      }),
+    ]);
     expect(mockProductInventoryUpsert).toHaveBeenCalledWith(
       [
         {
@@ -486,6 +504,7 @@ describe("POST /api/products/batch", () => {
           retail_price: 39.99,
           cost: 19.5,
           discontinued: false,
+          manual_updated_at: expect.any(String),
         }),
       ],
       [
@@ -495,6 +514,7 @@ describe("POST /api/products/batch", () => {
           retail_price: 12.99,
           cost: 6.25,
           discontinued: true,
+          manual_updated_at: expect.any(String),
         }),
       ],
     ]));
@@ -565,6 +585,7 @@ describe("POST /api/products/batch", () => {
       vendor_id: 17,
       retail_price: 12.99,
       cost: 6.25,
+      manual_updated_at: expect.any(String),
     }));
     expect(warn).toHaveBeenCalledWith(
       "[batch update] deferred mirror refresh reported warnings:",
@@ -618,6 +639,7 @@ describe("POST /api/products/batch", () => {
     expect(mockProductsUpsert).toHaveBeenCalledWith(expect.objectContaining({
       sku: 101,
       vendor_id: 17,
+      manual_updated_at: expect.any(String),
     }));
     expect(mockProductInventoryUpsert).toHaveBeenCalledWith([
       expect.objectContaining({
