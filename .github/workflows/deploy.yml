@@ -1,13 +1,10 @@
 name: Deploy to VPS
 
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types: [completed]
   workflow_dispatch:
     inputs:
       ref:
-        description: "Git ref to build and deploy"
+        description: "Pushed Git ref, branch, tag, or SHA to build and deploy"
         required: false
         default: "main"
 
@@ -16,20 +13,11 @@ permissions:
   packages: read
 
 concurrency:
-  group: deploy-main
+  group: deploy-vps
   cancel-in-progress: false
 
 jobs:
   publish:
-    if: >-
-      ${{
-        github.event_name == 'workflow_dispatch' ||
-        (
-          github.event.workflow_run.conclusion == 'success' &&
-          (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') &&
-          github.event.workflow_run.head_branch == 'main'
-        )
-      }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -40,26 +28,17 @@ jobs:
       build_time: ${{ steps.meta.outputs.build_time }}
       image_repository: ${{ steps.meta.outputs.image_repository }}
       image: ${{ steps.meta.outputs.image }}
-      deploy_ref: ${{ steps.target.outputs.deploy_ref }}
+      deploy_ref: ${{ steps.meta.outputs.full_sha }}
     steps:
       - name: Resolve deploy target
         id: target
         env:
           INPUT_REF: ${{ github.event.inputs.ref }}
-          WORKFLOW_HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
-          WORKFLOW_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
-          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
-            ref="${INPUT_REF:-main}"
-            deploy_ref="$ref"
-          else
-            ref="$WORKFLOW_HEAD_SHA"
-            deploy_ref="$WORKFLOW_HEAD_SHA"
-          fi
+          ref="${INPUT_REF:-main}"
 
           {
             echo "checkout_ref=$ref"
-            echo "deploy_ref=$deploy_ref"
           } >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@v5
@@ -120,15 +99,6 @@ jobs:
             NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
 
   deploy:
-    if: >-
-      ${{
-        github.event_name == 'workflow_dispatch' ||
-        (
-          github.event.workflow_run.conclusion == 'success' &&
-          (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') &&
-          github.event.workflow_run.head_branch == 'main'
-        )
-      }}
     needs: publish
     runs-on: ubuntu-latest
     permissions:
