@@ -89,6 +89,24 @@ describe("buildProductQueryPlan", () => {
     });
   });
 
+  it("routes trend and stock-coverage filters through the derived view", () => {
+    expect(buildProductQueryPlan({
+      ...EMPTY_FILTERS,
+      trendDirection: "accelerating",
+    })).toMatchObject({
+      source: "products_with_derived",
+      requireAggregatesReady: true,
+    });
+
+    expect(buildProductQueryPlan({
+      ...EMPTY_FILTERS,
+      maxStockCoverageDays: "30",
+    })).toMatchObject({
+      source: "products_with_derived",
+      requireAggregatesReady: true,
+    });
+  });
+
   it("routes edited-since-sync filters through the derived view", () => {
     const plan = buildProductQueryPlan({
       ...EMPTY_FILTERS,

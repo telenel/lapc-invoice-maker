@@ -50,6 +50,8 @@ function hasLastSaleProductFilters(filters: ProductFilters): boolean {
 export function buildProductQueryPlan(filters: ProductFilters): ProductQueryPlan {
   const requireAggregatesReady = requiresAggregateReadiness(filters);
   const needsDerived = hasAnalyticsProductFilters(filters)
+    || filters.trendDirection !== ""
+    || filters.maxStockCoverageDays !== ""
     || filters.minMargin !== ""
     || filters.maxMargin !== ""
     || filters.sortBy === "margin"
