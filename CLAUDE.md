@@ -38,6 +38,7 @@ If a task appears to require a PRISM write, stop, state the exact operation you 
 - Open or mark the PR ready with `npm run git:publish-pr` when the work is ready for review.
 - Draft PRs are active-work handoffs and may receive more checkpoint pushes.
 - Ready PRs are review surfaces; only push review fixes with `CR_FIX=1 git push`.
+- Merging PRs to `main` does not automatically deploy production; deploy the current batch intentionally with `npm run deploy:vps` after switching to fresh `main`.
 - Never switch away from committed local work until it is checkpointed, published, or explicitly parked in a named stash.
 - Let CodeRabbit and CI review the PR.
 - Merge before starting the next feature.

@@ -111,6 +111,25 @@ After the PR is open:
 - if the PR is ready, only push review fixes with `CR_FIX=1 git push`
 - put any new idea or scope change on a new branch from fresh `main`
 
+## Deploy Production
+
+Merging a PR to `main` does not automatically deploy production. This is intentional: PRs can merge quickly, and the VPS should rebuild once for the final release SHA instead of once per PR.
+
+When the current batch of merged PRs is ready to ship:
+
+```bash
+npm run git:switch -- main
+npm run deploy:vps
+```
+
+`npm run deploy:vps` triggers the `Deploy to VPS` GitHub Actions workflow with `ref=main`. To deploy a different pushed branch, tag, or SHA:
+
+```bash
+DEPLOY_REF=<branch-or-sha> npm run deploy:vps
+```
+
+Keep using `npm run hotfix:deploy -- <ref>` only for urgent low-risk fixes that intentionally bypass the GitHub image-publish path.
+
 ## What The Hook Blocks
 
 The tracked `pre-push` hook blocks pushes when:
