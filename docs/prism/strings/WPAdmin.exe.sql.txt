@@ -1,0 +1,201 @@
+﻿?Update@CDccLocationRoyaltySet@@UAEHXZ
+?Update@CG3ModuleBar@@QAEXXZ
+?Update@CGXBrowserGrid@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+delete from CatalogGroups where CatalogGroupID = %d
+DELETE FROM DCC_Class WHERE Department = %s AND Class = %s
+DELETE FROM DCC_Department WHERE Department = %s
+DELETE FROM DeptClassCat WHERE DeptClassCat.DCCID = %ld
+delete from mo_discount_codes where modiscid = %ld and locationid = %ld
+delete from MO_Shipping_Codes_Location where ShipCodeID = %ld and LocationID = %ld
+DELETE FROM MO_Shipping_Details WHERE ShipCodeDID = %ld
+DELETE FROM MonsoonMarketplaces WHERE MarketPlaceID = %ld
+delete from prism.dbo.POS_Register_Access where UserID = %ld
+delete from prism_security.dbo.prismuser where suid = %ld
+EXEC E_LocationGroups_Add %d
+EXEC E_LocationGroups_AddLocation %d, %d
+EXEC E_LocationGroups_Delete %d
+EXEC E_LocationGroups_RemoveLocation %d
+exec RoyaltyUpdateByDccLocationRoyaltySet 
+exec RoyaltyUpdateByLocationSelection 
+GRANT EXECUTE ON [dbo].[%s] TO [public] 
+if exists (select * from dbo.sysobjects 
+Insert Into Buyers_Guide_Extended (Bookkey, LocationID, BGVendorID) Values ('%s', %d, %d)
+INSERT INTO custom_reports_log.dbo.Reports_Downloaded (StoreID, CustomReportID, DateDownloaded) VALUES (%s, %d, GetDate())
+INSERT INTO DCC_Category ( CatName, Department, Class, Category) VALUES ( '%s', %ld, %ld, %ld )
+INSERT INTO DCC_Class ( ClassName, Class, Department) VALUES ( '%s', %ld, %ld )
+INSERT INTO DCC_Department ( Subsystem, DeptName, Department ) VALUES ( %d, '%s', %ld)
+Insert into DCCGLCode (GLCodeTypeID, DCCID, DCCMask, LocationID, COAID) values (1, %d, %d, %d, 0)
+INSERT INTO DeptClassCat ( DCCID, Department, Class, Category, DCCType) VALUES ( %ld, %ld, %ld, %ld, 3 )
+insert into OldPassword (OPassTypeId, Password, RecordId) values(1, '%s', %d)
+insert into prism.dbo.systemlog (datelogged, apptext) values (getdate(), 'BGLoad - Could not set timeouts')
+INSERT INTO ReportParams (REPUID,ParamName,ControlLabel,ParamType,ControlType,TabOrder,ExtraData) VALUES (%ld, '%s', '%s', %d, %d, %d, '%s')
+INSERT INTO ReportSortOptions (RSOUID, REPUID, SortDesc, SortOrder, AccessSortOrder, TabOrder) VALUES (%ld, %ld, '%s', '%s', '%s', %d)
+INSERT Location_Groups (LocationGroupTypeID, ParentGroupID, GroupName) SELECT %d, NULL, '%s'
+Please Select a Valid Term
+Please select links.
+Replace%Select the entire document
+select 
+SELECT  CONVERT(INT,ParamValue) FROM SystemParameters WHERE ParamType = 5001 AND locationid  = 0
+SELECT  CONVERT(INT,ParamValue) FROM SystemParameters WHERE ParamType = 94 AND locationid  = 0
+SELECT (MAX(RSOUID) + 1) FROM ReportSortOptions WHERE RSOUID < %ld 
+SELECT (MAX(RSOUID) + 1) FROM ReportSortOptions WHERE RSOUID > %ld 
+select abpercent, newpercent, usedpercent from Buyers_Guide_Vendor_Commission where bgvendorid = %ld
+select AcctCategoryTypeID, CategoryCode from Acct_Financial_Category_Type
+SELECT AcctCategoryTypeID, CategoryDesc FROM Acct_Financial_Category_Type
+Select All
+SELECT AppVersionName FROM prism_security.dbo.Applications WHERE ApplicationID = 1 
+Select Book Database Input File
+SELECT CashFlowCatID, CashFlowDesc FROM Acct_Cash_Flow_Categories
+SELECT COAMasterID, Description FROM Acct_COA_Master where COAMasterID <> %d order by GLCode
+SELECT COUNT(*) as Sequence FROM prism.dbo.ReportMaster INNER JOIN prism.dbo.ReportCustom ON prism.dbo.ReportMaster.REPUID = prism.dbo.ReportCustom.REPUID WHERE MenuID = %ld AND prism.dbo.ReportCustom.fCustom = 1
+SELECT Count(*) FROM %s WHERE DCCID = %d and DCCMask = %d AND LocationID = 0
+SELECT Count(*) FROM Acct_COA WHERE GLCode = '%s'
+SELECT Count(*) FROM Acct_COA WHERE GLCode = '%s' and COAID <> %d
+select count(*) from Acct_COA_Master where GLCode = '%s'
+SELECT Count(*) FROM Buyback_Detail INNER JOIN Buyback_Session_Purchasers ON Buyback_Detail.BBPurchaserID = Buyback_Session_Purchasers.BBPurchaserID INNER JOIN Buyback_Purchaser ON Buyback_Purchaser.PurchaserID = Buyback_Session_Purchasers.PurchaserID and Buyback_Purchaser.BGVendorID = 
+SELECT Count(*) FROM Buyback_Session INNER JOIN Buyback_Session_Purchasers ON Buyback_Session_Purchasers.SessionID = Buyback_Session.SessionID INNER JOIN Buyback_Purchaser On Buyback_Session_Purchasers.PurchaserID = Buyback_Purchaser.PurchaserID and Buyback_Purchaser.BGVendorID = 
+SELECT Count(*) FROM dbo.SystemParameters WHERE ParamType = 5000 AND ParamValue = 1
+SELECT Count(*) FROM DCC_Category WHERE Department = %d AND Class = %d
+SELECT Count(*) FROM DCC_Category WHERE Department = %s AND Class = %s and CatName = '%s'
+SELECT Count(*) FROM DCC_Class WHERE Department = %d
+SELECT count(*) from DCC_Department WHERE Department = %s
+SELECT Count(*) FROM DCCLocation WHERE DCCID = %d and DCCMask = %d
+SELECT Count(*) FROM DeptClassCat WHERE DCCID = %d
+SELECT Count(*) FROM Location where LocationID IN (%s)
+select count(*) from mo_discount_codes where description = '%s' and locationid = %ld
+SELECT Count(*) FROM MO_Shipping_Codes_Location WHERE ShipCodeID = %ld AND fWebFlag = 1 AND LocationID = %d AND WebRank = %d
+select count(*) from mo_shipping_codes_location where ShipCodeID = %ld and LocationID = %ld
+select count(*) from prism.dbo.catalog_sales_header where userid = %ld
+select count(*) from prism.dbo.po_header where userid = %ld
+select count(*) from prism.dbo.transaction_header where userid = %ld
+select count(*) from prism_security.dbo.useraccount where suid = %ld and datasetid = %ld
+select count(*) from prism_security.dbo.UserGroup where GroupDesc = '%s'
+SELECT COUNT(*) FROM ReportMaster WHERE FileName = '%s'
+SELECT count(*) FROM ReportParams WHERE ReportParams.REPUID = %u
+SELECT count(*) FROM Stock_Ledger WHERE LocationID = %d and DCCID = %d AND AcctDate = '%s'
+select count(*) from systemparameters where paramtype = 104 and locationID > 0 and paramvalue = '1'
+SELECT Count(*) FROM VW_DCCGLCODE_DISTLOC WHERE DCCID = %d and DCCMask = %d
+select count(POSID) from Pos_Setup %s
+select CurrDescr From Currency_Exchange where CurrencyExID = %d
+select dcl.DCCID, dcl.LocationID, vdcl.DeptClassCat from DCCLocation dcl  inner join VW_DCC_LOOKUP vdcl on vdcl.DCCID = dcl.DCCID where isnull(dcl.fDefaultDigitalDCC, 0) = 1
+select Description from Location where LocationId = 
+SELECT Description FROM MO_Shipping_Codes WHERE ShipCodeID = %d
+Select Description, fRetail, GLCodeTypeID from DCCGLCodeType order by GLCodeTypeID
+SELECT DISTINCT Buyback_Session.SessionDesc, Buyback_Purchaser.PurchaserDesc FROM Buyback_Detail INNER JOIN Buyback_Session_Purchasers ON Buyback_Detail.BBPurchaserID = Buyback_Session_Purchasers.BBPurchaserID INNER JOIN Buyback_session ON Buyback_Session_Purchasers.SessionID = Buyback_Session.SessionID INNER JOIN Buyback_Purchaser On Buyback_Session_Purchasers.PurchaserID = Buyback_Purchaser.PurchaserID and Buyback_Purchaser.BGVendorID = 
+select distinct datasetid, datasettypeid, accountdesc from prism_security.dbo.vw_us_acct_detail where suid = %ld 
+SELECT DISTINCT LocationID, ShortDescription FROM VW_GL_ACCT_NAV WHERE COAMasterID = %d ORDER BY LocationID
+select distinct prism_security.dbo.DatasetType.DatasetTypeID, DatasetTypeDesc from prism_security.dbo.DatasetType inner join prism_security.dbo.Dataset on prism_security.dbo.DatasetType.DatasetTypeID = prism_security.dbo.Dataset.DatasetTypeID where ApplicationID = %d
+SELECT DISTINCT ReportCustom.REPUID,ReportCustom.MenuText FROM dbo.ReportCustom INNER JOIN ReportMaster ON ReportCustom.REPUID = ReportMaster.REPUID WHERE ReportCustom.fCustom = %ld AND fActive = %ld AND MenuID = %ld ORDER BY ReportCustom.MenuText
+SELECT EndingInvCost, EndingInvRetail FROM Stock_Ledger WHERE LocationID = %d AND DCCID = %d AND AcctDate = '%s'
+select fCustom from ReportCustom where REPUID = %ld
+SELECT fDebit FROM Acct_Financial_Category_Type where AcctCategoryTypeID = %d
+select fDistributed from pos_setup where posid = %d
+SELECT GLCode FROM Acct_COA WHERE COAID = %d
+Select GroupDesc, ModuleDesc, GroupSecTypeDesc, GroupID from Prism_Security.dbo.VW_GROUP_MODULE_DESC where GroupSecID = %d and GroupSecTypeID = %d
+select GroupID, GroupDesc from prism_security.dbo.UserGroup where DatasetTypeID = %d
+select groupid, groupdesc from prism_security.dbo.usergroup where datasettypeid = %ld
+select groupid, groupdesc from prism_security.dbo.usergroup where datasettypeid in (select datasettypeid from prism_security.dbo.dataset where datasetid = %ld)
+select Grouping_id from Web_Routing where routing_id = %d
+Select GroupSecTypeID, GroupSecTypeDesc, fBit from Prism_Security.dbo.GroupSecurityTypes where DatasetTypeID = %d order by fBit 
+select isnull(g.CatalogGroupID, 0), isnull(g.CatalogGroup, 0) from CatalogGroups g left join CatalogGroupOrder_vw o on g.CatalogGroupID = o.CatalogGroupID where o.CatalogGroupParentID %s order by o.DisplayIdx
+SELECT ItemTaxTypeID, Description FROM Item_Tax_Type
+SELECT LocationGroupTypeID, LocationGroupName FROM Location_Group_Types WHERE LocationGroupTypeID IN (2, 3)
+select locationid, description from location where locationID in (%s)
+SELECT LocationID, Description FROM Location WHERE LocationID NOT IN (SELECT LocationID FROM %s WHERE DCCID = %d and DCCMask = %d) AND LocationID IN (%s)ORDER BY LocationID
+SELECT LocationID, ShortDescription FROM Location where LocationID IN (%s)
+SELECT LocationID, ShortDescription FROM Location WHERE LocationID IN (%s) ORDER BY StoreNumber
+SELECT MAX(LocationGroupID) FROM Location_Groups WHERE ParentGroupID = %d
+SELECT MAX(LocationGroupingID) FROM Location_Grouping WHERE LocationGroupID = %d
+SELECT MethodID, MethodDesc FROM MO_Shipping_Methods
+SELECT MIN(LocationGroupID) FROM Location_Groups WHERE ParentGroupID IS NULL AND LocationGroupTypeID = %d
+SELECT min(LocationID) FROM Location_Grouping WHERE LocationGroupID = %d
+SELECT MO_Shipping_Details.ShipCodeDID, MO_Shipping_Details.ShipCodeID, MO_Shipping_Details.EndingItem, MO_Shipping_Details.EndingRange, MO_Shipping_Details.Amount, MO_Shipping_Details.Each FROM dbo.MO_Shipping_Details MO_Shipping_Details WHERE MO_Shipping_Details.ShipCodeID = %ld ORDER BY %s 
+select modiscid, locationid, description from mo_discount_codes where description = '%s' and locationid = %ld
+select modiscmethodid, description from mo_discount_codes_method where fiscostmethod = %ld
+select modisctypeid, description from mo_discount_codes_type
+SELECT ModuleID, RecordID, UserName FROM ModuleLocking
+Select Network Directory
+SELECT PaperTypeID, Description FROM dbo.PaperType ORDER BY Description
+SELECT ParamName, ControlLabel, ParamType, ControlType, TabOrder, ExtraData FROM ReportParams WHERE REPUID = %ld
+select ParamValue from prism.dbo.SystemParameters where groupingid = 12026 and paramtype = 123
+select ParamValue from SystemParameters where ParamType = 123 and GroupingId = 12026
+select ParamValue from SystemParameters where ParamType = 127 and GroupingId = 12026
+SELECT ParamValue FROM SystemParameters WHERE ParamType = 95 AND locationid  = 0
+SELECT ParamValue FROM SystemParameters WHERE ParamType = 96 AND locationid  = 0
+select POSID, Description from Pos_Setup %s
+Select PosUpdateDownloadTypeId, Description from POS_Update_Download_Type
+Select PosUpdateDownloadTypeId, Description from POS_Update_Download_Type where PSDTID = 2
+Select PosUpdateDownloadTypeId, Description from POS_Update_Download_Type where PSDTID = 5
+select pu.UserName, ug.GroupDesc, ug2.GroupDesc, l.Description from prism_security.dbo.UserAcctLocation ual  left join prism_security.dbo.UserGroup ug on ug.GroupID = ual.GroupID  left join prism_security.dbo.PrismUser pu on pu.SUID = %d  left join prism_security.dbo.UserGroup ug2 on ug2.GroupID = %d  left join prism.dbo.Location l on l.LocationID = %d where useracctlocationid = %d
+SELECT PubnetID, Description FROM dbo.Pubnet_Values 
+select reportid from ReportMaster where REPUID = %ld
+select REPUID from Custom_Reports.dbo.ReportCustom where Custom_Reports.dbo.ReportCustom.OldREPUID = %ld 
+SELECT REPUID, MenuID, FileTime FROM prism.dbo.ReportMaster WHERE REPUID = %d
+select rtrim(pu.UserName), rtrim(ug.GroupDesc), rtrim(l.Description) from prism_security.dbo.UserAcctLocation ual
+select rtrim(pu.UserName), rtrim(ug.GroupDesc), rtrim(ug2.GroupDesc), rtrim(l.Description) from prism_security.dbo.UserGroup ug  left join prism_security.dbo.UserGroup ug2 on ug2.GroupID = %d  left join prism_security.dbo.PrismUser pu on pu.SUID = %d  left join prism.dbo.Location l on l.LocationID = %d where ug.GroupID = %d
+Select SecModeDesc, fBit from Prism_Security.dbo.SecurityModes order by fBit
+Select SecTypeDesc, fBit from Prism_Security.dbo.SecurityTypes order by fBit
+select SequenceTypeID, SequenceTypeDescription from Sequence_Type where Type = 1
+select ShipInterfaceID, description from MO_Shipping_Interface order by ShipInterfaceID
+select shortdescription from location where locationid = %ld
+SELECT SortDesc, SortOrder, AccessSortOrder, TabOrder FROM ReportSortOptions WHERE REPUID = %ld
+select statecode, statename from prism.dbo.state_code order by statecode asc
+SELECT StoreNumber, LocationID FROM Location WHERE StoreNumber > 99
+SELECT SubGroupingID, Description FROM SystemParameters_Groups WHERE GroupingID = %d ORDER BY Description
+SELECT SubGroupingID, Description FROM SystemParameters_Groups WHERE GroupingID = %d ORDER BY SubgroupingID
+SELECT Subsystem FROM DCC_Department WHERE Department = %ld
+SELECT Subsystem, Name FROM dbo.Subsystem_Table ORDER BY Name
+SELECT Subsystem, Name FROM dbo.Subsystem_Table WHERE fDisplay = 1
+SELECT Subsystem, Name, Abbreviation FROM Subsystem_Table 
+select suid from prism_security.dbo.prismuser where username = '%s'
+select SUID, Name from Prism_Security.Dbo.PrismUser where fDisabled = 0
+SELECT SUID, UserName FROM prism_security.dbo.PrismUser ORDER BY UserName
+select SysParamId from SystemParameters where ParamType = 2563
+SELECT TagTypeID FROM TagType WHERE IsDefault = 1 and Subsystem = %d
+SELECT TagTypeID, Description FROM TagType Order by Description
+SELECT TagTypeID, Description FROM TagType where subsystem = %d Order by Description
+SELECT TaxTypeID, Description FROM TaxType Where IsDisabled = 0 AND LocationID = 0
+SELECT TaxTypeID, Description FROM TaxType Where IsDisabled = 0 AND LocationID IN (0,%d)
+select text from prism.dbo.syscomments where id = object_id('%s')
+select TextDesc from Custom_Reports.dbo.Report_CustomReport where REPUID in (select REPUID from Custom_Reports.dbo.ReportMaster where FileName = '%s' )
+SELECT TOP 1 COAMasterID FROM Acct_COA_Master ORDER BY COAMasterID DESC
+Select top 1 GroupID From prism_security.dbo.UserGroup order by GroupID desc
+select top 1 modiscid from mo_discount_codes order by modiscid desc
+select top 1 ReportID from Custom_Reports.dbo.ReportMaster order by REPUID desc
+select top 1 REPUID from Custom_Reports.dbo.ReportMaster order by REPUID desc
+SELECT TOP 1 REPUID FROM ReportMaster ORDER BY REPUID DESC
+SELECT TOP 1 REPUID FROM ReportMaster WHERE ReportID = 0 ORDER BY REPUID
+SELECT top 1 TagTypeID FROM TagType where Subsystem = %dORDER BY TagTypeID
+select 'User: ' + rtrim(pu.username) + ' has removed user: ' + rtrim(pu1.username) + ' from the following locations and groups.' from prism_security.dbo.PrismUser pu  inner join prism_security.dbo.PrismUser pu1 on pu1.suid = %d where pu.suid = %d
+SELECT Value, Description FROM dbo.g3_reportparam_control_types 
+SELECT Value, Description FROM dbo.g3_reportparam_param_types 
+SELECT VendorAddressGroups.AddressGroupID, VendorAddressGroups.Description FROM dbo.VendorAddressGroups VendorAddressGroups ORDER BY VendorAddressGroups.Description
+select wr.routing_id, s.ParamDescr from web_routing wr inner join SystemParameters s on wr.grouping_id = s.ParamType where s.groupingid = 80000 and %s order by ParamDescr desc
+update %s set %s = '%s' where %s = %d
+Update Acct_COA set COAMasterID = %d where COAID = %d
+UPDATE Buyers_Guide_Vendor_Commission SET abpercent = %f, newpercent = %f, usedpercent = %f WHERE BGVendorID = %ld
+update CatalogGroupOrder set CatalogGroupParentID %s, DisplayIdx = -1 where %s = %d
+update custom_reports.dbo.Report_CustomReport set CustomReportID = %d, SPName = '%s' where REPUID = %d 
+UPDATE custom_Reports.dbo.ReportMaster SET PDFFileName = '%s' WHERE REPUID = %ld 
+Update DCC_Category SET CatName = '%s' WHERE Department = %d AND Class = %d AND Category = %d
+Update DCC_Class SET ClassName = '%s' WHERE Department = %d AND Class = %d
+Update DCC_Department SET DeptName = '%s' WHERE Department = %d
+Update DCC_Department SET Subsystem = %d WHERE Department = %d
+UPDATE DeptClassCat SET DCCType = %ld WHERE DCCID = %ld
+UPDATE GraphicComponentTypes SET SortOrder = %d WHERE GraphicComponentTypeID = %d
+UPDATE Location_Groups SET GroupDescription = '%s' WHERE LocationGroupID = %d
+UPDATE Location_Groups SET GroupName = '%s' WHERE LocationGroupID = %d
+update prism_security.dbo.PrismUser set SuperUser = '%s' where SUID = %d
+Update royalty percentage and minimum for DCCs, items, and proposed purchase orders at the selected location(s)?
+Update royalty percentage and minimum for inventory and proposed purchase orders at the selected location(s) and DCC(s)?
+UPDATE Stock_Ledger SET EndingInvCost = %.2f, EndingInvRetail = %.2f WHERE LocationID = %d AND DCCID = %d AND AcctDate = '%s'
+update SystemParameters set ParamValue = %d where LocationId = 0 and ParamName like 'AllokenTerm'
+update SystemParameters set ParamValue = '%s' where LocationId = 0 and ParamName like 'AllokenEmail'
+update SystemParameters set ParamValue = '%s' where LocationId = 0 and ParamName like 'AllokenStore'
+update SystemParameters set ParamValue = '%s' where ParamType = 127
+update SystemParameters set ParamValue = '%s' where ParamType = 2563
+UPDATE SystemParameters SET ParamValue = '0' WHERE ParamType = %d AND LocationID <> %d AND LocationID <> -1
+update TagType set Description = '%s', IsDefault = %d where TagTypeId = %d
+with OrderPair as (select CGOID, DisplayIdx from CatalogGroupOrder where %s = %d or %s = %d) update CatalogGroupOrder set DisplayIdx = (select top 1 DisplayIdx from OrderPair where CGOID != CatalogGroupOrder.CGOID) where CGOID in (select CGOID from OrderPair)
+Would you like to just update the retail prices?
+WPAdmin Update Config

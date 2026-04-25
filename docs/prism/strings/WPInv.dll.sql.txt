@@ -1,0 +1,70 @@
+﻿ and poid in (select poid from po_detail pod inner join po_location pol on pod.pod_id = pol.pod_id where pol.PODL_ID NOT IN (SELECT PurchaseDtlID FROM VW_INVC_DETAIL WHERE InvoiceID = %d))
+ AND POID in (Select POID From VW_INVC_PODETAIL where LocationID in (%s))
+?Update@CGXBrowserGrid@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+DCCID IN (SELECT DCCID FROM Freight_Invoice_Detail WHERE %s)
+DELETE FROM Freight_Invoice_Detail WHERE FRINVDID = %ld
+InvoiceID IN (SELECT D.InvoiceID FROM dbo.Invoice_Detail D INNER JOIN VW_ITM_MASTER I ON D.SKU = I.SKU WHERE REPLACE(I.ISBN13, '-','') LIKE '%s%%')
+InvoiceID IN (SELECT d.InvoiceID FROM VW_INVENTORY_STATUS_CODE_SKU_LOCATIONS s INNER JOIN Invoice_Detail d ON d.SKU = s.SKU AND s.InvStatusCodeID %s INNER JOIN Invoice_Location l on l.INVDUID = d.INVDUID AND l.LocationID = s.LocationID)
+InvoiceID IN (SELECT d.InvoiceID FROM VW_SEASON_CODE_SKUS s INNER JOIN Invoice_Detail d ON d.SKU = s.SKU AND s.SeasonCode LIKE '%s%%')
+InvoiceID IN (SELECT d.InvoiceID FROM VW_STYLE_SKUS m INNER JOIN Invoice_Detail d ON d.SKU = m.SKU AND m.StyleID = %d)
+InvoiceID IN (SELECT Invoice_Detail.InvoiceID FROM Invoice_Detail, VW_INVC_QSDETAIL WHERE Invoice_Detail.PurchaseID = VW_INVC_QSDETAIL.PID AND Invoice_Detail.fPurchaseIDType = VW_INVC_QSDETAIL.PType AND (VW_INVC_QSDETAIL.PDate >= '%s 00:00:00' AND  VW_INVC_QSDETAIL.PDate <= '%s 23:59:59'))
+InvoiceID IN (SELECT Invoice_Detail.InvoiceID FROM Invoice_Detail, VW_INVC_QSDETAIL WHERE Invoice_Detail.PurchaseID = VW_INVC_QSDETAIL.PID AND Invoice_Detail.fPurchaseIDType = VW_INVC_QSDETAIL.PType AND VW_INVC_QSDETAIL.PNumber LIKE '%s%%')
+InvoiceID IN (SELECT InvoiceID FROM Invoice_Detail INNER JOIN VW_ITM_MASTER IM ON Invoice_Detail.SKU = IM.SKU WHERE BookKey LIKE '%s%%' AND Subsystem in (2,3))
+InvoiceID IN (SELECT InvoiceID FROM Invoice_Detail WHERE SKU = %ld)
+InvoiceID IN (SELECT InvoiceID FROM Invoice_Detail WHERE SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%'))
+InvoiceID in (select InvoiceID from Invoice_Header where fEDI = 1)
+InvoiceID IN (SELECT T.InvoiceID FROM dbo.Invoice_Detail T WHERE T.SKU = %ld)
+InvoiceID in(select ih.invoiceid from invoice_header ih inner join invoice_detail id on id.invoiceid = ih.invoiceid and ih.fEDI = 1 inner join invoice_location il on il.invduid = id.invduid inner join po_detail pd on pd.poid = id.purchaseid inner join po_location pl on pl.podl_id = il.purchasedtlid and pl.recvqty <> pl.InvoicedQty) 
+InvoiceID in(select ih.invoiceid from invoice_header ih inner join invoice_detail id on id.invoiceid = ih.invoiceid and ih.fEDI = 1 inner join invoice_location il on il.invduid = id.invduid inner join po_detail pd on pd.poid = id.purchaseid inner join po_location pl on pl.podl_id = il.purchasedtlid and pl.recvqty = pl.InvoicedQty) 
+POID = ? AND PODL_ID NOT IN (SELECT * FROM dbo.fnInvoicingCompleteSkuListForPO( ? ))
+SELECT * FROM dbo.VW_FREIGHT_INV_NAVIGATOR
+SELECT * FROM dbo.VW_INVC_NAVIGATOR
+SELECT * FROM VW_INVC_DETAIL_GRID WHERE INVDUID = %d
+SELECT AddressID, Description FROM AddressType
+select bgvendorid from buyers_guide_vendors where vendorid = %ld
+select cast(Subsystem as int), rtrim(Name) from Subsystem_Table
+SELECT Count(*) FROM Invoice_Header WHERE InvoiceNumber like '%s' and VendorID = %d
+Select count(*) from VW_INVC_Discr_Credit_Memos where InvoiceHeaderID = %i
+Select count(*) from VW_INVC_Discr_Credit_Memos where InvoiceLocationID = %i
+Select count(*) from VW_INVC_Discr_Credit_Memos where InvoiceLocationID in (%s)
+select count(InvoiceId) from Invoice_Detail where InvoiceId = %d
+select count(ReasonId) from CD_Reasons where ReasonId = %d and fDisable = 0
+select CurrencyExId from Invoice_Header where InvoiceId = %d
+SELECT Description FROM Item I INNER JOIN ItemMaster M ON I.Subsystem = M.Subsystem and I.UUID = M.UUID WHERE SKU = %ld
+select Description from QuickSearchType where ModuleID = 10021 and TypeID = %d
+select Description from QuickSearchType where TypeId = %d and ModuleID = 10021
+Select Detail Item
+select DiscountTaken from Freight_Invoice_Header where FRINVHID = %ld
+select ExchRate from Invoice_Header where InvoiceId = %d and ExchRate is not null
+select INVLUID from Invoice_Location where INVDUID = %ld
+Select ISNULL(TotalRoyalty,0.0) From Invoice_Header where InvoiceID = %ld
+select LocationID from Invoice_Location where INVLUID = %ld
+SELECT LocationID, ShortDescription FROM Location
+SELECT LocationID, ShortDescription FROM Location where locationID in (%s) order by LocationID
+SELECT MaxReturnTime, ReturnPolicyID, SpecialInstructions FROM dbo.VendorParameters WHERE VendorID = %ld AND Subsystem = %d
+select Name from VendorMaster where VendorID = %d
+select PurchaseID from invoice_detail where INVDUID = %ld
+select PurchaseID from Invoice_Location l inner join invoice_detail d on l.invduid = d.invduid where INVLUID = %ld
+select qs.Description from Freight_Invoice_Header fih inner join QuickSearchType qs ON fih.TypeID = qs.TypeID  where qs.ModuleID = 10021 and FRINVHID = %d
+SELECT ReasonID, fActReq, Qty, Cost, Retail, Discount FROM VW_INVC_DISCR WHERE DSCHID = %ld AND DSCDID = %ld
+SELECT ReasonID, ReasonText FROM CD_AcctReasons
+select ReasonId, ReasonText from CD_AcctReasons order by ReasonId
+SELECT ReasonID, ReasonText FROM CD_Reasons
+select ReasonId, ReasonText from CD_Reasons where fDisable = 0 order by ReasonText
+SELECT Retail FROM dbo.Invoice_Detail WHERE InvoiceID = %ld AND SKU = %ld
+select rtrim(Abbreviation) from Subsystem_Table where Subsystem = %d
+SELECT ShipViaID, Description FROM ShipVia
+select StatusDesc from Status_Codes where ModuleID = 10020 and StatusID = %d
+SELECT Subsystem FROM Subsystem_Table WHERE Name = '%s'
+SELECT Subsystem, Name FROM dbo.Subsystem_Table WHERE fDisplay = 1
+SELECT SUID, UserName FROM prism_security.dbo.PrismUser
+select TermID from Invoice_Location where INVLUID = %ld
+select top 1 COAID from VW_DCCGLCODE where GLCodeTypeID = 1 and DCCID = %d and LocationID in (%d,0) order by priority
+Select top 1 InvoiceID From Invoice_Header where InvoiceNumber like '%s' and VendorId = %d Order by InvoiceID desc
+select TotalDiscTaken from Invoice_Header where InvoiceID = %ld
+SELECT TypeID, Description FROM QuickSearchType WHERE ModuleID = 10021
+select VendorCode from VendorMaster where VendorID = %d
+select VendorID from VendorMaster where VendorCode = '%s'
+UPDATE dbo.VendorParameters SET MaxReturnTime = %ld WHERE VendorID = %ld AND Subsystem = %d
+update Invoice_Detail set Retail = %.4f where Invduid = %d
+update Invoice_Location set Royalty = %.4f where Invluid = %d

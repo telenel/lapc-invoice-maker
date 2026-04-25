@@ -1,0 +1,223 @@
+﻿(SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%'))
+(TXUID IN (SELECT UUID FROM VW_ITM_BARCODE WHERE Subsystem = 2 AND Barcode like '%s%%'))
+?Update@?$CG3SerialNumberDetailBase@VCG3XRecordViewBase@@@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Update@CGXBrowserGrid@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Update@CItemSet@@UAEHXZ
+Create/update items for all related styles?
+Create/update items from the style?
+delete from BIP_Temp where QueryID = %ld
+delete from DigitalTxtHeader where DigitalTxtID = %d
+delete from Inventory_NonMerch where InvNonMerchId = %d
+delete from Item_XREF where SKU = %d %s
+DELETE FROM Item_Xref WHERE SKU = %ld
+delete from OnHold where OnHoldId = %d and OnHoldTypeId = %d
+delete from packagedetail where packagedid = %ld
+delete from PackageHeader where PackageID = %d
+DELETE FROM Price_Change_Detail WHERE PriceChangeID = %ld AND SKU = %ld AND LocationID = %ld
+delete from price_change_table where pricechangeid = %ld
+DELETE FROM SerialNumberDetail WHERE SerialDID = %ld
+DELETE FROM VERBA_Price_Change WHERE VERBAID = %ld
+delete from warranty where warrantyid = %ld
+delete verba_price_change where fProcess = 0 and VERBAId in (select VERBAId from VERBA_Price_Change_View where LocationID = %d)
+DigitalTxtID IN (SELECT DigitalTxtID FROM DigitalTxtDetail WHERE BasketID like '%s%%')
+DigitalTxtID IN (SELECT DigitalTxtID FROM DigitalTxtDetail WHERE ReturnDate >= '%s 00:00:00' AND ReturnDate <= '%s 23:59:59')
+DigitalTxtID IN (SELECT DigitalTxtID FROM DigitalTxtDetail WHERE SoldDate >= '%s 00:00:00' AND SoldDate <= '%s 23:59:59')
+EXEC E_CreateItemsFromStyle %d
+EXEC E_Style_Cascade_Cost_Retail %d, %d, %d, '%s', '%s'
+EXEC E_StyleDetail_Set %d, %d, %d, '%s', '%s'
+EXEC E_StyleTemplate_UpdateItems %d
+exec E_StyleTemplateDetail_Add_%s %d, %d
+exec E_StyleTemplateDetail_Delete_%s %d, %d
+EXEC E_StyleTemplateDetail_Set %d, %d, %d, %d
+exec StyleInventoryStatusUpdate 
+INSERT INTO Inv_POVendor (VendorID, LocationID, SKU, MinimumStock, MaximumStock, AutoOrderQty, MinOrderQty, VendorCatNumber, Rank) SELECT VendorID, LocationID, %d, MinimumStock, MaximumStock, AutoOrderQty, MinOrderQty, VendorCatNumber, Rank FROM Inv_POVendor WHERE SKU = %d
+INSERT INTO Inv_POVendor (VendorID, SKU, LocationID, MinimumStock, MaximumStock, AutoOrderQty, MinOrderQty, VendorCatNumber, Rank, Cost) VALUES (%d, %d, %d, %d, %d, %d, %d, '%s', %d, %f)
+insert into Inventory_NonMerch (SKU, LocationId, FeeCodeId) values (%d, %d, %d)
+INSERT INTO Item_Xref (SKU, Barcode, SortOrder) VALUES (%d, '%s', %d)
+insert into Item_Xref (SKU, Barcode, SortOrder) values(%d, '%s', %d)
+INSERT INTO Matrix_Attrib_Order VALUES (%d, %d, '%s', %d)
+insert into OnHold (SKU, LocationID, OnHoldTypeId) values(%d, %d, %d)
+insert into OnHoldType (Name) values('%s')
+insert into Price_Change_Table (RoundingMtd,RndAmt,fNewUsed,fUsedNew,Description,Type,ProcessUser) values(0,0,%d,%d,'VERBA ' + cast((getdate()) as varchar),2,'%s')
+Insert into VERBA_Import (SKU,NewPrice) Values (%s, $%s)
+Locations have changed.  You must manually update any detail items which may be affected, either by deleting individual item(s) or re-generating a list.
+MatrixID IN (SELECT MatrixID FROM Matrix_Detail WHERE SKU IN (%s))
+OnHoldTypeId not in (select OnHoldTypeId from OnHold where SKU = %d and LocationId = %d)
+Please either select a vendor
+Please select a vendor.
+Please select an input file.
+Please Select an Instruction
+PriceChangeID IN (SELECT d.PriceChangeID FROM VW_INVENTORY_STATUS_CODE_SKU_LOCATIONS s INNER JOIN VW_PRICE_CHANGE_DETAIL d ON d.SKU = s.SKU AND d.LocationID = s.LocationID AND s.InvStatusCodeID %s)
+PriceChangeID IN (SELECT d.PriceChangeID FROM VW_SEASON_CODE_SKUS s INNER JOIN VW_PRICE_CHANGE_DETAIL d ON d.SKU = s.SKU AND s.SeasonCode LIKE '%s%%')
+PriceChangeID IN (SELECT d.PriceChangeID FROM VW_STYLE_SKUS m INNER JOIN VW_PRICE_CHANGE_DETAIL d ON d.SKU = m.SKU AND m.StyleID = %d)
+PriceChangeID IN (SELECT PriceChangeID FROM VW_PRICE_CHANGE_DETAIL WHERE BookKey LIKE '%s%%' AND Subsystem IN (2,3))
+PriceChangeID IN (SELECT PriceChangeID FROM VW_PRICE_CHANGE_DETAIL WHERE REPLACE(ISBN13, '-','') LIKE '%s%%')
+PriceChangeID IN (SELECT PriceChangeID FROM VW_PRICE_CHANGE_DETAIL WHERE SKU = %ld)
+PriceChangeID IN (SELECT PriceChangeID FROM VW_PRICE_CHANGE_DETAIL WHERE SKU IN (%s))
+PriceChangeID IN (SELECT PriceChangeID FROM VW_PRICE_CHANGE_DETAIL WHERE SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%'))
+SELECT %s, %s FROM %s WHERE StyleTemplateID = %d ORDER BY Sequence, %s
+SELECT 0, 'Description'
+SELECT Abbreviation FROM Binding WHERE BindingID = %d
+SELECT AttribID, AttribName FROM Matrix_Attrib
+SELECT AttribName FROM Matrix_Attrib WHERE AttribID = %d
+SELECT Author, Title FROM Textbook WHERE SKU = %d OR UsedSKU = %d
+SELECT Author, Title FROM Tradebook WHERE SKU = %d
+select BarCode from Item where SKU = %d
+SELECT Barcode, ItemXrefID FROM Item_Xref WHERE SKU = %d ORDER BY SortOrder
+SELECT Binding.BindingID, Binding.Abbreviation+' - '+Binding.Name FROM dbo.Binding Binding ORDER BY Binding.Name
+SELECT CASE WHEN EXISTS ( SELECT * FROM VW_STYLE_SKUS v INNER JOIN Styles s ON s.StyleID = v.StyleID WHERE s.StyleTemplateID = %d ) THEN 1 ELSE 0 END
+SELECT CASE WHEN EXISTS ( SELECT * FROM VW_STYLE_SKUS WHERE StyleID = %d ) THEN 1 ELSE 0 END
+select cast(l.StoreNumber as varchar) + ','   + cast(v.SKU as varchar) + ','   + v.CurveSource + ','   + left(convert(varchar, v.PostWeek, 120), 10) + ','   + cast(v.SaleQty as varchar)   + CHAR(13) + CHAR(10) as LineText from VW_Forecast_Curve v inner join Location l on l.LocationID = v.LocationID where v.SKU = 
+select cast(LocationID as int), ShortDescription from Location
+SELECT ColorID, Color FROM VW_STYLE_TEMPLATE_COLORS WHERE StyleTemplateID = %d ORDER BY Sequence, Color
+Select count(*) from [Rental_Header_Item] where [SKU]=%d
+select Count(*) from DigitalTxtDetail where DigitalTxtID = %d
+select count(*) from DigitalTxtHeader where LocationID = %d and SKU = %d
+select COUNT(*) from Inv_ShelfLocations where ShelfLocationID = %ld and SKU = %ld and LocationID = %ld
+select count(*) from Inventory where LocationID = %d and SKU = %d
+select count(*) from inventory where locationid = %ld and sku = %ld
+select Count(*) from Inventory where SKU = %i and LocationID = %i
+select count(*) from Inventory_NonMerch where LocationId = %d and SKU = %d
+select count(*) from Item_Components_Detail icd inner join Item_Components_Header ich on icd.bid = ich.bid where icd.fRental = 1 and icd.SKU <> %ld  and ich.sku = %ld
+select count(*) from OnHoldType where lower(Name) = '%s'
+select Count(*) from PackageDetail where PackageID = %d
+select count(*) from Price_Change_DCCID where PriceChangeID = %d
+SELECT Count(*) FROM ShelfLocations WHERE ShelfDesc = '%s'
+SELECT Count(*) FROM ShelfLocations WHERE ShelfDesc = '%s' AND fDisable = 0
+SELECT Count(*) FROM TaxType Where IsDisabled = 0 AND TaxTypeID = %d AND LocationID IN (0, %d)
+select count(*) from Textbook where sku = %d
+select count(*) from VERBA_Price_Change_View where fProcess = 1 and LocationID in (%s)
+SELECT COUNT(*) FROM VW_STYLE_TEMPLATE_COLORS WHERE StyleTemplateID = %d
+SELECT COUNT(*) FROM VW_STYLE_TEMPLATE_SIZES WHERE StyleTemplateID = %d
+Select CSV File
+select dbo.fnIsComponentUsed(%ld, %ld)
+select dbo.IsBundleRented(%ld)
+SELECT DCCID FROM VW_ITM_MASTER WHERE SKU = 
+select DeptClassCat from VW_DCC_LOOKUP where DCCID = %d
+SELECT Description FROM Color WHERE ColorID = %d
+SELECT Description FROM GMSize WHERE SizeID = %d
+select Description from Location where LocationID = %i
+select description from location where locationid = %ld
+SELECT Description, BdType FROM VW_ITM_MASTER WHERE SKU = %d
+SELECT Description, BdType, EdColor, CpSize FROM VW_ITM_MASTER WHERE SKU = %d
+select DigitalTxtID from VW_DigitalTxtHeader where SKU = %d and LocationId = %d
+select distinct sku from packagedetail where packagedetail.packageid = (select packageid from packageheader where sku = %ld)
+SELECT DISTINCT TermID, TermName FROM vw_Term WHERE LocationID = %d and fOpenFlg = 1 order by TermID desc
+SELECT DISTINCT TermID, TermName FROM vw_Term WHERE LocationID = %d and fOpenFlg = 1 order by TermName desc
+SELECT DISTINCT TermID, TermName FROM vw_Term WHERE LocationID = %d and TermID in (SELECT DISTINCT TermID from VERBA_Price_Change_History ) order by TermID desc
+SELECT DISTINCT TermID, TermName FROM vw_Term WHERE LocationID = %d and TermID in (SELECT DISTINCT TermID from VERBA_Price_Change_History ) order by TermName desc
+SELECT EQListData.EQListDesc FROM dbo.EQListData EQListData WHERE EQListData.EQListID = %ld
+select FeeCodeId, Description, Price from POS_Fee_Codes where LocationId = %d and FeeCodeTypeId = 4 order by Description desc
+select FeeCodeId, Description, Price, InvNonMerchId from VW_Inventory_NonMerch where SKU = %d and LocationId = %d
+SELECT fInactiveFlag  FROM VendorMaster  WHERE VendorID = %ld
+SELECT fInactiveFlag FROM VendorMaster WHERE VendorID = %d
+SELECT gm.CatalogNumber FROM GeneralMerchandise gm INNER JOIN Inventory iv ON gm.SKU = iv.SKU WHERE gm.SKU = %d and iv.LocationID = %d
+select GraphicName from Style_Graphics where StyleGraphicID = %d
+SELECT InvStatusCodeID, StatusCodeName FROM dbo.InventoryStatusCodes
+SELECT IsLocked FROM Style_Location_Colors WHERE StyleLocationID = %d
+SELECT IsLocked FROM Style_Locations WHERE StyleLocationID = %d
+SELECT ISNULL(BindingID, 0) FROM Binding WHERE Abbreviation = '%s'
+SELECT ISNULL(BindingID, 0) FROM Binding_ONIX WHERE ONIX_Code = '%s'
+SELECT ISNULL(fDiscontinue, 0) FROM Item WHERE SKU = 
+select isnull(ParamValue, 0) from SystemParameters where LocationID = 0 and ParamType = 68077
+select isnull(ParamValue, 0) from SystemParameters where LocationID = 0 and ParamType = 68078
+SELECT Item.Barcode FROM dbo.Item Item WHERE Item.Barcode = '%s'
+SELECT Item.Barcode FROM Item WHERE Item.Barcode = '%s' %s
+SELECT Item_Xref.Barcode FROM dbo.Item_Xref Item_Xref WHERE Item_Xref.Barcode = '%s'
+SELECT Item_Xref.Barcode FROM Item_Xref WHERE Item_Xref.Barcode = '%s' %s
+select ItemSeasonCodeId, SeasonCode from ItemSeasonCodes
+select ItemTaxTypeId, Description from Item_Tax_Type
+SELECT Itm.SKU, Itm.CatISBN FROM VW_ITM_MASTER Itm WHERE Itm.Subsystem = %d AND REPLACE( Itm.ISBN13, '-', '' ) = '%s'
+SELECT Itm.SKU, Itm.CatISBN, Itm.TypeID FROM VW_ITM_MASTER Itm WHERE Itm.Subsystem = %d AND REPLACE( Itm.ISBN13, '-', '' ) = '%s' ORDER BY Itm.TypeID
+SELECT LEN('%s')
+SELECT Location.LocationID, Location.Description FROM dbo.Location Location INNER JOIN dbo.Price_Change_Location ON Price_Change_Location.LocationID = Location.LocationID WHERE (Price_Change_Location.fSelected = 1) AND (Price_Change_Location.PriceChangeID = %ld) 
+SELECT Location.ShortDescription FROM dbo.Location Location WHERE (Location.LocationID = %ld) 
+SELECT LocationID FROM Inv_POVendor WHERE SKU = %d AND Rank = 0 ORDER BY LocationID
+SELECT LocationID FROM Location ORDER BY LocationID
+select LocationID from Location where StoreNumber = %d
+SELECT LocationID, ShortDescription FROM Location
+SELECT MAX(warrantyid) FROM warranty
+SELECT MIN(SKU) FROM Item WHERE StyleID = %d
+SELECT MIN(TagTypeID) FROM TagType
+select name from prism.dbo.PackageHeader where name = '%s'
+select name from prism.dbo.PackageHeader where name = '%s' and packageid != %d
+select Name, DigitalInstrID from DigitalTxtInstructions where fDigitalAdoption = 1
+select packagedid from packagedetail where packageid = %ld and packagedetail.sku = %ld 
+SELECT PackageType.PackageType, PackageType.DefaultQty FROM dbo.PackageType PackageType ORDER BY PackageType.PackageType 
+SELECT PackageType.PackageType, PackageType.Description, PackageType.DefaultQty FROM dbo.PackageType PackageType ORDER BY PackageType.PackageType
+SELECT ParamValue FROM SystemParameters WHERE ParamType = 120
+SELECT ParamValue FROM SystemParameters WHERE ParamType = 121
+select PriceChangeID from Price_Change_Table where Description like 'VERBA%%' and fHasBeenRun = 0
+select PrinterName from TagTypePrinter where ParentId = 1 and TTPTId = 3
+SELECT RoyaltyCost, MinRoyaltyCost FROM VW_INVENTORY_ROYALTY_DEFAULTS
+SELECT RTRIM(txComment) FROM Item WHERE SKU = %ld AND Subsystem = %d
+SELECT SessionID, SessionDateTime FROM ImportLog WHERE ModuleID = %d AND Subsystem = %d
+Select ShortDescription from Location where LocationID = %d
+SELECT SizeID, Size FROM VW_STYLE_TEMPLATE_SIZES WHERE StyleTemplateID = %d ORDER BY Sequence, Size
+SELECT SKU FROM Item WHERE 
+SELECT SKU FROM Item WHERE VendorID = %d
+SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode LIKE '%s%%'
+SELECT SKU FROM VW_SEASON_CODE_SKUS WHERE SeasonCode LIKE '%s%%'
+SELECT SKU, Description, BdType, EdColor, CpSize, DCCID, VendorID, Subsystem FROM VW_ITM_MASTER
+select SKU, Qty from Bundle_DetailItem where BUNDID = %d
+select SKU, UsedSKU from textbook where %s = %d
+SELECT StockAdjReasonID, Reason FROM dbo.StockAdjustReason_vw WHERE AllowManual = 1 and fInactive = 0 
+SELECT StockAdjReasonID, Reason FROM dbo.StockAdjustReason_vw WHERE AllowManual = 1 and StockAdjReasonID <> %ld and fInactive = 0 
+SELECT StockAdjReasonID, Reason FROM dbo.StockAdjustReason_vw WHERE ReasonID <> %ld
+select StockOnHand from Inventory where LocationID = %d and SKU = %d
+SELECT StockOnHand FROM Inventory WHERE SKU = %d and LocationID = %d
+SELECT Style FROM Styles WHERE StyleID = %d
+SELECT StyleID FROM VW_STYLE_SKUS
+SELECT StyleID FROM VW_STYLE_SKUS WHERE SKU = 
+SELECT StyleID FROM VW_STYLE_SKUS WHERE SKU = %d
+select StyleTemplate from Style_Template where StyleTemplateID = %d
+SELECT substring(gm.CatalogNumber, 1, 16) FROM GeneralMerchandise gm INNER JOIN Inventory iv ON gm.SKU = iv.SKU WHERE gm.SKU = %d and iv.LocationID = %d
+select subsystem from vw_itm_master where sku = %ld
+select sum(Qty) from OnHold where SKU = %d and LocationID = %d
+SELECT TagType.TagTypeID, TagType.Description FROM dbo.TagType TagType WHERE Subsystem = %d ORDER BY Description 
+SELECT TagTypeID FROM TagType WHERE IsDefault = 1 AND Subsystem = 
+select Template from SerialNumberHeader where SerialID = %ld
+Select TermID from vw_term where TermName = '%s'
+SELECT TextStatus.TextStatusID, TextStatus.Description FROM dbo.TextStatus TextStatus
+SELECT TextStatusID FROM TextStatus_ONIX WHERE ONIX_Code = '%s'
+select top 1 CommentText from GblComment where DetailID = %d and ModuleId = %d and StatusType = %d order by DetailID desc
+Select top 1 locationid from location where locationid in(%s) order by locationid
+select top 1 StkAdjId from Stock_Adjustment_Table where Sku = %d and LocationId = %d and (ModuleId = %d or ModuleID = 10090) and ReasonId = %d and Qty = %d order by StkAdjId desc
+SELECT TradeStatus.TradeStatusID, TradeStatus.Description FROM dbo.TradeStatus TradeStatus
+SELECT TradeStatusID FROM TradeStatus_ONIX WHERE ONIX_Code = '%s'
+select UserName from prism_security.dbo.PrismUser where SUID = %d
+select VendorCode from VendorMaster where VendorId = %d
+SELECT VendorID FROM Item WHERE SKU = %ld
+SELECT VendorID FROM VendorMaster WHERE VendorCode like '%s'
+select VendorID, MinimumStock, MaximumStock, AutoOrderQty, MinOrderQty, Cost, VendorCatNumber from VW_Inventory_Vendor where Sku = %d and LocationId = %d order by Rank
+SELECT WarName FROM Warranty WHERE WarrantyID = %ld
+SELECT XREF FROM SerialNumberDetail WHERE SerialDID = %d
+SerialID in (Select SerialID from SerialNumberDetail Where CustomerID = %d)
+SerialID IN (SELECT SerialNumberDetail.SerialID FROM dbo.SerialNumberDetail SerialNumberDetail, dbo.SerialNumberHeader SerialNumberHeader WHERE SerialNumberDetail.SerialID = SerialNumberHeader.SerialID AND SerialNumberDetail.MfgSerialNumber LIKE '%s%%')
+SKU IN (SELECT m.SKU FROM VW_STYLE_SKUS m WHERE m.StyleID = %d)
+SKU IN (SELECT s.SKU FROM VW_INVENTORY_STATUS_CODE_SKU_LOCATIONS s WHERE s.InvStatusCodeID %s)
+SKU IN (SELECT s.SKU FROM VW_SEASON_CODE_SKUS s WHERE s.SeasonCode LIKE '%s%%')
+SKU IN (SELECT SKU FROM Item WHERE %s)
+The following list of fields are available to update from the import process:
+TRUID IN (SELECT T.TRUID FROM Tradebook T INNER JOIN ItemMaster I ON I.Subsystem = 3 AND I.UUID = T.TRUID WHERE REPLACE(I.ISBN13, '-','') LIKE '%s%%')
+TXUID IN (SELECT T.TXUID FROM Textbook T INNER JOIN ItemMaster I ON I.Subsystem = 2 AND I.UUID = T.TXUID WHERE REPLACE(I.ISBN13, '-','') LIKE '%s%%')
+TXUID IN (SELECT UUID FROM Item WHERE %s AND Subsystem = 2)
+unable to update prices.
+UPDATE %s SET Sequence = %d WHERE %s = %d
+update inventory set 
+update item set BarCode = '%s' where SKU = %d
+update Item set BarCode = null where SKU = %d
+UPDATE Item SET fDiscontinue = 1 WHERE SKU = %d AND Subsystem = %d
+UPDATE Item SET fDiscontinue = 1 WHERE SKU = %ld AND Subsystem = %d
+update Item_Components_Detail set fRental = %d where SKU = %ld
+update Item_Xref set SortOrder = %d where ItemXrefID = %d
+update Price_Change_Table set RoundingMtd = 0, RndAmt = 0, fNewUsed = %d, fUsedNew = %d where PriceChangeID = %d
+update SerialNumberDetail set Price = %.2f where SerialID = %ld 
+UPDATE ShelfLocations SET fDisable = 0, ShelfDesc = '%s' WHERE ShelfDesc = '%s'
+UPDATE ShelfLocations SET fDisable = 1 WHERE ShelfLocationID = %d
+UPDATE Style_Location_Colors SET IsLocked = 0 WHERE StyleLocationID = %d
+UPDATE Style_Locations SET IsLocked = 0 WHERE StyleLocationID = %d
+update Verba_Price_Change_View set fProcess = %d where VERBAId = %d
+update VERBA_Price_Change_View set fProcess = %d, VERBAUser = '%s' where LocationID in (%s)
+update Verba_Price_Change_View set fProcess = %d, VERBAUser = '%s' where VERBAId = %d
+update VERBA_Price_Change_View set fProcess = 0 where LocationID in (%s) and fProcess = 1

@@ -1,0 +1,142 @@
+﻿-- select reason --
+delete from prism_security.dbo.UserMap where UMID = %d
+delete from SortHeader where GroupId = '%s'
+delete from Transaction_Tax where TransactionId = %d
+delete from Transaction_Tax_Detail where TransactionId = %d
+exec P_SettlementStatusSet %d, '%s'
+Failure decompressing data from a cabinet file.
+INSERT INTO ModuleLocking (ModuleID, RecordID, UserName) VALUES (%d, %d, '%s')
+insert into OposLog (DateTimeStamp, StationName, TranNumber, Message) values (GETDATE(), '%s', '%s', '%s')
+SELECT 
+select  count(*) from Rental_History where TranDtlID = %d and RRtnID is null
+SELECT %s FROM %s WHERE %s = %ld
+select Address, Zipcode from Transaction_Address where fShippingAddr = 0 and TransactionId = %d
+SELECT AppVersionNumber FROM prism_security.dbo.Applications WHERE ApplicationID = %ld
+select AVSMessage from Transaction_AVSText where AVSCode = %d
+Select C.fSendEmailStatus, C.TotCancelledQty, C.TotShippedQty, C.TotBackordered, H.MOShipCodeID, MOfExchanged FROM Transaction_Header H INNER JOIN Catalog_Sales_Header C ON H.MOReceiptID = C.ReceiptID WHERE TransactionID = %ld
+select case when exists(select * from Item_Components_Header where sku = %d) then 1 else 0 end
+select case when exists(select * from Rental_History rh inner join BundleTrans_Header bth on bth.TranDtlID = rh.TranDtlID where rh.RentalHID = %d) then 1 else 0 end
+select case when exists(select * from transaction_detail where TransactionID = %d and Qty != 0) then 1 else 0 end
+select case when ReportCustom.REPUID = 10002174 or ReportCustom.REPUID = 10002174 then 1 else fActive end from ReportCustom inner join ReportMaster ON ReportCustom.REPUID = ReportMaster.REPUID where ReportId = %d 
+select convert(int,isnull(LOGINPROPERTY('%s','DaysUntilExpiration'),-1)) as Days
+select count(*) from %s
+select count(*) from %s where %s
+SELECT Count(*) FROM ModuleLocking WHERE ModuleID = %d AND RecordID = %d
+select count(*) from NMRPTransactionDetail ntd inner join Transaction_Detail td on td.TranDtlId = ntd.TranDtlID where td.TransactionID = %d and td.Qty > 0
+select count(*) from NMRPTransactionDetail where TranDtlID = %d
+select count(*) from Rental_Adoption_Header
+SELECT Count(*) FROM SalesTypes
+select count(*) from Transaction_Detail td inner join BundleTrans_Header bth on bth.TranDtlID = td.TranDtlID where td.TransactionID = %d
+SELECT Count(*) FROM Transaction_Detail WHERE TransactionId = %d
+Select CustomerID FROM Transaction_Header H WHERE TransactionID = %d
+SELECT dbo.fnIsNbcRetail()
+select dbo.fnIsTrainingDB()
+SELECT Description FROM POS_Device WHERE UPOSName = '%s'
+select Description from POS_Setup where PosId = %d
+SELECT Description FROM VW_TENDER_AUTH where TenderCodeLocID = %d
+select DSN from Web_Routing_Ex where WRXID = %d
+select dtl.TransactionId, dtl.TranDtlID, dtl.QTY, dtl.SKU, dtl.XREF, hdr.MOReceiptID from Transaction_Detail dtl                 left join Transaction_Header hdr on hdr.TransactionID = dtl.TransactionID                    where dtl.TranDtlID = %d
+SELECT fCCFlag FROM Tender_Auth_Types WHERE TenderAuthID = (SELECT TenderAuthID FROM Tender_Codes_Location WHERE TenderCodeLocID = %d)
+SELECT fManualTax FROM Catalog_Sales_Header WHERE ReceiptID = %d
+SELECT fManualTax FROM Transaction_Header WHERE TransactionID = %d
+select fNMRP from Rental_Setup_Pos
+SELECT fReserve FROM Catalog_Sales_Header WHERE ReceiptID = %d
+select fStatus from transaction_header where TransactionID = %ld
+Select fStorePickup FROM MO_Shipping_Codes WHERE ShipCodeID = %ld
+SELECT fTaxExempt FROM Catalog_Sales_Header WHERE ReceiptID = %d
+SELECT fTaxExempt FROM Transaction_Header WHERE TransactionID = %d
+SELECT GETDATE()
+select GuidKey from Transaction_Tender where TranTendorId = %d
+select icd.SKU from Item_Components_Detail icd inner join Item_Components_Header ich on ich.BID = icd.BID where ich.SKU = %d and icd.fRental = 1
+SELECT LocationID FROM Transaction_Header WHERE TransactionId = %d
+select LocationId, MOfStatus, MOfReserve, TranNumber, MOfExchanged, MOReceiptId from Transaction_Header where TransactionId = %d
+Select LTRIM(RTRIM(Email)) FROM Customer_Table WHERE CustomerID = %d
+SELECT LTRIM(RTRIM(ParamValue)) FROM SystemParameters WHERE ParamType = 703 and LocationID = %d
+SELECT LTRIM(RTRIM(ParamValue)) FROM SystemParameters WHERE ParamType = 704 and LocationID = %d
+SELECT LTRIM(RTRIM(ParamValue)) FROM SystemParameters WHERE ParamType = 727 and LocationID = %d
+SELECT LTRIM(RTRIM(ParamValue)) FROM SystemParameters WHERE ParamType = 728 and LocationID = %d
+select MenuId from ReportMaster where RepUId = %d
+select MLID from ModuleLocking where ModuleID = %d and RecordID = %d
+SELECT MOfReserve, TranNumber FROM Transaction_Header WHERE TransactionId = %d
+select MOReceiptID from Transaction_Header where TransactionID = %d
+select MOTypeID from Catalog_Sales_Header where ReceiptID = %d
+select NMRPMonitorEmail from Rental_Setup_Pos
+select ParamValue from SystemParameters where GroupingId = 10083 and LocationId = %d and ParamType = 112
+select ParamValue from SystemParameters where GroupingId = 10083 and LocationId = %d and ParamType = 113
+select ParamValue from SystemParameters where GroupingId = 12009 and ParamType = 725 and LocationId = %d
+select ParamValue from SystemParameters where GroupingId = 12009 and ParamType = 726 and LocationId = %d
+select ParamValue from SystemParameters where GroupingID = 12026 and ParamType = 199
+select ParamValue from SystemParameters where GroupingID = 13504 and ParamType = 8599 and SubGroupingId = %d
+select ParamValue from SystemParameters where GroupingId = 13504 and SubGroupingId = %d and ParamName = 'QServerIP'
+select ParamValue from SystemParameters where GroupingId = 13504 and SubGroupingId = %d and ParamName = 'QServerPort'
+select paramvalue from systemparameters where groupingid = 13504 and SubGroupingID = %d and ParamName like 'QServerIP'
+select paramvalue from systemparameters where groupingid = 13504 and SubGroupingID = %d and ParamName like 'QServerPort'
+SELECT ParamValue FROM SystemParameters WHERE LocationID = %d AND ParamName LIKE '%s'
+SELECT ParamValue FROM SystemParameters WHERE LocationID = %d AND ParamName LIKE '%s' AND SubGroupingID = %d
+SELECT ParamValue FROM SystemParameters WHERE LocationID = %d AND ParamType = %d
+SELECT ParamValue FROM SystemParameters WHERE LocationID = %d AND ParamType = %d AND SubGroupingID = %d
+select ParamValue from SystemParameters where ParamName = 'CCManagementMode'
+select ParamValue from SystemParameters where ParamName = 'Pt2PtPennyPreAuth'
+select ParamValue from SystemParameters where ParamName = 'SaveCCNumber' and SubGroupingID = %d
+select ParamValue from SystemParameters where ParamType = 123 and GroupingID = 12026
+select ParamValue from SystemParameters where ParamType = 4221 and LocationId = 0
+select ParamValue from SystemParameters where ParamType = 4222 and LocationId = 0
+select ParamValue from SystemParameters where ParamType = 8909 and GroupingId = 13504 and SubGroupingId = %d
+select ParamValue from SystemParameters where ParamType = 8910 and GroupingId = 13504 and SubGroupingId = %d
+select ParamValue from SystemParameters where ParamType = 8916 and GroupingId = 13504 and SubGroupingId = %d
+select ParamValue from SystemParameters where ParamType = 8920
+Select Paramvalue from SystemParameters WHERE ParamType = 91
+select Password from prism_security.dbo.prismuser where UserName like '%s'
+select POSID from transaction_header where TransactionID = %ld
+select QTY, OriginalTranDtlID from MORefundRentalTranDtl_vw  where TransactionID = %d
+select ReceiptNumber from Buyback_Header where BBReceiptId = %d
+Select ReceiptNumber from Catalog_Sales_Header where ReceiptID = %d
+select ReceiptNumber, CustomerID, UserID from Catalog_Sales_Header where ReceiptID = %d
+Select ReceiptTemplateID from POS_Register_Templates where RegisterID = %d and ReceiptTypeID = %d
+select ReportId FROM VW_REPORT_MASTER where OldReportId = %d
+select rhi.RentalID from Item_Components_Detail icd inner join Item_Components_Header ich on ich.BID = icd.BID inner join Rental_Header_Item rhi on rhi.SKU = icd.SKU where ich.SKU = %d and icd.fRental = 1
+select rhi.SKU from Rental_Header_Item rhi inner join Item_Components_Header ich on ich.SKU = rhi.SKU where rhi.RentalID = %d
+select rtrim(ParamValue) from SystemParameters where ParamType = 127 and GroupingID = 12026 
+select rtrim(ParamValue) from SystemParameters where ParamType = 2563 and GroupingID = 12026 
+select rtrim(tb.Author) as Author, rtrim(tb.Title) as Title, rtrim(im.ISBN13) as ISBN13 from Textbook tb inner join vw_Itm_Master im on im.sku = tb.sku inner join Item_Components_Detail icd on icd.SKU = tb.SKU and icd.fRental = 1 inner join Item_Components_Header ich on ich.BID = icd.BID where ich.SKU = %d
+SELECT ShipState, ShipZipcode FROM VW_MO_ShipHeaderAddress WHERE TransactionId = %d
+SELECT SKU FROM Transaction_Detail WHERE TransactionId = %d
+Select SlipOption from POS_Receipt_Types where ReceiptTypeID = %d
+select StateAbbrev from State_Code where STUID = %d
+Select StoredProcedure from POS_Receipt_Types where ReceiptTypeID = %d
+select sum(D.Qty), sum(D.MOCancelQty), sum(D.MOBackOrderQty) from Transaction_Detail D WHERE TransactionID = %ld
+SELECT SUM(qty) FROM Catalog_Sales_Detail WHERE ReceiptId = %d
+select SuperUser from prism_security.dbo.PrismUser where SUID = %d
+SELECT TaxTotal FROM Catalog_Sales_Header WHERE ReceiptID = %d
+SELECT TaxTotal FROM Transaction_Header WHERE TransactionID = %d
+select tc.Description from Tender_Codes_Location tcl
+select tc.Description, tt.TenderAmount from Transaction_Signature s inner join Transaction_Tender tt on tt.TranTendorID = s.TranTendorID inner join Tender_Codes_Location tl on tl.TenderCodeLocID = tt.TenderID inner join Tender_Codes tc on tc.TenderCodeID = tl.TenderCodeID where s.TranTendorID = %ld order by tt.TranTendorID
+select tc.POSTendCode from Tender_Codes_Location tcl inner join Tender_Codes tc on tcl.tendercodeid = tc.tendercodeid where tcl.TenderCodeLocId = %d
+select td.TranDtlId, td.Sku, td.Qty, td.Description, rmd.Xref from Transaction_Detail td                           left join NMRPTransactionDetail nmrptd on nmrptd.TranDtlID = td.TranDtlID                           left join Rental_MO_Xref rmd on rmd.trandtlid = td.trandtlid                           where td.TransactionId = %d AND td.Qty > 0  and (td.fStatus = 1 or nmrptd.RentalPrice is not null or td.NBCPRentalPrice is not null)                 ORDER BY td.TranDtlID
+select TerminalId, POSID, isnull(UTGInstance,0) from POS_Registers where RegisterId = %d
+select th.TranNumber from Transaction_Header th inner join Transaction_Tender tt on tt.TransactionID = th.TransactionID where tt.TranTendorID = %ld
+SELECT tmDateTime = GETDATE()
+select top 1 Address, Zipcode from Customer_Address where fBillAddr in (1,2) and CustomerID = %d order by fDefault desc
+select top 1 paramValue from SystemParameters where groupingid = 13504 and SubGroupingID = %d and ParamName in ('QServerIP', 'QServerSettleIP') and isnull(ParamValue,'') != '' order by ParamName desc
+select top 4 d.Description from Transaction_Tender t inner join Transaction_Detail_Tender dt on dt.TranTenderId = t.TranTendorID inner join Transaction_Detail d on dt.TranDtlId = d.TranDtlId where t.TranTendorId = %d
+select top 4 description from Catalog_Sales_detail csd inner join Catalog_Sales_Header csh on csh.ReceiptID = csd.ReceiptID where csh.ReceiptNumber = '%s'
+select top 4 description from Transaction_Detail where TransactionID = %d
+select tq.ServerQueNo from Tender_Codes_Location tcl inner join Tender_Queues tq on tq.TenderQueId = tcl.TenderQueId and tq.fClosable = 1 inner join Pos_Setup ps on tcl.PosId = ps.PosId where ps.fDistributed in (1, 2, 5) and ps.PosId = %d
+Select TrackOffset - 1 + FieldLength From POS_MSR_Options Where MSROID = %ld
+select TranNumber from Transaction_Header h where h.TransactionId = %d
+SELECT TranSigCapID from Transaction_Signature where TransactionID = %ld and TranTendorID = %ld
+SELECT UserName FROM ModuleLocking WHERE ModuleID = %d AND RecordID = %d
+select UserName from prism_security.dbo.prismuser u  inner join Transaction_Header h on h.userid = u.suid  where h.TransactionID = %d
+The database and application versions do not match.  Do you want to update at this time?
+UPDATE Catalog_Sales_Header SET ShipCharge = %.4f WHERE ReceiptID = %d
+update prism_security.dbo.prismuser set Password = '%s' where UserName like '%s'
+UPDATE SystemParameters SET ParamValue = '%s' WHERE LocationID = %d AND ParamType = %d
+UPDATE SystemParameters SET ParamValue = '%s' WHERE LocationID = %d AND ParamType = %d AND SubGroupingID = %d
+Update SystemParameters set ParamValue = '%s' where ParamName = 'Shift4EcomMotoClientAccessToken' and LocationID = %d
+update Transaction_Detail set RentalPId = %d where TranDtlID = %d
+UPDATE Transaction_Header SET ShipCharge = %.4f WHERE TransactionId = %d
+update Transaction_Header set TaxTotal = 0.0 where TransactionId = %d
+UPDATE Transaction_Header SET Transaction_Header.ShipCharge = %6.3f, Transaction_Header.TaxTotal = %6.3f WHERE Transaction_Header.TransactionId = %d
+use prism; select top 1 * from transaction_header
+use prism_security; select top 1 * from applications
+Your WinPrism password will expire %s. Please click on the File menu and select the Change Password option to change your password. Thank you.

@@ -1,0 +1,29 @@
+﻿?Update@CGXBrowserGrid@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Update@CVendISBNSet@@UAEHXZ
+delete from vendormaster where vendorid = %ld
+exec ResendMagicVendorColorSize
+MACRMACRselect ShipViaId, Description from ShipVia where 0 = 1
+Please Select a Location and Shipping Type
+SELECT AddressType.AddressID, AddressType.Description, AddressType.OmitName FROM dbo.AddressType AddressType 
+select count(*) from VendorLocation where VendorId = %d and LocationId = %d and isnull(ShipViaId,0) = %d and Subsystem = %d and VendorLId <> %d
+SELECT CurrencyExID, CurrDescr FROM Currency_Exchange
+SELECT Location.LocationID, Location.Description FROM dbo.Location Location 
+SELECT max(VendorMaster.VendorCode) FROM dbo.VendorMaster WHERE  VendorMaster.VendorCode LIKE '%s[0-9][0-9][0-9]'
+select Name, VendorCode, VendorID from VendorMaster where bDefaultDigitalVend = 1
+select pcid, description from pubnet_code where pctid = 3 order by pcid
+select pcid, description from pubnet_code where pctid = 4 order by pcid
+select pcid, description from pubnet_code where pctid = 5 order by pcid
+select pcid, description from pubnet_code where pctid = 6 order by pcid
+select pcid, description from pubnet_code where pctid = 7 order by pcid
+select pcid, description from pubnet_code where pctid = 9 order by pcid
+SELECT ReturnPolicy.PolicyID, ReturnPolicy.Description, ReturnPolicy.Abbreviation FROM dbo.ReturnPolicy ReturnPolicy
+SELECT ShipVia.ShipViaID, ShipVia.Description FROM dbo.ShipVia ShipVia
+SELECT ShipVia.ShipViaID, ShipVia.Description FROM dbo.ShipVia ShipVia WHERE {fn UCASE(ShipVia.Description) } <> 'NONE'
+select ShipViaId, Description from ShipVia where ShipViaId not in (select isnull(ShipViaId,0) from VendorLocation where VendorId = %d and LocationId = %d and SubSystem = %d)
+SELECT Subsystem_Table.Subsystem, Subsystem_Table.Name FROM dbo.Subsystem_Table Subsystem_Table WHERE (Subsystem_Table.fDisplay = 1) 
+SELECT Subsystem_Table.Subsystem, Subsystem_Table.Name FROM dbo.Subsystem_Table Subsystem_Table WHERE Subsystem_Table.fDisplay = 1
+SELECT SUID, [Name], 1 AS SortOrder FROM prism_security.dbo.PrismUser WHERE fBuyer = 1 UNION SELECT 0, 'All Buyers', 0 ORDER BY SortOrder, [Name]
+SELECT VendorAddressGroups.AddressGroupID, VendorAddressGroups.Description FROM dbo.VendorAddressGroups VendorAddressGroups
+SELECT VendorOrderingMethod.VendorOrderingMethodID, VendorOrderingMethod.VendorOrderingMethodDesc FROM dbo.VendorOrderingMethod VendorOrderingMethod ORDER BY VendorOrderingMethod.VendorOrderingMethodID
+SELECT VendorPubnetCode.PubnetCodeID, VendorPubnetCode.Description FROM dbo.VendorPubnetCode VendorPubnetCode
+SELECT VendorTypes.VendTypeID, VendorTypes.VendTypeDesc FROM dbo.VendorTypes VendorTypes ORDER BY VendorTypes.VendTypeID

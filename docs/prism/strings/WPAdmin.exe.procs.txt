@@ -1,0 +1,7 @@
+﻿E_LocationGroups_Add
+E_LocationGroups_AddLocation
+E_LocationGroups_Delete
+E_LocationGroups_RemoveLocation
+ON
+RoyaltyUpdateByDccLocationRoyaltySet
+RoyaltyUpdateByLocationSelection

@@ -1,0 +1,148 @@
+﻿(CustomerID in (select customerid from acct_Memb_acct_cust)) and 
+?Update@CGXBrowserGrid@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Update@SECListBaseC@@UAEHHHHHH@Z
+?Update@SECTreeBaseC@@UAEHPAU_TREEITEM@@HHHH@Z
+ARInvoiceID in (Select ARInvoiceID from Acct_ARInvoice_GiftCert Where AgencyID = %d)
+ARInvoiceID in (Select ARInvoiceID from Acct_ARInvoice_GiftCert Where GCNumber like '%%%s')
+ARInvoiceID in (Select ARInvoiceID from Acct_ARInvoice_Header Where AgencyID = %d AND fOpenBalance = 1)
+ARInvoiceID in (Select ARInvoiceID from Acct_ARInvoice_Header Where CustomerID = %d AND fOpenBalance = 1)
+ARInvoiceID in (Select ARInvoiceID from Acct_ARInvoice_Pymt Where AgencyID = %d)
+ARInvoiceID in (Select ARInvoiceID from Acct_ARInvoice_Pymt Where CustomerID = %d)
+CustomerID in (select customerid from acct_agency_customer where agencyid = %d)
+CustomerID in (select customerid from acct_Memb_acct_cust where MemAcctID = %d)
+DELETE FROM Acct_Adjust_Detail WHERE TransferDtlID = %ld
+DELETE FROM Acct_Agency_NonMerch WHERE AcctAgncyNMrchID = %ld
+DELETE FROM Acct_Agency_NonMerch where AgencyID = %ld and fG3 = 0
+DELETE FROM Acct_Agency_NonMerch where AgencyID = %ld and fG3 = 1
+DELETE FROM Acct_ARInvoice_Detail WHERE ARInvoiceID = %ld AND SKU = %ld
+delete from Acct_Auto_Loc where ModuleID = %ld and AutoID = %ld
+DELETE FROM Acct_Memb_Detail WHERE MemTranDtlID = %ld
+INSERT INTO Acct_Agency_NonMerch (AgencyID, fG3, FeeCodeDescr) VALUES (%ld, 0, '%3d')
+INSERT INTO Acct_Agency_NonMerch (AgencyID, fG3, FeeCodeDescr) VALUES (%ld, 1, '%s')
+Insert into Acct_Memb_Acct_Cust (MemAcctID, CustomerID, fStatus, fAccountLimit, AccountLImit, StartDate, ExpDate) select Acct_Memb_Tier_Detail.MemAcctID, %d, 1, Acct_Memb_Account.fAccountLimit, Acct_Memb_Account.AccountLimit, StartDate, EndDate from Acct_Memb_Tier_Detail inner join Acct_Memb_Account on Acct_Memb_Tier_Detail.MemAcctID = Acct_Memb_Account.MemAcctID where Acct_Memb_Tier_Detail.MemTierID = %d
+MemTranID in (select MemTranID from vw_memb_trans_detail where sku in (%s))
+select acctbaltypeid, description from acct_balance_type order by acctbaltypeid asc
+SELECT AcctGroupID, Description FROM Acct_Agency_Group
+select acctgroupid, description from acct_agency_group order by acctgroupid asc
+SELECT AgencyNumber FROM Acct_Agency WHERE AgencyID = %ld
+select agencytypeid from acct_agency where agencyid = %ld
+SELECT AgencyTypeID, Description FROM Acct_Agency_Type
+select agencytypeid, description from acct_agency_type order by agencytypeid asc
+select BadCheckNumber from Customer_Table where CustomerId = %d
+Select Card Type
+SELECT CASE WHEN Customer_Table.AccountNumber IS NULL THEN '' ELSE RTRIM(Customer_Table.AccountNumber) + ' / ' + RTRIM(Customer_Table.FirstName) + ' ' + RTRIM(Customer_Table.LastName) END FROM Customer_Table WHERE Customer_Table.CustomerID = %ld
+select cast(LocationId as int), ShortDescription from Location
+Select Convert(varchar,Period,101) FROM Acct_PeriodRange Where '%s' Between BeginDate and EndDate and AppID = 2 
+SELECT Count (*) FROM Acct_ARInvoice_Header WHERE InvoiceNumber = '%s'
+Select count(*) from Acct_Adjust_Header where TransferNumber like '%s'
+SELECT Count(*) FROM Acct_Agency WHERE AgencyID = %ld
+select count(*) from acct_agency where agencyid not in (select acct_agency_customer.agencyid from acct_agency_customer inner join acct_agency on acct_agency.agencyid = acct_agency_customer.agencyid where customerid = %ld)
+select count(*) from acct_agency where AgencyNumber = '%s'
+select count(*) from acct_agency_customer where agencyID = %d
+Select count(*) from acct_agency_customer where agencyid = %ld 
+Select count(*) from Acct_Agency_Customer where CustomerID = %d and AgencyID = %d
+SELECT Count(*) FROM Acct_Agency_Customer WHERE CustomerID = %ld
+select Count(*) from Acct_Agency_Customer where Customerid = %ld and AgencyID = %ld
+select Count(*) from Acct_Agency_Customer where Customerid = %ld and AgencyID = %ld and AgencyCustId <> %ld
+select count(*) from acct_apply where customerid = %ld
+select count(*) from acct_arinvoice_giftcert where gcnumber = '%s'
+select count(*) from acct_arinvoice_header where invoicenumber = '%s'
+Select count(*) from Acct_ARInvoice_Header where InvoiceNumber like '%s'
+select Count(*) from Acct_Auto_Acct inner join Acct_Agency on Acct_Auto_Acct.AgencyID = Acct_Agency.AgencyID where ModuleID = 3 and AutoID = %d and fBilling = 0
+select Count(*) from Acct_Auto_Acct inner join Acct_Agency on Acct_Auto_Acct.AgencyID = Acct_Agency.AgencyID where ModuleID = 3 and AutoID = %d and fBilling = 1
+select count(*) from Acct_Memb_Account where AccountCode = '%s'
+select count(*) from acct_memb_account where memacctid not in (select memacctid from acct_memb_acct_cust where customerid = %ld)
+select count(*) from Acct_Memb_Acct_Cust inner join Acct_Memb_Tier_Detail on Acct_Memb_Acct_Cust.MemAcctID = Acct_Memb_Tier_Detail.MemAcctID where CustomerID = %d and MemTierID = %d
+Select count(*) from Acct_Memb_Acct_Cust where CustomerID = %d and MemAcctID = %d
+select count(*) from Acct_Memb_Acct_Cust where MemAcctID = %d and CustomerID = %d
+Select count(*) FROM Acct_Memb_Setup where LocationID = %d and POSID = %d
+select count(*) from Acct_Memb_Tier where TierCode = '%s'
+select count(*) from Acct_Memb_Tier_Detail where MemAcctID = %d
+Select count(*) from Transaction_Signature where TransactionID = %d
+select count(*) from VW_POS_OPEN_HIST_MAX_ALL where POSID = %d  and closedate is null
+SELECT CustomerID FROM Acct_ARInvoice_Header WHERE InvoiceNumber = '%s'
+select dbo.fnPosInstalled()
+Select Description FROM Acct_Agency_Group WHERE AcctGroupID = %ld
+Select description from POS_MSR_Card_Types where MSRID = %d
+Select Description from pos_setup where posid = %d
+SELECT Description FROM VW_ITM_MASTER WHERE SKU = %ld
+Select DiscID, dc.Description from Discount_Codes dc inner join Discount_Codes_Type dct on dc.DiscTypeID = dct.DiscTypeID where fTranDisc = 1 and dct.fIsFixed = 1
+Select DiscID, Description from Discount_Codes where fTranDisc = 1
+select DiscountTotal, Qty from VW_AR_TRANS_DETAIL_SUM where ReceiptId = %d
+SELECT DISTINCT Description FROM dbo.VW_POS_NON_MERCH WHERE (Description NOT IN  (SELECT FeeCodeDescr   FROM Acct_Agency_NonMerch   WHERE AgencyID = %ld AND fG3 = 1))
+SELECT Distinct POSTendCode, tcl.Description FROM Vw_Tender_Code_Loc tcl  where tcl.TenderAuthId in (14, 20)
+select distinct ps.POSID, ps.Description from pos_setup ps inner join POS_Registers pr on ps.POSID = pr.POSID  where ps.posid < 0x71000000 and ps.fDistributed <> 4
+select fargiftcertificate from customer_table where customerid = %ld
+select InvoiceTotal from VW_AR_BADCHK_HEADER where ARInvoiceID = %d
+select isnull(fDoGL,2) from Acct_ARInvoice_Header where ARInvoiceID = %ld
+select LocationID from Acct_ARInvoice_Header where ARInvoiceID = %d
+SELECT LocationID, Description FROM Location where LocationID in (%s)
+SELECT LocationID, ShortDescription FROM Location where LocationID in (%s)
+SELECT MSRID, Description FROM POS_MSR_Card_Types 
+select Name from Acct_Memb_Account where MemAcctID = %d
+select Name from prism_security.dbo.prismuser where suid = %d
+select nextnumber from sequence where sequencetypeid = %ld
+SELECT NonMerchOptID, Description FROM Acct_Agency_Non_Merch_Opt
+select paramValue
+select ParamValue from SystemParameters s inner join Pos_Setup p on p.LocationId = s.LocationId where ParamType = 8541 and PosId = %d
+SELECT paramvalue FROM systemparameters WHERE locationid = 0 AND paramtype = 4141
+SELECT paramvalue FROM systemparameters WHERE locationid = 0 AND paramtype = 4142
+SELECT paramvalue FROM systemparameters WHERE locationid = 0 AND paramtype = 4143
+SELECT POSID, Description FROM POS_Setup where LocationID = %d and POSID < 99999999
+select qwkformat from sequence where sequencetypeid = %ld
+select RegisterId, RegisterName from POS_Registers where POSID = %d and factive = 1
+select RTRIM(AccountNumber) + ' / ' + RTRIM(ISNULL(FirstName, '')) + ' ' + RTRIM(LastName) from Customer_Table where CustomerID = %d
+select RTRIM(AccountNumber) + ' / ' + RTRIM(isnull(FirstName,'')) + ' ' + RTRIM(LastName) from Customer_Table where CustomerID = %d
+select RTRIM(AgencyNumber) + ' / ' + RTRIM(Name) from Acct_Agency where AgencyID = %d
+select RTRIM(Customer_Table.AccountNumber) + ' / ' + RTRIM(isnull(Customer_Table.FirstName,'')) + ' ' + RTRIM(Customer_Table.LastName) from Customer_Table where CustomerID = %d
+select RTRIM(dbo.Acct_Agency.AgencyNumber)+ ' / ' + RTRIM(dbo.Acct_Agency.Name) from Acct_Agency where AgencyID = %d
+SELECT RTRIM(paramvalue) FROM systemparameters WHERE locationid = 0 AND paramtype = 4141
+select SequenceTypeID, SequenceTypeDescription from Sequence_Type where Type = 4
+select SequenceTypeID, SequenceTypeDescription from Sequence_Type where Type = 5
+select ShortDescription from Location where LocationID = %d
+SELECT StatementCodeID, Description FROM Acct_Statement_Codes
+select statementcodeid, description from acct_statement_codes order by statementcodeid asc
+select StatusDesc from Status_Codes where StatusID = %d and ModuleID = 13101
+select StatusDesc from Status_Codes where StatusID = %d and ModuleID = 13103
+select StatusDesc from Status_Codes where StatusID = %d and ModuleID = 13254
+select StatusDesc Status_Codes from Status_Codes where StatusID = %d and ModuleID = 13101
+select SUID from prism_security.dbo.PrismUser where Name like '%%%s%%'
+select SUID from prism_security.dbo.PrismUser where UserName like '%%%s%%'
+select sum(gcamt) from vw_ar_giftcert_detail where arinvoiceid = %ld
+Select TenderAuthID FROM tender_codes_location tcl inner join transaction_tender tt on tcl.TenderCodeLocID = tt.TenderID WHERE TranTendorID = %d 
+SELECT TenderCodeID, Description FROM Tender_codes Order by Description
+SELECT top 1 AgencyID from Acct_Agency order by AgencyID desc
+Select top 1 AgencyID From Acct_Agency where AgencyID not in (select AgencyID From Acct_Agency_Customer where customerID = %d)
+SELECT TOP 1 AgingRptID FROM Acct_ARRptAging ORDER BY AgingRptID DESC
+SELECT TOP 1 Amount FROM Acct_Adjust_Detail ORDER BY TransferDtlID DESC 
+SELECT TOP 1 ARAutoID FROM Acct_ARAutogen_Inv ORDER BY ARAutoID DESC
+SELECT TOP 1 ARAutoPymtID FROM Acct_ARAuto_Pymt ORDER BY ARAutoPymtID DESC
+SELECT TOP 1 ARCalcFinChgID FROM Acct_ARCalcFinChg ORDER BY ARCalcFinChgID DESC
+SELECT TOP 1 ARDunnID FROM Acct_ARDunning ORDER BY ARDunnID DESC
+SELECT TOP 1 ARExportID FROM Acct_ARExport ORDER BY ARExportID DESC
+SELECT TOP 1 ARInvoiceID FROM Acct_ARInvoice_Header ORDER BY ARInvoiceID DESC
+SELECT TOP 1 ARMailLabelID FROM Acct_ARMail_Labels ORDER BY ARMailLabelID DESC
+SELECT TOP 1 ARPurFinID FROM Acct_ARPurgeFinAid ORDER BY ARPurFinID DESC
+SELECT TOP 1 ARPurgePymtID FROM Acct_ARPurgePymt ORDER BY ARPurgePymtID DESC
+SELECT TOP 1 ARStmtID FROM Acct_ARStmt ORDER BY ARStmtID DESC
+SELECT top 1 MemAcctID from Acct_Memb_Account order by MemAcctID desc
+SELECT TOP 1 MemMailLabelID FROM Acct_Memb_Mail_Labels ORDER BY MemMailLabelID DESC
+Select TOP 1 MemSetupID FROM Acct_Memb_Setup ORDER BY MemSetupID DESC
+SELECT TOP 1 MemStmtID FROM Acct_Memb_Stmt ORDER BY MemStmtID DESC
+Select TOP 1 MemTierID FROM Acct_Memb_Tier ORDER BY MemTierID DESC
+SELECT TOP 1 Price FROM Acct_Memb_Detail ORDER BY MemTranDtlID DESC 
+select TransactionId from Transaction_Tender where CIDReason = %d and AgencyID > 0
+SELECT tt.TransactionID, TenderAccount FROM Transaction_Tender tt INNER JOIN Transaction_Header th on tt.TransactionID = th.TransactionID WHERE LEN(ISNULL(TenderAccount, '')) > 5 AND AgencyID <= 0 and th.MOReceiptId is null
+TransactionId in (SELECT DISTINCT H.TransactionID From Transaction_Header H JOIN Transaction_Detail D ON H.TransactionID = D.TransactionID JOIN Rental_History RH ON D.TranDtlID = RH.TranDtlId JOIN Rental_Detail RD ON RH.RentalDId = RD.RentalDId Where H.fStatus not in (0,3,4,7) and RD.RentalNumPrefix + ' '+right('00000'+ltrim(str(RD.RentalNumID)),5) LIKE '%%%s%%')
+TransactionId in (SELECT DISTINCT H.TransactionID From Transaction_Header H JOIN Transaction_Detail D ON H.TransactionID = D.TransactionID JOIN SerialNumberDetail SD ON D.TranDtlID = SD.TranDtlID Where H.fStatus not in (0,3,4,7) and SD.MfgSerialNumber LIKE '%%%s%%')
+TransactionId in (select TransactionId from Transaction_Detail where SKU in (%s))
+TransactionId in (SELECT TransactionId from Transaction_Tender inner join Acct_Agency on Transaction_Tender.AgencyID = Acct_Agency.AgencyID where Name like '%%%s%%')
+Update Acct_Adjust_Detail set AcctApplyID = 0 where TransferID = %d
+UPDATE Acct_Adjust_Header SET Balance = %s WHERE TransferID = %d
+update Acct_ARInvoice_Header set fDoGL = 0 where ARInvoiceID = %ld
+update Acct_ARInvoice_Header set fDoGL = 1 where ARInvoiceID = %ld
+update Acct_Memb_Account set Priority = %d where MemAcctID = %d
+UPDATE Acct_Memb_Header SET TranTotal = %.2f WHERE MemTranID = %ld
+update Acct_Memb_Tier set TierPriority = %d where MemTierID = %d
+update Acct_Memb_Tier_Detail set Priority = %d where MemTierDtlID = %d
+UPDATE Customer_Table Set BadCheckNumber = '%s' WHERE CustomerID = %d

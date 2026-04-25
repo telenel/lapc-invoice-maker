@@ -1,0 +1,40 @@
+﻿?Update@CGXBrowserGrid@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+SELECT AcctCategoryTypeID, CategoryDesc FROM Acct_Financial_Category_Type
+SELECT AcctCategoryTypeID, CategoryDesc FROM Acct_Financial_Category_Type 
+SELECT AcctGroupTypeID, GroupTypeDesc FROM Acct_Financial_Group_Type
+select count(*) from Acct_GLJournal_Header  where  GLPeriod = '%2d/01/%4d'
+select count(*) from Acct_GLJournal_Header  where (GLTranTypeID <> 5 and fPosted = 0 and GLPeriod < (SELECT paramValue FROM SystemParameters WHERE ParamType = 4220 AND LocationID = 0)) or (GLTranTypeID = 4 and datepart(yy,GLPeriod) = datepart(yy,(SELECT paramValue FROM SystemParameters WHERE ParamType = 4220 AND LocationID = 0)))
+select count(*) from Acct_GLJournal_Header  where fPosted = 0 and GlTranTypeID <> 4 and GLPeriod <= (SELECT paramValue FROM SystemParameters WHERE ParamType = 4220 AND LocationID = 0)
+select count(*) from Acct_GLJournal_Header  where fPosted = 0 and GLTranTypeID <> 6 and GLTranTypeID <> 4 and GLPeriod <= (SELECT paramValue FROM SystemParameters WHERE ParamType = 4220 AND LocationID = 0)
+select count(*) from Acct_GLJournal_Header  where GLTranTypeID = 4 and datepart(yy,GLPeriod) = datepart(yy,(SELECT paramValue FROM SystemParameters WHERE ParamType = 4220 AND LocationID = 0))
+select count(*) from Acct_GLJournal_Header  where GLTranTypeID = 6 and GLPeriod  = (SELECT paramValue FROM SystemParameters WHERE ParamType = 4220 AND LocationID = 0)
+select count(*) from Acct_GLJournal_Header where fPosted = 0 and GLTranTypeID = 6 and GLPeriod  = (SELECT paramValue FROM SystemParameters WHERE ParamType = 4220 AND LocationID = 0)
+select count(*) from Acct_GLJournal_Header where GLTranTypeID <> 4 and datepart(yy,GLPeriod) = %s and LocationID not in (select LocationId from Acct_GLJournal_Header where GLTranTypeID = 4 and datepart(yy,GLPeriod) = %s)
+Select Count(*) from Acct_GLJournal_Header where GLTranTypeID <> 7
+Select Count(*) from Acct_GLJournal_Header where GLTranTypeID <> 7 and datepart(yy,GLPeriod) = %d
+Select count(*) from Acct_Journal_Rec_Header where TranNumber like '%s'
+select datepart(mm,GLPeriod) from Acct_GLJournal_Header where GLJournalID = %d
+select datepart(yy,GLPeriod) from Acct_GLJournal_Header where GLJournalID = %d
+SELECT DISTINCT COAMasterID, GLControlCode FROM VW_GL_JRN_NAV WHERE GLJournalID = %d ORDER BY GLControlCode
+SELECT DISTINCT COAMasterID, GLControlCode FROM VW_GL_REC_JRN_NAV WHERE RecExpHdrID = %d ORDER BY GLControlCode
+SELECT distinct datepart(yy, GLPeriod), datepart(yy, GLPeriod) FROM Acct_GLJournal_Header where fPosted = 1 Order by datepart(yy, GLPeriod) 
+SELECT distinct datepart(yy, Period), datepart(yy, Period) FROM Acct_PeriodRange where  Period < '%s' and AppID = 1Order by datepart(yy, Period) 
+SELECT distinct datepart(yy, Period), datepart(yy, Period) FROM Acct_PeriodRange where AppID = 1 Order by datepart(yy, Period) 
+select fPosted from Acct_GLJournal_Header where GLJournalID = %d
+select GLTranTypeID from Acct_GLJournal_Header where GLJournalID = %d
+SELECT LocationID, Description FROM Location where LocationID in (%s)
+SELECT LocationID, ShortDescription FROM Location where LocationID in (%s)
+select SequenceTypeID, SequenceTypeDescription from Sequence_Type where Type = 6
+SELECT SUM(ISNULL(BudgetAmount,0)) AS Allocated FROM VW_GL_BUDGET_DETAIL WHERE FiscalYear = %d and COAHdrBudgetID = %d
+SELECT SUM(ISNULL(VW_GL_JRNL_DETAIL.Credit,0)) AS TotalCredit, SUM(ISNULL(VW_GL_JRNL_DETAIL.Debit,0)) AS TotalDebit,ABS(SUM(ISNULL(VW_GL_JRNL_DETAIL.Credit,0)) - SUM(ISNULL(VW_GL_JRNL_DETAIL.Debit,0))) AS Difference FROM VW_GL_JRNL_DETAIL WHERE GLJournalID = %d
+SELECT SUM(ISNULL(VW_GL_REC_JRN_DETAIL.CreditAmount,0)) AS TotalCredit, SUM(ISNULL(VW_GL_REC_JRN_DETAIL.DebitAmount,0)) AS TotalDebit FROM VW_GL_REC_JRN_DETAIL WHERE VW_GL_REC_JRN_DETAIL.RecExpHdrID = %d
+Select top 1 convert(varchar(10),GLPeriod,101) from Acct_GLJournal_Header order by GLPeriod
+Select top 1 datepart(mm,GLPeriod) from Acct_GLJournal_Header where GLTranTypeID <> 7  and datepart(yy,GLPeriod) = %d order by GLPeriod
+SELECT TOP 1 GLBalSheetChangeID FROM Acct_GLBalSheetChange ORDER BY GLBalSheetChangeID DESC
+SELECT TOP 1 GLBalSheetID FROM Acct_GLBalSheet ORDER BY GLBalSheetID DESC
+SELECT TOP 1 GLCashFlowID FROM Acct_GLCashFlow ORDER BY GLCashFlowID DESC
+SELECT TOP 1 GLExportID FROM Acct_GLExport ORDER BY GLExportID DESC
+SELECT TOP 1 GLIncStmtID FROM Acct_GLIncStmt ORDER BY GLIncStmtID DESC
+Select TOP 1 GLJournalID FROM Acct_GLJournal_Header ORDER BY GLJournalID DESC
+Select TOP 1 RecExpHdrID FROM Acct_Journal_REC_Header ORDER BY RecExpHdrID DESC
+You are not allowed to select a Next Date which is in a Closed GL Period

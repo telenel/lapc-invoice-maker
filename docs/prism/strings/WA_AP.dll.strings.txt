@@ -1,0 +1,4019 @@
+﻿ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
+ 1997-2015
+ AND COAID = %ld
+ AND LocationID = %ld
+ AND VendorID = %ld
+ OR ReconDate IS NULL
+ t Hu/Ph
+ t!Hu<Ph
+!This program cannot be run in DOS mode.
+"000=0M0w0
+########
+#.###### %
+#020;0@0M0]0m0r0
+$0@0D0H0L0P0T0X0\0`0d0h0l0p0t0x0|0
+$0<0T0l0
+%8.8ld
+%d invoices generated.
+%m-%d-%Y
+%m/%d/%Y
+%s (%s:%d)
+%Y-%m-%d
+(checkdate >= '%s 00:00:00' AND  checkdate <= '%s 23:59:59')
+(GeneratedDate >= '%s 00:00:00' AND  GeneratedDate <= '%s 23:59:59' AND 
+(InvoiceDate >= '%s 00:00:00' AND  InvoiceDate <= '%s 23:59:59')
+(LastPaidDate >= '%s 00:00:00' AND  LastPaidDate <= '%s 23:59:59')
+(NextDate >= '%s 00:00:00' AND  NextDate <= '%s 23:59:59')
+.?AV?$CArray@HH@@
+.?AV?$CArray@V?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@V12@@@
+.?AV?$CG3GridTemplate@VCGXRecordView@@@@
+.?AV?$CG3GridTemplate@VCGXRecordWnd@@@@
+.?AV?$CG3SysParamsBase@VCG3XRecordViewBase@@@@
+.?AV?$CG3XRecordBase@VCG3XRecordViewBase@@@@
+.?AV?$CG3XRecordBase@VCG3XRecordWndBase@@@@
+.?AV?$CG3XViewBase@VCGXRecordView@@@@
+.?AV?$CMap@HHHH@@
+.?AV?$CMapArrayT@V?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@@
+.?AVCAPAutoProcView@@
+.?AVCAPCheckHeaderSet@@
+.?AVCAPCheckMntDetailSet@@
+.?AVCAPCheckMntDetailView@@
+.?AVCAPCheckMntFrame@@
+.?AVCAPCheckMntHeaderView@@
+.?AVCAPCheckMntQuickSearch@@
+.?AVCAPCheckMntQuickSearchGrid@@
+.?AVCAPCheckMntReprintChkDlg@@
+.?AVCAPCreditBrowseDlg@@
+.?AVCAPCreditBrowseEdit@@
+.?AVCAPCreditBrowseGrid@@
+.?AVCAPCreditBrwsSet@@
+.?AVCAPCreditResolvedDetailSet@@
+.?AVCAPCreditResolvedHeaderSet@@
+.?AVCAPCredMemoMntDetailView@@
+.?AVCAPCredMemoMntDtlDlg@@
+.?AVCAPCredMemoMntDtlVwSet@@
+.?AVCAPCredMemoMntFrame@@
+.?AVCAPCredMemoMntHdrDlg@@
+.?AVCAPCredMemoMntHeaderView@@
+.?AVCAPCredMemoMntQuickSearch@@
+.?AVCAPCredMemoMntQuickSearchGrid@@
+.?AVCAPCredMemoMntVndChkInfoDlg@@
+.?AVCAPCredMemoMntVoidCreditDlg@@
+.?AVCAPCredReqMntDetailView@@
+.?AVCAPCredReqMntDtlVwSet@@
+.?AVCAPCredReqMntFrame@@
+.?AVCAPCredReqMntHdrVwSet@@
+.?AVCAPCredReqMntHeaderView@@
+.?AVCAPCredReqMntQuickSearch@@
+.?AVCAPCredReqMntQuickSearchGrid@@
+.?AVCAPExportSet@@
+.?AVCAPExportView@@
+.?AVCAPGenChecksDetailView@@
+.?AVCAPGenChecksDtlAllView@@
+.?AVCAPGenChecksDtlDtlView@@
+.?AVCAPGenChecksDtlSumView@@
+.?AVCAPGenChecksDtlSumVwSet@@
+.?AVCAPGenChecksDtlVwSet@@
+.?AVCAPGenChecksFrame@@
+.?AVCAPGenChecksHeaderView@@
+.?AVCAPGenChecksQuickSearch@@
+.?AVCAPGenChecksQuickSearchGrid@@
+.?AVCAPGenParamView@@
+.?AVCAPGenRecurEntGrid@@
+.?AVCAPGenRecurEntSet@@
+.?AVCAPGenRecurEntView@@
+.?AVCAPInvDetailSet@@
+.?AVCAPInvHeaderSet@@
+.?AVCAPInvMntDetailDlg@@
+.?AVCAPInvMntDetailView@@
+.?AVCAPInvMntDirectCheckDlg@@
+.?AVCAPInvMntDtlVwSet@@
+.?AVCAPInvMntFrame@@
+.?AVCAPInvMntHeaderDlg@@
+.?AVCAPInvMntHeaderView@@
+.?AVCAPInvMntQuickSearch@@
+.?AVCAPInvMntQuickSearchGrid@@
+.?AVCAPInvMntVoidInvoiceDlg@@
+.?AVCAPInvPymtAddDlg@@
+.?AVCAPInvPymtAutoDlg@@
+.?AVCAPInvPymtCrdDtlDlg@@
+.?AVCAPInvPymtDetailView@@
+.?AVCAPInvPymtDtlAllView@@
+.?AVCAPInvPymtDtlDtlView@@
+.?AVCAPInvPymtDtlSumView@@
+.?AVCAPInvPymtDtlSumVwSet@@
+.?AVCAPInvPymtDtlVwSet@@
+.?AVCAPInvPymtFrame@@
+.?AVCAPInvPymtHeaderView@@
+.?AVCAPInvPymtInvDtlDlg@@
+.?AVCAPInvPymtQuickSearch@@
+.?AVCAPInvPymtQuickSearchGrid@@
+.?AVCAPInvPymtSelectDtlDlg@@
+.?AVCAPInvPymtSelectGrid@@
+.?AVCAPLocationLB@@
+.?AVCAPMEBaseView@@
+.?AVCAPMEReportView@@
+.?AVCAPMESetupView@@
+.?AVCAPMonthEndView@@
+.?AVCAPOutInvBrowseDlg@@
+.?AVCAPOutInvBrowseEdit@@
+.?AVCAPOutInvBrowseGrid@@
+.?AVCAPOutInvSet@@
+.?AVCAPPayBatchDetailSet@@
+.?AVCAPPayBatchHeaderSet@@
+.?AVCAPPeriodSetupView@@
+.?AVCAPPurgeHeaderView@@
+.?AVCAPPurgeParamView@@
+.?AVCAPRecExpHdrVwSet@@
+.?AVCAPRecurExpAddDlg@@
+.?AVCAPRecurExpDetailSet@@
+.?AVCAPRecurExpDetailView@@
+.?AVCAPRecurExpDtlAddEditDlg@@
+.?AVCAPRecurExpDtlSet@@
+.?AVCAPRecurExpFrame@@
+.?AVCAPRecurExpHeaderView@@
+.?AVCAPRecurExpQuickSearch@@
+.?AVCAPRecurExpQuickSearchGrid@@
+.?AVCAPReturnDetailSet@@
+.?AVCAPSeqChkInfoSet@@
+.?AVCAPSeqChkParamDlg@@
+.?AVCAPSequenceView@@
+.?AVCAPStoreParamView@@
+.?AVCAPVendorLB@@
+.?AVCAutoAcctSet@@
+.?AVCAutoLocSet@@
+.?AVCAutoVendSet@@
+.?AVCButton@@
+.?AVCCheckListBox@@
+.?AVCCmdTarget@@
+.?AVCComboBox@@
+.?AVCCurrencyExchStaticBtn@@
+.?AVCDialog@@
+.?AVCEdit@@
+.?AVCFormView@@
+.?AVCFrameWnd@@
+.?AVCG3BrowseEditBase@@
+.?AVCG3Dialog@@
+.?AVCG3FormView@@
+.?AVCG3HeaderDtlSheet@@
+.?AVCG3HeaderDtlViewBase@@
+.?AVCG3IncrementalSearchDlg@@
+.?AVCG3IncrementalSearchGrd@@
+.?AVCG3QuickSearchBase@@
+.?AVCG3QuickSearchResultsGrid@@
+.?AVCG3RecordView@@
+.?AVCG3SequenceView@@
+.?AVCG3SysParamsView@@
+.?AVCG3Worksheet@@
+.?AVCG3XRecordView@@
+.?AVCG3XRecordViewBase@@
+.?AVCG3XRecordWnd@@
+.?AVCG3XRecordWndBase@@
+.?AVCGXBrowserGrid@@
+.?AVCGXGridCore@@
+.?AVCGXODBCGrid@@
+.?AVCGXRecordView@@
+.?AVCGXRecordWnd@@
+.?AVCGXView@@
+.?AVCHeaderSet@@
+.?AVCHeaderView@@
+.?AVCListBox@@
+.?AVCLocationSelectorClient@@
+.?AVCMapArray@@
+.?AVCMDIChildWnd@@
+.?AVCObject@@
+.?AVCPeriodSetupBaseView@@
+.?AVCReconAdjDtlAddEditDlg@@
+.?AVCReconHdrAddDlg@@
+.?AVCReconProcDetailSet@@
+.?AVCReconProcDetailView@@
+.?AVCReconProcFrame@@
+.?AVCReconProcHeaderSet@@
+.?AVCReconProcHeaderView@@
+.?AVCReconProcHeaderVwSet@@
+.?AVCReconProcQuickSearch@@
+.?AVCReconProcQuickSearchGrid@@
+.?AVCRecordset@@
+.?AVCRecordView@@
+.?AVCScheduleExportDlg@@
+.?AVCScrollView@@
+.?AVCSpinButtonCtrl@@
+.?AVCStatic@@
+.?AVCView@@
+.?AVCWnd@@
+.?AVSECBrowseEditBase@@
+.?AVSECListBoxEditor@@
+.?AVSECMDIChildWnd@@
+.?AVSECWorksheetWnd@@
+.?AVtype_info@@
+.PAVCDBException@@
+.PAVCException@@
+/D$$v4h
+/D$4v[
+: :$:(:,:0:4:8:<:@:D:H:L:P:T:d:
+: :$:(:,:0:4:8:<:@:D:H:L:P:T:X:\:`:d:h:l:p:t:x:|:
+: :$:(:,:0:4:8:<:@:D:P:T:8;<;@;D;H;L;P;T;X;\;`;d;h;l;p;t;x;|;
+: :$:(:,:0:4:8:<:D:\:`:x:
+: :(:4:T:\:d:l:x:
+: :0:8:L:X:`:
+: :8:@:T:`:h:
+: :8:>:K:b:h:q:~:
+: ;4;<;d;p;
+:!:&:A:J:i:x:
+:!:*:?:N:n:w:
+:!:1:A:Q:a:q:
+:!:4:J:b:s:z:
+:!;+;@;
+:":(:.:4:::@:F:L:R:X:^:d:j:p:v:|:
+:#:*:A:V:f:
+:$:,:::
+:$:;:V:\:
+:$:4:A:I:O:_:l:t:z:
+:%:;:X:d:p:|:
+:%:E:U:^:g:p:
+:&:0:::D:N:\:e:j:p:t:y:
+:(:::S:u:
+:(:?:L:z:
+:(:8:H:L:P:T:X:\:`:d:h:l:p:t:x:|:
+:(:8:H:X:\:@?`?h?p?x?
+:(:8:H:X:h:l:|:
+:(:H:P:X:d:
+:):V:f:
+:,:;:J:`:u:
+:,:<:@:P:T:d:h:x:|:
+:,:4:<:D:L:T:\:d:l:t:|:
+:,:4:L:T:h:x:
+:,:S:[:
+:,;I;O;a;s;
+:.:F:X:
+:/:?:M:f:u:
+:/:?:T:
+:-:4:V:d:{:
+:':5:A:I:g:|:
+:':A:\:q:x:
+:;:J:R:g:
+:@:I:Y:f:|:
+:+:::C:X:g:n:
+:+:7:C:O:[:g:s:
+:+;N;\;`;d;
+:>:c:o:{:
+:1:b:m:|:
+:1;D;V;c;z;
+:2:=:c:i:
+:3:;:i:
+:3:I:b:x:
+:4:9:U:]:w:
+:5:;:C:V:d:{:
+:5:D:S:b:q:
+:6:E:h:{:
+:6:E:h:y:
+:6;D;[;b;
+:8:?:]:~:
+:I:Y:i:y:
+:P=T=l=
+:p>t>x>|>
+:Q:f:w:
+; ;$;(;,;0;4;8;<;@;D;H;L;P;T;X;\;`;d;h;l;p;t;x;|;
+; ;$;(;,;0;4;8;<;@;H;L;P;T;X;\;`;d;h;l;p;t;|;
+; ;$;(;@;D;H;L;P;d;t;x;
+; ;$;(;0;H;X;h;l;p;t;x;|;
+; ;(;0;8;D;d;p;
+; ;,;2;G;M;Y;_;g;z;
+; ;:;K;e;v;
+; ;5;v;
+; ;6;;;Q;
+; ;8;D;d;l;x;
+; ;F;N;m;
+;!;(;1;@;H;
+;";';,;1;6;I;[;h;
+;";';,;1;6;I;[;l;
+;";6;D;[;v;|;
+;"<5<;<z<
+;#;D;M;|;
+;#<?<\<i<x<
+;$;*;0;6;<;B;H;N;T;Z;`;f;l;r;x;~;
+;$;,;D;L;`;l;t;
+;$;,;L;T;d;l;t;
+;$;.;8;B;L;V;Z;`;j;t;~;
+;$;;;c;r;
+;$;5;D;S;b;x;
+;$;8;H;\;d;|;
+;$<*<M<S<_<e<w<
+;%;;;U;k;
+;%;0;\;e;p;
+;%;E;U;k;
+;&;/;4;G;M;S;k;q;
+;&;+;6;Q;f;v;
+;&;3;J;
+;&;4;K;`;j;z;
+;&;5;L;
+;(;/;5;B;Q;^;b;g;l;q;v;
+;(;>;X;b;
+;(;6;?;J;X;a;p;
+;(;S;_;k;w;
+;,;<;Q;`;h;|;
+;,;0;4;8;<;D;\;l;|;
+;,;P;x;
+;.;=;J;v;
+;.;=;S;e;q;z;
+;.;>;M;Z;
+;.<><G<
+;/;9;>;S;];{;
+;';-;9;O;_;i;
+;?;K;[;k;{;
+;+;F;X;
+;=;H;P;c;x;
+;=;L;Q;j;
+;0;7;J;X;d;n;t;y;
+;0;E;e;u;
+;0L0}0
+;1;C;R;
+;4;@;D;d;h;l;p;t;x;|;
+;4;<;B;\;d;j;
+;4<P<T<X<\<`<d<h<l<p<t<x<|<
+;6;>;f;v;
+;6;D;[;n;
+;H;[;o;
+;V;d;{;
+? ?$?(?,?0?4?8?<?@?D?H?L?P?T?X?
+? ?$?(?,?0?4?8?<?@?D?H?L?P?T?X?\?`?d?h?l?p?t?x?|?
+? ?$?4?
+? ?&?,?2?8?>?D?J?P?V?\?b?h?n?t?z?
+? ?,?A?V?f?
+? ?=?I?N?\?b?r?w?
+? ?2?J?\?e?q?{?
+? ?J?P?j?r?x?
+?!?-?4?^?c?o?
+?!?'?6?N?^?d?t?
+?!?0?F?]?f?|?
+?"?5?K?R?
+?#?4?C?b?
+?$?,?8?X?d?
+?$?<?L?\?`?h?l?p?t?x?|?
+?$?<?T?l?
+?$?3?B?Q?`?o?~?
+?$?4?D?H?L?P?T?`?d?h?l?p?t?x?|?
+?%?.?7?@?I?R?h?
+?%?:?A?V?c?z?
+?%?:?H?q?
+?&?5?N?a?g?w?
+?(?:?C?f?x?
+?(?0?D?P?X?p?
+?(?H?P?t?
+?)?@?T?a?y?
+?,?0?4?8?<?@?D?H?L?P?T?\?`?d?h?l?p?t?x?
+?,?8?@?X?h?p?x?
+?,?9?a?n?r?w?|?
+?,?F?P?
+?.?3?m?u?
+?.?A?G?W?a?q?
+??$DDX_FieldPctMaskEdit@N@@YGXPAVCDataExchange@@AAVCG3PercentMaskedEdit@@AANPAVCRecordset@@@Z
+??$DDX_PctMaskEdit@N@@YGXPAVCDataExchange@@AAVCG3PercentMaskedEdit@@AAN@Z
+?'?-?:?f?x?
+??_7CAPCheckMntFrame@@6B@
+??_7CAPCheckMntHeaderView@@6B@
+??_7CAPCredMemoMntFrame@@6B@
+??_7CAPCredMemoMntHeaderView@@6B@
+??_7CAPCredReqMntFrame@@6B@
+??_7CAPCredReqMntHeaderView@@6B@
+??_7CAPExportView@@6B@
+??_7CAPGenChecksFrame@@6B@
+??_7CAPGenChecksHeaderView@@6B@
+??_7CAPGenParamView@@6BCGXODBCGrid@@@
+??_7CAPGenParamView@@6BCGXView@@@
+??_7CAPGenRecurEntView@@6B@
+??_7CAPInvMntFrame@@6B@
+??_7CAPInvMntHeaderView@@6B@
+??_7CAPInvPymtFrame@@6B@
+??_7CAPInvPymtHeaderView@@6B@
+??_7CAPMEBaseView@@6B@
+??_7CAPMEReportView@@6B@
+??_7CAPMESetupView@@6B@
+??_7CAPMonthEndView@@6B@
+??_7CAPPeriodSetupView@@6B@
+??_7CAPPurgeHeaderView@@6B@
+??_7CAPPurgeParamView@@6BCGXODBCGrid@@@
+??_7CAPPurgeParamView@@6BCGXView@@@
+??_7CAPRecurExpFrame@@6B@
+??_7CAPRecurExpHeaderView@@6B@
+??_7CAPSequenceView@@6B@
+??_7CAPStoreParamView@@6BCGXODBCGrid@@@
+??_7CAPStoreParamView@@6BCGXView@@@
+??_7CReconProcFrame@@6B@
+??_7CReconProcHeaderView@@6B@
+??0_LS@@QAE@I@Z
+??0CAPAutoProcView@@IAE@I@Z
+??0CAPCheckHeaderSet@@QAE@PAVCDatabase@@@Z
+??0CAPCheckMntFrame@@IAE@XZ
+??0CAPCheckMntHeaderView@@IAE@XZ
+??0CAPCreditResolvedDetailSet@@QAE@PAVCDatabase@@@Z
+??0CAPCreditResolvedHeaderSet@@QAE@PAVCDatabase@@@Z
+??0CAPCredMemoMntFrame@@IAE@XZ
+??0CAPCredMemoMntHeaderView@@IAE@XZ
+??0CAPCredReqMntFrame@@IAE@XZ
+??0CAPCredReqMntHeaderView@@IAE@XZ
+??0CAPCurrentPeriod@@QAE@XZ
+??0CAPExportView@@IAE@XZ
+??0CAPGenChecksFrame@@IAE@XZ
+??0CAPGenChecksHeaderView@@IAE@XZ
+??0CAPGenParamView@@IAE@XZ
+??0CAPGenRecurEntView@@IAE@XZ
+??0CAPInvDetailSet@@QAE@PAVCDatabase@@@Z
+??0CAPInvHeaderSet@@QAE@PAVCDatabase@@@Z
+??0CAPInvMntFrame@@IAE@XZ
+??0CAPInvMntHeaderView@@IAE@XZ
+??0CAPInvPymtFrame@@IAE@XZ
+??0CAPInvPymtHeaderView@@IAE@XZ
+??0CAPMEBaseView@@IAE@I@Z
+??0CAPMEReportView@@IAE@XZ
+??0CAPMESetupView@@IAE@XZ
+??0CAPMonthEndView@@IAE@XZ
+??0CAPPayBatchDetailSet@@QAE@PAVCDatabase@@@Z
+??0CAPPayBatchHeaderSet@@QAE@PAVCDatabase@@@Z
+??0CAPPeriodSetupView@@IAE@XZ
+??0CAPPurgeHeaderView@@IAE@XZ
+??0CAPPurgeParamView@@IAE@XZ
+??0CAPReconciliationSet@@QAE@PAVCDatabase@@@Z
+??0CAPRecurExpDetailSet@@QAE@PAVCDatabase@@@Z
+??0CAPRecurExpFrame@@IAE@XZ
+??0CAPRecurExpHeaderView@@IAE@XZ
+??0CAPReturnDetailSet@@QAE@PAVCDatabase@@@Z
+??0CAPSequenceView@@IAE@XZ
+??0CAPStoreParamView@@IAE@XZ
+??0CAutoAcctSet@@QAE@PAVCDatabase@@@Z
+??0CAutoLocSet@@QAE@PAVCDatabase@@@Z
+??0CAutoVendSet@@QAE@PAVCDatabase@@@Z
+??0CCurrencyExchStaticBtn@@QAE@XZ
+??0CG3APPeriodEdit@@QAE@XZ
+??0CG3APPrintCheck@@QAE@XZ
+??0CG3BrowseEditBase@@QAE@XZ
+??0CG3ColorStaticCtrl@@QAE@XZ
+??0CG3ComboBox@@QAE@XZ
+??0CG3CurrencyEdit@@QAE@XZ
+??0CG3CurrentPeriodBase@@QAE@H@Z
+??0CG3DateTime@@QAE@ABUtagTIMESTAMP_STRUCT@@@Z
+??0CG3DateTime@@QAE@HHHHHHH@Z
+??0CG3DateTime@@QAE@XZ
+??0CG3DateTimeCtrl@@QAE@XZ
+??0CG3Dialog@@QAE@IPAVCWnd@@@Z
+??0CG3EDIIndicator@@QAE@XZ
+??0CG3FormView@@IAE@I@Z
+??0CG3GLCodeBrowseEdit@@QAE@XZ
+??0CG3GLPeriodEdit@@QAE@XZ
+??0CG3HeaderDtlSheet@@IAE@XZ
+??0CG3HeaderDtlViewBase@@IAE@XZ
+??0CG3IncrementalSearchDlg@@QAE@PAVCWnd@@@Z
+??0CG3IncrementalSearchGrd@@QAE@XZ
+??0CG3PercentMaskedEdit@@QAE@XZ
+??0CG3QuickSearchBase@@QAE@XZ
+??0CG3QuickSearchResultsGrid@@QAE@XZ
+??0CG3RecordView@@IAE@I@Z
+??0CG3SeqSeriesSelectBrEdit@@QAE@XZ
+??0CG3SequenceView@@IAE@I@Z
+??0CG3SysParamsView@@QAE@XZ
+??0CG3VendBrowseDlg@@QAE@PAVCWnd@@@Z
+??0CG3VendBrowseEdit@@QAE@XZ
+??0CG3Worksheet@@IAE@XZ
+??0CG3XRecordView@@QAE@XZ
+??0CG3XRecordWnd@@QAE@XZ
+??0CGLCurrentPeriod@@QAE@XZ
+??0CGXComboBoxWnd@@QAE@PAVCGXGridCore@@@Z
+??0CGXDynamicRecordset@@QAE@PAVCDatabase@@@Z
+??0CGXRange@@QAE@KK@Z
+??0CGXRange@@QAE@KKKK@Z
+??0CGXRange@@QAE@XZ
+??0CGXStyle@@QAE@XZ
+??0CMapArray@@QAE@XZ
+??0CPeriodSetupBaseView@@IAE@XZ
+??0CReconProcFrame@@IAE@XZ
+??0CReconProcHeaderView@@IAE@XZ
+??0CScheduleExportDlg@@QAE@IIPAVCWnd@@@Z
+??0SECListBoxEditor@@QAE@XZ
+??1_LS@@QAE@XZ
+??1CAPAutoProcView@@MAE@XZ
+??1CAPCheckHeaderSet@@UAE@XZ
+??1CAPCheckMntFrame@@MAE@XZ
+??1CAPCheckMntHeaderView@@MAE@XZ
+??1CAPCreditResolvedDetailSet@@UAE@XZ
+??1CAPCreditResolvedHeaderSet@@UAE@XZ
+??1CAPCredMemoMntFrame@@MAE@XZ
+??1CAPCredMemoMntHeaderView@@MAE@XZ
+??1CAPCredReqMntFrame@@MAE@XZ
+??1CAPCredReqMntHeaderView@@MAE@XZ
+??1CAPExportView@@MAE@XZ
+??1CAPGenChecksFrame@@MAE@XZ
+??1CAPGenChecksHeaderView@@MAE@XZ
+??1CAPGenParamView@@MAE@XZ
+??1CAPGenRecurEntView@@MAE@XZ
+??1CAPInvDetailSet@@UAE@XZ
+??1CAPInvHeaderSet@@UAE@XZ
+??1CAPInvMntFrame@@MAE@XZ
+??1CAPInvMntHeaderView@@MAE@XZ
+??1CAPInvPymtFrame@@MAE@XZ
+??1CAPInvPymtHeaderView@@MAE@XZ
+??1CAPMEBaseView@@MAE@XZ
+??1CAPMEReportView@@MAE@XZ
+??1CAPMESetupView@@MAE@XZ
+??1CAPMonthEndView@@MAE@XZ
+??1CAPPayBatchDetailSet@@UAE@XZ
+??1CAPPayBatchHeaderSet@@UAE@XZ
+??1CAPPeriodSetupView@@MAE@XZ
+??1CAPPurgeHeaderView@@MAE@XZ
+??1CAPPurgeParamView@@MAE@XZ
+??1CAPReconciliationSet@@UAE@XZ
+??1CAPRecurExpDetailSet@@UAE@XZ
+??1CAPRecurExpFrame@@MAE@XZ
+??1CAPRecurExpHeaderView@@MAE@XZ
+??1CAPReturnDetailSet@@UAE@XZ
+??1CAPSequenceView@@MAE@XZ
+??1CAPStoreParamView@@MAE@XZ
+??1CCurrencyExchStaticBtn@@UAE@XZ
+??1CG3APPeriodEdit@@UAE@XZ
+??1CG3APPrintCheck@@UAE@XZ
+??1CG3BrowseEditBase@@UAE@XZ
+??1CG3ColorStaticCtrl@@UAE@XZ
+??1CG3ComboBox@@UAE@XZ
+??1CG3CurrencyEdit@@UAE@XZ
+??1CG3DateTimeCtrl@@UAE@XZ
+??1CG3Dialog@@UAE@XZ
+??1CG3EDIIndicator@@UAE@XZ
+??1CG3FormView@@UAE@XZ
+??1CG3GLCodeBrowseEdit@@UAE@XZ
+??1CG3GLPeriodEdit@@UAE@XZ
+??1CG3HeaderDtlSheet@@MAE@XZ
+??1CG3HeaderDtlViewBase@@MAE@XZ
+??1CG3IncrementalSearchDlg@@UAE@XZ
+??1CG3IncrementalSearchGrd@@UAE@XZ
+??1CG3PercentMaskedEdit@@UAE@XZ
+??1CG3QuickSearchBase@@UAE@XZ
+??1CG3QuickSearchResultsGrid@@UAE@XZ
+??1CG3RecordView@@UAE@XZ
+??1CG3SeqSeriesSelectBrEdit@@UAE@XZ
+??1CG3SequenceView@@MAE@XZ
+??1CG3SysParamsView@@UAE@XZ
+??1CG3VendBrowseDlg@@UAE@XZ
+??1CG3VendBrowseEdit@@UAE@XZ
+??1CG3Worksheet@@MAE@XZ
+??1CG3XRecordView@@UAE@XZ
+??1CG3XRecordWnd@@UAE@XZ
+??1CGXDynamicRecordset@@UAE@XZ
+??1CGXStyle@@UAE@XZ
+??1CMapArray@@UAE@XZ
+??1CPeriodSetupBaseView@@MAE@XZ
+??1CReconProcFrame@@MAE@XZ
+??1CReconProcHeaderView@@MAE@XZ
+??1CScheduleExportDlg@@UAE@XZ
+??1SECListBoxEditor@@UAE@XZ
+??1type_info@@UAE@XZ
+??4CG3DateTime@@QAEXABUtagTIMESTAMP_STRUCT@@@Z
+??4CG3DateTime@@QAEXABVCTime@ATL@@@Z
+??9CG3DateTime@@QBEHABUtagTIMESTAMP_STRUCT@@@Z
+?-?G?c?
+?'?H?U?w?
+?'?Z?c?|?
+?_GetBaseClass@CAPCheckMntFrame@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPCheckMntHeaderView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPCredMemoMntFrame@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPCredMemoMntHeaderView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPCredReqMntFrame@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPCredReqMntHeaderView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPExportView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPGenChecksFrame@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPGenChecksHeaderView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPGenParamView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPGenRecurEntView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPInvMntFrame@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPInvMntHeaderView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPInvPymtFrame@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPInvPymtHeaderView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPMEBaseView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPMEReportView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPMESetupView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPMonthEndView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPPeriodSetupView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPPurgeHeaderView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPPurgeParamView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPRecurExpFrame@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPRecurExpHeaderView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPSequenceView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CAPStoreParamView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CReconProcFrame@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CReconProcHeaderView@@KGPAUCRuntimeClass@@XZ
+?_Xbad_alloc@std@@YAXXZ
+?_Xlength_error@std@@YAXPBD@Z
+?+?E?[?u?~?
+?=?X?j?s?
+?0?7?F?N?V?\?d?o?u?
+?1?>?B?G?L?Q?V?f?u?
+?2?8?Q?k?r?{?
+?3?8?F?N?a?
+?4?A?O?k?x?}?
+?4?D?T?d?h?x?|?
+?4?E?N?n?
+?4?U?l?
+?8?<?@?D?H?L?P?T?X?\?`?d?h?l?p?t?x?|?
+?8?T?x?
+?8?X?`?h?p?x?
+?ActivateFrame@CG3Worksheet@@UAEXH@Z
+?AddBinding@CG3UpdateInfoArray@@QAEHPAVCRecordset@@KV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?AddBorders@CGXGridCore@@UAE?AVCSize@@V2@ABVCGXStyle@@@Z
+?AddColumnFilter@?$CG3GridTemplate@VCGXRecordView@@@@MAEXKVCPoint@@@Z
+?AddColumnFilter@?$CG3GridTemplate@VCGXRecordWnd@@@@MAEXKVCPoint@@@Z
+?AddCommand@CGXGridCore@@UAEXPAVCGXCommand@@W4GXCmdType@@@Z
+?AddControl@CG3LayoutManager@@QAEXW4ELayoutType@1@I@Z
+?AddCustomMenuItems@CG3QuickSearchBase@@MAEXPAVCMenu@@@Z
+?AddLogEntry@CG3FormView@@QAEHPAVCException@@@Z
+?AddLogEntry@CG3RecordView@@QAEHPAVCException@@@Z
+?AddNew@CGXBrowserGrid@@UAEKXZ
+?AddParam@CG3ParamInfoOb@@QAEHHHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?AddQuery@CMapArray@@QAE_NABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?AddRecalcRange@CGXGridCore@@UAEXABVCGXRange@@@Z
+?AddToVendorMap@CAPGenChecksFrame@@IAE_NHABN00@Z
+?AllowEmptyDisplayString@CG3BrowseEditBase@@UBE_NXZ
+?AllowGridFilter@?$CG3GridTemplate@VCGXRecordView@@@@MBE_NXZ
+?AllowGridFilter@?$CG3GridTemplate@VCGXRecordWnd@@@@MBE_NXZ
+?BatchDelete@CG3RecordView@@UAEJIJ@Z
+?BatchPrintClose@CG3RecordView@@UAEJIJ@Z
+?BatchPrintInit@CG3RecordView@@UAEJIJ@Z
+?BatchPrintPrint@CG3RecordView@@UAEJIJ@Z
+?BatchUpdateAllGlobals@CG3RecordView@@UAEXXZ
+?BeginTrans@CG3IncrementalSearchGrd@@UAEXPBD@Z
+?BeginTrans@CGXODBCGrid@@UAEXPBD@Z
+?BuildWhereClause@?$CG3SysParamsBase@VCG3XRecordViewBase@@@@MAEXXZ
+?BuildWhereClause@CG3BrowseEditBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@AAV23@@Z
+?CalcBufferDimension@CGXGridCore@@UAEHPBDKAAK1@Z
+?CalcRectFromRowCol@CGXGridCore@@UAE?AVCRect@@KKKKH@Z
+?CalculateButtonRectangles@SECListBoxEditor@@UAEXXZ
+?CalculateComputedTotal@CAPInvMntHeaderView@@IAEXXZ
+?CalculateHeight@SECListBoxEditor@@UAEHXZ
+?CalculateTotals@CAPCredMemoMntHeaderView@@QAEXH@Z
+?CalculateTotals@CAPGenChecksHeaderView@@IAEXXZ
+?CalculateTotals@CAPInvMntHeaderView@@IAEXH@Z
+?CalculateTotals@CAPInvPymtHeaderView@@QAEXXZ
+?CalculateTotals@CAPRecurExpHeaderView@@QAEXXZ
+?CalculateTotals@CReconProcHeaderView@@QAEXXZ
+?CanActivateGrid@CGXGridCore@@UAEHH@Z
+?CanAppend@CGXODBCGrid@@UAEHXZ
+?CancelRecord@CGXBrowserGrid@@UAEXXZ
+?CanChange@CReconProcHeaderView@@IAEHXZ
+?CanChangeAutoFillSelection@CGXGridCore@@MAEHAAVCGXRange@@ABV2@@Z
+?CanChangeSelection@CGXBrowserGrid@@UAEHPAVCGXRange@@HH@Z
+?CanChangeTab@CGXGridCore@@UAEHXZ
+?CanClear@CGXGridCore@@UAEHXZ
+?CanCopy@CGXGridCore@@UAEHXZ
+?CanCut@CGXBrowserGrid@@UAEHXZ
+?CanDelete@CAPCredMemoMntHeaderView@@IAEHHH@Z
+?CanDelete@CAPInvMntHeaderView@@IAEHHH@Z
+?CanEdit@CReconProcHeaderView@@QAEHXZ
+?CanFillCells@?$CG3GridTemplate@VCGXRecordView@@@@MAE_NXZ
+?CanFillCells@?$CG3GridTemplate@VCGXRecordWnd@@@@MAE_NXZ
+?CanFloatCell@CGXGridCore@@UAEHPAVCGXControl@@KKABVCGXStyle@@H@Z
+?CanFreezeCols@CGXGridCore@@UAEHXZ
+?CanFreezeRows@CGXGridCore@@UAEHXZ
+?CanMergeCell@CGXGridCore@@UAEHPAVCGXControl@@KKABVCGXStyle@@H@Z
+?CanMergeCells@CGXGridCore@@UAEHABVCGXStyle@@0@Z
+?CanPaste@CGXBrowserGrid@@UAEHXZ
+?CanRedo@CGXGridCore@@UAEHPAVCCmdUI@@@Z
+?CanSelectCurrentCell@CGXBrowserGrid@@UAEHHKKKK@Z
+?CanUndo@CGXGridCore@@UAEHPAVCCmdUI@@@Z
+?CanUnfreezeCols@CGXGridCore@@UAEHXZ
+?CanUnfreezeRows@CGXGridCore@@UAEHXZ
+?CanUpdate@CG3IncrementalSearchGrd@@UAEHXZ
+?CanUpdate@CGXODBCGrid@@UAEHXZ
+?ChangeBaseStyle@CGXGridCore@@UAEHGABVCGXStyle@@W4GXModifyType@@IW4GXCmdType@@@Z
+?ChangeProperties@CGXGridCore@@UAEHABVCGXProperties@@IW4GXCmdType@@@Z
+?ChangeStylesMap@CGXGridCore@@UAEHABVCGXStylesMap@@IW4GXCmdType@@@Z
+?ChooseSingleLocation@CG3LocationComboBox@@QAEJXZ
+?classCAPCheckMntFrame@CAPCheckMntFrame@@2UCRuntimeClass@@B
+?classCAPCheckMntHeaderView@CAPCheckMntHeaderView@@2UCRuntimeClass@@B
+?classCAPCredMemoMntFrame@CAPCredMemoMntFrame@@2UCRuntimeClass@@B
+?classCAPCredMemoMntHeaderView@CAPCredMemoMntHeaderView@@2UCRuntimeClass@@B
+?classCAPCredReqMntFrame@CAPCredReqMntFrame@@2UCRuntimeClass@@B
+?classCAPCredReqMntHeaderView@CAPCredReqMntHeaderView@@2UCRuntimeClass@@B
+?classCAPExportView@CAPExportView@@2UCRuntimeClass@@B
+?classCAPGenChecksFrame@CAPGenChecksFrame@@2UCRuntimeClass@@B
+?classCAPGenChecksHeaderView@CAPGenChecksHeaderView@@2UCRuntimeClass@@B
+?classCAPGenParamView@CAPGenParamView@@2UCRuntimeClass@@B
+?classCAPGenRecurEntView@CAPGenRecurEntView@@2UCRuntimeClass@@B
+?classCAPInvMntFrame@CAPInvMntFrame@@2UCRuntimeClass@@B
+?classCAPInvMntHeaderView@CAPInvMntHeaderView@@2UCRuntimeClass@@B
+?classCAPInvPymtFrame@CAPInvPymtFrame@@2UCRuntimeClass@@B
+?classCAPInvPymtHeaderView@CAPInvPymtHeaderView@@2UCRuntimeClass@@B
+?classCAPMEBaseView@CAPMEBaseView@@2UCRuntimeClass@@B
+?classCAPMEReportView@CAPMEReportView@@2UCRuntimeClass@@B
+?classCAPMESetupView@CAPMESetupView@@2UCRuntimeClass@@B
+?classCAPMonthEndView@CAPMonthEndView@@2UCRuntimeClass@@B
+?classCAPPeriodSetupView@CAPPeriodSetupView@@2UCRuntimeClass@@B
+?classCAPPurgeHeaderView@CAPPurgeHeaderView@@2UCRuntimeClass@@B
+?classCAPPurgeParamView@CAPPurgeParamView@@2UCRuntimeClass@@B
+?classCAPRecurExpFrame@CAPRecurExpFrame@@2UCRuntimeClass@@B
+?classCAPRecurExpHeaderView@CAPRecurExpHeaderView@@2UCRuntimeClass@@B
+?classCAPSequenceView@CAPSequenceView@@2UCRuntimeClass@@B
+?classCAPStoreParamView@CAPStoreParamView@@2UCRuntimeClass@@B
+?classCReconProcFrame@CReconProcFrame@@2UCRuntimeClass@@B
+?classCReconProcHeaderView@CReconProcHeaderView@@2UCRuntimeClass@@B
+?CleanAdvancedUndo@CGXGridCore@@UAEXXZ
+?Clear@CGXGridCore@@UAEHH@Z
+?CLEAR_BOX_AND_SELECT_ITEM@CLocationSelector@@2VFillOptions@1@B
+?ClearCells@CGXBrowserGrid@@UAEHABVCGXRangeList@@H@Z
+?ClearCellsAlternate@CGXGridCore@@UAEHABVCGXRange@@H@Z
+?ClearGrid@?$CG3GridTemplate@VCGXRecordView@@@@UAEXXZ
+?ClearGrid@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXXZ
+?ClearGXData@?$CG3XRecordBase@VCG3XRecordViewBase@@@@IAEXXZ
+?Close@CGXDynamicRecordset@@UAEXXZ
+?CommitTrans@CG3IncrementalSearchGrd@@UAEXXZ
+?CommitTrans@CGXODBCGrid@@UAEXXZ
+?CompareDate@CG3DateTime@@QBEHABUtagTIMESTAMP_STRUCT@@@Z
+?ComposeStyleRowCol@CGXGridCore@@UAEXKKPAVCGXStyle@@H@Z
+?ContinueModal@CG3Dialog@@UAEHXZ
+?ConvertValueToString@?$CG3SysParamsBase@VCG3XRecordViewBase@@@@UAEXKAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?ConvertValueToString@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEXKAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?ConvertValueToString@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXKAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Copy@CGXGridCore@@UAEHXZ
+?CopyCells@CGXGridCore@@UAEHVCGXRange@@KKI@Z
+?CopyCellsToArchive@CGXGridCore@@UAEHAAVCArchive@@ABVCGXRangeList@@H@Z
+?CopyRange@CGXGridCore@@UAEHABVCGXRange@@@Z
+?CopyRange@CGXGridCore@@UAEHABVCGXRangeList@@@Z
+?CopyRangeList@CGXGridCore@@UAEHAAVCGXRangeList@@H@Z
+?CopyTextToFile@CGXGridCore@@UAEHAAVCFile@@ABVCGXRangeList@@@Z
+?Create@CCurrencyExchStaticBtn@@UAEHPBDKABUtagRECT@@PAVCWnd@@I@Z
+?Create@CGXComboBoxWnd@@QAEHKI@Z
+?CreateGridInfo@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEXXZ
+?CreateGridInfo@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXXZ
+?CreateInQuery@CG3QuickSearchBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV23@0@Z
+?CreateMenuResourceIds@CG3QuickSearchBase@@MAEXXZ
+?CreateObject@CAPCheckMntFrame@@SGPAVCObject@@XZ
+?CreateObject@CAPCheckMntHeaderView@@SGPAVCObject@@XZ
+?CreateObject@CAPCredMemoMntFrame@@SGPAVCObject@@XZ
+?CreateObject@CAPCredMemoMntHeaderView@@SGPAVCObject@@XZ
+?CreateObject@CAPCredReqMntFrame@@SGPAVCObject@@XZ
+?CreateObject@CAPCredReqMntHeaderView@@SGPAVCObject@@XZ
+?CreateObject@CAPExportView@@SGPAVCObject@@XZ
+?CreateObject@CAPGenChecksFrame@@SGPAVCObject@@XZ
+?CreateObject@CAPGenChecksHeaderView@@SGPAVCObject@@XZ
+?CreateObject@CAPGenParamView@@SGPAVCObject@@XZ
+?CreateObject@CAPGenRecurEntView@@SGPAVCObject@@XZ
+?CreateObject@CAPInvMntFrame@@SGPAVCObject@@XZ
+?CreateObject@CAPInvMntHeaderView@@SGPAVCObject@@XZ
+?CreateObject@CAPInvPymtFrame@@SGPAVCObject@@XZ
+?CreateObject@CAPInvPymtHeaderView@@SGPAVCObject@@XZ
+?CreateObject@CAPMEReportView@@SGPAVCObject@@XZ
+?CreateObject@CAPMESetupView@@SGPAVCObject@@XZ
+?CreateObject@CAPMonthEndView@@SGPAVCObject@@XZ
+?CreateObject@CAPPeriodSetupView@@SGPAVCObject@@XZ
+?CreateObject@CAPPurgeHeaderView@@SGPAVCObject@@XZ
+?CreateObject@CAPPurgeParamView@@SGPAVCObject@@XZ
+?CreateObject@CAPRecurExpFrame@@SGPAVCObject@@XZ
+?CreateObject@CAPRecurExpHeaderView@@SGPAVCObject@@XZ
+?CreateObject@CAPSequenceView@@SGPAVCObject@@XZ
+?CreateObject@CAPStoreParamView@@SGPAVCObject@@XZ
+?CreateObject@CReconProcFrame@@SGPAVCObject@@XZ
+?CreateObject@CReconProcHeaderView@@SGPAVCObject@@XZ
+?CreateQuickToolBar@CG3Worksheet@@IAEHKIK@Z
+?CreateSplitters@CG3HeaderDtlSheet@@IAE_NPAUCCreateContext@@@Z
+?CreateStyle@CGXGridCore@@UAEPAVCGXStyle@@XZ
+?CreditBalances@CAPCredMemoMntHeaderView@@IAEHXZ
+?CustomDisplayMenu@CG3QuickSearchBase@@MAEXPAVCMenu@@@Z
+?Cut@CGXBrowserGrid@@UAEHXZ
+?CutRange@CGXGridCore@@UAEHABVCGXRangeList@@H@Z
+?DDX_BEItem@@YGXPAVCDataExchange@@IAAJPAVCG3BrowseEditBase@@@Z
+?DDX_CBItem@@YGXPAVCDataExchange@@HAAE@Z
+?DDX_CBItem@@YGXPAVCDataExchange@@HAAJ@Z
+?DDX_CurrEdit@@YGXPAVCDataExchange@@AAVCG3CurrencyEdit@@AAN@Z
+?DDX_CurrEdit@@YGXPAVCDataExchange@@AAVCG3CurrencyEdit@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?DDX_DateText@@YGXPAVCDataExchange@@HAAUtagTIMESTAMP_STRUCT@@@Z
+?DDX_DateTime@@YGXPAVCDataExchange@@HAAUtagTIMESTAMP_STRUCT@@@Z
+?DDX_FieldBEItem@@YGXPAVCDataExchange@@IAAJPAVCRecordset@@PAVCG3BrowseEditBase@@@Z
+?DDX_FieldCBItem@@YGXPAVCDataExchange@@HAAJPAVCRecordset@@_N@Z
+?DDX_FieldCurrEdit@@YGXPAVCDataExchange@@AAVCG3CurrencyEdit@@AANPAVCRecordset@@@Z
+?DDX_FieldCurrEdit@@YGXPAVCDataExchange@@AAVCG3CurrencyEdit@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PAVCRecordset@@@Z
+?DDX_FieldCurrencyBtn@@YGXPAVCDataExchange@@PAVCCurrencyExchStaticBtn@@AAJPAVCRecordset@@@Z
+?DDX_FieldDateText@@YGXPAVCDataExchange@@HAAUtagTIMESTAMP_STRUCT@@PAVCRecordset@@@Z
+?DDX_FieldDateTime@@YGXPAVCDataExchange@@HAAUtagTIMESTAMP_STRUCT@@PAVCRecordset@@@Z
+?DDX_FieldPeriodEdit@@YGXPAVCDataExchange@@PAVCG3PeriodEditBase@@AAUtagTIMESTAMP_STRUCT@@PAVCRecordset@@@Z
+?DDX_G3FieldText@@YGXPAVCDataExchange@@HAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PAVCRecordset@@@Z
+?DDX_PeriodEdit@@YGXPAVCDataExchange@@PAVCG3PeriodEditBase@@AAUtagTIMESTAMP_STRUCT@@@Z
+?DDX_PeriodText@@YGXPAVCDataExchange@@IAAUtagTIMESTAMP_STRUCT@@@Z
+?DDX_RptItems@CAPPurgeHeaderView@@IAEXPAVCDataExchange@@@Z
+?DeferDestroyWindow@CG3Worksheet@@QAEXXZ
+?DefWindowProcA@SECMDIChildWnd@@UAEJIIJ@Z
+?DeleteDiscrepancies@CAPInvMntHeaderView@@IAEHXZ
+?DeleteItem@SECListBoxEditor@@UAEHH@Z
+?DeleteRangeName@CGXGridCore@@UAEHPBDPAVCObject@@W4GXCmdType@@@Z
+?DeleteRecords@CGXBrowserGrid@@UAEXXZ
+?DeleteRows@?$CG3SysParamsBase@VCG3XRecordViewBase@@@@UAEXABVCDWordArray@@0PAH@Z
+?DeleteRows@CG3IncrementalSearchGrd@@UAEXABVCDWordArray@@0PAH@Z
+?DeleteRows@CG3QuickSearchResultsGrid@@MAEXABVCDWordArray@@0PAH@Z
+?DeleteRows@CGXODBCGrid@@UAEXABVCDWordArray@@0PAH@Z
+?DeleteUsesSQL@CG3RecordView@@UAEHXZ
+?DestroyWindow@CG3IncrementalSearchDlg@@UAEHXZ
+?DestroyWindow@CG3Worksheet@@UAEHXZ
+?DisplayAggregateText@CG3Worksheet@@UAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?DisplayContextMenu@?$CG3GridTemplate@VCGXRecordView@@@@UAEXKKVCPoint@@@Z
+?DisplayContextMenu@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXKKVCPoint@@@Z
+?DisplayContextMenu@CG3QuickSearchResultsGrid@@MAEXKKVCPoint@@@Z
+?DisplayHidenControls@CAPCredMemoMntHeaderView@@IAEXXZ
+?DisplayHidenControls@CAPInvMntHeaderView@@IAEXXZ
+?DisplayMenu@CG3QuickSearchBase@@MAEXI@Z
+?DisplayMenu@CG3QuickSearchBase@@MAEXXZ
+?DisplayStatus@CAPCredReqMntHeaderView@@QAEXPAVCDataExchange@@@Z
+?DisplayStatus@CAPInvMntHeaderView@@IAEXXZ
+?DisplayWarningText@?$CG3GridTemplate@VCGXRecordView@@@@UAEXXZ
+?DisplayWarningText@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXXZ
+?DndDrawMoveRect@CGXGridCore@@UAEXVCPoint@@HH@Z
+?DndStartDragDrop@CGXGridCore@@UAEHKK@Z
+?DoAutoFill@CGXGridCore@@MAEXAAVCGXRange@@0@Z
+?DoCancelMode@CGXGridCore@@MAEHXZ
+?DoCommand@CGXGridCore@@MAEHIJ@Z
+?DoCtlColor@CGXGridCore@@MAEPAUHBRUSH__@@PAVCDC@@PAVCWnd@@I@Z
+?DoDataExchange@CAPCheckMntHeaderView@@EAEXPAVCDataExchange@@@Z
+?DoDataExchange@CAPCredMemoMntHeaderView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CAPCredReqMntHeaderView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CAPExportView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CAPGenChecksHeaderView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CAPGenRecurEntView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CAPInvMntHeaderView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CAPInvPymtHeaderView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CAPMEBaseView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CAPMEReportView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CAPMESetupView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CAPMonthEndView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CAPPurgeHeaderView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CAPRecurExpHeaderView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CAPSequenceView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CG3Dialog@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CG3FormView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CG3HeaderDtlViewBase@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CG3IncrementalSearchDlg@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CG3RecordView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CG3SequenceView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CPeriodSetupBaseView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CReconProcHeaderView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CScheduleExportDlg@@MAEXPAVCDataExchange@@@Z
+?DoDelete@SECListBoxEditor@@UAEHXZ
+?DoFieldExchange@CAPCheckHeaderSet@@UAEXPAVCFieldExchange@@@Z
+?DoFieldExchange@CAPCreditResolvedDetailSet@@UAEXPAVCFieldExchange@@@Z
+?DoFieldExchange@CAPCreditResolvedHeaderSet@@MAEXPAVCFieldExchange@@@Z
+?DoFieldExchange@CAPInvDetailSet@@UAEXPAVCFieldExchange@@@Z
+?DoFieldExchange@CAPInvHeaderSet@@UAEXPAVCFieldExchange@@@Z
+?DoFieldExchange@CAPPayBatchDetailSet@@UAEXPAVCFieldExchange@@@Z
+?DoFieldExchange@CAPPayBatchHeaderSet@@UAEXPAVCFieldExchange@@@Z
+?DoFieldExchange@CAPRecurExpDetailSet@@UAEXPAVCFieldExchange@@@Z
+?DoFieldExchange@CAPReturnDetailSet@@UAEXPAVCFieldExchange@@@Z
+?DoFieldExchange@CAutoAcctSet@@UAEXPAVCFieldExchange@@@Z
+?DoFieldExchange@CAutoLocSet@@UAEXPAVCFieldExchange@@@Z
+?DoFieldExchange@CAutoVendSet@@UAEXPAVCFieldExchange@@@Z
+?DoGetDlgCode@CGXGridCore@@MAEII@Z
+?DoGetScrollBarCtrl@CGXGridCore@@MBEPAVCScrollBar@@H@Z
+?DoHScroll@CGXGridCore@@MAEHIIPAVCScrollBar@@@Z
+?DoLButtonDblClk@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoLButtonDown@?$CG3GridTemplate@VCGXRecordView@@@@UAEHIVCPoint@@@Z
+?DoLButtonDown@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHIVCPoint@@@Z
+?DoLButtonUp@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoLookUp@CG3BrowseEditBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV23@@Z
+?DoMButtonDblClk@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoMButtonDown@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoMButtonUp@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoModal@CG3Dialog@@UAEHPAVCView@@@Z
+?DoModal@CG3Dialog@@UAEHXZ
+?DoMouseActivate@CGXGridCore@@MAEHPAVCWnd@@IIAAH@Z
+?DoMouseMove@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoMoveDown@SECListBoxEditor@@UAEHXZ
+?DoMoveUp@SECListBoxEditor@@UAEHXZ
+?DoNotifyDestroy@CGXGridCore@@MAEHXZ
+?DoOnUpdate@CG3BrowseEditBase@@UAEXXZ
+?DoPreparePrinting@CG3Dialog@@MAEHPAUCPrintInfo@@@Z
+?DoPrintPreview@CG3Dialog@@MAEHIPAVCG3View@@PAVCG3XGridWndPreview@@PAUCG3XGridWndPreviewState@@@Z
+?DoRButtonDblClk@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoRButtonDown@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoRButtonUp@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoRequery@CAPGenChecksFrame@@MAEXPAJ@Z
+?DoRequery@CAPInvPymtFrame@@UAEXPAJ@Z
+?DoScroll@CGXGridCore@@UAEHHK@Z
+?DoSetCursor@CGXGridCore@@MAEHPAVCWnd@@II@Z
+?DoShowMenuPopup@CCurrencyExchStaticBtn@@MAEXXZ
+?DoShowWindow@CGXGridCore@@MAEHHI@Z
+?DoSize@CGXGridCore@@MAEHIHH@Z
+?DoVScroll@CGXGridCore@@MAEHIIPAVCScrollBar@@@Z
+?DrawGridLine@CGXGridCore@@MAEXPAVCDC@@HHHHHKI@Z
+?DrawInvertCell@CGXGridCore@@MAEXPAVCDC@@KKVCRect@@@Z
+?DrawInvertFrame@CGXGridCore@@MAEXPAVCDC@@ABVCRect@@1HHHH@Z
+?DrawSelectionFrame@CGXGridCore@@UAEXPAVCDC@@HPBVCGXRange@@@Z
+?DrawSelectionRangeFrame@CGXGridCore@@MAEXPAVCDC@@ABVCGXRange@@HH@Z
+?Edit@CGXBrowserGrid@@UAEXK@Z
+?EnableContextMenu@?$CG3GridTemplate@VCGXRecordView@@@@UAEXKKPAVCMenu@@@Z
+?EnableContextMenu@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXKKPAVCMenu@@@Z
+?EnableControls@CAPAutoProcView@@UAEXH@Z
+?EnableControls@CAPCheckMntHeaderView@@MAEXH@Z
+?EnableControls@CAPCredMemoMntHeaderView@@MAEXH@Z
+?EnableControls@CAPExportView@@MAEXH@Z
+?EnableControls@CAPGenChecksHeaderView@@MAEXH@Z
+?EnableControls@CAPInvMntHeaderView@@MAEXH@Z
+?EnableControls@CAPInvPymtHeaderView@@MAEXH@Z
+?EnableControls@CAPRecurExpHeaderView@@MAEXH@Z
+?EnableControls@CAPSequenceView@@MAEXH@Z
+?EnableControls@CG3FormView@@UAEXH@Z
+?EnableControls@CG3RecordView@@UAEXH@Z
+?EnableControls@CReconProcHeaderView@@MAEXH@Z
+?EnableControls@CScheduleExportDlg@@QAEXH@Z
+?EnableHammer@CG3Worksheet@@UAEX_N@Z
+?EnableLocationCombo@CLocationSelectorClient@@QAEXH@Z
+?EnableMoveCols@CGXGridParam@@QAEXH@Z
+?EnableSelection@CGXGridParam@@QAEXI@Z
+?EnableSysCommandEx@SECMDIChildWnd@@UAEXK@Z
+?EnableUndo@CGXGridParam@@QAEXH@Z
+?EvalVisibleFloatMergeCells@CGXGridCore@@UAEHABVCGXRange@@KKKKKKHPAV2@H@Z
+?ExecuteCommand@CGXGridCore@@UAEHPAVCGXCommand@@PAV1@W4GXCmdType@@@Z
+?F?X?x?
+?FillCell@?$CG3GridTemplate@VCGXRecordView@@@@MAEXKKKKV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?FillCell@?$CG3GridTemplate@VCGXRecordWnd@@@@MAEXKKKKV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?FillCell@CG3XRecordView@@UAEXKKKKV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?FillComboBox@CLocationSelector@@QBEXPAVCComboBox@@ABVFilter@1@ABVFillOptions@1@@Z
+?FillDragDrop@?$CG3GridTemplate@VCGXRecordView@@@@UAEHPAU_tagG3DROPDATAEX@@ABVCGXRangeList@@@Z
+?FillDragDrop@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHPAU_tagG3DROPDATAEX@@ABVCGXRangeList@@@Z
+?FindNextCell@CGXGridCore@@UAEHHAAK0@Z
+?FindString@?$CG3XRecordBase@VCG3XRecordViewBase@@@@UAEXPBD@Z
+?FindString@?$CG3XRecordBase@VCG3XRecordWndBase@@@@UAEXPBD@Z
+?Format@CG3DateTime@@QBE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@I@Z
+?Format@CG3DateTime@@QBE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PBD@Z
+?Format@CG3DateTime@@QBE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?FormatDisplayString@CG3BrowseEditBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV23@@Z
+?FreeObjectCache@CGXGridCore@@MAEXXZ
+?FreezeCols@CGXGridCore@@UAEXXZ
+?FreezeRows@CGXGridCore@@UAEXXZ
+?G3BeginTrans@@YAHXZ
+?G3CommitTrans@@YAHXZ
+?G3DropButtonMenu@@YAIPAVSECCustomToolBar@@IIHPAVCWnd@@P82@AEXPAVCMenu@@@Z@Z
+?G3EscapeSQL@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV12@_N@Z
+?G3ExecuteSQL@@YA_NABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PAVCG3Database@@W4ExceptionOption@@@Z
+?G3GetApp@@YAPAVCG3WinApp@@XZ
+?G3GetCurLocationID@@YAJXZ
+?G3GetDatabasePtr@@YAPAVCG3Database@@H@Z
+?G3GetFieldDouble@@YANAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@FH@Z
+?G3GetFieldLong@@YAJAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@FHPAVCG3Database@@@Z
+?G3GetFieldLongDB@@YAJABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PAVCG3Database@@FW4ExceptionOption@@@Z
+?G3GetFieldString@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@AAV12@FHPAVCG3Database@@@Z
+?G3GetFieldStringArrayDB@@YA_NABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PAVCG3Database@@AAV?$CArray@V?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@V12@@@W4ExceptionOption@@@Z
+?G3GetFieldStringDB@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV12@PAVCG3Database@@FW4ExceptionOption@@@Z
+?G3GetLocationName@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@J@Z
+?G3GetLocationSelector@@YAPAVCG3LocationSelector@@XZ
+?G3GetNextSequence@@YAHHHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@HPAHHPAVCG3Database@@@Z
+?G3GetSystemParameter@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@JJPAVCG3Database@@W4ExceptionOption@@@Z
+?G3GetVendorName@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@J@Z
+?G3HasEntryAccess@@YAJJJJ@Z
+?G3HasReportAccess@@YAJJJJ@Z
+?G3InvVendorEdit@@YAHJHJ@Z
+?G3IsDisplayGST_PSTOn@@YA_NXZ
+?G3ItemSetTodayDate@@YAXAAUtagTIMESTAMP_STRUCT@@PAVCG3Database@@W4ExceptionOption@@@Z
+?G3PrintEx@@YAXIPAVCWnd@@PAVCSortInfoArray@@PAVCPrintDialog@@@Z
+?G3PrintPreviewEx@@YAXIPAVCWnd@@PAVCSortInfoArray@@_NHHHH@Z
+?G3ResetSequence@@YAHHHHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?G3Rollback@@YAHXZ
+?G3Round@@YAXAANH@Z
+?G3SetSystemParameter@@YAXJJJPAVCG3Database@@@Z
+?GetAdditionalFilter@CG3QuickSearchBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetAdvancedUndoInfo@CGXGridCore@@UAEPAVCObject@@XZ
+?GetAggregator@CG3Worksheet@@UAEAAVCAggregator@@XZ
+?GetAllDetailView@CAPGenChecksFrame@@IAEPAVCObject@@XZ
+?GetAppendRow@CGXBrowserGrid@@UAEKXZ
+?GetAppID@CAPPeriodSetupView@@MAEHXZ
+?GetAutoID@CAPExportView@@MAEJXZ
+?GetBatchCurrencyID@CAPInvPymtHeaderView@@MAEJXZ
+?GetBeam@CGXTabWnd@@QAEAAVCGXTabBeam@@XZ
+?GetBeginDate@CG3CurrentPeriodBase@@QAE?AVCG3DateTime@@XZ
+?GetCellRangeRowCol@CGXGridCore@@UAEPAVCGXRange@@KKAAV2@@Z
+?GetCheckNumber@CAPInvMntHeaderView@@IAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetCheckTotal@CAPGenChecksFrame@@QAENH@Z
+?GetClipboardStyleRowCol@CGXGridCore@@UAEHKKPAVCGXStyle@@H@Z
+?GetColCount@CGXGridCore@@UAEKXZ
+?GetColIndex@CGXBrowserGrid@@UAEKK@Z
+?GetColIndexByName@?$CG3GridTemplate@VCGXRecordView@@@@QAEKV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetColWidth@?$CG3GridTemplate@VCGXRecordView@@@@UAEHK@Z
+?GetColWidth@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHK@Z
+?GetContextMenuID@?$CG3GridTemplate@VCGXRecordView@@@@UAEIKKVCPoint@@@Z
+?GetContextMenuID@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEIKKVCPoint@@@Z
+?GetContextMenuID@CG3QuickSearchResultsGrid@@MAEIKKVCPoint@@@Z
+?GetContextSubMenuID@?$CG3GridTemplate@VCGXRecordView@@@@UAEIKKVCPoint@@@Z
+?GetContextSubMenuID@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEIKKVCPoint@@@Z
+?GetContextSubMenuID@CG3QuickSearchResultsGrid@@MAEIKKVCPoint@@@Z
+?GetControl@CGXGridCore@@UAEPAVCGXControl@@KK@Z
+?GetCopyTextRowCol@CGXGridCore@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@KK@Z
+?GetCoveredCellsRowCol@CGXGridCore@@UAEPAVCGXRange@@KKAAV2@@Z
+?GetCreditTotal@CAPGenChecksFrame@@QAENH@Z
+?GetCurGridCol@CG3RecordView@@UAEJXZ
+?GetCurGridRow@CG3RecordView@@UAEJXZ
+?GetCurrencyExId@CAPInvMntHeaderView@@IAEHXZ
+?GetCurrentAPCredRslvHdrID@CAPCredMemoMntFrame@@QAEJXZ
+?GetCurrentAPExpenseID@CAPRecurExpFrame@@QAEJXZ
+?GetCurrentAPIHeaderID@CAPInvMntFrame@@QAEJXZ
+?GetCurrentAPRetHdrID@CAPCredReqMntFrame@@QAEJXZ
+?GetCurrentCell@CGXGridCore@@QAEHPAK0H@Z
+?GetCurrentCheckHeaderID@CAPCheckMntFrame@@QAEJXZ
+?GetCurrentDataPtr@CG3NavComboBox@@QAEPAJXZ
+?GetCurrentExpensePeriodUI@CAPInvMntHeaderView@@UAE?AVCG3DateTime@@XZ
+?GetCurrentRecHdrID@CAPGenChecksFrame@@QAEJXZ
+?GetCurrentRecHdrID@CAPInvPymtFrame@@QAEJXZ
+?GetCurrentYear@CAPPeriodSetupView@@MAEHXZ
+?GetCurrExchObj@CG3WinApp@@QAEPAVCCurrencyExchObj@@J@Z
+?GetCustomerQuery@CG3QuickSearchBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV23@H@Z
+?GetCWnd@CG3QuickSearchBase@@MAEPAVCWnd@@XZ
+?GetDatabasePtr@CHeaderSet@@MAEPAVCG3Database@@XZ
+?GetDataEx@CG3BrowseEditBase@@UAEJXZ
+?GetDateQuery@CG3QuickSearchBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV23@00@Z
+?GetDefaultColWidth@CGXGridCore@@UAEHXZ
+?GetDefaultConnect@CAPCheckHeaderSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultConnect@CAPCreditResolvedDetailSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultConnect@CAPCreditResolvedHeaderSet@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultConnect@CAPInvDetailSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultConnect@CAPInvHeaderSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultConnect@CAPPayBatchDetailSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultConnect@CAPPayBatchHeaderSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultConnect@CAPRecurExpDetailSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultConnect@CAPReturnDetailSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultConnect@CAutoAcctSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultConnect@CAutoLocSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultConnect@CAutoVendSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultRowHeight@CGXGridCore@@UAEHXZ
+?GetDefaultSQL@CAPCheckHeaderSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultSQL@CAPCreditResolvedDetailSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultSQL@CAPCreditResolvedHeaderSet@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultSQL@CAPInvDetailSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultSQL@CAPInvHeaderSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultSQL@CAPPayBatchDetailSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultSQL@CAPPayBatchHeaderSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultSQL@CAPRecurExpDetailSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultSQL@CAPReturnDetailSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultSQL@CAutoAcctSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultSQL@CAutoLocSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultSQL@CAutoVendSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDetailView@CAPCheckMntFrame@@QAEPAVCAPCheckMntDetailView@@XZ
+?GetDetailView@CAPCheckMntHeaderView@@IAEPAVCAPCheckMntDetailView@@XZ
+?GetDetailView@CAPCredMemoMntFrame@@QAEPAVCAPCredMemoMntDetailView@@XZ
+?GetDetailView@CAPCredMemoMntHeaderView@@IAEPAVCAPCredMemoMntDetailView@@XZ
+?GetDetailView@CAPCredReqMntFrame@@QAEPAVCAPCredReqMntDetailView@@XZ
+?GetDetailView@CAPCredReqMntHeaderView@@IAEPAVCAPCredReqMntDetailView@@XZ
+?GetDetailView@CAPGenChecksFrame@@QAEPAVCAPGenChecksDetailView@@XZ
+?GetDetailView@CAPGenChecksHeaderView@@IAEPAVCAPGenChecksDetailView@@XZ
+?GetDetailView@CAPInvMntFrame@@QAEPAVCAPInvMntDetailView@@XZ
+?GetDetailView@CAPInvMntHeaderView@@IAEPAVCAPInvMntDetailView@@XZ
+?GetDetailView@CAPInvPymtFrame@@QAEPAVCAPInvPymtDetailView@@XZ
+?GetDetailView@CAPInvPymtHeaderView@@IAEPAVCAPInvPymtDetailView@@XZ
+?GetDetailView@CAPRecurExpFrame@@QAEPAVCAPRecurExpDetailView@@XZ
+?GetDetailView@CAPRecurExpHeaderView@@IAEPAVCAPRecurExpDetailView@@XZ
+?GetDetailView@CReconProcFrame@@QAEPAVCReconProcDetailView@@XZ
+?GetDetailView@CReconProcHeaderView@@IAEPAVCReconProcDetailView@@XZ
+?GetDetailWnd@CG3HeaderDtlSheet@@UAEPAVCWnd@@XZ
+?GetDiscountTotal@CAPGenChecksFrame@@QAENH@Z
+?GetDisplaySize@CGXODBCGrid@@MAEJABUCGXFieldInfo@@J@Z
+?GetDoubleValue@CGXStyle@@QBENXZ
+?GetDropDataGlobal@?$CG3GridTemplate@VCGXRecordView@@@@UAEPAXPAVCGXNoOleDataObjectProxy@@@Z
+?GetDropDataGlobal@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEPAXPAVCGXNoOleDataObjectProxy@@@Z
+?GetDtlAllClass@CAPGenChecksFrame@@MAEPAUCRuntimeClass@@XZ
+?GetDtlAllClass@CAPInvPymtFrame@@UAEPAUCRuntimeClass@@XZ
+?GetDtlDtlClass@CAPGenChecksFrame@@MAEPAUCRuntimeClass@@XZ
+?GetDtlDtlClass@CAPInvPymtFrame@@UAEPAUCRuntimeClass@@XZ
+?GetDtlSumClass@CAPGenChecksFrame@@MAEPAUCRuntimeClass@@XZ
+?GetDtlSumClass@CAPInvPymtFrame@@UAEPAUCRuntimeClass@@XZ
+?GetEndDate@CG3CurrentPeriodBase@@QAE?AVCG3DateTime@@XZ
+?GetError@CGXGridCore@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetFieldData@CGXDynamicRecordset@@QAEHHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?GetFieldData@CGXODBCGrid@@QAEXHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetFilterAllValid@CG3LocationComboBox@@QAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetFontHeight@CGXGridCore@@UAEHXZ
+?GetFontMetrics@CGXGridCore@@MAEXPAVCDC@@AAH1@Z
+?GetFontWidth@CGXGridCore@@UAEHXZ
+?GetFrozenCols@CGXGridCore@@UAEKXZ
+?GetFrozenRows@CGXGridCore@@UAEKXZ
+?GetG3RecordView@CG3QuickSearchBase@@MAEPAVCG3RecordView@@XZ
+?GetG3XRecordView@CG3QuickSearchBase@@MAEPAVCG3XRecordView@@XZ
+?GetGlbHeaderTxt@CAPCheckMntHeaderView@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetGlbHeaderTxt@CAPCredMemoMntHeaderView@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetGlbHeaderTxt@CAPCredReqMntHeaderView@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetGlbHeaderTxt@CAPExportView@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetGlbHeaderTxt@CAPGenChecksHeaderView@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetGlbHeaderTxt@CAPInvMntHeaderView@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetGlbHeaderTxt@CAPInvPymtHeaderView@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetGlbHeaderTxt@CAPRecurExpHeaderView@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetGlbHeaderTxt@CG3RecordView@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetGXTabWnd@CG3HeaderDtlSheet@@MAEAAVCGXTabWnd@@XZ
+?GetHeaderClass@CAPGenChecksFrame@@MAEPAUCRuntimeClass@@XZ
+?GetHeaderClass@CAPInvPymtFrame@@UAEPAUCRuntimeClass@@XZ
+?GetHeaderCols@CGXGridCore@@UAEKXZ
+?GetHeaderID@CAPRecurExpHeaderView@@QAEJXZ
+?GetHeaderID@CHeaderView@@UAEHXZ
+?GetHeaderRows@CGXGridCore@@UAEKXZ
+?GetHeaderView@CAPCheckMntFrame@@QAEPAVCAPCheckMntHeaderView@@XZ
+?GetHeaderView@CAPCredMemoMntFrame@@QAEPAVCAPCredMemoMntHeaderView@@XZ
+?GetHeaderView@CAPCredReqMntFrame@@QAEPAVCAPCredReqMntHeaderView@@XZ
+?GetHeaderView@CAPGenChecksFrame@@QAEPAVCAPGenChecksHeaderView@@XZ
+?GetHeaderView@CAPInvMntFrame@@QAEPAVCAPInvMntHeaderView@@XZ
+?GetHeaderView@CAPInvPymtFrame@@QAEPAVCAPInvPymtHeaderView@@XZ
+?GetHeaderView@CAPRecurExpFrame@@QAEPAVCAPRecurExpHeaderView@@XZ
+?GetHeaderView@CReconProcFrame@@QAEPAVCReconProcHeaderView@@XZ
+?GetHeaderWnd@CG3HeaderDtlSheet@@UAEPAVCWnd@@XZ
+?GetID@CG3BrowseEditBase@@UAEJXZ
+?GetInvertStateRowCol@CGXGridCore@@UAEHKKPBVCGXRangeList@@@Z
+?GetInvoiceTotal@CAPGenChecksFrame@@QAENH@Z
+?GetItemFindFmtStr@CG3RecordView@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetItemFindStr@CG3QuickSearchBase@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetLastRow@CGXBrowserGrid@@UAEKXZ
+?GetListBoxPtr@SECListBoxEditor@@QBEPAVCListBox@@XZ
+?GetLocationComboBoxPtr@@YAPAVCG3LocationComboBox@@XZ
+?GetLocationID@?$CG3GridTemplate@VCGXRecordView@@@@UAEJXZ
+?GetLocationID@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEJXZ
+?GetLocationID@CG3Dialog@@UAEJXZ
+?GetLocationID@CG3FormView@@UAEJXZ
+?GetLocationID@CG3RecordView@@UAEJXZ
+?GetLocationID@CG3Worksheet@@MAEJXZ
+?GetLocationString@CG3QuickSearchBase@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetLocationText@CG3SequenceView@@IAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetLongValue@?$CG3GridTemplate@VCGXRecordView@@@@QAEJKPBD@Z
+?GetLongValue@?$CG3GridTemplate@VCGXRecordWnd@@@@QAEJKPBD@Z
+?GetMainIDStr@CAPExportView@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetMainTable@CAPExportView@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetMapValue@CG3QuickSearchResultsGrid@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@KABVCGXStyle@@@Z
+?GetMessageMap@CAPCheckMntFrame@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPCheckMntHeaderView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPCredMemoMntFrame@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPCredMemoMntHeaderView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPCredReqMntFrame@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPCredReqMntHeaderView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPExportView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPGenChecksFrame@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPGenChecksHeaderView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPGenParamView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPGenRecurEntView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPInvMntFrame@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPInvMntHeaderView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPInvPymtFrame@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPInvPymtHeaderView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPMEBaseView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPMEReportView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPMESetupView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPMonthEndView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPPeriodSetupView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPPurgeHeaderView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPPurgeParamView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPRecurExpFrame@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPRecurExpHeaderView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPSequenceView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CAPStoreParamView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CCurrencyExchStaticBtn@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CG3QuickSearchBase@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CG3XRecordWnd@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CReconProcFrame@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CReconProcHeaderView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CScheduleExportDlg@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@SECListBoxEditor@@MBEPBUAFX_MSGMAP@@XZ
+?GetModuleFrame@CHeaderView@@MAEPAVCModuleFrame@@XZ
+?GetModuleID@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEIXZ
+?GetModuleID@?$CG3XViewBase@VCGXRecordView@@@@UAEIXZ
+?GetModuleID@CG3Dialog@@UAEJXZ
+?GetModuleID@CG3RecordView@@QAEIXZ
+?GetNavigatorWnd@CAPCheckMntFrame@@QAEPAVCG3NavComboBox@@XZ
+?GetNavigatorWnd@CAPCredMemoMntFrame@@QAEPAVCG3NavComboBox@@XZ
+?GetNavigatorWnd@CAPCredMemoMntHeaderView@@IAEPAVCG3NavComboBox@@XZ
+?GetNavigatorWnd@CAPCredReqMntFrame@@QAEPAVCG3NavComboBox@@XZ
+?GetNavigatorWnd@CAPCredReqMntHeaderView@@IAEPAVCG3NavComboBox@@XZ
+?GetNavigatorWnd@CAPInvMntFrame@@QAEPAVCG3NavComboBox@@XZ
+?GetNavigatorWnd@CAPInvMntHeaderView@@IAEPAVCG3NavComboBox@@XZ
+?GetNavigatorWnd@CAPRecurExpFrame@@QAEPAVCG3NavComboBox@@XZ
+?GetNavigatorWnd@CG3HeaderDtlSheet@@QAEPAVCG3NavComboBox@@XZ
+?GetNavigatorWnd@CReconProcFrame@@QAEPAVCG3NavComboBox@@XZ
+?GetNavigatorWnd@CReconProcHeaderView@@IAEPAVCG3NavComboBox@@XZ
+?GetNavWnd@CG3HeaderDtlViewBase@@QAEPAVCG3NavComboBox@@XZ
+?GetNextCheckNumber@CG3APPrintCheck@@QAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?GetNextInSequence@CG3SequenceView@@IAEJXZ
+?GetOleViewerRowCol@CGXBrowserGrid@@UBEXKKKAAPAVCGXOleViewer@@@Z
+?GetParamInfoOb@?$CG3XViewBase@VCGXRecordView@@@@QAEPAVCG3ParamInfoOb@@XZ
+?GetParamInfoOb@CG3FormView@@QAEPAVCG3ParamInfoOb@@XZ
+?GetParamInfoOb@CG3RecordView@@QAEPAVCG3ParamInfoOb@@PAV1@@Z
+?GetParamInfoOb@CG3RecordView@@QAEPAVCG3ParamInfoOb@@XZ
+?GetParentWorksheet@CG3FormView@@MAEPAVCG3Worksheet@@XZ
+?GetParentWorksheet@CG3RecordView@@MAEPAVCG3Worksheet@@XZ
+?GetPayFlag@CAPInvMntHeaderView@@IAEHXZ
+?GetPeriod@CG3PeriodEditBase@@QAE?AVCG3DateTime@@XZ
+?GetProcModuleID@CAPExportView@@MAEJXZ
+?GetQuery@CG3QuickSearchResultsGrid@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@KH@Z
+?GetQueryRecordCount@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEJXZ
+?GetQueryRecordCount@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEJXZ
+?GetQuickSearch@CAPCheckMntFrame@@QAEPAVCAPCheckMntQuickSearch@@XZ
+?GetQuickSearch@CAPCredMemoMntFrame@@QAEPAVCAPCredMemoMntQuickSearch@@XZ
+?GetQuickSearch@CAPCredReqMntFrame@@QAEPAVCAPCredReqMntQuickSearch@@XZ
+?GetQuickSearch@CAPInvMntFrame@@QAEPAVCAPInvMntQuickSearch@@XZ
+?GetQuickSearch@CAPRecurExpFrame@@QAEPAVCAPRecurExpQuickSearch@@XZ
+?GetQuickSearch@CReconProcFrame@@QAEPAVCReconProcQuickSearch@@XZ
+?GetQuickSearchAddStoredProc@CAPCreditResolvedHeaderSet@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV23@@Z
+?GetQuickSearchAddStoredProc@CAPInvHeaderSet@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV23@@Z
+?GetRangeName@CGXGridCore@@UAEHPBDAAVCGXRange@@@Z
+?GetRecordset@CAPCheckMntHeaderView@@QAEPAVCAPCheckHeaderSet@@XZ
+?GetRecordset@CAPCredMemoMntHeaderView@@IAEPAVCAPCreditResolvedHeaderSet@@XZ
+?GetRecordset@CAPCredReqMntHeaderView@@QAEPAVCAPCredReqMntHdrVwSet@@XZ
+?GetRecordset@CAPExportView@@IAEPAVCAPExportSet@@XZ
+?GetRecordset@CAPGenChecksHeaderView@@QAEPAVCAPPayBatchHeaderSet@@XZ
+?GetRecordset@CAPInvMntHeaderView@@IAEPAVCAPInvHeaderSet@@XZ
+?GetRecordset@CAPInvPymtHeaderView@@IAEPAVCAPPayBatchHeaderSet@@XZ
+?GetRecordset@CAPRecurExpHeaderView@@QAEPAVCAPRecExpHdrVwSet@@XZ
+?GetRecordset@CReconProcHeaderView@@QAEPAVCReconProcHeaderVwSet@@XZ
+?GetRegisteredControl@CGXGridCore@@UAEPAVCGXControl@@G@Z
+?GetRowCount@CGXBrowserGrid@@UAEKXZ
+?GetRowHeight@CGXGridCore@@UAEHK@Z
+?GetRowIndex@CGXBrowserGrid@@UAEKK@Z
+?GetRuntimeClass@CAPCheckHeaderSet@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPCheckMntFrame@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPCheckMntHeaderView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPCreditResolvedDetailSet@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPCreditResolvedHeaderSet@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPCredMemoMntFrame@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPCredMemoMntHeaderView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPCredReqMntFrame@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPCredReqMntHeaderView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPExportView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPGenChecksFrame@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPGenChecksHeaderView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPGenParamView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPGenRecurEntView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPInvDetailSet@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPInvHeaderSet@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPInvMntFrame@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPInvMntHeaderView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPInvPymtFrame@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPInvPymtHeaderView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPMEBaseView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPMEReportView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPMESetupView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPMonthEndView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPPayBatchDetailSet@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPPayBatchHeaderSet@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPPeriodSetupView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPPurgeHeaderView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPPurgeParamView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPRecurExpDetailSet@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPRecurExpFrame@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPRecurExpHeaderView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPReturnDetailSet@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPSequenceView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAPStoreParamView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAutoAcctSet@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAutoLocSet@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CAutoVendSet@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CG3Dialog@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CG3IncrementalSearchDlg@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CG3IncrementalSearchGrd@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CG3QuickSearchBase@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CG3XRecordWnd@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CReconProcFrame@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CReconProcHeaderView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CScheduleExportDlg@@UBEPAUCRuntimeClass@@XZ
+?GetScrollBarCtrl@CGXRecordView@@UBEPAVCScrollBar@@H@Z
+?GetScrollBarCtrl@CGXRecordWnd@@UBEPAVCScrollBar@@H@Z
+?GetScrollPos@CGXGridCore@@MBEKH@Z
+?GetScrollRange@CGXGridCore@@MBEXHPAK0@Z
+?GetSelectedRanges@?$CG3GridTemplate@VCGXRecordView@@@@MAEPAVCGXRangeList@@XZ
+?GetSelectedRanges@?$CG3GridTemplate@VCGXRecordWnd@@@@MAEPAVCGXRangeList@@XZ
+?GetSelectedRows@CGXGridCore@@UAEHAAVCDWordArray@@0HH@Z
+?GetSelectedRows@CGXGridCore@@UAEKAAVCDWordArray@@HH@Z
+?GetSort@CAPInvHeaderSet@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetSort@CHeaderSet@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetSortKey@CGXGridCore@@UAEXPAVCGXControl@@KKABUCGXSortInfo@@ABVCGXStyle@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetStatusDesc@CG3RecordView@@QAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@G@Z
+?GetStyleArray@CGXGridCore@@UAEPAVCObArray@@ABVCGXRange@@HPAVCGXLongOperation@@@Z
+?GetStyleRowCol@CGXBrowserGrid@@UAEHKKAAVCGXStyle@@W4GXModifyType@@H@Z
+?GetSuperWndProcAddr@SECBrowseEditBase@@MAEPAP6GJPAUHWND__@@IIJ@ZXZ
+?GetSysColor@GX_SYS_DATA@@QAEKH@Z
+?GetTab@CGXTabBeam@@QAEAAVCGXTabInfo@@H@Z
+?GetTabIndex@CG3HeaderDtlSheet@@UAEHXZ
+?GetTermFilter@CG3QuickSearchBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetThisClass@CAPAutoProcView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPCheckMntFrame@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPCheckMntHeaderView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPCredMemoMntFrame@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPCredMemoMntHeaderView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPCredReqMntFrame@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPCredReqMntHeaderView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPExportView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPGenChecksFrame@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPGenChecksHeaderView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPGenParamView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPGenRecurEntView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPInvMntFrame@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPInvMntHeaderView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPInvPymtFrame@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPInvPymtHeaderView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPMEBaseView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPMEReportView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPMESetupView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPMonthEndView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPPeriodSetupView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPPurgeHeaderView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPPurgeParamView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPRecurExpFrame@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPRecurExpHeaderView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPSequenceView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CAPStoreParamView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3Dialog@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3FormView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3HeaderDtlSheet@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3HeaderDtlViewBase@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3QuickSearchResultsGrid@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3RecordView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3SequenceView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3SysParamsView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3Worksheet@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3XRecordView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3XRecordWnd@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CPeriodSetupBaseView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CReconProcFrame@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CReconProcHeaderView@@SGPAUCRuntimeClass@@XZ
+?GetThisMessageMap@CAPAutoProcView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPCheckMntFrame@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPCheckMntHeaderView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPCredMemoMntFrame@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPCredMemoMntHeaderView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPCredReqMntFrame@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPCredReqMntHeaderView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPExportView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPGenChecksFrame@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPGenChecksHeaderView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPGenParamView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPGenRecurEntView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPInvMntFrame@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPInvMntHeaderView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPInvPymtFrame@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPInvPymtHeaderView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPMEBaseView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPMEReportView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPMESetupView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPMonthEndView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPPeriodSetupView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPPurgeHeaderView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPPurgeParamView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPRecurExpFrame@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPRecurExpHeaderView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPSequenceView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CAPStoreParamView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3BrowseEditBase@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3Dialog@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3FormView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3HeaderDtlSheet@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3HeaderDtlViewBase@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3IncrementalSearchDlg@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3IncrementalSearchGrd@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3QuickSearchResultsGrid@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3RecordView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3SequenceView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3SysParamsView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3Worksheet@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3XRecordView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3XRecordWnd@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CPeriodSetupBaseView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CReconProcFrame@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CReconProcHeaderView@@KGPBUAFX_MSGMAP@@XZ
+?GetToolBarButtons@CG3HeaderDtlSheet@@MAEKXZ
+?GetToolBarStyles@CG3HeaderDtlSheet@@MAEKXZ
+?GetTransactionID@?$CG3GridTemplate@VCGXRecordView@@@@UAEJXZ
+?GetTransactionID@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEJXZ
+?GetTransactionID@CG3Dialog@@UAEJXZ
+?GetTransactionID@CG3FormView@@UAEJXZ
+?GetTransactionID@CG3RecordView@@UAEJXZ
+?GetTransactionID@CG3Worksheet@@MAEJXZ
+?GetTransferDtlID@?$CG3GridTemplate@VCGXRecordView@@@@UAEJXZ
+?GetTransferDtlID@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEJXZ
+?GetTransferDtlID@CG3Dialog@@UAEJXZ
+?GetTransferDtlID@CG3FormView@@UAEJXZ
+?GetTransferDtlID@CG3RecordView@@UAEJXZ
+?GetTransferDtlID@CG3Worksheet@@MAEJXZ
+?GetTransferID@?$CG3GridTemplate@VCGXRecordView@@@@UAEJXZ
+?GetTransferID@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEJXZ
+?GetTransferID@CG3Dialog@@UAEJXZ
+?GetTransferID@CG3FormView@@UAEJXZ
+?GetTransferID@CG3RecordView@@UAEJXZ
+?GetTransferID@CG3Worksheet@@MAEJXZ
+?GetUIntValue@CGXStyle@@QBEIXZ
+?GetUpdateFlag@CGXGridCore@@UAEHKK@Z
+?GetValue@?$CMapArrayT@V?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@@QAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@HH@Z
+?GetValue@CG3CurrencyEdit@@QAEXAAN@Z
+?GetValue@CG3PercentMaskedEdit@@QAEHAAN@Z
+?GetValue@CG3XCurrencyEdit@@QAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@_N@Z
+?GetValueByColName@?$CG3GridTemplate@VCGXRecordWnd@@@@QAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@KV23@@Z
+?GetValueRowCol@CGXData@@QAEPBDKKHPAVCGXStyle@@@Z
+?GetValueRowCol@CGXGridCore@@QAEABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@KK@Z
+?GetVendor@CAPCheckMntHeaderView@@IAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetVendorCurrencyExId@CG3RecordView@@MAEHH@Z
+?GetVendorCurrencyId@@YAHH@Z
+?GetVendorDisplayed@CAPCredMemoMntHeaderView@@MAEHXZ
+?GetVendorDisplayed@CAPInvMntHeaderView@@MAEHXZ
+?GetVendorDisplayed@CAPRecurExpHeaderView@@MAEHXZ
+?GetVendorDisplayed@CG3RecordView@@MAEHXZ
+?GetVendorInRecordset@CAPCredMemoMntHeaderView@@MAEHXZ
+?GetVendorInRecordset@CAPInvMntHeaderView@@MAEHXZ
+?GetVendorInRecordset@CAPRecurExpHeaderView@@MAEHXZ
+?GetVendorInRecordset@CG3RecordView@@MAEHXZ
+?GetVendorMapValue@CAPGenChecksFrame@@IAEPAVCGenCheckTotals@@H@Z
+?GetViewAllowCurrencyChange@CAPCredMemoMntHeaderView@@MAE_NXZ
+?GetViewAllowCurrencyChange@CAPInvMntHeaderView@@MAE_NXZ
+?GetViewAllowCurrencyChange@CAPInvPymtHeaderView@@MAE_NXZ
+?GetViewAllowCurrencyChange@CG3RecordView@@UAE_NXZ
+?GetViewBaseCurrencyId@CAPGenChecksHeaderView@@MAEJXZ
+?GetViewBaseCurrencyId@CG3RecordView@@UAEJXZ
+?GetViewCurrencyId@CAPCheckMntHeaderView@@MAEJXZ
+?GetViewCurrencyId@CAPCredMemoMntHeaderView@@MAEJXZ
+?GetViewCurrencyId@CAPCredReqMntHeaderView@@UAEJXZ
+?GetViewCurrencyId@CAPGenChecksHeaderView@@MAEJXZ
+?GetViewCurrencyId@CAPInvMntHeaderView@@MAEJXZ
+?GetViewCurrencyId@CAPInvPymtHeaderView@@MAEJXZ
+?GetViewCurrencyId@CAPRecurExpHeaderView@@MAEJXZ
+?GetViewCurrencyId@CG3RecordView@@UAEJXZ
+?GetViewCurrencyId@CReconProcHeaderView@@MAEJXZ
+?GetViewCurrencyRate@CAPCheckMntHeaderView@@MAENXZ
+?GetViewCurrencyRate@CAPCredMemoMntHeaderView@@MAENXZ
+?GetViewCurrencyRate@CAPCredReqMntHeaderView@@UAENXZ
+?GetViewCurrencyRate@CAPGenChecksHeaderView@@MAENXZ
+?GetViewCurrencyRate@CAPInvMntHeaderView@@MAENXZ
+?GetViewCurrencyRate@CAPInvPymtHeaderView@@MAENXZ
+?GetViewCurrencyRate@CG3RecordView@@UAENXZ
+?GetViewCurrencyRate@CReconProcHeaderView@@MAENXZ
+?GetVoucherNumber@CAPCredMemoMntHeaderView@@IAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetVoucherNumber@CAPInvMntHeaderView@@IAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetYear@CG3DateTime@@QAEHXZ
+?GetZoom@CGXGridCore@@UAEHXZ
+?GXGetAppState@@YGPAUGX_APP_STATE@@XZ
+?HasDiscrepancies@CAPInvMntHeaderView@@IAEHXZ
+?HideCols@CGXGridCore@@UAEHKKHPAHIW4GXCmdType@@@Z
+?HideCurrentCell@CGXGridCore@@UAEXXZ
+?HideRows@CGXGridCore@@UAEHKKHPAHIW4GXCmdType@@@Z
+?HitTest@CGXGridCore@@UAEHAAVCPoint@@PAK1PAVCRect@@@Z
+?I?P?a?m?y?
+?INCLUDE_ALL@CLocationSelector@@2VFilter@1@B
+?Init@CCurrencyExchStaticBtn@@QAEXXZ
+?InitBrowserSettings@CGXBrowserGrid@@MAEXXZ
+?InitColumnHeaders@?$CG3GridTemplate@VCGXRecordView@@@@UAEXXZ
+?InitColumnHeaders@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXXZ
+?InitGrid@?$CG3GridTemplate@VCGXRecordView@@@@UAEXPAU_tagG3GRIDINFO@@@Z
+?InitGrid@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXPAU_tagG3GRIDINFO@@@Z
+?InitGrid@CG3HeaderDtlViewBase@@MAEXPAU_tagG3GRIDINFO@@@Z
+?InitGrid@CG3QuickSearchResultsGrid@@MAEXPAU_tagG3GRIDINFO@@@Z
+?Initialize@CAPCheckMntHeaderView@@IAEXXZ
+?Initialize@CAPCredMemoMntHeaderView@@IAEXXZ
+?Initialize@CAPCredReqMntHeaderView@@IAEXXZ
+?Initialize@CAPGenChecksHeaderView@@IAEXXZ
+?Initialize@CAPInvMntHeaderView@@IAEXXZ
+?Initialize@CAPInvPymtHeaderView@@IAEXXZ
+?Initialize@CAPPurgeHeaderView@@IAEXXZ
+?Initialize@CAPRecurExpHeaderView@@IAEXXZ
+?Initialize@CG3BrowseEditBase@@UAEHIPAVCWnd@@PADHKK@Z
+?Initialize@CG3ColorStaticCtrl@@QAEHIPAVCWnd@@KKHHH@Z
+?Initialize@CG3ComboBox@@QAEHIPAVCWnd@@PAVCDatabase@@PBD@Z
+?Initialize@CG3EDIIndicator@@QAEXHPAVCWnd@@@Z
+?Initialize@CG3GLCodeBrowseEdit@@QAEHIPAVCWnd@@J@Z
+?Initialize@CG3PeriodEditBase@@QAEXIPAVCWnd@@@Z
+?Initialize@CG3QuickSearchBase@@QAEXPAVCG3Worksheet@@PAVSECCustomToolBar@@PAIHPAUCRuntimeClass@@@Z
+?Initialize@CG3VendBrowseEdit@@QAEHIPAVCWnd@@J@Z
+?Initialize@CGXRecordWnd@@QAEXXZ
+?Initialize@CReconProcHeaderView@@IAEXXZ
+?Initialize@SECListBoxEditor@@UAEHIPAVCWnd@@H@Z
+?Initialize@SECListBoxEditor@@UAEHPAVCWnd@@IH@Z
+?InitializeQS@CG3QuickSearchBase@@UAEXPAVCG3Worksheet@@PAVSECCustomToolBar@@@Z
+?InsertCols@CGXGridCore@@UAEHKKPAHPAVCObArray@@1KIW4GXCmdType@@@Z
+?InsertRows@CGXGridCore@@UAEHKKPAHPAVCObArray@@1KIW4GXCmdType@@@Z
+?InvoiceBalances@CAPInvMntHeaderView@@IAEHXZ
+?IsActive@?$CG3XRecordBase@VCG3XRecordViewBase@@@@UAEHXZ
+?IsActive@?$CG3XRecordBase@VCG3XRecordWndBase@@@@UAEHXZ
+?IsCatShipHeaderSet@CHeaderSet@@MBE_NXZ
+?IsCheckCleared@CAPCheckMntHeaderView@@MAE_NH@Z
+?IsClosedStatus@CReconProcHeaderView@@QAEHXZ
+?IsColHidden@CGXGridCore@@UAEHK@Z
+?IsColumnValidForFill@?$CG3GridTemplate@VCGXRecordView@@@@MAE_NK@Z
+?IsColumnValidForFill@?$CG3GridTemplate@VCGXRecordWnd@@@@MAE_NK@Z
+?IsCopyPasteId@CG3Worksheet@@MAE_NH@Z
+?IsDetailCurrencyValid@CAPInvPymtHeaderView@@IAE_N_N@Z
+?IsEditable@CG3HeaderDtlViewBase@@MAEHXZ
+?IsOnLastRecord@CGXBrowserGrid@@QAEHXZ
+?IsOpenStatus@CReconProcHeaderView@@QAEHXZ
+?IsQuickSearchStoredProc@CHeaderSet@@MAE_NXZ
+?IsReadOnly@CGXGridCore@@UAEHXZ
+?IsRecordsetEmpty@CG3RecordView@@UAEHXZ
+?IsRecordsetFieldDirty@CG3RecordView@@UAEHPAX@Z
+?IsRowHidden@CGXGridCore@@UAEHK@Z
+?IsScrollLockedFromCell@CGXGridCore@@UAEHXZ
+?IsSelectLocEditable@CG3XRecordView@@QAEHXZ
+?IsSequenceValid@CAPInvPymtHeaderView@@IAE_N_N@Z
+?IsUpdatePending@?$CG3XRecordBase@VCG3XRecordViewBase@@@@QAEHXZ
+?IsUpdatePending@CG3RecordView@@UAEHXZ
+?IsValidCell@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEHXZ
+?IsValidCell@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEHXZ
+?IsValidData@CG3BrowseEditBase@@MAEHXZ
+?IsValidDate@CG3DateTime@@QAEHXZ
+?IsValidRecord@CHeaderView@@MAE_NXZ
+?IsValidVendorCurrency@CAPCredMemoMntHeaderView@@MAE_NXZ
+?IsValidVendorCurrency@CAPInvMntHeaderView@@MAE_NXZ
+?IsValidVendorCurrency@CAPRecurExpHeaderView@@MAE_NXZ
+?IsValidVendorCurrency@CG3RecordView@@MAE_NXZ
+?IsZeroValid@CG3BrowseEditBase@@UAEHXZ
+?LoadFont@CGXGridCore@@UAEPAVCFont@@PAVCDC@@ABVCGXStyle@@PBV4@@Z
+?LoadFrame@CG3Worksheet@@UAEHIKPAVCWnd@@PAUCCreateContext@@@Z
+?LoadFromSystemParams@CAPMEBaseView@@IAEXXZ
+?LoadParameters@CAPMEReportView@@IAEXXZ
+?LoadStatusMap@CG3RecordView@@IAEXH@Z
+?LookUp@CG3BrowseEditBase@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@J@Z
+?LookupStyleRowCol@CGXGridCore@@UAEABVCGXStyle@@KK@Z
+?MarkEdit@CGXGridCore@@MAEXKKII@Z
+?MergeCoveredCells@CGXGridCore@@MAEXAAVCGXRange@@@Z
+?MoveCells@CGXGridCore@@UAEHVCGXRange@@KKPAVCObject@@IW4GXCmdType@@@Z
+?MoveCols@CG3HeaderDtlViewBase@@MAEHKKKIW4GXCmdType@@@Z
+?MoveCols@CGXGridCore@@UAEHKKKIW4GXCmdType@@@Z
+?MoveCurrentCell@CGXGridCore@@UAEHHIH@Z
+?MoveCurrentCellEx@CGXGridCore@@MAEHHI@Z
+?MoveDataCols@CGXGridCore@@UAEHABVCGXRange@@ABVCDWordArray@@IW4GXCmdType@@@Z
+?MoveDataRows@CGXGridCore@@UAEHABVCGXRange@@ABVCDWordArray@@IW4GXCmdType@@@Z
+?MoveRows@CGXGridCore@@UAEHKKKIW4GXCmdType@@@Z
+?MoveTo@CGXODBCGrid@@UAEHK@Z
+?MoveUpCore@SECListBoxEditor@@UAEXH@Z
+?OnActivateGrid@CGXGridCore@@MAEHH@Z
+?OnActivateView@CG3HeaderDtlViewBase@@MAEXHPAVCView@@0@Z
+?OnActivateView@CG3RecordView@@MAEXHPAVCView@@0@Z
+?OnActivateView@CG3XRecordView@@UAEXHPAVCView@@0@Z
+?OnActivateView@CGXRecordView@@UAEXHPAVCView@@0@Z
+?OnAddedNewRecord@CGXODBCGrid@@MAEXXZ
+?OnAddReportParams@?$CG3XViewBase@VCGXRecordView@@@@UAEXPAVCG3ParamInfoOb@@@Z
+?OnAddReportParams@CAPCheckMntHeaderView@@MAEXPAVCG3ParamInfoOb@@@Z
+?OnAddReportParams@CAPGenChecksHeaderView@@MAEXPAVCG3ParamInfoOb@@@Z
+?OnAddReportParams@CAPInvMntHeaderView@@MAEXPAVCG3ParamInfoOb@@@Z
+?OnAddReportParams@CG3RecordView@@MAEXPAVCG3ParamInfoOb@@@Z
+?OnAddReportParams@CReconProcHeaderView@@MAEXPAVCG3ParamInfoOb@@@Z
+?OnAdjustPrintRectangle@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnApproveInvoice@CAPInvMntHeaderView@@AAEXXZ
+?OnAutoFillDone@CGXGridCore@@MAEXAAVCGXRange@@@Z
+?OnAutogen@CAPInvPymtHeaderView@@IAEXXZ
+?OnAutoScroll@CGXGridCore@@UAEHHK@Z
+?OnBeginPrinting@CG3Dialog@@MAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnBeginPrinting@CGXRecordView@@MAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnBeginPrinting@CGXRecordWnd@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnCalculateTotals@CAPInvMntHeaderView@@AAEXXZ
+?OnCanceledEditing@CGXBrowserGrid@@UAEXKK@Z
+?OnCancelEditing@CGXGridCore@@MAEHKK@Z
+?OnCancelTracking@CGXGridCore@@MAEXXZ
+?OnCellUndone@CGXGridCore@@UAEXKKH@Z
+?OnChangeDays@CAPGenRecurEntView@@IAEXXZ
+?OnChangedSelection@CG3XRecordView@@UAEXPBVCGXRange@@HH@Z
+?OnChangedSelection@CGXGridCore@@MAEXPBVCGXRange@@HH@Z
+?OnChangeFindText@CG3IncrementalSearchDlg@@MAEXXZ
+?OnChangeLocation@CHeaderView@@MAEXXZ
+?OnChangeSeqSeries@CAPGenChecksHeaderView@@IAEXXZ
+?OnChangeSequenceTypeID@CG3SequenceView@@IAEXXZ
+?OnChangeTab@CG3HeaderDtlViewBase@@MAEXXZ
+?OnChangeVendor@CAPInvMntHeaderView@@AAEXXZ
+?OnCheckAllItems@CReconProcHeaderView@@IAEXXZ
+?OnCheckClipboardFormat@CGXGridCore@@UAEHXZ
+?OnCheckedEDI@CAPInvMntFrame@@IAEXXZ
+?OnCheckParams@CAPSequenceView@@IAEXXZ
+?OnCheckSeqChange@CAPInvPymtHeaderView@@IAEXXZ
+?OnClickedButtonRowCol@CGXGridCore@@MAEXKK@Z
+?OnClose@CAPCheckMntFrame@@IAEXXZ
+?OnClose@CAPCredMemoMntFrame@@IAEXXZ
+?OnClose@CAPMonthEndView@@IAEXXZ
+?OnClose@CReconProcFrame@@IAEXXZ
+?OnCloseFindReplaceDialog@?$CG3GridTemplate@VCGXRecordView@@@@UAEXXZ
+?OnCloseFindReplaceDialog@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXXZ
+?OnCmdMsg@CAPCheckMntFrame@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CAPCredMemoMntFrame@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CAPCredReqMntFrame@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CAPGenChecksFrame@@MAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CAPInvMntFrame@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CAPInvPymtFrame@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CAPRecurExpFrame@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CG3HeaderDtlSheet@@MAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CG3QuickSearchBase@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CG3Worksheet@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CReconProcFrame@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCommand@CGXRecordView@@UAEHIJ@Z
+?OnCommand@CGXRecordWnd@@MAEHIJ@Z
+?OnCreate@CG3RecordView@@MAEHPAUtagCREATESTRUCTA@@@Z
+?OnCreateClient@CAPCheckMntFrame@@MAEHPAUtagCREATESTRUCTA@@PAUCCreateContext@@@Z
+?OnCreateClient@CAPCredMemoMntFrame@@MAEHPAUtagCREATESTRUCTA@@PAUCCreateContext@@@Z
+?OnCreateClient@CAPCredReqMntFrame@@MAEHPAUtagCREATESTRUCTA@@PAUCCreateContext@@@Z
+?OnCreateClient@CAPGenChecksFrame@@MAEHPAUtagCREATESTRUCTA@@PAUCCreateContext@@@Z
+?OnCreateClient@CAPInvMntFrame@@MAEHPAUtagCREATESTRUCTA@@PAUCCreateContext@@@Z
+?OnCreateClient@CAPInvPymtFrame@@MAEHPAUtagCREATESTRUCTA@@PAUCCreateContext@@@Z
+?OnCreateClient@CAPRecurExpFrame@@MAEHPAUtagCREATESTRUCTA@@PAUCCreateContext@@@Z
+?OnCreateClient@CReconProcFrame@@MAEHPAUtagCREATESTRUCTA@@PAUCCreateContext@@@Z
+?OnCreateFromVoided@CAPCredMemoMntHeaderView@@IAEXXZ
+?OnCreateFromVoided@CAPInvMntHeaderView@@AAEXXZ
+?OnCreateInvoice@CAPRecurExpHeaderView@@IAEXXZ
+?OnDeleteCell@CGXGridCore@@MAEHKK@Z
+?OnDestroy@CAPCheckMntHeaderView@@IAEXXZ
+?OnDestroy@CAPCredMemoMntHeaderView@@IAEXXZ
+?OnDestroy@CAPCredReqMntHeaderView@@IAEXXZ
+?OnDestroy@CAPExportView@@IAEXXZ
+?OnDestroy@CAPGenChecksHeaderView@@IAEXXZ
+?OnDestroy@CAPInvMntHeaderView@@AAEXXZ
+?OnDestroy@CAPInvPymtHeaderView@@IAEXXZ
+?OnDestroy@CAPMESetupView@@IAEXXZ
+?OnDestroy@CAPPeriodSetupView@@IAEXXZ
+?OnDestroy@CAPRecurExpHeaderView@@IAEXXZ
+?OnDestroy@CAPSequenceView@@IAEXXZ
+?OnDestroy@CReconProcHeaderView@@IAEXXZ
+?OnDirectCheck@CAPInvMntHeaderView@@AAEXXZ
+?OnDiscountChanged@CAPRecurExpHeaderView@@IAEXXZ
+?OnDndCacheGlobalData@?$CG3GridTemplate@VCGXRecordView@@@@UAEHPAVCGXNoOleDataSourceProxy@@ABVCGXRangeList@@AAK2@Z
+?OnDndCacheGlobalData@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHPAVCGXNoOleDataSourceProxy@@ABVCGXRangeList@@AAK2@Z
+?OnDndCalculateFocusRect@CGXGridCore@@UAEHPAVCGXNoOleDataObjectProxy@@AAK1@Z
+?OnDndDropData@?$CG3GridTemplate@VCGXRecordView@@@@UAEHPAVCGXNoOleDataObjectProxy@@KK@Z
+?OnDndDropData@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHPAVCGXNoOleDataObjectProxy@@KK@Z
+?OnDndQueryAcceptData@?$CG3GridTemplate@VCGXRecordView@@@@UAEHPAVCGXNoOleDataObjectProxy@@@Z
+?OnDndQueryAcceptData@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHPAVCGXNoOleDataObjectProxy@@@Z
+?OnDraw@CGXRecordView@@UAEXPAVCDC@@@Z
+?OnDrawItem@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEXPAVCDC@@KKABVCRect@@ABVCGXStyle@@@Z
+?OnDrawItem@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXPAVCDC@@KKABVCRect@@ABVCGXStyle@@@Z
+?OnDrawTLBR_InvertCells@CGXGridCore@@MAEXAAUDrawStruct@1@@Z
+?OnDrawTLBR_LoadCell@CGXGridCore@@MAEXAAUDrawStruct@1@II@Z
+?OnDrawTopLeftBottomRight@CGXGridCore@@MAEXKKKKPAVCDC@@@Z
+?OnEditingJustStarted@SECListBoxEditor@@UAEXXZ
+?OnEditingStopped@SECListBoxEditor@@UAEXXZ
+?OnEmptyRecordset@CG3RecordView@@UAEXXZ
+?OnEnable@?$CG3GridTemplate@VCGXRecordView@@@@UAEXH@Z
+?OnEnable@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXH@Z
+?OnEndEditing@CGXGridCore@@MAEHKK@Z
+?OnEndingBalanceChange@CReconProcHeaderView@@IAEXXZ
+?OnEndPrinting@CG3Dialog@@MAEXPAVCDC@@PAUCPrintInfo@@H@Z
+?OnEndPrinting@CGXRecordView@@MAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnEndPrinting@CGXRecordWnd@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnEndTracking@CGXGridCore@@MAEXKKHAAVCSize@@@Z
+?OnExecGridProc@?$CG3GridTemplate@VCGXRecordView@@@@UAEXKAAVCGXStyle@@PAVCG3GridObject@@@Z
+?OnExecGridProc@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXKAAVCGXStyle@@PAVCG3GridObject@@@Z
+?OnExecGridProcEx@?$CG3GridTemplate@VCGXRecordView@@@@UAEHKKPAVCG3GridObject@@@Z
+?OnExecGridProcEx@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHKKPAVCG3GridObject@@@Z
+?OnExtHitTest@CGXGridCore@@UAEHKKAAVCPoint@@AAVCRect@@@Z
+?OnFilePrint@CG3Dialog@@MAEXXZ
+?OnFilePrintPreview@CG3Dialog@@MAEXXZ
+?OnFillCache@CGXODBCGrid@@MAEXXZ
+?OnFindNext@CGXGridCore@@UAEXPBDHH@Z
+?OnFindReplace@CGXGridCore@@MAEXPAVCFindReplaceDialog@@@Z
+?OnFlushBlobValue@CGXBrowserGrid@@MAEXKKPAVCGXAbstractBlob@@@Z
+?OnFlushCellValue@?$CG3SysParamsBase@VCG3XRecordViewBase@@@@UAEXKKPBD@Z
+?OnFlushCellValue@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEXKKPBD@Z
+?OnFlushCellValue@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXKKPBD@Z
+?OnFlushRecord@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEHKPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnFlushRecord@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEHKPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnFrameClose@CHeaderView@@UAE_NXZ
+?OnG3Options@CAPCheckMntFrame@@IAEXXZ
+?OnG3Options@CAPCredMemoMntFrame@@IAEXXZ
+?OnG3Options@CAPCredReqMntFrame@@IAEXXZ
+?OnG3Options@CAPGenChecksFrame@@IAEXXZ
+?OnG3Options@CAPInvMntFrame@@IAEXXZ
+?OnG3Options@CAPInvPymtFrame@@IAEXXZ
+?OnG3Options@CAPRecurExpFrame@@IAEXXZ
+?OnG3Options@CReconProcFrame@@IAEXXZ
+?OnGenerate@CAPGenChecksHeaderView@@IAEXXZ
+?OnGetMinMaxInfo@CAPCheckMntFrame@@IAEXPAUtagMINMAXINFO@@@Z
+?OnGetMinMaxInfo@CAPInvMntFrame@@IAEXPAUtagMINMAXINFO@@@Z
+?OnGetQuickRecordset@CG3RecordView@@UAEPAVCRecordset@@XZ
+?OnGetRecordCount@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEJXZ
+?OnGetRecordCount@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEJXZ
+?OnGetRecordCount@CG3IncrementalSearchGrd@@UAEJXZ
+?OnGetRecordset@CAPCheckMntHeaderView@@UAEPAVCRecordset@@XZ
+?OnGetRecordset@CAPCredMemoMntHeaderView@@UAEPAVCRecordset@@XZ
+?OnGetRecordset@CAPCredReqMntHeaderView@@UAEPAVCRecordset@@XZ
+?OnGetRecordset@CAPExportView@@MAEPAVCRecordset@@XZ
+?OnGetRecordset@CAPGenChecksHeaderView@@UAEPAVCRecordset@@XZ
+?OnGetRecordset@CAPInvMntHeaderView@@UAEPAVCRecordset@@XZ
+?OnGetRecordset@CAPInvPymtHeaderView@@UAEPAVCRecordset@@XZ
+?OnGetRecordset@CAPRecurExpHeaderView@@UAEPAVCRecordset@@XZ
+?OnGetRecordset@CG3SequenceView@@UAEPAVCRecordset@@XZ
+?OnGetRecordset@CGXODBCGrid@@UAEPAVCRecordset@@XZ
+?OnGetRecordset@CPeriodSetupBaseView@@UAEPAVCRecordset@@XZ
+?OnGetRecordset@CReconProcHeaderView@@MAEPAVCRecordset@@XZ
+?OnGetSortColsKey@CGXGridCore@@UAEXKABVCGXSortInfoArray@@AAVCStringArray@@@Z
+?OnGetSortRowsKey@CGXGridCore@@UAEXKABVCGXSortInfoArray@@AAVCStringArray@@@Z
+?OnGLPeriodChange@CAPCheckMntHeaderView@@IAE_NXZ
+?OnGridBeginPrinting@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnGridChar@CGXGridCore@@MAEHIII@Z
+?OnGridDeadChar@CGXGridCore@@MAEHIII@Z
+?OnGridDoubleByteChar@CGXGridCore@@MAEHABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@II@Z
+?OnGridDragEnter@CGXGridCore@@UAEKPAVCGXNoOleDataObjectProxy@@KVCPoint@@@Z
+?OnGridDragLeave@CGXGridCore@@UAEXXZ
+?OnGridDragOver@?$CG3GridTemplate@VCGXRecordView@@@@UAEKPAVCGXNoOleDataObjectProxy@@KVCPoint@@@Z
+?OnGridDragOver@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEKPAVCGXNoOleDataObjectProxy@@KVCPoint@@@Z
+?OnGridDragScroll@CGXGridCore@@UAEKKVCPoint@@@Z
+?OnGridDraw@CGXBrowserGrid@@UAEXPAVCDC@@@Z
+?OnGridDrop@CGXBrowserGrid@@UAEHPAVCGXNoOleDataObjectProxy@@KVCPoint@@@Z
+?OnGridDropEx@CGXGridCore@@UAEKPAVCGXNoOleDataObjectProxy@@KKVCPoint@@@Z
+?OnGridEndPrinting@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnGridInitialUpdate@CAPGenParamView@@UAEXXZ
+?OnGridInitialUpdate@CAPPurgeParamView@@UAEXXZ
+?OnGridInitialUpdate@CAPStoreParamView@@UAEXXZ
+?OnGridInitialUpdate@CG3HeaderDtlViewBase@@MAEXXZ
+?OnGridInitialUpdate@CG3IncrementalSearchGrd@@UAEXXZ
+?OnGridInitialUpdate@CG3QuickSearchResultsGrid@@MAEXXZ
+?OnGridInitialUpdate@CG3SysParamsView@@UAEXXZ
+?OnGridInitialUpdate@CG3XRecordView@@UAEXXZ
+?OnGridInitialUpdate@CG3XRecordWnd@@UAEXXZ
+?OnGridKeyDown@CGXBrowserGrid@@UAEHIII@Z
+?OnGridKeyUp@CGXGridCore@@MAEHIII@Z
+?OnGridKillFocus@CGXGridCore@@MAEXPAVCWnd@@@Z
+?OnGridPrepareDC@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnGridPreTranslateMessage@CGXGridCore@@MAEHPAUtagMSG@@@Z
+?OnGridPrint@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnGridSetFocus@CGXGridCore@@MAEXPAVCWnd@@@Z
+?OnGridSysChar@CGXGridCore@@MAEHIII@Z
+?OnGridSysColorChange@CGXGridCore@@MAEXXZ
+?OnGridSysDeadChar@CGXGridCore@@MAEHIII@Z
+?OnGridSysKeyDown@CGXGridCore@@MAEHIII@Z
+?OnGridSysKeyUp@CGXGridCore@@MAEHIII@Z
+?OnGridTimer@CGXGridCore@@MAEXI@Z
+?OnGridUpdate@CGXGridCore@@MAEXPAVCView@@JPAVCObject@@@Z
+?OnGridWindowProc@CGXGridCore@@MAEHIIJAAJ@Z
+?OnGridWinIniChange@CGXGridCore@@MAEXPBD@Z
+?OnHoldInvoice@CAPInvMntHeaderView@@AAEXXZ
+?OnInfoWndMoveRecord@CGXGridCore@@UAEXHJ@Z
+?OnInitColInfo@CGXODBCGrid@@MAEXKABUCGXFieldInfo@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@AAJAAGPAH@Z
+?OnInitCurrentCell@CGXGridCore@@MAEXKK@Z
+?OnInitDialog@CG3Dialog@@MAEHXZ
+?OnInitDialog@CG3IncrementalSearchDlg@@MAEHXZ
+?OnInitDialog@CScheduleExportDlg@@MAEHXZ
+?OnInitialUpdate@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEXXZ
+?OnInitialUpdate@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXXZ
+?OnInitialUpdate@CAPAutoProcView@@UAEXXZ
+?OnInitialUpdate@CAPCheckMntHeaderView@@EAEXXZ
+?OnInitialUpdate@CAPCredMemoMntHeaderView@@MAEXXZ
+?OnInitialUpdate@CAPCredReqMntHeaderView@@MAEXXZ
+?OnInitialUpdate@CAPExportView@@MAEXXZ
+?OnInitialUpdate@CAPGenChecksHeaderView@@MAEXXZ
+?OnInitialUpdate@CAPGenRecurEntView@@UAEXXZ
+?OnInitialUpdate@CAPInvMntHeaderView@@MAEXXZ
+?OnInitialUpdate@CAPInvPymtHeaderView@@MAEXXZ
+?OnInitialUpdate@CAPMEBaseView@@UAEXXZ
+?OnInitialUpdate@CAPMEReportView@@UAEXXZ
+?OnInitialUpdate@CAPMESetupView@@UAEXXZ
+?OnInitialUpdate@CAPMonthEndView@@UAEXXZ
+?OnInitialUpdate@CAPPurgeHeaderView@@MAEXXZ
+?OnInitialUpdate@CAPRecurExpHeaderView@@MAEXXZ
+?OnInitialUpdate@CAPSequenceView@@UAEXXZ
+?OnInitialUpdate@CG3FormView@@UAEXXZ
+?OnInitialUpdate@CG3HeaderDtlViewBase@@MAEXXZ
+?OnInitialUpdate@CG3RecordView@@UAEXXZ
+?OnInitialUpdate@CG3SequenceView@@UAEXXZ
+?OnInitialUpdate@CG3XRecordView@@UAEXXZ
+?OnInitialUpdate@CPeriodSetupBaseView@@MAEXXZ
+?OnInitialUpdate@CReconProcHeaderView@@MAEXXZ
+?OnInitialUpdateFrame@CAPCheckMntFrame@@MAEXXZ
+?OnInitialUpdateFrame@CAPCredMemoMntFrame@@MAEXXZ
+?OnInitialUpdateFrame@CAPCredReqMntFrame@@MAEXXZ
+?OnInitialUpdateFrame@CAPGenChecksFrame@@MAEXXZ
+?OnInitialUpdateFrame@CAPInvMntFrame@@MAEXXZ
+?OnInitialUpdateFrame@CAPInvPymtFrame@@MAEXXZ
+?OnInitialUpdateFrame@CAPRecurExpFrame@@MAEXXZ
+?OnInitialUpdateFrame@CG3Worksheet@@MAEXXZ
+?OnInitialUpdateFrame@CReconProcFrame@@MAEXXZ
+?OnItemAdded@SECListBoxEditor@@UAEXHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnItemDelete@SECListBoxEditor@@UAEHHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnItemMoved@SECListBoxEditor@@UAEXHHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?OnItemRenamed@SECListBoxEditor@@UAEXHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@0@Z
+?OnLButtonClickedRowCol@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnLButtonDblClk@CGXRecordView@@IAEXIVCPoint@@@Z
+?OnLButtonDblClkRowCol@CG3HeaderDtlViewBase@@MAEHKKIVCPoint@@@Z
+?OnLButtonDblClkRowCol@CG3IncrementalSearchGrd@@UAEHKKIVCPoint@@@Z
+?OnLButtonDblClkRowCol@CG3QuickSearchResultsGrid@@MAEHKKIVCPoint@@@Z
+?OnLButtonDblClkRowCol@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnLButtonHitRowCol@CG3IncrementalSearchGrd@@UAEHKKKKVCPoint@@IG@Z
+?OnLButtonHitRowCol@CGXGridCore@@MAEHKKKKVCPoint@@IG@Z
+?OnLeftCell@CGXBrowserGrid@@UAEHKKKK@Z
+?OnLeftColChange@CGXGridCore@@MAEHK@Z
+?OnLeftColChanged@CGXGridCore@@MAEXXZ
+?OnLoadCellStyle@?$CG3SysParamsBase@VCG3XRecordViewBase@@@@UAEHKKAAVCGXStyle@@PBD@Z
+?OnLoadCellStyle@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEHKKAAVCGXStyle@@PBD@Z
+?OnLoadCellStyle@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEHKKAAVCGXStyle@@PBD@Z
+?OnMButtonClickedRowCol@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnMButtonDblClkRowCol@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnMButtonHitRowCol@CGXGridCore@@MAEHKKKKVCPoint@@IG@Z
+?OnModifiedPrintDevice@CG3Dialog@@UAEXXZ
+?OnModifiedPrintDevice@CGXView@@UAEXXZ
+?OnModifyCell@CGXBrowserGrid@@UAEXKK@Z
+?OnMouseMoveOver@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnMove@CAPCheckMntHeaderView@@EAEHI@Z
+?OnMove@CAPCredMemoMntHeaderView@@MAEHI@Z
+?OnMove@CAPCredReqMntHeaderView@@UAEHI@Z
+?OnMove@CAPGenChecksHeaderView@@MAEHI@Z
+?OnMove@CAPInvMntHeaderView@@MAEHI@Z
+?OnMove@CAPInvPymtHeaderView@@MAEHI@Z
+?OnMove@CAPRecurExpHeaderView@@MAEHI@Z
+?OnMove@CAPSequenceView@@UAEHI@Z
+?OnMove@CG3RecordView@@UAEHI@Z
+?OnMove@CHeaderView@@UAEHI@Z
+?OnMove@CPeriodSetupBaseView@@UAEHI@Z
+?OnMove@CReconProcHeaderView@@MAEHI@Z
+?OnMovedCurrentCell@CG3QuickSearchResultsGrid@@MAEXKK@Z
+?OnMovedCurrentCell@CGXODBCGrid@@MAEXKK@Z
+?OnMoveTracking@CGXGridCore@@MAEXKKHAAVCSize@@@Z
+?OnNavSelChange@CAPCheckMntFrame@@IAEXXZ
+?OnNavSelChange@CAPCredMemoMntFrame@@IAEXXZ
+?OnNavSelChange@CAPCredReqMntFrame@@IAEXXZ
+?OnNavSelChange@CAPInvMntFrame@@IAEXXZ
+?OnNavSelChange@CAPRecurExpFrame@@IAEXXZ
+?OnOK@CG3IncrementalSearchDlg@@MAEXXZ
+?OnPasteDiffRange@CGXGridCore@@UAEHXZ
+?OnPasteDirect@CGXGridCore@@UAEHABVCGXRange@@@Z
+?OnPasteFromClipboard@CGXGridCore@@UAEHABVCGXRange@@@Z
+?OnPostBatch@CAPInvPymtHeaderView@@IAEXXZ
+?OnPostCreditMemo@CAPCredMemoMntHeaderView@@IAEXXZ
+?OnPostRecord@CAPMESetupView@@IAEXXZ
+?OnPostStatement@CReconProcHeaderView@@IAEXXZ
+?OnPrepareDC@CG3Dialog@@MAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnPrepareDC@CGXRecordView@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnPreparePrinting@CG3Dialog@@MAEHPAUCPrintInfo@@@Z
+?OnPreparePrinting@CGXRecordView@@MAEHPAUCPrintInfo@@@Z
+?OnPreview@CAPExportView@@IAEXXZ
+?OnPreview@CAPMEReportView@@IAEXXZ
+?OnPreview@CAPPurgeHeaderView@@IAEXXZ
+?OnPrint@CAPMEReportView@@IAEXXZ
+?OnPrint@CAPPurgeHeaderView@@IAEXXZ
+?OnPrint@CG3Dialog@@MAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnPrint@CGXRecordView@@MAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnPrint@CGXRecordWnd@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnPrintHeaderAndFooter@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnQSBuyer@CG3QuickSearchBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?OnQSCrsSetCampusID@CG3QuickSearchBase@@MAEJXZ
+?OnQSGetFormatBuyer@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatCatNum@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatColor@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatCrs@CG3QuickSearchBase@@MAEXPAVCG3CrsObj@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatCustomer@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatDate@CG3QuickSearchBase@@MAEXIAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatDCC@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatGeneric@CG3QuickSearchBase@@MAEXIAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatGLAccount@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatInstructor@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatInventoryStatus@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatISBN@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatLocTerm@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatSeason@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatSectionID@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatSize@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatSKU@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatStatType@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@V23@@Z
+?OnQSGetFormatStatus@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatStyle@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatSubsystem@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatTerm@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatVendor@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatVendorPrefOrderMethod@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatWarrantyID@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatWorkStatus@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatXREF@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetSubsystemDCC@CG3QuickSearchBase@@MAEHXZ
+?OnQSSetLocTermData@CG3QuickSearchBase@@MAEXPAVCG3LocationTermDlg@@@Z
+?OnQSSetStatusData@CG3QuickSearchBase@@MAEXPAVCG3QSSelectBaseDlg@@@Z
+?OnQSSetTermFilter@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSStyle@CG3QuickSearchBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?OnRButtonClickedRowCol@?$CG3GridTemplate@VCGXRecordView@@@@UAEHKKIVCPoint@@@Z
+?OnRButtonClickedRowCol@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHKKIVCPoint@@@Z
+?OnRButtonDblClkRowCol@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnRButtonHitRowCol@CGXGridCore@@MAEHKKKKVCPoint@@IG@Z
+?OnRefreshRecord@CAPMESetupView@@IAEXXZ
+?OnRemoveCreditMemo@CAPCredMemoMntHeaderView@@IAEXXZ
+?OnReplaceAll@CGXODBCGrid@@MAEXPBD0H@Z
+?OnReplaceSel@CGXBrowserGrid@@UAEXPBDHH0@Z
+?OnReprintCheck@CAPCheckMntHeaderView@@IAEXXZ
+?OnRequery@CG3QuickSearchBase@@UAEHPAVCRecordset@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnResetFilter@CG3RecordView@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?OnReverseBatch@CAPGenChecksHeaderView@@IAEXXZ
+?OnReverseStatement@CReconProcHeaderView@@IAEXXZ
+?OnScrollBecauseOfEdit@CGXGridCore@@MAEHHK@Z
+?OnSelDragCancel@CGXGridCore@@MAEXXZ
+?OnSelDragColsDrop@CGXGridCore@@MAEHKKK@Z
+?OnSelDragColsMove@CGXGridCore@@MAEHKKK@Z
+?OnSelDragColsStart@CGXGridCore@@MAEHKK@Z
+?OnSelDragDrop@CGXGridCore@@MAEHKKKK@Z
+?OnSelDragMove@CGXGridCore@@MAEHKKKK@Z
+?OnSelDragRowsDrop@CGXGridCore@@MAEHKKK@Z
+?OnSelDragRowsMove@CGXGridCore@@MAEHKKK@Z
+?OnSelDragRowsStart@CGXGridCore@@MAEHKK@Z
+?OnSelDragStart@CGXGridCore@@MAEHKK@Z
+?OnSetGridControl@?$CG3GridTemplate@VCGXRecordView@@@@UAEXK@Z
+?OnSetGridControl@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXK@Z
+?OnSetReadOnly@CG3FormView@@UAEXH@Z
+?OnSetReadOnly@CG3RecordView@@UAEXH@Z
+?OnShowFindReplaceDialog@CGXGridCore@@UAEXH@Z
+?OnSortByGLCode@CAPCredMemoMntFrame@@IAEXXZ
+?OnSortByGLCode@CAPCredReqMntFrame@@IAEXXZ
+?OnSortByGLCode@CAPInvMntFrame@@IAEXXZ
+?OnSortByGLCode@CAPRecurExpFrame@@IAEXXZ
+?OnSortByLocation@CAPCheckMntFrame@@IAEXXZ
+?OnSortByLocation@CAPCredMemoMntFrame@@IAEXXZ
+?OnSortByLocation@CAPCredReqMntFrame@@IAEXXZ
+?OnSortByLocation@CAPGenChecksFrame@@IAEXXZ
+?OnSortByLocation@CAPInvMntFrame@@IAEXXZ
+?OnSortByLocation@CAPInvPymtFrame@@IAEXXZ
+?OnSortByLocation@CAPRecurExpFrame@@IAEXXZ
+?OnSortByVendor@CAPGenChecksFrame@@IAEXXZ
+?OnSortByVendor@CAPInvPymtFrame@@IAEXXZ
+?OnStart@CAPExportView@@IAEXXZ
+?OnStart@CAPGenRecurEntView@@IAEXXZ
+?OnStart@CAPMonthEndView@@IAEXXZ
+?OnStart@CAPPurgeHeaderView@@IAEXXZ
+?OnStartAutoFillSelection@CGXGridCore@@MAEHAAVCGXRange@@AAIAAVCPoint@@@Z
+?OnStartEditing@CGXGridCore@@MAEHKK@Z
+?OnStartSelection@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnStartTracking@CGXGridCore@@MAEHKKH@Z
+?OnSubtotalChanged@CAPRecurExpHeaderView@@IAEXXZ
+?OnTabChanged@CGXGridCore@@UAEXH@Z
+?OnTermsChanged@CAPRecurExpHeaderView@@IAEXXZ
+?OnTestGridDimension@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEXKK@Z
+?OnTestGridDimension@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXKK@Z
+?OnTextNotFound@CG3IncrementalSearchGrd@@UAEXPBD@Z
+?OnTextNotFound@CGXGridCore@@UAEXPBD@Z
+?OnTopRowChange@CGXGridCore@@MAEHK@Z
+?OnTopRowChanged@CGXGridCore@@MAEXXZ
+?OnTrackColWidth@?$CG3GridTemplate@VCGXRecordView@@@@UAEHK@Z
+?OnTrackColWidth@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHK@Z
+?OnTrackColWidthEnd@CGXGridCore@@MAEHKH@Z
+?OnTrackColWidthMove@CGXGridCore@@MAEHKH@Z
+?OnTrackColWidthStart@CGXGridCore@@MAEHK@Z
+?OnTrackRowHeight@CGXGridCore@@MAEHK@Z
+?OnTrackRowHeightEnd@CGXGridCore@@MAEHKH@Z
+?OnTrackRowHeightMove@CGXGridCore@@MAEHKH@Z
+?OnTrackRowHeightStart@CGXGridCore@@MAEHK@Z
+?OnUncheckAllItems@CReconProcHeaderView@@IAEXXZ
+?OnUpdate@CAPCredMemoMntHeaderView@@MAEXPAVCView@@JPAVCObject@@@Z
+?OnUpdate@CAPGenChecksHeaderView@@MAEXPAVCView@@JPAVCObject@@@Z
+?OnUpdate@CAPInvMntHeaderView@@MAEXPAVCView@@JPAVCObject@@@Z
+?OnUpdate@CAPRecurExpHeaderView@@MAEXPAVCView@@JPAVCObject@@@Z
+?OnUpdate@CG3BrowseEditBase@@MAEHXZ
+?OnUpdate@CG3FormView@@MAEXPAVCView@@JPAVCObject@@@Z
+?OnUpdate@CG3RecordView@@MAEXPAVCView@@JPAVCObject@@@Z
+?OnUpdate@CG3SequenceView@@MAEXPAVCView@@JPAVCObject@@@Z
+?OnUpdate@CG3SysParamsView@@UAEXPAVCView@@JPAVCObject@@@Z
+?OnUpdate@CG3XRecordView@@UAEXPAVCView@@JPAVCObject@@@Z
+?OnUpdate@CHeaderView@@MAEXPAVCView@@JPAVCObject@@@Z
+?OnUpdate@CReconProcHeaderView@@MAEXPAVCView@@JPAVCObject@@@Z
+?OnUpdateAdd@CAPSequenceView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateApproveInvoice@CAPInvMntHeaderView@@AAEXPAVCCmdUI@@@Z
+?OnUpdateAutogen@CAPInvPymtHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateBtn@CAPCheckMntHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateCheckAllItems@CReconProcHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateCreateFromVoided@CAPCredMemoMntHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateCreateFromVoided@CAPInvMntHeaderView@@AAEXPAVCCmdUI@@@Z
+?OnUpdateCreateInvoice@CAPRecurExpHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateDelete@CAPSequenceView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateDirectCheck@CAPInvMntHeaderView@@AAEXPAVCCmdUI@@@Z
+?OnUpdateDisable@CAPCredReqMntHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateDisable@CAPGenChecksHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateDiscountAmount@CAPInvMntHeaderView@@IAEXXZ
+?OnUpdateFrameMenu@SECWorksheetWnd@@MAEXHPAVCWnd@@PAUHMENU__@@@Z
+?OnUpdateFrameTitle@SECWorksheetWnd@@MAEXH@Z
+?OnUpdateGenerate@CAPGenChecksHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateHoldInvoice@CAPInvMntHeaderView@@AAEXPAVCCmdUI@@@Z
+?OnUpdateInvoicedTotal@CAPInvMntHeaderView@@IAEXXZ
+?OnUpdateNav@CAPCheckMntFrame@@IAEXPAVCCmdUI@@@Z
+?OnUpdateNav@CAPCredMemoMntFrame@@IAEXPAVCCmdUI@@@Z
+?OnUpdateNav@CAPCredReqMntFrame@@IAEXPAVCCmdUI@@@Z
+?OnUpdateNav@CAPGenChecksFrame@@IAEXPAVCCmdUI@@@Z
+?OnUpdateNav@CAPInvMntFrame@@IAEXPAVCCmdUI@@@Z
+?OnUpdateNav@CAPInvPymtFrame@@IAEXPAVCCmdUI@@@Z
+?OnUpdateNav@CAPRecurExpFrame@@IAEXPAVCCmdUI@@@Z
+?OnUpdatePostBatch@CAPInvPymtHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdatePostCreditMemo@CAPCredMemoMntHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdatePostStatement@CReconProcHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateRecAdd@CAPInvPymtHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateRecDelete@CAPCredMemoMntHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateRecDelete@CAPInvMntHeaderView@@AAEXPAVCCmdUI@@@Z
+?OnUpdateRecExists@CAPInvPymtHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateRecInsert@CAPCredMemoMntHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateRecInsert@CAPInvMntHeaderView@@AAEXPAVCCmdUI@@@Z
+?OnUpdateRecordButtons@CAPPurgeHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateRecordDelete@CReconProcHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateRemoveCreditMemo@CAPCredMemoMntHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateReprintCheck@CAPCheckMntHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateReverseBatch@CAPGenChecksHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateReverseStatement@CReconProcHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateTermPercentage@CAPInvMntHeaderView@@IAEXXZ
+?OnUpdateUncheckAllItems@CReconProcHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateVendorCheckInfo@CAPCredMemoMntHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateVoidCheck@CAPCheckMntHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateVoidCredit@CAPCredMemoMntHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateVoidInvoice@CAPInvMntHeaderView@@AAEXPAVCCmdUI@@@Z
+?OnUseCheckDate@CAPExportView@@IAEXXZ
+?OnUseCurrent@CAPExportView@@IAEXXZ
+?OnUseCurrentDate@CAPExportView@@IAEXXZ
+?OnUseDates@CAPExportView@@IAEXXZ
+?OnUseVoucher@CAPExportView@@IAEXXZ
+?OnValidateCell@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEHKK@Z
+?OnValidateCell@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEHKK@Z
+?OnVendorCheckInfo@CAPCredMemoMntHeaderView@@IAEXXZ
+?OnVoidCheck@CAPCheckMntHeaderView@@IAEXXZ
+?OnVoidCredit@CAPCredMemoMntHeaderView@@IAEXXZ
+?OnVoidInvoice@CAPInvMntHeaderView@@AAEXXZ
+?OpenRecordset@CGXODBCGrid@@UAEXXZ
+?Paste@CGXBrowserGrid@@UAEHXZ
+?PasteCellsFromArchive@CGXGridCore@@UAEHAAVCArchive@@ABVCGXRange@@H@Z
+?PasteTextFromBuffer@CGXBrowserGrid@@UAEHPBDKABVCGXRange@@@Z
+?PasteTextRowCol@CGXGridCore@@UAEHKKABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@IPBVCGXStyle@@@Z
+?PerformQuickSearch@CG3QuickSearchBase@@QAEHPAVCObject@@HHH@Z
+?PostNcDestroy@CGXRecordWnd@@MAEXXZ
+?PostQuickSearch@CG3QuickSearchBase@@MAEXXZ
+?PostQuickSearchResults@CG3QuickSearchBase@@MAEXXZ
+?PostUpdateRecordset@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEXK@Z
+?PostUpdateRecordset@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXK@Z
+?PreChangeSelection@CGXGridCore@@MAEXPAVCGXRange@@HH@Z
+?PreCreateWindow@CG3Worksheet@@MAEHAAUtagCREATESTRUCTA@@@Z
+?PrepareChangeSelection@CGXGridCore@@MAEXPAU__POSITION@@KKKKH@Z
+?PrepareClearSelection@CGXGridCore@@MAEXH@Z
+?PrepareDCAttribs@CGXGridCore@@MAEXPAVCDC@@@Z
+?PrepareOptionsMenu@CAPCredMemoMntFrame@@QAEXPAVCMenu@@@Z
+?PrepareOptionsMenu@CAPCredReqMntFrame@@QAEXPAVCMenu@@@Z
+?PrepareOptionsMenu@CAPGenChecksFrame@@IAEXPAVCMenu@@@Z
+?PrepareOptionsMenu@CAPInvMntFrame@@QAEXPAVCMenu@@@Z
+?PrepareOptionsMenu@CAPInvPymtFrame@@QAEXPAVCMenu@@@Z
+?PrepareOptionsMenu@CAPRecurExpFrame@@QAEXPAVCMenu@@@Z
+?PreQuickSearchResults@CG3QuickSearchBase@@MAEXXZ
+?PreTranslateMessage@CG3BrowseEditBase@@UAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CG3HeaderDtlSheet@@MAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CG3IncrementalSearchDlg@@MAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CG3Worksheet@@UAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CG3XRecordWnd@@UAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CGXRecordView@@UAEHPAUtagMSG@@@Z
+?PreTranslateMessage@SECListBoxEditor@@UAEHPAUtagMSG@@@Z
+?PreUpdateRecordset@CGXODBCGrid@@MAEXK@Z
+?PrintCheck@CG3APPrintCheck@@QAEXPAVCWnd@@@Z
+?ProcessContextMenuCommand@CG3QuickSearchResultsGrid@@MAEHHAAJ@Z
+?ProcessKeys@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHPAVCWnd@@IIII@Z
+?ProcessKeys@?$CG3XViewBase@VCGXRecordView@@@@UAEHPAVCWnd@@IIII@Z
+?ProcessKeys@CG3HeaderDtlViewBase@@MAEHPAVCWnd@@IIII@Z
+?ProcessKeys@CG3IncrementalSearchGrd@@UAEHPAVCWnd@@IIII@Z
+?ProcessKeys@CG3QuickSearchResultsGrid@@MAEHPAVCWnd@@IIII@Z
+?QuickSearchRequery@CG3RecordView@@IAEXH@Z
+?Recalc@CGXGridCore@@UAEXH@Z
+?RecalcDiscountTotal@CAPInvMntHeaderView@@IAEXXZ
+?RecalcInvoiceTotal@CAPRecurExpHeaderView@@IAEXPAVCDataExchange@@@Z
+?RecordAdd@CAPAutoProcView@@UAEHXZ
+?RecordAdd@CAPCredMemoMntHeaderView@@MAEHXZ
+?RecordAdd@CAPExportView@@MAEHXZ
+?RecordAdd@CAPInvMntHeaderView@@MAEHXZ
+?RecordAdd@CAPInvPymtHeaderView@@MAEHXZ
+?RecordAdd@CAPRecurExpHeaderView@@MAEHXZ
+?RecordAdd@CAPSequenceView@@UAEHXZ
+?RecordAdd@CG3RecordView@@UAEHXZ
+?RecordAdd@CReconProcHeaderView@@MAEHXZ
+?RecordDelete@CAPAutoProcView@@UAEHH@Z
+?RecordDelete@CAPCredMemoMntHeaderView@@MAEHH@Z
+?RecordDelete@CAPCredReqMntHeaderView@@UAEHH@Z
+?RecordDelete@CAPExportView@@MAEHH@Z
+?RecordDelete@CAPInvMntHeaderView@@MAEHH@Z
+?RecordDelete@CAPInvPymtHeaderView@@MAEHH@Z
+?RecordDelete@CAPRecurExpHeaderView@@MAEHH@Z
+?RecordDelete@CAPSequenceView@@UAEHH@Z
+?RecordDelete@CG3RecordView@@UAEHH@Z
+?RecordDelete@CReconProcHeaderView@@MAEHH@Z
+?RecordPost@?$CG3XRecordBase@VCG3XRecordViewBase@@@@UAEHXZ
+?RecordPost@?$CG3XRecordBase@VCG3XRecordWndBase@@@@UAEHXZ
+?RecordPost@CAPAutoProcView@@UAEHXZ
+?RecordPost@CAPCheckMntHeaderView@@UAEHXZ
+?RecordPost@CAPCredMemoMntHeaderView@@UAEHXZ
+?RecordPost@CAPCredReqMntHeaderView@@UAEHXZ
+?RecordPost@CAPExportView@@MAEHXZ
+?RecordPost@CAPGenChecksHeaderView@@MAEHXZ
+?RecordPost@CAPInvMntHeaderView@@UAEHH@Z
+?RecordPost@CAPInvPymtHeaderView@@MAEHXZ
+?RecordPost@CAPRecurExpHeaderView@@MAEHXZ
+?RecordPost@CAPSequenceView@@UAEHXZ
+?RecordPost@CG3HeaderDtlViewBase@@UAEHXZ
+?RecordPost@CG3RecordView@@UAEHXZ
+?RecordPost@CPeriodSetupBaseView@@UAEHXZ
+?RecordPost@CReconProcHeaderView@@UAEHXZ
+?RecordRefresh@CAPAutoProcView@@UAEHXZ
+?RecordRefresh@CAPCheckMntHeaderView@@MAEHXZ
+?RecordRefresh@CAPCredMemoMntHeaderView@@MAEHXZ
+?RecordRefresh@CAPExportView@@MAEHXZ
+?RecordRefresh@CAPInvMntHeaderView@@MAEHXZ
+?RecordRefresh@CAPInvPymtHeaderView@@MAEHXZ
+?RecordRefresh@CG3RecordView@@UAEHXZ
+?RecordRefresh@CPeriodSetupBaseView@@UAEHXZ
+?RecordRefresh@CReconProcHeaderView@@MAEHXZ
+?RecycleStyle@CGXGridCore@@UAEXPAVCGXStyle@@@Z
+?RecycleTooltips@SECListBoxEditor@@UAEXXZ
+?Redo@CGXGridCore@@UAEHXZ
+?Redraw@CGXGridCore@@UAEXIH@Z
+?RedrawRowCol@CGXGridCore@@QAEXABVCGXRange@@IH@Z
+?RedrawRowCol@CGXGridCore@@UAEXKKKKIH@Z
+?Refresh@CReconProcHeaderView@@IAEXXZ
+?RefreshFrameMenu@SECMDIChildWnd@@UAEXPAVCWnd@@@Z
+?RefreshRecord@CG3RecordView@@UAEHPAVCRecordset@@@Z
+?RefreshViews@CGXGridCore@@UAEHHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?RegisterControl@CGXGridCore@@QAEXGPAVCGXControl@@HH@Z
+?ReInitGrid@?$CG3GridTemplate@VCGXRecordView@@@@UAEXPAU_tagG3GRIDINFO@@@Z
+?ReInitGrid@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXPAU_tagG3GRIDINFO@@@Z
+?RemoveCols@CGXBrowserGrid@@UAEHKKIW4GXCmdType@@@Z
+?RemoveCommand@CGXGridCore@@UAEXW4GXCmdType@@@Z
+?RemoveRows@CGXBrowserGrid@@UAEHKKIW4GXCmdType@@@Z
+?Requery@?$CG3SysParamsBase@VCG3XRecordViewBase@@@@UAEXXZ
+?Requery@CAPAutoProcView@@UAEXH@Z
+?Requery@CAPCheckMntHeaderView@@MAEXH@Z
+?Requery@CAPCredMemoMntHeaderView@@UAEXH@Z
+?Requery@CAPCredReqMntHeaderView@@UAEXH@Z
+?Requery@CAPGenChecksHeaderView@@UAEXH@Z
+?Requery@CAPInvMntHeaderView@@UAEXH@Z
+?Requery@CAPInvPymtHeaderView@@UAEXH@Z
+?Requery@CAPRecurExpHeaderView@@MAEXH@Z
+?Requery@CG3HeaderDtlViewBase@@MAEXPAJ@Z
+?Requery@CG3NavComboBox@@QAEHXZ
+?Requery@CG3QuickSearchResultsGrid@@MAEXXZ
+?Requery@CG3RecordView@@UAEXH@Z
+?Requery@CG3SequenceView@@UAEXH@Z
+?Requery@CG3XRecordView@@UAEXH@Z
+?Requery@CG3XRecordView@@UAEXXZ
+?Requery@CGXODBCGrid@@UAEXXZ
+?Requery@CHeaderSet@@UAEHXZ
+?Requery@CPeriodSetupBaseView@@UAEXH@Z
+?Requery@CReconProcHeaderView@@UAEXH@Z
+?RequeryToRefresh@CAPRecurExpHeaderView@@IAEXXZ
+?RequeryUpdateRecordsets@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEXK@Z
+?RequeryUpdateRecordsets@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXK@Z
+?RequeryUpdateRecordsets@CG3HeaderDtlViewBase@@MAEXK@Z
+?ResetCurrencyExch@CAPCheckMntHeaderView@@MAEXXZ
+?ResetCurrencyExch@CAPGenChecksHeaderView@@MAEXXZ
+?ResetCurrencyExch@CAPInvPymtHeaderView@@MAEXXZ
+?ResetCurrencyExch@CG3RecordView@@UAEXXZ
+?ResetCurrencyExch@CReconProcHeaderView@@MAEXXZ
+?ResetCurrentCell@CGXGridCore@@UAEXH@Z
+?ResetEditorSizePos@SECListBoxEditor@@UAEXXZ
+?ResetError@CGXGridCore@@UAEXXZ
+?ResetTotals@CAPGenChecksFrame@@QAEXXZ
+?ResizeColWidthsToFit@CGXGridCore@@UAEHVCGXRange@@HI@Z
+?ResizeRowHeightsToFit@CGXGridCore@@UAEHVCGXRange@@HI@Z
+?Rollback@CG3IncrementalSearchGrd@@UAEXXZ
+?Rollback@CGXODBCGrid@@UAEXXZ
+?ScrollCellInView@CGXGridCore@@UAEHKKIH@Z
+?Seek@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEHJJFPBD@Z
+?Seek@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEHJJFPBD@Z
+?SelectRange@CGXGridCore@@UAEXABVCGXRange@@HH@Z
+?Serialize@?$CG3GridTemplate@VCGXRecordView@@@@UAEXAAVCArchive@@@Z
+?Serialize@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXAAVCArchive@@@Z
+?SetActive@?$CG3XRecordBase@VCG3XRecordViewBase@@@@UAEXH@Z
+?SetActive@?$CG3XRecordBase@VCG3XRecordWndBase@@@@UAEXH@Z
+?SetAdvancedUndo@CGXGridCore@@UAEHH@Z
+?SetBaseFilter@CG3QuickSearchBase@@QAEXPBD@Z
+?SetBeginPeriod@CG3PeriodEditBase@@QAEXVCG3DateTime@@@Z
+?SetBinaryFlags@CGXBrowserGrid@@MAEHPBVCGXStyle@@H@Z
+?SetButtonVisibility@SECListBoxEditor@@UAEXH@Z
+?SetCheckSeqID@CG3APPrintCheck@@QAEXJ@Z
+?SetChoiceList@CGXStyle@@QAEAAV1@ABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetColCount@CGXGridCore@@UAEHKI@Z
+?SetCols@CGXRange@@QAEAAV1@K@Z
+?SetCols@CGXRange@@QAEAAV1@KK@Z
+?SetColWidth@CGXGridCore@@UAEHKKHPAHIW4GXCmdType@@@Z
+?SetControlTextRowCol@CGXBrowserGrid@@UAEHKKABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@IPBVCGXStyle@@@Z
+?SetCoveredCellsRowCol@CGXGridCore@@UAEHKKKKIW4GXCmdType@@@Z
+?SetCtrlStyle@?$CG3GridTemplate@VCGXRecordView@@@@UAEXHK@Z
+?SetCtrlStyle@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXHK@Z
+?SetCurCmd@CG3QuickSearchBase@@QAEXI@Z
+?SetCurGridCol@CG3RecordView@@UAEXK@Z
+?SetCurGridRow@CG3RecordView@@UAEXK@Z
+?SetCurrencyExch@CCurrencyExchStaticBtn@@QAEXH@Z
+?SetCurrencyId@CAPCheckMntHeaderView@@IAEXXZ
+?SetCurrencyId@CAPGenChecksHeaderView@@IAEXXZ
+?SetCurrencyId@CAPInvPymtHeaderView@@IAEXXZ
+?SetCurrencyId@CReconProcHeaderView@@IAEXXZ
+?SetCurrencyMatching@CG3RecordView@@IAEX_N@Z
+?SetCurrentAPCredRslvHdrID@CAPCredMemoMntFrame@@QAEXJ@Z
+?SetCurrentAPExpenseID@CAPRecurExpFrame@@QAEXJ@Z
+?SetCurrentAPIHeaderID@CAPInvMntFrame@@QAEXJ@Z
+?SetCurrentAPRetHdrID@CAPCredReqMntFrame@@QAEXJ@Z
+?SetCurrentCell@?$CG3XViewBase@VCGXRecordView@@@@UAEHKKI@Z
+?SetCurrentCell@CG3HeaderDtlViewBase@@MAEHKKI@Z
+?SetCurrentCell@CG3IncrementalSearchGrd@@UAEHKKI@Z
+?SetCurrentCell@CG3QuickSearchResultsGrid@@UAEHKKI@Z
+?SetCurrentCell@CGXBrowserGrid@@UAEHKKI@Z
+?SetCurrentCheckHeaderID@CAPCheckMntFrame@@QAEXJ@Z
+?SetCurrentRecHdrID@CAPGenChecksFrame@@QAEXJ@Z
+?SetCurrentRecHdrID@CAPInvPymtFrame@@QAEXJ@Z
+?SetDataEx@CG3BrowseEditBase@@UAEXJ@Z
+?SetDataField@CG3NavComboBox@@QAEXHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@0@Z
+?SetDateTime@CG3DateTime@@QAEXPAVCG3Database@@W4ExceptionOption@@@Z
+?SetDefaultColWidth@CGXGridCore@@UAEHHIW4GXCmdType@@@Z
+?SetDefaultRowHeight@CGXGridCore@@UAEHHIW4GXCmdType@@@Z
+?SetDefaultSQL@CG3NavComboBox@@QAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetDeleteUsesSQL@CG3RecordView@@UAEXH@Z
+?SetDisplayCurrencyExchId@CG3CurrencyEdit@@QAEXJJ@Z
+?SetDlgTitle@CG3IncrementalSearchDlg@@QAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetField@CG3NavComboBox@@QAEXHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@0@Z
+?SetFilter@CG3NavComboBox@@QAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetFrozenCols@CGXGridCore@@UAEHKKIW4GXCmdType@@@Z
+?SetFrozenRows@CGXGridCore@@UAEHKKIW4GXCmdType@@@Z
+?SetGrid@CG3IncrementalSearchDlg@@QAEXPAVCG3IncrementalSearchGrd@@@Z
+?SetGridCursor@CGXGridCore@@UAEXI@Z
+?SetHorizontalAlignment@CGXStyle@@QAEAAV1@K@Z
+?SetID@CG3BrowseEditBase@@UAEJJ@Z
+?SetInterior@CGXStyle@@QAEAAV1@K@Z
+?SetLDisplayText@CG3BrowseEditBase@@UAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetLeftCol@CGXGridCore@@UAEXKIH@Z
+?SetMinMaxInfo@CAPCheckMntFrame@@QAEXXZ
+?SetMinMaxInfo@CAPInvMntFrame@@QAEXXZ
+?SetMinMaxInfo@CG3Worksheet@@QAEXXZ
+?SetModifiedFlag@CGXGridCore@@UAEXH@Z
+?SetParam@CG3ParamInfoOb@@QAEXHJ@Z
+?SetParam@CG3ParamInfoOb@@QAEXHPBD@Z
+?SetParamInfo@?$CG3XViewBase@VCGXRecordView@@@@UAEXXZ
+?SetParamInfo@CAPCheckMntHeaderView@@MAEXXZ
+?SetParamInfo@CAPCredMemoMntHeaderView@@MAEXXZ
+?SetParamInfo@CAPCredReqMntHeaderView@@UAEXXZ
+?SetParamInfo@CAPGenChecksHeaderView@@MAEXXZ
+?SetParamInfo@CAPInvMntHeaderView@@MAEXXZ
+?SetParamInfo@CAPInvPymtHeaderView@@MAEXXZ
+?SetParamInfo@CAPPurgeHeaderView@@UAEXXZ
+?SetParamInfo@CAPRecurExpHeaderView@@MAEXXZ
+?SetParamInfo@CG3FormView@@UAEXXZ
+?SetParamInfo@CG3RecordView@@UAEXXZ
+?SetParamInfo@CReconProcHeaderView@@MAEXXZ
+?SetPrinting@CGXGridCore@@UAEXHH@Z
+?SetQuick@SECListBoxEditor@@UAEXH@Z
+?SetQuickSearch@CHeaderSet@@QAEX_N@Z
+?SetRangeName@CGXGridCore@@UAEHPBDABVCGXRange@@PAVCObject@@IW4GXCmdType@@@Z
+?SetReadOnly@CG3BrowseEditBase@@QAEXH@Z
+?SetReadOnly@CG3PeriodEditBase@@QAEXH@Z
+?SetReadOnly@CGXGridCore@@UAEXH@Z
+?SetRowCount@CGXGridCore@@UAEHKI@Z
+?SetRowHeight@CGXGridCore@@UAEHKKHPAHIW4GXCmdType@@@Z
+?SetRows@CGXRange@@QAEAAV1@K@Z
+?SetScrollBarMode@CGXGridCore@@UAEXHHH@Z
+?SetScrollLockedFromCell@CGXGridCore@@UAEHH@Z
+?SetScrollPos@CGXGridCore@@MAEKHKH@Z
+?SetScrollRange@CGXGridCore@@MAEXHKKH@Z
+?SetSecurity@CG3FormView@@UAEHJ@Z
+?SetSecurity@CG3RecordView@@UAEXHH@Z
+?SetSelection@CGXGridCore@@UAEXPAU__POSITION@@KKKK@Z
+?SetSortOrder@CG3NavComboBox@@QAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetSpacesToTab@SECListBoxEditor@@UAEXH@Z
+?SetSqlQuery@CGXDynamicRecordset@@QAEXPBD@Z
+?SetStatus@CG3EDIIndicator@@QAEXH@Z
+?SetStatusField@CG3QSSelectBaseDlg@@QAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetStyleRange@CGXBrowserGrid@@UAEHABVCGXRange@@ABVCGXStyle@@W4GXModifyType@@HI@Z
+?SetStyleRange@CGXBrowserGrid@@UAEHABVCGXRange@@PBVCGXStyle@@W4GXModifyType@@HPBVCObArray@@IW4GXCmdType@@@Z
+?SetTabName@CGXTabWnd@@QAEXHPBDH@Z
+?SetTopRow@CGXGridCore@@UAEXKIH@Z
+?SetTotalValues@CAPGenChecksFrame@@QAE_NHABN00@Z
+?SetTotalValues@CAPGenChecksHeaderView@@QAE_NABN000@Z
+?SetTypeField@CG3QSSelectBaseDlg@@QAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetUpdateFlag@CGXGridCore@@UAEXKKH@Z
+?SetUserAttribute@CGXStyle@@QAEAAV1@GK@Z
+?SetUserAttribute@CGXStyle@@QAEAAV1@GPBD@Z
+?SetValue@?$CMapArrayT@V?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@@QAE_NHABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?SetValue@CG3PercentMaskedEdit@@QAEHAAN@Z
+?SetValue@CGXStyle@@QAEAAV1@ABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetValue@CGXStyle@@QAEAAV1@N@Z
+?SetValue@CGXStyle@@QAEAAV1@PBD@Z
+?SetValueRange@CGXGridCore@@QAEHABVCGXRange@@ABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@W4GXModifyType@@HI@Z
+?SetValueRange@CGXGridCore@@QAEHABVCGXRange@@PBDW4GXModifyType@@HI@Z
+?SetVerticalAlignment@CGXStyle@@QAEAAV1@K@Z
+?SetViewCurrencyExch@CG3CurrencyEdit@@QAEXJN@Z
+?SetViewCurrencyRate@CAPCredMemoMntHeaderView@@MAEXN@Z
+?SetViewCurrencyRate@CAPInvMntHeaderView@@MAEXN@Z
+?SetViewCurrencyRate@CAPInvPymtHeaderView@@MAEXN@Z
+?SetViewCurrencyRate@CG3RecordView@@UAEXN@Z
+?SetWarningText@CGXGridCore@@UAEXPBD@Z
+?SetZoom@CGXGridCore@@UAEXHI@Z
+?ShowContextCursor@?$CG3GridTemplate@VCGXRecordView@@@@UAEXAAVCPoint@@@Z
+?ShowContextCursor@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXAAVCPoint@@@Z
+?ShowContextCursor@CGXGridCore@@UAEXIPBD@Z
+?ShowExchangeRateDlg@CG3RecordView@@MAEXPAVCCurrencyExchObj@@@Z
+?ShowScrollBar@CGXRecordView@@UAEXIH@Z
+?ShowScrollBar@CGXRecordWnd@@UAEXIH@Z
+?SortCols@CGXBrowserGrid@@UAEXVCGXRange@@AAVCGXSortInfoArray@@I@Z
+?SortKeys@CGXGridCore@@UAEXABVCGXSortInfoArray@@AAVCPtrArray@@@Z
+?SortRows@?$CG3GridTemplate@VCGXRecordView@@@@MAEXVCGXRange@@AAVCGXSortInfoArray@@I@Z
+?SortRows@?$CG3GridTemplate@VCGXRecordWnd@@@@MAEXVCGXRange@@AAVCGXSortInfoArray@@I@Z
+?SortRows@CG3HeaderDtlViewBase@@MAEXVCGXRange@@AAVCGXSortInfoArray@@I@Z
+?SortRows@CG3QuickSearchResultsGrid@@MAEXVCGXRange@@AAVCGXSortInfoArray@@I@Z
+?StartEditing@SECListBoxEditor@@UAEHD@Z
+?StopEditing@SECListBoxEditor@@UAEXXZ
+?StoreColCount@CGXGridCore@@MAEHK@Z
+?StoreColWidth@CGXGridCore@@MAEHKH@Z
+?StoreCopyCells@CGXGridCore@@UAEHVCGXRange@@KK@Z
+?StoreCoveredCellsRowCol@CGXGridCore@@MAEHKKKKH@Z
+?StoreCurrentCell@CGXGridCore@@MAEXHKK@Z
+?StoreDefaultColWidth@CGXGridCore@@MAEHH@Z
+?StoreDefaultRowHeight@CGXGridCore@@MAEHH@Z
+?StoreFrozenCols@CGXGridCore@@MAEHKK@Z
+?StoreFrozenRows@CGXGridCore@@MAEHKK@Z
+?StoreHeaderHeight@CG3HeaderDtlSheet@@IAEXXZ
+?StoreHideCol@CGXGridCore@@MAEHKH@Z
+?StoreHideRow@CGXGridCore@@MAEHKH@Z
+?StoreInsertCols@CGXBrowserGrid@@UAEHKKH@Z
+?StoreInsertRows@CGXBrowserGrid@@UAEHKKH@Z
+?StoreMoveCells@CGXGridCore@@UAEHVCGXRange@@KKAAPAVCObject@@HW4GXCmdType@@@Z
+?StoreMoveCols@CGXBrowserGrid@@UAEHKKKH@Z
+?StoreMoveDataCols@CGXBrowserGrid@@MAEHABVCGXRange@@ABVCDWordArray@@@Z
+?StoreMoveDataRows@CGXBrowserGrid@@MAEHABVCGXRange@@ABVCDWordArray@@@Z
+?StoreMoveRows@CGXBrowserGrid@@UAEHKKKH@Z
+?StoreReadOnly@CGXGridCore@@MAEHH@Z
+?StoreRemoveCols@CGXBrowserGrid@@UAEHKKH@Z
+?StoreRemoveRows@CGXBrowserGrid@@UAEHKKH@Z
+?StoreRowCount@CGXGridCore@@MAEHK@Z
+?StoreRowHeight@CGXGridCore@@MAEHKH@Z
+?StoreSelectRange@CGXGridCore@@MAEHABVCGXRange@@H@Z
+?StoreStyleRowCol@CGXBrowserGrid@@UAEHKKPBVCGXStyle@@W4GXModifyType@@H@Z
+?StoreValueRowCol@CGXData@@QAEHKKPBDW4GXModifyType@@HPAVCGXStyle@@@Z
+?StoreZoom@CGXGridCore@@MAEHHH@Z
+?SubclassDlgItem@CCurrencyExchStaticBtn@@UAEHIPAVCWnd@@@Z
+?SubtractBorders@CGXGridCore@@UAE?AVCRect@@ABV2@ABVCGXStyle@@H@Z
+?SwitchTabWnd@CG3HeaderDtlSheet@@MAEXPAVCWnd@@@Z
+?SwitchTabWnd@CG3HeaderDtlSheet@@UAEXH@Z
+?Template2QwkFormat@CG3SequenceView@@QAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@V23@@Z
+?terminate@@YAXXZ
+?ToggleSelectionFrameMarker@CGXGridCore@@UAEXXZ
+?ToggleStatus@CAPInvMntHeaderView@@IAEXH@Z
+?TransferCurrentCell@CGXGridCore@@UAEHHIH@Z
+?Undo@CGXBrowserGrid@@UAEHXZ
+?UndoAdvanced@CGXGridCore@@UAEHPAVCObject@@HH@Z
+?UndoRecord@CGXBrowserGrid@@UAEXXZ
+?UnfreezeCols@CGXGridCore@@UAEXXZ
+?UnfreezeRows@CGXGridCore@@UAEXXZ
+?Update@CGXBrowserGrid@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?UpdateAllData@?$CG3XViewBase@VCGXRecordView@@@@UAEHH@Z
+?UpdateAllData@CG3RecordView@@QAEHH@Z
+?UpdateAllGlobals@?$CG3XViewBase@VCGXRecordView@@@@UAEXXZ
+?UpdateAllGlobals@CAPCheckMntHeaderView@@MAEXXZ
+?UpdateAllGlobals@CAPCredMemoMntHeaderView@@MAEXXZ
+?UpdateAllGlobals@CAPCredReqMntHeaderView@@UAEXXZ
+?UpdateAllGlobals@CAPExportView@@MAEXXZ
+?UpdateAllGlobals@CAPGenChecksHeaderView@@MAEXXZ
+?UpdateAllGlobals@CAPInvMntHeaderView@@MAEXXZ
+?UpdateAllGlobals@CAPInvPymtHeaderView@@MAEXXZ
+?UpdateAllGlobals@CAPPurgeHeaderView@@UAEXXZ
+?UpdateAllGlobals@CAPRecurExpHeaderView@@MAEXXZ
+?UpdateAllGlobals@CG3FormView@@UAEXXZ
+?UpdateAllGlobals@CG3HeaderDtlViewBase@@MAEXXZ
+?UpdateAllGlobals@CG3RecordView@@UAEXXZ
+?UpdateAllGlobals@CReconProcHeaderView@@MAEXXZ
+?UpdateAllViews@CGXGridCore@@UAEXPAVCWnd@@JPAVCObject@@@Z
+?UpdateBaseStyle@CGXGridCore@@UAEXGIH@Z
+?UpdateChangedColCount@CGXGridCore@@MAEXKIH@Z
+?UpdateChangedColWidths@CGXGridCore@@MAEXKKPAHIH@Z
+?UpdateChangedRowCount@CGXGridCore@@MAEXKIH@Z
+?UpdateChangedRowHeights@CGXGridCore@@MAEXKKPAHIH@Z
+?UpdateControl@CG3BrowseEditBase@@UAEXJH@Z
+?UpdateCoveredCellsRowCol@CGXGridCore@@MAEXKKKKIH@Z
+?UpdateDetailAllGridCurrency@CAPGenChecksFrame@@QAEXPAVCView@@JPAVCObject@@@Z
+?UpdateFrozenCols@CGXGridCore@@MAEXKKIH@Z
+?UpdateFrozenRows@CGXGridCore@@MAEXKKIH@Z
+?UpdateInsertCols@CGXGridCore@@MAEXKKIH@Z
+?UpdateInsertRows@CGXGridCore@@MAEXKKIH@Z
+?UpdateMoveCols@CGXGridCore@@MAEXKKKIH@Z
+?UpdateMoveDataCols@CGXGridCore@@UAEXABVCGXRange@@IH@Z
+?UpdateMoveDataRows@CGXGridCore@@UAEXABVCGXRange@@IH@Z
+?UpdateMoveRows@CGXGridCore@@MAEXKKKIH@Z
+?UpdateProperties@CGXGridCore@@UAEXIH@Z
+?UpdateQuickStatus@CG3QuickSearchBase@@UAEXXZ
+?UpdateReadOnly@CGXGridCore@@MAEXHH@Z
+?UpdateRecordInfoWnd@CGXGridCore@@UAEXXZ
+?UpdateRemoveCols@CGXGridCore@@MAEXKKPAHIH@Z
+?UpdateRemoveRows@CGXGridCore@@MAEXKKPAHIH@Z
+?UpdateScrollbars@CGXGridCore@@UAEXHH@Z
+?UpdateSelectRange@CGXGridCore@@MAEXABVCGXRange@@PBVCGXRangeList@@H@Z
+?UpdateStyleRange@CGXGridCore@@UAEXABVCGXRange@@PBVCGXStyle@@W4GXModifyType@@HIH@Z
+?UpdateStylesMap@CGXGridCore@@UAEXIH@Z
+?UpdateTitle@CG3FormView@@UAEXXZ
+?UpdateTitle@CG3RecordView@@UAEXXZ
+?UpdateTotals@CAPGenChecksFrame@@QAEXXZ
+?UpdateZoom@CGXGridCore@@MAEXHIH@Z
+?UpdScratch@CAPCredMemoMntHeaderView@@IAEXXZ
+?UpdScratch@CAPInvMntHeaderView@@IAEXXZ
+?ValidateExData@CG3BrowseEditBase@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Verify@CScheduleExportDlg@@QAE_NXZ
+?VoidCreditMemo@CAPCredMemoMntHeaderView@@IAEXXZ
+?VoidInvoice@CAPInvMntHeaderView@@IAEXH@Z
+?WindowProc@CGXRecordView@@MAEJIIJ@Z
+?WindowProc@CGXRecordWnd@@MAEJIIJ@Z
+?WriteNewLocations@CAPAutoProcView@@IAEXXZ
+@.data
+@.reloc
+[Amount]
+[APCredRslvDtlID]
+[APCredRslvHdrID]
+[APDtlID]
+[APExpenseID]
+[APExportID]
+[APIDetailID]
+[APIHeaderID]
+[APRetDtlID]
+[APRetHdrID]
+[Bank]
+[BankAmount]
+[BankStatementID]
+[BatchDtlID]
+[BatchID]
+[BeginningBalance]
+[BeginningDate]
+[bSelect]
+[CashCOAID]
+[CheckAmount]
+[CheckAmt]
+[CheckDate]
+[CheckDtlID]
+[CheckHdrID]
+[CheckMax]
+[CheckMin]
+[CheckNumber]
+[CheckTypeID]
+[Cleared]
+[COAID]
+[CostAmt]
+[CreateDate]
+[Credit    ]
+[CreditAmount]
+[CreditAmt]
+[CreditDue]
+[CreditMemoNumber]
+[CurrencyExId]
+[dbo].[Acct_APExport]
+[dbo].[Acct_BankStatements]
+[dbo].[Sequence_Check_Info]
+[dbo].[VW_ACCT_RECON_DTL]
+[dbo].[VW_ACCT_RECON_HDR]
+[dbo].[VW_AP_CHECKMNT_DETAIL]
+[dbo].[VW_AP_CRDMNT_DETAIL]
+[dbo].[VW_AP_CRDMNT_HEADER]
+[dbo].[VW_AP_CRMMNT_DETAIL]
+[dbo].[VW_AP_GENCHKS_DETAIL]
+[dbo].[VW_AP_GENCHKS_DTLSUM]
+[dbo].[VW_AP_INVMNT_DETAIL]
+[dbo].[VW_AP_INVPYMT_DETAIL]
+[dbo].[VW_AP_INVPYMT_DTLSUM]
+[dbo].[VW_AP_INVPYMT_OUT_INVOICES]
+[dbo].[VW_AP_INVPYMT_UNUSED_MEMOS]
+[dbo].[VW_AP_REC_EXP_DETAIL]
+[dbo].[VW_AP_REC_EXP_HEADER]
+[Description]
+[DifferenceAmount]
+[Discount  ]
+[DiscountAmt]
+[DiscountAvail]
+[DueDate]
+[EndDate]
+[EndingBalance]
+[EndingDate]
+[ExchRate]
+[ExpenseNumber]
+[ExpensePeriod]
+[fAttachmentPrint]
+[fCheckPrint]
+[fDiscrepancy]
+[fInvoice]
+[fManualAdd]
+[fResolveFlag]
+[FromVoucher]
+[fSchedule]
+[fSendAll]
+[fStatus]
+[fType]
+[fUseCheckDate]
+[fUseCurrentDate]
+[fUseCurrentPeriod]
+[fUseDateRange]
+[fUseVoucherRange]
+[fVoucherPrint]
+[GLCode]
+[GLPeriod]
+[InvoiceDate]
+[InvoiceID]
+[InvoiceNumber]
+[LastPaidDate]
+[LetterCode]
+[Location]
+[LocationID]
+[LocationID], [COAID]
+[MaxReturnTime]
+[MICRCode]
+[Name]
+[NextDate]
+[Occurance]
+[Outstanding]
+[OutstandingAmount]
+[paramAPCredRslvHdrID]
+[paramAPIHeaderID]
+[paramAPRetHdrID]
+[paramBatchID]
+[paramDays]
+[paramSequenceID]
+[PayShort  ]
+[PermDate]
+[POID     ]
+[PONumber]
+[Reconciled]
+[ReconDate]
+[RequestID]
+[RequestNumber]
+[RequestType]
+[ResolvedAmount]
+[Retail]
+[RetailAmount]
+[ReturnPolicy]
+[ScheduleDay]
+[ScheduleMonth]
+[ScheduleNumber]
+[SchedulePeriod]
+[ScheduleTime]
+[ScheduleYearDay]
+[ScheduleYearMonth]
+[SCIID]
+[SequenceID]
+[ShortDescription]
+[StartDate]
+[Status]
+[Subsystem]
+[TermsDays]
+[TermsPercent]
+[TotalCredit]
+[TotalDiscount]
+[TotalInvoice]
+[ToVoucher]
+[UnusedAmount]
+[VendorCode]
+[VendorID ]
+[VendorID]
+[VendorName]
+[Voucher]
+[VoucherID]
+[VoucherNumber]
+[VoucherTypeID]
+__clean_type_info_names_internal
+__CppXcptFilter
+__crtTerminateProcess
+__crtUnhandledException
+__CxxFrameHandler3
+__dllonexit
+_amsg_exit
+_calloc_crt
+_crt_debugger_hook
+_CxxThrowException
+_except_handler4_common
+_initterm
+_initterm_e
+_malloc_crt
+_onexit
+_resetstkoflw
+_unlock
+`.rdata
+{ call dbo.DistributeDiscount(%f,%ld) }
+{ call dbo.SP_APCheck_GLPeriodChange(%ld, '%s') }
+{ call dbo.SP_APCheck_Reprint(%d, '%s', %d) }
+{ call dbo.SP_APCheck_Void(%d,'%s') }
+{ call dbo.SP_APCredMemoMntCalcTotals(%ld) }
+{ call dbo.SP_APInvMntCalcTotals(%ld) }
+{ call dbo.SP_APRecurExp_CalcTotals(%ld) }
+{ call dbo.SP_GetVendorCode(%ld) }
+{ call P_APInvPymtGetCurrencyId(%d)}
+{ call P_APInvPymtPost(%d, %d) }
+{ call SP_AcctReconAdj_AddDtl(%d, %d, %d, %d, '%s', %s, '%s', '%s', %d, %f) }
+{ call SP_AcctReconAdj_UpdateDtl(%d, %d, %d, %d, '%s', %s, '%s', '%s', %d, %f) }
+{ call SP_APCredMemoMnt_UpdHdrVndChkInfo(%d, %d, '%s', '%s', '%s', %10.2f) }
+{ call SP_APCredMemoMnt_UpdHdrVoidCredit(%d, '%s') }
+{ call SP_APCredMemoMnt_UpdUsedAmount(%d, %10.2f, %10.2f, %10.2f, %10.2f) }
+{ call SP_APCredMemoMntAdd('%s', %d, '%s') }
+{ call SP_APCredMemoMntCanReverseICS(%d) }
+{ call SP_APGenerateChecks(%d, '%s', %d, '%s') }
+{ call SP_APInvMnt_CDDeleteAll(%d, %d) }
+{ call SP_APInvMnt_UpdHdrVoidInvoice(%d, '%s', %d) }
+{ call SP_APInvMntAdd('%s', '%s', %d, NULL, %d, %f) }
+{ call SP_APInvoicePost(%d, %d) }
+{ call SP_APPurgePayables_All(%d) }
+{ call SP_APUpdScratch('%s', %d, %d, %d, '%s', %10.2f, %10.2f, '%s', '%s', '%s', %d) }
+{call SP_AcctRecon_AddHdr(%d, '%s', %.4f, '%s')}
+{call SP_AcctRecon_CanAddHdr(%d, '%s', %.4f, '%s')}
+{call SP_AcctRecon_CanReverseHdr(%d)}
+{call SP_AcctRecon_ClearAllDtl(%d,'%s',0)}
+{call SP_AcctRecon_ClearAllDtl(%d,'%s',1)}
+{call SP_AcctRecon_ClearDtl(%d,'%s',%d,'%s',%d)}
+{call SP_AcctRecon_DeleteHdr(%d)}
+{call SP_AcctRecon_PostHdr(%d)}
+{call SP_AcctRecon_ReverseHdr(%d)}
+{call SP_AcctReconAdj_DeleteDtl(%d)}
+{call SP_APCloseMonth}
+{call SP_APCreditPost(%d, 0)}
+{call SP_APCreditPost(%d, 1)}
+{call SP_APCreditUpdHeader(%d)}
+{call SP_APCredMemoCreateFromVoid(%d)}
+{call SP_APCredMemoMntHasICSCheck(%d)}
+{call SP_APExport(%d,%d)}
+{call SP_APGenChksValid(%d)}
+{call SP_APGenRecurEntrySet(?)}
+{call SP_APGLPostCredit(%d, '%s', 0)}
+{call SP_APGLPostCredit(%d, '%s', 1)}
+{call SP_APGLPostCredit(%d, '%s', 1, 1)}
+{call SP_APGLPostCredit(%d, '%s',0)}
+{call SP_APGLPostCredit(%d, '', 1)}
+{call SP_APGLPostCredit(%d, '', 1, 1)}
+{call SP_APGLPostCredit(%d,'', 0)}
+{call SP_APGLPostInvoice(%d, '%s', 0)}
+{call SP_APGLPostInvoice(%d, '%s', 1)}
+{call SP_APGLPostInvoice(%d, '%s', 1, 1)}
+{call SP_APGLPostInvoice(%d, '', %d)}
+{call SP_APInvMntCreateFromVoid(%d)}
+{call SP_APInvMntDirectChk(%d, %d, '%s', %f) }
+{call SP_APInvoicePost(%d, 0)}
+{call SP_APInvoiceUpdHeader(%d)}
+{call SP_APInvPymtAddCredit(%d,%d,%s)}
+{call SP_APInvPymtAddInvoice(%d,%d,%s,%s)}
+{call SP_APInvPymtAuto(%d)}
+{call SP_APInvPymtCalcTotals(%d)}
+{call SP_APInvPymtCopyExisting(%d, %d)}
+{call SP_APInvPymtDelete(%d)}
+{call SP_APInvPymtGetOutstanding(%d, %d, %d, %d)}
+{call SP_APInvPymtGetStartChkNum(%d)}
+{call SP_APInvPymtGetUnused(%d, %d, %d, %d)}
+{call SP_APRecurExp_AddDtl(%d, %d, %d, %02.2f, %02.2f, '%s')}
+{call SP_APRecurExp_Create_Invoice(%d)}
+{call SP_APRecurExp_Delete(%d)}
+{call SP_APRecurExp_DeleteDtl(%d)}
+{call SP_APRecurExp_UpdateDtl(%d,%d,%d,%02.2f,%02.2f,'%s')}
+{call SP_APRecurExpChk }
+{call SP_TD_APCRDMNT_HEADER(%ld)}
+{call SP_TD_APCRMMNT_HEADER(%ld)}
+{call SP_TD_APINVMNT_HEADER(%ld)}
+< <$<(<,<0<4<8<<<@<D<H<L<P<T<`<d<
+< <$<(<,<0<4<8<<<@<D<H<L<P<T<X<\<`<d<h<l<p<t<x<|<
+< <$<(<,<0<4<8<<<@<D<H<L<P<T<X<\<`<d<l<p<t<
+< <&<,<2<8<><D<J<P<V<\<b<h<n<t<z<
+< <(<0<8<D<d<l<t<|<
+< <(<3<9<E<K<Q<f<l<x<~<
+< <0<@<D<H<L<P<T<\<t<
+< <0<@<D<H<L<P<T<X<\<`<d<h<l<t<x<|<
+< <2<<<f<t<
+< <5<f<t<
+< <H<W<c<
+<!<&<I<g<
+<!<1<><B<G<L<Q<V<f<x<
+<!=6=E=a=t=z=
+<"<'<,<1<6<G<W<c<x<
+<"<8<E<f<u<
+<#<D<R<W<
+<#=2=7=Z=
+<$<(<@<D<\<`<x<|<
+<$<,<2<L<T<Z<j<w<
+<$<;<N<^<n<}<
+<$<3<I<e<n<w<
+<$<D<P<p<x<
+<$<D<U<d<s<
+<%<;<U<d<s<
+<&<,<?<\<m<
+<&<,<9<a<v<
+<(<1<:<l<q<
+<(<2<<<F<T<]<b<h<l<q<
+<(<4<@<L<U<~<
+<)</<;<T<Y<
+<)<9<I<m<
+<)=I=P=\=l=s=
+<)=J=\=
+<,<<<H<h<p<
+<,<4<<<D<L<T<\<l<x<
+<,<4<H<T<\<t<|<
+<,<D<\<x<|<
+<,<L<U<j<y<
+</<8<O<T<a<l<x<
+<:<U<{<
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<+<><N<^<n<}<
+<+<0<<<A<M<R<^<e<
+<'<,<<<A<J<O<X<e<s<
+<-<_<o<
+<'<=<U<^<g<p<
+<'<9<F<z<
+<'<A<\<q<x<
+<=<P<_<n<
+<-=O=V=h=
+<1<D<S<Y<e<
+<2<:<C<b<
+<2<A<f<t<
+<2T2l2
+<3<V<d<}<
+<4<<<P<\<d<|<
+<8<P<t<
+<9<?<L<T<]<l<
+<9<C<}<
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0"><dependency><dependentAssembly><assemblyIdentity type="win32" name="Microsoft.Windows.Common-Controls" version="6.0.0.0" processorArchitecture="x86" publicKeyToken="6595b64144ccf1df" language="*"></assemblyIdentity></dependentAssembly></dependency><trustInfo xmlns="urn:schemas-microsoft-com:asm.v3"><security><requestedPrivileges><requestedExecutionLevel level="asInvoker" uiAccess="false"></requestedExecutionLevel></requestedPrivileges></security></trustInfo><application xmlns="urn:schemas-microsoft-com:asm.v3"><windowsSettings><dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true</dpiAware></windowsSettings></application></assembly>
+<B<Q<h<r<x<
+<B<V<d<{<
+<F<U<k<t<
+<P>T>X>\>`>d>h>l>p>t>x>|>
+<t<x<|<
+<V<d<{<
+= =$=(=,=0=4=8=<=@=D=H=d=|=
+= =$=(=,=0=4=8=<=@=D=H=L=P=T=X=\=`=d=h=l=p=t=x=|=
+= =$=(=,=0=4=8=<=@=D=H=P=h=x=
+= =$=(=,=4=@=D=H=L=P=T=X=\=`=d=h=l=p=t=x=|=
+= =$=<=@=X=\=t=x=
+= =,=2=G=M=Y=_=g=z=
+= =@=P=X=`=h=
+= =2=;=H=U=[=g=
+= AMJu1j
+=!=@=S=b=n=
+=!>6>E>a>t>z>
+="=(=.=4=:=@=F=L=R=X=^=d=j=p=v=|=
+="='=,=1=6=
+="='=,=1=6=G=
+="='=,=1=6=Y=k=|=
+="=I=V=
+=">1>F>T>k>
+=$=(=@=D=\=`=x=|=
+=$=,=4=D=L=`=l=t=
+=$=3=;=f=u=
+=$=7=W=\={=
+=%=<=`=p=
+=%=<=U=d=
+=&=4=X=h=t=
+=&>4>R>n>u>
+=(=?=r=
+=(=4=C=R=a=j=v=
+=(=T=x=
+=)=.=D=W=r=z=
+=)=9=?=t=
+=*=@=O=X=d=s=z=
+=*=8=a=~=
+=*=A=f=
+=*=C=`=x=~=
+=*=E=[=}=
+=,=6=V=e=
+=,=8=X=d=
+=.=:=?=W=n=
+=.>:>B>O>h>u>
+=/=^=j=
+=+>4>9>I>^>
+===X=j=s=
+=-=C=U=r=
+=>=D=x=
+=0=8=L=\=p=x=
+=1=F=V=p=
+=1=F=X=`=r=z=
+=2=:=?=D=I=O=
+=2=Z=h=q=v=
+=3=<=Q=\=j=s=
+=3=X=b=v=
+=4=D=T=d=t=
+=4=D=T=X=\=`=d=h=l=p=t=x=|=
+=4=L=l=
+=4=T=\=d=l=t=|=
+=5=J=t=
+=5=S=e=
+=6=^=e=n=t=
+=6=D=[=v=|=
+=6=D=v=
+=8=@=H=P=\=|=
+=8=E=i=
+=9=K=[=
+=J=p=y=
+=P=e=n=w=
+=P=f=x=
+=R>k>|>
+> >$>(>,>0>4>8><>@>D>H>L>P>T>X>\>`>d>h>l>p>t>x>|>
+> >$>(>,>0>4>8><>@>D>H>L>P>T>X>\>h>l>
+> >$>(>,>0>4>8><>@>D>H>P>h>x>
+> >$>(>4>8>
+> >$>0>4>
+> >$>4>8>H>L>\>`>p>t>
+> >(><>L>`>h>
+> >(>0>8>D>d>l>t>|>
+> >(>3>9>E>K>Q>f>l>x>~>
+> >l>p>t>x>|>
+>!?*?/?X?e?
+>!>&>]>{>
+>!>&>6>H>u>
+>!>.>2>7><>A>F>V>h>
+>!>/>:>P>]>m>r>~>
+>!>->G>N>}>
+>!>6><>H>N>c>i>u>{>
+>">(>a>x>
+>">)>9>D>P>W>z>
+>">+>0>L>Y>w>
+>">1>@>O>^>t>
+>">7>J>O>
+>">9>^>
+>#?e?~?
+>#?I?N?f?}?
+>#>/>;>G>j>
+>#>>>E>R>`>
+>#>4>@>O>j>o>
+>$?1?D?a?
+>$?D?t?
+>$>*>0>6><>B>H>N>T>Z>`>f>l>r>x>~>
+>$>*>N>g>
+>$>,>4><>D>L>d>l>
+>$>,>8>X>d>
+>$><>T>l>
+>$>3>B>Q>`>v>
+>$>5>J>_>
+>$>8>A>Y>g>{>
+>$>D>L>X>x>
+>%>,>5>;>s>
+>%>E>d>k>
+>&?n?x?
+>&>4>K>^>h>n>~>
+>&>6>N>f>
+>&>6>N>T>
+>(?D?H?h?
+>(>1>@>`>i>~>
+>(>4>@>\>u>~>
+>)>9>I>Y>i>y>
+>*>6>?>H>h>
+>,><>@>D>H>L>P>T>X>`>x>
+>,><>L>\>l>p>
+>/???M?g?o?|?
+>:>S>^>d>u>
+>+?0?=?M?]?u?
+>+>@>J>Z>l>v>
+>+>7>C>l>
+>+>A>f>t>
+>+>E>T>c>r>
+>+>S>c>s>
+><>D>X>`>h>
+>1>8>T>b>
+>2>@>D>H>
+>3>@>H>P>f>k>
+>3>K>f>s>
+>5?A?d?x?
+>5>:>j>
+>6>G>[>f>y>
+>9>>>k>|>
+>D>\>a>
+>F?T?k?
+>I?[?v?
+>I>T>Z>r>
+>N>i>v>
+0 0$0(0,0004080<0
+0 0$0(0,0004080<0@0D0H0L0P0`0
+0 0$0(0,0004080<0@0D0H0L0P0T0X0\0`0d0h0l0p0|0
+0 0$0(0,0004080<0@0D0H0L0P0T0X0\0`0d0h0l0p0t0x0|0
+0 0$0(0,0004080<0@0D0L0P0T0X0\0`0d0h0l0t0
+0 0$0(0,040L0P0h0l0
+0 0@0H0T0t0|0
+0 0>0D0
+0 0004080<0@0D0H0L0T0l0|0
+0 080<0T0X0p0t0
+0!0&060H0u0
+0!0.0V0a0n0r0w0|0
+0!0'0,0B0F0L0b0f0l0
+0!060F0`0s0y0
+0"010@0O0e0u0
+0"050K0e0n0w0
+0"1'1H1U1v1
+0"1B1c1
+0$0*00060<0B0H0N0T0Z0`0f0l0r0x0~0
+0$0,040<0D0P0p0x0
+0$0,040<0D0X0h0|0
+0$030^0j0
+0$030B0Q0`0v0
+0$080@0\0|0
+0$090?0K0Q0f0l0x0~0
+0$0C0M0l0p0t0x0
+0%050D0U0d0z0
+0&1;1h1
+0&181^1d1r1
+0(0,0004080<0@0D0H0L0P0T0X0\0`0d0h0l0p0t0x0|0
+0(0.0:0H0V0b0n0z0
+0(0.0>0J0
+0(0`0j0
+0(050^0z0
+0(090I0a0t0~0
+0*010W0
+0*060V0f0
+0,0<0P0X0p0x0
+0,0G0W0b0q0
+0,0P0t0
+0,0t0x0|0
+0.171@1R1j1|1
+0/0?0R0^0z0
+0/050A0G0Y0k0}0
+0+0>0N0[0j0
+0+070>0K0e0l0|0
+0=0E0v0
+0>0C0f0x0
+0>1J1V1^1k1
+0'0,04080<0@0V0h0
+0-0]0p0
+00<0E0a0v0
+0-0<0R0e0t0
+000C0I0U0a0m0y0
+0-020>0C0
+0-040B0H0[0o0
+0-0C0U0d0s0
+0-0g0|0
+010>0B0G0L0Q0V0z0
+010P0w0
+010P0x0
+011n1z1
+0'171U1{1
+034383<3@3D3H3L3P3T3X3\3`3d3h3l3p3t3x3|3
+040904B0
+040T0`0{0
+060;0a0k0q0
+080@0F0Y0_0{0
+080G0L0d0{0
+0A0n0t0|0
+0D0H0P0X0d0
+0D1f1t1
+0K0T0Y0i0~0
+0Q0q0x0
+0W0\0o0v0
+1 1$1(1,1014181<1@1D1H1L1P1T1X1\1`1d1h1l1p1t1x1|1
+1 1$1(1,1014181<1@1D1H1L1P1T1X1\1`1d1h1p1t1x1|1
+1 1$1(1,1014181<1@1D1H1L1P1T1X1\1`1d1t1
+1 1$1(1,1014181<1@1D1H1L1P1T1X1\1l1
+1 1$1(1,1014181D1H1H3L3P3T3X3\3`3d3h3l3p3t3x3|3
+1 1$1(1,181<1T1X1\1`1d1h1l1p1t1x1|1
+1 1&1,12181>1D1J1P1V1\1b1h1n1t1z1
+1 1(10181P1\1|1
+1 1(141=1B1H1R1\1l1|1
+1 1)121H1e1t1
+1 1,151G1
+1 1,1L1T1h1p1x1
+1 151>1T1e1t1
+1 181H1X1\1`1d1h1l1t1x1|1
+1 1F1S1g1p1
+1 2'2-2B2a2y2
+1!1(161=1T1n1
+1!1E1v1
+1!2.22272<2A2F2U2d2z2
+1"1&1,1B1F1L1b1f1l1
+1"1)171C1L1u1z1
+1"1.1:1B1O1h1u1
+1"1A1W1r1
+1#1Y1k1|1
+1$1,1@1H1d1l1
+1$1,181X1`1h1t1
+1$1,181X1`1l1
+1$1,1D1L1`1p1
+1$1<1T1l1
+1$1<1T1p1t1x1|1
+1$141D1H1L1P1T1X1\1`1d1h1l1p1x1
+1$141D1H1P1T1X1\1`1d1h1l1p1t1x1|1
+1$141Q1c1l1{1
+1$2<2O2_2h2
+1$2P2x2
+1%1@1Y1r1
+1%101@1L1R1X1m1s1
+1%1A1T1Z1
+1%1C1U1k1
+1&1-1=1H1T1]1u1z1
+1&1-1=1K1v1
+1&151D1S1b1q1
+1&181N1W1q1z1
+1&1A1V1]1l1t1|1
+1&1I1N1a1j1
+1&2+2=2[2o2u2 3;3G3V3_3l3
+1&272[2g2q2
+1)1:1b1
+1)1P1w1
+1)2:2b2z2
+1*1/1R1Y1i1t1
+1,121;1W1d1j1
+1.2>2G2V2]2
+1.252B2L2V2h2r2
+1:1A1W1\1h1o1
+1=1V1e1
+1'1>1P1Z1j1
+11191F1h1
+111a1~1
+111R1d1w1
+1-191?1W1b1k1
+14181P1`1p1
+162E2Y2
+181X1x1
+1A1V1x1
+1D1T1_1q1
+1H1U1~1
+1Q1`1f1
+1R2k2|2
+1V2d2{2
+2 2$2(2,2024282<2@2D2H2L2P2T2X2\2`2d2h2l2p2t2x2|2
+2 2$2(2,2024282<2@2D2H2L2P2T2X2d2h2
+2 2$2(2,2024282<2D2\2l2|2
+2 2$2(2,20282P2`2p2t2
+2 2(2@2P2`2d2t2x2|2
+2 2(20282@2H2P2X2d2
+2 2(242T2\2p2|2
+2 242<2X2`2x2
+2 272A2s2
+2 2D2P2X2p2|2
+2 2D2P2X2p2x2
+2!2)292A2P2V2{2
+2"2(2.242:2@2F2L2R2X2^2d2j2p2v2|2
+2#2)2<2Y2j2
+2#2)252A2M2R2b2g2s2z2
+2#272@2O2o2
+2$2,242@2`2h2p2x2
+2$2.252f2u2
+2$2;2N2Z2f2r2
+2$2;2N2Z2i2
+2$2<2T2l2
+2$242>2Y2v2
+2$2E2R2]2i2|2
+2$3K3U3q3
+2%2.272@2I2l2
+2%2p2|2
+2&282E2N2W2
+2&343K3^3m3z3
+2(2/252;2D2H2L2P2T2
+2*262B2N2Z2b2o2
+2,222>2D2L2_2e2q2w2
+2.232D2P2
+2.2R2e2{2
+2/242N2
+2/2B2^2z2
+2:2C2^2e2u2
+2:2U2k2
+2@2F2O2U2}2
+2\3w3}3
+2+2D2]2z2
+2>2U2^2~2
+20242L2\2l2|2
+212=2T2
+212C2S2c2i2u2~2
+2'272F2f2u2
+2-2C2U2d2s2
+232C2S2c2s2
+2'3W3v3
+242L2d2
+252D2S2b2q2
+262D2[2e2
+28.2.7 Build: 07
+2C2H2U2]2w2
+2I3[3l3
+2p4t4x4|4
+3 3$3(3,3034383@3D3H3L3P3T3X3\3`3d3l3p3t3x3|3
+3 3$3(3,3034383<3@3D3H3L3P3T3X3\3`3d3h3l3p3|3
+3 3$3(3,3034383<3@3D3H3L3P3T3X3\3`3d3h3l3p3t3x3|3
+3 3$3(3,3034383<3@3D3H3L3P3T3X3\3`3d3h3t3x3
+3 3$3(3,3034383<3@3D3H3L3P3T3X3\3h3l3
+3 3$3(303H3X3h3l3p3t3x3|3
+3 3$30343
+3 3(3@3H3\3d3
+3 3(30383D3d3l3t3
+3 3)3.343>3H3R3\3f3j3p3z3
+3 3)3/3a3w3
+3 3,3L3T3h3x3
+3 30343D3H3X3\3`3d3h3l3p3t3x3
+3 3l4p4t4x4|4
+3!3&353R3f3x3
+3!3&3N3l3|3
+3!3>3X3i3
+3!4.42474<4A4F4V4h4
+3"3+3H3L3P3p3w3|3
+3"3F3v3
+3"3N3f3
+3"414F4T4p4
+3#3+3?3N3V3\3k3
+3#333C3R3
+3#464P4q4x4
+3$3*30363<3B3H3N3T3Z3`3f3l3r3x3~3
+3$4(4,4044484<4@4D4H4L4P4T4X4\4`4d4h4l4p4t4x4|4
+3%3.373@3V3e3n3
+3%3;3Q3v3
+3%3>3N3V3^3t3z3
+3%303@3L3R3X3m3s3
+3%343C3R3a3p3
+3&3@3S3Y3e3q3}3
+3&313^3
+3&383O3b3h3
+3(3?3m3y3
+3(343=3f3u3
+3(343K3W3c3o3{3
+3(3H3P3X3`3h3p3|3
+3(3Y3i3x3
+3)3/3W3s3y3
+3*313R3
+3*3R3^3u3
+3,383\3|3
+3,393I3R3[3
+3,3D3\3t3
+3.4A4W4a4
+3/353I3[3x3
+3/3F3\3|3
+3/3H3N3_3|3
+3+3:3C3X3g3n3
+3+31393I3Q3l3x3
+30383@3V3`3q3
+30383L3\3d3x3
+303J3\3
+31383G3O3W3]3e3p3
+313E3[3g3{3
+3'303?3_3o3~3
+333V3f3
+3'3B3]3s3
+3'3H3U3z3
+343D3T3d3h3l3p3t3x3|3
+353^3}3
+354A4N4R4W4\4a4f4u4
+364D4[4
+373A3b3{3
+373A3F3O3X3_3m3y3
+3F4T4x4
+3p3t3x3|3
+4 4$4(4,4044484<4@4D4H4L4P4T4X4\4`4d4h4l4p4t4x4|4
+4 4$4(4,4044484<4@4D4P4T4L6d6
+4 4$4(4,44484<4@4D4H4L4P4T4\4`4d4h4l4p4t4x4
+4 4&4,42484>4D4J4P4V4\4b4h4n4t4z4
+4 4&434P4_4h4n4t4
+4 40484@4H4T4t4|4
+4 464E4T4c4r4
+4!404?4N4]4l4{4
+4"4)494S4Z4j4|4v5|5
+4"4,4V4e4
+4"414>4B4G4L4Q4V4i4{4
+4"5(5A5^5p5v5
+4#4/444@4E4Q4X4
+4#424:4
+4$4.484B4L4V4Z4`4j4t4~4
+4$4>4X4s4
+4$404P4\4|4
+4$434B4Q4`4o4~4
+4$444>4Y4v4
+4$4H4h4p4x4
+4$535b5n5
+4%4,4<4R4o4{4
+4%4.474M4e4q4z4
+4%4+484@4I4i4
+4&434J4
+4&444K4`4j4p4v4
+4&484A4Q4
+4&4D4a4
+4&545K5^5n5z5
+4&585U5[5j5s5
+4(484H4X4h4l4|4
+4(4Q4`4|4
+4(5<5D5V5d5y5
+4)404L4[4d4x4
+4)454N4^4p4
+4*575C5Y5y5
+4,4<4@4D4\4`4d4h4l4
+4,4<4L4\4l4|4
+4,4044484<4@4D4H4L4P4T4X4\4`4d4h4l4p4t4x4|4
+4,444<4D4L4X4x4
+4,444H4T4\4t4|4
+4,4D4\4x4|4
+4/4s4x4
+4;5B5g5x5
+4@4M4a4
+4+4E4T4j4
+404:4J4b4}4
+404P4X4`4h4p4x4
+424A4N4R4W4\4a4f4
+424H4e4
+435V5h5
+4'4:4@4L4R4d4t4~4
+444L4d4|4
+454;4K4
+454M4Y4_4{4
+464C4Z4
+464D4h4t4
+464F4]4r4y4
+484Y4t4
+4A4V4f4
+4E4J4Q4h4
+4F4U4s4
+4X5\5`5d5h5l5p5t5x5|5
+5 5$5(5,5054585<5@5D5H5L5P5T5X5\5`5d5h5l5p5t5
+5 5$5(5,5054585<5@5D5H5L5P5T5X5\5`5d5h5l5p5t5x5|5
+5 5$5(5,5054585<5@5D5H5L5P5T5X5\5`5l5p5
+5 5$5(5,5054585<5@5D5H5L5P5X5\5`5d5h5l5p5t5x5|5
+5 5$5(5,5054585<5T5l5
+5 5$5(5,50545D5
+5 5$5054585<5@5D5H5L5P5T5X5\5`5d5h5l5p5t5x5|5
+5 5/5>5M5\5k5z5
+5 54585H5L5T5l5|5
+5 575E5U5i5
+5!525=5C5[5j5y5
+5!5-5=5
+5!6)666F6X6
+5!666D6[6e6
+5"5(5.545:5@5F5L5R5X5^5d5j5p5v5|5
+5#5(54595E5L5
+5#5;5G5P5h5p5
+5#525A5P5_5n5}5
+5#6@6X6
+5$5*50565<5B5H5N5T5Z5`5f5l5r5x5~5
+5$5;5N5]5c5
+5$5<5H5l5
+5$545D5H5P5T5X5\5`5d5h5l5p5t5x5|5
+5$585`5
+5%5C5U5k5
+5%626J6f6q6
+5&5/5Q5V5f5n5
+5&5@5Z5
+5&5=5[5b5r5
+5&525R5v5
+5&565F5U5n5
+5&585B5H5r5
+5&5D5a5
+5(5,5D5H5`5d5|5
+5(5:5|5
+5(5<5D5`5
+5(545<5\5d5l5|5
+5(565?5J5X5a5l5z5
+5(585<5L5P5T5X5\5`5d5h5p5
+5(5L5l5t5|5
+5)5<5c5
+5)5b5p5y5~5
+5)5Q5m5~5
+5*585H5c5m5
+5.5@5c5o5
+5.5>5]5f5o5
+5`6d6h6l6p6t6
+5+5D5~5
+5>5V5f5s5
+50585P5X5l5t5
+505B5K5X5e5k5w5
+505C5H5V5\5
+51585G5O5W5]5e5p5
+525A5N5R5W5\5a5f5
+525E5T5j5
+52696I6T6`6i6
+535?5h5
+536[6`6v6
+545@5`5h5p5x5
+5'5,5?5O5`5
+5-5@5S5f5q5~5
+5'535?5K5W5c5o5{5
+5'535H5
+556F6Q6j6
+566C6Z6
+575<5f5x5
+5A6V6g6~6
+5C5O5x5
+5h6l6p6t6x6|6
+6 6$6(6,6064686<6@6D6H6L6P6T6X6\6`6d6h6l6p6t6x6|6
+6 6$6(6,6064686<6D6\6l6|6
+6 6$6(6,64686<6@6D6H6L6P6T6X6`6d6h6p6
+6 6&6,62686>6D6J6P6V6\6b6h6n6t6z6
+6 6(6<6D6T6h6p6
+6 6(606<6`6
+6 6(60686@6H6T6t6
+6 6(676?6O6_6o6
+6 63696E6Q6]6i6u6
+6 6-6F6S6j6
+6 6D6d6l6t6|6
+6!6.62676<6A6F6i6
+6!696Q6`6g6|6
+6"6A6N6R6W6\6a6f6
+6"7V7g7
+6#626^6w6
+6#656K6e6{6
+6#7`7i7y7
+6$6*60666<6B6H6N6T6Z6`6f6l6r6x6~6
+6$6.62686B6L6V6`6j6n6t6~6
+6$606T6t6|6
+6$64686H6L6P6T6X6\6`6d6l6
+6$6J6f6~6
+6%6+676C6O6
+6%646J6z6
+6%6A6M6T6o6
+6%6D6K6
+6&6/6B6K6c6h6y6
+6&6<6R6h6
+6&616Q6e6n6w6
+6(60666?6P6X6^6g6
+6(666M6W6g6
+6(686H6L6P6T6X6`6d6h6l6p6t6x6|6
+6)6M6`6s6
+6*7E7N7W7`7i7r7
+6,6H6L6P6T6X6\6`6d6h6l6p6t6x6|6
+6,6V6]6m6
+6.6=6J6
+6/676g6
+6/6A6q6
+6;6V6h6
+6?6O6_6o6u6
+6?7p7x7
+6+6E6N6d6u6
+6=6C6^6y6
+60646L6P6h6l6
+60686D6h6
+646P6T6X6\6`6d6h6l6p6t6x6|6
+646T6t6
+656E6r6
+656M6Y6_6o6{6
+6'6:6@6L6R6d6t6~6
+666I6Q6Y6o6y6
+667H7u7
+6'686U6]6x6
+6-7H7O7_7q7
+6'7J7X7\7`7
+696h6n6{6
+6A7V7h7
+6F6W6{6
+6H7L7P7T7X7\7`7d7h7l7p7t7x7|7
+7 7$7(7,7074787<7@7D7H7L7P7T7X7\7`7d7h7l7p7t7
+7 7$7(7,7074787<7@7D7H7L7P7T7X7\7`7d7h7l7p7t7x7|7
+7 7$7(7,7074787<7@7D7P7T7`7d7h7l7p7t7x7|7
+7 7&7,72787>7D7J7P7V7\7b7h7n7t7z7
+7 7(70787@7H7P7X7d7
+7 7(70787@7L7l7t7|7
+7 7*707<7V7d7{7
+7 7<7d7|7
+7 707@7P7`7d7t7x7
+7 747<7X7`7x7
+7 787H7X7\7`7d7h7l7p7t7x7|7
+7 787H7X7h7l7|7
+7 8$8(8,8084888<8@8D8H8L8P8T8X8\8`8d8h8l8p8t8x8|8
+7!7&767H7n7
+7!7?7M7U7
+7!757I7[7m7
+7!7F7T7r7
+7"7(7.747:7@7F7L7R7X7^7d7j7p7v7|7
+7$7,747<7D7L7T7`7
+7$707S7e7t7
+7%7.777@7V7e7t7
+7%747D7V7q7
+7%7C7I7Q7_7k7s7
+7%7E7U7^7g7p7y7
+7%7V7f7
+7&7;7V7c7z7
+7&7@7S7Y7e7q7}7
+7&7D7a7
+7&888b8h8
+7(707D7L7h7p7
+7(787H7L7P7T7X7\7`7d7h7l7p7t7|7
+7(7L7l7t7|7
+7(7W7o7
+7(7X7k7y7
+7)71777G7T7\7b7|7
+7,7<7L7P7h7x7|7
+7,757:7@7D7I7\7
+7,7D7`7d7h7l7p7t7x7|7
+7.7=7J7t7{7
+7+7B7V7c7{7
+7+7F7L7U7
+7+7K7v7
+7+7S7_7k7w7
+7<8T8l8
+70787>7F7N7f7x7
+71777G7b7v7
+717J7}7
+727E7e7q7
+727K7q7~7
+727V7n7z7
+767D7[7n7z7
+767F7e7x7~7
+7-7;7P7`7n7
+7'777U7e7u7
+777Q7b7t7}7
+7'7B7I7Y7h7
+7-7V7c7k7
+787E7k7v7
+787P7b7
+797D7]7g7
+7B7Z7k7w7
+7F7T7k7u7
+8 8$8(8,8084888<8@8D8H8L8P8\8`8|8
+8 8$8(8,8084888<8@8D8H8L8P8T8X8\8`8d8h8l8p8t8x8
+8 8$8(8,8084888<8@8D8H8L8P8T8X8\8`8d8h8l8p8t8x8|8
+8 8$888<8@8D8H8P8X8l8|8
+8 8&8>8D8v8
+8 8,848L8\8d8t8|8
+8 808@8D8H8L8P8T8X8\8`8d8h8l8p8t8x8|8
+8 888@8d8p8x8
+8 888H8X8\8`8d8h8l8p8t8x8|8
+8 9$9(9,9094989<9@9D9H9L9P9T9X9\9`9d9h9l9p9t9x9|9
+8!8&868H8u8
+8!8.82878<8A8F8n8
+8!8<8B8U8k8v8
+8!868F8`8s8y8
+8"8(8.848:8@8F8L8R8X8^8d8j8p8v8|8
+8"8@8H8U8]8|8
+8"8+8J8`8h8q8
+8"8'8,81868F8X8x8
+8$8*80868<8B8H8N8T8Z8`8f8l8r8x8~8
+8$8*8B8Q8h8|8
+8$8,848<8D8L8T8\8d8l8t8|8
+8$8,848<8H8h8p8x8
+8$8;8[8k8q8
+8$8;8Y8`8p8~8
+8$8@8I8w8|8
+8$8H8l8
+8$909P9
+8%8-8C8
+8%8-8G8P8u8
+8&8L8m8t8
+8(8=8\8c8q8
+8(80888@8X8`8t8
+8(858p8w8}8
+8(888H8L8P8T8X8\8`8d8l8p8t8x8|8
+8(888H8L8P8T8X8`8x8
+8)858E8T8n8s8
+8*848f8u8
+8*8E8T8c8r8
+8,898F8X8
+8,8G8N8^8r8{8
+8/8L8d8p8
+8;9^9s9
+8@8X8e8r8
+8+8<8M8k8q8
+8+898I8S8}8
+8+8U8l8
+8=8F8K8V8d8x8
+8>8N8W8b8p8y8
+818F8V8p8
+818H8N8
+838?8K8W8c8o8{8
+838D8c8l8u8~8
+848<8P8`8t8|8
+858D8S8b8q8
+868E8e8
+8'8/888a8v8
+8'8A8f8{8
+8'8B8J8^8}8
+8-8C8e8n8
+8'9,9F9V9
+8'9;9W9t9
+8A8e8u8
+8F8W8w8
+8G9`9x9
+8H8U8v8
+8h9l9p9t9x9|9
+8K8g8y8
+8N8Z8f8r8~8
+9 9$9(9,9094989<9@9D9H9L9P9T9X9\9`9d9h9l9p9
+9 9$9(9,9094989<9@9D9H9L9P9T9X9\9`9d9h9l9p9t9x9|9
+9 9$9(9,989<9@9D9H9L9P9T9X9\9`9d9h9l9p9t9x9
+9 9$9(9094989@9D9L9d9h9l9p9t9
+9 9&9,92989>9D9J9P9V9\9b9h9n9t9z9
+9 9(90989@9H9P9X9l9|9
+9 9,929@9H9b9l9
+9 9:9B9H9u9
+9 989<9T9X9p9t9
+9 989H9X9\9`9d9h9l9p9t9x9|9
+9!:8:?:E:R:a:n:r:w:|:
+9!9-929>9E9y9~9
+9":F:m:
+9"9&9,969@9J9T9^9b9h9r9|9
+9"9F9X9z9
+9#:/:D:a:f:r:
+9#9/9;9G9S9_9k9w9
+9#979N9b9p9
+9$:9:b:i:q:
+9$9*90969
+9$9*90969<9B9H9N9T9Z9`9f9l9r9x9~9
+9$9,949<9D9L9T9\9d9p9
+9$9:9z9
+9$94989<9@9D9H9L9P9X9p9
+9$9D9L9`9l9t9
+9$9H9\9d9
+9%9.9D9U9^9g9p9
+9%9;9]9s9
+9&:+:5:=:W:`:
+9&:8:~:
+9(9/959B9Q9^9b9g9l9q9v9
+9(90989@9H9P9X9h9p9
+9(9G9O9j9
+9(9P9t9
+9)929>9M9\9k9z9
+9*:I:x:
+9*919=9Q9a9r9
+9*9F9^9u9
+9,9]9p9
+9.9>9M9Z9
+9.959D9O9Y9y9
+9.9N9i9{9
+9:9f9x9
+9@9F9X9e9
+9@9S9|9
+9+:8:X:k:
+9+9<9V9d9{9
+9+919r9
+90989T9\9x9
+929[9k9
+929R9X9
+94999O9T9j9o9{9
+949G9U9b9m9r9
+959<9E9L9V9]9f9m9
+959H9_9k9w9
+969D9[9n9}9
+9'9.9<9V9g9
+9'969M9d9k9x9
+999H9T9
+999H9u9
+9-9C9U9]9y9
+9'9h9u9
+9-9Q9]9i9y9
+9C9V9e9
+9D9Q9k9|9
+A check sequence must be selected.
+A/P current month successfully closed.
+AccountCode
+AccountCode, Description
+AccountCode, LocationID
+Acct_APExport
+Add Credit Memo Item
+Add Invoice Item
+Add Reconciliation Adjustment Detail
+Add Recurring Expense Detail
+agingDays1
+All Batch Detail records must match the Check Sequence Currency Exchange.
+All GL Codes
+All GLCodes
+All Locations
+All Vendors
+Amount
+Annually
+AP data successfully exported.
+APCredRslvDtlID
+APCredRslvDtlID = %ld
+APCredRslvDtlID = ?
+APCredRslvDtlID = 0
+APCredRslvHdrID
+APCredRslvHdrID = %ld
+APCredRslvHdrID = ?
+APDtlID
+APDtlID = %d
+APExpenseID = %d 
+APExpenseID = %ld
+APExpenseID = 0
+APExportID
+APExportID = %d
+APExportID = 0
+APIDetailID
+APIDetailID = %ld
+APIDetailID = ?
+APIDetailID = 0
+APIHeaderID
+APIHeaderID = %ld
+APIHeaderID = ?
+APIHeaderID in (select APIHeaderID from Acct_API_Header where fEDI = 1)
+AppendMenuA
+APRetHdrID = %ld
+APRetHdrID = ?
+APRetHdrID = 0
+Are you sure this is what you want?
+Are you sure you want to close the current month?
+Are you sure you want to create a new invoice?
+Are you sure you want to create a new memo?
+Are you sure you want to delete this detail?
+Are you sure you want to Export the AP data?
+Are you sure you want to generate checks?
+Are you sure you want to generate recurring expenses?
+Autogen Process completed.
+Available discount is $ %.2f
+BankStatementID = %d
+Batch %d has been posted
+Batch Name
+Batch name is already in use.
+Batch Name: %s
+BatchDtlID
+BatchDtlID = %d
+BatchDtlID = ?
+BatchID = %d
+BatchID = %d 
+BatchID = ?
+BatchID = 0
+BatchID IN (SELECT BatchID FROM VW_AP_GENCHKS_DETAIL WHERE VendorID = %ld)
+BatchID IN (SELECT BatchID FROM VW_AP_INVPYMT_DETAIL WHERE VendorID = %ld)
+BatchName LIKE '%s%%'
+Both Expense and Inventory
+bReportmode
+C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\atlmfc\include\afxwin2.inl
+cannot toggle to a hold status.
+CAPCheckMntDetailSet
+CAPCheckMntDetailView
+CAPCheckMntFrame
+CAPCheckMntHeaderView
+CAPCheckMntQuickSearchGrid
+CAPCreditBrwsSet
+CAPCredMemoMntDetailView
+CAPCredMemoMntDtlVwSet
+CAPCredMemoMntFrame
+CAPCredMemoMntHeaderView
+CAPCredMemoMntQuickSearchGrid
+CAPCredReqMntDetailView
+CAPCredReqMntDtlVwSet
+CAPCredReqMntFrame
+CAPCredReqMntHdrVwSet
+CAPCredReqMntHeaderView
+CAPCredReqMntQuickSearchGrid
+CAPExportSet
+CAPExportView
+CAPGenChecksDetailView
+CAPGenChecksDtlAllView
+CAPGenChecksDtlDtlView
+CAPGenChecksDtlSumView
+CAPGenChecksDtlSumVwSet
+CAPGenChecksDtlVwSet
+CAPGenChecksFrame
+CAPGenChecksHeaderView
+CAPGenChecksQuickSearchGrid
+CAPGenParamView
+CAPGenRecurEntGrid
+CAPGenRecurEntSet
+CAPGenRecurEntView
+CAPInvMntDetailView
+CAPInvMntDtlVwSet
+CAPInvMntFrame
+CAPInvMntHeaderView
+CAPInvMntQuickSearchGrid
+CAPInvPymtDetailView
+CAPInvPymtDtlAllView
+CAPInvPymtDtlDtlView
+CAPInvPymtDtlSumView
+CAPInvPymtDtlSumVwSet
+CAPInvPymtDtlVwSet
+CAPInvPymtFrame
+CAPInvPymtHeaderView
+CAPInvPymtQuickSearchGrid
+CAPInvPymtSelectDtlDlg
+CAPMEBaseView
+CAPMEReportView
+CAPMESetupView
+CAPMonthEndView
+CAPOutInvSet
+CAPPeriodSetupView
+CAPPurgeHeaderView
+CAPPurgeParamView
+CAPRecExpHdrVwSet
+CAPRecurExpDetailView
+CAPRecurExpDtlSet
+CAPRecurExpFrame
+CAPRecurExpHeaderView
+CAPRecurExpQuickSearchGrid
+CAPSeqChkInfoSet
+CAPSequenceView
+CAPStoreParamView
+Change Invoice Status for Period
+Change to Hold Period
+Change to POST Period
+Check amount is required.
+Check Date...
+Check generation successfully completed.
+Check Number
+Check Number: %s
+check_batch_id
+check_header_id
+check_selection_id
+check_sequence_id
+CheckAmt
+CheckDate
+CheckDate, LetterCode
+checkhdrid = %d
+CheckHdrID = %d 
+CheckHdrID = %ld
+CheckHdrID = 0
+CheckHdrID IN ( SELECT CheckHdrID FROM VW_AP_CHECKMNT_DETAIL WHERE InvoiceNumber LIKE '%%%s%%' and finvoice=0 )
+CheckHdrID IN ( SELECT CheckHdrID FROM VW_AP_CHECKMNT_DETAIL WHERE InvoiceNumber LIKE '%%%s%%' and finvoice=1 )
+CheckMenuItem
+CheckMenuRadioItem
+checknumber LIKE '%%%s%%'
+Click OK to accept  Or  Click Cancel
+Combination of discount and payment cannot be greater than outstanding.
+Comment
+CompanyName
+Copyright 
+Create Date...
+CreateDate >= '%s 00:00:00' AND CreateDate <= '%s 23:59:59'
+CReconProcDetailSet
+CReconProcDetailView
+CReconProcFrame
+CReconProcHeaderSet
+CReconProcHeaderView
+CReconProcHeaderVwSet
+CReconProcQuickSearchGrid
+Credit amount cannot be greater than unused amount
+Credit amount is required.
+Credit Amt
+Credit cannot exceed unused.
+Credit Memo
+Credit Memo is assigned to a prior period.
+Credit Memo is required.
+Credit Memo must be removed from batch before editing, 
+Credit Memo must be set to either the Current Period or a Future Period
+Credit Memo was posted in ICS in a previous period and cannot be reversed.
+Credit: %s  Voucher: %s
+CreditAmount
+CreditAmt
+CurrencyExId = %d
+D$$hTB
+D$`SVW
+D$hSVW
+D$xSVW
+Date is Required.
+DecodePointer
+DELETE Acct_Auto_Acct WHERE AutoID = %d AND ModuleID = %d
+DELETE Acct_Auto_Loc WHERE AutoID = %d AND ModuleID = %d
+delete Acct_Pay_Batch_Detail where BatchDtlID = %d
+delete Acct_Pay_Batch_Detail where BatchID = %d
+delete Acct_Pay_Batch_Detail where VendorID = %d and BatchID = %d
+Delete current batch?
+Delete current reconciliation header?
+DELETE FROM Acct_API_Detail WHERE APIDetailID = %ld
+DELETE FROM Acct_Credit_Resolved_Detail WHERE APCredRslvDtlID = %ld
+delete sequence_check_info where sequenceID = %d
+DeleteCriticalSection
+Description
+Description, AccountCode
+Detail
+Difference
+DIRECT
+Discount cannot exceed available.
+DiscountAmt
+Do Not Use Credits
+Do you want to delete the existing Invoices and Credits?
+Edit Credit to Use
+Edit Invoice for Payment
+Edit Reconciliation Adjustment Detail
+Edit Recurring Expense Detail
+EnableWindow
+EncodePointer
+end_date
+end_period
+end_vendor_id
+Ending Balance
+EndingDate >= '%s 00:00:00' AND EndingDate <= '%s 23:59:59'
+ERROR : Unable to initialize critical section in CAtlBaseModule
+Error creating invoice.
+Exception thrown in destructor
+Exp Inv
+Expense
+Expense No.
+Expense No: %s
+Expense Number is required.
+Expense Number must be unique.
+ExpenseNumber = '%s'
+ExpenseNumber like '%%%s%%'
+ExportID
+fExpenseInvoice
+FileDescription
+FileVersion
+fincCredMemChk
+fincludePrepay
+fincludeWriteOffs
+Find Credit Memo
+Find Invoice
+fInvoice
+fManualAdd
+fromCheckDate
+fromCheckNumber
+fromCreateDate
+fromCreditDate
+fromCreditMemo
+fromExpPeriod
+fromInvCredDate
+fromInvDate
+fromInvDueDate
+fromInvoice
+fromVendor
+fStatus
+fuseDate
+fuseDateII
+fuseDueDate
+fuseInvDate
+fusePeriod
+Generated
+GetClassNameA
+GetCurrentProcessId
+GetCurrentThreadId
+GetLastError
+GetParent
+GetSysColor
+GetSystemTimeAsFileTime
+GetWindow
+GetWindowLongA
+GetWindowRect
+GL Period Update Failed for Check %s
+HOLD *GL*
+InitializeCriticalSectionEx
+InternalName
+Invalid amount.
+Invalid Period (Closed AP Period)
+Invalid Period (Closed GL Period)
+Invalid Sequence Series Selected.
+InvalidateRect
+Inventory
+Invoice Cost
+Invoice has been partially paid, cannot toggle to a hold status.
+Invoice is assigned to a prior period.
+Invoice is required.
+Invoice must be removed from batch before editing, 
+Invoice Number
+Invoice Number is required.
+Invoice Total
+Invoice: %s  Voucher: %s
+IsDebuggerPresent
+IsProcessorFeaturePresent
+IsWindow
+IsWindowVisible
+It may only be posted in the current or a future period.
+KERNEL32.dll
+L$<Sh*T
+Last Paid
+LegalCopyright
+LegalTrademarks
+LocationID
+LocationID, AccountCode
+malloc
+MANUAL
+Manual Add
+map/set<T> too long
+max_detail_count
+memcpy_s
+Memo Number
+memset
+merged
+mfc120.dll
+Modify Credit Memo Item
+Modify Invoice Item
+ModifyMenuA
+Monthly
+MSVCP120.dll
+MSVCR120.dll
+MultiByteToWideChar
+Nebraska Book Company, Inc.
+No invoices for this vendor are currently in the batch.
+No Recurring Expenses need to generated.
+Number
+ODBC;DSN=WinPrism
+og1120as.dll
+OLEAUT32.dll
+OriginalFilename
+ot1120as.dll
+OutputDebugStringW
+PARTIAL
+Pay Short: %8.2lf Disc: %8.2lf Freight %8.2lf Fees: %8.2lf Credits %8.2lf
+Payment amount is required.
+Payment cannot exceed outstanding + discount used.
+Payment is less than outstanding + discount used.
+perenddate
+Please initialize the date in the WPAdmin module.
+Please recreate the batch.
+Please use Ellipsis Button to select a valid AP Invoice for this batch
+Please use Ellipsis Button to select a valid credit memo for this batch
+Please use the Generate Recurring Entries Module.
+PostMessageA
+Press OK to continue generating checks, or press Cancel to halt Check Generation.
+Prior period reconciliation reports will need to be re-generated after posting this Credit Memo to the current or future period as the report totals will change.
+Prior period reconciliation will need to be re-generated after posting this Invoice to the current or future period as the report totals will change.
+ProductName
+ProductVersion
+QSVWh0(
+Quarterly
+QueryPerformanceCounter
+ReconID = %ld
+Recurring entries are due to be generated.
+RegisterWindowMessageA
+Request Number: %s
+RequestNumber
+RequestNumber LIKE '%s%%'
+Resolved Amt
+RetailAmount
+secComboExApply
+secComboExNewItem
+SECCURRENCYEDIT
+SELECT * FROM dbo.VW_AP_CRDMNT_NAVIGATOR
+SELECT * FROM dbo.VW_AP_CRMMNT_NAVIGATOR
+SELECT * FROM dbo.VW_AP_INVMNT_NAVIGATOR
+SELECT * FROM VW_AP_CHECKMNT_NAV
+SELECT * FROM VW_AP_REC_EXP_NAV
+Select APCredRslvHdrID from Acct_Credit_Resolved_Header Where VoucherID = %d
+Select APIHeaderID from Acct_API_Header Where VoucherID = %d
+select av.VoucherNumber from Acct_API_Header aah INNER JOIN Acct_Voucher av ON aah.VoucherID = av.VoucherID where APIHeaderID = %d
+select BatchDtlID from Acct_Pay_Batch_Detail where VendorID = %d and BatchID = %d
+Select BatchID, BatchName from Acct_Pay_Batch_Header Order by GeneratedDate desc
+select case when aah.fFreightInv = 0 then ih.PrepayNumber else fih.PrepayNumber end as CheckNumber from Acct_API_Header aah LEFT OUTER JOIN Invoice_Header ih ON aah.InvoiceID = ih.InvoiceID LEFT OUTER JOIN Freight_Invoice_Header fih ON aah.InvoiceID = fih.FRINVHID where APIHeaderID = %d
+select CheckMin, CheckMax from Sequence_Check_Info where SequenceID = %d
+select CheckTypeID, Description from Acct_APCheckType where fCheck = 0
+select CheckTypeID, Description from Acct_APCheckType where fCheck = 1
+select Cleared from VW_ACCT_RECON_DTL where ID = %d
+SELECT Count(*) FROM Acct_API_Header WHERE InvoiceNumber = '%s' and VendorID = %d
+SELECT Count(*) FROM Acct_Credit_Resolved_Header WHERE CreditMemoNumber = '%s' and VendorID = %d
+Select count(*) from Acct_Pay_Batch_Detail where BatchID = %d
+select Count(*) from Acct_Pay_Batch_Detail where BatchId = %d and CurrencyExId <> (select CurrencyExId from Sequence_Check_Info where SequenceId = %d)
+select count(*) from Acct_Pay_Batch_Detail where fInvoice = 1 and VendorID = (select VendorID from Acct_Credit_Resolved_Header where APCredRslvHdrID = %d)  and batchID = %d
+select count(*) from Acct_Pay_Batch_Detail where VendorID = %d and BatchID = %d and fInvoice = 0
+select count(*) from Acct_Pay_Batch_Detail where VendorID = %d and BatchID = %d and fInvoice = 1
+SELECT Count(*) FROM Acct_Pay_Batch_Detail WHERE VoucherID = %ld
+select count(*) from Acct_Pay_Batch_Detail where VoucherID = (select VoucherID from Acct_API_Header where APIHeaderID = %d)  and batchID = %d
+select count(*) from Acct_Pay_Batch_Detail where VoucherID = (select VoucherID from Acct_Credit_Resolved_Header where APCredRslvHdrID = %d)  and batchID = %d
+select count(*) from acct_Pay_Batch_Header where BatchName like '%s'
+select count(*) from Acct_Pay_Batch_Header where CheckSeqId = %d
+SELECT COUNT(*) FROM Acct_Recurring_Expense_Header WHERE ExpenseNumber = '%s'
+select Count(*) from CD_Header where CD_Header.DSCHID = %ld AND (CD_Header.fType = %d OR CD_Header.fType = %d)
+select count(*) from VW_ACCT_RECON_DTL where %s)
+select count(checkhdrid) from acct_check_header where checkhdrid <> %ld and checknumber = '%s'
+select CurrencyExId from Acct_API_Header where APIHeaderId = %d
+select CurrencyExId from Acct_Credit_Resolved_Header where APCredRslvHdrID = %d
+select CurrencyExId from Acct_Pay_Batch_Detail where BatchId = %d
+select CurrencyExId from Sequence_Check_Info where SequenceId = %d
+select CurrencyExId from Sequence_Check_Info where SequenceId = (select CheckSeqID as SequenceId from Acct_Pay_Batch_header where BatchID = %d)
+select Description from Acct_COA where COAID = %ld
+Select Detail Item
+SELECT fTypeCode, Description, UseGLCode FROM Acct_Reconciliation_Types Order By Description
+select ih.fPayFlag from Acct_API_Header aah LEFT OUTER JOIN Invoice_Header ih ON aah.InvoiceID = ih.InvoiceID where APIHeaderID = %d
+Select ISNULL(BatchID,0) FROM Acct_API_Header API INNER JOIN Acct_Pay_Batch_Detail BD ON API.VoucherID = BD.VoucherID AND API.VendorID = BD.VendorID AND BD.fInvoice = 1 WHERE API.APIHeaderID = %ld 
+Select ISNULL(BatchID,0) FROM Acct_Credit_Resolved_Header CRH INNER JOIN Acct_Pay_Batch_Detail BD ON CRH.VoucherID = BD.VoucherID AND CRH.VendorID = BD.VendorID AND BD.fInvoice = 0 WHERE CRH.APCredRslvHdrID = %ld 
+SELECT LocationID, ShortDescription FROM Location WHERE LocationID in (%s) 
+Select MaxDetailCnt from VW_AP_CHECKSEQ_INFO where SequenceID = %ld
+select Name from VendorMaster where VendorID = %d
+select ParamValue from SystemParameters where LocationID = 0 and ParamType = 4051
+select sci.CurrencyExId from Acct_Check_Header h inner join Sequence_Check_Info sci on sci.SequenceId = h.SequenceId where h.CheckHdrId = %d
+select sci.CurrencyExId from Acct_Pay_Batch_Header h inner join Sequence_Check_Info sci on sci.SequenceId = h.CheckSeqId where h.BatchId = %d
+select SequenceID from Sequence where sequencetypeid = 30 and sequencenumber = 0
+select SequenceTypeID, SequenceTypeDescription from Sequence_Type where Type = 3
+select StatusDesc from Status_Codes where ModuleId = 13001 and StatusId = %d
+select StatusDesc from Status_Codes where ModuleId = 13008 and StatusId = %d
+select StatusDesc from Status_Codes where ModuleID = 13009 and StatusID = %d
+select StatusDesc from Status_Codes where Status_Codes.StatusID = %ld and Status_Codes.ModuleID = %d
+select StatusDesc from Status_Codes where StatusID = %d and ModuleID = 13003
+select StatusId, StatusDesc from Status_Codes where ModuleID = 13001
+SELECT TOP 1 APExportID FROM Acct_APExport ORDER BY APExportID DESC
+Select TOP 1 BatchID FROM Acct_Pay_Batch_Header ORDER BY BatchID DESC
+SELECT top 1 BatchName from Acct_Pay_Batch_Header  where BatchID in (select batchid FROM Acct_Pay_Batch_Detail WHERE VoucherID = %ld)
+select top 1 sequenceID from sequence order by SequenceID desc
+SELECT TOP 1 vp.PaymentDays FROM VendorParameters vp LEFT JOIN VendorMaster vm on vp.VendorID = vm.VendorID WHERE vm.VendorID = %d and vp.SubSystem > 1 ORDER BY vp.SubSystem
+SELECT TOP 1 vp.PaymentPct FROM VendorParameters vp LEFT JOIN VendorMaster vm on vp.VendorID = vm.VendorID WHERE vm.VendorID = %d and vp.SubSystem > 1 ORDER BY vp.SubSystem
+select VendorCode from VendorMaster where VendorID = %d
+SELECT VendorID, Name, LocationID, Description FROM VW_AP_GENCHKS_NAV WHERE BatchID = %d ORDER BY LocationID
+SELECT VendorID, Name, LocationID, Description FROM VW_AP_GENCHKS_NAV WHERE BatchID = %d ORDER BY Name
+SELECT VendorID, Name, LocationID, Description FROM VW_AP_INVPYMT_NAV WHERE BatchID = %d ORDER BY LocationID
+SELECT VendorID, Name, LocationID, Description FROM VW_AP_INVPYMT_NAV WHERE BatchID = %d ORDER BY Name
+select vm.CurrencyExId from Acct_API_Header aah inner join VendorMaster vm ON vm.VendorID = aah.VendorID where APIHeaderID = %d
+select VoucherNumber from Acct_Voucher where VoucherID = %d
+select VoucherNumber, VendorName from VW_AP_INVMNT_HEADER where APIHeaderID = %d
+Selected Locations
+Selected Vendors
+Semi-Annual
+SendMessageA
+SequenceID = %d AND (ReconDate = '%s'
+SequenceID = %d AND EndingDate = '%s'
+SequenceID = ?
+SequenceID = 0
+start_date
+start_period
+start_vendor_id
+Statement Date
+Status
+Status %s %d
+Status = 0
+Status, GeneratedDate desc
+STP=SP_APCreditMemo(%ld, '%s');ID=APCredRslvHdrID;DSP=CreditMemoNumber
+STP=SP_APOutInvoice(%ld, '%s');ID=APIHeaderID;DSP=InvoiceNumber;EX=1
+StringFileInfo
+strtod
+strtol
+Successfully created invoice.
+Summary
+t$<h=f
+t/Wh k
+t>;;u/
+t>Wh7N
+T9X9\9`9d9h9l9p9t9x9|9
+The beginning check number is required.
+The Currency Exchange for this AP Invoice does not match the Batch Check Sequence Currency Exchange.
+The Currency Exchange for this Credit Memo does not match the Batch Check Sequence Currency Exchange.
+The Currency Exchange ID in some of the Batch Detail records do not match the Check Sequence Currency Exchange ID
+The current A/P date has not been initialized.
+The difference between the reconciled amount and the bank statement amount must be $0.00 to post.
+The following vendor's checks cannot be generated because they are not in the check sequence range of allowable values:
+The following vouchers have already had checks generated for them:
+The following vouchers have already had credit used for them:
+The following vouchers have different SubSystems and may need
+This Credit already exists for this batch.  Use the edit detail for any changes.
+This Invoice already exists for this batch.  Use the edit detail for any changes.
+This process generates invoices from Recurring Expenses that have been setup in the 'Recurring Expenses' process.  All Recurring Expenses that meet the current criteria are displayed.
+to be generated separately to have the correct address.:
+toCheckDate
+toCheckNumber
+toCreateDate
+toCreditDate
+toCreditMemo
+toExpPeriod
+toInvCredDate
+toInvDate
+toInvDueDate
+toInvoice
+Total Discount
+toVendor
+Translation
+t'WVhQ
+Update
+UPDATE dbo.Acct_API_Header SET fStatus = %ld WHERE APIHeaderID = %ld
+UPDATE dbo.Acct_API_Header SET GLPeriod = '%s' WHERE APIHeaderID = %ld
+UPDATE dbo.Acct_Credit_Resolved_Header SET fStatus = %d WHERE APCredRslvHdrID = %ld
+Use All Amounts
+Use Only Full Amounts
+use_date
+USER32.dll
+VarFileInfo
+Vendor
+VendorCode
+VendorCode, fInvoice desc
+VendorID
+VendorID = %d
+VendorID = %ld
+Void Check for Period
+Void check?
+Void Credit?
+Void Invoice?
+Voucher Number
+VoucherID = 0
+VoucherId in (select VoucherId from Acct_Voucher where VoucherNumber like '%s%%')
+VS_VERSION_INFO
+WA_AP DLL
+WA_AP Dynamic Link Library
+WA_AP.dll
+WACommon.dll
+Weekly
+WPComm.dll
+WPUtility.dll
