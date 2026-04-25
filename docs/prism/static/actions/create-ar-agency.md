@@ -207,14 +207,107 @@ WHERE AgencyID = @new_agency_id AND TaxCodeID = @specific_tax_code;
 
 Steps 1, 5, 6, 7, 8 use mechanisms with recovered or partially-recovered SQL. Steps 2, 3 are MFC-generated and not yet captured (no recent agency creation in the plan cache window).
 
-## 6. What we still need
+## 6. Closing the gap without a literal capture (2026-04-25 update)
 
-Two cheap follow-ups would close every remaining gap:
+The plan-cache approach to capturing the literal MFC-generated INSERT requires someone to drive WPAdmin from a desktop, which Marcos is not always positioned to do. A 7-day plan-cache scan with strict filtering (`probe-prism-recent-agency-writes.ts`) returned **zero** cached agency INSERTs across the entire district — the cache had churned past every recent agency-create from the last week. The MFC INSERT shape stays empirical until someone clicks _New Agency_.
 
-1. **Marcos creates one test agency in WPAdmin** → re-run `prism-probe-proc-body.ts` filtered for cached statements that mention `Acct_Agency` AND were executed in the last hour. Captures the MFC-generated INSERT verbatim.
-2. **Re-probe after a known-recent agency edit** to fill the `TUI_Acct_Agency` and `TD_Acct_Agency` trigger bodies.
+**Alternative path — value-sampling.** Instead of waiting on a literal capture, we sampled **1,072 Pierce-prefixed agencies** (`AgencyNumber LIKE 'P%'`) and computed the per-column fill rate, distinct value count, and modal values. The output gives us a high-confidence **Pierce-default INSERT template** — it tells us what Pierce *actually* puts in each column, regardless of what value WPAdmin's form ships in its UI defaults. For a laportal mirror, that's actually a better contract than the literal MFC INSERT (which would tell us only what the form sends, not what Pierce conventions are).
 
-Until then, the schema-derived INSERT shape plus the `TI_Acct_Agency` trigger body is enough to write a working laportal-side agency creator. The exact set of NOT-NULL columns is already known from `sys.columns`; reasonable defaults can be derived from sampling existing Pierce agencies (a separate read-only query against `Acct_Agency` filtered to `LocationID`-related columns).
+Probe: [`scripts/probe-prism-agency-value-distribution.ts`](../../../../scripts/probe-prism-agency-value-distribution.ts). 1,072 agencies × 55 columns × 4 metrics = comprehensive.
+
+### Pierce-default values per column (n=1,072)
+
+| Column | Type | Always | Notes |
+|---|---|---|---|
+| `MaxDays` | int | **`30`** | 100% of agencies — 30-day terms |
+| `StatementCodeID` | int | **`6`** (98%) | Pierce statement code; `4` (12 agencies), `2` (5) are exceptions |
+| `DiscountCodeID` | int | **`0`** (99.9%) | |
+| `ChangeLimit` | money | **`0`** (100%) | |
+| `MimimumCharge` | money | **`0`** (99.9%) | |
+| `FinanceRate` | decimal | **`0`** (100%) | |
+| `AgencyTypeID` | int | **`4`** (62%), `2` (34%), `6` (3%) | 4 = external entity, 2 = internal department |
+| `fTaxExempt` | tinyint | **`0`** (99.6%) | |
+| `fBalanceType` | tinyint | **`1`** (100%) | |
+| `fBilling` | tinyint | **`1`** (98.8%) | |
+| `fSetCredLimit` | tinyint | **`0`** (91.7%) | `1` for the 89 agencies that override credit limit |
+| `fStatus` | tinyint | **`0`** (99.4%) | |
+| `fDebit` | tinyint | **`0`** (99.3%) | |
+| `fFinanceType` | tinyint | **`0`** (100%) | |
+| `fFinanceCharge` | tinyint | **`0`** (99.9%) | |
+| `fPageBreak` | tinyint | **`0`** (99.8%) | |
+| `TenderCode` | int | **`12`** (92.9%) | Pierce's billing tender code; `49` (5%), `77` (<1%) are alternates |
+| `DiscountType` | int | **`0`** (100%) | |
+| `PrintInvoice` | int | **`0`** (99.9%) | |
+| `fPermitChgDue` | tinyint | **`0`** (100%) | |
+| `fOpenDrawer` | tinyint | **`0`** (99.9%) | |
+| `fRefRequired` | tinyint | **`0`** (99.4%) | |
+| `fAccessibleOnline` | tinyint | **`0`** (93.7%) | `1` for 67 agencies that get web access |
+| `fAllowLimitChg` | tinyint | **`0`** (98.8%) | |
+| `HalfReceiptTemplateID` | int | **`0`** (97.8%) | `31` for the 24 agencies with a half-receipt template |
+| `FullReceiptTemplateID` | int | **`0`** (100%) | |
+| `fInvoiceInAR` | tinyint | **`1`** (91.2%) | The flag that enables AR-invoice promotion |
+| `NonMerchOptID` | int | **`2`** (98.4%) | `3` (1.4%), `1` (0.2%) are exceptions |
+| `fPrintBalance` | tinyint | **`0`** (83.4%) | `1` for 178 agencies that get balance on receipt |
+| `fDispCustCmnt` | tinyint | **`0`** (99.6%) | |
+| `fPrtCustCmnt` | tinyint | **`0`** (99.6%) | |
+| `PrtStartExpDate` | tinyint | **`0`** (92.6%) | `1` for 79 time-bound agencies |
+| `TextbookValidation` | int | **`0`** (100%) | |
+| `ValidateTextbooksOnly` | tinyint | **`0`** (100%) | |
+
+### Pierce-style INSERT template (synthesized)
+
+Drop-in starting point for a laportal `createAgency` service. Caller supplies the highlighted variables; everything else uses the Pierce-default value derived above.
+
+```sql
+INSERT INTO Acct_Agency (
+    -- caller-supplied (the unique identity + display + classification)
+    AgencyNumber, Name, AgencyTypeID,
+    -- caller-supplied optional address fields (nullable; populate when external entity)
+    Contact, Address, City, State, PostalCode, Phone1,
+    -- caller-supplied financial overrides (default 0; populate to grant credit)
+    CreditLimit, fSetCredLimit,
+    -- caller-supplied behaviour overrides (default 0; populate to enable web / receipt-balance / time-bound)
+    fAccessibleOnline, fPrintBalance, PrtStartExpDate, HalfReceiptTemplateID,
+    -- Pierce-default values
+    MaxDays, StatementCodeID, DiscountCodeID, ChangeLimit, MimimumCharge, FinanceRate,
+    fTaxExempt, fBalanceType, fBilling, fStatus, fDebit, fFinanceType, fFinanceCharge,
+    fPageBreak, TenderCode, DiscountType, PrintInvoice, fPermitChgDue, fOpenDrawer,
+    fRefRequired, fAllowLimitChg, FullReceiptTemplateID, fInvoiceInAR, NonMerchOptID,
+    fDispCustCmnt, fPrtCustCmnt, TextbookValidation, ValidateTextbooksOnly
+)
+VALUES (
+    @AgencyNumber, @Name, @AgencyTypeID,
+    @Contact, @Address, @City, @State, @PostalCode, @Phone1,
+    ISNULL(@CreditLimit, 0), CASE WHEN ISNULL(@CreditLimit, 0) > 0 THEN 1 ELSE 0 END,
+    ISNULL(@fAccessibleOnline, 0), ISNULL(@fPrintBalance, 0), ISNULL(@PrtStartExpDate, 0), ISNULL(@HalfReceiptTemplateID, 0),
+    -- Pierce defaults
+    30, 6, 0, 0, 0, 0,
+    0, 1, 1, 0, 0, 0, 0,
+    0, 12, 0, 0, 0, 0,
+    0, 0, 0, 1, 2,
+    0, 0, 0, 0
+);
+
+DECLARE @new_agency_id int = SCOPE_IDENTITY();
+-- TI_Acct_Agency trigger fires here automatically and populates Acct_Agency_Tax_Codes
+-- (one row per Tax_Codes entry, Cartesian product). Do not insert those rows yourself.
+
+-- After the agency row exists:
+--   Acct_Agency_Customer linkage rows: caller's responsibility
+--   Acct_Agency_DCC perms: caller's responsibility (or use SP_AcctAgencyCopyDCC <template>, <new>)
+--   Acct_Agency_NonMerch fees: caller's responsibility (or use SP_AcctAgencyCopyNonMerch)
+--   POS sync: EXEC SP_ARAcctResendToPos @new_agency_id  -- pushes to register-local DBs
+```
+
+This is the contract laportal can mirror **today** without any further reverse-engineering. The remaining unknowns (literal MFC INSERT shape, full TUI/TD trigger bodies) don't block it — they only matter if we want bit-perfect parity with WPAdmin's UI, which we don't.
+
+### What's still ❓ (low priority)
+
+- Literal MFC `INSERT INTO Acct_Agency` from WPAdmin — would close the last sliver of "what does WPAdmin technically send". Captures next time someone drives WPAdmin's New Agency form.
+- `TUI_Acct_Agency` cursor body (partial recovery only — cursor preludes captured, loop body evicted).
+- `TD_Acct_Agency` (delete trigger) — not in cache because no recent agency deletes. Closes when WPAdmin deletes one.
+
+None of these block laportal mirroring. All will surface naturally next time a Pierce admin works the WPAdmin form.
 
 ## 7. Implications for laportal
 
