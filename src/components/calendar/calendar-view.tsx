@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -8,7 +8,6 @@ import interactionPlugin from "@fullcalendar/interaction";
 import type { DatesSetArg, EventClickArg, EventInput } from "@fullcalendar/core";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { AddEventModal } from "@/components/calendar/add-event-modal";
 import {
   EventDetailSidebar,
   type CalendarEvent,
@@ -52,6 +51,9 @@ const MOBILE_VIEWPORT_WIDTH = 1024;
 const MIN_WEEK_CALENDAR_WIDTH = 920;
 const DESKTOP_SIDEBAR_WIDTH = 240;
 const STACKED_LAYOUT_MIN_CONTENT_WIDTH = MIN_WEEK_CALENDAR_WIDTH + DESKTOP_SIDEBAR_WIDTH;
+const LazyAddEventModal = lazy(() =>
+  import("@/components/calendar/add-event-modal").then((module) => ({ default: module.AddEventModal })),
+);
 
 function toEventInputs(events: CalendarEventItem[]): EventInput[] {
   return events.map((event) => ({
@@ -128,6 +130,7 @@ export function CalendarView({
   const leaveTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   const [selectedEvent, setSelectedEvent] = useState<EventResponse | undefined>(undefined);
+  const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editModalKey, setEditModalKey] = useState(0);
 
   const [displayMonth, setDisplayMonth] = useState(() => fromDateKey(getDateKeyInLosAngeles()));
@@ -580,19 +583,32 @@ export function CalendarView({
       className={cn("flex min-w-0", useStackedLayout ? "flex-col gap-3" : "")}
       style={useStackedLayout ? undefined : { height: `${calendarHeight}px` }}
     >
-      {selectedEvent && (
-        <AddEventModal
-          key={editModalKey}
-          event={selectedEvent}
-          defaultOpen
-          onSave={() => {
-            setSelectedEvent(undefined);
-            refetchEvents();
-          }}
-          onClose={() => setSelectedEvent(undefined)}
-          trigger={<span />}
-        />
-      )}
+      <Suspense fallback={null}>
+        {createModalOpen && (
+          <LazyAddEventModal
+            defaultOpen
+            onSave={() => {
+              setCreateModalOpen(false);
+              refetchEvents();
+            }}
+            onClose={() => setCreateModalOpen(false)}
+            trigger={<span />}
+          />
+        )}
+        {selectedEvent && (
+          <LazyAddEventModal
+            key={editModalKey}
+            event={selectedEvent}
+            defaultOpen
+            onSave={() => {
+              setSelectedEvent(undefined);
+              refetchEvents();
+            }}
+            onClose={() => setSelectedEvent(undefined)}
+            trigger={<span />}
+          />
+        )}
+      </Suspense>
 
       <div
         ref={containerRef}
@@ -625,15 +641,10 @@ export function CalendarView({
           onDateClick={handleMiniDateClick}
           activeRange={activeRange}
           addEventTrigger={
-            <AddEventModal
-              onSave={refetchEvents}
-              trigger={
-                <Button className="w-full gap-1.5">
-                  <Plus className="h-4 w-4" />
-                  Add Event
-                </Button>
-              }
-            />
+            <Button className="w-full gap-1.5" onClick={() => setCreateModalOpen(true)}>
+              <Plus className="h-4 w-4" />
+              Add Event
+            </Button>
           }
         />
 
