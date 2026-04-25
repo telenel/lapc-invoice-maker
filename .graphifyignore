@@ -21,7 +21,6 @@ everything-claude-code/
 src/generated/
 src/__tests__/
 tests/
-src/components/ui/
 
 # Secrets and local environment files
 .env

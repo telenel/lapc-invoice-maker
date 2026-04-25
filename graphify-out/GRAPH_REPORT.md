@@ -1,12 +1,12 @@
 # Graph Report - lapc-invoice-maker  (2026-04-25)
 
 ## Corpus Check
-- 572 files · ~408,964 words
+- 596 files · ~414,197 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4102 nodes · 6610 edges · 60 communities detected
-- Extraction: 86% EXTRACTED · 14% INFERRED · 0% AMBIGUOUS · INFERRED: 952 edges (avg confidence: 0.81)
+- 4184 nodes · 6680 edges · 59 communities detected
+- Extraction: 86% EXTRACTED · 14% INFERRED · 0% AMBIGUOUS · INFERRED: 961 edges (avg confidence: 0.81)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -44,7 +44,6 @@
 - [[_COMMUNITY_Community 31|Community 31]]
 - [[_COMMUNITY_Community 32|Community 32]]
 - [[_COMMUNITY_Community 33|Community 33]]
-- [[_COMMUNITY_Community 34|Community 34]]
 - [[_COMMUNITY_Community 35|Community 35]]
 - [[_COMMUNITY_Community 36|Community 36]]
 - [[_COMMUNITY_Community 37|Community 37]]
@@ -53,23 +52,23 @@
 - [[_COMMUNITY_Community 40|Community 40]]
 - [[_COMMUNITY_Community 41|Community 41]]
 - [[_COMMUNITY_Community 42|Community 42]]
-- [[_COMMUNITY_Community 43|Community 43]]
-- [[_COMMUNITY_Community 44|Community 44]]
-- [[_COMMUNITY_Community 45|Community 45]]
 - [[_COMMUNITY_Community 46|Community 46]]
-- [[_COMMUNITY_Community 47|Community 47]]
+- [[_COMMUNITY_Community 48|Community 48]]
 - [[_COMMUNITY_Community 49|Community 49]]
 - [[_COMMUNITY_Community 50|Community 50]]
-- [[_COMMUNITY_Community 56|Community 56]]
-- [[_COMMUNITY_Community 60|Community 60]]
-- [[_COMMUNITY_Community 62|Community 62]]
-- [[_COMMUNITY_Community 72|Community 72]]
-- [[_COMMUNITY_Community 75|Community 75]]
-- [[_COMMUNITY_Community 87|Community 87]]
+- [[_COMMUNITY_Community 52|Community 52]]
+- [[_COMMUNITY_Community 58|Community 58]]
+- [[_COMMUNITY_Community 63|Community 63]]
+- [[_COMMUNITY_Community 65|Community 65]]
+- [[_COMMUNITY_Community 67|Community 67]]
+- [[_COMMUNITY_Community 77|Community 77]]
+- [[_COMMUNITY_Community 80|Community 80]]
+- [[_COMMUNITY_Community 83|Community 83]]
 - [[_COMMUNITY_Community 94|Community 94]]
-- [[_COMMUNITY_Community 298|Community 298]]
-- [[_COMMUNITY_Community 299|Community 299]]
-- [[_COMMUNITY_Community 300|Community 300]]
+- [[_COMMUNITY_Community 101|Community 101]]
+- [[_COMMUNITY_Community 315|Community 315]]
+- [[_COMMUNITY_Community 316|Community 316]]
+- [[_COMMUNITY_Community 317|Community 317]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `WinPRISM tables → binaries that touch them` - 613 edges
@@ -84,16 +83,16 @@
 10. `request()` - 71 edges
 
 ## Surprising Connections (you probably didn't know these)
-- `Item` --conceptually_related_to--> `Item Cross-References`  [INFERRED]
-  docs/prism/README.md → README.md
 - `Prism` --conceptually_related_to--> `Prism Cross-References`  [INFERRED]
-  docs/prism/README.md → README.md
-- `Product` --conceptually_related_to--> `Product Cross-References`  [INFERRED]
   docs/prism/README.md → README.md
 - `Supabase` --conceptually_related_to--> `Supabase Cross-References`  [INFERRED]
   docs/prism/README.md → README.md
-- `Invoice` --conceptually_related_to--> `Invoice Cross-References`  [INFERRED]
-  docs/prism/SCHEMA.md → README.md
+- `Storage` --conceptually_related_to--> `Storage Cross-References`  [INFERRED]
+  docs/prism/static/plan-cache-method.md → README.md
+- `main()` --calls--> `upsert()`  [INFERRED]
+  prisma/seed.ts → src/domains/user-draft/repository.ts
+- `main()` --calls--> `toIsoString()`  [INFERRED]
+  scripts/probe-prism-invoice-report.ts → src/domains/analytics/repository.ts
 
 ## Hyperedges (group relationships)
 - **Analytics referenced across 3 files** — concept_analytics, doc_readme_md, doc_docs_project_overview_md, doc_docs_performance_testing_md [INFERRED 0.80]
@@ -250,80 +249,80 @@
 ## Communities
 
 ### Community 0 - "Community 0"
-Cohesion: 0.01
-Nodes (538): Acct_Adjust_Detail Cross-References, Acct_Adjust_Header Cross-References, Acct_Agency Cross-References, Acct_Agency_Customer Cross-References, Acct_Agency_Group Cross-References, Acct_Agency_Non_Merch_Opt Cross-References, Acct_Agency_NonMerch Cross-References, Acct_Agency_Type Cross-References (+530 more)
-
-### Community 1 - "Community 1"
 Cohesion: 0.0
 Nodes (536): WinPRISM tables → binaries that touch them, `Acct_Adjust_Detail`, `Acct_Adjust_Header`, `Acct_Agency`, `Acct_Agency_Customer`, `Acct_Agency_Group`, `Acct_Agency_Non_Merch_Opt`, `Acct_Agency_NonMerch` (+528 more)
 
+### Community 1 - "Community 1"
+Cohesion: 0.01
+Nodes (383): Acct_COA Cross-References, Cash_Cnt_Group_Loc Cross-References, Discount_Codes_Location Cross-References, GovernmentIDAgency Cross-References, Inv_POVendor Cross-References, Inv_ShelfLocations Cross-References, Item Cross-References, Item_Components_Detail Cross-References (+375 more)
+
 ### Community 2 - "Community 2"
 Cohesion: 0.02
-Nodes (284): Analytics Cross-References, Approver Cross-References, Archive Cross-References, Bulk Edit Cross-References, Calendar Cross-References, Cron Cross-References, Dashboard Cross-References, Follow-Up Cross-References (+276 more)
+Nodes (282): Analytics Cross-References, Approver Cross-References, Archive Cross-References, Bulk Edit Cross-References, Calendar Cross-References, Cron Cross-References, Dashboard Cross-References, Follow-Up Cross-References (+274 more)
 
 ### Community 3 - "Community 3"
-Cohesion: 0.01
-Nodes (142): closeModal(), handleDelete(), handleOpen(), handleSubmit(), todayStr(), getSupabaseAdminClient(), handleRestore(), getBackfillPageProgress() (+134 more)
+Cohesion: 0.02
+Nodes (246): Acct_Agency Cross-References, Acct_Agency_Tax_Codes Cross-References, Acct_Apply Cross-References, Acct_ARInvoice_ Cross-References, Acct_ARInvoice_Detail Cross-References, Acct_ARInvoice_GiftCert Cross-References, Acct_ARInvoice_Header Cross-References, Acct_ARInvoice_Pymt Cross-References (+238 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.01
-Nodes (216): Acct_Agency_Tax_Codes Cross-References, Cash_Cnt_Group_Loc Cross-References, Discount_Codes_Location Cross-References, Inv_ShelfLocations Cross-References, Item_Components_Detail Cross-References, Item_Components_Header Cross-References, Item_Tax_Type Cross-References, Item_Tax_Type_Grouping Cross-References (+208 more)
+Nodes (252): Acct_Adjust_Detail Cross-References, Acct_Adjust_Header Cross-References, Acct_Agency_Customer Cross-References, Acct_Agency_Group Cross-References, Acct_Agency_Non_Merch_Opt Cross-References, Acct_Agency_NonMerch Cross-References, Acct_Agency_Type Cross-References, Acct_APCheckType Cross-References (+244 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.01
-Nodes (201): Acct_Cash_Flow_Categories Cross-References, Acct_COA_Budget_Detail Cross-References, Acct_COA_Budget_Header Cross-References, Acct_COA_Master Cross-References, Acct_Financial_Category_Type Cross-References, Acct_Financial_Group_Type Cross-References, Acct_GLBalSheet Cross-References, Acct_GLBalSheetChange Cross-References (+193 more)
+Nodes (217): Acct_Cash_Flow_Categories Cross-References, Acct_COA_Master Cross-References, CR_Term Cross-References, DCC_Category Cross-References, DCC_Class Cross-References, DCC_Department Cross-References, DCC_Selection Cross-References, Item_Xref_Dups Cross-References (+209 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.03
-Nodes (96): main(), buildAggregateSql(), main(), measure(), main(), buildFilterParams(), request(), main() (+88 more)
+Cohesion: 0.02
+Nodes (106): getSupabaseAdminClient(), main(), buildAggregateSql(), main(), measure(), main(), buildFilterParams(), request() (+98 more)
 
 ### Community 7 - "Community 7"
 Cohesion: 0.02
-Nodes (92): deriveWeekStart(), toMondayDateKey(), fetchAnalytics(), getDefaultDateRange(), getMissingCustomerCateringRequirements(), normalizeCateringDetails(), normalizeQuoteTimeInput(), getStatusBadgeClasses() (+84 more)
+Nodes (100): getBackfillPageProgress(), computeMargin(), onKey(), onPaste(), parsePastedGrid(), toBatchRow(), CategoryMixChart(), formatCurrency() (+92 more)
 
 ### Community 8 - "Community 8"
 Cohesion: 0.03
-Nodes (85): main(), handleCreate(), assertSafeObjectKey(), downloadDocument(), invoicePdfObjectKey(), printQuotePdfObjectKey(), quotePdfObjectKey(), removeDocument() (+77 more)
+Nodes (87): main(), handleDelete(), onLeave(), handleCreate(), assertSafeObjectKey(), downloadDocument(), invoicePdfObjectKey(), printQuotePdfObjectKey() (+79 more)
 
 ### Community 9 - "Community 9"
-Cohesion: 0.02
-Nodes (67): handleExportCsv(), parseInitialFilters(), parsePage(), parseSortDir(), parseSortField(), ItemRefSelectField(), ItemRefSelects(), onSubmit() (+59 more)
+Cohesion: 0.03
+Nodes (82): deriveWeekStart(), toMondayDateKey(), fetchAnalytics(), getDefaultDateRange(), getStatusBadgeClasses(), loadEvents(), loadQueue(), QueueStatusBadge() (+74 more)
 
 ### Community 10 - "Community 10"
 Cohesion: 0.02
-Nodes (105): `WinPrism.exe` — static-analysis inventory, `AutogenMR_Location`, `AutogenPO_DCCID`, `AutogenPO_Location`, `AutogenRet_DCCID`, `AutogenRet_Location`, `AutogenRet_Term`, `AutogenRet_Vendor` (+97 more)
+Nodes (68): handleExportCsv(), parseInitialFilters(), parsePage(), parseSortDir(), parseSortField(), ItemRefSelectField(), ItemRefSelects(), onSubmit() (+60 more)
 
 ### Community 11 - "Community 11"
-Cohesion: 0.03
-Nodes (57): load(), renderCoverSheet(), buildAccountFollowUpEmail(), formatEventDateTime(), formatCurrency(), formatDate(), formatDateCompact(), formatDateFromDate() (+49 more)
+Cohesion: 0.02
+Nodes (72): closeModal(), handleDelete(), handleOpen(), handleSubmit(), todayStr(), handleRestore(), handleConfirm(), getErrorMessage() (+64 more)
 
 ### Community 12 - "Community 12"
 Cohesion: 0.03
-Nodes (56): escapeHtml(), buildBarcodePrintHtml(), openBarcodePrintWindow(), renderBarcodeSvg(), getChatInstance(), cloneProductLocationIds(), formatProductLocationList(), getPrimaryProductLocationId() (+48 more)
+Nodes (68): load(), renderCoverSheet(), buildAccountFollowUpEmail(), formatEventDateTime(), formatAmount(), formatCurrency(), formatDate(), formatDateCompact() (+60 more)
 
 ### Community 13 - "Community 13"
-Cohesion: 0.05
-Nodes (70): Acct_APCheckType Cross-References, Acct_APExport Cross-References, Acct_API_Detail Cross-References, Acct_API_Header Cross-References, Acct_Auto_FinDiv Cross-References, Acct_Auto_Loc Cross-References, Acct_Auto_Vend Cross-References, Acct_Check_Header Cross-References (+62 more)
+Cohesion: 0.02
+Nodes (105): `WinPrism.exe` — static-analysis inventory, `AutogenMR_Location`, `AutogenPO_DCCID`, `AutogenPO_Location`, `AutogenRet_DCCID`, `AutogenRet_Location`, `AutogenRet_Term`, `AutogenRet_Vendor` (+97 more)
 
 ### Community 14 - "Community 14"
-Cohesion: 0.05
-Nodes (40): buildNonMerchandiseFilterSql(), buildRangeBounds(), findCategoryMix(), findCopyTechAnalytics(), findInventorySummary(), findLatestSyncRun(), findNewProducts(), findProductTrends() (+32 more)
+Cohesion: 0.04
+Nodes (45): escapeHtml(), buildBarcodePrintHtml(), openBarcodePrintWindow(), renderBarcodeSvg(), getChatInstance(), applyFieldToPatch(), applyInventoryPatchValue(), buildBulkPatchForRow() (+37 more)
 
 ### Community 15 - "Community 15"
 Cohesion: 0.05
-Nodes (36): buildNotificationRef(), checkAndSendAccountFollowUps(), getAppUrl(), notifyExhausted(), notifySent(), fetchRealtimeToken(), getSupabaseBrowserClient(), getSupabaseRealtimeContext() (+28 more)
+Nodes (46): buildNonMerchandiseFilterSql(), buildRangeBounds(), findCategoryMix(), findCopyTechAnalytics(), findInventorySummary(), findLatestSyncRun(), findNewProducts(), findProductTrends() (+38 more)
 
 ### Community 16 - "Community 16"
+Cohesion: 0.05
+Nodes (36): buildNotificationRef(), checkAndSendAccountFollowUps(), getAppUrl(), notifyExhausted(), notifySent(), fetchRealtimeToken(), getSupabaseBrowserClient(), getSupabaseRealtimeContext() (+28 more)
+
+### Community 17 - "Community 17"
 Cohesion: 0.07
 Nodes (37): computeEffectivePredicate(), normalizeClauses(), main(), runQuery(), trunc(), buildFormValues(), buildScopeRuleSummary(), formatItemTypeLabel() (+29 more)
 
-### Community 17 - "Community 17"
-Cohesion: 0.05
-Nodes (42): `WPBuyBack.dll` — static-analysis inventory, `BookRouting`, `BookRoutingConfig`, `BookRoutingConfigTerm`, `Bundle_Detail`, `Bundle_DetailItem`, `Bundle_Header`, `Buyback_Buyer_Groups` (+34 more)
-
 ### Community 18 - "Community 18"
-Cohesion: 0.08
-Nodes (24): handleDelete(), onLeave(), addEstimateItem(), buildEstimateSummaryText(), CopyTierPreview(), handleAddBinding(), handleAddCopy(), handleAddPoster() (+16 more)
+Cohesion: 0.06
+Nodes (24): updateField(), getMissingCustomerCateringRequirements(), normalizeCateringDetails(), normalizeQuoteTimeInput(), sanitizeCustomerProvidedCateringDetails(), handleCategorySelect(), coerceQuotePaymentMethod(), handlePaymentMethodSelect() (+16 more)
 
 ### Community 19 - "Community 19"
 Cohesion: 0.14
@@ -346,191 +345,195 @@ Cohesion: 0.11
 Nodes (11): buildFiltersForBrowseTab(), getSelectedProductCacheSku(), getSelectedProductSignature(), getTabCountBaseFilters(), getTabCountRefreshKey(), handleFilterChange(), handleLocationChange(), handleTabChange() (+3 more)
 
 ### Community 24 - "Community 24"
-Cohesion: 0.11
-Nodes (15): useInvoiceForm(), isBlankLineItem(), isEmptyNumber(), prepareLineItemsForSubmit(), defaultForm(), emptyItem(), todayISO(), useInvoiceFormState() (+7 more)
-
-### Community 25 - "Community 25"
 Cohesion: 0.15
 Nodes (15): buildPatch(), handleClose(), handleSave(), hasUnsavedChanges(), update(), buildSavedScopedItems(), formatMirrorWarning(), formatSaveError() (+7 more)
 
-### Community 26 - "Community 26"
+### Community 25 - "Community 25"
 Cohesion: 0.15
 Nodes (16): attempt(), findCommittedDccMatch(), findExactDccMatch(), formatDccParts(), getItemDccText(), getPartialDccPatch(), getSanitizedFallbackDccPatch(), normalizeDccQuery() (+8 more)
 
-### Community 27 - "Community 27"
+### Community 26 - "Community 26"
 Cohesion: 0.14
-Nodes (13): coerceQuotePaymentMethod(), handlePaymentMethodSelect(), handleSubmit(), getQuotePaymentMethodGuidance(), getQuotePaymentMethodLabel(), isQuotePaymentMethod(), PaymentMethodGuidanceCallout(), PaymentMethodGuidanceDialog() (+5 more)
+Nodes (12): useInvoiceForm(), defaultForm(), emptyItem(), todayISO(), useInvoiceFormState(), buildPayload(), postDraft(), putDraft() (+4 more)
 
-### Community 28 - "Community 28"
-Cohesion: 0.11
-Nodes (20): VendorParameters Cross-References, `WPInv.dll` — static-analysis inventory, Wpinv.Dll.Sql, `Discrepancy`, `Freight_Invoice_Detail`, `Invoice_Detail`, `Invoice_Location`, Read surface (tables/views referenced via SELECT/JOIN only) (+12 more)
-
-### Community 29 - "Community 29"
+### Community 27 - "Community 27"
 Cohesion: 0.22
 Nodes (15): analyzeBinary(), classifyOp(), discoverBinaries(), ensureDir(), isLikelyUiMessage(), isViewName(), main(), parseStatement() (+7 more)
 
-### Community 30 - "Community 30"
-Cohesion: 0.25
-Nodes (16): applyFieldToPatch(), applyInventoryPatchValue(), buildBulkPatchForRow(), dedupeLocationIds(), getInventorySnapshot(), hasMeaningfulPatchValue(), hasOwnFieldValue(), hasPatchFields() (+8 more)
-
-### Community 31 - "Community 31"
+### Community 28 - "Community 28"
 Cohesion: 0.17
 Nodes (2): isObjectBody(), parseId()
 
-### Community 32 - "Community 32"
+### Community 29 - "Community 29"
 Cohesion: 0.14
 Nodes (5): bulkEditFieldCommit(), parseError(), CommitConfirmDialog(), formatFieldLabelList(), actuallyCommit()
 
-### Community 33 - "Community 33"
+### Community 30 - "Community 30"
 Cohesion: 0.19
 Nodes (6): basisPointsToMultiplierInput(), basisPointsToPercentInput(), centsToInput(), createFormState(), fixedTierToFormState(), quantityTierToFormState()
 
-### Community 34 - "Community 34"
+### Community 31 - "Community 31"
 Cohesion: 0.23
 Nodes (6): getProductActiveFilterChips(), getProductActiveFilterCount(), hasFilterBool(), hasFilterText(), recomputeRect(), update()
 
-### Community 35 - "Community 35"
+### Community 32 - "Community 32"
 Cohesion: 0.17
 Nodes (12): Deployment Standard, Deployment Standard, Failure Modes This Prevents, Hotfix deploy, Non-Negotiables, Normal `main` deploy, Required GitHub Secrets, Required Runtime Contract (+4 more)
 
-### Community 36 - "Community 36"
+### Community 33 - "Community 33"
 Cohesion: 0.18
 Nodes (3): useHintsDismissed(), useUserPreference(), UIScaleProvider()
 
-### Community 37 - "Community 37"
-Cohesion: 0.29
-Nodes (6): copyCredentialBundle(), copyCredentials(), handleCloseCreate(), handleCreate(), handleResetPassword(), stripTemporaryPassword()
-
-### Community 38 - "Community 38"
+### Community 35 - "Community 35"
 Cohesion: 0.28
 Nodes (4): isCopyTechImportPreview(), parseJsonResponse(), parsePreviewResponse(), ApiError
 
-### Community 39 - "Community 39"
+### Community 36 - "Community 36"
 Cohesion: 0.22
 Nodes (9): `VendMnt.dll` — static-analysis inventory, Read surface (tables/views referenced via SELECT/JOIN only), Stored procs called, UI message sample (first 50), `VendMnt.dll` — static-analysis inventory, `vendormaster`, Views referenced, Write statements (verbatim) (+1 more)
 
-### Community 40 - "Community 40"
-Cohesion: 0.22
-Nodes (9): `WPData.dll` — static-analysis inventory, `DccLocationRoyaltySet_vw`, Read surface (tables/views referenced via SELECT/JOIN only), Stored procs called, UI message sample (first 50), Views referenced, `WPData.dll` — static-analysis inventory, Write statements (verbatim) (+1 more)
-
-### Community 41 - "Community 41"
+### Community 37 - "Community 37"
 Cohesion: 0.29
 Nodes (3): CopyTechValidationError, roundMoney(), toLineItem()
 
-### Community 42 - "Community 42"
+### Community 38 - "Community 38"
 Cohesion: 0.46
 Nodes (6): buildCronCommand(), escapeSqlLiteral(), getSupabaseSchedulerStatus(), readExtensions(), readJobs(), reconcileSupabaseScheduler()
 
-### Community 43 - "Community 43"
+### Community 39 - "Community 39"
 Cohesion: 0.43
 Nodes (5): getBulkEditFieldDefinition(), FieldValueEditor(), getSelectOptions(), isBooleanField(), isNumericField()
 
-### Community 44 - "Community 44"
+### Community 40 - "Community 40"
 Cohesion: 0.33
 Nodes (4): DraggableDashboard(), parseStoredOrder(), readLocalOrder(), useDashboardOrder()
 
-### Community 45 - "Community 45"
+### Community 41 - "Community 41"
 Cohesion: 0.29
 Nodes (7): `WPPdt.dll` — static-analysis inventory, Read surface (tables/views referenced via SELECT/JOIN only), Stored procs called, UI message sample (first 50), Views referenced, `WPPdt.dll` — static-analysis inventory, Write surface (tables this binary mutates)
 
-### Community 46 - "Community 46"
-Cohesion: 0.33
-Nodes (2): useNotifications(), NotificationBell()
+### Community 42 - "Community 42"
+Cohesion: 0.4
+Nodes (2): handleKeyDown(), handleSelect()
 
-### Community 47 - "Community 47"
+### Community 46 - "Community 46"
 Cohesion: 0.47
 Nodes (4): getPrimaryInventoryField(), toFormState(), toInventoryLocationState(), toInventoryState()
+
+### Community 48 - "Community 48"
+Cohesion: 0.33
+Nodes (2): useNotifications(), NotificationBell()
 
 ### Community 49 - "Community 49"
 Cohesion: 0.6
 Nodes (3): canViewQuoteActivity(), canViewQuoteDetails(), getQuoteViewerAccess()
 
 ### Community 50 - "Community 50"
+Cohesion: 0.5
+Nodes (2): handleClick(), onClick()
+
+### Community 52 - "Community 52"
 Cohesion: 0.6
 Nodes (3): hideColumn(), resolveColumnVisibilityUpdate(), toggle()
 
-### Community 56 - "Community 56"
+### Community 58 - "Community 58"
 Cohesion: 0.67
 Nodes (2): canViewInvoiceDetails(), getInvoiceViewerAccess()
 
-### Community 60 - "Community 60"
+### Community 63 - "Community 63"
+Cohesion: 0.5
+Nodes (2): Badge(), cn()
+
+### Community 65 - "Community 65"
 Cohesion: 0.5
 Nodes (2): EditItemDialog(), resolveEditDialogMode()
 
-### Community 62 - "Community 62"
+### Community 67 - "Community 67"
 Cohesion: 0.67
 Nodes (2): handleCreate(), resetCreateForm()
 
-### Community 72 - "Community 72"
+### Community 77 - "Community 77"
 Cohesion: 1.0
 Nodes (2): toDetailResponse(), toStaffResponse()
 
-### Community 75 - "Community 75"
+### Community 80 - "Community 80"
 Cohesion: 0.67
 Nodes (1): invalidRequest()
 
-### Community 87 - "Community 87"
+### Community 83 - "Community 83"
 Cohesion: 1.0
-Nodes (2): getEventTypesKey(), useDeferredDashboardRealtime()
+Nodes (2): DraftRecoveryBanner(), getRelativeTime()
 
 ### Community 94 - "Community 94"
 Cohesion: 1.0
+Nodes (2): getEventTypesKey(), useDeferredDashboardRealtime()
+
+### Community 101 - "Community 101"
+Cohesion: 1.0
 Nodes (2): createPrismaClient(), getDatabaseUrl()
 
-### Community 298 - "Community 298"
+### Community 315 - "Community 315"
 Cohesion: 1.0
 Nodes (1): Vendmnt.Dll.Procs
 
-### Community 299 - "Community 299"
+### Community 316 - "Community 316"
 Cohesion: 1.0
 Nodes (1): Wpadmin.Exe.Procs
 
-### Community 300 - "Community 300"
+### Community 317 - "Community 317"
 Cohesion: 1.0
 Nodes (1): Wpposcmn.Dll.Procs
 
 ## Knowledge Gaps
 - **1643 isolated node(s):** `LAPortal`, `Features`, `Tech Stack`, `Architecture`, `Development` (+1638 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `Community 31`** (17 nodes): `getAccessibleRequisition()`, `invalidIdResponse()`, `isObjectBody()`, `parseId()`, `route.ts`, `route.ts`, `route.ts`, `route.ts`, `route.ts`, `route.ts`, `route.ts`, `route.ts`, `route.ts`, `route.ts`, `route.ts`, `route.ts`, `route.ts`
+- **Thin community `Community 28`** (17 nodes): `getAccessibleRequisition()`, `invalidIdResponse()`, `isObjectBody()`, `parseId()`, `route.ts`, `route.ts`, `route.ts`, `route.ts`, `route.ts`, `route.ts`, `route.ts`, `route.ts`, `route.ts`, `route.ts`, `route.ts`, `route.ts`, `route.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 46`** (6 nodes): `hasEventType()`, `isNotificationPayload()`, `useNotifications()`, `NotificationBell()`, `notification-bell.tsx`, `hooks.ts`
+- **Thin community `Community 42`** (6 nodes): `handleChange()`, `handleClick()`, `handleFocus()`, `handleKeyDown()`, `handleSelect()`, `inline-combobox.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 56`** (4 nodes): `annotateInvoiceForViewer()`, `canViewInvoiceDetails()`, `getInvoiceViewerAccess()`, `access.ts`
+- **Thin community `Community 48`** (6 nodes): `hasEventType()`, `isNotificationPayload()`, `useNotifications()`, `NotificationBell()`, `notification-bell.tsx`, `hooks.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 60`** (4 nodes): `EditItemDialog()`, `resolveEditDialogMode()`, `edit-item-dialog-mode.ts`, `edit-item-dialog.tsx`
+- **Thin community `Community 50`** (5 nodes): `cn()`, `handleClick()`, `InputGroupButton()`, `onClick()`, `input-group.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 62`** (4 nodes): `handleCreate()`, `handleDelete()`, `resetCreateForm()`, `account-code-manager.tsx`
+- **Thin community `Community 58`** (4 nodes): `annotateInvoiceForViewer()`, `canViewInvoiceDetails()`, `getInvoiceViewerAccess()`, `access.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 72`** (3 nodes): `toDetailResponse()`, `toStaffResponse()`, `service.ts`
+- **Thin community `Community 63`** (4 nodes): `Badge()`, `badge.tsx`, `utils.ts`, `cn()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 75`** (3 nodes): `invalidRequest()`, `route.ts`, `route.ts`
+- **Thin community `Community 65`** (4 nodes): `EditItemDialog()`, `resolveEditDialogMode()`, `edit-item-dialog-mode.ts`, `edit-item-dialog.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 87`** (3 nodes): `use-deferred-dashboard-realtime.ts`, `getEventTypesKey()`, `useDeferredDashboardRealtime()`
+- **Thin community `Community 67`** (4 nodes): `handleCreate()`, `handleDelete()`, `resetCreateForm()`, `account-code-manager.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 94`** (3 nodes): `createPrismaClient()`, `getDatabaseUrl()`, `prisma.ts`
+- **Thin community `Community 77`** (3 nodes): `toDetailResponse()`, `toStaffResponse()`, `service.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 298`** (1 nodes): `Vendmnt.Dll.Procs`
+- **Thin community `Community 80`** (3 nodes): `invalidRequest()`, `route.ts`, `route.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 299`** (1 nodes): `Wpadmin.Exe.Procs`
+- **Thin community `Community 83`** (3 nodes): `DraftRecoveryBanner()`, `getRelativeTime()`, `draft-recovery-banner.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 300`** (1 nodes): `Wpposcmn.Dll.Procs`
+- **Thin community `Community 94`** (3 nodes): `use-deferred-dashboard-realtime.ts`, `getEventTypesKey()`, `useDeferredDashboardRealtime()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 101`** (3 nodes): `createPrismaClient()`, `getDatabaseUrl()`, `prisma.ts`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 315`** (1 nodes): `Vendmnt.Dll.Procs`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 316`** (1 nodes): `Wpadmin.Exe.Procs`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 317`** (1 nodes): `Wpposcmn.Dll.Procs`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `WinPRISM tables → binaries that touch them` connect `Community 1` to `Community 0`, `Community 5`, `Community 4`, `Community 13`?**
-  _High betweenness centrality (0.099) - this node is a cross-community bridge._
-- **Why does `Number()` connect `Community 3` to `Community 6`, `Community 7`, `Community 8`, `Community 9`, `Community 11`, `Community 12`, `Community 14`, `Community 15`, `Community 16`, `Community 18`, `Community 21`, `Community 23`, `Community 24`, `Community 25`, `Community 27`, `Community 30`?**
-  _High betweenness centrality (0.059) - this node is a cross-community bridge._
-- **Why does ``WinPrism.exe` — static-analysis inventory` connect `Community 10` to `Community 0`, `Community 5`, `Community 4`, `Community 13`?**
-  _High betweenness centrality (0.041) - this node is a cross-community bridge._
+- **Why does `WinPRISM tables → binaries that touch them` connect `Community 0` to `Community 1`, `Community 3`, `Community 4`, `Community 5`?**
+  _High betweenness centrality (0.104) - this node is a cross-community bridge._
+- **Why does `Number()` connect `Community 7` to `Community 6`, `Community 8`, `Community 9`, `Community 10`, `Community 11`, `Community 12`, `Community 14`, `Community 15`, `Community 16`, `Community 17`, `Community 18`, `Community 21`, `Community 23`, `Community 24`?**
+  _High betweenness centrality (0.062) - this node is a cross-community bridge._
+- **Why does `Item` connect `Community 1` to `Community 13`, `Community 3`, `Community 4`, `Community 5`?**
+  _High betweenness centrality (0.030) - this node is a cross-community bridge._
 - **Are the 102 inferred relationships involving `Number()` (e.g. with `main()` and `main()`) actually correct?**
   _`Number()` has 102 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `LAPortal`, `Features`, `Tech Stack` to the rest of the system?**
   _1643 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.01 - nodes in this community are weakly interconnected._
-- **Should `Community 1` be split into smaller, more focused modules?**
   _Cohesion score 0.0 - nodes in this community are weakly interconnected._
+- **Should `Community 1` be split into smaller, more focused modules?**
+  _Cohesion score 0.01 - nodes in this community are weakly interconnected._
