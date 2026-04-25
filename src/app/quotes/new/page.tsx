@@ -6,8 +6,8 @@ import { PrinterIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuoteForm } from "@/components/quote/quote-form";
 import { QuoteMode } from "@/components/quote/quote-mode";
-import { ProductSearchPanel } from "@/components/shared/product-search-panel";
-import { openRegisterPrintWindow } from "@/components/shared/register-print-view";
+import { LazyProductSearchPanel } from "@/components/shared/lazy-product-search-panel";
+import { openDeferredRegisterPrintWindow } from "@/components/shared/register-print-loader";
 import { CATALOG_ITEMS_STORAGE_KEY } from "@/domains/product/constants";
 import type { SelectedProduct } from "@/domains/product/types";
 import { formatDateLong as formatDate } from "@/lib/formatters";
@@ -74,7 +74,7 @@ export default function NewQuotePage() {
 
   const quoteForm = useQuoteForm(initial);
 
-  function handlePrintForRegister() {
+  async function handlePrintForRegister() {
     const { form, itemsWithMargin } = quoteForm;
     if (form.items.length === 0) return;
     const displayItems = form.marginEnabled ? itemsWithMargin : form.items;
@@ -85,7 +85,7 @@ export default function NewQuotePage() {
       .reduce((sum, item) => sum + Number(item.extendedPrice), 0);
     const taxAmount = taxableTotal * taxRate;
 
-    openRegisterPrintWindow({
+    await openDeferredRegisterPrintWindow({
       documentNumber: "Draft Quote",
       documentType: "Quote",
       status: "DRAFT",
@@ -124,7 +124,7 @@ export default function NewQuotePage() {
           <QuoteMode {...quoteForm} />
         </div>
         <div className="order-1 lg:order-2 lg:sticky lg:top-8">
-          <ProductSearchPanel onAddProducts={(products) => quoteForm.addItems(mapProductsToItems(products))} />
+          <LazyProductSearchPanel onAddProducts={(products) => quoteForm.addItems(mapProductsToItems(products))} />
         </div>
       </div>
     </div>
