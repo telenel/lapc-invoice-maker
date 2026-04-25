@@ -1,12 +1,14 @@
 import {
   createContext,
   createElement,
+  lazy,
+  Suspense,
   useContext,
   type ReactNode,
 } from "react";
 import { createPlugin } from "@fullcalendar/core";
 import type { CustomContentGenerator, SpecificViewContentArg } from "@fullcalendar/core";
-import { AgendaStreamView, type AgendaStreamViewProps } from "./AgendaStreamView";
+import type { AgendaStreamViewProps } from "./AgendaStreamView";
 
 export type AgendaStreamIntegrationValue = Pick<
   AgendaStreamViewProps,
@@ -22,6 +24,9 @@ export type AgendaStreamIntegrationValue = Pick<
 >;
 
 const AgendaStreamIntegrationContext = createContext<AgendaStreamIntegrationValue | null>(null);
+const LazyAgendaStreamView = lazy(() =>
+  import("./AgendaStreamView").then((module) => ({ default: module.AgendaStreamView })),
+);
 
 export function AgendaStreamIntegrationProvider({
   children,
@@ -40,14 +45,24 @@ export function AgendaStreamIntegrationProvider({
 function AgendaStreamPluginView({ viewProps }: { viewProps: SpecificViewContentArg }) {
   const integration = useContext(AgendaStreamIntegrationContext);
 
-  return createElement(AgendaStreamView, {
+  return createElement(LazyAgendaStreamView, {
     ...viewProps,
     ...integration,
   });
 }
 
 export const agendaStreamViewContent: CustomContentGenerator<SpecificViewContentArg> = (props) =>
-  createElement(AgendaStreamPluginView, { viewProps: props });
+  createElement(
+    Suspense,
+    {
+      fallback: createElement(
+        "div",
+        { className: "flex h-full min-h-[420px] items-center justify-center text-sm text-muted-foreground" },
+        "Loading calendar stream...",
+      ),
+    },
+    createElement(AgendaStreamPluginView, { viewProps: props }),
+  );
 
 export const agendaStreamPlugin = createPlugin({
   name: "agendaStream",
