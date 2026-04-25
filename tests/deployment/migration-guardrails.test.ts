@@ -65,9 +65,11 @@ describe("deploy and migration guardrails", () => {
   it("tracks manual product edits separately from sync-trigger timestamp noise", () => {
     const sql = readRepoFile("prisma/migrations/20260425193000_products_manual_edit_tracking/migration.sql");
 
+    expect(sql).toContain('DROP VIEW IF EXISTS "products_with_derived"');
     expect(sql).toContain('ADD COLUMN IF NOT EXISTS "manual_updated_at" TIMESTAMPTZ');
     expect(sql).toContain('"products_manual_updated_at_idx"');
     expect(sql).toContain("(p.manual_updated_at IS NOT NULL AND p.manual_updated_at > p.synced_at) AS edited_since_sync");
+    expect(sql).toContain('GRANT SELECT ON "products_with_derived" TO authenticated');
     expect(sql).toContain('ALTER VIEW "products_with_derived" SET (security_invoker = true)');
   });
 

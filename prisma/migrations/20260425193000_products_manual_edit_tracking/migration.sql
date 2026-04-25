@@ -1,3 +1,5 @@
+DROP VIEW IF EXISTS "products_with_derived";
+
 ALTER TABLE "products"
   ADD COLUMN IF NOT EXISTS "manual_updated_at" TIMESTAMPTZ;
 
@@ -29,5 +31,9 @@ SELECT
   END AS margin_ratio,
   (p.manual_updated_at IS NOT NULL AND p.manual_updated_at > p.synced_at) AS edited_since_sync
 FROM "products" p;
+
+REVOKE ALL ON "products_with_derived" FROM anon;
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER ON "products_with_derived" FROM authenticated;
+GRANT SELECT ON "products_with_derived" TO authenticated;
 
 ALTER VIEW "products_with_derived" SET (security_invoker = true);
