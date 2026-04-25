@@ -79,6 +79,36 @@ export function buildAggregateRecomputeSql(): string {
   `;
 }
 
+export function buildAnalyticsRollupRefreshSql(): string[] {
+  return [
+    "REFRESH MATERIALIZED VIEW analytics_sales_daily",
+    "REFRESH MATERIALIZED VIEW analytics_sales_receipts_daily",
+    "REFRESH MATERIALIZED VIEW analytics_sales_hourly",
+  ];
+}
+
+export async function refreshAnalyticsSalesRollups(options: {
+  db?: AggregateDbClient;
+} = {}): Promise<void> {
+  const { db } = options;
+  const ownsDb = !db;
+  const client = db ?? createPgAggregateClient(getAggregateDatabaseUrl());
+
+  if (ownsDb) {
+    await client.connect?.();
+  }
+
+  try {
+    for (const statement of buildAnalyticsRollupRefreshSql()) {
+      await client.query(statement);
+    }
+  } finally {
+    if (ownsDb) {
+      await client.end?.();
+    }
+  }
+}
+
 function getAggregateDatabaseUrl(): string {
   const connectionString = process.env.DATABASE_URL ?? process.env.DIRECT_URL;
   if (!connectionString) {
@@ -135,7 +165,7 @@ export async function runAggregateRecompute(options: {
       ) as AggregateQueryResult<{ sku: string }>;
       const skuRows = skuResult.rows;
       if (skuRows.length === 0) {
-        return totalAffected;
+        break;
       }
 
       const skuBatch = skuRows.map((row) => row.sku);
@@ -148,6 +178,9 @@ export async function runAggregateRecompute(options: {
       totalAffected += Number(updatedRows[0]?.affected ?? 0);
       lastSku = skuBatch[skuBatch.length - 1];
     }
+
+    await refreshAnalyticsSalesRollups({ db: client });
+    return totalAffected;
   } finally {
     if (ownsDb) {
       await client.end?.();

@@ -1,12 +1,12 @@
 import { type NextRequest } from "next/server";
-import { withAuth } from "@/domains/shared/auth";
 import { analyticsCache } from "@/domains/analytics/cache";
-import { analyticsJson, parseAnalyticsFilters } from "./route-utils";
+import { withAuth } from "@/domains/shared/auth";
+import { analyticsJson, parseAnalyticsFilters } from "../route-utils";
 
 export const GET = withAuth(async (req: NextRequest) => {
   const parsed = parseAnalyticsFilters(req);
   if ("response" in parsed) return parsed.response;
 
-  const result = await analyticsCache.getCombined(parsed.filters);
+  const result = await analyticsCache.getOperations(parsed.filters);
   return analyticsJson(result);
 });

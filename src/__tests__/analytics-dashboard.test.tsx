@@ -110,7 +110,9 @@ describe("AnalyticsDashboard", () => {
       />,
     );
 
-    expect(screen.getByText("Operations dashboard 118")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("Operations dashboard 118")).toBeInTheDocument();
+    });
 
     fireEvent.change(screen.getByLabelText("From"), { target: { value: "2026-05-01" } });
 
@@ -118,6 +120,51 @@ describe("AnalyticsDashboard", () => {
       expect(screen.getByText("dateFrom must be less than or equal to dateTo")).toBeInTheDocument();
     });
     expect(screen.queryByText("Operations dashboard 118")).not.toBeInTheDocument();
+  });
+
+  it("fetches operations first and defers finance until the tab is selected", async () => {
+    const fetchMock = vi.fn((url: string) => {
+      if (url.startsWith("/api/analytics/operations")) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(buildAnalyticsResponse().operations),
+        });
+      }
+
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          summary: buildAnalyticsResponse().summary,
+          byCategory: [],
+          byMonth: [],
+          byDepartment: [],
+          trend: [],
+          byUser: [],
+        }),
+      });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(
+      <AnalyticsDashboard
+        initialDateFrom="2026-04-01"
+        initialDateTo="2026-04-30"
+      />,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Operations dashboard 118")).toBeInTheDocument();
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(String(fetchMock.mock.calls[0][0])).toContain("/api/analytics/operations");
+
+    fireEvent.click(screen.getByRole("tab", { name: "Finance" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Finance dashboard 3")).toBeInTheDocument();
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(String(fetchMock.mock.calls[1][0])).toContain("/api/analytics/finance");
   });
 });
 

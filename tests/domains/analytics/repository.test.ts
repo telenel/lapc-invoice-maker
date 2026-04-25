@@ -33,15 +33,13 @@ describe("analyticsRepository", () => {
       dateTo: "2026-01-31",
     });
 
-    expect(prisma.invoice.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          type: "INVOICE",
-          category: "COPY_TECH",
-          archivedAt: null,
-        }),
-      }),
-    );
+    const copyTechQueries = vi
+      .mocked(prisma.$queryRawUnsafe)
+      .mock.calls.map(([sql]) => sql)
+      .filter((sql): sql is string => typeof sql === "string" && sql.includes("category = 'COPY_TECH'"));
+
+    expect(copyTechQueries.length).toBeGreaterThan(0);
+    expect(copyTechQueries.every((sql) => sql.includes("archived_at IS NULL"))).toBe(true);
   });
 
   it("keeps zero-stock rows in reorder breach counts while filtering stock-only aggregates", async () => {
@@ -60,5 +58,37 @@ describe("analyticsRepository", () => {
     expect(inventorySummaryQuery).not.toMatch(
       /LEFT JOIN products p\s+ON p\.sku = inv\.sku\s+WHERE\s+COALESCE\(inv\.stock_on_hand,\s*0\)\s*>\s*0\b/,
     );
+  });
+
+  it("uses analytics sales rollups instead of raw transaction scans for range charts", async () => {
+    await analyticsRepository.findOperationsSnapshot({
+      dateFrom: "2026-01-01",
+      dateTo: "2026-01-31",
+    });
+
+    const sql = vi
+      .mocked(prisma.$queryRawUnsafe)
+      .mock.calls.map(([statement]) => String(statement))
+      .join("\n");
+
+    expect(sql).toContain("analytics_sales_daily");
+    expect(sql).toContain("analytics_sales_receipts_daily");
+    expect(sql).toContain("analytics_sales_hourly");
+    expect(sql).not.toContain("(st.process_date AT TIME ZONE 'America/Los_Angeles')::date BETWEEN");
+  });
+
+  it("reads receipt KPIs from receipt-grain rollups instead of SKU-grain rollups", async () => {
+    await analyticsRepository.findOperationsSnapshot({
+      dateFrom: "2026-01-01",
+      dateTo: "2026-01-31",
+    });
+
+    const sql = vi
+      .mocked(prisma.$queryRawUnsafe)
+      .mock.calls.map(([statement]) => String(statement))
+      .join("\n");
+
+    expect(sql).toContain("SUM(sr.receipts)");
+    expect(sql).not.toContain("SUM(sd.receipts)");
   });
 });

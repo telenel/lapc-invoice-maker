@@ -1,12 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { AnalyticsResponse } from "@/domains/analytics/types";
+import type { AnalyticsResponse, FinanceAnalytics, OperationsAnalytics } from "@/domains/analytics/types";
 import { getDateKeyInLosAngeles, shiftDateKey } from "@/lib/date-utils";
-import { FinanceDashboard } from "./finance-dashboard";
-import { OperationsDashboard } from "./operations-dashboard";
+
+const FinanceDashboard = dynamic(
+  () => import("./finance-dashboard").then((m) => m.FinanceDashboard),
+  { ssr: false },
+);
+const OperationsDashboard = dynamic(
+  () => import("./operations-dashboard").then((m) => m.OperationsDashboard),
+  { ssr: false },
+);
+
+type AnalyticsTab = "operations" | "finance";
 
 function getDefaultDateRange() {
   const dateTo = getDateKeyInLosAngeles();
@@ -34,6 +44,17 @@ function LoadingSkeleton() {
   );
 }
 
+function toFinanceAnalytics(data: AnalyticsResponse): FinanceAnalytics {
+  return {
+    summary: data.summary,
+    byCategory: data.byCategory,
+    byMonth: data.byMonth,
+    byDepartment: data.byDepartment,
+    trend: data.trend,
+    byUser: data.byUser,
+  };
+}
+
 export function AnalyticsDashboard({
   initialData = null,
   initialDateFrom,
@@ -46,47 +67,85 @@ export function AnalyticsDashboard({
   const defaults = getDefaultDateRange();
   const [dateFrom, setDateFrom] = useState(initialDateFrom ?? defaults.dateFrom);
   const [dateTo, setDateTo] = useState(initialDateTo ?? defaults.dateTo);
-  const [data, setData] = useState<AnalyticsResponse | null>(initialData);
-  const [loading, setLoading] = useState(() => initialData === null);
+  const [activeTab, setActiveTab] = useState<AnalyticsTab>("operations");
+  const [operationsData, setOperationsData] = useState<OperationsAnalytics | null>(
+    initialData?.operations ?? null,
+  );
+  const [financeData, setFinanceData] = useState<FinanceAnalytics | null>(
+    initialData ? toFinanceAnalytics(initialData) : null,
+  );
+  const [operationsRangeKey, setOperationsRangeKey] = useState<string | null>(
+    initialData ? `${initialDateFrom ?? defaults.dateFrom}|${initialDateTo ?? defaults.dateTo}` : null,
+  );
+  const [financeRangeKey, setFinanceRangeKey] = useState<string | null>(
+    initialData ? `${initialDateFrom ?? defaults.dateFrom}|${initialDateTo ?? defaults.dateTo}` : null,
+  );
+  const [loadingTab, setLoadingTab] = useState<AnalyticsTab | null>(() => initialData === null ? "operations" : null);
   const [error, setError] = useState<string | null>(null);
-  const skippedInitialFetchRef = useRef(initialData !== null);
-  const initialRangeKey = `${initialDateFrom ?? defaults.dateFrom}|${initialDateTo ?? defaults.dateTo}`;
   const currentRangeKey = `${dateFrom}|${dateTo}`;
-  const hasOperations = Boolean(data && (data as Partial<AnalyticsResponse>).operations);
+  const activeDataIsFresh = activeTab === "operations"
+    ? operationsData !== null && operationsRangeKey === currentRangeKey
+    : financeData !== null && financeRangeKey === currentRangeKey;
+  const loading = loadingTab === activeTab && !activeDataIsFresh;
 
   useEffect(() => {
     if (dateFrom && dateTo && dateFrom > dateTo) {
-      setData(null);
-      setLoading(false);
+      setOperationsData(null);
+      setFinanceData(null);
+      setOperationsRangeKey(null);
+      setFinanceRangeKey(null);
+      setLoadingTab(null);
       setError("dateFrom must be less than or equal to dateTo");
       return;
     }
 
-    if (skippedInitialFetchRef.current && currentRangeKey === initialRangeKey) {
-      skippedInitialFetchRef.current = false;
+    if (activeDataIsFresh) {
+      setLoadingTab(null);
       return;
     }
 
+    const controller = new AbortController();
+
     async function fetchAnalytics() {
-      setLoading(true);
+      const tab = activeTab;
+      setLoadingTab(tab);
       setError(null);
       try {
         const params = new URLSearchParams();
         if (dateFrom) params.set("dateFrom", dateFrom);
         if (dateTo) params.set("dateTo", dateTo);
-        const res = await fetch(`/api/analytics?${params.toString()}`);
+        const endpoint = tab === "operations" ? "/api/analytics/operations" : "/api/analytics/finance";
+        const res = await fetch(`${endpoint}?${params.toString()}`, {
+          signal: controller.signal,
+        });
         if (!res.ok) throw new Error("Failed to fetch analytics");
         const json = await res.json();
-        setData(json);
+        if (tab === "operations") {
+          setOperationsData(json as OperationsAnalytics);
+          setOperationsRangeKey(currentRangeKey);
+        } else {
+          setFinanceData(json as FinanceAnalytics);
+          setFinanceRangeKey(currentRangeKey);
+        }
       } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
         setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoadingTab((current) => (current === activeTab ? null : current));
+        }
       }
     }
 
     fetchAnalytics();
-  }, [currentRangeKey, dateFrom, dateTo, initialRangeKey]);
+    return () => controller.abort();
+  }, [
+    activeDataIsFresh,
+    activeTab,
+    currentRangeKey,
+    dateFrom,
+    dateTo,
+  ]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -136,23 +195,33 @@ export function AnalyticsDashboard({
 
       {loading ? (
         <LoadingSkeleton />
-      ) : data ? (
-        <Tabs defaultValue={hasOperations ? "operations" : "finance"} className="gap-6">
+      ) : (
+        <Tabs
+          value={activeTab}
+          onValueChange={(value) => setActiveTab(value as AnalyticsTab)}
+          className="gap-6"
+        >
           <TabsList variant="default" className="w-fit">
-            {hasOperations ? <TabsTrigger value="operations">Operations</TabsTrigger> : null}
+            <TabsTrigger value="operations">Operations</TabsTrigger>
             <TabsTrigger value="finance">Finance</TabsTrigger>
           </TabsList>
 
-          {hasOperations ? (
+          {activeTab === "operations" ? (
             <TabsContent value="operations">
-              <OperationsDashboard data={data.operations} />
+              {operationsData && operationsRangeKey === currentRangeKey ? (
+                <OperationsDashboard data={operationsData} />
+              ) : null}
             </TabsContent>
           ) : null}
-          <TabsContent value="finance">
-            <FinanceDashboard data={data} />
-          </TabsContent>
+          {activeTab === "finance" ? (
+            <TabsContent value="finance">
+              {financeData && financeRangeKey === currentRangeKey ? (
+                <FinanceDashboard data={financeData} />
+              ) : null}
+            </TabsContent>
+          ) : null}
         </Tabs>
-      ) : null}
+      )}
     </div>
   );
 }
