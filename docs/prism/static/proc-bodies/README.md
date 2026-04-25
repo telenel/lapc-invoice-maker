@@ -21,6 +21,9 @@ See [`../plan-cache-method.md`](../plan-cache-method.md) for the full methodolog
 | `SP_ARCreateInvoiceDtl.sql` | Companion: copies a single transaction-detail line into `Acct_ARInvoice_Detail`. Called once per (receipt, line) pair. |
 | `SP_ARCreateMOTran.sql` | The mail-order / special-order receipt-create proc on the POS side. Originates the Transaction that the Hdr/Dtl procs later promote. |
 | `SP_ARAutogenInvoices.sql` | Batch invoice generator — the proc behind WPAdmin's "Generate Invoices" button. Inlines all of its work (does NOT delegate to `SP_ARCreateInvoiceHdr`/`Dtl`). |
+| `SP_RPT_AR_INVOICE.sql` | The proc Crystal Reports calls to fetch the data set behind a single AR invoice (the "open invoice → print → save as PDF" workflow). Returns a flat 47-column result set bound to a `.rpt` template. |
+| `SP_RPT_AR_INVOICE_REGISTER.sql` | Sibling: the AR invoice REGISTER report — a list-view of multiple invoices in a date / customer / agency range. |
+| `SP_RPT_AR_INVOICE_ADDTIONAL_INFOMATION.sql` | (sic — typo in proc name) Sub-report bound alongside `SP_RPT_AR_INVOICE`: aggregations like total items, total lines, tax-exempt YES/NO, discount calculations, joined to `prism_security.PrismUser` for the username. |
 
 ## Caveats and limits
 
