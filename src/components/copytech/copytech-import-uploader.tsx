@@ -1,13 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, type DragEvent } from "react";
 import {
   AlertCircleIcon,
   CheckCircle2Icon,
+  DownloadIcon,
   FileSpreadsheetIcon,
   Loader2Icon,
+  UploadCloudIcon,
   UploadIcon,
+  XIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { copyTechImportApi } from "@/domains/copytech-import/api-client";
@@ -52,6 +55,12 @@ function getErrorMessage(error: unknown): string {
   return "Request failed";
 }
 
+const MAX_FILE_BYTES = 1_000_000;
+
+function isAcceptableCsv(candidate: File): boolean {
+  return candidate.name.toLowerCase().endsWith(".csv");
+}
+
 export function CopyTechImportUploader({ format }: CopyTechImportUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
@@ -59,6 +68,7 @@ export function CopyTechImportUploader({ format }: CopyTechImportUploaderProps) 
   const [busy, setBusy] = useState<"preview" | "commit" | null>(null);
   const [createdInvoiceIds, setCreatedInvoiceIds] = useState<string[]>([]);
   const [requestError, setRequestError] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
 
   const canCommit = preview != null && preview.errors.length === 0 && preview.invoiceCount > 0 && file != null;
   const headerLine = useMemo(
@@ -66,11 +76,76 @@ export function CopyTechImportUploader({ format }: CopyTechImportUploaderProps) 
     [format.optionalHeaders, format.requiredHeaders],
   );
 
+  function resetFileState() {
+    setFile(null);
+    setPreview(null);
+    setCreatedInvoiceIds([]);
+    setRequestError(null);
+    if (inputRef.current) inputRef.current.value = "";
+  }
+
   function handleFileChange(nextFile: File | null) {
+    if (nextFile && !isAcceptableCsv(nextFile)) {
+      toast.error("Only .csv files are supported.");
+      resetFileState();
+      return;
+    }
+    if (nextFile && nextFile.size > MAX_FILE_BYTES) {
+      toast.error("File exceeds the 1 MB limit.");
+      resetFileState();
+      return;
+    }
     setFile(nextFile);
     setPreview(null);
     setCreatedInvoiceIds([]);
     setRequestError(null);
+  }
+
+  function handleClearFile() {
+    resetFileState();
+  }
+
+  function handleDragEnter(event: DragEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.dataTransfer.types.includes("Files")) {
+      setDragActive(true);
+    }
+  }
+
+  function handleDragOver(event: DragEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.dataTransfer.types.includes("Files")) {
+      event.dataTransfer.dropEffect = "copy";
+      setDragActive(true);
+    }
+  }
+
+  function handleDragLeave(event: DragEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    setDragActive(false);
+  }
+
+  function handleDrop(event: DragEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    event.stopPropagation();
+    setDragActive(false);
+    const dropped = event.dataTransfer.files?.[0] ?? null;
+    if (dropped) handleFileChange(dropped);
+  }
+
+  function handleDownloadTemplate() {
+    const blob = new Blob([format.exampleCsv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "copytech-import-template.csv";
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    URL.revokeObjectURL(url);
   }
 
   async function handlePreview() {
@@ -124,7 +199,7 @@ export function CopyTechImportUploader({ format }: CopyTechImportUploaderProps) 
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,420px)_1fr]">
+      <div className="grid gap-5 lg:grid-cols-[1fr_minmax(0,360px)]">
         <Card>
           <CardHeader>
             <CardTitle>Upload</CardTitle>
@@ -134,20 +209,28 @@ export function CopyTechImportUploader({ format }: CopyTechImportUploaderProps) 
             <button
               type="button"
               onClick={() => inputRef.current?.click()}
+              onDragEnter={handleDragEnter}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
               className={cn(
-                "flex min-h-[150px] w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border bg-muted/20 px-4 py-6 text-center transition-colors hover:bg-muted/35 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                file && "border-primary/50 bg-primary/5",
+                "flex min-h-[180px] w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-primary/40 bg-primary/5 px-4 py-8 text-center transition-colors hover:border-primary/60 hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                dragActive && "border-primary bg-primary/15",
+                file && "border-primary/70 bg-primary/10",
               )}
+              aria-label={file ? `Selected file ${file.name}. Click to replace.` : "Choose or drop a CSV file"}
             >
-              <FileSpreadsheetIcon className="size-7 text-muted-foreground" aria-hidden="true" />
-              <span className="max-w-full truncate text-sm font-medium">
-                {file ? file.name : "Choose CSV file"}
-              </span>
               {file ? (
-                <span className="text-xs text-muted-foreground">
-                  {(file.size / 1024).toFixed(1)} KB
-                </span>
-              ) : null}
+                <FileSpreadsheetIcon className="size-10 text-primary" aria-hidden="true" />
+              ) : (
+                <UploadCloudIcon className="size-10 text-primary" aria-hidden="true" />
+              )}
+              <span className="max-w-full truncate text-base font-semibold">
+                {file ? file.name : "Drop CSV here or click to browse"}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {file ? `${(file.size / 1024).toFixed(1)} KB · click to replace` : "Up to 1 MB, .csv only"}
+              </span>
             </button>
             <input
               ref={inputRef}
@@ -156,6 +239,9 @@ export function CopyTechImportUploader({ format }: CopyTechImportUploaderProps) 
               className="sr-only"
               onChange={(event) => handleFileChange(event.target.files?.[0] ?? null)}
             />
+            <p className="text-xs text-muted-foreground">
+              Export charges from CopyTech as CSV before uploading. Use the template on the right if you&rsquo;re building one by hand.
+            </p>
             <div className="flex flex-col gap-2 sm:flex-row">
               <Button
                 type="button"
@@ -164,7 +250,7 @@ export function CopyTechImportUploader({ format }: CopyTechImportUploaderProps) 
                 disabled={busy !== null}
               >
                 {busy === "preview" ? <Loader2Icon className="size-4 animate-spin" aria-hidden="true" /> : <UploadIcon className="size-4" aria-hidden="true" />}
-                Preview
+                Validate CSV
               </Button>
               <Button
                 type="button"
@@ -176,6 +262,18 @@ export function CopyTechImportUploader({ format }: CopyTechImportUploaderProps) 
                 {busy === "commit" ? <Loader2Icon className="size-4 animate-spin" aria-hidden="true" /> : <CheckCircle2Icon className="size-4" aria-hidden="true" />}
                 Create drafts
               </Button>
+              {file ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="gap-2 text-muted-foreground hover:text-foreground"
+                  onClick={handleClearFile}
+                  disabled={busy !== null}
+                >
+                  <XIcon className="size-4" aria-hidden="true" />
+                  Remove
+                </Button>
+              ) : null}
             </div>
             {requestError ? (
               <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -191,7 +289,17 @@ export function CopyTechImportUploader({ format }: CopyTechImportUploaderProps) 
             <CardDescription>Required columns first; optional columns may follow in any order.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-3 md:grid-cols-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={handleDownloadTemplate}
+            >
+              <DownloadIcon className="size-4" aria-hidden="true" />
+              Download template
+            </Button>
+            <div className="space-y-3">
               <div>
                 <p className="text-xs font-medium uppercase text-muted-foreground">Required</p>
                 <div className="mt-2 flex flex-wrap gap-1.5">

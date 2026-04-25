@@ -1,9 +1,37 @@
 .shell {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  min-height: 100%;
+  gap: 12px;
+  height: 100%;
+  overflow-y: auto;
   color: var(--foreground, var(--fg));
+}
+
+.utilityBar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 10px;
+  background: var(--card, #fff);
+}
+
+.utilityStats {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.statDivider {
+  color: var(--muted-foreground, var(--muted-fg, #6b7280));
+  opacity: 0.5;
 }
 
 .topBar {
@@ -165,16 +193,16 @@
 .laneStack {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
 }
 
 .lane {
   display: grid;
-  grid-template-columns: 104px minmax(0, 1fr);
-  gap: 12px;
-  padding: 12px;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px;
   border: 1px solid var(--border, #e5e7eb);
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--card, #fff);
 }
 
@@ -190,8 +218,8 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
-  padding: 10px;
+  gap: 2px;
+  padding: 8px 10px;
   border: 1px solid transparent;
   border-radius: 10px;
   background: color-mix(in oklch, var(--accent, #f3f4f6) 60%, white);
@@ -200,9 +228,10 @@
 }
 
 .plateNumber {
-  font-size: 38px;
-  line-height: 0.95;
-  letter-spacing: -0.03em;
+  font-size: 26px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-weight: 700;
 }
 
 .todayPill {
@@ -229,17 +258,17 @@
 
 .compactBar {
   position: relative;
-  min-height: 88px;
-  padding: 12px;
-  border-radius: 12px;
+  min-height: 60px;
+  padding: 8px 10px;
+  border-radius: 10px;
   background: color-mix(in oklch, var(--accent, #f3f4f6) 45%, white);
   overflow: hidden;
 }
 
 .compactAxis {
   position: relative;
-  height: 20px;
-  margin-bottom: 8px;
+  height: 16px;
+  margin-bottom: 6px;
   border-bottom: 1px solid var(--border, #e5e7eb);
 }
 
@@ -336,7 +365,18 @@
   color: var(--muted-foreground, var(--muted-fg, #6b7280));
 }
 
-.emptyState,
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  border-radius: 8px;
+  color: var(--muted-foreground, var(--muted-fg, #6b7280));
+  font-size: 12px;
+  font-style: italic;
+  opacity: 0.7;
+}
+
 .emptyExpanded {
   display: flex;
   align-items: center;
