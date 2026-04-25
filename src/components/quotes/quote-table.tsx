@@ -29,24 +29,7 @@ import { useSSE } from "@/lib/use-sse";
 import { quoteApi, type QuoteListResponse } from "@/domains/quote/api-client";
 import { followUpApi } from "@/domains/follow-up/api-client";
 import type { FollowUpBadgeState } from "@/domains/follow-up/types";
-import type { QuoteFilters as QuoteRequestFilters } from "@/domains/quote/types";
-
-type QuoteStatus = "DRAFT" | "SENT" | "SUBMITTED_EMAIL" | "SUBMITTED_MANUAL" | "ACCEPTED" | "DECLINED" | "REVISED" | "EXPIRED";
-
-interface Quote {
-  id: string;
-  quoteNumber: string | null;
-  date: string;
-  recipientName: string | null;
-  recipientOrg: string | null;
-  department: string;
-  category: string;
-  totalAmount: string | number;
-  expirationDate: string | null;
-  quoteStatus: QuoteStatus;
-  accountNumber?: string | null;
-  paymentFollowUpBadge?: FollowUpBadgeState | null;
-}
+import type { QuoteFilters as QuoteRequestFilters, QuoteListItemResponse, QuoteStatus } from "@/domains/quote/types";
 
 const EMPTY_FILTERS: QuoteFilters = {
   search: "",
@@ -127,7 +110,7 @@ function parseSortDir(searchParams: ReturnType<typeof useSearchParams>): SortDir
 }
 
 interface QuoteRowProps {
-  quote: Quote;
+  quote: QuoteListItemResponse;
   onClick: (id: string) => void;
   badgeState: FollowUpBadgeState | null;
   selected: boolean;
@@ -211,7 +194,7 @@ export function QuoteTable({
   }, [router]);
 
   const [filters, setFilters] = useState<QuoteFilters>(() => parseInitialFilters(searchParams));
-  const [quotes, setQuotes] = useState<Quote[]>(initialData?.quotes ?? []);
+  const [quotes, setQuotes] = useState<QuoteListItemResponse[]>(initialData?.quotes ?? []);
   const [total, setTotal] = useState(initialData?.total ?? 0);
   const [page, setPage] = useState(() => parsePage(searchParams));
   const [loading, setLoading] = useState(() => initialData === undefined);

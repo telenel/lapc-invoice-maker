@@ -153,7 +153,7 @@ describe("quoteService", () => {
   // ── list ────────────────────────────────────────────────────────────────
 
   describe("list", () => {
-    it("returns paginated QuoteResponse array with DTO mapping", async () => {
+    it("returns paginated quote list rows with compact DTO mapping", async () => {
       const quote = makeQuote();
       mockRepo.findMany.mockResolvedValue({
         quotes: [quote],
@@ -177,10 +177,7 @@ describe("quoteService", () => {
       expect(q.expirationDate).toBe("2026-02-15");
       expect(q.totalAmount).toBe(150);
       expect(q.staff).toEqual({ id: "s1", name: "Alice", title: "Manager", department: "IT" });
-      expect(q.items).toHaveLength(2);
-      expect(q.items[0].quantity).toBe(3);
-      expect(q.items[0].unitPrice).toBe(25);
-      expect(q.items[0].extendedPrice).toBe(75);
+      expect("items" in q).toBe(false);
       expect(q.paymentFollowUpBadge).toBeNull();
     });
 
@@ -231,6 +228,10 @@ describe("quoteService", () => {
       expect(result!.staffId).toBe("s1");
       expect(result!.createdAt).toBe("2026-01-01T00:00:00.000Z");
       expect(result!.creatorName).toBe("Admin");
+      expect(result!.items).toHaveLength(2);
+      expect(result!.items[0].quantity).toBe(3);
+      expect(result!.items[0].unitPrice).toBe(25);
+      expect(result!.items[0].extendedPrice).toBe(75);
       expect(result!.paymentFollowUpBadge).toBeNull();
     });
 

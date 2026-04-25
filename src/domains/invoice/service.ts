@@ -10,6 +10,8 @@ import { safePublishAll } from "@/lib/sse";
 import type {
   InvoiceResponse,
   InvoiceItemResponse,
+  InvoiceListItemResponse,
+  InvoiceExportRow,
   InvoiceFilters,
   CreateInvoiceInput,
   FinalizeInput,
@@ -58,6 +60,8 @@ function assertInvoiceIsActive(invoice: { archivedAt?: Date | null }) {
 // ── DTO mapper ─────────────────────────────────────────────────────────────
 
 type InvoiceWithRelations = Awaited<ReturnType<typeof invoiceRepository.findById>>;
+type InvoiceListRow = Awaited<ReturnType<typeof invoiceRepository.findMany>>["invoices"][number];
+type InvoiceExportRepositoryRow = Awaited<ReturnType<typeof invoiceRepository.findManyForExport>>[number];
 
 function toInvoiceResponse(invoice: NonNullable<InvoiceWithRelations>): InvoiceResponse {
   const staff: InvoiceStaffDetail | null = invoice.staff
@@ -142,6 +146,62 @@ function toInvoiceResponse(invoice: NonNullable<InvoiceWithRelations>): InvoiceR
   };
 }
 
+function toInvoiceListItem(invoice: InvoiceListRow): InvoiceListItemResponse {
+  return {
+    id: invoice.id,
+    invoiceNumber: invoice.invoiceNumber,
+    date: getDateOnlyKey(invoice.date) ?? invoice.date.toISOString(),
+    staffId: invoice.staffId ?? null,
+    status: normalizeInvoiceStatus(invoice.status),
+    type: invoice.type,
+    department: invoice.department,
+    category: invoice.category,
+    accountCode: invoice.accountCode,
+    accountNumber: invoice.accountNumber ?? "",
+    notes: invoice.notes ?? "",
+    totalAmount: Number(invoice.totalAmount),
+    isRecurring: invoice.isRecurring,
+    isRunning: invoice.isRunning || invoice.status === "PENDING_CHARGE",
+    runningTitle: invoice.runningTitle,
+    createdAt: invoice.createdAt.toISOString(),
+    staff: invoice.staff
+      ? {
+          id: invoice.staff.id,
+          name: invoice.staff.name,
+          title: invoice.staff.title,
+          department: invoice.staff.department,
+        }
+      : null,
+    contact: invoice.contact
+      ? {
+          id: invoice.contact.id,
+          name: invoice.contact.name,
+          org: invoice.contact.org,
+        }
+      : null,
+    creatorId: invoice.creator.id,
+    creatorName: invoice.creator.name,
+    itemCount: invoice._count.items,
+    firstItemDescription: invoice.items[0]?.description?.trim() || null,
+  };
+}
+
+function toInvoiceExportRow(invoice: InvoiceExportRepositoryRow): InvoiceExportRow {
+  return {
+    invoiceNumber: invoice.invoiceNumber,
+    date: getDateOnlyKey(invoice.date) ?? invoice.date.toISOString(),
+    category: invoice.category,
+    staffName: invoice.staff?.name ?? invoice.contact?.name ?? "",
+    department: invoice.department,
+    accountNumber: invoice.accountNumber ?? "",
+    accountCode: invoice.accountCode,
+    totalAmount: Number(invoice.totalAmount),
+    status: normalizeInvoiceStatus(invoice.status),
+    itemDescriptions: invoice.items.map((item) => item.description),
+    notes: invoice.notes ?? "",
+  };
+}
+
 // ── Service ────────────────────────────────────────────────────────────────
 
 export const invoiceService = {
@@ -151,11 +211,16 @@ export const invoiceService = {
   async list(filters: InvoiceFilters & { sortBy?: string; sortOrder?: "asc" | "desc" }) {
     const { invoices, total, page, pageSize } = await invoiceRepository.findMany(filters);
     return {
-      invoices: invoices.map((inv) => toInvoiceResponse(inv as unknown as NonNullable<InvoiceWithRelations>)),
+      invoices: invoices.map(toInvoiceListItem),
       total,
       page,
       pageSize,
     };
+  },
+
+  async listForExport(filters: InvoiceFilters & { sortBy?: string; sortOrder?: "asc" | "desc" }): Promise<InvoiceExportRow[]> {
+    const invoices = await invoiceRepository.findManyForExport(filters);
+    return invoices.map(toInvoiceExportRow);
   },
 
   /**

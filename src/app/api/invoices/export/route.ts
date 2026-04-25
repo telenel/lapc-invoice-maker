@@ -110,7 +110,7 @@ export const GET = withAuth(async (req: NextRequest) => {
       sortOrder: (sp.get("sortOrder") ?? sp.get("sortDir") ?? "desc") as "asc" | "desc",
     };
 
-    const { invoices } = await invoiceService.list(filters);
+    const invoices = await invoiceService.listForExport(filters);
 
     const headers = [
       "Invoice Number",
@@ -127,12 +127,12 @@ export const GET = withAuth(async (req: NextRequest) => {
     ];
 
     const rows = invoices.map((inv) => {
-      const itemDescriptions = inv.items.map((item) => item.description).join("; ");
+      const itemDescriptions = inv.itemDescriptions.join("; ");
       return [
         inv.invoiceNumber ?? "",
         getDateOnlyKey(inv.date) ?? "",
         inv.category,
-        inv.staff?.name ?? inv.contact?.name ?? "",
+        inv.staffName,
         inv.department,
         inv.accountNumber,
         inv.accountCode,

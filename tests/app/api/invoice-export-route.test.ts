@@ -8,6 +8,7 @@ vi.mock("next-auth", () => ({
 vi.mock("@/domains/invoice/service", () => ({
   invoiceService: {
     list: vi.fn(),
+    listForExport: vi.fn(),
   },
 }));
 
@@ -21,12 +22,7 @@ describe("GET /api/invoices/export", () => {
     vi.mocked(getServerSession).mockResolvedValue({
       user: { id: "u1", role: "user" },
     } as never);
-    vi.mocked(invoiceService.list).mockResolvedValue({
-      invoices: [],
-      total: 0,
-      page: 1,
-      pageSize: 100000,
-    } as never);
+    vi.mocked(invoiceService.listForExport).mockResolvedValue([] as never);
   });
 
   it("forwards the full invoice filter contract for authenticated exports", async () => {
@@ -37,7 +33,7 @@ describe("GET /api/invoices/export", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(invoiceService.list).toHaveBeenCalledWith({
+    expect(invoiceService.listForExport).toHaveBeenCalledWith({
       search: "laptop",
       status: "FINAL",
       staffId: "staff-1",

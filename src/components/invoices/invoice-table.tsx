@@ -22,7 +22,7 @@ import {
 } from "./invoice-filters";
 import { formatAmount, formatDate, getInitials } from "@/lib/formatters";
 import { invoiceApi } from "@/domains/invoice/api-client";
-import type { InvoiceFilters, InvoiceListResponse, InvoiceResponse } from "@/domains/invoice/types";
+import type { InvoiceFilters, InvoiceListItemResponse, InvoiceListResponse } from "@/domains/invoice/types";
 import { useSSE } from "@/lib/use-sse";
 import { FollowUpBadge } from "@/components/follow-up/follow-up-badge";
 import { followUpApi } from "@/domains/follow-up/api-client";
@@ -96,7 +96,7 @@ export function InvoiceTable({
   const searchParams = useSearchParams();
 
   const [filters, setFilters] = useState<FilterBarFilters>(() => parseInitialFilters(searchParams));
-  const [invoices, setInvoices] = useState<InvoiceResponse[]>(initialData?.invoices ?? []);
+  const [invoices, setInvoices] = useState<InvoiceListItemResponse[]>(initialData?.invoices ?? []);
   const [total, setTotal] = useState(initialData?.total ?? 0);
   const [page, setPage] = useState(() => parsePage(searchParams));
   const [loading, setLoading] = useState(() => initialData === undefined);
@@ -241,13 +241,13 @@ export function InvoiceTable({
     return sortDir === "asc" ? " ↑" : " ↓";
   }
 
-  function statusLabel(status: InvoiceResponse["status"]) {
+  function statusLabel(status: InvoiceListItemResponse["status"]) {
     return status === "FINAL"
       ? "Final"
       : "Draft";
   }
 
-  function statusVariant(status: InvoiceResponse["status"]): "success" | "info" | "warning" {
+  function statusVariant(status: InvoiceListItemResponse["status"]): "success" | "info" | "warning" {
     return status === "FINAL"
       ? "success"
       : "warning";

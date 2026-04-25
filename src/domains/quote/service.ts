@@ -16,6 +16,7 @@ import type { Prisma } from "@/generated/prisma/client";
 import type {
   QuoteResponse,
   QuoteItemResponse,
+  QuoteListItemResponse,
   QuoteFilters,
   CreateQuoteInput,
   UpdateQuoteInput,
@@ -39,6 +40,7 @@ import { getQuotePaymentFollowUpBadgeState } from "./payment-follow-up";
 // ── DTO mapper ─────────────────────────────────────────────────────────────
 
 type QuoteWithRelations = Awaited<ReturnType<typeof quoteRepository.findById>>;
+type QuoteListRow = Awaited<ReturnType<typeof quoteRepository.findMany>>["quotes"][number];
 const MAX_QUOTE_NUMBER_ATTEMPTS = 3;
 
 function publicResponseErrorMessage(status: string | null | undefined): string {
@@ -215,6 +217,44 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
   };
 }
 
+function toQuoteListItem(quote: QuoteListRow): QuoteListItemResponse {
+  return {
+    id: quote.id,
+    quoteNumber: quote.quoteNumber,
+    quoteStatus: (quote.quoteStatus ?? "DRAFT") as QuoteResponse["quoteStatus"],
+    date: getDateOnlyKey(quote.date) ?? quote.date.toISOString(),
+    staffId: quote.staffId ?? null,
+    expirationDate: quote.expirationDate ? getDateOnlyKey(quote.expirationDate) ?? quote.expirationDate.toISOString() : null,
+    type: quote.type,
+    department: quote.department,
+    category: quote.category,
+    accountNumber: quote.accountNumber ?? "",
+    totalAmount: Number(quote.totalAmount),
+    recipientName: quote.recipientName ?? "",
+    recipientOrg: quote.recipientOrg ?? "",
+    createdAt: quote.createdAt.toISOString(),
+    staff: quote.staff
+      ? {
+          id: quote.staff.id,
+          name: quote.staff.name,
+          title: quote.staff.title,
+          department: quote.staff.department,
+        }
+      : null,
+    contact: quote.contact
+      ? {
+          id: quote.contact.id,
+          name: quote.contact.name,
+          org: quote.contact.org,
+        }
+      : null,
+    creatorId: quote.creator.id,
+    creatorName: quote.creator.name,
+    paymentDetailsResolved: Boolean(quote.paymentMethod || quote.convertedToInvoice?.paymentMethod),
+    paymentFollowUpBadge: null,
+  };
+}
+
 async function attachQuotePaymentFollowUpBadges(
   quotes: QuoteResponse[],
 ): Promise<QuoteResponse[]> {
@@ -241,6 +281,36 @@ async function attachQuotePaymentFollowUpBadges(
       sentAttempts: sentAttemptsByInvoiceId[quote.id] ?? 0,
     }),
   }));
+}
+
+async function mapQuoteListItemsWithPaymentBadges(quotes: QuoteListRow[]): Promise<QuoteListItemResponse[]> {
+  const eligibleIds = quotes
+    .filter((quote) =>
+      quote.quoteStatus === "ACCEPTED" &&
+      !quote.paymentMethod &&
+      !quote.convertedToInvoice?.paymentMethod &&
+      Boolean(quote.shareToken) &&
+      Boolean(quote.recipientEmail) &&
+      !quote.convertedToInvoice,
+    )
+    .map((quote) => quote.id);
+
+  const sentAttemptsByInvoiceId = await quoteRepository.countPaymentReminderAttemptsByInvoiceIds(eligibleIds);
+
+  return quotes.map((quote) => {
+    const paymentDetailsResolved = Boolean(quote.paymentMethod || quote.convertedToInvoice?.paymentMethod);
+    return {
+      ...toQuoteListItem(quote),
+      paymentFollowUpBadge: getQuotePaymentFollowUpBadgeState({
+        quoteStatus: (quote.quoteStatus ?? "DRAFT") as QuoteResponse["quoteStatus"],
+        paymentDetailsResolved,
+        hasShareToken: Boolean(quote.shareToken),
+        hasRecipientEmail: Boolean(quote.recipientEmail),
+        hasConvertedInvoice: Boolean(quote.convertedToInvoice),
+        sentAttempts: sentAttemptsByInvoiceId[quote.id] ?? 0,
+      }),
+    };
+  });
 }
 
 function calculateLineItems(
@@ -342,9 +412,7 @@ export const quoteService = {
    */
   async list(filters: QuoteFilters) {
     const { quotes, total, page, pageSize } = await quoteRepository.findMany(filters);
-    const mappedQuotes = await attachQuotePaymentFollowUpBadges(
-      quotes.map((q) => toQuoteResponse(q as unknown as NonNullable<QuoteWithRelations>)),
-    );
+    const mappedQuotes = await mapQuoteListItemsWithPaymentBadges(quotes);
     return {
       quotes: mappedQuotes,
       total,

@@ -2,6 +2,7 @@
 import { ApiError } from "@/domains/shared/types";
 import type {
   QuoteResponse,
+  QuoteListItemResponse,
   CreateQuoteInput,
   UpdateQuoteInput,
   QuoteFilters,
@@ -41,7 +42,7 @@ function buildFilterParams(filters: QuoteFilters): URLSearchParams {
 }
 
 export interface QuoteListResponse {
-  quotes: QuoteResponse[];
+  quotes: QuoteListItemResponse[];
   total: number;
   page: number;
   pageSize: number;

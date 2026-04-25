@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { formatAmount, formatDate, getInitials } from "@/lib/formatters";
 import { invoiceApi } from "@/domains/invoice/api-client";
 import { quoteApi } from "@/domains/quote/api-client";
-import type { InvoiceResponse } from "@/domains/invoice/types";
+import type { InvoiceListItemResponse } from "@/domains/invoice/types";
 import type { FollowUpBadgeState } from "@/domains/follow-up/types";
 import { useDashboardBootstrapData } from "./dashboard-bootstrap-provider";
 import type { DashboardActivityItem } from "@/domains/dashboard/types";
@@ -100,7 +100,7 @@ export function RecentActivity({
         quoteApi.list({ pageSize: 10, sortBy: "createdAt", sortOrder: "desc" }),
       ]);
 
-      const invoiceItems: DashboardActivityItem[] = invoiceData.invoices.map((inv: InvoiceResponse) => ({
+      const invoiceItems: DashboardActivityItem[] = invoiceData.invoices.map((inv: InvoiceListItemResponse) => ({
         type: "invoice" as const,
         id: inv.id,
         number: inv.invoiceNumber ?? null,

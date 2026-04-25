@@ -7,27 +7,50 @@ import { addDaysToDateKey, getDateKeyInLosAngeles, zonedDateTimeToUtc } from "@/
 
 // ── Shared include shapes ──────────────────────────────────────────────────
 
-const listInclude = {
+const listSelect = {
+  id: true,
+  invoiceNumber: true,
+  date: true,
+  staffId: true,
+  status: true,
+  type: true,
+  department: true,
+  category: true,
+  accountCode: true,
+  accountNumber: true,
+  notes: true,
+  totalAmount: true,
+  isRecurring: true,
+  isRunning: true,
+  runningTitle: true,
+  createdAt: true,
   staff: { select: { id: true, name: true, title: true, department: true } },
-  contact: { select: { id: true, name: true, email: true, phone: true, org: true, department: true, title: true, notes: true, createdAt: true } },
+  contact: { select: { id: true, name: true, org: true } },
   creator: { select: { id: true, name: true, username: true } },
-  archiver: { select: { id: true, name: true } },
   items: {
     orderBy: { sortOrder: "asc" as const },
-    select: {
-      id: true,
-      description: true,
-      quantity: true,
-      unitPrice: true,
-      extendedPrice: true,
-      sortOrder: true,
-      isTaxable: true,
-      costPrice: true,
-      marginOverride: true,
-      sku: true,
-    },
+    take: 1,
+    select: { description: true },
   },
   _count: { select: { items: true } },
+} as const;
+
+const exportSelect = {
+  invoiceNumber: true,
+  date: true,
+  category: true,
+  department: true,
+  accountNumber: true,
+  accountCode: true,
+  totalAmount: true,
+  status: true,
+  notes: true,
+  staff: { select: { name: true } },
+  contact: { select: { name: true } },
+  items: {
+    orderBy: { sortOrder: "asc" as const },
+    select: { description: true },
+  },
 } as const;
 
 const detailInclude = {
@@ -151,7 +174,7 @@ export async function findMany(filters: InvoiceFilters & {
   const [invoices, total] = await prisma.$transaction([
     prisma.invoice.findMany({
       where,
-      include: listInclude,
+      select: listSelect,
       orderBy: { [sortField]: sortDir },
       skip: (page - 1) * pageSize,
       take: pageSize,
@@ -160,6 +183,25 @@ export async function findMany(filters: InvoiceFilters & {
   ]);
 
   return { invoices, total, page, pageSize };
+}
+
+export async function findManyForExport(filters: InvoiceFilters & {
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}) {
+  const where = buildWhere(filters);
+  const page = Math.max(1, filters.page ?? 1);
+  const pageSize = Math.max(1, filters.pageSize ?? 100_000);
+  const sortField = ALLOWED_SORT_FIELDS.has(filters.sortBy ?? "") ? (filters.sortBy ?? "createdAt") : "createdAt";
+  const sortDir = filters.sortOrder ?? "desc";
+
+  return prisma.invoice.findMany({
+    where,
+    select: exportSelect,
+    orderBy: { [sortField]: sortDir },
+    skip: (page - 1) * pageSize,
+    take: pageSize,
+  });
 }
 
 /**
