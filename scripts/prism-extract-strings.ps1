@@ -2,10 +2,17 @@ param(
     [string] $Root = 'C:\Program Files (x86)\WinPRISM',
     [string] $Pattern = '^(WPAdmin\.exe|WinPrism\.exe|ItemMnt\.dll|VendMnt\.dll|WPInv\.dll|WPData\.dll|WPPdt\.dll|WPComm\.dll|WPPosCmn\.dll|WPUtility\.dll|WPBuyBack\.dll|WPCredit\.dll|WPTender\.dll|WA_AP\.dll|WA_AR\.dll|WA_GL\.dll|WACommon\.dll)$',
     [int] $MinLen = 6,
-    [string] $OutDir = 'C:\Users\MONTALMA2\code\laportal\docs\prism\strings'
+    [string] $OutDir = ''
 )
 
 $ErrorActionPreference = 'Stop'
+
+if ([string]::IsNullOrWhiteSpace($OutDir)) {
+    $scriptRoot = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
+    $repoRoot = Split-Path -Parent $scriptRoot
+    $OutDir = Join-Path $repoRoot 'docs/prism/strings'
+}
+
 if (-not (Test-Path $OutDir)) { New-Item -ItemType Directory -Path $OutDir -Force | Out-Null }
 
 $Files = Get-ChildItem -Path $Root -File |
