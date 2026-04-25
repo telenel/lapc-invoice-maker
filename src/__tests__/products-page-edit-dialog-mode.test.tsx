@@ -465,6 +465,11 @@ describe("ProductsPage edit dialog mode integration", () => {
 
     render(<ProductsPage />);
 
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "New Item" })).toBeEnabled();
+    });
+    await user.click(screen.getByRole("button", { name: "New Item" }));
+
     await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
 
     await waitFor(() => {
@@ -502,6 +507,11 @@ describe("ProductsPage edit dialog mode integration", () => {
     });
 
     render(<ProductsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "New Item" })).toBeEnabled();
+    });
+    await user.click(screen.getByRole("button", { name: "New Item" }));
 
     await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
 
@@ -563,6 +573,11 @@ describe("ProductsPage edit dialog mode integration", () => {
     });
 
     render(<ProductsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "New Item" })).toBeEnabled();
+    });
+    await user.click(screen.getByRole("button", { name: "New Item" }));
 
     await user.click(screen.getByRole("button", { name: "Open edit dialog" }));
 
