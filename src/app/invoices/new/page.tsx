@@ -6,8 +6,7 @@ import { PrinterIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useInvoiceForm } from "@/components/invoice/invoice-form";
 import { KeyboardMode } from "@/components/invoice/keyboard-mode";
-import { ProductSearchPanel } from "@/components/shared/product-search-panel";
-import { openRegisterPrintWindow } from "@/components/shared/register-print-view";
+import { LazyProductSearchPanel } from "@/components/shared/lazy-product-search-panel";
 import { CATALOG_ITEMS_STORAGE_KEY } from "@/domains/product/constants";
 import type { SelectedProduct } from "@/domains/product/types";
 import { formatDateLong as formatDate } from "@/lib/formatters";
@@ -74,9 +73,10 @@ export default function NewInvoicePage() {
 
   const invoiceForm = useInvoiceForm(initial);
 
-  function handlePrintForRegister() {
+  async function handlePrintForRegister() {
     const { form, subtotal, taxAmount, grandTotal } = invoiceForm;
     if (form.items.length === 0) return;
+    const { openRegisterPrintWindow } = await import("@/components/shared/register-print-view");
     openRegisterPrintWindow({
       documentNumber: form.invoiceNumber || form.runningTitle || "Draft Invoice",
       documentType: "Invoice",
@@ -116,7 +116,7 @@ export default function NewInvoicePage() {
           <KeyboardMode {...invoiceForm} />
         </div>
         <div className="order-1 lg:order-2 lg:sticky lg:top-8">
-          <ProductSearchPanel onAddProducts={(products) => invoiceForm.addItems(mapProductsToItems(products))} />
+          <LazyProductSearchPanel onAddProducts={(products) => invoiceForm.addItems(mapProductsToItems(products))} />
         </div>
       </div>
     </div>
