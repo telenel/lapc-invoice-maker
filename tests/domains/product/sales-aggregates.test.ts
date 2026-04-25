@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildAggregateRecomputeSql, runAggregateRecompute } from "@/domains/product/sales-aggregates";
+import {
+  buildAggregateRecomputeSql,
+  buildAnalyticsRollupRefreshSql,
+  runAggregateRecompute,
+} from "@/domains/product/sales-aggregates";
 
 describe("sales-aggregates", () => {
   it("buildAggregateRecomputeSql includes all 14 aggregate assignments", () => {
@@ -28,6 +32,13 @@ describe("sales-aggregates", () => {
   it("buildAggregateRecomputeSql scopes the update to a SKU batch", () => {
     expect(buildAggregateRecomputeSql()).toContain("sku = ANY($1::bigint[])");
     expect(buildAggregateRecomputeSql()).toContain("SELECT COUNT(*)::int AS affected FROM updated");
+  });
+
+  it("buildAnalyticsRollupRefreshSql refreshes both analytics materialized views", () => {
+    expect(buildAnalyticsRollupRefreshSql()).toEqual([
+      "REFRESH MATERIALIZED VIEW analytics_sales_daily",
+      "REFRESH MATERIALIZED VIEW analytics_sales_hourly",
+    ]);
   });
 
   it("runAggregateRecompute walks sale-active SKU batches and totals the affected rows", async () => {
@@ -63,6 +74,14 @@ describe("sales-aggregates", () => {
       4,
       expect.stringContaining("sku = ANY($1::bigint[])"),
       [["30"]],
+    );
+    expect(query).toHaveBeenNthCalledWith(
+      6,
+      "REFRESH MATERIALIZED VIEW analytics_sales_daily",
+    );
+    expect(query).toHaveBeenNthCalledWith(
+      7,
+      "REFRESH MATERIALIZED VIEW analytics_sales_hourly",
     );
   });
 

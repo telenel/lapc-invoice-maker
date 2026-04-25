@@ -5,21 +5,21 @@ vi.mock("next-auth", () => ({
   getServerSession: vi.fn(),
 }));
 
-vi.mock("@/domains/analytics/service", () => ({
-  analyticsService: {
-    getAnalytics: vi.fn(),
+vi.mock("@/domains/analytics/cache", () => ({
+  analyticsCache: {
+    getCombined: vi.fn(),
   },
 }));
 
 import { getServerSession } from "next-auth";
-import { analyticsService } from "@/domains/analytics/service";
+import { analyticsCache } from "@/domains/analytics/cache";
 import { GET } from "@/app/api/analytics/route";
 
 describe("GET /api/analytics", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getServerSession).mockResolvedValue({ user: { id: "u1", role: "admin" } } as never);
-    vi.mocked(analyticsService.getAnalytics).mockResolvedValue({
+    vi.mocked(analyticsCache.getCombined).mockResolvedValue({
       summary: {
         count: 0,
         total: 0,
@@ -67,6 +67,6 @@ describe("GET /api/analytics", () => {
     const response = await GET(new NextRequest("http://localhost/api/analytics"));
 
     expect(response.status).toBe(200);
-    expect(analyticsService.getAnalytics).toHaveBeenCalledWith({ dateFrom: undefined, dateTo: undefined });
+    expect(analyticsCache.getCombined).toHaveBeenCalledWith({ dateFrom: undefined, dateTo: undefined });
   });
 });

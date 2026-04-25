@@ -62,7 +62,7 @@ describe("analyticsRepository non-merchandise filters", () => {
     );
     expect(topProductQueries).toHaveLength(2);
     for (const call of topProductQueries) {
-      expect(call.sql).toMatch(/st\.sku(?:::integer)? NOT IN/);
+      expect(call.sql).toContain("sd.sku NOT IN");
       expect(call.sql).toContain("p.dept_name");
       expect(call.sql).toContain("p.cat_name");
       expect(call.params.at(-2)).toEqual([1, 2]);
@@ -90,19 +90,19 @@ describe("analyticsRepository non-merchandise filters", () => {
     const categoryMixQuery = findQueryCall((sql) =>
       sql.includes("AS category") && sql.includes("GROUP BY COALESCE(NULLIF(TRIM(p.dept_name), ''), 'Uncategorized')"),
     );
-    expect(categoryMixQuery.sql).toMatch(/st\.sku(?:::integer)? NOT IN/);
+    expect(categoryMixQuery.sql).toContain("sd.sku NOT IN");
     expect(categoryMixQuery.sql).toContain("p.dept_name");
     expect(categoryMixQuery.sql).toContain("p.cat_name");
     expect(categoryMixQuery.params.at(-2)).toEqual([1, 2]);
     expect(categoryMixQuery.params.at(-1)).toEqual(["SHIPPING", "WEB SHIPPING", "GIFT"]);
 
     const revenueConcentrationQuery = findQueryCall((sql) =>
-      sql.includes("GROUP BY st.sku") &&
+      sql.includes("GROUP BY sd.sku") &&
       sql.includes("ORDER BY revenue DESC") &&
       !sql.includes("MAX(pwd.trend_direction) AS trend_direction"),
     );
     expect(revenueConcentrationQuery.sql).toContain("LEFT JOIN products p");
-    expect(revenueConcentrationQuery.sql).toMatch(/st\.sku(?:::integer)? NOT IN/);
+    expect(revenueConcentrationQuery.sql).toContain("sd.sku NOT IN");
     expect(revenueConcentrationQuery.sql).toContain("p.dept_name");
     expect(revenueConcentrationQuery.sql).toContain("p.cat_name");
     expect(revenueConcentrationQuery.params.at(-2)).toEqual([1, 2]);

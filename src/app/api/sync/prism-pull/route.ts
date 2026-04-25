@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isPrismConfigured } from "@/lib/prism";
 import { prisma } from "@/lib/prisma";
 import { runPrismPull } from "@/domains/product/prism-sync";
+import { analyticsCache } from "@/domains/analytics/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
@@ -85,6 +86,7 @@ async function handle(request: NextRequest): Promise<NextResponse> {
         error: txnSyncError,
       },
     });
+    analyticsCache.clear();
     return NextResponse.json({
       runId: run.id,
       status,

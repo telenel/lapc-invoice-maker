@@ -518,7 +518,7 @@ describe("Main Nav Page Bootstraps", () => {
     );
 
     expect(screen.getByRole("tab", { name: /Operations/i })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: /Monthly CopyTech trend/i })).toBeInTheDocument();
+    expect(screen.getByTestId("dynamic-chart")).toBeInTheDocument();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

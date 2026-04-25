@@ -66,6 +66,15 @@ export interface AnalyticsResponse {
   operations: OperationsAnalytics;
 }
 
+export interface FinanceAnalytics {
+  summary: AnalyticsSummary;
+  byCategory: CategoryStat[];
+  byMonth: MonthStat[];
+  byDepartment: DepartmentStat[];
+  trend: TrendPoint[];
+  byUser: UserStat[];
+}
+
 export interface AnalyticsFilters {
   dateFrom?: string;
   dateTo?: string;
