@@ -49,7 +49,7 @@ function matchesSidebarEvent(candidate: CalendarEventItem, current: CalendarEven
 }
 
 const MOBILE_VIEWPORT_WIDTH = 1024;
-const MIN_WEEK_CALENDAR_WIDTH = 1080;
+const MIN_WEEK_CALENDAR_WIDTH = 920;
 const DESKTOP_SIDEBAR_WIDTH = 240;
 const STACKED_LAYOUT_MIN_CONTENT_WIDTH = MIN_WEEK_CALENDAR_WIDTH + DESKTOP_SIDEBAR_WIDTH;
 
@@ -149,8 +149,11 @@ export function CalendarView({
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
         const navH = document.querySelector("nav")?.getBoundingClientRect().height ?? 64;
-        const availableWidth = mainEl.clientWidth || window.innerWidth;
-        const mobileViewport = window.innerWidth < MOBILE_VIEWPORT_WIDTH;
+        const bodyZoom = parseFloat(getComputedStyle(document.body).zoom) || 1;
+        const cssViewportH = window.innerHeight / bodyZoom;
+        const cssViewportW = window.innerWidth / bodyZoom;
+        const availableWidth = mainEl.clientWidth || cssViewportW;
+        const mobileViewport = cssViewportW < MOBILE_VIEWPORT_WIDTH;
         const stackedLayout = availableWidth < STACKED_LAYOUT_MIN_CONTENT_WIDTH;
         setIsMobileViewport(mobileViewport);
         setUseStackedLayout(stackedLayout);
@@ -158,19 +161,21 @@ export function CalendarView({
         if (stackedLayout) {
           mainEl.style.overflow = prevOverflow;
           mainEl.style.padding = prevPadding;
+          mainEl.style.removeProperty("height");
           document.documentElement.style.removeProperty("--fc-slot-height");
           document.documentElement.style.removeProperty("--fc-slot-font");
           const sidebarHeight =
             document.querySelector<HTMLElement>("[data-calendar-sidebar]")?.getBoundingClientRect().height ?? 320;
           const minimumCalendarHeight = mobileViewport ? 480 : 560;
-          setCalendarHeight(Math.max(window.innerHeight - navH - sidebarHeight - 24, minimumCalendarHeight));
+          setCalendarHeight(Math.max(cssViewportH - navH - sidebarHeight - 24, minimumCalendarHeight));
           calendarRef.current?.getApi().updateSize();
           return;
         }
 
         mainEl.style.overflow = "hidden";
         mainEl.style.padding = "0";
-        setCalendarHeight(window.innerHeight - navH);
+        mainEl.style.height = `${cssViewportH - navH}px`;
+        setCalendarHeight(cssViewportH - navH);
 
         requestAnimationFrame(() => {
           const container = containerRef.current;
@@ -573,7 +578,7 @@ export function CalendarView({
   return (
     <div
       className={cn("flex min-w-0", useStackedLayout ? "flex-col gap-3" : "")}
-      style={useStackedLayout ? undefined : { height: "calc(100vh - 64px)" }}
+      style={useStackedLayout ? undefined : { height: `${calendarHeight}px` }}
     >
       {selectedEvent && (
         <AddEventModal
@@ -655,6 +660,7 @@ export function CalendarView({
                 eventWillUnmount={handleEventWillUnmount}
                 height={calendarHeight}
                 weekends={false}
+                firstDay={1}
                 slotMinTime="07:00:00"
                 slotMaxTime="19:30:00"
                 nowIndicator

@@ -235,7 +235,7 @@ function buildTimelineEvents(events: AgendaStreamEvent[]): TimelineLaneEvent[] {
 
 function getCompactTrackHeight(events: TimelineLaneEvent[]): number {
   const overlapDepth = events.reduce((maxDepth, event) => Math.max(maxDepth, event.col + 1), 1);
-  return Math.max(22, overlapDepth * 22);
+  return Math.max(20, overlapDepth * 20);
 }
 
 function buildDensityMap(events: AgendaStreamEvent[]): Record<string, number> {
@@ -319,7 +319,7 @@ function CompactBar({
   const trackHeight = getCompactTrackHeight(events);
 
   return (
-    <div className={styles.compactBar} style={{ minHeight: `${trackHeight + 44}px` }}>
+    <div className={styles.compactBar} style={{ minHeight: `${trackHeight + 28}px` }}>
       <div className={styles.compactAxis}>
         {[8, 10, 12, 14, 16, 18].map((hour) => (
           <div
@@ -333,7 +333,7 @@ function CompactBar({
         {isToday && nowMin != null ? (
           <div
             className={styles.compactNow}
-            style={{ left: `${getTimelinePercent(nowMin)}%`, bottom: `${-(trackHeight + 12)}px` }}
+            style={{ left: `${getTimelinePercent(nowMin)}%`, bottom: `${-(trackHeight + 8)}px` }}
             aria-hidden="true"
           />
         ) : null}
@@ -990,71 +990,16 @@ export function AgendaStreamView({
     });
   }
 
+  const hasExternalNav = Boolean(onNavigateNextWeek || onNavigatePreviousWeek || onNavigateToday);
+
   return (
     <div className={styles.shell}>
-      <header className={styles.topBar}>
-        <div className={styles.topBarLeft}>
-          <div className={styles.navButtons}>
-            <button
-              type="button"
-              className={styles.secondaryButton}
-              onClick={() => {
-                if (onNavigateToday) {
-                  onNavigateToday();
-                  return;
-                }
-
-                updateWeekStart(todayDateKey);
-              }}
-            >
-              Today
-            </button>
-            <button
-              type="button"
-              className={styles.iconButton}
-              aria-label="Previous week"
-              onClick={() => {
-                if (onNavigatePreviousWeek) {
-                  onNavigatePreviousWeek();
-                  return;
-                }
-
-                updateWeekStart(addDaysToDateKey(currentWeekStart, -7));
-              }}
-            >
-              {"<"}
-            </button>
-            <button
-              type="button"
-              className={styles.iconButton}
-              aria-label="Next week"
-              onClick={() => {
-                if (onNavigateNextWeek) {
-                  onNavigateNextWeek();
-                  return;
-                }
-
-                updateWeekStart(addDaysToDateKey(currentWeekStart, 7));
-              }}
-            >
-              {">"}
-            </button>
-          </div>
-
-          <div>
-            <div className={styles.weekLabel}>{formatWeekLabel(currentWeekStart)}</div>
-            <h1 className={styles.monthHeading}>{formatMonthHeading(currentWeekStart)}</h1>
-          </div>
-        </div>
-
-        <div className={styles.topBarRight}>
-          <div className={styles.statBlock}>
-            <span className={styles.statLabel}>Events</span>
+      {hasExternalNav ? (
+        <div className={styles.utilityBar}>
+          <div className={styles.utilityStats}>
             <span className={styles.statValue}>{`${stats.totalEvents} events`}</span>
-          </div>
-          <div className={styles.statBlock}>
-            <span className={styles.statLabel}>Catering</span>
-            <span className={styles.cateringValue}>{formatCurrency(stats.cateringTotal)}</span>
+            <span className={styles.statDivider} aria-hidden="true">·</span>
+            <span className={styles.cateringValue}>{formatCurrency(stats.cateringTotal)} catering</span>
           </div>
           <label className={styles.showPastToggle}>
             <input
@@ -1065,7 +1010,61 @@ export function AgendaStreamView({
             <span>Show past</span>
           </label>
         </div>
-      </header>
+      ) : (
+        <header className={styles.topBar}>
+          <div className={styles.topBarLeft}>
+            <div className={styles.navButtons}>
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={() => updateWeekStart(todayDateKey)}
+              >
+                Today
+              </button>
+              <button
+                type="button"
+                className={styles.iconButton}
+                aria-label="Previous week"
+                onClick={() => updateWeekStart(addDaysToDateKey(currentWeekStart, -7))}
+              >
+                {"<"}
+              </button>
+              <button
+                type="button"
+                className={styles.iconButton}
+                aria-label="Next week"
+                onClick={() => updateWeekStart(addDaysToDateKey(currentWeekStart, 7))}
+              >
+                {">"}
+              </button>
+            </div>
+
+            <div>
+              <div className={styles.weekLabel}>{formatWeekLabel(currentWeekStart)}</div>
+              <h1 className={styles.monthHeading}>{formatMonthHeading(currentWeekStart)}</h1>
+            </div>
+          </div>
+
+          <div className={styles.topBarRight}>
+            <div className={styles.statBlock}>
+              <span className={styles.statLabel}>Events</span>
+              <span className={styles.statValue}>{`${stats.totalEvents} events`}</span>
+            </div>
+            <div className={styles.statBlock}>
+              <span className={styles.statLabel}>Catering</span>
+              <span className={styles.cateringValue}>{formatCurrency(stats.cateringTotal)}</span>
+            </div>
+            <label className={styles.showPastToggle}>
+              <input
+                type="checkbox"
+                checked={showPast}
+                onChange={(event) => toggleShowPast(event.target.checked)}
+              />
+              <span>Show past</span>
+            </label>
+          </div>
+        </header>
+      )}
 
       <div
         className={styles.body}
