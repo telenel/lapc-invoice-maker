@@ -43,6 +43,7 @@ vi.mock("@/components/ui/button", () => ({
 }));
 
 vi.mock("@/components/products/product-filters", () => ({
+  ProductFilterSummary: () => <div data-testid="filter-summary" />,
   ProductFiltersBar: ({ filters }: { filters: { tab: string } }) => (
     <div data-testid="filters-bar">filters:{filters.tab}</div>
   ),
