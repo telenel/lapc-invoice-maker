@@ -1,8 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { addDaysToDateKey, getDateKeyInLosAngeles, shiftDateKey, zonedDateTimeToUtc } from "@/lib/date-utils";
 import { NON_MERCH_DEPT_NAMES, NON_MERCH_SKUS } from "@/domains/product/non-merch-skus";
-import { buildIncludedFinanceWhere } from "@/domains/shared/finance";
-import type { AnalyticsDateRange, AnalyticsFilters, OperationsSnapshot } from "./types";
+import type { AnalyticsDateRange, FinanceAnalytics, OperationsSnapshot } from "./types";
 
 type NumericLike = number | string | bigint | null | undefined;
 type DateLike = Date | string | null | undefined;
@@ -12,6 +11,17 @@ type SalesSummaryRow = {
   units: NumericLike;
   receipts: NumericLike;
   discount_amount: NumericLike;
+};
+
+type FinanceStatsRow = {
+  bucket_type: "summary" | "category" | "month" | "department" | "user";
+  bucket_key: string | null;
+  count: NumericLike;
+  total: NumericLike;
+  finalized_count: NumericLike;
+  finalized_total: NumericLike;
+  expected_count: NumericLike;
+  expected_total: NumericLike;
 };
 
 type MonthlySalesRow = {
@@ -106,6 +116,30 @@ type LowStockSqlRow = {
   min_stock: NumericLike;
   units_sold_30d: NumericLike;
   last_sale_date: DateLike;
+};
+
+type CopyTechSummaryRow = {
+  invoice_revenue: NumericLike;
+  invoice_count: NumericLike;
+  quote_revenue: NumericLike;
+  quote_count: NumericLike;
+};
+
+type CopyTechMonthlyRow = CopyTechSummaryRow & {
+  month: string;
+};
+
+type CopyTechServiceMixSqlRow = {
+  service: string;
+  revenue: NumericLike;
+  quantity: NumericLike;
+};
+
+type CopyTechRequesterSqlRow = {
+  name: string | null;
+  revenue: NumericLike;
+  invoice_count: NumericLike;
+  quote_count: NumericLike;
 };
 
 function toNumber(value: NumericLike, fallback = 0): number {
@@ -213,18 +247,128 @@ function buildNonMerchandiseFilterSql({
   `;
 }
 
+function toAggregateBucket(row: FinanceStatsRow) {
+  return {
+    count: toInteger(row.count),
+    total: toNumber(row.total),
+    finalizedCount: toInteger(row.finalized_count),
+    finalizedTotal: toNumber(row.finalized_total),
+    expectedCount: toInteger(row.expected_count),
+    expectedTotal: toNumber(row.expected_total),
+  };
+}
+
+async function findFinanceAnalytics(range: AnalyticsDateRange): Promise<FinanceAnalytics> {
+  const rows = await prisma.$queryRawUnsafe<FinanceStatsRow[]>(
+    `
+      WITH included AS (
+        SELECT
+          i.date AS document_date,
+          i.total_amount,
+          i.category,
+          i.department,
+          COALESCE(NULLIF(TRIM(u.name), ''), 'Unknown') AS user_name,
+          CASE
+            WHEN i.type = 'INVOICE' AND i.status = 'FINAL' THEN 'finalized'
+            ELSE 'expected'
+          END AS lane
+        FROM invoices i
+        LEFT JOIN users u
+          ON u.id = i.created_by
+        WHERE i.archived_at IS NULL
+          AND i.date BETWEEN $1::date AND $2::date
+          AND (
+            (i.type = 'INVOICE' AND i.status IN ('FINAL', 'DRAFT', 'PENDING_CHARGE'))
+            OR (
+              i.type = 'QUOTE'
+              AND i.quote_status IN ('DRAFT', 'SENT', 'SUBMITTED_EMAIL', 'SUBMITTED_MANUAL', 'ACCEPTED')
+              AND NOT EXISTS (
+                SELECT 1
+                FROM invoices converted
+                WHERE converted.converted_from_quote_id = i.id
+              )
+            )
+          )
+      ),
+      bucketed AS (
+        SELECT 'summary'::text AS bucket_type, NULL::text AS bucket_key, * FROM included
+        UNION ALL
+        SELECT 'category'::text AS bucket_type, category AS bucket_key, * FROM included
+        UNION ALL
+        SELECT 'month'::text AS bucket_type, TO_CHAR(document_date, 'YYYY-MM') AS bucket_key, * FROM included
+        UNION ALL
+        SELECT 'department'::text AS bucket_type, department AS bucket_key, * FROM included
+        UNION ALL
+        SELECT 'user'::text AS bucket_type, user_name AS bucket_key, * FROM included
+      )
+      SELECT
+        bucket_type,
+        bucket_key,
+        COUNT(*) AS count,
+        COALESCE(SUM(total_amount), 0) AS total,
+        COUNT(*) FILTER (WHERE lane = 'finalized') AS finalized_count,
+        COALESCE(SUM(total_amount) FILTER (WHERE lane = 'finalized'), 0) AS finalized_total,
+        COUNT(*) FILTER (WHERE lane = 'expected') AS expected_count,
+        COALESCE(SUM(total_amount) FILTER (WHERE lane = 'expected'), 0) AS expected_total
+      FROM bucketed
+      GROUP BY bucket_type, bucket_key
+      ORDER BY bucket_type, bucket_key
+    `,
+    range.dateFrom,
+    range.dateTo,
+  );
+
+  const emptySummary: FinanceStatsRow = {
+    bucket_type: "summary",
+    bucket_key: null,
+    count: 0,
+    total: 0,
+    finalized_count: 0,
+    finalized_total: 0,
+    expected_count: 0,
+    expected_total: 0,
+  };
+  const summary = rows.find((row) => row.bucket_type === "summary") ?? emptySummary;
+  const byMonth = rows
+    .filter((row) => row.bucket_type === "month" && row.bucket_key)
+    .map((row) => ({ month: row.bucket_key ?? "", ...toAggregateBucket(row) }))
+    .sort((left, right) => left.month.localeCompare(right.month));
+
+  return {
+    summary: toAggregateBucket(summary),
+    byCategory: rows
+      .filter((row) => row.bucket_type === "category" && row.bucket_key)
+      .map((row) => ({ category: row.bucket_key ?? "Uncategorized", ...toAggregateBucket(row) }))
+      .sort((left, right) => right.total - left.total),
+    byMonth,
+    byDepartment: rows
+      .filter((row) => row.bucket_type === "department" && row.bucket_key)
+      .map((row) => ({ department: row.bucket_key ?? "Unknown", ...toAggregateBucket(row) }))
+      .sort((left, right) => left.department.localeCompare(right.department)),
+    trend: byMonth.map((row) => ({
+      month: row.month,
+      count: row.count,
+      finalizedCount: row.finalizedCount,
+      expectedCount: row.expectedCount,
+    })),
+    byUser: rows
+      .filter((row) => row.bucket_type === "user" && row.bucket_key)
+      .map((row) => ({ user: row.bucket_key ?? "Unknown", ...toAggregateBucket(row) }))
+      .sort((left, right) => right.total - left.total),
+  };
+}
+
 async function findSalesSummary(range: AnalyticsDateRange) {
   const rows = await prisma.$queryRawUnsafe<SalesSummaryRow[]>(
     `
       SELECT
-        COALESCE(SUM(st.ext_price), 0) AS revenue,
-        COALESCE(SUM(st.qty), 0) AS units,
-        COUNT(DISTINCT st.transaction_id) AS receipts,
-        COALESCE(SUM(st.discount_amt), 0) AS discount_amount
-      FROM sales_transactions st
-      WHERE st.location_id = 2
-        AND st.dtl_f_status <> 1
-        AND (st.process_date AT TIME ZONE 'America/Los_Angeles')::date BETWEEN $1::date AND $2::date
+        COALESCE(SUM(sd.revenue), 0) AS revenue,
+        COALESCE(SUM(sd.units), 0) AS units,
+        COALESCE(SUM(sd.receipts), 0) AS receipts,
+        COALESCE(SUM(sd.discount_amount), 0) AS discount_amount
+      FROM analytics_sales_daily sd
+      WHERE sd.location_id = 2
+        AND sd.sale_date BETWEEN $1::date AND $2::date
     `,
     range.dateFrom,
     range.dateTo,
@@ -242,15 +386,14 @@ async function findMonthlySales(range: AnalyticsDateRange) {
   const rows = await prisma.$queryRawUnsafe<MonthlySalesRow[]>(
     `
       SELECT
-        TO_CHAR(date_trunc('month', st.process_date AT TIME ZONE 'America/Los_Angeles'), 'YYYY-MM') AS month,
-        COALESCE(SUM(st.ext_price), 0) AS revenue,
-        COALESCE(SUM(st.qty), 0) AS units,
-        COUNT(DISTINCT st.transaction_id) AS receipts,
-        COALESCE(SUM(st.discount_amt), 0) / NULLIF(COALESCE(SUM(st.ext_price), 0), 0) AS discount_rate
-      FROM sales_transactions st
-      WHERE st.location_id = 2
-        AND st.dtl_f_status <> 1
-        AND (st.process_date AT TIME ZONE 'America/Los_Angeles')::date BETWEEN $1::date AND $2::date
+        TO_CHAR(date_trunc('month', sd.sale_date), 'YYYY-MM') AS month,
+        COALESCE(SUM(sd.revenue), 0) AS revenue,
+        COALESCE(SUM(sd.units), 0) AS units,
+        COALESCE(SUM(sd.receipts), 0) AS receipts,
+        COALESCE(SUM(sd.discount_amount), 0) / NULLIF(COALESCE(SUM(sd.revenue), 0), 0) AS discount_rate
+      FROM analytics_sales_daily sd
+      WHERE sd.location_id = 2
+        AND sd.sale_date BETWEEN $1::date AND $2::date
       GROUP BY 1
       ORDER BY 1 ASC
     `,
@@ -271,13 +414,12 @@ async function findWeekdaySales(range: AnalyticsDateRange) {
   const rows = await prisma.$queryRawUnsafe<WeekdaySalesRow[]>(
     `
       SELECT
-        EXTRACT(DOW FROM st.process_date AT TIME ZONE 'America/Los_Angeles')::int AS day_of_week,
-        COALESCE(SUM(st.ext_price), 0) AS revenue,
-        COUNT(DISTINCT st.transaction_id) AS receipts
-      FROM sales_transactions st
-      WHERE st.location_id = 2
-        AND st.dtl_f_status <> 1
-        AND (st.process_date AT TIME ZONE 'America/Los_Angeles')::date BETWEEN $1::date AND $2::date
+        EXTRACT(DOW FROM sd.sale_date)::int AS day_of_week,
+        COALESCE(SUM(sd.revenue), 0) AS revenue,
+        COALESCE(SUM(sd.receipts), 0) AS receipts
+      FROM analytics_sales_daily sd
+      WHERE sd.location_id = 2
+        AND sd.sale_date BETWEEN $1::date AND $2::date
       GROUP BY 1
       ORDER BY 1 ASC
     `,
@@ -296,13 +438,12 @@ async function findHourlySales(range: AnalyticsDateRange) {
   const rows = await prisma.$queryRawUnsafe<HourlySalesRow[]>(
     `
       SELECT
-        EXTRACT(HOUR FROM st.process_date AT TIME ZONE 'America/Los_Angeles')::int AS hour,
-        COALESCE(SUM(st.ext_price), 0) AS revenue,
-        COUNT(DISTINCT st.transaction_id) AS receipts
-      FROM sales_transactions st
-      WHERE st.location_id = 2
-        AND st.dtl_f_status <> 1
-        AND (st.process_date AT TIME ZONE 'America/Los_Angeles')::date BETWEEN $1::date AND $2::date
+        sh.hour,
+        COALESCE(SUM(sh.revenue), 0) AS revenue,
+        COALESCE(SUM(sh.receipts), 0) AS receipts
+      FROM analytics_sales_hourly sh
+      WHERE sh.location_id = 2
+        AND sh.sale_date BETWEEN $1::date AND $2::date
       GROUP BY 1
       ORDER BY 1 ASC
     `,
@@ -321,36 +462,34 @@ async function findTopProducts(range: AnalyticsDateRange, orderBy: "units" | "re
   const rows = await prisma.$queryRawUnsafe<ProductPerformanceSqlRow[]>(
     `
       SELECT
-        st.sku::integer AS sku,
+        sd.sku AS sku,
         COALESCE(
           NULLIF(TRIM(MAX(p.title)), ''),
           NULLIF(TRIM(MAX(p.description)), ''),
-          NULLIF(TRIM(MAX(st.description)), ''),
-          CONCAT('SKU ', st.sku::text)
+          CONCAT('SKU ', sd.sku::text)
         ) AS description,
         COALESCE(NULLIF(TRIM(MAX(p.dept_name)), ''), 'Uncategorized') AS department,
-        COALESCE(SUM(st.qty), 0) AS units,
-        COALESCE(SUM(st.ext_price), 0) AS revenue,
-        MAX(st.process_date AT TIME ZONE 'America/Los_Angeles') AS last_sale_date,
+        COALESCE(SUM(sd.units), 0) AS units,
+        COALESCE(SUM(sd.revenue), 0) AS revenue,
+        MAX(sd.sale_date) AS last_sale_date,
         MAX(pwd.trend_direction) AS trend_direction
-      FROM sales_transactions st
+      FROM analytics_sales_daily sd
       LEFT JOIN products p
-        ON p.sku = st.sku::integer
+        ON p.sku = sd.sku
       LEFT JOIN products_with_derived pwd
-        ON pwd.sku = st.sku::integer
-      WHERE st.location_id = 2
-        AND st.dtl_f_status <> 1
-        AND (st.process_date AT TIME ZONE 'America/Los_Angeles')::date BETWEEN $1::date AND $2::date
+        ON pwd.sku = sd.sku
+      WHERE sd.location_id = 2
+        AND sd.sale_date BETWEEN $1::date AND $2::date
 ${buildNonMerchandiseFilterSql({
-  skuColumn: "st.sku::integer",
+  skuColumn: "sd.sku",
   deptColumn: "p.dept_name",
   categoryColumn: "p.cat_name",
   skuParamIndex: 3,
   nameParamIndex: 4,
 })}
-      GROUP BY st.sku
-      HAVING COALESCE(SUM(st.ext_price), 0) > 0
-      ORDER BY ${orderBy === "units" ? "units DESC, revenue DESC" : "revenue DESC, units DESC"}, st.sku ASC
+      GROUP BY sd.sku
+      HAVING COALESCE(SUM(sd.revenue), 0) > 0
+      ORDER BY ${orderBy === "units" ? "units DESC, revenue DESC" : "revenue DESC, units DESC"}, sd.sku ASC
       LIMIT 8
     `,
     range.dateFrom,
@@ -442,16 +581,15 @@ async function findCategoryMix(range: AnalyticsDateRange) {
     `
       SELECT
         COALESCE(NULLIF(TRIM(MAX(p.dept_name)), ''), 'Uncategorized') AS category,
-        COALESCE(SUM(st.ext_price), 0) AS revenue,
-        COALESCE(SUM(st.qty), 0) AS units
-      FROM sales_transactions st
+        COALESCE(SUM(sd.revenue), 0) AS revenue,
+        COALESCE(SUM(sd.units), 0) AS units
+      FROM analytics_sales_daily sd
       LEFT JOIN products p
-        ON p.sku = st.sku::integer
-      WHERE st.location_id = 2
-        AND st.dtl_f_status <> 1
-        AND (st.process_date AT TIME ZONE 'America/Los_Angeles')::date BETWEEN $1::date AND $2::date
+        ON p.sku = sd.sku
+      WHERE sd.location_id = 2
+        AND sd.sale_date BETWEEN $1::date AND $2::date
 ${buildNonMerchandiseFilterSql({
-  skuColumn: "st.sku::integer",
+  skuColumn: "sd.sku",
   deptColumn: "p.dept_name",
   categoryColumn: "p.cat_name",
   skuParamIndex: 3,
@@ -478,22 +616,21 @@ async function findRevenueConcentration(range: AnalyticsDateRange) {
   const rows = await prisma.$queryRawUnsafe<RevenueBySkuRow[]>(
     `
       SELECT
-        COALESCE(SUM(st.ext_price), 0) AS revenue
-      FROM sales_transactions st
+        COALESCE(SUM(sd.revenue), 0) AS revenue
+      FROM analytics_sales_daily sd
       LEFT JOIN products p
-        ON p.sku = st.sku::integer
-      WHERE st.location_id = 2
-        AND st.dtl_f_status <> 1
-        AND (st.process_date AT TIME ZONE 'America/Los_Angeles')::date BETWEEN $1::date AND $2::date
+        ON p.sku = sd.sku
+      WHERE sd.location_id = 2
+        AND sd.sale_date BETWEEN $1::date AND $2::date
 ${buildNonMerchandiseFilterSql({
-  skuColumn: "st.sku::integer",
+  skuColumn: "sd.sku",
   deptColumn: "p.dept_name",
   categoryColumn: "p.cat_name",
   skuParamIndex: 3,
   nameParamIndex: 4,
 })}
-      GROUP BY st.sku
-      HAVING COALESCE(SUM(st.ext_price), 0) > 0
+      GROUP BY sd.sku
+      HAVING COALESCE(SUM(sd.revenue), 0) > 0
       ORDER BY revenue DESC
     `,
     range.dateFrom,
@@ -712,131 +849,158 @@ async function findLowStockHighDemand() {
 
 async function findCopyTechAnalytics(range: AnalyticsDateRange) {
   const bounds = buildRangeBounds(range);
-  const [invoices, printQuotes] = await Promise.all([
-    prisma.invoice.findMany({
-      where: {
-        type: "INVOICE",
-        category: "COPY_TECH",
-        archivedAt: null,
-        createdAt: {
-          gte: bounds.start,
-          lt: bounds.endExclusive,
-        },
-      },
-      select: {
-        totalAmount: true,
-        createdAt: true,
-        recipientOrg: true,
-      },
-      orderBy: { createdAt: "asc" },
-    }),
-    prisma.printQuote.findMany({
-      where: {
-        createdAt: {
-          gte: bounds.start,
-          lt: bounds.endExclusive,
-        },
-      },
-      select: {
-        totalCents: true,
-        createdAt: true,
-        requesterOrganization: true,
-        lineItems: {
-          select: {
-            service: true,
-            quantity: true,
-            lineTotalCents: true,
-          },
-        },
-      },
-      orderBy: { createdAt: "asc" },
-    }),
+  const [summaryRows, monthlyRows, serviceMixRows, requesterRows] = await Promise.all([
+    prisma.$queryRawUnsafe<CopyTechSummaryRow[]>(
+      `
+        WITH invoice_summary AS (
+          SELECT
+            COALESCE(SUM(total_amount), 0) AS invoice_revenue,
+            COUNT(*) AS invoice_count
+          FROM invoices
+          WHERE type = 'INVOICE'
+            AND category = 'COPY_TECH'
+            AND archived_at IS NULL
+            AND created_at >= $1::timestamptz
+            AND created_at < $2::timestamptz
+        ),
+        quote_summary AS (
+          SELECT
+            COALESCE(SUM(total_cents), 0) / 100.0 AS quote_revenue,
+            COUNT(*) AS quote_count
+          FROM print_quotes
+          WHERE created_at >= $1::timestamptz
+            AND created_at < $2::timestamptz
+        )
+        SELECT
+          invoice_summary.invoice_revenue,
+          invoice_summary.invoice_count,
+          quote_summary.quote_revenue,
+          quote_summary.quote_count
+        FROM invoice_summary, quote_summary
+      `,
+      bounds.start,
+      bounds.endExclusive,
+    ),
+    prisma.$queryRawUnsafe<CopyTechMonthlyRow[]>(
+      `
+        SELECT
+          month,
+          COALESCE(SUM(invoice_revenue), 0) AS invoice_revenue,
+          COALESCE(SUM(invoice_count), 0) AS invoice_count,
+          COALESCE(SUM(quote_revenue), 0) AS quote_revenue,
+          COALESCE(SUM(quote_count), 0) AS quote_count
+        FROM (
+          SELECT
+            TO_CHAR(created_at AT TIME ZONE 'America/Los_Angeles', 'YYYY-MM') AS month,
+            total_amount AS invoice_revenue,
+            1 AS invoice_count,
+            0::numeric AS quote_revenue,
+            0 AS quote_count
+          FROM invoices
+          WHERE type = 'INVOICE'
+            AND category = 'COPY_TECH'
+            AND archived_at IS NULL
+            AND created_at >= $1::timestamptz
+            AND created_at < $2::timestamptz
+          UNION ALL
+          SELECT
+            TO_CHAR(created_at AT TIME ZONE 'America/Los_Angeles', 'YYYY-MM') AS month,
+            0::numeric AS invoice_revenue,
+            0 AS invoice_count,
+            total_cents / 100.0 AS quote_revenue,
+            1 AS quote_count
+          FROM print_quotes
+          WHERE created_at >= $1::timestamptz
+            AND created_at < $2::timestamptz
+        ) rows
+        GROUP BY month
+        ORDER BY month ASC
+      `,
+      bounds.start,
+      bounds.endExclusive,
+    ),
+    prisma.$queryRawUnsafe<CopyTechServiceMixSqlRow[]>(
+      `
+        SELECT
+          line_items.service::text AS service,
+          COALESCE(SUM(line_items.line_total_cents), 0) / 100.0 AS revenue,
+          COALESCE(SUM(line_items.quantity), 0) AS quantity
+        FROM print_quote_line_items line_items
+        INNER JOIN print_quotes quotes
+          ON quotes.id = line_items.quote_id
+        WHERE quotes.created_at >= $1::timestamptz
+          AND quotes.created_at < $2::timestamptz
+        GROUP BY line_items.service
+        ORDER BY revenue DESC, service ASC
+      `,
+      bounds.start,
+      bounds.endExclusive,
+    ),
+    prisma.$queryRawUnsafe<CopyTechRequesterSqlRow[]>(
+      `
+        SELECT
+          requester AS name,
+          COALESCE(SUM(revenue), 0) AS revenue,
+          COALESCE(SUM(invoice_count), 0) AS invoice_count,
+          COALESCE(SUM(quote_count), 0) AS quote_count
+        FROM (
+          SELECT
+            COALESCE(NULLIF(TRIM(recipient_org), ''), 'Unspecified requester') AS requester,
+            total_amount AS revenue,
+            1 AS invoice_count,
+            0 AS quote_count
+          FROM invoices
+          WHERE type = 'INVOICE'
+            AND category = 'COPY_TECH'
+            AND archived_at IS NULL
+            AND created_at >= $1::timestamptz
+            AND created_at < $2::timestamptz
+          UNION ALL
+          SELECT
+            COALESCE(NULLIF(TRIM(requester_organization), ''), 'Unspecified requester') AS requester,
+            total_cents / 100.0 AS revenue,
+            0 AS invoice_count,
+            1 AS quote_count
+          FROM print_quotes
+          WHERE created_at >= $1::timestamptz
+            AND created_at < $2::timestamptz
+        ) rows
+        GROUP BY requester
+        ORDER BY revenue DESC, requester ASC
+        LIMIT 8
+      `,
+      bounds.start,
+      bounds.endExclusive,
+    ),
   ]);
 
-  const monthly = new Map<string, OperationsSnapshot["copyTechMonthly"][number]>();
-  const topRequesters = new Map<string, OperationsSnapshot["copyTechTopRequesters"][number]>();
-  const serviceMix = new Map<string, OperationsSnapshot["copyTechServiceMix"][number]>();
-
-  let invoiceRevenue = 0;
-  let quoteRevenue = 0;
-
-  for (const invoice of invoices) {
-    const month = getDateKeyInLosAngeles(invoice.createdAt).slice(0, 7);
-    const revenue = Number(invoice.totalAmount);
-    invoiceRevenue += revenue;
-
-    const monthlyBucket = monthly.get(month) ?? {
-      month,
-      invoiceRevenue: 0,
-      quoteRevenue: 0,
-      invoiceCount: 0,
-      quoteCount: 0,
-    };
-    monthlyBucket.invoiceRevenue += revenue;
-    monthlyBucket.invoiceCount += 1;
-    monthly.set(month, monthlyBucket);
-
-    const requester = normalizeText(invoice.recipientOrg, "Unspecified requester");
-    const requesterBucket = topRequesters.get(requester) ?? {
-      name: requester,
-      revenue: 0,
-      invoiceCount: 0,
-      quoteCount: 0,
-    };
-    requesterBucket.revenue += revenue;
-    requesterBucket.invoiceCount += 1;
-    topRequesters.set(requester, requesterBucket);
-  }
-
-  for (const quote of printQuotes) {
-    const month = getDateKeyInLosAngeles(quote.createdAt).slice(0, 7);
-    const revenue = quote.totalCents / 100;
-    quoteRevenue += revenue;
-
-    const monthlyBucket = monthly.get(month) ?? {
-      month,
-      invoiceRevenue: 0,
-      quoteRevenue: 0,
-      invoiceCount: 0,
-      quoteCount: 0,
-    };
-    monthlyBucket.quoteRevenue += revenue;
-    monthlyBucket.quoteCount += 1;
-    monthly.set(month, monthlyBucket);
-
-    const requester = normalizeText(quote.requesterOrganization, "Unspecified requester");
-    const requesterBucket = topRequesters.get(requester) ?? {
-      name: requester,
-      revenue: 0,
-      invoiceCount: 0,
-      quoteCount: 0,
-    };
-    requesterBucket.revenue += revenue;
-    requesterBucket.quoteCount += 1;
-    topRequesters.set(requester, requesterBucket);
-
-    for (const lineItem of quote.lineItems) {
-      const serviceBucket = serviceMix.get(lineItem.service) ?? {
-        service: lineItem.service,
-        revenue: 0,
-        quantity: 0,
-      };
-      serviceBucket.revenue += lineItem.lineTotalCents / 100;
-      serviceBucket.quantity += lineItem.quantity;
-      serviceMix.set(lineItem.service, serviceBucket);
-    }
-  }
+  const summary = summaryRows[0];
 
   return {
     summary: {
-      invoiceRevenue,
-      invoiceCount: invoices.length,
-      quoteRevenue,
-      quoteCount: printQuotes.length,
+      invoiceRevenue: toNumber(summary?.invoice_revenue),
+      invoiceCount: toInteger(summary?.invoice_count),
+      quoteRevenue: toNumber(summary?.quote_revenue),
+      quoteCount: toInteger(summary?.quote_count),
     },
-    monthly: Array.from(monthly.values()).sort((left, right) => left.month.localeCompare(right.month)),
-    serviceMix: Array.from(serviceMix.values()).sort((left, right) => right.revenue - left.revenue),
-    topRequesters: Array.from(topRequesters.values()).sort((left, right) => right.revenue - left.revenue).slice(0, 8),
+    monthly: monthlyRows.map((row) => ({
+      month: row.month,
+      invoiceRevenue: toNumber(row.invoice_revenue),
+      invoiceCount: toInteger(row.invoice_count),
+      quoteRevenue: toNumber(row.quote_revenue),
+      quoteCount: toInteger(row.quote_count),
+    })),
+    serviceMix: serviceMixRows.map((row) => ({
+      service: row.service,
+      revenue: toNumber(row.revenue),
+      quantity: toInteger(row.quantity),
+    })),
+    topRequesters: requesterRows.map((row) => ({
+      name: normalizeText(row.name, "Unspecified requester"),
+      revenue: toNumber(row.revenue),
+      invoiceCount: toInteger(row.invoice_count),
+      quoteCount: toInteger(row.quote_count),
+    })),
   };
 }
 
@@ -860,38 +1024,8 @@ async function findLatestSyncRun() {
 }
 
 export const analyticsRepository = {
-  async findFinanceDocuments(filters: AnalyticsFilters) {
-    return prisma.invoice.findMany({
-      where: buildIncludedFinanceWhere(filters.dateFrom, filters.dateTo),
-      select: {
-        type: true,
-        status: true,
-        quoteStatus: true,
-        convertedToInvoice: { select: { id: true } },
-        date: true,
-        totalAmount: true,
-        category: true,
-        department: true,
-        createdBy: true,
-      },
-      orderBy: { date: "asc" },
-    }).then((documents) =>
-      documents.map((document) => ({
-        ...document,
-        convertedToInvoiceId: document.convertedToInvoice?.id ?? null,
-      })),
-    );
-  },
-
-  async findUsersByIds(ids: string[]) {
-    if (ids.length === 0) {
-      return [];
-    }
-
-    return prisma.user.findMany({
-      where: { id: { in: ids } },
-      select: { id: true, name: true },
-    });
+  async findFinanceAnalytics(range: AnalyticsDateRange): Promise<FinanceAnalytics> {
+    return findFinanceAnalytics(range);
   },
 
   async findOperationsSnapshot(range: AnalyticsDateRange): Promise<OperationsSnapshot> {

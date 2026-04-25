@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { AnalyticsResponse } from "@/domains/analytics/types";
+import type { FinanceAnalytics } from "@/domains/analytics/types";
 
 const CategoryChart = dynamic(() => import("./category-chart").then((m) => m.CategoryChart), { ssr: false });
 const MonthlyTotalsChart = dynamic(() => import("./monthly-totals-chart").then((m) => m.MonthlyTotalsChart), { ssr: false });
@@ -10,7 +10,7 @@ const DepartmentSpendChart = dynamic(() => import("./department-spend-chart").th
 const InvoiceTrendChart = dynamic(() => import("./invoice-trend-chart").then((m) => m.InvoiceTrendChart), { ssr: false });
 const UserChart = dynamic(() => import("./user-chart").then((m) => m.UserChart), { ssr: false });
 
-export function FinanceDashboard({ data }: { data: AnalyticsResponse }) {
+export function FinanceDashboard({ data }: { data: FinanceAnalytics }) {
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">

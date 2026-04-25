@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockFindOperationsSnapshot } = vi.hoisted(() => ({
+const { mockFindFinanceAnalytics, mockFindOperationsSnapshot } = vi.hoisted(() => ({
+  mockFindFinanceAnalytics: vi.fn(),
   mockFindOperationsSnapshot: vi.fn(),
 }));
 
 vi.mock("@/domains/analytics/repository", () => ({
   analyticsRepository: {
-    findFinanceDocuments: vi.fn(),
-    findUsersByIds: vi.fn(),
+    findFinanceAnalytics: mockFindFinanceAnalytics,
     findOperationsSnapshot: mockFindOperationsSnapshot,
   },
 }));
@@ -17,110 +17,97 @@ import { analyticsService } from "@/domains/analytics/service";
 
 const mockRepo = vi.mocked(analyticsRepository, true);
 
+const emptyFinance = {
+  summary: {
+    count: 0,
+    total: 0,
+    finalizedCount: 0,
+    finalizedTotal: 0,
+    expectedCount: 0,
+    expectedTotal: 0,
+  },
+  byCategory: [],
+  byMonth: [],
+  byDepartment: [],
+  trend: [],
+  byUser: [],
+};
+
 describe("analyticsService", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    mockFindFinanceAnalytics.mockReset();
     mockFindOperationsSnapshot.mockReset();
+    mockFindFinanceAnalytics.mockResolvedValue(emptyFinance);
   });
 
   describe("getAnalytics", () => {
-    it("loads finance documents once and resolves user names from creator IDs", async () => {
+    it("loads pre-aggregated finance analytics once for the resolved range", async () => {
       const filters = { dateFrom: "2026-01-01", dateTo: "2026-03-31" };
-
-      mockRepo.findFinanceDocuments.mockResolvedValue([] as never);
-      mockRepo.findUsersByIds.mockResolvedValue([] as never);
 
       await analyticsService.getAnalytics(filters);
 
-      expect(mockRepo.findFinanceDocuments).toHaveBeenCalledWith(filters);
-      expect(mockRepo.findUsersByIds).toHaveBeenCalledWith([]);
+      expect(mockRepo.findFinanceAnalytics).toHaveBeenCalledWith(filters);
     });
 
-    it("splits finalized and expected totals across summary, months, departments, and users", async () => {
-      mockRepo.findFinanceDocuments.mockResolvedValue([
-        {
-          type: "INVOICE",
-          status: "FINAL",
-          quoteStatus: null,
-          convertedToInvoiceId: null,
-          date: new Date("2026-01-10"),
-          totalAmount: "500",
-          category: "SUPPLIES",
-          department: "English",
-          createdBy: "u1",
+    it("keeps the finance aggregate shape returned by the repository", async () => {
+      mockFindFinanceAnalytics.mockResolvedValue({
+        summary: {
+          count: 5,
+          total: 1400,
+          finalizedCount: 1,
+          finalizedTotal: 500,
+          expectedCount: 4,
+          expectedTotal: 900,
         },
-        {
-          type: "INVOICE",
-          status: "DRAFT",
-          quoteStatus: null,
-          convertedToInvoiceId: null,
-          date: new Date("2026-01-12"),
-          totalAmount: "200",
-          category: "SUPPLIES",
-          department: "English",
-          createdBy: "u1",
-        },
-        {
-          type: "INVOICE",
-          status: "PENDING_CHARGE",
-          quoteStatus: null,
-          convertedToInvoiceId: null,
-          date: new Date("2026-02-01"),
-          totalAmount: "150",
-          category: "CATERING",
-          department: "Catering",
-          createdBy: "u2",
-        },
-        {
-          type: "QUOTE",
-          status: "DRAFT",
-          quoteStatus: "ACCEPTED",
-          convertedToInvoiceId: null,
-          date: new Date("2026-02-05"),
-          totalAmount: "300",
-          category: "CATERING",
-          department: "Catering",
-          createdBy: "u2",
-        },
-        {
-          type: "QUOTE",
-          status: "DRAFT",
-          quoteStatus: "SENT",
-          convertedToInvoiceId: null,
-          date: new Date("2026-02-08"),
-          totalAmount: "250",
-          category: "COPY_TECH",
-          department: "Library",
-          createdBy: "u3",
-        },
-        {
-          type: "QUOTE",
-          status: "DRAFT",
-          quoteStatus: "DECLINED",
-          convertedToInvoiceId: null,
-          date: new Date("2026-02-10"),
-          totalAmount: "999",
-          category: "COPY_TECH",
-          department: "Library",
-          createdBy: "u3",
-        },
-        {
-          type: "QUOTE",
-          status: "DRAFT",
-          quoteStatus: "ACCEPTED",
-          convertedToInvoiceId: "inv-1",
-          date: new Date("2026-02-11"),
-          totalAmount: "777",
-          category: "COPY_TECH",
-          department: "Library",
-          createdBy: "u3",
-        },
-      ] as never);
-      mockRepo.findUsersByIds.mockResolvedValue([
-        { id: "u1", name: "Alice" },
-        { id: "u2", name: "Bob" },
-        { id: "u3", name: "Carol" },
-      ] as never);
+        byMonth: [
+          {
+            month: "2026-01",
+            count: 2,
+            total: 700,
+            finalizedCount: 1,
+            finalizedTotal: 500,
+            expectedCount: 1,
+            expectedTotal: 200,
+          },
+        ],
+        byDepartment: [
+          {
+            department: "English",
+            count: 2,
+            total: 700,
+            finalizedCount: 1,
+            finalizedTotal: 500,
+            expectedCount: 1,
+            expectedTotal: 200,
+          },
+        ],
+        byUser: [
+          {
+            user: "Alice",
+            count: 2,
+            total: 700,
+            finalizedCount: 1,
+            finalizedTotal: 500,
+            expectedCount: 1,
+            expectedTotal: 200,
+          },
+        ],
+        byCategory: [
+          {
+            category: "SUPPLIES",
+            count: 2,
+            total: 700,
+            finalizedCount: 1,
+            finalizedTotal: 500,
+            expectedCount: 1,
+            expectedTotal: 200,
+          },
+        ],
+        trend: [
+          { month: "2026-01", count: 2, finalizedCount: 1, expectedCount: 1 },
+        ],
+      });
 
       const result = await analyticsService.getAnalytics({});
 
@@ -133,37 +120,9 @@ describe("analyticsService", () => {
         expectedTotal: 900,
       });
 
-      expect(result.byMonth).toEqual([
-        {
-          month: "2026-01",
-          count: 2,
-          total: 700,
-          finalizedCount: 1,
-          finalizedTotal: 500,
-          expectedCount: 1,
-          expectedTotal: 200,
-        },
-        {
-          month: "2026-02",
-          count: 3,
-          total: 700,
-          finalizedCount: 0,
-          finalizedTotal: 0,
-          expectedCount: 3,
-          expectedTotal: 700,
-        },
-      ]);
+      expect(result.byMonth).toHaveLength(1);
 
       expect(result.byDepartment).toEqual([
-        {
-          department: "Catering",
-          count: 2,
-          total: 450,
-          finalizedCount: 0,
-          finalizedTotal: 0,
-          expectedCount: 2,
-          expectedTotal: 450,
-        },
         {
           department: "English",
           count: 2,
@@ -172,15 +131,6 @@ describe("analyticsService", () => {
           finalizedTotal: 500,
           expectedCount: 1,
           expectedTotal: 200,
-        },
-        {
-          department: "Library",
-          count: 1,
-          total: 250,
-          finalizedCount: 0,
-          finalizedTotal: 0,
-          expectedCount: 1,
-          expectedTotal: 250,
         },
       ]);
 
@@ -194,24 +144,6 @@ describe("analyticsService", () => {
           expectedCount: 1,
           expectedTotal: 200,
         },
-        {
-          user: "Bob",
-          count: 2,
-          total: 450,
-          finalizedCount: 0,
-          finalizedTotal: 0,
-          expectedCount: 2,
-          expectedTotal: 450,
-        },
-        {
-          user: "Carol",
-          count: 1,
-          total: 250,
-          finalizedCount: 0,
-          finalizedTotal: 0,
-          expectedCount: 1,
-          expectedTotal: 250,
-        },
       ]);
 
       expect(result.byCategory).toEqual([
@@ -224,68 +156,16 @@ describe("analyticsService", () => {
           expectedCount: 1,
           expectedTotal: 200,
         },
-        {
-          category: "CATERING",
-          count: 2,
-          total: 450,
-          finalizedCount: 0,
-          finalizedTotal: 0,
-          expectedCount: 2,
-          expectedTotal: 450,
-        },
-        {
-          category: "COPY_TECH",
-          count: 1,
-          total: 250,
-          finalizedCount: 0,
-          finalizedTotal: 0,
-          expectedCount: 1,
-          expectedTotal: 250,
-        },
       ]);
 
       expect(result.trend).toEqual([
         { month: "2026-01", count: 2, finalizedCount: 1, expectedCount: 1 },
-        { month: "2026-02", count: 3, finalizedCount: 0, expectedCount: 3 },
-      ]);
-    });
-
-    it("falls back to Unknown when a creator cannot be resolved", async () => {
-      mockRepo.findFinanceDocuments.mockResolvedValue([
-        {
-          type: "QUOTE",
-          status: "DRAFT",
-          quoteStatus: "SENT",
-          convertedToInvoiceId: null,
-          date: new Date("2026-03-15"),
-          totalAmount: "300",
-          category: "COPY_TECH",
-          department: "English",
-          createdBy: "u-missing",
-        },
-      ] as never);
-      mockRepo.findUsersByIds.mockResolvedValue([] as never);
-
-      const result = await analyticsService.getAnalytics({});
-
-      expect(result.byUser).toEqual([
-        {
-          user: "Unknown",
-          count: 1,
-          total: 300,
-          finalizedCount: 0,
-          finalizedTotal: 0,
-          expectedCount: 1,
-          expectedTotal: 300,
-        },
       ]);
     });
 
     it("builds store operations insights from mirrored sales, inventory, and CopyTech data", async () => {
       const filters = { dateFrom: "2026-01-01", dateTo: "2026-03-31" };
 
-      mockRepo.findFinanceDocuments.mockResolvedValue([] as never);
-      mockRepo.findUsersByIds.mockResolvedValue([] as never);
       mockFindOperationsSnapshot.mockResolvedValue({
         salesSummary: {
           revenue: 9450,
@@ -509,8 +389,6 @@ describe("analyticsService", () => {
     });
 
     it("keeps operations highlights neutral when the selected range has no mirrored store sales", async () => {
-      mockRepo.findFinanceDocuments.mockResolvedValue([] as never);
-      mockRepo.findUsersByIds.mockResolvedValue([] as never);
       mockFindOperationsSnapshot.mockResolvedValue(undefined as never);
 
       const result = await analyticsService.getAnalytics({
