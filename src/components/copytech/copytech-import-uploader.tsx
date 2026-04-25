@@ -58,13 +58,7 @@ function getErrorMessage(error: unknown): string {
 const MAX_FILE_BYTES = 1_000_000;
 
 function isAcceptableCsv(candidate: File): boolean {
-  const nameOk = candidate.name.toLowerCase().endsWith(".csv");
-  const typeOk =
-    candidate.type === "" ||
-    candidate.type === "text/csv" ||
-    candidate.type === "application/csv" ||
-    candidate.type === "text/plain";
-  return nameOk && typeOk;
+  return candidate.name.toLowerCase().endsWith(".csv");
 }
 
 export function CopyTechImportUploader({ format }: CopyTechImportUploaderProps) {
@@ -82,13 +76,23 @@ export function CopyTechImportUploader({ format }: CopyTechImportUploaderProps) 
     [format.optionalHeaders, format.requiredHeaders],
   );
 
+  function resetFileState() {
+    setFile(null);
+    setPreview(null);
+    setCreatedInvoiceIds([]);
+    setRequestError(null);
+    if (inputRef.current) inputRef.current.value = "";
+  }
+
   function handleFileChange(nextFile: File | null) {
     if (nextFile && !isAcceptableCsv(nextFile)) {
       toast.error("Only .csv files are supported.");
+      resetFileState();
       return;
     }
     if (nextFile && nextFile.size > MAX_FILE_BYTES) {
       toast.error("File exceeds the 1 MB limit.");
+      resetFileState();
       return;
     }
     setFile(nextFile);
@@ -98,11 +102,7 @@ export function CopyTechImportUploader({ format }: CopyTechImportUploaderProps) 
   }
 
   function handleClearFile() {
-    setFile(null);
-    setPreview(null);
-    setCreatedInvoiceIds([]);
-    setRequestError(null);
-    if (inputRef.current) inputRef.current.value = "";
+    resetFileState();
   }
 
   function handleDragEnter(event: DragEvent<HTMLButtonElement>) {
