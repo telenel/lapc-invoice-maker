@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useInvoiceForm, InvoiceFormData } from "@/components/invoice/invoice-form";
 import { KeyboardMode } from "@/components/invoice/keyboard-mode";
 import { LazyProductSearchPanel } from "@/components/shared/lazy-product-search-panel";
+import { openDeferredRegisterPrintWindow } from "@/components/shared/register-print-loader";
 import type { SelectedProduct } from "@/domains/product/types";
 import { TAX_RATE } from "@/domains/invoice/constants";
 import { formatDateLong as formatDate } from "@/lib/formatters";
@@ -204,15 +205,7 @@ export default function EditInvoicePage() {
   async function handlePrintForRegister() {
     const { form, subtotal, taxAmount, grandTotal } = invoiceForm;
     if (form.items.length === 0) return;
-    let openRegisterPrintWindow: typeof import("@/components/shared/register-print-view")["openRegisterPrintWindow"];
-    try {
-      ({ openRegisterPrintWindow } = await import("@/components/shared/register-print-view"));
-    } catch (error) {
-      console.error("Failed to load register print view", error);
-      window.alert("Could not load the print view. Please try again.");
-      return;
-    }
-    openRegisterPrintWindow({
+    await openDeferredRegisterPrintWindow({
       documentNumber: form.invoiceNumber || form.runningTitle || "Draft Invoice",
       documentType: "Invoice",
       status: "DRAFT",

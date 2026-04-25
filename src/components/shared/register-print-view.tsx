@@ -25,7 +25,7 @@ function formatCurrency(value: number): string {
   return `$${value.toFixed(2)}`;
 }
 
-export function openRegisterPrintWindow(doc: RegisterPrintData): void {
+export function openRegisterPrintWindow(doc: RegisterPrintData, targetWindow?: Window | null): void {
   // Pre-render barcodes for items that have SKUs
   const barcodes = new Map<string, string>();
   for (const item of doc.items) {
@@ -156,6 +156,14 @@ export function openRegisterPrintWindow(doc: RegisterPrintData): void {
   </div>
 </body>
 </html>`;
+
+  if (targetWindow && !targetWindow.closed) {
+    targetWindow.document.open();
+    targetWindow.document.write(html);
+    targetWindow.document.close();
+    targetWindow.focus();
+    return;
+  }
 
   const blob = new Blob([html], { type: "text/html" });
   const url = URL.createObjectURL(blob);

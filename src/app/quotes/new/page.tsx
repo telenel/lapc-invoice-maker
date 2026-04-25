@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useQuoteForm } from "@/components/quote/quote-form";
 import { QuoteMode } from "@/components/quote/quote-mode";
 import { LazyProductSearchPanel } from "@/components/shared/lazy-product-search-panel";
+import { openDeferredRegisterPrintWindow } from "@/components/shared/register-print-loader";
 import { CATALOG_ITEMS_STORAGE_KEY } from "@/domains/product/constants";
 import type { SelectedProduct } from "@/domains/product/types";
 import { formatDateLong as formatDate } from "@/lib/formatters";
@@ -84,15 +85,7 @@ export default function NewQuotePage() {
       .reduce((sum, item) => sum + Number(item.extendedPrice), 0);
     const taxAmount = taxableTotal * taxRate;
 
-    let openRegisterPrintWindow: typeof import("@/components/shared/register-print-view")["openRegisterPrintWindow"];
-    try {
-      ({ openRegisterPrintWindow } = await import("@/components/shared/register-print-view"));
-    } catch (error) {
-      console.error("Failed to load register print view", error);
-      window.alert("Could not load the print view. Please try again.");
-      return;
-    }
-    openRegisterPrintWindow({
+    await openDeferredRegisterPrintWindow({
       documentNumber: "Draft Quote",
       documentType: "Quote",
       status: "DRAFT",
