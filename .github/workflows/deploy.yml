@@ -28,7 +28,7 @@ jobs:
       build_time: ${{ steps.meta.outputs.build_time }}
       image_repository: ${{ steps.meta.outputs.image_repository }}
       image: ${{ steps.meta.outputs.image }}
-      deploy_ref: ${{ steps.target.outputs.deploy_ref }}
+      deploy_ref: ${{ steps.meta.outputs.full_sha }}
     steps:
       - name: Resolve deploy target
         id: target
@@ -39,7 +39,6 @@ jobs:
 
           {
             echo "checkout_ref=$ref"
-            echo "deploy_ref=$ref"
           } >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@v5
