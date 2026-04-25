@@ -1,0 +1,336 @@
+﻿    Xmodem message: %s*PDT data successfully uploaded to database&Failure uploading PDT data to database
+ !"#$%&
+ 1997-2015
+!This program cannot be run in DOS mode.
+%s (%s:%d)
+&About WinPDT...
+&WinPDT Configuration ...
+.?AVCAboutDlg@@
+.?AVCCmdTarget@@
+.?AVCDialog@@
+.?AVCFiscalInventoryTempSet@@
+.?AVCListBox@@
+.?AVCObject@@
+.?AVCPDTLinkConfigDlg@@
+.?AVCPdtLinkDlg@@
+.?AVCRecordset@@
+.?AVCWnd@@
+.?AVtype_info@@
+.PAVCDBException@@
+.PAVCException@@
+.PAVCFileException@@
+: :$:(:,:0:4:8:<:@:D:H:L:P:T:X:\:`:d:h:l:p:t:x:|:
+: :&:,:2:8:>:D:J:P:V:\:b:h:n:t:z:
+:#:D:J:\:g:n:s:
+:%:.:D:~:
+:&:8:a:~:
+:=:E:N:W:`:
+:8:@:P:X:`:t:|:
+; ;$;(;,;0;4;8;<;@;D;H;L;P;T;X;\;`;d;h;l;p;t;x;|;
+;!;3;F;X;f;x;
+;";(;.;4;:;@;F;L;R;X;^;d;j;p;v;|;
+;$;,;4;<;D;P;p;x;
+;(;?;S;l;r;
+;(;4;K;d;u;~;
+;2;7;z;
+?"?H?U?r?
+?*?7?F?Q?Z?o?
+?,?<?E?N?W?i?o?
+??_7CFiscalInventoryTempSet@@6B@
+??_7CPDTLinkConfigDlg@@6B@
+??_7CPdtLinkDlg@@6B@
+??_FCFiscalInventoryTempSet@@QAEXXZ
+??_FCPDTLinkConfigDlg@@QAEXXZ
+??_FCPdtLinkDlg@@QAEXXZ
+??0_LS@@QAE@I@Z
+??0CFiscalInventoryTempSet@@QAE@PAVCDatabase@@@Z
+??0CG3CommPort@@QAE@XZ
+??0CG3LogFile@@QAE@XZ
+??0CPDTLinkConfigDlg@@QAE@PAVCWnd@@@Z
+??0CPdtLinkDlg@@QAE@HPAVCWnd@@@Z
+??1_LS@@QAE@XZ
+??1CFiscalInventoryTempSet@@UAE@XZ
+??1CG3CommPort@@UAE@XZ
+??1CG3LogFile@@UAE@XZ
+??1CPDTLinkConfigDlg@@UAE@XZ
+??1CPdtLinkDlg@@UAE@XZ
+??1type_info@@UAE@XZ
+?_GetBaseClass@CFiscalInventoryTempSet@@KGPAUCRuntimeClass@@XZ
+?=?S?Y?l?r?
+?5?>?G?P?f?u?
+?AssignErrMsgFn@CG3CommPort@@QAEHP6AXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z@Z
+?AssignLog@CG3CommPort@@QAEXPAVCG3LogFile@@@Z
+?classCFiscalInventoryTempSet@CFiscalInventoryTempSet@@2UCRuntimeClass@@B
+?ClearBuffers@CG3CommPort@@UAEXXZ
+?Close@CG3CommPort@@UAEXXZ
+?Close@CG3LogFile@@UAEXXZ
+?DoDataExchange@CPDTLinkConfigDlg@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CPdtLinkDlg@@MAEXPAVCDataExchange@@@Z
+?DoFieldExchange@CFiscalInventoryTempSet@@UAEXPAVCFieldExchange@@@Z
+?DoPDTConfigDialog@@YAHXZ
+?DoPDTDialog@@YAHXZ
+?DoPDTUpload@@YAHPAVCDatabase@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetDefaultConnect@CFiscalInventoryTempSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultSQL@CFiscalInventoryTempSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetMessageMap@CPDTLinkConfigDlg@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CPdtLinkDlg@@MBEPBUAFX_MSGMAP@@XZ
+?GetRuntimeClass@CFiscalInventoryTempSet@@UBEPAUCRuntimeClass@@XZ
+?GetThisClass@CFiscalInventoryTempSet@@SGPAUCRuntimeClass@@XZ
+?GetThisMessageMap@CPDTLinkConfigDlg@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CPdtLinkDlg@@KGPBUAFX_MSGMAP@@XZ
+?OnCancel@CPdtLinkDlg@@MAEXXZ
+?OnHandleTimers@CPdtLinkDlg@@IAEJIJ@Z
+?OnInitDialog@CPDTLinkConfigDlg@@MAEHXZ
+?OnInitDialog@CPdtLinkDlg@@MAEHXZ
+?OnOK@CPDTLinkConfigDlg@@MAEXXZ
+?OnPaint@CPdtLinkDlg@@IAEXXZ
+?OnPdtConfigDataFileBrowseBtn@CPDTLinkConfigDlg@@IAEXXZ
+?OnPdtConfigLogFileBrowseBtn@CPDTLinkConfigDlg@@IAEXXZ
+?OnQueryDragIcon@CPdtLinkDlg@@IAEPAUHICON__@@XZ
+?OnSysCommand@CPdtLinkDlg@@IAEXIJ@Z
+?Open@CG3CommPort@@UAEHHJDHH@Z
+?Open@CG3LogFile@@UAEHPBDW4EFileMode@1@@Z
+?PdtLinkInit@CPdtLinkDlg@@IAEXXZ
+?Read@CG3CommPort@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@HH@Z
+?SetLogLevel@CG3LogFile@@QAEHH@Z
+?StopWaitingForRX@CG3CommPort@@UAEXXZ
+?T?X?l?p?
+?terminate@@YAXXZ
+?WaitForRX@CG3CommPort@@UAEHH@Z
+?Write@CG3CommPort@@UAEHPADH@Z
+?Write@CG3LogFile@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?XmodemReceive@CG3CommPort@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@P6AXPAD@ZP6AXPAUxfer@@@Z@Z
+@.data
+@.reloc
+[Area]
+[Batch]
+[dbo].[Fiscal_Inventory_Temp_Table]
+[Fixture]
+[FixtureAreaTempID]
+[ScanCode]
+[StoreNumber]
+__clean_type_info_names_internal
+__CppXcptFilter
+__crtTerminateProcess
+__crtUnhandledException
+__CxxFrameHandler3
+__dllonexit
+_access
+_amsg_exit
+_calloc_crt
+_crt_debugger_hook
+_except_handler4_common
+_initterm
+_initterm_e
+_malloc_crt
+_mkdir
+_onexit
+_tempnam
+_unlink
+_unlock
+`.rdata
+< <$<(<,<0<4<8<<<@<\<`<d<h<l<p<t<x<|<
+<#<)<9<?<D<J<P<X<^<d<t<
+<$<*<0<6<<<B<H<N<T<Z<`<f<l<r<x<
+<$<,<8<X<`<t<
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<'<0<9<B<K<T<]<f<o<x<
+<1<i<{<
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0"><trustInfo xmlns="urn:schemas-microsoft-com:asm.v3"><security><requestedPrivileges><requestedExecutionLevel level="asInvoker" uiAccess="false"></requestedExecutionLevel></requestedPrivileges></security></trustInfo><application xmlns="urn:schemas-microsoft-com:asm.v3"><windowsSettings><dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true</dpiAware></windowsSettings></application></assembly>
+<L<T<^<j<v<
+= =$=(=,=0=4=8=<=@=D=H=L=P=T=X=\=`=d=h=l=p=t=x=|=
+="=(=:=X=^=i=o=}=
+=&=8=F=X=k=}=
+='=0=9=B=K=T=j=
+=0=8=<=T=X=
+=9=P=f=
+>#>9>S>]>
+>&>L>^>h>o>
+>+>J>S>i>
+>A>G>R>X>f>p>w>
+>O>g>w>
+0!0'0,0A0F0L0Q0a0f0l0q0
+0!0'0:0G0c0v0{0
+0"0+040=0P0c0v0
+0(0@0\0
+0,0<0L0\0`0d0h0l0p0t0|0
+01070A0G0Q0W0a0g0q0w0|0
+0123456789
+040904b0
+080X0k0p0v0
+0T0a0v0
+1 1-1A1
+1 181T1t1
+1#1*171@1K1Q1]1c1q1x1
+1%111=1B1R1Y1y1~1
+1,101H1X1h1l1p1t1x1|1
+1,282A2^2
+1'1=1K1X1a1q1|1
+1'1P1b1
+2 2)222;2D2M2v2
+2 282<2@2D2H2\2l2p2
+2#2-2:2F2V2f2{2
+2#2-282A2Z2b2j2
+2=2P2_2w2~2
+28.2.7 Build: 07
+3#3)373@3f3{3
+3&393q3w3}3
+3(30383@3H3P3X3`3h3t3
+3*343b3m3
+3.3A3P3V3]3i3v3
+3;3G3S3_3h3
+4"4(4K4}4
+4#464R4b4
+4$4D4L4T4\4d4l4t4|4
+4,4<4E4T4Z4`4f4l4r4x4
+4'4-484W4a4~4
+454H4N4Z4f4k4{4
+5"5+5D5M5n5{5
+5#565G5`5f5o5t5|5
+5$5,585X5`5l5
+525E5Q5f5x5
+565F5d5
+6 6$6(6,6064686<6@6D6H6L6P6T6X6\6l6
+6 6(646X6x6
+6)6<6l6
+6+6=6F6Z6`6r6
+6-626\6e6r6
+6'656B6L6Z6k6
+6K6S6`6e6
+7 7$7(7,7074787<7@7D7H7L7P7T7X7\7`7d7h7l7p7t7x7|7
+7$7P7p7x7
+7%7-777D7R7i7s7z7
+7&888N8i8v8~8
+7/747X7a7n7w7
+7/797C7U7\7r7
+7;7o7t7
+8 8$8(8,8084888<8@8D8H8L8P8T8X8\8`8d8h8l8p8t8x8|8
+8"888U8^8g8p8y8
+8&80858;8H8N8`8k8s8
+8(808H8P8X8`8|8
+8/959E9S9[9n9t9
+848<8G8V8\8b8{8
+868E8c8v8
+9 9$9(9,9094989<9@9D9H9L9P9T9X9\9`9d9h9l9p9t9x9|9
+9 9(949<9`9t9|9
+9 9*9=9J9[9c9k9t9{9
+9#9)939W9
+9$9:9X9d9p9|9
+9-9S9f9
+About WinPDT
+All Files (*.*)|*.*||
+AppendMenuA
+C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\atlmfc\include\afxwin2.inl
+C:\WinPDT\WinPDT.dat
+C:\WinPDT\WinPDT.log
+Cancel
+CFiscalInventoryTempSet
+Character recevied --> %c  <--
+Comments
+CompanyName
+Control-D received (%s)
+Copyright 
+Copyright (C) 1999
+D$ +D$
+Data File (%s) already exists.6This could be from a failed download.  If the data was6not cleared from the PDT - delete the file.  Otherwise(contact customer support for assistance.
+Data File existed
+Data File:
+DataFile
+DecodePointer
+DeleteCriticalSection
+DoUpload
+DrawIcon
+DRich2
+DSN=WinPrism;UID=<redacted>;PWD=<redacted>;DATABASE=prism
+EnableMenuItem
+EnableWindow
+EncodePointer
+Error #%d opening serial port.
+ERROR : Unable to initialize critical section in CAtlBaseModule
+Error opening Data File (%s)
+Error opening Log File (%s)
+ERROR: %d#Invalid PDT command line parameters&Unable to receive xmodem file from PDT#Xmodem download from PDT successful%Invalid record count in file from PDT
+Escape pressed...exiting
+Exception thrown in destructor
+FileDescription
+FileVersion
+GetClientRect
+GetCurrentProcessId
+GetCurrentThreadId
+GetLastError
+GetSystemMenu
+GetSystemMetrics
+GetSystemTimeAsFileTime
+InitializeCriticalSectionEx
+Initializing RS232 serial port
+InternalName
+Invalid Data File
+Invalid Logfile
+Invalid PDT Data Filename
+Invalid username or password
+IsDebuggerPresent
+IsIconic
+IsProcessorFeaturePresent
+KERNEL32.dll
+L$$h2u
+L$$h3u
+L$|_^[3
+l4p4t4x4|4
+LegalCopyright
+LegalTrademarks
+Line received (%s) (%d)
+LoadIconA
+Log File:
+Log Level:
+LogFile
+Login: 
+LogLevel
+logout
+Max chars received (%s)$Timeout waiting for RS232 input (%s)'Timed out or got Ctrl-D at login prompt
+memset
+mfc120.dll
+MS Sans Serif
+msctls_updown32
+MSVCR120.dll
+Nebraska Book Company, Inc.
+ODBC;DSN=WinPrism
+ODBC32.dll
+OriginalFilename
+OutputDebugStringW
+Password:
+PDT has logged in"Sending command line prompt to PDT.No PDT input for over 20 seconds...logging off
+PDT has logged off normally
+PDT has requested a download
+PDTLinkConfig
+PrivateBuild
+Processing PDT login session
+ProductName
+ProductVersion
+QueryPerformanceCounter
+Save Data File As
+Save Log File As
+Sending login prompt to PDT-Waiting for PDT login...press Cancel to abort3Ready to try another download...Clear all messages?
+SendMessageA
+Serial Port:
+SerialPort
+SetTimer
+SpecialBuild
+StringFileInfo
+t%WhXT
+Translation
+Transmitting -->%s<--
+Unable to connect to database%Error reading PDT data from data file(Error creating tempory download filename
+Unable to delete Data File (%s)
+Unable to send password prompt#Timed out or got Ctrl-D in password
+Upload Data:
+USER32.dll
+VarFileInfo
+VS_VERSION_INFO
+WinPDT
+WinPDT Configuration
+WinPDT Version 1.0
+WinPDT_%d_%d_
+WPComm.dll
+WPPdt DLL
+WPPdt Dynamic Link Library
+WPPdt.DLL

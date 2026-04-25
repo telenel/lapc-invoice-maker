@@ -1,0 +1,2770 @@
+﻿ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
+ 1997-2015
+ and CurrencyExId = %d
+ AND LocationID = %ld
+ AND LocationID in (%s)
+ AND POID = %ld
+ and poid in (select poid from po_detail pod inner join po_location pol on pod.pod_id = pol.pod_id where pol.PODL_ID NOT IN (SELECT PurchaseDtlID FROM VW_INVC_DETAIL WHERE InvoiceID = %d))
+ AND POID in (Select POID From VW_INVC_PODETAIL where LocationID in (%s))
+ AND RecvQty > 0
+ AND SKU = %ld
+ Invoice Item
+ t!Hu<Phs
+!This program cannot be run in DOS mode.
+%s (%s:%d)
+&070c0~0
+(fBuyback IN (1,2) OR fMerchTrans IN (1))
+(InvoiceDate >= '%s 00:00:00' AND  InvoiceDate <= '%s 23:59:59')
+.?AV?$CArray@NN@@
+.?AV?$CArray@PAVCDiscrepancyGridData@@PAV1@@@
+.?AV?$CG3GridTemplate@VCGXGridWnd@@@@
+.?AV?$CG3GridTemplate@VCGXRecordView@@@@
+.?AV?$CG3GridTemplate@VCGXRecordWnd@@@@
+.?AV?$CG3XRecordBase@VCG3XRecordViewBase@@@@
+.?AV?$CG3XRecordBase@VCG3XRecordWndBase@@@@
+.?AV?$CG3XViewBase@VCGXRecordView@@@@
+.?AV?$CMapArrayT@V?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@@
+.?AVCBitmap@@
+.?AVCCmdTarget@@
+.?AVCCommonDialog@@
+.?AVCDialog@@
+.?AVCDiscrepancyCtrl@@
+.?AVCDiscrepancyGrid@@
+.?AVCDiscrepancyGridData@@
+.?AVCEdit@@
+.?AVCException@@
+.?AVCFormView@@
+.?AVCFrameWnd@@
+.?AVCFreightINVAddNewDlg@@
+.?AVCFreightINVDetailDlg@@
+.?AVCFreightINVDetailSet@@
+.?AVCFreightINVDetailView@@
+.?AVCFreightINVDispDetailSet@@
+.?AVCFreightINVFrame@@
+.?AVCFreightINVHeaderSet@@
+.?AVCFreightINVHeaderView@@
+.?AVCFreightINVQuickSearch@@
+.?AVCFreightINVQuickSearchGrid@@
+.?AVCG3CDHeaderSet@@
+.?AVCG3Dialog@@
+.?AVCG3Exception@@
+.?AVCG3HeaderDtlSheet@@
+.?AVCG3HeaderDtlViewBase@@
+.?AVCG3InfoDlgBase@@
+.?AVCG3LBGridBase@@
+.?AVCG3QuickSearchBase@@
+.?AVCG3QuickSearchResultsGrid@@
+.?AVCG3RecordView@@
+.?AVCG3Worksheet@@
+.?AVCG3XCurrencyEdit@@
+.?AVCG3XGridWnd@@
+.?AVCG3XNoNegCurrEdit@@
+.?AVCG3XRecordView@@
+.?AVCG3XRecordViewBase@@
+.?AVCG3XRecordWnd@@
+.?AVCG3XRecordWndBase@@
+.?AVCGdiObject@@
+.?AVCGXBCurrencyEdit@@
+.?AVCGXBDropEdit@@
+.?AVCGXBrowserGrid@@
+.?AVCGXControl@@
+.?AVCGXCurrencyEdit@@
+.?AVCGXGridCore@@
+.?AVCGXGridWnd@@
+.?AVCGXODBCGrid@@
+.?AVCGXRecordView@@
+.?AVCGXRecordWnd@@
+.?AVCGXStatic@@
+.?AVCGXView@@
+.?AVCHeaderSet@@
+.?AVCInvAddNewDlg@@
+.?AVCInvAddPODlg@@
+.?AVCInvAllocHdrDlg@@
+.?AVCInvAllocHdrGrid@@
+.?AVCInvAllocHdrSet@@
+.?AVCINVAllViewGM@@
+.?AVCINVAllViewTX@@
+.?AVCInvDetailSet@@
+.?AVCInvDetailSumSet@@
+.?AVCINVDetailViewBase@@
+.?AVCINVDetailViewGM@@
+.?AVCINVDetailViewTX@@
+.?AVCInvDiscrepancyCtrl@@
+.?AVCInvDiscrepancyGrid@@
+.?AVCINVDiscrGrid@@
+.?AVCInvDiscrSet@@
+.?AVCInvDispDetailSet@@
+.?AVCInvEditDiscountDlg@@
+.?AVCInvEditInfoSet@@
+.?AVCINVFrame@@
+.?AVCINVHeaderSet@@
+.?AVCINVHeaderView@@
+.?AVCInvLocationSet@@
+.?AVCInvoicePrintTagsDlg@@
+.?AVCInvPayShortDlg@@
+.?AVCInvPODetailGrid@@
+.?AVCInvPODetailSet@@
+.?AVCInvPOHeaderGrid@@
+.?AVCInvPOHeaderSet@@
+.?AVCInvPrePayDlg@@
+.?AVCInvPrintDiscrDlg@@
+.?AVCINVQuickSearch@@
+.?AVCINVQuickSearchGrid@@
+.?AVCInvQwkDiscrDlg@@
+.?AVCInvQwkInsertDlg@@
+.?AVCInvSelectDtlDlg@@
+.?AVCInvSelectGrid@@
+.?AVCINVSummaryView@@
+.?AVCLocationSelectorClient@@
+.?AVCMapArray@@
+.?AVCMDIChildWnd@@
+.?AVCObject@@
+.?AVCRecordset@@
+.?AVCRecordView@@
+.?AVCScrollView@@
+.?AVCView@@
+.?AVCWnd@@
+.?AVSECMDIChildWnd@@
+.?AVSECWorksheetWnd@@
+.?AVtype_info@@
+.PAVCDBException@@
+.PAVCException@@
+.PAVCG3Exception@@
+.PAVCObject@@
+/D$4vHh<
+/D$4vHh=
+: :$:(:,:0:4:8:<:@:D:H:L:P:T:X:\:`:d:h:l:p:t:x:|:
+: :$:(:,:0:4:8:<:@:D:H:L:T:l:p:
+: :&:,:2:8:>:D:J:P:V:\:
+: :*:4:>:h:p:x:
+: :@;D;\;t;
+:!:-:9:D:u:|:
+:":(:.:4:::@:F:L:R:X:^:d:j:p:v:|:
+:":):V:
+:":8:I:}:
+:";1;F;T;k;
+:$:,:4:@:`:l:
+:$:::I:Q:n:x:
+:$:0:8:P:X:h:
+:%:;:U:^:g:}:
+:%:t:y:
+:&:6:b:w:
+:(:,:D:H:`:d:|:
+:(:6:T:j:~:
+:(:B:T:\:n:v:
+:):?:U:d:s:
+:);1;Z;
+:);2;=;Y;`;n;};
+:*:V:f:
+:.:^:d:
+:.;:;F;R;^;f;s;
+:':>:N:\:x:}:
+:':8:G:V:
+:;:C:c:z:
+:+:4:?:M:V:a:o:x:
+:+:D:t:|:
+:=:Q:^:
+:0:8:@:H:P:X:`:p:x:
+:1:>:H:^:l:v:
+:4:G:W:
+:4:L:d:|:
+:4:T:p:
+:6:E:\:l:s:
+:6;G;M;
+:6;H;f;u;
+:7:M:\:d:
+:8:H:W:
+:8;<;@;D;H;L;P;T;X;\;`;d;h;l;p;t;x;|;
+:8;Y;k;z;
+:L;d;|;
+; ;$;(;,;0;4;8;<;@;D;H;L;P;T;X;\;`;d;h;l;p;t;x;|;
+; ;(;0;8;D;d;p;x;
+; ;,;L;T;\;h;
+; ;6;J;Q;d;j;o;|;
+;!;6;A;W;q;{;
+;!;7;F;N;k;};
+;";3;M;^;u;
+;"<.<[<d<
+;#;/;w;
+;#;N;Z;f;r;~;
+;#;P;U;
+;$;(;@;D;\;`;x;|;
+;$;*;0;6;<;B;H;N;T;Z;`;f;l;r;x;~;
+;$;>;[;p;u;
+;$;3;;;X;b;
+;$;4;D;T;d;t;
+;$;C;P;e;o;
+;&;=;L;T;c;k;
+;(;4;];x;
+;(;9;u;
+;,;D;`;
+;.;:;C;m;r;
+;';3;?;K;n;
+;-;E;N;W;`;i;r;{;
+;?<X<r<}<
+;+;:;B;K;T;
+;+;E;[;u;
+;<<T<l<
+;-<><Q<a<q<
+;2;L;X;z;
+;3<<<A<N<Y<m<t<
+;4;<;D;L;T;\;d;l;t;
+;4<V<g<~<
+;5;A;l;
+;6;E;\;o;v;|;
+;6<H<h<{<
+;8;@;L;l;t;|;
+;A;H;Y;x;
+;E;`;o;
+;F;X;u;
+;t$8}B
+? ?$?(?,?0?4?8?<?@?D?H?L?P?T?X?\?`?d?h?l?p?t?x?|?
+? ?&?,?2?8?>?D?J?P?V?\?b?h?n?t?z?
+? ?(?0?8?T?\?d?p?x?
+? ?)?A?F?o?x?
+? ?/?>?T?e?n?
+?!?*?3?@?Q?h?q?
+?#?>?F?S?
+?#?2?A?W?e?t?
+?#?2?b?q?
+?$?<?T?l?
+?$?4?D?T?d?h?l?p?t?x?
+?%?/?8?G?`?j?s?
+?%?4?J?e?{?
+?&?=?M?V?k?
+?&?8?X?p?
+?,?<?L?\?`?d?h?l?p?x?|?
+?,?3?B?H?
+?/?@?T?c?r?
+??$DDX_FieldPctMaskEdit@V?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@@YGXPAVCDataExchange@@AAVCG3PercentMaskedEdit@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PAVCRecordset@@@Z
+??$DDX_PctMaskEdit@N@@YGXPAVCDataExchange@@AAVCG3PercentMaskedEdit@@AAN@Z
+?-?;?x?
+??_7CDiscrepancyCtrl@@6B@
+??_7CDiscrepancyGrid@@6BCGXGridCore@@@
+??_7CDiscrepancyGrid@@6BCWnd@@@
+??_7CDiscrepancyGridData@@6B@
+??_7CFreightINVFrame@@6B@
+??_7CFreightINVHeaderView@@6B@
+??_7CINVFrame@@6B@
+??_7CINVHeaderView@@6B@
+??0_LS@@QAE@I@Z
+??0CDiscrepancyCtrl@@QAE@XZ
+??0CDiscrepancyGrid@@QAE@HHW4eDiscrepancyTypes@@NNNH@Z
+??0CDiscrepancyGridData@@QAE@ABV0@@Z
+??0CDiscrepancyGridData@@QAE@XZ
+??0CFreightINVFrame@@IAE@XZ
+??0CFreightINVHeaderSet@@QAE@PAVCDatabase@@@Z
+??0CFreightINVHeaderView@@IAE@XZ
+??0CG3CDDetailSet@@QAE@PAVCDatabase@@@Z
+??0CG3CDHeaderSet@@QAE@PAVCDatabase@@@Z
+??0CG3ColorStaticCtrl@@QAE@XZ
+??0CG3ComboBox@@QAE@XZ
+??0CG3CurrencyEdit@@QAE@XZ
+??0CG3DateTime@@QAE@ABU_SYSTEMTIME@@@Z
+??0CG3DateTime@@QAE@XZ
+??0CG3DateTimeCtrl@@QAE@XZ
+??0CG3DCCBrowseEdit@@QAE@XZ
+??0CG3Dialog@@QAE@IPAVCWnd@@@Z
+??0CG3EDIIndicator@@QAE@XZ
+??0CG3Exception@@QAE@PBDW4ESeverity@0@@Z
+??0CG3GLCodeBrowseEdit@@QAE@XZ
+??0CG3GSTEdit@@QAE@XZ
+??0CG3HeaderDtlSheet@@IAE@XZ
+??0CG3HeaderDtlViewBase@@IAE@XZ
+??0CG3InfoDlgBase@@QAE@IPAVCWnd@@@Z
+??0CG3InvDiscrReasonBrowseDlg@@QAE@PAVCWnd@@@Z
+??0CG3LBGridBase@@QAE@XZ
+??0CG3PercentMaskedEdit@@QAE@XZ
+??0CG3PriceCalcEdits@@QAE@XZ
+??0CG3PriceCalculatorDlg@@QAE@NNHPAVCWnd@@@Z
+??0CG3QuickSearchBase@@QAE@XZ
+??0CG3QuickSearchResultsGrid@@QAE@XZ
+??0CG3RecordView@@IAE@I@Z
+??0CG3VendBrowseEdit@@QAE@XZ
+??0CG3Worksheet@@IAE@XZ
+??0CG3XCurrencyEdit@@QAE@PAVCGXGridCore@@I@Z
+??0CG3XGridWnd@@QAE@XZ
+??0CG3XNoNegCurrEdit@@QAE@PAVCGXGridCore@@I@Z
+??0CG3XRecordView@@QAE@XZ
+??0CG3XRecordWnd@@QAE@XZ
+??0CGXBrush@@QAE@XZ
+??0CGXDynamicRecordset@@QAE@PAVCDatabase@@@Z
+??0CGXRange@@QAE@KK@Z
+??0CGXRange@@QAE@XZ
+??0CGXStyle@@QAE@XZ
+??0CINVFrame@@IAE@XZ
+??0CINVHeaderSet@@QAE@PAVCDatabase@@@Z
+??0CINVHeaderView@@IAE@I@Z
+??0CINVHeaderView@@IAE@XZ
+??0CMapArray@@QAE@XZ
+??0SEC3DTabWnd@@QAE@XZ
+??1_LS@@QAE@XZ
+??1CDiscrepancyCtrl@@UAE@XZ
+??1CDiscrepancyGrid@@UAE@XZ
+??1CDiscrepancyGridData@@UAE@XZ
+??1CFreightINVFrame@@MAE@XZ
+??1CFreightINVHeaderSet@@UAE@XZ
+??1CFreightINVHeaderView@@MAE@XZ
+??1CG3CDDetailSet@@UAE@XZ
+??1CG3CDHeaderSet@@UAE@XZ
+??1CG3ColorStaticCtrl@@UAE@XZ
+??1CG3ComboBox@@UAE@XZ
+??1CG3CurrencyEdit@@UAE@XZ
+??1CG3DateTimeCtrl@@UAE@XZ
+??1CG3DCCBrowseEdit@@UAE@XZ
+??1CG3Dialog@@UAE@XZ
+??1CG3EDIIndicator@@UAE@XZ
+??1CG3Exception@@UAE@XZ
+??1CG3GLCodeBrowseEdit@@UAE@XZ
+??1CG3GSTEdit@@UAE@XZ
+??1CG3HeaderDtlSheet@@MAE@XZ
+??1CG3HeaderDtlViewBase@@MAE@XZ
+??1CG3InfoDlgBase@@UAE@XZ
+??1CG3InvDiscrReasonBrowseDlg@@UAE@XZ
+??1CG3LBGridBase@@UAE@XZ
+??1CG3PercentMaskedEdit@@UAE@XZ
+??1CG3PriceCalcEdits@@UAE@XZ
+??1CG3PriceCalculatorDlg@@UAE@XZ
+??1CG3QuickSearchBase@@UAE@XZ
+??1CG3QuickSearchResultsGrid@@UAE@XZ
+??1CG3RecordView@@UAE@XZ
+??1CG3VendBrowseEdit@@UAE@XZ
+??1CG3Worksheet@@MAE@XZ
+??1CG3XCurrencyEdit@@UAE@XZ
+??1CG3XGridWnd@@UAE@XZ
+??1CG3XNoNegCurrEdit@@UAE@XZ
+??1CG3XRecordView@@UAE@XZ
+??1CG3XRecordWnd@@UAE@XZ
+??1CGXDynamicRecordset@@UAE@XZ
+??1CGXStyle@@UAE@XZ
+??1CINVFrame@@MAE@XZ
+??1CINVHeaderSet@@UAE@XZ
+??1CINVHeaderView@@MAE@XZ
+??1CMapArray@@UAE@XZ
+??1SEC3DTabWnd@@UAE@XZ
+??1type_info@@UAE@XZ
+?'?2?B?N?T?Z?o?u?
+?'?4?V?d?
+??4CDiscrepancyGridData@@QAEAAV0@ABV0@@Z
+??4CDiscrepancyGridData@@QAEABV0@AAVCG3CDDetailSet@@@Z
+?-?6?h?q?
+?-?6?V?\?c?i?t?z?
+??8CG3DateTime@@QBEHABUtagTIMESTAMP_STRUCT@@@Z
+?_GetBaseClass@CDiscrepancyCtrl@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CFreightINVFrame@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CFreightINVHeaderView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CINVFrame@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CINVHeaderView@@KGPAUCRuntimeClass@@XZ
+?+?5?S?]?
+?2?7?A?r?
+?2?9?o?
+?3?T?Z?
+?8?@?L?l?t?|?
+?8?D?d?p?
+?8?R?d?l?~?
+?ActivateFrame@CG3Worksheet@@UAEXH@Z
+?AddBinding@CG3UpdateInfoArray@@QAEHPAVCRecordset@@KV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?AddBorders@CGXGridCore@@UAE?AVCSize@@V2@ABVCGXStyle@@@Z
+?AddBorders@CGXStatic@@UAE?AVCSize@@V2@ABVCGXStyle@@@Z
+?AddChild@CGXControl@@MAEXPAVCGXChild@@@Z
+?AddColumnFilter@?$CG3GridTemplate@VCGXGridWnd@@@@MAEXKVCPoint@@@Z
+?AddColumnFilter@?$CG3GridTemplate@VCGXRecordView@@@@MAEXKVCPoint@@@Z
+?AddColumnFilter@?$CG3GridTemplate@VCGXRecordWnd@@@@MAEXKVCPoint@@@Z
+?AddComboChoiceList@CDiscrepancyGrid@@IAEXW4eColumns@1@PBD@Z
+?AddCommand@CGXGridCore@@UAEXPAVCGXCommand@@W4GXCmdType@@@Z
+?AddControl@CG3LayoutManager@@QAEXW4ELayoutType@1@I@Z
+?AddCustomMenuItems@CG3QuickSearchBase@@MAEXPAVCMenu@@@Z
+?AddDiscrepancy@CDiscrepancyGrid@@IAEXPAVCDiscrepancyGridData@@@Z
+?AddNew@CGXBrowserGrid@@UAEKXZ
+?AddParam@CG3ParamInfoOb@@QAEHHHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?AddQuery@CMapArray@@QAE_NABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?AddRecalcRange@CGXGridCore@@UAEXABVCGXRange@@@Z
+?AddRow@CDiscrepancyGrid@@IAEXHPAVCDiscrepancyGridData@@@Z
+?AllowGridFilter@?$CG3GridTemplate@VCGXGridWnd@@@@MBE_NXZ
+?AllowGridFilter@?$CG3GridTemplate@VCGXRecordView@@@@MBE_NXZ
+?AllowGridFilter@?$CG3GridTemplate@VCGXRecordWnd@@@@MBE_NXZ
+?AttachForeignTable@CGXODBCGrid@@QAEXKPAVCGXDynamicRecordset@@IIHH@Z
+?BatchDelete@CG3RecordView@@UAEJIJ@Z
+?BatchPrintClose@CG3RecordView@@UAEJIJ@Z
+?BatchPrintInit@CG3RecordView@@UAEJIJ@Z
+?BatchPrintPrint@CG3RecordView@@UAEJIJ@Z
+?BatchUpdateAllGlobals@CG3RecordView@@UAEXXZ
+?BeginTrans@CGXGridCore@@UAEXPBD@Z
+?BeginTrans@CGXODBCGrid@@UAEXPBD@Z
+?C?V?d?x?
+?CalcBufferDimension@CGXGridCore@@UAEHPBDKAAK1@Z
+?CalcRectFromRowCol@CGXGridCore@@UAE?AVCRect@@KKKKH@Z
+?CalcSize@CGXStatic@@UAE?AVCSize@@PAVCDC@@KKABVCGXStyle@@PBV4@H@Z
+?CalculateTotals@CINVHeaderView@@QAEXXZ
+?CanActivateGrid@CGXGridCore@@UAEHH@Z
+?CanAppend@CGXODBCGrid@@UAEHXZ
+?CancelRecord@CGXBrowserGrid@@UAEXXZ
+?CanChangeAutoFillSelection@CGXGridCore@@MAEHAAVCGXRange@@ABV2@@Z
+?CanChangeSelection@CGXBrowserGrid@@UAEHPAVCGXRange@@HH@Z
+?CanChangeSelection@CGXGridCore@@MAEHPAVCGXRange@@HH@Z
+?CanChangeTab@CGXGridCore@@UAEHXZ
+?CanClear@CGXGridCore@@UAEHXZ
+?CanCopy@CGXControl@@UAEHXZ
+?CanCopy@CGXGridCore@@UAEHXZ
+?CanCut@CGXBrowserGrid@@UAEHXZ
+?CanCut@CGXControl@@UAEHXZ
+?CanCut@CGXGridCore@@UAEHXZ
+?CanFillCells@?$CG3GridTemplate@VCGXGridWnd@@@@MAE_NXZ
+?CanFillCells@?$CG3GridTemplate@VCGXRecordView@@@@MAE_NXZ
+?CanFillCells@?$CG3GridTemplate@VCGXRecordWnd@@@@MAE_NXZ
+?CanFloatCell@CGXCurrencyEdit@@UAEHKKABVCGXStyle@@H@Z
+?CanFloatCell@CGXGridCore@@UAEHPAVCGXControl@@KKABVCGXStyle@@H@Z
+?CanFreezeCols@CGXGridCore@@UAEHXZ
+?CanFreezeRows@CGXGridCore@@UAEHXZ
+?CanMergeCell@CGXControl@@UAEHKKABVCGXStyle@@H@Z
+?CanMergeCell@CGXGridCore@@UAEHPAVCGXControl@@KKABVCGXStyle@@H@Z
+?CanMergeCells@CGXGridCore@@UAEHABVCGXStyle@@0@Z
+?CanPaste@CGXBrowserGrid@@UAEHXZ
+?CanPaste@CGXControl@@UAEHXZ
+?CanPaste@CGXGridCore@@UAEHXZ
+?CanRedo@CGXGridCore@@UAEHPAVCCmdUI@@@Z
+?CanSelectCurrentCell@CGXBrowserGrid@@UAEHHKKKK@Z
+?CanSelectCurrentCell@CGXGridCore@@MAEHHKKKK@Z
+?CanUndo@CGXGridCore@@UAEHPAVCCmdUI@@@Z
+?CanUnfreezeCols@CGXGridCore@@UAEHXZ
+?CanUnfreezeRows@CGXGridCore@@UAEHXZ
+?CanUpdate@CGXODBCGrid@@UAEHXZ
+?ChangeBaseStyle@CGXGridCore@@UAEHGABVCGXStyle@@W4GXModifyType@@IW4GXCmdType@@@Z
+?ChangeProperties@CGXGridCore@@UAEHABVCGXProperties@@IW4GXCmdType@@@Z
+?ChangeStylesMap@CGXGridCore@@UAEHABVCGXStylesMap@@IW4GXCmdType@@@Z
+?CheckDiscrepancyTran@CINVHeaderView@@IAEXH@Z
+?ChildWithFocus@CGXControl@@MAEPAVCGXChild@@XZ
+?classCDiscrepancyCtrl@CDiscrepancyCtrl@@2UCRuntimeClass@@B
+?classCFreightINVFrame@CFreightINVFrame@@2UCRuntimeClass@@B
+?classCFreightINVHeaderView@CFreightINVHeaderView@@2UCRuntimeClass@@B
+?classCINVFrame@CINVFrame@@2UCRuntimeClass@@B
+?classCINVHeaderView@CINVHeaderView@@2UCRuntimeClass@@B
+?CleanAdvancedUndo@CGXGridCore@@UAEXXZ
+?Clear@CGXGridCore@@UAEHH@Z
+?ClearCells@CGXBrowserGrid@@UAEHABVCGXRangeList@@H@Z
+?ClearCells@CGXGridCore@@UAEHABVCGXRangeList@@H@Z
+?ClearCellsAlternate@CGXGridCore@@UAEHABVCGXRange@@H@Z
+?ClearFields@CG3InfoDlgBase@@UAEXXZ
+?ClearGrid@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXXZ
+?ClearGrid@?$CG3GridTemplate@VCGXRecordView@@@@UAEXXZ
+?ClearGrid@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXXZ
+?ClearGXData@?$CG3XRecordBase@VCG3XRecordViewBase@@@@IAEXXZ
+?Close@CGXDynamicRecordset@@UAEXXZ
+?CommitTrans@CGXGridCore@@UAEXXZ
+?CommitTrans@CGXODBCGrid@@UAEXXZ
+?CommonConstruct@CINVHeaderView@@IAEXXZ
+?ComposeStyleRowCol@CGXGridCore@@UAEXKKPAVCGXStyle@@H@Z
+?ComputeTotal@CINVHeaderView@@IAEXXZ
+?ContinueModal@CG3Dialog@@UAEHXZ
+?ConvertControlTextToValue@CGXCurrencyEdit@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@KKPBVCGXStyle@@@Z
+?ConvertValueToString@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEXKAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?ConvertValueToString@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXKAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Copy@CGXCurrencyEdit@@UAEHXZ
+?Copy@CGXGridCore@@UAEHXZ
+?CopyCells@CGXGridCore@@UAEHVCGXRange@@KKI@Z
+?CopyCellsToArchive@CGXGridCore@@UAEHAAVCArchive@@ABVCGXRangeList@@H@Z
+?CopyRange@CGXGridCore@@UAEHABVCGXRange@@@Z
+?CopyRange@CGXGridCore@@UAEHABVCGXRangeList@@@Z
+?CopyRangeList@CGXGridCore@@UAEHAAVCGXRangeList@@H@Z
+?CopyTextToFile@CGXGridCore@@UAEHAAVCFile@@ABVCGXRangeList@@@Z
+?Create@CGXRecordWnd@@QAEHKABUtagRECT@@PAVCWnd@@I@Z
+?CreateControl@CGXCurrencyEdit@@UAEHK@Z
+?CreateGrid@CDiscrepancyCtrl@@IAE_NXZ
+?CreateGridInfo@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEXXZ
+?CreateGridInfo@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXXZ
+?CreateInQuery@CG3QuickSearchBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV23@0@Z
+?CreateMenuResourceIds@CG3QuickSearchBase@@MAEXXZ
+?CreateObject@CFreightINVFrame@@SGPAVCObject@@XZ
+?CreateObject@CFreightINVHeaderView@@SGPAVCObject@@XZ
+?CreateObject@CINVFrame@@SGPAVCObject@@XZ
+?CreateObject@CINVHeaderView@@SGPAVCObject@@XZ
+?CreatePopupMenu@CGXBCurrencyEdit@@MBEPAVCMenu@@XZ
+?CreateQuickToolBar@CG3Worksheet@@IAEHKIK@Z
+?CreateStyle@CGXGridCore@@UAEPAVCGXStyle@@XZ
+?CreateToolBar@CDiscrepancyCtrl@@IAE_NXZ
+?CreateView@CGXTabWnd@@QAEPAVCWnd@@PAUCRuntimeClass@@PBDPAUCCreateContext@@I@Z
+?CreditMemoExists@CDiscrepancyGrid@@MAE_NXZ
+?CustomDisplayMenu@CG3QuickSearchBase@@MAEXPAVCMenu@@@Z
+?Cut@CGXBrowserGrid@@UAEHXZ
+?Cut@CGXCurrencyEdit@@UAEHXZ
+?Cut@CGXGridCore@@UAEHXZ
+?CutRange@CGXGridCore@@UAEHABVCGXRangeList@@H@Z
+?DDX_BEItem@@YGXPAVCDataExchange@@IAAJPAVCG3BrowseEditBase@@@Z
+?DDX_CBItem@@YGXPAVCDataExchange@@HAAJ@Z
+?DDX_CurrEdit@@YGXPAVCDataExchange@@AAVCG3CurrencyEdit@@AAN@Z
+?DDX_CurrEdit@@YGXPAVCDataExchange@@AAVCG3CurrencyEdit@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?DDX_DateText@@YGXPAVCDataExchange@@HAAUtagTIMESTAMP_STRUCT@@@Z
+?DDX_DateTime@@YGXPAVCDataExchange@@HAAUtagTIMESTAMP_STRUCT@@@Z
+?DDX_FieldBEItem@@YGXPAVCDataExchange@@IAAJPAVCRecordset@@PAVCG3BrowseEditBase@@@Z
+?DDX_FieldCBItem@@YGXPAVCDataExchange@@HAAJPAVCRecordset@@_N@Z
+?DDX_FieldCurrEdit@@YGXPAVCDataExchange@@AAVCG3CurrencyEdit@@AANPAVCRecordset@@@Z
+?DDX_FieldCurrEdit@@YGXPAVCDataExchange@@AAVCG3CurrencyEdit@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PAVCRecordset@@@Z
+?DDX_FieldDateTime@@YGXPAVCDataExchange@@HAAUtagTIMESTAMP_STRUCT@@PAVCRecordset@@@Z
+?DDX_G3FieldText@@YGXPAVCDataExchange@@HAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PAVCRecordset@@@Z
+?DDX_PriceEdits@@YGXPAVCDataExchange@@PAVCG3PriceCalcEdits@@AAN2@Z
+?DeferDestroyWindow@CG3Worksheet@@QAEXXZ
+?DefWindowProcA@SECMDIChildWnd@@UAEJIIJ@Z
+?DeleteDiscrepancies@CINVHeaderView@@IAEHXZ
+?DeleteDiscrepancy@CDiscrepancyGrid@@IAEXPAVCDiscrepancyGridData@@@Z
+?DeletePopupMenu@CGXBCurrencyEdit@@MBEXPAVCMenu@@@Z
+?DeleteRangeName@CGXGridCore@@UAEHPBDPAVCObject@@W4GXCmdType@@@Z
+?DeleteRecords@CGXBrowserGrid@@UAEXXZ
+?DeleteRows@CG3QuickSearchResultsGrid@@MAEXABVCDWordArray@@0PAH@Z
+?DeleteRows@CGXODBCGrid@@UAEXABVCDWordArray@@0PAH@Z
+?DeleteUsesSQL@CG3RecordView@@UAEHXZ
+?DestroyWindow@CG3Worksheet@@UAEHXZ
+?DiffDate@CG3DateTime@@QAEJAAU_SYSTEMTIME@@@Z
+?DisplayAggregateText@CG3Worksheet@@UAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?DisplayContextMenu@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXKKVCPoint@@@Z
+?DisplayContextMenu@?$CG3GridTemplate@VCGXRecordView@@@@UAEXKKVCPoint@@@Z
+?DisplayContextMenu@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXKKVCPoint@@@Z
+?DisplayContextMenu@CG3QuickSearchResultsGrid@@MAEXKKVCPoint@@@Z
+?DisplayHidenControls@CINVHeaderView@@IAEXXZ
+?DisplayMenu@CG3QuickSearchBase@@MAEXI@Z
+?DisplayMenu@CG3QuickSearchBase@@MAEXXZ
+?DisplayWarningText@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXXZ
+?DisplayWarningText@?$CG3GridTemplate@VCGXRecordView@@@@UAEXXZ
+?DisplayWarningText@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXXZ
+?DndDrawMoveRect@CGXGridCore@@UAEXVCPoint@@HH@Z
+?DndStartDragDrop@CGXGridCore@@UAEHKK@Z
+?DoAutoFill@CGXGridCore@@MAEXAAVCGXRange@@0@Z
+?DoBackspace@CGXBCurrencyEdit@@MAEXXZ
+?DoCancelMode@CGXGridCore@@MAEHXZ
+?DoCommand@CGXGridCore@@MAEHIJ@Z
+?DoCtlColor@CGXGridCore@@MAEPAUHBRUSH__@@PAVCDC@@PAVCWnd@@I@Z
+?DoDataExchange@CFreightINVHeaderView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CG3Dialog@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CG3HeaderDtlViewBase@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CG3InfoDlgBase@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CG3RecordView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CINVHeaderView@@MAEXPAVCDataExchange@@@Z
+?DoDelete@CGXBCurrencyEdit@@MAEXXZ
+?DoFieldExchange@CFreightINVHeaderSet@@MAEXPAVCFieldExchange@@@Z
+?DoFieldExchange@CG3CDHeaderSet@@UAEXPAVCFieldExchange@@@Z
+?DoFieldExchange@CINVHeaderSet@@UAEXPAVCFieldExchange@@@Z
+?DoGetDlgCode@CGXGridCore@@MAEII@Z
+?DoGetScrollBarCtrl@CGXGridCore@@MBEPAVCScrollBar@@H@Z
+?DoHScroll@CGXGridCore@@MAEHIIPAVCScrollBar@@@Z
+?DoInsert@CGXBCurrencyEdit@@MAEXPBD@Z
+?DoItemFindSKU@CINVHeaderView@@IAE_NPAVCG3ItemFindObj@@@Z
+?DoLButtonDblClk@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoLButtonDown@?$CG3GridTemplate@VCGXGridWnd@@@@UAEHIVCPoint@@@Z
+?DoLButtonDown@?$CG3GridTemplate@VCGXRecordView@@@@UAEHIVCPoint@@@Z
+?DoLButtonDown@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHIVCPoint@@@Z
+?DoLButtonUp@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoMButtonDblClk@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoMButtonDown@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoMButtonUp@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoModal@CG3Dialog@@UAEHPAVCView@@@Z
+?DoModal@CG3Dialog@@UAEHXZ
+?DoMouseActivate@CGXGridCore@@MAEHPAVCWnd@@IIAAH@Z
+?DoMouseMove@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoNotifyDestroy@CGXGridCore@@MAEHXZ
+?DoPreparePrinting@CG3Dialog@@MAEHPAUCPrintInfo@@@Z
+?DoPrintPreview@CG3Dialog@@MAEHIPAVCG3View@@PAVCG3XGridWndPreview@@PAUCG3XGridWndPreviewState@@@Z
+?DoRButtonDblClk@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoRButtonDown@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoRButtonUp@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoRequery@CINVFrame@@UAEXPAJ@Z
+?DoScroll@CGXGridCore@@UAEHHK@Z
+?DoSetCursor@CGXGridCore@@MAEHPAVCWnd@@II@Z
+?DoShowWindow@CGXGridCore@@MAEHHI@Z
+?DoSize@CGXGridCore@@MAEHIHH@Z
+?DoValidation@CFreightINVHeaderView@@IAEHXZ
+?DoVScroll@CGXGridCore@@MAEHIIPAVCScrollBar@@@Z
+?Draw@CGXCurrencyEdit@@UAEXPAVCDC@@VCRect@@KKABVCGXStyle@@PBV4@@Z
+?DrawBackground@CGXControl@@MAEXPAVCDC@@ABVCRect@@ABVCGXStyle@@H@Z
+?DrawBtn@CGXBDropEdit@@MAEXAAVCDC@@VCRect@@@Z
+?DrawDecimalSeparatorLine@CGXBCurrencyEdit@@MAEXAAVCDC@@H@Z
+?DrawFrame@CGXControl@@MAEXPAVCDC@@ABVCRect@@ABVCGXStyle@@@Z
+?DrawGridLine@CGXGridCore@@MAEXPAVCDC@@HHHHHKI@Z
+?DrawInvertCell@CGXGridCore@@MAEXPAVCDC@@KKVCRect@@@Z
+?DrawInvertFrame@CGXGridCore@@MAEXPAVCDC@@ABVCRect@@1HHHH@Z
+?DrawSelectionFrame@CGXGridCore@@UAEXPAVCDC@@HPBVCGXRange@@@Z
+?DrawSelectionRangeFrame@CGXGridCore@@MAEXPAVCDC@@ABVCGXRange@@HH@Z
+?E?]?i?o?
+?Edit@CGXBrowserGrid@@UAEXK@Z
+?Empty@CDiscrepancyGrid@@QAE_NXZ
+?EnableContextMenu@?$CG3GridTemplate@VCGXRecordView@@@@UAEXKKPAVCMenu@@@Z
+?EnableContextMenu@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXKKPAVCMenu@@@Z
+?EnableContextMenu@CDiscrepancyGrid@@MAEXKKPAVCMenu@@@Z
+?EnableControls@CFreightINVHeaderView@@MAEXH@Z
+?EnableControls@CINVHeaderView@@MAEXH@Z
+?EnableHammer@CG3Worksheet@@UAEX_N@Z
+?EnableLocationCombo@CLocationSelectorClient@@QAEXH@Z
+?EnableMoveCols@CGXGridParam@@QAEXH@Z
+?EnableSelection@CGXGridParam@@QAEXI@Z
+?EnableSysCommandEx@SECMDIChildWnd@@UAEXK@Z
+?EnableTrackRowHeight@CGXGridParam@@QAEXI@Z
+?EnableUndo@CGXGridParam@@QAEXH@Z
+?EraseBackground@CGXBCurrencyEdit@@MAEXPAVCDC@@@Z
+?EvalVisibleFloatMergeCells@CGXGridCore@@UAEHABVCGXRange@@KKKKKKHPAV2@H@Z
+?ExecuteCommand@CGXGridCore@@UAEHPAVCGXCommand@@PAV1@W4GXCmdType@@@Z
+?FillCell@?$CG3GridTemplate@VCGXGridWnd@@@@MAEXKKKKV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?FillCell@?$CG3GridTemplate@VCGXRecordWnd@@@@MAEXKKKKV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?FillCell@CG3XRecordView@@UAEXKKKKV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?FillChoiceList@CGXDynamicRecordset@@QAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?FillDataArray@CDiscrepancyGrid@@IAE_NXZ
+?FillDragDrop@?$CG3GridTemplate@VCGXGridWnd@@@@UAEHPAU_tagG3DROPDATAEX@@ABVCGXRangeList@@@Z
+?FillDragDrop@?$CG3GridTemplate@VCGXRecordView@@@@UAEHPAU_tagG3DROPDATAEX@@ABVCGXRangeList@@@Z
+?FillDragDrop@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHPAU_tagG3DROPDATAEX@@ABVCGXRangeList@@@Z
+?FillGrid@CDiscrepancyGrid@@IAE_NXZ
+?FillSubsystemQuery@CINVHeaderView@@MAEXXZ
+?FindNextCell@CGXGridCore@@UAEHHAAK0@Z
+?FindString@?$CG3XRecordBase@VCG3XRecordViewBase@@@@UAEXPBD@Z
+?FindString@?$CG3XRecordBase@VCG3XRecordWndBase@@@@UAEXPBD@Z
+?FindStringInChoiceList@CGXControl@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PBD1H@Z
+?FindTextA@CGXCurrencyEdit@@UAEHABUGX_FR_STATE@@KKHH@Z
+?FocusOnChild@CGXControl@@MAEXPAVCGXChild@@@Z
+?FreeObjectCache@CGXGridCore@@MAEXXZ
+?FreezeCols@CGXGridCore@@UAEXXZ
+?FreezeRows@CGXGridCore@@UAEXXZ
+?G3AddDscTran@@YAXJ@Z
+?G3AddFrtTran@@YAXJ@Z
+?G3AdjustDate@@YAXAAUtagTIMESTAMP_STRUCT@@J@Z
+?G3DelTran@@YAXJH@Z
+?G3DropButtonMenu@@YAIPAVSECCustomToolBar@@IIHPAVCWnd@@P82@AEXPAVCMenu@@@Z@Z
+?G3ExecuteSQL@@YA_NABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PAVCG3Database@@W4ExceptionOption@@@Z
+?G3FindPrice@@YAXDAAN00@Z
+?G3GblComment@@YAHJJJJHHPBD@Z
+?G3GetApp@@YAPAVCG3WinApp@@XZ
+?G3GetCurrentUserID@@YAJXZ
+?G3GetDatabasePtr@@YAPAVCG3Database@@H@Z
+?G3GetFieldDouble@@YANAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@FH@Z
+?G3GetFieldLong@@YAJAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@FHPAVCG3Database@@@Z
+?G3GetFieldLongDB@@YAJABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PAVCG3Database@@FW4ExceptionOption@@@Z
+?G3GetFieldString@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@AAV12@FHPAVCG3Database@@@Z
+?G3GetFieldStringDB@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV12@PAVCG3Database@@FW4ExceptionOption@@@Z
+?G3GetGblComment@@YAHJJJJHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@AAH@Z
+?G3GetLocationCBShortName@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@J@Z
+?G3GetMatrixCount@@YAJJ@Z
+?G3GetSubsystemText@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@E@Z
+?G3GetSystemParameter@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@JJPAVCG3Database@@W4ExceptionOption@@@Z
+?G3GetUserName@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@J@Z
+?G3INVAddCreditDiscr@@YAHHHJJJNNNPBDW4eDiscrepancyTypes@@@Z
+?G3INVDeleteAllCreditDiscr@@YAHJW4eDiscrepancyTypes@@@Z
+?G3INVDeleteCreditDiscr@@YAHJJJW4eDiscrepancyTypes@@@Z
+?G3INVDeleteCreditDiscr@@YAHJJW4eDiscrepancyTypes@@H@Z
+?G3INVUpdateCreditDiscr@@YAHHJJJNNNPBDW4eDiscrepancyTypes@@@Z
+?G3InvVendorEdit@@YAHJHJ@Z
+?G3IsDisplayGST_PSTOn@@YA_NXZ
+?G3ItemFind@@YAHKHHH@Z
+?G3ItemSetTodayDate@@YAXAAUtagTIMESTAMP_STRUCT@@PAVCG3Database@@W4ExceptionOption@@@Z
+?G3ItemSetZeroDate@@YAXAAUtagTIMESTAMP_STRUCT@@@Z
+?G3PrintEx@@YAXIPAVCWnd@@PAVCSortInfoArray@@PAVCPrintDialog@@@Z
+?G3PrintPreviewEx@@YAXIPAVCWnd@@PAVCSortInfoArray@@_NHHHH@Z
+?G3Round@@YAXAANH@Z
+?G3TranExists@@YAHJH@Z
+?GetActiveTab@SECTabWndBase@@QBEHAAH@Z
+?GetAdditionalFilter@CG3QuickSearchBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetAdvancedUndoInfo@CGXGridCore@@UAEPAVCObject@@XZ
+?GetAggregator@CG3Worksheet@@UAEAAVCAggregator@@XZ
+?GetAppendRow@CGXBrowserGrid@@UAEKXZ
+?GetBeam@CGXTabWnd@@QAEAAVCGXTabBeam@@XZ
+?GetCellRangeRowCol@CGXGridCore@@UAEPAVCGXRange@@KKAAV2@@Z
+?GetCellRect@CGXStatic@@UAE?AVCRect@@KKPAUtagRECT@@PBVCGXStyle@@@Z
+?GetCellTipID@CGXControl@@UAEKKKPAVCGXStyle@@@Z
+?GetChild@CGXControl@@MAEPAVCGXChild@@H@Z
+?GetChoiceListItem@CGXControl@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PBDH@Z
+?GetClientRect@CGXRecordView@@QAEXPAUtagRECT@@@Z
+?GetClipboardStyleRowCol@CGXGridCore@@UAEHKKPAVCGXStyle@@H@Z
+?GetColCount@CGXGridCore@@UAEKXZ
+?GetColIndex@CGXBrowserGrid@@UAEKK@Z
+?GetColIndexByName@?$CG3GridTemplate@VCGXRecordView@@@@QAEKI@Z
+?GetColIndexByName@?$CG3GridTemplate@VCGXRecordView@@@@QAEKV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetColor@CGXBrush@@QBEKXZ
+?GetColWidth@?$CG3GridTemplate@VCGXGridWnd@@@@UAEHK@Z
+?GetColWidth@?$CG3GridTemplate@VCGXRecordView@@@@UAEHK@Z
+?GetColWidth@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHK@Z
+?GetContextMenuID@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEIKKVCPoint@@@Z
+?GetContextMenuID@CDiscrepancyGrid@@MAEIKKVCPoint@@@Z
+?GetContextMenuID@CG3QuickSearchResultsGrid@@MAEIKKVCPoint@@@Z
+?GetContextSubMenuID@?$CG3GridTemplate@VCGXRecordView@@@@UAEIKKVCPoint@@@Z
+?GetContextSubMenuID@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEIKKVCPoint@@@Z
+?GetContextSubMenuID@CDiscrepancyGrid@@MAEIKKVCPoint@@@Z
+?GetContextSubMenuID@CG3QuickSearchResultsGrid@@MAEIKKVCPoint@@@Z
+?GetControl@CGXGridCore@@UAEPAVCGXControl@@KK@Z
+?GetControlClass@CG3XCurrencyEdit@@UBEPAUCGXControlClass@@XZ
+?GetControlClass@CG3XNoNegCurrEdit@@UBEPAUCGXControlClass@@XZ
+?GetControlText@CG3XCurrencyEdit@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@KKPBDABVCGXStyle@@@Z
+?GetControlText@CGXCurrencyEdit@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@KKPBDABVCGXStyle@@@Z
+?GetCopyTextRowCol@CGXGridCore@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@KK@Z
+?GetCount@CGXControl@@MAEHXZ
+?GetCoveredCellsRowCol@CGXGridCore@@UAEPAVCGXRange@@KKAAV2@@Z
+?GetCurGridCol@CG3RecordView@@UAEJXZ
+?GetCurGridRow@CG3RecordView@@UAEJXZ
+?GetCurrentCell@CGXGridCore@@QAEHAAK0H@Z
+?GetCurrentCell@CGXGridCore@@QAEHPAK0H@Z
+?GetCurrentCellControl@CGXGridCore@@QAEPAVCGXControl@@XZ
+?GetCurrentDataPtr@CG3NavComboBox@@QAEPAJXZ
+?GetCurrentFRINVHID@CFreightINVFrame@@QAEJXZ
+?GetCurrentInvoiceID@CINVFrame@@QAEJXZ
+?GetCurrentSKU@CG3InfoDlgBase@@UAEJXZ
+?GetCurrentSubsystem@CINVFrame@@QAEJXZ
+?GetCurrentText@CGXCurrencyEdit@@UAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetCurrExchObj@CG3WinApp@@QAEPAVCCurrencyExchObj@@J@Z
+?GetCustomerQuery@CG3QuickSearchBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV23@H@Z
+?GetCWnd@CG3QuickSearchBase@@MAEPAVCWnd@@XZ
+?GetDatabasePtr@CHeaderSet@@MAEPAVCG3Database@@XZ
+?GetDate@CG3DateTime@@QAEXAAUtagTIMESTAMP_STRUCT@@@Z
+?GetDateQuery@CG3QuickSearchBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV23@00@Z
+?GetDateTime@CG3DateTime@@QAEXAAUtagTIMESTAMP_STRUCT@@@Z
+?GetDefaultColWidth@CGXGridCore@@UAEHXZ
+?GetDefaultConnect@CFreightINVHeaderSet@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultConnect@CG3CDHeaderSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultConnect@CINVHeaderSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultRowHeight@CGXGridCore@@UAEHXZ
+?GetDefaultSQL@CFreightINVHeaderSet@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultSQL@CG3CDHeaderSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultSQL@CINVHeaderSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDetailClass@CINVFrame@@IAEPAUCRuntimeClass@@XZ
+?GetDetailView@CFreightINVFrame@@QAEPAVCFreightINVDetailView@@XZ
+?GetDetailView@CFreightINVHeaderView@@IAEPAVCFreightINVDetailView@@XZ
+?GetDetailView@CINVFrame@@QAEPAVCINVDetailViewBase@@XZ
+?GetDetailView@CINVHeaderView@@IAEPAVCINVDetailViewBase@@XZ
+?GetDetailWnd@CG3HeaderDtlSheet@@UAEPAVCWnd@@XZ
+?GetDiscrepancyData@CDiscrepancyGrid@@IAEPAVCDiscrepancyGridData@@H@Z
+?GetDisplaySize@CGXODBCGrid@@MAEJABUCGXFieldInfo@@J@Z
+?GetDoubleValue@?$CG3GridTemplate@VCGXRecordView@@@@QAENKPBD@Z
+?GetDropDataGlobal@?$CG3GridTemplate@VCGXGridWnd@@@@UAEPAXPAVCGXNoOleDataObjectProxy@@@Z
+?GetDropDataGlobal@?$CG3GridTemplate@VCGXRecordView@@@@UAEPAXPAVCGXNoOleDataObjectProxy@@@Z
+?GetDropDataGlobal@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEPAXPAVCGXNoOleDataObjectProxy@@@Z
+?GetDtlAllClass@CINVFrame@@MAEPAUCRuntimeClass@@XZ
+?GetDtlDtlClass@CINVFrame@@MAEPAUCRuntimeClass@@XZ
+?GetDtlSumClass@CINVFrame@@MAEPAUCRuntimeClass@@XZ
+?GetError@CGXGridCore@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetErrorMessage@CG3Exception@@UAEHPADIPAI@Z
+?GetFieldData@CGXDynamicRecordset@@QAEHHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?GetFieldData@CGXODBCGrid@@QAEXHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetFilterAllValid@CG3LocationComboBox@@QAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetFontHeight@CGXGridCore@@UAEHXZ
+?GetFontMetrics@CGXGridCore@@MAEXPAVCDC@@AAH1@Z
+?GetFontWidth@CGXGridCore@@UAEHXZ
+?GetFrozenCols@CGXGridCore@@UAEKXZ
+?GetFrozenRows@CGXGridCore@@UAEKXZ
+?GetG3RecordView@CG3QuickSearchBase@@MAEPAVCG3RecordView@@XZ
+?GetG3XRecordView@CG3QuickSearchBase@@MAEPAVCG3XRecordView@@XZ
+?GetGlbHeaderTxt@CINVHeaderView@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetGrid@CDiscrepancyCtrl@@IBEPAVCDiscrepancyGrid@@XZ
+?GetGXTabWnd@CG3HeaderDtlSheet@@MAEAAVCGXTabWnd@@XZ
+?GetHeaderClass@CINVFrame@@MAEPAUCRuntimeClass@@XZ
+?GetHeaderCols@CGXGridCore@@UAEKXZ
+?GetHeaderRows@CGXGridCore@@UAEKXZ
+?GetHeaderView@CFreightINVFrame@@QAEPAVCFreightINVHeaderView@@XZ
+?GetHeaderView@CINVFrame@@QAEPAVCINVHeaderView@@XZ
+?GetHeaderWnd@CG3HeaderDtlSheet@@UAEPAVCWnd@@XZ
+?GetInsideRect@CGXTabWnd@@QBEXAAVCRect@@@Z
+?GetInterior@CGXStyle@@QBE?AUCGXBrush@@XZ
+?GetInvertStateRowCol@CGXGridCore@@UAEHKKPBVCGXRangeList@@@Z
+?GetInvoiceType@CINVHeaderView@@QAEHXZ
+?GetInvTypeDesc@CFreightINVHeaderView@@AAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetItemCost@CG3InfoDlgBase@@UAEXAAN@Z
+?GetItemCost@CG3InfoDlgBase@@UAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetItemFindFmtStr@CG3RecordView@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetItemFindStr@CG3QuickSearchBase@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetItemRetail@CG3InfoDlgBase@@UAEXAAN@Z
+?GetItemRetail@CG3InfoDlgBase@@UAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetLastRow@CGXBrowserGrid@@UAEKXZ
+?GetLocationComboBoxPtr@@YAPAVCG3LocationComboBox@@XZ
+?GetLocationID@?$CG3GridTemplate@VCGXGridWnd@@@@UAEJXZ
+?GetLocationID@?$CG3GridTemplate@VCGXRecordView@@@@UAEJXZ
+?GetLocationID@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEJXZ
+?GetLocationID@CG3Dialog@@UAEJXZ
+?GetLocationID@CG3RecordView@@UAEJXZ
+?GetLocationID@CG3Worksheet@@MAEJXZ
+?GetLocationString@CG3QuickSearchBase@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetLongValue@?$CG3GridTemplate@VCGXRecordView@@@@QAEJKI@Z
+?GetLongValue@?$CG3GridTemplate@VCGXRecordView@@@@QAEJKPBD@Z
+?GetLongValue@?$CG3GridTemplate@VCGXRecordWnd@@@@QAEJKPBD@Z
+?GetMapValue@CG3QuickSearchResultsGrid@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@KABVCGXStyle@@@Z
+?GetMarkHeaderState@CGXControl@@MAEHKKABVCGXStyle@@@Z
+?GetMessageMap@CDiscrepancyCtrl@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CDiscrepancyGrid@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CFreightINVFrame@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CFreightINVHeaderView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CG3QuickSearchBase@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CG3XCurrencyEdit@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CG3XNoNegCurrEdit@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CG3XRecordWnd@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CINVFrame@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CINVHeaderView@@MBEPBUAFX_MSGMAP@@XZ
+?GetModify@CGXCurrencyEdit@@UAEHXZ
+?GetModuleID@?$CG3GridTemplate@VCGXGridWnd@@@@UAEIXZ
+?GetModuleID@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEIXZ
+?GetModuleID@?$CG3XViewBase@VCGXRecordView@@@@UAEIXZ
+?GetModuleID@CG3Dialog@@UAEJXZ
+?GetModuleID@CG3RecordView@@QAEIXZ
+?GetNavigatorWnd@CFreightINVFrame@@QAEPAVCG3NavComboBox@@XZ
+?GetNavigatorWnd@CG3HeaderDtlSheet@@QAEPAVCG3NavComboBox@@XZ
+?GetNavigatorWnd@CINVHeaderView@@IAEPAVCG3NavComboBox@@XZ
+?GetNavWnd@CG3HeaderDtlViewBase@@QAEPAVCG3NavComboBox@@XZ
+?GetOleViewerRowCol@CGXBrowserGrid@@UBEXKKKAAPAVCGXOleViewer@@@Z
+?GetParamInfoOb@?$CG3XViewBase@VCGXRecordView@@@@QAEPAVCG3ParamInfoOb@@XZ
+?GetParamInfoOb@CG3RecordView@@QAEPAVCG3ParamInfoOb@@XZ
+?GetParamValue@CG3ParamInfoOb@@QAEAAVCComVariant@ATL@@H@Z
+?GetParentWorksheet@CG3RecordView@@MAEPAVCG3Worksheet@@XZ
+?GetPayFlag@CFreightINVHeaderView@@MAEEXZ
+?GetPayFlag@CINVHeaderView@@MAEEXZ
+?GetPOCost@CG3InfoDlgBase@@UAEXAAN@Z
+?GetPOCost@CG3InfoDlgBase@@UAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetPORetail@CG3InfoDlgBase@@UAEXAAN@Z
+?GetPORetail@CG3InfoDlgBase@@UAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetPrinterType@CG3WinApp@@QAEJXZ
+?GetQueryRecordCount@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEJXZ
+?GetQueryRecordCount@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEJXZ
+?GetQuickSearch@CINVFrame@@QAEPAVCINVQuickSearch@@XZ
+?GetQuickSearchAddStoredProc@CFreightINVHeaderSet@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV23@@Z
+?GetQuickSearchAddStoredProc@CINVHeaderSet@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV23@@Z
+?GetRangeName@CGXGridCore@@UAEHPBDAAVCGXRange@@@Z
+?GetRecordset@CFreightINVHeaderView@@IAEPAVCFreightINVHeaderSet@@XZ
+?GetRecordset@CINVHeaderView@@QAEPAVCINVHeaderSet@@XZ
+?GetRegisteredControl@CGXGridCore@@UAEPAVCGXControl@@G@Z
+?GetRegistryValue@@YAJPAUHKEY__@@PBDPAK1PAE2@Z
+?GetRowCount@CGXBrowserGrid@@UAEKXZ
+?GetRowCount@CGXGridCore@@UAEKXZ
+?GetRowHeight@CGXGridCore@@UAEHK@Z
+?GetRowIndex@CGXBrowserGrid@@UAEKK@Z
+?GetRuntimeClass@CDiscrepancyCtrl@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CFreightINVFrame@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CFreightINVHeaderSet@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CFreightINVHeaderView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CG3CDHeaderSet@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CG3Dialog@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CG3InfoDlgBase@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CG3QuickSearchBase@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CG3XGridWnd@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CG3XRecordWnd@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CGXCurrencyEdit@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CINVFrame@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CINVHeaderSet@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CINVHeaderView@@UBEPAUCRuntimeClass@@XZ
+?GetScrollBarCtrl@CGXGridWnd@@UBEPAVCScrollBar@@H@Z
+?GetScrollBarCtrl@CGXRecordView@@UBEPAVCScrollBar@@H@Z
+?GetScrollBarCtrl@CGXRecordWnd@@UBEPAVCScrollBar@@H@Z
+?GetScrollPos@CGXGridCore@@MBEKH@Z
+?GetScrollRange@CGXGridCore@@MBEXHPAK0@Z
+?GetSelectedRanges@?$CG3GridTemplate@VCGXGridWnd@@@@MAEPAVCGXRangeList@@XZ
+?GetSelectedRanges@?$CG3GridTemplate@VCGXRecordView@@@@MAEPAVCGXRangeList@@XZ
+?GetSelectedRanges@?$CG3GridTemplate@VCGXRecordWnd@@@@MAEPAVCGXRangeList@@XZ
+?GetSelectedRows@CGXGridCore@@UAEHAAVCDWordArray@@0HH@Z
+?GetSelectedRows@CGXGridCore@@UAEKAAVCDWordArray@@HH@Z
+?GetSelectedText@CGXCurrencyEdit@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetSort@CHeaderSet@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetSortKey@CGXCurrencyEdit@@UAEXKKABUCGXSortInfo@@ABVCGXStyle@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetSortKey@CGXGridCore@@UAEXPAVCGXControl@@KKABUCGXSortInfo@@ABVCGXStyle@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetStatus@CFreightINVHeaderView@@MBEEXZ
+?GetStatus@CINVHeaderView@@MBEEXZ
+?GetStatusDesc@CG3RecordView@@QAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@G@Z
+?GetStyleArray@CGXGridCore@@UAEPAVCObArray@@ABVCGXRange@@HPAVCGXLongOperation@@@Z
+?GetStyleRowCol@CGXBrowserGrid@@UAEHKKAAVCGXStyle@@W4GXModifyType@@H@Z
+?GetStyleRowCol@CGXGridCore@@UAEHKKAAVCGXStyle@@W4GXModifyType@@H@Z
+?GetSysColor@GX_SYS_DATA@@QAEKH@Z
+?GetTab@CGXTabBeam@@QAEAAVCGXTabInfo@@H@Z
+?GetTabIndex@CG3HeaderDtlSheet@@UAEHXZ
+?GetTermFilter@CG3QuickSearchBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetThisClass@CDiscrepancyCtrl@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CFreightINVFrame@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CFreightINVHeaderView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3Dialog@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3HeaderDtlSheet@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3HeaderDtlViewBase@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3POBaseDlg@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3QuickSearchResultsGrid@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3RecordView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3Worksheet@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3XRecordView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3XRecordWnd@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CINVFrame@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CINVHeaderView@@SGPAUCRuntimeClass@@XZ
+?GetThisMessageMap@CDiscrepancyCtrl@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CDiscrepancyGrid@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CFreightINVFrame@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CFreightINVHeaderView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3Dialog@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3HeaderDtlSheet@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3HeaderDtlViewBase@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3InfoDlgBase@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3LBGridBase@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3QuickSearchResultsGrid@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3RecordView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3Worksheet@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3XGridWnd@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3XRecordView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3XRecordWnd@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CINVFrame@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CINVHeaderView@@KGPBUAFX_MSGMAP@@XZ
+?GetToolBarButtons@CG3HeaderDtlSheet@@MAEKXZ
+?GetToolBarStyles@CG3HeaderDtlSheet@@MAEKXZ
+?GetTransactionID@?$CG3GridTemplate@VCGXGridWnd@@@@UAEJXZ
+?GetTransactionID@?$CG3GridTemplate@VCGXRecordView@@@@UAEJXZ
+?GetTransactionID@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEJXZ
+?GetTransactionID@CG3Dialog@@UAEJXZ
+?GetTransactionID@CG3RecordView@@UAEJXZ
+?GetTransactionID@CG3Worksheet@@MAEJXZ
+?GetTransferDtlID@?$CG3GridTemplate@VCGXGridWnd@@@@UAEJXZ
+?GetTransferDtlID@?$CG3GridTemplate@VCGXRecordView@@@@UAEJXZ
+?GetTransferDtlID@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEJXZ
+?GetTransferDtlID@CG3Dialog@@UAEJXZ
+?GetTransferDtlID@CG3RecordView@@UAEJXZ
+?GetTransferDtlID@CG3Worksheet@@MAEJXZ
+?GetTransferID@?$CG3GridTemplate@VCGXGridWnd@@@@UAEJXZ
+?GetTransferID@?$CG3GridTemplate@VCGXRecordView@@@@UAEJXZ
+?GetTransferID@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEJXZ
+?GetTransferID@CG3Dialog@@UAEJXZ
+?GetTransferID@CG3RecordView@@UAEJXZ
+?GetTransferID@CG3Worksheet@@MAEJXZ
+?GetUpdateFlag@CGXGridCore@@UAEHKK@Z
+?GetValue@?$CMapArrayT@V?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@@QAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@HH@Z
+?GetValue@CG3CurrencyEdit@@QAEXAAN@Z
+?GetValue@CG3PercentMaskedEdit@@QAEHAAN@Z
+?GetValue@CG3XCurrencyEdit@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetValue@CGXCurrencyEdit@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetValueByColName@?$CG3GridTemplate@VCGXRecordView@@@@QAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@KI@Z
+?GetValueRowCol@CGXData@@QAEPBDKKHPAVCGXStyle@@@Z
+?GetValueRowCol@CGXGridCore@@QAEABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@KK@Z
+?GetVendorCurrencyExId@CG3RecordView@@MAEHH@Z
+?GetVendorDisplayed@CINVHeaderView@@MAEHXZ
+?GetVendorInRecordset@CINVHeaderView@@MAEHXZ
+?GetViewAllowCurrencyChange@CINVHeaderView@@MAE_NXZ
+?GetViewBaseCurrencyId@CG3RecordView@@UAEJXZ
+?GetViewCurrencyId@CINVHeaderView@@UAEJXZ
+?GetViewCurrencyRate@CINVHeaderView@@MAENXZ
+?GetWndPtr@CGXCurrencyEdit@@UBEPAVCWnd@@XZ
+?GetZoom@CGXGridCore@@UAEHXZ
+?GXDrawTransparentBitmap@@YGXPAVCDC@@PAVCBitmap@@HHK@Z
+?GXGetAppState@@YGPAUGX_APP_STATE@@XZ
+?HandleNegativeSignKey@CG3XNoNegCurrEdit@@MAEXXZ
+?HandleNegativeSignKey@CGXBCurrencyEdit@@MAEXXZ
+?HasChanged@CFreightINVHeaderView@@IAEHXZ
+?Hide@CGXCurrencyEdit@@UAEXXZ
+?HideCols@CGXGridCore@@UAEHKKHPAHIW4GXCmdType@@@Z
+?HideCurrentCell@CGXGridCore@@UAEXXZ
+?HideRows@CGXGridCore@@UAEHKKHPAHIW4GXCmdType@@@Z
+?HitTest@CGXGridCore@@UAEHAAVCPoint@@PAK1PAVCRect@@@Z
+?HitTestBtn@CGXCurrencyEdit@@UBEHVCPoint@@H@Z
+?ImplementFindReplace@CGXGridCore@@QAEXXZ
+?Init@CGXCurrencyEdit@@UAEXKK@Z
+?InitAmtColumn@CDiscrepancyGrid@@IAEXXZ
+?InitBrowserSettings@CGXBrowserGrid@@MAEXXZ
+?InitColumnHeaders@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXXZ
+?InitColumnHeaders@?$CG3GridTemplate@VCGXRecordView@@@@UAEXXZ
+?InitColumnHeaders@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXXZ
+?InitColumns@CDiscrepancyGrid@@MAE_NXZ
+?InitComboColumn@CDiscrepancyGrid@@IAE_NW4eColumns@1@PBD@Z
+?InitDiscGrid@CDiscrepancyGrid@@IAEXXZ
+?InitDiscountColumn@CDiscrepancyGrid@@IAEXXZ
+?InitFromUserAttributes@CG3XCurrencyEdit@@UAEXPAVCGXBCurrencyEdit@@PBVCGXStyle@@@Z
+?InitFromUserAttributes@CGXCurrencyEdit@@UAEXPAVCGXBCurrencyEdit@@PBVCGXStyle@@@Z
+?InitGrid@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXPAU_tagG3GRIDINFO@@@Z
+?InitGrid@?$CG3GridTemplate@VCGXRecordView@@@@UAEXPAU_tagG3GRIDINFO@@@Z
+?InitGrid@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXPAU_tagG3GRIDINFO@@@Z
+?InitGrid@CG3HeaderDtlViewBase@@MAEXPAU_tagG3GRIDINFO@@@Z
+?InitGrid@CG3LBGridBase@@MAEXPAU_tagG3GRIDINFO@@@Z
+?InitGrid@CG3QuickSearchResultsGrid@@MAEXPAU_tagG3GRIDINFO@@@Z
+?Initialize@CG3ColorStaticCtrl@@QAEHIPAVCWnd@@KKHHH@Z
+?Initialize@CG3ComboBox@@QAEHIPAVCWnd@@PAVCDatabase@@PBD@Z
+?Initialize@CG3DCCBrowseEdit@@QAEHIPAVCWnd@@HHHHHH@Z
+?Initialize@CG3EDIIndicator@@QAEXHPAVCWnd@@@Z
+?Initialize@CG3GLCodeBrowseEdit@@QAEHIPAVCWnd@@J@Z
+?Initialize@CG3PriceCalcEdits@@QAEHPAVCWnd@@III@Z
+?Initialize@CG3QuickSearchBase@@QAEXPAVCG3Worksheet@@PAVSECCustomToolBar@@PAIHPAUCRuntimeClass@@@Z
+?Initialize@CG3VendBrowseEdit@@QAEHIPAVCWnd@@J@Z
+?Initialize@CGXGridWnd@@QAEXXZ
+?Initialize@CGXRecordWnd@@QAEXXZ
+?Initialize@CINVHeaderView@@IAEXXZ
+?InitializeCellTip@CGXControl@@UAEXKKPAVCGXStyle@@PAVCGXCellTipWnd@@@Z
+?InitializeQS@CG3QuickSearchBase@@UAEXPAVCG3Worksheet@@PAVSECCustomToolBar@@@Z
+?InitializeSetsAndTransferType@CINVHeaderView@@IAEXXZ
+?InitQtyColumn@CDiscrepancyGrid@@IAEXXZ
+?InsertCols@CGXGridCore@@UAEHKKPAHPAVCObArray@@1KIW4GXCmdType@@@Z
+?InsertRows@CGXGridCore@@UAEHKKPAHPAVCObArray@@1KIW4GXCmdType@@@Z
+?InvertBorders@CGXControl@@UAEXPAVCDC@@ABVCRect@@@Z
+?IsActive@?$CG3XRecordBase@VCG3XRecordViewBase@@@@UAEHXZ
+?IsActive@?$CG3XRecordBase@VCG3XRecordWndBase@@@@UAEHXZ
+?IsActive@CGXCurrencyEdit@@UAEHXZ
+?IsActiveAlways@CGXControl@@UAEHXZ
+?IsBuybackInv@CINVHeaderView@@QAEHXZ
+?IsCatShipHeaderSet@CHeaderSet@@MBE_NXZ
+?IsColHidden@CGXGridCore@@UAEHK@Z
+?IsColumnValidForFill@?$CG3GridTemplate@VCGXGridWnd@@@@MAE_NK@Z
+?IsColumnValidForFill@?$CG3GridTemplate@VCGXRecordView@@@@MAE_NK@Z
+?IsColumnValidForFill@?$CG3GridTemplate@VCGXRecordWnd@@@@MAE_NK@Z
+?IsCopyPasteId@CG3Worksheet@@MAE_NH@Z
+?IsEditable@CG3HeaderDtlViewBase@@MAEHXZ
+?IsGridEmpty@CINVFrame@@IAEHXZ
+?IsInvoiceGoods@CINVHeaderView@@IAEHXZ
+?IsLocationInCombo@CG3LocationComboBox@@QAEHJ@Z
+?IsMerchTranInv@CINVHeaderView@@QAEHXZ
+?IsOnLastRecord@CGXBrowserGrid@@QAEHXZ
+?IsPrintDriveSetForSKU@@YA_NHH@Z
+?IsQuickSearchStoredProc@CHeaderSet@@MAE_NXZ
+?IsReadOnly@CGXControl@@UAEHXZ
+?IsReadOnly@CGXGridCore@@UAEHXZ
+?IsReasonIdValid@CDiscrepancyGrid@@IAE_NPAVCDiscrepancyGridData@@@Z
+?IsRecordsetEmpty@CG3RecordView@@UAEHXZ
+?IsRecordsetFieldDirty@CG3RecordView@@UAEHPAX@Z
+?IsRowHidden@CGXGridCore@@UAEHK@Z
+?IsRowPending@CDiscrepancyGrid@@IAEKXZ
+?IsScrollLockedFromCell@CGXGridCore@@UAEHXZ
+?IsSelectLocEditable@CG3XRecordView@@QAEHXZ
+?IsUpdatePending@?$CG3XRecordBase@VCG3XRecordViewBase@@@@QAEHXZ
+?IsUpdatePending@CG3RecordView@@UAEHXZ
+?IsValidCell@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEHXZ
+?IsValidCell@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEHXZ
+?IsValidVendorCurrency@CG3RecordView@@MAE_NXZ
+?IsValidVendorCurrency@CINVHeaderView@@MAE_NXZ
+?IsWindowlessControl@CGXControl@@UAEHXZ
+?KeyPressed@CG3XCurrencyEdit@@MAEHIIII@Z
+?KeyPressed@CG3XNoNegCurrEdit@@MAEHIIII@Z
+?LButtonDblClk@CGXCurrencyEdit@@UAEHIVCPoint@@@Z
+?LButtonDown@CGXControl@@UAEHIVCPoint@@I@Z
+?LButtonUp@CGXCurrencyEdit@@UAEHIVCPoint@@I@Z
+?LoadFont@CGXGridCore@@UAEPAVCFont@@PAVCDC@@ABVCGXStyle@@PBV4@@Z
+?LoadFrame@CG3Worksheet@@UAEHIKPAVCWnd@@PAUCCreateContext@@@Z
+?LoadStatusMap@CG3RecordView@@IAEXH@Z
+?LoadStyle@CGXControl@@UAEHKKPAVCGXStyle@@@Z
+?LookupStyleRowCol@CGXGridCore@@UAEABVCGXStyle@@KK@Z
+?MarkEdit@CGXGridCore@@MAEXKKII@Z
+?MButtonDblClk@CGXControl@@UAEHIVCPoint@@@Z
+?MButtonDown@CGXControl@@UAEHIVCPoint@@I@Z
+?MButtonUp@CGXControl@@UAEHIVCPoint@@I@Z
+?MergeCoveredCells@CGXGridCore@@MAEXAAVCGXRange@@@Z
+?MouseActivate@CGXControl@@UAEHPAVCWnd@@IIAAH@Z
+?MouseMove@CGXControl@@UAEHIVCPoint@@I@Z
+?MouseMoveOver@CGXControl@@UAEHKKIVCPoint@@@Z
+?MoveCells@CGXGridCore@@UAEHVCGXRange@@KKPAVCObject@@IW4GXCmdType@@@Z
+?MoveCols@CG3HeaderDtlViewBase@@MAEHKKKIW4GXCmdType@@@Z
+?MoveCols@CGXGridCore@@UAEHKKKIW4GXCmdType@@@Z
+?MoveCurrentCell@CGXGridCore@@UAEHHIH@Z
+?MoveCurrentCellEx@CGXGridCore@@MAEHHI@Z
+?MoveDataCols@CGXGridCore@@UAEHABVCGXRange@@ABVCDWordArray@@IW4GXCmdType@@@Z
+?MoveDataRows@CGXGridCore@@UAEHABVCGXRange@@ABVCDWordArray@@IW4GXCmdType@@@Z
+?MoveRows@CGXGridCore@@UAEHKKKIW4GXCmdType@@@Z
+?MoveTo@CGXODBCGrid@@UAEHK@Z
+?NeedShowCellTip@CGXControl@@UAEHKKPAVCGXStyle@@@Z
+?O?f?t?|?
+?OnActivateGrid@CGXGridCore@@MAEHH@Z
+?OnActivateView@CFreightINVHeaderView@@MAEXHPAVCView@@0@Z
+?OnActivateView@CG3HeaderDtlViewBase@@MAEXHPAVCView@@0@Z
+?OnActivateView@CG3RecordView@@MAEXHPAVCView@@0@Z
+?OnActivateView@CG3XRecordView@@UAEXHPAVCView@@0@Z
+?OnActivateView@CINVHeaderView@@MAEXHPAVCView@@0@Z
+?OnAddedNewRecord@CGXODBCGrid@@MAEXXZ
+?OnAddPO@CINVHeaderView@@IAEXXZ
+?OnAddReportParams@CINVHeaderView@@MAEXPAVCG3ParamInfoOb@@@Z
+?OnAdjustPrintRectangle@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnAllocHdrAmts@CINVHeaderView@@IAEXXZ
+?OnAutoFillDone@CGXGridCore@@MAEXAAVCGXRange@@@Z
+?OnAutoScroll@CGXGridCore@@UAEHHK@Z
+?OnBeginPrinting@CG3Dialog@@MAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnBeginPrinting@CGXGridWnd@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnBeginPrinting@CGXRecordView@@MAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnBeginPrinting@CGXRecordWnd@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnCanceledEditing@CGXBrowserGrid@@UAEXKK@Z
+?OnCanceledEditing@CGXControl@@UAEXXZ
+?OnCanceledEditing@CGXGridCore@@MAEXKK@Z
+?OnCancelEditing@CGXControl@@UAEHXZ
+?OnCancelEditing@CGXGridCore@@MAEHKK@Z
+?OnCancelTracking@CGXGridCore@@MAEXXZ
+?OnCellUndone@CGXGridCore@@UAEXKKH@Z
+?OnChangedSelection@CG3XRecordView@@UAEXPBVCGXRange@@HH@Z
+?OnChangedSelection@CGXGridCore@@MAEXPBVCGXRange@@HH@Z
+?OnChangeTab@CG3HeaderDtlViewBase@@MAEXXZ
+?OnChangeVendor@CINVHeaderView@@IAEXXZ
+?OnChar@CG3XCurrencyEdit@@UAEXIII@Z
+?OnCheckClipboardFormat@CGXGridCore@@UAEHXZ
+?OnCheckedEDI@CINVFrame@@IAEXXZ
+?OnCheckedEDIBalanced@CINVFrame@@IAEXXZ
+?OnCheckedEDINotBalanced@CINVFrame@@IAEXXZ
+?OnClickedButton@CGXControl@@UAEXPAVCGXChild@@@Z
+?OnClickedButtonRowCol@CGXGridCore@@MAEXKK@Z
+?OnClose@CFreightINVFrame@@IAEXXZ
+?OnCloseFindReplaceDialog@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXXZ
+?OnCloseFindReplaceDialog@?$CG3GridTemplate@VCGXRecordView@@@@UAEXXZ
+?OnCloseFindReplaceDialog@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXXZ
+?OnCmdMsg@CFreightINVFrame@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CG3HeaderDtlSheet@@MAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CG3QuickSearchBase@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CG3Worksheet@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CINVFrame@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CINVHeaderView@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCommand@CGXCurrencyEdit@@UAEHIJ@Z
+?OnCommand@CGXGridWnd@@MAEHIJ@Z
+?OnCommand@CGXRecordView@@UAEHIJ@Z
+?OnCommand@CGXRecordWnd@@MAEHIJ@Z
+?OnCreate@CDiscrepancyCtrl@@IAEHPAUtagCREATESTRUCTA@@@Z
+?OnCreate@CG3RecordView@@MAEHPAUtagCREATESTRUCTA@@@Z
+?OnCreateClient@CFreightINVFrame@@MAEHPAUtagCREATESTRUCTA@@PAUCCreateContext@@@Z
+?OnCreateClient@CG3HeaderDtlSheet@@MAEHPAUtagCREATESTRUCTA@@PAUCCreateContext@@@Z
+?OnCreateClient@CINVFrame@@MAEHPAUtagCREATESTRUCTA@@PAUCCreateContext@@@Z
+?OnDateChange@CINVHeaderView@@IAEXPAUtagNMHDR@@PAJ@Z
+?OnDelete@CDiscrepancyCtrl@@IAEXXZ
+?OnDelete@CDiscrepancyGrid@@IAEXXZ
+?OnDeleteCell@CGXControl@@UAEHXZ
+?OnDeleteCell@CGXGridCore@@MAEHKK@Z
+?OnDestroy@CINVHeaderView@@IAEXXZ
+?OnDndCacheGlobalData@?$CG3GridTemplate@VCGXGridWnd@@@@UAEHPAVCGXNoOleDataSourceProxy@@ABVCGXRangeList@@AAK2@Z
+?OnDndCacheGlobalData@?$CG3GridTemplate@VCGXRecordView@@@@UAEHPAVCGXNoOleDataSourceProxy@@ABVCGXRangeList@@AAK2@Z
+?OnDndCacheGlobalData@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHPAVCGXNoOleDataSourceProxy@@ABVCGXRangeList@@AAK2@Z
+?OnDndCalculateFocusRect@CGXGridCore@@UAEHPAVCGXNoOleDataObjectProxy@@AAK1@Z
+?OnDndDropData@?$CG3GridTemplate@VCGXGridWnd@@@@UAEHPAVCGXNoOleDataObjectProxy@@KK@Z
+?OnDndDropData@?$CG3GridTemplate@VCGXRecordView@@@@UAEHPAVCGXNoOleDataObjectProxy@@KK@Z
+?OnDndDropData@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHPAVCGXNoOleDataObjectProxy@@KK@Z
+?OnDndQueryAcceptData@?$CG3GridTemplate@VCGXGridWnd@@@@UAEHPAVCGXNoOleDataObjectProxy@@@Z
+?OnDndQueryAcceptData@?$CG3GridTemplate@VCGXRecordView@@@@UAEHPAVCGXNoOleDataObjectProxy@@@Z
+?OnDndQueryAcceptData@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHPAVCGXNoOleDataObjectProxy@@@Z
+?OnDraw@CGXRecordView@@UAEXPAVCDC@@@Z
+?OnDrawItem@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEXPAVCDC@@KKABVCRect@@ABVCGXStyle@@@Z
+?OnDrawItem@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXPAVCDC@@KKABVCRect@@ABVCGXStyle@@@Z
+?OnDrawItem@CGXGridCore@@MAEXPAVCDC@@KKABVCRect@@ABVCGXStyle@@@Z
+?OnDrawTLBR_InvertCells@CGXGridCore@@MAEXAAUDrawStruct@1@@Z
+?OnDrawTLBR_LoadCell@CGXGridCore@@MAEXAAUDrawStruct@1@II@Z
+?OnDrawTopLeftBottomRight@CGXGridCore@@MAEXKKKKPAVCDC@@@Z
+?OnEmptyRecordset@CG3RecordView@@UAEXXZ
+?OnEnable@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXH@Z
+?OnEnable@?$CG3GridTemplate@VCGXRecordView@@@@UAEXH@Z
+?OnEnable@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXH@Z
+?OnEndEditing@CGXControl@@UAEHXZ
+?OnEndEditing@CGXGridCore@@MAEHKK@Z
+?OnEndPrinting@CG3Dialog@@MAEXPAVCDC@@PAUCPrintInfo@@H@Z
+?OnEndPrinting@CGXGridWnd@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnEndPrinting@CGXRecordView@@MAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnEndPrinting@CGXRecordWnd@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnEndTracking@CGXGridCore@@MAEXKKHAAVCSize@@@Z
+?OnExecGridProc@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXKAAVCGXStyle@@PAVCG3GridObject@@@Z
+?OnExecGridProc@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXKAAVCGXStyle@@PAVCG3GridObject@@@Z
+?OnExecGridProcEx@?$CG3GridTemplate@VCGXGridWnd@@@@UAEHKKPAVCG3GridObject@@@Z
+?OnExecGridProcEx@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHKKPAVCG3GridObject@@@Z
+?OnExtHitTest@CGXGridCore@@UAEHKKAAVCPoint@@AAVCRect@@@Z
+?OnFilePrint@CG3Dialog@@MAEXXZ
+?OnFilePrintPreview@CG3Dialog@@MAEXXZ
+?OnFillCache@CGXODBCGrid@@MAEXXZ
+?OnFindNext@CGXGridCore@@UAEXPBDHH@Z
+?OnFindReplace@CGXGridCore@@MAEXPAVCFindReplaceDialog@@@Z
+?OnFlushBlobValue@CGXBrowserGrid@@MAEXKKPAVCGXAbstractBlob@@@Z
+?OnFlushCellValue@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEXKKPBD@Z
+?OnFlushCellValue@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXKKPBD@Z
+?OnFlushRecord@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEHKPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnFlushRecord@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEHKPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnG3Options@CFreightINVFrame@@IAEXXZ
+?OnG3Options@CINVFrame@@IAEXXZ
+?OnGetQuickRecordset@CG3RecordView@@UAEPAVCRecordset@@XZ
+?OnGetRecordCount@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEJXZ
+?OnGetRecordCount@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEJXZ
+?OnGetRecordset@CFreightINVHeaderView@@UAEPAVCRecordset@@XZ
+?OnGetRecordset@CGXODBCGrid@@UAEPAVCRecordset@@XZ
+?OnGetRecordset@CINVHeaderView@@MAEPAVCRecordset@@XZ
+?OnGetSortColsKey@CGXGridCore@@UAEXKABVCGXSortInfoArray@@AAVCStringArray@@@Z
+?OnGetSortRowsKey@CGXGridCore@@UAEXKABVCGXSortInfoArray@@AAVCStringArray@@@Z
+?OnGridBeginPrinting@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnGridCancelMode@CGXControl@@UAEXXZ
+?OnGridChar@CGXCurrencyEdit@@UAEHIII@Z
+?OnGridChar@CGXGridCore@@MAEHIII@Z
+?OnGridCtlColor@CGXControl@@UAEPAUHBRUSH__@@PAVCDC@@PAVCWnd@@I@Z
+?OnGridDeadChar@CGXControl@@UAEHIII@Z
+?OnGridDeadChar@CGXGridCore@@MAEHIII@Z
+?OnGridDoubleByteChar@CGXCurrencyEdit@@UAEHABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@II@Z
+?OnGridDoubleByteChar@CGXGridCore@@MAEHABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@II@Z
+?OnGridDragEnter@CGXGridCore@@UAEKPAVCGXNoOleDataObjectProxy@@KVCPoint@@@Z
+?OnGridDragLeave@CGXGridCore@@UAEXXZ
+?OnGridDragOver@?$CG3GridTemplate@VCGXGridWnd@@@@UAEKPAVCGXNoOleDataObjectProxy@@KVCPoint@@@Z
+?OnGridDragOver@?$CG3GridTemplate@VCGXRecordView@@@@UAEKPAVCGXNoOleDataObjectProxy@@KVCPoint@@@Z
+?OnGridDragOver@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEKPAVCGXNoOleDataObjectProxy@@KVCPoint@@@Z
+?OnGridDragScroll@CGXGridCore@@UAEKKVCPoint@@@Z
+?OnGridDraw@CGXBrowserGrid@@UAEXPAVCDC@@@Z
+?OnGridDraw@CGXGridCore@@MAEXPAVCDC@@@Z
+?OnGridDrop@CGXBrowserGrid@@UAEHPAVCGXNoOleDataObjectProxy@@KVCPoint@@@Z
+?OnGridDrop@CGXGridCore@@UAEHPAVCGXNoOleDataObjectProxy@@KVCPoint@@@Z
+?OnGridDropEx@CGXGridCore@@UAEKPAVCGXNoOleDataObjectProxy@@KKVCPoint@@@Z
+?OnGridEndPrinting@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnGridInitialUpdate@CDiscrepancyGrid@@MAEXXZ
+?OnGridInitialUpdate@CG3HeaderDtlViewBase@@MAEXXZ
+?OnGridInitialUpdate@CG3QuickSearchResultsGrid@@MAEXXZ
+?OnGridInitialUpdate@CG3XGridWnd@@UAEXXZ
+?OnGridInitialUpdate@CG3XRecordView@@UAEXXZ
+?OnGridInitialUpdate@CG3XRecordWnd@@UAEXXZ
+?OnGridKeyDown@CGXBrowserGrid@@UAEHIII@Z
+?OnGridKeyDown@CGXCurrencyEdit@@UAEHIII@Z
+?OnGridKeyDown@CGXGridCore@@MAEHIII@Z
+?OnGridKeyUp@CGXControl@@UAEHIII@Z
+?OnGridKeyUp@CGXGridCore@@MAEHIII@Z
+?OnGridKillFocus@CGXGridCore@@MAEXPAVCWnd@@@Z
+?OnGridPrepareDC@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnGridPreTranslateMessage@CGXControl@@UAEHPAUtagMSG@@@Z
+?OnGridPreTranslateMessage@CGXGridCore@@MAEHPAUtagMSG@@@Z
+?OnGridPrint@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnGridSetFocus@CGXGridCore@@MAEXPAVCWnd@@@Z
+?OnGridSysChar@CGXControl@@UAEHIII@Z
+?OnGridSysChar@CGXGridCore@@MAEHIII@Z
+?OnGridSysColorChange@CGXControl@@UAEXXZ
+?OnGridSysColorChange@CGXGridCore@@MAEXXZ
+?OnGridSysDeadChar@CGXControl@@UAEHIII@Z
+?OnGridSysDeadChar@CGXGridCore@@MAEHIII@Z
+?OnGridSysKeyDown@CGXCurrencyEdit@@UAEHIII@Z
+?OnGridSysKeyDown@CGXGridCore@@MAEHIII@Z
+?OnGridSysKeyUp@CGXControl@@UAEHIII@Z
+?OnGridSysKeyUp@CGXGridCore@@MAEHIII@Z
+?OnGridTimer@CGXGridCore@@MAEXI@Z
+?OnGridUpdate@CGXGridCore@@MAEXPAVCView@@JPAVCObject@@@Z
+?OnGridWindowProc@CGXGridCore@@MAEHIIJAAJ@Z
+?OnGridWinIniChange@CGXControl@@UAEXPBD@Z
+?OnGridWinIniChange@CGXGridCore@@MAEXPBD@Z
+?OnInfoWndMoveRecord@CGXGridCore@@UAEXHJ@Z
+?OnInitChildren@CGXControl@@MAEXKKABVCRect@@@Z
+?OnInitColInfo@CGXODBCGrid@@MAEXKABUCGXFieldInfo@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@AAJAAGPAH@Z
+?OnInitCurrentCell@CGXGridCore@@MAEXKK@Z
+?OnInitDialog@CG3Dialog@@MAEHXZ
+?OnInitDialog@CG3InfoDlgBase@@MAEHXZ
+?OnInitialUpdate@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXXZ
+?OnInitialUpdate@CFreightINVHeaderView@@MAEXXZ
+?OnInitialUpdate@CG3HeaderDtlViewBase@@MAEXXZ
+?OnInitialUpdate@CG3RecordView@@UAEXXZ
+?OnInitialUpdate@CG3XRecordView@@UAEXXZ
+?OnInitialUpdate@CGXGridWnd@@MAEXXZ
+?OnInitialUpdate@CINVHeaderView@@MAEXXZ
+?OnInitialUpdateFrame@CFreightINVFrame@@MAEXXZ
+?OnInitialUpdateFrame@CG3HeaderDtlSheet@@MAEXXZ
+?OnInitialUpdateFrame@CG3Worksheet@@MAEXXZ
+?OnInitialUpdateFrame@CINVFrame@@MAEXXZ
+?OnInsert@CDiscrepancyCtrl@@IAEXXZ
+?OnInsert@CDiscrepancyGrid@@IAEXXZ
+?OnInvalidKeyPressed@CGXControl@@MAEXPBD@Z
+?OnInvEditDiscount@CINVHeaderView@@IAEXXZ
+?OnInvPayShort@CINVHeaderView@@IAEXXZ
+?OnInvPost@CFreightINVHeaderView@@IAEXXZ
+?OnInvPost@CINVHeaderView@@IAEXXZ
+?OnInvPostDiscr@CINVHeaderView@@IAEXXZ
+?OnInvReverse@CINVHeaderView@@IAEXXZ
+?OnKeyDown@CDiscrepancyCtrl@@AAE_NIJ@Z
+?OnKeyDownDel@CDiscrepancyGrid@@IAE_NXZ
+?OnKeyDownEscape@CDiscrepancyGrid@@IAE_NXZ
+?OnKeyDownInsert@CDiscrepancyGrid@@IAE_NXZ
+?OnLButtonClickedRowCol@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnLButtonDblClk@CGXRecordView@@IAEXIVCPoint@@@Z
+?OnLButtonDblClkRowCol@CG3QuickSearchResultsGrid@@MAEHKKIVCPoint@@@Z
+?OnLButtonDblClkRowCol@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnLButtonHitRowCol@CGXGridCore@@MAEHKKKKVCPoint@@IG@Z
+?OnLeftCell@CGXBrowserGrid@@UAEHKKKK@Z
+?OnLeftCell@CGXControl@@UAEHKK@Z
+?OnLeftCell@CGXGridCore@@MAEHKKKK@Z
+?OnLeftColChange@CGXGridCore@@MAEHK@Z
+?OnLeftColChanged@CGXGridCore@@MAEXXZ
+?OnLoadCellStyle@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEHKKAAVCGXStyle@@PBD@Z
+?OnLoadCellStyle@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEHKKAAVCGXStyle@@PBD@Z
+?OnMButtonClickedRowCol@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnMButtonDblClkRowCol@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnMButtonHitRowCol@CGXGridCore@@MAEHKKKKVCPoint@@IG@Z
+?OnModifiedPrintDevice@CG3Dialog@@UAEXXZ
+?OnModifiedPrintDevice@CGXView@@UAEXXZ
+?OnModifyCell@CGXBrowserGrid@@UAEXKK@Z
+?OnModifyCell@CGXControl@@UAEXXZ
+?OnModifyCell@CGXGridCore@@MAEXKK@Z
+?OnMouseMoveOver@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnMove@CFreightINVHeaderView@@MAEHI@Z
+?OnMove@CG3RecordView@@UAEHI@Z
+?OnMove@CINVHeaderView@@MAEHI@Z
+?OnMovedCurrentCell@CG3QuickSearchResultsGrid@@MAEXKK@Z
+?OnMovedCurrentCell@CGXGridCore@@MAEXKK@Z
+?OnMovedCurrentCell@CGXODBCGrid@@MAEXKK@Z
+?OnMoveTracking@CGXGridCore@@MAEXKKHAAVCSize@@@Z
+?OnNavSelChange@CFreightINVFrame@@IAEXXZ
+?OnNotifyMsg@CGXControl@@UAEXPAUtagMSG@@@Z
+?OnPasteDiffRange@CGXGridCore@@UAEHXZ
+?OnPasteDirect@CGXGridCore@@UAEHABVCGXRange@@@Z
+?OnPasteFromClipboard@CGXGridCore@@UAEHABVCGXRange@@@Z
+?OnPrepareDC@CG3Dialog@@MAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnPrepareDC@CGXRecordView@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnPreparePrinting@CG3Dialog@@MAEHPAUCPrintInfo@@@Z
+?OnPreparePrinting@CGXRecordView@@MAEHPAUCPrintInfo@@@Z
+?OnPrint@CG3Dialog@@MAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnPrint@CGXGridWnd@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnPrint@CGXRecordView@@MAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnPrint@CGXRecordWnd@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnPrintHeaderAndFooter@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnQSBuyer@CG3QuickSearchBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?OnQSCrsSetCampusID@CG3QuickSearchBase@@MAEJXZ
+?OnQSGetFormatBuyer@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatCatNum@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatColor@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatCrs@CG3QuickSearchBase@@MAEXPAVCG3CrsObj@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatCustomer@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatDCC@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatGeneric@CG3QuickSearchBase@@MAEXIAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatGLAccount@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatInstructor@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatInventoryStatus@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatISBN@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatLocTerm@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatSeason@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatSectionID@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatSize@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatSKU@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatStatType@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@V23@@Z
+?OnQSGetFormatStatus@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatStyle@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatSubsystem@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatTerm@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatVendor@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatVendorPrefOrderMethod@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatWarrantyID@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatWorkStatus@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatXREF@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetSubsystemDCC@CG3QuickSearchBase@@MAEHXZ
+?OnQSSetLocTermData@CG3QuickSearchBase@@MAEXPAVCG3LocationTermDlg@@@Z
+?OnQSSetTermFilter@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSStyle@CG3QuickSearchBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?OnRButtonClickedRowCol@?$CG3GridTemplate@VCGXGridWnd@@@@UAEHKKIVCPoint@@@Z
+?OnRButtonClickedRowCol@?$CG3GridTemplate@VCGXRecordView@@@@UAEHKKIVCPoint@@@Z
+?OnRButtonClickedRowCol@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHKKIVCPoint@@@Z
+?OnRButtonDblClkRowCol@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnRButtonHitRowCol@CGXGridCore@@MAEHKKKKVCPoint@@IG@Z
+?OnReasonCode@CDiscrepancyCtrl@@IAEXXZ
+?OnReasonCode@CDiscrepancyGrid@@IAEXXZ
+?OnRecordPost@CG3RecordView@@IAEXXZ
+?OnRecordRefresh@CFreightINVHeaderView@@IAEXXZ
+?OnRecordSearch@CINVHeaderView@@IAEXXZ
+?OnReplaceAll@CGXGridCore@@UAEXPBD0H@Z
+?OnReplaceAll@CGXODBCGrid@@MAEXPBD0H@Z
+?OnReplaceSel@CGXBrowserGrid@@UAEXPBDHH0@Z
+?OnReplaceSel@CGXGridCore@@UAEXPBDHH0@Z
+?OnRequery@CG3QuickSearchBase@@UAEHPAVCRecordset@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnResetFilter@CG3RecordView@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?OnScrollBecauseOfEdit@CGXGridCore@@MAEHHK@Z
+?OnSelDragCancel@CGXGridCore@@MAEXXZ
+?OnSelDragColsDrop@CGXGridCore@@MAEHKKK@Z
+?OnSelDragColsMove@CGXGridCore@@MAEHKKK@Z
+?OnSelDragColsStart@CGXGridCore@@MAEHKK@Z
+?OnSelDragDrop@CGXGridCore@@MAEHKKKK@Z
+?OnSelDragMove@CGXGridCore@@MAEHKKKK@Z
+?OnSelDragRowsDrop@CGXGridCore@@MAEHKKK@Z
+?OnSelDragRowsMove@CGXGridCore@@MAEHKKK@Z
+?OnSelDragRowsStart@CGXGridCore@@MAEHKK@Z
+?OnSelDragStart@CGXGridCore@@MAEHKK@Z
+?OnSetFocus@CDiscrepancyCtrl@@IAEXPAVCWnd@@@Z
+?OnSetGridControl@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXK@Z
+?OnSetGridControl@?$CG3GridTemplate@VCGXRecordView@@@@UAEXK@Z
+?OnSetGridControl@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXK@Z
+?OnSetReadOnly@CG3RecordView@@UAEXH@Z
+?OnShowFindReplaceDialog@CGXGridCore@@UAEXH@Z
+?OnSortByLocation@CFreightINVFrame@@IAEXXZ
+?OnSortByLocation@CINVFrame@@IAEXXZ
+?OnSortByPO@CINVFrame@@IAEXXZ
+?OnStartAutoFillSelection@CGXGridCore@@MAEHAAVCGXRange@@AAIAAVCPoint@@@Z
+?OnStartEditing@CGXControl@@UAEHXZ
+?OnStartEditing@CGXGridCore@@MAEHKK@Z
+?OnStartSelection@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnStartTracking@CGXGridCore@@MAEHKKH@Z
+?OnTabChanged@CGXGridCore@@UAEXH@Z
+?OnTabKey@CDiscrepancyCtrl@@AAE_NXZ
+?OnTabSwitch@CINVFrame@@IAEJIJ@Z
+?OnTestGridDimension@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEXKK@Z
+?OnTestGridDimension@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXKK@Z
+?OnTestGridDimension@CGXGridCore@@UAEXKK@Z
+?OnTextNotFound@CGXGridCore@@UAEXPBD@Z
+?OnTopRowChange@CGXGridCore@@MAEHK@Z
+?OnTopRowChanged@CGXGridCore@@MAEXXZ
+?OnTrackColWidth@?$CG3GridTemplate@VCGXGridWnd@@@@UAEHK@Z
+?OnTrackColWidth@?$CG3GridTemplate@VCGXRecordView@@@@UAEHK@Z
+?OnTrackColWidth@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHK@Z
+?OnTrackColWidthEnd@CGXGridCore@@MAEHKH@Z
+?OnTrackColWidthMove@CGXGridCore@@MAEHKH@Z
+?OnTrackColWidthStart@CGXGridCore@@MAEHK@Z
+?OnTrackRowHeight@CGXGridCore@@MAEHK@Z
+?OnTrackRowHeightEnd@CGXGridCore@@MAEHKH@Z
+?OnTrackRowHeightMove@CGXGridCore@@MAEHKH@Z
+?OnTrackRowHeightStart@CGXGridCore@@MAEHK@Z
+?OnUpdate@CG3RecordView@@MAEXPAVCView@@JPAVCObject@@@Z
+?OnUpdate@CG3XRecordView@@UAEXPAVCView@@JPAVCObject@@@Z
+?OnUpdate@CINVHeaderView@@MAEXPAVCView@@JPAVCObject@@@Z
+?OnUpdateAlloc@CINVHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateClosed@CINVHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateClosedPO@CINVHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateClosedPOMR@CINVHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateCompTotal@CINVHeaderView@@IAEXXZ
+?OnUpdateFrameMenu@SECWorksheetWnd@@MAEXHPAVCWnd@@PAUHMENU__@@@Z
+?OnUpdateFrameTitle@SECWorksheetWnd@@MAEXH@Z
+?OnUpdateInsert@CINVHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateInvPost@CINVHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateNav@CFreightINVFrame@@IAEXPAVCCmdUI@@@Z
+?OnUpdateNav@CINVFrame@@IAEXPAVCCmdUI@@@Z
+?OnUpdateOpen@CINVHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateOpenPO@CINVHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateRecordPost@CG3RecordView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateRecordPost@CINVHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateSetLocation@CINVHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnValidate@CGXControl@@UAEHXZ
+?OnValidateCell@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEHKK@Z
+?OnValidateCell@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEHKK@Z
+?OnValidateCell@CDiscrepancyGrid@@MAEHKK@Z
+?OnValidateCell@CGXGridCore@@MAEHKK@Z
+?OnWndMsg@CGXBDropEdit@@MAEHIIJPAJ@Z
+?OnWPMDateChange@CINVHeaderView@@IAEJIJ@Z
+?OpenRecordset@CGXODBCGrid@@UAEXXZ
+?Paste@CGXBrowserGrid@@UAEHXZ
+?Paste@CGXCurrencyEdit@@UAEHXZ
+?Paste@CGXGridCore@@UAEHXZ
+?PasteCellsFromArchive@CGXGridCore@@UAEHAAVCArchive@@ABVCGXRange@@H@Z
+?PasteTextFromBuffer@CGXBrowserGrid@@UAEHPBDKABVCGXRange@@@Z
+?PasteTextFromBuffer@CGXGridCore@@UAEHPBDKABVCGXRange@@@Z
+?PasteTextRowCol@CGXGridCore@@UAEHKKABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@IPBVCGXStyle@@@Z
+?PerformQuickSearch@CG3QuickSearchBase@@QAEHPAVCObject@@HHH@Z
+?PostNcDestroy@CGXGridWnd@@MAEXXZ
+?PostNcDestroy@CGXRecordWnd@@MAEXXZ
+?PostQuickSearch@CG3QuickSearchBase@@MAEXXZ
+?PostQuickSearchResults@CG3QuickSearchBase@@MAEXXZ
+?PostUpdateRecordset@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEXK@Z
+?PostUpdateRecordset@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXK@Z
+?PreChangeSelection@CGXGridCore@@MAEXPAVCGXRange@@HH@Z
+?PreCreateWindow@CG3Worksheet@@MAEHAAUtagCREATESTRUCTA@@@Z
+?PrepareChangeSelection@CGXGridCore@@MAEXPAU__POSITION@@KKKKH@Z
+?PrepareClearSelection@CGXGridCore@@MAEXH@Z
+?PrepareDCAttribs@CGXGridCore@@MAEXPAVCDC@@@Z
+?PrepareOptionsMenu@CFreightINVFrame@@UAEXPAVCMenu@@@Z
+?PrepareOptionsMenu@CINVFrame@@QAEXPAVCMenu@@@Z
+?PrepareTextForPaste@CGXBCurrencyEdit@@MAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?PreQuickSearchResults@CG3QuickSearchBase@@MAEXXZ
+?PreSubclassWindow@CDiscrepancyCtrl@@MAEXXZ
+?PreTranslateMessage@CDiscrepancyCtrl@@MAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CDiscrepancyGrid@@MAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CG3HeaderDtlSheet@@MAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CG3LBGridBase@@MAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CG3Worksheet@@UAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CG3XRecordWnd@@UAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CGXGridWnd@@MAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CGXRecordView@@UAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CINVFrame@@UAEHPAUtagMSG@@@Z
+?PreUpdateRecordset@CGXODBCGrid@@MAEXK@Z
+?ProcessContextMenuCommand@CG3QuickSearchResultsGrid@@MAEHHAAJ@Z
+?ProcessKeys@?$CG3GridTemplate@VCGXGridWnd@@@@UAEHPAVCWnd@@IIII@Z
+?ProcessKeys@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHPAVCWnd@@IIII@Z
+?ProcessKeys@?$CG3XViewBase@VCGXRecordView@@@@UAEHPAVCWnd@@IIII@Z
+?ProcessKeys@CG3HeaderDtlViewBase@@MAEHPAVCWnd@@IIII@Z
+?ProcessKeys@CG3QuickSearchResultsGrid@@MAEHPAVCWnd@@IIII@Z
+?RButtonDblClk@CGXControl@@UAEHIVCPoint@@@Z
+?RButtonDown@CGXControl@@UAEHIVCPoint@@I@Z
+?RButtonUp@CGXControl@@UAEHIVCPoint@@I@Z
+?Recalc@CGXGridCore@@UAEXH@Z
+?RecordAdd@CFreightINVHeaderView@@MAEHXZ
+?RecordAdd@CINVHeaderView@@MAEHXZ
+?RecordDelete@CINVHeaderView@@MAEHH@Z
+?RecordPost@?$CG3XRecordBase@VCG3XRecordWndBase@@@@UAEHXZ
+?RecordPost@CFreightINVHeaderView@@UAEHXZ
+?RecordPost@CG3HeaderDtlViewBase@@UAEHXZ
+?RecordPost@CG3RecordView@@UAEHXZ
+?RecordPost@CINVHeaderView@@UAEHXZ
+?RecordRefresh@CG3RecordView@@UAEHXZ
+?RecycleStyle@CGXGridCore@@UAEXPAVCGXStyle@@@Z
+?Redo@CGXGridCore@@UAEHXZ
+?Redraw@CGXGridCore@@UAEXIH@Z
+?RedrawRowCol@CGXGridCore@@QAEXABVCGXRange@@IH@Z
+?RedrawRowCol@CGXGridCore@@UAEXKKKKIH@Z
+?Refresh@CFreightINVHeaderView@@UAEXXZ
+?Refresh@CGXControl@@UAEXXZ
+?Refresh@CINVHeaderView@@UAEXXZ
+?RefreshFrameMenu@SECMDIChildWnd@@UAEXPAVCWnd@@@Z
+?RefreshRecord@CG3RecordView@@UAEHPAVCRecordset@@@Z
+?RefreshViews@CGXGridCore@@UAEHHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?RegisterControl@CGXGridCore@@QAEXGPAVCGXControl@@HH@Z
+?RegisterWindowClass@CDiscrepancyCtrl@@SA_NXZ
+?ReInitGrid@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXPAU_tagG3GRIDINFO@@@Z
+?ReInitGrid@?$CG3GridTemplate@VCGXRecordView@@@@UAEXPAU_tagG3GRIDINFO@@@Z
+?ReInitGrid@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXPAU_tagG3GRIDINFO@@@Z
+?RemoveAllBindings@CG3UpdateInfoArray@@QAEXXZ
+?RemoveChild@CGXControl@@MAEXPAVCGXChild@@@Z
+?RemoveCols@CGXBrowserGrid@@UAEHKKIW4GXCmdType@@@Z
+?RemoveCols@CGXGridCore@@UAEHKKIW4GXCmdType@@@Z
+?RemoveCommand@CGXGridCore@@UAEXW4GXCmdType@@@Z
+?RemoveData@CDiscrepancyGrid@@IAEXXZ
+?RemoveRows@CGXBrowserGrid@@UAEHKKIW4GXCmdType@@@Z
+?RemoveRows@CGXGridCore@@UAEHKKIW4GXCmdType@@@Z
+?ReplaceAll@CGXCurrencyEdit@@UAEHABUGX_FR_STATE@@KK@Z
+?ReplaceSel@CGXCurrencyEdit@@UAEXPBD@Z
+?ReportError@CG3Exception@@UAEHII@Z
+?Requery@CFreightINVHeaderView@@UAEXH@Z
+?Requery@CG3HeaderDtlViewBase@@MAEXPAJ@Z
+?Requery@CG3NavComboBox@@QAEHXZ
+?Requery@CG3QuickSearchResultsGrid@@MAEXXZ
+?Requery@CG3RecordView@@UAEXH@Z
+?Requery@CG3XRecordView@@UAEXH@Z
+?Requery@CG3XRecordView@@UAEXXZ
+?Requery@CGXODBCGrid@@UAEXXZ
+?Requery@CHeaderSet@@UAEHXZ
+?Requery@CINVHeaderView@@UAEXH@Z
+?RequeryDetail@CFreightINVHeaderView@@IAEXXZ
+?RequeryNavigator@CFreightINVHeaderView@@QAEXXZ
+?RequeryUpdateRecordsets@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXK@Z
+?Reset@CGXControl@@UAEXXZ
+?ResetCurrencyExch@CG3RecordView@@UAEXXZ
+?ResetCurrentCell@CGXGridCore@@UAEXH@Z
+?ResetError@CGXGridCore@@UAEXXZ
+?ResizeColWidthsToFit@CGXGridCore@@UAEHVCGXRange@@HI@Z
+?ResizeRowHeightsToFit@CGXGridCore@@UAEHVCGXRange@@HI@Z
+?Rollback@CGXGridCore@@UAEXXZ
+?Rollback@CGXODBCGrid@@UAEXXZ
+?Save@CDiscrepancyCtrl@@QAE_NAAH@Z
+?Save@CDiscrepancyGrid@@QAE_NAAH@Z
+?SaveAction@CDiscrepancyGrid@@IAE_NPAVCDiscrepancyGridData@@V?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SaveAmount@CDiscrepancyGrid@@IAE_NPAVCDiscrepancyGridData@@V?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SaveColumnData@CDiscrepancyGrid@@IAE_NPAVCDiscrepancyGridData@@HABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SaveComment@CDiscrepancyGrid@@IAE_NPAVCDiscrepancyGridData@@V?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SaveDataForUndo@CGXBCurrencyEdit@@MAEXPBDH@Z
+?SaveDiscount@CDiscrepancyGrid@@IAE_NPAVCDiscrepancyGridData@@V?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SaveQty@CDiscrepancyGrid@@IAE_NPAVCDiscrepancyGridData@@V?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SaveReason@CDiscrepancyGrid@@IAE_NPAVCDiscrepancyGridData@@V?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?ScrollCellInView@CGXGridCore@@UAEHKKIH@Z
+?Seek@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEHJJFPBD@Z
+?Seek@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEHJJFPBD@Z
+?SelectRange@CGXGridCore@@UAEXABVCGXRange@@HH@Z
+?Serialize@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXAAVCArchive@@@Z
+?Serialize@?$CG3GridTemplate@VCGXRecordView@@@@UAEXAAVCArchive@@@Z
+?Serialize@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXAAVCArchive@@@Z
+?SetActive@?$CG3XRecordBase@VCG3XRecordViewBase@@@@UAEXH@Z
+?SetActive@?$CG3XRecordBase@VCG3XRecordWndBase@@@@UAEXH@Z
+?SetActive@CGXCurrencyEdit@@UAEXH@Z
+?SetAdvancedUndo@CGXGridCore@@UAEHH@Z
+?SetBaseFilter@CG3QuickSearchBase@@QAEXPBD@Z
+?SetBinaryFlags@CGXBrowserGrid@@MAEHPBVCGXStyle@@H@Z
+?SetChoiceList@CGXStyle@@QAEAAV1@ABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetColCount@CGXGridCore@@UAEHKI@Z
+?SetColor@CGXProperties@@QAEXHK@Z
+?SetCols@CGXRange@@QAEAAV1@K@Z
+?SetCols@CGXRange@@QAEAAV1@KK@Z
+?SetColWidth@CGXGridCore@@UAEHKKHPAHIW4GXCmdType@@@Z
+?SetControlText@CGXControl@@UAEHKKABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@IPBVCGXStyle@@@Z
+?SetControlTextRowCol@CGXBrowserGrid@@UAEHKKABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@IPBVCGXStyle@@@Z
+?SetControlTextRowCol@CGXGridCore@@UAEHKKABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@IPBVCGXStyle@@@Z
+?SetCost@CG3PriceCalcEdits@@QAEXN@Z
+?SetCoveredCellsRowCol@CGXGridCore@@UAEHKKKKIW4GXCmdType@@@Z
+?SetCtrlStyle@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXHK@Z
+?SetCtrlStyle@?$CG3GridTemplate@VCGXRecordView@@@@UAEXHK@Z
+?SetCtrlStyle@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXHK@Z
+?SetCurCmd@CG3QuickSearchBase@@QAEXI@Z
+?SetCurGridCol@CG3RecordView@@UAEXK@Z
+?SetCurGridRow@CG3RecordView@@UAEXK@Z
+?SetCurrentCell@?$CG3XViewBase@VCGXRecordView@@@@UAEHKKI@Z
+?SetCurrentCell@CG3HeaderDtlViewBase@@MAEHKKI@Z
+?SetCurrentCell@CG3QuickSearchResultsGrid@@UAEHKKI@Z
+?SetCurrentCell@CGXBrowserGrid@@UAEHKKI@Z
+?SetCurrentCell@CGXGridCore@@UAEHKKI@Z
+?SetCurrentFRINVHID@CFreightINVFrame@@QAEXJ@Z
+?SetCurrentInvoiceID@CINVFrame@@QAEXJ@Z
+?SetCurrentSubsystem@CINVFrame@@QAEXJ@Z
+?SetCurrentText@CGXCurrencyEdit@@UAEXABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetDataField@CG3NavComboBox@@QAEXHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@0@Z
+?SetDateTime@CG3DateTime@@QAEXPAVCG3Database@@W4ExceptionOption@@@Z
+?SetDefaultColWidth@CGXGridCore@@UAEHHIW4GXCmdType@@@Z
+?SetDefaultRowHeight@CGXGridCore@@UAEHHIW4GXCmdType@@@Z
+?SetDefaultSQL@CG3NavComboBox@@QAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetDeleteUsesSQL@CG3RecordView@@UAEXH@Z
+?SetDisplayCurrencyExchId@CG3XCurrencyEdit@@QAEXJJ@Z
+?SetDrawingTechnique@CGXGridCore@@QAE?AW4GXDrawingTechnique@@W42@@Z
+?SetField@CG3NavComboBox@@QAEXHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@0@Z
+?SetFieldDirty@?$CG3XRecordBase@VCG3XRecordViewBase@@@@QAEXKV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?SetFilter@CG3NavComboBox@@QAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetFrozenCols@CGXGridCore@@UAEHKKIW4GXCmdType@@@Z
+?SetFrozenRows@CGXGridCore@@UAEHKKIW4GXCmdType@@@Z
+?SetGridCursor@CGXGridCore@@UAEXI@Z
+?SetGridType@CDiscrepancyGrid@@QAEXW4eDiscrepancyTypes@@@Z
+?SetHorizontalAlignment@CGXStyle@@QAEAAV1@K@Z
+?SetInterior@CGXStyle@@QAEAAV1@K@Z
+?SetInvoiceType@CINVHeaderView@@IAEXH@Z
+?SetItemCost@CG3InfoDlgBase@@UAEXN@Z
+?SetItemCost@CG3InfoDlgBase@@UAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetItemRetail@CG3InfoDlgBase@@UAEXN@Z
+?SetItemRetail@CG3InfoDlgBase@@UAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetLeftCol@CGXGridCore@@UAEXKIH@Z
+?SetModifiedFlag@CGXGridCore@@UAEXH@Z
+?SetModify@CGXCurrencyEdit@@UAEXH@Z
+?SetNotifyWnd@CGXTabBeam@@QAEXPAVCWnd@@@Z
+?SetParam@CG3ParamInfoOb@@QAEXHH@Z
+?SetParam@CG3ParamInfoOb@@QAEXHJ@Z
+?SetParam@CG3ParamInfoOb@@QAEXHPBD@Z
+?SetParamInfo@?$CG3XViewBase@VCGXRecordView@@@@UAEXXZ
+?SetParamInfo@CG3RecordView@@UAEXXZ
+?SetParentView@CDiscrepancyGrid@@QAEXPAVCG3RecordView@@@Z
+?SetPOCost@CG3InfoDlgBase@@UAEXN@Z
+?SetPOCost@CG3InfoDlgBase@@UAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetPOItem@CG3InfoDlgBase@@UAEXJJJJJH@Z
+?SetPORetail@CG3InfoDlgBase@@UAEXN@Z
+?SetPORetail@CG3InfoDlgBase@@UAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetPrinting@CGXGridCore@@UAEXHH@Z
+?SetQuickSearch@CHeaderSet@@QAEX_N@Z
+?SetRangeName@CGXGridCore@@UAEHPBDABVCGXRange@@PAVCObject@@IW4GXCmdType@@@Z
+?SetReadOnly@CG3BrowseEditBase@@QAEXH@Z
+?SetReadOnly@CGXGridCore@@UAEXH@Z
+?SetReadOnly@CGXStyle@@QAEAAV1@H@Z
+?SetRowCount@CGXGridCore@@UAEHKI@Z
+?SetRowHeight@CGXGridCore@@UAEHKKHPAHIW4GXCmdType@@@Z
+?SetRows@CGXRange@@QAEAAV1@K@Z
+?SetScrollBarMode@CGXGridCore@@UAEXHHH@Z
+?SetScrollLockedFromCell@CGXGridCore@@UAEHH@Z
+?SetScrollPos@CGXGridCore@@MAEKHKH@Z
+?SetScrollRange@CGXGridCore@@MAEXHKKH@Z
+?SetSecurity@CG3RecordView@@UAEXHH@Z
+?SetSelection@CGXGridCore@@UAEXPAU__POSITION@@KKKK@Z
+?SetSKUInformation@CG3InfoDlgBase@@UAEXJ@Z
+?SetSortOrder@CG3NavComboBox@@QAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetSqlQuery@CGXDynamicRecordset@@QAEXPBD@Z
+?SetStatus@CG3EDIIndicator@@QAEXH@Z
+?SetStatus@CINVHeaderView@@IAEXH@Z
+?SetStatusField@CG3QSSelectBaseDlg@@QAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetStyleRange@CGXBrowserGrid@@UAEHABVCGXRange@@ABVCGXStyle@@W4GXModifyType@@HI@Z
+?SetStyleRange@CGXBrowserGrid@@UAEHABVCGXRange@@PBVCGXStyle@@W4GXModifyType@@HPBVCObArray@@IW4GXCmdType@@@Z
+?SetStyleRange@CGXGridCore@@UAEHABVCGXRange@@ABVCGXStyle@@W4GXModifyType@@HI@Z
+?SetStyleRange@CGXGridCore@@UAEHABVCGXRange@@PBVCGXStyle@@W4GXModifyType@@HPBVCObArray@@IW4GXCmdType@@@Z
+?SetSubsystemField@CG3QSSelectBaseDlg@@QAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetTable@CGXRange@@QAEAAV1@XZ
+?SetTabName@CGXTabWnd@@QAEXHPBDH@Z
+?SetTextColor@CGXStyle@@QAEAAV1@K@Z
+?SetTopRow@CGXGridCore@@UAEXKIH@Z
+?SetTypeField@CG3QSSelectBaseDlg@@QAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetupColumn@CG3GridArtInstructionsBrowseEdit@@SAXPAVCGXGridCore@@K@Z
+?SetUpdateFlag@CGXGridCore@@UAEXKKH@Z
+?SetUserAttribute@CGXStyle@@QAEAAV1@GJ@Z
+?SetUserAttribute@CGXStyle@@QAEAAV1@GPBD@Z
+?SetValue@CGXCurrencyEdit@@UAEXPBD@Z
+?SetValue@CGXStyle@@QAEAAV1@ABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetValue@CGXStyle@@QAEAAV1@N@Z
+?SetValue@CGXStyle@@QAEAAV1@PBD@Z
+?SetValueRange@CGXGridCore@@QAEHABVCGXRange@@ABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@W4GXModifyType@@HI@Z
+?SetValueRange@CGXGridCore@@QAEHABVCGXRange@@JW4GXModifyType@@HI@Z
+?SetValueRange@CGXGridCore@@QAEHABVCGXRange@@NW4GXModifyType@@HI@Z
+?SetValueRange@CGXGridCore@@QAEHABVCGXRange@@PBDW4GXModifyType@@HI@Z
+?SetViewCurrencyRate@CINVHeaderView@@MAEXN@Z
+?SetWarningText@CGXGridCore@@UAEXPBD@Z
+?SetZoom@CGXGridCore@@UAEXHI@Z
+?ShowCalculator@CGXBCurrencyEdit@@MAEHXZ
+?ShowContextCursor@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXAAVCPoint@@@Z
+?ShowContextCursor@?$CG3GridTemplate@VCGXRecordView@@@@UAEXAAVCPoint@@@Z
+?ShowContextCursor@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXAAVCPoint@@@Z
+?ShowContextCursor@CGXGridCore@@UAEXIPBD@Z
+?ShowExchangeRateDlg@CG3RecordView@@MAEXPAVCCurrencyExchObj@@@Z
+?ShowScrollBar@CGXGridWnd@@UAEXIH@Z
+?ShowScrollBar@CGXRecordView@@UAEXIH@Z
+?ShowScrollBar@CGXRecordWnd@@UAEXIH@Z
+?SortCols@CGXBrowserGrid@@UAEXVCGXRange@@AAVCGXSortInfoArray@@I@Z
+?SortCols@CGXGridCore@@UAEXVCGXRange@@AAVCGXSortInfoArray@@I@Z
+?SortKeys@CGXGridCore@@UAEXABVCGXSortInfoArray@@AAVCPtrArray@@@Z
+?SortRows@?$CG3GridTemplate@VCGXGridWnd@@@@MAEXVCGXRange@@AAVCGXSortInfoArray@@I@Z
+?SortRows@?$CG3GridTemplate@VCGXRecordView@@@@MAEXVCGXRange@@AAVCGXSortInfoArray@@I@Z
+?SortRows@?$CG3GridTemplate@VCGXRecordWnd@@@@MAEXVCGXRange@@AAVCGXSortInfoArray@@I@Z
+?SortRows@CG3HeaderDtlViewBase@@MAEXVCGXRange@@AAVCGXSortInfoArray@@I@Z
+?SortRows@CG3QuickSearchResultsGrid@@MAEXVCGXRange@@AAVCGXSortInfoArray@@I@Z
+?StartEdit@CGXBCurrencyEdit@@MAEXH@Z
+?StopEdit@CGXBCurrencyEdit@@MAEXXZ
+?Store@CGXCurrencyEdit@@UAEHXZ
+?StoreColCount@CGXGridCore@@MAEHK@Z
+?StoreColWidth@CGXGridCore@@MAEHKH@Z
+?StoreCopyCells@CGXGridCore@@UAEHVCGXRange@@KK@Z
+?StoreCoveredCellsRowCol@CGXGridCore@@MAEHKKKKH@Z
+?StoreCurrentCell@CGXGridCore@@MAEXHKK@Z
+?StoreDefaultColWidth@CGXGridCore@@MAEHH@Z
+?StoreDefaultRowHeight@CGXGridCore@@MAEHH@Z
+?StoreFrozenCols@CGXGridCore@@MAEHKK@Z
+?StoreFrozenRows@CGXGridCore@@MAEHKK@Z
+?StoreHideCol@CGXGridCore@@MAEHKH@Z
+?StoreHideRow@CGXGridCore@@MAEHKH@Z
+?StoreInsertCols@CGXBrowserGrid@@UAEHKKH@Z
+?StoreInsertCols@CGXGridCore@@MAEHKKH@Z
+?StoreInsertRows@CGXBrowserGrid@@UAEHKKH@Z
+?StoreInsertRows@CGXGridCore@@MAEHKKH@Z
+?StoreMoveCells@CGXGridCore@@UAEHVCGXRange@@KKAAPAVCObject@@HW4GXCmdType@@@Z
+?StoreMoveCols@CGXBrowserGrid@@UAEHKKKH@Z
+?StoreMoveCols@CGXGridCore@@MAEHKKKH@Z
+?StoreMoveDataCols@CGXBrowserGrid@@MAEHABVCGXRange@@ABVCDWordArray@@@Z
+?StoreMoveDataCols@CGXGridCore@@UAEHABVCGXRange@@ABVCDWordArray@@@Z
+?StoreMoveDataRows@CGXBrowserGrid@@MAEHABVCGXRange@@ABVCDWordArray@@@Z
+?StoreMoveDataRows@CGXGridCore@@UAEHABVCGXRange@@ABVCDWordArray@@@Z
+?StoreMoveRows@CGXBrowserGrid@@UAEHKKKH@Z
+?StoreMoveRows@CGXGridCore@@MAEHKKKH@Z
+?StoreReadOnly@CGXGridCore@@MAEHH@Z
+?StoreRemoveCols@CGXBrowserGrid@@UAEHKKH@Z
+?StoreRemoveCols@CGXGridCore@@MAEHKKH@Z
+?StoreRemoveRows@CGXBrowserGrid@@UAEHKKH@Z
+?StoreRemoveRows@CGXGridCore@@MAEHKKH@Z
+?StoreRowCount@CGXGridCore@@MAEHK@Z
+?StoreRowHeight@CGXGridCore@@MAEHKH@Z
+?StoreSelectRange@CGXGridCore@@MAEHABVCGXRange@@H@Z
+?StoreStyle@CGXCurrencyEdit@@UAEHKKPBVCGXStyle@@W4GXModifyType@@H0@Z
+?StoreStyleRowCol@CGXBrowserGrid@@UAEHKKPBVCGXStyle@@W4GXModifyType@@H@Z
+?StoreStyleRowCol@CGXGridCore@@UAEHKKPBVCGXStyle@@W4GXModifyType@@H@Z
+?StoreValueRowCol@CGXData@@QAEHKKPBDW4GXModifyType@@HPAVCGXStyle@@@Z
+?StoreZoom@CGXGridCore@@MAEHHH@Z
+?SubclassDlgItem@CDiscrepancyCtrl@@QAEHIPAVCWnd@@PAVCG3RecordView@@@Z
+?SubtractBorders@CGXGridCore@@UAE?AVCRect@@ABV2@ABVCGXStyle@@H@Z
+?SwitchTab@CGXTabWnd@@QAEXH@Z
+?SwitchTab@CGXTabWnd@@QAEXPAVCWnd@@@Z
+?SwitchTabWnd@CINVFrame@@UAEXH@Z
+?SwitchTabWnd@CINVFrame@@UAEXPAVCWnd@@@Z
+?terminate@@YAXXZ
+?ToggleOverstrikeMode@CGXBCurrencyEdit@@MAEXXZ
+?ToggleSelectionFrameMarker@CGXGridCore@@UAEXXZ
+?TransferCurrentCell@CGXGridCore@@UAEHHIH@Z
+?Undo@CGXBrowserGrid@@UAEHXZ
+?Undo@CGXGridCore@@UAEHXZ
+?UndoAdvanced@CGXGridCore@@UAEHPAVCObject@@HH@Z
+?UndoRecord@CGXBrowserGrid@@UAEXXZ
+?UnfreezeCols@CGXGridCore@@UAEXXZ
+?UnfreezeRows@CGXGridCore@@UAEXXZ
+?Update@CGXBrowserGrid@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?UpdateAllData@?$CG3XViewBase@VCGXRecordView@@@@UAEHH@Z
+?UpdateAllGlobals@?$CG3XViewBase@VCGXRecordView@@@@UAEXXZ
+?UpdateAllGlobals@CFreightINVHeaderView@@MAEXXZ
+?UpdateAllGlobals@CG3HeaderDtlViewBase@@MAEXXZ
+?UpdateAllGlobals@CG3RecordView@@UAEXXZ
+?UpdateAllGlobals@CINVHeaderView@@MAEXXZ
+?UpdateAllViews@CGXGridCore@@UAEXPAVCWnd@@JPAVCObject@@@Z
+?UpdateBaseStyle@CGXGridCore@@UAEXGIH@Z
+?UpdateChangedColCount@CGXGridCore@@MAEXKIH@Z
+?UpdateChangedColWidths@CGXGridCore@@MAEXKKPAHIH@Z
+?UpdateChangedRowCount@CGXGridCore@@MAEXKIH@Z
+?UpdateChangedRowHeights@CGXGridCore@@MAEXKKPAHIH@Z
+?UpdateColumn@?$CG3XRecordBase@VCG3XRecordViewBase@@@@IAEXKKV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?UpdateCostAmount@CDiscrepancyGrid@@IAEXPAVCDiscrepancyGridData@@@Z
+?UpdateCoveredCellsRowCol@CGXGridCore@@MAEXKKKKIH@Z
+?UpdateDiscrepancy@CDiscrepancyGrid@@IAEXPAVCDiscrepancyGridData@@@Z
+?UpdateExpirationDays@CINVHeaderView@@IAEXJ@Z
+?UpdateFrozenCols@CGXGridCore@@MAEXKKIH@Z
+?UpdateFrozenRows@CGXGridCore@@MAEXKKIH@Z
+?UpdateInsertCols@CGXGridCore@@MAEXKKIH@Z
+?UpdateInsertRows@CGXGridCore@@MAEXKKIH@Z
+?UpdateMoveCols@CGXGridCore@@MAEXKKKIH@Z
+?UpdateMoveDataCols@CGXGridCore@@UAEXABVCGXRange@@IH@Z
+?UpdateMoveDataRows@CGXGridCore@@UAEXABVCGXRange@@IH@Z
+?UpdateMoveRows@CGXGridCore@@MAEXKKKIH@Z
+?UpdateProperties@CGXGridCore@@UAEXIH@Z
+?UpdateQuickStatus@CG3QuickSearchBase@@UAEXXZ
+?UpdateReadOnly@CGXGridCore@@MAEXHH@Z
+?UpdateRecordInfoWnd@CGXGridCore@@UAEXXZ
+?UpdateRemoveCols@CGXGridCore@@MAEXKKPAHIH@Z
+?UpdateRemoveRows@CGXGridCore@@MAEXKKPAHIH@Z
+?UpdateScrollbars@CGXGridCore@@UAEXHH@Z
+?UpdateSelectRange@CGXGridCore@@MAEXABVCGXRange@@PBVCGXRangeList@@H@Z
+?UpdateStyleRange@CGXGridCore@@UAEXABVCGXRange@@PBVCGXStyle@@W4GXModifyType@@HIH@Z
+?UpdateStylesMap@CGXGridCore@@UAEXIH@Z
+?UpdateTitle@CG3RecordView@@UAEXXZ
+?UpdateZoom@CGXGridCore@@MAEXHIH@Z
+?ValidatePaste@CGXControl@@MAEHABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?ValidateString@CGXControl@@MAEHABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?WindowProc@CGXGridWnd@@MAEJIIJ@Z
+?WindowProc@CGXRecordView@@MAEJIIJ@Z
+?WindowProc@CGXRecordWnd@@MAEJIIJ@Z
+@.data
+@.reloc
+@0D0H0L0P0T0X0\0`0d0h0l0p0t0x0|0
+[AcctCost]
+[AcctRetail]
+[ArtInstructionsID]
+[BdType]
+[CalcExt]
+[CatISBN]
+[CDUID]
+[Cost]
+[CountDiscr]
+[CpSize]
+[Credits]
+[CurrencyExId]
+[dbo].[[VW_INVC_POHEADER_WITH_NO_NYI]]
+[dbo].[Freight_Invoice_Detail]
+[dbo].[Invoice_Detail]
+[dbo].[Invoice_Location]
+[dbo].[VW_FREIGHT_INVOICE_DETAIL]
+[dbo].[VW_INVC_ALLOC_HDR]
+[dbo].[VW_INVC_DETAIL_GRID]
+[dbo].[VW_INVC_DETAIL_SUM_GRID]
+[dbo].[VW_INVC_POHEADER_WITH_NYI]
+[DCCID]
+[Description]
+[Discount]
+[DiscQty]
+[DiscrQty]
+[DISUID]
+[DSCDID]
+[DSCHID]
+[EdColor]
+[ExtCost]
+[ExtendedCost]
+[fActReq]
+[Fees]
+[fFlag]
+[fInvListPriceFlag]
+[fPriceUpdate]
+[fPurchaseIDType]
+[Freight]
+[FRINVDID]
+[FRINVHID]
+[fStatus]
+[GLCode]
+[GLCodeID]
+[HasGlobalNote]
+[HdrType]
+[INVDUID]
+[INVLUID]
+[InvoiceDisc]
+[InvoiceID]
+[ISBNCat]
+[LocationDesc]
+[LocationID]
+[Margin]
+[Package]
+[paramDiscrOnly]
+[paramINVDUID]
+[paramINVLUID]
+[paramInvoiceID]
+[paramLocationID]
+[paramPOID]
+[paramPurchaseID]
+[paramSKU]
+[paramVendorID]
+[PODate]
+[PODate] DESC
+[PODL_ID]
+[POID]
+[PONumber]
+[POSRetail]
+[PReturnQty]
+[PurchaseDiscount]
+[PurchaseDtlID]
+[PurchaseID]
+[PurchasesDiscount]
+[ReasonID]
+[RecvQty]
+[Retail]
+[Royalty]
+[ShortAmount]
+[ShortAmt]
+[ShortDescription]
+[StatusDesc]
+[Subsystem]
+[SubsystemText]
+[TermID]
+[TermName]
+[Title]
+[TotalDiscQty]
+[TotalDiscrQty]
+[TotalExtCost]
+[TotalFreight]
+[TotalPReturnQty]
+[TotalQty]
+[TotalShortAmt]
+[TypeID]
+[Units]
+[VendorCode]
+[VendorID]
+\Settings
+__clean_type_info_names_internal
+__CppXcptFilter
+__crtTerminateProcess
+__crtUnhandledException
+__CxxFrameHandler3
+__dllonexit
+__RTDynamicCast
+_amsg_exit
+_calloc_crt
+_crt_debugger_hook
+_CxxThrowException
+_except_handler4_common
+_initterm
+_initterm_e
+_malloc_crt
+_onexit
+_purecall
+_unlock
+`.rdata
+{ call dbo.SP_FRINVCCalcTotals(%ld) }
+{ call dbo.SP_INVCCalcTotals(%ld) }
+{ call SP_APSetFreightInvFreight(%ld) }
+{ call SP_G3GetInventoryPrices(%ld,%ld) }
+{ call SP_G3UpdatePrices(%ld,%ld,%.4f,%.4f,0,%d, 0) }
+{ call SP_G3UpdatePurchHist(%ld, 1) }
+{ call SP_INVCAddPO(%ld, %ld, %.2f, %d, %d) }
+{ call SP_INVCCanEditDiscount(%ld,%ld) }
+{ call SP_INVCConvertDiscr(%ld) }
+{ call SP_INVCDeleteDetail(%d, %d) }
+{ call SP_INVCDiscr(?,?,?,?) }
+{ call SP_INVCDiscrCreditDue(%ld) }
+{ call SP_INVCGetEditInfo(?) }
+{ call SP_INVCHasCredit(%ld,%ld,%ld) }
+{ call SP_INVCHasCredit(%ld,0) }
+{ call SP_INVCHasDiscr(%ld, 0) }
+{ call SP_INVCHasDiscr(%ld, 1) }
+{ call SP_INVCHasReturns(%ld, %ld, %ld) }
+{ call SP_INVCHasReturns(%ld,0) }
+{ call SP_INVCIsSingleSKU(%ld) }
+{ call SP_INVCPost(%d, %d, %d, '%s', %d) }
+{ call SP_INVCSetDiscrPrinted(%ld, %d) }
+{ call SP_INVCUpdateItem(%ld,%ld,%.4f,%.4f,%.4f,%.4f,%.4f,%d) }
+{ call SP_INVCUpdateLocationDiscr(%ld,%ld) }
+{ call SP_INVCUpdateLocExtCost(%ld, %.2f, %ld, %.2f) }
+{ call SP_INVCUpdatePrices(%ld, %ld, %ld, %d) }
+{ call SP_StkLdgFreightInvoice(%ld, 0) }
+{ call SP_StkLdgFreightInvoice(%ld, 1) }
+{ call SP_StkLdgInvoice(%ld, 1) }
+{ call SP_TD_Freight_Invoice_Header(%d) }
+{ call SP_TD_Invoice_Header(%d) }
+{call P_INV_CR_CalculateGST(%lf)}
+{call SP_INVCPostCheck(%d)}
+{call SP_StkLdgFRInvPurchDis(%d, %s)}
+{call SP_StkLdgInvPurchDis(%d, %s)}
+< <$<(<,<0<4<8<<<@<D<H<L<P<T<X<\<`<d<h<l<p<t<x<|<
+< <$<4<8<H<L<\<`<p<t<x<
+< <&<,<2<8<><D<J<P<V<\<b<h<n<t<z<
+< <)<2<R<h<t<
+< <,<L<T<`<
+< <@<\<d<l<x<
+< <@<L<l<t<|<
+< <D<K<Z<
+< =0=B=[=t=
+<!<&<><U<z<
+<!=.=2=7=<=A=F=V=h=
+<#<-<K<Y<g<s<
+<#<2<A<W<e<t<
+<$<3<B<K<`<o<v<
+<$<3<I<z<
+<$<4<D<T<d<t<
+<$=F=T=k=
+<%<]<j<
+<%<4<C<R<a<h<t<
+<%=<=U=d=s=
+<&<4<><f<x<
+<&=3===[=i=w=
+<&=5=Y=d=t=
+<(<H<d<h<l<p<t<x<|<
+<(<R<o<
+<)<H<Y<j<
+<,<4<<<H<h<t<|<
+<,<6<r<z<
+<,<m<u<
+</<?<K<W<i<w<
+<?=G=p=
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<+<5<i<{<
+<+<K<\<f<z<
+<'<,<[<q<w<
+<'<1<;<E<O<S<Y<c<m<w<
+<'<7<P<W<t<
+<'=/=J=W=
+<3<=<g<o<
+<3=N=k=|=
+<4=F=M=v=
+<5===[=
+<6<B<Q<^<
+<8<T<t<
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0"><dependency><dependentAssembly><assemblyIdentity type="win32" name="Microsoft.Windows.Common-Controls" version="6.0.0.0" processorArchitecture="x86" publicKeyToken="6595b64144ccf1df" language="*"></assemblyIdentity></dependentAssembly></dependency><trustInfo xmlns="urn:schemas-microsoft-com:asm.v3"><security><requestedPrivileges><requestedExecutionLevel level="asInvoker" uiAccess="false"></requestedExecutionLevel></requestedPrivileges></security></trustInfo><application xmlns="urn:schemas-microsoft-com:asm.v3"><windowsSettings><dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true</dpiAware></windowsSettings></application></assembly>
+= =$=(=,=0=4=8=<=@=D=H=L=P=T=X=\=`=d=h=l=p=t=x=|=
+= =$=(=,=0=4=8=<=@=D=H=X=
+= =$=(=,=0=4=8=<=@=D=H=X=8><>@>D>H>L>P>T>X>\>`>d>h>l>p>t>x>|>
+= =(=4=T=`=
+= =@=H=P=\=d=
+= =4=D=H=L=P=T=\=t=
+=!=)=/=7=B=R=^=d=j=
+=!=+=5=?=C=I=S=]=g=q={=
+=!=1=A=Q=a=q=
+=!>.>2>7><>A>F>V>h>
+="=(=.=4=:=@=F=L=R=X=^=d=j=p=v=|=
+=#=2=A=P=_=u=
+=#>>>K>_>
+=$=<=E=Q=`=p=
+=$=5=>=G=]=u=
+=$=V=v=
+=&=,=;=s=
+=&>8>\>
+=(=2=6=<=F=P=Z=d=n=r=x=
+=(=6=E={=
+=)=5=E=n=
+=,=<=@=P=T=X=\=`=h=
+=,=4=<=D=L=X=`=x=
+=,=D=\=t=
+=,=L=h=x=
+=.=A=V=m=}=
+=+=E=[=u=
+=+=k=t=
+=<=D=P=X=x=
+=-===G=P=o=~=
+='=0=9=J=
+='=M=Y=z=
+=>>C>h>u>
+=>>J>R>_>x>
+=6=D=[=b=
+=6=G=P=U=[=_=
+=7=]=v=
+=7===W=]=w=}=
+=7>B>L>j>x>
+=A=V=f=
+=E>Z>a>q>{>
+=F>T>k>
+=T>X>\>`>d>h>l>p>t>x>|>
+> ?(?0?<?D?\?
+> >$>(>,>0>4>
+> >$>(>,>0>4>8><>@>D>H>L>P>T>X>\>`>d>h>l>p>t>x>|>
+>!>1>A>Q>a>q>
+>">&>,>6>@>J>T>^>b>h>r>|>
+>#>)>1>9>?>G>V>f>y>
+>$?-?8?c?w?
+>$>(>,>0>4><>@>D>H>P>h>l>
+>$>*>0>6><>B>H>N>T>Z>`>f>l>r>x>~>
+>$>,>4><>D>L>T>\>d>l>t>|>
+>$>1>>>K>V>
+>$>6>M>i>
+>$>D>P>p>x>
+>%?<?U?s?
+>%>/>3>9>C>M>W>a>k>o>u>
+>%>+>1>6>D>m>t>
+>&?4?K?R?y?
+>&>1>>>B>G>L>Q>V>f>z>
+>&>5>D>S>b>q>
+>&>8>^>v>
+>&>J>c>
+>(>1>:>S>e>
+>(>4>[>u>
+>*>9>H>W>f>u>
+>,><>L>P>T>X>\>d>|>
+>,>0>4>8><>V>f>
+>:>U>^>g>}>
+>[?a?z?
+>+>H>u>
+><>D>L>T>\>d>l>t>|>
+>=>P>j>
+>'>;>]>r>
+>'><>P>i>
+>'>O>Y>s>
+>0><>\>h>
+>0>P>p>
+>2>;>D>M>V>_>
+>4>L>d>|>
+>5>K>h>
+>6?C?M?k?y?
+>9?K?Y?w?
+>9>C>L>]>m>
+>C>Q>X>
+>F>W>n>
+>J?V?a?~?
+>t?x?|?
+>V?c?z?
+0 0$0(0,000<0@0L0P0T0X0\0`0d0h0l0p0t0x0|0
+0 0$0(0,0004080<0@0D0H0L0P0T0X0\0`0d0h0l0p0t0
+0 0$0(0,0004080<0@0D0H0L0P0T0X0\0`0d0h0l0p0t0x0|0
+0 0$0(0,0004080<0@0L0P0\0`0d0h0l0p0t0x0|0
+0 0$0(0,04080<0@0D0H0P0T0X0\0`0h0
+0 0(040T0\0h0
+0 0(0H0d0l0t0
+0 00040D0H0L0P0T0\0t0
+0!0*0V0f0
+0!0.02070<0A0F0p0
+0!060P0V0m0
+0"0&0,0B0F0L0b0f0l0
+0"0'0,01060w0
+0#070D0b0z0
+0$0*00060<0B0H0N0T0Z0`0f0l0r0x0~0
+0$00080X0t0|0
+0$030B0Q0`0o0
+0$050D0S0b0q0
+0%030<0O0v0
+0%0V0d0x0
+0&0=0Y0
+0&080\0z0
+0(0@0`0t0
+0(0]0c0
+0(0H0P0X0`0h0t0
+0(1/151;1D1H1L1P1T1
+0*131`1e1o1
+'0,0?0F0Y0
+0,0004080L0P0h0l0
+0,141M1
+0.0000
+0-0<0K0b0k0
+000G0V0^0h0
+0'080I0f0u0
+0'0G0V0e0n0
+0-0K0[0k0
+0-0l0u0
+040904B0
+040E0O0n0u0{0
+060>0C0P0Y0b0k0t0
+060E0T0j0
+061I1j1~1
+090V0e0y0
+0F0X0r0
+0F1T1x1
+0X1\1`1d1h1l1p1t1x1|1
+0X1_1o1
+1 1$1(1,1014181<1@1D1H1L1P1T1X1\1`1d1h1l1p1t1x1|1
+1 1&1,12181>1D1J1P1V1\1b1h1n1t1z1
+1!1*1C1L1U1y1
+1!101?1N1]1l1
+1!282?2E2R2a2n2r2w2|2
+1"1&1,1B1F1L1b1f1l1
+1"1,1<1L1\1e1t1z1
+1"1L1T1_1e1n1|1
+1$1,10181@1D1H1L1P1T1X1\1`1d1l1p1t1x1|1
+1$1,141@1`1p1
+1$1,141<1D1L1X1`1x1
+1%1;1J1Y1b1n1}1
+1%1;1U1d1s1
+1%1=1S1\1g1
+1%101:1D1a1i1q1y1
+1&1<1Y1b1o1z1
+1&2B2^2z2
+1(1,1D1H1`1p1
+1(141T1\1d1l1t1|1
+1(181H1L1P1T1X1\1`1d1h1l1p1t1x1|1
+1(1H1X1|1
+1(1K1j1|1
+1(3,3034383<3@3D3H3L3P3T3X3\3`3d3h3l3p3t3x3|3
+1*1E1T1c1r1
+1,1A1V1f1
+1,1S1a1k1t1
+1,1S1g1
+1;1Y1k1|1
+1\1`1d1h1l1p1
+1+191V1h1
+1+1B1X1}1
+1+1S1c1s1
+1>1]1u1
+1>1N1X1c1q1{1
+102<2N2T2Z2m2s2
+1'1:1v1
+111K1]1e1
+131>1G1\1
+132?2K2i2u2
+1B1O1v1
+1J2R2X2^2r2x2
+2 2$2(2,2024282<2@2D2H2L2P2T2`2d2
+2 2$2(2,2024282<2@2D2H2L2P2T2X2\2`2d2h2l2p2t2x2|2
+2 2$2(202H2L2d2t2
+2 2$24282<2@2D2L2d2t2
+2 2/2>2T2
+2 2J2O2f2s2
+2 3<3`3t3
+2!2*2?2E2Z2g2m2
+2!3.32373<3A3F3V3h3.4:4@4V4r4
+2"2&2,2B2F2L2b2f2l2
+2"2(2.242:2@2F2L2R2X2^2d2j2p2v2|2
+2"2,2>2
+2"2F2X2
+2"353>3G3]3
+2$202P2`2h2
+2$2D2`2
+2%2.2D2U2^2t2
+2%2<2U2d2s2
+2%2O2f2
+2&242K2U2
+2&252I2N2V2a2
+2(2,2D2H2`2d2|2
+2(2;2Q2^2b2g2l2q2v2
+2)2;2L2n2
+2)2@2g2
+2)292I2Y2i2y2
+2,242<2H2P2
+2,282X2`2h2t2
+2.363U3_3
+2+2?2E2
+2+2A2V2f2
+2=2M2Y2{2
+2-222H2Z2t2
+242<2D2L2T2\2d2l2t2|2
+252>2a2u2~2
+262E2l2
+273?3^3f3
+28.2.7 Build: 07
+2W3i3p3
+3 3$3(3,3034383<3@3D3H3L3P3T3X3\3`3d3h3l3p3
+3 3$3(3,3034383<3@3D3H3L3P3T3X3\3`3d3h3l3p3t3x3|3
+3 3$3(3,3034383<3@3D3H3L3P3T3X3\3`3l3p3
+3 3$3(3,30383<3@3D3H3L3P3T3X3\3d3h3l3p3t3x3|3
+3 3(3@3P3`3d3h3l3p3t3x3|3
+3 3(30383@3H3X3|3
+3 3(343<3\3d3l3
+3 3)323;3i3
+3 3.3;3F3P3t3
+3 4H4|4
+3!4&494~4
+3"3;3X3l3|3
+3"323C3
+3"4>4\4s4y4
+3#3.3?3R3W3d3z3
+3#323A3P3_3n3}3
+3$3(3@3D3\3`3x3|3
+3$3*30363<3B3H3N3T3Z3`3f3l3r3x3~3
+3$3,343@3`3h3t3
+3$3,383\3d3l3t3|3
+3$3<3X3\3`3d3h3l3p3t3x3|3
+3%3R3r3
+3&3,3z3
+3&3/3<3k3s3
+3&343J3j3w3
+3&3A3K3
+3(343@3L3X3d3p3|3
+3)393I3Y3i3y3
+3)4;4L4j4
+3,3D3`3d3h3l3p3t3x3|3
+3.3?3L3Y3a3l3|3
+3/353H3N3h3
+3:3I3a3n3r3w3|3
+3+3<3p3"4n4v4
+3=3U3r3
+3-353>3h3u3
+3-383F3O3^3~3
+3'3H3U3x3
+3-3U3l3
+383E3g3
+383M3T3`3v3
+3h>l>p>t>x>|>
+3H3M3u3
+3l4p4t4x4|4
+3O3T3j3o3{3
+3P3d3u3
+4 4$4(4,4044484<4@4D4H4L4P4T4X4\4`4d4h4l4p4t4x4|4
+4 4$4<4@4X4\4t4x4
+4 4&4,42484>4D4J4P4V4\4b4h4n4t4z4
+4 4,484D4P4\4h4t4
+4 4/484>4D4y4
+4 4@4L4l4x4
+4 484\4d4l4x4
+4!4+4`4h4
+4!4-4R4a4v4
+4!464A4O4X4c4q4z4
+4!515F5W5
+4"4@4H4Z4t4
+4"5(5C5^5{5
+4#424A4P4f4u4
+4$444D4T4d4h4
+4$5+5f5t5
+4%414A4N4W4`4
+4%454u4
+4%464<4O4b4u4
+4%4W4a4
+4&444I4^4e4t4
+4)4;4W4
+4*4:4P4]4e4
+4*474D4Q4^4k4x4
+4*484?4M4]4
+4*4K4V4f4
+4*4R4Z4u4
+4,444<4D4h4p4x4
+4,4U4Z4g4p4~4
+4.565Q5[5
+4+424V4e4
+4+474J4_4~4
+40494]4v4
+414F4V4p4
+414P4w4
+42484V4q4x4
+425F5U5q5
+444<4D4L4T4\4d4l4t4|4
+44484<4P4T4l4p4
+4'4B4]4f4o4x4
+454D4S4b4q4
+464H4u4
+464Q4f4w4
+465F5d5
+494D4L4T4a4i4
+4F;t$<
+4W5s5{5
+5 5$5(5,50545@5D5
+5 5$5(5,5054585<5@5D5H5L5P5T5X5\5`5d5h5l5p5t5x5|5
+5 5$5`5d5h5l5p5t5x5|5
+5 5g5v5
+5!5*535<5E5N5W5p5
+5"5(5.545:5@5F5L5R5X5^5d5j5p5v5|5
+5#555A5I5
+5$5(585<5L5P5`5d5t5x5
+5$5*50565<5B5H5N5T5Z5`5f5l5r5x5~5
+5$5:5A5X5^5q5
+5$505<5H5T5`5l5x5
+5$545:5@5F5L5R5X5^5d5j5p5v5|5
+5$545D5H5L5P5T5X5\5`5d5h5l5p5t5x5|5
+5%545C5R5a5w5
+5%5E5x5}5
+5&555a5~5
+5(5?5_5s5
+5(585H5L5\5`5d5h5l5p5t5|5
+5(5D5`5
+5)555A5M5Y5l5|5
+5*5;5H5N5S5}5
+5,545@5H5h5
+5,545<5D5L5X5`5
+5,545<5L5T5d5l5t5|5
+5.5B5S5d5x5
+5.5H5k5
+5:5B5a5k5
+5@5M5\5q5
+5`7d7h7l7p7t7x7|7
+5+5G5W5n5
+50585@5H5T5t5|5
+506O6f6t6
+535>5G5l5t5
+5-565j5o5
+565E5\5
+5X5a5f5v5
+5Y5h5v5
+6 6$6(6,6064686<6@6D6H6L6P6T6X6\6`6d6h6l6p6t6x6|6
+6 6$6(6,646L6\6l6p6t6
+6 6&6,62686>6D6J6P6V6\6b6h6n6t6z6
+6 6,686D6M6v6
+6 6<6D6L6X6x6
+6 666E6T6l6s6
+6!666H6_6q6
+6"6'6?6V6}6
+6"6f6x6
+6"7)777Q7X7f7
+6"757>7G7P7f7}7
+6#6+636B6J6b6w6
+6#626A6P6_6n6
+6$6*60666<6B6H6N6T6Z6`6f6l6r6x6~6
+6$6<6\6x6
+6$6<6L6\6`6p6t6x6|6
+6%6.676M6e6n6
+6%656E6T6~6
+6&6>6P6c6k6s6
+6&636J6
+6&656D6b6u6
+6)6;6T6
+6)616?6F6V6i6r6
+6)7.797@7L7Q7\7c7v7
+6*666N6Z6s6
+6,6064686<6@6D6H6L6T6X6\6`6d6h6p6
+6,606P6p6x6|6
+6,6D6`6d6h6l6p6t6x6|6
+6.686t6|6
+6/6I6o6|6
+6?6Z6a6q6
+6+6<6R6n6
+6<6D6L6X6x6
+6>6J6T6l6
+60666F6~6
+60666N6
+60C0Z0
+60G0^0
+636F6L6\6l6|6
+656=6T6\6q6
+666D6[6e6
+6-676n6v6
+676S6g6{6
+686@6H6P6X6`6l6
+696@6U6t6z6
+697I7`7
+6A6K6V6`6j6t6~6
+6F7T7k7
+7 7$7(7,707`7d7h7l7p7t7x7|7
+7 7$7(7,7074787<7@7D7H7L7P7T7X7\7`7d7h7l7p7t7
+7 7$7(7,7074787<7@7D7H7L7P7T7X7\7`7d7h7l7p7t7x7|7
+7 7$7,7074787<7D7\7`7x7
+7 7$7,7D7H7`7p7
+7 7&7,72787>7D7J7P7V7\7b7h7n7t7z7
+7 7(70787\7d7l7x7
+7!767E7c7v7
+7"7(7.747:7@7F7L7R7X7^7d7j7p7v7|7
+7$7;7V7\7e7
+7%7;7c7
+7%7V7p7v7
+7&7,717A7~7
+7&737X7e7
+7(70787@7H7T7t7
+7(787D7S7`7
+7(787V7f7
+7(7L7t7
+7)727B7T7|7
+7)7P7Y7h7
+7)8;8T8
+7)8<8O8i8|8
+7*767B7N7Z7h7v7
+7,707@7D7H7L7P7X7p7
+7.7A7Q7a7q7
+7/7Q7{7
+7;7t7}7
+7;8E8P8Z8
+7<7D7L7X7x7
+7>7J7V7b7n7z7
+737?7K7P7
+747:7L7V7
+747P7T7X7\7`7d7h7l7p7t7x7|7
+7-8;8F8f8t8
+7A7J7T7]7
+7F7N7i7s7
+7G7U7d7z7
+7H7U7y7
+7K7S7n7x7
+7M7U7r7z7
+8 8$8(8,80848@8D8
+8 8$8(8,8084888<8@8D8H8L8P8T8X8\8@9D9\9|9
+8 8$8(8,8084888<8@8D8H8L8P8T8X8\8`8d8h8l8p8t8x8|8
+8 8$8(8,8084888<8@8D8H8L8X8\8
+8 8;8]8c8y8
+8 8084888<8@8D8H8L8P8T8X8\8`8d8h8l8p8t8|8
+8 8084888<8@8D8H8L8P8T8X8\8`8d8h8l8p8t8x8|8
+8 83898E8Q8]8i8u8
+8 8L8Q8f8x8
+8 9,9<9Z9j9z9
+8!8&8A8L8k8
+8!818A8Q8a8q8
+8"8(8.848:8@8F8L8R8X8^8d8j8p8v8|8
+8"919H9O9U9b9q9~9
+8#8*868;8G8L8X8]8i8
+8#8:8T8f8u8
+8#9;9I9_9o9u9
+8$8*80868<8B8H8N8T8Z8`8f8l8r8x8~8
+8$8,848@8`8h8p8x8
+8$8,848<8D8L8T8\8h8
+8$848<8H8P8h8p8x8
+8$8H8X8d8p8
+8%8@8J8
+8%858e8
+8%858H8Q8v8
+8%8U8a8i8q8w8
+8&808?8V8q8
+8&848E8V8g8x8
+8&898?8D8Q8Z8
+8)838Y8j8
+8)9<9i9y9
+8*8?8G8m8
+8*898H8W8f8u8
+8:8U8k8
+8\?`?t?x?
+8>8i8{8
+81878L8v8
+848E8N8W8`8i8r8{8
+8F8X8w8
+8G8U8k8
+8L8Q8]8
+8M9y9~9
+9 :,:[:c:
+9 9$9(9,90949
+9 9$9(9,90949\9t9
+9 9$9(9,9094989<9@9D9H9L9P9T9X9\9`9d9h9l9p9t9x9|9
+9 9$9(9094989<9@9D9H9L9P9T9X9\9d9l9p9t9x9|9
+9 9&9,92989>9D9J9P9V9\9b9h9n9t9z9
+9 9*9K9W9c9r9
+9 9I9N9`9}9
+9!:3:K:P:]:b:o:t:
+9!9&92979C9
+9!919A9Q9a9q9
+9!969F9`9s9y9
+9!9-959;9_9
+9"9,9M9c9r9z9
+9$9*90969<9B9H9N9T9Z9`9f9l9r9x9~9
+9%:+:f:
+9%949C9R9h9
+9%9I9X9e9
+9&9@9T9d9{9
+9&929>9J9V9b9n9z9
+9(9,9094989<9@9D9H9L9P9T9X9\9`9d9h9l9p9t9x9|9
+9(9,9094989<9@9D9H9L9P9T9X9\9`9d9h9l9p9x9|9
+9(949T9\9d9p9
+9(959Z9v9
+9(9-969C9N9_9l9q9z9
+9(9D9L9T9`9
+9):4:9:
+9)9=9W9^9n9w9
+9,9;9J9Y9h9w9
+9.:3:?:D:P:W:c:h:~:
+9/999J9p9}9
+9::Q:Y:a:m:u:{:
+9:9C9^9e9
+9:9U9^9g9p9
+9;9\9d9{9
+9[9w9}9
+949:9P9_9g9
+949<9D9L9T9\9d9l9t9|9
+989T9t9
+9'9>9C9S9e9u9
+999>9K9T9i9
+999I9R9
+9G0t"F;
+A discrepancy already exists for the selected reason.
+Action
+Add Discrepancy (Insert)
+All Locations
+All Purchase Orders
+AppendMenuA
+C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\atlmfc\include\afxwin1.inl
+C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\atlmfc\include\afxwin2.inl
+Cannot add a duplicate invoice for this vendor.
+Cat/ISBN
+CDiscrepancyCtrl
+CFreightINVDetailSet
+CFreightINVDetailView
+CFreightINVDispDetailSet
+CFreightINVFrame
+CFreightINVHeaderView
+CFreightINVQuickSearchGrid
+CheckMenuItem
+CheckMenuRadioItem
+CInvAddPODlg
+CInvAllocHdrDlg
+CInvAllocHdrGrid
+CInvAllocHdrSet
+CINVAllViewGM
+CINVAllViewTX
+CInvDetailSet
+CInvDetailSumSet
+CINVDetailViewBase
+CINVDetailViewGM
+CINVDetailViewTX
+CInvDiscrepancyCtrl
+CInvDiscrSet
+CInvDispDetailSet
+CInvEditInfoSet
+CINVFrame
+CINVHeaderView
+CInvLocationSet
+CInvPODetailSet
+CInvPOHeaderSet
+CInvPrintDiscrDlg
+CINVQuickSearchGrid
+CInvSelectDtlDlg
+CINVSummaryView
+Comment
+CompanyName
+Copyright 
+CountDiscr
+Credits
+D$ SVW
+D$`SVW
+D$4PjR
+D$8PjM
+D$H+D$@
+D$hSVW
+D$PSVW
+DCCID IN (SELECT DCCID FROM Freight_Invoice_Detail WHERE %s)
+DecodePointer
+DefaultSubsystemID
+DefWindowProcA
+Delete Discrepancy (Del)
+DELETE FROM Freight_Invoice_Detail WHERE FRINVDID = %ld
+DeleteCriticalSection
+Description
+Description, PONumber
+Detail records need to exist before posting.
+Discount
+Discount can not be greater than $ %.2f
+Discrepancy cannot be deleted because it's on a Credit Memo
+Discrepancy_Ctrl
+discrepancynumber
+DISUID
+Do you want to delete the discrepancy?
+DSCDID = %d and fFlag = %d
+DSCHID = %ld AND fType = 2
+DSCHID = %ld AND fType in (2,4)
+EDI with no NYI
+EDI with NYI
+Edit Discrepancy Reasons
+EnableMenuItem
+EnableWindow
+EncodePointer
+ERROR : Unable to initialize critical section in CAtlBaseModule
+Exception thrown in destructor
+Ext Royalty
+ExtCost
+ExtendedCost
+fBuyback IN (0) AND fMerchTrans IN (0)
+fBuyback IN (0) AND fMerchTrans IN (0,1)
+fBuyback IN (0,1,2) AND fMerchTrans IN (0)
+fBuyback IN (0,1,2) AND fMerchTrans IN (0,1)
+fBuyback IN (1,2)
+FileDescription
+FileVersion
+fInvoiceType
+fInvType
+fMerchTrans IN (1)
+fPriceUpdate
+Freight
+FRINVDID
+FRINVHID
+FRINVHID = %ld
+FRINVHID = ?
+FRINVHID = ? and FRINVDID = ?
+fStatus
+GDI32.dll
+GetClassInfoA
+GetClientRect
+GetCurrentProcessId
+GetCurrentThreadId
+GetFocus
+GetKeyState
+GetLastError
+GetNextDlgTabItem
+GetObjectA
+GetParent
+GetSysColor
+GetSystemTimeAsFileTime
+GetTopWindow
+GetWindowRect
+GlobalFree
+InflateRect
+InitializeCriticalSectionEx
+InternalName
+InvalidateRect
+INVDUID
+INVLUID
+INVLUID = ?
+Invoice '%s' already exists for Vendor '%s.'  
+Invoice Date
+Invoice detail(s) cannot be deleted because a discrepancy has been resolved on a Credit Memo
+Invoice has a resolved discrepancy, unable to delete invoice.
+Invoice Number
+Invoice Number: %s
+Invoice Total
+InvoiceDisc
+InvoiceID
+InvoiceID = %d
+InvoiceID = %ld
+InvoiceID = ?
+InvoiceID = ? AND INVDUID = ?
+InvoiceID = ? AND Subsystem = ?
+InvoiceID = ? AND Subsystem = 1
+InvoiceID = ? AND Subsystem IN (2,3)
+InvoiceID IN (SELECT D.InvoiceID FROM dbo.Invoice_Detail D INNER JOIN VW_ITM_MASTER I ON D.SKU = I.SKU WHERE REPLACE(I.ISBN13, '-','') LIKE '%s%%')
+InvoiceID IN (SELECT d.InvoiceID FROM VW_INVENTORY_STATUS_CODE_SKU_LOCATIONS s INNER JOIN Invoice_Detail d ON d.SKU = s.SKU AND s.InvStatusCodeID %s INNER JOIN Invoice_Location l on l.INVDUID = d.INVDUID AND l.LocationID = s.LocationID)
+InvoiceID IN (SELECT d.InvoiceID FROM VW_SEASON_CODE_SKUS s INNER JOIN Invoice_Detail d ON d.SKU = s.SKU AND s.SeasonCode LIKE '%s%%')
+InvoiceID IN (SELECT d.InvoiceID FROM VW_STYLE_SKUS m INNER JOIN Invoice_Detail d ON d.SKU = m.SKU AND m.StyleID = %d)
+InvoiceID IN (SELECT Invoice_Detail.InvoiceID FROM Invoice_Detail, VW_INVC_QSDETAIL WHERE Invoice_Detail.PurchaseID = VW_INVC_QSDETAIL.PID AND Invoice_Detail.fPurchaseIDType = VW_INVC_QSDETAIL.PType AND (VW_INVC_QSDETAIL.PDate >= '%s 00:00:00' AND  VW_INVC_QSDETAIL.PDate <= '%s 23:59:59'))
+InvoiceID IN (SELECT Invoice_Detail.InvoiceID FROM Invoice_Detail, VW_INVC_QSDETAIL WHERE Invoice_Detail.PurchaseID = VW_INVC_QSDETAIL.PID AND Invoice_Detail.fPurchaseIDType = VW_INVC_QSDETAIL.PType AND VW_INVC_QSDETAIL.PNumber LIKE '%s%%')
+InvoiceID IN (SELECT InvoiceID FROM Invoice_Detail INNER JOIN VW_ITM_MASTER IM ON Invoice_Detail.SKU = IM.SKU WHERE BookKey LIKE '%s%%' AND Subsystem in (2,3))
+InvoiceID IN (SELECT InvoiceID FROM Invoice_Detail WHERE SKU = %ld)
+InvoiceID IN (SELECT InvoiceID FROM Invoice_Detail WHERE SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%'))
+InvoiceID in (select InvoiceID from Invoice_Header where fEDI = 1)
+InvoiceID IN (SELECT T.InvoiceID FROM dbo.Invoice_Detail T WHERE T.SKU = %ld)
+InvoiceID in(select ih.invoiceid from invoice_header ih inner join invoice_detail id on id.invoiceid = ih.invoiceid and ih.fEDI = 1 inner join invoice_location il on il.invduid = id.invduid inner join po_detail pd on pd.poid = id.purchaseid inner join po_location pl on pl.podl_id = il.purchasedtlid and pl.recvqty <> pl.InvoicedQty) 
+InvoiceID in(select ih.invoiceid from invoice_header ih inner join invoice_detail id on id.invoiceid = ih.invoiceid and ih.fEDI = 1 inner join invoice_location il on il.invduid = id.invduid inner join po_detail pd on pd.poid = id.purchaseid inner join po_location pl on pl.podl_id = il.purchasedtlid and pl.recvqty = pl.InvoicedQty) 
+invoicenum
+InvoiceNumber
+IsDebuggerPresent
+IsProcessorFeaturePresent
+KERNEL32.dll
+L$ j@P
+L$$h%N
+L$,_^[3
+L$\_^3
+L$L_^[3
+l0p0t0x0|0
+LegalCopyright
+LegalTrademarks
+LoadBitmapW
+Location: %s  DCC: %s
+LocationDesc, SKU
+LocationID
+LocationID = %ld
+memcpy_s
+memmove_s
+memset
+mfc120.dll
+Modify 
+ModifyMenuA
+MSVCR120.dll
+Nebraska Book Company, Inc.
+No detail records exist for allocation.
+No details exist with value.
+Not All Credits are allocated.
+Not All Fees are allocated.
+Not All Freight is allocated.
+ODBC;DSN=prism
+ODBC;DSN=WinPrism
+og1120as.dll
+OLEAUT32.dll
+OriginalFilename
+ot1120as.dll
+OutputDebugStringW
+P8^[_]
+Please enter all of the required data or delete the row.
+POID = ? AND PODL_ID NOT IN (SELECT * FROM dbo.fnInvoicingCompleteSkuListForPO( ? ))
+PONumber
+PONumber, Description
+PONumber, ShortDescription, SKU
+PONumber, SKU
+POSRetail
+PostMessageA
+print_global_note
+ProductName
+ProductVersion
+QtyType
+QueryPerformanceCounter
+Reason
+Rectangle
+RegisterWindowMessageA
+Retail
+Rich2C
+Royalty
+secComboExApply
+secComboExNewItem
+SELECT * FROM dbo.VW_FREIGHT_INV_NAVIGATOR
+SELECT * FROM dbo.VW_INVC_NAVIGATOR
+SELECT * FROM VW_INVC_DETAIL_GRID WHERE INVDUID = %d
+SELECT AddressID, Description FROM AddressType
+select bgvendorid from buyers_guide_vendors where vendorid = %ld
+select cast(Subsystem as int), rtrim(Name) from Subsystem_Table
+SELECT Count(*) FROM Invoice_Header WHERE InvoiceNumber like '%s' and VendorID = %d
+Select count(*) from VW_INVC_Discr_Credit_Memos where InvoiceHeaderID = %i
+Select count(*) from VW_INVC_Discr_Credit_Memos where InvoiceLocationID = %i
+Select count(*) from VW_INVC_Discr_Credit_Memos where InvoiceLocationID in (%s)
+select count(InvoiceId) from Invoice_Detail where InvoiceId = %d
+select count(ReasonId) from CD_Reasons where ReasonId = %d and fDisable = 0
+select CurrencyExId from Invoice_Header where InvoiceId = %d
+SELECT Description FROM Item I INNER JOIN ItemMaster M ON I.Subsystem = M.Subsystem and I.UUID = M.UUID WHERE SKU = %ld
+select Description from QuickSearchType where ModuleID = 10021 and TypeID = %d
+select Description from QuickSearchType where TypeId = %d and ModuleID = 10021
+Select Detail Item
+select DiscountTaken from Freight_Invoice_Header where FRINVHID = %ld
+select ExchRate from Invoice_Header where InvoiceId = %d and ExchRate is not null
+select INVLUID from Invoice_Location where INVDUID = %ld
+Select ISNULL(TotalRoyalty,0.0) From Invoice_Header where InvoiceID = %ld
+select LocationID from Invoice_Location where INVLUID = %ld
+SELECT LocationID, ShortDescription FROM Location
+SELECT LocationID, ShortDescription FROM Location where locationID in (%s) order by LocationID
+SELECT MaxReturnTime, ReturnPolicyID, SpecialInstructions FROM dbo.VendorParameters WHERE VendorID = %ld AND Subsystem = %d
+select Name from VendorMaster where VendorID = %d
+select PurchaseID from invoice_detail where INVDUID = %ld
+select PurchaseID from Invoice_Location l inner join invoice_detail d on l.invduid = d.invduid where INVLUID = %ld
+select qs.Description from Freight_Invoice_Header fih inner join QuickSearchType qs ON fih.TypeID = qs.TypeID  where qs.ModuleID = 10021 and FRINVHID = %d
+SELECT ReasonID, fActReq, Qty, Cost, Retail, Discount FROM VW_INVC_DISCR WHERE DSCHID = %ld AND DSCDID = %ld
+SELECT ReasonID, ReasonText FROM CD_AcctReasons
+select ReasonId, ReasonText from CD_AcctReasons order by ReasonId
+SELECT ReasonID, ReasonText FROM CD_Reasons
+select ReasonId, ReasonText from CD_Reasons where fDisable = 0 order by ReasonText
+SELECT Retail FROM dbo.Invoice_Detail WHERE InvoiceID = %ld AND SKU = %ld
+select rtrim(Abbreviation) from Subsystem_Table where Subsystem = %d
+SELECT ShipViaID, Description FROM ShipVia
+select StatusDesc from Status_Codes where ModuleID = 10020 and StatusID = %d
+SELECT Subsystem FROM Subsystem_Table WHERE Name = '%s'
+SELECT Subsystem, Name FROM dbo.Subsystem_Table WHERE fDisplay = 1
+SELECT SUID, UserName FROM prism_security.dbo.PrismUser
+select TermID from Invoice_Location where INVLUID = %ld
+select top 1 COAID from VW_DCCGLCODE where GLCodeTypeID = 1 and DCCID = %d and LocationID in (%d,0) order by priority
+Select top 1 InvoiceID From Invoice_Header where InvoiceNumber like '%s' and VendorId = %d Order by InvoiceID desc
+select TotalDiscTaken from Invoice_Header where InvoiceID = %ld
+SELECT TypeID, Description FROM QuickSearchType WHERE ModuleID = 10021
+select VendorCode from VendorMaster where VendorID = %d
+select VendorID from VendorMaster where VendorCode = '%s'
+SendMessageA
+shipviaid
+ShortDescription
+SKU: %ld  %s
+Software\Nebraska Book Company\WinPrism\
+Status
+StringFileInfo
+strtod
+Subsystem
+t%WhxA
+t`Ht=H
+TermID
+The amount must be greater than 0.
+The quantity must be greater than 0.
+Translation
+TypeID
+UPDATE dbo.VendorParameters SET MaxReturnTime = %ld WHERE VendorID = %ld AND Subsystem = %d
+update Invoice_Detail set Retail = %.4f where Invduid = %d
+update Invoice_Location set Royalty = %.4f where Invluid = %d
+UpdateWindow
+USER32.dll
+VarFileInfo
+Vendor Name
+vendor_address_type
+VendorID = %ld AND InvoiceNumber = '%s'
+VendorID = ?
+VS_VERSION_INFO
+VW_INVC_PODETAIL
+WPComm.dll
+WPData.dll
+WPInv Dynamic Link Library
+WPInv.dll
+WPUtility.dll

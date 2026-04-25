@@ -1,0 +1,19 @@
+﻿%s IN (SELECT AutoID FROM Acct_Auto_Loc WHERE ModuleID = %d AND 
+?Update@CGXBrowserGrid@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+SELECT APExpenseID, ExpenseNumber FROM Acct_Recurring_Expense_Header
+SELECT CheckHdrID, CheckNumber FROM Acct_Check_Header
+Select convert(varchar(10), Period, 101) from Acct_PeriodRange Where getDate() between BeginDate and EndDate and AppId = 2
+Select convert(varchar(10),BeginDate,101) from Acct_PeriodRange Where Period = '%s' and AppID = %d
+Select convert(varchar(10),EndDate,101) from Acct_PeriodRange Where Period = '%s' and AppID = %d
+SELECT Count(*) FROM %s WHERE Description = '%s'
+select Count(*) from Acct_Pay_Batch_Detail where BatchID = (select BatchID from Acct_Pay_Batch_Header where BatchName = '%s')
+select CurrencyExID from Sequence_Check_Info where SequenceID in (select SequenceID from Sequence where Description = '%s')
+SELECT DISTINCT AcctDivisionID,DivisionDesc FROM dbo.Acct_Financial_Divisions WHERE fDisable = 0 ORDER BY AcctDivisionID ASC
+Select Excluded Vendors
+select name from Acct_Memb_Account where MemAcctID =%d
+Select Sequence
+SELECT SequenceNumber FROM Sequence WHERE SequenceID = %ld
+SELECT VoucherID, VoucherNumber FROM Acct_Voucher
+SequenceTypeID = %d  and SequenceID in (select SequenceID from Sequence_Check_Info where CurrencyExId = %d)
+SequenceTypeID = %d and SequenceNumber <> 1 and SequenceID in (select SequenceID from Sequence_Check_Info where CurrencyExId = %d)
+Update Acct_PeriodRange Set BeginDate = '%s', EndDate = '%s' where Period = '%s' and AppID = %d

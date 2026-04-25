@@ -1,0 +1,1033 @@
+﻿  Proceed with the Update?
+ AND (MOfReserve = 1 OR MOReceiptId in (select ReceiptId from Catalog_Sales_Header where MOTypeID = 3 AND SOShipType = 2))
+ AND INVDUID IN (SELECT Invoice_Location.INVLUID  FROM Invoice_Location  Inner join Invoice_Detail on Invoice_Detail.INVDUID = Invoice_Location.INVDUID Inner join Invoice_Header on Invoice_Detail.InvoiceID = Invoice_Header.InvoiceID WHERE Invoice_Detail.InvoiceID = %ld)
+ AND InvoiceID in (Select InvoiceID From VW_PRET_INVDETAIL where %s)
+ AND TermID in (select TermID from CR_Term where CampusID = %d) 
+ IN (SELECT 
+ XDocHdrId in (select distinct DocHdrId from XDoc_ItemInfo where DocHdrId in 
+%s record already exists. Merge this record into the existing %s Record ?
+(%s %s) and PurchaseID not in (select PurchaseId from VW_RCV_Staging_Detail where RCVSTID = %d)
+(select DocHdrID from XDoc_ItemInfo where POID_ID in (select POID from PO_Header where BuyerId = %ld))))
+(XDocHdrID in (select DocHdrID from XDoc_ItemInfo where replace(CatISBN, '-', '') = '%s' or replace(CatISBN13, '-', '') = '%s'))
+(XDocHdrID in (select DocHdrID from XDoc_ItemInfo where replace(CatISBN, '-', '') in (select replace(CatISBN, '-', '') from VW_ITM_MASTER where [Description] like '%%' + '%s' + '%%')) or XDocHdrID in (select DocHdrID from XDoc_ItemInfo where replace(CatISBN13, '-', '') in (select replace(CatISBN, '-', '') from VW_ITM_MASTER where [Description] like '%%' + '%s' + '%%')))
+(XDocHdrId in (select XDocHdrId from VW_IN_MSG_DTL where BuyerId = %ld) 
+?Update@CCampusMntSet@@UAEHXZ
+?Update@CCRLocationsDtlSet@@UAEHXZ
+?Update@CG3ModuleBar@@QAEXXZ
+?Update@CGXBrowserGrid@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Update@CInstructorsDtlSet@@UAEHXZ
+An item cannot be linked if the intended child is a parent to another item (links cannot be "chained"). Please select a different item.
+An item cannot be linked to itself. Please select a different item.
+Are you sure you want to merge the %d selected instructor(s) back into '%s'?
+AutogenPOID IN (SELECT AutogenPOID FROM AutogenPO_Location WHERE 
+AutogenRetID IN (SELECT AutogenRetID FROM AutogenRet_Location WHERE 
+AutogenRetID IN (SELECT AutogenRetID FROM AutogenRet_Vendor WHERE VendorID = %ld)
+BUNID in (select BUNID from vw_bundle_detail left outer join VW_ITM_BARCODE on VW_ITM_BARCODE.sku = vw_bundle_detail.sku WHERE Barcode like '%s%%')
+BUNID in (select BUNID from vw_bundle_detail where REPLACE(ISBN13, '-','') LIKE '%s%%')
+BUNID IN (SELECT BUNID FROM vw_bundle_detail WHERE SKU = %ld)
+Cannot create an item find dialog from a non-WinPRISM document.
+CatalogID in (select CatalogID from CatalogAux ca left join LocationSelectionLocations lsl on ca.LocationSelectionID = lsl.LocationSelectionID where (isnull(lsl.LocationID,0) = 0) or (lsl.LocationID in (%s)))
+CatalogID IN (SELECT CatalogID FROM VW_CatalogItems WHERE SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%'))
+CatalogID IN (SELECT d.CatalogID FROM dbo.VW_CatalogItems d INNER JOIN VW_ITM_MASTER I ON I.SKU = d.SKU WHERE REPLACE(I.ISBN13, '-','') LIKE '%s%%')
+CatalogID IN (SELECT d.CatalogID FROM VW_CatalogItems d INNER JOIN VW_ITM_MASTER IM ON d.SKU = IM.SKU WHERE IM.BookKey LIKE '%s%%' AND IM.Subsystem IN (1,2,3))
+CatalogID IN (SELECT d.CatalogID FROM VW_INVENTORY_STATUS_CODE_SKU_LOCATIONS s INNER JOIN VW_CatalogInventory d ON d.SKU = s.SKU AND d.LocationID = s.LocationID AND s.InvStatusCodeID %s)
+CatalogID IN (SELECT d.CatalogID FROM VW_SEASON_CODE_SKUS s INNER JOIN VW_CatalogItems d ON d.SKU = s.SKU AND s.SeasonCode LIKE '%s%%')
+CatalogID IN (SELECT d.CatalogID FROM VW_STYLE_SKUS m INNER JOIN VW_CatalogItems d ON d.SKU = m.SKU AND m.StyleID = %d)
+CatalogID IN (SELECT v.CatalogID FROM VW_CatalogItems v WHERE v.SKU IN (%d))
+CatalogID IN (SELECT v.CatalogID FROM VW_CatalogItems v WHERE v.SKU IN (%s))
+Confirm Instructor Merge
+convert(varchar(10),PurchaseID)+convert(varchar(1),PurchaseType) IN (SELECT convert(varchar(10),PurchaseID)+convert(varchar(1),PurchaseType) FROM VW_RCV_QSDETAIL WHERE BookKey LIKE '%s%%' AND Subsystem in (2,3))
+convert(varchar(10),PurchaseID)+convert(varchar(1),PurchaseType) IN (SELECT convert(varchar(10),PurchaseID)+convert(varchar(1),PurchaseType) FROM VW_RCV_QSDETAIL WHERE REPLACE(ISBN13, '-','') LIKE '%s%%')
+convert(varchar(10),PurchaseID)+convert(varchar(1),PurchaseType) IN (SELECT convert(varchar(10),PurchaseID)+convert(varchar(1),PurchaseType) FROM VW_RCV_QSDETAIL WHERE SKU = %ld)
+convert(varchar(10),PurchaseID)+convert(varchar(1),PurchaseType) IN (SELECT convert(varchar(10),PurchaseID)+convert(varchar(1),PurchaseType) FROM VW_RCV_QSDETAIL WHERE SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%'))
+convert(varchar(10),PurchaseID)+convert(varchar(1),PurchaseType) IN (SELECT convert(varchar(10),PurchaseID)+convert(varchar(1),PurchaseType) FROM VW_RCV_QSDETAIL WHERE TermID = %ld)
+Could not update selected tags.
+CourseReqID IN (SELECT CourseReqID FROM CR_Detail INNER JOIN VW_ITM_MASTER IM ON CR_Detail.SKU = IM.SKU WHERE BookKey LIKE '%s%%' AND Subsystem in (2,3))
+CourseReqID IN (SELECT CourseReqID FROM CR_Detail WHERE SKU in (select OD2.SKU from Order_Decisions OD inner join CR_Locations crl on OD.CRLUID = crl.CRLUID left outer join Order_Decisions OD2 on (OD.ParentODUID = OD2.ODUID or OD2.SKU = OD.SKU) and crl.TermID = crl.TermID where OD.SKU = %ld))
+CourseReqID IN (SELECT CourseReqID FROM CR_Detail WHERE SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%'))
+CourseReqID IN (SELECT T.CourseReqID FROM CR_Detail T INNER JOIN VW_ITM_MASTER I ON I.SKU = T.SKU WHERE REPLACE(I.ISBN13, '-','') LIKE '%s%%')
+CRentalAdoptionGridSet::Update
+CRLUID IN (Select CRLUID From CR_Locations_Detail Where DeptID IN (Select DeptID From CR_Department Where DeptName LIKE '%s%%')))
+CRTUID IN (SELECT CRTD.CRTUID FROM dbo.CRT_Detail CRTD INNER JOIN VW_ITM_MASTER I ON I.SKU = CRTD.SKU WHERE REPLACE(I.ISBN13, '-','') LIKE '%s%%')
+CRTUID IN (SELECT CRTD.CRTUID FROM dbo.CRT_Detail CRTD WHERE CRTD.SKU = %ld)
+CRTUID IN (SELECT CRTD.CRTUID FROM dbo.CRT_Detail CRTD, dbo.Invoice_Header INVH, dbo.Invoice_Detail INVD, dbo.Invoice_Location INVL WHERE CRTD.INVDUID = INVL.INVLUID AND INVL.INVDUID = INVD.INVDUID AND INVD.InvoiceID = INVH.InvoiceID AND INVH.InvoiceDate >= '%s 00:00:00' AND INVH.InvoiceDate <= '%s 23:59:59')
+CRTUID IN (SELECT CRTD.CRTUID FROM dbo.CRT_Detail CRTD, dbo.Invoice_Header INVH, dbo.Invoice_Detail INVD, dbo.Invoice_Location INVL WHERE CRTD.INVDUID = INVL.INVLUID AND INVL.INVDUID = INVD.INVDUID AND INVD.InvoiceID = INVH.InvoiceID AND INVH.InvoiceNumber LIKE '%s%%')
+CRTUID IN (SELECT CRTH.CRTUID FROM dbo.CRT_Header CRTH, dbo.VendorMaster VM WHERE CRTH.VendorID = VM.VendorID AND VM.VendorID = %ld)
+CRTUID IN (SELECT CRTUID FROM CRT_Detail INNER JOIN VW_ITM_MASTER IM ON CRT_Detail.SKU = IM.SKU WHERE BookKey LIKE '%s%%' AND Subsystem in (2,3))
+CRTUID IN (SELECT CRTUID FROM CRT_Detail WHERE SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%'))
+CRTUID IN (SELECT d.CRTUID FROM VW_INVENTORY_STATUS_CODE_SKU_LOCATIONS s INNER JOIN CRT_Detail d ON d.SKU = s.SKU AND d.LocationID = s.LocationID AND s.InvStatusCodeID %s)
+CRTUID IN (SELECT d.CRTUID FROM VW_SEASON_CODE_SKUS s INNER JOIN CRT_Detail d ON d.SKU = s.SKU AND s.SeasonCode LIKE '%s%%')
+CRTUID IN (SELECT d.CRTUID FROM VW_STYLE_SKUS m INNER JOIN CRT_Detail d ON d.SKU = m.SKU AND m.StyleID = %d)
+delete from BIP_Temp where QueryID = %ld
+delete from Bundle_DetailItem where SKU = %d and BUNDID = %d
+delete from Catalog_Sales_Tender where CatSaleTenderId = %d and ChargeBack = 0
+delete from cr_course where UCourseID = %ld
+DELETE FROM CR_Enrollment_Detail WHERE EnrollmentDtlID = %ld
+delete from IncomingMessages where MsgID = %ld
+delete from MailOrderPinpad where MailOrderPinpadID = %d
+delete from MarkdownScheduleConfig where MarkdownScheduleConfigId = %d
+delete from MOFulfillmentHeader
+delete from MT_Header where MTUID = %ld
+delete from mt_location where mtluid = %ld
+delete from NBCPPeriodRetain where NBCPPeriodRetainID = %d
+delete from NMRPSessionRetain where NMRPSessionRetainID = %d
+delete from OTB_DCCID where OTBID = %d
+delete from OutgoingMessages where MsgID = %ld
+delete from PDA_WL_Request where WLRID = %d
+delete from PDA_WL_Request where WLRID in (%s)
+delete from PO_BuyerLimit where BLID = %d
+DELETE FROM Problem_Notifications_Detail WHERE ProbNotifyDID = %ld
+DELETE FROM Problem_Notifications_Header WHERE 
+delete from problem_notifications_header where probnotifyid = %ld
+delete from Rcv_Staging_Detail where RCVSTDID = %d
+delete from Rcv_Staging_Location where RCVSTLID = %d
+delete from Rcv_Staging_Location_Type where RSLID = %d
+delete from Rental_Adoption_Detail where RentalAdoptionHeaderId = %d and Adopt = 0
+delete from Rental_Adoption_Header where RentalAdoptionHeaderId = %d
+delete from Rental_Detail where RentalDId = %d
+delete from Rental_Header_Item_Period where RHI_RP = %d
+delete from Rental_Term where RentalPId = %d
+delete from RentalAccount where RentalAccountID = %d
+delete from RNRRegAssignment where POSID = %d
+DELETE FROM SalesHistoryHeader WHERE SHMID = %ld
+DELETE FROM SalesTable WHERE POSID = %ld AND SalesDate = '%s'
+delete from ScheduledReport where ScheduledReportID = %d
+delete from tempsalestable where locationid = %ld and posid = %ld and typeid = %ld and salescode = %ld and salesdate = '%s'
+delete from Transaction_Tender where  TranTendorID = %d and (ChargeBack = 0 or fAuthorized = 0)
+delete from WantList_Location where WantListID = %d and LocationID = %d
+DELETE FROM WantListDetail WHERE WantListID = %ld AND SKU = %ld AND LocationID = %ld
+delete from wantlistheader where wantlistid = %ld
+delete from whl_detail where whluid = %ld and locationid = %ld and sku = %ld and price = %4f
+delete from whl_detail where whluid = %ld and sku = %ld and price = %4f
+delete from XDoc_Note where DocNoteID = %d
+delete Rental_MO_Xref where trandtlid in               (select trandtlid from transaction_detail where transactionid = %i)
+exec CatalogRemoveItem %d, %d
+exec E_CatalogInventory_SynchLocations %d
+exec MarkDownApplyScheduleTemplate %d, %d, '%s'
+exec MarkDownCreateScheduleConfigDetail %d
+exec MediaUnlinkFiles %d, %d, %d
+exec NBCPClosePeriod %d, %d
+exec NMRPCloseAccountSession %d, %d
+exec P_Rental_Adoption_AddTestData %d
+exec Rental_Replace_XREF_Validate '%s', '%s', %d, %d
+exec ResendCatalogsToHub %d
+EXEC SP_PO_UpdateArtInstructions %d, %d
+EXISTS ( SELECT * FROM VW_ORDER_DECISIONS_CONFIGURATIONS XC  INNER JOIN Order_Decisions XOD ON  XOD.CRLUID = XC.CRLUID AND  XC.fOpenFlg = 1 AND  XOD.SKU = VW_ORDER_DECISIONS_HEADER.SKU AND  XOD.fWksStatusFlg <> 1 )
+EXISTS ( SELECT * FROM VW_ORDER_DECISIONS_CONFIGURATIONS XC  INNER JOIN Order_Decisions XOD ON  XOD.CRLUID = XC.CRLUID AND  XC.fOpenFlg = 1 AND  XOD.SKU = VW_ORDER_DECISIONS_HEADER.SKU AND  XOD.fWksStatusFlg = %d )
+EXISTS ( SELECT * FROM VW_ORDER_DECISIONS_CONFIGURATIONS XC  INNER JOIN Order_Decisions XOD ON  XOD.CRLUID = XC.CRLUID AND  XC.fOpenFlg = 1 AND  XOD.SKU = VW_ORDER_DECISIONS_HEADER.SKU AND  XOD.ManualQTP = 1 )
+FixtureAreaID IN (SELECT FixtureAreaID FROM Fiscal_Inventory_Detail_Table WHERE SKU IN (%s))
+fStatus = 0 AND CRTUID IN (SELECT CRTUID FROM CRT_Detail WHERE SKU IN (%s))
+fStatus = 0 AND MRID IN (SELECT MRID FROM MR_Detail WHERE SKU = %ld)
+fStatus = 0 AND POID IN (SELECT POID FROM PO_Detail WHERE SKU = %ld)
+if not exists(select * from CR_DEPARTMENT where DeptName= '%s' and CampusID=%s) insert into CR_DEPARTMENT values('%s', '%s', %s, NULL)
+insert CatalogMediaLinkQueue(CatalogID) select 
+INSERT CMD_Catalog_RefreshItems SELECT 
+INSERT CMD_CatalogItems_Add SELECT 
+INSERT CMD_CatalogProductFamilies_Add SELECT '
+INSERT CMD_CatalogProductFamilies_SynchLocations SELECT 
+INSERT CR_Locations (LocationID, TermID, FillBy, CloseOn, fOrderShortFlg, fBuybackType) SELECT LocationID = %d, TermID, FillBy, CloseOn, fOrderShortFlg, fBuybackType FROM CR_Locations WHERE CRLUID = %d
+insert into ##Serial_number_post_table_temp (record_type,unique_stamp,fTracking_type,serialDID,crtuid) VALUES (2,'%s',%d,%d,%d)
+insert into ##Serial_number_post_table_temp (record_type,unique_stamp,qty,crtuid,locationid,sku) VALUES (1,'%s',%d,%d,%d,%d)
+insert into bip_temp(descr) values('%s')
+INSERT INTO CR_Locations_Detail (CRLUID, DeptID, Pcnt) VALUES (%d, %d, %d)
+INSERT INTO Instructors_Detail (InstructorID, DeptID, CampusID) VALUES (%d, %d, %d)
+INSERT INTO Instructors_Detail (InstructorID, DeptID, CampusID, fDefaultFlg) VALUES (%d, %d, %d, 1)
+insert into NBCPPeriodRetain (RentalPID, RentalID, ShipQty) values (%d, %d, %d)
+insert into NMRPSessionRetain (RentalSessionID, LocationID, RentalID, KeepQty) values (%d, %d, %d, %d)
+insert into PO_BuyerLimit (SUID, Limit) values(%d, 0)
+insert into problem_notifications_detail(probnotifyid, sku, freasonid, userid, txcomment) values(%ld, %ld, %ld, %ld, '%s')
+insert into problem_notifications_header(termid) values(%ld)
+insert into Rcv_Staging_Detail (RCVSTID, PurchaseId, PurchaseType) values(%d, %d, %d)
+insert into Rcv_Staging_Header (Number, UserId) values('%s', %d)
+insert into Rcv_Staging_Location (RCVSTID, RSLID, Comment) values(%d, %d, '%s')
+insert into Rcv_Staging_Location_Type (StagingLoc) values ('%s')
+insert into Rental_Term (RentalPId, TermId) values(%d, %d)
+insert into RentalAccount (UserName, Password) values ('%s', '%s')
+insert into RentalAuthoFailureLog(TransactionID, CustomerID, [Text]) values(%d, %d, '%s')
+insert into ScheduledReport (REPUID, RSPID, DOWMask, PrintTime, fStatus, Email) values (%d, %d, %d, '%s', %d, '%s')
+insert into XDoc_Exceptions(DocHdrID, [Text]) values(%ld, ' ' )
+insert into XDoc_Exceptions(DocHdrID, [Text]) values(%ld, space(9) + '"Clear Warning/Error" Removes the warning/error text from the Incoming Messages Grid so it doesn''t display as Warning/Error; ')
+insert into XDoc_Exceptions(DocHdrID, [Text]) values(%ld, space(9) + 'It does not resolve the Warning/Error condition/s that caused the Incoming Message to be displayed that way.')
+insert into XDoc_Exceptions(DocHdrID, [Text]) values(%ld, space(9) + 'USER: ' + SYSTEM_USER + ' performed Clear Warning/Error on this response at ' + ltrim(rtrim(convert(varchar(max), GetDate()))))
+insert into XDoc_Exceptions(DocHdrID, [Text]) values(%ld, space(9) + 'USER: "' + SYSTEM_USER + '" chose to update receiving with this %s following warning of existing receiving on PO at ' + ltrim(rtrim(convert(varchar(255), GetDate()))))
+insert into XDoc_Exceptions(DocHdrID, [Text]) values(%ld, space(9) + 'USER: "' + SYSTEM_USER + '" performed Change Order to Accept Both New and Used on this Order at ' + ltrim(rtrim(convert(varchar(max), GetDate()))))
+insert into XDoc_Exceptions(DocHdrID, [Text]) values(%ld, space(9) + 'USER: "' + SYSTEM_USER + '" performed Change Order to Accept Both New and Used on this Response at ' + ltrim(rtrim(convert(varchar(max), GetDate()))))
+insert into XDoc_Exceptions(DocHdrID, [Text]) values(%ld, 'User ' + '"' + SYSTEM_USER + '" Resent ' + convert(varchar(255), getdate()))
+insert into XDoc_Exceptions(DocHdrID, [Text]) values(%ld, 'WARNING:' )
+insert into XDoc_Exceptions(DocHdrID, [Text]) values(%ld, 'WARNING:')
+insert into XDoc_Log(DocHdrID, [Text])        values(%ld, space(9) + '"Clear Warning/Error" Removes the warning/error text from the Incoming Messages Grid so it doesn''t display as Warning/Error; ')
+insert into XDoc_Log(DocHdrID, [Text])        values(%ld, space(9) + 'It does not resolve the Warning/Error condition/s that caused the Incoming Message to be displayed that way.')
+insert into XDoc_Log(DocHdrID, [Text])        values(%ld, space(9) + 'USER: ' + SYSTEM_USER + ' performed Clear Warning/Error on this response at ' + ltrim(rtrim(convert(varchar(max), GetDate()))))
+insert into XDoc_Log(DocHdrID, [Text]) values(%ld, ' ' )
+insert into XDoc_Log(DocHdrID, [Text]) values(%ld, space(9) + 'USER: "' + SYSTEM_USER + '" chose to update receiving with this %s following warning of existing receiving on PO at ' + ltrim(rtrim(convert(varchar(255), GetDate()))))
+insert into XDoc_Log(DocHdrID, [Text]) values(%ld, space(9) + 'USER: "' + SYSTEM_USER + '" performed Change Order to Accept Both New and Used on this Order at ' + ltrim(rtrim(convert(varchar(max), GetDate()))))
+insert into XDoc_Log(DocHdrID, [Text]) values(%ld, space(9) + 'USER: "' + SYSTEM_USER + '" performed Change Order to Accept Both New and Used on this Response at ' + ltrim(rtrim(convert(varchar(max), GetDate()))))
+insert into XDoc_Log(DocHdrID, [Text]) values(%ld, 'User ' + '"' + SYSTEM_USER + '" Resent ' + convert(varchar(255), getdate()))
+insert into XDoc_Log(DocHdrID, [Text]) values(%ld, 'WARNING:' )
+insert into XDoc_Log(DocHdrID, [Text]) values(%ld, 'WARNING:')
+insert into XDoc_Note(Description, Text) values('%s', '%s')
+insert MarkdownDetailAdd_cmd(MarkdownItemLocationId, NewRetail, IsWriteOff, MarkdownScheduleId) select 
+insert MarkdownItem(MarkdownId, Sku) select 
+insert MarkdownItems_SynchLocations_cmd select 
+insert MarkdownRefreshItems_cmd select 
+insert MarkdownScheduleApply_cmd select 
+InstructorID IN (Select InstructorID FROM VW_INSTRUCT_DETAIL WHERE CampusName like '%s')
+InstructorID IN (Select InstructorID FROM VW_INSTRUCT_DETAIL WHERE DeptName like '%s')
+InvoiceID = ? and qty <> 0 AND INVLUID NOT IN (SELECT CRTD.INVDUID FROM CRT_Detail CRTD WHERE CRTD.CRTUID = ?)
+InvoiceID = ? and qty <> 0 AND INVLUID NOT IN (SELECT INVDUID FROM CRT_Detail CRTD WHERE CRTD.CRTUID = ?)
+InvoiceID IN (SELECT IH.InvoiceID FROM Invoice_Header IH, VW_PRET_INVOICE_DTL ID WHERE IH.InvoiceID = ID.InvoiceID AND ID.AvailRtnQty > 0 AND ID.INVLUID NOT IN (SELECT CRTD.INVDUID FROM CRT_Detail CRTD WHERE CRTD.CRTUID = ?)
+LocationID = (SELECT LocationID FROM Location WHERE %s)
+MarkdownId in ( select mi.MarkdownId from MarkdownItem mi where mi.sku in (%s) )
+MarkdownId in (select d.MarkdownId from MarkdownItem_vw d inner join MarkdownAux a on a.MarkdownId = d.MarkdownId inner join LocationSelectionLocations lsl on lsl.LocationSelectionId = a.LocationSelectionId inner join VW_INVENTORY_STATUS_CODE_SKU_LOCATIONS s on s.Sku = d.Sku and s.LocationId = lsl.LocationId where s.InvStatusCodeId %s )
+MarkdownId in (select d.MarkdownId from VW_SEASON_CODE_SKUS s inner join MarkdownItem_vw d on d.Sku = s.Sku and s.SeasonCode like '%s%%')
+MarkdownId in (select d.MarkdownId from VW_Style_Skus m inner join MarkdownItem_vw d ON d.Sku = m.Sku and m.StyleId = %d)
+MarkdownID in (select MarkdownId from MarkdownItem_vw where Bookkey like '%s%%' and Subsystem in (2,3))
+MarkdownId in (select MarkdownId from MarkdownItem_vw where replace(Isbn13, '-','') like '%s%%')
+MarkdownId in (select MarkdownId from MarkdownItem_vw where Sku = %d)
+MarkdownId in (select MarkdownId from MarkdownItem_vw where Sku in (select Sku from Item where 
+MarkdownId in (select MarkdownId from MarkdownItem_vw where sku in (select sku from VW_Itm_Barcode where Barcode like '%s%%'))
+Merge aborted.
+Merge completed successfully.
+MOReceiptId IN (select ReceiptId from Catalog_Sales_Header where 
+MRID IN (SELECT d.MRID FROM VW_SEASON_CODE_SKUS s INNER JOIN VW_MR_QSDETAIL d ON d.SKU = s.SKU AND s.SeasonCode LIKE '%s%%')
+MRID IN (SELECT d.MRID FROM VW_STYLE_SKUS m INNER JOIN VW_MR_QSDETAIL d ON d.SKU = m.SKU AND m.StyleID = %d)
+MRID IN (SELECT m.MRID FROM VW_INVENTORY_STATUS_CODE_MERCHANDISE_REQUESTS m WHERE m.InvStatusCodeID %s)
+MRID IN (SELECT MRID FROM VW_MR_QSDETAIL WHERE BookKey LIKE '%s%%' AND Subsystem in (2,3))
+MRID IN (SELECT MRID FROM VW_MR_QSDETAIL WHERE REPLACE(ISBN13, '-','') LIKE '%s%%')
+MRID IN (SELECT MRID FROM VW_MR_QSDETAIL WHERE SKU = %ld)
+MRID IN (SELECT MRID FROM VW_MR_QSDETAIL WHERE SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%'))
+MRID IN (SELECT MRID FROM VW_MR_QSDETAIL WHERE TermID = %ld)
+MTUID IN (SELECT d.MTUID FROM VW_INVENTORY_STATUS_CODE_SKU_LOCATIONS s INNER JOIN MT_Detail d ON d.SKU = s.SKU AND VW_MTI_Header.RecvLocationID = s.LocationID AND s.InvStatusCodeID %s)
+MTUID IN (SELECT d.MTUID FROM VW_SEASON_CODE_SKUS s INNER JOIN MT_Detail d ON d.SKU = s.SKU AND s.SeasonCode LIKE '%s%%')
+MTUID IN (SELECT d.MTUID FROM VW_STYLE_SKUS m INNER JOIN MT_Detail d ON d.SKU = m.SKU AND m.StyleID = %d)
+MTUID IN (SELECT MT_Detail.MTUID FROM dbo.MT_Detail INNER JOIN VW_ITM_MASTER I ON I.SKU = MT_Detail.SKU WHERE REPLACE(I.ISBN13, '-','') LIKE '%s%%')
+MTUID IN (SELECT MT_Detail.MTUID FROM dbo.MT_Detail WHERE MT_Detail.SKU = %ld)
+MTUID IN (SELECT MTD.MTUID FROM MT_Detail MTD INNER JOIN MR_Header MRH ON MTD.MRID = MRH.MRID WHERE MRH.MRDate >= '%s 00:00:00' AND MRH.MRDate <= '%s 23:59:59')
+MTUID IN (SELECT MTUID FROM MT_Detail INNER JOIN MR_Header ON MT_Detail.MRID = MR_Header.MRID WHERE MR_Header.MRNumber LIKE '%s%%') 
+MTUID IN (SELECT MTUID FROM MT_Detail INNER JOIN VW_ITM_MASTER IM ON MT_Detail.SKU = IM.SKU WHERE IM.BookKey LIKE '%s%%' AND Subsystem in (2,3))
+MTUID IN (SELECT MTUID FROM MT_Detail WHERE SKU IN (%s))
+MTUID IN (SELECT MTUID FROM MT_Detail WHERE SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%'))
+NMRP Participants must select a valid NMRP Tender
+OTBID in (select OTBID from OTB_DCCID where (CONVERT(integer, DCCID) & %d) = %d)
+OTBID IN (SELECT OTBID FROM VW_OTB_Header WHERE EndDate >= '%s 00:00:00' AND EndDate <= '%s 23:59:59')
+OTBID IN (SELECT OTBID FROM VW_OTB_Header WHERE StartDate >= '%s 00:00:00' AND StartDate <= '%s 23:59:59')
+Please Enter/Select the PO you would like to Update
+Please first select an instructor to merge into.
+Please Select a Buyer.
+Please select a document to send
+Please select a Location
+Please select a period.
+Please select a rental period.
+Please Select a Staging Location.
+Please select a Term
+Please Select a terminal/Lane ID
+Please Select an Agreement
+Please select an AR Account.
+POID IN (SELECT d.POID FROM VW_INVENTORY_STATUS_CODE_SKU_LOCATIONS s INNER JOIN VW_PO_QSDETAIL d ON d.SKU = s.SKU AND d.LocationID = s.LocationID AND s.InvStatusCodeID %s)
+POID IN (SELECT d.POID FROM VW_SEASON_CODE_SKUS s INNER JOIN VW_PO_QSDETAIL d ON d.SKU = s.SKU AND s.SeasonCode LIKE '%s%%')
+POID IN (SELECT d.POID FROM VW_STYLE_SKUS m INNER JOIN VW_PO_QSDETAIL d ON d.SKU = m.SKU AND m.StyleID = %d)
+POID IN (SELECT POID FROM VW_PO_QSDETAIL d inner join VW_ITM_BARCODE b on b.SKU = d.SKU WHERE Barcode like '%s%%')
+POID IN (SELECT POID FROM VW_PO_QSDETAIL WHERE %s)
+POID IN (SELECT POID FROM VW_PO_QSDETAIL WHERE BookKey LIKE '%s%%' AND Subsystem in (2,3))
+POID IN (SELECT POID FROM VW_PO_QSDETAIL WHERE REPLACE(ISBN13, '-','') LIKE '%s%%')
+POID IN (SELECT POID FROM VW_PO_QSDETAIL WHERE SKU = %ld)
+POID IN (SELECT POID FROM VW_PO_QSDETAIL WHERE TermID = %ld)
+PrismUser.UserName IN (SELECT UserName FROM PDA_MerchandiseRequestItems)  OR PrismUser.SUID IN (SELECT UserID FROM PDA_PO_Requests) 
+PrismUser.UserName IN (SELECT UserName FROM PDA_ProposedReturnItems)
+ProbNotifyID IN (SELECT ProbNotifyID FROM Problem_Notifications_Detail INNER JOIN VW_ITM_MASTER IM ON Problem_Notifications_Detail.SKU = IM.SKU WHERE BookKey LIKE '%s%%' AND Subsystem in (2,3))
+ProbNotifyID IN (SELECT ProbNotifyID FROM Problem_Notifications_Detail WHERE SKU = %ld)
+ProbNotifyID IN (SELECT ProbNotifyID FROM Problem_Notifications_Detail WHERE SKU IN (%s))
+ProbNotifyID IN (SELECT ProbNotifyID FROM Problem_Notifications_Detail WHERE SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%'))
+ProbNotifyID IN (SELECT T.ProbNotifyID FROM Problem_Notifications_Detail T INNER JOIN VW_ITM_MASTER I ON I.SKU = T.SKU WHERE REPLACE(I.ISBN13, '-','') LIKE '%s%%')
+RCVSTID IN (SELECT RCVSTID FROM rcv_staging_header WHERE RcvDate >= '%s 00:00:00' AND RcvDate <= '%s 23:59:59')
+RCVSTID in (select RCVSTID from VW_RCV_Staging_Detail where Name like '%s%%')
+ReceiptID IN (SELECT d.ReceiptID FROM VW_INVENTORY_STATUS_CODE_SKU_LOCATIONS s INNER JOIN Catalog_Sales_Detail d ON d.SKU = s.SKU AND s.InvStatusCodeID %s INNER JOIN Catalog_Sales_Header h ON h.ReceiptID = d.ReceiptID AND h.LocationID = s.LocationID)
+ReceiptID IN (SELECT d.ReceiptID FROM VW_SEASON_CODE_SKUS s INNER JOIN Catalog_Sales_Detail d ON d.SKU = s.SKU AND s.SeasonCode LIKE '%s%%')
+ReceiptID IN (SELECT d.ReceiptID FROM VW_STYLE_SKUS m INNER JOIN Catalog_Sales_Detail d ON d.SKU = m.SKU AND m.StyleID = %d)
+ReceiptId IN (select ReceiptId from Catalog_Sales_Detail d inner join item on item.sku = d.sku where 
+ReceiptID IN (SELECT ReceiptID FROM Catalog_Sales_Detail INNER JOIN VW_ITM_MASTER IM ON Catalog_Sales_Detail.SKU = IM.SKU WHERE BookKey LIKE '%s%%' AND Subsystem in (2,3))
+ReceiptID IN (SELECT ReceiptID FROM Catalog_Sales_Detail INNER JOIN VW_ITM_MASTER ON VW_ITM_MASTER.SKU = Catalog_Sales_Detail.SKU WHERE REPLACE(ISBN13, '-','') LIKE '%s%%')
+ReceiptID IN (SELECT ReceiptID FROM Catalog_Sales_Detail WHERE SKU = %ld)
+ReceiptID IN (SELECT ReceiptID FROM Catalog_Sales_Detail WHERE SKU IN (%s))
+ReceiptID IN (SELECT ReceiptID FROM Catalog_Sales_Detail WHERE SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%'))
+Receiving Update Successful
+Receiving Update Unsuccessful, please see Incoming Messages Activity Log for details.
+RentalId in ( select     RH.RentalID from     Rental_Header RH     inner join Rental_Header_Item RHI on RHI.RentalID = RH.RentalID     inner join VW_ITM_MASTER IM on         IM.SKU = RHI.SKU         and         REPLACE(IM.ISBN13, '-', '') like '%s%%' )
+RentalId in (select distinct rhi.RentalId from Rental_Header_Item rhi inner join Rental_Header_Item_Period rhip on rhip.RentalHIId = rhi.RentalHIId where rhip.RentalPId = %d)
+RentalId in (select i.RentalId from Rental_History h inner join Rental_Detail d on h.RentalDId = d.RentalDId inner join Rental_Header_Item i on i.RentalHIId = d.RentalHIId where CustomerId = %d)
+RentalId in (select RentalId from Rental_Header_Item where %s)
+RentalId in (select RentalId from Rental_Header_Item where Sku = %d)
+RentalId in (select RentalId from Rental_Header_Item where Sku in (%s))
+RentalPId in ( select RentalPId from Rental_Header_Item_Period where RentalHIId=(select RentalHIId from Rental_Detail where RentalDId=%d))
+RentalPId in (Select distinct RentalPId from vw_Rental_Adoption_Terms where SKU = %d)
+select   count(MsgID) from   IncomingMessages IM   inner join XDoc_Header XHR on XHR.DocHdrID = IM.XDocHdrID   inner join XDoc_Header XHO on XHO.DocHdrID = XHR.OriginID where   XHO.POID1 = %ld   and   (IM.[Filename] like '%%WARNING%%' or IM.[Filename] like '%%ERROR%%')
+select   count(MsgID) from   IncomingMessages IM   inner join XDoc_Header XHR on XHR.DocHdrID = IM.XDocHdrID   inner join XDoc_Header XHO on XHO.DocHdrID = XHR.OriginID where   XHO.WantlistID = %ld   and   (IM.[Filename] like '%%WARNING%%' or IM.[Filename] like '%%ERROR%%')
+select ((mr_detail.unitpack * mr_location.qty) - mr_location.denyqty - mr_location.claimqty - mr_location.rcvqty)from mr_location inner join mr_detail on mr_location.mrd_id = mr_detail.mrd_id where mrdl_id = %ld
+select ((po_detail.unitpack * po_location.qty) - po_location.cancelqty - po_location.backorderqty - po_location.recvqty)from po_location inner join po_detail on po_location.pod_id = po_detail.pod_id where podl_id = %ld
+SELECT * FROM dbo.VW_CR_LOCATIONS_CAMPUS
+SELECT * FROM dbo.VW_FISC_INV_TEMP_TBL
+SELECT * FROM dbo.VW_PRET_NAVIGATOR
+SELECT * FROM dbo.VW_WHL_NAVIGATOR
+SELECT * FROM VW_CR_LOCATIONS_CAMPUS
+select * from VW_INCOMINGMESSAGES_NAVIGATOR
+SELECT * FROM VW_MO_DISCOUNT_SELECT
+SELECT * FROM VW_MO_DISPLAY_SHIP WHERE ReceiptID = %d
+SELECT * FROM VW_MO_SELECT_SHIP 
+SELECT * FROM VW_MR_PROP_DETAIL WHERE MRD_ID = %d
+SELECT * FROM VW_PO_PROP_DETAIL WHERE POD_ID = %d
+SELECT * FROM VW_PURCH_SHIPVIA WHERE PID = %ld AND PurchaseType = %d
+select * from VW_TEMPSALES_NAVIGATOR
+select * from VW_TEMPSALES_NAVIGATOR where %s
+select [MSRID], [Description] from [POS_MSR_Card_Types]
+select 2, VendorID from WantlistVendor where WantlistID = %ld order by IndexOrder asc
+Select a Term/Location
+SELECT Abbreviation FROM CR_Campus WHERE CampusID = %ld
+select abpercent, newpercent, usedpercent from Buyers_Guide_Vendor_Commission where bgvendorid = %ld
+select AccountNumber from Customer_Table where CustomerID = %d
+SELECT AccountNumber FROM Customer_Table WHERE FirstName = '%s' and LastName = '%s'
+Select Address
+SELECT BarCode FROM Item WHERE SKU = %ld
+SELECT BGID, 0, AltISBN, Author, Title, Binding FROM Buyers_Guide_Table WHERE 
+select bgvendorid from Buyers_Guide_Vendors where vendorid = %ld
+SELECT BOUID, Reason FROM BackOrder_Reason
+select bpuid from bip_temp where descr = '%s' order by bpuid desc
+SELECT BPUID, 0, ISBNCat, Author, Title, BdTyp FROM BIP_Temp WHERE 
+select BundleTranDtlID from BundleTran_vw where ComponentTranDtlID = %d and Qty > 0
+select buyprice from buyers_guide_table where bgid = %d
+SELECT CampusID FROM CR_Campus WHERE CampusName LIKE '%s'
+SELECT CampusID FROM CR_Campus WHERE CampusName like '%s' 
+SELECT CampusID FROM CR_Term WHERE TermID = %d
+SELECT CampusID FROM CR_Term WHERE TermID = %ld
+select CampusID from VW_CR_HEADER where CourseReqID = %d
+SELECT CampusID, CampusName FROM CR_Campus ORDER BY CampusName
+SELECT CampusID, CampusName FROM CR_Campus ORDER BY CampusName 
+SELECT CampusID,CampusName FROM CR_Campus
+SELECT CampusID,CampusName FROM CR_Campus order by CampusName
+SELECT CampusName FROM CR_Campus WHERE CampusID = %d
+SELECT CampusName FROM CR_Campus WHERE CampusID = %ld
+SELECT CampusName FROM dbo.CR_Campus ORDER BY CampusName
+select CancelDate from PO_Header where POID = %d
+SELECT CASE WHEN EXISTS ( SELECT * FROM CatalogAux ca INNER JOIN LocationSelectionLocations lsl ON lsl.LocationSelectionID = ca.LocationSelectionID AND ca.CatalogID = 
+select cast(LocationID as int), ShortDescription from Location
+SELECT CatalogGroupID, CatalogGroup FROM CatalogGroups ORDER BY CatalogGroup
+select CatalogId from Catalog_Sales_Detail where SKU = %d and ReceiptId = %d
+SELECT CatalogTypeID, CatalogType FROM CatalogTypes ORDER BY SortOrder
+select CatSaleTenderId from Catalog_Sales_Tender where ReceiptID = %d
+select CloseDate, fNBCPV2Status from Rental_Period rp inner join RentalSessionAccount rsa on rsa.RentalSessionID = cast(isnull(rp.NBCPeriod,0) as int) where RentalPID = %d
+select CloseDate, fReconcileSent from RentalSessionAccount where RentalAccountID = %d and RentalSessionID = %d
+SELECT COAID FROM Acct_COA WHERE GLCode = '%s'
+select Comment from Rcv_Staging_Location where RCVSTLID = %d
+select ComponentTranDtlID from BundleTran_vw where BundleTranDtlID = %d and Qty > 0
+select Cost, Retail from PO_Detail where POD_ID = %d
+select costtypeid, costtypename from mt_costtypes
+SELECT Count (*) FROM CR_Locations_Detail WHERE CRLUID = %d AND DeptID = %d
+SELECT Count (*) FROM Instructors_Detail WHERE InstructorID = %d AND CampusID = %d AND DeptID = %d
+select count(*) as DupCount from MailOrderPinpad where Name = '%s' and MailOrderPinpadID != %d
+SELECT Count(*) FROM %s WHERE Description = '%s'
+SELECT COUNT(*) FROM (SELECT DISTINCT [LocationId] FROM [VW_RCV_OPEN_DETAIL] WHERE [PurchaseType] = %d and [SKU] = %d and [PID] = %d) as A
+Select Count(*) From [CR_Detail] Where [CourseReqID]=%d AND [SKU]=%d
+select count(*) from Acct_agency_Customer aac inner join Transaction_Header th on th.TransactionID = %d and th.CustomerID = aac.CustomerID and aac.AGencyID = %d
+Select count(*) from Acct_Agency_Customer where AgencyID = %s and CustomerID = %d
+select count(*) from Acct_Agency_Customer where customerID in (select CustomerID from Rental_History where RentalHId = %d) and AgencyID = %d
+SELECT Count(*) FROM AutogenPO WHERE Description = '%s'
+SELECT Count(*) FROM AutogenRet WHERE Description = '%s'
+select count(*) from Bundle_DetailItem where BUNDID = %d
+SELECT Count(*) FROM Catalog_Sales_Detail WHERE ReceiptID = %d
+select count(*) from Catalog_Sales_Detail where ReceiptID = %d and CatalogID < 0 and SKU < 10000
+select count(*) from Catalog_Sales_Detail where ReceiptId = %d AND SKU = %d and CatalogId = %d
+select count(*) from Catalog_Sales_Detail where ReceiptId = %d AND SKU = 1 and CatalogId = %d and FeeCodeId = %d
+SELECT Count(*) FROM Catalog_Sales_Header WHERE ReceiptNumber LIKE '%s'
+select count(*) from CR_Course where ucourseid = %ld
+select count(*) from CR_DEPARTMENT where DeptName= '%s' and CampusID=%s
+select count(*) from cr_header inner join cr_detail on cr_header.coursereqid = cr_detail.coursereqid where sku = %d and termid = %d
+select count(*) from cr_header where UCourseID = %ld
+SELECT Count(*) FROM CRT_Header WHERE ReturnNumber = '%s'
+SELECT Count(*) FROM Customer_Table WHERE AccountNumber = '%s'
+select count(*) from DigitalTxtHeader where SKU = %ld
+select count(*) from Inventory where SKU = %ld and fNoReturns = 0 and LocationId = %d
+select count(*) from invwks_dcc where invwksid = %ld
+select count(*) from Location where LocationID not in (select LocationID from MO_Email where ConfigType = %d)
+select count(*) from Location where RentalAccountID = %d
+select count(*) from MarkdownScheduleConfig
+select count(*) from MarkdownScheduleConfigDetail where DayOffset = %d and MarkdownScheduleConfigDetailId <> %d and MarkdownScheduleConfigId = %d
+select count(*) from MOFulfillmentHeader
+SELECT count(*) FROM MT_Detail WHERE MTUID = %d AND TotalQtyProvide > 0
+select count(*) from OTB_Revision r inner join OTB_Header h on r.OTBID = h.OTBID where fOriginal = 0 and r.OTBID = %d
+select count(*) from OTB_Revision r inner join OTB_Header h on r.OTBID = h.OTBID where fposted = 1 and r.OTBID = %d
+select count(*) from PO_BuyerLimit where SUID = %d
+select count(*) from PO_Detail pod inner join po_location pol on pol.POD_ID = pod.POD_ID where SKU = %d and TermID = %d and LocationID = %d
+select count(*) from PO_Vendor where POID = %ld
+select count(*) from pos_fee_codes pfc inner join transaction_detail td on pfc.feecodeid = td.feecode where td.sku = 1 and td.transactionid = %ld and pfc.frefundable = 0
+select count(*) from Rcv_Staging_Detail where RCVSTID = %d and PurchaseId = %d and PurchaseType = %d
+select count(*) from Rcv_Staging_Header where Number like '%s'
+select count(*) from Rental_Adoption_Detail where Adopt = 0 and RentalAdoptionHeaderId = %d
+SELECT COUNT(*) FROM Rental_Adoption_Header
+select count(*) from Rental_Header_Item where SKU = %d
+select count(*) from Rental_Header_Item_Period rhip inner join Rental_Header_Item rhi on rhi.RentalHIID = rhip.RentalHIID where rhip.RentalPID = %d and rhi.RentalID = %d
+select count(*) from Rental_History rh inner join rental_detail rd on rd.RentalDID = rh.RentalDID inner join Rental_Header_Item rhi on rhi.RentalHIID = rhi.RentalHIID inner join Rental_Header_Item_Period rhip on rhip.RentalHIID = rhi.RentalHIID and rhip.fNMRPRental = 1where rh.RentalPID = %d
+select count(*) from Rental_History rh inner join Rental_Detail rd on rd.RentalDId = rh.RentalDId inner join Rental_Header_Item_Period rhip on rhip.RentalHIId = rd.RentalHIId and rhip.RentalPId = rh.RentalPId where rhip.fNMRPRental = 1 and rh.RentalHID = %d
+select count(*) from Rental_History where RentalHId = %d and TenderCodeLocId is not null
+select count(*) from Rental_History where TranDtlID in (select TranDtlID from Transaction_Detail where SKU = %d and TransactionID in (select TransactionID from Transaction_Header where TranNumber in (select ReceiptNumber as TranNumber from Catalog_Sales_Header where ReceiptID = %d)))
+select count(*) from Rental_MO_Xref where XREF = '%s' and TranDtlID in (Select TranDtlID from Transaction_Detail where TransactionID in (Select TransactionID from Transaction_Detail where TranDtlID = %d))
+Select count(*) from Rental_Period rp inner join Rental_History rh on rp.RentalPId = rh.RentalPId where cast(NBCPeriod as int) > 0 and rp.RentalPId = %d
+select count(*) from RentalAccount where Username = '%s'
+select count(*) from RentalSessionAccount where RentalSessionID = %d and CloseDate is null
+select count(*) from serialnumberheader where sku = %ld
+select count(*) from serialnumberheader where sku = (select sku from Transaction_Detail where TranDtlID = %ld)
+SELECT count(*) FROM Stock_Ledger_Reverse WHERE fType = 12 AND RecordID = %ld
+select count(*) from sys.sysobjects where name like 'P_Rental_Adoption_AddTestData' and type = 'p'
+SELECT Count(*) FROM Transaction_Detail WHERE MOReceiptDtlID = %d
+select count(*) from Transaction_Detail where MOReceiptDtlID = %ld
+select count(*) from Transaction_Detail where TransactionId = %d and fStatus = 1
+select count(*) from Transaction_Detail where TransactionId = %d AND SKU = %d and (CatalogId = %d or CatalogId is null)
+select count(*) from Transaction_Detail where TransactionId = %d AND SKU = %d and (CatalogId = %d or CatalogId is null) 
+select count(*) from Transaction_Detail where TransactionId = %d AND SKU = %d and (CatalogId = %d or CatalogId is null) and fStatus = 1
+select count(*) from Transaction_Detail where TransactionId = %d AND SKU = 1 and (CatalogId = %d or CatalogId is null) and FeeCode = %d
+SELECT Count(*) FROM Transaction_Header WHERE MOReceiptID = %d AND fStatus <> 4
+SELECT Count(*) FROM Transaction_Header WHERE MOReceiptID = %d AND MOfStatus = 0
+select count(*) from VW_CR_DETAIL where CourseReqID = %ld and SKU = 0
+select count(*) from vw_cr_items_not_in_inv_term where termid = %ld
+select count(*) from VW_ORDER_DECISIONS_LOCATIONS where sku = %d and bundid is not null
+select count(*) from VW_ORDER_DECISIONS_ROW_CFG where userName = dbo.fnSystemUser()
+SELECT COUNT(*) FROM VW_PO_STYLE_LOCATION_COMPONENTS_EX WHERE GraphicComponentID IS NULL AND POID = 
+SELECT Count(*) FROM VW_PRET_SN_ONLY WHERE CRTUID = %ld
+SELECT count(*) FROM VW_Rental_Period WHERE EndDate > GetDate()
+SELECT count(*) FROM VW_Rental_Period WHERE EndDate > GetDate() AND 
+SELECT count(*) FROM VW_Rental_Period WHERE EndDate > GetDate() AND RentalPId in (Select distinct RentalPId from vw_Rental_Adoption_Terms where SKU = %d)
+select count(*) from VW_SERIAL_NUMBER_DETAIL where SerialID = %d and TrackingNumber = '%s'
+SELECT Count(*) FROM WantListHeader WHERE WantListDesc = '%s' AND WantListID <> %d
+SELECT Count(*) FROM WantListHeader WHERE WantListName = '%s' AND WantListID <> %d
+select count(*) from WantlistVendor where WantlistID = %ld
+select count(*) from WebOrderDepositProcessLogDetail where WODPHID = %d and ErrorFlg = 0
+select count(*) from whl_detail where whluid = %ld
+select count(cid) from x12_ASN_carton where cartonnumber = '%s'
+select count(cid) from x12_ASN_carton where cartonnumber = '%s' and freceivedone = 0
+select count(CRDUID) from CR_Detail where SKU = %ld and CourseReqID = %d and CRDUID <> %ld
+select count(crluid) from cr_locations where locationid = %ld and termid = %ld
+select count(CRTUID) from CRT_Detail where CRTUID = %d
+select count(distinct pl.LocationId) from PO_Location pl inner join PO_Detail pd on pd.POD_ID = pl.POD_ID and pd.POID = 
+select count(distinct VendorID) from PO_Vendor where POID = %ld
+select count(distinct VendorID) from PO_Vendor where POID = %ld and VendorID in (select VendorID from XDoc_VendorPreferences where DocTypeID = 2)
+select count(distinct VendorID) from WantlistVendor where WantlistID = %ld
+select count(distinct wlv.VendorID) from WantlistVendorTerm wlvt inner join WantListVendor wlv on wlv.WLVendorID = wlvt.WLVendorID inner join XDoc_VendorPreferences xdv on xdv.VendorID = wlv.VendorID and xdv.LocationID = wlvt.LocationID and xdv.TermID = wlvt.TermID where wlv.WantlistID = %ld
+select count(DISUID) from CD_Header CH inner join CD_Detail CD on CD.CDUID = CH.CDUID inner join Invoice_Location IL on IL.INVLUID = CD.DSCDID where IL.PurchaseDtlID = %d
+select count(DocDtlID) from XDoc_Source where DocHdrID = %ld and [Text] like '%%NBC BIN AND HOLD LIST%%'
+select count(DocExceptionID) from XDoc_Exceptions where DocHdrID = %ld
+select count(DocHdrID) from XDoc_Header where (POID1 = %ld or POID2 = %ld)
+select count(DocHdrID) from XDoc_Header where DocHdrID = %ld
+select count(DocHdrID) from XDoc_Header where ParentID = %ld and TypeID in (3, 4, 5)
+select count(docnoteid) from XDoc_Note
+select count(docnoteid) from xdoc_note where description = '%s'
+select count(hist.RentalHId) from Rental_History hist inner join Rental_Detail d on hist.RentalDId = d.RentalDId inner join Rental_Header_Item rhi on rhi.RentalHIId = d.RentalHIId where rhi.RentalId =  %d
+select count(ItemInfoID) from XDoc_ItemInfo where DocHdrID = %d
+select count(ml.mrdl_id) from mr_detail md inner join mr_location ml on ml.mrd_id = md.mrd_id where md.mrid = %ld and md.sku = %ld and ml.fromlocationid = %ld and ml.termid = %ld
+select count(MsgID) from OutgoingMessages where MsgSubType in (2,3) and POorWantlistID = %ld
+select count(ODUID) from Order_Decisions where CRLUID = %d and Parentoduid in (select ODUID from Order_Decisions where CRLUID = %d and SKU = %d)
+select count(ODUID) from Order_Decisions where CRLUID = %d and SKU = %d and Parentoduid is not null
+select count(oduid) from order_decisions where parentoduid = %ld and sku = %ld
+select count(oduid) from order_decisions where parentoduid in (select oduid from order_decisions where sku in (select sku from po_detail where poid = %ld)) and sku = %ld
+select count(ODUID) from VW_ORD_Decisions_EX where LocationId = %d and TermId = %d and SKU = dbo.fnGetNewSKU(%ld)
+select count(ParamValue) from Systemparameters where ParamType = 144 and ParamValue = 1
+select count(pl.podl_id) from po_detail pd inner join po_location pl on pl.pod_id = pd.pod_id where pd.poid = %ld and pd.sku = %ld and pl.locationid = %ld and pl.termid = %ld
+select count(po_header.poid) from po_header inner join po_detail on po_detail.poid = po_header.poid and po_header.ponumber = '%s' and po_detail.sku = %ld
+SELECT COUNT(PO_Header.POID) FROM PO_Header INNER JOIN PO_Detail ON PO_Detail.POID = PO_Header.POID INNER JOIN VW_ITM_BARCODE ON VW_ITM_BARCODE.SKU = PO_Detail.SKU WHERE PO_Header.PONumber = '%s' AND VW_ITM_BARCODE.BarCode = '%s'
+select count(po_header.poid) from po_header inner join po_detail on po_detail.poid = po_header.poid where ponumber = '%s' and replace(catisbn, '-', '') = '%s'
+select count(poid) from po_header where ponumber = '%s'
+select count(probnotifyid) from problem_notifications_detail where probnotifyid = %ld
+select count(ReceiptDtlId) from Catalog_Sales_Detail where ReceiptId = %d and Sku = %d and CatalogId = %d
+select count(RentalId) from Rental_Header_Item where RentalId = %d
+select count(SKU) from PO_Detail d inner join PO_Location l on l.POD_ID = d.POD_ID where POID = %d and SKU = %d and LocationId = %d
+select count(sku) from vw_itm_master where subsystem = %ld and sku = dbo.fnGetNewSKU(%ld)
+select count(sku) from vw_itm_master where subsystem = %ld and typeid = %ld and sku = %ld
+select count(sku) from VW_MO_SALE_DTL where ReceiptId = %d group by sku, SOH having sum(Qty) > SOH
+select count(stuid) from vw_salesmnt_unposted where shmid = %ld and salescode = %ld
+select count(XDocHdrID) from IncomingMessages where XDocHdrID = %ld and ([FileName] like '%%error%%' or [FileName] like '%%warning%%')
+select count(XDocHdrID) from vw_out_msg_dtl where XDocHdrID = %ld
+select count(XDocHdrID) from x12_ASN_carton where CartonNumber = '%s'
+select count(XDocHdrID) from X12_ASN_Carton where CartonNumber = '%s' and freceivedone = 0
+select count(XDocHdrID) from x12_ASN_Item where CatISBN = '%s'
+select count(XDocHdrID) from X12_ASN_Item where CatISBN = '%s' and freceivedone = 0
+select count(XDocHdrID) from x12_ASN_PO where PONumber = '%s'
+select count(XDocHdrID) from X12_ASN_PO where PONumber = '%s' and freceivedone = 0
+select CourseLevelID, Name from CRCourseLevel
+SELECT CourseName FROM CR_Course INNER JOIN CR_Header ON CR_Course.UCourseID = CR_Header.UCourseID WHERE CourseReqID = %ld
+select CourseName from CR_Course where UCourseID = %d
+SELECT CourseReqID FROM CR_Enrollment_Detail WHERE EnrollmentID = %ld AND CourseReqID = %ld
+SELECT CourseReqID FROM CR_Header INNER JOIN CR_Course ON CR_Header.UcourseID = CR_Course.UCourseID WHERE CourseName like '%s' AND CourseSection like '%s' AND CR_Header.DeptID = %ld AND CR_Header.TermID = %ld
+SELECT CourseReqID FROM CR_Header WHERE CourseReqID = %ld
+select CourseReqID from VW_COURSE_SELECTION where CrsSelGrpID = %ld
+SELECT CourseSection FROM CR_Header WHERE CourseReqID = %ld
+SELECT CR_Campus.CampusID, CR_Campus.CampusName FROM dbo.CR_Campus CR_Campus ORDER BY CR_Campus.CampusName
+SELECT CR_Department.DeptID FROM CR_Department INNER JOIN CR_Header ON CR_Department.DeptID = CR_Header.DeptID WHERE CourseReqID = %ld
+SELECT CR_Term.TermID FROM CR_Term INNER JOIN CR_Header ON CR_Term.TermID = CR_Header.TermID WHERE CourseReqID = %ld
+select cr_term.termid, cr_term.termname, cr_locations.locationid from cr_term, cr_locations where cr_locations.crluid = %ld and cr_locations.termid = cr_term.termid
+select cr_term.termid, cr_term.termname, location.locationid, location.shortdescription from cr_locations, cr_term, location where cr_locations.crluid = %ld and cr_locations.locationid = location.locationid and cr_locations.termid = cr_term.termid
+select CRLUID from CR_Locations where LocationID = %d and TermID = %d
+select crluid from cr_locations where termid = %ld and locationid = %ld
+select crluid from vw_cr_locations_term where termid = %ld and locationid = %ld
+SELECT CROptID, CROptDesc FROM CR_Detail_Options WHERE fDisable = 0 UNION SELECT 0,'ALL' ORDER BY CROptID
+select CurrencyExId from CRT_Header where CRTUID = %d
+SELECT d.Value FROM Report_SaveParams_Header h INNER JOIN Report_SaveParams_Detail d ON d.RSPID = h.RSPID INNER JOIN ReportParams p ON p.RPUID = d.RPUID AND p.ParamName = '%s' WHERE h.REPUID = 
+SELECT dbo.fnQtyWithOrderIncrement(%d, %d)
+SELECT DefaultLocationID FROM PO_Header WHERE POID = 
+SELECT DeptID FROM CR_Department WHERE CampusID = %d AND DeptName like '%s' 
+select DeptName from CR_Department where DeptID = %d
+SELECT DeptName FROM CR_Department WHERE DeptID = %ld
+select DeptName from VW_CR_HEADER where CourseReqID = %d
+SELECT Description FROM Catalog_Sales_Detail WHERE ReceiptID = %ld AND SKU = %ld
+SELECT Description FROM Item I INNER JOIN ItemMaster M ON I.Subsystem = M.Subsystem and I.UUID = M.UUID WHERE SKU = %ld
+select Description from Item_Tax_Type where ItemTaxTypeID = %d
+select Description from MR_ShipTypes where ShipType = %d
+select Description from QuickSearchType where ModuleID = 10080 and TypeID = %d
+SELECT Description FROM Transaction_Detail WHERE TransactionId = %ld AND SKU = %ld
+select Description from VW_ITM_MASTER where sku = %d
+SELECT Description, POSID, LocationID FROM Pos_Setup WHERE 
+select Description, Price, TaxCodeID from POS_Fee_Codes where FeeCodeId = %d
+select Description+char(13)+char(10)+isnull(CatISBN, '') from VW_POS_ITEM_RESULTS where SKU = %ld and LocationID = %ld
+select DesiredTurns, Margin, BudgetTurns from OTB_Revision where OTBRID = %d
+Select Detail Item
+select deviceid, description From vw_pos_device where devicetypeid in (0,13)
+SELECT DiscountAmount FROM Catalog_Sales_Detail WHERE ReceiptDtlID = %d
+SELECT DiscountCode FROM Transaction_Header WHERE TransactionId = %d
+select distinct BuyerId, BuyerName from [dbo].[fnXDocGetBuyerNameCombo]()
+SELECT distinct l.LocationID, l.Description FROM Location l INNER JOIN WantList_Location wll ON wll.LocationID = l.LocationID INNER JOIN WantListLocationTerm wllt on wllt.WLLID = wllt.WLLID INNER JOIN CR_Locations crl on crl.LocationID = wll.LocationID and crl.TermID = wllt.TermID INNER JOIN Order_Decisions od on od.CRLUID = crl.CRLUID and od.SKU = %d INNER JOIN Inventory i on i.SKU = od.SKU and i.LocationID = l.LocationID WHERE wll.WantListID = %d AND crl.fOpenFlg = 1 AND i.fTXWantListFlag = 1 AND od.fWksStatusFlg = 1
+select distinct LocationID, TermID from WantListDetail where WantListID = %d order by LocationID, TermID
+select distinct ponumber from vw_rcv_asn_po where poid = %ld
+select distinct ra.RentalAccountID, ra.Username from RentalAccount ra inner join RentalSessionAccount rsa on rsa.RentalAccountID = ra.RentalAccountID where rsa.RentalSessionID = %d and rsa.CloseDate is null and rsa.fReconcileSent = 0 order by ra.UserName
+select distinct rs.RentalSessionID, rs.Name, rs.DueDate, rs.StartDate from RentalSession rs inner join RentalSessionAccount rsa on rsa.RentalSessionID = rs.RentalSessionID where rsa.OpenDate is not null and rsa.CloseDate is null order by rs.StartDate
+select distinct tc.TenderCodeID, tc.Description from Tender_Codes tc left join Tender_Codes_Location tcl on tcl.TenderCodeID = tc.TenderCodeID inner join Tender_Auth_Types tat on tat.TenderAuthID = tcl.TenderAuthID where fTenderMode is null or fTenderMode = %d
+SELECT DISTINCT TermID FROM CR_Locations WHERE fOpenFlg = %ld
+SELECT DISTINCT TermID, TermDesc FROM vw_Rental_Adoption_Terms WHERE RentalPId = %d
+SELECT DISTINCT TermID, TermDesc FROM vw_Rental_Adoption_Terms WHERE RentalPId = %d AND SKU = %d
+select distinct th.TransactionID, th.TranNumber from WebOrderDepositProcessLogDetail wodpd inner join Transaction_Header th on th.TransactionID = wodpd.TransactionID  where wodpd.WODPHID = %d and wodpd.ErrorFlg = 0
+select EmailReminderIncludePenaltyFees from Rental_Setup_Pos
+select excludereasonid from XDoc_Header where DocHdrID = %ld
+select ExtPrice from Catalog_Sales_Detail where Sku = 5 and ReceiptId = %d
+select ExtPrice from Transaction_Detail where Sku = 5 and TransactionId = %d
+select fAllowCCTender, fAllowARTender from Rental_Setup_Pos
+select fAllowNullXREF from Rental_Setup_Pos
+select fDynamicRental from Rental_Setup_Pos
+select FeeCode from Transaction_Detail where TranDtlID = %d
+select FeeCodeId from Catalog_Sales_Detail where ReceiptDtlID = %d
+select FeeCodeId from Inventory_NonMerch where SKU = %d and  LocationId = %d
+select fEnforceXRefLen from Rental_Setup_POS
+select FileName from IncomingMessages where XDocHdrID = %ld
+select FillCode, FillDescription from MO_Shipping_FillType order by FillCode asc
+select filltypeid, shortdesc from xdoc_filltype order by filltypeid asc
+SELECT fInvListPriceFlag FROM Inventory WHERE SKU = %ld AND LocationID = %ld
+SELECT fIsStyleBased FROM VW_PO_PROP_DETAIL WHERE PODL_ID = %d
+SELECT fListPriceFlag FROM Item WHERE SKU = %ld
+select fNBCPV2 from Rental_Setup_Pos
+select fNMRP from Rental_Setup_Pos
+select fromlocationid, termid from mr_location where mrdl_id = %ld
+SELECT fStatus FROM Catalog_Sales_Detail WHERE ReceiptID = %ld AND SKU = %ld
+select fStatus from Catalog_Sales_Header where ReceiptId = %d
+SELECT fStatus FROM CRT_Header WHERE CRTUID = %d
+SELECT fStatus FROM PO_Header WHERE POID = %d
+select fStatus from prism.dbo.transaction_header where TransactionID = %ld
+SELECT fStatus, PONumber FROM PO_Header WHERE POID = %d
+Select fTaxExempt from Acct_Agency where AgencyID = %s
+select GovernmentIdAgency, GovernmentIdNumber from Customer_Table where CustomerID = (select CustomerID from Rental_History where RentalHID = %d)
+select h.Description, h.Template, h.SKU, i.Subsystem from VW_Rental_Header_Ex h inner join Item i on i.Sku = h.Sku where RentalId = %d
+SELECT h.MTUID, MTDUID, SKU, TotalQtyProvide FROM MT_Detail d INNER JOIN MT_Header h ON d.MTUID = h.MTUID WHERE h.TrnID = '%s'
+SELECT h.MTUID, MTDUID, SKU, TotalQtyProvide, SendLocationID FROM MT_Detail d INNER JOIN MT_Header h ON d.MTUID = h.MTUID WHERE h.TrnID = '%s'
+SELECT h.MTUID, MTDUID, SKU, TotalQtyProvide, SendLocationID, RecvLocationID FROM MT_Detail d INNER JOIN MT_Header h ON d.MTUID = h.MTUID WHERE h.TrnID = '%s'
+select id, description from XDOC_ExchangeDetail order by preferenceid asc
+Select Instructor
+select InstructorName from Instructors where InstructorID = %d
+Select Instructors to merge into '
+select isnull((select distinct fIsStyleBased from VW_RCV_OPEN_DETAIL where PID = %ld and fIsStyleBased = 1),0)
+Select ISNULL(CourseReqID,0) FROM CR_Shelftags WHERE CourseReqID = %ld and LocationID = %ld 
+select isnull(fDiscountFlag,0) from VW_DCCLOCATION vw inner join item on vw.dccid = item.dccid and item.sku = %dwhere LocationID = %d
+SELECT ISNULL(Inventory.Cost,0.0) FROM Inventory WHERE Inventory.SKU = %ld AND Inventory.LocationID = %ld
+select isnull(LocationID, 0) from Rental_History where RentalHId = %d
+select isnull(ParamValue, '') from SystemParameters where LocationID = 0 and ParamType = 913
+select isnull(ParamValue, 0) from SystemParameters where LocationID = 0 and ParamType = 912
+select isnull(ParamValue, 0) from SystemParameters where LocationID = 0 and ParamType = 921
+select isnull(ParamValue, 0) from SystemParameters where ParamType = 840 and LocationID = 0
+select isnull(ParamValue, 1) from SystemParameters where LocationID = 0 and ParamType = 841
+select isnull(ParamValue, 1) from SystemParameters where LocationID = 0 and ParamType = 842
+select isnull(ParamValue,0) from SystemParameters where ParamName = 'WebOrderDepositProcessing'
+select isnull(POID, 0) from PO_Header where PONumber = '%s'
+select isnull(ra.RegisterID,0) from Rental_History rh inner join Transaction_Detail td on td.TranDtlID = rh.TranDtlId inner join Transaction_Header th on th.TransactionID = td.TransactionID inner join RNRRegAssignment ra on ra.POSID = th.POSID where rh.RentalHID = %d
+select isnull(RRtnId, 0) from Rental_History where RentalHId = %d
+SELECT isnull(StockOnHand, 0)-isnull(RentalQty, 0) FROM Inventory WHERE LocationID = %ld AND SKU = %ld
+SELECT ISNULL(SUM(TenderAmount),0) FROM Catalog_Sales_Tender WHERE ReceiptId = %d
+SELECT ISNULL(SUM(TenderAmount),0) from Transaction_Tender tt inner join Transaction_Header th on th.TransactionId = tt.TransactionId WHERE tt.TransactionId = %d
+select isnull(TermDesc,''), TermID from dbo.CR_Term where isnull(fESTIncludeTerm,0) = 1
+select isnull(VendorCode, 'None') from VW_CatalogProductFamilyVendor v where v.CatalogProductFamilyID = %d
+select IsWriteOff from MarkdownScheduleConfig where MarkdownScheduleConfigId = %d
+Select Item
+select l.LocationID from Order_Decisions od inner join CR_Locations crl on crl.CRLUID = od.CRLUID inner join Location l on l.LocationID = crl.LocationID where SKU = %d and TermID = %d and BUNDID is not null
+select l.LocationId, l.ShortDescription, sit.SAN from Location l inner join Store_Information_Table sit on sit.LocationID = l.LocationID inner join RentalAccount ra on ra.RentalAccountID = l.RentalAccountID
+select location.locationid, location.description from cr_locations inner join location on location.locationid = cr_locations.locationid where termid = %ld
+SELECT Location.LocationID, Location.Description FROM dbo.Location Location INNER JOIN dbo.WantList_Location WantList_Location ON WantList_Location.LocationID = Location.LocationID WHERE WantList_Location.WantListID = %ld 
+SELECT Location.LocationID, Location.Description FROM dbo.Location Location WHERE (LocationID IN ( %s ) )
+SELECT Location.LocationID, Location.Description FROM dbo.Location Location WHERE LocationID in (%s)
+SELECT Location.LocationID, Location.ShortDescription FROM dbo.Location Location WHERE %s
+SELECT Location.ShortDescription FROM dbo.Location Location WHERE (Location.LocationID = %ld) 
+SELECT LocationId FROM [VW_RCV_OPEN_DETAIL] WHERE [PurchaseType] = %d and [SKU] = %d and [PID] = %d
+SELECT LocationID FROM Catalog_Sales_Header WHERE ReceiptID = %d
+SELECT LocationID FROM CR_Locations WHERE TermID = %ld
+SELECT LocationID FROM CRT_Detail WHERE CRTDUID = %ld
+select LocationId from MarkdownItemLocation where MarkdownItemLocationId = 
+select locationid from po_location where POD_ID = %ld
+select locationid from po_location where podl_id = %ld
+select LocationId from SystemParameters where ParamType = 458 and ParamValue = %d
+SELECT LocationID FROM Transaction_Header WHERE TransactionId  = %d
+SELECT LocationID FROM Transaction_Header WHERE TransactionID = %d
+select LocationId from VW_TENDER_CODE_LOC where TenderCodeLocId = %d
+select LocationId from WantList_Location where WantListId = %d
+SELECT LocationID, Description FROM Location
+select locationid, description from location where %s
+SELECT LocationID, Description FROM Location WHERE (LocationID IN ( %s ) )
+SELECT LocationID, Description FROM Location where LocationID in (%s)
+SELECT LocationID, Description FROM VW_PO_SHIP_LOCATION
+select LocationId, ParamValue, ParamType from SystemParameters where ParamType in (703, 705, 727, 728) and LocationId <> -1 and ParamValue is not null
+select locationid, shortdescription from location
+SELECT LocationID, ShortDescription FROM Location WHERE (LocationID IN ( %s ) )
+select locationid, shortdescription from location where locationid  = %ld 
+SELECT LocationID, ShortDescription FROM Location where LocationID in (%s)
+select locationid, shortdescription from location where locationid not in (select locationid from cr_locations where termid = %ld)
+SELECT LocationID, ShortDescription FROM Location where LocationID not in (select LocationID from MO_Email where ConfigType = %ld)
+SELECT LocationID, ShortDescription FROM Location where LocationID not in (select LocationID from MO_Email)
+SELECT LocationID, SKU, Qty FROM WHL_Detail WHERE WHLUID = %ld
+SELECT LocationID, SKU, Qty, TermID FROM VW_PRET_SN_ONLY WHERE CRTUID = %ld
+SELECT LocationID, SKU, Qty, TermID FROM WHL_Detail WHERE WHLUID = %ld
+select locationid, termid from po_location where podl_id = %ld
+select LocationID, TranNumber, MOFWebOrder, CustomerID from Transaction_Header where TransactionID = %d
+select LocationSelectionID from MarkdownAux where MarkdownID = 
+SELECT LongDescriptionSetID FROM CatalogProductFamilyAux WHERE CatalogProductFamilyID = 
+select ltrim(rtrim(isnull(MRT.Descr, ''))) from MsgReportType MRT left outer join IncomingMessages IM on IM.ReportType = MRT.ReportType where IM.XDocHdrID = %ld
+select ltrim(rtrim(isnull(MST.SubTypeName, ''))) from MsgSubType MST left outer join OutgoingMessages OM on OM.MsgSubType = MST.MsgSubType where OM.XDocHdrID = %ld
+SELECT LTRIM(RTRIM(ParamValue)) FROM SystemParameters WHERE ParamType = 703 AND LocationID = 
+SELECT LTRIM(RTRIM(ParamValue)) FROM SystemParameters WHERE ParamType = 727 and LocationID = %d
+SELECT LTRIM(RTRIM(ParamValue)) FROM SystemParameters WHERE ParamType = 728 and LocationID = %d
+SELECT m.CatISBN FROM Item i INNER JOIN ItemMaster m ON i.UUID = m.UUID AND i.Subsystem = m.Subsystem WHERE i.SKU = %ld
+select MarkdownScheduleConfigId, Name from MarkdownScheduleConfig
+select MasterSKU from VW_ORDER_DECISIONS_MASTER_SKUS where LocationID = %d and TermId = %d and SKU = dbo.fnGetNewSKU(%d)
+SELECT MatrixID FROM Matrix_Header WHERE StyleID = 
+select max(RentalNumId) from Rental_Detail d inner join Rental_Header_Item i on i.RentalHIId = d.RentalHIId where i.RentalId = %d and isnull(d.RentalNumPrefix, '') like '%s%%'
+SELECT MAX(WantListID) FROM WantListHeader WHERE WantListName = '%s'
+SELECT MBID, 0, AltISBN, Author, Title, 0 FROM Mathews_Books WHERE 
+SELECT MenuID, REPUID, MenuText, (select count(*) from Report_SaveParams_Header where REPUID = VW_REPORT_MASTER.REPUID) as SavedParameterSets, (select count(*) from ScheduledReport where REPUID = VW_REPORT_MASTER.REPUID) as ScheduledReports from  VW_REPORT_MASTER
+SELECT MODiscID FROM Catalog_Sales_Header WHERE ReceiptID = %d
+SELECT MODiscID FROM Customer_Location WHERE CustomerID = %ld AND LocationID = %d
+select MODiscTypeId, DiscAmt from MO_Discount_Codes where MODiscId = %d
+SELECT moe.LocationID, l.ShortDescription FROM MO_Email moe left join Location l on l.LocationID = moe.LocationID  where moe.LocationID >= 0 and moe.ConfigType = 0
+SELECT moe.LocationID, l.ShortDescription FROM MO_Email moe left join Location l on l.LocationID = moe.LocationID  where moe.LocationID >= 0 and moe.ConfigType = 1
+SELECT moe.LocationID, l.ShortDescription FROM MO_Email moe left join Location l on l.LocationID = moe.LocationID  where moe.LocationID >= 0 and moe.ConfigType = 2
+SELECT moe.LocationID, l.ShortDescription FROM MO_Email moe left join Location l on l.LocationID = moe.LocationID  where moe.LocationID >= 0 and moe.ConfigType = 3
+SELECT moe.LocationID, l.ShortDescription FROM MO_Email moe left join Location l on l.LocationID = moe.LocationID  where moe.LocationID >= 0 and moe.ConfigType = 5
+SELECT moe.LocationID, l.ShortDescription FROM MO_Email moe left join Location l on l.LocationID = moe.LocationID where moe.LocationID >= 0 and moe.ConfigType = %d
+SELECT MOfReserve FROM Transaction_Header WHERE TransactionId = %d
+select MOfWebOrder from Transaction_Header where TransactionID = %d
+SELECT MOOpenQty FROM Transaction_Detail WHERE SKU = %ld AND TransactionId = %d
+SELECT MOReceiptId FROM Transaction_Header WHERE TransactionId = %d
+SELECT MOTypeID FROM Catalog_Sales_Header WHERE ReceiptID = %d
+select mr_header.locationid from mr_header inner join mr_detail on mr_header.mrid = mr_detail.mrid inner join mr_location on mr_detail.mrd_id = mr_location.mrd_id where mrdl_id = %ld
+select mrd_id from mr_detail where mrid = %ld and sku = %ld
+select mrdl_id from mr_location where mrd_id = %ld
+select mrdl_id from mr_location where mrd_id = %ld and fromlocationid = %ld and termid = %ld
+SELECT MRDL_ID, Location, SKU, FillQty, DenyQty, TRNumber, Term FROM vw_mt_fill_history WHERE MRDL_ID IN (%s) ORDER BY SKU
+Select MRID From MT_Detail WHERE MTDUID = %d
+select msgid, msgname + ' : ' + ltrim(rtrim(convert(varchar(10), SentDate, 110))) from VW_OUT_MSG_DTL where msgtype in (1, 4) and fhistory = 0 and Status = 3 order by VW_OUT_MSG_DTL.MsgType, VW_OUT_MSG_DTL.XDocHdrID desc
+select msgid, msgname + ' : ' + ltrim(rtrim(convert(varchar(10), SentDate, 110))) from VW_OUT_MSG_DTL where msgtype in (2, 3) and fhistory = 0 and Status = 3 order by VW_OUT_MSG_DTL.MsgType, VW_OUT_MSG_DTL.XDocHdrID desc
+select Name from Acct_Agency where AgencyId = %d
+select Name from Prism_Security.dbo.PrismUser where SUID = %d
+select Name from Subsystem_Table where Subsystem = %d
+select name from vendormaster where vendorid = %d
+select Name, TerminalID, LaneID from MailOrderPinpad where MailOrderPinpadID = %d
+Select NBCPeriod from Rental_Period where RentalPId = %d
+select NBCVendorID from XDoc_Target where TargetID = %ld
+SELECT Number, Date, Qty FROM VW_RCV_PRIOR_RECEIVING WHERE PODL_ID IN (%s) AND RcvType = %ld ORDER BY DATE
+select ODUID from Order_Decisions where CRLUID = %d and SKU = %d
+select oduid from order_decisions where crluid = %ld and sku = %ld
+select ODUID from VW_Ord_Decisions where SKU = dbo.fnGetNewSKU(%d) and TermID = %d and LocationID = %d
+SELECT OpenToBuyPct FROM  AutogenPO_Location  WHERE TermID = %ld and LocationID = %ld ORDER BY AutogenPOID, SortOrder,LocationID
+select ordertypeid, shortdesc from xdoc_ordertype order by ordertypeid asc
+select ordertypeid, shortdesc from xdoc_ordertype where ordertypeid in (2,3) order by ordertypeid asc
+select OriginID from XDoc_Header where DocHdrID = %ld
+select OriginPOID from po_header where poid = %ld
+select OTBLID from OTB_Location ol inner join Location l on l.LocationID = ol.LocationID where OTBID = %d and l.LocationId = %d
+select OTBRID, Description from OTB_Revision where OTBID = %d
+select OTBRID, Description from OTB_Revision where OTBID = %d and fOriginal = 0
+select OTBRID, Description from OTB_Revision where OTBID = %d order by fOriginal desc
+select OTBRID, Description, fPosted from OTB_Revision where OTBID = %d
+select p.WLRID, p.XREF, p.Qty, u.UserName, p.LocationId from PDA_WL_Request p inner join prism_security.dbo.prismuser u on u.SUID = p.UserId where LocationId in (%s)
+SELECT PackageType.PackageType, PackageType.DefaultQty FROM dbo.PackageType PackageType ORDER BY PackageType.PackageType 
+select ParamValue from SystemParameters where LocationID = %d and ParamName = 'ComputeOrderDecisions'
+select ParamValue from SystemParameters where LocationID = 0 and ParamType = 5014
+select ParamValue from SystemParameters where LocationID = 0 and ParamType = 905
+select ParamValue from SystemParameters where LocationID = 0 and ParamType = 906
+select ParamValue from SystemParameters where LocationID = 0 and ParamType = 907
+select ParamValue from SystemParameters where LocationID = 0 and ParamType = 914
+select ParamValue from SystemParameters where LocationID = 0 and ParamType = 915
+select ParamValue from SystemParameters where LocationID = 0 and ParamType = 916
+select ParamValue from SystemParameters where ParamName = '%s'
+select ParamValue from SystemParameters where ParamName = 'BypassParsingPrinterTraysForShelfTags'
+select ParamValue from SystemParameters where Paramname = 'CCManagementMode' and ParamType = 68081
+select ParamValue from SystemParameters where ParamName = 'ComputeOrderDecisions' and LocationID = %d
+select ParamValue from SystemParameters where ParamName = 'SH4_MOWebTerminalID' and LocationID = %d
+select ParamValue from SystemParameters where ParamType = 122
+select paramvalue from systemparameters where paramtype = 155
+SELECT ParamValue FROM SystemParameters WHERE ParamType = 162 AND LocationID = 0
+select ParamValue from SystemParameters where ParamType = 5009 and LocationID = 0
+select ParamValue from SystemParameters where ParamType = 79
+select ParamValue from SystemParameters where ParamType = 90
+select ParentODUID from VW_ORD_Decisions_Grid_EX where LocationId = %d and TermId = %d and SKU = %d
+SELECT PatternID FROM Recurrence WHERE RecurrenceID = 
+select Period from Rental_Adoption_Header where RentalAdoptionHeaderId = %d
+select pfc.description from pos_fee_codes pfc inner join transaction_detail td on pfc.feecodeid = td.feecode where td.sku = 1 and td.transactionid = %ld and pfc.frefundable = 0
+select pfc.frefundable, pfc.description from transaction_detail td inner join pos_fee_codes pfc on pfc.feecodeid = td.feecode where td.sku = 1 and td.trandtlid = %ld
+select po_detail.sku from po_detail inner join po_location on po_detail.pod_id = po_location.pod_id where po_location.podl_id = %ld
+select pod_id from po_detail where POID = %ld AND SKU = %ld
+select PODL_ID from PO_Location PL inner join PO_Detail PD on PD.POD_ID = PL.POD_ID and PD.POID = %ld and PL.LocationID = %ld and PD.SKU = %ld
+SELECT PODL_ID FROM PO_LOCATION WHERE POD_ID = %ld
+select podl_id from po_location where pod_id = %ld and locationid = %ld and termid = %ld
+select poid from po_header where ParentPOID = %ld
+Select PONumber from PO_Header where POID = %d
+select ponumber from po_header where poid = %ld
+SELECT PONumber, VendorID FROM PO_Header WHERE POID = %ld
+Select POS file
+select POSID from Transaction_Header where TransactionID = %d
+select PostVoidRcptID from Transaction_Header where MOfStatus = 0 and MOReceiptID = %d
+SELECT Price FROM VW_CatalogInventory WHERE SKU = 
+select price from vw_rental_available ra where SKU = %d and RentalPID = (select RentalPID from Rental_Header_Item_Period where RHI_RP = %d)
+select PriceUpdateType from Purch_AddConfig where ModuleID = 10046 and UserID = %d
+select PrinterName from TagTypePrinter where ParentId = 1 and TTPTId = 4
+select PrinterName, PrinterPort, PrinterPaperSource from TagTypePrinter where ParentId = %d and TTPTId = 2
+SELECT PRNTID, Name FROM Monarch_Printers
+select probnotifydid from problem_notifications_header pnh inner join problem_notifications_detail pnd on pnd.probnotifyid = pnh.probnotifyid where pnh.probnotifyid = %ld and pnd.sku = %ld
+select probnotifyid from problem_notifications_header where termid = %ld
+select ProvideQty from vw_rcv_open_detail where PID=%d and PDID=%d and PLID=%d
+select ps.LocationId from Tender_Codes_Location tcl inner join Pos_Setup ps on tcl.PosId = ps.PosId where tcl.TenderCodeLocId = %d
+select PubnetCodeID from VendorParameters where Subsystem = %ld and VendorID = (select top 1 VendorID from PO_Vendor where POID = %ld and fStatus = 0 order by IndexOrder asc)
+select PubnetCodeID from VendorParameters where VendorID = %ld and Subsystem = %ld 
+select qst.Description from Transaction_Header th inner join Catalog_Sales_Header csh ON th.MOReceiptId = csh.ReceiptId inner join QuickSearchType qst on qst.TypeID = csh.MOTypeID AND qst.ModuleID = 10081 where TransactionId = %d
+SELECT Qty FROM Catalog_Sales_Detail WHERE ReceiptDtlID = %d
+SELECT Qty FROM Catalog_Sales_Detail WHERE SKU = %ld AND ReceiptID = %ld
+select QueryID from BIP_Temp where BPUID = %d
+select rcvqty from mr_location where mrdl_id = %ld
+select rcvqty from mr_location where mrdl_id = %ld 
+SELECT Reason_Code.ReasonID, Reason_Code.Name FROM dbo.Reason_Code Reason_Code WHERE Reason_Code.ModuleID = 10023
+SELECT ReasonID FROM CD_Detail WHERE LocationID = %ld AND DSCDID = %ld AND fFlag = %ld
+SELECT ReasonID, Name FROM dbo.Reason_Code WHERE ModuleID = 10023 ORDER BY ReasonID
+select ReceiptDtlID, fNewUsed from Catalog_Sales_Detail where ReceiptDtlID = %ld
+select ReceiptDtlID, fNewUsed from Catalog_Sales_Detail where ReceiptDtlID = (select MOReceiptDtlID from Transaction_Detail where TranDtlID in (%ld))
+SELECT ReceiptID FROM Catalog_Sales_Header ORDER BY ReceiptID DESC
+SELECT ReceiptNumber FROM Catalog_Sales_Header WHERE ReceiptID = %d
+select recvqty from po_location where podl_id = %ld
+select recvqty from po_location where podl_id = %ld 
+select RentalAccountID from Location l inner join Rental_Period rp on rp.LocationID = l.LocationID where rp.RentalPID = %d
+select RentalHId from Rental_History rh inner join Rental_Detail rd on rd.RentalDId = rh.RentalDId inner join Rental_Header_Item rhi on rhi.RentalHIId = rd.RentalHIId inner join Rental_Header_Item_Period rhip on rhi.RentalHIId = rhip.RentalHIId and rh.RentalPId = rhip.RentalPId where rhip.RHI_RP = %d
+select RentalHIId, ISBN, Imprint, Edition, Copyright, Binding, txComment from VW_Rental_Header_Ex where RentalId = %d
+select RentalPeriodName, LocationName, SAN, StartDate, DueDate, Status, SessionName from RentalPeriodSession_vw where DueDate > getdate() order by StartDate
+select RentalSessionID, Name, DueDate, StartDate from NBCPGetReconcileSessions_vw order by StartDate
+select RentalTagTypeId from Rental_Setup_Main
+select RentalTagTypeId, Description from Rental_TagType where fDynamic = 0
+select RentalTagTypeId, Description from Rental_TagType where fDynamic = 1
+select replace(replace(MsgName, 'COMPLETED: ', ''), 'WARNING: Please Click Here - ', '') from vw_in_msg_dtl where XDocHdrID = %ld
+select replace(replace(MsgName, 'COMPLETED: ', ''), 'WARNING: Please Click Here - ', '') from vw_out_msg_dtl where XDocHdrID = %ld
+SELECT ReportID FROM ReportMaster WHERE REPUID = 
+select ReportId from ReportMaster where REPUID = %d
+SELECT ReportID, Name FROM Buyback_Receipt_Printers
+select ReportTitle from VW_REPORT_MASTER where REPUID = %d
+SELECT Retail, Cost FROM Inventory WHERE SKU = %ld AND LocationID = (SELECT LocationID FROM Invoice_Location WHERE INVLUID = %ld)
+SELECT ReturnPolicy.PolicyID, ReturnPolicy.Description, ReturnPolicy.Abbreviation FROM dbo.ReturnPolicy ReturnPolicy
+select rh.RentalPId, rp.Description from Rental_Period rp left join Rental_History rh on rh.RentalPId = rp.RentalPId where rh.RentalHId = %d
+select rhipnew.RHI_RP from Rental_Header_Item_Period rhipused inner join Rental_Header_Item rhiused on rhiused.RentalHIId = rhipused.RentalHIId and rhiused.fUsed = 1 inner join Rental_Header_Item rhinew on rhiused.RentalId = rhinew.RentalId and rhinew.fUsed = 0 inner join Rental_Header_Item_Period rhipnew on rhipnew.RentalHIId = rhinew.RentalHIId and rhipnew.RentalPId = rhipused.RentalPId where rhipused.RHI_RP = %d
+select rm.ReportID, rc.ReportTitle from ReportMaster rm inner join ReportCustom rc on rm.repuid = rc.repuid where MenuID = 102 and rc.fActive = 1 and fShelfTag = 1 order by rc.Sequence
+select rm.ReportTitle, RSPID, DOWMask, PrintTime, fStatus, Email from ScheduledReport sr inner join VW_REPORT_MASTER rm on rm.REPUID = sr.REPUID where sr.ScheduledReportID = %d
+select rm.REPUID, rc.ReportTitle from ReportMaster rm inner join ReportCustom rc on rm.repuid = rc.repuid where MenuID = 303 and rc.fActive = 1 order by rc.Sequence
+SELECT RP.Abbreviation, VP.MaxReturnTime FROM VendorParameters VP, ReturnPolicy RP WHERE VP.VendorID = %ld AND VP.SubSystem = %ld AND VP.ReturnPolicyID = RP.PolicyID
+select rp.RentalPId, rp.Description, l.Abbreviation, convert(varchar,rp.StartDate,101), convert(varchar,rp.EndDate,101) from Rental_Period rp left join location l on l.LocationId = rp.LocationID  where datediff(month,EndDate, GETDATE()) <= 12 order by rp.StartDate
+select rs.RentalSessionID, rs.Name, rs.StartDate, rs.DueDate, rsa.OpenDate, rsa.CloseDate from RentalSession rs inner join RentalSessionAccount rsa on rsa.RentalSessionID = rs.RentalSessionID where rsa.RentalAccountID = %d
+select rsh.RSPID, isnull(rgh.Name, rsh.Name) as Name from Report_SaveParams_Header rsh left outer join ReportGenHeader rgh on rgh.RGHID = rsh.ReportGenId  where rsh.REPUID = %d
+select RSLID from Rcv_Staging_Location where RCVSTLID = %d
+select RSLID, StagingLoc from Rcv_Staging_Location_Type order by StagingLoc
+select RSOUID, SortDesc from reportsortoptions where repuid = %d
+select RSOUID, SortDesc from ReportSortOptions where REPUID = %ld order by TabOrder asc
+select RTRIM(AccountNumber) + ' / ' + RTRIM(isnull(FirstName,'')) + ' ' + RTRIM(LastName) from Customer_Table where CustomerId = %d
+select rtrim(Description) from MO_Shipping_Codes where ShipCodeId = %d
+select rtrim(ShipState), rtrim(ShipZipcode) from VW_MO_SALE_HEADER where ReceiptID = %d
+SELECT rts.SKU, rts.SKU, rts.ISBN13, rts.Author, rts.Title, 0 from ResolveTradebookSku_vw rts where 
+SELECT rts.SKU, rts.SKU, rts.ISBN13, rts.Author, rts.Title, rts.isDigitalText from ResolveTextbookSku_vw rts where 
+SELECT SaleHistoryTypeID, Description FROM SalesHistoryType 
+select ScheduledReportStatusID, Name from ScheduledReportStatus order by ScheduledReportStatusID
+select SectionStatus from VW_CR_HEADER where CourseReqID = %d
+Select SendLocationID From MT_Header WHERE MTUID = (SELECT MTUID FROM MT_Detail WHERE MTDUID = %d)
+select SerialID from SerialNumberHeader where SKU = %d and LocationID = %d
+SELECT ShipType, Description FROM MR_ShipTypes
+SELECT ShipViaID, Description FROM ShipVia
+SELECT SHMID FROM SalesHistoryHeader WHERE POSID = %d AND PostDate = '%d/%d/%d'
+SELECT SHMID FROM SalesHistoryHeader WHERE POSID = %d AND PostDate = '%d/%d/%d' and SHMID <> %d
+select shortdescription from location where locationid = %d
+SELECT SKU FROM CR_Header INNER JOIN CR_Detail ON CR_Header.CourseReqID = CR_Detail.CourseReqID WHERE SKU = %ld AND TermID = %ld 
+Select SKU From MT_Detail WHERE MTDUID = %d
+select Sku from PO_Detail where PoId = %d
+SELECT SKU FROM Textbook where UsedSKU = %d
+select SKU from Transaction_Detail where TranDtlID = %d
+SELECT SKU, fReqOptRec FROM CR_Detail WHERE CourseReqID = %ld AND fCancelFlg = 0
+select SKU, isnull(BuyPriceUSCurrency,-1.00), RentalAdoptionDetailId from Rental_Adoption_Detail where RentalAdoptionDetailId in ( select RentalAdoptionDetailId from VW_RentalAdoptionDlg_Detail where RentalAdoptionHeaderId = %d and Adopt = 1)
+SELECT SKU, Qty, TranDtlID FROM Transaction_Detail WHERE TransactionId = %ld
+Select StatusCodeID from inventory where sku = %d and LocationID = %d
+SELECT StatusID, StatusDesc FROM Status_Codes WHERE ModuleID = 
+select statusid, statusdesc from status_codes where moduleid = %ld and statusid = %d 
+select StatusId, StatusDesc from Status_Codes where ModuleID = 10046
+select StatusID, StatusDesc from Status_Codes where ModuleID = 10046 and StatusID in (0, 1) order by StatusID asc
+select StatusId, StatusDesc from Status_Codes where ModuleID = 10062
+select StatusId, StatusDesc from Status_Codes where ModuleId = 10080
+select StatusId, StatusDesc from Status_Codes where ModuleId = 10081
+select StudentAccount from Customer_Table ct inner join CR_Enrollment ce on ce.CustomerID = ct.CustomerID where EnrollmentID = %d
+SELECT Style FROM VW_PO_STYLES WHERE POID = %d AND StyleMinimumWarning = 1
+select Subsystem from Item where SKU = %d
+select Subsystem from PO_Header where PoId = 
+select Subsystem from PO_Header where POID = %ld
+select subsystem, name from dbo.subsystem_table
+SELECT Subsystem, Name FROM dbo.Subsystem_Table WHERE fDisplay = 1
+SELECT Subsystem_Table.Subsystem, Subsystem_Table.Name FROM dbo.Subsystem_Table Subsystem_Table WHERE (fDisplay = 1) 
+select sum(isnull(TotalRecvQty, 0)) from PO_Detail where POID in (select POID_ID from XDoc_ItemInfo where DocHdrID = %ld)
+select sum(ReceiveQty) from Rcv_Staging_Location where RCVSTID = %d
+SELECT T.CROptCode, T.CROptDesc FROM dbo.CR_Detail_Options T WHERE fDisable = 0 ORDER BY T.CROptDesc
+select T.TargetID, T.VendorID from XDoc_Target T inner join PO_Vendor P on P.VendorID = T.VendorID where POID = %ld order by P.IndexOrder asc
+select T.TargetID, T.VendorID from XDoc_Target T inner join WantlistVendor W on W.VendorID = T.VendorID where WantlistID = %ld order by W.IndexOrder asc
+select ta.State, ta.Zipcode from Transaction_Header th inner join Transaction_Address ta on ta.TransactionId = th.TransactionId where ta.fShippingAddr = 1 and th.TransactionId = %d
+select TargetID from XDoc_Header where DocHdrID = %ld
+select targetid from xdoc_target where vendorid = %d
+select TaxCode from Catalog_Sales_Detail where ReceiptDtlID = %d
+select TaxCode from Transaction_Detail where TranDtlID = %d
+select TaxCodeID from POS_Fee_Codes where FeeCodeID = %d
+select tc.POSTaxCode, tc.TaxCodeDesc from Tax_Codes_Location tcl inner join Tax_Code_Group tcg on tcl.TaxGroupID = tcg.TaxGroupID inner join Tax_Code_Grouping tcgg on tcg.TaxGroupID = tcgg.TaxGroupID inner join Tax_Codes tc on tcgg.TaxCodeID = tc.TaxCodeID where tcl.LocationID = %d
+SELECT td.SKU, td.Qty, th.MOfExchanged, th.TranNumber FROM Transaction_Header th inner join Transaction_Detail td on td.TransactionID = th.TransactionID WHERE th.TransactionId = %d
+select TelexNumber from VendorAddress where AddressID = 0 and Subsystem = 2 and TelexNumber <> '' and TelexNumber is not null and VendorID = %ld
+select TelexNumber from VendorAddress where AddressID = 0 and Subsystem = 2 and TelexNumber <> '' and TelexNumber is not null and VendorID = (select top 1 VendorID from WantlistVendor wlv inner join WantListVendorTerm wlvt on wlvt.WLVendorID = wlv.WLVendorID where wlv.WantlistID = %ld and wlvt.fStatus = 0 order by wlv.IndexOrder asc)
+select TelexNumber from VendorAddress where AddressID = 0 and Subsystem = 2 and TelexNumber <> '' and TelexNumber is not null and VendorID = (select top 1 wlv.VendorID from WantlistVendor wlv inner join WantListVendorTerm wlvt on wlvt.WLVendorID = wlv.WLVendorID where wlv.WantlistID = %ld and wlvt.fStatus = 0 order by wlv.IndexOrder asc)
+select TenderAccount, ExpDate from Transaction_Tender where TransactionID = %d and ChargeBack = 1
+select TenderAuthId from Tender_Codes_Location where TenderCodeLocId = %d
+SELECT TenderAuthID FROM Tender_Codes_Location where TenderCodeLocID in (SELECT TenderID from Catalog_Sales_Tender WHERE ReceiptID = %ld)
+select TermDesc from CR_Term crt inner join CR_Locations crl on crl.TermID = crt.TermID where crl.CRLUID = %d
+SELECT TermID FROM CR_Locations WHERE CRLUID = %d
+SELECT TermID FROM CR_Locations WHERE LocationID = %d AND fOpenFlg = 0
+SELECT TermID FROM CR_Locations WHERE LocationID = %d AND fOpenFlg = 1
+SELECT TermID FROM CR_Locations WHERE LocationID = %d AND fOpenFlg >= 0
+select TermId from Rental_Term where RentalPId = %d
+SELECT TermID FROM VW_CR_LOCATIONS_TERM WHERE LocationID = %ld AND fOpenFlg = 1 AND fActiveFlg = 1 ORDER BY PostingOrder
+select termid, termname from cr_term
+select termid, termname from cr_term where termid = %ld
+SELECT TermID, TermName FROM VW_MT_FILL_TERMS WHERE fOpenFlg = 1 AND MTUID IN (0,%ld) ORDER BY TermName DESC
+select TermID, TermName from WantListLocationTerm_vw where WantListID = %d and LocationID = %d order by TermName
+SELECT TermName FROM CR_Term C INNER JOIN CR_Locations L ON C.TermID = L.TermID WHERE LocationID = %ld and C.TermID = %ld and fExportWebFlg = 1
+select termname from cr_term where termid = %d
+SELECT TermName FROM CR_Term WHERE TermID = %ld
+select TermName from VW_CR_HEADER where CourseReqID = %d
+select Text from Rental_Email where Type = %d
+select th.POSID, tt.TenderAccount, tt.ExpDate, tt.AgencyID, tt.TenderID, tt.TenderAmount from Transaction_Tender tt left join Transaction_Header th on th.TransactionID = tt.TransactionID where th.TransactionID = %d
+select th.RegisterId from Rental_History hist inner join Transaction_Detail td on hist.TranDtlId = td.TranDtlId inner join Transaction_Header th on th.TransactionId = td.TransactionId where hist.RentalHId = %d
+select top 1 12 as TargetID, VendorID from PO_Vendor where POID = %ld order by IndexOrder asc
+select top 1 13 as TargetID, VendorID from PO_Vendor where POID = %ld order by IndexOrder asc
+select top 1 accountnumber from VW_MO_SALE_HEADER where customerid = %d
+select top 1 accountnumber from VW_MO_SHIP_HEADER where customerid = %d
+SELECT TOP 1 AutogenPOID FROM AutogenPO WHERE RTRIM(Description) = '%s' ORDER BY AutogenPOID DESC
+SELECT TOP 1 AutogenRetID FROM AutogenRet ORDER BY AutogenRetID DESC
+SELECT TOP 1 CatalogProductFamilyID FROM CatalogProductFamilies ORDER BY CatalogProductFamilyID DESC
+select top 1 CustomerAddrID, FirstName, LastName, Address, City, State, Zipcode, Country, Phone, Ext, GovernmentIDNumber, GovernmentIDAgency, BirthDate from NMRPCustomerDialog_vw where AccountNumber = '%s'
+SELECT TOP 1 CustomerID FROM Customer_Table WHERE AccountNumber = '%s' ORDER BY CustomerID DESC
+select top 1 fNMRP from Rental_Setup_Pos
+select top 1 HeaderId from VW_RentalAdoptionDlg_Header
+SELECT TOP 1 InstructorID FROM Instructors WHERE InstructorName = '%s' ORDER BY InstructorID DESC
+select top 1 lsl.LocationID from LocationSelectionLocations lsl inner join Location l on l.LocationID = lsl.LocationID inner join MarkdownAux a on a.LocationSelectionID = lsl.LocationSelectionID where a.MarkdownID = 
+Select Top 1 MRID From MR_Header where MRNumber = '%s' Order by MRID desc
+select top 1 OTBID from VW_OTB_Header where OTBPlan like '%s' order by CreateDate desc
+select top 1 ParamValue from SystemParameters where Paramname = 'CCManagementMode'
+select top 1 pd.sku from packagedetail pd where pd.packageid = (select ph.packageid from packageheader ph where sku = %ld) and pd.sku not in (select inv.sku from inventory inv where inv.sku = pd.sku and inv.locationid = %ld)
+select top 1 PeriodDesc, StatusId, StatusDesc from VW_RentalAdoptionDlg_Header
+SELECT top 1 POD_ID FROM PO_Detail WHERE (POD_ID > %d) AND (POID = %d) ORDER BY POD_ID
+SELECT top 1 POD_ID FROM PO_Detail WHERE (POID = %d) ORDER BY POD_ID desc
+select top 1 PubnetCodeID from VendorParameters where PubnetCodeID <> 0 and PubnetCodeID is not null and VendorID = (select top 1 VendorID from PO_Vendor where POID = %ld and fStatus = 0 order by IndexOrder asc)
+select top 1 PubnetCodeID from VendorParameters where Subsystem = %ld and VendorID = (select top 1 VendorID from PO_Vendor where POID = %ld and fStatus = 0 order by IndexOrder asc)
+select top 1 PubnetSAN from VendorParameters where PubnetSAN <> '' and PubnetSAN is not null and VendorID = (select top 1 VendorID from PO_Vendor where POID = %ld and fStatus = 0 order by IndexOrder asc)
+select top 1 PubnetSAN from VendorParameters where PubnetSAN <> '' and PubnetSAN is not null and VendorID = (select top 1 VendorID from PO_Vendor where POID = %ld and fStatus = 0 order by IndexOrder asc) and Subsystem = %ld
+select top 1 RCVSTID from Rcv_Staging_Header where Number like '%s' and UserId = %d order by rcvDate desc
+select top 1 RCVSTLID from Rcv_Staging_Location where RCVSTID = %d order by Date desc
+Select top 1 TenderCodeId from Tender_Codes where POSTendCode = %d
+select top 1 TenderCodeLocID from Tender_Codes_Location where TenderAuthID = 15 and POSID = %d
+select top 1 VendorID from PO_Vendor where POID = %d and fStatus = 0 order by IndexOrder
+select top 1 VendorID from PO_Vendor where POID = %ld and fStatus = 0 order by IndexOrder asc
+select top 1 VendorID from WantlistVendor wlv inner join WantListVendorTerm wlvt on wlvt.WLVendorID = wlvt.WLVendorID where wlv.WantlistID = %ld and wlvt.fStatus = 0 order by IndexOrder asc
+Select Top 1 WarrantyId from Warranty Where IsRental = 1
+select TotalQty from po_detail where poid = %d and sku = %d
+select TotalRcvQty from MR_Detail where MRD_ID = %d
+select TotalRecvQty from PO_Detail where POD_ID = %d
+SELECT TranNumber FROM Transaction_Header WHERE TransactionId = %d
+select TranNumber from Transaction_Header where TransactionID = %d)
+select TransactionId from Transaction_Detail d inner join Rental_History h on d.TranDtlId = h.TranDtlId where h.RentalHId = %d
+select TransactionId from Transaction_Header where MOReceiptId = %d
+SELECT TransactionID FROM Transaction_Header WHERE MOReceiptID = %d AND MOfStatus = 0
+SELECT TransactionId FROM Transaction_Header where MOReceiptId is not NULL ORDER BY TransactionId DESC
+select translatorid, fulldesc from xdoc_translator where typeid = 1 order by translatorid asc
+select TranTendorID from Transaction_Tender where TransactionID = %d
+select tt.TenderAccount, tt.ExpDate, tcl.TenderAuthID from Transaction_Tender tt inner join Tender_Codes_Location tcl on tcl.TenderCodeLocID = tt.TenderID where TransactionID = %d
+select TypeId from Item where SKU = %d
+select TypeID from XDoc_Header where DocHdrID = %d
+select TypeID from XDoc_Header where DocHdrID = %ld
+SELECT TypeID, Description FROM QuickSearchType WHERE ModuleID = %d  AND TypeID not in (%ld, %ld) ORDER BY TypeID
+SELECT TypeID, Description FROM QuickSearchType WHERE ModuleID = %d ORDER BY TypeID
+select typeid, shortdesc from xdoc_type  where typeid in (1,2) order by typeid asc
+select TypeID, ShortDesc from xdoc_type where TypeID in (1) order by typeid asc
+select typeid, shortdesc from xdoc_type where typeid in (2) order by typeid asc
+Select UnitsPerPack from GeneralMerchandise where sku = %d
+select upper(description) from vw_ord_decisions_ex where locationid = %ld and termid = %ld and sku = dbo.fnGetNewSKU(%d)
+select UsedSKU from Textbook where SKU = %d
+SELECT VendorEmail, BuyerEmail, PONumber, VendorID, LocationID, fStatus, RequestsEmailReadReceipts, SubSystem FROM E_VW_PO_EMAILS WHERE POID = 
+select VendorID from PO_Header where POID = %ld
+SELECT VendorID FROM PO_Header WHERE POID = %ld 
+select VendorID from WantListVendor where WantListID = %d order by IndexOrder
+select vendorid from xdoc_target where targetid = %d
+select VendorID from XDoc_Target where TargetID = %ld
+select vendorid, subsystem from PO_Header where poid = %d
+select VendorOrderingMethodID from VendorMaster where VendorId = %ld
+SELECT vom.VendorOrderingMethodId, vom.VendorOrderingMethodDesc from po_header ph inner join VendorMaster vm on ph.VendorID = vm.VendorID inner join VendorOrderingMethod vom on vm.VendorOrderingMethodID = vom.VendorOrderingMethodID where ph.POID = 
+SELECT VW_ITM_BARCODE.SKU FROM PO_Header INNER JOIN PO_Detail ON PO_Detail.POID = PO_Header.POID INNER JOIN VW_ITM_BARCODE ON VW_ITM_BARCODE.SKU = PO_Detail.SKU WHERE PO_Header.PONumber = '%s' AND VW_ITM_BARCODE.BarCode = '%s'
+select vw_itm_master.sku from po_header inner join po_detail on po_detail.poid = po_header.poid inner join vw_itm_master on vw_itm_master.sku = po_detail.sku where po_header.ponumber = '%s' and replace(vw_itm_master.catisbn, '-', '') = '%s'
+Select Want List Vendors
+SELECT WantListID FROM WantListHeader WHERE ParentWantList = %ld
+select WantlistName from WantlistHeader where WantlistID = %ld
+select WarName from Warranty where WarrantyId = %d
+SELECT WarningText FROM VW_PO_OrderIncrementWarnings WHERE POID = 
+select WHLDUID from WHL_Detail where WHLUID = %ld and SKU = %ld and price = %4f
+select XDocHdrID from IncomingMessages where MsgID = %ld
+select XDocHdrID from OutgoingMessages where MsgID = %ld
+select XREF from rental_detail where RentalDId = %d
+Select ZSUID, 0, ISBN, Author, Title, bDigitalText FROM CR_ZeroSkuDetail WHERE
+SKU IN (SELECT MasterSKU FROM VW_ORDER_DECISIONS_MASTER_SKUS WHERE SKU = %ld)
+SKU IN (SELECT MasterSKU FROM VW_ORDER_DECISIONS_MASTER_SKUS WHERE SKU = %s)
+SKU IN (SELECT SKU FROM Item WHERE %s)
+SKU in (select SKU from Rental_Header_Item where RentalId = ? )
+Sku in (select Sku from VW_ORDERDECISIONS_BYSECTIONID where SectionId like '%s')
+TermID IN (Select TermID From CR_Locations Where %s %s)
+TermID IN (Select TermID From CR_Locations Where %s AND fOpenFlg = 1)
+TermID in (select TermID from CR_Locations where fOpenFlg = 1)
+TermID IN (Select TermID From CR_Locations Where LocationID = ? 
+TermID IN (Select TermID From CR_Locations Where LocationID = ? %s AND 
+TermID IN (Select TermID From CR_Locations Where LocationID = ? AND fOpenFlg = 1)
+TermID IN (SELECT WantListDetail.TermID FROM dbo.WantListDetail WantListDetail WHERE WantListDetail.TermID = %ld)
+transactionid in (select d.transactionid from vw_inventory_status_code_sku_locations s inner join transaction_detail d  on d.sku = s.sku  inner join transaction_header h on h.transactionid = d.transactionid and h.locationid = s.locationid and s.invstatuscodeid %s) 
+TransactionID IN (SELECT d.TransactionID FROM VW_SEASON_CODE_SKUS s INNER JOIN Transaction_Detail d ON d.SKU = s.SKU AND s.SeasonCode LIKE '%s%%')
+TransactionID IN (SELECT d.TransactionID FROM VW_STYLE_SKUS m INNER JOIN Transaction_Detail d ON d.SKU = m.SKU AND m.StyleID = %d)
+TransactionId IN (select TransactionID from Transaction_Detail d inner join item on item.sku = d.sku where 
+TransactionId IN (SELECT TransactionId FROM Transaction_Detail INNER JOIN VW_ITM_MASTER IM ON Transaction_Detail.SKU = IM.SKU WHERE BookKey LIKE '%s%%' AND Subsystem IN (2,3))
+TransactionId IN (SELECT TransactionId FROM Transaction_Detail INNER JOIN VW_ITM_MASTER ON VW_ITM_MASTER.SKU = Transaction_Detail.SKU WHERE REPLACE(ISBN13, '-','') LIKE '%s%%')
+TransactionId IN (SELECT TransactionId FROM Transaction_Detail WHERE SKU = %ld)
+TransactionId IN (SELECT TransactionId FROM Transaction_Detail WHERE SKU IN (%s))
+TransactionId IN (SELECT TransactionId FROM Transaction_Detail WHERE SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%'))
+UCourseID IN (SELECT UCourseID from CR_Course where CourseDescr like '%s%%')
+Update
+update bip_temp set queryid = bpuid where bpuid = %ld
+update Catalog_Sales_Detail set fNewUsed = %ld where ReceiptDtlID = %ld
+update Catalog_Sales_Detail set QTY = QTY + 1 where ReceiptId = %d and SKU = %d and CatalogId = %d
+update Catalog_Sales_Detail set QTY = QTY + 1 where ReceiptId = %d and SKU = %d and CatalogId = %d %s
+UPDATE Catalog_Sales_Detail SET SOPOID = %d WHERE ReceiptDtlID = %d
+update Catalog_Sales_Detail set TaxCode = %d where ReceiptDtlID = %d
+update Catalog_Sales_Detail set TaxCode = %d WHERE ReceiptDtlID in (%s)
+update Catalog_Sales_Detail set TaxCode = (select ItemTaxTypeID from Item where SKU = %d) where ReceiptDtlID = %d
+UPDATE Catalog_Sales_Header SET fTaxExempt = 1, TaxTotal = .0000, TaxRate = 0.0000 where ReceiptID = %ld
+update Catalog_Sales_Header set TaxTotal = %.02f where ReceiptId = %d
+Update CatalogGroupOrder set CatalogGroupParentID = %d where CatalogID = %d
+UPDATE CatalogItems SET IsActive = 0 WHERE SKU = 
+Update CR_Detail SET fPrntShlfTag = 0 WHERE CourseReqID = %ld
+Update CR_Shelftags Set CR_Shelftags.fPrintShelfTag = 1where CR_Shelftags.CourseReqID = %ld 
+UPDATE CRT_Detail SET Qty = %d WHERE CRTDUID = %ld
+update Customer_Address set Address = '%s', City = '%s', State = '%s', ZipCode = '%s', Country = '%s', Phone1 = '%s', Ext1 = '%s' where CustomerAddrID = %d
+update Customer_Table set FirstName = '%s', LastName = '%s', Birthdate = '%s', GovernmentIDNumber = '%s', GovernmentIDAgency = '%s' where AccountNumber = '%s'
+UPDATE Fiscal_Inventory_Header_Table SET Batch = %d, Fixture = '%s', Area = '%s', LocationID = %ld WHERE FixtureAreaID = %ld 
+update IncomingMessages set FileName = replace(FileName, 'COMPLETED:', 'COMPLETED: WARNING:') where XDocHdrID = %ld
+update IncomingMessages set Filename = replace(replace(replace(replace(replace(Filename, '(Invalid)', ''), 'ERROR: Please Click Here - ', ''), 'WARNING: Please Click Here - ', ''), 'WARNING: ', ''), 'ERROR: ', '') where XDocHdrID = %ld
+UPDATE Instructors_Detail SET fDefaultFlg = 0 WHERE InstructorID = %d 
+update MailOrderPinpad set UserID = %d, LockedTime = GetDate() where MailOrderPinpadID = %d
+update MailOrderPinpad set UserID = null, LockedTime = null where UserID = %d
+update MarkdownSchedule set AppliedDate = getdate() where MarkdownScheduleId = 
+update MarkdownScheduleConfig set IsWriteOff = %d where MarkdownScheduleConfigId = %d
+update MR_Location set DiscrQty = %d where MRDL_ID = %d
+update NBCPPeriodRetain set ShipQty = %d where NBCPPeriodRetainID = %d
+update NMRPSessionRetain set KeepQty = %d where NMRPSessionRetainID = %d
+update NMRPTransactionDetail set Dispatched = 2 where TranDtlID =  (select TranDtlID from Rental_History where RentalHId = %d)
+Update Order Decisions for Items?
+update order_decisions set fwksstatusflg = %ld where crluid = %ld and sku = %ld
+update Order_Decisions set ManualQTP = 1 where ODUID = %d
+UPDATE Order_Decisions SET POID = %d WHERE ODUID = %d AND SKU = %d
+update OTB_Detail set %s = %s where OTBRID = %d and OTBDate > '%s'
+update OTB_Revision set Description = '%s' where OTBRID = %d
+update OTB_Revision set DesiredTurns = %f, Margin = %f where OTBRID = %d
+update OutgoingMessages set Status = 1 where MsgSubType = 2 and POorWantListID = %d
+update OutgoingMessages set Status = 1 where XDocHdrID = %ld
+update PO_Header set CancelDate = '%s' where POID = %d
+update PO_Header set fStatus = 5 where POID = %d
+update PO_Location set DiscrQty = %d where PODL_ID = %d
+update PO_Vendor set fStatus = 0 where POID = %ld
+update PO_Vendor set TargetID = %ld, DocTypeID = %ld,UpdateTypeID = %ld, fMakeWPInvoice = %ld, fMerged = %ld, MergeToLocationID = %ld, OrderTypeID = %ld, FillTypeID = %ld, POTrackingType = %ld,fTrackBOandCA = 1, POID1 = %ld where POID = %ld
+update problem_notifications_detail set txcomment = txcomment + 'Linked SKU: %s' where probnotifydid = %ld
+update Rcv_Staging_Location set RSLID = %d, Comment = '%s' where RCVSTLID = %d
+update Rcv_Staging_Location_Type set StagingLoc = '%s' where RSLID = %d
+update Rental_Adoption_Detail set Adopt = %d where RentalAdoptionHeaderId = %d
+update Rental_Detail set fTagPrint = 1 %s
+update Rental_Email set Text = '%s' where Type = %d
+update Rental_History set 
+update Rental_Setup_Pos set EmailReminderIncludePenaltyFees = %d
+update salestable set typeid = %ld, salescode = %ld where stuid = %ld
+update ScheduledReport set RSPID = %d, DOWMask = %d, PrintTime = '%s', fStatus = %d, Email = '%s' where ScheduledReportID = %d
+update SystemParameters set ParamValue = '%d' where ParamName = '%s'
+update SystemParameters set ParamValue = %d where ParamType = 1013
+update SystemParameters set ParamValue = %ld where LocationID = 0 and ParamType = 905
+update SystemParameters set ParamValue = %ld where LocationID = 0 and ParamType = 906
+update SystemParameters set ParamValue = %ld where LocationID = 0 and ParamType = 907
+update SystemParameters set ParamValue = %ld where LocationID = 0 and ParamType = 914
+update SystemParameters set ParamValue = %ld where LocationID = 0 and ParamType = 915
+update SystemParameters set ParamValue = %ld where LocationID = 0 and ParamType = 916
+update SystemParameters set ParamValue = 0 where LocationID = 0 and ParamType = 912
+update SystemParameters set ParamValue = 0 where ParamType = 1013
+update SystemParameters set ParamValue = '1697978' where LocationID = 0 and ParamType = 913
+update Transaction_Address set Address = '%s', City = '%s', State = '%s', ZipCode = '%s', Country = '%s', Phone1 = '%s', Ext1 = '%s' where TransactionID = %d and fShippingAddr = 0
+update Transaction_Detail set MOfNewUsed = %ld where MOReceiptDtlID = %ld
+UPDATE Transaction_Detail SET Qty = %d WHERE TranDtlID = %d
+update Transaction_Detail set TaxCode = %d where TranDtlID = %d
+update Transaction_Detail set TaxCode = %d WHERE TranDtlID in (%s)
+update Transaction_Detail set TaxCode = (select ItemTaxTypeID from Item where SKU = %d) where TranDtlID = %d
+UPDATE Transaction_Header SET MOtxComment = '%s' WHERE MOReceiptID = %d
+update Transaction_Header set PostVoidRcptID = %d where TransactionID = %d
+Update Transaction_Header set ShipCharge = %.4f where TransactionId = %d
+update Transaction_Tender set fAuthorized = 0 where TranTendorID = %d
+update WebOrderDepositProcessLogDetail set ErrorFlg = 1, Status = 'Could not authorize student''s credit card.' where TransactionID = %d
+update WebOrderDepositProcessLogDetail set Status = 'Successfully processed.' where WODPHID = %d and TransactionID = %d
+update wlvt set fStatus = 0 from WantListVendorTerm wlvt inner join WantListVendor wlv on wlv.WLVendorID = wlvt.WLVendorID  where wlv.WantlistID = %ld
+update wlvt set POID1 = %ld, POID2 = %ld, POTrackingType = %ld, StatusOfCreatedPOs = %ld, fCreatePOs = %ld, PONumber = '%s', TargetID = %ld from WantListVendorTerm wlvt inner join WantListVendor wlv on wlv.WLVendorID = wlvt.WLVendorID where wlv.WantlistID = %ld and wlv.VendorID = %ld and LocationID = %d and TermID = %d
+update XDoc_Header set fExcludeFromPO = 0, ExcludeReasonID = 0 where DocHdrID = %ld
+update XDoc_Header set FillTypeID = 3 where DocHdrID = %ld
+update XDoc_Target set VendorID = %ld where TargetID = %ld
+update XDoc_Target set VendorID = %ld, NBCVendorID = %ld, CBCVendorID = %ld where TargetID = %ld
+WantListID IN (SELECT WantListHeader.WantListID FROM WantListHeader, VendorMaster WHERE WantListHeader.VendorID = %ld) 
+WantListID IN (SELECT WantListID FROM VW_WANT_LIST_DETAIL WHERE REPLACE(ISBN13, '-','') LIKE '%s%%')
+WantListID IN (SELECT WantListID FROM VW_WANT_LIST_DETAIL WHERE SKU = %ld)
+WantListID IN (SELECT WantListID FROM VW_WANT_LIST_DETAIL WHERE SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%'))
+WantListID IN (SELECT WantListID FROM WantListDetail WHERE SKU IN (%s))
+WantListID IN (SELECT WantListID FROM WantListDetail WL INNER JOIN VW_ITM_MASTER IM ON WL.SKU = IM.SKU WHERE IM.BookKey LIKE '%s%%' AND Subsystem in (2,3))
+whl_header.whluid in (select whl_header.whluid from whl_header inner join whl_detail on whl_detail.whluid = whl_header.whluid inner join vw_itm_master on vw_itm_master.sku = whl_detail.sku where REPLACE(ISBN13, '-','') LIKE '%s%%')
+whl_header.whluid in (select whl_header.whluid from whl_header inner join whl_detail on whl_detail.whluid = whl_header.whluid WHERE SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%'))
+whl_header.whluid in (select whl_header.whluid from whl_header inner join whl_detail on whl_detail.whluid = whl_header.whluid where whl_detail.sku = %ld)
+WHLUID IN (SELECT WHLUID FROM WHL_Detail WHERE BookKey LIKE '%s%%')
+whluid in (select whluid from whl_detail where sku IN (%s))
+WHLUID IN (SELECT WHLUID FROM WHL_Header WHERE %s)
+XDocHdrID in (select DocHdrID from XDoc_ItemInfo where ItemStatus in (
+XDocHdrID in (select DocHdrID from XDoc_ItemInfo where ItemStatus in (select Code from X12_Code where DocID = 0 and SegmentID = 17 and ElementID = 29 and ECTID = 0))
+XDocHdrID in (select DocHdrID from XDoc_ItemInfo where ItemStatus in (select Code from X12_Code where DocID = 0 and SegmentID = 17 and ElementID = 29 and ECTID = 1))
+XDocHdrID in (select DocHdrID from XDoc_ItemInfo where ItemStatus in (select Code from X12_Code where DocID = 0 and SegmentID = 17 and ElementID = 29 and ECTID = 2))
+XDocHdrID in (select XDocHdrID from VW_IN_MSG_DTL where MsgName like '%%' + '%s' + '%%')
+XDocHdrID in (select XDocHdrID from VW_IN_MSG_DTL where ReceivedDate <= '%s')
+XDocHdrID in (select XDocHdrID from VW_IN_MSG_DTL where ReceivedDate >= '%s')
+XDocHdrID in (select XDocHdrID from VW_IN_MSG_DTL where ReceivedDate between '%s' and '%s')
+XDocHdrID in (select XDocHdrID from VW_IN_MSG_DTL where VendorID = %ld)
+XDocHdrID in (select XDocHdrID from X12_ASN_Carton where CartonNumber = '%s')
+XDocHdrID in (select XDocHdrID from X12_ASN_Item where CatISBN = '%s')
+XDocHdrID in (select XDocHdrID from X12_ASN_PO where PONumber = '%s')
+You must select a terminal ID
+You must select a terminal/Lane ID

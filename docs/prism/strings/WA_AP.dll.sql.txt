@@ -1,0 +1,86 @@
+﻿?Update@CGXBrowserGrid@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+APIHeaderID in (select APIHeaderID from Acct_API_Header where fEDI = 1)
+BatchID IN (SELECT BatchID FROM VW_AP_GENCHKS_DETAIL WHERE VendorID = %ld)
+BatchID IN (SELECT BatchID FROM VW_AP_INVPYMT_DETAIL WHERE VendorID = %ld)
+CheckHdrID IN ( SELECT CheckHdrID FROM VW_AP_CHECKMNT_DETAIL WHERE InvoiceNumber LIKE '%%%s%%' and finvoice=0 )
+CheckHdrID IN ( SELECT CheckHdrID FROM VW_AP_CHECKMNT_DETAIL WHERE InvoiceNumber LIKE '%%%s%%' and finvoice=1 )
+DELETE FROM Acct_API_Detail WHERE APIDetailID = %ld
+DELETE FROM Acct_Credit_Resolved_Detail WHERE APCredRslvDtlID = %ld
+GL Period Update Failed for Check %s
+Please use Ellipsis Button to select a valid AP Invoice for this batch
+Please use Ellipsis Button to select a valid credit memo for this batch
+SELECT * FROM dbo.VW_AP_CRDMNT_NAVIGATOR
+SELECT * FROM dbo.VW_AP_CRMMNT_NAVIGATOR
+SELECT * FROM dbo.VW_AP_INVMNT_NAVIGATOR
+SELECT * FROM VW_AP_CHECKMNT_NAV
+SELECT * FROM VW_AP_REC_EXP_NAV
+Select APCredRslvHdrID from Acct_Credit_Resolved_Header Where VoucherID = %d
+Select APIHeaderID from Acct_API_Header Where VoucherID = %d
+select av.VoucherNumber from Acct_API_Header aah INNER JOIN Acct_Voucher av ON aah.VoucherID = av.VoucherID where APIHeaderID = %d
+select BatchDtlID from Acct_Pay_Batch_Detail where VendorID = %d and BatchID = %d
+Select BatchID, BatchName from Acct_Pay_Batch_Header Order by GeneratedDate desc
+select case when aah.fFreightInv = 0 then ih.PrepayNumber else fih.PrepayNumber end as CheckNumber from Acct_API_Header aah LEFT OUTER JOIN Invoice_Header ih ON aah.InvoiceID = ih.InvoiceID LEFT OUTER JOIN Freight_Invoice_Header fih ON aah.InvoiceID = fih.FRINVHID where APIHeaderID = %d
+select CheckMin, CheckMax from Sequence_Check_Info where SequenceID = %d
+select CheckTypeID, Description from Acct_APCheckType where fCheck = 0
+select CheckTypeID, Description from Acct_APCheckType where fCheck = 1
+select Cleared from VW_ACCT_RECON_DTL where ID = %d
+SELECT Count(*) FROM Acct_API_Header WHERE InvoiceNumber = '%s' and VendorID = %d
+SELECT Count(*) FROM Acct_Credit_Resolved_Header WHERE CreditMemoNumber = '%s' and VendorID = %d
+Select count(*) from Acct_Pay_Batch_Detail where BatchID = %d
+select Count(*) from Acct_Pay_Batch_Detail where BatchId = %d and CurrencyExId <> (select CurrencyExId from Sequence_Check_Info where SequenceId = %d)
+select count(*) from Acct_Pay_Batch_Detail where fInvoice = 1 and VendorID = (select VendorID from Acct_Credit_Resolved_Header where APCredRslvHdrID = %d)  and batchID = %d
+select count(*) from Acct_Pay_Batch_Detail where VendorID = %d and BatchID = %d and fInvoice = 0
+select count(*) from Acct_Pay_Batch_Detail where VendorID = %d and BatchID = %d and fInvoice = 1
+SELECT Count(*) FROM Acct_Pay_Batch_Detail WHERE VoucherID = %ld
+select count(*) from Acct_Pay_Batch_Detail where VoucherID = (select VoucherID from Acct_API_Header where APIHeaderID = %d)  and batchID = %d
+select count(*) from Acct_Pay_Batch_Detail where VoucherID = (select VoucherID from Acct_Credit_Resolved_Header where APCredRslvHdrID = %d)  and batchID = %d
+select count(*) from acct_Pay_Batch_Header where BatchName like '%s'
+select count(*) from Acct_Pay_Batch_Header where CheckSeqId = %d
+SELECT COUNT(*) FROM Acct_Recurring_Expense_Header WHERE ExpenseNumber = '%s'
+select Count(*) from CD_Header where CD_Header.DSCHID = %ld AND (CD_Header.fType = %d OR CD_Header.fType = %d)
+select count(*) from VW_ACCT_RECON_DTL where %s)
+select count(checkhdrid) from acct_check_header where checkhdrid <> %ld and checknumber = '%s'
+select CurrencyExId from Acct_API_Header where APIHeaderId = %d
+select CurrencyExId from Acct_Credit_Resolved_Header where APCredRslvHdrID = %d
+select CurrencyExId from Acct_Pay_Batch_Detail where BatchId = %d
+select CurrencyExId from Sequence_Check_Info where SequenceId = %d
+select CurrencyExId from Sequence_Check_Info where SequenceId = (select CheckSeqID as SequenceId from Acct_Pay_Batch_header where BatchID = %d)
+select Description from Acct_COA where COAID = %ld
+Select Detail Item
+SELECT fTypeCode, Description, UseGLCode FROM Acct_Reconciliation_Types Order By Description
+select ih.fPayFlag from Acct_API_Header aah LEFT OUTER JOIN Invoice_Header ih ON aah.InvoiceID = ih.InvoiceID where APIHeaderID = %d
+Select ISNULL(BatchID,0) FROM Acct_API_Header API INNER JOIN Acct_Pay_Batch_Detail BD ON API.VoucherID = BD.VoucherID AND API.VendorID = BD.VendorID AND BD.fInvoice = 1 WHERE API.APIHeaderID = %ld 
+Select ISNULL(BatchID,0) FROM Acct_Credit_Resolved_Header CRH INNER JOIN Acct_Pay_Batch_Detail BD ON CRH.VoucherID = BD.VoucherID AND CRH.VendorID = BD.VendorID AND BD.fInvoice = 0 WHERE CRH.APCredRslvHdrID = %ld 
+SELECT LocationID, ShortDescription FROM Location WHERE LocationID in (%s) 
+Select MaxDetailCnt from VW_AP_CHECKSEQ_INFO where SequenceID = %ld
+select Name from VendorMaster where VendorID = %d
+select ParamValue from SystemParameters where LocationID = 0 and ParamType = 4051
+select sci.CurrencyExId from Acct_Check_Header h inner join Sequence_Check_Info sci on sci.SequenceId = h.SequenceId where h.CheckHdrId = %d
+select sci.CurrencyExId from Acct_Pay_Batch_Header h inner join Sequence_Check_Info sci on sci.SequenceId = h.CheckSeqId where h.BatchId = %d
+select SequenceID from Sequence where sequencetypeid = 30 and sequencenumber = 0
+select SequenceTypeID, SequenceTypeDescription from Sequence_Type where Type = 3
+select StatusDesc from Status_Codes where ModuleId = 13001 and StatusId = %d
+select StatusDesc from Status_Codes where ModuleId = 13008 and StatusId = %d
+select StatusDesc from Status_Codes where ModuleID = 13009 and StatusID = %d
+select StatusDesc from Status_Codes where Status_Codes.StatusID = %ld and Status_Codes.ModuleID = %d
+select StatusDesc from Status_Codes where StatusID = %d and ModuleID = 13003
+select StatusId, StatusDesc from Status_Codes where ModuleID = 13001
+SELECT TOP 1 APExportID FROM Acct_APExport ORDER BY APExportID DESC
+Select TOP 1 BatchID FROM Acct_Pay_Batch_Header ORDER BY BatchID DESC
+SELECT top 1 BatchName from Acct_Pay_Batch_Header  where BatchID in (select batchid FROM Acct_Pay_Batch_Detail WHERE VoucherID = %ld)
+select top 1 sequenceID from sequence order by SequenceID desc
+SELECT TOP 1 vp.PaymentDays FROM VendorParameters vp LEFT JOIN VendorMaster vm on vp.VendorID = vm.VendorID WHERE vm.VendorID = %d and vp.SubSystem > 1 ORDER BY vp.SubSystem
+SELECT TOP 1 vp.PaymentPct FROM VendorParameters vp LEFT JOIN VendorMaster vm on vp.VendorID = vm.VendorID WHERE vm.VendorID = %d and vp.SubSystem > 1 ORDER BY vp.SubSystem
+select VendorCode from VendorMaster where VendorID = %d
+SELECT VendorID, Name, LocationID, Description FROM VW_AP_GENCHKS_NAV WHERE BatchID = %d ORDER BY LocationID
+SELECT VendorID, Name, LocationID, Description FROM VW_AP_GENCHKS_NAV WHERE BatchID = %d ORDER BY Name
+SELECT VendorID, Name, LocationID, Description FROM VW_AP_INVPYMT_NAV WHERE BatchID = %d ORDER BY LocationID
+SELECT VendorID, Name, LocationID, Description FROM VW_AP_INVPYMT_NAV WHERE BatchID = %d ORDER BY Name
+select vm.CurrencyExId from Acct_API_Header aah inner join VendorMaster vm ON vm.VendorID = aah.VendorID where APIHeaderID = %d
+select VoucherNumber from Acct_Voucher where VoucherID = %d
+select VoucherNumber, VendorName from VW_AP_INVMNT_HEADER where APIHeaderID = %d
+Update
+UPDATE dbo.Acct_API_Header SET fStatus = %ld WHERE APIHeaderID = %ld
+UPDATE dbo.Acct_API_Header SET GLPeriod = '%s' WHERE APIHeaderID = %ld
+UPDATE dbo.Acct_Credit_Resolved_Header SET fStatus = %d WHERE APCredRslvHdrID = %ld
+VoucherId in (select VoucherId from Acct_Voucher where VoucherNumber like '%s%%')

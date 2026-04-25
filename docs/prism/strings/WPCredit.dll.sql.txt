@@ -1,0 +1,36 @@
+﻿ IN (SELECT 
+?Update@CGXBrowserGrid@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+CONVERT(varchar(10),HeaderID) + CONVERT(varchar(1),Type) IN (SELECT CONVERT(varchar(10),HeaderID) + CONVERT(varchar(1),fType) FROM VW_MCRED_DETAIL WHERE BookKey LIKE '%s%%' AND Subsystem in (2,3))
+CONVERT(varchar(10),HeaderID) + CONVERT(varchar(1),Type) IN (SELECT CONVERT(varchar(10),HeaderID) + CONVERT(varchar(1),fType) FROM VW_MCRED_DETAIL WHERE fType in (1,2) and InvoiceNumber LIKE '%s%%')
+CONVERT(varchar(10),HeaderID) + CONVERT(varchar(1),Type) IN (SELECT CONVERT(varchar(10),HeaderID) + CONVERT(varchar(1),fType) FROM VW_MCRED_DETAIL WHERE REPLACE(ISBN13, '-','') LIKE '%s%%')
+CONVERT(varchar(10),HeaderID) + CONVERT(varchar(1),Type) IN (SELECT CONVERT(varchar(10),HeaderID) + CONVERT(varchar(1),fType) FROM VW_MCRED_DETAIL WHERE SKU = %ld)
+CONVERT(varchar(10),HeaderID) + CONVERT(varchar(1),Type) IN (SELECT CONVERT(varchar(10),HeaderID) + CONVERT(varchar(1),fType) FROM VW_MCRED_DETAIL WHERE SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%'))
+CONVERT(varchar(10),HeaderID) + CONVERT(varchar(1),Type) IN (SELECT CONVERT(varchar(10),HeaderID) + CONVERT(varchar(1),fType) FROM VW_MCRED_DETAIL, Invoice_Header WHERE VW_MCRED_DETAIL.InvoiceID = Invoice_Header.InvoiceID AND Invoice_Header.InvoiceDate >= '%s 00:00:00' AND Invoice_Header.InvoiceDate <= '%s 23:59:59' AND VW_MCRED_DETAIL.fType in (1,2))
+CRRUID IN (SELECT Credit_Resolved.CRRUID FROM Credit_Resolved WHERE Credit_Resolved.VendorID = %ld)
+CRRUID in (select crruid from credit_resolved_detail where 
+CRRUID IN (SELECT CRRUID FROM VW_RCRED_DETAIL WHERE BookKey LIKE '%s%%' AND Subsystem in (2,3))
+CRRUID IN (SELECT CRRUID FROM VW_RCRED_DETAIL WHERE REPLACE(ISBN13, '-', '') LIKE '%s%%')
+CRRUID IN (SELECT CRRUID FROM VW_RCRED_DETAIL WHERE SKU = %ld)
+CRRUID IN (SELECT CRRUID FROM VW_RCRED_DETAIL WHERE SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%'))
+CRRUID IN (SELECT CRRUID FROM VW_RCRED_DETAIL_UNION WHERE  RequestNumber LIKE '%s%%')
+CRRUID IN (SELECT CRRUID FROM VW_RCRED_RSLV_DTL WHERE SKU = %ld)
+CRRUID IN (SELECT d.CRRUID FROM VW_INVENTORY_STATUS_CODE_SKU_LOCATIONS s INNER JOIN VW_RCRED_DETAIL d ON d.SKU = s.SKU AND d.LocationID = s.LocationID AND s.InvStatusCodeID %s)
+CRRUID IN (SELECT d.CRRUID FROM VW_SEASON_CODE_SKUS s INNER JOIN VW_RCRED_DETAIL d ON d.SKU = s.SKU AND s.SeasonCode LIKE '%s%%')
+CRRUID IN (SELECT d.CRRUID FROM VW_STYLE_SKUS m INNER JOIN VW_RCRED_DETAIL d ON d.SKU = m.SKU AND m.StyleID = %d)
+HeaderID IN (SELECT HeaderID FROM dbo.VW_MCRED_DETAIL WHERE SKU IN (%s))
+insert into ##Serial_number_post_table_temp                           (record_type,unique_stamp,fTracking_type,serialDID,crtuid)                             VALUES (1102,'%s',NULL,%d,NULL)
+RequestHdrID = ? AND  RequestDtlID NOT IN  (SELECT Credit_Resolved_Detail.RequestDtlID  FROM Credit_Resolved_Detail  WHERE Credit_Resolved_Detail.RequestHdrID = ? AND  Credit_Resolved_Detail.fType = ? AND  (Credit_Resolved_Detail.CRRUID = ? OR  Credit_Resolved_Detail.fStatus = 1))
+SELECT * FROM VW_MCRED_NAV
+SELECT * FROM VW_RCRED_NAV
+SELECT Count(*) FROM Credit_Resolved_Detail WHERE CRRUID = %d AND fWriteOff = 1
+SELECT COUNT(*) FROM Credit_Resolved_Detail WHERE fType = %ld AND RequestHdrID = %ld
+select count(*) from CRT_Detail where CRTUID = %d and fSentNBC = 1
+SELECT CRT_Detail.LocationID, CRT_Detail.SKU, CRT_Detail.Qty, Invoice_Location.TermID                         FROM CRT_Detail                           LEFT OUTER JOIN Invoice_Location ON CRT_Detail.INVDUID = Invoice_Location.INVLUID                             AND CRT_Detail.LocationID = Invoice_Location.LocationID                               WHERE CRTUID = %ld
+select fStatus from VW_MCRED_HEADER where Type = %d AND HeaderID = %ld
+SELECT ISNULL(SUM(ResolvedAmount), 0) FROM Credit_Resolved_Detail WHERE fType = %ld AND RequestHdrID = %ld
+SELECT RP.Abbreviation, VP.MaxReturnTime FROM VendorParameters VP, ReturnPolicy RP WHERE VP.VendorID = %ld AND VP.SubSystem = %ld AND VP.ReturnPolicyID = RP.PolicyID
+select statusdesc from status_codes where moduleid = %ld and statusid = %ld
+SELECT StatusID, StatusDesc FROM Status_Codes WHERE ModuleID = 10106
+SELECT TermID FROM CRT_Header                           WHERE CRTUID = %ld
+SELECT top 1 Invoice_Header.InvoiceNumber FROM Credit_Resolved_Detail, CD_Header, Invoice_Header WHERE Invoice_Header.InvoiceID = CD_Header.DSCHID AND Credit_Resolved_Detail.RequestHdrID = CD_Header.CDUID AND Credit_Resolved_Detail.CRRUID = %ld AND Credit_Resolved_Detail.fType = 2 AND Invoice_Header.fStatus <= 2
+SELECT top 1 Invoice_Header.InvoiceNumber FROM Credit_Resolved_Detail, CRT_Detail, Invoice_Location, Invoice_Detail, Invoice_Header WHERE Invoice_Location.INVLUID = CRT_Detail.INVDUID AND Invoice_Detail.INVDUID = Invoice_Location.INVDUID AND Invoice_Detail.InvoiceID = Invoice_Header.InvoiceID AND Credit_Resolved_Detail.RequestHdrID = CRT_Detail.CRTUID AND Credit_Resolved_Detail.CRRUID = %ld AND Credit_Resolved_Detail.fType = 1 AND Invoice_Header.fStatus <= 2

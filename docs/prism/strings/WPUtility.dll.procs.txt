@@ -1,0 +1,9 @@
+﻿E_ArtInstructions_Delete
+E_GraphicComponent_Delete
+E_GraphicComponentType_Delete
+E_LocationSelection_SetUserDefault
+E_LocationSelection_Update
+E_StyleGraphics_Delete
+P_GMSize_SortTo
+P_Media_UpdateSortOrder
+P_ShelfLocation_Delete

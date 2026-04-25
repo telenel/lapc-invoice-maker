@@ -1,0 +1,213 @@
+﻿ GroupID in (select GroupID from POS_Groups where POS_Groups.Description like '%s%%') 
+?Update@CGXBrowserGrid@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Update@CPOSKeyboardMappingView@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Update@CPOSPayInOutView@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Update@CPosPoleDispView@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Update@CPOSQuickSKUView@@MAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Update@CPOSSetupView@@MAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Update@SECListBaseC@@UAEHHHHHH@Z
+?Update@SECTreeBaseC@@UAEHPAU_TREEITEM@@HHHH@Z
+DELETE FROM %s WHERE ReceiptTemplateID = %ld
+DELETE FROM [dbo].[Discount_Codes_Location] WHERE DiscLocID = %ld
+delete from [dbo].[POS_Groups] where GroupID = %ld
+DELETE FROM Cash_Cnt_Counts WHERE GroupID = %ld
+delete from Cash_Cnt_Group_Loc where CashCntGroupID = %ld
+delete from Cash_Cnt_Group_Loc where CashCntGroupLocID = %ld
+delete from Cash_Cnt_Groups where CashCntGroupID = %ld
+DELETE FROM Cash_Cnt_Results WHERE GroupID = %ld
+DELETE FROM Item_Tax_Type WHERE ItemTaxTypeID = %ld
+DELETE FROM Item_Tax_Type_Grouping WHERE ItemTaxTypeGrpID = %ld
+DELETE FROM Item_Tax_Type_Grouping WHERE ItemTaxTypeID = %ld
+DELETE FROM POS_Cash_Count_Shifts WHERE CashCntShiftID = %ld
+DELETE FROM POS_Cash_Count_Shifts WHERE GroupID = %ld
+delete from POS_Fee_Codes where FeeCodeID = %ld
+delete from POS_Keyboard_Mapping_Groups where MappingGroup = %d
+delete from POS_Keyboard_Mappings where (VK_Code = %d) AND (ScanCode = %d) AND (MappingGroup = %d) 
+delete from POS_Keyboard_Mappings where MappingGroup = %d
+delete from POS_MSR_Card_Types where MSRID = %d
+delete from POS_MSR_Options where MSRID = %d
+DELETE FROM POS_MSR_Options WHERE MSROID = %ld
+delete from POS_Open_History where POSID = %d
+delete from POS_QuickSKU where QuickSKU = %ld and POSID = %ld
+delete from POS_Receipt_Footer where ReceiptTemplateID = %ld
+delete from POS_Receipt_Header where ReceiptTemplateID = %ld
+delete from POS_Receipt_Template_Options where ReceiptTemplateID = %ld
+delete from POS_Receipt_Templates where ReceiptTemplateID = %ld
+delete from POS_Reg_Groupings where GroupingID = %ld
+DELETE FROM POS_Register_Access WHERE POS_Register_Access.UserID = %ld AND POS_Register_Access.RegisterID IN (SELECT RegisterID FROM POS_Registers INNER JOIN Pos_Setup ON POS_Registers.POSID = Pos_Setup.POSID WHERE Pos_Setup.LocationID = %ld)
+DELETE FROM POS_Register_Templates WHERE RegisterID = %ld
+DELETE FROM POS_Registers WHERE POS_Registers.RegisterID = %ld
+delete from POS_Setup where POSID = %d
+delete from POS_Trans_Types where TransTypeID = %ld
+delete from POS_Trans_Types_Location where TransTypeID = %ld
+delete from POS_Trans_Types_Location where TransTypeLocID = %ld
+DELETE FROM Tax_Code_Group WHERE TaxGroupID = %ld
+DELETE FROM Tax_Code_Grouping WHERE TaxCodeGroupingID = %ld
+DELETE FROM Tax_Code_Grouping WHERE TaxGroupID = %ld
+delete from Tax_Codes where TaxCodeID = %ld
+DELETE FROM Tax_Codes_Location WHERE TaxCodeLocID = %ld
+DELETE FROM Tax_Codes_Location WHERE TaxGroupID = %ld
+DELETE FROM Tax_Jurisdiction WHERE TaxGroupID = %ld
+delete from Tax_Shift_Profiles where TaxProfileID = %ld
+DELETE FROM Tax_Tables WHERE TaxTableID = %ld
+delete from Tender_Codes where TenderCodeID = %ld
+DELETE FROM Tender_Codes_BIN_Rng WHERE TenderCodeID = %ld and TenderCodeBINRngID = %ld
+delete from Tender_Codes_Location where TenderCodeID = %ld
+delete from Tender_Codes_Location where TenderCodeLocID = %ld
+delete from Tender_Codes_Multi where TenderCodeID = %ld
+DELETE FROM Tender_Codes_Multi WHERE TenderCodeID = %ld and LinkedTenderCodeID = %ld
+exec LockSettlementReportStatus %d, %d
+fDistributed <> 4 and POSID < 0x74000000 and POSID NOT IN (SELECT tcl.POSID FROM [Tender_Codes_Location] tcl WHERE tcl.TenderCodeID = ?)
+fDistributed in (1, 2, 5) and POSID < 0x71000000 and POSID NOT IN (SELECT gl.POSID FROM [Cash_Cnt_Group_Loc] gl WHERE gl.CashCntGroupID = ?)
+fDistributed in (1, 2, 5) and POSID < 0x71000000 and POSID NOT IN (SELECT tt.POSID FROM [POS_Trans_Types_Location] tt WHERE tt.TransTypeID = ?)
+fDistributed in (1,2,3,5) and (POSID < 0x71000000 or (POSID > 0x72000000 and POSID < 0x7300FFFF)) and POSID NOT IN (SELECT dcl.POSID FROM [Discount_Codes_Location] dcl WHERE dcl.DiscID = ?)
+INSERT INTO %s ([ReceiptTemplateID], [Seq], [Line], [FontID], [ReportLogoID]) VALUES (%ld, %ld, '%s', %ld, %ld)
+INSERT INTO [dbo].[Cash_Cnt_Group_Loc] ([CashCntGroupID], [POSID]) VALUES (%ld, %ld)
+INSERT INTO [dbo].[Discount_Codes_Location] ([DiscID], [POSID]) VALUES (%ld, %ld)
+INSERT INTO [dbo].[POS_MSR_Options] ([MSRID], [MSROTYPEID]) VALUES (%d, %d)
+INSERT INTO [dbo].[POS_Register_Access] ([UserID], [RegisterID]) VALUES (%ld, %ld)
+INSERT INTO [dbo].[POS_Trans_Types_Location] ([TransTypeID], [POSID]) VALUES (%ld, %ld)
+INSERT INTO [dbo].[Tax_Code_Grouping] ([TaxGroupID], [TaxCodeID]) VALUES (%ld, %ld)
+INSERT INTO [dbo].[Tender_Codes_Location] ([TenderCodeID], [POSID]) VALUES (%ld, %ld)
+INSERT INTO Cash_Cnt_Counts (GroupID,  [Date]) VALUES (%ld, getdate())
+INSERT INTO Item_Tax_Type_Grouping (ItemTaxTypeID, LocationID, POSID, TaxProfileID, TaxGroupID) VALUES (%d, %d, %d, %d, %d)
+INSERT INTO POS_Cash_Count_Shifts (GroupID, RegAccessHistID, RegisterID, CashDrawer, UserID, LogOnDate, LogOffDate) VALUES (%ld, %ld, %ld, %d, %ld, %s, %s) 
+INSERT INTO POS_Cash_Count_Shifts DEFAULT VALUES
+INSERT INTO Tax_Codes_Location ([TaxGroupID], [LocationID]) VALUES (%ld, %ld)
+insert into Tax_Jurisdiction (TaxGroupID, PostalCode, City) values(%d, %s, %s)
+INSERT INTO Tender_Codes_Multi (TenderCodeID, LinkedTenderCodeID) VALUES (%ld, %ld)
+LocationID = ? AND RegisterID NOT IN (SELECT ra.RegisterID FROM dbo.POS_Register_Access ra WHERE ra.UserID = ?)
+LocationID = ? AND TaxGroupID NOT IN (SELECT t.TaxGroupID FROM Item_Tax_Type_Grouping t  WHERE t.ItemTaxTypeID = %ld  AND t.LocationID = ? and  t.POSID = ? and t.TaxProfileID = ?)
+MSROTYPEID NOT IN (SELECT msro.MSROTYPEID FROM dbo.POS_MSR_Options msro WHERE msro.MSRID = ?)
+SELECT %s FROM %s WHERE %s = '%s'
+SELECT %s FROM %s WHERE %s = '%s' AND %s <> %ld
+SELECT * FROM dbo.VW_POS_RA_HISTORY_SS
+SELECT * FROM POS_DCC_Methods
+SELECT * FROM POS_Keyboard_Mappings WHERE (VK_Code = %d) AND (ScanCode = %d) AND (MappingGroup = %d)
+SELECT * FROM POS_QuickSKU WHERE POSID = %d AND QuickSKU = %d
+SELECT * FROM POS_Trans_Security_Level
+SELECT * FROM VW_POS_SETUP WHERE POSID <> %d and Description = '%s'
+SELECT * FROM VW_POS_SETUP WHERE POSID = %d
+SELECT * FROM VW_POS_SETUP WHERE PosNum = %d AND LocationID = %d AND POSID <> %d
+select [Description] from dbo.POS_MSR_Card_Types where [MSRID] = %ld
+select [DiscMethodID], [Description] from [Discount_Codes_Method] WHERE [fIsCostMethod] = 0
+select [DiscMethodID], [Description] from [Discount_Codes_Method] WHERE [fIsCostMethod] = 1
+select [DiscTypeID], [Description] from [Discount_Codes_Type] WHERE [fIsAvailItem] = 1
+select [DiscTypeID], [Description] from [Discount_Codes_Type] WHERE [fIsAvailTrans] = 1
+select [MSRID], [Description] from [POS_MSR_Card_Types]
+select [SignatureTypeID], [Description] from [POS_Sig_Types]
+select 1, '1' union select 2, '2' union select 3, '3'
+SELECT BarcodeTypeID, BarcodeName from POS_Receipt_Barcode_Types
+SELECT CASE WHEN EXISTS (%s) THEN 1 ELSE 0 END
+select CashCntGroupID from Cash_Cnt_Groups where Description = '%s'
+SELECT CashCntShiftID FROM POS_Cash_Count_Shifts WHERE GroupID = %ld AND RegAccessHistID = %ld AND UserID = %ld AND CashDrawer = %d AND RegisterID = %ld
+SELECT CharsPerLine FROM POS_Receipt_Fonts WHERE FontID = %ld
+SELECT CloseDate FROM POS_Open_History WHERE POSHistoryID = %d
+SELECT COL_LENGTH('Pos_Keyboard_Mappings','KeyboardCode')
+SELECT COL_LENGTH('Pos_Keyboard_Mappings','KeyName')
+select count(*)  from prism.dbo.POS_Register_Access pra inner join prism.dbo.POS_Registers as pr on pra.RegisterID = pr.RegisterID inner join prism.dbo.Pos_Setup as ps on pr.POSID = ps.POSID
+SELECT COUNT(*) FROM [dbo].[POS_Groups] WHERE Description = '%s' AND GroupID <> %ld
+SELECT COUNT(*) FROM [dbo].[POS_Registers] WHERE ReceiptKey = '%s' AND POSID = %ld AND RegisterID <> %ld
+Select COUNT(*) from [dbo].[Tender_Codes_BIN_Rng] Where TenderCodeID = %ld and StartBIN <= '%s' and '%s' <= EndBIN
+SELECT Count(*) FROM [dbo].[VW_POS_REG_ACCS_SEL_CASHIER] WHERE [SUID] = %ld AND [LocationID] = %ld
+select count(*) from inventory where sku = %d and locationid = (select LocationID from POS_setup where posID = %d)
+SELECT COUNT(*) FROM Item_Tax_Type_Grouping WHERE TaxGroupID = %ld
+SELECT Count(*) FROM Item_Tax_Type_Grouping WHERE TaxProfileID = %ld
+SELECT Count(*) FROM POS_Reg_Groupings WHERE Description = '%s' AND POSID = %ld
+SELECT COUNT(*) FROM POS_Register_Access_History WHERE RegAccessHistID = %ld AND (fPostPending = 1 or fPosted = 1)
+SELECT Count(*) FROM POS_Registers WHERE GroupingID = %ld
+SELECT Count(*) FROM POS_Registers WHERE KeyboardMappingGroup = %ld 
+SELECT COUNT(*) FROM POS_Registers WHERE RegisterName = '%s' AND POSID = %ld AND RegisterID <> %ld
+select count(*) from pos_setup where fdistributed = 2
+Select Count(*) from sequence where locationID = %d and SequenceNumber = %d and SequenceTypeID = %d
+SELECT COUNT(*) FROM Tax_Codes WHERE TaxTableID = %ld
+SELECT Count(*) FROM Tax_Codes_Location WHERE [TaxGroupID] = %ld AND [LocationID] = %ld
+SELECT Count(*) FROM Tax_Shift_Profiles WHERE Description = '%s'
+SELECT Count(*) FROM Transaction_Header WHERE TaxProfileID = %ld
+SELECT COUNT(*) FROM VW_POS_RA_HISTORY WHERE %s AND (fPostPending = 1 OR fPosted = 1) AND POSID = %ld AND dbo.fnIsDatePartEqual(LogOnDate, %s) = 1
+select count(QuickID) from POS_QuickSKU where QuickID <> %ld and POSID = %ld and QuickSKU = %ld
+SELECT CountryID, Name FROM Country
+SELECT CurrencyExID, CurrDescr FROM Currency_Exchange
+SELECT DCCID FROM VW_DCC_LOOKUP WHERE SalesCode = %ld
+SELECT DccMethod, Description FROM POS_DCC_Methods
+select Description from Acct_COA where COAID = %ld
+select Description from Cash_Cnt_Groups where CashCntGroupID = %ld
+select Description from Discount_Codes where DiscID = %ld
+SELECT Description FROM Item_Tax_Type WHERE ItemTaxTypeID = %ld
+SELECT Description FROM POS_Fee_Codes WHERE FeeCodeID = %ld 
+SELECT Description FROM POS_Groups WHERE GroupID = %ld 
+SELECT Description FROM Pos_Setup WHERE POSID = %ld
+SELECT Description FROM POS_Setup WHERE POSID = %ld 
+select Description from POS_Trans_Types where TransTypeID = %ld
+SELECT Description FROM Tender_Codes WHERE TenderCodeID = %d
+select Description from Tender_Codes where TenderCodeID = %ld
+select DiscID from Discount_Codes where Description = '%s' and fTranDisc = %d
+select distinct LocationID from POS_Setup where POSID = %d 
+select distinct POSID, POSDesc from VW_POS_REG_ACTIVITY
+select distinct POSID, POSDescription from VW_POS_TENDER_QUEUE_SETTLEMENT
+select fBitFlag from tender_auth_types where TenderAuthID = %d
+select FeeCodeID from VW_POS_NON_MERCH where Description = '%s' and LocationID = %ld
+select FeeCodeID from VW_POS_PAY_IN_OUT where Description = '%s' and LocationID = %ld
+select FeeCodeTypeID, Description from POS_Fee_Code_Type WHERE fPayCode = 1
+select fSettlementSuccess from VW_POS_OPEN_HIST_MAX_ALL where POSHistoryId = %d
+select GroupID, Description from POS_Groups where GroupTypeID = 4 order by Description
+SELECT GroupTypeID, Description FROM dbo.Pos_Group_Types ORDER BY Description
+select ItemTaxTypeID from Item_Tax_Type where Description = '%s'
+SELECT LocationID FROM POS_Setup WHERE POSID = %d
+SELECT LocationID FROM POS_Setup WHERE POSID = %ld 
+select LocationID, ShortDescription from Location where LocationID = %d
+SELECT LocationID, ShortDescription FROM Location where LocationID in (%s)
+SELECT MappingGroup, Description FROM POS_Keyboard_Mapping_Groups
+SELECT MAX(MappingGroup) FROM POS_Keyboard_Mapping_Groups
+SELECT MAX(POSID) AS MaxPOSID FROM VW_POS_SETUP
+SELECT MAX(PosNum) AS MaxPosNum FROM VW_POS_SETUP WHERE LocationID = %d
+select MSRID from POS_MSR_Card_Types where Description = '%s'
+SELECT OpenDate FROM POS_Open_History WHERE POSHistoryID = %d
+SELECT POSID FROM POS_Open_history WHERE POSHistoryID = %d
+Select POSID from POS_Setup where RTRIM(Description) = '%s'
+select POSID from VW_POS_SETUP where Description = '%s'
+select POSID, Description from POS_Setup
+SELECT POSID, Description from POS_Setup WHERE fDistributed <> 4 and ((LocationID = %d and POSID < 0x71000000) OR POSID = (0x72000000 + %d) OR POSID = (0x73000000 + %d)) ORDER BY POSID
+select POSID, Description from POS_Setup where LocationId = %d and POSID < 0x71000000 and fDistributed in (1,2,5)
+Select POSID, description from pos_setup where locationid = %d and posid < 100000000
+Select POSID, description from pos_setup where locationid = -1
+SELECT POSID, Description FROM POS_Setup WHERE POSID < 0x71000000 and fDistributed in (1, 2, 5) AND 
+SELECT POSID, Description FROM POS_Setup where POSID = -1
+select PSDTID, Name from Pos_Setup_DistType
+select ReceiptTemplateID, TemplateName from POS_Receipt_Templates where ReceiptTypeID = %d
+select ReceiptTypeID, TypeName from POS_Receipt_Types
+SELECT RegisterName FROM POS_Registers WHERE RegisterID = %ld 
+SELECT RegTypeID, Description FROM POS_Register_Type
+SELECT ReportLogoID, Description FROM VW_POS_REPORT_LOGO ORDER BY Description
+SELECT SalesCode FROM VW_DCC_LOOKUP WHERE DCCID = %ld
+select SequenceTypeDescription from VW_POS_SEQ_SERIES where SequenceTypeID = %d
+select ShortDescription from location where locationid = %ld
+select st.StateCode from Store_Information_Table sit inner join State_Code st on st.StateAbbrev = sit.MailState where LocationId = %d
+SELECT StackOnTxCdID FROM Tax_Code_Grouping WHERE TaxCodeGroupingID = %ld
+SELECT TaxCodeDesc FROM Tax_Codes WHERE TaxCodeID = %ld 
+select TaxCodeID from Tax_Codes where TaxCodeDesc = '%s'
+select TaxGroupDesc from Tax_Code_Group where TaxGroupID = %ld
+select TaxGroupID from Tax_Code_Group where TaxGroupDesc = '%s'
+select TaxJurisdictionID from Tax_Jurisdiction where TaxGroupID = %d and PostalCode %s and City %s
+select TaxTableID from Tax_Tables where TaxTableDesc = '%s'
+SELECT TaxTypeID, Description FROM Tax_Type
+select TenderAuthId, Description from Tender_Auth_Types where fDisplay = 1 order by Description
+select TenderCodeID from Tender_Codes where Description = '%s'
+SELECT TenderCodeID, Description FROM dbo.Tender_Codes WHERE TenderCodeID <> %ld and  (TenderCodeID NOT IN  (SELECT LinkedTenderCodeID   FROM Tender_Codes_Multi   WHERE TenderCodeID = %ld))
+select TenderQueId, Description from Tender_Queues
+SELECT TOP 1 CashCntShiftID FROM POS_Cash_Count_Shifts WHERE GroupID is null ORDER BY CashCntShiftID DESC
+SELECT TOP 1 FontID FROM POS_Receipt_Fonts WHERE PrinterTypeID = %ld ORDER BY Seq
+select TransTypeID from POS_Trans_Types where Description = '%s'
+Select TypeName from POS_Receipt_Types where ReceiptTypeID = %ld
+TaxCodeID NOT IN (SELECT tcg.TaxCodeID FROM [dbo].[Tax_Code_Grouping] tcg WHERE tcg.TaxGroupID = ?)
+UPDATE Cash_Cnt_Counts SET [Date] = getdate(), fCompleted = 1 WHERE GroupID = %ld
+UPDATE Cash_Cnt_Counts SET fPosted = 1 WHERE GroupID = %ld
+UPDATE POS_Cash_Count_Shifts SET GroupID = CashCntShiftID, RegAccessHistID = %ld, RegisterID = %ld, CashDrawer = %d, UserID = %ld, LogOnDate = %s, LogOffDate = %s WHERE CashCntShiftID = %ld AND GroupID is null
+update POS_Register_Access set fCanOverride = %d where UserID = %d and RegisterID in (select RegisterID from POS_Registers pr inner join POS_Setup ps on ps.POSID = pr.POSID where ps.LocationID = %d)
+UPDATE POS_Register_Access_History SET fPostPending = 0 WHERE RegAccessHistID = %ld
+UPDATE POS_Register_Access_History SET fPostPending = 0%s WHERE RegAccessHistID = %ld
+UPDATE POS_Register_Access_History SET fPostPending = 1 WHERE RegAccessHistID = %ld
+UPDATE Tax_Code_Grouping SET StackOnTxCdID = 0 WHERE StackOnTxCdID = %ld
+UPDATE VW_POS_RA_HISTORY SET fPostPending = 0 WHERE %s AND POSID = %ld AND dbo.fnIsDatePartEqual(LogOnDate, %s) = 1
+UPDATE VW_POS_RA_HISTORY SET fPostPending = 0%s WHERE %s AND POSID = %ld AND dbo.fnIsDatePartEqual(LogOnDate, %s) = 1
+UPDATE VW_POS_RA_HISTORY SET fPostPending = 1 WHERE %s AND POSID = %ld AND dbo.fnIsDatePartEqual(LogOnDate, %s) = 1

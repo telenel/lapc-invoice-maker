@@ -1,0 +1,436 @@
+﻿ and AgencyID not in(select NBCPAgencyID from Rental_Setup_Pos where NBCPAgencyID is not null)
+ AND ColorID IN ( SELECT Color FROM GeneralMerchandise WHERE SKU = %d )
+ AND ColorID IN ( SELECT Color FROM GeneralMerchandise WHERE SKU IN (
+ AND DeptID IN (SELECT Distinct DeptID From CR_Department WHERE CampusID = %ld)
+ AND DeptID IN (SELECT Distinct DeptID From VW_CR_LOCATIONS WHERE TermID = %ld)
+ AND POID IN (SELECT POID FROM PO_Location WHERE LocationID = %ld)
+ AND UCourseID IN (SELECT UCourseID FROM CR_Course WHERE CourseName = '%s')
+%s.SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode LIKE '%s%%')
+%s.Sku in (select v.Sku from GmCatalogNumber_vw v where v.CatalogNumber Like '%s%%')
+(select LastName from Customer_Table where CustomerID in (select CustomerID from Customer_Address where CustomerAddrID = CH.BillAddrID)),
+(select LastName from Customer_Table where CustomerID in (select CustomerID from Customer_Address where CustomerAddrID = CH.ShipAddrID)),
+?Update@?$CG3SerialNumberDetailBase@VCG3XRecordViewBase@@@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Update@?$CG3SerialNumberDetailBase@VCG3XRecordWndBase@@@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Update@CG3AutoIDSet@@UAEHXZ
+?Update@CG3ModuleBar@@QAEXXZ
+?Update@CGXBrowserGrid@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Update@CItemSet@@UAEHXZ
+?Update@SECListBaseC@@UAEHHHHHH@Z
+?Update@SECTreeBaseC@@UAEHPAU_TREEITEM@@HHHH@Z
+AgencyID not in(select NMRPAgencyID from Rental_Setup_Pos where NMRPAgencyID is not null)
+Are you sure you want to merge this customer?
+Cannot exit.  Need to select %ld serial item(s).
+Cannot merge customer into itself.
+CustomerID in (select CustomerID from Acct_Memb_Acct_Cust)
+CustomerID in (select CustomerID from Customer_Table where AccountNumber LIKE '%s%%')
+CustomerID in (select CustomerID from Customer_Table where StudentAccount LIKE '%s%%')
+CustomerID not in (select CustomerID from CR_Enrollment)
+delete from bip_temp where queryid = %ld
+delete from buyback_pricetagqueue where sessionid = %ld and buyerlocid = %ld
+delete from customer_location where CustomerID = %ld and locationid = %ld
+delete from EQListData where EQListId = %d
+DELETE FROM Item_Xref_Dups WHERE Barcode = '%s' AND SKU <> %ld
+DELETE FROM Item_Xref_Dups WHERE Barcode = '%s' AND SKU <> %ld AND SKU <> %ld
+DELETE FROM prism_security.dbo.MenuSecurity WHERE MenuSecurityID = %ld
+delete from Purch_AddConfig_Location where PurchAddCfgID = %ld
+delete from Report_SaveParams_Course where RSPDID = %d
+delete from Report_SaveParams_DCC where RSPDID = %d
+delete from ReportGenGroup where RGGID = %d
+delete from ReportGenGroupSummary where RGGID = %d
+DELETE FROM SerialNumberDetail WHERE SerialDID = %ld
+delete from StockAdjustReason where StockAdjReasonID=%d
+delete from systemlog where slid = %ld
+DeptID IN (SELECT Distinct DeptID From CR_Department WHERE CampusID = %d)
+DeptID IN (SELECT Distinct DeptID From VW_CR_LOCATIONS WHERE TermID = %d)
+Deselect '%s' and select another Serial #.
+EXEC E_ArtInstructions_Delete %d
+EXEC E_GraphicComponent_Delete %d
+EXEC E_GraphicComponentType_Delete %d
+EXEC E_LocationSelection_SetUserDefault %d, %d, %d
+EXEC E_LocationSelection_Update %d, %d, %d
+EXEC E_StyleGraphics_Delete %d
+exec P_GMSize_SortTo %d, %d
+EXEC P_Media_UpdateSortOrder 
+EXEC P_ShelfLocation_Delete %d
+FROM VW_EQ_ITEM WHERE SKU IN (SELECT SKU FROM (
+INSERT CMD_SalesEvent_RefreshItems SELECT 
+INSERT CMD_SalesEventItems_SynchLocations SELECT 
+insert into BIP_Temp (queryid, sku, typeid, descr, sys, impmfg, bdtyp, edcolor, cpsize, isbncat, vendor, price, author, title, bookkey) values (%ld, 0, 1, '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s')
+insert into bip_temp(descr) values('NEW SEARCH PLACE-HOLDER')
+INSERT INTO Course_Selection (CrsSelGrpID, CrsID, Mask, TermID) VALUES (%d, %d, %d, %d) 
+INSERT INTO dbo.Stock_Adjustment_Table (Stock_Adjustment_Table.SKU, Stock_Adjustment_Table.LocationID, Stock_Adjustment_Table.UserID, Stock_Adjustment_Table.ModuleID, Stock_Adjustment_Table.ReasonID, Stock_Adjustment_Table.Qty, Stock_Adjustment_Table.AdjDate) VALUES (%ld, %ld, %ld, %d, %ld, %ld, '%0.2d/%0.2d/%0.2d %0.2d:%0.2d:%0.2d')
+INSERT INTO DCC_Selection (DCCSelGrpID, DCCID, DCCMask, Department, Class) VALUES (%d, %d, %d, %d, %d) 
+INSERT INTO OutgoingMessages (MsgType, MsgSubType, Status, POorWantListID, CreatedDate, ScheduledDate, LocationID, fHistory, fMergedLoc) SELECT DISTINCT 1, 2, 1, %ld, GETDATE(), GETDATE(), PO_Location.LocationID, 0, 0 FROM PO_Location, PO_Detail WHERE PO_Location.POD_ID = PO_Detail.POD_ID AND PO_Detail.POID = %ld
+insert into Report_SaveParams_Course (RSPDID, CourseId, Mask, TermId) values(%d, %d, %d, %d)
+insert into Report_SaveParams_DCC (RSPDID, DCCID, DCCIDMask) values(%d, %d, %d)
+insert into ReportSelectionValue(ReportSelectionId, Value) values(%d, %d)
+INSERT INTO SerialNumberHeader (LocationID, SKU, Description, ProductIDCode, WarrantyID, WarrantyDays, fRental, POSPrice, Template, KeepUntil) values(%d, %d, '%s', %d, %d, %d, %d, %f, '%s', '%s')
+Item Find - [%s] - Select Item
+Merge completed successfully.
+Please enter an existing XREF/Serial Number or select a row.
+Please select a single course only.
+SalesEventID IN ( SELECT SalesEventID FROM SalesEventItems WHERE SKU IN (%s) )
+SalesEventID IN (SELECT d.SalesEventID FROM VW_SalesEventItems d INNER JOIN SalesEventAux a ON a.SalesEventID = d.SalesEventID INNER JOIN LocationSelectionLocations lsl ON lsl.LocationSelectionID = a.LocationSelectionID INNER JOIN VW_INVENTORY_STATUS_CODE_SKU_LOCATIONS s ON s.SKU = d.SKU AND s.LocationID = lsl.LocationID WHERE s.InvStatusCodeID %s )
+SalesEventID IN (SELECT d.SalesEventID FROM VW_SEASON_CODE_SKUS s INNER JOIN VW_SalesEventItems d ON d.SKU = s.SKU AND s.SeasonCode LIKE '%s%%')
+SalesEventID IN (SELECT d.SalesEventID FROM VW_STYLE_SKUS m INNER JOIN VW_SalesEventItems d ON d.SKU = m.SKU AND m.StyleID = %d)
+SalesEventID in (select SalesEventID from SalesEventAux sa left join LocationSelectionLocations lsl on sa.LocationSelectionID = lsl.LocationSelectionID where (isnull(lsl.LocationID,0) = 0) or (lsl.LocationID in (%s)))
+SalesEventID IN (SELECT SalesEventID FROM VW_SalesEventItems WHERE BookKey LIKE '%s%%' AND Subsystem IN (2,3))
+SalesEventID IN (SELECT SalesEventID FROM VW_SalesEventItems WHERE REPLACE(ISBN13, '-','') LIKE '%s%%')
+SalesEventID IN (SELECT SalesEventID FROM VW_SalesEventItems WHERE SKU = %d)
+SalesEventID IN (SELECT SalesEventID FROM VW_SalesEventItems WHERE SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%'))
+Select
+SELECT 
+SELECT %s, %s%s FROM %s
+SELECT %s, %s, %s%s FROM %s
+SELECT * FROM State_Code 
+select * from VW_SYSLOG_NAVIGATOR
+select * from VW_SYSLOG_NAVIGATOR order by locationid, applicationid, moduleid
+SELECT [DayOfWeek], DayofWeekText FROM VW_DaysOfWeek ORDER BY DayOfWeek
+SELECT [Description] FROM VW_PriceModificationDescriptions WHERE PriceModificationID = 
+SELECT [Month], MonthText FROM VW_Months ORDER BY [Month]
+Select a sequence series.
+Select a single location
+SELECT Abbreviation FROM Binding WHERE BindingID = %d
+SELECT AccountNumber FROM Customer_Table WHERE FirstName = '%s' and LastName = '%s'
+SELECT AcctCategoryTypeID, CategoryDesc FROM Acct_Financial_Category_Type 
+SELECT BindingID FROM Binding WHERE Abbreviation = '%s'
+SELECT Bookkey FROM Buyers_Guide_Adopted WHERE SKU = %d and BGVendorID = 1
+select bpuid from bip_temp where descr = 'new search place-holder' order by bpuid desc
+select bpuid from bip_temp where queryid = %ld and isbncat = '%s'
+select bpuid, TypeID, Descr, Sys, ImpMfg, BdTyp, EdColor, CpSize, ISBNCat, Vendor from bip_temp where QueryID = %ld and descr <> 'NEW SEARCH PLACE-HOLDER'
+SELECT CampusID FROM CR_Term WHERE TermName = '%s'
+SELECT CASE WHEN EXISTS ( SELECT * FROM VW_CourseSavedSelections WHERE CrsSelGrpID = 
+SELECT CASE WHEN EXISTS ( SELECT * FROM VW_DccSavedSelections WHERE DCCSelGrpID = 
+SELECT CASE WHEN EXISTS (SELECT * FROM LocationSelectionLocations WHERE LocationID = 
+SELECT CASE WHEN NOT EXISTS ( SELECT * FROM Style_Location_Components WHERE StyleComponentID = 
+select CatalogItemID from CatalogItems where CatalogProductFamilyID = %d and sku = %d
+SELECT CatalogNumber FROM GeneralMerchandise WHERE SKU = %d
+SELECT Category, CatName FROM DCC_Category WHERE (Department = %ld) AND (Class = %ld) ORDER BY Category
+select CCNumber, CCExpDate, '', isnull(th.TranNumber,rtrim(rh.comment)) from rental_history rh left join transaction_detail td on td.TranDtlID = rh.TranDtlId left join transaction_header th on th.transactionid = td.transactionid where RentalHId = %d
+select CDUID from CD_Detail where DISUID = %d
+select CDUID from CD_Header where DSCHID = %ld AND fType = %d
+SELECT Class, ClassName FROM DCC_Class WHERE (Department = %ld) ORDER BY Class
+SELECT COL_LENGTH('%s','%s')
+SELECT CollectiveName FROM VW_Media_CollectiveName WHERE MediaSetID = 
+SELECT ColorID FROM Color WHERE Description = '%s'
+SELECT ColorID, Description FROM Color WHERE fDisable = 0 ORDER BY Description, ColorID
+SELECT Colorref, Name FROM ReportHeaderColor 
+SELECT CONVERT(char,CR_Header.DeptID) FROM CR_Header INNER JOIN CR_Department ON CR_Header.DeptID = CR_Department.DeptID WHERE DeptName like '%s' and CONVERT(char,TermID) = '%s'
+SELECT CONVERT(char,DeptID) FROM CR_Department WHERE DeptID = %ld
+SELECT CONVERT(char,TermID) FROM CR_Term WHERE TermID = %ld
+SELECT CONVERT(char,TermID) FROM CR_Term WHERE TermName like '%s'
+SELECT CONVERT(char,UCourseID) FROM CR_Course WHERE CourseName like '%s' and CONVERT(char,TermID) = '%s' and CONVERT(char,DeptID) = '%s'
+SELECT CONVERT(char,UCourseID) FROM CR_Course WHERE UCourseID = %ld
+select count(*) from %s where %s
+select count(*) from acct_apply where customerid = %ld
+SELECT Count(*) FROM CD_Reasons WHERE ReasonText = '%s'
+SELECT Count(*) FROM CD_Reasons WHERE ReasonText = '%s' AND fDisable = 0
+SELECT Count(*) FROM CR_Locations_Detail as CRLD1 WHERE CRLUID = %ld AND DeptID IN (SELECT DeptID FROM CR_Locations_Detail as CRLD2 where CRLD2.CRLUID = %ld)
+select count(*) from customer_location where customerid = %ld and locationid = %ld
+SELECT Count(*) FROM Customer_Table WHERE AccountNumber = '%s'
+SELECT Count(*) FROM dbo.Problem_Notifications_Reasons WHERE Name = '%s'
+SELECT Count(*) FROM dbo.Problem_Notifications_Reasons WHERE Name = '%s' AND fDisable = 0
+SELECT Count(*) FROM dbo.SystemParameters WHERE ParamType = 5000 AND ParamValue = 1
+SELECT Count(*) FROM dbo.VendorDiscountCodes WHERE DiscCode = '%s' AND VendorID = %ld AND Subsystem = %d
+SELECT Count(*) FROM dbo.VendorDiscountCodes WHERE DiscCode = '%s' AND VendorID = %ld AND Subsystem = %d AND fDisable = 0
+SELECT Count(*) FROM GMSize WHERE Description = '%s'
+SELECT Count(*) FROM GMSize WHERE Description = '%s' AND fDisable = 0
+select count(*) from Mathews_books
+select count(*) from outgoingmessages where MsgType = 1 AND MsgSubType = 2 AND POorWantListID = %ld AND fHistory = 0
+SELECT Count(*) FROM prism_security.dbo.MenuSecurity WHERE ModuleUID = %ld AND LocationID = %ld
+SELECT Count(*) FROM prism_security.dbo.MenuSecurity WHERE ModuleUID = %ld AND LocationID = %ld AND MenuSecurityID <> %ld
+SELECT Count(*) FROM ReportLogo WHERE Description = '%s'
+SELECT COUNT(*) FROM SerialNumberDetail WHERE %s
+select count(*) from SerialNumberDetail where SerialDID = %ld AND CustomerID = 0 AND TrackingID = %ld AND fTrackingType = %d and SaleDate > '1970-01-01' 
+select count(*) from SerialNumberDetail where SerialID = %ld AND CustomerID = %ld AND TrackingID = %ld AND fTrackingType = %d and (TranDtlID is null or TranDtlID not in (select TranDtlID from Transaction_Detail where SKU = %ld and TransactionID in (select TransactionID from Transaction_Header where MOReceiptID = %ld) ) )
+select count(*) from Stock_Adjustment_Table where ReasonID=%d
+select count(*) from StockAdjustReason
+select count(*) from StockAdjustReason_vw where Reason = '%s' 
+SELECT Count(*) FROM VendorMaster WHERE VendorID = 0
+SELECT Count(*) FROM VW_FISC_INV_POST V INNER JOIN Inventory I ON V.LocationID = I.LocationID AND V.SKU = I.SKU AND V.LocationID = %ld
+select count(*)from dbo.sysobjects where id = object_id(N'[dbo].[Pos_Export]') and OBJECTPROPERTY(id, N'IsUserTable') = 1
+select count(BPUID) from BIP_Temp where QueryID = %ld and ISBNCat = '%s'
+select count(slid) from systemlog where %s
+select count(Taborder) from ReportSortOptions where REPUID = %d
+select CourseId, Mask, TermId from Report_SaveParams_Course where RSPDID = %d
+SELECT CourseReqID, CourseSection FROM CR_Header WHERE (TermID = %ld) AND (DeptID = %ld) AND (UcourseID = %ld) AND (fDisableFlg = 0) ORDER BY CourseSection
+SELECT CourseReqID, CourseSection FROM CR_Header WHERE (TermID = %ld) AND (DeptID = %ld) AND (UcourseID = %ld) ORDER BY CourseSection
+SELECT CR_Campus.CampusName FROM dbo.CR_Term CR_Term, dbo.CR_Campus CR_Campus WHERE CR_Term.TermID = %ld AND CR_Term.CampusID = CR_Campus.CampusID
+SELECT CR_Course.UCourseID FROM CR_Course INNER JOIN CR_Header ON CR_Course.UCourseID = CR_Header.UCourseID WHERE CourseReqID = %ld 
+SELECT CRLUID FROM CR_Locations WHERE LocationID = %ld AND TermID = %ld 
+SELECT CrsID, Mask, TermID FROM Course_Selection WHERE CrsSelGrpID = 
+select cst.TenderAccount, cst.ExpDate, cst.CID, csh.ReceiptNumber from catalog_sales_tender cst inner join catalog_sales_Header csh on csh.receiptid = cst.receiptid where cst.CatSaleTenderId = %d
+select CurrencyExId from VendorMaster where VendorId = %d
+SELECT CurrencyExID, CurrDescr FROM Currency_Exchange
+select customeraddrid from customer_address where customerid = %ld and addrdesc is null
+select customeraddrid from customer_address where customerid = %ld and fBillAddr = %ld order by customeraddrid asc
+select customeraddrid from customer_address where customerid = %ld and fBillAddr = %ld order by customeraddrid desc
+select customeraddrid from customer_address where customerid = %ld and fBillAddr in (%ld,%ld) order by customeraddrid asc
+select customeraddrid from customer_address where customerid = %ld and fBillAddr in (%ld,%ld) order by customeraddrid desc
+SELECT CustomerID FROM Catalog_Sales_Header WHERE ReceiptID = %d
+Select CustomerID from Customer_Table where AccountNumber = '%s'
+select CustomerID from SerialNumberDetail where SerialDID = %ld
+SELECT CustomerID FROM Transaction_Header WHERE TransactionId = %d
+SELECT d.POID FROM PO_Location l INNER JOIN PO_Detail d ON d.POD_ID = l.POD_ID AND l.PODL_ID = %d
+select dbo.buyback_pricetagqueue.BBPTQID from dbo.buyback_pricetagqueue where sessionid = %ld and buyerlocid = %ld order by BBPTQID DESC
+SELECT dbo.fnQtyWithOrderIncrement(%d, %d)
+select DCCID, DCCIDMask from Report_SaveParams_DCC where RSPDID = %d
+SELECT DCCID, DCCMask FROM DCC_Selection WHERE DCCSelGrpID = 
+SELECT Department, DeptName, Subsystem FROM DCC_Department ORDER BY Department
+SELECT DeptDesc FROM CR_Department WHERE DeptID = %ld
+SELECT DeptID FROM CR_Course WHERE TermID = %ld AND UCourseID = %ld 
+SELECT DeptID FROM CR_Header WHERE CourseReqID = %ld 
+SELECT DeptName FROM VW_DCC_LOOKUP WHERE 
+SELECT Description FROM VW_ITM_MASTER WHERE SKU = %ld
+SELECT Discount FROM Buyers_Guide_Adopted WHERE SKU = %d and BGVendorID = 1
+SELECT DISTINCT CR_Course.UCourseID, CourseName FROM CR_Course INNER JOIN CR_Header ON CR_Course.UCourseID = CR_Header.UCourseID WHERE (CR_Course.TermID = %ld) AND (CR_Course.DeptID = %ld) ORDER BY CourseName
+SELECT DISTINCT Location.LocationID, ShortDescription FROM Location  INNER JOIN Inventory ON Inventory.LocationID = Location.LocationID  INNER JOIN Matrix_Detail ON Inventory.SKU = Matrix_Detail.SKU  WHERE Matrix_Detail.MatrixID = %d
+SELECT DISTINCT prism_security.dbo.DatasetType.DatasetTypeID, prism_security.dbo.DatasetType.DatasetTypeDesc FROM prism_security.dbo.Dataset INNER JOIN prism_security.dbo.DatasetType ON prism_security.dbo.Dataset.DatasetTypeID = prism_security.dbo.DatasetType.DatasetTypeID INNER JOIN prism_security.dbo.ModuleSecurity ON prism_security.dbo.Dataset.DatasetTypeID = prism_security.dbo.ModuleSecurity.DatasetTypeID WHERE ApplicationID = %d and prism_security.dbo.ModuleSecurity.ModuleUID = %ld
+SELECT DISTINCT T.Department, T.DeptName, T.Subsystem FROM DCC_Department T INNER JOIN DeptClassCat D ON   D.Department = T.Department WHERE   T.Subsystem = %d %s ORDER BY T.Department
+SELECT DISTINCT VW_CRS.DeptID, VW_CRS.Deptname FROM VW_CRS WHERE VW_CRS.TermID = %ld ORDER BY VW_CRS.DeptName
+SELECT DownAttribID FROM Matrix_Header WHERE MatrixID =%d
+select DSCDID from CD_Detail where DISUID = %d
+select EmailAddress from Store_Information_Table where LocationId = 
+SELECT EmailTemplateId, EmailTemplate FROM EmailTemplate WHERE EmailTemplateTypeId = %d ORDER BY EmailTemplate
+SELECT EQFunctionID * 10 + fAllowUpdates, FuncDesc FROM EQFunction
+SELECT EQListSQL FROM EQListData WHERE EQListID = %d
+SELECT fActive FROM ReportCustom INNER JOIN ReportMaster ON ReportCustom.REPUID = ReportMaster.REPUID WHERE ReportID = %ld 
+SELECT fActiveFlg FROM CR_Locations WHERE LocationID = %ld AND fOpenFlg = 1 AND TermID = %ld
+select fAdoptISBN13 from Buyers_Guide_Vendors where BGVendorID = %d
+Select fAllowMultiSeries FROM Sequence_Type WHERE SequenceTypeID = %ld
+SELECT fARGiftCertificate FROM Customer_Table WHERE CustomerID = '%d'
+select fargiftcertificate from customer_table where customerid = %ld
+select fCanBatchPrint from ReportMaster where ReportID = %ld
+select FileName from ReportMaster where REPUID = %d
+SELECT FilterName FROM ItemFindSettings WHERE ItemFindSettingsID = 
+SELECT fInactiveFlag FROM VendorMaster WHERE VendorID = %d
+select fisbookbinding from binding where abbreviation = '%s'
+SELECT fOpenFlg FROM CR_Locations WHERE LocationID = %ld AND TermID = %ld
+SELECT FuncDesc, fAllowUpdates FROM EQFunction WHERE EQFunctionID = %d
+SELECT GraphicComponentTypeID, Tag FROM VW_GraphicComponentTags ORDER BY SortOrder
+SELECT GroupName FROM Location_Groups WHERE LocationGroupID = 
+select imprint from vendorisbn where vendorid = %ld and isbnprefix = left('%s', len(isbnprefix))
+select INVLUID from Invoice_Location where INVDUID = %ld
+SELECT InvStatusCodeID, StatusCodeName FROM InventoryStatusCodes
+SELECT ISBN FROM Buyers_Guide_Adopted WHERE SKU = %d and BGVendorID = 1
+select isnull(Abbreviation, '') from Binding where Name = '%s'
+select isnull(PatchLevel,0) from prism_security.dbo.Applications where ApplicationID = %d
+select len(vendoraddress.telexnumber) from vendoraddress, po_header where vendoraddress.vendorid = po_header.vendorid and po_header.poid = %ld and vendoraddress.addressid = 0 and vendoraddress.subsystem = po_header.subsystem
+SELECT ListPrice FROM Buyers_Guide_Adopted WHERE SKU = %d and BGVendorID = 1
+SELECT LocationID FROM Location
+SELECT LocationID FROM Location WHERE StoreNumber = %d
+SELECT LocationID FROM Location_Grouping WHERE LocationGroupingID = 
+SELECT LocationID FROM SerialNumberHeader WHERE SerialID IN (SELECT SerialID FROM SerialNumberDetail WHERE SerialDID = %ld)
+SELECT LocationID FROM Style_Locations WHERE StyleLocationID = %d
+SELECT LocationID, Description FROM Location
+select LocationId, Description from Location where LocationId in (%s) order by SortOrder
+SELECT LocationID, Description FROM prism_security.dbo.VW_MENU_SEC_LOCATIONS
+select LocationSelectionID from SalesEventAux where SalesEventID = 
+SELECT LocationSelectionViewID FROM LocationSelections WHERE LocationSelectionID = 
+SELECT LocationSelectionViewID, LocationSelectionView FROM LocationSelectionViews ORDER BY LocationGroupTypeID, LocationSelectionView, LocationSelectionViewID
+Select Logo
+SELECT LongDescriptionID FROM VW_LongDescriptions WHERE LongDescriptionSetID = 
+SELECT LTRIM(RTRIM(ParamValue)) FROM SystemParameters WHERE ParamType = 703 AND LocationID = 
+SELECT LTRIM(RTRIM(TermName)) + '.' + LTRIM(RTRIM(DeptName)) + '.' + LTRIM(RTRIM(CourseName)) + '.' + LTRIM(RTRIM(CourseSection)) FROM CR_Header INNER JOIN CR_Department ON CR_Header.DeptID = CR_Department.DeptID INNER JOIN CR_Term ON CR_Header.TermID = CR_Term.TermID INNER JOIN CR_Course ON CR_Header.UcourseID = CR_Course.UcourseID WHERE CourseReqID = %ld 
+SELECT LTRIM(RTRIM(TermName)) + '.' + LTRIM(RTRIM(DeptName)) + '.' + LTRIM(RTRIM(CourseName)) FROM CR_Course INNER JOIN CR_Department ON CR_Course.DeptID = CR_Department.DeptID INNER JOIN CR_Term ON CR_Course.TermID = CR_Term.TermID WHERE UCourseID = %ld 
+SELECT LTRIM(RTRIM(TermName)) + '.' + LTRIM(RTRIM(DeptName)) FROM CR_Term, CR_Department WHERE TermID = %ld AND DeptID = %ld 
+SELECT Matrix_Header.MatrixID, Description FROM Matrix_Header INNER JOIN Matrix_Detail ON Matrix_Detail.MatrixID = Matrix_Header.MatrixID WHERE Matrix_Detail.SKU = %d
+SELECT MatrixID, Description FROM Matrix_Header WHERE MatrixID = %d
+SELECT MAX(ItemNumber) FROM SerialNumberDetail WHERE SerialID = %d
+SELECT MAX(POID) FROM PO_Header where PONumber like '%s' and VendorId = %d
+SELECT Max(TermID) FROM CR_Term WHERE CampusID = %ld
+SELECT Max(TermName) FROM CR_Term WHERE CampusID = %ld
+SELECT MediaDisplayTypeID, MediaDisplayType FROM MediaDisplayTypes ORDER BY SortOrder
+SELECT MediaTypeID, MediaType FROM MediaTypes ORDER BY SortOrder
+SELECT MenuID, ReportID, MenuText FROM VW_REPORT_MASTER 
+select MfgSerialNumber from SerialNumberDetail where SerialDID = %ld 
+select modiscid, description from mo_discount_codes
+select modiscid, description from mo_discount_codes where locationid = %ld
+SELECT MOReceiptID FROM Transaction_Header WHERE TransactionId = %d
+SELECT Name FROM Subsystem_Table WHERE Subsystem = %d
+SELECT OrdinalID, Ordinal FROM Recurrence_Ordinals ORDER BY SortOrder
+select PackageDID, SKU, Quantity from PackageDetail where PackageID in (select PackageID from PackageHeader where SKU = %ld) and SKU in (select SKU from SerialNumberHeader where LocationID = %d) 
+select ParamValue from SystemParameters where LocationId = 0 and ParamType = 5004
+select ParamValue from SystemParameters where LocationID = 0 and ParamType = 5005
+select ParamValue from SystemParameters where LocationID = 0 and ParamType = 5010
+select ParamValue from SystemParameters where LocationID = 0 and ParamType = 5011
+select ParamValue from SystemParameters where LocationID = 0 and ParamType = 5012
+select ParamValue from SystemParameters where LocationID = 0 and ParamType = 5013
+select ParamValue from SystemParameters where LocationId = 0 and ParamType = 5014
+select ParamValue from SystemParameters where LocationID = 0 and ParamType = 5015
+select ParamValue from SystemParameters where LocationID = 0 and ParamType = 5016
+select ParamValue from SystemParameters where LocationID = 0 and ParamType = 5017
+select ParamValue from SystemParameters where LocationID = 0 and ParamType = 86
+SELECT ParamValue FROM SystemParameters WHERE ParamType = 120
+SELECT ParamValue FROM SystemParameters WHERE ParamType = 121
+SELECT ParamValue FROM SystemParameters WHERE ParamType = 122
+select ParamValue from SystemParameters where ParamType = 4221 and LocationId = 0
+select ParamValue from SystemParameters where ParamType = 4222 and LocationId = 0
+SELECT Paramvalue FROM SystemParameters WHERE Paramtype = 5006 
+SELECT Paramvalue FROM SystemParameters WHERE Paramtype = 5007 
+SELECT PatternID, Pattern FROM Recurrence_Patterns ORDER BY SortOrder
+SELECT PO_Header.ReceiveDate FROM dbo.PO_Header PO_Header WHERE PO_Header.POID = %ld
+select pol.RecvQty from PO_Location pol inner join PO_Detail pod on pol.POD_ID = pod.POD_ID where pod.poid = %d and pod.SKU = %d and pol.LocationId = %d
+SELECT PONumber, PODate, ReceiveDate, POID FROM PO_Header
+SELECT POSID, Description FROM POS_SetUP 
+select PrinterName from TagTypePrinter where ParentId = %d and TTPTId = %d
+select PrinterName from TagTypePrinter where ParentId = 1 and TTPTId = 3
+select PrinterPaperSource from TagTypePrinter where ParentId = %d and TTPTId = 2
+select PrinterPort, PrinterName, PrinterDevice from TagTypePrinter where ParentId = %d and TTPTId = %d
+SELECT PrismUser.SUID, PrismUser.Name FROM prism_security.dbo.PrismUser PrismUser 
+select psacid, description from packagestockadjustcode order by psacid asc
+SELECT PurchAddCfgID FROM Purch_AddConfig WHERE UserID=%d AND ModuleID=%d
+select ReasonID, Name from Reason_Code where ModuleID = 10055 and Name in ('Count Adj','Other','Store Use') 
+SELECT ReceiptNumber,
+SELECT RecvLocationID FROM MT_Header WHERE MTUID = %d
+select ReportId from ReportMaster where RepUId = %d
+SELECT ReportID FROM VW_REPORT_MASTER WHERE OldReportID = %ld 
+select RequestsEmailReadReceipts from prism_security.dbo.PrismUser where SUID = 
+select Retail from VW_ITM_INVENTORY where sku = %ld and locationid = %ld
+SELECT ReturnNumber, CDUID FROM CD_Header
+SELECT ReturnNumber, CRTUID FROM CRT_Header
+select RGHID, Name from ReportGenHeader where RGTID  = %d
+select RGHID, Name from ReportGenHeader where RGTID = %d
+select RGTID, Name from ReportGenTemplate order by Name
+SELECT RootLocationGroupID FROM LocationSelectionViews WHERE LocationSelectionViewID = 
+SELECT RoundingDirectionID, Direction FROM PriceModificationRoundingDirections ORDER BY RoundingDirectionID
+SELECT RoundingTargetID, RoundingText FROM PriceModificationRoundingTargets ORDER BY SortOrder
+select RSOUID, SortDesc from ReportSortOptions where REPUID = %d order by TabOrder
+select RSPID, Name from Report_SaveParams_Header where REPUID = %d
+select rtrim( Barcode ), SKU from Item_XRef_Dups
+select rtrim(ltrim(name)) from binding where abbreviation = '%s'
+select s.EmailAddress from Store_Information_Table s inner join LocationSelectionLocations lsl on lsl.LocationId = s.LocationId where lsl.LocationSelectionId = 
+select SalesEventItemId from SalesEventItems where SalesEventID = %d and sku = %d
+SELECT SendLocationID FROM MT_Header WHERE MTUID = %d
+SELECT SerialID FROM SerialNumberHeader WHERE LocationID = %ld and SKU = %ld
+SELECT SerialID FROM SerialNumberHeader WHERE LocationID = %ld AND SKU = %ld and fRental = %d 
+select SerialID from SerialNumberHeader where SKU = %ld and LocationID = %d
+select SerialID from SerialNumberHeader where SKU = %ld and LocationID = %d and fRental = 0
+SELECT ShipCodeID, MethodDesc, Description FROM VW_MO_SHIPCODE_HEADER 
+select ShipViaId, Description from ShipVia where 0 = 1
+SELECT ShortDescription FROM Location WHERE LocationID = 
+Select ShortDescription from Location where LocationID = %ld
+SELECT SizeID, Description FROM GMSize WHERE fDisable = 0 ORDER BY SortOrder, Description, SizeID
+SELECT SKU FROM Buyers_Guide_Adopted WHERE Bookkey = '%s' and BGVendorID = 2 and Subsystem = 2
+SELECT SKU FROM Buyers_Guide_Adopted WHERE Bookkey = '%s' and BGVendorID = 2 and Subsystem = 3
+SELECT SKU FROM Buyers_Guide_Adopted WHERE Bookkey = '%s' and isbn = '%s' and BGVendorID = 1
+SELECT SKU FROM SerialNumberHeader WHERE ProductIDCode = '%s'
+SELECT SKU FROM Textbook WHERE Author = '%s' AND Title = '%s' AND dbo.fnISBNGet10(ISNULL(ISBN,'')) = '%s' AND ISNULL(Copyright,'') = '%s' AND ISNULL(Edition,'') = '%s'
+SELECT SKU FROM Textbook WHERE Author = '%s' AND Title = '%s' AND ISNULL(ISBN,'') = '%s' AND ISNULL(Copyright,'') = '%s' AND ISNULL(Edition,'') = '%s'
+SELECT SKU FROM Textbook WHERE TXUID = %d 
+SELECT SKU FROM Tradebook WHERE Author = '%s' AND Title = '%s' AND dbo.fnISBNGet10(ISNULL(ISBN,'')) = '%s' AND ISNULL(Copyright,'') = '%s' AND ISNULL(Edition,'') = '%s'
+SELECT SKU FROM Tradebook WHERE Author = '%s' AND Title = '%s' AND ISNULL(ISBN,'') = '%s' AND ISNULL(Copyright,'') = '%s' AND ISNULL(Edition,'') = '%s'
+SELECT SKU FROM Tradebook WHERE TRUID = %d 
+SELECT SKU FROM VW_ITM_BARCODE WHERE BarCode = '%s'
+select sku, locationid from SerialNumberHeader where serialid = %ld 
+SELECT sl.StyleLocationID FROM Style_Locations sl INNER JOIN Item i ON i.StyleID = sl.StyleID WHERE i.SKU = %d AND sl.LocationID = %d
+SELECT StatusDesc FROM Status_Codes WHERE ModuleID = %d AND StatusID = %d
+select StockAdjReasonID, ReasonID, Reason, ReasonType, fInactive from StockAdjustReason 
+SELECT StyleID FROM VW_STYLE_SKUS WHERE SKU = %d
+SELECT Subsystem FROM Item WHERE SKU = %d
+select Subsystem from Item where SKU = %ld
+SELECT Subsystem, Name FROM dbo.Subsystem_Table WHERE fDisplay = 1
+SELECT Subsystem, Name FROM Subsystem_Table WHERE fDisplay = 1
+SELECT Subsystem, Name FROM Subsystem_Table WHERE Subsystem in (1,2,3,4)
+SELECT Subsystem_Table.Subsystem, Subsystem_Table.Name FROM dbo.Subsystem_Table Subsystem_Table 
+select SYSTEM_USER
+select TagTypeID from Inventory where SKU = %d and LocationId = %d
+select TagTypeId from TagType where  Scriptid = %d and SubSystem = %d
+select TenderAccount, ExpDate, CID, th.TranNumber from Transaction_Tender tt inner join transaction_header th on th.TransactionID = tt.TransactionID where TranTendorId = %d
+select TenderCodeId, Description from Tender_Codes
+SELECT TermID FROM CR_Term WHERE TermName = '%s'
+SELECT TermID FROM Purch_AddConfig_Location WHERE PurchAddCfgID=%d
+SELECT TermID FROM VW_CR_LOCATIONS_TERM WHERE LocationID = %ld AND fOpenFlg = 1 AND CampusID = %ld AND fActiveFlg = 1
+SELECT TermID FROM VW_CR_LOCATIONS_TERM WHERE LocationID = %ld AND TermName > '%s' AND fOpenFlg = 1 AND CampusID IN (SELECT CampusID FROM CR_Term WHERE TermID = %ld)
+SELECT TermName FROM CR_Term WHERE CR_Term.TermID = %ld
+SELECT TermName FROM CR_Term WHERE TermID = %ld
+select Text from TermCondition where TCTId = %d
+Select the default printer used to print the label.
+Select the default printer used to print the serial number tag.
+select title from bip_temp where bpuid = %ld
+SELECT TOP 1 %s FROM %s ORDER BY %s DESC
+SELECT TOP 1 CrsSelID FROM Course_Selection WHERE CrsID = %d ORDER BY CrsSelID DESC
+select top 1 customerid from customer_table order by customerid desc
+SELECT TOP 1 DCCSelID FROM DCC_Selection WHERE DCCID = %d ORDER BY DCCSelID DESC
+select top 1 itemTaxTypeID from dbo.VW_DCCITEMTAXTYPE where dccid = %d order by priority
+select top 1 lsl.LocationID from LocationSelectionLocations lsl inner join Location l on l.LocationID = lsl.LocationID inner join SalesEventAux a on a.LocationSelectionID = lsl.LocationSelectionID where a.SalesEventID = 
+SELECT TOP 1 ReasonID FROM CD_Reasons WHERE fDisable = 0 ORDER BY ReasonText
+SELECT Top 1 ReportLogoID FROM ReportLogo WHERE fDeleted = %ld ORDER BY ReportLogoID Asc
+SELECT TOP 1 SequenceNumber FROM Sequence WHERE LocationID = %d AND SequenceTypeID = %d ORDER BY SequenceNumber DESC
+select top 1 SerialDID from SerialNumberDetail where SerialID = %ld order by SerialDID desc 
+SELECT top 1 SKU FROM VW_ITM_MASTER WHERE Subsystem = %d and REPLACE(ISBN13, '-', '') = '%s'
+select top 1 slid from systemlog where %s order by slid asc
+select top 1 slid from systemlog where %s order by slid desc
+SELECT TOP 1 VendorAddressGroups.AddressGroupID FROM dbo.VendorAddressGroups VendorAddressGroups
+SELECT TranDtlID FROM Transaction_Detail WHERE SKU = %ld AND TransactionID in (select TransactionID from transaction_header where MOReceiptID = %ld) 
+SELECT TRNumber, txComment, MTUID FROM MT_HEADER
+SELECT TypeID, Description FROM QuickSearchType WHERE ModuleID = %d
+SELECT TypeName FROM POS_Receipt_Types WHERE ReceiptTypeID = %ld
+select uposname From pos_device where deviceid = %ld
+SELECT v.StyleLocationID FROM PO_Location l INNER JOIN VW_PO_STYLE_LOCATION_SKUS v ON v.POD_ID = l.POD_ID AND v.LocationID = l.LocationID AND l.PODL_ID = %d
+select Value, RSPDID from Report_SaveParams_Detail where RSPID = %d and 
+SELECT VendorCode FROM VendorMaster WHERE VendorID = %d
+SELECT VendorID FROM Item WHERE SKU = %d
+SELECT VendorID FROM VendorParameters WHERE VendorID = %ld AND SubSystem = %ld
+SELECT VendorID, Imprint FROM VendorISBN WHERE ISBNPrefix = '
+select vendormaster.name from vendormaster where vendormaster.vendorid = %ld 
+SELECT VendorMaster.UsedFlag FROM dbo.VendorMaster VendorMaster WHERE VendorMaster.VendorID = %ld
+SELECT VendorOrderingMethodID, VendorOrderingMethodDesc FROM VendorOrderingMethod
+SELECT VW_Status_Codes.StatusID, VW_Status_Codes.StatusDesc FROM VW_Status_Codes WHERE VW_Status_Codes.ModuleID = %ld 
+select WarrantyDays from SerialNumberHeader where SerialID = %ld 
+SELECT XREF FROM SerialNumberDetail WHERE SerialDId = %d
+SerialID = %ld AND SerialDID NOT IN (SELECT SerialDID FROM SerialNumberDetail WHERE SerialID = %ld AND TrackingID = %ld AND fTrackingType = %d AND CustomerID = 0) 
+SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%')
+TermID in (select TermID from CR_Locations where fOpenFlg = 1 and LocationID = %ld)
+TermID in (select TermID from CR_Locations where fOpenFlg = 1)
+update bip_temp set price = '%s' where bpuid = %ld
+update bip_temp set queryid = bpuid where bpuid = %ld
+UPDATE Buyback_Detail SET LocationID = %d WHERE BBPurchaserID = %d AND fPostedFlg <> 1 and BBItemID in (Select BBItemID from Buyback_List_Item where SKU = 0 and BOOKKEY = '%s' AND ISBN = '%s')
+UPDATE Buyback_Detail SET LocationID = %d WHERE BBPurchaserID = %d AND fPostedFlg <> 1 AND BOOKKEY = '%s' AND ISBN = '%s'
+update buyback_pricetagqueue set fPrinted = 1 where fPrinted = 0 and sessionid = %ld and buyerlocid = %ld
+update buyback_pricetagqueue set fPrinted = 1 where fPrinted = 0 and sessionid = %ld and buyerlocid = %ld and BBPTQID <= %ld
+UPDATE CD_Reasons SET fDisable = 0 WHERE ReasonText = '%s'
+UPDATE CD_Reasons SET fDisable = 1 WHERE ReasonID = %d
+UPDATE Color SET fDisable = 1 WHERE ColorID = %d
+UPDATE Course_Selection SET CrsSelGrpID = CrsSelID WHERE CrsSelID = %d 
+UPDATE dbo.Problem_Notifications_Reasons SET fDisable = 0 WHERE Name = '%s'
+UPDATE dbo.Problem_Notifications_Reasons SET fDisable = 1 WHERE ReasonID = %d
+UPDATE dbo.VendorDiscountCodes SET fDisable = 0 WHERE DiscCode = '%s' AND VendorID = %ld AND Subsystem = %d
+UPDATE dbo.VendorDiscountCodes SET fDisable = 1 WHERE DiscCodeID = %d
+UPDATE DCC_Selection SET DCCSelGrpID = DCCSelID WHERE DCCSelID = %d 
+UPDATE GMSize SET fDisable = 0 WHERE Description = '%s'
+UPDATE GMSize SET fDisable = 1 WHERE SizeID = %d
+update itemmaster set EdColor = c.Description     from GeneralMerchandise g     left outer join Color c on g.Color = c.ColorID     where itemmaster.uuid = g.gmuid and itemmaster.subsystem = 1         and itemmaster.EdColor = '%s'
+UPDATE ItemSeasonCodes SET bDeleted = 1 WHERE ItemSeasonCodeID = 
+UPDATE LocationSelections SET LocationSelectionViewID = %d WHERE LocationSelectionID = %d
+update PO_Style_Location_Components set GraphicComponentID=%d where POID=%d and StyleLocationComponentID=%d
+UPDATE ReportLogo SET fDeleted = 1, Description = '' WHERE ReportLogoID = %d
+update SalesEventItemLocations set SalePriceOverride = NULL where SalesEventItemLocationID in (%s)
+update SerialNumberDetail set Price = %.2f where SerialID = %ld 
+UPDATE SerialNumberDetail SET SerialNumberDetail.CustomerID =  NULL, SerialNumberDetail.SaleDate = NULL, SerialNumberDetail.TrackingID = NULL, SerialNumberDetail.fTrackingType = NULL WHERE SerialNumberDetail.SerialDID = %d
+UPDATE SerialNumberDetail SET SerialNumberDetail.CustomerID = 0, SerialNumberDetail.SaleDate = GetDate() WHERE SerialNumberDetail.SerialDID = %d
+UPDATE SerialNumberDetail SET SerialNumberDetail.CustomerID = 0, SerialNumberDetail.SaleDate = GetDate(), SerialNumberDetail.TrackingID = CD_Header.CDUID, SerialNumberDetail.fTrackingType = %d FROM CD_Header WHERE SerialNumberDetail.SerialDID = %d AND CD_Header.CDUID = %d
+UPDATE SerialNumberDetail SET SerialNumberDetail.CustomerID = 0, SerialNumberDetail.SaleDate = GetDate(), SerialNumberDetail.TrackingID = CRT_Header.CRTUID, SerialNumberDetail.fTrackingType = %d FROM CRT_Header WHERE SerialNumberDetail.SerialDID = %d AND CRT_Header.CRTUID = %d
+UPDATE SerialNumberDetail SET SerialNumberDetail.CustomerID = Catalog_Sales_Header.CustomerID, SerialNumberDetail.SaleDate = %s, SerialNumberDetail.WarrantyExpDate = %s, SerialNumberDetail.TrackingID = Catalog_Sales_Header.ReceiptID, SerialNumberDetail.fTrackingType = %d FROM Catalog_Sales_Header WHERE SerialNumberDetail.SerialDID = %d AND Catalog_Sales_Header.ReceiptID = %d
+UPDATE SerialNumberDetail SET SerialNumberDetail.CustomerID = NULL, SerialNumberDetail.ReceiveDate = GetDate() WHERE SerialNumberDetail.SerialDID = %ld 
+UPDATE SerialNumberDetail SET SerialNumberDetail.CustomerID = NULL, SerialNumberDetail.ReceiveDate = GetDate(), SerialNumberDetail.TrackingID = PO_Header.POID, SerialNumberDetail.fTrackingType = %d FROM PO_Header WHERE SerialNumberDetail.SerialDID = %ld AND PO_Header.POID = %ld
+UPDATE SerialNumberDetail SET SerialNumberDetail.CustomerID = Transaction_Header.CustomerID, SerialNumberDetail.SaleDate = %s, SerialNumberDetail.WarrantyExpDate = %s, SerialNumberDetail.TrackingID = Transaction_Header.MOReceiptID, SerialNumberDetail.fTrackingType = %d, SerialNumberDetail.TranDtlID = %ld FROM Transaction_Header WHERE SerialNumberDetail.SerialDID = %d AND Transaction_Header.TransactionId = %d
+UPDATE SerialNumberDetail SET SerialNumberDetail.ReceiveDate = GetDate(), SerialNumberDetail.SaleDate = '%s', SerialNumberDetail.TrackingID = MT_Header.MTUID, SerialNumberDetail.fTrackingType = %d FROM MT_Header WHERE SerialNumberDetail.SerialDID = %d AND MT_Header.MTUID = %d
+UPDATE SerialNumberDetail SET SerialNumberDetail.TranDtlID =  NULL, SerialNumberDetail.CustomerID =  NULL, SerialNumberDetail.SaleDate = '%s', SerialNumberDetail.WarrantyExpDate = '%s', SerialNumberDetail.TrackingID = 0, SerialNumberDetail.fTrackingType = 0 WHERE SerialNumberDetail.SerialDID = %d
+update SerialNumberDetail set TranDtlID = %ld where SerialID = %ld AND CustomerID = %ld AND TrackingID = %ld AND fTrackingType = %d
+update TermCondition set Text = '%s' where TCTId = %d
+UPDATE Textbook SET Textbook.ISBN = BIP_Temp.ISBNCat, Textbook.Author = BIP_Temp.Author, Textbook.Title = '%s', Textbook.Edition = BIP_Temp.EdColor, Textbook.Copyright = BIP_Temp.CpSize, Textbook.Imprint = BIP_Temp.ImpMfg, Textbook.BindingID = %d FROM BIP_Temp WHERE Textbook.TXUID = %d AND BIP_Temp.BPUID = %d
+UPDATE Textbook SET Textbook.ISBN = Buyers_Guide_Table.ISBN, Textbook.Author = Buyers_Guide_Table.Author, Textbook.Title = Buyers_Guide_Table.Title, Textbook.Edition = Buyers_Guide_Table.Edition, Textbook.Copyright = Buyers_Guide_Table.Copyright, Textbook.Imprint = Buyers_Guide_Table.Imprint, Textbook.BindingID = %d FROM Buyers_Guide_Table WHERE Textbook.TXUID = %d AND Buyers_Guide_Table.Bookkey = '%s'
+UPDATE Textbook SET Textbook.ISBN = Mathews_Books.ISBN, Textbook.Author = Mathews_Books.Author, Textbook.Title = Mathews_Books.Title, Textbook.Edition = Mathews_Books.Edition, Textbook.Copyright = Mathews_Books.Copyright, Textbook.Imprint = Mathews_Books.Imprint, Textbook.BindingID = %d FROM Mathews_Books WHERE Textbook.TXUID = %d AND Mathews_Books.BookID = '%s'
+UPDATE Textbook SET Textbook.ISBN = Tradebook.ISBN, Textbook.Author = Tradebook.Author, Textbook.Title = Tradebook.Title, Textbook.Edition = Tradebook.Edition, Textbook.Copyright = Tradebook.Copyright, Textbook.Imprint = Tradebook.Imprint, Textbook.BindingID = %d FROM Tradebook WHERE Textbook.TXUID = %d AND Tradebook.SKU = %d
+Update the existing to match Books In Print book
+Update the existing to match Matthews book
+Update the existing to match tradebook
+UPDATE Tradebook SET Tradebook.ISBN = BIP_Temp.ISBNCat, Tradebook.Author = BIP_Temp.Author, Tradebook.Title = '%s', Tradebook.Edition = BIP_Temp.EdColor, Tradebook.Copyright = BIP_Temp.CpSize, Tradebook.Imprint = BIP_Temp.ImpMfg, Tradebook.BindingID = %d FROM BIP_Temp WHERE Tradebook.TRUID = %d AND BIP_Temp.BPUID = %d
+UPDATE Tradebook SET Tradebook.ISBN = Mathews_Books.ISBN, Tradebook.Author = Mathews_Books.Author, Tradebook.Title = Mathews_Books.Title, Tradebook.Edition = Mathews_Books.Edition, Tradebook.Copyright = Mathews_Books.Copyright, Tradebook.Imprint = Mathews_Books.Imprint, Tradebook.BindingID = %d FROM Mathews_Books WHERE Tradebook.TRUID = %d AND Mathews_Books.MBID = %d
+UPDATE VW_PO_STYLE_LOCATION_COMPONENTS SET GraphicComponentID = DefaultGraphicComponentID WHERE StyleLocationID = %d AND POID = %d
+UPDATE VW_STYLE_LOCATION_COMPONENTS SET GraphicComponentID = DefaultGraphicComponentID WHERE StyleLocationID = %d
+Use Report Maintenance utility in WPAdmin to Add and Update Custom reports.
+WantListID IN (SELECT WantListID FROM WantList_Location WHERE LocationID = %ld
+You cannot merge a customer to a gift certificate!
+You must select a Reason Type!

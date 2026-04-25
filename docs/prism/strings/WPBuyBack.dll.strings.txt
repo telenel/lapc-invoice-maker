@@ -1,0 +1,5103 @@
+﻿ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
+ (SELECT LocationID FROM Buyback_List_Create WHERE BBUID = 
+ 000Y1h1u1
+ 1997-2015
+ AND (VW_BB_LIST_ORDDEC_EX.fWksStatusFlg = 1 or (VW_BB_LIST_ORDDEC_EX.fWksStatusFlg = 2 AND BBDetail.BBDetID is not null ) ) 
+ AND BBItemID = %ld
+ AND BGVendorID in (
+ AND LocationID = %ld
+ and purchaserid = %ld
+ and purchaserlocid = %ld
+ AND SessionID = %d
+ AND SessionID > 0
+ AND TermID = %ld
+ AND VW_BB_LIST_ORDDEC_EX.fWksStatusFlg = 1
+ AND VW_BB_LIST_ORDDEC_EX.SKU IN (SELECT SKU FROM (
+ AND VW_BB_LIST_ORDDEC_EX.TermID IN 
+ buyerlocid = %ld 
+ buyerlocid = %ld and sessionid = %ld 
+ case when (%f/2) < (ROUND((BuyPrice * %f - FLOOR(BuyPrice *%f)) * 100,0)) %% %f then 
+ CourseName = '
+ DeptID = %d
+ IS NULL 
+ OR TB.UsedSKU = %ld)
+ OR UsedSKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%%%')))
+ ORDER BY TermName, DeptName, CourseName
+ sessionid = %ld 
+ t!Hu\Ph`
+ t!Hu<Pht
+ TermID = %d 
+ UNION 
+ WHERE 
+ WHERE SequenceTypeID = %d
+ WHERE SessionID = %d
+ WHERE VW_BB_LIST_ORDDEC_EX.LocationID IN 
+!080?0E0R0a0n0r0w0|0
+!0P0W0^0
+!1'173F3
+!This program cannot be run in DOS mode.
+###-###-####
+#0=0Y0`0
+#0>0W0q0~0
+%-4.4s%-3.3s need has been met!
+%d-%d-%d
+%f - ROUND((BuyPrice * %f - FLOOR(BuyPrice * %f)) * 100,0) %% %f)/100 
+%s (%s:%d)
+%s AND BGVendorID = %ld 
+'%s' is an invalid search string for Quick Reference
+%s/%s, %s.
+&#####
+&Buyer...
+&Location...
+&Purchaser...
+(0?0G0M0v0
+(BBPQUID = ?)
+(CONVERT(integer, DCCID) & %ld) = %ld
+(FLOOR(BuyPrice * %f)* 100 + (ROUND((BuyPrice * %f - FLOOR(BuyPrice * %f)) * 100,0)) - 
+(FLOOR(BuyPrice * %f)* 100 + (ROUND((BuyPrice * %f - FLOOR(BuyPrice * %f)) * 100,0)) + %f - 
+(FLOOR(BuyPrice * %f)* 100 + ROUND((BuyPrice * %f - FLOOR(BuyPrice * %f)) * 100,0) - 
+(FLOOR(BuyPrice * %f)* 100 + ROUND((BuyPrice * %f - FLOOR(BuyPrice * %f)) * 100,0) + 
+(ISBN = '%s' or AltISBN  = '%s')
+(PurchaserID <> ?)
+(PurchaserID = ? OR PurchaserDesc = ?)
+(ROUND((BuyPrice * %f - FLOOR(BuyPrice * %f)) * 100,0)) %% %f)/100  END AS BuyPrice
+(ROUND((BuyPrice * %f - FLOOR(BuyPrice *%f)) * 100,0)) %% %f)/100 else 
+(SELECT TermID FROM Buyback_List_Create WHERE BBUID = 
+(SKU IN (%s))
+) as BBDetail on BBDetail.SKU = VW_BB_LIST_ORDDEC_EX.SKU 
+) EQ )
+******
+, ISBN, Imprint, Binding, Edition, Copyright, BBItemID FROM VW_BB_BG_BUY_LIST WHERE 
+.?AV?$CArray@HH@@
+.?AV?$CArray@JJ@@
+.?AV?$CArray@PAVCBBPurchaser@@PAV1@@@
+.?AV?$CArray@UStructBBListDetail@CBBListDetailTable@@U12@@@
+.?AV?$CArray@UStructTransIDs@CBBTranslateIDTable@@U12@@@
+.?AV?$CArray@VCBBBuyInfo@@V1@@@
+.?AV?$CG3GridTemplate@VCGXGridWnd@@@@
+.?AV?$CG3GridTemplate@VCGXRecordView@@@@
+.?AV?$CG3GridTemplate@VCGXRecordWnd@@@@
+.?AV?$CG3XRecordBase@VCG3XRecordViewBase@@@@
+.?AV?$CG3XRecordBase@VCG3XRecordWndBase@@@@
+.?AV?$CG3XViewBase@VCGXRecordView@@@@
+.?AV?$CMapArrayT@V?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@@
+.?AVCBBAddItemDlg@@
+.?AVCBBAddNewItem@@
+.?AVCBBAddQRefDlg@@
+.?AVCBBBundledItemsGrid@@
+.?AVCBBBuyAddMoneyDlg@@
+.?AVCBBBuyBundledItemDlg@@
+.?AVCBBBuyDetailSet@@
+.?AVCBBBuyDetailView@@
+.?AVCBBBuyDetVwSet@@
+.?AVCBBBuyerBrDlg@@
+.?AVCBBBuyerBrEdit@@
+.?AVCBBBuyerBrGrid@@
+.?AVCBBBuyerDlg@@
+.?AVCBBBuyerFrame@@
+.?AVCBBBuyerGrpBrDlg@@
+.?AVCBBBuyerGrpBrEdit@@
+.?AVCBBBuyerGrpBrGrid@@
+.?AVCBBBuyerGrpSet@@
+.?AVCBBBuyerLocSet@@
+.?AVCBBBuyerSessionLocationSet@@
+.?AVCBBBuyerSet@@
+.?AVCBBBuyerView@@
+.?AVCBBBuyFindDlg@@
+.?AVCBBBuyFindGrid@@
+.?AVCBBBuyFrame@@
+.?AVCBBBuyHdrExpSet@@
+.?AVCBBBuyHeaderSet@@
+.?AVCBBBuyHeaderView@@
+.?AVCBBBuyInfo@@
+.?AVCBBBuyItemDlg@@
+.?AVCBBBuyLoginDlg@@
+.?AVCBBBuyPurSet@@
+.?AVCBBBuyStolenDlg@@
+.?AVCBBBuyTotalDlg@@
+.?AVCBBCompFiles@@
+.?AVCBBCutPerDlg@@
+.?AVCBBDCCBrowseEdit@@
+.?AVCBBDestSet@@
+.?AVCBBDispParmsDlg@@
+.?AVCBBGroupAddLocDlg@@
+.?AVCBBGroupDlg@@
+.?AVCBBGroupLocLB@@
+.?AVCBBGroupView@@
+.?AVCBBImpExp_FullDownload@@
+.?AVCBBImpExp_TransTotalsNew@@
+.?AVCBBImportExport@@
+.?AVCBBListAddDlg@@
+.?AVCBBListAddTermDlg@@
+.?AVCBBListAllView@@
+.?AVCBBListCreateSet@@
+.?AVCBBListDetailDlg@@
+.?AVCBBListDetailSet@@
+.?AVCBBListDetailTable@@
+.?AVCBBListDetailView@@
+.?AVCBBListDetailViewBase@@
+.?AVCBBListDetVwSet@@
+.?AVCBBListFindDlg@@
+.?AVCBBListFindGrid@@
+.?AVCBBListGenDlg@@
+.?AVCBBListGenGrid@@
+.?AVCBBListHeaderSet@@
+.?AVCBBListHeaderView@@
+.?AVCBBListItemSet@@
+.?AVCBBListODVwSet@@
+.?AVCBBListQuickSearch@@
+.?AVCBBListQuickSearchGrid@@
+.?AVCBBListSelectDtlDlg@@
+.?AVCBBListSelectGrid@@
+.?AVCBBListSummaryView@@
+.?AVCBBListSumVwSet@@
+.?AVCBBLoadBGView@@
+.?AVCBBLoadBuyersGuide@@
+.?AVCBBLocBrDlg@@
+.?AVCBBLocBrGrid@@
+.?AVCBBNewItemSet@@
+.?AVCBBPostView@@
+.?AVCBBPriceTagChooseLocationDlg@@
+.?AVCBBPriceTagDetailSet@@
+.?AVCBBPriceTagDtlView@@
+.?AVCBBPriceTagFrm@@
+.?AVCBBPriceTagQueueLoginDlg@@
+.?AVCBBPriceTagQueueUserSet@@
+.?AVCBBPriceTagSetTimerDlg@@
+.?AVCBBPrintReceipt@@
+.?AVCBBPurBrDlg@@
+.?AVCBBPurBrGrid@@
+.?AVCBBPurchaser@@
+.?AVCBBPurchaserLB@@
+.?AVCBBPurchaserMaintDlg@@
+.?AVCBBPurchaserSet@@
+.?AVCBBPurchaserView@@
+.?AVCBBQRefAddExDlg@@
+.?AVCBBQRefBaseView@@
+.?AVCBBQRefEditView@@
+.?AVCBBQRefFilter@@
+.?AVCBBQRefFindDlg@@
+.?AVCBBQRefFindSet@@
+.?AVCBBQRefFindView@@
+.?AVCBBQRefFrame@@
+.?AVCBBQRefSelSessDlg@@
+.?AVCBBQRefSet@@
+.?AVCBBQtyEdit@@
+.?AVCBBSearchEdit@@
+.?AVCBBSelSessDlg@@
+.?AVCBBSelStolenDlg@@
+.?AVCBBSequenceSet@@
+.?AVCBBSeriesEdit@@
+.?AVCBBSessAddLocDlg@@
+.?AVCBBSessAddPurDlg@@
+.?AVCBBSessAddWkstDlg@@
+.?AVCBBSessionAddDlg@@
+.?AVCBBSessionBaseDtlView@@
+.?AVCBBSessionBrDlg@@
+.?AVCBBSessionBrEdit@@
+.?AVCBBSessionBrGrid@@
+.?AVCBBSessionFrame@@
+.?AVCBBSessionLocSet@@
+.?AVCBBSessionLocView@@
+.?AVCBBSessionPurSet@@
+.?AVCBBSessionSet@@
+.?AVCBBSessionView@@
+.?AVCBBSessionWkstSet@@
+.?AVCBBSessionWkstView@@
+.?AVCBBSessPurBrDlg@@
+.?AVCBBSessPurBrEdit@@
+.?AVCBBSessPurBrGrid@@
+.?AVCBBSessPurSet@@
+.?AVCBBSessQuickSearch@@
+.?AVCBBSessQuickSearchGrid@@
+.?AVCBBSessVwSet@@
+.?AVCBBStolenBooksFrame@@
+.?AVCBBStolenBooksQuickSearch@@
+.?AVCBBStolenBooksQuickSearchGrid@@
+.?AVCBBStolenBooksSet@@
+.?AVCBBStolenBooksView@@
+.?AVCBBSuspReceiptBrDlg@@
+.?AVCBBSuspReceiptBrGrid@@
+.?AVCBBSuspReceiptSet@@
+.?AVCBBTransfer@@
+.?AVCBBTranslateIDTable@@
+.?AVCBBTransListDetailSet@@
+.?AVCBBTransListDtlView@@
+.?AVCBBTransListFrm@@
+.?AVCBBTransListHeaderSet@@
+.?AVCBBTransListQuickResultsGrid@@
+.?AVCBBTransListQuickSearch@@
+.?AVCBBTransListTagQtyDlg@@
+.?AVCBBTransListView@@
+.?AVCBGNetPriceDlg@@
+.?AVCBitmap@@
+.?AVCBookRoutingConfigDlg@@
+.?AVCBookRoutingConfigGrid@@
+.?AVCBookRoutingConfigSet@@
+.?AVCBrush@@
+.?AVCBulkFetchSet@@
+.?AVCButton@@
+.?AVCBuybackListFrame@@
+.?AVCBuyBookMembershipDlg@@
+.?AVCBuyBookMembershipDlgGrid@@
+.?AVCBuyBookMembershipDlgSet@@
+.?AVCBuyersGuideInqSet@@
+.?AVCBuyersGuideInqView@@
+.?AVCBuyersGuideInqViewBB@@
+.?AVCBuyersGuideSet@@
+.?AVCCmdTarget@@
+.?AVCComboBox@@
+.?AVCDatabase@@
+.?AVCDialog@@
+.?AVCDirectionButton@@
+.?AVCEdit@@
+.?AVCException@@
+.?AVCFont@@
+.?AVCFormView@@
+.?AVCFrameWnd@@
+.?AVCG3BrowseEditBase@@
+.?AVCG3CABFile@@
+.?AVCG3ColorStaticCtrl@@
+.?AVCG3Database@@
+.?AVCG3DCCBrowseEdit@@
+.?AVCG3Dialog@@
+.?AVCG3Exception@@
+.?AVCG3FileImpExp@@
+.?AVCG3FormView@@
+.?AVCG3HeaderDtlSheet@@
+.?AVCG3HeaderDtlViewBase@@
+.?AVCG3IncrementalSearchDlg@@
+.?AVCG3IncrementalSearchGrd@@
+.?AVCG3ItemFindObj@@
+.?AVCG3LBGridBase@@
+.?AVCG3LocationSet@@
+.?AVCG3PriceTagPrintQueueSet@@
+.?AVCG3QSDataItem@@
+.?AVCG3QuickSearchBase@@
+.?AVCG3QuickSearchResultsGrid@@
+.?AVCG3RecordView@@
+.?AVCG3ScanEdit@@
+.?AVCG3Worksheet@@
+.?AVCG3XGridWnd@@
+.?AVCG3XRecordView@@
+.?AVCG3XRecordViewBase@@
+.?AVCG3XRecordWnd@@
+.?AVCG3XRecordWndBase@@
+.?AVCGdiObject@@
+.?AVCGXBrowserGrid@@
+.?AVCGXDynamicRecordset@@
+.?AVCGXGridCore@@
+.?AVCGXGridWnd@@
+.?AVCGXODBCGrid@@
+.?AVCGXRecordView@@
+.?AVCGXRecordWnd@@
+.?AVCGXView@@
+.?AVCItemMasterSet@@
+.?AVCItemSet@@
+.?AVCListBox@@
+.?AVCLocationSelectorClient@@
+.?AVCMapArray@@
+.?AVCMDIChildWnd@@
+.?AVCObject@@
+.?AVCRecordset@@
+.?AVCRecordView@@
+.?AVCScrollView@@
+.?AVCSequenceSet@@
+.?AVCStatic@@
+.?AVCTabCtrl@@
+.?AVCTenderAuthParam@@
+.?AVCTenderAuthParamBB@@
+.?AVCTxtSubBundleDetailItemSet@@
+.?AVCULoadDataDlg@@
+.?AVCView@@
+.?AVCWnd@@
+.?AVSECBrowseEditBase@@
+.?AVSECListBoxEditor@@
+.?AVSECMDIChildWnd@@
+.?AVSECWorksheetWnd@@
+.?AVtype_info@@
+.PAVCDBException@@
+.PAVCException@@
+.PAVCFileException@@
+.PAVCG3Exception@@
+.PAVCObject@@
+.PAVCUserException@@
+/D$<r4h
+: :$:(:,:0:4:8:<:@:D:H:L:P:T:X:\:`:d:
+: :$:(:,:0:4:8:<:@:D:H:L:P:T:X:\:`:d:h:l:p:
+: :$:(:,:0:4:8:<:@:D:H:L:P:T:X:\:`:d:h:l:p:t:
+: :$:(:,:0:4:8:<:@:D:H:L:P:T:X:\:`:d:h:l:p:t:x:|:
+: :$:(:,:0:4:8:<:@:D:H:L:X:\:h:l:p:t:x:|:
+: :$:(:,:4:8:<:@:D:H:P:T:X:\:`:h:
+: :$:(:8:
+: :$:(:8:<:@:P:T:X:h:l:p:
+: :$:,:0:4:<:T:X:\:p:t:
+: :$:,:D:H:`:p:
+: :&:,:2:8:>:D:J:P:V:\:b:h:n:t:z:
+: :(:0:8:@:H:T:\:|:
+: :':6:B:G:P:n;
+: :@:H:T:\:t:|:
+: :3:C:W:m:
+: :8:<:T:X:p:t:
+: :n:z:
+: ;(;N;V;|;
+:!:.:;:C:L:m:
+:!:F:z:
+:!;7;=;L;
+:#:,:B:U:^:g:p:y:
+:#:/:?:Q:d:
+:#:2:A:P:_:n:}:
+:$:(:@:D:\:`:x:
+:$:,:4:<:D:L:T:\:d:l:x:
+:$:-:6:?:H:Q:Z:c:l:u:~:
+:$:=:G:`:j:s:|:
+:$:0:6:K:Q:]:c:i:~:
+:$:0:P:X:`:h:t:
+:$:3:B:Q:`:v:
+:$:K:i:o:
+:$:R:^:
+:$;,;4;@;H;`;p;x;
+:%:::A:G:L:U:|:
+:%:9:N:j:}:
+:%:E:\:
+:%:F:X:`:e:
+:&:0:::\:d:
+:&:M:m:|:
+:&:S:]:o:
+:&;A;V;h;
+:(:,:0:4:8:<:@:D:H:L:P:T:X:\:`:d:h:l:p:t:x:|:
+:(:/:H:
+:(:5:]:z:
+:(:8:T:\:d:p:
+:(:9:F:P:
+:(;K;c;i;
+:):.:7:D:Z:p:
+:*:D:V:^:p:x:
+:,:4:E:M:_:l:
+:,:8:@:X:`:p:x:
+:,:H:d:
+:.:@:F:^:j:p:
+:.:>:I:\:n:
+:/:=:I:P:V:[:d:p:
+:/:4:R:[:h:z:
+:':.:::E:^:o:
+:':?:W:f:m:
+:-:@:S:e:o:
+:-:2:8:<:@:D:H:V:h:
+:;:D:X:e:
+:;:Q:q:
+:-;3;<;I;
+:';R;[;
+:@;D;\;t;
+:+:A:N:R:W:\:a:f:v:
+:<:\:|:
+:0:6:N:T:
+:0:8:@:H:P:l:t:|:
+:0:A:N:_:|:
+:0:C:I:U:Z:j:o:{:
+:0:L:T:\:h:
+:0:O:j:v:
+:0:W:c:
+:1:E:[:u:
+:1;>;B;G;L;Q;V;f;w;
+:1;F;T;k;
+:2:F:V:h:t:
+:3:9:H:N:f:l:{:
+:3:E:K:c:i:
+:4:A:N:R:W:\:a:f:w:}:
+:5:D:Z:}:
+:6:D:[:n:z:
+:6:L:[:j:y:
+:8:@:L:l:x:
+:8:E:z:
+:8;B;a;n;r;w;|;
+:9:B:K:[:t:
+:B:K:t:
+:G:';-;=;[;j;
+:L;P;T;X;\;`;d;h;l;p;t;x;|;
+:T:\:g:n:
+:X;\;`;d;h;l;p;t;x;|;
+:Y;h;v;
+; ;$;(;,;0;4;8;<;@;D;H;L;P;T;X;\;`;d;h;l;p;t;x;|;
+; ;$;(;,;0;4;8;<;@;D;H;L;P;T;X;\;`;d;h;x;@=D=H=L=P=T=X=\=`=|=
+; ;$;(;,;0;4;8;<;@;D;H;L;P;T;X;\;`;d;l;
+; ;*;R;a;m;
+; ;?;V;e;{;
+; ;<;`;
+; ;6;=;S;Z;p;u;
+; ;T<l<
+;!;&;D;V;a;z;
+;!;,;`;e;q;v;
+;!;,;~;
+;!<.<2<7<<<A<F<V<d<{<
+;";(;.;4;:;@;F;L;R;X;^;d;j;p;v;|;
+;";(;F;S;`;
+;";/;B;I;X;o;|;
+;";5;;;N;T;v;
+;"<1<F<V<m<
+;#;2;H;r;
+;#;X;_;e;k;t;x;|;
+;#<5<?<I<v<
+;$;);9;H;T;h;w;
+;$;,;4;<;D;L;T;\;d;l;t;|;
+;$;<;D;L;p;x;
+;$;4;8;H;L;\;`;d;h;p;t;|;
+;$;F;R;^;
+;$;H;W;d;
+;$;P;g;s;
+;$<0<D<o<
+;$<6<H<_<
+;%;.;G;U;d;s;
+;%;9;B;Z;f;
+;%;H;U;
+;%;V;h;
+;&;.;@;H;W;_;n;v;
+;&;0;:;g;q;{;
+;&;5;Q;^;n;
+;&;6;<;q;
+;&;6;M;l;
+;&;7;^;e;
+;&;8;[;l;
+;&;N;V;i;
+;&<4<K<s<
+;(;,;0;@;D;H;X;\;`;p;t;x;
+;(;,;0;4;8;<;F;X;
+;(;0;8;H;l;t;|;
+;(;1;=;F;Z;c;
+;(;3;G;[;p;{;
+;(;H;h;
+;(;J;S;{;
+;(;V;[;
+;*;3;H;`;i;u;
+;,;@;z;
+;,;<;L;P;T;l;p;t;x;|;
+;.;F;a;m;
+;/;5;E;N;s;
+;:;G;O;k;};
+;:;P;g;q;
+;-;<;H;q;
+;-;<;K;a;u;~;
+;';0;9;B;K;T;];f;o;x;
+;-;6;B;\;v;
+;';9;a;m;v;
+;-;F;S;j;
+;+;A;f;{;
+;+;R;_;
+;+<b<w<
+;<;D;L;T;\;d;l;t;|;
+;<;H;h;t;
+;<;U;^;g;};
+;0;@;P;`;d;t;x;
+;0;@;P;T;X;\;`;d;h;l;t;x;|;
+;0;4;8;<;@;D;H;L;P;T;X;\;`;d;h;l;p;t;x;|;
+;0;8;@;H;P;X;d;
+;1;F;T;n;
+;1;F;X;p;K<T<
+;2<O<f<l<x<
+;3;@;R;[;i;w;
+;4;F;i;~;
+;4<P<T<X<\<`<d<h<l<p<t<x<|<
+;6;B;R;b;n;z;
+;6;e;w;
+;7;?;];m;s;
+;8;@;H;P;X;`;h;t;
+;8;U;k;
+;B;I;^;e;q;x;
+;DATABASE=Prism;UID=WPAdmin
+;E;Q;a;
+;G;O;\;u;
+;W;\;o;v;
+? ?$?(?,?0?4?
+? ?$?(?,?0?4?8?<?
+? ?$?(?,?0?4?8?<?@?D?H?L?P?T?X?\?`?d?
+? ?$?(?,?0?4?8?<?@?D?H?L?P?T?X?\?`?d?h?l?p?|?
+? ?$?(?,?0?4?8?<?@?D?H?L?P?T?X?\?`?d?h?l?p?t?x?|?
+? ?$?(?,?0?4?8?<?@?D?H?L?X?\?`?d?h?l?p?t?x?|?
+? ?$?(?,?8?<?|?
+? ?$?,?0?4?<?T?X?p?
+? ?$?<?@?X?h?x?
+? ?&?3?P?_?h?n?t?
+? ?&?7?>?L?S?a?h?v?}?
+? ?(?4?<?T?x?
+? ?(?4?T?`?
+? ?)???U?~?
+? ?/?>?M?T?f?t?
+? ?@?H?P?\?|?
+? ?@?H?P?X?d?
+? ?@?L?l?x?
+? ?0?@?P?`?p?
+? ?0?4?8?H?L?P?
+?!?&?6?E?f?k?{?
+?!?-?9?E?Q?]?i?u?
+?!?<?B?q?w?
+?!?8?G?W?_?i?
+?!?C?O?{?
+?"?)?V?c?z?
+?"?5?C?P?Y?j?s?
+?"?A?N?R?W?\?a?f?v?
+?$?*?0?6?<?B?H?N?T?Z?`?f?l?r?x?~?
+?$?,?4?<?D?L?T?\?d?l?t?|?
+?$?.?<?E?J?P?T?Y?f?x?
+?$?;?D?a?x?
+?$?4?8?H?L?\?`?p?t?
+?$?7?K?T?q?z?
+?$?F?T?x?
+?%?D?J?W?c?x?
+?&?.?F?W?{?
+?&?]?n?
+?&?D?a?
+?(?<?D?d?l?
+?(?5?B?O?\?i?t?
+?(?8?H?X?\?l?p?
+?(?B?H?S?^?s?
+?(?V?h?
+?)?2?7?<?K?Y?i?w?
+?*?3?<?K?h?z?
+?*?6?H?l?
+?*?O?k?w?
+?,?:?H?X?k?}?
+?,?2?E?K?^?d?w?}?
+?,?4?<?H?h?t?
+?,?D?\?t?
+?.?@?[?l?
+?/?6?H?R?t?
+?:?B?z?
+?:?O?_?m?
+???H?]?
+??_7CBBBuyerFrame@@6B@
+??_7CBBBuyerView@@6BCGXODBCGrid@@@
+??_7CBBBuyerView@@6BCGXView@@@
+??_7CBBBuyFrame@@6B@
+??_7CBBBuyHeaderView@@6B@
+??_7CBBImportExport@@6B@
+??_7CBBListHeaderView@@6B@
+??_7CBBLoadBGView@@6B@
+??_7CBBPostView@@6B@
+??_7CBBPriceTagDtlView@@6BCGXODBCGrid@@@
+??_7CBBPriceTagDtlView@@6BCGXView@@@
+??_7CBBPriceTagFrm@@6B@
+??_7CBBPurchaserView@@6BCGXODBCGrid@@@
+??_7CBBPurchaserView@@6BCGXView@@@
+??_7CBBQRefEditView@@6BCGXODBCGrid@@@
+??_7CBBQRefEditView@@6BCGXView@@@
+??_7CBBQRefFrame@@6B@
+??_7CBBSeriesEdit@@6B@
+??_7CBBSessionFrame@@6B@
+??_7CBBSessionView@@6B@
+??_7CBBStolenBooksFrame@@6B@
+??_7CBBStolenBooksView@@6B@
+??_7CBBTransListFrm@@6B@
+??_7CBBTransListView@@6B@
+??_7CBuybackListFrame@@6B@
+??_7CBuyersGuideInqView@@6BCGXODBCGrid@@@
+??_7CBuyersGuideInqView@@6BCGXView@@@
+??_7CBuyersGuideInqViewBB@@6BCGXODBCGrid@@@
+??_7CBuyersGuideInqViewBB@@6BCGXView@@@
+?'?>?S?_?i?s?}?
+?-?>?T?f?s?
+??0_LS@@QAE@I@Z
+??0CAuthorizationBuyBack@@QAE@XZ
+??0CBBBuyerFrame@@IAE@XZ
+??0CBBBuyerView@@IAE@XZ
+??0CBBBuyFrame@@IAE@XZ
+??0CBBBuyHeaderView@@IAE@XZ
+??0CBBImportExport@@IAE@XZ
+??0CBBListHeaderView@@IAE@XZ
+??0CBBLoadBGView@@IAE@XZ
+??0CBBPostView@@IAE@XZ
+??0CBBPriceTagDetailSet@@QAE@PAVCDatabase@@@Z
+??0CBBPriceTagDtlView@@IAE@XZ
+??0CBBPriceTagFrm@@IAE@XZ
+??0CBBPurchaserView@@IAE@XZ
+??0CBBQRefEditView@@QAE@XZ
+??0CBBQRefFrame@@IAE@XZ
+??0CBBSeriesEdit@@IAE@XZ
+??0CBBSessionFrame@@IAE@XZ
+??0CBBSessionView@@IAE@XZ
+??0CBBStolenBooksFrame@@IAE@XZ
+??0CBBStolenBooksView@@IAE@XZ
+??0CBBTransListFrm@@IAE@XZ
+??0CBBTransListView@@IAE@XZ
+??0CBuybackListFrame@@IAE@XZ
+??0CBuyersGuideInqView@@IAE@XZ
+??0CBuyersGuideInqViewBB@@IAE@XZ
+??0CBuyersGuideSet@@QAE@PAVCDatabase@@@Z
+??0CBuyersGuideVendorSet@@QAE@PAVCDatabase@@@Z
+??0CComboBtn@@QAE@XZ
+??0CG3AdoptTextbook@@QAE@XZ
+??0CG3AdoptTextParam@@QAE@XZ
+??0CG3BrowseEditBase@@QAE@XZ
+??0CG3CABFile@@QAE@H@Z
+??0CG3ColorStaticCtrl@@QAE@XZ
+??0CG3ComboBox@@QAE@XZ
+??0CG3CurrencyEdit@@QAE@XZ
+??0CG3Database@@QAE@XZ
+??0CG3DateTime@@QAE@ABUtagTIMESTAMP_STRUCT@@@Z
+??0CG3DateTime@@QAE@XZ
+??0CG3DCCBrowseEdit@@QAE@XZ
+??0CG3Dialog@@QAE@IPAVCWnd@@@Z
+??0CG3EQBrowseEdit@@QAE@XZ
+??0CG3Exception@@QAE@PBDW4ESeverity@0@@Z
+??0CG3FileImpExp@@QAE@XZ
+??0CG3FormView@@IAE@I@Z
+??0CG3GetDateDlg@@QAE@PAVCWnd@@@Z
+??0CG3HeaderDtlSheet@@IAE@XZ
+??0CG3HeaderDtlViewBase@@IAE@XZ
+??0CG3IncrementalSearchDlg@@QAE@PAVCWnd@@@Z
+??0CG3IncrementalSearchGrd@@QAE@XZ
+??0CG3ItemFindObj@@QAE@XZ
+??0CG3LBGridBase@@QAE@XZ
+??0CG3LocationSet@@QAE@PAVCDatabase@@@Z
+??0CG3PriceTagPrintQueueSet@@QAE@PAVCDatabase@@@Z
+??0CG3QSDataItem@@QAE@XZ
+??0CG3QuickSearchBase@@QAE@XZ
+??0CG3QuickSearchResultsGrid@@QAE@XZ
+??0CG3RecordView@@IAE@I@Z
+??0CG3ScanEdit@@QAE@XZ
+??0CG3TermBrowseEdit@@QAE@XZ
+??0CG3Worksheet@@IAE@XZ
+??0CG3XGridWnd@@QAE@XZ
+??0CG3XRecordView@@QAE@XZ
+??0CG3XRecordWnd@@QAE@XZ
+??0CGXComboBoxWnd@@QAE@PAVCGXGridCore@@@Z
+??0CGXDynamicRecordset@@QAE@PAVCDatabase@@@Z
+??0CGXRange@@QAE@KK@Z
+??0CGXRange@@QAE@KKKK@Z
+??0CGXRange@@QAE@XZ
+??0CGXStyle@@QAE@XZ
+??0CGXTabWnd@@QAE@PAUCRuntimeClass@@@Z
+??0CItemMasterSet@@QAE@PAVCDatabase@@@Z
+??0CItemSet@@QAE@PAVCDatabase@@@Z
+??0CMapArray@@QAE@XZ
+??0CRentalCustOutstandingDlg@@QAE@HPAVCWnd@@@Z
+??0CRentalReturnItem@@QAE@HH@Z
+??0CSequenceSet@@QAE@PAVCDatabase@@@Z
+??0CTenderAuthParamBB@@QAE@XZ
+??0CTxtSubBundleDetailItemSet@@QAE@PAVCDatabase@@@Z
+??0SECBrowseFileEdit@@QAE@XZ
+??0SECListBoxEditor@@QAE@XZ
+??0SECMaskEdit@@QAE@XZ
+??0SECProgressCtrl@@QAE@XZ
+??1_LS@@QAE@XZ
+??1CAuthorizationBuyBack@@UAE@XZ
+??1CBBBuyerFrame@@MAE@XZ
+??1CBBBuyerView@@UAE@XZ
+??1CBBBuyFrame@@UAE@XZ
+??1CBBBuyHeaderView@@MAE@XZ
+??1CBBImportExport@@UAE@XZ
+??1CBBListHeaderView@@MAE@XZ
+??1CBBLoadBGView@@MAE@XZ
+??1CBBPostView@@MAE@XZ
+??1CBBPriceTagDetailSet@@UAE@XZ
+??1CBBPriceTagDtlView@@UAE@XZ
+??1CBBPriceTagFrm@@MAE@XZ
+??1CBBPurchaserView@@MAE@XZ
+??1CBBQRefEditView@@UAE@XZ
+??1CBBQRefFrame@@MAE@XZ
+??1CBBSeriesEdit@@MAE@XZ
+??1CBBSessionFrame@@MAE@XZ
+??1CBBSessionView@@MAE@XZ
+??1CBBStolenBooksFrame@@MAE@XZ
+??1CBBStolenBooksView@@MAE@XZ
+??1CBBTransListFrm@@MAE@XZ
+??1CBBTransListView@@MAE@XZ
+??1CBuybackListFrame@@MAE@XZ
+??1CBuyersGuideInqView@@UAE@XZ
+??1CBuyersGuideInqViewBB@@UAE@XZ
+??1CBuyersGuideSet@@UAE@XZ
+??1CBuyersGuideVendorSet@@UAE@XZ
+??1CComboBtn@@UAE@XZ
+??1CG3AdoptTextbook@@UAE@XZ
+??1CG3AdoptTextParam@@UAE@XZ
+??1CG3BrowseEditBase@@UAE@XZ
+??1CG3CABFile@@UAE@XZ
+??1CG3ColorStaticCtrl@@UAE@XZ
+??1CG3ComboBox@@UAE@XZ
+??1CG3CurrencyEdit@@UAE@XZ
+??1CG3Database@@UAE@XZ
+??1CG3DCCBrowseEdit@@UAE@XZ
+??1CG3Dialog@@UAE@XZ
+??1CG3EQBrowseEdit@@UAE@XZ
+??1CG3Exception@@UAE@XZ
+??1CG3FileImpExp@@UAE@XZ
+??1CG3FormView@@UAE@XZ
+??1CG3GetDateDlg@@UAE@XZ
+??1CG3HeaderDtlSheet@@MAE@XZ
+??1CG3HeaderDtlViewBase@@MAE@XZ
+??1CG3IncrementalSearchDlg@@UAE@XZ
+??1CG3IncrementalSearchGrd@@UAE@XZ
+??1CG3ItemFindObj@@UAE@XZ
+??1CG3LBGridBase@@UAE@XZ
+??1CG3LocationSet@@UAE@XZ
+??1CG3QSDataItem@@UAE@XZ
+??1CG3QuickSearchBase@@UAE@XZ
+??1CG3QuickSearchResultsGrid@@UAE@XZ
+??1CG3RecordView@@UAE@XZ
+??1CG3ScanEdit@@UAE@XZ
+??1CG3TermBrowseEdit@@UAE@XZ
+??1CG3Worksheet@@MAE@XZ
+??1CG3XGridWnd@@UAE@XZ
+??1CG3XRecordView@@UAE@XZ
+??1CG3XRecordWnd@@UAE@XZ
+??1CGXDynamicRecordset@@UAE@XZ
+??1CGXStyle@@UAE@XZ
+??1CGXTabWnd@@UAE@XZ
+??1CItemMasterSet@@UAE@XZ
+??1CItemSet@@UAE@XZ
+??1CMapArray@@UAE@XZ
+??1CRentalCustOutstandingDlg@@UAE@XZ
+??1CRentalReturnItem@@UAE@XZ
+??1CSequenceSet@@UAE@XZ
+??1CTenderAuthParamBB@@UAE@XZ
+??1CTxtSubBundleDetailItemSet@@UAE@XZ
+??1SECBrowseEditBase@@UAE@XZ
+??1SECListBoxEditor@@UAE@XZ
+??1SECMaskEdit@@UAE@XZ
+??1SECProgressCtrl@@UAE@XZ
+??1type_info@@UAE@XZ
+?'?3???K?W?c?o?{?
+??4CG3DateTime@@QAEXABU_SYSTEMTIME@@@Z
+??4CG3DateTime@@QAEXABUtagTIMESTAMP_STRUCT@@@Z
+?-?6?E?U?\?n?
+?-?E?N?W?m?
+?_GetBaseClass@CBBBuyerFrame@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CBBBuyerView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CBBBuyFrame@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CBBBuyHeaderView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CBBImportExport@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CBBListHeaderView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CBBLoadBGView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CBBPostView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CBBPriceTagDtlView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CBBPriceTagFrm@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CBBPurchaserView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CBBQRefEditView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CBBQRefFrame@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CBBSeriesEdit@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CBBSessionFrame@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CBBSessionView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CBBStolenBooksFrame@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CBBStolenBooksView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CBBTransListFrm@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CBBTransListView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CBuybackListFrame@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CBuyersGuideInqView@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CBuyersGuideInqViewBB@@KGPAUCRuntimeClass@@XZ
+?_Xbad_alloc@std@@YAXXZ
+?_Xlength_error@std@@YAXPBD@Z
+?+?0?F?U?q?
+?+?5?m?z?
+?+?E?T?c?r?
+?+?M?`?s?
+?0?@?P?T?X?\?`?d?h?l?p?t?x?|?
+?0?<?H?R?y?
+?2?>?G?V?]?m?v?
+?2?B?T?g?x?
+?2?C?c?
+?2?i?~?
+?4?P?p?
+?5?>?^?
+?5?D?S?b?q?
+?7?O?\?d?l?|?
+?A?F?R?W?m?r?~?
+?A?J?S?\?
+?ActivateFrame@CG3Worksheet@@UAEXH@Z
+?AddBinding@CG3UpdateInfoArray@@QAEHPAVCRecordset@@KV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?AddBorders@CGXGridCore@@UAE?AVCSize@@V2@ABVCGXStyle@@@Z
+?AddColumnFilter@?$CG3GridTemplate@VCGXGridWnd@@@@MAEXKVCPoint@@@Z
+?AddColumnFilter@?$CG3GridTemplate@VCGXRecordView@@@@MAEXKVCPoint@@@Z
+?AddColumnFilter@?$CG3GridTemplate@VCGXRecordWnd@@@@MAEXKVCPoint@@@Z
+?AddCommand@CGXGridCore@@UAEXPAVCGXCommand@@W4GXCmdType@@@Z
+?AddControl@CG3LayoutManager@@QAEXW4ELayoutType@1@I@Z
+?AddCustomMenuItems@CG3QuickSearchBase@@MAEXPAVCMenu@@@Z
+?AddDetail@CBBListHeaderView@@QAEHJH@Z
+?AddFile@CG3CABFile@@QAEXABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?AddLocationPrices@CG3AdoptTextParam@@QAEXJAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@0@Z
+?AddNew@CGXBrowserGrid@@UAEKXZ
+?AddNew@CItemSet@@UAEXXZ
+?AddNewHeader@CBBBuyHeaderView@@IAEXXZ
+?AddParam@CG3ParamInfoOb@@QAEHHHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?AddPostInventory@CG3AdoptTextbook@@QAEJV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@0JJ@Z
+?AddQuery@CMapArray@@QAE_NABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?AddRecalcRange@CGXGridCore@@UAEXABVCGXRange@@@Z
+?AddRentalToBBTran@CBBBuyHeaderView@@IAEXH@Z
+?AdjustDetail@CBBBuyHeaderView@@IAEXPAVCBBBuyDetailSet@@H@Z
+?AdjustDetailAdd@CBBBuyHeaderView@@QAEXPAVCBBBuyDetailSet@@@Z
+?AdjustDetailDelete@CBBBuyHeaderView@@QAEXPAVCBBBuyDetailSet@@@Z
+?Adopt@CG3AdoptTextbook@@QAEJV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@0J@Z
+?AdoptBBImport@CG3AdoptTextbook@@QAEJXZ
+?AllowEmptyDisplayString@CG3BrowseEditBase@@UBE_NXZ
+?AllowGridFilter@?$CG3GridTemplate@VCGXGridWnd@@@@MBE_NXZ
+?AllowGridFilter@?$CG3GridTemplate@VCGXRecordView@@@@MBE_NXZ
+?AllowGridFilter@?$CG3GridTemplate@VCGXRecordWnd@@@@MBE_NXZ
+?AttachEdit@SECMaskEdit@@QAEHHPAVCWnd@@@Z
+?AttachForeignTable@CGXODBCGrid@@QAEXKPAVCGXDynamicRecordset@@IIHH@Z
+?AuthorizeTender@CAuthorizationPOS@@QAE_NPAVCTenderAuthParamPOS@@J@Z
+?BatchDelete@CG3RecordView@@UAEJIJ@Z
+?BatchPrintClose@CG3RecordView@@UAEJIJ@Z
+?BatchPrintInit@CG3RecordView@@UAEJIJ@Z
+?BatchPrintPrint@CG3RecordView@@UAEJIJ@Z
+?BatchUpdateAllGlobals@CG3RecordView@@UAEXXZ
+?BeginTrans@CG3IncrementalSearchGrd@@UAEXPBD@Z
+?BeginTrans@CGXGridCore@@UAEXPBD@Z
+?BeginTrans@CGXODBCGrid@@UAEXPBD@Z
+?BuildIncludeFlag@CBBImportExport@@AAEXXZ
+?BuildWhereClause@CG3BrowseEditBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@AAV23@@Z
+?BuildWhereClause@CG3DCCBrowseEdit@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@AAV23@@Z
+?C?S?b?
+?CalcBufferDimension@CGXGridCore@@UAEHPBDKAAK1@Z
+?CalcRectFromRowCol@CGXGridCore@@UAE?AVCRect@@KKKKH@Z
+?CalculateButtonRectangles@SECListBoxEditor@@UAEXXZ
+?CalculateHeight@SECListBoxEditor@@UAEHXZ
+?CalcUsedPrices@CG3AdoptTextbook@@QAEXJNAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@0@Z
+?CanActivateGrid@CGXGridCore@@UAEHH@Z
+?CanAppend@CGXODBCGrid@@UAEHXZ
+?CancelRecord@CGXBrowserGrid@@UAEXXZ
+?CanChangeAutoFillSelection@CGXGridCore@@MAEHAAVCGXRange@@ABV2@@Z
+?CanChangeSelection@CGXBrowserGrid@@UAEHPAVCGXRange@@HH@Z
+?CanChangeSelection@CGXGridCore@@MAEHPAVCGXRange@@HH@Z
+?CanChangeTab@CGXGridCore@@UAEHXZ
+?CanClear@CGXGridCore@@UAEHXZ
+?CanCopy@CGXGridCore@@UAEHXZ
+?CanCut@CGXBrowserGrid@@UAEHXZ
+?CanCut@CGXGridCore@@UAEHXZ
+?CanFillCells@?$CG3GridTemplate@VCGXGridWnd@@@@MAE_NXZ
+?CanFillCells@?$CG3GridTemplate@VCGXRecordView@@@@MAE_NXZ
+?CanFillCells@?$CG3GridTemplate@VCGXRecordWnd@@@@MAE_NXZ
+?CanFloatCell@CGXGridCore@@UAEHPAVCGXControl@@KKABVCGXStyle@@H@Z
+?CanFreezeCols@CGXGridCore@@UAEHXZ
+?CanFreezeRows@CGXGridCore@@UAEHXZ
+?CanMergeCell@CGXGridCore@@UAEHPAVCGXControl@@KKABVCGXStyle@@H@Z
+?CanMergeCells@CGXGridCore@@UAEHABVCGXStyle@@0@Z
+?CanPaste@CGXBrowserGrid@@UAEHXZ
+?CanPaste@CGXGridCore@@UAEHXZ
+?CanRedo@CGXGridCore@@UAEHPAVCCmdUI@@@Z
+?CanSelectCurrentCell@CGXBrowserGrid@@UAEHHKKKK@Z
+?CanSelectCurrentCell@CGXGridCore@@MAEHHKKKK@Z
+?CanUndo@CGXGridCore@@UAEHPAVCCmdUI@@@Z
+?CanUnfreezeCols@CGXGridCore@@UAEHXZ
+?CanUnfreezeRows@CGXGridCore@@UAEHXZ
+?CanUpdate@CG3IncrementalSearchGrd@@UAEHXZ
+?CanUpdate@CGXODBCGrid@@UAEHXZ
+?ChangeBaseStyle@CGXGridCore@@UAEHGABVCGXStyle@@W4GXModifyType@@IW4GXCmdType@@@Z
+?ChangeColHeaderStyle@CGXGridCore@@QAEHABVCGXStyle@@W4GXModifyType@@IW4GXCmdType@@@Z
+?ChangeProperties@CGXGridCore@@UAEHABVCGXProperties@@IW4GXCmdType@@@Z
+?ChangeSearchByMode@CBBBuyHeaderView@@IAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?ChangeStandardStyle@CGXGridCore@@QAEHABVCGXStyle@@W4GXModifyType@@IW4GXCmdType@@@Z
+?ChangeStylesMap@CGXGridCore@@UAEHABVCGXStylesMap@@IW4GXCmdType@@@Z
+?CheckForSubBundleItems@CBBListHeaderView@@AAE_NHAAV?$CArray@HH@@@Z
+?CheckItemFindView@CBBListHeaderView@@QAEXH@Z
+?CheckPostDuplicates@CG3AdoptTextbook@@QAEHPAVCG3AdoptTextParam@@@Z
+?CheckUncheckSelectedBoxes@CBBPriceTagDtlView@@QAEXH@Z
+?classCBBBuyerFrame@CBBBuyerFrame@@2UCRuntimeClass@@B
+?classCBBBuyerView@CBBBuyerView@@2UCRuntimeClass@@B
+?classCBBBuyFrame@CBBBuyFrame@@2UCRuntimeClass@@B
+?classCBBBuyHeaderView@CBBBuyHeaderView@@2UCRuntimeClass@@B
+?classCBBImportExport@CBBImportExport@@2UCRuntimeClass@@B
+?classCBBListHeaderView@CBBListHeaderView@@2UCRuntimeClass@@B
+?classCBBLoadBGView@CBBLoadBGView@@2UCRuntimeClass@@B
+?classCBBPostView@CBBPostView@@2UCRuntimeClass@@B
+?classCBBPriceTagDtlView@CBBPriceTagDtlView@@2UCRuntimeClass@@B
+?classCBBPriceTagFrm@CBBPriceTagFrm@@2UCRuntimeClass@@B
+?classCBBPurchaserView@CBBPurchaserView@@2UCRuntimeClass@@B
+?classCBBQRefEditView@CBBQRefEditView@@2UCRuntimeClass@@B
+?classCBBQRefFrame@CBBQRefFrame@@2UCRuntimeClass@@B
+?classCBBSeriesEdit@CBBSeriesEdit@@2UCRuntimeClass@@B
+?classCBBSessionFrame@CBBSessionFrame@@2UCRuntimeClass@@B
+?classCBBSessionView@CBBSessionView@@2UCRuntimeClass@@B
+?classCBBStolenBooksFrame@CBBStolenBooksFrame@@2UCRuntimeClass@@B
+?classCBBStolenBooksView@CBBStolenBooksView@@2UCRuntimeClass@@B
+?classCBBTransListFrm@CBBTransListFrm@@2UCRuntimeClass@@B
+?classCBBTransListView@CBBTransListView@@2UCRuntimeClass@@B
+?classCBuybackListFrame@CBuybackListFrame@@2UCRuntimeClass@@B
+?classCBuyersGuideInqView@CBuyersGuideInqView@@2UCRuntimeClass@@B
+?classCBuyersGuideInqViewBB@CBuyersGuideInqViewBB@@2UCRuntimeClass@@B
+?classCG3NavComboBoxBtn@CG3NavComboBoxBtn@@2USECButtonClass@@B
+?CleanAdvancedUndo@CGXGridCore@@UAEXXZ
+?Clear@CGXGridCore@@UAEHH@Z
+?ClearCells@CGXBrowserGrid@@UAEHABVCGXRangeList@@H@Z
+?ClearCells@CGXGridCore@@UAEHABVCGXRangeList@@H@Z
+?ClearCellsAlternate@CGXGridCore@@UAEHABVCGXRange@@H@Z
+?ClearGrid@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXXZ
+?ClearGrid@?$CG3GridTemplate@VCGXRecordView@@@@UAEXXZ
+?ClearGrid@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXXZ
+?ClearGXData@?$CG3XRecordBase@VCG3XRecordViewBase@@@@IAEXXZ
+?ClearTransaction@CBBBuyHeaderView@@IAEXXZ
+?Close@CG3CABFile@@QAEXXZ
+?Close@CG3Database@@UAEXXZ
+?Close@CGXDynamicRecordset@@UAEXXZ
+?CommitTrans@CG3IncrementalSearchGrd@@UAEXXZ
+?CommitTrans@CGXGridCore@@UAEXXZ
+?CommitTrans@CGXODBCGrid@@UAEXXZ
+?CompactDB@CG3Database@@QAEXXZ
+?ComposeStyleRowCol@CGXGridCore@@UAEXKKPAVCGXStyle@@H@Z
+?ConnectToDatasource@CBBImportExport@@AAE_NXZ
+?ContinueModal@CG3Dialog@@UAEHXZ
+?ConvertBindingToAbbr@CBBListHeaderView@@IAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@V23@@Z
+?ConvertCurrency@CG3WinApp@@QAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@V23@JJN@Z
+?ConvertCurrency@CG3WinApp@@QAENNJJN@Z
+?ConvertValueToString@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEXKAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?ConvertValueToString@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXKAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Copy@CGXGridCore@@UAEHXZ
+?CopyCells@CGXGridCore@@UAEHVCGXRange@@KKI@Z
+?CopyCellsToArchive@CGXGridCore@@UAEHAAVCArchive@@ABVCGXRangeList@@H@Z
+?CopyRange@CGXGridCore@@UAEHABVCGXRange@@@Z
+?CopyRange@CGXGridCore@@UAEHABVCGXRangeList@@@Z
+?CopyRangeList@CGXGridCore@@UAEHAAVCGXRangeList@@H@Z
+?CopyTextToFile@CGXGridCore@@UAEHAAVCFile@@ABVCGXRangeList@@@Z
+?CorrectBGQuery@CBBBuyHeaderView@@IAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV23@@Z
+?Create@CGXComboBoxWnd@@QAEHKI@Z
+?Create@CGXTabWnd@@QAEHPAVCWnd@@PBDPAUCCreateContext@@KI@Z
+?CreateBuyerLocArray@CBBBuyHeaderView@@IAEXXZ
+?CreateCompress@CG3CABFile@@QAEHABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?CreateDecompress@CG3CABFile@@QAEHABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?CreateGridInfo@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEXXZ
+?CreateGridInfo@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXXZ
+?CreateGridInfo@CBuyersGuideInqView@@MAEXXZ
+?CreateGridInfo@CBuyersGuideInqViewBB@@MAEXXZ
+?CreateInQuery@CG3QuickSearchBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV23@0@Z
+?CreateMenuResourceIds@CG3QuickSearchBase@@MAEXXZ
+?CreateObject@CBBBuyerFrame@@SGPAVCObject@@XZ
+?CreateObject@CBBBuyerView@@SGPAVCObject@@XZ
+?CreateObject@CBBBuyFrame@@SGPAVCObject@@XZ
+?CreateObject@CBBBuyHeaderView@@SGPAVCObject@@XZ
+?CreateObject@CBBImportExport@@SGPAVCObject@@XZ
+?CreateObject@CBBListHeaderView@@SGPAVCObject@@XZ
+?CreateObject@CBBLoadBGView@@SGPAVCObject@@XZ
+?CreateObject@CBBPostView@@SGPAVCObject@@XZ
+?CreateObject@CBBPriceTagDtlView@@SGPAVCObject@@XZ
+?CreateObject@CBBPriceTagFrm@@SGPAVCObject@@XZ
+?CreateObject@CBBPurchaserView@@SGPAVCObject@@XZ
+?CreateObject@CBBQRefEditView@@SGPAVCObject@@XZ
+?CreateObject@CBBQRefFrame@@SGPAVCObject@@XZ
+?CreateObject@CBBSeriesEdit@@SGPAVCObject@@XZ
+?CreateObject@CBBSessionFrame@@SGPAVCObject@@XZ
+?CreateObject@CBBSessionView@@SGPAVCObject@@XZ
+?CreateObject@CBBStolenBooksFrame@@SGPAVCObject@@XZ
+?CreateObject@CBBStolenBooksView@@SGPAVCObject@@XZ
+?CreateObject@CBBTransListFrm@@SGPAVCObject@@XZ
+?CreateObject@CBBTransListView@@SGPAVCObject@@XZ
+?CreateObject@CBuybackListFrame@@SGPAVCObject@@XZ
+?CreateObject@CBuyersGuideInqView@@SGPAVCObject@@XZ
+?CreateObject@CBuyersGuideInqViewBB@@SGPAVCObject@@XZ
+?CreatePurchaserArrays@CBBBuyHeaderView@@IAEHXZ
+?CreateQuery@CBBBuyHeaderView@@IAEHAAHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?CreateQuickToolBar@CG3Worksheet@@IAEHKIK@Z
+?CreateStyle@CGXGridCore@@UAEPAVCGXStyle@@XZ
+?CreateView@CGXTabWnd@@QAEPAVCWnd@@PAUCRuntimeClass@@PBDPAUCCreateContext@@I@Z
+?CustomDisplayMenu@CG3QuickSearchBase@@MAEXPAVCMenu@@@Z
+?Cut@CGXBrowserGrid@@UAEHXZ
+?Cut@CGXGridCore@@UAEHXZ
+?CutRange@CGXGridCore@@UAEHABVCGXRangeList@@H@Z
+?DDX_BEItem@@YGXPAVCDataExchange@@IAAJPAVCG3BrowseEditBase@@@Z
+?DDX_CBItem@@YGXPAVCDataExchange@@HAAH@Z
+?DDX_CBItem@@YGXPAVCDataExchange@@HAAJ@Z
+?DDX_CurrEdit@@YGXPAVCDataExchange@@AAVCG3CurrencyEdit@@AAN@Z
+?DDX_CurrEdit@@YGXPAVCDataExchange@@AAVCG3CurrencyEdit@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?DDX_DateText@@YGXPAVCDataExchange@@HAAUtagTIMESTAMP_STRUCT@@@Z
+?DDX_FieldBEItem@@YGXPAVCDataExchange@@IAAJPAVCRecordset@@PAVCG3BrowseEditBase@@@Z
+?DDX_FieldCBItem@@YGXPAVCDataExchange@@HAAEPAVCRecordset@@_N@Z
+?DDX_FieldCBItem@@YGXPAVCDataExchange@@HAAJPAVCRecordset@@_N@Z
+?DDX_FieldCurrEdit@@YGXPAVCDataExchange@@AAVCG3CurrencyEdit@@AANPAVCRecordset@@@Z
+?DDX_FieldCurrEdit@@YGXPAVCDataExchange@@AAVCG3CurrencyEdit@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PAVCRecordset@@@Z
+?DDX_FieldDateTime@@YGXPAVCDataExchange@@HAAUtagTIMESTAMP_STRUCT@@PAVCRecordset@@@Z
+?DDX_G3FieldText@@YGXPAVCDataExchange@@HAAJPAVCRecordset@@@Z
+?DDX_G3FieldText@@YGXPAVCDataExchange@@HAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PAVCRecordset@@@Z
+?DeferDestroyWindow@CG3Worksheet@@QAEXXZ
+?DefWindowProcA@SECMDIChildWnd@@UAEJIIJ@Z
+?DeleteDetailRecords@CBBBuyHeaderView@@IAEXXZ
+?DeleteItem@SECListBoxEditor@@UAEHH@Z
+?DeletePurchaser@CBBPurchaserView@@IAEJV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?DeleteRangeName@CGXGridCore@@UAEHPBDPAVCObject@@W4GXCmdType@@@Z
+?DeleteRecords@CGXBrowserGrid@@UAEXXZ
+?DeleteRows@CBBBuyerView@@MAEXABVCDWordArray@@0PAH@Z
+?DeleteRows@CBBQRefEditView@@MAEXABVCDWordArray@@0PAH@Z
+?DeleteRows@CG3IncrementalSearchGrd@@UAEXABVCDWordArray@@0PAH@Z
+?DeleteRows@CG3QuickSearchResultsGrid@@MAEXABVCDWordArray@@0PAH@Z
+?DeleteRows@CGXODBCGrid@@UAEXABVCDWordArray@@0PAH@Z
+?DeleteUsesSQL@CG3RecordView@@UAEHXZ
+?DestroyItemFind@CG3RecordView@@QAEXXZ
+?DestroyWindow@CG3IncrementalSearchDlg@@UAEHXZ
+?DestroyWindow@CG3ScanEdit@@UAEHXZ
+?DestroyWindow@CG3Worksheet@@UAEHXZ
+?DisplayAggregateText@CG3Worksheet@@UAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?DisplayContextMenu@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXKKVCPoint@@@Z
+?DisplayContextMenu@?$CG3GridTemplate@VCGXRecordView@@@@UAEXKKVCPoint@@@Z
+?DisplayContextMenu@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXKKVCPoint@@@Z
+?DisplayContextMenu@CG3QuickSearchResultsGrid@@MAEXKKVCPoint@@@Z
+?DisplayErrors@CBBImportExport@@AAEXXZ
+?DisplayMenu@CG3QuickSearchBase@@MAEXI@Z
+?DisplayMenu@CG3QuickSearchBase@@MAEXXZ
+?DisplayRoutingInfo@CBBBuyHeaderView@@AAEXH@Z
+?DisplayWarningText@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXXZ
+?DisplayWarningText@?$CG3GridTemplate@VCGXRecordView@@@@UAEXXZ
+?DisplayWarningText@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXXZ
+?DndDrawMoveRect@CGXGridCore@@UAEXVCPoint@@HH@Z
+?DndStartDragDrop@CGXGridCore@@UAEHKK@Z
+?DoAutoFill@CGXGridCore@@MAEXAAVCGXRange@@0@Z
+?DoCancelMode@CGXGridCore@@MAEHXZ
+?DoColumnBinding@CG3FileImpExp@@UAEHXZ
+?DoColumnFormatting@CG3FileImpExp@@UAEHXZ
+?DoColumnReformat@CG3FileImpExp@@UAEXXZ
+?DoCommand@CGXGridCore@@MAEHIJ@Z
+?DoCtlColor@CGXGridCore@@MAEPAUHBRUSH__@@PAVCDC@@PAVCWnd@@I@Z
+?DoDataExchange@CBBBuyHeaderView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CBBImportExport@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CBBListHeaderView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CBBLoadBGView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CBBPostView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CBBPurchaserView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CBBSeriesEdit@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CBBSessionView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CBBStolenBooksView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CBBTransListView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CG3Dialog@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CG3FormView@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CG3HeaderDtlViewBase@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CG3IncrementalSearchDlg@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CG3RecordView@@MAEXPAVCDataExchange@@@Z
+?DoDelete@SECListBoxEditor@@UAEHXZ
+?DoFieldExchange@CBBPriceTagDetailSet@@UAEXPAVCFieldExchange@@@Z
+?DoFieldExchange@CBuyersGuideSet@@UAEXPAVCFieldExchange@@@Z
+?DoFieldExchange@CG3LocationSet@@UAEXPAVCFieldExchange@@@Z
+?DoFieldExchange@CG3PriceTagPrintQueueSet@@UAEXPAVCFieldExchange@@@Z
+?DoFieldExchange@CGXDynamicRecordset@@UAEXPAVCFieldExchange@@@Z
+?DoFieldExchange@CItemMasterSet@@UAEXPAVCFieldExchange@@@Z
+?DoFieldExchange@CItemSet@@UAEXPAVCFieldExchange@@@Z
+?DoFieldExchange@CSequenceSet@@UAEXPAVCFieldExchange@@@Z
+?DoFieldExchange@CTxtSubBundleDetailItemSet@@UAEXPAVCFieldExchange@@@Z
+?DoGetDlgCode@CGXGridCore@@MAEII@Z
+?DoGetScrollBarCtrl@CGXGridCore@@MBEPAVCScrollBar@@H@Z
+?DoHScroll@CGXGridCore@@MAEHIIPAVCScrollBar@@@Z
+?DoItemFindSKU@CG3RecordView@@QAEHPAVCG3ItemFindObj@@@Z
+?DoItemSearch@CBBBuyHeaderView@@IAEXXZ
+?DoLButtonDblClk@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoLButtonDown@?$CG3GridTemplate@VCGXGridWnd@@@@UAEHIVCPoint@@@Z
+?DoLButtonDown@?$CG3GridTemplate@VCGXRecordView@@@@UAEHIVCPoint@@@Z
+?DoLButtonDown@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHIVCPoint@@@Z
+?DoLButtonUp@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoLookUp@CG3BrowseEditBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV23@@Z
+?DoMButtonDblClk@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoMButtonDown@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoMButtonUp@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoModal@CG3Dialog@@UAEHPAVCView@@@Z
+?DoModal@CG3Dialog@@UAEHXZ
+?DoMouseActivate@CGXGridCore@@MAEHPAVCWnd@@IIAAH@Z
+?DoMouseMove@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoMoveDown@SECListBoxEditor@@UAEHXZ
+?DoMoveUp@SECListBoxEditor@@UAEHXZ
+?DoNewItemSearch@CBBBuyHeaderView@@IAEXXZ
+?DoNotifyDestroy@CGXGridCore@@MAEHXZ
+?DoOnUpdate@CG3BrowseEditBase@@UAEXXZ
+?DoOnUpdate@CG3DCCBrowseEdit@@UAEXXZ
+?DoPreparePrinting@CG3Dialog@@MAEHPAUCPrintInfo@@@Z
+?DoPrintPreview@CG3Dialog@@MAEHIPAVCG3View@@PAVCG3XGridWndPreview@@PAUCG3XGridWndPreviewState@@@Z
+?DoRButtonDblClk@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoRButtonDown@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoRButtonUp@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoRequery@CBuybackListFrame@@MAEXPAJ@Z
+?DoScroll@CGXGridCore@@UAEHHK@Z
+?DoSetCursor@CGXGridCore@@MAEHPAVCWnd@@II@Z
+?DoShowWindow@CGXGridCore@@MAEHHI@Z
+?DoSize@CGXGridCore@@MAEHIHH@Z
+?DoSortByLocation@CBBPriceTagFrm@@QAEXXZ
+?DoSortByLocation@CBBTransListFrm@@QAEXXZ
+?DoSortByPurchaser@CBBPriceTagFrm@@QAEXXZ
+?DoSortBySession@CBBTransListFrm@@QAEXXZ
+?DoTransfer@CBBImportExport@@AAEXXZ
+?DoVScroll@CGXGridCore@@MAEHIIPAVCScrollBar@@@Z
+?DrawGridLine@CGXGridCore@@MAEXPAVCDC@@HHHHHKI@Z
+?DrawInvertCell@CGXGridCore@@MAEXPAVCDC@@KKVCRect@@@Z
+?DrawInvertFrame@CGXGridCore@@MAEXPAVCDC@@ABVCRect@@1HHHH@Z
+?DrawSelectionFrame@CGXGridCore@@UAEXPAVCDC@@HPBVCGXRange@@@Z
+?DrawSelectionRangeFrame@CGXGridCore@@MAEXPAVCDC@@ABVCGXRange@@HH@Z
+?Edit@CGXBrowserGrid@@UAEXK@Z
+?EditDetail@CBBQRefEditView@@MAEXXZ
+?EjectReceipt@COPOSContainer@@QAEXXZ
+?EmptyPriceTagQueue@CBBPriceTagDtlView@@QAEXXZ
+?EnableContextMenu@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXKKPAVCMenu@@@Z
+?EnableContextMenu@?$CG3GridTemplate@VCGXRecordView@@@@UAEXKKPAVCMenu@@@Z
+?EnableContextMenu@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXKKPAVCMenu@@@Z
+?EnableControls@CBBSessionView@@MAEXH@Z
+?EnableControls@CBBStolenBooksView@@UAEXH@Z
+?EnableControls@CG3FormView@@UAEXH@Z
+?EnableControls@CG3RecordView@@UAEXH@Z
+?EnableHammer@CG3Worksheet@@UAEX_N@Z
+?EnableLocationCombo@CLocationSelectorClient@@QAEXH@Z
+?EnableMoveCols@CGXGridParam@@QAEXH@Z
+?EnableMoveRows@CGXGridParam@@QAEXH@Z
+?EnableOleDataSource@CGXGridCore@@QAEHK@Z
+?EnableOleDropTarget@CGXGridCore@@QAEXK@Z
+?EnableSelection@CGXGridParam@@QAEXI@Z
+?EnableSysCommandEx@SECMDIChildWnd@@UAEXK@Z
+?EnableTrackRowHeight@CGXGridParam@@QAEXI@Z
+?EnableUndo@CGXGridParam@@QAEXH@Z
+?EndMSRCapture@CG3MainFrame@@QAEHXZ
+?EndTransaction@CBBBuyHeaderView@@QAEHXZ
+?EvalVisibleFloatMergeCells@CGXGridCore@@UAEHABVCGXRange@@KKKKKKHPAV2@H@Z
+?ExecuteCommand@CGXGridCore@@UAEHPAVCGXCommand@@PAV1@W4GXCmdType@@@Z
+?ExtractFiles@CG3CABFile@@QAEXXZ
+?F?X?z?
+?FillAllocPurchArray@CBBBuyHeaderView@@IAEXXZ
+?FillBGInformation@CBBLoadBGView@@IAEXXZ
+?FillCell@?$CG3GridTemplate@VCGXGridWnd@@@@MAEXKKKKV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?FillCell@?$CG3GridTemplate@VCGXRecordWnd@@@@MAEXKKKKV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?FillCell@CG3XRecordView@@UAEXKKKKV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?FillChoiceList@CGXDynamicRecordset@@QAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?FillDispPurchArray@CBBBuyHeaderView@@IAEXXZ
+?FillDragDrop@?$CG3GridTemplate@VCGXGridWnd@@@@UAEHPAU_tagG3DROPDATAEX@@ABVCGXRangeList@@@Z
+?FillDragDrop@?$CG3GridTemplate@VCGXRecordView@@@@UAEHPAU_tagG3DROPDATAEX@@ABVCGXRangeList@@@Z
+?FillDragDrop@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHPAU_tagG3DROPDATAEX@@ABVCGXRangeList@@@Z
+?FillStudentInfo@CBBBuyHeaderView@@IAEXPAX@Z
+?FindDetailRecord@CBBListHeaderView@@IAEXXZ
+?FindNextCell@CGXGridCore@@UAEHHAAK0@Z
+?FindNextNewTitle@CBBQRefEditView@@IAE_NXZ
+?FindString@?$CG3XRecordBase@VCG3XRecordViewBase@@@@UAEXPBD@Z
+?FindString@?$CG3XRecordBase@VCG3XRecordWndBase@@@@UAEXPBD@Z
+?Format@CG3DateTime@@QBE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PBD@Z
+?Format@CG3DateTime@@QBE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?FormatDisplayString@CG3BrowseEditBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV23@@Z
+?FormatDisplayString@CG3DCCBrowseEdit@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV23@@Z
+?FreeObjectCache@CGXGridCore@@MAEXXZ
+?FreePurchaserArrays@CBBBuyHeaderView@@IAEXXZ
+?FreezeCols@CGXGridCore@@UAEXXZ
+?FreezeRows@CGXGridCore@@UAEXXZ
+?G3BBPrintPriceTag@@YAHPAVCG3XRecordView@@JJJJHHJPAVCPrintDialog@@@Z
+?G3BBPrintPriceTagQueue@@YAHPAVCG3XRecordView@@PAVCPrintDialog@@JJHHH@Z
+?G3BBPrintQueueSetPrintedFlag@@YAHJJJJHHHH@Z
+?G3BBPrintQueueTag@@YAHPAVCG3XRecordView@@JJJJHHJHPAVCPrintDialog@@@Z
+?G3BBPurgePriceTagQueue@@YAHPAVCG3XRecordView@@JJ@Z
+?G3BBQueuePriceTag@@YAHJJJJHHJ@Z
+?G3BeginTrans@@YAHXZ
+?G3CanPrintPriceTags@@YAJJJJ@Z
+?G3CanSeeMargin@@YAJJJJ@Z
+?G3CommitTrans@@YAHXZ
+?G3DCCDataEx@@YAJV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@00@Z
+?G3DropButtonMenu@@YAIPAVSECCustomToolBar@@IIHPAVCWnd@@P82@AEXPAVCMenu@@@Z@Z
+?G3EnableAllControls@@YAXPAVCWnd@@_N@Z
+?G3EscapeSQL@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV12@_N@Z
+?G3ExecuteSQL@@YA_NABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PAVCG3Database@@W4ExceptionOption@@@Z
+?G3GetApp@@YAPAVCG3WinApp@@XZ
+?G3GetCRLUID@@YAJJJ@Z
+?G3GetCurLocationID@@YAJXZ
+?G3GetDatabasePtr@@YAPAVCG3Database@@H@Z
+?G3GetDCCInfo@@YAHJAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?G3GetEQSQL@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@J@Z
+?G3GetFieldLong@@YAJAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@FHPAVCG3Database@@@Z
+?G3GetFieldLongArray@@YA_NAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@AAV?$CArray@JJ@@HPAVCG3Database@@@Z
+?G3GetFieldLongDB@@YAJABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PAVCG3Database@@FW4ExceptionOption@@@Z
+?G3GetFieldString@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@AAV12@FHPAVCG3Database@@@Z
+?G3GetFieldStringDB@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV12@PAVCG3Database@@FW4ExceptionOption@@@Z
+?G3GetLocationName@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@J@Z
+?G3GetLocationSelector@@YAPAVCG3LocationSelector@@XZ
+?G3GetLocationShortDesc@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@J@Z
+?G3GetMainWnd@@YAPAVCG3MainFrame@@XZ
+?G3GetMatrixCount@@YAJJ@Z
+?G3GetStatus@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@JH@Z
+?G3GetSubsystem@@YAHJ@Z
+?G3GetSystemParameter@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@JJPAVCG3Database@@W4ExceptionOption@@@Z
+?G3GetSystemTypeMask@@YAJJJJJ@Z
+?G3GetTermID@@YAJV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?G3GetTermName@@YAXJAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?G3GetUsedSKU@@YAJJ@Z
+?G3HasEntryAccess@@YAJJJJ@Z
+?G3ISBNCheckDigit@@YADV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?G3ISBNExpand@@YAHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?G3ISBNGet13@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@V12@@Z
+?G3ItemFind@@YAHKHHH@Z
+?G3ItemFindDlg@@YAJKHPAVCG3ItemFindObj@@H@Z
+?G3ItemFindDlgEx@@YAHPAVCG3ItemFindObj@@@Z
+?G3ItemGetDCCID@@YAJJ@Z
+?G3ItemGetNextSKU@@YAJPAVCG3Database@@@Z
+?G3LookupDCCInfo@@YAXJAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@AAJ_N@Z
+?G3MakeDCC@@YAJV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@00@Z
+?G3PrintEx@@YAXIPAVCWnd@@PAVCSortInfoArray@@PAVCPrintDialog@@@Z
+?G3PrintPreviewEx@@YAXIPAVCWnd@@PAVCSortInfoArray@@_NHHHH@Z
+?G3Rollback@@YAHXZ
+?G3Round@@YAXAANH@Z
+?G3RoundIt@@YAXHHAAN@Z
+?G3TableLookup@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@JABV12@000@Z
+?G3WebAddTrigger@@YAHJHHJH@Z
+?GenerateList@CBBListHeaderView@@IAEXXZ
+?GetActivePane@CGXTabWnd@@QAEPAVCWnd@@XZ
+?GetAdditionalFilter@CBBTransListFrm@@QAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetAdditionalFilter@CG3QuickSearchBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetAdvancedUndoInfo@CGXGridCore@@UAEPAVCObject@@XZ
+?GetAggregator@CG3Worksheet@@UAEAAVCAggregator@@XZ
+?GetAppendRow@CGXBrowserGrid@@UAEKXZ
+?GetAuthoModeType@CTenderAuthParam@@QAEHXZ
+?GetAuthoType@CTenderAuthParam@@QAEHXZ
+?GetBeam@CGXTabWnd@@QAEAAVCGXTabBeam@@XZ
+?GetBundledItemDetailID@CBBListHeaderView@@IAEJXZ
+?GetBuyersGuideInfo@CBBStolenBooksView@@QAEXABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@0@Z
+?GetBuyersGuideInfo@CBBStolenBooksView@@QAEXXZ
+?GetBuyerView@CBBBuyerFrame@@QAEPAVCWnd@@XZ
+?GetBuyPrice@CBBListHeaderView@@IAENXZ
+?GetBuyQty@CBBListHeaderView@@IAEJXZ
+?GetCellRangeRowCol@CGXGridCore@@UAEPAVCGXRange@@KKAAV2@@Z
+?GetClipboardStyleRowCol@CGXGridCore@@UAEHKKPAVCGXStyle@@H@Z
+?GetColArray@CGXRangeList@@QBEHKAAVCDWordArray@@0H@Z
+?GetColCount@CBBPurchaserView@@MAEKXZ
+?GetColCount@CGXGridCore@@UAEKXZ
+?GetColIndex@CGXBrowserGrid@@UAEKK@Z
+?GetColIndexByName@?$CG3GridTemplate@VCGXRecordView@@@@QAEKI@Z
+?GetColIndexByName@?$CG3GridTemplate@VCGXRecordView@@@@QAEKV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetColIndexByName@?$CG3GridTemplate@VCGXRecordWnd@@@@QAEKI@Z
+?GetColWidth@?$CG3GridTemplate@VCGXGridWnd@@@@UAEHK@Z
+?GetColWidth@?$CG3GridTemplate@VCGXRecordView@@@@UAEHK@Z
+?GetColWidth@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHK@Z
+?GetContextMenuID@?$CG3GridTemplate@VCGXGridWnd@@@@UAEIKKVCPoint@@@Z
+?GetContextMenuID@?$CG3GridTemplate@VCGXRecordView@@@@UAEIKKVCPoint@@@Z
+?GetContextMenuID@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEIKKVCPoint@@@Z
+?GetContextMenuID@CBBPriceTagDtlView@@UAEIKKVCPoint@@@Z
+?GetContextMenuID@CG3QuickSearchResultsGrid@@MAEIKKVCPoint@@@Z
+?GetContextSubMenuID@?$CG3GridTemplate@VCGXGridWnd@@@@UAEIKKVCPoint@@@Z
+?GetContextSubMenuID@?$CG3GridTemplate@VCGXRecordView@@@@UAEIKKVCPoint@@@Z
+?GetContextSubMenuID@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEIKKVCPoint@@@Z
+?GetContextSubMenuID@CBBPriceTagDtlView@@UAEIKKVCPoint@@@Z
+?GetContextSubMenuID@CG3QuickSearchResultsGrid@@MAEIKKVCPoint@@@Z
+?GetControl@CGXGridCore@@UAEPAVCGXControl@@KK@Z
+?GetCopyTextRowCol@CGXGridCore@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@KK@Z
+?GetCount@CGXTabBeam@@QAEHXZ
+?GetCourseSrchStr@CBBBuyHeaderView@@IAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@V23@@Z
+?GetCoveredCellsRowCol@CGXGridCore@@UAEPAVCGXRange@@KKAAV2@@Z
+?GetCurGridCol@CG3RecordView@@UAEJXZ
+?GetCurGridRow@CG3RecordView@@UAEJXZ
+?GetCurrentBBUID@CBuybackListFrame@@QAEJXZ
+?GetCurrentCell@CGXGridCore@@QAEHPAK0H@Z
+?GetCurrentCellControl@CGXGridCore@@QAEPAVCGXControl@@XZ
+?GetCurrentDataPtr@CG3NavComboBox@@QAEPAJXZ
+?GetCurrentRate@CG3WinApp@@QAENJ@Z
+?GetCurrentSessionStatus@CBuybackListFrame@@QAEHXZ
+?GetCurrExchObj@CG3WinApp@@QAEPAVCCurrencyExchObj@@J@Z
+?GetCurSel@CGXTabBeam@@QAEHXZ
+?GetCustomerQuery@CG3QuickSearchBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV23@H@Z
+?GetCWnd@CG3QuickSearchBase@@MAEPAVCWnd@@XZ
+?GetData@CG3ItemFindDataArray@@QAEPAVCG3ItemFindSKUObj@@H@Z
+?GetDataEx@CG3BrowseEditBase@@UAEJXZ
+?GetDateFromInput@CG3FileImpExp@@QAE?AUtagTIMESTAMP_STRUCT@@HH@Z
+?GetDateQuery@CG3QuickSearchBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV23@00@Z
+?GetDCCSrchStr@CBBBuyHeaderView@@IAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@V23@@Z
+?GetDefaultColWidth@CGXGridCore@@UAEHXZ
+?GetDefaultConnect@CBBPriceTagDetailSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultConnect@CBuyersGuideSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultConnect@CG3LocationSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultConnect@CG3PriceTagPrintQueueSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultConnect@CGXDynamicRecordset@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultConnect@CItemMasterSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultConnect@CItemSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultConnect@CSequenceSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultConnect@CTxtSubBundleDetailItemSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultRowHeight@CGXGridCore@@UAEHXZ
+?GetDefaultSQL@CBBPriceTagDetailSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultSQL@CBuyersGuideSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultSQL@CG3LocationSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultSQL@CG3PriceTagPrintQueueSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultSQL@CGXDynamicRecordset@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultSQL@CItemMasterSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultSQL@CItemSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultSQL@CSequenceSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultSQL@CTxtSubBundleDetailItemSet@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDetailClass@CBuybackListFrame@@MAEPAUCRuntimeClass@@XZ
+?GetDetailView@CBBBuyFrame@@QAEPAVCWnd@@XZ
+?GetDetailView@CBBBuyHeaderView@@QAEPAVCBBBuyDetailView@@XZ
+?GetDetailView@CBBListHeaderView@@IAEPAVCBBListDetailView@@XZ
+?GetDetailView@CBuybackListFrame@@QAEPAVCBBListDetailView@@XZ
+?GetDetailWnd@CG3HeaderDtlSheet@@UAEPAVCWnd@@XZ
+?GetDisplaySize@CGXODBCGrid@@MAEJABUCGXFieldInfo@@J@Z
+?GetDropDataGlobal@?$CG3GridTemplate@VCGXGridWnd@@@@UAEPAXPAVCGXNoOleDataObjectProxy@@@Z
+?GetDropDataGlobal@?$CG3GridTemplate@VCGXRecordView@@@@UAEPAXPAVCGXNoOleDataObjectProxy@@@Z
+?GetDropDataGlobal@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEPAXPAVCGXNoOleDataObjectProxy@@@Z
+?GetDtlAllClass@CBuybackListFrame@@MAEPAUCRuntimeClass@@XZ
+?GetDtlDtlClass@CBuybackListFrame@@MAEPAUCRuntimeClass@@XZ
+?GetDtlSumClass@CBuybackListFrame@@MAEPAUCRuntimeClass@@XZ
+?GetDtlView@CBBPriceTagFrm@@QAEPAVCBBPriceTagDtlView@@XZ
+?GetDtlView@CBBSessionFrame@@QAEPAVCWnd@@XZ
+?GetEditView@CBBQRefFrame@@QAEPAVCWnd@@XZ
+?GetError@CGXGridCore@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetErrorMessage@CG3Exception@@UAEHPADIPAI@Z
+?GetField@CGXDynamicRecordset@@QBEAAUCGXFieldDesc@@I@Z
+?GetFieldData@CGXDynamicRecordset@@QAEHHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?GetFieldData@CGXODBCGrid@@QAEXHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetFilter@CG3LocationComboBox@@SA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@_N@Z
+?GetFindView@CBBQRefFrame@@QAEPAVCWnd@@XZ
+?GetFirstDisplayedLocation@CG3LocationSelector@@QAEHXZ
+?GetFontHeight@CGXGridCore@@UAEHXZ
+?GetFontMetrics@CGXGridCore@@MAEXPAVCDC@@AAH1@Z
+?GetFontWidth@CGXGridCore@@UAEHXZ
+?GetFrozenCols@CGXGridCore@@UAEKXZ
+?GetFrozenRows@CGXGridCore@@UAEKXZ
+?GetG3RecordView@CG3QuickSearchBase@@MAEPAVCG3RecordView@@XZ
+?GetG3XRecordView@CG3QuickSearchBase@@MAEPAVCG3XRecordView@@XZ
+?GetGlbHeaderTxt@CG3RecordView@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetGridView@CBBTransListFrm@@QAEPAVCWnd@@XZ
+?GetGridView@CBBTransListView@@IAEPAVCBBTransListDtlView@@XZ
+?GetGroupView@CBBBuyerFrame@@QAEPAVCWnd@@XZ
+?GetGXTabWnd@CG3HeaderDtlSheet@@MAEAAVCGXTabWnd@@XZ
+?GetHdrView@CBBBuyFrame@@QAEPAVCWnd@@XZ
+?GetHdrView@CBBSessionFrame@@QAEPAVCWnd@@XZ
+?GetHdrView@CBBTransListFrm@@QAEPAVCBBTransListView@@XZ
+?GetHeaderClass@CBuybackListFrame@@MAEPAUCRuntimeClass@@XZ
+?GetHeaderCols@CGXGridCore@@UAEKXZ
+?GetHeaderRows@CGXGridCore@@UAEKXZ
+?GetHeaderView@CBuybackListFrame@@QAEPAVCBBListHeaderView@@XZ
+?GetHeaderWnd@CG3HeaderDtlSheet@@UAEPAVCWnd@@XZ
+?GetID@CG3BrowseEditBase@@UAEJXZ
+?GetInvertStateRowCol@CGXGridCore@@UAEHKKPBVCGXRangeList@@@Z
+?GetItemFindFmtStr@CBBListHeaderView@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetItemFindFmtStr@CBBStolenBooksView@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetItemFindFmtStr@CG3RecordView@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetItemFindStr@CG3QuickSearchBase@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetItemFindView@CG3RecordView@@QAEPAVCG3ItemFindResultsView@@XZ
+?GetLastRow@CGXBrowserGrid@@UAEKXZ
+?GetListBoxPtr@SECListBoxEditor@@QBEPAVCListBox@@XZ
+?GetLocationComboBoxPtr@@YAPAVCG3LocationComboBox@@XZ
+?GetLocationID@?$CG3GridTemplate@VCGXGridWnd@@@@UAEJXZ
+?GetLocationID@?$CG3GridTemplate@VCGXRecordView@@@@UAEJXZ
+?GetLocationID@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEJXZ
+?GetLocationID@CG3Dialog@@UAEJXZ
+?GetLocationID@CG3FormView@@UAEJXZ
+?GetLocationID@CG3RecordView@@UAEJXZ
+?GetLocationID@CG3Worksheet@@MAEJXZ
+?GetLocationString@CG3QuickSearchBase@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetLocGridView@CBBSessionView@@IAEPAVCBBSessionLocView@@XZ
+?GetLocView@CBBSessionFrame@@QAEPAVCWnd@@XZ
+?GetLongValue@?$CG3GridTemplate@VCGXRecordView@@@@QAEJKPBD@Z
+?GetLongValue@?$CG3GridTemplate@VCGXRecordWnd@@@@QAEJKPBD@Z
+?GetLowCashThreshold@CBBSessionFrame@@QAENXZ
+?GetMapValue@CG3QuickSearchResultsGrid@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@KABVCGXStyle@@@Z
+?GetMessageMap@CBBBuyerFrame@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CBBBuyerView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CBBBuyFrame@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CBBBuyHeaderView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CBBImportExport@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CBBListHeaderView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CBBLoadBGView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CBBPostView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CBBPriceTagDtlView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CBBPriceTagFrm@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CBBPurchaserView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CBBQRefFrame@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CBBSeriesEdit@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CBBSessionFrame@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CBBSessionView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CBBStolenBooksFrame@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CBBStolenBooksView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CBBTransListFrm@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CBBTransListView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CBuybackListFrame@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CBuyersGuideInqView@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CBuyersGuideInqViewBB@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CG3ColorStaticCtrl@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CG3DCCBrowseEdit@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CG3Dialog@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CG3IncrementalSearchDlg@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CG3IncrementalSearchGrd@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CG3LBGridBase@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CG3QuickSearchBase@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CG3XRecordWnd@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@SECListBoxEditor@@MBEPBUAFX_MSGMAP@@XZ
+?GetModuleID@?$CG3GridTemplate@VCGXGridWnd@@@@UAEIXZ
+?GetModuleID@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEIXZ
+?GetModuleID@?$CG3XViewBase@VCGXRecordView@@@@UAEIXZ
+?GetModuleID@CG3Dialog@@UAEJXZ
+?GetModuleID@CG3RecordView@@QAEIXZ
+?GetNavigatorWnd@CBBListHeaderView@@IAEPAVCG3NavComboBox@@XZ
+?GetNavigatorWnd@CBBPriceTagFrm@@QAEPAVCG3NavComboBox@@XZ
+?GetNavigatorWnd@CBBTransListFrm@@QAEPAVCG3NavComboBox@@XZ
+?GetNavigatorWnd@CG3HeaderDtlSheet@@QAEPAVCG3NavComboBox@@XZ
+?GetNavWnd@CG3HeaderDtlViewBase@@QAEPAVCG3NavComboBox@@XZ
+?GetNextLine@CG3FileImpExp@@QAEHPAVCFile@@@Z
+?GetNextSequenceAccessDB@CBBBuyHeaderView@@IAEHHHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetOleDataObject@CGXOleDataObjectProxy@@QBEPAVCOleDataObject@@XZ
+?GetOleViewerRowCol@CGXBrowserGrid@@UBEXKKKAAPAVCGXOleViewer@@@Z
+?GetOTBQty@CBBListHeaderView@@IAEJXZ
+?GetParamInfoOb@?$CG3XViewBase@VCGXRecordView@@@@QAEPAVCG3ParamInfoOb@@XZ
+?GetParamInfoOb@CG3FormView@@QAEPAVCG3ParamInfoOb@@XZ
+?GetParamInfoOb@CG3RecordView@@QAEPAVCG3ParamInfoOb@@XZ
+?GetParamValue@CG3ParamInfoOb@@QAEAAVCComVariant@ATL@@H@Z
+?GetParentWorksheet@CG3FormView@@MAEPAVCG3Worksheet@@XZ
+?GetParentWorksheet@CG3RecordView@@MAEPAVCG3Worksheet@@XZ
+?GetQuery@CG3QuickSearchResultsGrid@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@KH@Z
+?GetQueryRecordCount@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEJXZ
+?GetQueryRecordCount@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEJXZ
+?GetQuickSearch@CBuybackListFrame@@QAEPAVCBBListQuickSearch@@XZ
+?GetRangeName@CGXGridCore@@UAEHPBDAAVCGXRange@@@Z
+?GetReceiptType@CG3WinApp@@QAEJXZ
+?GetRecordset@CBBBuyHeaderView@@QAEPAVCBBBuyHeaderSet@@XZ
+?GetRecordset@CBBListHeaderView@@QAEPAVCBBListHeaderSet@@XZ
+?GetRecordset@CBBPurchaserView@@QAEPAVCBBPurchaserSet@@XZ
+?GetRecordset@CBBSessionView@@IAEPAVCBBSessionSet@@XZ
+?GetRecordset@CBBStolenBooksView@@QAEPAVCBBStolenBooksSet@@XZ
+?GetRecordset@CBBTransListView@@QAEPAVCBBTransListHeaderSet@@XZ
+?GetRegisteredControl@CGXGridCore@@UAEPAVCGXControl@@G@Z
+?GetRentalAdditionalInfo@CBBBuyHeaderView@@IAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?GetRentalSku@CBBBuyHeaderView@@AAEHPBD@Z
+?GetRowArray@CGXRangeList@@QBEHKAAVCDWordArray@@0H@Z
+?GetRowCount@CBBPriceTagDtlView@@UAEKXZ
+?GetRowCount@CBBPurchaserView@@MAEKXZ
+?GetRowCount@CGXBrowserGrid@@UAEKXZ
+?GetRowCount@CGXGridCore@@UAEKXZ
+?GetRowHeight@CGXGridCore@@UAEHK@Z
+?GetRowIndex@CGXBrowserGrid@@UAEKK@Z
+?GetRuntimeClass@CBBBuyerFrame@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBBBuyerView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBBBuyFrame@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBBBuyHeaderView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBBImportExport@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBBListHeaderView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBBLoadBGView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBBPostView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBBPriceTagDetailSet@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBBPriceTagDtlView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBBPriceTagFrm@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBBPurchaserView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBBQRefEditView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBBQRefFrame@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBBSeriesEdit@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBBSessionFrame@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBBSessionView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBBStolenBooksFrame@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBBStolenBooksView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBBTransListFrm@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBBTransListView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBuybackListFrame@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBuyersGuideInqView@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBuyersGuideInqViewBB@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CBuyersGuideSet@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CG3Database@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CG3Dialog@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CG3FileImpExp@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CG3IncrementalSearchDlg@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CG3IncrementalSearchGrd@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CG3ItemFindObj@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CG3LocationSet@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CG3PriceTagPrintQueueSet@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CG3QuickSearchBase@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CG3XGridWnd@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CG3XRecordWnd@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CGXDynamicRecordset@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CItemMasterSet@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CItemSet@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CSequenceSet@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CTxtSubBundleDetailItemSet@@UBEPAUCRuntimeClass@@XZ
+?GetScrollBarCtrl@CGXGridWnd@@UBEPAVCScrollBar@@H@Z
+?GetScrollBarCtrl@CGXRecordView@@UBEPAVCScrollBar@@H@Z
+?GetScrollBarCtrl@CGXRecordWnd@@UBEPAVCScrollBar@@H@Z
+?GetScrollPos@CGXGridCore@@MBEKH@Z
+?GetScrollRange@CGXGridCore@@MBEXHPAK0@Z
+?GetSearchItem@CG3QuickSearchBase@@IAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetSelectedCols@CGXGridCore@@QAEKAAVCDWordArray@@HH@Z
+?GetSelectedRanges@?$CG3GridTemplate@VCGXGridWnd@@@@MAEPAVCGXRangeList@@XZ
+?GetSelectedRanges@?$CG3GridTemplate@VCGXRecordView@@@@MAEPAVCGXRangeList@@XZ
+?GetSelectedRanges@?$CG3GridTemplate@VCGXRecordWnd@@@@MAEPAVCGXRangeList@@XZ
+?GetSelectedRows@CGXGridCore@@UAEHAAVCDWordArray@@0HH@Z
+?GetSelectedRows@CGXGridCore@@UAEKAAVCDWordArray@@HH@Z
+?GetSessionID@CBBImportExport@@AAEHXZ
+?GetSessionID@CBBQRefFrame@@QAEJXZ
+?GetSessionStatus@CBBListHeaderView@@IAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetSortKey@CGXGridCore@@UAEXPAVCGXControl@@KKABUCGXSortInfo@@ABVCGXStyle@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetStringFromInput@CG3FileImpExp@@QAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@HH@Z
+?GetStyleArray@CGXGridCore@@UAEPAVCObArray@@ABVCGXRange@@HPAVCGXLongOperation@@@Z
+?GetStyleRowCol@CGXBrowserGrid@@UAEHKKAAVCGXStyle@@W4GXModifyType@@H@Z
+?GetStyleRowCol@CGXGridCore@@UAEHKKAAVCGXStyle@@W4GXModifyType@@H@Z
+?GetSuperWndProcAddr@SECBrowseEditBase@@MAEPAP6GJPAUHWND__@@IIJ@ZXZ
+?GetTab@CGXTabBeam@@QAEAAVCGXTabInfo@@H@Z
+?GetTabIndex@CG3HeaderDtlSheet@@UAEHXZ
+?GetTargetID@CBBQRefEditView@@MAEJH@Z
+?GetTermFilter@CG3QuickSearchBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetTextbookInfo@CBBStolenBooksView@@QAEXXZ
+?GetThisClass@CBBBuyerFrame@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CBBBuyerView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CBBBuyFrame@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CBBBuyHeaderView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CBBImportExport@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CBBListHeaderView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CBBLoadBGView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CBBPostView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CBBPriceTagDtlView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CBBPriceTagFrm@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CBBPurchaserView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CBBQRefEditView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CBBQRefFrame@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CBBSeriesEdit@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CBBSessionFrame@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CBBSessionView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CBBStolenBooksFrame@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CBBStolenBooksView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CBBTransListFrm@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CBBTransListView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CBuybackListFrame@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CBuyersGuideInqView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CBuyersGuideInqViewBB@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3Dialog@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3FormView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3HeaderDtlSheet@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3HeaderDtlViewBase@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3QuickSearchResultsGrid@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3RecordView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3Worksheet@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3XRecordView@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CG3XRecordWnd@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CGXTabBeam@@SGPAUCRuntimeClass@@XZ
+?GetThisMessageMap@CBBBuyerFrame@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CBBBuyerView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CBBBuyFrame@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CBBBuyHeaderView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CBBImportExport@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CBBListHeaderView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CBBLoadBGView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CBBPostView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CBBPriceTagDtlView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CBBPriceTagFrm@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CBBPurchaserView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CBBQRefFrame@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CBBSeriesEdit@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CBBSessionFrame@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CBBSessionView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CBBStolenBooksFrame@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CBBStolenBooksView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CBBTransListFrm@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CBBTransListView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CBuybackListFrame@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CBuyersGuideInqView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CBuyersGuideInqViewBB@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3BrowseEditBase@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3Dialog@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3FormView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3HeaderDtlSheet@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3HeaderDtlViewBase@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3QuickSearchBase@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3QuickSearchResultsGrid@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3RecordView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3ScanEdit@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3Worksheet@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3XGridWnd@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3XRecordView@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3XRecordWnd@@KGPBUAFX_MSGMAP@@XZ
+?GetToolBarButtons@CBuybackListFrame@@MAEKXZ
+?GetToolBarStyles@CG3HeaderDtlSheet@@MAEKXZ
+?GetTransactionID@?$CG3GridTemplate@VCGXGridWnd@@@@UAEJXZ
+?GetTransactionID@?$CG3GridTemplate@VCGXRecordView@@@@UAEJXZ
+?GetTransactionID@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEJXZ
+?GetTransactionID@CG3Dialog@@UAEJXZ
+?GetTransactionID@CG3FormView@@UAEJXZ
+?GetTransactionID@CG3RecordView@@UAEJXZ
+?GetTransactionID@CG3Worksheet@@MAEJXZ
+?GetTransferDtlID@?$CG3GridTemplate@VCGXGridWnd@@@@UAEJXZ
+?GetTransferDtlID@?$CG3GridTemplate@VCGXRecordView@@@@UAEJXZ
+?GetTransferDtlID@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEJXZ
+?GetTransferDtlID@CG3Dialog@@UAEJXZ
+?GetTransferDtlID@CG3FormView@@UAEJXZ
+?GetTransferDtlID@CG3RecordView@@UAEJXZ
+?GetTransferDtlID@CG3Worksheet@@MAEJXZ
+?GetTransferID@?$CG3GridTemplate@VCGXGridWnd@@@@UAEJXZ
+?GetTransferID@?$CG3GridTemplate@VCGXRecordView@@@@UAEJXZ
+?GetTransferID@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEJXZ
+?GetTransferID@CG3Dialog@@UAEJXZ
+?GetTransferID@CG3FormView@@UAEJXZ
+?GetTransferID@CG3RecordView@@UAEJXZ
+?GetTransferID@CG3Worksheet@@MAEJXZ
+?GetULoadParameters@CBBBuyHeaderView@@IAE_NAAVCTenderAuthParam@@@Z
+?GetUpdateFlag@CGXGridCore@@UAEHKK@Z
+?GetValue@?$CMapArrayT@V?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@@QAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@HH@Z
+?GetValue@CG3CurrencyEdit@@QAEXAAN@Z
+?GetValueByColName@?$CG3GridTemplate@VCGXRecordWnd@@@@QAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@KV23@@Z
+?GetValueRowCol@CGXGridCore@@QAEABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@KK@Z
+?GetVendorCurrencyExId@CG3RecordView@@MAEHH@Z
+?GetVendorDefaults@CG3AdoptTextParam@@QAEXH@Z
+?GetVendorDisplayed@CG3RecordView@@MAEHXZ
+?GetVendorInRecordset@CG3RecordView@@MAEHXZ
+?GetViewAllowCurrencyChange@CG3RecordView@@UAE_NXZ
+?GetViewBaseCurrencyId@CG3RecordView@@UAEJXZ
+?GetViewCurrencyId@CG3RecordView@@UAEJXZ
+?GetViewCurrencyRate@CG3RecordView@@UAENXZ
+?GetWkstGridView@CBBSessionView@@IAEPAVCBBSessionWkstView@@XZ
+?GetWkstView@CBBSessionFrame@@QAEPAVCWnd@@XZ
+?GetZoom@CGXGridCore@@UAEHXZ
+?HasRequiredFields@CBBPurchaserView@@IAEHXZ
+?HideCols@CGXGridCore@@UAEHKKHPAHIW4GXCmdType@@@Z
+?HideCurrentCell@CGXGridCore@@UAEXXZ
+?HideRows@CGXGridCore@@UAEHKKHPAHIW4GXCmdType@@@Z
+?HitTest@CGXGridCore@@UAEHAAVCPoint@@PAK1PAVCRect@@@Z
+?ImplementFindReplace@CGXGridCore@@QAEXXZ
+?InitBGPurchaserInfo@CBBBuyHeaderView@@IAEXXZ
+?InitBrowserSettings@CGXBrowserGrid@@MAEXXZ
+?InitColumnHeaders@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXXZ
+?InitColumnHeaders@?$CG3GridTemplate@VCGXRecordView@@@@UAEXXZ
+?InitColumnHeaders@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXXZ
+?InitCurrencyExchange@CG3WinApp@@QAEXXZ
+?InitForTransfer@CBBImportExport@@AAEHXZ
+?InitGrid@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXPAU_tagG3GRIDINFO@@@Z
+?InitGrid@?$CG3GridTemplate@VCGXRecordView@@@@UAEXPAU_tagG3GRIDINFO@@@Z
+?InitGrid@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXPAU_tagG3GRIDINFO@@@Z
+?InitGrid@CBBBuyerView@@MAEXPAU_tagG3GRIDINFO@@@Z
+?InitGrid@CBBPriceTagDtlView@@MAEXPAU_tagG3GRIDINFO@@@Z
+?InitGrid@CBuyersGuideInqView@@MAEXPAU_tagG3GRIDINFO@@@Z
+?InitGrid@CBuyersGuideInqViewBB@@MAEXPAU_tagG3GRIDINFO@@@Z
+?InitGrid@CG3HeaderDtlViewBase@@MAEXPAU_tagG3GRIDINFO@@@Z
+?InitGrid@CG3LBGridBase@@MAEXPAU_tagG3GRIDINFO@@@Z
+?InitGrid@CG3QuickSearchResultsGrid@@MAEXPAU_tagG3GRIDINFO@@@Z
+?Initialize@CBBListHeaderView@@IAEXXZ
+?Initialize@CBBTransListView@@QAEHXZ
+?Initialize@CG3BrowseEditBase@@UAEHIPAVCWnd@@PADHKK@Z
+?Initialize@CG3ColorStaticCtrl@@QAEHIPAVCWnd@@KKHHH@Z
+?Initialize@CG3ComboBox@@QAEHIPAVCWnd@@PAVCDatabase@@PBD@Z
+?Initialize@CG3DCCBrowseEdit@@QAEHIPAVCWnd@@HHHHHH@Z
+?Initialize@CG3EQBrowseEdit@@QAEHIPAVCWnd@@J@Z
+?Initialize@CG3QuickSearchBase@@QAEXPAVCG3Worksheet@@PAVSECCustomToolBar@@PAIHPAUCRuntimeClass@@@Z
+?Initialize@CG3ScanEdit@@UAEHIPAVCWnd@@@Z
+?Initialize@CG3TermBrowseEdit@@QAEHIPAVCWnd@@H@Z
+?Initialize@CGXGridWnd@@QAEXXZ
+?Initialize@CGXRecordWnd@@QAEXXZ
+?Initialize@SECBrowseEditBase@@QAEHIPAVCWnd@@@Z
+?Initialize@SECListBoxEditor@@UAEHIPAVCWnd@@H@Z
+?Initialize@SECListBoxEditor@@UAEHPAVCWnd@@IH@Z
+?InitializeQS@CG3QuickSearchBase@@UAEXPAVCG3Worksheet@@PAVSECCustomToolBar@@@Z
+?InitializeTender@CTenderAuthParamBB@@QAE_NHHH@Z
+?InitTenderCombo@CBBBuyHeaderView@@IAEXXZ
+?InitTextbookInfo@CBBStolenBooksView@@QAEXXZ
+?InsertCols@CGXGridCore@@UAEHKKPAHPAVCObArray@@1KIW4GXCmdType@@@Z
+?InsertItemRecord@CBBListHeaderView@@IAEHXZ
+?InsertRows@CGXGridCore@@UAEHKKPAHPAVCObArray@@1KIW4GXCmdType@@@Z
+?Invalidate@CGXRecordWnd@@QAEXH@Z
+?IsActive@?$CG3XRecordBase@VCG3XRecordViewBase@@@@UAEHXZ
+?IsActive@?$CG3XRecordBase@VCG3XRecordWndBase@@@@UAEHXZ
+?IsAddMode@CG3RecordView@@IAEHXZ
+?IsBuybackRentalEnabled@CBBBuyHeaderView@@AAE_NXZ
+?IsColHidden@CGXGridCore@@UAEHK@Z
+?IsColumnValidForFill@?$CG3GridTemplate@VCGXGridWnd@@@@MAE_NK@Z
+?IsColumnValidForFill@?$CG3GridTemplate@VCGXRecordView@@@@MAE_NK@Z
+?IsColumnValidForFill@?$CG3GridTemplate@VCGXRecordWnd@@@@MAE_NK@Z
+?IsCopyPasteId@CG3Worksheet@@MAE_NH@Z
+?IsDisplayMode@CBBSessionFrame@@QAEHXZ
+?IsEditable@CG3HeaderDtlViewBase@@MAEHXZ
+?IsFileToBeExtracted@CBBImportExport@@QAEHPBD@Z
+?IsNBCSpecial@CBBListHeaderView@@QAEHXZ
+?IsNullDate@CG3DateTime@@QAEHXZ
+?IsOnLastRecord@CGXBrowserGrid@@QAEHXZ
+?IsPrintDriveSetForSKU@@YA_NHH@Z
+?IsReadOnly@CGXGridCore@@UAEHXZ
+?IsReceiptPrinterPresent@COPOSContainer@@QAEHXZ
+?IsRecordDirty@CGXBrowserGrid@@QAEHXZ
+?IsRecordsetEmpty@CG3RecordView@@UAEHXZ
+?IsRecordsetFieldDirty@CG3RecordView@@UAEHPAX@Z
+?IsRemoteDB@CG3Database@@QAEHXZ
+?IsRental@CBBBuyHeaderView@@AAE_NHPBD@Z
+?IsRental@CRentalReturnItem@@QAE_NXZ
+?IsRowHidden@CGXGridCore@@UAEHK@Z
+?IsScrollLockedFromCell@CGXGridCore@@UAEHXZ
+?IsUpdatePending@?$CG3XRecordBase@VCG3XRecordViewBase@@@@QAEHXZ
+?IsUpdatePending@?$CG3XRecordBase@VCG3XRecordWndBase@@@@QAEHXZ
+?IsUpdatePending@CG3RecordView@@UAEHXZ
+?IsValidCell@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEHXZ
+?IsValidCell@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEHXZ
+?IsValidData@CG3BrowseEditBase@@MAEHXZ
+?IsValidDate@CG3DateTime@@QAEHXZ
+?IsValidVendorCurrency@CG3RecordView@@MAE_NXZ
+?IsZeroValid@CG3BrowseEditBase@@UAEHXZ
+?LoadFont@CGXGridCore@@UAEPAVCFont@@PAVCDC@@ABVCGXStyle@@PBV4@@Z
+?LoadFrame@CG3Worksheet@@UAEHIKPAVCWnd@@PAUCCreateContext@@@Z
+?LoadMenuA@CComboBtn@@QAEHIH@Z
+?LoadSuspended@CBBBuyHeaderView@@IAEXJ@Z
+?Logon@CG3Database@@QAEHPAV1@@Z
+?Logon@CG3Database@@UAEHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PBD1H@Z
+?LookUp@CG3BrowseEditBase@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@J@Z
+?LookupStyleRowCol@CGXGridCore@@UAEABVCGXStyle@@KK@Z
+?M?f?{?
+?m_TimerId@CBBSessionFrame@@0IB
+?MarkEdit@CGXGridCore@@MAEXKKII@Z
+?MergeCoveredCells@CGXGridCore@@MAEXAAVCGXRange@@@Z
+?ModifyDialogStyle@SECBrowseFileEdit@@QAEXKK@Z
+?MoveCells@CGXGridCore@@UAEHVCGXRange@@KKPAVCObject@@IW4GXCmdType@@@Z
+?MoveCols@CG3HeaderDtlViewBase@@MAEHKKKIW4GXCmdType@@@Z
+?MoveCols@CGXGridCore@@UAEHKKKIW4GXCmdType@@@Z
+?MoveCurrentCell@CGXGridCore@@UAEHHIH@Z
+?MoveCurrentCellEx@CGXGridCore@@MAEHHI@Z
+?MoveDataCols@CGXGridCore@@UAEHABVCGXRange@@ABVCDWordArray@@IW4GXCmdType@@@Z
+?MoveDataRows@CGXGridCore@@UAEHABVCGXRange@@ABVCDWordArray@@IW4GXCmdType@@@Z
+?MoveItemMstrToList@CBBListHeaderView@@IAEXXZ
+?MoveRows@CGXGridCore@@UAEHKKKIW4GXCmdType@@@Z
+?MoveTo@CGXODBCGrid@@UAEHK@Z
+?MoveUpCore@SECListBoxEditor@@UAEXH@Z
+?OnActivateGrid@CGXGridCore@@MAEHH@Z
+?OnActivateView@CBBPurchaserView@@MAEXHPAVCView@@0@Z
+?OnActivateView@CG3HeaderDtlViewBase@@MAEXHPAVCView@@0@Z
+?OnActivateView@CG3RecordView@@MAEXHPAVCView@@0@Z
+?OnActivateView@CG3XRecordView@@UAEXHPAVCView@@0@Z
+?OnAddDetail@CBBBuyerView@@IAEXXZ
+?OnAddedNewRecord@CGXODBCGrid@@MAEXXZ
+?OnAddMoney@CBBBuyHeaderView@@IAEXXZ
+?OnAddNewTitle@CBBBuyHeaderView@@IAEXXZ
+?OnAddReportParams@?$CG3XViewBase@VCGXRecordView@@@@UAEXPAVCG3ParamInfoOb@@@Z
+?OnAddReportParams@CBBPriceTagDtlView@@MAEXPAVCG3ParamInfoOb@@@Z
+?OnAddReportParams@CBBSessionView@@MAEXPAVCG3ParamInfoOb@@@Z
+?OnAddReportParams@CBBTransListView@@UAEXPAVCG3ParamInfoOb@@@Z
+?OnAddReportParams@CG3RecordView@@MAEXPAVCG3ParamInfoOb@@@Z
+?OnAdjustPrintRectangle@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnAutoFillDone@CGXGridCore@@MAEXAAVCGXRange@@@Z
+?OnAutoScroll@CGXGridCore@@UAEHHK@Z
+?OnBeginPrinting@CBuyersGuideInqView@@MAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnBeginPrinting@CBuyersGuideInqViewBB@@MAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnBeginPrinting@CG3Dialog@@MAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnBeginPrinting@CGXGridWnd@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnBeginPrinting@CGXRecordView@@MAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnBeginPrinting@CGXRecordWnd@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnBookRoutingConfig@CBBSessionFrame@@IAEXXZ
+?OnBrowse@CG3DCCBrowseEdit@@UAEXXZ
+?OnBuyPriceCell@CBuyersGuideInqView@@QAEXKAAVCGXStyle@@@Z
+?OnBuyPriceCell@CBuyersGuideInqViewBB@@QAEXKAAVCGXStyle@@@Z
+?OnCanceledEditing@CGXBrowserGrid@@UAEXKK@Z
+?OnCanceledEditing@CGXGridCore@@MAEXKK@Z
+?OnCancelEditing@CGXGridCore@@MAEHKK@Z
+?OnCancelTracking@CGXGridCore@@MAEXXZ
+?OnCellUndone@CGXGridCore@@UAEXKKH@Z
+?OnChangedSelection@CG3XRecordView@@UAEXPBVCGXRange@@HH@Z
+?OnChangedSelection@CGXGridCore@@MAEXPBVCGXRange@@HH@Z
+?OnChangeFindText@CG3IncrementalSearchDlg@@MAEXXZ
+?OnChangeTab@CG3HeaderDtlViewBase@@MAEXXZ
+?OnCheckClipboardFormat@CGXGridCore@@UAEHXZ
+?OnChildNotify@CG3ScanEdit@@UAEHIIJPAJ@Z
+?OnClickedButtonRowCol@CGXGridCore@@MAEXKK@Z
+?OnClose@CBBBuyFrame@@IAEXXZ
+?OnClose@CBBPriceTagFrm@@IAEXXZ
+?OnCloseFindReplaceDialog@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXXZ
+?OnCloseFindReplaceDialog@?$CG3GridTemplate@VCGXRecordView@@@@UAEXXZ
+?OnCloseFindReplaceDialog@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXXZ
+?OnCloseSession@CBBSessionView@@IAEXXZ
+?OnCmdMsg@CBBBuyerFrame@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CBBBuyFrame@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CBBPriceTagFrm@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CBBQRefFrame@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CBBSessionFrame@@MAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CBBStolenBooksFrame@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CBBTransListFrm@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CBuybackListFrame@@MAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CG3HeaderDtlSheet@@MAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CG3QuickSearchBase@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCmdMsg@CG3Worksheet@@UAEHIHPAXPAUAFX_CMDHANDLERINFO@@@Z
+?OnCommand@CGXGridWnd@@MAEHIJ@Z
+?OnCommand@CGXRecordView@@UAEHIJ@Z
+?OnCommand@CGXRecordWnd@@MAEHIJ@Z
+?OnCopyList@CBBListHeaderView@@IAEXXZ
+?OnCreate@CG3RecordView@@MAEHPAUtagCREATESTRUCTA@@@Z
+?OnCreateClient@CBBBuyerFrame@@MAEHPAUtagCREATESTRUCTA@@PAUCCreateContext@@@Z
+?OnCreateClient@CBBBuyFrame@@MAEHPAUtagCREATESTRUCTA@@PAUCCreateContext@@@Z
+?OnCreateClient@CBBPriceTagFrm@@MAEHPAUtagCREATESTRUCTA@@PAUCCreateContext@@@Z
+?OnCreateClient@CBBQRefFrame@@MAEHPAUtagCREATESTRUCTA@@PAUCCreateContext@@@Z
+?OnCreateClient@CBBSessionFrame@@MAEHPAUtagCREATESTRUCTA@@PAUCCreateContext@@@Z
+?OnCreateClient@CBBStolenBooksFrame@@MAEHPAUtagCREATESTRUCTA@@PAUCCreateContext@@@Z
+?OnCreateClient@CBBTransListFrm@@MAEHPAUtagCREATESTRUCTA@@PAUCCreateContext@@@Z
+?OnCreateClient@CG3HeaderDtlSheet@@MAEHPAUtagCREATESTRUCTA@@PAUCCreateContext@@@Z
+?OnDeleteCell@CGXGridCore@@MAEHKK@Z
+?OnDeleteTrans@CBBBuyHeaderView@@IAEXXZ
+?OnDestroy@CBBListHeaderView@@IAEXXZ
+?OnDestroy@CBBPurchaserView@@IAEXXZ
+?OnDestroy@CBBSessionView@@IAEXXZ
+?OnDestroy@CBBStolenBooksView@@IAEXXZ
+?OnDestroy@CBBTransListView@@IAEXXZ
+?OnDestroy@CG3Dialog@@IAEXXZ
+?OnDestroy@CGXRecordView@@IAEXXZ
+?OnDirectionChg@CBBImportExport@@AAEXXZ
+?OnDisableUI@CBBBuyHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnDisplayMode@CBBSessionFrame@@IAEXXZ
+?OnDisplayTotals@CBBBuyHeaderView@@IAEXXZ
+?OnDndCacheGlobalData@?$CG3GridTemplate@VCGXGridWnd@@@@UAEHPAVCGXNoOleDataSourceProxy@@ABVCGXRangeList@@AAK2@Z
+?OnDndCacheGlobalData@?$CG3GridTemplate@VCGXRecordView@@@@UAEHPAVCGXNoOleDataSourceProxy@@ABVCGXRangeList@@AAK2@Z
+?OnDndCacheGlobalData@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHPAVCGXNoOleDataSourceProxy@@ABVCGXRangeList@@AAK2@Z
+?OnDndCalculateFocusRect@CGXGridCore@@UAEHPAVCGXNoOleDataObjectProxy@@AAK1@Z
+?OnDndDropData@?$CG3GridTemplate@VCGXGridWnd@@@@UAEHPAVCGXNoOleDataObjectProxy@@KK@Z
+?OnDndDropData@?$CG3GridTemplate@VCGXRecordView@@@@UAEHPAVCGXNoOleDataObjectProxy@@KK@Z
+?OnDndDropData@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHPAVCGXNoOleDataObjectProxy@@KK@Z
+?OnDndQueryAcceptData@?$CG3GridTemplate@VCGXGridWnd@@@@UAEHPAVCGXNoOleDataObjectProxy@@@Z
+?OnDndQueryAcceptData@?$CG3GridTemplate@VCGXRecordView@@@@UAEHPAVCGXNoOleDataObjectProxy@@@Z
+?OnDndQueryAcceptData@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHPAVCGXNoOleDataObjectProxy@@@Z
+?OnDownloadChg@CBBImportExport@@AAEXXZ
+?OnDraw@CGXRecordView@@UAEXPAVCDC@@@Z
+?OnDrawItem@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEXPAVCDC@@KKABVCRect@@ABVCGXStyle@@@Z
+?OnDrawItem@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXPAVCDC@@KKABVCRect@@ABVCGXStyle@@@Z
+?OnDrawItem@CGXGridCore@@MAEXPAVCDC@@KKABVCRect@@ABVCGXStyle@@@Z
+?OnDrawTLBR_InvertCells@CGXGridCore@@MAEXAAUDrawStruct@1@@Z
+?OnDrawTLBR_LoadCell@CGXGridCore@@MAEXAAUDrawStruct@1@II@Z
+?OnDrawTopLeftBottomRight@CGXGridCore@@MAEXKKKKPAVCDC@@@Z
+?OnDropTarget@CBBQRefEditView@@MAEHJPAVCG3DragDrop@@KK@Z
+?OnEditDetail@CBBBuyerView@@IAEXXZ
+?OnEditingJustStarted@SECListBoxEditor@@UAEXXZ
+?OnEditingStopped@SECListBoxEditor@@UAEXXZ
+?OnEmailReceipt@CBBBuyHeaderView@@IAEXXZ
+?OnEmptyRecordset@CG3RecordView@@UAEXXZ
+?OnEnable@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXH@Z
+?OnEnable@?$CG3GridTemplate@VCGXRecordView@@@@UAEXH@Z
+?OnEnable@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXH@Z
+?OnEndEditing@CBBPurchaserView@@MAEHKK@Z
+?OnEndEditing@CGXGridCore@@MAEHKK@Z
+?OnEndPrinting@CBuyersGuideInqView@@MAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnEndPrinting@CBuyersGuideInqViewBB@@MAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnEndPrinting@CG3Dialog@@MAEXPAVCDC@@PAUCPrintInfo@@H@Z
+?OnEndPrinting@CGXGridWnd@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnEndPrinting@CGXRecordView@@MAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnEndPrinting@CGXRecordWnd@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnEndTracking@CGXGridCore@@MAEXKKHAAVCSize@@@Z
+?OnEndTrans@CBBBuyHeaderView@@IAEXXZ
+?OnExecGridProc@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXKAAVCGXStyle@@PAVCG3GridObject@@@Z
+?OnExecGridProc@?$CG3GridTemplate@VCGXRecordView@@@@UAEXKAAVCGXStyle@@PAVCG3GridObject@@@Z
+?OnExecGridProc@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXKAAVCGXStyle@@PAVCG3GridObject@@@Z
+?OnExecGridProc@CBBBuyerView@@UAEXKAAVCGXStyle@@PAVCG3GridObject@@@Z
+?OnExecGridProc@CBBQRefEditView@@UAEXKAAVCGXStyle@@PAVCG3GridObject@@@Z
+?OnExecGridProc@CBuyersGuideInqView@@UAEXKAAVCGXStyle@@PAVCG3GridObject@@@Z
+?OnExecGridProc@CBuyersGuideInqViewBB@@UAEXKAAVCGXStyle@@PAVCG3GridObject@@@Z
+?OnExecGridProcEx@?$CG3GridTemplate@VCGXGridWnd@@@@UAEHKKPAVCG3GridObject@@@Z
+?OnExecGridProcEx@?$CG3GridTemplate@VCGXRecordView@@@@UAEHKKPAVCG3GridObject@@@Z
+?OnExecGridProcEx@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHKKPAVCG3GridObject@@@Z
+?OnExecGridProcEx@CBBBuyerView@@UAEHKKPAVCG3GridObject@@@Z
+?OnExecGridProcEx@CBBQRefEditView@@UAEHKKPAVCG3GridObject@@@Z
+?OnExecGridProcEx@CBuyersGuideInqView@@UAEHKKPAVCG3GridObject@@@Z
+?OnExecGridProcEx@CBuyersGuideInqViewBB@@UAEHKKPAVCG3GridObject@@@Z
+?OnExtHitTest@CGXGridCore@@UAEHKKAAVCPoint@@AAVCRect@@@Z
+?OnFilePrint@CG3Dialog@@MAEXXZ
+?OnFilePrintPreview@CG3Dialog@@MAEXXZ
+?OnFillCache@CGXODBCGrid@@MAEXXZ
+?OnFind@?$CG3GridTemplate@VCGXRecordView@@@@IAEXXZ
+?OnFindNext@CGXGridCore@@UAEXPBDHH@Z
+?OnFindReplace@CGXGridCore@@MAEXPAVCFindReplaceDialog@@@Z
+?OnFlushBlobValue@CGXBrowserGrid@@MAEXKKPAVCGXAbstractBlob@@@Z
+?OnFlushCellValue@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEXKKPBD@Z
+?OnFlushCellValue@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXKKPBD@Z
+?OnFlushRecord@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEHKPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnFlushRecord@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEHKPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnFlushRecord@CBBQRefEditView@@MAEHKPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnG3Options@CBBPriceTagFrm@@IAEXXZ
+?OnG3Options@CBBSessionFrame@@IAEXXZ
+?OnG3Options@CBBStolenBooksFrame@@IAEXXZ
+?OnG3Options@CBBTransListFrm@@IAEXXZ
+?OnG3Options@CBuybackListFrame@@IAEXXZ
+?OnGenList@CBBListHeaderView@@IAEXXZ
+?OnGetDlgCode@CGXRecordWnd@@IAEIXZ
+?OnGetQuickRecordset@CG3RecordView@@UAEPAVCRecordset@@XZ
+?OnGetRecordCount@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEJXZ
+?OnGetRecordCount@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEJXZ
+?OnGetRecordCount@CG3IncrementalSearchGrd@@UAEJXZ
+?OnGetRecordset@CBBBuyHeaderView@@UAEPAVCRecordset@@XZ
+?OnGetRecordset@CBBListHeaderView@@UAEPAVCRecordset@@XZ
+?OnGetRecordset@CBBPurchaserView@@MAEPAVCRecordset@@XZ
+?OnGetRecordset@CBBSessionView@@MAEPAVCRecordset@@XZ
+?OnGetRecordset@CBBStolenBooksView@@UAEPAVCRecordset@@XZ
+?OnGetRecordset@CBBTransListView@@UAEPAVCRecordset@@XZ
+?OnGetRecordset@CGXODBCGrid@@UAEPAVCRecordset@@XZ
+?OnGetSortColsKey@CGXGridCore@@UAEXKABVCGXSortInfoArray@@AAVCStringArray@@@Z
+?OnGetSortRowsKey@CGXGridCore@@UAEXKABVCGXSortInfoArray@@AAVCStringArray@@@Z
+?OnGridBeginPrinting@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnGridChar@CGXGridCore@@MAEHIII@Z
+?OnGridDeadChar@CGXGridCore@@MAEHIII@Z
+?OnGridDoubleByteChar@CGXGridCore@@MAEHABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@II@Z
+?OnGridDragEnter@CGXGridCore@@UAEKPAVCGXNoOleDataObjectProxy@@KVCPoint@@@Z
+?OnGridDragLeave@CGXGridCore@@UAEXXZ
+?OnGridDragOver@?$CG3GridTemplate@VCGXGridWnd@@@@UAEKPAVCGXNoOleDataObjectProxy@@KVCPoint@@@Z
+?OnGridDragOver@?$CG3GridTemplate@VCGXRecordView@@@@UAEKPAVCGXNoOleDataObjectProxy@@KVCPoint@@@Z
+?OnGridDragOver@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEKPAVCGXNoOleDataObjectProxy@@KVCPoint@@@Z
+?OnGridDragOver@CGXGridCore@@UAEKPAVCGXNoOleDataObjectProxy@@KVCPoint@@@Z
+?OnGridDragScroll@CGXGridCore@@UAEKKVCPoint@@@Z
+?OnGridDraw@CGXBrowserGrid@@UAEXPAVCDC@@@Z
+?OnGridDraw@CGXGridCore@@MAEXPAVCDC@@@Z
+?OnGridDrop@CGXBrowserGrid@@UAEHPAVCGXNoOleDataObjectProxy@@KVCPoint@@@Z
+?OnGridDrop@CGXGridCore@@UAEHPAVCGXNoOleDataObjectProxy@@KVCPoint@@@Z
+?OnGridDropEx@CGXGridCore@@UAEKPAVCGXNoOleDataObjectProxy@@KKVCPoint@@@Z
+?OnGridEndPrinting@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnGridInitialUpdate@CBBPriceTagDtlView@@MAEXXZ
+?OnGridInitialUpdate@CBBPurchaserView@@MAEXXZ
+?OnGridInitialUpdate@CBuyersGuideInqView@@MAEXXZ
+?OnGridInitialUpdate@CBuyersGuideInqViewBB@@MAEXXZ
+?OnGridInitialUpdate@CG3HeaderDtlViewBase@@MAEXXZ
+?OnGridInitialUpdate@CG3IncrementalSearchGrd@@UAEXXZ
+?OnGridInitialUpdate@CG3QuickSearchResultsGrid@@MAEXXZ
+?OnGridInitialUpdate@CG3XGridWnd@@UAEXXZ
+?OnGridInitialUpdate@CG3XRecordView@@UAEXXZ
+?OnGridInitialUpdate@CG3XRecordWnd@@UAEXXZ
+?OnGridKeyDown@CGXBrowserGrid@@UAEHIII@Z
+?OnGridKeyDown@CGXGridCore@@MAEHIII@Z
+?OnGridKeyUp@CGXGridCore@@MAEHIII@Z
+?OnGridKillFocus@CGXGridCore@@MAEXPAVCWnd@@@Z
+?OnGridPrepareDC@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnGridPreTranslateMessage@CGXGridCore@@MAEHPAUtagMSG@@@Z
+?OnGridPrint@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnGridSetFocus@CGXGridCore@@MAEXPAVCWnd@@@Z
+?OnGridSysChar@CGXGridCore@@MAEHIII@Z
+?OnGridSysColorChange@CGXGridCore@@MAEXXZ
+?OnGridSysDeadChar@CGXGridCore@@MAEHIII@Z
+?OnGridSysKeyDown@CGXGridCore@@MAEHIII@Z
+?OnGridSysKeyUp@CGXGridCore@@MAEHIII@Z
+?OnGridTimer@CGXGridCore@@MAEXI@Z
+?OnGridUpdate@CGXGridCore@@MAEXPAVCView@@JPAVCObject@@@Z
+?OnGridWindowProc@CGXGridCore@@MAEHIIJAAJ@Z
+?OnGridWinIniChange@CGXGridCore@@MAEXPBD@Z
+?OnGroupDesc@CBBBuyerView@@QAEXKAAVCGXStyle@@@Z
+?OnInfoWndMoveRecord@CGXGridCore@@UAEXHJ@Z
+?OnInitColInfo@CGXODBCGrid@@MAEXKABUCGXFieldInfo@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@AAJAAGPAH@Z
+?OnInitCurrentCell@CGXGridCore@@MAEXKK@Z
+?OnInitDialog@CG3Dialog@@MAEHXZ
+?OnInitDialog@CG3IncrementalSearchDlg@@MAEHXZ
+?OnInitialUpdate@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXXZ
+?OnInitialUpdate@CBBBuyerView@@MAEXXZ
+?OnInitialUpdate@CBBBuyHeaderView@@MAEXXZ
+?OnInitialUpdate@CBBImportExport@@UAEXXZ
+?OnInitialUpdate@CBBListHeaderView@@MAEXXZ
+?OnInitialUpdate@CBBLoadBGView@@UAEXXZ
+?OnInitialUpdate@CBBPostView@@UAEXXZ
+?OnInitialUpdate@CBBPriceTagDtlView@@UAEXXZ
+?OnInitialUpdate@CBBPurchaserView@@MAEXXZ
+?OnInitialUpdate@CBBQRefEditView@@MAEXXZ
+?OnInitialUpdate@CBBSeriesEdit@@UAEXXZ
+?OnInitialUpdate@CBBSessionView@@MAEXXZ
+?OnInitialUpdate@CBBStolenBooksView@@MAEXXZ
+?OnInitialUpdate@CBBTransListView@@MAEXXZ
+?OnInitialUpdate@CG3FormView@@UAEXXZ
+?OnInitialUpdate@CG3HeaderDtlViewBase@@MAEXXZ
+?OnInitialUpdate@CG3RecordView@@UAEXXZ
+?OnInitialUpdate@CG3XRecordView@@UAEXXZ
+?OnInitialUpdate@CGXGridWnd@@MAEXXZ
+?OnInitialUpdateFrame@CBBPriceTagFrm@@MAEXXZ
+?OnInitialUpdateFrame@CBBSessionFrame@@MAEXXZ
+?OnInitialUpdateFrame@CBBStolenBooksFrame@@MAEXXZ
+?OnInitialUpdateFrame@CBBTransListFrm@@MAEXXZ
+?OnInitialUpdateFrame@CBuybackListFrame@@MAEXXZ
+?OnInitialUpdateFrame@CG3HeaderDtlSheet@@MAEXXZ
+?OnInitialUpdateFrame@CG3Worksheet@@MAEXXZ
+?OnItemAdded@SECListBoxEditor@@UAEXHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnItemDelete@SECListBoxEditor@@UAEHHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnItemMoved@SECListBoxEditor@@UAEXHHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?OnItemRenamed@SECListBoxEditor@@UAEXHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@0@Z
+?OnLButtonClickedRowCol@CBBPriceTagDtlView@@UAEHKKIVCPoint@@@Z
+?OnLButtonClickedRowCol@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnLButtonDblClk@CBBPurchaserView@@IAEXIVCPoint@@@Z
+?OnLButtonDblClk@CGXRecordView@@IAEXIVCPoint@@@Z
+?OnLButtonDblClkRowCol@CBBBuyerView@@MAEHKKIVCPoint@@@Z
+?OnLButtonDblClkRowCol@CG3HeaderDtlViewBase@@MAEHKKIVCPoint@@@Z
+?OnLButtonDblClkRowCol@CG3IncrementalSearchGrd@@UAEHKKIVCPoint@@@Z
+?OnLButtonDblClkRowCol@CG3QuickSearchResultsGrid@@MAEHKKIVCPoint@@@Z
+?OnLButtonDblClkRowCol@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnLButtonHitRowCol@CG3IncrementalSearchGrd@@UAEHKKKKVCPoint@@IG@Z
+?OnLButtonHitRowCol@CGXGridCore@@MAEHKKKKVCPoint@@IG@Z
+?OnLeftCell@CGXBrowserGrid@@UAEHKKKK@Z
+?OnLeftCell@CGXGridCore@@MAEHKKKK@Z
+?OnLeftColChange@CGXGridCore@@MAEHK@Z
+?OnLeftColChanged@CGXGridCore@@MAEXXZ
+?OnLoadCellStyle@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEHKKAAVCGXStyle@@PBD@Z
+?OnLoadCellStyle@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEHKKAAVCGXStyle@@PBD@Z
+?OnLoadCellStyle@CBBPurchaserView@@MAEHKKAAVCGXStyle@@PBD@Z
+?OnLoadSuspended@CBBBuyHeaderView@@IAEXXZ
+?OnLoadSuspendedCheck@CBBBuyHeaderView@@IAEXXZ
+?OnMButtonClickedRowCol@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnMButtonDblClkRowCol@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnMButtonHitRowCol@CGXGridCore@@MAEHKKKKVCPoint@@IG@Z
+?OnMDIActivate@CBBPriceTagFrm@@IAEXHPAVCWnd@@0@Z
+?OnMDIActivate@CG3Worksheet@@IAEXHPAVCWnd@@0@Z
+?OnMembership@CBBBuyHeaderView@@IAEXXZ
+?OnMenuItemCheckAll@CBBPriceTagDtlView@@QAEXXZ
+?OnMenuItemCheckNone@CBBPriceTagDtlView@@QAEXXZ
+?OnMenuItemPrintnQtyTags@CBBPriceTagDtlView@@QAEXXZ
+?OnMenuItemPrintTags@CBBPriceTagDtlView@@QAEXXZ
+?OnModifiedPrintDevice@CG3Dialog@@UAEXXZ
+?OnModifiedPrintDevice@CGXView@@UAEXXZ
+?OnModifyCell@CGXBrowserGrid@@UAEXKK@Z
+?OnModifyCell@CGXGridCore@@MAEXKK@Z
+?OnMouseMoveOver@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnMove@CBBListHeaderView@@UAEHI@Z
+?OnMove@CBBSessionView@@MAEHI@Z
+?OnMove@CBBStolenBooksView@@UAEHI@Z
+?OnMove@CBBTransListView@@UAEHI@Z
+?OnMove@CG3RecordView@@UAEHI@Z
+?OnMovedCurrentCell@CG3QuickSearchResultsGrid@@MAEXKK@Z
+?OnMovedCurrentCell@CGXGridCore@@MAEXKK@Z
+?OnMovedCurrentCell@CGXODBCGrid@@MAEXKK@Z
+?OnMoveTracking@CGXGridCore@@MAEXKKHAAVCSize@@@Z
+?OnNavSelChange@CBBPriceTagFrm@@IAEXXZ
+?OnNavSelChange@CBBTransListFrm@@IAEXXZ
+?OnNewTitle@CBBListHeaderView@@IAEXXZ
+?OnPaint@SECListBoxEditor@@QAEXXZ
+?OnPasteDiffRange@CGXGridCore@@UAEHXZ
+?OnPasteDirect@CGXGridCore@@UAEHABVCGXRange@@@Z
+?OnPasteFromClipboard@CGXGridCore@@UAEHABVCGXRange@@@Z
+?OnPrepareDC@CG3Dialog@@MAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnPrepareDC@CGXRecordView@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnPreparePrinting@CG3Dialog@@MAEHPAUCPrintInfo@@@Z
+?OnPreparePrinting@CGXRecordView@@MAEHPAUCPrintInfo@@@Z
+?OnPriceCell@CBuyersGuideInqView@@QAEXKAAVCGXStyle@@@Z
+?OnPriceCell@CBuyersGuideInqViewBB@@QAEXKAAVCGXStyle@@@Z
+?OnPrint@CBBTransListView@@IAEXXZ
+?OnPrint@CG3Dialog@@MAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnPrint@CGXGridWnd@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnPrint@CGXRecordView@@MAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnPrint@CGXRecordWnd@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnPrintAllView@CBBPriceTagFrm@@QAEXXZ
+?OnPrintHeaderAndFooter@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnPrintLastReceipt@CBBBuyHeaderView@@IAEXXZ
+?OnPrintPrintedView@CBBPriceTagFrm@@QAEXXZ
+?OnPrintSelectedView@CBBPriceTagFrm@@QAEXXZ
+?OnPrintUnprintedView@CBBPriceTagFrm@@QAEXXZ
+?OnPurgeAllQueue@CBBPriceTagFrm@@QAEXXZ
+?OnPurgeStolenBooks@CBBStolenBooksView@@IAEXXZ
+?OnQSBuyer@CG3QuickSearchBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?OnQSCrsSetCampusID@CG3QuickSearchBase@@MAEJXZ
+?OnQSGetFormatBuyer@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatCatNum@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatColor@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatCrs@CG3QuickSearchBase@@MAEXPAVCG3CrsObj@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatCustomer@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatDate@CG3QuickSearchBase@@MAEXIAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatDCC@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatGeneric@CG3QuickSearchBase@@MAEXIAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatGLAccount@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatInstructor@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatInventoryStatus@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatISBN@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatLocTerm@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatSeason@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatSectionID@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatSize@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatSKU@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatStatType@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@V23@@Z
+?OnQSGetFormatStatus@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatStyle@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatSubsystem@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatTerm@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatVendor@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatVendorPrefOrderMethod@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatWarrantyID@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatWorkStatus@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetFormatXREF@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSGetSubsystemDCC@CG3QuickSearchBase@@MAEHXZ
+?OnQSSetLocTermData@CG3QuickSearchBase@@MAEXPAVCG3LocationTermDlg@@@Z
+?OnQSSetStatusData@CG3QuickSearchBase@@MAEXPAVCG3QSSelectBaseDlg@@@Z
+?OnQSSetTermFilter@CG3QuickSearchBase@@MAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnQSStyle@CG3QuickSearchBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?OnQueryCurrentAmts@CBBBuyHeaderView@@IAEXXZ
+?OnRButtonClickedRowCol@?$CG3GridTemplate@VCGXGridWnd@@@@UAEHKKIVCPoint@@@Z
+?OnRButtonClickedRowCol@?$CG3GridTemplate@VCGXRecordView@@@@UAEHKKIVCPoint@@@Z
+?OnRButtonClickedRowCol@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHKKIVCPoint@@@Z
+?OnRButtonDblClk@CBBPurchaserView@@IAEXIVCPoint@@@Z
+?OnRButtonDblClkRowCol@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnRButtonHitRowCol@CGXGridCore@@MAEHKKKKVCPoint@@IG@Z
+?OnRecordDelete@CBBPurchaserView@@MAEXXZ
+?OnRecordInsert@CBBPurchaserView@@MAEXXZ
+?OnRecordPost@CBBPriceTagDtlView@@QAEXXZ
+?OnRecordPost@CBBPurchaserView@@IAEXXZ
+?OnRecordPost@CBBSeriesEdit@@IAEXXZ
+?OnRecordRefresh@CBBStolenBooksView@@IAEXXZ
+?OnRecordSearch@CBBListHeaderView@@IAEXXZ
+?OnRecordSearch@CBBQRefEditView@@MAEXXZ
+?OnRecordSearch@CBBStolenBooksView@@IAEXXZ
+?OnRecordSearch@CBuyersGuideInqView@@IAEXXZ
+?OnRecordSearch@CBuyersGuideInqViewBB@@IAEXXZ
+?OnRefreshLocations@CG3LocationComboBox@@QAEXXZ
+?OnReopenSession@CBBSessionView@@IAEXXZ
+?OnReplaceAll@CGXGridCore@@UAEXPBD0H@Z
+?OnReplaceAll@CGXODBCGrid@@MAEXPBD0H@Z
+?OnReplaceSel@CGXBrowserGrid@@UAEXPBDHH0@Z
+?OnReplaceSel@CGXGridCore@@UAEXPBDHH0@Z
+?OnRequery@CG3QuickSearchBase@@UAEHPAVCRecordset@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnResetFilter@CG3RecordView@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?OnScrollBecauseOfEdit@CGXGridCore@@MAEHHK@Z
+?OnSelChgSearchBy@CBBBuyHeaderView@@IAEXXZ
+?OnSelDragCancel@CGXGridCore@@MAEXXZ
+?OnSelDragColsDrop@CGXGridCore@@MAEHKKK@Z
+?OnSelDragColsMove@CGXGridCore@@MAEHKKK@Z
+?OnSelDragColsStart@CGXGridCore@@MAEHKK@Z
+?OnSelDragDrop@CGXGridCore@@MAEHKKKK@Z
+?OnSelDragMove@CGXGridCore@@MAEHKKKK@Z
+?OnSelDragRowsDrop@CGXGridCore@@MAEHKKK@Z
+?OnSelDragRowsMove@CGXGridCore@@MAEHKKK@Z
+?OnSelDragRowsStart@CGXGridCore@@MAEHKK@Z
+?OnSelDragStart@CGXGridCore@@MAEHKK@Z
+?OnSendListWeb@CBBListHeaderView@@IAEXXZ
+?OnSetGridControl@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXK@Z
+?OnSetGridControl@?$CG3GridTemplate@VCGXRecordView@@@@UAEXK@Z
+?OnSetGridControl@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXK@Z
+?OnSetOptions@CG3Database@@UAEXPAX@Z
+?OnSetReadOnly@CG3FormView@@UAEXH@Z
+?OnSetReadOnly@CG3RecordView@@UAEXH@Z
+?OnSetTimerInterval@CBBPriceTagFrm@@QAEXXZ
+?OnShowFindReplaceDialog@CGXGridCore@@UAEXH@Z
+?OnShowWindow@CBBPriceTagFrm@@IAEXHI@Z
+?OnShowWindow@SECWorksheetWnd@@IAEXHI@Z
+?OnSortByLocation@CBBPriceTagFrm@@QAEXXZ
+?OnSortByLocation@CBBTransListFrm@@QAEXXZ
+?OnSortByLocation@CBuybackListFrame@@IAEXXZ
+?OnSortByPurchaser@CBBPriceTagFrm@@QAEXXZ
+?OnSortBySession@CBBTransListFrm@@QAEXXZ
+?OnSortByTerm@CBuybackListFrame@@IAEXXZ
+?OnStart@CBBImportExport@@AAEXXZ
+?OnStart@CBBLoadBGView@@IAEXXZ
+?OnStart@CBBPostView@@IAEXXZ
+?OnStartAutoFillSelection@CGXGridCore@@MAEHAAVCGXRange@@AAIAAVCPoint@@@Z
+?OnStartAutoPrinting@CBBPriceTagFrm@@QAEXXZ
+?OnStartEditing@CBBBuyerView@@MAEHKK@Z
+?OnStartEditing@CGXGridCore@@MAEHKK@Z
+?OnStartSelection@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnStartTracking@CGXGridCore@@MAEHKKH@Z
+?OnStopAutoPrinting@CBBPriceTagFrm@@QAEXXZ
+?OnStudentIdChange@CBBBuyHeaderView@@IAEXXZ
+?OnStudentIdKillFocus@CBBBuyHeaderView@@IAEXXZ
+?OnSuspendedTransaction@CBBBuyHeaderView@@IAEXXZ
+?OnSuspendedTransactionUI@CBBBuyHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnTabChanged@CGXGridCore@@UAEXH@Z
+?OnTestGridDimension@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEXKK@Z
+?OnTestGridDimension@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXKK@Z
+?OnTestGridDimension@CGXGridCore@@UAEXKK@Z
+?OnTextNotFound@CG3IncrementalSearchGrd@@UAEXPBD@Z
+?OnTextNotFound@CGXGridCore@@UAEXPBD@Z
+?OnTimer@CBBPriceTagFrm@@QAEXI@Z
+?OnTimer@CBBSessionFrame@@IAEXI@Z
+?OnTopRowChange@CGXGridCore@@MAEHK@Z
+?OnTopRowChanged@CGXGridCore@@MAEXXZ
+?OnTrackColWidth@?$CG3GridTemplate@VCGXGridWnd@@@@UAEHK@Z
+?OnTrackColWidth@?$CG3GridTemplate@VCGXRecordView@@@@UAEHK@Z
+?OnTrackColWidth@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHK@Z
+?OnTrackColWidthEnd@CGXGridCore@@MAEHKH@Z
+?OnTrackColWidthMove@CGXGridCore@@MAEHKH@Z
+?OnTrackColWidthStart@CGXGridCore@@MAEHK@Z
+?OnTrackRowHeight@CGXGridCore@@MAEHK@Z
+?OnTrackRowHeightEnd@CGXGridCore@@MAEHKH@Z
+?OnTrackRowHeightMove@CGXGridCore@@MAEHKH@Z
+?OnTrackRowHeightStart@CGXGridCore@@MAEHK@Z
+?OnTransferTypeChg@CBBImportExport@@AAEXXZ
+?OnUpdate@CBBListHeaderView@@MAEXPAVCView@@JPAVCObject@@@Z
+?OnUpdate@CBBSeriesEdit@@MAEXPAVCView@@JPAVCObject@@@Z
+?OnUpdate@CBBStolenBooksView@@MAEXPAVCView@@JPAVCObject@@@Z
+?OnUpdate@CG3BrowseEditBase@@MAEHXZ
+?OnUpdate@CG3FormView@@MAEXPAVCView@@JPAVCObject@@@Z
+?OnUpdate@CG3RecordView@@MAEXPAVCView@@JPAVCObject@@@Z
+?OnUpdate@CG3XRecordView@@UAEXPAVCView@@JPAVCObject@@@Z
+?OnUpdateClose@CBBSessionView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateCopyList@CBBListHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateDelete@CBBSessionView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateFrameMenu@SECWorksheetWnd@@MAEXHPAVCWnd@@PAUHMENU__@@@Z
+?OnUpdateFrameTitle@SECWorksheetWnd@@MAEXH@Z
+?OnUpdateGenList@CBBListHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateInsert@CBBListHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateInsert@CBBSessionView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateNav@CBuybackListFrame@@IAEXPAVCCmdUI@@@Z
+?OnUpdateNewTitle@CBBListHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdatePost@CBBSessionView@@IAEXPAVCCmdUI@@@Z
+?OnUpdatePrintOptions@CBBPriceTagFrm@@IAEXPAVCCmdUI@@@Z
+?OnUpdatePrintReceipt@CBBTransListView@@IAEXPAVCCmdUI@@@Z
+?OnUpdatePurgeStolenBooks@CBBStolenBooksView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateRecExists@CBBListHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateRecordDelete@CBBPurchaserView@@MAEXPAVCCmdUI@@@Z
+?OnUpdateRecordDelete@CBBStolenBooksView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateRecordDelete@CBBTransListView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateRecordInsert@CBBPurchaserView@@MAEXPAVCCmdUI@@@Z
+?OnUpdateRecordInsert@CBBStolenBooksView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateRecordInsert@CBBTransListView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateRecordPost@CBBPurchaserView@@MAEXPAVCCmdUI@@@Z
+?OnUpdateRecordPost@CBBStolenBooksView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateRecordPost@CBBTransListView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateRecordRefresh@CBBPurchaserView@@MAEXPAVCCmdUI@@@Z
+?OnUpdateRecordRefresh@CBBStolenBooksView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateRecordRefresh@CBBTransListView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateReopen@CBBSessionView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateSendListWeb@CBBListHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateSetLocation@CBBListHeaderView@@IAEXPAVCCmdUI@@@Z
+?OnUpdateSetLocation@CG3RecordView@@IAEXPAVCCmdUI@@@Z
+?OnValidateCell@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEHKK@Z
+?OnValidateCell@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEHKK@Z
+?OnValidateCell@CBBPurchaserView@@MAEHKK@Z
+?OnValidateCell@CGXGridCore@@MAEHKK@Z
+?OnValidateLogonID@CBBBuyerView@@QAEHKK@Z
+?OnValidateName@CBBBuyerView@@QAEHKK@Z
+?OnValidatePassword@CBBBuyerView@@QAEHKK@Z
+?OnValidateQRefCode@CBBQRefEditView@@QAEHKK@Z
+?OpenASCIITransfer@CBBImportExport@@AAE_NXZ
+?OpenEx@CG3Database@@UAEHPBDK@Z
+?OpenGenListFiles@CBBListHeaderView@@IAEXXZ
+?OpenRecordset@CGXODBCGrid@@UAEXXZ
+?ParseDCC@@YAXABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@AAV12@11@Z
+?Paste@CGXBrowserGrid@@UAEHXZ
+?Paste@CGXGridCore@@UAEHXZ
+?PasteCellsFromArchive@CGXGridCore@@UAEHAAVCArchive@@ABVCGXRange@@H@Z
+?PasteTextFromBuffer@CGXBrowserGrid@@UAEHPBDKABVCGXRange@@@Z
+?PasteTextFromBuffer@CGXGridCore@@UAEHPBDKABVCGXRange@@@Z
+?PasteTextRowCol@CGXGridCore@@UAEHKKABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@IPBVCGXStyle@@@Z
+?PeekAndPump@CBBImportExport@@QAEXXZ
+?PerformQuickSearch@CG3QuickSearchBase@@QAEHPAVCObject@@HHH@Z
+?PostNcDestroy@CGXGridWnd@@MAEXXZ
+?PostNcDestroy@CGXRecordWnd@@MAEXXZ
+?PostQuickSearch@CG3QuickSearchBase@@MAEXXZ
+?PostQuickSearchResults@CG3QuickSearchBase@@MAEXXZ
+?PostUpdateRecordset@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEXK@Z
+?PostUpdateRecordset@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXK@Z
+?PreBindFields@CGXDynamicRecordset@@UAEXXZ
+?PreChangeSelection@CGXGridCore@@MAEXPAVCGXRange@@HH@Z
+?PreCreateWindow@CG3Worksheet@@MAEHAAUtagCREATESTRUCTA@@@Z
+?PrepareChangeSelection@CGXGridCore@@MAEXPAU__POSITION@@KKKKH@Z
+?PrepareClearSelection@CGXGridCore@@MAEXH@Z
+?PrepareDCAttribs@CGXGridCore@@MAEXPAVCDC@@@Z
+?PrepareOptionsMenu@CBBPriceTagFrm@@QAEXPAVCMenu@@@Z
+?PrepareOptionsMenu@CBBSessionFrame@@IAEXPAVCMenu@@@Z
+?PrepareOptionsMenu@CBBStolenBooksFrame@@QAEXPAVCMenu@@@Z
+?PrepareOptionsMenu@CBBTransListFrm@@QAEXPAVCMenu@@@Z
+?PrepareOptionsMenu@CBuybackListFrame@@IAEXPAVCMenu@@@Z
+?PreQuickSearchResults@CG3QuickSearchBase@@MAEXXZ
+?PreTranslateMessage@CBBBuyHeaderView@@MAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CBBSessionFrame@@MAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CBBSessionView@@MAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CG3BrowseEditBase@@UAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CG3HeaderDtlSheet@@MAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CG3IncrementalSearchDlg@@MAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CG3LBGridBase@@MAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CG3Worksheet@@UAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CG3XRecordWnd@@UAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CGXGridWnd@@MAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CGXRecordView@@UAEHPAUtagMSG@@@Z
+?PreTranslateMessage@SECListBoxEditor@@UAEHPAUtagMSG@@@Z
+?PreUpdateRecordset@CGXODBCGrid@@MAEXK@Z
+?PrintBarcode@COPOSContainer@@QAEXJV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@JJJJJ@Z
+?PrintReceipt@CBBBuyHeaderView@@IAEXH@Z
+?PrintTagsAll@CBBPriceTagDtlView@@QAEXXZ
+?PrintTagsPrinted@CBBPriceTagDtlView@@QAEXXZ
+?PrintTagsSelectedRows@CBBPriceTagDtlView@@QAEXXZ
+?PrintTagsUnprinted@CBBPriceTagDtlView@@QAEXXZ
+?PrintTagsUnprintedQueue@CBBPriceTagDtlView@@QAEXH@Z
+?PrintText@COPOSContainer@@QAEXJV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?ProcessContextMenuCommand@CG3QuickSearchResultsGrid@@MAEHHAAJ@Z
+?ProcessKeys@?$CG3GridTemplate@VCGXGridWnd@@@@UAEHPAVCWnd@@IIII@Z
+?ProcessKeys@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEHPAVCWnd@@IIII@Z
+?ProcessKeys@?$CG3XViewBase@VCGXRecordView@@@@UAEHPAVCWnd@@IIII@Z
+?ProcessKeys@CBBBuyerView@@MAEHPAVCWnd@@IIII@Z
+?ProcessKeys@CBBPurchaserView@@MAEHPAVCWnd@@IIII@Z
+?ProcessKeys@CG3HeaderDtlViewBase@@MAEHPAVCWnd@@IIII@Z
+?ProcessKeys@CG3IncrementalSearchGrd@@UAEHPAVCWnd@@IIII@Z
+?ProcessKeys@CG3QuickSearchResultsGrid@@MAEHPAVCWnd@@IIII@Z
+?ProcessTender@CBBBuyHeaderView@@IAE_NHN@Z
+?ProgressStep@CBBImportExport@@QAEXXZ
+?ProgressText@CBBImportExport@@QAEXPBD@Z
+?PurchaserAlreadyExists@CBBPurchaserView@@IAEHXZ
+?QueueInUse@CBBPriceTagDtlView@@QAEHXZ
+?ReadyToStart@CBBBuyHeaderView@@IAEHXZ
+?Recalc@CGXGridCore@@UAEXH@Z
+?RecordAdd@CBBListHeaderView@@UAEHXZ
+?RecordAdd@CBBSessionView@@MAEHXZ
+?RecordAdd@CBBStolenBooksView@@UAEHXZ
+?RecordAdd@CG3RecordView@@UAEHXZ
+?RecordDelete@CBBListHeaderView@@UAEHH@Z
+?RecordDelete@CBBSessionView@@MAEHH@Z
+?RecordDelete@CBBStolenBooksView@@UAEHH@Z
+?RecordDelete@CG3RecordView@@UAEHH@Z
+?RecordPost@?$CG3XRecordBase@VCG3XRecordViewBase@@@@UAEHXZ
+?RecordPost@?$CG3XRecordBase@VCG3XRecordWndBase@@@@UAEHXZ
+?RecordPost@CBBListHeaderView@@UAEHXZ
+?RecordPost@CBBSessionView@@UAEHXZ
+?RecordPost@CBBStolenBooksView@@UAEHXZ
+?RecordPost@CBBTransListView@@UAEHXZ
+?RecordPost@CG3HeaderDtlViewBase@@UAEHXZ
+?RecordPost@CG3RecordView@@UAEHXZ
+?RecordRefresh@CBBListHeaderView@@UAEHXZ
+?RecordRefresh@CBBSessionView@@MAEHXZ
+?RecordRefresh@CBBStolenBooksView@@UAEHXZ
+?RecordRefresh@CG3RecordView@@UAEHXZ
+?RecycleStyle@CGXGridCore@@UAEXPAVCGXStyle@@@Z
+?RecycleTooltips@SECListBoxEditor@@UAEXXZ
+?Redo@CGXGridCore@@UAEHXZ
+?Redraw@CGXGridCore@@UAEXIH@Z
+?RedrawRowCol@CGXGridCore@@QAEXABVCGXRange@@IH@Z
+?RedrawRowCol@CGXGridCore@@UAEXKKKKIH@Z
+?Refresh@CBBTransListView@@IAEXXZ
+?RefreshFrameMenu@SECMDIChildWnd@@UAEXPAVCWnd@@@Z
+?RefreshRecord@CG3RecordView@@UAEHPAVCRecordset@@@Z
+?RefreshViews@CGXGridCore@@UAEHHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?RegisterControl@CGXGridCore@@QAEXGPAVCGXControl@@HH@Z
+?ReInitGrid@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXPAU_tagG3GRIDINFO@@@Z
+?ReInitGrid@?$CG3GridTemplate@VCGXRecordView@@@@UAEXPAU_tagG3GRIDINFO@@@Z
+?ReInitGrid@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXPAU_tagG3GRIDINFO@@@Z
+?RemoveCols@CGXBrowserGrid@@UAEHKKIW4GXCmdType@@@Z
+?RemoveCols@CGXGridCore@@UAEHKKIW4GXCmdType@@@Z
+?RemoveCommand@CGXGridCore@@UAEXW4GXCmdType@@@Z
+?RemoveRows@CGXBrowserGrid@@UAEHKKIW4GXCmdType@@@Z
+?RemoveRows@CGXGridCore@@UAEHKKIW4GXCmdType@@@Z
+?ReportError@CG3Exception@@UAEHII@Z
+?Requery@CBBListHeaderView@@UAEXH@Z
+?Requery@CBBPriceTagDtlView@@QAEXJJ@Z
+?Requery@CBBSessionView@@UAEXH@Z
+?Requery@CBBStolenBooksView@@UAEXH@Z
+?Requery@CBBTransListView@@UAEXH@Z
+?Requery@CG3ComboBox@@QAEHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Requery@CG3HeaderDtlViewBase@@MAEXPAJ@Z
+?Requery@CG3NavComboBox@@QAEHXZ
+?Requery@CG3QuickSearchResultsGrid@@MAEXXZ
+?Requery@CG3RecordView@@UAEXH@Z
+?Requery@CG3XRecordView@@UAEXH@Z
+?Requery@CG3XRecordView@@UAEXXZ
+?Requery@CGXODBCGrid@@UAEXXZ
+?RequeryDetail@CBBSessionView@@IAEXXZ
+?RequeryUpdateRecordsets@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEXK@Z
+?RequeryUpdateRecordsets@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEXK@Z
+?RequeryUpdateRecordsets@CG3HeaderDtlViewBase@@MAEXK@Z
+?Reset@CTenderAuthParamBB@@MAEXXZ
+?ResetCurrencyExch@CG3RecordView@@UAEXXZ
+?ResetCurrentCell@CGXGridCore@@UAEXH@Z
+?ResetEditorSizePos@SECListBoxEditor@@UAEXXZ
+?ResetError@CGXGridCore@@UAEXXZ
+?ResetTender@CBBBuyHeaderView@@IAEXXZ
+?ResizeColWidthsToFit@CGXGridCore@@UAEHVCGXRange@@HI@Z
+?ResizeRowHeightsToFit@CGXGridCore@@UAEHVCGXRange@@HI@Z
+?ReturnRentalItem@CBBBuyHeaderView@@IAE_NHPBD@Z
+?ReturnRentals@CBBBuyHeaderView@@AAEXH@Z
+?Rollback@CG3IncrementalSearchGrd@@UAEXXZ
+?Rollback@CGXGridCore@@UAEXXZ
+?Rollback@CGXODBCGrid@@UAEXXZ
+?ScrollCellInView@CGXGridCore@@UAEHKKIH@Z
+?Seek@?$CG3XRecordBase@VCG3XRecordViewBase@@@@MAEHJJFPBD@Z
+?Seek@?$CG3XRecordBase@VCG3XRecordWndBase@@@@MAEHJJFPBD@Z
+?SelectRange@CGXGridCore@@UAEXABVCGXRange@@HH@Z
+?Serialize@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXAAVCArchive@@@Z
+?Serialize@?$CG3GridTemplate@VCGXRecordView@@@@UAEXAAVCArchive@@@Z
+?Serialize@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXAAVCArchive@@@Z
+?SetActive@?$CG3XRecordBase@VCG3XRecordViewBase@@@@UAEXH@Z
+?SetActive@?$CG3XRecordBase@VCG3XRecordWndBase@@@@UAEXH@Z
+?SetAdvancedUndo@CGXGridCore@@UAEHH@Z
+?SetBaseFilter@CG3QuickSearchBase@@QAEXPBD@Z
+?SetBGPurchaserPrices@CBBBuyHeaderView@@IAEXXZ
+?SetBinaryFlags@CGXBrowserGrid@@MAEHPBVCGXStyle@@H@Z
+?SetButtonVisibility@SECListBoxEditor@@UAEXH@Z
+?SetBuyerLocID@CBBPriceTagFrm@@QAEXJ@Z
+?SetCells@CGXRange@@QAEAAV1@KK@Z
+?SetChoiceList@CGXStyle@@QAEAAV1@ABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetColCount@CGXGridCore@@UAEHKI@Z
+?SetCols@CGXRange@@QAEAAV1@K@Z
+?SetColWidth@CGXGridCore@@UAEHKKHPAHIW4GXCmdType@@@Z
+?SetControlTextRowCol@CGXBrowserGrid@@UAEHKKABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@IPBVCGXStyle@@@Z
+?SetControlTextRowCol@CGXGridCore@@UAEHKKABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@IPBVCGXStyle@@@Z
+?SetCoveredCellsRowCol@CGXGridCore@@UAEHKKKKIW4GXCmdType@@@Z
+?SetCtrlStyle@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXHK@Z
+?SetCtrlStyle@?$CG3GridTemplate@VCGXRecordView@@@@UAEXHK@Z
+?SetCtrlStyle@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXHK@Z
+?SetCurCmd@CG3QuickSearchBase@@QAEXI@Z
+?SetCurGridCol@CG3RecordView@@UAEXK@Z
+?SetCurGridRow@CG3RecordView@@UAEXK@Z
+?SetCurrentCell@?$CG3XViewBase@VCGXRecordView@@@@UAEHKKI@Z
+?SetCurrentCell@CG3HeaderDtlViewBase@@MAEHKKI@Z
+?SetCurrentCell@CG3IncrementalSearchGrd@@UAEHKKI@Z
+?SetCurrentCell@CG3QuickSearchResultsGrid@@UAEHKKI@Z
+?SetCurrentCell@CGXBrowserGrid@@UAEHKKI@Z
+?SetCurrentCell@CGXGridCore@@UAEHKKI@Z
+?SetCurrentHeader@CBuybackListFrame@@QAEXJH@Z
+?SetDataEx@CG3BrowseEditBase@@UAEXJ@Z
+?SetDataField@CG3NavComboBox@@QAEXHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@0@Z
+?SetDate@CG3DateTime@@QAEXHHH@Z
+?SetDateTime@CG3DateTime@@QAEXPAVCG3Database@@W4ExceptionOption@@@Z
+?SetDefaultColWidth@CGXGridCore@@UAEHHIW4GXCmdType@@@Z
+?SetDefaultRowHeight@CGXGridCore@@UAEHHIW4GXCmdType@@@Z
+?SetDefaultSQL@CG3NavComboBox@@QAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetDeleteUsesSQL@CG3RecordView@@UAEXH@Z
+?SetDisplayCurrencyExchId@?$CG3GridTemplate@VCGXRecordView@@@@QAEXJJ@Z
+?SetDlgTitle@CG3IncrementalSearchDlg@@QAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetDrawingTechnique@CGXGridCore@@QAE?AW4GXDrawingTechnique@@W42@@Z
+?SetExStyle@SECProgressCtrl@@QAEXK@Z
+?SetField@CG3NavComboBox@@QAEXHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@0@Z
+?SetFieldData@CGXDynamicRecordset@@QAEHHPBDPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?SetFilter@CG3NavComboBox@@QAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetFrozenCols@CGXGridCore@@UAEHKKIW4GXCmdType@@@Z
+?SetFrozenRows@CGXGridCore@@UAEHKKIW4GXCmdType@@@Z
+?SetGrid@CG3IncrementalSearchDlg@@QAEXPAVCG3IncrementalSearchGrd@@@Z
+?SetGridCursor@CGXGridCore@@UAEXI@Z
+?SetHorizontalAlignment@CGXStyle@@QAEAAV1@K@Z
+?SetID@CG3BrowseEditBase@@UAEJJ@Z
+?SetInterior@CGXStyle@@QAEAAV1@K@Z
+?SetLDisplayText@CG3BrowseEditBase@@UAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetLeftCol@CGXGridCore@@UAEXKIH@Z
+?SetLineChrsForSlpOpt@COPOSContainer@@QAEJJ@Z
+?SetLocation@CBBSeriesEdit@@IAEXXZ
+?SetLocationField@CG3LocationTermDlg@@QAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetModifiedFlag@CGXGridCore@@UAEXH@Z
+?SetOptionsEnabled@CBBImportExport@@AAEXH@Z
+?SetParam@CG3ParamInfoOb@@QAEXHJ@Z
+?SetParam@CG3ParamInfoOb@@QAEXHPBD@Z
+?SetParamInfo@?$CG3XViewBase@VCGXRecordView@@@@UAEXXZ
+?SetParamInfo@CBBBuyHeaderView@@UAEXXZ
+?SetParamInfo@CBBListHeaderView@@UAEXXZ
+?SetParamInfo@CG3FormView@@UAEXXZ
+?SetParamInfo@CG3RecordView@@UAEXXZ
+?SetPrinting@CGXGridCore@@UAEXHH@Z
+?SetQuick@SECListBoxEditor@@UAEXH@Z
+?SetRangeName@CGXGridCore@@UAEHPBDABVCGXRange@@PAVCObject@@IW4GXCmdType@@@Z
+?SetReadOnly@CG3BrowseEditBase@@QAEXH@Z
+?SetReadOnly@CGXGridCore@@UAEXH@Z
+?SetReadOnly@CGXStyle@@QAEAAV1@H@Z
+?SetRequeryString@CBBBuyHeaderView@@IAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PAVCGXDynamicRecordset@@H_N@Z
+?SetRowCount@CGXGridCore@@UAEHKI@Z
+?SetRowHeight@CGXGridCore@@UAEHKKHPAHIW4GXCmdType@@@Z
+?SetRows@CGXRange@@QAEAAV1@K@Z
+?SetRows@CGXRange@@QAEAAV1@KK@Z
+?SetScrollBarMode@CGXGridCore@@UAEXHHH@Z
+?SetScrollLockedFromCell@CGXGridCore@@UAEHH@Z
+?SetScrollPos@CGXGridCore@@MAEKHKH@Z
+?SetScrollRange@CGXGridCore@@MAEXHKKH@Z
+?SetSecurity@CG3FormView@@UAEHJ@Z
+?SetSecurity@CG3RecordView@@UAEXHH@Z
+?SetSelection@CGXGridCore@@UAEXPAU__POSITION@@KKKK@Z
+?SetSessionID@CBBPriceTagFrm@@QAEXJ@Z
+?SetSessionID@CBBQRefFrame@@QAEXJ@Z
+?SetSortOrder@CG3NavComboBox@@QAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetSpacesToTab@SECListBoxEditor@@UAEXH@Z
+?SetSpecialMode@CGXGridParam@@QAEXG@Z
+?SetSqlQuery@CGXDynamicRecordset@@QAEXPBD@Z
+?SetStatusField@CG3QSSelectBaseDlg@@QAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetStyleRange@CGXBrowserGrid@@UAEHABVCGXRange@@ABVCGXStyle@@W4GXModifyType@@HI@Z
+?SetStyleRange@CGXBrowserGrid@@UAEHABVCGXRange@@PBVCGXStyle@@W4GXModifyType@@HPBVCObArray@@IW4GXCmdType@@@Z
+?SetStyleRange@CGXGridCore@@UAEHABVCGXRange@@ABVCGXStyle@@W4GXModifyType@@HI@Z
+?SetStyleRange@CGXGridCore@@UAEHABVCGXRange@@PBVCGXStyle@@W4GXModifyType@@HPBVCObArray@@IW4GXCmdType@@@Z
+?SetSysTypes@CG3ItemFindObj@@QAEXK@Z
+?SetTable@CGXRange@@QAEAAV1@XZ
+?SetTermField@CG3LocationTermDlg@@QAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetTextColor@CG3ColorStaticCtrl@@QAEXK@Z
+?SetTextColor@CGXStyle@@QAEAAV1@K@Z
+?SetTopRow@CGXGridCore@@UAEXKIH@Z
+?SetUpdateFlag@CGXGridCore@@UAEXKKH@Z
+?SetUserAttribute@CGXStyle@@QAEAAV1@GJ@Z
+?SetUserAttribute@CGXStyle@@QAEAAV1@GPBD@Z
+?SetValue@CGXStyle@@QAEAAV1@ABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetValue@CGXStyle@@QAEAAV1@N@Z
+?SetValue@CGXStyle@@QAEAAV1@PBD@Z
+?SetValueRange@CGXGridCore@@QAEHABVCGXRange@@ABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@W4GXModifyType@@HI@Z
+?SetValueRange@CGXGridCore@@QAEHABVCGXRange@@JW4GXModifyType@@HI@Z
+?SetValueRange@CGXGridCore@@QAEHABVCGXRange@@PBDW4GXModifyType@@HI@Z
+?SetVerticalAlignment@CGXStyle@@QAEAAV1@K@Z
+?SetViewCurrencyRate@CG3RecordView@@UAEXN@Z
+?SetWarningText@CGXGridCore@@UAEXPBD@Z
+?SetXref@CRentalReturnItem@@QAEXPBD@Z
+?SetZoom@CGXGridCore@@UAEXHI@Z
+?ShowContextCursor@?$CG3GridTemplate@VCGXGridWnd@@@@UAEXAAVCPoint@@@Z
+?ShowContextCursor@?$CG3GridTemplate@VCGXRecordView@@@@UAEXAAVCPoint@@@Z
+?ShowContextCursor@?$CG3GridTemplate@VCGXRecordWnd@@@@UAEXAAVCPoint@@@Z
+?ShowContextCursor@CGXGridCore@@UAEXIPBD@Z
+?ShowExchangeRateDlg@CG3RecordView@@MAEXPAVCCurrencyExchObj@@@Z
+?ShowPrintDlg@CBBPriceTagDtlView@@IAE_N_NW4ePrintType@1@@Z
+?ShowScrollBar@CGXGridWnd@@UAEXIH@Z
+?ShowScrollBar@CGXRecordView@@UAEXIH@Z
+?ShowScrollBar@CGXRecordWnd@@UAEXIH@Z
+?SkipRecord@CG3FileImpExp@@UAEHXZ
+?SortCols@CGXBrowserGrid@@UAEXVCGXRange@@AAVCGXSortInfoArray@@I@Z
+?SortCols@CGXGridCore@@UAEXVCGXRange@@AAVCGXSortInfoArray@@I@Z
+?SortKeys@CGXGridCore@@UAEXABVCGXSortInfoArray@@AAVCPtrArray@@@Z
+?SortPurchaserArray@CBBBuyHeaderView@@IAEXXZ
+?SortRows@?$CG3GridTemplate@VCGXGridWnd@@@@MAEXVCGXRange@@AAVCGXSortInfoArray@@I@Z
+?SortRows@?$CG3GridTemplate@VCGXRecordView@@@@MAEXVCGXRange@@AAVCGXSortInfoArray@@I@Z
+?SortRows@?$CG3GridTemplate@VCGXRecordWnd@@@@MAEXVCGXRange@@AAVCGXSortInfoArray@@I@Z
+?SortRows@CG3HeaderDtlViewBase@@MAEXVCGXRange@@AAVCGXSortInfoArray@@I@Z
+?SortRows@CG3QuickSearchResultsGrid@@MAEXVCGXRange@@AAVCGXSortInfoArray@@I@Z
+?StartBBImport@CG3AdoptTextbook@@QAEXPAVCG3AdoptTextParam@@@Z
+?StartEditing@SECListBoxEditor@@UAEHD@Z
+?StartMSRCapture@CG3MainFrame@@QAEHXZ
+?StopEditing@SECListBoxEditor@@UAEXXZ
+?StoreBuyInitialize@CBBSessionView@@IAEXXZ
+?StoreColCount@CGXGridCore@@MAEHK@Z
+?StoreColWidth@CGXGridCore@@MAEHKH@Z
+?StoreCopyCells@CGXGridCore@@UAEHVCGXRange@@KK@Z
+?StoreCoveredCellsRowCol@CGXGridCore@@MAEHKKKKH@Z
+?StoreCurrentCell@CGXGridCore@@MAEXHKK@Z
+?StoreDefaultColWidth@CGXGridCore@@MAEHH@Z
+?StoreDefaultRowHeight@CGXGridCore@@MAEHH@Z
+?StoreFrozenCols@CGXGridCore@@MAEHKK@Z
+?StoreFrozenRows@CGXGridCore@@MAEHKK@Z
+?StoreHideCol@CGXGridCore@@MAEHKH@Z
+?StoreHideRow@CGXGridCore@@MAEHKH@Z
+?StoreInsertCols@CGXBrowserGrid@@UAEHKKH@Z
+?StoreInsertCols@CGXGridCore@@MAEHKKH@Z
+?StoreInsertRows@CGXBrowserGrid@@UAEHKKH@Z
+?StoreInsertRows@CGXGridCore@@MAEHKKH@Z
+?StoreMoveCells@CGXGridCore@@UAEHVCGXRange@@KKAAPAVCObject@@HW4GXCmdType@@@Z
+?StoreMoveCols@CGXBrowserGrid@@UAEHKKKH@Z
+?StoreMoveCols@CGXGridCore@@MAEHKKKH@Z
+?StoreMoveDataCols@CGXBrowserGrid@@MAEHABVCGXRange@@ABVCDWordArray@@@Z
+?StoreMoveDataCols@CGXGridCore@@UAEHABVCGXRange@@ABVCDWordArray@@@Z
+?StoreMoveDataRows@CGXBrowserGrid@@MAEHABVCGXRange@@ABVCDWordArray@@@Z
+?StoreMoveDataRows@CGXGridCore@@UAEHABVCGXRange@@ABVCDWordArray@@@Z
+?StoreMoveRows@CGXBrowserGrid@@UAEHKKKH@Z
+?StoreMoveRows@CGXGridCore@@MAEHKKKH@Z
+?StoreReadOnly@CGXGridCore@@MAEHH@Z
+?StoreRemoveCols@CGXBrowserGrid@@UAEHKKH@Z
+?StoreRemoveCols@CGXGridCore@@MAEHKKH@Z
+?StoreRemoveRows@CGXBrowserGrid@@UAEHKKH@Z
+?StoreRemoveRows@CGXGridCore@@MAEHKKH@Z
+?StoreRowCount@CGXGridCore@@MAEHK@Z
+?StoreRowHeight@CGXGridCore@@MAEHKH@Z
+?StoreSelectRange@CGXGridCore@@MAEHABVCGXRange@@H@Z
+?StoreStyleRowCol@CGXBrowserGrid@@UAEHKKPBVCGXStyle@@W4GXModifyType@@H@Z
+?StoreStyleRowCol@CGXGridCore@@UAEHKKPBVCGXStyle@@W4GXModifyType@@H@Z
+?StoreZoom@CGXGridCore@@MAEHHH@Z
+?StudentBuyInitialize@CBBSessionView@@IAEXXZ
+?SubtractBorders@CGXGridCore@@UAE?AVCRect@@ABV2@ABVCGXStyle@@H@Z
+?SwitchTab@CGXTabWnd@@QAEXH@Z
+?SwitchTab@CGXTabWnd@@QAEXPAVCWnd@@@Z
+?SwitchTabWnd@CBBSessionFrame@@MAEXH@Z
+?SwitchTabWnd@CBBSessionFrame@@MAEXPAVCWnd@@@Z
+?SwitchTabWnd@CG3HeaderDtlSheet@@MAEXPAVCWnd@@@Z
+?SwitchTabWnd@CG3HeaderDtlSheet@@UAEXH@Z
+?terminate@@YAXXZ
+?ToggleSelectionFrameMarker@CGXGridCore@@UAEXXZ
+?TransferCurrentCell@CGXGridCore@@UAEHHIH@Z
+?Undo@CGXBrowserGrid@@UAEHXZ
+?Undo@CGXGridCore@@UAEHXZ
+?UndoAdvanced@CGXGridCore@@UAEHPAVCObject@@HH@Z
+?UndoRecord@CGXBrowserGrid@@UAEXXZ
+?UnfreezeCols@CGXGridCore@@UAEXXZ
+?UnfreezeRows@CGXGridCore@@UAEXXZ
+?Update@CBBPriceTagDtlView@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Update@CBBQRefEditView@@MAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Update@CGXBrowserGrid@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Update@CItemSet@@UAEHXZ
+?UpdateAddDetailRecord@CBBListHeaderView@@IAEXH@Z
+?UpdateAllData@?$CG3XViewBase@VCGXRecordView@@@@UAEHH@Z
+?UpdateAllData@CG3RecordView@@QAEHH@Z
+?UpdateAllGlobals@?$CG3XViewBase@VCGXRecordView@@@@UAEXXZ
+?UpdateAllGlobals@CBBBuyHeaderView@@UAEXXZ
+?UpdateAllGlobals@CBBListHeaderView@@UAEXXZ
+?UpdateAllGlobals@CBBPriceTagDtlView@@MAEXXZ
+?UpdateAllGlobals@CBBSessionView@@MAEXXZ
+?UpdateAllGlobals@CBBTransListView@@UAEXXZ
+?UpdateAllGlobals@CG3FormView@@UAEXXZ
+?UpdateAllGlobals@CG3RecordView@@UAEXXZ
+?UpdateAllViews@CGXGridCore@@UAEXPAVCWnd@@JPAVCObject@@@Z
+?UpdateBaseStyle@CGXGridCore@@UAEXGIH@Z
+?UpdateCashOut@CBBBuyHeaderView@@IAEXN@Z
+?UpdateChangedColCount@CGXGridCore@@MAEXKIH@Z
+?UpdateChangedColWidths@CGXGridCore@@MAEXKKPAHIH@Z
+?UpdateChangedRowCount@CGXGridCore@@MAEXKIH@Z
+?UpdateChangedRowHeights@CGXGridCore@@MAEXKKPAHIH@Z
+?UpdateControl@CG3BrowseEditBase@@UAEXJH@Z
+?UpdateControl@CG3DCCBrowseEdit@@UAEXJH@Z
+?UpdateCoveredCellsRowCol@CGXGridCore@@MAEXKKKKIH@Z
+?UpdateFrozenCols@CGXGridCore@@MAEXKKIH@Z
+?UpdateFrozenRows@CGXGridCore@@MAEXKKIH@Z
+?UpdateInsertCols@CGXGridCore@@MAEXKKIH@Z
+?UpdateInsertRows@CGXGridCore@@MAEXKKIH@Z
+?UpdateMoveCols@CGXGridCore@@MAEXKKKIH@Z
+?UpdateMoveDataCols@CGXGridCore@@UAEXABVCGXRange@@IH@Z
+?UpdateMoveDataRows@CGXGridCore@@UAEXABVCGXRange@@IH@Z
+?UpdateMoveRows@CGXGridCore@@MAEXKKKIH@Z
+?UpdateProperties@CGXGridCore@@UAEXIH@Z
+?UpdateQuickStatus@CG3QuickSearchBase@@UAEXXZ
+?UpdateReadOnly@CGXGridCore@@MAEXHH@Z
+?UpdateRecordInfoWnd@CGXGridCore@@UAEXXZ
+?UpdateRemoveCols@CGXGridCore@@MAEXKKPAHIH@Z
+?UpdateRemoveRows@CGXGridCore@@MAEXKKPAHIH@Z
+?UpdateScrollbars@CGXGridCore@@UAEXHH@Z
+?UpdateSelectRange@CGXGridCore@@MAEXABVCGXRange@@PBVCGXRangeList@@H@Z
+?UpdateStyleRange@CGXGridCore@@UAEXABVCGXRange@@PBVCGXStyle@@W4GXModifyType@@HIH@Z
+?UpdateStylesMap@CGXGridCore@@UAEXIH@Z
+?UpdateTitle@CG3FormView@@UAEXXZ
+?UpdateTitle@CG3RecordView@@UAEXXZ
+?UpdateZoom@CGXGridCore@@MAEXHIH@Z
+?ValidateDatasource@CBBImportExport@@AAE_NXZ
+?ValidateExData@CG3BrowseEditBase@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?WaitForPrinterIdle@COPOSContainer@@QAEXXZ
+?WindowProc@CGXGridWnd@@MAEJIIJ@Z
+?WindowProc@CGXRecordView@@MAEJIIJ@Z
+?WindowProc@CGXRecordWnd@@MAEJIIJ@Z
+@.data
+@.reloc
+@4;B4~P;
+[AccountCode]
+[AccountLimit]
+[ActBB]
+[Allocated]
+[AltISBN]
+[AmtToUse]
+[Author]
+[Balance]
+[Barcode]
+[BBCreateID]
+[BBCUID]
+[BBDetID]
+[BBDTLID]
+[BBItemID]
+[BBListCreateDate]
+[BBListDesc]
+[BBNetName]
+[BBNewID]
+[BBPQUID    ]
+[BBPQUID]
+[BBPurchaserID]
+[BBReceiptID]
+[BBRemoteID]
+[BBUID]
+[BGVendor]
+[BGVendorID]
+[Binding]
+[BindingID]
+[BookKey]
+[BookRoutingId]
+[BoughtQty]
+[BUNDID]
+[Buyback_Buyer_Groups]
+[Buyback_Buyer_Location]
+[Buyback_Buyers]
+[Buyback_Detail]
+[Buyback_Header]
+[Buyback_List_Create]
+[Buyback_List_Detail]
+[Buyback_List_Header]
+[Buyback_List_Item]
+[Buyback_New_Item]
+[Buyback_PriceTagQueueUser]
+[Buyback_Purchaser]
+[Buyback_Session]
+[Buyback_Session_Location]
+[Buyback_Session_Purchasers]
+[Buyback_Stolen_Books]
+[Buyback_WorkStations]
+[BuybackAltPercent]
+[BuybackPercent]
+[BuybackRound]
+[BuybackStatus]
+[BuyCode]
+[BuyerID]
+[BuyerLocDesc]
+[BuyerLocID]
+[BuyerLogin]
+[BuyerMode]
+[buyername]
+[BuyerPasswd]
+[BuyersGroupDesc]
+[BuyersGroupID]
+[BuyPrice]
+[BuyQty]
+[CashIn]
+[CashOut]
+[Comment]
+[ConditionID]
+[Copyright]
+[Cost]
+[CpSize]
+[CreateUserListID]
+[CustomerID]
+[CutPer]
+[dbo].[BookRoutingConfig_vw]
+[dbo].[VW_BB_BuyBookMembership]
+[DCCID]
+[Description]
+[Discount]
+[DispExchRate]
+[Edition]
+[EdType]
+[EndNumber]
+[EQUID]
+[EstBB]
+[ExchRate]
+[fAccountLimit]
+[fActiveFlag]
+[fAltPrice]
+[fAutoCreate]
+[fAutogen]
+[fBBRoundMethod]
+[fBuyFlg]
+[fConditionFlg]
+[fCreateZeroPriced]
+[fDeleted]
+[fImportedFlg]
+[fInventoryOnly]
+[fNBCFlag]
+[fNew]
+[fNonODList]
+[fPostedFlg]
+[fPrintPriceTags]
+[fPrintReceipts]
+[fStudentIDFlag]
+[fSubOrderShort]
+[fSuspended]
+[fTmpStatus]
+[fWksStatusFlg]
+[Imprint]
+[ISBN]
+[ISBNCat]
+[IsRental]
+[KeyCode]
+[ListPrice]
+[LocationID]
+[MaxBB]
+[MemTierId]
+[Name]
+[NewEdits]
+[NextEdit]
+[NextNumber]
+[NumSKU]
+[OnOrder]
+[OrderShort]
+[OrgQty]
+[OTBDIDParam]
+[OutPrint]
+[OutstandingRentals]
+[paramBBItemID]
+[paramBBPurchaserID
+[paramBBUID]
+[paramBuyerID
+[paramBuyersGroupID
+[ParamLocationID]
+[ParamSeqTypeID]
+[paramSessionID
+[paramSessionID]
+[paramSKU]
+[PDAIndex]
+[PercentMethod]
+[PercentQTP]
+[PostedTotal]
+[Price]
+[Priority]
+[PurchaserDesc]
+[PurchaserID
+[PurchaserID]
+[PurchaserLocDesc]
+[PurchaserLocID]
+[QRefID]
+[QwkFormat]
+[ReceiptFooter]
+[ReceiptHeader]
+[ReceiptNumber]
+[Received]
+[RentalAdditionalInfo]
+[Retail]
+[RoutingDesc]
+[Sequence]
+[SequenceID]
+[SequenceNumber]
+[SequenceTypeID]
+[SessionDesc]
+[SessionID]
+[SessPurDesc]
+[ShortDescription]
+[StartNumber]
+[StatusDesc]
+[StolenBookID]
+[StolenDateTime]
+[StoreMoneyFlag]
+[StoreStudentFlag]
+[StudentAddr]
+[StudentCity]
+[StudentID]
+[StudentName]
+[StudentPhone]
+[StudentState]
+[StudentZipcode]
+[SubBuyBackCode]
+[Subsystem]
+[Template]
+[TenderCodeLocId]
+[TermID]
+[TermName]
+[Title]
+[TitleDesc]
+[tmDate]
+[TotalAmt]
+[TotalQty]
+[TranMaxQty]
+[TranWarnQty]
+[txBuybackComment]
+[txComment]
+[Type]
+[TypeID]
+[UsedDCCID]
+[UseShare]
+[VW_BB_Buy_Detail_Routing]
+[VW_BB_BUY_PUR]
+[VW_BB_LIST_DETVW]
+[VW_BB_LIST_ORDDEC_EX]
+[VW_BB_LIST_PUR]
+[VW_BB_LIST_SUMVW]
+[VW_BB_SESSION]
+[VW_BB_SUSPENDED_RECEIPTS]
+[VW_BBBUYERSESSIONLOCATION]
+[VW_BBEXP_BUYHDR]
+[VW_BBTRANSLISTDETAIL]
+[VW_BBTRANSLISTHEADER]
+[VW_BUYERS_GUIDE_INQ]
+[VW_BUYERS_GUIDE_INQ_LIST]
+[WarningQty]
+[WarnPercent]
+[WholeSaleLocID]
+\$ PSQ
+__clean_type_info_names_internal
+__CppXcptFilter
+__crtTerminateProcess
+__crtUnhandledException
+__CxxFrameHandler3
+__dllonexit
+_amsg_exit
+_calloc_crt
+_crt_debugger_hook
+_CxxThrowException
+_except_handler4_common
+_initterm
+_initterm_e
+_malloc_crt
+_onexit
+_resetstkoflw
+_time64
+_unlock
+`.rdata
+{ call BookRoutingGetTranText(%d) }
+{ call P_BB_MarkTransactions(%d) }
+{ call P_BB_SpecialBarcode('%s', %d) }
+{ call P_BBGetSessionLocationTenders(%d) }
+{ call P_BBGetSessionLocationTenders(%d, %d) }
+{ call P_Rental_BuybackReturn('%s') }
+{ call SKU_Search_Using_BG_Data('%s','%s','%d','%s') }
+{ call SP_BB_Print_RECEIPT(%d, %d, %d) }
+{ call SP_BB_SuspendedTransArePresent(%d) }
+{ call SP_BB_SuspendTransaction(%d, %d) }
+{ call SP_BBGetPriceTooHighCount(%ld,%.2f) }
+{ call SP_BBIsSessionClosed(%d) }
+{ call SP_BBListGetDetail(%d, %d) }
+{ call SP_G3GetDCCDefaults(%ld,%ld,%ld) }
+{ call SP_G3GetNewSKU( %ld ) }
+{ call SP_G3InInventory(%ld,%ld) }
+{ call SP_G3ItemIsDCCAtLocation(%ld,%ld) }
+{ call SP_LinkedSKU_BB_BundledItemsExist(%d, %d) }
+{ CALL SP_LinkedSKU_BB_GetBundleDetailID( %ld, %ld, %ld ) }
+{ call SP_LinkedSKU_GetBBBoughtQty(%ld) }
+{ call sp_linkedsku_getparentprobnotify(%ld) }
+{ call SP_LinkedSKU_RBB_BundledItemsExist(%d) }
+{call 
+{call BB_Get_Session_Posted_Qty(%d, %d, %d)}
+{call IsUnsuspendingAllowed(%d,%d)}
+{call SP_BB_AddHeader( %d, %d, %d, '%s' )}
+{CALL SP_BB_DOWNLOAD_RESET(%d)}
+{call SP_BB_LIST_COPY (%d, %d, %d, %d)}
+{call SP_BB_POST_TOTALS (%d, %d)}
+{call SP_BB_UnsuspendTransaction(%d,%d)}
+{call SP_BB_UPDATE_XREF (%d)}
+{call SP_BBDeleteDetailChk(%d)}
+{call SP_BBDeleteRemoteData}
+{call SP_BBEXP_BNDL_ITM(%d)}
+{call SP_BBEXP_BNDL_ITMMSTR(%d)}
+{call SP_BBEXP_LISTDTL_NEW(%d)}
+{call SP_BBEXP_LISTHDR_NEW(%d)}
+{call SP_BBList_Check_Inv(%d, %d)}
+{call SP_BBList_GetBuyPrice(%d) }
+{call SP_BBList_GetBuyPrice(%s) }
+{call sp_BBList_OnValidCR(%d, %d)}
+{call SP_BBList_SpecListRetail(%d, %d)}
+{call SP_BBListCheckDups(%d, %s, '%s')}
+{call SP_BBRemote_AddHeader( %d, '%s', %d, %d, '%s' )}
++0Q0h0
+< <$<(<,<0<4<8<<<@<D<H<L<\<h<l<p<t<x<|<
+< <$<(<,<0<4<8<<<@<D<H<L<P<T<X<\<`<d<h<l<p<t<x<|<
+< <$<(<,<0<4<8<<<@<D<H<L<P<T<X<`<d<h<l<p<x<
+< <$<(<,<4<8<<<@<D<H<L<P<X<\<`<d<h<l<p<x<|<
+< <(<4<=<B<H<R<\<l<|<
+< <(<H<d<l<t<
+< <)<2<;<D<M<V<_<s<
+< </<E<U<k<
+< <@<H<P<X<d<l<
+< <0<4<8<H<L<P<`<d<h<x<|<
+< =@=G=O=]=z=
+<!<.<><O<\<j<q<
+<!<-<Y<g<r<
+<!<1<F<U<s<
+<!<A<J<\<|<
+<!=6=D=[=n=t=
+<!=6=D=`=u=
+<"<.<:<B<O<k<w<
+<"<+<8<C<N<W<v<
+<"<6<K<
+<#=7=E=R=[=
+<#=8=V=f=
+<$<(<8<<<@<D<H<L<P<T<X<\<`<h<
+<$<*<0<6<<<B<H<N<T<Z<`<f<l<r<x<~<
+<$<,<4<<<D<L<T<\<d<t<|<
+<$<,<4<D<L<T<\<d<l<x<
+<$<,<8<@<`<h<p<
+<$<,<8<X<`<h<p<x<
+<$<-<6<?<H<^<u<~<
+<$<0<8<T<^<
+<$<4<D<H<L<P<T<\<t<
+<$<5<D<S<b<x<
+<$<6<R<^<q<z<
+<$<7<D<L<b<j<s<
+<$<H<W<r<
+<$<H<X<g<t<
+<$<S<p<
+<$=(=,=0=4=8=<=@=D=H=L=P=T=X=\=`=d=h=l=p=t=x=|=
+<$=8=V=e=
+<%<E<n<u<
+<%<H<U<z<
+<%=<=U=d=z=
+<%=<=U=k=
+<%=M=U=x=
+<&<,<9<B<W<]<j<s<
+<&<.<;<[<g<s<|<
+<&<;<y<
+<&<2<><J<Z<
+<&=/=:=C=s=
+<&=+===[=o=u= >;>G>V>_>l>
+<&=5=L=
+<&=6=Q=u=
+<(<:<A<O<[<v<
+<(<0<8<D<d<l<t<|<
+<(<5<Y<v<
+<(=/=[=b=
+<)<;<J<q<
+<)<E<T<c<y<
+<*=<=W=\=l=
+<,<A<N<R<W<\<a<f<v<
+<.<=<a<n<r<w<|<
+<.<=<I<k<
+<.<8<B<Z<g<t<
+<.<C<_<
+<.<C<U<n<~<
+<.<Y<h<v<
+</<:<[<
+<;<D<M<a<v<
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<+<E<T<j<
+<'<><T<[<|<
+<'<0<\<j<x<
+<-<6<?<t<z<
+<'<9<q<
+<'<A<Q<]<i<|<
+<'=0=8===]={=
+<0<@<d<l<t<|<
+<0<8<\<d<l<x<
+<0<I<e<n<
+<1<F<X<r<
+<2<A<M<v<
+<4<@<l<
+<4<<<E<
+<4<D<T<d<h<x<|<
+<4<E<X<g<y<
+<4<H<T<k<w<
+<5<Y<k<
+<5T5l5
+<6<V<l<{<
+<7<=<u<{<
+<8<\<|<
+<8<J<P<Y<b<k<t<}<
+<8<P<l<
+<A<[<a<l<w<
+<A<R<_<g<p<
+<A=d=z=
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0"><dependency><dependentAssembly><assemblyIdentity type="win32" name="Microsoft.Windows.Common-Controls" version="6.0.0.0" processorArchitecture="x86" publicKeyToken="6595b64144ccf1df" language="*"></assemblyIdentity></dependentAssembly></dependency><trustInfo xmlns="urn:schemas-microsoft-com:asm.v3"><security><requestedPrivileges><requestedExecutionLevel level="asInvoker" uiAccess="false"></requestedExecutionLevel></requestedPrivileges></security></trustInfo><application xmlns="urn:schemas-microsoft-com:asm.v3"><windowsSettings><dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true</dpiAware></windowsSettings></application></assembly>
+<B<R<m<
+<C<V<c<z<
+<F<R<X<h<t<
+<L<h<{<
+<P=W=e={=
+<S<f<v<
+<Select Tender>
+<Y<h<v<
+= =$=(=,=0=4=8=<=@=(>,>0>4>8><>@>D>H>L>P>T>X>\>`>d>h>l>p>t>x>|>
+= =$=(=,=0=4=8=<=@=D=H=L=P=T=X=\=`=d=h=l=p=t=
+= =$=(=,=0=4=8=<=@=D=H=L=P=T=X=\=`=d=h=l=p=t=x=|=
+= =$=(=,=0=4=8=<=H=L=l=
+= =$=(=0=4=8=<=@=D=H=L=P=T=\=`=h=l=p=t=x=|=
+= =$=(=8=<=@=P=T=X=h=l=p=
+= =&=,=2=8=>=D=J=P=V=\=b=h=n=t=z=
+= =(=4=<=\=x=
+= =<=D=L=X=`=x=
+= =0=@=P=T=X=\=`=d=h=l=t=
+= =3=F=Q=^=b=g=l=q=v=
+= =6=E=b=x=
+= =H=h=
+= =P=Z=
+=!=(=4=;=G=f=u=
+=!=;=h=
+=!=@=h=w=
+=!=-=9=E=Q=]=i=u=
+=!=V=f=u=
+=!>6>F>]>p>v>
+=#=)=5=D=T=Y=
+=#=/=;=D=X=e=
+=#=F=T=k=
+=$=,=4=<=D=L=T=\=d=l=t=|=
+=$=,=8=@=`=|=
+=$=:=U=^=t=
+=$=B=U=^=t=
+=$>;>H>
+=%=?=P=Z=g=u=
+=%=4=D=V=
+=%=7=`=h=n=}=
+=%=F=l=
+=%=F=U=b=
+=%=W=|=
+=%>+>7>z>
+=&=,=5=b=q=
+=&=4=K=R=y=
+=&=5=K=e=n=w=
+=&=6=l=
+=&=6=M=`=j={=
+=&=D=a=
+=&>G>m>
+=(=,=0=4=8=<=@=D=H=P=h=x=
+=(=.=;=`=f=w=}=
+=(=/=;=S=Z=f=~=
+=(=0=H=X=t=|=
+=(=8=H=X=\=l=p=t=x=
+=(=E=N=W=`=r=
+=(=i=u=
+=)=a=~=
+=)=A=G=[=
+=,=;=Q=f=x=
+=,=0=H=L=d=h=
+=,=4=<=D=L=T=\=l=t=
+=,=D=\=t=
+=,>1>F>X>o>
+=.=>=N=U=[=j=w=
+=.=F=N=
+=`>d>h>l>p>t>x>|>
+=+=:=I=X=g=v=
+=+=2=Y=f=
+=+=E=N=W=`=v=
+===H=i={=
+='=3=<=K=b=r=
+='=M=c=t=~=
+='>=>J>
+=0=<=\=d=l=x=
+=0=7=E=Q=v=
+=0=8=@=L=T=l=t=
+=0=V=h=
+=2=Q=^=b=g=l=q=v=
+=3=E=S=`=~=
+=3>?>v>
+=4=E=N=W=`=i=r={=
+=4=P=p=
+=4>V>d>
+=6=<=Q=W=i=
+=6=D=[=
+=6=F=d=
+=7=D=b=k=t=}=
+=8=@=H=T=\=
+=8=<=@=D=H=L=P=T=X=\=`=d=h=l=p=t=x=|=
+=a=l=w=
+=B>Z>p>
+=F=[=x=
+=H=T=d=~=
+=H=U=v=
+=L>X>j>t>~>
+=O=U=e=s={=
+> ?&?C?L?c?u?|?
+> ?(?0?<?\?d?l?t?
+> >$>(>,>0>4>8>
+> >$>(>,>0>4>8><>@>D>H>L>0?4?8?<?@?D?H?L?P?T?X?\?`?d?h?l?p?t?x?|?
+> >$>(>,>0>4>8><>@>D>H>L>P>T>X>\>`>d>h>l>p>t>
+> >$>(>,>0>4>8><>@>D>H>L>P>T>X>\>`>d>h>l>p>t>x>|>
+> >$><>T>l>
+> >,>L>T>\>h>p>
+> >@>L>T>l>t>|>
+> >3>=>T>[>a>r>|>
+> >5>D>S>b>x>
+> >A>N>R>W>\>a>f>
+>!>&>:>
+>!>(>>>T>^>q>
+>!>*>7>H>Y>j>s>|>
+>!><>{>
+>!>2>C>]>w>
+>!>4>D>U>^>
+>!>F>T>k>
+>"?7?N?
+>">(>.>4>:>@>F>L>R>X>^>d>j>p>v>|>
+>">)>6>N>[>h>r>
+>">/>K>W>`>x>
+>#?F?U?^?t?
+>#>,>N?
+>#>8>O>[>g>s>
+>#>9>U>d>s>
+>#>F>X>y>
+>$>(>,>0>4>8>@>X>\>t>
+>$>,>4>@>`>p>
+>$>,>4><>D>L>T>\>d>l>t>|>
+>$>,>4><>D>P>p>x>
+>$>,>4>D>L>T>\>d>l>t>|>
+>$>,>D>T>\>x>
+>$>,>K>S>s>
+>$>>>D>O>v>
+>$>4>8>H>L>P>T>X>\>`>d>h>p>t>x>|>
+>$>B>P>]>
+>$>D>d>
+>$>D>P>p>|>
+>$>N>T>
+>%>.>7>@>\>e>~>
+>%>.>7>@>I>R>[>q>
+>%>5>K>l>
+>%>C>]>i>r>{>
+>%>I>[>l>
+>&?4?K?X?f?z?
+>&>@>S>Y>e>q>}>
+>&>=>T>k>{>
+>&>D>W>]>i>u>z>
+>(>,>0>@>D>H>X>\>`>p>t>x>
+>(>4>@>L>[>v>
+>(>5>Z>h>q>
+>(>I>Y>k>r>
+>(>K>e>t>
+>)>5>A>L>b>i>
+>)>B>b>z>
+>*>F>T>r>
+>,>4><>D>L>T>\>h>
+>,>D>\>t>
+>.>:>U>^>
+>.>B>W>c>}>
+>.>F>_>g>w>
+>/>;>Z>
+>/>B>H>R>_>n>
+>:>F>R>u>
+>:>M>j>}>
+>;>@>M>^>g>
+>+>2>>>V>d>{>
+>+>4>?>U>\>
+>+>H>Q>z>
+>=>C>^>y>
+>'>0>p>v>
+>'>5>C>M>_>i>
+>'>b>p>y>~>
+>->F>Y>q>~>
+>0>@>P>T>X>\>`>d>h>l>t>
+>3>]>n>
+>4>=>O>`>
+>4>8>P>T>l>p>
+>4>D>T>X>\>`>d>h>l>t>
+>4>L>d>|>
+>4>T>l>
+>5>?>f>w>
+>5>>>G>]>
+>6?D?[?
+>6?D?h?w?
+>6>E>R>{>
+>7><>H>O>v>{>
+>8>A>J>T>f>t>
+>8>H>X>g>t>
+>8>X>a>v>
+>9?@?L?d?j?}?
+>9?K?d?
+>9>K>Z>
+>C>N>Z>e>q>
+>D?k?w?
+>D>\>n>~>
+>E?K?S?i?
+>f?k?s?
+>F>T>k>~>
+>F>T>x>~>
+>Q>f>x>
+0 0$0(0,0004080@0D0H0L0P0T0X0\0`0d0h0l0p0t0x0|0
+0 0$0(0,0004080<0@0D0H0L0P0T0X0\0`0d0h0l0p0t0x0|0
+0 0$0(0,0004080<0@0D0L4P4T4`4d4p4t4x4|4
+0 0$0(0,00040H0L0d0h0l0p0t0x0|0
+0 0$0(04080t2x2|2
+0 0$0,0D0T0d0h0l0p0t0x0|0
+0 0&0,02080>0D0J0P0V0\0b0h0n0t0z0
+0 0(0@0P0`0d0h0l0p0x0|0
+0 0(000<0\0d0l0x0
+0 0)090B0
+0 0,0H0e0n0w0
+0 060K0b0t0
+0 080?0M0g0x0
+0 0D0L0T0`0
+0!0&060G0^0g0|0
+0!0&060H0u0
+0!0'0<0B0N0T0Z0o0u0
+0!050;0J0`0
+0!0J1W1k1}1
+0!1)1T1v1
+0!141w1
+0"0&0,0B0F0L0b0f0l0
+0"0*0A0V0h0
+0"0.050A0H0T0[0g0n0z0
+0#060?0H0Q0Z0v0
+0$0*00060<0B0H0N0T0Z0`0f0l0r0x0~0
+0$0,040<0D0L0T0\0d0p0
+0$0,040<0D0L0X0x0
+0$0,080X0`0h0t0
+0$0;0N0c0x0
+0$0-0<0c0m0w0
+0$04080<0@0D0L0d0t0
+0$050K0m0
+0$080@0H0T0t0|0
+0$090A0O0`0h0
+0$0D0L0h0p0x0
+0$0D0P0p0x0
+0$0F0Y0m0
+0%0*0V0c0w0
+0%0;0U0^0g0}0
+0%0;0U0d0s0
+0%0F0f0~0
+0&0,0<0L0Y0
+0&0.0N0\0
+0&080T0g0m0
+0&080X0
+0&0D0W0]0i0
+0&1`1v1
+0&181V1i1~1
+0(0,0L0d0|0
+0(000J0\0d0{0
+0)060f0x0
+0)1.161
+0)1;1J1m1u1
+0,00040H0L0d0h0l0p0
+0,0G0T0]0f0v0
+0,0H0L0P0T0X0\0`0d0h0l0p0t0x0|0
+0.040T0
+0.0C0g0l0
+0/0E0W0h0~0
+0:0A0V0c0i0v0
+0;0L0j0
+0@0M0U0
+0\1`1d1h1l1p1t1x1|1
+0+0E0N0d0x0
+0+121C1O1b1
+0>1G1L1
+0-0<0K0Z0i0x0
+000>0E0n0
+00080@0P0t0|0
+0-030F0O0[0j0
+004080<0@0D0H0L0P0T0X0\0`0d0|0
+0'050V0e0
+0'070G0W0g0t0
+0'080Z0i0v0
+0-0U0o0
+0'0V0d0{0
+010N0j0r0
+0-1g1}1
+02080A0N0R0W0\0a0f0y0
+020I0O0_0v0
+020J0b0
+020J0Y0^0g0z0
+02191H1Y1j1w1
+030]0j0
+040904B0
+040L0h0l0p0t0x0|0
+041V1e1|1
+050D0S0i0
+050F0m0w0
+050Y0u0
+061K1l1x1
+-070A0]0
+080<0@0D0H0L0P0T0X0\0`0d0h0l0p0t0x0|0
+090J0O0\0a0y0
+091B1R1Y1b1o1x1
+0C0e0q0w0
+-0i0n0z0
+0I0Y0k0
+0P0V0h0p0
+1 1$1(1,1014181<1@1D1H1L1P1T1X1\1`1d1h1l1p1t1x1|1
+1 1$1(1,1014181<1@1D1H1P1h1x1
+1 1&1,12181>1D1J1P1V1\1b1h1n1t1z1
+1 1(1@1P1l1t1|1
+1 1,181T1e1n1w1
+1 1,1L1X1x1
+1 1@1`1|1
+1 101@1D1T1X1h1l1p1t1x1|1
+1 161L1b1n1
+1!1'1,1B1F1L1b1f1l1
+1!1'1I1[1j1
+1!161F1`1s1y1
+1"1(1.141:1@1F1L1R1X1^1d1j1p1v1|1
+1"1.1=1W1e1
+1"1+1?1X1u1
+1#171M1_1s1
+1$1,141@1d1l1t1|1
+1$1,141<1D1L1T1\1d1l1t1|1
+1$1,141<1H1h1t1
+1$1,141D1L1T1\1d1l1t1|1
+1$1=1i1w1
+1$14181<1@1H1L1P1T1X1`1d1h1l1p1t1|1
+1$181F1S1l1
+1$2J2e2{2
+1%1;1U1d1z1
+1&121F1T1k1
+1&151Z1u1
+1&1F1K1W1\1h1s1
+1&2+2{253<3C3
+1&272a2
+1(1,1014181<1@1D1H1L1P1d1h1
+1(101D1L1T1`1
+1(1C1g1n1
+1(1G1Z1c1
+1(1H1P1`1
+1(1H1X1b1i1r1
+1(1Y1q1x1
+1)1Y1a1
+1*1=1R1
+1*101h1
+1*141>1H1
+1,1<1L1\1`1p1t1
+1,1<1L1\1l1p1
+1,141@1`1h1p1|1
+1,1W1r1
+1.171G1
+1/1?1Q1d1u1
+1/181N1W1\1i1n1{1
+1/1C1L1g1
+1:1C1U1`1n1w1
+1;1p1u1
+1?2K2W2g2z2
+1@1G1M1X1a1
+1^2h2m2z2
+1+1;1K1[1k1{1
+1+141^1v1
+1+171`1u1~1
+1+191D1Z1m1
+1+1A1J1W1d1i1v1
+1+1A1N1R1W1\1a1f1v1
+1<1D1L1T1\1h1
+1=1G1{1
+101>1D1Y1h1v1
+101E1b1q1
+1'101I1c1m1
+111C1V1_1h1w1
+1-131<1F1a1|1
+1'141[1p1
+1'141E1R1c1p1
+121;1D1
+131:1F1U1d1|1
+141E1T1j1
+151D1S1b1q1
+161E1\1o1
+161N1f1~1
+162E2i2u2
+191d1p1u1
+1B1T1[1l1
+1C1_1f1q1
+1C1a1v1
+1H2e2~2
+1M1g1z1
+1P2T2X2\2`2d2h2l2p2t2x2|2
+1T1]1j1
+2 2$2(2,2024282<2@2D2H2L2P2T2X2\2`2d2h2l2p2t2x2|2
+2 2$2(2,20282P2`2p2t2x2|2
+2 2$2(2<2@2X2\2`2d2x2|2
+2 2$20242
+2 2^2e2{2
+2 3(3.363>3V3g3
+2 3.3<3W3`3p3~3
+2!2&292K2
+2!2,2B2H2
+2!212Z2v2
+2!262D2h2t2
+2!282I2T2v2
+2!363D3[3e3
+2"2&2,2B2F2L2b2f2l2
+2"2(2.242:2@2F2L2R2X2^2d2j2p2v2|2
+2"2.252A2F2R2W2c2h2t2
+2"2+2=2D2J2O2X2}2
+2"20262<2N2T2f2l2~2
+2"2S2_2w2
+2"3P3c3
+2#2/2;2D2i2o2~2
+2#2>2L2Y2`2i2
+2$2(2@2P2`2p2
+2$2)262U2f2o2x2
+2$2*20262<2B2H2N2T2Z2`2f2l2r2x2~2
+2$2,242<2D2L2T2\2d2p2
+2$2,242<2D2L2T2\2h2
+2$2<2L2\2`2d2h2l2t2
+2$202G2j2
+2$202P2X2`2h2p2x2
+2$272O2\2e2v2
+2$292?2K2Q2W2l2r2~2
+2$2D2`2h2p2
+2$2G2V2s2x2
+2$2V2h2
+2$3(3,3034383<3@3D3H3L3P3T3X3\3`3d3h3l3p3t3x3|3
+2%2.272@2I2R2[2d2m2v2
+2%2;2x2
+2%242C2R2h2
+2%2F2U2b2
+2&252O2
+2&252O2b2h2
+2&262O2i2s2
+2&262P2c2i2u2
+2&272Y2n2
+2&282|2
+2&282b2{2
+2&2E2z2
+2&3,373=3q3
+2&323:3E3f3x3
+2&323;3K3S3z3
+2&343K3R3y3
+2&363T3q3
+2(2:2Q2]2f2
+2(252?2H2c2
+2(282H2L2P2T2X2\2`2d2l2p2t2x2|2
+2(2H2T2\2|2
+2)2S2b2
+2*292H2W2f2u2
+2,2?2Y2k2q2
+2,242<2D2L2T2\2d2l2t2|2
+2,242<2H2h2p2x2
+2,2B2c2o2{2
+2,2D2\2x2|2
+2,2H2b2
+2.2>2L2b2x2
+2.232?2L2\2
+2/2?2H2Q2d2i2r2
+2/282A2S2Z2`2e2n2
+2?2^2d2
+2@2I2R2[2n2
+2^3c3y3
+2^3f3s3
+2+2;2i2t2{2
+2+262L2o2
+2+292W2
+2+3E3N3W3m3
+2>3J3V3^3k3
+202@2P2T2d2h2l2p2t2x2
+202H2X2e2u2
+202Z2j2v2
+212?2c2n2
+213F3T3k3~3
+213F3T3p3
+2-2?2L2V2d2
+2'202F2S2j2
+223\3a3z3
+2-292E2Q2]2i2
+2'2V2d2{2
+23282A2S2`2h2{2
+242<2D2L2X2x2
+24282<2@2D2H2L2P2T2X2\2`2d2h2l2p2t2x2|2
+242B2a2y2
+243N3V3`3s3
+252:2G2v2
+252F2c2x2
+262D2h2x2
+273C3^3q3~3
+28.2.7 Build: 07
+282@2H2T2t2|2
+282@2L2l2x2
+282X2x2
+292L2|2
+292L2s2
+2D3`3d3h3l3p3t3x3|3
+2F2U2y2
+2L2o2|2
+2X2\2`2d2h2
+3 3$3(3,3034383<3
+3 3$3(3,3034383<3@3D3
+3 3$3(3,3034383<3@3D3H3L3P3l3
+3 3$3(3,3034383<3@3D3H3L3P3T3d3
+3 3$3(3,3034383<3@3D3H3L3P3T3X3\3`3d3h3l3p3t3x3|3
+3 3$3(3,30383P3`3p3t3x3|3
+3 3$3(3,343P3l3
+3 3$3(3,3p3t3x3|3
+3 3%3F3U3
+3 3&3,32383>3D3J3P3V3\3b3h3n3t3z3
+3 3(30383@3H3T3t3|3
+3 3(30383D3d3p3
+3 3*3=3Y3k3z3
+3 3,3H3h3t3
+3 3,3L3T3\3d3p3
+3 3@3d3
+3 3<3D3L3\3
+3 3<3e4
+3 3034383<3@3D3H3L3T3l3|3
+3 363E3c3v3|3
+3!3*333<3U3e3{3
+3!303=3F3O3[3d3
+3"3+3:3A3^3
+3"303W3q3
+3#3/3;3D3X3e3
+3$3(3@3D3H3\3`3x3|3
+3$3*30363<3B3H3N3T3Z3`3f3l3r3x3~3
+3$3,343@3`3h3p3x3
+3$3,343@3H3l3t3|3
+3$3<3L3\3`3d3h3l3p3t3x3|3
+3$343N3v3
+3$3D3`3h3p3|3
+3$3H3h3
+3$444R4\4
+3%313=3I3U3c3q3|3
+3%343B3i3
+3%363B3P3a3m3}3
+3%4K4a4f4t4
+3&343K3^3d3
+3(353Y3v3
+3(383H3X3h3l3|3
+3(3N3Z3
+3)3;3A3S3]3s3
+3)3A3Y3q3
+3*333I3e3n3
+3,3034383<3D3\3l3|3
+3,363v3
+3,3H3L3P3T3X3\3`3d3h3l3p3t3x3|3
+3.353V3e3r3
+3+323C3Q3_3f3t3
+3+3E3N3d3
+3<3D3P3p3x3
+3<4@4D4H4L4P4T4X4\4`4d4h4l4p4t4x4|4
+3<4E4T4
+303d3n3x3
+304=4X4
+313A3N3R3W3\3a3f3v3
+313C3P3`3i3
+313W3l3{3
+32363<3R3V3\3f3p3
+3-3=3V3j3
+3'3>3~3
+3'3>3U3f3m3}3
+3'30393B3X3u3~3
+333<3I3`3
+333<3N3]3z3
+3'343X3j3
+3'3N3U3v3
+3-3T3{3
+3-4^4f4
+3'4<4M4j4
+343?3\3{3
+343V3h3
+353>3F3K3e3u3~3
+353A3M3Y3e3q3
+353D3S3i3
+363<3D3m3
+383T3n3
+3B3X3j3
+3B4j4z4
+3I3U3Z3f3u3
+4 4$4(4,4044484<4@4D4H4L4\4
+4 4$4(4,4044484<4@4D4H4L4P4`4l4p4t4x4|4
+4 4$4(4,4044484<4@4D4H4L4P4T4h4l4
+4 4$4(4,4044484<4@4D4H4L4P4T4X4\4`4d4h4l4p4t4x4|4
+4 4$4(4,4044484<4@4D4H4L4P4T4X4\4`4d4h4x4
+4 4$4(4,4044484<4@4D4H4T4X4<7@7D7H7L7P7T7X7\7`7d7h7l7p7t7x7|7
+4 4$4(4,4044484<4@4L4P4
+4 4$4(44484l7p7t7x7|7
+4 4$4<4@4X4h4x4
+4 4&4,4?4E4X4^4
+4 4&4,42484>4D4J4P4V4\4b4h4n4t4z4
+4 4(4@4P4`4d4t4x4|4
+4 4(4\4d4l4x4
+4 4@4\4|4
+4 4@4H4P4`4
+4 4'424M4Y4q4v4
+4 464H4a4u4
+4!404?4N4]4s4
+4"4(4.444:4@4F4L4R4X4^4d4j4p4v4|4
+4"4;4l4
+4"4?4N4]4l4{4
+4#4.4>4X4a4
+4#4+4E4f4x4
+4#424O4X4j4y4
+4#464F4T4h4z4
+4#545D5Q5h5p5v5
+4$4(4044484<4@4D4H4L4P4T4X4\4`4d4h4l4p4x4
+4$4,444@4H4l4t4|4
+4$4,444<4H4h4p4x4
+4$404<4H4T4`4l4x4
+4$40454A4H4o4
+4$434B4Q4`4o4~4
+4$454N4W4`4i4r4
+4$4G4T4`4
+4$4T4m4u4
+4%4:4I4P4\4c4x4
+4%444C4R4h4
+4%444C4R4h4w4
+4%5;5f5v5
+4&4/484C4L4Q4Z4_4h4m4v4
+4&4;4P4a4g4
+4&464J4c4s4{4
+4&484a4
+4(4,4044484<4@4D4H4L4P4T4X4\4`4d4h4l4p4t4x4|4
+4(4?4h4
+4(404@4d4l4t4|4
+4(484<4@4D4H4L4P4T4\4t4
+4(4H4P4X4d4
+4(5.5;5Q5^5b5g5l5q5v5
+4)4.4:4I4^4y4
+4)4;4L4l4w4
+4)4@4L4X4d4p4
+4)424=4N4W4`4
+4)484G4V4l4
+4*404V4d4{4
+4*454>4G4P4Y4e4u4
+4,4<4@4P4T4X4\4`4h4
+4,4D4`4d4h4l4p4t4x4|4
+4,4P4l4
+4.464W4b4
+4.4F4p4y4
+4/4?4H4Q4c4j4p4u4~4
+4;4J4Y4h4o4{4
+4;4Y4d4s4{4
+4;5l5x5
+4@4H4P4\4|4
+4@5k5s5}5
+4+4;4G4S4_4o4~4
+4+4<4I4\4
+4+4B4H4Q4^4b4g4l4q4v4
+4<4N4V4d4
+4<4X4`4h4t4
+4=4L4m4~4
+4>4G4P4x4}4
+404[4w4
+404<4\4d4p4
+40484>4F4N4f4w4
+414@4G4\4v4
+414>4B4G4L4Q4V4f4u4
+414H4O4U4b4q4~4
+424?4n4z4
+425W6x6
+4'4@4c4o4
+4-4<4W4f4
+4'444V4d4
+444L4f4t4
+444P4T4X4\4`4d4h4l4p4t4x4|4
+4-4C4Y4k4
+4'4d4l4w4~4
+4'4K4Q4[4w4~4
+454K4e4
+4-5n5v5
+464C4R4[4d4q4
+464D4~4
+464H4u4
+464K4a4p4
+474>4^4
+484>4J4Y4~4
+494O4V4l4
+4A5N5R5W5\5a5f5v5
+4D4\4t4
+4D4g4|4
+4F4[4r4
+4S4c4q4z4
+4S4X4k4
+4T5a5i5
+5 5$5(5,5<5
+5 5$5(5,5054585@5D5H5L5P5T5\5`5d5h5l5t5
+5 5$5(5,5054585<5@5D5H5d5h5l5p5t5x5|5
+5 5$5(5,5054585<5@5D5H5L5P5T5X5\5`5
+5 5$5(5,5054585<5@5D5H5L5P5T5X5\5`5d5h5l5p5t5x5|5
+5 5$5(5,5054585<5@5D5H5L5P5T5X5\5`5h5
+5 5$5(5,505D5H5L5P5T5X5\5`5d5h5l5p5t5x5|5
+5 5(5@5P5`5d5t5x5|5
+5 5(505<5D5d5l5
+5 5*5G5\5o5
+5 555D5d5m5
+5!5-595b5x5
+5!5h5R6c6
+5!5q5~5
+5!6/6a6x6
+5"5(5.545:5@5F5L5R5X5^5d5j5p5v5|5
+5"5>5R5[5g5{5
+5"555F5R5[5d5t5
+5"585U5^5g5}5
+5"595O5V5k5
+5#535C5S5c5s5
+5#565`5j5t5
+5#565>5H5[5
+5$5*50565<5B5H5N5T5Z5`5f5l5r5x5~5
+5$5,585X5`5l5
+5$5,585X5`5l5t5
+5$5,585X5d5l5
+5$505P5X5`5h5p5x5
+5$545D5H5L5P5T5\5t5
+5$545D5H5X5\5l5p5
+5$6(6,6064686<6@6D6H6L6P6T6X6\6`6d6h6l6p6t6x6|6
+5%5,585?5T5c5j5
+5%535V5g5{5
+5%545Q5g5}5
+5%585?5L5S5a5l5u5~5
+5%5Y5d5
+5%6:6y6
+5&5.5:5K5|5
+5&5=5B5R5]5s5y5
+5&5>5E5\5g5s5
+5&51595G5i5r5{5
+5&555<5L5h5p5y5
+5&575K5T5Y5i5
+5(5,5054585<5@5D5H5L5P5T5X5\5`5d5h5l5p5t5x5|5
+5(5:5V5j5
+5(5?5K5a5
+5(585H5L5P5T5X5\5`5d5l5p5x5
+5(5L5T5\5d5l5t5|5
+5)5F5W5j5
+5)5V5[5e5
+5)6F6[6w6
+5*565_5x5
+5,5H5T5`5l5x5
+5,6=6M6y6
+5.5=5L5[5j5y5
+5.585>5Z5
+5.6W6_6i6
+5/5:5@5H5{5
+5/565G5d5
+5/5H5k5w5
+5;5C5Z5
+5;5P5a5n5r5w5|5
+5?5W5s5
+5]6k6y6
+5=5_5f5x5
+5=5C5L5Y5
+515F5V5p5
+516F6V6p6
+525M5k5
+545<5D5L5T5\5d5l5x5
+545j5t5
+545K5t5{5
+545L5d5|5
+545P5p5
+5'5@5^5y5
+5'545;5[5b5
+555[5{5
+555<5W5^5
+5-6:6f6s6
+565D5[5b5
+565E5\5i5q5i6
+565G5n5u5
+565H5_5o5x5
+566@6E6R6Z6d6m6
+566D6h6w6
+585@5H5T5\5|5
+585@5H5T5t5
+586D6P6X6o6w6
+595a5f5v5
+595S5w5
+5A5_5p5z5
+5A5H5Y5i5o5
+5B5R5W5m5
+5C5Y5k5t5}5
+5F5U5s5
+5G5a5p5v5~5
+5N6e6n6w6
+5N6i6{6
+5Q6l6r6
+6 6$6(6,606@6
+6 6$6(6,6064686<6@6D6H6L6P6T6X6\6`6d6h6l6|6
+6 6$6(6,6064686<6@6D6H6L6P6T6X6\6`6d6h6l6p6t6x6|6
+6 6$6(6,6064686<6@6D6H6L6P6T6X6\6`6l6p6|6
+6 6$6(6,6064686<6@6D6H6T6X6
+6 6$6(6,6064686<6h6
+6 6$6(6,6064686H6T6X6\6`6d6h6l6p6t6x6|6
+6 6(60686H6l6t6|6
+6 6(646<6\6x6
+6 6(646T6\6h6
+6 606@6D6H6L6P6T6X6\6`6d6h6p6
+6 6064686<6@6D6H6L6T6l6|6
+6 727E7n7
+6 767>7G7_7t7
+6 7H7r7y7
+6!6&666E6Y6m6t6
+6!6.6;6@6`6e6
+6!6I6[6j6
+6"6(676G6
+6"6.6Q6e6n6w6
+6"6@6F6f6
+6"616@6O6l6{6
+6"6-6=6
+6"676V6^6
+6#6+6;6D6M6V6_6|6
+6#6<6g6o6y6
+6#6<6i6{6
+6#636C6S6c6s6
+6#797K7x7
+6$6*60666<6B6H6N6T6Z6`6f6l6r6x6~6
+6$6,646<6D6L6T6\6d6p6
+6$6,646<6D6L6X6x6
+6$6,646<6H6h6p6x6
+6$6,6H6P6X6d6
+6$626;6D6f6t6
+6$6D6L6T6\6h6
+6%6.6Q6
+6%6;6@6I6a6q6}6
+6%6E6m6
+6&6>6V6e6l6
+6&636[6d6{6
+6&646R6`6m6
+6&686n6
+6&6M6m6|6
+6&6V6e6|6
+6&747K7k7w7
+6&787V7\7l7v7|7
+6&7A7S7Y7b7k7t7}7
+6(6,6D6H6`6d6|6
+6(606@6H6l6t6|6
+6(636?6v6
+6(686H6X6h6x6|6
+6(686J6c6
+6(6B6O6s6
+6)6;6W6
+6)797j7y7
+6,6<6L6P6T6X6\6`6d6h6l6p6x6|6
+6,6<6L6P6T6X6\6`6d6l6
+6,626;6N6W6p6
+6,6H6V6~6
+6.6A6[6u6
+6.6B6`6i6r6
+6.6K6k6v6
+6/6;6d6u6~6
+6/6E6Q6j6
+6:6C6Y6}6
+6;6L6f6r6
+6]6d6o6u6z6
+6+717:7C7L7U7^7g7p7y7
+607J7Q7W7q7
+60D0[0b0
+616=6f6w6
+646@6P6i6
+646C6I6\6q6|6
+646L6h6
+647F7X7w7
+656;6d6l6{6
+656D6S6b6x6
+666E6i6{6
+666H6d6
+666H6s6
+6-676L6\6f6v6}6
+6-686V6f6}6
+676A6c6v6
+686H6X6g6
+686T6|6
+696K6\6
+696U6d6z6
+6A6L6f6v6
+6F6T6t6
+6I6N6Z6_6
+6U6`6s6
+7 7$7(7,70747<7@7D7H7L7P7X7\7`7d7h7l7p7t7x7|7
+7 7$7(7,7074787<7@7\7t7
+7 7$7(7,7074787<7@7D7H7L7P7T7X7\7`7d7h7l7p7t7x7|7
+7 7$7(7,7074787<7@7D7H7L7P7T7X7\7`7d7h7x7
+7 7$7(7,7074787<7@7D7P7T7
+7 7$7(7,7074787<7H7L7P7T7X7\7`7d7h7l7p7t7x7|7
+7 7$747
+7 7$787<7@7D7H7L7P7T7X7\7`7d7h7l7p7t7x7|7
+7 7&7,72787>7D7J7P7V7\7b7h7n7t7z7
+7 7(7@7P7`7d7h7l7p7x7
+7 7,707
+7 7,7L7T7`7h7
+7 7/7E7U7^7g7}7
+7 7@7L7l7t7|7
+7 7+7V7f7}7
+7 787<7T7d7t7
+7!7)717:7
+7!7,747m7u7
+7!7'7c7j7t7{7
+7!7-7N7\7a7
+7"747=7B7S7c7{7
+7"747>7z7
+7"747i7
+7"787B7
+7"8.8F8T8k8
+7"888a8
+7#7(7L7~7
+7#7/7Q7^7j7v7
+7#7<7G7W7n7w7
+7#737C7S7c7s7
+7$7*7?7v7
+7$7,747<7D7P7X7p7
+7$7/7r7|7
+7$7@7H7P7\7|7
+7$757E7Y7
+7$8(8@8\8`8d8h8l8p8t8x8|8
+7%7,7?7N7]7l7s7
+7%7,7A7X7e7
+7%7C7V7\7q7{7
+7%7Q7g7o7x7
+7&7+7<7L7Q7^7c7t7
+7&7G7N7X7e7l7x7
+7(7.7;7i7~7
+7(7/7?7S7\7e7n7
+7(70787D7d7l7t7
+7(747@7L7X7d7p7|7
+7(757B7a7j7w7
+7(787<7L7P7T7l7p7t7x7|7
+7(7G7Z7u7|7
+7(8A8N8
+7,737C7L7\7e7y7
+7,747@7`7h7p7x7
+7,747@7`7l7
+7,747<7H7h7t7
+7,797A7f7x7
+7,7L7h7
+7,8D8\8x8|8
+7.7:7F7o7
+7.7;7Y7u7
+7.7=7L7[7j7y7
+7.7>7N7]7j7
+7.7D7U7^7t7
+7.7F7a7m7x7
+7/797s7
+7:7F7R7r7w7
+7;7E7O7a7~7
+7;8a8m8y8
+7?7Z7p7
+7+727D7K7]7d7y7
+7+777@7V7g7
+7+777G7\7n7
+7+797?7G7W7n7
+7+7K7U7w7
+7<7D7L7X7x7
+7>7_7n7
+7>7S7h7q7
+72777C7P7j7
+727D7f7x7
+727E7J7O7_7p7w7
+738:8@8L8[8s8z8
+738a8~8
+747D7T7X7\7`7d7h7l7p7x7
+747E7[7}7
+757K7m7
+767D7[7
+767F7d7w7}7
+777G7U7^7k7|7
+787D7P7\7r7
+787E7n7
+787H7N7]7
+787O7X7p7
+7A8h8o8
+7C7V7k7y7
+7D7a7z7
+7E7f7o7x7
+7p8t8x8|8
+7X7g7p7{7
+8 8$8(8,8084888<8@8D8H8L8P8T8X8\8`8d8h8l8
+8 8$8(8,8084888<8@8D8H8L8P8T8X8\8`8d8h8l8|80<4<8<<<@<D<\<t<
+8 8$8(8,8084888<8@8D8H8L8P8T8X8\8`8d8h8l8p8t8x8
+8 8$8(8,8084888<8@8D8H8L8P8T8X8\8`8d8h8l8p8t8x8|8
+8 8$8(8,8084888<8@8D8H8L8P8T8X8d8h8
+8 8$8(8,8084888<8@8D8H8L8X8\8
+8 8$8(8,8084888<8H8L8 9$9(9,9094989<9@9D9H9L9P9T9X9\9`9d9h9l9p9t9x9|9
+8 8$8(8,8084888T8X8\8`8d8h8l8p8t8x8|8
+8 8(8,8084888<8@8D8H8L8P8T8\8`8d8h8p8t8x8
+8 8,888D8`8x8
+8 808@8D8H8L8P8T8X8`8x8
+8 808@8P8T8d8h8x8|8
+8 888^8
+8 8O8i8
+8!8.82878<8A8F8V8d8{8
+8!80868P8a8h8v8}8
+8!818n8
+8!858D8S8b8q8
+8!868D8[8p8z8
+8!8F8X8q8
+8!8X8h8
+8!9*939<9h9p9}9
+8"8(8.848:8@8F8L8R8X8^8d8j8p8v8|8
+8"868F8]8n8u8~8
+8"8'8,81868D8S8^8g8r8{8
+8"9,959:9@9J9T9^9h9r9
+8"959>9T9e9
+8"989E9i9{9
+8#8)8@8G8m8
+8#838C8S8c8s8
+8#858D8T8b8o8
+8#8B8T8\8j8
+8#9>9^9v9
+8$8(8x8|8
+8$8,848@8d8l8t8|8
+8$8,848<8D8L8T8`8
+8$8,848<8D8L8X8x8
+8$8,888X8`8h8p8x8
+8$8@8\8|8
+8$808P8\8|8
+8$858K8e8t8
+8$898?8K8Q8f8l8x8~8
+8%8.878@8I8R8[8d8m8v8
+8%9-959
+8&8/8R8h8t8
+8&8;8U8|8
+8&8@8S8Y8e8q8|8
+8&8+8:8U8a8
+8&8<8X8o8{8
+8&818G8v8
+8&888d8y8
+8&8D8e8q8
+8&949K9U9{9
+8&989]9d9x9
+8(8,808@8D8H8X8\8`8p8t8x8
+8(80888@8P8t8|8
+8(80888D8d8l8t8|8
+8(808P8X8`8|8
+8(818:8S8h8
+8(848@8L8X8d8p8|8
+8(888H8L8P8T8\8t8
+8(888m8
+8(8B8H8]8
+8)8;8R8_8q8
+8)8G8Q8_8n8
+8)969e9n9w9
+8*868B8N8Z8f8r8~8
+8,8`8h8
+8,8<8L8P8`8d8t8x8
+8,8084888<8@8D8H8L8P8T8\8t8
+8,8c8x8
+8,8H8|8
+8.8>8K8Q8Z8i8
+8/8h8}8
+8;8@8f8t8
+8@=D=H=L=P=T=X=\=`=d=h=l=p=t=x=|=
+8+8@8J8P8
+8+898Q8r8
+8+8H8U8x8
+8<8D8I8N8S8Y8
+8<8Y8_8p8
+8>8N8d8t8
+808<8L8l8v8
+809h9r9}9
+828I8R8]8d8t8y8
+82T2X2\2`2d2h2l2p2t2x2|2
+83898H8N8f8l8{8
+838G8M8|8
+839A9T9
+848<8H8P8p8x8
+848g8{8
+849F9X9w9
+858@8j8
+858F8l8s8
+88<8@8D8H8L8H>L>P>T>X>\>`>d>h>l>p>t>x>|>
+8'838?8K8W8c8o8{8
+8'838F8
+8'838Q8f8t8
+888<8@8D8H8L8P8T8X8\8`8d8h8l8p8t8x8|8
+888D8f8r8~8
+8'8-8G8M8w8}8
+888N8e8o8
+898F8P8n8z8
+899K9\9
+8E8Q8]8|8
+8F8e8v8
+8F8f8v8
+8F8T8s8
+8H9X9g9
+8I8X8b8
+8N8W8l8u8~8
+9 9$9(9
+9 9$9(9,9094989<9@9D9H9L9P9T9X9\9`9d9h9l9p9t9x9|9
+9 9$9(9,9094989<9@9D9H9L9P9T9X9\9`9d9h9x9
+9 9$9(9094989<9@9D9H9L9P9X9\9`9d9h9l9p9t9|9
+9 9(949T9\9h9
+9 9(9L9T9\9d9l9t9|9
+9 9094989<9@9D9H9L9T9l9|9
+9 9094989H9L9P9`9d9h9x9|9
+9 90949D9H9
+9 909A9N9R9W9\9a9f9v9
+9 939;9E9K9]9g9q9
+9 959@9[9f9v9
+9!9*939<9E9N9W9`9i9r9{9
+9!9/9=9H9h9m9y9~9
+9!9+9V9d9
+9":5:>:G:P:i:
+9"9;9M9V9f9
+9"979F9M9^9m9s9
+9"9-969?9H9[9x9
+9"9X9s9
+9#9/9S9`9t9
+9#9J9e9t9
+9$9*90969<9B9H9N9T9Z9`9f9l9r9x9~9
+9$9,949<9D9L9T9\9h9
+9$9,949<9D9P9t9|9
+9$9.9O9`9z9
+9$9;9E9c9m9
+9$9@9\9|9
+9$9<9T9l9
+9$9>9G9Z9`9i9
+9$909N9W9s9~9
+9$9-9:9C9P9Y9f9o9|9
+9$9A9N9R9W9\9a9f9
+9$9A9V9f9
+9%9>9H9Q9Z9c9l9u9
+9%949C9Y9u9
+9%9C9U9k9
+9&9.9;9[9g9s9|9
+9&9;9N9b9p9w9
+9&959O9b9h9w9
+9&969R9[9d9q9
+9&9E9Z9e9y9
+9(9,9094989@9X9h9x9|9
+9(9;9[9`9
+9(949s9x9
+9(989H9X9\9l9p9
+9(989H9X9h9l9|9
+9(9-969;9D9I9d9q9v9
+9(9A9L9v9
+9(9G9Z9u9|9
+9):f:o:
+9)929>9c9z9
+9*:E:^:x:
+9*929?9T9
+9,969M9T9e9u9
+9,9B9X9d9p9|9
+9,9H9P9X9`9h9t9
+9,9L9n9
+9,9T9t9
+9,9V9d9
+9.:>:K:}:
+9.9D9K9l9{9
+9/9<9E9]9
+9/959;9M9S9e9k9}9
+9':1:a:~:
+9:9U9^9g9}9
+9@:I:b:k:
+9+:3:F:T:d:
+9+9<9X9
+9+90999Z9o9
+9<9D9L9\9d9l9t9|9
+9=9V9h9q9
+9>9U9d9s9
+90:4:8:<:@:D:H:L:P:T:X:\:`:d:h:l:p:t:x:|:
+90:9:T:d:m:
+90979M9R9\9j9v9
+91:X:e:
+939?9K9n9
+939?9O9[9
+939]9{9
+94:V:b:
+949L9d9
+96:;:f:x:
+969G9n9u9
+969H9e9o9
+97:n:z:
+979=9x9
+979C9a9v9
+989@9H9P9\9|9
+989@9H9P9X9d9
+989@9H9T9t9|9
+999L9[9q9
+9'9t9z9
+9A:N:R:W:\:a:f:r:
+9A:N:R:W:\:a:f:v:
+9C:K:`:
+9E9L9X9a9o9
+9E9Q9p9
+9F9W9v9
+9G:L:T:
+9G:Q:f:
+9J9e9t9~9
+9s0~8W
+9S9`9i9u9
+9T:X:\:`:d:h:l:p:t:x:|:
+A Blank Password is Invalid
+A card number must be entered.
+A name must be entered.
+A phone number must be 10 digits.
+All Locations
+All Purchaser Locations
+All Terms
+AltISBN = '%s' AND BookKey LIKE '%s%%'
+AltISBN in (%s)
+AND AltISBN
+AND BBItemID
+AND Binding
+AND Copyright
+AND Edition
+AND Title
+AND TypeID
+At least one buyer selected to be removed
+At least one group selected to be removed
+Author
+Author LIKE '
+Author, Title
+Author, Title, ISBN, Abbr
+balance Bought Qty with Buy Qty.
+bb_error_id
+BBCUID = ?
+BBCUID = 0
+BBCUID, fImportedFlg, tmDate
+BBDetID
+BBDetID = ?
+BBDTLID = ?
+BBDTLID DESC
+BBItemID
+BBItemID = %d
+BBItemID = ?
+BBItemID = 0
+BBItemID IN (SELECT BBItemID FROM VW_BB_LIST_BARCODE WHERE Barcode LIKE '
+BBListDesc
+BBListDesc LIKE '%%%s%%'
+BBNewID DESC
+BBPurchaserID
+BBPurchaserID = %d
+BBPurchaserID = ?
+BBPurchaserID IN (SELECT BBPurchaserID FROM VW_BB_LIST_PUR WHERE %s)
+BBPurchaserID IN (SELECT BBPurchaserID FROM VW_BB_LIST_PUR WHERE PurchaserID = 
+BBPurchaserID IN (SELECT BBPurchaserID FROM VW_BB_LIST_PUR WHERE SessionID = 
+BBPurchaserID NOT IN (SELECT BBPurchaserID FROM Buyback_List_Header) AND BuybackStatus = 1 AND (fNBCFlag = 0 OR fNonODList = 1)
+bbreceiptid
+BBReceiptID = ?
+BBReceiptID = ? and RentalHId is null
+BBReceiptID IN (SELECT BBReceiptID FROM dbo.VW_BBTRANSLISTDETAIL WHERE SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%'))
+BBReceiptID IN (SELECT BBReceiptID FROM VW_BBTRANSLISTDETAIL   WHERE BookKey LIKE '%s%%')
+BBReceiptID IN (SELECT BBReceiptID FROM VW_BBTRANSLISTDETAIL WHERE Author LIKE '%s%%')
+BBReceiptID IN (SELECT BBReceiptID FROM VW_BBTRANSLISTDETAIL WHERE REPLACE(ISBN13, '-','') LIKE '%s%%')
+BBReceiptID IN (SELECT BBReceiptID FROM VW_BBTRANSLISTDETAIL WHERE SKU = %ld)
+BBReceiptID IN (SELECT BBReceiptID FROM VW_BBTRANSLISTDETAIL WHERE Title LIKE '%%%s%%')
+BBUID = %d
+BBUID = ?
+BBUID = ? AND BBItemID = ?
+BBUID = ? AND LocationID = ? AND TermID = ?
+BBUID = ? AND LocationID = ? AND TermID = ? AND BBItemID = ?
+BBUID = 0
+BBUID IN (SELECT BBUID FROM Buyback_List_Detail WHERE %s)
+BBUID IN (SELECT BBUID FROM VW_BB_LIST_DETAIL WHERE BookKey LIKE '%s%%')
+BBUID IN (SELECT BBUID FROM VW_BB_LIST_DETAIL WHERE REPLACE(ISBN13, '-','') LIKE '%s%%')
+BBUID IN (SELECT BBUID FROM VW_BB_LIST_DETAIL WHERE SKU = %ld)
+BBUID IN (SELECT BBUID FROM VW_BB_LIST_DETAIL WHERE SKU IN (%s))
+BBUID IN (SELECT BBUID FROM VW_BB_LIST_DETAIL WHERE SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%'))
+BGID = 0
+BGTable
+BGVend
+Binding
+BitBlt
+BndlDtl
+BndlDtlI
+BndlHdr
+BndlItem
+BndlItem.wpp
+Bookkey = ''
+Bookkey LIKE '
+BookRoutingConfigId
+BUNDID = ?
+Bundle_Detail
+Bundle_DetailItem
+Bundle_Header
+Buyback Aborted - To Post You Must Add Missing Inventory Item SKU = %d 
+Buyback list is now scheduled to be sent to web.
+Buyback_Buyer_Groups
+Buyback_Buyer_Location
+Buyback_Buyers
+Buyback_Condition
+Buyback_Detail
+Buyback_Header
+Buyback_List_Create
+buyback_list_desc
+Buyback_List_Detail
+Buyback_List_Header
+Buyback_List_Item
+Buyback_List_Item_Xref
+Buyback_Purchaser
+Buyback_QuickRef
+Buyback_Session
+Buyback_Session.BuybackStatus
+buyback_session_desc
+buyback_session_description
+Buyback_Session_Location
+Buyback_Session_Purchasers
+buyback_session_store_desc
+buyback_session_store_id
+buyback_session_student_desc
+buyback_session_student_id
+Buyback_Stolen_Books
+Buyback_Workstations
+BuybackStatus
+BuybackStatus = 1
+BuybackStatus DESC, SessionID DESC
+BuyDetail
+buydtl.wpp
+Buyer...
+BuyerGrp
+BuyerID
+BuyerID  = %d
+BuyerID = ?
+BuyerID = ? 
+BuyerID = ? and BuyerLocID = ?
+BuyerID IN (SELECT BuyerID FROM Buyback_Workstations WHERE SessionID = %d)
+BuyerID NOT IN (SELECT BuyerID FROM Buyback_Workstations WHERE SessionID = %d)
+BuyerLoc
+BuyerLocID
+buyerlocid = %ld
+BuyerLogin
+buyerlogin = '%s'
+BuyerLogin = ?
+buyername like '%%%s%%'
+Buyers
+Buyers Guide not Loaded
+Buyers_Guide_Table
+Buyers_Guide_Vendors
+BuyersGroupID
+BuyersGroupID = ? 
+buyhdr.wpp
+BuyHead
+BuyPrice
+C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\atlmfc\include\afxwin1.inl
+C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\atlmfc\include\afxwin2.inl
+Cabinet files(*.cab)|*.cab||
+Campus
+Can only do a negative buy for this purchaser.
+Cannot create a wholesale record, Buyer Guide vendor has not been set.
+Cash To Add:
+Catalog:
+CBBBuyBundledItemDlg
+CBBBuyDetailSet
+CBBBuyDetailView
+CBBBuyDetVwSet
+CBBBuyerFrame
+CBBBuyerGrpSet
+CBBBuyerLocSet
+CBBBuyerSessionLocationSet
+CBBBuyerSet
+CBBBuyerView
+CBBBuyFindDlg
+CBBBuyFrame
+CBBBuyHdrExpSet
+CBBBuyHeaderSet
+CBBBuyHeaderView
+CBBBuyPurSet
+CBBGroupView
+CBBImportExport
+CBBListAllView
+CBBListCreateSet
+CBBListDetailSet
+CBBListDetailView
+CBBListDetailViewBase
+CBBListDetVwSet
+CBBListFindDlg
+CBBListGenGrid
+CBBListHeaderSet
+CBBListHeaderView
+CBBListItemSet
+CBBListODVwSet
+CBBListQuickSearchGrid
+CBBListSelectDtlDlg
+CBBListSummaryView
+CBBListSumVwSet
+CBBLoadBGView
+CBBNewItemSet
+CBBPostView
+CBBPriceTagDtlView
+CBBPriceTagFrm
+CBBPriceTagQueueUserSet
+CBBPurchaserSet
+CBBPurchaserView
+CBBQRefBaseView
+CBBQRefEditView
+CBBQRefFindSet
+CBBQRefFindView
+CBBQRefFrame
+CBBQRefSet
+CBBSequenceSet
+CBBSeriesEdit
+CBBSessionBaseDtlView
+CBBSessionFrame
+CBBSessionLocSet
+CBBSessionLocView
+CBBSessionPurSet
+CBBSessionSet
+CBBSessionView
+CBBSessionWkstSet
+CBBSessionWkstView
+CBBSessPurSet
+CBBSessQuickSearchGrid
+CBBSessVwSet
+CBBStolenBooksFrame
+CBBStolenBooksQuickSearchGrid
+CBBStolenBooksSet
+CBBStolenBooksView
+CBBSuspReceiptSet
+CBBTransListDetailSet
+CBBTransListDtlView
+CBBTransListFrm
+CBBTransListHeaderSet
+CBBTransListQuickResultsGrid
+CBBTransListView
+CBookRoutingConfigDlg
+CBookRoutingConfigSet
+CBulkFetchSet
+CBuybackListFrame
+CBuyBookMembershipDlg
+CBuyBookMembershipDlgSet
+CBuyersGuideInqSet
+CBuyersGuideInqView
+CBuyersGuideInqViewBB
+CheckMenuItem
+CheckMenuRadioItem
+CLEAN AND COMPLETE
+Comment
+Compacting the database...please wait
+CompanyName
+Condtn
+Context sensitive help
+CopyRect
+Copyright 
+Copyright:
+Course
+CR_Campus
+CR_Course
+CR_Department
+CR_Detail
+CR_Header
+CR_Locations
+CR_Locations_Detail
+CR_Term
+CR_ZeroSKUDetail
+CRDetl
+CreateCompatibleDC
+CreateFontIndirectA
+CreateSolidBrush
+CRHead
+CRLocs
+CRLocsDt
+CRZSDetl
+CULoadDataDlg
+Currency_Exchange
+Currency_Rates
+CurrExch
+CurrRate
+CustomerId = ?
+D$ h,S
+D$ SVWh&
+D$(;t$
+D$(SVW
+D$,;t$
+D$,+D$$
+D$,h@$
+D$`SVW
+D$0;t$
+D$0SVW
+D$4;t$
+D$8;t$
+D$HSVW
+D$pSVW
+D$xSVW
+D0M0R0[0`0i0
+DCC_Category
+DCC_Class
+DCC_Department
+DCCCat
+DCCClass
+DCCDept
+DecodePointer
+Default Tender
+DELETE Buyback_Detail WHERE BBReceiptID = %d
+DELETE Buyback_QuickRef WHERE QRefCode = '%s'
+DELETE FROM [Buyback_QuickRef] WHERE [QRefID] = %ld
+DELETE FROM [Buyback_QuickRef] WHERE QRefCode = '%s'
+delete from BookRoutingConfigTerm
+DELETE FROM Bundle_Detail
+DELETE FROM Bundle_DetailItem
+DELETE FROM Bundle_Header
+delete from Buyback_Buyer_Groups where BuyersGroupID = %ld
+DELETE FROM Buyback_Buyer_Location WHERE BuyersGroupID = %d
+delete from Buyback_Buyers where BuyerID = %ld
+DELETE FROM Buyback_Errors WHERE SessionID = %d
+DELETE FROM Buyback_InvRec_Checks WHERE BBInvRecID IN (SELECT BBInvRecID FROM Buyback_InvRec_Student WHERE SessionID = %d)
+DELETE FROM Buyback_InvRec_Store WHERE SessionID = %d
+DELETE FROM Buyback_InvRec_Student WHERE SessionID = %d
+DELETE FROM Buyback_List_Create WHERE BBUID IN (SELECT BBUID FROM Buyback_List_Header WHERE BBPurchaserID IN (SELECT BBPurchaserID FROM Buyback_Session_Purchasers WHERE SessionID = %d))
+DELETE FROM Buyback_List_Detail  WHERE fTmpStatus = 0 AND fAutoCreate = 1 AND BoughtQty = 0 AND BBUID = 
+DELETE FROM Buyback_List_Detail WHERE BBDetID = %ld
+DELETE FROM Buyback_List_Detail WHERE BBUID = %d AND BBItemID = %d
+delete from Buyback_List_Header where BBUID = %ld
+DELETE FROM Buyback_List_Item WHERE SessionID = %d
+DELETE FROM Buyback_New_Item WHERE SessionID = %d
+DELETE FROM buyback_pricetagqueue WHERE SessionID = %d
+DELETE FROM buyback_pricetagqueueuser WHERE SessionID = %d
+DELETE FROM Buyback_QuickRef WHERE QRefID = %s
+delete from buyback_session where sessionid = %ld
+DELETE FROM Buyback_Stolen_Books WHERE %s
+delete from buyback_workstations where sessionid = %ld
+DELETE FROM Buyers_Guide_Table
+Delete Quick Reference Entry?
+DeleteCriticalSection
+DeleteObject
+Deleting Existing Data
+DeptClassCat
+Description
+Destination
+DispatchMessageA
+DisplayTranSummary
+Do you want to delete it?
+DSN=Winprism
+DSN=winprism;
+Edition:
+EnableMenuItem
+EnableWindow
+EncodePointer
+end_receipt_number
+EQFunc
+EQFunction
+EQList
+EQListData
+ERROR : Unable to initialize critical section in CAtlBaseModule
+Estimated
+Exception thrown in destructor
+exec EmailBuybackReceipt %d
+exec RentalHistoryReturnBuyBack %d
+Export
+Exporting 
+fBuyFlg
+fDeleted <> 1 OR fDeleted IS NULL
+fDeleted = 0
+FileDescription
+FileVersion
+Find Buyer
+Find Buyer Group
+Find Location
+Find Purchaser
+Find Session
+Find Session/Purchaser
+Find Suspended Transaction
+fnisbnget10
+for this purchaser.
+fSuspended = 1
+GDI32.dll
+GeneralMerchandise
+GenMerch
+GetClientRect
+GetCurrentProcessId
+GetCurrentThreadId
+GetFocus
+GetKeyState
+GetLastError
+GetObjectA
+GetParent
+GetSysColor
+GetSystemTimeAsFileTime
+GetWindowRect
+GlobalAlloc
+GlobalFree
+GlobalLock
+GlobalUnlock
+GroupStorePurchaser
+GroupWholeSalePurchaser
+h=l=p=t=x=|=
+h0l0p0t0x0|0
+IDB_ARROW_LTORD
+IDB_ARROW_LTORF
+IDB_ARROW_LTORU
+IDB_ARROW_RTOLD
+IDB_ARROW_RTOLF
+IDB_ARROW_RTOLU
+If this lock is not valid anymore, would you like to clear it?
+Import
+Importing 
+InitializeCriticalSectionEx
+INSERT INTO [Buyback_QuickRef] ([QRefCode], [ISBN], [AltISBN], [BookKey]) SELECT '%s', [ISBN], [AltISBN], [Bookkey] FROM [Buyers_Guide_Table] WHERE [BGID] = %ld
+INSERT INTO [Buyback_QuickRef] ([QRefCode], [SKU], [ISBN], [AltISBN], [BookKey]) SELECT '%s', [SKU], [ISBN], [AltISBN], [Bookkey] FROM [Buyback_List_Item] WHERE [BBItemID] = %ld
+insert into BookRoutingConfigTerm (TermID) values (%d)
+insert into Buyback_Detail(BBReceiptId, Qty, Price, tmDate, RentalHId) values(%d, 0, 0, GetDate(), %d)
+INSERT INTO Buyback_Errors (SessionID, Date, ErrorTypeID, DCCID, LocationID) VALUES (%d, '%s', %d, %d, %d)
+INSERT INTO Buyback_Errors (SessionID, Date, ErrorTypeID, ISBNCat) VALUES (%d, '%s', %d, '%s')
+INSERT INTO Buyback_Errors (SessionID, Date, ErrorTypeID, SKU, LocationID) VALUES (%d, '%s', %d, %d, %d)
+INSERT INTO Buyback_New_Item (SessionID, ISBNCat, SKU, LocationID, DCCID, UsedDCCID, Cost, Retail, fInventoryOnly) VALUES (%d, '%s', %d, %d, %d, %d, CAST( '$%s' AS MONEY ), CAST( '$%s' AS MONEY ), 1 )
+INSERT INTO Buyback_New_Item (SessionID, ISBNCat, SKU, Subsystem, TitleDesc, Author, BindingID, DCCID, UsedDCCID, EdType, CpSize, LocationID, Cost, Retail, fInventoryOnly) VALUES (%d, '%s', %d, %d, '%s', '%s', %d, %d, %d, '%s', '%s', %d, CAST( '$%s' AS MONEY ), CAST( '$%s' AS MONEY ), 0)
+INSERT INTO Buyback_QuickRef (QRefCode, SKU, ISBN, AltISBN, BookKey) VALUES('%s', %ld, '%s', '%s', '%s')
+INSERT INTO Buyback_QuickRef (QRefCode, SKU, ISBN, AltISBN, BookKey) VALUES('%s', 0, '%s', '%s', '%s')
+INSERT INTO Buyback_Session_Location (SessionID, LocationID, WarnPercent, TranWarnQty, TranMaxQty, fPrintReceipts, fPrintPriceTags) VALUES (%d, %d, 90, 3, 3, 0, 0)
+INSERT INTO GeneralMerchandise (SKU, Description, Type, Size, CatalogNumber, Color, MfgID) VALUES (%d, '%s', '%s', '%s', '%s', 0, 0)
+INSERT INTO Inventory (SKU, LocationID, LastSaleDate, LastInventoryDate, Retail, Cost) VALUES (%d, %d, '01/01/1970', '01/01/1970', %s, %s)
+INSERT INTO Inventory (SKU, LocationID, LastSaleDate, LastInventoryDate, TaxTypeID, TagTypeID, Retail, Cost) VALUES (%d, %d, '01/01/1970', '01/01/1970', %d, %d, %s, %s)
+INSERT INTO Item (SKU, DCCID, VendorID, Subsystem, TypeID, UUID) VALUES (%d, %d, 0, %d, %d, %d)
+InstDetl
+Instruct
+Instructors
+Instructors_Detail
+InternalName
+InvalidateRect
+Invent1
+Invent2
+Invent3
+Inventory
+is assigned to a session workstation and could not be deleted.
+isalnum
+isalpha
+ISBN = '%s' AND BookKey = '%s'
+ISBN = ?
+ISBN LIKE '
+ISBN LIKE '%s' AND SessionID = %d
+ISBN_Groups
+ISBN_Lengths
+ISBNGrps
+ISBNLens
+IsDebuggerPresent
+isdigit
+isgraph
+IsProcessorFeaturePresent
+IsWindow
+It can not be bought
+Item_Tax_Type
+Item_Xref
+ItemMaster
+ItemMstr
+ItemMstr.wpp
+ItemTxTp
+ItemType
+ItemXref
+KERNEL32.dll
+KeyCode LIKE '
+KillTimer
+L$ +L$
+L$ h N
+L$ PWS
+L$$_^[3
+L$8Qj<
+LegalCopyright
+LegalTrademarks
+List Details
+List Headers
+List Items
+ListCrea
+ListDetl
+listdtl.wpp
+listhdr.wpp
+ListHead
+ListItem
+listitem.wpp
+ListXref
+LoadIconA
+LoadImageA
+Loading Buyers Guide...
+LoadStringA
+Location
+Location:%s
+LocationDesc
+LocationID
+LocationID, TermID
+LocationID,SessionID
+Locations
+M0Y0f0o0x0
+malloc
+map/set<T> too long
+memcpy
+memcpy_s
+memset
+MemTierId, Priority
+mfc120.dll
+Modify Location/Term
+ModifyMenuA
+Monarch_Printer_Strings
+Monarch_Printers
+Monarch_Tag_Types
+Move Selected Rows Down
+Move Selected Rows Up
+MSVCP120.dll
+MSVCR120.dll
+MultiByteToWideChar
+Name:%s
+Nebraska Book Co.
+Nebraska Book Co. (SP)
+Nebraska Book Company, Inc.
+NEED HAS BEEN MET
+NEED has been met for this Purchaser
+NetName:%s
+New Items
+NEW ONLY
+newitem.wpp
+Number is too long to be a sku.
+ODBC;DSN=Winprism
+og1120as.dll
+OLEAUT32.dll
+OrdDecs
+ORDER BY 
+Order_Decisions
+OrgQty
+OriginalFilename
+ot1120as.dll
+OutputDebugStringW
+PackageDetail
+PackageHeader
+PackageStockAdjustCode
+PackageType
+PaperType
+PaprType
+PeekMessageA
+PkgDetal
+PkgHead
+PkgSACde
+PkgType
+Please Select a Tender.
+Post Process (inventory) Aborted
+Post Process Aborted
+PostMessageA
+Print Queue is already in use ...
+Print this receipt?
+Printed
+Printer
+Priority
+Priority, Name
+Priority, PostingOrder, TermID
+ProductName
+ProductVersion
+PrtStrs
+PrtTags
+Purchaser is used in an open or closed session.
+Purchaser...
+PurchaserDesc
+PurchaserID
+PurchaserID,PurchaserLocID
+PurchaserLocDesc
+PurchaserLocID
+PurchaserLocID,PurchaserID
+Purchasers
+Purchser
+QueryPerformanceCounter
+Quick Reference Code [%s] already exists - unable to add.
+Quick Reference Code [%s] already exists for
+Quick Reference Code [%s] already exists. Delete existing Quick Reference Code?
+Quick Reference Code [%s] is not valid.
+QuickRef
+Receipt Number
+Receipt printer is offline or not available.
+ReceiptNumber = ? AND tmDate = ?
+ReceiptNumber like '%%%s%%'
+receiptnumber like '%%%s%%' 
+RegisterWindowMessageA
+Remote Buyback ID must be 1 or 2 alphanumeric characters
+Rental
+Replace(AltISBN, '-','') LIKE '
+ReportCustom
+ReportData
+ReportMaster
+ReportParams
+ReportSortOptions
+ROUND((BuyPrice * %f - FLOOR(BuyPrice * %f)) * 100,0) %% %f)/100 
+Routing Location
+Routing Type
+RoutingDesc
+RptCust
+RptData
+RptMstr
+RptPara
+RptSort
+secComboExApply
+secComboExNewItem
+SELECT * FROM 
+SELECT * FROM Buyback_Detail
+SELECT * FROM Buyback_Detail WHERE BBDTLID = 0
+SELECT * FROM Buyback_Header WHERE BBReceiptID = 0
+SELECT * FROM Buyback_List_Detail WHERE BBDetID = 0
+SELECT * FROM Buyback_List_Header WHERE BBUID = 0
+SELECT * FROM Buyback_List_item WHERE BBItemID = 0
+SELECT * FROM Buyback_List_item WHERE SessionID = %d AND fNew = 1
+SELECT * FROM Buyback_New_item WHERE BBNewID = 0
+SELECT * FROM Buyback_New_item WHERE SessionID = %d
+SELECT * FROM Buyback_Stolen_Books
+SELECT * FROM Buyback_Stolen_Books WHERE StolenBookID = 0
+SELECT * FROM dbo.
+SELECT * FROM dbo.Item WHERE SKU = 0
+SELECT * FROM dbo.ItemMaster WHERE ITMUID = 0
+SELECT * FROM Sequence WHERE SequenceTypeID = 21
+SELECT * FROM VW_BB_CLOSE_POST_CHK WHERE SessionID = %d
+select * from VW_BBSESSIONLOCLIST
+SELECT [Author],[Title],[AltISBN] FROM [Buyback_List_Item] Where [BBItemID]=%d
+SELECT [Author],[Title],[AltISBN] FROM [Buyers_Guide_Table] Where [BGID]=%d
+SELECT Abbreviation FROM Binding WHERE BindingID = %d
+SELECT Abbreviation FROM Binding WHERE Name = '
+select abpercent, newpercent, usedpercent from Buyers_Guide_Vendor_Commission where bgvendorid = %ld
+SELECT AltISBN FROM Buyback_QuickRef WHERE QRefCode = '%s'
+SELECT AltISBN, Author, Binding, Copyright, Edition, Title, Imprint, Type, Bookkey FROM Buyers_Guide_Table WHERE AltISBN = '%s' AND Bookkey LIKE '%s%%'
+SELECT AltISBN, Author, Binding, Copyright, Edition, Title, Imprint, Type, Bookkey FROM Buyers_Guide_Table WHERE BGID = %d
+SELECT Author, Title FROM Buyback_List_Item WHERE SKU = %ld AND AltISBN = '%s'
+SELECT Author, Title FROM Buyers_Guide_Table WHERE AltISBN = '%s' AND BookKey = '%s'
+select b.BuyerId, b.BuyerName from Buyback_Buyers b inner join Buyback_WorkStations w on w.BuyerId = b.BuyerId where w.SessionId = %d
+SELECT Barcode FROM Item WHERE SKU = %d
+select BBCUID from Buyback_Workstations where BuyerID = %ld
+SELECT BBDetID FROM VW_BB_BUY_PUR WHERE BBItemID = %d AND BBPurchaserID = %d AND LocationID = %d
+SELECT BBDTLID, ISBN, BookKey FROM Buyback_Detail  WHERE BBPurchaserID = %d AND fPostedFlg <> 1 AND BBItemID = 0 and LocationID = 0union SELECT BBDTLID, Buyback_List_Item.ISBN, Buyback_List_Item.BookKey FROM Buyback_Detail inner join Buyback_List_Item on Buyback_Detail.BBItemID = Buyback_List_Item.BBItemID  WHERE BBPurchaserID = %d AND fPostedFlg <> 1 AND Buyback_List_Item.SKU = 0 And Buyback_List_Item.BBItemID > 0 and LocationID = 0ORDER BY BookKey, ISBN 
+SELECT BBErrorID FROM Buyback_Errors ORDER BY BBErrorID DESC
+SELECT BBItemID From Buyback_Detail WHERE BBDTLID = %d
+SELECT BBItemID, Author, Title, ISBN  FROM VW_BB_DCC_SRCH WHERE 
+SELECT BBItemID, InstructorName, Author, Title, ISBN  FROM VW_BB_INSTRUCTOR_SRCH WHERE InstructorName LIKE '
+SELECT BBItemID, ISBN, Title  FROM VW_BB_GM_SRCH WHERE ISBN LIKE '
+SELECT BBItemID, ISBN, Title  FROM VW_BB_GM_SRCH WHERE Title LIKE '%
+SELECT BBItemID, TermName, DeptName, CourseName, Author, Title, ISBN  FROM VW_BB_COURSE_SRCH WHERE 
+SELECT BBItemID, VendorCode, Name, Author, Title, ISBN  FROM VW_BB_VENDOR_SRCH WHERE VendorCode = '
+SELECT BBPurchaserID FROM Buyback_List_Header WHERE BBUID = %s
+SELECT BBPurchaserID, PurchaserDesc FROM VW_BB_LIST_PUR WHERE SessionID = %d AND (fNBCFlag = 0 OR fNonODList = 1)
+SELECT BBPurchaserID, PurchaserDesc FROM VW_BB_LIST_PUR WHERE SessionID = %d AND fNBCFlag = 0
+SELECT BBPurchaserID, PurchaserDesc, Priority, BGVendorID FROM VW_BB_LIST_PUR WHERE SessionID = %d AND fNBCFlag = 1 AND fNonODList = 0 ORDER BY Priority
+select BBReceiptID from Buyback_Header where BBReceiptID = %ld
+SELECT BBReceiptID FROM Buyback_Header WHERE ReceiptNumber = '%s' AND fSuspended = 1
+SELECT BBReceiptID FROM Buyback_Header WHERE ReceiptNumber like '%s'
+SELECT BBUID From Buyback_List_Header WHERE BBPurchaserID = %d
+SELECT BGVendorID FROM VW_BB_LIST_PUR WHERE BBPurchaserID = %d
+SELECT BGVendorId, VendorName FROM Buyers_Guide_Vendors
+SELECT BGVendorID, VendorName FROM Buyers_Guide_Vendors WHERE BGVendorID <> 2
+SELECT BindingID FROM Binding WHERE Abbreviation = '%s'
+SELECT BindingID, Name FROM Binding
+SELECT Bookkey FROM Buyers_Guide_Table WHERE BGVendorID = 1 AND BGID = 
+select BookRoutingConfigId, GroupWholeSalePurchaser, GroupStorePurchaser, DisplayTranSummary, TermUsageType from BookRoutingConfig
+select bsp.BBPurchaserId, bsp.CutPer, bp.PurchaserDesc from Buyback_Session_Purchasers bsp inner join Buyback_Purchaser bp on bsp.PurchaserId = bp.PurchaserId where SessionId = %d order by bsp.Priority
+SELECT Buyback_List_Header.BBUID, BBListDesc, SessionDesc, PurchaserDesc, BuybackStatus FROM Buyback_List_Header INNER JOIN Buyback_Session_Purchasers ON Buyback_List_Header.BBPurchaserID = Buyback_Session_Purchasers.BBPurchaserID INNER JOIN Buyback_Purchaser ON Buyback_Session_Purchasers.PurchaserID = Buyback_Purchaser.PurchaserID INNER JOIN Buyback_Session ON Buyback_Session_Purchasers.SessionID = Buyback_Session.SessionID WHERE Buyback_Purchaser.fNonODList = 1 AND Buyback_Purchaser.fDeleted = 0
+select Buyback_Session_Location.LocationID from Buyback_List_Header inner join Buyback_Session_Purchasers on Buyback_Session_Purchasers.BBPurchaserID = Buyback_List_Header.BBPurchaserID inner join Buyback_Session_Location on Buyback_Session_Location.SessionID = Buyback_Session_Purchasers.SessionID where Buyback_List_Header.BBUID = %d order by Buyback_Session_Location.LocationID
+select BuyerID from Buyback_Buyers where BuyersGroupID = %ld
+SELECT BuyersGroupDesc FROM Buyback_Buyer_Groups WHERE BuyersGroupID = %d
+SELECT Buyprice FROM buyers_guide_adopted WHERE BGVendorID = 1 AND SKU = 
+SELECT BuyPrice FROM Buyers_Guide_Table WHERE BGVendorID = 1 AND BGID = 
+SELECT Buyprice FROM Buyers_Guide_Table WHERE BGVendorID = 1 AND ISBN = '
+select cast(LocationId as int), ShortDescription from Location
+SELECT CatalogNumber, Description, Type, Size FROM GeneralMerchandise WHERE SKU = %d
+SELECT CatISBN FROM VW_ITM_MASTER WHERE SKU = 
+SELECT ConditionID, Name FROM Buyback_Condition
+select convert(char(10),verdate,101) from Buyers_guide_vendors where BGVendorID = 1
+SELECT Cost, Retail FROM Inventory WHERE LocationID = %d AND SKU = %d
+select count(*) from BookRouting where len(isnull(rtrim(RoutingDesc), '')) > 0
+SELECT Count(*) FROM Buyback_Detail WHERE BBPurchaserID = %d AND fPostedFlg <> 1
+SELECT Count(*) FROM Buyback_Detail WHERE BBReceiptID = %d
+select count(*) from buyback_header where BBCUID in (select bbcuid from buyback_workstations where sessionid = %ld)
+SELECT count(*) FROM Buyback_List_Detail Inner Join Buyback_Detail ON Buyback_Detail.BBItemID = Buyback_List_Detail.BBItemID WHERE Buyback_List_Detail.BBUID = %d AND Buyback_List_Detail.BBItemID = %d
+SELECT Count(*) FROM Buyback_Purchaser INNER JOIN Buyback_Session_Purchasers ON Buyback_Purchaser.PurchaserID = Buyback_Session_Purchasers.PurchaserID INNER JOIN Buyback_Session ON Buyback_Session_Purchasers.SessionID = Buyback_Session.SessionID WHERE Buyback_Purchaser.PurchaserID = %d
+SELECT COUNT(*) FROM Buyback_QuickRef WHERE QRefCode = '%s'
+SELECT COUNT(*) FROM Buyback_QuickRef WHERE QRefCode = '%s' and QRefID != %s
+SELECT Count(*) FROM Buyback_Session
+SELECT Count(*) FROM Buyback_Session_Location WHERE SessionID = %d AND LocationID = %d
+SELECT Count(*) FROM Buyback_Session_Location WHERE SessionID = %d AND LocationID IN (SELECT LocationID FROM VW_BB_SESSION_LOC WHERE BuybackStatus = 1)
+SELECT Count(*) FROM Buyback_Session_Purchasers WHERE SessionID = %d
+SELECT COUNT(*) FROM Buyback_Stolen_Books WHERE ISBN LIKE '%s'
+SELECT COUNT(*) FROM Buyback_Stolen_Books WHERE SKU = %d
+SELECT Count(*) FROM Buyers_Guide_Table
+SELECT Count(*) FROM ItemMaster WHERE CatISBN = '%s'
+SELECT Count(*) FROM ItemMaster WHERE Subsystem = %d AND CatISBN LIKE '%s'
+SELECT Count(*) FROM Location
+select count(*) from SystemParameters where GroupingId = 12026 and ParamName = 'BuyBackRentals' and ParamValue = 1
+SELECT Count(*) FROM VendorMaster WHERE VendorID = 0
+SELECT CurrencyExID, CurrDescr FROM Currency_Exchange
+SELECT CutPer FROM Buyback_Session_Purchasers WHERE BBPurchaserID = %d
+SELECT DeptID FROM CR_Department WHERE DeptName = '%s'
+SELECT Description FROM VW_BB_BUYER_LOC WHERE BuyersGroupID = %d ORDER BY Priority
+Select Detail Item
+SELECT Discount FROM Buyers_Guide_Table WHERE BGVendorID = 1 AND BGID = 
+SELECT DISTINCT [BBItemID], [Author], [Title], [ISBN] FROM [VW_BB_QREF_NONE]
+SELECT DISTINCT [QRefID], [BG], [BL], [KeyCode], [Author], [Title], [ISBN], [BGVendor] FROM [VW_BB_QREF]
+select distinct buyerlocid, buyerlocdesc from vw_bbbuyersessionlocation where buyerid = %ld and sessionid = %ld
+select distinct ct.TermID, ct.TermName from CR_Term ct join CR_Locations cl on cl.TermID = ct.TermID where cl.fOpenFlg = 1 order by ct.TermName desc
+select distinct Cust.CustomerId from Customer_Table Cust inner join Acct_Memb_Acct_Cust MCust on MCust.CustomerId = Cust.CustomerId where AccountNumber like '%s'
+select distinct isnull(AdditionalInfo,'') from Rental_History rh inner join Rental_Detail rd on rd.RentalDId = rh.RentalDId join Rental_Header_Item_Period rhip on rh.RentalPId = rhip.RentalPId and rd.RentalHIId = rhip.RentalHIId where rhip.AdditionalInfo is not null and rh.RentalHId = %d
+select distinct PurchaserLocID,PurchaserID,PurchaserLocDesc,PurchaserDesc from VW_BBPRICETAGQUEUE
+select distinct sessionid, sessiondesc from vw_bbbuyersessionlocation where buyerid = %ld
+SELECT DISTINCT VW_BB_LIST_ORDDEC_EX.SKU, VW_BB_LIST_ORDDEC_EX.LocationID, VW_BB_LIST_ORDDEC_EX.TermID, VW_BB_LIST_ORDDEC_EX.Retail, VW_BB_LIST_ORDDEC_EX.Qtp, VW_BB_LIST_ORDDEC_EX.EstBB, VW_BB_LIST_ORDDEC_EX.MaxBB, VW_BB_LIST_ORDDEC_EX.fWksStatusFlg, VW_BB_LIST_ORDDEC_EX.OrderShort, VW_BB_LIST_ORDDEC_EX.Allocated, VW_BB_LIST_ORDDEC_EX.ActBB, VW_BB_LIST_ORDDEC_EX.OnOrder, VW_BB_LIST_ORDDEC_EX.Received, VW_BB_LIST_ORDDEC_EX.txBuybackComment FROM VW_BB_LIST_ORDDEC_EX LEFT JOIN (SELECT BBUID, BBDetID, SKU from Buyback_List_detail bld inner join Buyback_List_Item bli on bli.BBItemID = bld.BBItemID  WHERE BBUID = 
+SELECT fNBCFlag FROM VW_BB_LIST_PUR WHERE BBPurchaserID = %d
+SELECT fNonODList FROM VW_BB_LIST_PUR WHERE BBPurchaserID = %d
+SELECT GMUID FROM GeneralMerchandise WHERE SKU = %d
+select idx,Description from vw_bb_print_choices
+SELECT im.ISBN13, tx.Author, tx.BindingID, tx.Copyright, tx.Edition, tx.Title, tx.Imprint, tx.Type, tx.Bookkey FROM Textbook tx inner join ItemMaster im on tx.txuid = im.uuid and im.subsystem = 2 WHERE tx.SKU = %d
+SELECT ImpMfg FROM VW_ITM_MASTER WHERE SKU = %d
+SELECT ISBN FROM Buyers_Guide_Table WHERE BGVendorID = 1 AND BGID = 
+SELECT ISBN, BookKey, Author, Title, Imprint, Binding, Edition, Copyright, txComment, AltISBN FROM Buyers_Guide_Table WHERE BGID = 
+SELECT ISBN, Title, Author, Binding, Edition, Copyright, BookKey, Imprint FROM Buyers_Guide_Table WHERE BGID = %d
+SELECT ISBN, Title, Author, BindingID, Edition, Copyright FROM Tradebook WHERE SKU = %d
+SELECT ISBN, Title, Author, BindingID, UsedSKU, Edition, Copyright FROM Textbook WHERE SKU = %d
+Select Item
+SELECT ListPrice FROM Buyers_Guide_Table WHERE BGVendorID = 1 AND BGID = 
+SELECT LocationID FROM Buyback_Buyer_Location WHERE BuyersGroupID = %d ORDER BY Priority
+SELECT LocationID FROM Location 
+SELECT LocationID FROM VW_BB_BUY_LOC_PRIOR WHERE BuyerID = %d ORDER BY Priority
+SELECT LocationID, Description FROM Location
+SELECT LocationID, Description FROM Location 
+SELECT LocationID, Description FROM Location where %s
+SELECT LocationID, Description FROM Location WHERE LocationID NOT IN (SELECT LocationID From VW_BB_SESSION_LOC Where BuybackStatus = 1) AND %s
+select LocationId, 'dummy' from Buyback_Session_Location bsl inner join Tender_Codes_Location tcl on bsl.LocationId = (tcl.POSID & 0x0000ffff) and (tcl.POSID & 0xffff0000) = 0x71000000 where SessionId = %d
+SELECT LocationID, ISBN, BookKey FROM Buyback_Detail  WHERE BBPurchaserID = %d AND fPostedFlg <> 1 AND BBItemID = 0 and LocationID > 0union SELECT LocationID, Buyback_List_Item.ISBN, Buyback_List_Item.BookKey FROM Buyback_Detail inner join Buyback_List_Item on Buyback_Detail.BBItemID = Buyback_List_Item.BBItemID  WHERE BBPurchaserID = %d AND fPostedFlg <> 1 AND Buyback_List_Item.SKU = 0 And Buyback_List_Item.BBItemID > 0 and LocationID > 0ORDER BY LocationID 
+SELECT max(BuyersGroupID) from Buyback_Buyer_Groups
+SELECT Max(item.SKU) FROM buyback_detail Detail inner join Buyback_List_Item item on Detail.BBItemID = item.BBItemID inner join Buyback_Session BBSession on BBSession.SessionID = Item.SessionID where item.SKU not in (SELECT inv.SKU FROM Inventory inv where inv.LocationID = BBSession.WholeSaleLocID) and item.SessionID = %d and detail.BBPurchaserID = %d 
+select max(Priority) from Buyback_Session_Purchasers where SessionId = %d
+select od.sku from bundle_detailItem bdi inner join order_decisions od on od.bundid = bdi.bundid where bdi.sku = %d
+select ParamValue from SystemParameters where ParamType = 148
+SELECT prism.dbo.fnGetNewSku(%d)
+Select PurchaserDesc FROM Buyback_Purchaser WHERE PurchaserID = %d
+Select PurchaserID From Buyback_Purchaser Where PurchaserDesc = '%s' AND fDeleted = 0
+Select PurchaserID From Buyback_Purchaser Where PurchaserDesc = '%s' AND fDeleted = 1
+SELECT PurchaserID From Buyback_Session_Purchasers WHERE BBPurchaserID = %d
+SELECT ReceiptNumber FROM Buyback_Header WHERE BBReceiptID = %d
+SELECT SessionID FROM Buyback_Workstations WHERE BBCUID = %d
+SELECT SessionID FROM VW_BB_LIST_PUR WHERE BBPurchaserID = %d
+SELECT SKU From Buyback_List_Item WHERE BBItemID = %d
+SELECT SKU, ISBN, AltISBN, Bookkey FROM Buyback_QuickRef WHERE QRefCode = '%s'
+SELECT StatusID, StatusDesc FROM Status_Codes WHERE ModuleID = %d
+SELECT StolenBookID, StudentName, case when t.sku is not null then t.Title else bg.Title end as Title FROM Buyback_Stolen_Books sb left outer join textbook t on sb.SkU = t.sku  left outer join Buyers_Guide_table bg on sb.ISBN = bg.AltISBN and sb.Bookkey = bg.bookkey and bg.bgvendorid = 1 WHERE sb.ISBN = '%s'
+SELECT StoreMoneyFlag FROM Buyback_Session WHERE SessionID = %d
+SELECT StoreStudentFlag FROM Buyback_Session where SessionID = %d
+Select Subsystem from item where sku = %ld
+SELECT Sum(Price * Qty) FROM Buyback_Detail WHERE BBReceiptID = %d
+SELECT SUM(Qty * Price) FROM VW_BB_BUY_TOTAL WHERE BBItemID = 0 AND SessionID = %d
+SELECT SUM(Qty * Price) FROM VW_BB_BUY_TOTAL WHERE BBItemID > 0 AND SessionID = %d
+SELECT Sum(Qty) FROM Buyback_Detail WHERE %s AND BBReceiptID = %d
+SELECT Sum(Qty) FROM Buyback_Detail WHERE BBReceiptID = %d
+SELECT Sum(Qty) FROM VW_BB_BUY_TOTAL WHERE (AltISBN = '%s' or ISBN = '%s') AND Bookkey = '%s' AND SessionID = %d AND BBPurchaserID = %d
+SELECT SUM(Qty) FROM VW_BB_BUY_TOTAL WHERE BBItemID = 0 AND SessionID = %d
+SELECT SUM(Qty) FROM VW_BB_BUY_TOTAL WHERE BBItemID > 0 AND SessionID = %d
+select TermID from BookRoutingConfigTerm
+SELECT TOP 1 BuyersGroupID FROM Buyback_Buyer_Groups ORDER BY BuyersGroupID DESC
+select top 1 FirstName, LastName, a.Phone1 from Customer_Table c left outer join Customer_Address a on c.CustomerId = a.CustomerId where AccountNumber like '%s' and a.fDefault = 1
+SELECT TOP 1 StolenBookID FROM Buyback_Stolen_Books WHERE SKU = %d AND BookKey = '%s' ORDER BY StolenBookID DESC
+SELECT TOP 1 StolenBookID FROM Buyback_Stolen_Books WHERE SKU = %d AND ISBN = '%s' AND BookKey = '%s' ORDER BY StolenBookID DESC
+SELECT TypeID, Author, Title, Abbr, Adopted, 
+SELECT TypeID, Author, Title, Abbr, Adopted, BuyPrice, ISBN, Imprint, Binding, Edition, Copyright, BBItemID FROM VW_BB_ITEM_BUY_LIST WHERE 
+select VendorID FROM Buyers_Guide_Vendors WHERE BGVendorID = %d
+SELECT VW_ITM_MASTER.Subsystem, CatISBN, Description, VW_ITM_MASTER.BarCode, ImpMfg, BdType, LEFT(EdColor,2), LEFT(CpSize,2), VW_ITM_MASTER.TypeID, VW_ITM_MASTER.txComment, ISBN13, VW_ITM_MASTER.bookkey FROM VW_ITM_MASTER inner join Item on VW_ITM_MASTER.SKU = Item.SKU WHERE VW_ITM_MASTER.SKU = 
+SELECT WholeSaleLocID FROM Buyback_Session WHERE SessionID = %d
+SendMessageA
+SeqType
+Sequence
+Sequence.wpp
+Sequence_Type
+SequenceTypeID = ?
+SequenceTypeID = ? AND LocationID = ?
+Session
+Session...
+session_id
+SessionDesc
+SessionDesc LIKE '%%%s%%'
+SessionID
+SessionID <> 0
+SessionID = %d
+SessionID = %d AND 
+SessionID = %d AND BuyerID = %d
+SessionID = %d AND LocationID = %d
+sessionid = %ld
+sessionid = %ld and buyerlocid = %d
+sessionid = %ld and buyerlocid = %ld
+sessionid = %ld and buyerlocid = %ld and buyerid = %ld
+SessionID = ?
+SessionID = ? AND fImportedFlg < ?
+SessionID = ? AND ISBNCat = ? AND SKU = ? AND LocationID = ?
+SessionID = 0
+SessionID in (select SessionID from Buyback_Session  where BuybackStatus = 1)
+SessionID IN (SELECT SessionID FROM Buyback_Session_Location WHERE LocationID = 
+SessionID IN (SELECT SessionID FROM Buyback_Session_Purchasers WHERE PurchaserID = 
+SessionID IN (SELECT SessionID FROM Buyback_Workstations WHERE BuyerID = 
+SessionID IS NULL
+SessionID,LocationID
+SessLoc
+SessPurc
+SessWkst
+Set Identity_Insert %s Off
+Set Identity_Insert %s On
+SetTimer
+ShortDescription
+SKU = 
+SKU = %d AND SessionID = %d
+SKU = ?
+SKU = ? AND ISBN = ? AND BookKey = ? AND SessionID = ?
+SKU = -1
+SKU in (SELECT SKU FROM Buyback_QuickRef WHERE QRefCode = '%s')
+Source
+Source same as Destination (Duplicate Warning): Operation Aborted 
+SP_BBEXP_BNDL_DTL(%d)
+SP_BBEXP_BNDL_DTLITM(%d)
+SP_BBEXP_BNDL_HDR(%d)
+SP_BBEXP_BNDL_ITM(%d,%d,%d,%d)
+SP_BBEXP_BNDL_ITMMSTR(%d)
+SP_BBEXP_BUYDTL(%d)
+SP_BBEXP_BUYHDR(%d)
+SP_BBEXP_CRHDRSet(%d)
+SP_BBEXP_CRLOCS(%d)
+SP_BBEXP_CRLOCSDTL(%d)
+SP_BBEXP_INVENT(1,%d)
+SP_BBEXP_INVENT(2,%d)
+SP_BBEXP_INVENT(3,%d)
+SP_BBEXP_LISTCRT(%d)
+SP_BBEXP_LISTDTL(%d)
+SP_BBEXP_LISTHDR(%d)
+SP_BBEXP_LISTXREF(%d)
+SP_BBEXP_ORDDEC(%d)
+SP_BBEXP_REPORTDATA
+SP_BBUpdateSouceData
+start_receipt_number
+Status
+Status_Codes
+still contains buyers.  Remove buyers first.
+Stolen
+Stolen Books
+Stolen Date/Time
+stolen.wpp
+StolenBookID
+StolenBookID = %d
+StolenBookID = 0
+StolenBookID IN (SELECT BSB.StolenBookID FROM Buyback_Stolen_Books BSB INNER JOIN Textbook TB ON TB.SKU = BSB.SKU WHERE (BSB.SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%')
+StolenBookID IN (SELECT BSB.StolenBookID FROM Buyback_Stolen_Books BSB INNER JOIN Textbook TB ON TB.SKU = BSB.SKU WHERE BSB.SKU = %ld
+StolenBookID IN (SELECT BSB.StolenBookID FROM Buyback_Stolen_Books BSB INNER JOIN Textbook TB ON TB.SKU = BSB.SKU WHERE TB.Author LIKE '%s%%')
+StolenBookID IN (SELECT BSB.StolenBookID FROM Buyback_Stolen_Books BSB INNER JOIN Textbook TB ON TB.SKU = BSB.SKU WHERE TB.Title LIKE '%%%s%%')
+StolenBookID IN (SELECT StolenBookID FROM Buyback_Stolen_Books INNER JOIN VW_ITM_MASTER ON VW_ITM_MASTER.SKU = Buyback_Stolen_Books.SKU AND VW_ITM_MASTER.Bookkey = Buyback_Stolen_Books.BookKey WHERE REPLACE(ISBN13, '-','') LIKE '%s%%')
+StolenBookID IN (SELECT StolenBookID FROM Buyback_Stolen_Books WHERE BookKey LIKE '%s%%')
+StolenDateTime >= '%s 00:00:00' AND StolenDateTime <= '%s 23:59:59'
+Store_Information_Table
+StoreInf
+StringFileInfo
+strtod
+strtol
+strtoul
+Student ID
+Student Name
+StudentDateTime >= '%s 00:00:00' AND StudentDateTime <= '%s 23:59:59'
+StudentID like '%%%s%%'
+StudentName
+StudentName LIKE '%%%s%%'
+Sub Bundle Item Desc's
+Sub Bundle Items
+Subsys
+Subsystem
+Subsystem = 1
+Subsystem = 2
+Subsystem = 3
+Subsystem_Table
+Subtracting estimated from estimated is not allowed.
+Sysparam
+Syspargr
+SystemParameters
+SystemParameters_Groups
+t$(RPVQ
+t>;3u/
+Table 
+TagType
+TaxType
+TBL=Buyback_Buyer_Groups;ID=BuyersGroupID;DSP=BuyersGroupDesc
+TBL=Buyback_Buyers;ID=BuyerID;DSP=BuyerLogin;ERR=Buyer
+TBL=Buyback_Session;ID=SessionID;DSP=SessionDesc
+TBL=VW_BB_LIST_PUR;ID=BBPurchaserID;DSP=SessPurDesc
+Term Name
+TermID
+TermName
+TermUsageType
+Textbook
+TextStat
+TextStatus
+The card number must have a length of 8 digits.
+The inventory for location %s needs to be added for SKU %d.
+The ISBN already exists in the system.
+The Remote ID has not been set.
+The selected suspended transaction either does not exist or is not part of the current Buyback Session and cannot be Unsuspended
+The session has been closed.  You will either need to reopen the session or cancel the transaction.
+The string must be all numeric characters
+The Transaction Will be Suspended.  Do you Wish to Continue?
+THIS BOOK HAS NO VALUE!
+This Rental Item includes the following additional information:
+Title LIKE '%
+Title:
+tmDate >= '%s 00:00:00' AND tmDate <= '%s 23:59:59'
+Tradebook
+TradeSt
+TradeStatus
+Transactions
+TranslateMessage
+Translation
+txComment
+u+Pj@h
+Unable to Initialize Buy Back Tender
+Unable to initialize OPOS Printer.
+Unable to redistribute quantities to
+Unlimited
+update BookRouting set RoutingDesc = %s, Priority = %d where BookRoutingId = %d
+update BookRoutingConfig set GroupWholeSalePurchaser = %d, GroupStorePurchaser = %d, DisplayTranSummary = %d, TermUsageType = %d where BookRoutingConfigId = %d
+UPDATE Buyback_Detail SET LocationID = %d WHERE BBDtlID = %d
+UPDATE Buyback_Detail SET LocationID = 0 WHERE BBPurchaserID = %d AND fPostedFlg <> 1 and BBItemID = 0
+UPDATE Buyback_Detail SET LocationID = 0 WHERE BBPurchaserID = %d AND fPostedFlg <> 1 and BBItemID in (Select BBItemID from Buyback_List_Item where SKU = 0)
+UPDATE Buyback_Header SET fImportedFlg = 4
+UPDATE Buyback_List_Detail SET fBuyFlg = 1  WHERE fTmpStatus = 0 AND fAutoCreate = 1 AND BoughtQty > 0 AND BBUID = 
+UPDATE Buyback_List_Detail SET fNew = 0
+UPDATE Buyback_List_Detail SET fTmpStatus = 0 WHERE BBUID = 
+UPDATE Buyback_List_Header SET fNew = 0
+UPDATE Buyback_List_Item SET fNew = 0
+UPDATE Buyback_List_Item SET KeyCode = NULL WHERE KeyCode = '%s'
+UPDATE Buyback_QuickRef SET QRefCode = '%d' WHERE QRefID = %s
+UPDATE Buyback_Session_Purchasers SET CutPer = %.4f WHERE BBPurchaserID = %d
+UPDATE CR_Locations SET PostingOrder = 99999999 WHERE PostingOrder IS NULL
+UPDATE EQFunction SET fAllowUpdates = 0
+UpdateWindow
+User Login Name cannot be set to blanks
+User Name cannot be set to blanks
+USER32.dll
+UUID = ? AND Subsystem = ?
+VarFileInfo
+Vendor
+VendorMaster
+VS_VERSION_INFO
+VW_BB_LIST_PUR
+VW_IFF_BG.
+W$F;s0|
+WarningQty
+WHERE 
+Workstation
+WPBB_ICS
+WPBB_REM
+WPBuyBack
+WPBuyBack DLL
+WPBuyBack Dynamic Link Library
+WPBuyBack.DLL
+WPComm.dll
+WPData.dll
+WPTender.dll
+WPUtility.dll
+You must set the Remote ID in Session Setup before you can buy books.
+You must supply an ID for this Remote Buyback machine

@@ -1,0 +1,24 @@
+﻿?Update@CGXBrowserGrid@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+CTendTotGrid::Update
+SELECT 
+SELECT * FROM POS_Keyboard_Mappings WHERE MappingGroup = %d
+select count(*) from Rental_Setup_POS where NMRPAgencyID = %d or NBCPAgencyID = %d
+SELECT Description FROM POS_Groups WHERE GroupTypeID = 3 and KeyboardCode = '%s'
+select Description from VW_ITM_MASTER where SKU = %d
+SELECT Description FROM VW_TENDER_AUTH where TenderCodeLocID = %ld 
+SELECT fCCFlag FROM Tender_Auth_Types WHERE TenderAuthID = (SELECT TenderAuthID FROM Tender_Codes_Location WHERE TenderCodeLocID = %d)
+select fTaxExempt from Tender_Codes_Location where TenderCodeLocID = %ld
+SELECT GroupID FROM VW_POS_TENDER_LIST WHERE Code = '%s'
+select ISNULL(LTRIM(RTRIM(FirstName)), '') + ' ' + LTRIM(RTRIM(LastName)) from Customer_Table where CustomerID = %d
+SELECT ISNULL(TranLevelID, 0) FROM POS_Register_Access WHERE RegisterID = %d AND UserID = %d
+SELECT KeyboardMappingGroup FROM POS_Registers WHERE RegisterID = %d
+Select Manual Tax Code
+select rtrim(AgencyNumber) + ' / ' + rtrim(Name) from Acct_Agency where AgencyID = %d 
+select TaxCodeID from Acct_Agency_Tax_Codes where AgencyID = %d and fExempt = 1
+Select Tender
+Select Tender for Move Item
+Select Tender Type
+select TranTendorID, rtrim(TenderDesc) + ' ' + rtrim(accountName) from VW_POS_TENDER_TOTALS where TransactionID = %d and TranTendorID <> %d order by TranTendorID
+select TranTendorID, rtrim(TenderDesc) + ' ' + rtrim(accountName) from VW_POS_TENDER_TOTALS where TransactionID = %d order by TranTendorID
+select TranTypeID from Transaction_Header where TransactionID = %d
+update GblComment set ModuleID = %d where HeaderID = %d

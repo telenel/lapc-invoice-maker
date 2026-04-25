@@ -1,0 +1,8 @@
+﻿E_CreateItemsFromStyle
+E_Style_Cascade_Cost_Retail
+E_StyleDetail_Set
+E_StyleTemplate_UpdateItems
+E_StyleTemplateDetail_Add_
+E_StyleTemplateDetail_Delete_
+E_StyleTemplateDetail_Set
+StyleInventoryStatusUpdate

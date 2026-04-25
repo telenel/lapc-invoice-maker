@@ -1,0 +1,65 @@
+# WinPRISM stored procs → binaries that call them
+
+Includes both `EXEC name` references and standalone proc-name strings (which usually indicate ODBC `{call name(?)}` invocations).
+
+- `CatalogGroup` — WPAdmin.exe
+- `CatalogGroupID` — WPAdmin.exe
+- `CatalogGroups` — WPAdmin.exe
+- `CatalogID` — WA_AR.dll, WPAdmin.exe, WinPrism.exe
+- `CatalogItemID` — WinPrism.exe
+- `CatalogProductFamilyID` — WinPrism.exe
+- `CatalogRemoveItem` — WinPrism.exe
+- `Catalogs` — WPAdmin.exe, WinPrism.exe
+- `E_ArtInstructions_Delete` — WPUtility.dll
+- `E_CatalogInventory_SynchLocations` — WinPrism.exe
+- `E_CreateItemsFromStyle` — ItemMnt.dll
+- `E_GraphicComponentType_Delete` — WPUtility.dll
+- `E_GraphicComponent_Delete` — WPUtility.dll
+- `E_LocationGroups_Add` — WPAdmin.exe
+- `E_LocationGroups_AddLocation` — WPAdmin.exe
+- `E_LocationGroups_Delete` — WPAdmin.exe
+- `E_LocationGroups_RemoveLocation` — WPAdmin.exe
+- `E_LocationSelection_SetUserDefault` — WPUtility.dll
+- `E_LocationSelection_Update` — WPUtility.dll
+- `E_StyleDetail_Set` — ItemMnt.dll
+- `E_StyleGraphics_Delete` — WPUtility.dll
+- `E_StyleTemplateDetail_Add_` — ItemMnt.dll
+- `E_StyleTemplateDetail_Delete_` — ItemMnt.dll
+- `E_StyleTemplateDetail_Set` — ItemMnt.dll
+- `E_StyleTemplate_UpdateItems` — ItemMnt.dll
+- `E_Style_Cascade_Cost_Retail` — ItemMnt.dll
+- `EmailBuybackReceipt` — WPBuyBack.dll
+- `InventoryStatusCodes` — WPUtility.dll
+- `LockSettlementReportStatus` — WPPosCmn.dll
+- `MarkDownApplyScheduleTemplate` — WinPrism.exe
+- `MarkDownCreateScheduleConfigDetail` — WinPrism.exe
+- `MediaUnlinkFiles` — WinPrism.exe
+- `NBCPClosePeriod` — WinPrism.exe
+- `NBCUtil_Trace_Status` — WPComm.dll
+- `NBC_Rebate_Crd2` — WPCredit.dll
+- `NMRPCloseAccountSession` — WinPrism.exe
+- `P_GMSize_SortTo` — WPUtility.dll
+- `P_Media_UpdateSortOrder` — WPUtility.dll
+- `P_Rental_Adoption_AddTestData` — WinPrism.exe
+- `P_SettlementStatusSet` — WPComm.dll
+- `P_ShelfLocation_Delete` — WPUtility.dll
+- `RentalAccountID` — WinPrism.exe
+- `RentalHistory` — WPTender.dll
+- `RentalHistoryReturnBuyBack` — WPBuyBack.dll
+- `RentalPID` — WinPrism.exe
+- `RentalPeriod` — WPTender.dll
+- `RentalPeriodName` — WinPrism.exe
+- `RentalSessionID` — WinPrism.exe
+- `RentalTagTypeID` — WinPrism.exe
+- `Rental_Replace_XREF_Validate` — WinPrism.exe
+- `ResendCatalogsToHub` — WinPrism.exe
+- `ResendMagicVendorColorSize` — VendMnt.dll
+- `RoyaltyCost` — ItemMnt.dll
+- `RoyaltyMinimum` — WPData.dll
+- `RoyaltyPercentage` — WPData.dll
+- `RoyaltyUpdateByDccLocationRoyaltySet` — WPAdmin.exe
+- `RoyaltyUpdateByLocationSelection` — WPAdmin.exe
+- `SP_BBEXP_REPORTDATA` — WPBuyBack.dll
+- `SP_BBUpdateSouceData` — WPBuyBack.dll
+- `SP_PO_UpdateArtInstructions` — WinPrism.exe
+- `StyleInventoryStatusUpdate` — ItemMnt.dll

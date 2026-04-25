@@ -1,0 +1,266 @@
+﻿ (SELECT LocationID FROM Buyback_List_Create WHERE BBUID = 
+ AND VW_BB_LIST_ORDDEC_EX.SKU IN (SELECT SKU FROM (
+ OR UsedSKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%%%')))
+(SELECT TermID FROM Buyback_List_Create WHERE BBUID = 
+?Update@CBBPriceTagDtlView@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Update@CBBQRefEditView@@MAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Update@CGXBrowserGrid@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Update@CItemSet@@UAEHXZ
+<Select Tender>
+BBItemID IN (SELECT BBItemID FROM VW_BB_LIST_BARCODE WHERE Barcode LIKE '
+BBPurchaserID IN (SELECT BBPurchaserID FROM VW_BB_LIST_PUR WHERE %s)
+BBPurchaserID IN (SELECT BBPurchaserID FROM VW_BB_LIST_PUR WHERE PurchaserID = 
+BBPurchaserID IN (SELECT BBPurchaserID FROM VW_BB_LIST_PUR WHERE SessionID = 
+BBPurchaserID NOT IN (SELECT BBPurchaserID FROM Buyback_List_Header) AND BuybackStatus = 1 AND (fNBCFlag = 0 OR fNonODList = 1)
+BBReceiptID IN (SELECT BBReceiptID FROM dbo.VW_BBTRANSLISTDETAIL WHERE SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%'))
+BBReceiptID IN (SELECT BBReceiptID FROM VW_BBTRANSLISTDETAIL   WHERE BookKey LIKE '%s%%')
+BBReceiptID IN (SELECT BBReceiptID FROM VW_BBTRANSLISTDETAIL WHERE Author LIKE '%s%%')
+BBReceiptID IN (SELECT BBReceiptID FROM VW_BBTRANSLISTDETAIL WHERE REPLACE(ISBN13, '-','') LIKE '%s%%')
+BBReceiptID IN (SELECT BBReceiptID FROM VW_BBTRANSLISTDETAIL WHERE SKU = %ld)
+BBReceiptID IN (SELECT BBReceiptID FROM VW_BBTRANSLISTDETAIL WHERE Title LIKE '%%%s%%')
+BBUID IN (SELECT BBUID FROM Buyback_List_Detail WHERE %s)
+BBUID IN (SELECT BBUID FROM VW_BB_LIST_DETAIL WHERE BookKey LIKE '%s%%')
+BBUID IN (SELECT BBUID FROM VW_BB_LIST_DETAIL WHERE REPLACE(ISBN13, '-','') LIKE '%s%%')
+BBUID IN (SELECT BBUID FROM VW_BB_LIST_DETAIL WHERE SKU = %ld)
+BBUID IN (SELECT BBUID FROM VW_BB_LIST_DETAIL WHERE SKU IN (%s))
+BBUID IN (SELECT BBUID FROM VW_BB_LIST_DETAIL WHERE SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%'))
+BuyerID IN (SELECT BuyerID FROM Buyback_Workstations WHERE SessionID = %d)
+BuyerID NOT IN (SELECT BuyerID FROM Buyback_Workstations WHERE SessionID = %d)
+DELETE FROM [Buyback_QuickRef] WHERE [QRefID] = %ld
+DELETE FROM [Buyback_QuickRef] WHERE QRefCode = '%s'
+delete from BookRoutingConfigTerm
+DELETE FROM Bundle_Detail
+DELETE FROM Bundle_DetailItem
+DELETE FROM Bundle_Header
+delete from Buyback_Buyer_Groups where BuyersGroupID = %ld
+DELETE FROM Buyback_Buyer_Location WHERE BuyersGroupID = %d
+delete from Buyback_Buyers where BuyerID = %ld
+DELETE FROM Buyback_Errors WHERE SessionID = %d
+DELETE FROM Buyback_InvRec_Checks WHERE BBInvRecID IN (SELECT BBInvRecID FROM Buyback_InvRec_Student WHERE SessionID = %d)
+DELETE FROM Buyback_InvRec_Store WHERE SessionID = %d
+DELETE FROM Buyback_InvRec_Student WHERE SessionID = %d
+DELETE FROM Buyback_List_Create WHERE BBUID IN (SELECT BBUID FROM Buyback_List_Header WHERE BBPurchaserID IN (SELECT BBPurchaserID FROM Buyback_Session_Purchasers WHERE SessionID = %d))
+DELETE FROM Buyback_List_Detail  WHERE fTmpStatus = 0 AND fAutoCreate = 1 AND BoughtQty = 0 AND BBUID = 
+DELETE FROM Buyback_List_Detail WHERE BBDetID = %ld
+DELETE FROM Buyback_List_Detail WHERE BBUID = %d AND BBItemID = %d
+delete from Buyback_List_Header where BBUID = %ld
+DELETE FROM Buyback_List_Item WHERE SessionID = %d
+DELETE FROM Buyback_New_Item WHERE SessionID = %d
+DELETE FROM buyback_pricetagqueue WHERE SessionID = %d
+DELETE FROM buyback_pricetagqueueuser WHERE SessionID = %d
+DELETE FROM Buyback_QuickRef WHERE QRefID = %s
+delete from buyback_session where sessionid = %ld
+DELETE FROM Buyback_Stolen_Books WHERE %s
+delete from buyback_workstations where sessionid = %ld
+DELETE FROM Buyers_Guide_Table
+exec EmailBuybackReceipt %d
+exec RentalHistoryReturnBuyBack %d
+INSERT INTO [Buyback_QuickRef] ([QRefCode], [ISBN], [AltISBN], [BookKey]) SELECT '%s', [ISBN], [AltISBN], [Bookkey] FROM [Buyers_Guide_Table] WHERE [BGID] = %ld
+INSERT INTO [Buyback_QuickRef] ([QRefCode], [SKU], [ISBN], [AltISBN], [BookKey]) SELECT '%s', [SKU], [ISBN], [AltISBN], [Bookkey] FROM [Buyback_List_Item] WHERE [BBItemID] = %ld
+insert into BookRoutingConfigTerm (TermID) values (%d)
+insert into Buyback_Detail(BBReceiptId, Qty, Price, tmDate, RentalHId) values(%d, 0, 0, GetDate(), %d)
+INSERT INTO Buyback_Errors (SessionID, Date, ErrorTypeID, DCCID, LocationID) VALUES (%d, '%s', %d, %d, %d)
+INSERT INTO Buyback_Errors (SessionID, Date, ErrorTypeID, ISBNCat) VALUES (%d, '%s', %d, '%s')
+INSERT INTO Buyback_Errors (SessionID, Date, ErrorTypeID, SKU, LocationID) VALUES (%d, '%s', %d, %d, %d)
+INSERT INTO Buyback_New_Item (SessionID, ISBNCat, SKU, LocationID, DCCID, UsedDCCID, Cost, Retail, fInventoryOnly) VALUES (%d, '%s', %d, %d, %d, %d, CAST( '$%s' AS MONEY ), CAST( '$%s' AS MONEY ), 1 )
+INSERT INTO Buyback_New_Item (SessionID, ISBNCat, SKU, Subsystem, TitleDesc, Author, BindingID, DCCID, UsedDCCID, EdType, CpSize, LocationID, Cost, Retail, fInventoryOnly) VALUES (%d, '%s', %d, %d, '%s', '%s', %d, %d, %d, '%s', '%s', %d, CAST( '$%s' AS MONEY ), CAST( '$%s' AS MONEY ), 0)
+INSERT INTO Buyback_QuickRef (QRefCode, SKU, ISBN, AltISBN, BookKey) VALUES('%s', %ld, '%s', '%s', '%s')
+INSERT INTO Buyback_QuickRef (QRefCode, SKU, ISBN, AltISBN, BookKey) VALUES('%s', 0, '%s', '%s', '%s')
+INSERT INTO Buyback_Session_Location (SessionID, LocationID, WarnPercent, TranWarnQty, TranMaxQty, fPrintReceipts, fPrintPriceTags) VALUES (%d, %d, 90, 3, 3, 0, 0)
+INSERT INTO GeneralMerchandise (SKU, Description, Type, Size, CatalogNumber, Color, MfgID) VALUES (%d, '%s', '%s', '%s', '%s', 0, 0)
+INSERT INTO Inventory (SKU, LocationID, LastSaleDate, LastInventoryDate, Retail, Cost) VALUES (%d, %d, '01/01/1970', '01/01/1970', %s, %s)
+INSERT INTO Inventory (SKU, LocationID, LastSaleDate, LastInventoryDate, TaxTypeID, TagTypeID, Retail, Cost) VALUES (%d, %d, '01/01/1970', '01/01/1970', %d, %d, %s, %s)
+INSERT INTO Item (SKU, DCCID, VendorID, Subsystem, TypeID, UUID) VALUES (%d, %d, 0, %d, %d, %d)
+Please Select a Tender.
+SELECT * FROM 
+SELECT * FROM Buyback_Detail
+SELECT * FROM Buyback_Detail WHERE BBDTLID = 0
+SELECT * FROM Buyback_Header WHERE BBReceiptID = 0
+SELECT * FROM Buyback_List_Detail WHERE BBDetID = 0
+SELECT * FROM Buyback_List_Header WHERE BBUID = 0
+SELECT * FROM Buyback_List_item WHERE BBItemID = 0
+SELECT * FROM Buyback_List_item WHERE SessionID = %d AND fNew = 1
+SELECT * FROM Buyback_New_item WHERE BBNewID = 0
+SELECT * FROM Buyback_New_item WHERE SessionID = %d
+SELECT * FROM Buyback_Stolen_Books
+SELECT * FROM Buyback_Stolen_Books WHERE StolenBookID = 0
+SELECT * FROM dbo.
+SELECT * FROM dbo.Item WHERE SKU = 0
+SELECT * FROM dbo.ItemMaster WHERE ITMUID = 0
+SELECT * FROM Sequence WHERE SequenceTypeID = 21
+SELECT * FROM VW_BB_CLOSE_POST_CHK WHERE SessionID = %d
+select * from VW_BBSESSIONLOCLIST
+SELECT [Author],[Title],[AltISBN] FROM [Buyback_List_Item] Where [BBItemID]=%d
+SELECT [Author],[Title],[AltISBN] FROM [Buyers_Guide_Table] Where [BGID]=%d
+SELECT Abbreviation FROM Binding WHERE BindingID = %d
+SELECT Abbreviation FROM Binding WHERE Name = '
+select abpercent, newpercent, usedpercent from Buyers_Guide_Vendor_Commission where bgvendorid = %ld
+SELECT AltISBN FROM Buyback_QuickRef WHERE QRefCode = '%s'
+SELECT AltISBN, Author, Binding, Copyright, Edition, Title, Imprint, Type, Bookkey FROM Buyers_Guide_Table WHERE AltISBN = '%s' AND Bookkey LIKE '%s%%'
+SELECT AltISBN, Author, Binding, Copyright, Edition, Title, Imprint, Type, Bookkey FROM Buyers_Guide_Table WHERE BGID = %d
+SELECT Author, Title FROM Buyback_List_Item WHERE SKU = %ld AND AltISBN = '%s'
+SELECT Author, Title FROM Buyers_Guide_Table WHERE AltISBN = '%s' AND BookKey = '%s'
+select b.BuyerId, b.BuyerName from Buyback_Buyers b inner join Buyback_WorkStations w on w.BuyerId = b.BuyerId where w.SessionId = %d
+SELECT Barcode FROM Item WHERE SKU = %d
+select BBCUID from Buyback_Workstations where BuyerID = %ld
+SELECT BBDetID FROM VW_BB_BUY_PUR WHERE BBItemID = %d AND BBPurchaserID = %d AND LocationID = %d
+SELECT BBDTLID, ISBN, BookKey FROM Buyback_Detail  WHERE BBPurchaserID = %d AND fPostedFlg <> 1 AND BBItemID = 0 and LocationID = 0union SELECT BBDTLID, Buyback_List_Item.ISBN, Buyback_List_Item.BookKey FROM Buyback_Detail inner join Buyback_List_Item on Buyback_Detail.BBItemID = Buyback_List_Item.BBItemID  WHERE BBPurchaserID = %d AND fPostedFlg <> 1 AND Buyback_List_Item.SKU = 0 And Buyback_List_Item.BBItemID > 0 and LocationID = 0ORDER BY BookKey, ISBN 
+SELECT BBErrorID FROM Buyback_Errors ORDER BY BBErrorID DESC
+SELECT BBItemID From Buyback_Detail WHERE BBDTLID = %d
+SELECT BBItemID, Author, Title, ISBN  FROM VW_BB_DCC_SRCH WHERE 
+SELECT BBItemID, InstructorName, Author, Title, ISBN  FROM VW_BB_INSTRUCTOR_SRCH WHERE InstructorName LIKE '
+SELECT BBItemID, ISBN, Title  FROM VW_BB_GM_SRCH WHERE ISBN LIKE '
+SELECT BBItemID, ISBN, Title  FROM VW_BB_GM_SRCH WHERE Title LIKE '%
+SELECT BBItemID, TermName, DeptName, CourseName, Author, Title, ISBN  FROM VW_BB_COURSE_SRCH WHERE 
+SELECT BBItemID, VendorCode, Name, Author, Title, ISBN  FROM VW_BB_VENDOR_SRCH WHERE VendorCode = '
+SELECT BBPurchaserID FROM Buyback_List_Header WHERE BBUID = %s
+SELECT BBPurchaserID, PurchaserDesc FROM VW_BB_LIST_PUR WHERE SessionID = %d AND (fNBCFlag = 0 OR fNonODList = 1)
+SELECT BBPurchaserID, PurchaserDesc FROM VW_BB_LIST_PUR WHERE SessionID = %d AND fNBCFlag = 0
+SELECT BBPurchaserID, PurchaserDesc, Priority, BGVendorID FROM VW_BB_LIST_PUR WHERE SessionID = %d AND fNBCFlag = 1 AND fNonODList = 0 ORDER BY Priority
+select BBReceiptID from Buyback_Header where BBReceiptID = %ld
+SELECT BBReceiptID FROM Buyback_Header WHERE ReceiptNumber = '%s' AND fSuspended = 1
+SELECT BBReceiptID FROM Buyback_Header WHERE ReceiptNumber like '%s'
+SELECT BBUID From Buyback_List_Header WHERE BBPurchaserID = %d
+SELECT BGVendorID FROM VW_BB_LIST_PUR WHERE BBPurchaserID = %d
+SELECT BGVendorId, VendorName FROM Buyers_Guide_Vendors
+SELECT BGVendorID, VendorName FROM Buyers_Guide_Vendors WHERE BGVendorID <> 2
+SELECT BindingID FROM Binding WHERE Abbreviation = '%s'
+SELECT BindingID, Name FROM Binding
+SELECT Bookkey FROM Buyers_Guide_Table WHERE BGVendorID = 1 AND BGID = 
+select BookRoutingConfigId, GroupWholeSalePurchaser, GroupStorePurchaser, DisplayTranSummary, TermUsageType from BookRoutingConfig
+select bsp.BBPurchaserId, bsp.CutPer, bp.PurchaserDesc from Buyback_Session_Purchasers bsp inner join Buyback_Purchaser bp on bsp.PurchaserId = bp.PurchaserId where SessionId = %d order by bsp.Priority
+SELECT Buyback_List_Header.BBUID, BBListDesc, SessionDesc, PurchaserDesc, BuybackStatus FROM Buyback_List_Header INNER JOIN Buyback_Session_Purchasers ON Buyback_List_Header.BBPurchaserID = Buyback_Session_Purchasers.BBPurchaserID INNER JOIN Buyback_Purchaser ON Buyback_Session_Purchasers.PurchaserID = Buyback_Purchaser.PurchaserID INNER JOIN Buyback_Session ON Buyback_Session_Purchasers.SessionID = Buyback_Session.SessionID WHERE Buyback_Purchaser.fNonODList = 1 AND Buyback_Purchaser.fDeleted = 0
+select Buyback_Session_Location.LocationID from Buyback_List_Header inner join Buyback_Session_Purchasers on Buyback_Session_Purchasers.BBPurchaserID = Buyback_List_Header.BBPurchaserID inner join Buyback_Session_Location on Buyback_Session_Location.SessionID = Buyback_Session_Purchasers.SessionID where Buyback_List_Header.BBUID = %d order by Buyback_Session_Location.LocationID
+select BuyerID from Buyback_Buyers where BuyersGroupID = %ld
+SELECT BuyersGroupDesc FROM Buyback_Buyer_Groups WHERE BuyersGroupID = %d
+SELECT Buyprice FROM buyers_guide_adopted WHERE BGVendorID = 1 AND SKU = 
+SELECT BuyPrice FROM Buyers_Guide_Table WHERE BGVendorID = 1 AND BGID = 
+SELECT Buyprice FROM Buyers_Guide_Table WHERE BGVendorID = 1 AND ISBN = '
+select cast(LocationId as int), ShortDescription from Location
+SELECT CatalogNumber, Description, Type, Size FROM GeneralMerchandise WHERE SKU = %d
+SELECT CatISBN FROM VW_ITM_MASTER WHERE SKU = 
+SELECT ConditionID, Name FROM Buyback_Condition
+select convert(char(10),verdate,101) from Buyers_guide_vendors where BGVendorID = 1
+SELECT Cost, Retail FROM Inventory WHERE LocationID = %d AND SKU = %d
+select count(*) from BookRouting where len(isnull(rtrim(RoutingDesc), '')) > 0
+SELECT Count(*) FROM Buyback_Detail WHERE BBPurchaserID = %d AND fPostedFlg <> 1
+SELECT Count(*) FROM Buyback_Detail WHERE BBReceiptID = %d
+select count(*) from buyback_header where BBCUID in (select bbcuid from buyback_workstations where sessionid = %ld)
+SELECT count(*) FROM Buyback_List_Detail Inner Join Buyback_Detail ON Buyback_Detail.BBItemID = Buyback_List_Detail.BBItemID WHERE Buyback_List_Detail.BBUID = %d AND Buyback_List_Detail.BBItemID = %d
+SELECT Count(*) FROM Buyback_Purchaser INNER JOIN Buyback_Session_Purchasers ON Buyback_Purchaser.PurchaserID = Buyback_Session_Purchasers.PurchaserID INNER JOIN Buyback_Session ON Buyback_Session_Purchasers.SessionID = Buyback_Session.SessionID WHERE Buyback_Purchaser.PurchaserID = %d
+SELECT COUNT(*) FROM Buyback_QuickRef WHERE QRefCode = '%s'
+SELECT COUNT(*) FROM Buyback_QuickRef WHERE QRefCode = '%s' and QRefID != %s
+SELECT Count(*) FROM Buyback_Session
+SELECT Count(*) FROM Buyback_Session_Location WHERE SessionID = %d AND LocationID = %d
+SELECT Count(*) FROM Buyback_Session_Location WHERE SessionID = %d AND LocationID IN (SELECT LocationID FROM VW_BB_SESSION_LOC WHERE BuybackStatus = 1)
+SELECT Count(*) FROM Buyback_Session_Purchasers WHERE SessionID = %d
+SELECT COUNT(*) FROM Buyback_Stolen_Books WHERE ISBN LIKE '%s'
+SELECT COUNT(*) FROM Buyback_Stolen_Books WHERE SKU = %d
+SELECT Count(*) FROM Buyers_Guide_Table
+SELECT Count(*) FROM ItemMaster WHERE CatISBN = '%s'
+SELECT Count(*) FROM ItemMaster WHERE Subsystem = %d AND CatISBN LIKE '%s'
+SELECT Count(*) FROM Location
+select count(*) from SystemParameters where GroupingId = 12026 and ParamName = 'BuyBackRentals' and ParamValue = 1
+SELECT Count(*) FROM VendorMaster WHERE VendorID = 0
+SELECT CurrencyExID, CurrDescr FROM Currency_Exchange
+SELECT CutPer FROM Buyback_Session_Purchasers WHERE BBPurchaserID = %d
+SELECT DeptID FROM CR_Department WHERE DeptName = '%s'
+SELECT Description FROM VW_BB_BUYER_LOC WHERE BuyersGroupID = %d ORDER BY Priority
+Select Detail Item
+SELECT Discount FROM Buyers_Guide_Table WHERE BGVendorID = 1 AND BGID = 
+SELECT DISTINCT [BBItemID], [Author], [Title], [ISBN] FROM [VW_BB_QREF_NONE]
+SELECT DISTINCT [QRefID], [BG], [BL], [KeyCode], [Author], [Title], [ISBN], [BGVendor] FROM [VW_BB_QREF]
+select distinct buyerlocid, buyerlocdesc from vw_bbbuyersessionlocation where buyerid = %ld and sessionid = %ld
+select distinct ct.TermID, ct.TermName from CR_Term ct join CR_Locations cl on cl.TermID = ct.TermID where cl.fOpenFlg = 1 order by ct.TermName desc
+select distinct Cust.CustomerId from Customer_Table Cust inner join Acct_Memb_Acct_Cust MCust on MCust.CustomerId = Cust.CustomerId where AccountNumber like '%s'
+select distinct isnull(AdditionalInfo,'') from Rental_History rh inner join Rental_Detail rd on rd.RentalDId = rh.RentalDId join Rental_Header_Item_Period rhip on rh.RentalPId = rhip.RentalPId and rd.RentalHIId = rhip.RentalHIId where rhip.AdditionalInfo is not null and rh.RentalHId = %d
+select distinct PurchaserLocID,PurchaserID,PurchaserLocDesc,PurchaserDesc from VW_BBPRICETAGQUEUE
+select distinct sessionid, sessiondesc from vw_bbbuyersessionlocation where buyerid = %ld
+SELECT DISTINCT VW_BB_LIST_ORDDEC_EX.SKU, VW_BB_LIST_ORDDEC_EX.LocationID, VW_BB_LIST_ORDDEC_EX.TermID, VW_BB_LIST_ORDDEC_EX.Retail, VW_BB_LIST_ORDDEC_EX.Qtp, VW_BB_LIST_ORDDEC_EX.EstBB, VW_BB_LIST_ORDDEC_EX.MaxBB, VW_BB_LIST_ORDDEC_EX.fWksStatusFlg, VW_BB_LIST_ORDDEC_EX.OrderShort, VW_BB_LIST_ORDDEC_EX.Allocated, VW_BB_LIST_ORDDEC_EX.ActBB, VW_BB_LIST_ORDDEC_EX.OnOrder, VW_BB_LIST_ORDDEC_EX.Received, VW_BB_LIST_ORDDEC_EX.txBuybackComment FROM VW_BB_LIST_ORDDEC_EX LEFT JOIN (SELECT BBUID, BBDetID, SKU from Buyback_List_detail bld inner join Buyback_List_Item bli on bli.BBItemID = bld.BBItemID  WHERE BBUID = 
+SELECT fNBCFlag FROM VW_BB_LIST_PUR WHERE BBPurchaserID = %d
+SELECT fNonODList FROM VW_BB_LIST_PUR WHERE BBPurchaserID = %d
+SELECT GMUID FROM GeneralMerchandise WHERE SKU = %d
+select idx,Description from vw_bb_print_choices
+SELECT im.ISBN13, tx.Author, tx.BindingID, tx.Copyright, tx.Edition, tx.Title, tx.Imprint, tx.Type, tx.Bookkey FROM Textbook tx inner join ItemMaster im on tx.txuid = im.uuid and im.subsystem = 2 WHERE tx.SKU = %d
+SELECT ImpMfg FROM VW_ITM_MASTER WHERE SKU = %d
+SELECT ISBN FROM Buyers_Guide_Table WHERE BGVendorID = 1 AND BGID = 
+SELECT ISBN, BookKey, Author, Title, Imprint, Binding, Edition, Copyright, txComment, AltISBN FROM Buyers_Guide_Table WHERE BGID = 
+SELECT ISBN, Title, Author, Binding, Edition, Copyright, BookKey, Imprint FROM Buyers_Guide_Table WHERE BGID = %d
+SELECT ISBN, Title, Author, BindingID, Edition, Copyright FROM Tradebook WHERE SKU = %d
+SELECT ISBN, Title, Author, BindingID, UsedSKU, Edition, Copyright FROM Textbook WHERE SKU = %d
+Select Item
+SELECT ListPrice FROM Buyers_Guide_Table WHERE BGVendorID = 1 AND BGID = 
+SELECT LocationID FROM Buyback_Buyer_Location WHERE BuyersGroupID = %d ORDER BY Priority
+SELECT LocationID FROM Location 
+SELECT LocationID FROM VW_BB_BUY_LOC_PRIOR WHERE BuyerID = %d ORDER BY Priority
+SELECT LocationID, Description FROM Location
+SELECT LocationID, Description FROM Location 
+SELECT LocationID, Description FROM Location where %s
+SELECT LocationID, Description FROM Location WHERE LocationID NOT IN (SELECT LocationID From VW_BB_SESSION_LOC Where BuybackStatus = 1) AND %s
+select LocationId, 'dummy' from Buyback_Session_Location bsl inner join Tender_Codes_Location tcl on bsl.LocationId = (tcl.POSID & 0x0000ffff) and (tcl.POSID & 0xffff0000) = 0x71000000 where SessionId = %d
+SELECT LocationID, ISBN, BookKey FROM Buyback_Detail  WHERE BBPurchaserID = %d AND fPostedFlg <> 1 AND BBItemID = 0 and LocationID > 0union SELECT LocationID, Buyback_List_Item.ISBN, Buyback_List_Item.BookKey FROM Buyback_Detail inner join Buyback_List_Item on Buyback_Detail.BBItemID = Buyback_List_Item.BBItemID  WHERE BBPurchaserID = %d AND fPostedFlg <> 1 AND Buyback_List_Item.SKU = 0 And Buyback_List_Item.BBItemID > 0 and LocationID > 0ORDER BY LocationID 
+SELECT max(BuyersGroupID) from Buyback_Buyer_Groups
+SELECT Max(item.SKU) FROM buyback_detail Detail inner join Buyback_List_Item item on Detail.BBItemID = item.BBItemID inner join Buyback_Session BBSession on BBSession.SessionID = Item.SessionID where item.SKU not in (SELECT inv.SKU FROM Inventory inv where inv.LocationID = BBSession.WholeSaleLocID) and item.SessionID = %d and detail.BBPurchaserID = %d 
+select max(Priority) from Buyback_Session_Purchasers where SessionId = %d
+select od.sku from bundle_detailItem bdi inner join order_decisions od on od.bundid = bdi.bundid where bdi.sku = %d
+select ParamValue from SystemParameters where ParamType = 148
+SELECT prism.dbo.fnGetNewSku(%d)
+Select PurchaserDesc FROM Buyback_Purchaser WHERE PurchaserID = %d
+Select PurchaserID From Buyback_Purchaser Where PurchaserDesc = '%s' AND fDeleted = 0
+Select PurchaserID From Buyback_Purchaser Where PurchaserDesc = '%s' AND fDeleted = 1
+SELECT PurchaserID From Buyback_Session_Purchasers WHERE BBPurchaserID = %d
+SELECT ReceiptNumber FROM Buyback_Header WHERE BBReceiptID = %d
+SELECT SessionID FROM Buyback_Workstations WHERE BBCUID = %d
+SELECT SessionID FROM VW_BB_LIST_PUR WHERE BBPurchaserID = %d
+SELECT SKU From Buyback_List_Item WHERE BBItemID = %d
+SELECT SKU, ISBN, AltISBN, Bookkey FROM Buyback_QuickRef WHERE QRefCode = '%s'
+SELECT StatusID, StatusDesc FROM Status_Codes WHERE ModuleID = %d
+SELECT StolenBookID, StudentName, case when t.sku is not null then t.Title else bg.Title end as Title FROM Buyback_Stolen_Books sb left outer join textbook t on sb.SkU = t.sku  left outer join Buyers_Guide_table bg on sb.ISBN = bg.AltISBN and sb.Bookkey = bg.bookkey and bg.bgvendorid = 1 WHERE sb.ISBN = '%s'
+SELECT StoreMoneyFlag FROM Buyback_Session WHERE SessionID = %d
+SELECT StoreStudentFlag FROM Buyback_Session where SessionID = %d
+Select Subsystem from item where sku = %ld
+SELECT Sum(Price * Qty) FROM Buyback_Detail WHERE BBReceiptID = %d
+SELECT SUM(Qty * Price) FROM VW_BB_BUY_TOTAL WHERE BBItemID = 0 AND SessionID = %d
+SELECT SUM(Qty * Price) FROM VW_BB_BUY_TOTAL WHERE BBItemID > 0 AND SessionID = %d
+SELECT Sum(Qty) FROM Buyback_Detail WHERE %s AND BBReceiptID = %d
+SELECT Sum(Qty) FROM Buyback_Detail WHERE BBReceiptID = %d
+SELECT Sum(Qty) FROM VW_BB_BUY_TOTAL WHERE (AltISBN = '%s' or ISBN = '%s') AND Bookkey = '%s' AND SessionID = %d AND BBPurchaserID = %d
+SELECT SUM(Qty) FROM VW_BB_BUY_TOTAL WHERE BBItemID = 0 AND SessionID = %d
+SELECT SUM(Qty) FROM VW_BB_BUY_TOTAL WHERE BBItemID > 0 AND SessionID = %d
+select TermID from BookRoutingConfigTerm
+SELECT TOP 1 BuyersGroupID FROM Buyback_Buyer_Groups ORDER BY BuyersGroupID DESC
+select top 1 FirstName, LastName, a.Phone1 from Customer_Table c left outer join Customer_Address a on c.CustomerId = a.CustomerId where AccountNumber like '%s' and a.fDefault = 1
+SELECT TOP 1 StolenBookID FROM Buyback_Stolen_Books WHERE SKU = %d AND BookKey = '%s' ORDER BY StolenBookID DESC
+SELECT TOP 1 StolenBookID FROM Buyback_Stolen_Books WHERE SKU = %d AND ISBN = '%s' AND BookKey = '%s' ORDER BY StolenBookID DESC
+SELECT TypeID, Author, Title, Abbr, Adopted, 
+SELECT TypeID, Author, Title, Abbr, Adopted, BuyPrice, ISBN, Imprint, Binding, Edition, Copyright, BBItemID FROM VW_BB_ITEM_BUY_LIST WHERE 
+select VendorID FROM Buyers_Guide_Vendors WHERE BGVendorID = %d
+SELECT VW_ITM_MASTER.Subsystem, CatISBN, Description, VW_ITM_MASTER.BarCode, ImpMfg, BdType, LEFT(EdColor,2), LEFT(CpSize,2), VW_ITM_MASTER.TypeID, VW_ITM_MASTER.txComment, ISBN13, VW_ITM_MASTER.bookkey FROM VW_ITM_MASTER inner join Item on VW_ITM_MASTER.SKU = Item.SKU WHERE VW_ITM_MASTER.SKU = 
+SELECT WholeSaleLocID FROM Buyback_Session WHERE SessionID = %d
+SessionID in (select SessionID from Buyback_Session  where BuybackStatus = 1)
+SessionID IN (SELECT SessionID FROM Buyback_Session_Location WHERE LocationID = 
+SessionID IN (SELECT SessionID FROM Buyback_Session_Purchasers WHERE PurchaserID = 
+SessionID IN (SELECT SessionID FROM Buyback_Workstations WHERE BuyerID = 
+SKU in (SELECT SKU FROM Buyback_QuickRef WHERE QRefCode = '%s')
+StolenBookID IN (SELECT BSB.StolenBookID FROM Buyback_Stolen_Books BSB INNER JOIN Textbook TB ON TB.SKU = BSB.SKU WHERE (BSB.SKU IN (SELECT SKU FROM VW_ITM_BARCODE WHERE Barcode like '%s%%')
+StolenBookID IN (SELECT BSB.StolenBookID FROM Buyback_Stolen_Books BSB INNER JOIN Textbook TB ON TB.SKU = BSB.SKU WHERE BSB.SKU = %ld
+StolenBookID IN (SELECT BSB.StolenBookID FROM Buyback_Stolen_Books BSB INNER JOIN Textbook TB ON TB.SKU = BSB.SKU WHERE TB.Author LIKE '%s%%')
+StolenBookID IN (SELECT BSB.StolenBookID FROM Buyback_Stolen_Books BSB INNER JOIN Textbook TB ON TB.SKU = BSB.SKU WHERE TB.Title LIKE '%%%s%%')
+StolenBookID IN (SELECT StolenBookID FROM Buyback_Stolen_Books INNER JOIN VW_ITM_MASTER ON VW_ITM_MASTER.SKU = Buyback_Stolen_Books.SKU AND VW_ITM_MASTER.Bookkey = Buyback_Stolen_Books.BookKey WHERE REPLACE(ISBN13, '-','') LIKE '%s%%')
+StolenBookID IN (SELECT StolenBookID FROM Buyback_Stolen_Books WHERE BookKey LIKE '%s%%')
+update BookRouting set RoutingDesc = %s, Priority = %d where BookRoutingId = %d
+update BookRoutingConfig set GroupWholeSalePurchaser = %d, GroupStorePurchaser = %d, DisplayTranSummary = %d, TermUsageType = %d where BookRoutingConfigId = %d
+UPDATE Buyback_Detail SET LocationID = %d WHERE BBDtlID = %d
+UPDATE Buyback_Detail SET LocationID = 0 WHERE BBPurchaserID = %d AND fPostedFlg <> 1 and BBItemID = 0
+UPDATE Buyback_Detail SET LocationID = 0 WHERE BBPurchaserID = %d AND fPostedFlg <> 1 and BBItemID in (Select BBItemID from Buyback_List_Item where SKU = 0)
+UPDATE Buyback_Header SET fImportedFlg = 4
+UPDATE Buyback_List_Detail SET fBuyFlg = 1  WHERE fTmpStatus = 0 AND fAutoCreate = 1 AND BoughtQty > 0 AND BBUID = 
+UPDATE Buyback_List_Detail SET fNew = 0
+UPDATE Buyback_List_Detail SET fTmpStatus = 0 WHERE BBUID = 
+UPDATE Buyback_List_Header SET fNew = 0
+UPDATE Buyback_List_Item SET fNew = 0
+UPDATE Buyback_List_Item SET KeyCode = NULL WHERE KeyCode = '%s'
+UPDATE Buyback_QuickRef SET QRefCode = '%d' WHERE QRefID = %s
+UPDATE Buyback_Session_Purchasers SET CutPer = %.4f WHERE BBPurchaserID = %d
+UPDATE CR_Locations SET PostingOrder = 99999999 WHERE PostingOrder IS NULL
+UPDATE EQFunction SET fAllowUpdates = 0

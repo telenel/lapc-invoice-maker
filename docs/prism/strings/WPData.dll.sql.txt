@@ -1,0 +1,7 @@
+﻿?Update@CCampusMntSet@@UAEHXZ
+?Update@CCRLocationsDtlSet@@UAEHXZ
+?Update@CDccLocationRoyaltySet@@UAEHXZ
+?Update@CInstructorsDtlSet@@UAEHXZ
+?Update@CItemSet@@UAEHXZ
+?Update@CVendISBNSet@@UAEHXZ
+update DccLocationRoyaltySet_vw set 

@@ -1,0 +1,2111 @@
+﻿ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~
+ 1997-2015
+ FROM 
+ WHERE %s = %ld
+ WHERE UPPER(%s) = '%s'
+!This program cannot be run in DOS mode.
+$%4.2f
+$%9.02lf
+$%9.2lf
+$%s.%s
+%b %d, %Y
+%s (%s:%d)
+&060O0U0h0n0t0
+&Account Sale
+&Close
+&Move Selected to Another Tender
+&Remove Selected Items From Tender
+&Show Item Detail
+($%4.2f)
+($%s.%s)
+,00040@0D0P0T0\0`0
+,Change due is not permitted for this tender. Change due exceeds tender limit.
+.?AV?$CArray@JJ@@
+.?AV?$CArray@NN@@
+.?AV?$CArray@PAVCDetailItemObj@@PAV1@@@
+.?AV?$CArray@PAVCItemTaxObj@@PAV1@@@
+.?AV?$CArray@PAVCTenderItemObj@@PAV1@@@
+.?AV?$CArray@PAVCTenderObj@@PAV1@@@
+.?AV?$CMap@IAAIVCPosKbdMapItem@@AAV1@@@
+.?AV?$CMap@JJJJ@@
+.?AV?$CMap@U?$pair@JJ@std@@AAU12@VCTaxTotalObj@@AAV3@@@
+.?AV?$CPos_Curr_Edit@VCGXCurrencyEdit@@@@
+.?AVCButton@@
+.?AVCCmdTarget@@
+.?AVCColoredTextMessageBox@@
+.?AVCComboBox@@
+.?AVCComboInfo@@
+.?AVCDetailItemObj@@
+.?AVCDialog@@
+.?AVCEdit@@
+.?AVCFindBy@@
+.?AVCFindResultsDlgBase@@
+.?AVCFindResultsGridBase@@
+.?AVCFont@@
+.?AVCG3LightDialog@@
+.?AVCG3POSCurrencyEdit@@
+.?AVCG3XComboBox@@
+.?AVCGdiObject@@
+.?AVCGridBrowseEditBase@@
+.?AVCGridTendBrowseEdit@@
+.?AVCGXBCurrencyEdit@@
+.?AVCGXBDropEdit@@
+.?AVCGXBrowserGrid@@
+.?AVCGXControl@@
+.?AVCGXCurrencyEdit@@
+.?AVCGXEditControl@@
+.?AVCGXGridCore@@
+.?AVCGXODBCGrid@@
+.?AVCGXRecordWnd@@
+.?AVCGXStatic@@
+.?AVCItemTaxObj@@
+.?AVCListBox@@
+.?AVCListCtrl@@
+.?AVCManTaxCodeDlg@@
+.?AVCNonMerchDlg@@
+.?AVCObject@@
+.?AVCPOSBadCheckPromptDlg@@
+.?AVCPOSComboBoxDlgBase@@
+.?AVCPosKbdMapItem@@
+.?AVCPosKeyboardMapping@@
+.?AVCPOSTenderDlg@@
+.?AVCRecordset@@
+.?AVCRentalCustOutstandingDlg@@
+.?AVCRentalCustOutstandingGrid@@
+.?AVCRentalCustOutstandingSet@@
+.?AVCRentalDlgMultiPeriods@@
+.?AVCRentalDlgSellMultiPeriods@@
+.?AVCRentalPeriodListCtrl@@
+.?AVCRentalReturnItem@@
+.?AVCRequestNumDlg@@
+.?AVCSecureTerminalDlg@@
+.?AVCTabbedComboBox@@
+.?AVCTenderItemObj@@
+.?AVCTenderObj@@
+.?AVCTendSelectDlg@@
+.?AVCTendTotDetailDlg@@
+.?AVCTendTotDetailGrid@@
+.?AVCTendTotDetailSet@@
+.?AVCTendTotDlg@@
+.?AVCTendTotGrid@@
+.?AVCTendTotSet@@
+.?AVCWnd@@
+.?AVFormat@SECCurrencyEdit@@
+.?AVSECCurrencyEdit@@
+.?AVSECDropEdit@@
+.?AVtype_info@@
+.PAVCDBException@@
+.PAVCException@@
+/D$8v%
+: :$:(:,:0:4:
+: :$:(:,:0:4:8:<:@:D:H:L:P:T:X:\:`:d:h:l:p:t:x:|:
+: :&:,:2:8:>:D:J:P:V:\:b:h:n:t:z:
+: :&:8:R:d:m:{:
+: :(:0:8:D:d:l:x:
+:":;:U:d:s:|:
+:":6:F:_:e:x:~:
+:$:*:0:6:<:B:H:N:T:Z:`:f:l:r:x:~:
+:$:4:::@:O:b:
+:$:4:<:H:h:p:|:
+:$:5:>:T:e:n:
+:%:.:D:U:^:t:
+:%:D:J:]:c:i:{:
+:&:>:J:Z:w:~:
+:):/:5:G:V:o:{:
+:):5:E:N:
+:*:1:K:k:w:
+:,:2:F:R:X:r:{:
+:/:5:;:N:h:s:
+:':P:Y:q:z:
+:-;B;R;[;d;m;y;
+:+:F:U:s:y:
+:+;F;W;p;v;
+:0:4:8:L:\:`:p:t:x:
+:0:8:@:H:P:X:`:l:
+:1:G:x:
+:4:V:h:
+:5:=:u:
+:6:B:a:v:
+:F:U:l:r:
+:F:W:p:v:
+; ;$;(;,;0;4;
+; ;$;(;,;0;4;8;<;@;D;H;L;P;T;X;\;`;d;h;l;p;t;x;|;
+; ;&;,;2;8;>;D;J;P;V;\;b;h;n;t;z;
+; ;4;D;H;L;d;h;l;
+;";(;.;4;:;@;F;L;R;X;^;d;j;p;v;|;
+;";.;7;C;O;[;g;s;
+;";6;B;H;b;k;
+;";6;F;_;e;x;~;
+;#;);/;A;Q;a;f;y;
+;#;);<;B;H;W;f;l;
+;#;6;F;T;h;z;
+;#;v;|;
+;$;,;4;<;D;L;T;\;l;t;
+;$;0;<;H;T;p;
+;%;-;<;T;v;
+;%;5;V;g;
+;%;A;M;a;q;
+;&;,;A;G;M;`;
+;&;8;?;S;_;n;u;
+;&;E;N;f;x;
+;&<,<A<G<M<`<
+;*;T;[;q;v;
+;,;H;X;
+;.;Y;k;y;
+;';-;=;C;I;X;i;r;
+;';>;U;d;s;
+;-;3;9;K;
+;';I;k;
+;\=`=d=h=l=p=t=x=|=
+;+<F<W<n<
+;=;o;v;
+;5;C;I;];
+;8;@;L;l;t;
+;8;@;T;`;h;
+;F u{S
+;L<P<d<h<x<|<
+? ?$?(?,?0?4?8?<?@?D?H?L?P?T?X?\?`?d?h?l?p?t?x?|?
+? ?&?9???E?W?
+? ?8?<?T?X?p?t?
+?!?*?7?x?~?
+?"?(?.?4?:?@?F?L?R?X?^?d?j?p?v?|?
+?"?+?4?=?Q?Z?q?}?
+?"?+?V?k?
+?"?2?8?>?M?]?
+?"?3?C?Y?h?
+?#?1?=?I?\?
+?#?8?K?a?
+?$?0?8?P?X?h?x?
+?$?3?9?I?O?U?d?m?v?
+?%?,???W?
+?%?+?1?@?I?
+?%?7?_?y?
+?(?4?=?X?]?
+?(?L?l?t?|?
+?,?<?L?P?T?l?p?t?x?|?
+?,?E?N?n?
+?/?V?f?
+?'?,?@?\?}?
+?'?-?=?C?I?X?z?
+??_7CColoredTextMessageBox@@6B@
+??_7CFindBy@@6B@
+??_7CFindResultsDlgBase@@6B@
+??_7CFindResultsGridBase@@6BCGXODBCGrid@@@
+??_7CFindResultsGridBase@@6BCWnd@@@
+??_7CG3POSCurrencyEdit@@6B@
+??_7CG3XComboBox@@6B@
+??_7CNonMerchDlg@@6B@
+??_7CPOSComboBoxDlgBase@@6B@
+??_7CPosKeyboardMapping@@6B@
+??_7CPOSTenderDlg@@6B@
+??_7CRentalCustOutstandingDlg@@6B@
+??_7CRentalDlgMultiPeriods@@6B@
+??_7CRentalDlgSellMultiPeriods@@6B@
+??_7CRentalReturnItem@@6B@
+??_7CSecureTerminalDlg@@6B@
+??_7CTendTotDlg@@6B@
+??_FCSecureTerminalDlg@@QAEXXZ
+??0CColoredTextMessageBox@@QAE@ABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@KW4ColoredMessageBoxType@@0PAVCWnd@@@Z
+??0CFindBy@@QAE@ABV0@@Z
+??0CFindBy@@QAE@XZ
+??0CFindResultsDlgBase@@QAE@HPAVCWnd@@@Z
+??0CFindResultsGridBase@@QAE@H@Z
+??0CG3CreditCardInfoDialog@@QAE@H_NHHHHPAVCWnd@@@Z
+??0CG3Crypto@@QAE@PAVCG3Database@@@Z
+??0CG3DateTime@@QAE@XZ
+??0CG3LightDialog@@QAE@IPAVCWnd@@@Z
+??0CG3POSCurrencyEdit@@QAE@XZ
+??0CG3PrismUserSet@@QAE@PAVCDatabase@@@Z
+??0CG3XComboBox@@QAE@XZ
+??0CGXBitmapButtonChild@@QAE@PAVCGXControl@@@Z
+??0CGXBrush@@QAE@XZ
+??0CGXCurrencyEdit@@QAE@PAVCGXGridCore@@I@Z
+??0CGXDynamicRecordset@@QAE@PAVCDatabase@@@Z
+??0CGXEditControl@@QAE@PAVCGXGridCore@@I@Z
+??0CGXFont@@QAE@XZ
+??0CGXRange@@QAE@XZ
+??0CGXRecordWnd@@QAE@XZ
+??0CGXStyle@@QAE@XZ
+??0CNonMerchDlg@@QAE@JPAVCWnd@@@Z
+??0CPOSComboBoxDlgBase@@QAE@JPAVCWnd@@@Z
+??0CPosKeyboardMapping@@QAE@J@Z
+??0CPosRegAccsCashierSet@@QAE@PAVCDatabase@@@Z
+??0CPOSTenderDlg@@QAE@JPAVCWnd@@V?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+??0CRentalCustOutstandingDlg@@QAE@HPAVCWnd@@@Z
+??0CRentalDlgMultiPeriods@@QAE@ABV?$vector@VCRentalSelectionInfo@@V?$allocator@VCRentalSelectionInfo@@@std@@@std@@ABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@HPAVCWnd@@@Z
+??0CRentalDlgSellMultiPeriods@@QAE@ABV?$vector@VCRentalSelectionInfo@@V?$allocator@VCRentalSelectionInfo@@@std@@@std@@ABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@JPAVCWnd@@@Z
+??0CRentalReturnItem@@QAE@ABV0@@Z
+??0CRentalReturnItem@@QAE@HH@Z
+??0CSecureTerminalDlg@@QAE@PAVCWnd@@@Z
+??0CTendTotDlg@@QAE@JPAVCWnd@@@Z
+??0Format@SECCurrencyEdit@@QAE@H@Z
+??0SECCurrencyEdit@@QAE@XZ
+??1CColoredTextMessageBox@@UAE@XZ
+??1CFindBy@@UAE@XZ
+??1CFindResultsDlgBase@@UAE@XZ
+??1CFindResultsGridBase@@UAE@XZ
+??1CG3CreditCardInfoDialog@@UAE@XZ
+??1CG3Crypto@@UAE@XZ
+??1CG3LightDialog@@UAE@XZ
+??1CG3POSCurrencyEdit@@UAE@XZ
+??1CG3PrismUserSet@@UAE@XZ
+??1CG3XComboBox@@UAE@XZ
+??1CGXCurrencyEdit@@UAE@XZ
+??1CGXDynamicRecordset@@UAE@XZ
+??1CGXEditControl@@UAE@XZ
+??1CGXFont@@UAE@XZ
+??1CGXODBCGrid@@MAE@XZ
+??1CGXStyle@@UAE@XZ
+??1CNonMerchDlg@@UAE@XZ
+??1CodeSiteMethodTracer@@QAE@XZ
+??1CPOSComboBoxDlgBase@@UAE@XZ
+??1CPosKeyboardMapping@@UAE@XZ
+??1CPosRegAccsCashierSet@@UAE@XZ
+??1CPOSTenderDlg@@UAE@XZ
+??1CRentalCustOutstandingDlg@@UAE@XZ
+??1CRentalDlgMultiPeriods@@UAE@XZ
+??1CRentalDlgSellMultiPeriods@@UAE@XZ
+??1CRentalReturnItem@@UAE@XZ
+??1CSecureTerminalDlg@@UAE@XZ
+??1CTendTotDlg@@UAE@XZ
+??1SECCurrencyEdit@@UAE@XZ
+??1type_info@@UAE@XZ
+??4CFindBy@@QAEAAV0@ABV0@@Z
+??4CRentalReturnItem@@QAEAAV0@ABV0@@Z
+??4Format@SECCurrencyEdit@@UAEAAV01@ABV01@@Z
+??8Format@SECCurrencyEdit@@UBEHABV01@@Z
+?_GetBaseClass@CRentalCustOutstandingDlg@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CRentalDlgMultiPeriods@@KGPAUCRuntimeClass@@XZ
+?_GetBaseClass@CRentalDlgSellMultiPeriods@@KGPAUCRuntimeClass@@XZ
+?_GetControlBaseClass@CGridBrowseEditBase@@KGPAUCGXControlClass@@XZ
+?+?;?K?v?
+?+?1?7?I?Y?k?r?
+?+?1?D?J?d?p?y?
+?<?Q?[?i?w?
+?=?F?\?b?h?z?
+?0?E?N?W?`?
+?4?<?D?L?T?\?d?l?t?|?
+?4?J?\?
+?AcceptCommasInNumbers@CGXEditControl@@UAEHPBVCGXStyle@@@Z
+?AddBorders@CGXGridCore@@UAE?AVCSize@@V2@ABVCGXStyle@@@Z
+?AddBorders@CGXStatic@@UAE?AVCSize@@V2@ABVCGXStyle@@@Z
+?AddChild@CGXControl@@MAEXPAVCGXChild@@@Z
+?AddCommand@CGXGridCore@@UAEXPAVCGXCommand@@W4GXCmdType@@@Z
+?AddControl@CG3LayoutManager@@QAEXW4ELayoutType@1@I@Z
+?AddItemToTender@CTendTotDlg@@IAEHHHJ@Z
+?AddNew@CGXBrowserGrid@@UAEKXZ
+?AddNewRow@CTendTotDlg@@QAEXH@Z
+?AddRecalcRange@CGXGridCore@@UAEXABVCGXRange@@@Z
+?AddTenderRecord@CTendTotDlg@@QAEXHJ@Z
+?AllocateExchangeItems@CTendTotDlg@@IAEXHJ@Z
+?AllocateItemsToTenders@CTendTotDlg@@IAEXXZ
+?AllowTenderKeys@CPosKeyboardMapping@@QAEX_N@Z
+?BeginTrans@CGXODBCGrid@@UAEXPBD@Z
+?CalcBufferDimension@CGXGridCore@@UAEHPBDKAAK1@Z
+?CalcEditStyle@CGXEditControl@@MAEKPAUtagRECT@@AAH@Z
+?CalcRectFromRowCol@CGXGridCore@@UAE?AVCRect@@KKKKH@Z
+?CalcSize@CGXEditControl@@MAE?AVCSize@@PAVCDC@@KKABVCGXStyle@@PBV4@H@Z
+?CalcSize@CGXStatic@@UAE?AVCSize@@PAVCDC@@KKABVCGXStyle@@PBV4@H@Z
+?CalcSumOfColWidths@CGXGridCore@@QAEHKKH@Z
+?CanActivateGrid@CGXGridCore@@UAEHH@Z
+?CanAppend@CGXODBCGrid@@UAEHXZ
+?CancelNewRow@CTendTotDlg@@QAEXXZ
+?CancelRecord@CGXBrowserGrid@@UAEXXZ
+?CanChangeAutoFillSelection@CGXGridCore@@MAEHAAVCGXRange@@ABV2@@Z
+?CanChangeSelection@CGXBrowserGrid@@UAEHPAVCGXRange@@HH@Z
+?CanChangeTab@CGXGridCore@@UAEHXZ
+?CanClear@CGXGridCore@@UAEHXZ
+?CanCopy@CGXControl@@UAEHXZ
+?CanCopy@CGXGridCore@@UAEHXZ
+?CanCut@CGXBrowserGrid@@UAEHXZ
+?CanCut@CGXControl@@UAEHXZ
+?CanFloatCell@CGXCurrencyEdit@@UAEHKKABVCGXStyle@@H@Z
+?CanFloatCell@CGXEditControl@@UAEHKKABVCGXStyle@@H@Z
+?CanFloatCell@CGXGridCore@@UAEHPAVCGXControl@@KKABVCGXStyle@@H@Z
+?CanFreezeCols@CGXGridCore@@UAEHXZ
+?CanFreezeRows@CGXGridCore@@UAEHXZ
+?CanMergeCell@CGXControl@@UAEHKKABVCGXStyle@@H@Z
+?CanMergeCell@CGXGridCore@@UAEHPAVCGXControl@@KKABVCGXStyle@@H@Z
+?CanMergeCells@CGXGridCore@@UAEHABVCGXStyle@@0@Z
+?CanPaste@CGXBrowserGrid@@UAEHXZ
+?CanPaste@CGXControl@@UAEHXZ
+?CanRedo@CGXGridCore@@UAEHPAVCCmdUI@@@Z
+?CanSelectCurrentCell@CGXBrowserGrid@@UAEHHKKKK@Z
+?CanUndo@CGXGridCore@@UAEHPAVCCmdUI@@@Z
+?CanUnfreezeCols@CGXGridCore@@UAEHXZ
+?CanUnfreezeRows@CGXGridCore@@UAEHXZ
+?CanUpdate@CGXODBCGrid@@UAEHXZ
+?ChangeBaseStyle@CGXGridCore@@UAEHGABVCGXStyle@@W4GXModifyType@@IW4GXCmdType@@@Z
+?ChangeProperties@CGXGridCore@@UAEHABVCGXProperties@@IW4GXCmdType@@@Z
+?ChangeStandardStyle@CGXGridCore@@QAEHABVCGXStyle@@W4GXModifyType@@IW4GXCmdType@@@Z
+?ChangeStylesMap@CGXGridCore@@UAEHABVCGXStylesMap@@IW4GXCmdType@@@Z
+?ChildWithFocus@CGXControl@@MAEPAVCGXChild@@XZ
+?classCRentalCustOutstandingDlg@CRentalCustOutstandingDlg@@2UCRuntimeClass@@B
+?classCRentalDlgMultiPeriods@CRentalDlgMultiPeriods@@2UCRuntimeClass@@B
+?classCRentalDlgSellMultiPeriods@CRentalDlgSellMultiPeriods@@2UCRuntimeClass@@B
+?CleanAdvancedUndo@CGXGridCore@@UAEXXZ
+?Clear@CGXGridCore@@UAEHH@Z
+?ClearCells@CGXBrowserGrid@@UAEHABVCGXRangeList@@H@Z
+?ClearCellsAlternate@CGXGridCore@@UAEHABVCGXRange@@H@Z
+?Close@CGXDynamicRecordset@@UAEXXZ
+?CodeSite@@YAPAVLogCodeSite@@V?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?CommitTrans@CGXODBCGrid@@UAEXXZ
+?ComposeStyleRowCol@CGXGridCore@@UAEXKKPAVCGXStyle@@H@Z
+?ConvertControlTextToValue@CGXControl@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@KKPBVCGXStyle@@@Z
+?ConvertControlTextToValue@CGXCurrencyEdit@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@KKPBVCGXStyle@@@Z
+?ConvertValueToString@CGXODBCGrid@@UAEXKAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?ConvLtoDbl@CTendTotDlg@@IAENJ@Z
+?Copy@CGXCurrencyEdit@@UAEHXZ
+?Copy@CGXEditControl@@UAEHXZ
+?Copy@CGXGridCore@@UAEHXZ
+?CopyCells@CGXGridCore@@UAEHVCGXRange@@KKI@Z
+?CopyCellsToArchive@CGXGridCore@@UAEHAAVCArchive@@ABVCGXRangeList@@H@Z
+?CopyRange@CGXGridCore@@UAEHABVCGXRange@@@Z
+?CopyRange@CGXGridCore@@UAEHABVCGXRangeList@@@Z
+?CopyRangeList@CGXGridCore@@UAEHAAVCGXRangeList@@H@Z
+?CopyTextToFile@CGXGridCore@@UAEHAAVCFile@@ABVCGXRangeList@@@Z
+?Create@SECDropEdit@@UAEHKABUtagRECT@@PAVCWnd@@I@Z
+?CreateControl@CGXCurrencyEdit@@UAEHK@Z
+?CreateControl@CGXEditControl@@MAEHKPAUtagRECT@@@Z
+?CreateEx@SECDropEdit@@UAEHKKABUtagRECT@@PAVCWnd@@I@Z
+?CreatePopupMenu@CGXBCurrencyEdit@@MBEPAVCMenu@@XZ
+?CreatePopupMenu@SECCurrencyEdit@@UBEPAVCMenu@@XZ
+?CreateStyle@CGXGridCore@@UAEPAVCGXStyle@@XZ
+?CreateTmpRecsForDetailGrid@CTendTotDlg@@IAEXXZ
+?ctrlCGXEditControl@CGXEditControl@@2UCGXControlClass@@A
+?CurrencyConversion@CTendTotDlg@@QAEJHJJ@Z
+?CurrencyInit@CTendTotDlg@@QAEXHJ@Z
+?Cut@CGXBrowserGrid@@UAEHXZ
+?Cut@CGXCurrencyEdit@@UAEHXZ
+?Cut@CGXEditControl@@UAEHXZ
+?CutRange@CGXGridCore@@UAEHABVCGXRangeList@@H@Z
+?DeletePopupMenu@CGXBCurrencyEdit@@MBEXPAVCMenu@@@Z
+?DeletePopupMenu@SECCurrencyEdit@@UBEXPAVCMenu@@@Z
+?DeleteRangeName@CGXGridCore@@UAEHPBDPAVCObject@@W4GXCmdType@@@Z
+?DeleteRecords@CGXBrowserGrid@@UAEXXZ
+?DeleteRow@CTendTotDlg@@QAEXH@Z
+?DeleteRows@CGXODBCGrid@@UAEXABVCDWordArray@@0PAH@Z
+?DisplayMsgOnPole@COPOSContainer@@QAEXV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?DisplayWarningText@CGXGridCore@@UAEXXZ
+?DndDrawMoveRect@CGXGridCore@@UAEXVCPoint@@HH@Z
+?DndStartDragDrop@CGXGridCore@@UAEHKK@Z
+?DoAutoFill@CGXGridCore@@MAEXAAVCGXRange@@0@Z
+?DoBackspace@SECCurrencyEdit@@UAEXXZ
+?DoCancelMode@CGXGridCore@@MAEHXZ
+?DoCommand@CGXGridCore@@MAEHIJ@Z
+?DoCtlColor@CGXGridCore@@MAEPAUHBRUSH__@@PAVCDC@@PAVCWnd@@I@Z
+?DoDataExchange@CFindResultsDlgBase@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CPOSComboBoxDlgBase@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CRentalCustOutstandingDlg@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CRentalDlgMultiPeriods@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CRentalDlgSellMultiPeriods@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CSecureTerminalDlg@@MAEXPAVCDataExchange@@@Z
+?DoDataExchange@CTendTotDlg@@MAEXPAVCDataExchange@@@Z
+?DoDelete@CGXBCurrencyEdit@@MAEXXZ
+?DoDelete@SECCurrencyEdit@@UAEXXZ
+?DoGetDlgCode@CGXGridCore@@MAEII@Z
+?DoGetScrollBarCtrl@CGXGridCore@@MBEPAVCScrollBar@@H@Z
+?DoHScroll@CGXGridCore@@MAEHIIPAVCScrollBar@@@Z
+?DoInsert@CGXBCurrencyEdit@@MAEXPBD@Z
+?DoInsert@SECCurrencyEdit@@UAEXPBD@Z
+?DoLButtonDblClk@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoLButtonDown@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoLButtonUp@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoMButtonDblClk@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoMButtonDown@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoMButtonUp@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoModal@CColoredTextMessageBox@@UAEHXZ
+?DoMouseActivate@CGXGridCore@@MAEHPAVCWnd@@IIAAH@Z
+?DoMouseMove@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoNotifyDestroy@CGXGridCore@@MAEHXZ
+?DoRButtonDblClk@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoRButtonDown@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoRButtonUp@CGXGridCore@@MAEHIVCPoint@@@Z
+?DoScroll@CGXGridCore@@UAEHHK@Z
+?DoSetCursor@CGXGridCore@@MAEHPAVCWnd@@II@Z
+?DoShowWindow@CGXGridCore@@MAEHHI@Z
+?DoSize@CGXGridCore@@MAEHIHH@Z
+?DoVScroll@CGXGridCore@@MAEHIIPAVCScrollBar@@@Z
+?Draw@CGXCurrencyEdit@@UAEXPAVCDC@@VCRect@@KKABVCGXStyle@@PBV4@@Z
+?Draw@CGXEditControl@@UAEXPAVCDC@@VCRect@@KKABVCGXStyle@@PBV4@@Z
+?DrawBackground@CGXControl@@MAEXPAVCDC@@ABVCRect@@ABVCGXStyle@@H@Z
+?DrawBtn@CGXBDropEdit@@MAEXAAVCDC@@VCRect@@@Z
+?DrawBtn@SECDropEdit@@MAEXAAVCDC@@VCRect@@@Z
+?DrawDecimalSeparatorLine@CGXBCurrencyEdit@@MAEXAAVCDC@@H@Z
+?DrawDecimalSeparatorLine@SECCurrencyEdit@@UAEXAAVCDC@@H@Z
+?DrawFrame@CGXControl@@MAEXPAVCDC@@ABVCRect@@ABVCGXStyle@@@Z
+?DrawGridLine@CGXGridCore@@MAEXPAVCDC@@HHHHHKI@Z
+?DrawInvertCell@CGXGridCore@@MAEXPAVCDC@@KKVCRect@@@Z
+?DrawInvertFrame@CGXGridCore@@MAEXPAVCDC@@ABVCRect@@1HHHH@Z
+?DrawSelectionFrame@CGXGridCore@@UAEXPAVCDC@@HPBVCGXRange@@@Z
+?DrawSelectionRangeFrame@CGXGridCore@@MAEXPAVCDC@@ABVCGXRange@@HH@Z
+?Edit@CGXBrowserGrid@@UAEXK@Z
+?EnableChangeTab@CGXGridParam@@QAEXH@Z
+?EnableManualTaxControls@CTendTotDlg@@IAEXXZ
+?EnableMoveCols@CGXGridParam@@QAEXH@Z
+?EnableMoveRows@CGXGridParam@@QAEXH@Z
+?EnableSelection@CGXGridParam@@QAEXI@Z
+?EnableTrackRowHeight@CGXGridParam@@QAEXI@Z
+?EnableUndo@CGXGridParam@@QAEXH@Z
+?EncryptStr@CG3Crypto@@QAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PBD@Z
+?EraseBackground@CGXBCurrencyEdit@@MAEXPAVCDC@@@Z
+?EraseBackground@SECCurrencyEdit@@UAEXPAVCDC@@@Z
+?EvalVisibleFloatMergeCells@CGXGridCore@@UAEHABVCGXRange@@KKKKKKHPAV2@H@Z
+?ExecuteCommand@CGXGridCore@@UAEHPAVCGXCommand@@PAV1@W4GXCmdType@@@Z
+?FillItems@CG3XComboBox@@IAEHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?FindAccount@CFindBy@@QAEHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?FindCommon@CFindBy@@AAEHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@00HHH@Z
+?FindCustomer@CFindBy@@QAEHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?FindDecimalSeparator@Format@SECCurrencyEdit@@UBEHPBDD@Z
+?FindFirstAndLastDigits@Format@SECCurrencyEdit@@UBEHPBDAAH1@Z
+?FindItem@CFindBy@@QAEHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?FindMFGSerial@CFindBy@@QAEHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?FindNextCell@CGXGridCore@@UAEHHAAK0@Z
+?FindReceipt@CFindBy@@QAEHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?FindRental@CFindBy@@QAEHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?FindRentalHistory@CFindBy@@QAEHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?FindStringInChoiceList@CGXControl@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PBD1H@Z
+?FindTextA@CGXCurrencyEdit@@UAEHABUGX_FR_STATE@@KKHH@Z
+?FindTextA@CGXEditControl@@UAEHABUGX_FR_STATE@@KKHH@Z
+?FocusOnChild@CGXControl@@MAEXPAVCGXChild@@@Z
+?Format@CG3DateTime@@QBE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PBD@Z
+?FormatValue@Format@SECCurrencyEdit@@UBEXNAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?FormKey@CPosKeyboardMapping@@QAEIII@Z
+?FreeObjectCache@CGXGridCore@@MAEXXZ
+?FreezeCols@CGXGridCore@@UAEXXZ
+?FreezeRows@CGXGridCore@@UAEXXZ
+?G3EscapeSQL@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV12@_N@Z
+?G3ExecuteSQL@@YA_NABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PAVCG3Database@@W4ExceptionOption@@@Z
+?G3GetDatabasePtr@@YAPAVCG3Database@@H@Z
+?G3GetFieldDouble@@YANAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@FH@Z
+?G3GetFieldLong@@YAJAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@FHPAVCG3Database@@@Z
+?G3GetFieldLongEx@@YAJAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PAJFHPAVCG3Database@@@Z
+?G3GetFieldString@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@AAV12@FHPAVCG3Database@@@Z
+?G3GetFieldStringDB@@YA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@ABV12@PAVCG3Database@@FW4ExceptionOption@@@Z
+?G3Round@@YAXAANH@Z
+?GetAdvancedUndoInfo@CGXGridCore@@UAEPAVCObject@@XZ
+?GetAgencyID@CTendTotDlg@@QAEJH@Z
+?GetAppendRow@CGXBrowserGrid@@UAEKXZ
+?GetCellRangeRowCol@CGXGridCore@@UAEPAVCGXRange@@KKAAV2@@Z
+?GetCellRect@CGXStatic@@UAE?AVCRect@@KKPAUtagRECT@@PBVCGXStyle@@@Z
+?GetCellTipID@CGXControl@@UAEKKKPAVCGXStyle@@@Z
+?GetChild@CGXControl@@MAEPAVCGXChild@@H@Z
+?GetChoiceListItem@CGXControl@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PBDH@Z
+?GetCID@CG3CreditCardInfoDialog@@QBE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetClipboardStyleRowCol@CGXGridCore@@UAEHKKPAVCGXStyle@@H@Z
+?GetColCount@CGXGridCore@@UAEKXZ
+?GetColIndex@CGXBrowserGrid@@UAEKK@Z
+?GetColWidth@CGXGridCore@@UAEHK@Z
+?GetControl@CGXGridCore@@UAEPAVCGXControl@@KK@Z
+?GetControlClass@CGridBrowseEditBase@@UBEPAUCGXControlClass@@XZ
+?GetControlClass@CGXCurrencyEdit@@UBEPAUCGXControlClass@@XZ
+?GetControlText@CGXCurrencyEdit@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@KKPBDABVCGXStyle@@@Z
+?GetCopyTextRowCol@CGXGridCore@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@KK@Z
+?GetCount@CGXControl@@MAEHXZ
+?GetCoveredCellsRowCol@CGXGridCore@@UAEPAVCGXRange@@KKAAV2@@Z
+?GetCurrentCell@CGXGridCore@@QAEHAAK0H@Z
+?GetCurrentCellControl@CGXGridCore@@QAEPAVCGXControl@@XZ
+?GetCurrentText@CGXCurrencyEdit@@UAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetCurrentText@CGXEditControl@@UAEXAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetDate@CG3CreditCardInfoDialog@@QBE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetDefaultColWidth@CGXGridCore@@UAEHXZ
+?GetDefaultRowHeight@CGXGridCore@@UAEHXZ
+?GetDisplaySize@CGXODBCGrid@@MAEJABUCGXFieldInfo@@J@Z
+?GetDlgSQL@CNonMerchDlg@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@J@Z
+?GetDlgSQL@CPOSComboBoxDlgBase@@MAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@J@Z
+?GetDlgSQL@CPOSTenderDlg@@UAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@J@Z
+?GetEnlargeIndex@CTendTotDlg@@QAEJXZ
+?GetError@CGXGridCore@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetFieldData@CGXDynamicRecordset@@QAEHHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?GetFontHeight@CGXGridCore@@UAEHXZ
+?GetFontMetrics@CGXGridCore@@MAEXPAVCDC@@AAH1@Z
+?GetFontWidth@CGXGridCore@@UAEHXZ
+?GetFormat@SECCurrencyEdit@@QAEXAAVFormat@1@@Z
+?GetFrozenCols@CGXGridCore@@UAEKXZ
+?GetFrozenRows@CGXGridCore@@UAEKXZ
+?GetHeaderCols@CGXGridCore@@UAEKXZ
+?GetHeaderRows@CGXGridCore@@UAEKXZ
+?GetInvertStateRowCol@CGXGridCore@@UAEHKKPBVCGXRangeList@@@Z
+?GetItemRemainAmt@CTendTotDlg@@IAEJH@Z
+?GetItemRemainDiscAmt@CTendTotDlg@@IAEJH@Z
+?GetItemRemainTaxAmt@CTendTotDlg@@IAEJH@Z
+?GetItemRemainTranDiscAmt@CTendTotDlg@@IAEJH@Z
+?GetLastRow@CGXBrowserGrid@@UAEKXZ
+?GetLongValue@CGXStyle@@QBEJXZ
+?GetMachineName@CWPCommFunctions@@SA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetMachineUserName@CWPCommFunctions@@SA?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetManagerPassword@CSecureTerminalDlg@@IAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetMarkHeaderState@CGXControl@@MAEHKKABVCGXStyle@@@Z
+?GetMessageMap@CColoredTextMessageBox@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CFindResultsDlgBase@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CFindResultsGridBase@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CG3XComboBox@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CPOSComboBoxDlgBase@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CRentalCustOutstandingDlg@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CRentalDlgMultiPeriods@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CRentalDlgSellMultiPeriods@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CSecureTerminalDlg@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@CTendTotDlg@@MBEPBUAFX_MSGMAP@@XZ
+?GetMessageMap@SECCurrencyEdit@@MBEPBUAFX_MSGMAP@@XZ
+?GetModify@CGXCurrencyEdit@@UAEHXZ
+?GetModify@CGXEditControl@@UAEHXZ
+?GetModuleID@CG3LightDialog@@UAEJXZ
+?GetNumber@CG3CreditCardInfoDialog@@QBE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetOleViewerRowCol@CGXBrowserGrid@@UBEXKKKAAPAVCGXOleViewer@@@Z
+?GetRangeName@CGXGridCore@@UAEHPBDAAVCGXRange@@@Z
+?GetRegisteredControl@CGXGridCore@@UAEPAVCGXControl@@G@Z
+?GetRentalCount@CRentalReturnItem@@AAEHXZ
+?GetRentalDiscAllowed@CRentalDlgMultiPeriods@@QAEHXZ
+?GetRentalHeaderId@CRentalReturnItem@@QBEHXZ
+?GetRentalPeriod@CRentalDlgMultiPeriods@@QAEJXZ
+?GetRentalPrice@CRentalDlgMultiPeriods@@QAENXZ
+?GetRentalTaxType@CRentalDlgMultiPeriods@@QAEHXZ
+?GetResult@CRentalDlgMultiPeriods@@QAEHXZ
+?GetRowCount@CGXBrowserGrid@@UAEKXZ
+?GetRowHeight@CGXGridCore@@UAEHK@Z
+?GetRowIndex@CGXBrowserGrid@@UAEKK@Z
+?GetRuntimeClass@CG3LightDialog@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CGXCurrencyEdit@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CGXEditControl@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CGXRecordWnd@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CRentalCustOutstandingDlg@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CRentalDlgMultiPeriods@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@CRentalDlgSellMultiPeriods@@UBEPAUCRuntimeClass@@XZ
+?GetRuntimeClass@SECCurrencyEdit@@UBEPAUCRuntimeClass@@XZ
+?GetScrollBarCtrl@CGXRecordWnd@@UBEPAVCScrollBar@@H@Z
+?GetScrollPos@CGXGridCore@@MBEKH@Z
+?GetScrollRange@CGXGridCore@@MBEXHPAK0@Z
+?GetSelectedRows@CGXGridCore@@UAEHAAVCDWordArray@@0HH@Z
+?GetSelectedRows@CGXGridCore@@UAEKAAVCDWordArray@@HH@Z
+?GetSelectedText@CGXCurrencyEdit@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetSelectedText@CGXEditControl@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetSortKey@CGXControl@@UAEXKKABUCGXSortInfo@@ABVCGXStyle@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetSortKey@CGXCurrencyEdit@@UAEXKKABUCGXSortInfo@@ABVCGXStyle@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetSortKey@CGXGridCore@@UAEXPAVCGXControl@@KKABUCGXSortInfo@@ABVCGXStyle@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetStyleArray@CGXGridCore@@UAEPAVCObArray@@ABVCGXRange@@HPAVCGXLongOperation@@@Z
+?GetStyleRowCol@CGXBrowserGrid@@UAEHKKAAVCGXStyle@@W4GXModifyType@@H@Z
+?GetSysColor@GX_SYS_DATA@@QAEKH@Z
+?GetTenderAmt@CTendTotDlg@@QAENH@Z
+?GetTenderAmtLong@CTendTotDlg@@QAEJH@Z
+?GetTenderAuthorized@CTendTotDlg@@QAEHH@Z
+?GetTenderAvailable@CTendTotDlg@@IAEJHJJH@Z
+?GetTenderCount@CTendTotDlg@@QAEHXZ
+?GetTenderExempt@CTendTotDlg@@QAEHH@Z
+?GetTenderID@CTendTotDlg@@QAEJH@Z
+?GetTenderLimit@CTendTotDlg@@QAENH@Z
+?GetTenderTaxAmt@CTendTotDlg@@QAENH@Z
+?GetThisClass@CRentalCustOutstandingDlg@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CRentalDlgMultiPeriods@@SGPAUCRuntimeClass@@XZ
+?GetThisClass@CRentalDlgSellMultiPeriods@@SGPAUCRuntimeClass@@XZ
+?GetThisMessageMap@CColoredTextMessageBox@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CFindResultsDlgBase@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CFindResultsGridBase@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3LightDialog@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CG3XComboBox@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CGXCurrencyEdit@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CGXEditControl@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CGXRecordWnd@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CPOSComboBoxDlgBase@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CRentalCustOutstandingDlg@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CRentalDlgMultiPeriods@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CRentalDlgSellMultiPeriods@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CSecureTerminalDlg@@KGPBUAFX_MSGMAP@@XZ
+?GetThisMessageMap@CTendTotDlg@@KGPBUAFX_MSGMAP@@XZ
+?GetTranTenderID@CTendTotDlg@@QAEJH@Z
+?GetUpdateFlag@CGXGridCore@@UAEHKK@Z
+?GetUserDescr@CSecureTerminalDlg@@IAE?AV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@XZ
+?GetValue@CGXCurrencyEdit@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?GetValue@SECCurrencyEdit@@QBEXAAN@Z
+?GetValueRowCol@CGXGridCore@@QAEABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@KK@Z
+?GetWndPtr@CGXCurrencyEdit@@UBEPAVCWnd@@XZ
+?GetWndPtr@CGXEditControl@@UBEPAVCWnd@@XZ
+?GetZoom@CGXGridCore@@UAEHXZ
+?Grid@CGXControl@@QAEPAVCGXGridCore@@XZ
+?GXGetAppState@@YGPAUGX_APP_STATE@@XZ
+?HandleNegativeSignKey@CGXBCurrencyEdit@@MAEXXZ
+?HandleNegativeSignKey@SECCurrencyEdit@@UAEXXZ
+?Hide@CGXCurrencyEdit@@UAEXXZ
+?Hide@CGXEditControl@@UAEXXZ
+?HideCols@CGXGridCore@@UAEHKKHPAHIW4GXCmdType@@@Z
+?HideCurrentCell@CGXGridCore@@UAEXXZ
+?HideRows@CGXGridCore@@UAEHKKHPAHIW4GXCmdType@@@Z
+?HitTest@CGXGridCore@@UAEHAAVCPoint@@PAK1PAVCRect@@@Z
+?HitTestBtn@CGXCurrencyEdit@@UBEHVCPoint@@H@Z
+?HitTestBtn@SECCurrencyEdit@@UBEHVCPoint@@H@Z
+?ImplementFindReplace@CGXGridCore@@QAEXXZ
+?IncludeReturns@CRentalReturnItem@@QAEX_N@Z
+?Init@CFindBy@@QAEXHH@Z
+?Init@CGXCurrencyEdit@@UAEXKK@Z
+?Init@CGXEditControl@@UAEXKK@Z
+?InitBrowserSettings@CGXBrowserGrid@@MAEXXZ
+?InitFromUserAttributes@CGXCurrencyEdit@@UAEXPAVCGXBCurrencyEdit@@PBVCGXStyle@@@Z
+?Initialize@CG3POSCurrencyEdit@@UAEHPAVCWnd@@I@Z
+?Initialize@CG3XComboBox@@QAEHIPAVCWnd@@PAVCDatabase@@I@Z
+?Initialize@CG3XComboBox@@QAEHIPAVCWnd@@PAVCDatabase@@PBD@Z
+?Initialize@CGXRecordWnd@@QAEXXZ
+?Initialize@CTendTotDlg@@QAEXJJJJH@Z
+?Initialize@SECCurrencyEdit@@QAEHPAVCWnd@@I@Z
+?InitializeArrays@CTendTotDlg@@IAEXXZ
+?InitializeCellTip@CGXControl@@UAEXKKPAVCGXStyle@@PAVCGXCellTipWnd@@@Z
+?InitializeItemTaxArray@CTendTotDlg@@IAEXXZ
+?InitializeMappingTable@CPosKeyboardMapping@@AAEXXZ
+?InsertCols@CGXGridCore@@UAEHKKPAHPAVCObArray@@1KIW4GXCmdType@@@Z
+?InsertRows@CGXGridCore@@UAEHKKPAHPAVCObArray@@1KIW4GXCmdType@@@Z
+?Invalidate@CGXRecordWnd@@QAEXH@Z
+?InvertBorders@CGXControl@@UAEXPAVCDC@@ABVCRect@@@Z
+?IsActive@CGXCurrencyEdit@@UAEHXZ
+?IsActive@CGXEditControl@@UAEHXZ
+?IsActiveAlways@CGXControl@@UAEHXZ
+?IsAllowTenderKeys@CPosKeyboardMapping@@QAE_NXZ
+?IsAuthorizedTendersPending@CTendTotDlg@@QAE_NXZ
+?IsColHidden@CGXGridCore@@UAEHK@Z
+?IsNMRP@CRentalDlgMultiPeriods@@QAE_NXZ
+?IsReadOnly@CGXControl@@UAEHXZ
+?IsReadOnly@CGXGridCore@@UAEHXZ
+?IsRental@CRentalReturnItem@@QAE_NXZ
+?IsRowHidden@CGXGridCore@@UAEHK@Z
+?IsSaleToCharge@CTendTotDlg@@QAEHXZ
+?IsScrollLockedFromCell@CGXGridCore@@UAEHXZ
+?IsSuperUser@CWPCommFunctions@@SA_NHPAVCG3Database@@@Z
+?IsTenderAmtAvailable@CTendTotDlg@@IAEHH@Z
+?IsValidHash@CWPCommFunctions@@SA_NPBD0@Z
+?IsWindowlessControl@CGXControl@@UAEHXZ
+?KeyPressed@CGXControl@@UAEHIIII@Z
+?LButtonDblClk@CGXCurrencyEdit@@UAEHIVCPoint@@@Z
+?LButtonDblClk@CGXEditControl@@UAEHIVCPoint@@@Z
+?LButtonDown@CGXControl@@UAEHIVCPoint@@I@Z
+?LButtonUp@CGXCurrencyEdit@@UAEHIVCPoint@@I@Z
+?LButtonUp@CGXEditControl@@UAEHIVCPoint@@I@Z
+?LoadBitmaps@CGXBitmapButtonChild@@QAEHIII@Z
+?LoadComboBox@CPOSComboBoxDlgBase@@IAEHJ@Z
+?LoadFont@CGXGridCore@@UAEPAVCFont@@PAVCDC@@ABVCGXStyle@@PBV4@@Z
+?LoadStyle@CGXControl@@UAEHKKPAVCGXStyle@@@Z
+?LookupStyleRowCol@CGXGridCore@@UAEABVCGXStyle@@KK@Z
+?MarkEdit@CGXGridCore@@MAEXKKII@Z
+?MButtonDblClk@CGXControl@@UAEHIVCPoint@@@Z
+?MButtonDown@CGXControl@@UAEHIVCPoint@@I@Z
+?MButtonUp@CGXControl@@UAEHIVCPoint@@I@Z
+?MergeCoveredCells@CGXGridCore@@MAEXAAVCGXRange@@@Z
+?MouseActivate@CGXControl@@UAEHPAVCWnd@@IIAAH@Z
+?MouseMove@CGXControl@@UAEHIVCPoint@@I@Z
+?MouseMoveOver@CGXControl@@UAEHKKIVCPoint@@@Z
+?MoveCells@CGXGridCore@@UAEHVCGXRange@@KKPAVCObject@@IW4GXCmdType@@@Z
+?MoveCols@CGXGridCore@@UAEHKKKIW4GXCmdType@@@Z
+?MoveCurrentCell@CGXGridCore@@UAEHHIH@Z
+?MoveCurrentCellEx@CGXGridCore@@MAEHHI@Z
+?MoveDataCols@CGXGridCore@@UAEHABVCGXRange@@ABVCDWordArray@@IW4GXCmdType@@@Z
+?MoveDataRows@CGXGridCore@@UAEHABVCGXRange@@ABVCDWordArray@@IW4GXCmdType@@@Z
+?MoveRows@CGXGridCore@@UAEHKKKIW4GXCmdType@@@Z
+?MoveTenderDetail@CTendTotDlg@@QAEXJJ@Z
+?MoveTo@CGXODBCGrid@@UAEHK@Z
+?NeedShowCellTip@CGXControl@@UAEHKKPAVCGXStyle@@@Z
+?OnAccountSale@CTendTotDlg@@IAEXXZ
+?OnActivateGrid@CGXGridCore@@MAEHH@Z
+?OnAddedNewRecord@CGXODBCGrid@@MAEXXZ
+?OnAdjustPrintRectangle@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnAutoFillDone@CGXGridCore@@MAEXAAVCGXRange@@@Z
+?OnAutoScroll@CGXGridCore@@UAEHHK@Z
+?OnBeginPrinting@CGXRecordWnd@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnBnClickedRent@CRentalDlgMultiPeriods@@IAEXXZ
+?OnBnClickedSell@CRentalDlgSellMultiPeriods@@IAEXXZ
+?OnCancel@CFindResultsDlgBase@@MAEXXZ
+?OnCancel@CPOSComboBoxDlgBase@@MAEXXZ
+?OnCancel@CTendTotDlg@@MAEXXZ
+?OnCanceledEditing@CGXBrowserGrid@@UAEXKK@Z
+?OnCanceledEditing@CGXControl@@UAEXXZ
+?OnCancelEditing@CGXControl@@UAEHXZ
+?OnCancelEditing@CGXGridCore@@MAEHKK@Z
+?OnCancelTracking@CGXGridCore@@MAEXXZ
+?OnCbnDblclkComboTender@CPOSComboBoxDlgBase@@IAEXXZ
+?OnCellUndone@CGXGridCore@@UAEXKKH@Z
+?OnChangedSelection@CGXGridCore@@MAEXPBVCGXRange@@HH@Z
+?OnChar@CGXCurrencyEdit@@IAEXIII@Z
+?OnCheckClipboardFormat@CGXGridCore@@UAEHXZ
+?OnClickedButton@CGXControl@@UAEXPAVCGXChild@@@Z
+?OnClickedButtonRowCol@CGXGridCore@@MAEXKK@Z
+?OnClose@CFindResultsGridBase@@IAEXXZ
+?OnCommand@CGXCurrencyEdit@@UAEHIJ@Z
+?OnCommand@CGXEditControl@@UAEHIJ@Z
+?OnCommand@CGXRecordWnd@@MAEHIJ@Z
+?OnCtlColor@CColoredTextMessageBox@@IAEPAUHBRUSH__@@PAVCDC@@PAVCWnd@@I@Z
+?OnDeleteCell@CGXControl@@UAEHXZ
+?OnDeleteCell@CGXGridCore@@MAEHKK@Z
+?OnDndCacheGlobalData@CGXGridCore@@UAEHPAVCGXNoOleDataSourceProxy@@ABVCGXRangeList@@AAK2@Z
+?OnDndCalculateFocusRect@CGXGridCore@@UAEHPAVCGXNoOleDataObjectProxy@@AAK1@Z
+?OnDndDropData@CGXGridCore@@UAEHPAVCGXNoOleDataObjectProxy@@KK@Z
+?OnDndQueryAcceptData@CGXGridCore@@UAEHPAVCGXNoOleDataObjectProxy@@@Z
+?OnDrawItem@CGXGridCore@@MAEXPAVCDC@@KKABVCRect@@ABVCGXStyle@@@Z
+?OnDrawTLBR_InvertCells@CGXGridCore@@MAEXAAUDrawStruct@1@@Z
+?OnDrawTLBR_LoadCell@CGXGridCore@@MAEXAAUDrawStruct@1@II@Z
+?OnDrawTopLeftBottomRight@CGXGridCore@@MAEXKKKKPAVCDC@@@Z
+?OnEditFind@CFindResultsGridBase@@IAEXXZ
+?OnEndEditing@CGXControl@@UAEHXZ
+?OnEndEditing@CGXEditControl@@UAEHXZ
+?OnEndEditing@CGXGridCore@@MAEHKK@Z
+?OnEndPrinting@CGXRecordWnd@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnEndTracking@CGXGridCore@@MAEXKKHAAVCSize@@@Z
+?OnExtHitTest@CGXGridCore@@UAEHKKAAVCPoint@@AAVCRect@@@Z
+?OnFillCache@CGXODBCGrid@@MAEXXZ
+?OnFindNext@CGXGridCore@@UAEXPBDHH@Z
+?OnFindReplace@CGXGridCore@@MAEXPAVCFindReplaceDialog@@@Z
+?OnFlushBlobValue@CGXBrowserGrid@@MAEXKKPAVCGXAbstractBlob@@@Z
+?OnFlushCellValue@CGXODBCGrid@@MAEXKKPBD@Z
+?OnFlushRecord@CGXODBCGrid@@MAEHKPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?OnGetDlgCode@CFindResultsGridBase@@QAEIXZ
+?OnGetDlgCode@CGXRecordWnd@@IAEIXZ
+?OnGetDlgCode@CPOSComboBoxDlgBase@@IAEIXZ
+?OnGetRecordCount@CGXODBCGrid@@UAEJXZ
+?OnGetRecordset@CGXODBCGrid@@UAEPAVCRecordset@@XZ
+?OnGetSortColsKey@CGXGridCore@@UAEXKABVCGXSortInfoArray@@AAVCStringArray@@@Z
+?OnGetSortRowsKey@CGXGridCore@@UAEXKABVCGXSortInfoArray@@AAVCStringArray@@@Z
+?OnGridBeginPrinting@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnGridCancelMode@CGXControl@@UAEXXZ
+?OnGridChar@CGXCurrencyEdit@@UAEHIII@Z
+?OnGridChar@CGXEditControl@@UAEHIII@Z
+?OnGridChar@CGXGridCore@@MAEHIII@Z
+?OnGridCtlColor@CGXControl@@UAEPAUHBRUSH__@@PAVCDC@@PAVCWnd@@I@Z
+?OnGridDeadChar@CGXControl@@UAEHIII@Z
+?OnGridDeadChar@CGXGridCore@@MAEHIII@Z
+?OnGridDoubleByteChar@CGXCurrencyEdit@@UAEHABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@II@Z
+?OnGridDoubleByteChar@CGXEditControl@@UAEHABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@II@Z
+?OnGridDoubleByteChar@CGXGridCore@@MAEHABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@II@Z
+?OnGridDragEnter@CGXGridCore@@UAEKPAVCGXNoOleDataObjectProxy@@KVCPoint@@@Z
+?OnGridDragLeave@CGXGridCore@@UAEXXZ
+?OnGridDragOver@CGXGridCore@@UAEKPAVCGXNoOleDataObjectProxy@@KVCPoint@@@Z
+?OnGridDragScroll@CGXGridCore@@UAEKKVCPoint@@@Z
+?OnGridDraw@CGXBrowserGrid@@UAEXPAVCDC@@@Z
+?OnGridDrop@CGXBrowserGrid@@UAEHPAVCGXNoOleDataObjectProxy@@KVCPoint@@@Z
+?OnGridDropEx@CGXGridCore@@UAEKPAVCGXNoOleDataObjectProxy@@KKVCPoint@@@Z
+?OnGridEndPrinting@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnGridInitialUpdate@CFindResultsGridBase@@MAEXXZ
+?OnGridInitialUpdate@CGXODBCGrid@@MAEXXZ
+?OnGridKeyDown@CGXBrowserGrid@@UAEHIII@Z
+?OnGridKeyDown@CGXCurrencyEdit@@UAEHIII@Z
+?OnGridKeyDown@CGXEditControl@@UAEHIII@Z
+?OnGridKeyUp@CGXControl@@UAEHIII@Z
+?OnGridKeyUp@CGXGridCore@@MAEHIII@Z
+?OnGridKillFocus@CGXGridCore@@MAEXPAVCWnd@@@Z
+?OnGridPrepareDC@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnGridPreTranslateMessage@CGXControl@@UAEHPAUtagMSG@@@Z
+?OnGridPreTranslateMessage@CGXGridCore@@MAEHPAUtagMSG@@@Z
+?OnGridPrint@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnGridSetFocus@CGXGridCore@@MAEXPAVCWnd@@@Z
+?OnGridSysChar@CGXControl@@UAEHIII@Z
+?OnGridSysChar@CGXGridCore@@MAEHIII@Z
+?OnGridSysColorChange@CGXControl@@UAEXXZ
+?OnGridSysColorChange@CGXGridCore@@MAEXXZ
+?OnGridSysDeadChar@CGXControl@@UAEHIII@Z
+?OnGridSysDeadChar@CGXGridCore@@MAEHIII@Z
+?OnGridSysKeyDown@CGXControl@@UAEHIII@Z
+?OnGridSysKeyDown@CGXCurrencyEdit@@UAEHIII@Z
+?OnGridSysKeyDown@CGXGridCore@@MAEHIII@Z
+?OnGridSysKeyUp@CGXControl@@UAEHIII@Z
+?OnGridSysKeyUp@CGXGridCore@@MAEHIII@Z
+?OnGridTimer@CGXGridCore@@MAEXI@Z
+?OnGridUpdate@CGXGridCore@@MAEXPAVCView@@JPAVCObject@@@Z
+?OnGridWindowProc@CGXGridCore@@MAEHIIJAAJ@Z
+?OnGridWinIniChange@CGXControl@@UAEXPBD@Z
+?OnGridWinIniChange@CGXGridCore@@MAEXPBD@Z
+?OnInfoWndMoveRecord@CGXGridCore@@UAEXHJ@Z
+?OnInitChildren@CGXControl@@MAEXKKABVCRect@@@Z
+?OnInitColInfo@CGXODBCGrid@@MAEXKABUCGXFieldInfo@@AAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@AAJAAGPAH@Z
+?OnInitCurrentCell@CGXGridCore@@MAEXKK@Z
+?OnInitDialog@CColoredTextMessageBox@@MAEHXZ
+?OnInitDialog@CFindResultsDlgBase@@MAEHXZ
+?OnInitDialog@CG3LightDialog@@MAEHXZ
+?OnInitDialog@CPOSComboBoxDlgBase@@MAEHXZ
+?OnInitDialog@CRentalCustOutstandingDlg@@MAEHXZ
+?OnInitDialog@CRentalDlgMultiPeriods@@MAEHXZ
+?OnInitDialog@CRentalDlgSellMultiPeriods@@MAEHXZ
+?OnInitDialog@CSecureTerminalDlg@@MAEHXZ
+?OnInitDialog@CTendTotDlg@@MAEHXZ
+?OnInitialUpdate@CGXRecordWnd@@MAEXXZ
+?OnInvalidKeyPressed@CGXControl@@MAEXPBD@Z
+?OnKillFocus@CGXCurrencyEdit@@IAEXPAVCWnd@@@Z
+?OnLButtonClickedRowCol@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnLButtonDblClkRowCol@CFindResultsGridBase@@MAEHKKIVCPoint@@@Z
+?OnLButtonDblClkRowCol@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnLButtonHitRowCol@CGXGridCore@@MAEHKKKKVCPoint@@IG@Z
+?OnLeftCell@CGXBrowserGrid@@UAEHKKKK@Z
+?OnLeftCell@CGXControl@@UAEHKK@Z
+?OnLeftColChange@CGXGridCore@@MAEHK@Z
+?OnLeftColChanged@CGXGridCore@@MAEXXZ
+?OnLoadCellStyle@CGXODBCGrid@@MAEHKKAAVCGXStyle@@PBD@Z
+?OnManualTaxClick@CTendTotDlg@@IAEXXZ
+?OnMButtonClickedRowCol@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnMButtonDblClkRowCol@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnMButtonHitRowCol@CGXGridCore@@MAEHKKKKVCPoint@@IG@Z
+?OnModifyCell@CGXBrowserGrid@@UAEXKK@Z
+?OnModifyCell@CGXControl@@UAEXXZ
+?OnMouseMoveOver@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnMovedCurrentCell@CGXODBCGrid@@MAEXKK@Z
+?OnMoveTracking@CGXGridCore@@MAEXKKHAAVCSize@@@Z
+?OnNotifyMsg@CGXControl@@UAEXPAUtagMSG@@@Z
+?OnOK@CFindResultsDlgBase@@MAEXXZ
+?OnOK@CPOSComboBoxDlgBase@@MAEXXZ
+?OnOK@CRentalDlgSellMultiPeriods@@MAEXXZ
+?OnOK@CSecureTerminalDlg@@MAEXXZ
+?OnOK@CTendTotDlg@@MAEXXZ
+?OnPasteDiffRange@CGXGridCore@@UAEHXZ
+?OnPasteDirect@CGXGridCore@@UAEHABVCGXRange@@@Z
+?OnPasteFromClipboard@CGXGridCore@@UAEHABVCGXRange@@@Z
+?OnPrint@CGXRecordWnd@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnPrintHeaderAndFooter@CGXGridCore@@UAEXPAVCDC@@PAUCPrintInfo@@@Z
+?OnProcessChar@CGXEditControl@@UAEHIII@Z
+?OnRButtonClickedRowCol@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnRButtonDblClkRowCol@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnRButtonHitRowCol@CGXGridCore@@MAEHKKKKVCPoint@@IG@Z
+?OnReplaceAll@CGXODBCGrid@@MAEXPBD0H@Z
+?OnReplaceSel@CGXBrowserGrid@@UAEXPBDHH0@Z
+?OnScrollBecauseOfEdit@CGXGridCore@@MAEHHK@Z
+?OnSelDragCancel@CGXGridCore@@MAEXXZ
+?OnSelDragColsDrop@CGXGridCore@@MAEHKKK@Z
+?OnSelDragColsMove@CGXGridCore@@MAEHKKK@Z
+?OnSelDragColsStart@CGXGridCore@@MAEHKK@Z
+?OnSelDragDrop@CGXGridCore@@MAEHKKKK@Z
+?OnSelDragMove@CGXGridCore@@MAEHKKKK@Z
+?OnSelDragRowsDrop@CGXGridCore@@MAEHKKK@Z
+?OnSelDragRowsMove@CGXGridCore@@MAEHKKK@Z
+?OnSelDragRowsStart@CGXGridCore@@MAEHKK@Z
+?OnSelDragStart@CGXGridCore@@MAEHKK@Z
+?OnSetFocus@CGXRecordWnd@@IAEXPAVCWnd@@@Z
+?OnShowDetail@CTendTotDlg@@IAEXXZ
+?OnShowFindReplaceDialog@CGXGridCore@@UAEXH@Z
+?OnSize@CFindResultsDlgBase@@IAEXIHH@Z
+?OnStartAutoFillSelection@CGXGridCore@@MAEHAAVCGXRange@@AAIAAVCPoint@@@Z
+?OnStartEditing@CGXControl@@UAEHXZ
+?OnStartEditing@CGXGridCore@@MAEHKK@Z
+?OnStartSelection@CGXGridCore@@MAEHKKIVCPoint@@@Z
+?OnStartTracking@CGXGridCore@@MAEHKKH@Z
+?OnTabChanged@CGXGridCore@@UAEXH@Z
+?OnTaxKillFocus@CTendTotDlg@@IAEXXZ
+?OnTestGridDimension@CGXODBCGrid@@MAEXKK@Z
+?OnTextNotFound@CGXGridCore@@UAEXPBD@Z
+?OnTopRowChange@CGXGridCore@@MAEHK@Z
+?OnTopRowChanged@CGXGridCore@@MAEXXZ
+?OnTrackColWidth@CGXGridCore@@MAEHK@Z
+?OnTrackColWidthEnd@CGXGridCore@@MAEHKH@Z
+?OnTrackColWidthMove@CGXGridCore@@MAEHKH@Z
+?OnTrackColWidthStart@CGXGridCore@@MAEHK@Z
+?OnTrackRowHeight@CGXGridCore@@MAEHK@Z
+?OnTrackRowHeightEnd@CGXGridCore@@MAEHKH@Z
+?OnTrackRowHeightMove@CGXGridCore@@MAEHKH@Z
+?OnTrackRowHeightStart@CGXGridCore@@MAEHK@Z
+?OnValidate@CGXControl@@UAEHXZ
+?OnValidateCell@CGXGridCore@@MAEHKK@Z
+?OnWndMsg@CGXBDropEdit@@MAEHIIJPAJ@Z
+?OnWndMsg@SECDropEdit@@MAEHIIJPAJ@Z
+?OpenRecordset@CGXODBCGrid@@UAEXXZ
+?ParseDateTime@CG3DateTime@@QAEXPBD@Z
+?ParseValue@Format@SECCurrencyEdit@@UBEHPBDAANAAH@Z
+?Paste@CGXBrowserGrid@@UAEHXZ
+?Paste@CGXCurrencyEdit@@UAEHXZ
+?Paste@CGXEditControl@@UAEHXZ
+?PasteCellsFromArchive@CGXGridCore@@UAEHAAVCArchive@@ABVCGXRange@@H@Z
+?PasteTextFromBuffer@CGXBrowserGrid@@UAEHPBDKABVCGXRange@@@Z
+?PasteTextRowCol@CGXGridCore@@UAEHKKABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@IPBVCGXStyle@@@Z
+?PoleDisplay@CTendTotDlg@@QAEXJHJ@Z
+?PostNcDestroy@CGXRecordWnd@@MAEXXZ
+?PreChangeSelection@CGXGridCore@@MAEXPAVCGXRange@@HH@Z
+?PrepareChangeSelection@CGXGridCore@@MAEXPAU__POSITION@@KKKKH@Z
+?PrepareClearSelection@CGXGridCore@@MAEXH@Z
+?PrepareDCAttribs@CGXGridCore@@MAEXPAVCDC@@@Z
+?PrepareTextForPaste@CGXBCurrencyEdit@@MAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?PrepareTextForPaste@SECCurrencyEdit@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?PreTranslateMessage@CColoredTextMessageBox@@MAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CFindResultsGridBase@@MAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CGXRecordWnd@@MAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CPOSComboBoxDlgBase@@MAEHPAUtagMSG@@@Z
+?PreTranslateMessage@CPOSTenderDlg@@UAEHPAUtagMSG@@@Z
+?PreUpdateRecordset@CGXODBCGrid@@MAEXK@Z
+?ProcessKeys@CFindResultsGridBase@@MAEHPAVCWnd@@IIII@Z
+?ProcessKeys@CGXBrowserGrid@@UAEHPAVCWnd@@IIII@Z
+?PromptUser@CRentalReturnItem@@AAE_NXZ
+?PutDecInValue@CGXEditControl@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PBVCGXStyle@@@Z
+?RButtonDblClk@CGXControl@@UAEHIVCPoint@@@Z
+?RButtonDown@CGXControl@@UAEHIVCPoint@@I@Z
+?RButtonUp@CGXControl@@UAEHIVCPoint@@I@Z
+?Recalc@CGXGridCore@@UAEXH@Z
+?RecalcDiscount@CTendTotDlg@@IAEXXZ
+?RecalcTaxes@CTendTotDlg@@IAEXXZ
+?RecycleStyle@CGXGridCore@@UAEXPAVCGXStyle@@@Z
+?Redo@CGXGridCore@@UAEHXZ
+?Redraw@CGXGridCore@@UAEXIH@Z
+?RedrawRowCol@CGXGridCore@@QAEXKKIH@Z
+?RedrawRowCol@CGXGridCore@@UAEXKKKKIH@Z
+?Refresh@CGXControl@@UAEXXZ
+?RefreshViews@CGXGridCore@@UAEHHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@H@Z
+?RegisterControl@CGXGridCore@@QAEXGPAVCGXControl@@HH@Z
+?RemapKey@CPosKeyboardMapping@@QAEHIIIPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?RemapKey@CPosKeyboardMapping@@QAEHPBUtagMSG@@PAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?RemoveChild@CGXControl@@MAEXPAVCGXChild@@@Z
+?RemoveCols@CGXBrowserGrid@@UAEHKKIW4GXCmdType@@@Z
+?RemoveCommand@CGXGridCore@@UAEXW4GXCmdType@@@Z
+?RemoveItemFromTender@CTendTotDlg@@IAEHHH@Z
+?RemoveMappingTable@CPosKeyboardMapping@@AAEXXZ
+?RemoveRows@CGXBrowserGrid@@UAEHKKIW4GXCmdType@@@Z
+?RemoveTenderDetail@CTendTotDlg@@QAEXJJ@Z
+?ReplaceAll@CGXCurrencyEdit@@UAEHABUGX_FR_STATE@@KK@Z
+?ReplaceAll@CGXEditControl@@UAEHABUGX_FR_STATE@@KK@Z
+?ReplaceSel@CGXCurrencyEdit@@UAEXPBD@Z
+?ReplaceSel@CGXEditControl@@UAEXPBD@Z
+?Requery@CG3XComboBox@@QAEHV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?Requery@CGXODBCGrid@@UAEXXZ
+?Reset@CGXControl@@UAEXXZ
+?Reset@CTendTotDlg@@IAEXXZ
+?ResetCurrentCell@CGXGridCore@@UAEXH@Z
+?ResetError@CGXGridCore@@UAEXXZ
+?ResizeColWidthsToFit@CGXGridCore@@UAEHVCGXRange@@HI@Z
+?ResizeRowHeightsToFit@CGXGridCore@@UAEHVCGXRange@@HI@Z
+?Rollback@CGXODBCGrid@@UAEXXZ
+?SaveData@CTendTotDlg@@IAEXXZ
+?SaveDataForUndo@CGXBCurrencyEdit@@MAEXPBDH@Z
+?SaveDataForUndo@SECCurrencyEdit@@UAEXPBDH@Z
+?SaveTenderAmt@CTendTotDlg@@QAEXHJ@Z
+?ScrollCellInView@CGXGridCore@@UAEHKKIH@Z
+?SelectRange@CGXGridCore@@UAEXABVCGXRange@@HH@Z
+?SetActive@CGXCurrencyEdit@@UAEXH@Z
+?SetActive@CGXEditControl@@UAEXH@Z
+?SetAdvancedUndo@CGXGridCore@@UAEHH@Z
+?SetAgencyID@CTendTotDlg@@QAEXH@Z
+?SetBackgroundColor@Format@SECCurrencyEdit@@QAEXK@Z
+?SetBinaryFlags@CGXBrowserGrid@@MAEHPBVCGXStyle@@H@Z
+?SetCanSetManualTax@CTendTotDlg@@QAEX_N@Z
+?SetCells@CGXRange@@QAEAAV1@KK@Z
+?SetColCount@CGXGridCore@@UAEHKI@Z
+?SetColor@CGXBrush@@QAEAAU1@K@Z
+?SetCols@CGXRange@@QAEAAV1@K@Z
+?SetCols@CGXRange@@QAEAAV1@KK@Z
+?SetColWidth@CGXGridCore@@UAEHKKHPAHIW4GXCmdType@@@Z
+?SetControlText@CGXControl@@UAEHKKABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@IPBVCGXStyle@@@Z
+?SetControlText@CGXEditControl@@UAEHKKABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@IPBVCGXStyle@@@Z
+?SetControlTextRowCol@CGXBrowserGrid@@UAEHKKABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@IPBVCGXStyle@@@Z
+?SetCoveredCellsRowCol@CGXGridCore@@UAEHKKKKIW4GXCmdType@@@Z
+?SetCurrentCell@CFindResultsGridBase@@MAEHKKI@Z
+?SetCurrentCell@CGXBrowserGrid@@UAEHKKI@Z
+?SetCurrentText@CGXCurrencyEdit@@UAEXABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetCurrentText@CGXEditControl@@UAEXABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?SetDecimalDigits@CG3POSCurrencyEdit@@UAEXH@Z
+?SetDefaultColWidth@CGXGridCore@@UAEHHIW4GXCmdType@@@Z
+?SetDefaultRowHeight@CGXGridCore@@UAEHHIW4GXCmdType@@@Z
+?SetDialogHeading@CRentalCustOutstandingDlg@@IAEXXZ
+?SetDisabledAccountSale@CTendTotDlg@@QAEXH@Z
+?SetDrawingTechnique@CGXGridCore@@QAE?AW4GXDrawingTechnique@@W42@@Z
+?SetEnlargeIndex@CTendTotDlg@@QAEXJ@Z
+?SetFont@CGXStyle@@QAEAAV1@ABVCGXFont@@W4GXModifyType@@@Z
+?SetFormat@SECCurrencyEdit@@QAEXABVFormat@1@@Z
+?SetFrozenCols@CGXGridCore@@UAEHKKIW4GXCmdType@@@Z
+?SetFrozenRows@CGXGridCore@@UAEHKKIW4GXCmdType@@@Z
+?SetGridCursor@CGXGridCore@@UAEXI@Z
+?SetHorizontalAlignment@CGXStyle@@QAEAAV1@K@Z
+?SetInterior@CGXStyle@@QAEAAV1@K@Z
+?SetLeftCol@CGXGridCore@@UAEXKIH@Z
+?SetLoggingInfo@CTendTotDlg@@QAEXHH@Z
+?SetModifiedFlag@CGXGridCore@@UAEXH@Z
+?SetModify@CGXCurrencyEdit@@UAEXH@Z
+?SetModify@CGXEditControl@@UAEXH@Z
+?SetPattern@CGXBrush@@QAEAAU1@H@Z
+?SetPrinting@CGXGridCore@@UAEXHH@Z
+?SetRangeName@CGXGridCore@@UAEHPBDABVCGXRange@@PAVCObject@@IW4GXCmdType@@@Z
+?SetReadOnly@CG3XComboBox@@QAEXH@Z
+?SetReadOnly@CGXGridCore@@UAEXH@Z
+?SetReadOnly@CGXStyle@@QAEAAV1@H@Z
+?SetReadOnly@SECCurrencyEdit@@QAEXH@Z
+?SetRentalTenderMode@CPOSTenderDlg@@QAEXH@Z
+?SetRowCount@CGXGridCore@@UAEHKI@Z
+?SetRowHeight@CGXGridCore@@UAEHKKHPAHIW4GXCmdType@@@Z
+?SetRows@CGXRange@@QAEAAV1@K@Z
+?SetScrollBarMode@CGXGridCore@@UAEXHHH@Z
+?SetScrollLockedFromCell@CGXGridCore@@UAEHH@Z
+?SetScrollPos@CGXGridCore@@MAEKHKH@Z
+?SetScrollRange@CGXGridCore@@MAEXHKKH@Z
+?SetSelection@CGXGridCore@@UAEXPAU__POSITION@@KKKK@Z
+?SetSize@CGXFont@@QAEAAV1@N@Z
+?SetSku@CRentalReturnItem@@QAEXH@Z
+?SetSpecialMode@CGXGridParam@@QAEXG@Z
+?SetSqlQuery@CGXDynamicRecordset@@QAEXPBD@Z
+?SetStyleRange@CGXBrowserGrid@@UAEHABVCGXRange@@ABVCGXStyle@@W4GXModifyType@@HI@Z
+?SetStyleRange@CGXBrowserGrid@@UAEHABVCGXRange@@PBVCGXStyle@@W4GXModifyType@@HPBVCObArray@@IW4GXCmdType@@@Z
+?SetTable@CGXRange@@QAEAAV1@XZ
+?SetTenderName@CG3CreditCardInfoDialog@@QAEXPBD@Z
+?SetTopRow@CGXGridCore@@UAEXKIH@Z
+?SetUpdateFlag@CGXGridCore@@UAEXKKH@Z
+?SetupRentalPeriodList@CRentalDlgMultiPeriods@@IAEXXZ
+?SetUserAttribute@CGXStyle@@QAEAAV1@GPBD@Z
+?SetValue@CGXCurrencyEdit@@UAEXPBD@Z
+?SetValue@CGXEditControl@@UAEXPBD@Z
+?SetValue@CGXStyle@@QAEAAV1@N@Z
+?SetValue@CGXStyle@@QAEAAV1@PBD@Z
+?SetValue@SECCurrencyEdit@@QAEXNH@Z
+?SetValueRange@CGXGridCore@@QAEHABVCGXRange@@PBDW4GXModifyType@@HI@Z
+?SetWarningText@CGXGridCore@@UAEXPBD@Z
+?SetXref@CRentalReturnItem@@QAEXPBD@Z
+?SetZoom@CGXGridCore@@UAEXHI@Z
+?ShouldBeNegative@CTendTotDlg@@QAEHXZ
+?ShowAR@CPOSTenderDlg@@QAEX_N@Z
+?ShowCalculator@CGXBCurrencyEdit@@MAEHXZ
+?ShowCalculator@SECCurrencyEdit@@MAEHXZ
+?ShowContextCursor@CGXGridCore@@UAEXAAVCPoint@@@Z
+?ShowContextCursor@CGXGridCore@@UAEXIPBD@Z
+?ShowScrollBar@CGXRecordWnd@@UAEXIH@Z
+?SortCols@CGXBrowserGrid@@UAEXVCGXRange@@AAVCGXSortInfoArray@@I@Z
+?SortKeys@CGXGridCore@@UAEXABVCGXSortInfoArray@@AAVCPtrArray@@@Z
+?SortRows@CGXODBCGrid@@UAEXVCGXRange@@AAVCGXSortInfoArray@@I@Z
+?StartEdit@CGXBCurrencyEdit@@MAEXH@Z
+?StartEdit@SECCurrencyEdit@@UAEXH@Z
+?StopEdit@CGXBCurrencyEdit@@MAEXXZ
+?StopEdit@SECCurrencyEdit@@UAEXXZ
+?Store@CGXCurrencyEdit@@UAEHXZ
+?Store@CGXEditControl@@UAEHXZ
+?StoreColCount@CGXGridCore@@MAEHK@Z
+?StoreColWidth@CGXGridCore@@MAEHKH@Z
+?StoreCopyCells@CGXGridCore@@UAEHVCGXRange@@KK@Z
+?StoreCoveredCellsRowCol@CGXGridCore@@MAEHKKKKH@Z
+?StoreCurrentCell@CGXGridCore@@MAEXHKK@Z
+?StoreDefaultColWidth@CGXGridCore@@MAEHH@Z
+?StoreDefaultRowHeight@CGXGridCore@@MAEHH@Z
+?StoreFrozenCols@CGXGridCore@@MAEHKK@Z
+?StoreFrozenRows@CGXGridCore@@MAEHKK@Z
+?StoreHideCol@CGXGridCore@@MAEHKH@Z
+?StoreHideRow@CGXGridCore@@MAEHKH@Z
+?StoreInsertCols@CGXBrowserGrid@@UAEHKKH@Z
+?StoreInsertRows@CGXBrowserGrid@@UAEHKKH@Z
+?StoreMoveCells@CGXGridCore@@UAEHVCGXRange@@KKAAPAVCObject@@HW4GXCmdType@@@Z
+?StoreMoveCols@CGXBrowserGrid@@UAEHKKKH@Z
+?StoreMoveDataCols@CGXBrowserGrid@@MAEHABVCGXRange@@ABVCDWordArray@@@Z
+?StoreMoveDataRows@CGXBrowserGrid@@MAEHABVCGXRange@@ABVCDWordArray@@@Z
+?StoreMoveRows@CGXBrowserGrid@@UAEHKKKH@Z
+?StoreReadOnly@CGXGridCore@@MAEHH@Z
+?StoreRemoveCols@CGXBrowserGrid@@UAEHKKH@Z
+?StoreRemoveRows@CGXBrowserGrid@@UAEHKKH@Z
+?StoreRowCount@CGXGridCore@@MAEHK@Z
+?StoreRowHeight@CGXGridCore@@MAEHKH@Z
+?StoreSelectRange@CGXGridCore@@MAEHABVCGXRange@@H@Z
+?StoreStyle@CGXControl@@UAEHKKPBVCGXStyle@@W4GXModifyType@@H0@Z
+?StoreStyle@CGXCurrencyEdit@@UAEHKKPBVCGXStyle@@W4GXModifyType@@H0@Z
+?StoreStyleRowCol@CGXBrowserGrid@@UAEHKKPBVCGXStyle@@W4GXModifyType@@H@Z
+?StoreZoom@CGXGridCore@@MAEHHH@Z
+?StripSeparatorFromValue@CGXEditControl@@UAEHAAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@PBVCGXStyle@@AAN@Z
+?SubtractBorders@CGXGridCore@@UAE?AVCRect@@ABV2@ABVCGXStyle@@H@Z
+?terminate@@YAXXZ
+?ToggleOverstrikeMode@CGXBCurrencyEdit@@MAEXXZ
+?ToggleOverstrikeMode@SECCurrencyEdit@@UAEXXZ
+?ToggleSelectionFrameMarker@CGXGridCore@@UAEXXZ
+?TraceMethod@LogCodeSite@@QAE?AVCodeSiteMethodTracer@@V?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?TransferCurrentCell@CGXGridCore@@UAEHHIH@Z
+?Undo@CGXBrowserGrid@@UAEHXZ
+?UndoAdvanced@CGXGridCore@@UAEHPAVCObject@@HH@Z
+?UndoRecord@CGXBrowserGrid@@UAEXXZ
+?UnfreezeCols@CGXGridCore@@UAEXXZ
+?UnfreezeRows@CGXGridCore@@UAEXXZ
+?Update@CGXBrowserGrid@@UAEHPAV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?UpdateAllViews@CGXGridCore@@UAEXPAVCWnd@@JPAVCObject@@@Z
+?UpdateBaseStyle@CGXGridCore@@UAEXGIH@Z
+?UpdateChangedColCount@CGXGridCore@@MAEXKIH@Z
+?UpdateChangedColWidths@CGXGridCore@@MAEXKKPAHIH@Z
+?UpdateChangedRowCount@CGXGridCore@@MAEXKIH@Z
+?UpdateChangedRowHeights@CGXGridCore@@MAEXKKPAHIH@Z
+?UpdateCoveredCellsRowCol@CGXGridCore@@MAEXKKKKIH@Z
+?UpdateDisplay@CTendTotDlg@@IAEXH@Z
+?UpdateFrozenCols@CGXGridCore@@MAEXKKIH@Z
+?UpdateFrozenRows@CGXGridCore@@MAEXKKIH@Z
+?UpdateGlobalCommentModule@CTendTotDlg@@SAXHH@Z
+?UpdateInsertCols@CGXGridCore@@MAEXKKIH@Z
+?UpdateInsertRows@CGXGridCore@@MAEXKKIH@Z
+?UpdateMoveCols@CGXGridCore@@MAEXKKKIH@Z
+?UpdateMoveDataCols@CGXGridCore@@UAEXABVCGXRange@@IH@Z
+?UpdateMoveDataRows@CGXGridCore@@UAEXABVCGXRange@@IH@Z
+?UpdateMoveRows@CGXGridCore@@MAEXKKKIH@Z
+?UpdateProperties@CGXGridCore@@UAEXIH@Z
+?UpdateReadOnly@CGXGridCore@@MAEXHH@Z
+?UpdateRecordInfoWnd@CGXGridCore@@UAEXXZ
+?UpdateRemoveCols@CGXGridCore@@MAEXKKPAHIH@Z
+?UpdateRemoveRows@CGXGridCore@@MAEXKKPAHIH@Z
+?UpdateScrollbars@CGXGridCore@@UAEXHH@Z
+?UpdateSelectRange@CGXGridCore@@MAEXABVCGXRange@@PBVCGXRangeList@@H@Z
+?UpdateStyleRange@CGXGridCore@@UAEXABVCGXRange@@PBVCGXStyle@@W4GXModifyType@@HIH@Z
+?UpdateStylesMap@CGXGridCore@@UAEXIH@Z
+?UpdateZoom@CGXGridCore@@MAEXHIH@Z
+?ValidatePaste@CGXControl@@MAEHABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?ValidatePaste@CGXEditControl@@UAEHABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?ValidateString@CGXControl@@MAEHABV?$CStringT@DV?$StrTraitMFC_DLL@DV?$ChTraitsCRT@D@ATL@@@@@ATL@@@Z
+?ValidateTenderAmount@CTendTotDlg@@QAEHHN@Z
+?WindowProc@CGXRecordWnd@@MAEJIIJ@Z
+@.data
+@.reloc
+@This Item's DCC is not Valid for this account. Manager Override?
+[AccountName]
+[AgencyID]
+[CustomerId]
+[dbo].[RentalCustOutstanding_vw]
+[dbo].[VW_MO_TENDER_TOTALS]
+[dbo].[VW_POS_TENDER_DETAIL]
+[dbo].[VW_POS_TENDER_TOTALS]
+[Description]
+[DueDate]
+[ISBN]
+[m_paramTranID]
+[NonReturnCost]
+[NonReturnFee]
+[paramTransactionID]
+[paramTranTenderID]
+[TaxAmount]
+[TenderAmount]
+[TenderDesc]
+[TenderID]
+[TranDtlID]
+[TransactionID]
+[TranTenderID]
+[TranTendorID]
+__clean_type_info_names_internal
+__CppXcptFilter
+__crtTerminateProcess
+__crtUnhandledException
+__CxxFrameHandler3
+__dllonexit
+_amsg_exit
+_calloc_crt
+_crt_debugger_hook
+_except_handler4_common
+_initterm
+_initterm_e
+_malloc_crt
+_onexit
+_purecall
+_unlock
+`.rdata
+{ call BadChecksExist (%d, %d, %d) } 
+{ call P_AddAccessHistory(%d, %d, %d, %d, '%s', '%s', %d, '%s') }
+{ call P_Rental_GetNotReturnedHeaderId(%d, '%s', %d, %d) }
+{ call SP_G3GetUserInfo(0,'%s') }
+{ call SP_POS_Find_%s('%s',%ld,%ld,%ld) }
+{ call SP_POS_Find_Bad_Checks(%d, %d) }
+{ call SP_POS_Find_By_%s('%s', %d, %d) }
+{ call SP_POS_Find_ManTax_Code(%ld) }
+{ call SP_POS_Find_NonMerch(%ld) }
+{ call SP_POS_Find_Tender(%d, %d, NULL, %d, %d) }
+{ call SP_POS_GetManagerPassword(%ld,%d) }
+{ call SP_POS_TendTotalSaveTax(%d, %d, %d, %d, %d, %d, %d, 0, %d) }
+{call SP_MOCalcInitItemTax(%d, '', '')}
+{call SP_POS_GetCurrency(%d)}
+{call SP_POS_GetCurrency(0)}
+{call SP_POS_GetCurrency}
+{call SP_POS_GetPoleDispInfo(%d, %d, %d, %d)}
+{call SP_POS_GetTender(%d, %d)}
+{call SP_POS_GetTender(%d, 0, '%s')}
+{call SP_POS_GetTenderDescription(%ld)}
+{call SP_POS_TendTotalAddDCCOverride(%d,%d)}
+{call SP_POS_TendTotalAddTender(%d,%d, 0, 0, %d)}
+{call SP_POS_TendTotalAddTender(%d,%d, 0, 0, %d, '%s', '%s', '%s', %d)}
+{call SP_POS_TendTotalApplyAgencyDiscount(%d,%d)}
+{call SP_POS_TendTotalCancel(%d, %d, %d)}
+{call SP_POS_TendTotalClearAcctSale(%d)}
+{call SP_POS_TendTotalClearTenderDetail(%d, %d)}
+{call SP_POS_TendTotalClearTenderDetail(%d, %d, %d, %d)}
+{call SP_POS_TendTotalDeleteTender(%d, %d)}
+{call SP_POS_TendTotalGetAmtRequired('%s')}
+{call SP_POS_TendTotalGetManualTaxCodeDefault(%d, %d)}
+{call SP_POS_TendTotalInit(%d, %d, %d, %d)}
+{call SP_POS_TendTotalInitItem(%d, %d)}
+{call SP_POS_TendTotalInitItemTax(%d, 0, 0)}
+{call SP_POS_TendTotalInitRefundDetail(%d)}
+{call SP_POS_TendTotalInitTender(%d, %d)}
+{call SP_POS_TendTotalInitTenderDetail(%d, %d)}
+{call SP_POS_TendTotalIsDCCValid(%d,%d,%d)}
+{call SP_POS_TendTotalIsNMerchValid(%d,%d,%d)}
+{call SP_POS_TendTotalRecalcTax(%d, %d, %d)}
+{call SP_POS_TendTotalRecalcTransDiscount(%d)}
+{call SP_POS_TendTotalSaveHeader(%d, %d, %d, %d, %d)}
+{call SP_POS_TendTotalSaveItem(%d, %d, %d, %d, %d, %d)}
+{call SP_POS_TendTotalSaveItemDiscount(%d, %d, %d)}
+{call SP_POS_TendTotalSaveTender(%d, %d, '%s', %d, %d)}
+{call SP_POS_TendTotalSaveTenderDetail(%d, %d, %d, %d, %d, %d, %d, %d, %d, %d)}
+{call SP_POS_TendTotalSaveTenderDetail(%d, %d, %d, %d, %d, %d, %d, %d,0,%d)}
+{call SP_POS_TendTotalTextbookValidation(%d, %d, %d)}
+~D$PPf
+< <$<(<,<0<4<8<<<@<D<H<L<P<T<X<\<`<d<h<l<p<t<x<|<
+< <&<9<?<E<W<^<k<y<
+< <(<0<8<@<P<X<l<x<
+< <(<4<T<\<d<l<x<
+< <:<C<]<f<
+< <5<D<S<b<q<z<
+<"<(<.<4<:<@<F<L<R<X<^<d<j<p<v<|<
+<"<5<L<b<u<~<
+<"<6<G<`<f<y<
+<$<6<E<Z<y<
+<%<.<7<@<I<R<[<d<m<v<
+<&<2<:<G<f<u<
+<&<2<8<R<[<
+<&<6<O<U<h<n<t<
+<(<,<0<4<8<<<@<D<H<L<P<T<\<`<d<h<l<p<t<x<|<
+<(<1<D<
+<(<H<P<X<`<h<p<x<
+<)<4<@<N<]<c<s<y<
+<*<0<6<E<`<
+<.<A<H<N<Y<i<y<
+</<=<F<O<_<
+<:<Q<w<
+<:=g=q=
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<{uej j{
+<=<M<\<m<
+<4<L<U<a<p<
+<5<@<[<f<v<
+<6<F<_<e<x<~<
+<6=E=\=b=u={=
+<7<Y<{<
+<assembly xmlns="urn:schemas-microsoft-com:asm.v1" manifestVersion="1.0"><dependency><dependentAssembly><assemblyIdentity type="win32" name="Microsoft.Windows.Common-Controls" version="6.0.0.0" processorArchitecture="x86" publicKeyToken="6595b64144ccf1df" language="*"></assemblyIdentity></dependentAssembly></dependency><trustInfo xmlns="urn:schemas-microsoft-com:asm.v3"><security><requestedPrivileges><requestedExecutionLevel level="asInvoker" uiAccess="false"></requestedExecutionLevel></requestedPrivileges></security></trustInfo><application xmlns="urn:schemas-microsoft-com:asm.v3"><windowsSettings><dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true</dpiAware></windowsSettings></application></assembly>
+<F<M<S<b<h<x<~<
+<H<Y<e<u<~<
+= =$=(=,=0=
+= =$=(=,=0=4=8=<=@=D=H=L=P=T=X=\=`=d=h=l=p=t=x=|=
+= =&=8=H=
+= =(=4=X=x=
+= =0=6=<=K=Y=r=
+=!=)=9=Q=V=l=v=
+="=2=8=>=M=Y=
+=#=)=C=L=v=
+=$=*=0=6=<=B=H=N=T=Z=`=f=l=r=x=~=
+=$=,=4=<=D=P=p=x=
+=$=.=`=
+=$=K=e=n=w=
+=%=.=?=b=u=~=
+=%=0=5=:=Q=`=f=y=
+=&===D=V=\=l=r=x=
+=&=7=N=U=g=m=}=
+=&=7=P=V=i=o=u=
+=&=F=L=_=e=k=z=
+=(=,=@=D=\=`=d=h=l=
+=(=Q=f=r=
+=*=0=6=H=l=
+=,=0=H=L=d=h=
+=,=4=<=D=L=T=\=h=
+=.>@>_>p>
+=.>8>v>
+=+=X=^=}=
+=1=V=h=
+=3=K=c=i=~=
+=4=:=M=S=Y=k=
+=4=V=g=~=
+=5=E=Q=b=k=t=}=
+=5=Q=u=
+=8=?=T=d=y=
+=D>Y>`>s>
+> >$>(>,>0>4>8>@>X>h>x>|>
+> >$>(>,>0>4>8><>@>D>H>L>P>T>X>\>`>d>h>l>p>t>x>|>
+> >&>,>2>8>>>D>J>P>V>\>b>h>n>t>z>
+> >(><>H>P>h>p>
+> >,>8>D>P>\>h>t>
+> >/>>>M>V>_>i>
+> >4><>L>X>
+> >8>@>P>d>
+>!?5?\?c?u?
+>!>.>2>7><>A>F>V>f>
+>">(>:>Q>
+>#>)>/>>>J>Y>a>
+>$>,>D>L>T>\>l>t>
+>$>6>M>T>f>
+>%>:>R>j>
+>&?5?Z?`?s?y?
+>&>\>U?z?
+>&>8>T>Z>m>s>y>
+>(>8>H>X>h>l>|>
+>)>/>5>G>W>g>l>
+>/>5>;>N>
+>/>5>H>N>T>f>
+>/>8>I>R>[>k>{>
+>->6>L>R>X>j>
+>0>?>E>U>[>a>p>v>
+>1>7>J>P>V>h>y?
+>2>;>f>v>
+>3>V>g>
+>5>>>W>n>
+>7>D>n>
+>8>>>E>
+>9>N>l>r>
+>9>U>k>
+0 0$0(0,0004080<0@0D0H0L0P0T0X0\0`0d0
+0 0$0(0,0004080<0@0D0H0L0P0T0X0\0`0d0h0l0p0t0x0|0
+0 0$0(0,00040p1t1x1|1
+0 0(00080@0H0P0X0`0h0p0x0
+0 0+0@0F051E1V1a1
+0 080P0d0
+0!0'0,020<0a0~0
+0!0'0:0@0F0X0g0
+0!060F0_0e0x0~0
+0"0(040E0J0V0c0
+0"01080B0t0
+0"050>0G0P0Y0b0{0
+0$0(080<0@0D0H0L0P0T0\0`0d0h0l0t0
+0$0*00060<0B0H0N0T0Z0`0f0l0r0x0~0
+0$0,080X0`0h0p0|0
+0$0-060?0X0u0~0
+0%080>0D0V0
+0&000I0S0l0v0
+0&0X0e0n0
+0(020D0f0x0
+0,0<0@0D0\0`0d0h0l0
+0,0L0T0\0d0l0t0|0
+0;H ~5;_
+0=1C1a1g1r1{1
+0'0;0A0Q0W0]0l0u0
+000C0H0N0b0g0s0
+000V0o0
+020@0s0
+030<0R0e0n0w0
+040904e4
+050;0P0V0\0o0
+060F0_0e0x0~0
+060F0f0l0
+071V1f1
+0B0H0T0g0
+0B1P1^1
+1 1$1(1,1014181<1@1D1H1L1P1T1X1\1`1d1h1l1p1t1
+1 1$1(1,1014181<1@1D1H1L1P1T1X1\1`1d1h1l1p1t1x1|1
+1 1$1(1,10141L1h1l1p1t1x1|1
+1 1&1,12181>1D1J1P1V1\1b1h1n1t1z1
+1 1&191?1E1W1
+1 1014181<1@1D1H1L1P1T1\1t1
+1!10191W1v1
+1#1/1?1s1z1
+1$1,141@1`1h1p1|1
+1$1-161R1e1n1w1
+1$1D1L1X1|1
+1%2+2B2a2~2
+1&1?1E1X1^1d1v1
+1&1[1h1
+1&111<1G1R1[1`1i1r1
+1(191L1j1p1
+1(1H1P1\1|1
+1(2D2`2
+1*1@1X1
+1*101C1I1O1a1p1
+1,101H1X1h1x1|1
+1.181B1W1s1
+1;1V1f1
+1?2I2Y2g2
+1+111A1G1M1\1o1
+11171J1P1V1h1
+1'151>1G1P1Y1j1s1
+1'1N1T1g1m1s1
+121K1]1m1
+151>1G1]1u1~1
+162a2{2
+181A1R1
+181T1p1
+1D2J2P2
+2 2$2(2,2024282<2@2D2H2L2P2T2X2\2`2d2h2l2p2t2x2|2
+2 2$2,2024282<2@2H2L2P2T2X2`2x2|2
+2 2024282<2@2D2H2P2h2x2
+2!20292E2Q2`2
+2"2(2.242:2@2F2L2R2X2^2d2j2p2v2|2
+2#3/3;3G3S3b3
+2&2;2W2]2p2v2|2
+2&242=2F2X2o2
+2&282W2]2p2v2|2
+2(202<2\2d2x2
+2)3;3f3v3
+2,22282G2]2j2
+2,2B2U2d2m2
+2,2B2U2l2u2
+2.2T2]2i2v2
+2=2E2N2^2
+20282@2L2l2t2|2
+21272=2P2
+212N2f2r2z2
+2'2/2N2V2p2
+2-2?2L2U2v2
+2'232?2W2_2k2w2|2
+23292G2Z2~2
+232K2U2n2
+242J2]2m2
+242L2d2
+28.2.7 Build: 07
+282@2H2P2X2`2h2p2x2
+2C2L2b2
+2H2V2d2
+3 3$3(3,3034383<3@3D3H3L3P3T3X3\3`3d3h3l3p3t3x3|3
+3"3+393K3a3j3s3|3
+3#3=3P3
+3$3*30363<3B3H3N3T3Z3`3f3l3r3x3~3
+3$343d3
+3$3D3L3T3\3h3
+3%313B3K3T3]3
+3&3;3\3`3d3h3l3
+3&353;3K3Q3W3f3q3
+3(3B3V3_3
+3(454Y4f4o4
+3)3;3J3s4
+3,3<3@3D3\3`3d3h3l3
+3,30343L3P3T3h3x3|3
+3,343<3H3h3p3
+3.3V3h3
+3;3F3l3s3
+3+444=4S4e4q4
+3<3X3n3
+303=3D3M3\3e3t3}3
+30383@3H3P3X3d3
+3'3`3f3u3{3
+3'383@3R3
+3'4J4d4
+353>3G3P3Y3r3
+353D3V3[3u3
+363F3_3e3x3~3
+373g3n3~3
+383\3x3
+3H4U4{4
+3P3j3v3
+3Q3W3]3c3i3o3v3}3
+4 4$4(4,4044484<4@4D4H4L4P4T4X4\4`4d4h4l4p4t4x4|4
+4 4&4,42484>4D4J4P4V4\4b4h4n4t4z4
+4 4:4H4U4Z4g4u4
+4!565F5_5e5x5~5
+4#424;4D4Z4u4
+4#42484H4N4T4c4n4
+4$4<4L4P4T4X4\4`4d4h4l4t4
+4%444:4@4F4L4R4X4
+4&464M4`4u4
+4&565O5U5h5n5t5
+4(4,404D4T4X4
+4(404H4P4X4`4h4p4x4
+4)484F4a4g4|4
+4*4V4f4
+4,42484G4n4
+4,444<4H4l4
+4,444H4`4l4t4
+4,4H4L4P4T4X4\4`4d4h4l4p4t4x4|4
+4?4H4Z4
+4+4V4h4
+4<4E4g4
+4<5h5o5
+4=5D5R5^5m5}5
+404G4V4f4
+4-4?4E4U4[4a4p4y4
+4'414K4^4
+4'5:5C5H5Y5
+464F4_4e4x4~4
+484N4h4t4
+494V4h4
+4M4`4i4
+5 5$5(5,5054585<5@5D5H5L5P5T5X5\5`5d5h5l5p5t5x5|5
+5 5&5<5^5h5r5
+5 5(50585@5H5P5X5`5l5
+5 5/5R5
+5 5<5U5^5g5p5
+5!5&565F5_5e5x5~5
+5!535<5i5x5
+5"5(555D5S5\5e5{5
+5"5'5,51565N5X5^5j5r5
+5$505T5t5|5
+5$585D5L5d5l5|5
+5&565O5U5h5n5t5
+5&575^5d5w5}5
+5(5.5>5D5J5[5
+5(5.545F5U5^5p5w5
+5(5;5T5Z5`5
+5(585H5L5P5T5X5\5`5d5h5l5t5
+5(5D5l5
+5(6V6h6
+5,5D5\5x5|5
+5/555H5N5T5f5x5
+5+52575r5{5
+5+5F5U5s5y5
+5+636@6E6`6e6
+5>5D5W5]5c5r5
+50N0f0x0
+5-6<6O6U6q6
+5A5U5^5g5}5
+5A6>7N7j7T8[8k8
+5E5N5d5u5
+5E5N5h5q5
+6 6$6(6,6064686<6@6D6H6L6P6T6X6\6`6d6h6l6p6t6x6|6
+6 6(6<6H6P6h6p6x6
+6 6:6C6]6f6
+6 6@6W6b6|6
+6 666E6N6W6c6l6u6~6
+6!6'6:6@6F6X6
+6!676P6Y6o6
+6#6)6<6B6H6W6f6l6
+6$6(6,60646<6@6D6H6L6T6X6\6`6d6h6p6t6x6|6
+6$606P6X6l6x6
+6$63696I6O6U6d6t6
+6$6A6m6s6
+6%6*6f6
+6%707K7V7f7
+6&606B6v6
+6(646<6T6\6d6l6|6
+6)656D6f6v6
+6)7.7F7V7o7u7
+6/6V6f6
+6+626B6_6
+6<7C7W7c7y7
+6>6D6W6]6c6r6
+626P6v6
+646E6N6d6u6
+656;6P6V6\6r6
+6'6@6F6Y6_6e6w6
+666;6O6X6e6n6
+6E6N6d6u6~6
+6F6T6k6
+7 7$7(7,7074787<7@7D7H7
+7 7$7(7,7074787<7@7D7H7L7P7T7d7
+7 7$7(7,7074787<7@7D7H7L7P7T7X7\7`7d7h7l7p7t7x7|7
+7 7(70787@7L7l7t7
+7 7(7F7T7k7~7
+7 7)7I7^7
+7!707V7
+7"727V7g7
+7#7Q7k7
+7#7V7g7
+7$7<7D7L7T7`7
+7%7.777@7I7_7u7~7
+7%7+7>7D7J7\7s7
+7%717:7H7^7
+7%7a7~7
+7&7<7E7K7]7j7z7
+7&767X8p8w8
+7&7F7V7o7u7
+7(707@7H7P7X7`7h7p7x7
+7)7D7J7_7e7k7~7
+7,727E7K7Q7c7l7
+7+717D7J7P7_7t7
+7+7A7G7M7_7
+7<7H7h7p7|7
+7<8V8b8
+7=7S7w7
+707\7k7
+71777J7P7V7h7
+74787P7T7l7p7
+747T7p7
+757>7G7P7Y7b7k7t7}7
+757>7G7P7Y7e7q7}7
+7'7@7F7Y7_7e7w7
+7'727C7L7W7h7q7|7
+7-767P7Y7s7|7
+797f7l7r7x7~7
+7Q7f7x7
+8 8$8(8,8084888<8@8D8H8L8P8T8X8\8`8d8h8l8p8t8x8|8
+8 8$8(8,8084888<8@8D8H8L8P8T8X8\8`8d8h8l8p8t8x8|8<:T:p:t:x:|:
+8 8&8,82888>8D8J8P8V8\8b8h8n8t8z8
+8 8(808<8\8d8x8
+8 8,8L8T8\8h8
+8!8*8@8U8d8s8
+8#898I8^8|8
+8$848a8v8
+8%8:8X8f8x8
+8&8/8d8
+8&868O8U8h8n8t8
+8(848@8L8X8t8
+8(8A8G8Z8`8f8x8
+8*8F8O8_8
+8,808@8D8T8X8h8l8|8
+8.848V8f8
+8/858E8K8Q8`8i8r8
+8/858H8N8T8f8w8
+8/8B8H8
+8/8U8j8r8
+8/9V9f9
+8+8;8a8
+8>8F8g8w8
+8084888<8@8D8H8L8P8T8X8\8`8d8h8l8p8t8x8|8
+80888<8T8X8
+828C8T8Z8a8t8
+848@8d8
+848X8p8
+858>8G8P8Y8o8
+868<8R8X8^8p8
+8'8:8B8H8
+8-8A8G8W8]8c8r8
+8B9^9v9
+8I;P;a;
+8l9p9t9x9|9
+8X8_8p8
+9 :$:(:,:0:4:8:<:@:D:H:L:P:T:X:\:`:d:h:l:p:t:x:|:
+9 :(:4:B:N:
+9 9$9(9,9094989<9@9D9H9L9P9T9X9\9`9d9h9l9p9t9x9|9
+9 9(949T9`9
+9!9.979k9
+9"9(9.949:9@9F9L9R9X9^9d9j9p9v9|9
+9"9+9D9U9^9g9p9
+9"919A9a9
+9$9(9,9D9H9L9`9p9t9x9
+9$9)9A9y;
+9$9*90969<9B9H9N9T9Z9`9f9l9r9x9~9
+9$9,949<9D9L9T9`9
+9$949<9L9T9h9t9|9
+9$949Z9h9
+9%9;9A9N9
+9%959;9A9P9Y9t9
+9&9.9>9q9
+9&989Q9W9j9p9v9
+9*939C9f9w9
+9.9<9Q9a9
+9+9Q9]9m9s9
+9>9j9r9~9
+949P9t9
+959>9T9{9
+979T9Z9j9|9
+979V9e9|9
+9'9<9B9V9b9h9
+9'9>9U9^9t9
+9D$Luf
+9H:S:]:j:}:
+9N9Z9f9r9
+9R9_9o9t9
+9x(~:3
+A Tender cannot be used just for change.
+Account
+Account Request Number
+Agency
+'All Items are not completely allocated.
+AR Tender cannot be deleted.
+Are you sure you want to cancel?
+Authentication failed.
+Authorized Tender cannot be deleted.
+Bad Check
+Bad Check(s):
+C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\atlmfc\include\afxwin1.inl
+Cancel
+Cancelling will cause authorized tenders to be reversed.
+CColoredTextMessageBox
+CColoredTextMessageBox::~CColoredTextMessageBox
+CColoredTextMessageBox::CColoredTextMessageBox
+CColoredTextMessageBox::DoModal
+CColoredTextMessageBox::OnCtlColor
+CColoredTextMessageBox::OnInitDialog
+CColoredTextMessageBox::PreTranslateMessage
+CFindBy
+CFindBy::~CFindBy
+CFindBy::CFindBy
+CFindBy::FindAccount
+CFindBy::FindCommon
+CFindBy::FindCustomer
+CFindBy::FindItem
+CFindBy::FindMFGSerial
+CFindBy::FindReceipt
+CFindBy::FindRental
+CFindBy::FindRentalHistory
+CFindBy::Init
+CFindResultsDlgBase
+CFindResultsDlgBase::~CFindResultsDlgBase
+CFindResultsDlgBase::CFindResultsDlgBase
+CFindResultsDlgBase::DoDataExchange
+CFindResultsDlgBase::OnCancel
+CFindResultsDlgBase::OnInitDialog
+CFindResultsDlgBase::OnOK
+CFindResultsDlgBase::OnSize
+CFindResultsGridBase
+CFindResultsGridBase::~CFindResultsGridBase
+CFindResultsGridBase::CFindResultsGridBase
+CFindResultsGridBase::OnClose
+CFindResultsGridBase::OnEditFind
+CFindResultsGridBase::OnGetDlgCode
+CFindResultsGridBase::OnGridInitialUpdate
+CFindResultsGridBase::OnLButtonDblClkRowCol
+CFindResultsGridBase::PreTranslateMessage
+CFindResultsGridBase::ProcessKeys
+CFindResultsGridBase::SetCurrentCell
+CG3POSCurrencyEdit
+CG3POSCurrencyEdit::Initialize
+CG3POSCurrencyEdit::SetDecimalDigits
+CG3XComboBox
+CG3XComboBox::~CG3XComboBox
+CG3XComboBox::CG3XComboBox
+CG3XComboBox::FillItems
+CG3XComboBox::Initialize 1
+CG3XComboBox::Initialize 2
+CG3XComboBox::Requery
+CG3XComboBox::SetReadOnly
+CGridBrowseEditBase
+CGridBrowseEditBase::~CGridBrowseEditBase
+CGridBrowseEditBase::BuildWhereClause
+CGridBrowseEditBase::CGridBrowseEditBase
+CGridBrowseEditBase::DoLookUp
+CGridBrowseEditBase::FormatDisplayString
+CGridBrowseEditBase::GetControlText
+CGridBrowseEditBase::GetValue
+CGridBrowseEditBase::LookUp 1
+CGridBrowseEditBase::LookUp 2
+CGridBrowseEditBase::OnClickedButton
+CGridBrowseEditBase::OnInitChildren
+CGridBrowseEditBase::OnValidate
+CGridBrowseEditBase::PreTranslateMessage
+CGridTendBrowseEdit
+CGridTendBrowseEdit::~CGridTendBrowseEdit
+CGridTendBrowseEdit::CGridTendBrowseEdit
+CGridTendBrowseEdit::LookUp 1
+CGridTendBrowseEdit::LookUp 2
+CGridTendBrowseEdit::OnBrowse
+CGridTendBrowseEdit::OnValidate
+Change Due:
+CManTaxCodeDlg
+CManTaxCodeDlg::CManTaxCodeDlg
+CManTaxCodeDlg::GetDlgSQL
+CNonMerchDlg
+CNonMerchDlg::CNonMerchDlg
+CNonMerchDlg::GetDlgSQL
+CompanyName
+Copyright 
+CPOSBadCheckPromptDlg
+CPOSBadCheckPromptDlg::~CPOSBadCheckPromptDlg
+CPOSBadCheckPromptDlg::CPOSBadCheckPromptDlg
+CPOSBadCheckPromptDlg::DoDataExchange
+CPOSBadCheckPromptDlg::FillListBox
+CPOSBadCheckPromptDlg::OnCancel
+CPOSBadCheckPromptDlg::OnInitDialog
+CPOSBadCheckPromptDlg::OnOK
+CPOSComboBoxDlgBase
+CPOSComboBoxDlgBase::CPOSComboBoxDlgBase
+CPOSComboBoxDlgBase::DoDataExchange
+CPOSComboBoxDlgBase::LoadComboBox
+CPOSComboBoxDlgBase::OnCancel
+CPOSComboBoxDlgBase::OnCbnDblclkComboTender
+CPOSComboBoxDlgBase::OnGetDlgCode
+CPOSComboBoxDlgBase::OnInitDialog
+CPOSComboBoxDlgBase::OnOK
+CPOSComboBoxDlgBase::PreTranslateMessage
+CPosKbdMapItem
+CPosKbdMapItem::~CPosKbdMapItem
+CPosKbdMapItem::CPosKbdMapItem 1
+CPosKbdMapItem::CPosKbdMapItem 2
+CPosKeyboardMapping
+CPosKeyboardMapping::~CPosKeyboardMapping
+CPosKeyboardMapping::CPosKeyboardMapping
+CPosKeyboardMapping::FormKey
+CPosKeyboardMapping::InitializeMappingTable
+CPosKeyboardMapping::RemoveMappingTable
+CPOSTenderDlg
+CPOSTenderDlg::CPOSTenderDlg
+CPOSTenderDlg::GetDlgSQL
+CPOSTenderDlg::PreTranslateMessage
+CreateAcceleratorTableA
+CreateFontIndirectA
+CRentalCustOutstandingDlg
+CRentalCustOutstandingDlg::~CRentalCustOutstandingDlg
+CRentalCustOutstandingDlg::CRentalCustOutstandingDlg
+CRentalCustOutstandingDlg::DoDataExchange
+CRentalCustOutstandingDlg::OnInitDialog
+CRentalCustOutstandingDlg::SetDialogHeading
+CRentalCustOutstandingGrid
+CRentalCustOutstandingGrid::~CRentalCustOutstandingGrid
+CRentalCustOutstandingGrid::CRentalCustOutstandingGrid
+CRentalCustOutstandingGrid::OnGridInitialUpdate
+CRentalCustOutstandingSet
+CRentalCustOutstandingSet::CRentalCustOutstandingSet
+CRentalCustOutstandingSet::GetDefaultConnect
+CRentalCustOutstandingSet::GetDefaultSQL
+CRentalDlgMultiPeriods
+CRentalDlgMultiPeriods::~CRentalDlgMultiPeriods
+CRentalDlgMultiPeriods::DoDataExchange
+CRentalDlgMultiPeriods::GetRentalDiscAllowed
+CRentalDlgMultiPeriods::GetRentalPeriod
+CRentalDlgMultiPeriods::GetRentalPrice
+CRentalDlgMultiPeriods::GetRentalTaxType
+CRentalDlgMultiPeriods::IsNMRP
+CRentalDlgMultiPeriods::OnBnClickedRent
+CRentalDlgMultiPeriods::OnInitDialog
+CRentalDlgMultiPeriods::SetupRentalPeriodList
+CRentalDlgSellMultiPeriods
+CRentalDlgSellMultiPeriods::~CRentalDlgSellMultiPeriods
+CRentalDlgSellMultiPeriods::CRentalDlgSellMultiPeriods
+CRentalDlgSellMultiPeriods::DoDataExchange
+CRentalDlgSellMultiPeriods::OnBnClickedSell
+CRentalDlgSellMultiPeriods::OnInitDialog
+CRentalDlgSellMultiPeriods::OnOK
+CRentalPeriodListCtrl
+CRentalPeriodListCtrl::~CRentalPeriodListCtrl
+CRentalPeriodListCtrl::CRentalPeriodListCtrl
+CRentalReturnItem
+CRentalReturnItem::~CRentalReturnItem
+CRentalReturnItem::CRentalReturnItem
+CRentalReturnItem::GetRentalCount
+CRentalReturnItem::IsRental
+CRentalReturnItem::PromptUser
+CRequestNumDlg
+CRequestNumDlg::~CRequestNumDlg
+CRequestNumDlg::CRequestNumDlg
+CRequestNumDlg::DoDataExchange
+CRequestNumDlg::OnInitDialog
+CSecureTerminalDlg
+CSecureTerminalDlg::CSecureTerminalDlg
+CSecureTerminalDlg::DoDataExchange
+CSecureTerminalDlg::GetManagerPassword
+CSecureTerminalDlg::GetUserDescr
+CSecureTerminalDlg::OnInitDialog
+CSecureTerminalDlg::OnOK
+CTabbedComboBox
+CTabbedComboBox::DestroyContent
+CTendSelectDlg
+CTendSelectDlg::~CTendSelectDlg
+CTendSelectDlg::CTendSelectDlg
+CTendSelectDlg::OnInitDialog
+CTendSelectDlg::OnOK
+CTendTotDetailDlg
+CTendTotDetailDlg::~CTendTotDetailDlg
+CTendTotDetailDlg::CTendTotDetailDlg
+CTendTotDetailDlg::DoDataExchange
+CTendTotDetailDlg::OnChangeTender
+CTendTotDetailDlg::OnInitDialog
+CTendTotDetailDlg::OnMoveItems
+CTendTotDetailDlg::OnRemoveItems
+CTendTotDetailGrid
+CTendTotDetailGrid::~CTendTotDetailGrid
+CTendTotDetailGrid::CTendTotDetailGrid
+CTendTotDetailGrid::GetSelectedDetail
+CTendTotDetailGrid::Initialize
+CTendTotDetailGrid::OnGetDlgCode
+CTendTotDetailGrid::OnGridInitialUpdate
+CTendTotDetailGrid::OnSetFocus
+CTendTotDetailGrid::ProcessKeys
+CTendTotDetailGrid::SetTranTenderID
+CTendTotDetailSet
+CTendTotDetailSet::CTendTotDetailSet
+CTendTotDetailSet::GetDefaultConnect
+CTendTotDetailSet::GetDefaultSQL
+CTendTotDlg
+CTendTotDlg::~CTendTotDlg
+CTendTotDlg::AddItemToTender
+CTendTotDlg::AddNewRow
+CTendTotDlg::AddTenderRecord
+CTendTotDlg::AllocateExchangeItems
+CTendTotDlg::AllocateItemsToTenders
+CTendTotDlg::CancelNewRow
+CTendTotDlg::ConvLtoDbl
+CTendTotDlg::CreateTmpRecsForDetailGrid
+CTendTotDlg::CTendTotDlg
+CTendTotDlg::CurrencyConversion
+CTendTotDlg::CurrencyInit
+CTendTotDlg::DeleteRow
+CTendTotDlg::DoDataExchange
+CTendTotDlg::EnableManualTaxControls
+CTendTotDlg::GetItemRemainAmt
+CTendTotDlg::GetItemRemainDiscAmt
+CTendTotDlg::GetItemRemainTaxAmt
+CTendTotDlg::GetItemRemainTranDiscAmt
+CTendTotDlg::GetTenderAmt
+CTendTotDlg::GetTenderAuthorized
+CTendTotDlg::GetTenderAvailable
+CTendTotDlg::GetTenderExempt
+CTendTotDlg::GetTenderLimit
+CTendTotDlg::GetTenderTaxAmt
+CTendTotDlg::Initialize
+CTendTotDlg::InitializeArrays
+CTendTotDlg::InitializeItemTaxArray
+CTendTotDlg::IsTenderAmtAvailable
+CTendTotDlg::MoveTenderDetail
+CTendTotDlg::OnAccountSale
+CTendTotDlg::OnCancel
+CTendTotDlg::OnInitDialog
+CTendTotDlg::OnManualTaxClick
+CTendTotDlg::OnOK
+CTendTotDlg::OnShowDetail
+CTendTotDlg::OnTaxKillFocus
+CTendTotDlg::PoleDisplay
+CTendTotDlg::RecalcDiscount
+CTendTotDlg::RecalcTaxes
+CTendTotDlg::RemoveItemFromTender
+CTendTotDlg::RemoveTenderDetail
+CTendTotDlg::Reset
+CTendTotDlg::SaveData
+CTendTotDlg::SaveTenderAmt
+CTendTotDlg::SetLoggingInfo
+CTendTotDlg::ShouldBeNegative
+CTendTotDlg::UpdateDisplay
+CTendTotDlg::UpdateGlobalCommentModule
+CTendTotDlg::ValidateTenderAmount
+CTendTotGrid
+CTendTotGrid::~CTendTotGrid
+CTendTotGrid::AddNew
+CTendTotGrid::CancelRecord
+CTendTotGrid::CTendTotGrid
+CTendTotGrid::GetRowCount
+CTendTotGrid::GetTenderFlags
+CTendTotGrid::Initialize
+CTendTotGrid::IsNMRPTender
+CTendTotGrid::OnFlushCellValue
+CTendTotGrid::OnFlushRecord
+CTendTotGrid::OnGetDlgCode
+CTendTotGrid::OnGridInitialUpdate
+CTendTotGrid::OnLeftCell
+CTendTotGrid::OnValidateCell
+CTendTotGrid::PreTranslateMessage
+CTendTotGrid::ProcessKeys
+CTendTotGrid::Reset
+CTendTotGrid::Update
+CTendTotGrid::UpdatePending
+CTendTotSet
+CTendTotSet::CTendTotSet
+CTendTotSet::GetDefaultConnect
+CTendTotSet::GetDefaultSQL
+CustID
+Custom POS Currency Control
+Custom1
+Customer
+Customer Outstanding Rentals
+Customer:
+CustomerId = %d
+d$$hxl
+D$0SVW
+D$4_^[
+D$4+D$D
+D$Lt>;
+D$pSVW
+DAn amount over $9,999.99 has been entered.
+DecodePointer
+DeleteCriticalSection
+Description
+DestroyAcceleratorTable
+Do you want to continue?'Account Number %s is on BAD CHECK LIST.
+DrawTextA
+DSN=Winprism;
+DThis Non-Merch Item is not Valid for this account. Manager Override?
+Due Date
+DueDate, Description
+EnableWindow
+EncodePointer
+Enter manager's password to continue:
+ERROR : Unable to initialize critical section in CAtlBaseModule
+Error retreiving manager access set: user may not have register access
+Error retreiving manager user set: user may not exist
+ESC = Cancel
+Exception thrown in destructor
+Exempt
+F(;A(~
+FileDescription
+FileVersion
+fInvalid user name or password.
+GDI32.dll
+GetBkColor
+GetCurrentProcessId
+GetCurrentThreadId
+GetKeyState
+GetLastError
+GetObjectA
+GetParent
+GetSysColor
+GetSystemMetrics
+GetSystemTimeAsFileTime
+GetTextColor
+GetWindowRect
+GX Grid Browse Edit
+InitializeCriticalSectionEx
+Insufficient security rights.
+InternalName
+Invalid tender.
+InvalidateRect
+Is this a rental item?
+IsDebuggerPresent
+IsProcessorFeaturePresent
+IsWindow
+Item Details
+KERNEL32.dll
+keybd_event
+L$4Qj<
+LegalCopyright
+LegalTrademarks
+Manager Override
+Managers Override accepted.\Cannot add Item to this Account, higher priority accounts have not been completely tendered.-Transaction has not been completely tendered.8Credit given to an inactive account. Manager's override?
+Manual Tax
+memcpy_s
+memmove_s
+memset
+mfc120.dll
+MFGSERIAL
+MS Sans Serif
+MS Shell Dlg
+MSVCR120.dll
+Nebraska Book Company, Inc.
+Non-Merchandise
+ODBC;DSN=WinPrism
+og1120as.dll
+One or more rentals exist for:
+Only %s (%s) or a manager can unlock this terminal.
+OriginalFilename
+ot1120as.dll
+OutputDebugStringW
+Outstanding Amount cannot be negative.
+Outstanding Amount:
+Outstanding Rentals for 
+Outstanding Rentals for %s
+Password:
+Passwords are case sensitive, make sure that your caps lock is not on.
+PeekMessageA
+PostMessageA
+ProductName
+ProductVersion
+QCannot remove Item from this Account, lower priority accounts have been tendered.7Are you sure you want to clear this as an account sale?8Are you sure you want to change this to an account sale?DManual tax cannot be enabled/disabled when items have been tendered.5Manual tax not allowed with tax exempt Account sales.$Tender amount exceeds account limit.&Tender credit exceeds account balance.)Priority accounts must be tendered first.
+QueryPerformanceCounter
+Receipt
+RegisterWindowMessageA
+Rental
+Rental Guaranteed Tender cannot be deleted.
+RentalHistory
+RentalPeriod
+Repl Cost
+Repl Fee
+Request Number:
+Search Results
+secComboExApply
+secComboExNewItem
+Secure Terminal
+SELECT 
+SELECT * FROM POS_Keyboard_Mappings WHERE MappingGroup = %d
+select count(*) from Rental_Setup_POS where NMRPAgencyID = %d or NBCPAgencyID = %d
+SELECT Description FROM POS_Groups WHERE GroupTypeID = 3 and KeyboardCode = '%s'
+select Description from VW_ITM_MASTER where SKU = %d
+SELECT Description FROM VW_TENDER_AUTH where TenderCodeLocID = %ld 
+SELECT fCCFlag FROM Tender_Auth_Types WHERE TenderAuthID = (SELECT TenderAuthID FROM Tender_Codes_Location WHERE TenderCodeLocID = %d)
+select fTaxExempt from Tender_Codes_Location where TenderCodeLocID = %ld
+SELECT GroupID FROM VW_POS_TENDER_LIST WHERE Code = '%s'
+select ISNULL(LTRIM(RTRIM(FirstName)), '') + ' ' + LTRIM(RTRIM(LastName)) from Customer_Table where CustomerID = %d
+SELECT ISNULL(TranLevelID, 0) FROM POS_Register_Access WHERE RegisterID = %d AND UserID = %d
+SELECT KeyboardMappingGroup FROM POS_Registers WHERE RegisterID = %d
+Select Manual Tax Code
+select rtrim(AgencyNumber) + ' / ' + rtrim(Name) from Acct_Agency where AgencyID = %d 
+select TaxCodeID from Acct_Agency_Tax_Codes where AgencyID = %d and fExempt = 1
+Select Tender
+Select Tender for Move Item
+Select Tender Type
+select TranTendorID, rtrim(TenderDesc) + ' ' + rtrim(accountName) from VW_POS_TENDER_TOTALS where TransactionID = %d and TranTendorID <> %d order by TranTendorID
+select TranTendorID, rtrim(TenderDesc) + ' ' + rtrim(accountName) from VW_POS_TENDER_TOTALS where TransactionID = %d order by TranTendorID
+select TranTypeID from Transaction_Header where TransactionID = %d
+SendMessageA
+SetActiveWindow
+sscanf_s
+Static
+StringFileInfo
+strtod
+SUID = %u
+SysListView32
+t/Wh@b
+Tax Total:
+Tender
+Tender Description
+Tender has been authorized, this transaction must be completed.
+Tender not found
+Tender Totals
+Tender:
+This item is not an approved textbook for this student and account. Manager Override?
+This terminal has been locked.
+TranDtlID
+Transaction Total:
+TransactionID = ?
+TransactionID = ? and TranTenderID = ?
+TranslateAcceleratorA
+Translation
+TranTendorID
+u)9L$@u#W
+Unable to fully allocate tax amount to items.
+Untendered Items
+update GblComment set ModuleID = %d where HeaderID = %d
+UpdateWindow
+User Name:
+USER32.dll
+UserName = '%s'
+VarFileInfo
+VS_VERSION_INFO
+WinPrism
+WPComm.dll
+WPTender Dynamic Link Library
+WPTender.dll
+XXXXXXXXXXXXXXXX
