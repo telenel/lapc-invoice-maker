@@ -2,7 +2,11 @@ import "@testing-library/jest-dom/vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import { ProductFiltersBar } from "@/components/products/product-filters";
+import {
+  ProductFilterSummary,
+  ProductFiltersBar,
+  getProductActiveFilterChips,
+} from "@/components/products/product-filters";
 import { EMPTY_FILTERS } from "@/domains/product/constants";
 import { EMPTY_REFS, buildProductRefMaps } from "@/domains/product/ref-data";
 
@@ -18,6 +22,60 @@ vi.mock("@/domains/product/vendor-directory", () => ({
 }));
 
 describe("ProductFiltersBar", () => {
+  it("summarizes all active product filters, not just DCC", () => {
+    const labels = getProductActiveFilterChips({
+      ...EMPTY_FILTERS,
+      search: "scantron",
+      minPrice: "1",
+      maxPrice: "12",
+      minStock: "1",
+      unitsSoldWindow: "30d",
+      minUnitsSold: "10",
+      discontinued: "no",
+    }).map((chip) => chip.label);
+
+    expect(labels).toEqual(expect.arrayContaining([
+      "Search: scantron",
+      "Price: $1-$12",
+      "Stock: >= 1",
+      "Units sold 30d: >= 10",
+      "Not discontinued",
+    ]));
+  });
+
+  it("keeps the active preset and filters visible in the list summary", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const onClearPreset = vi.fn();
+
+    render(
+      <ProductFilterSummary
+        filters={{ ...EMPTY_FILTERS, minUnitsSold: "10", unitsSoldWindow: "30d", page: 2 }}
+        activeViewName="Top sellers - 30d"
+        onChange={onChange}
+        onClear={vi.fn()}
+        onClearPreset={onClearPreset}
+      />,
+    );
+
+    expect(screen.getByText("Applied list state")).toBeInTheDocument();
+    expect(screen.getByText("Top sellers - 30d")).toBeInTheDocument();
+    expect(screen.getByText("Units sold 30d: >= 10")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Clear Units sold 30d: >= 10 filter" }));
+
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({
+      minUnitsSold: "",
+      maxUnitsSold: "",
+      unitsSoldWindow: "",
+      page: 1,
+    }));
+
+    await user.click(screen.getByRole("button", { name: "Clear preset Top sellers - 30d" }));
+
+    expect(onClearPreset).toHaveBeenCalled();
+  });
+
   it("renders and clears the composite DCC chip", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();

@@ -15,7 +15,7 @@ import {
   serializeFiltersToSearchParams,
   applyPreset,
 } from "@/domains/product/view-serializer";
-import { ProductFiltersBar } from "@/components/products/product-filters";
+import { ProductFilterSummary, ProductFiltersBar } from "@/components/products/product-filters";
 import { ProductTable } from "@/components/products/product-table";
 import { ProductActionBar } from "@/components/products/product-action-bar";
 import { resolveEditDialogMode } from "@/components/products/edit-item-dialog-mode";
@@ -759,6 +759,17 @@ export default function ProductsPageClient() {
     updateFilters({ ...EMPTY_FILTERS, tab: filters.tab });
   }
 
+  function handleClearPreset() {
+    // Do NOT clear restoredViewRef here — the URL still carries the
+    // old view= slug for a render cycle while router.replace flushes.
+    // Letting the restoration effect's "!viewParam" branch own the
+    // ref reset avoids a race where the effect sees the stale slug
+    // with a cleared guard and re-applies the preset.
+    setActiveView(null);
+    setRuntimeColumns(null);
+    updateFilters({ ...EMPTY_FILTERS, tab: filters.tab });
+  }
+
   const handlePresetClick = useCallback((view: SavedView) => {
     const { filters: next, visibleColumns } = applyPreset(view, filters);
     // Use the preset's column list verbatim. Merging with baseColumns would
@@ -1038,21 +1049,20 @@ export default function ProductsPageClient() {
           activeSlug={activeView?.slug ?? null}
           activeId={activeView?.id ?? null}
           onPresetClick={handlePresetClick}
-          onClearPreset={() => {
-            // Do NOT clear restoredViewRef here — the URL still carries the
-            // old view= slug for a render cycle while router.replace flushes.
-            // Letting the restoration effect's "!viewParam" branch own the
-            // ref reset avoids a race where the effect sees the stale slug
-            // with a cleared guard and re-applies the preset.
-            setActiveView(null);
-            setRuntimeColumns(null);
-            updateFilters({ ...EMPTY_FILTERS, tab: filters.tab });
-          }}
+          onClearPreset={handleClearPreset}
           onDeleteClick={(v) => setDeleteTarget(v)}
           onViewsResolved={setResolvedViews}
           refreshToken={savedViewsRefresh}
         />
       </div>
+
+      <ProductFilterSummary
+        filters={filters}
+        activeViewName={activeView?.name ?? null}
+        onChange={handleFilterChange}
+        onClear={handleClearFilters}
+        onClearPreset={activeView ? handleClearPreset : undefined}
+      />
 
       {/* Table toolbar: tabs left · save view + column toggle right */}
       <div className="page-enter page-enter-3 mb-2 flex flex-wrap items-center justify-between gap-2">

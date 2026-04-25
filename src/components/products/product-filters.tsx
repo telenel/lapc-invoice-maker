@@ -6,6 +6,12 @@ import { ChevronDownIcon, SearchIcon, XIcon } from "lucide-react";
 import { useVendorDirectory } from "@/domains/product/vendor-directory";
 import type { ProductFilters } from "@/domains/product/types";
 
+export interface ProductActiveFilterChip {
+  key: string;
+  label: string;
+  clearPatch: Partial<ProductFilters>;
+}
+
 function hasFilterText(value: string | null | undefined): boolean {
   return (value ?? "").toString().trim() !== "";
 }
@@ -78,16 +84,95 @@ export function getProductActiveFilterCount(filters: ProductFilters): number {
   return count;
 }
 
-function getProductActiveFilterChips(filters: ProductFilters): Array<{
-  key: string;
-  label: string;
-  clearPatch: Partial<ProductFilters>;
-}> {
-  const chips: Array<{
-    key: string;
-    label: string;
-    clearPatch: Partial<ProductFilters>;
-  }> = [];
+function formatRangeLabel(
+  label: string,
+  min: string,
+  max: string,
+  unit = "",
+): string {
+  const left = min.trim();
+  const right = max.trim();
+  if (left && right) return `${label}: ${unit}${left}-${unit}${right}`;
+  if (left) return `${label}: >= ${unit}${left}`;
+  return `${label}: <= ${unit}${right}`;
+}
+
+function formatWindowLabel(value: string): string {
+  const labels: Record<string, string> = {
+    "30d": "30d",
+    "90d": "90d",
+    "365d": "1y",
+    "1y": "1y",
+    "2y": "2y",
+    "3y": "3y",
+    "5y": "5y",
+    lifetime: "lifetime",
+  };
+  return labels[value] ?? value;
+}
+
+function pushRangeChip(
+  chips: ProductActiveFilterChip[],
+  key: string,
+  label: string,
+  minValue: string,
+  maxValue: string,
+  clearPatch: Partial<ProductFilters>,
+  unit = "",
+) {
+  if (!hasFilterText(minValue) && !hasFilterText(maxValue)) return;
+  chips.push({
+    key,
+    label: formatRangeLabel(label, minValue, maxValue, unit),
+    clearPatch,
+  });
+}
+
+function pushAggregateChip(
+  chips: ProductActiveFilterChip[],
+  key: string,
+  label: string,
+  minValue: string,
+  maxValue: string,
+  windowValue: string,
+  clearPatch: Partial<ProductFilters>,
+  unit = "",
+) {
+  if (!hasFilterText(minValue) && !hasFilterText(maxValue) && !windowValue) return;
+
+  const windowLabel = windowValue ? ` ${formatWindowLabel(windowValue)}` : "";
+  const rangeLabel =
+    hasFilterText(minValue) || hasFilterText(maxValue)
+      ? formatRangeLabel(`${label}${windowLabel}`, minValue, maxValue, unit)
+      : `${label}: ${formatWindowLabel(windowValue)}`;
+
+  chips.push({
+    key,
+    label: rangeLabel,
+    clearPatch,
+  });
+}
+
+export function getProductActiveFilterChips(filters: ProductFilters): ProductActiveFilterChip[] {
+  const chips: ProductActiveFilterChip[] = [];
+
+  if (hasFilterText(filters.search)) {
+    chips.push({
+      key: "search",
+      label: `Search: ${filters.search.trim()}`,
+      clearPatch: { search: "" },
+    });
+  }
+
+  pushRangeChip(
+    chips,
+    "price",
+    "Price",
+    filters.minPrice,
+    filters.maxPrice,
+    { minPrice: "", maxPrice: "" },
+    "$",
+  );
 
   if (hasFilterText(filters.dccComposite)) {
     chips.push({
@@ -100,6 +185,114 @@ function getProductActiveFilterChips(filters: ProductFilters): Array<{
         catNum: "",
       },
     });
+  } else {
+    if (hasFilterText(filters.deptNum)) {
+      chips.push({ key: "deptNum", label: `Dept: ${filters.deptNum}`, clearPatch: { deptNum: "" } });
+    }
+    if (hasFilterText(filters.classNum)) {
+      chips.push({ key: "classNum", label: `Class: ${filters.classNum}`, clearPatch: { classNum: "" } });
+    }
+    if (hasFilterText(filters.catNum)) {
+      chips.push({ key: "catNum", label: `Category: ${filters.catNum}`, clearPatch: { catNum: "" } });
+    }
+  }
+
+  if (hasFilterText(filters.vendorId)) {
+    chips.push({
+      key: "vendorId",
+      label: `Vendor: #${filters.vendorId}`,
+      clearPatch: { vendorId: "" },
+    });
+  }
+
+  if (hasFilterBool(filters.hasBarcode)) chips.push({ key: "hasBarcode", label: "Has barcode", clearPatch: { hasBarcode: false } });
+  if (hasFilterBool(filters.hasIsbn)) chips.push({ key: "hasIsbn", label: "Has ISBN", clearPatch: { hasIsbn: false } });
+  if (hasFilterText(filters.author)) chips.push({ key: "author", label: `Author: ${filters.author}`, clearPatch: { author: "" } });
+  if (hasFilterText(filters.edition)) chips.push({ key: "edition", label: `Edition: ${filters.edition}`, clearPatch: { edition: "" } });
+  if (hasFilterText(filters.catalogNumber)) chips.push({ key: "catalogNumber", label: `Catalog #: ${filters.catalogNumber}`, clearPatch: { catalogNumber: "" } });
+  if (hasFilterText(filters.productType)) chips.push({ key: "productType", label: `Product type: ${filters.productType}`, clearPatch: { productType: "" } });
+
+  pushRangeChip(
+    chips,
+    "stock",
+    "Stock",
+    filters.minStock,
+    filters.maxStock,
+    { minStock: "", maxStock: "" },
+  );
+
+  if (hasFilterText(filters.lastSaleDateFrom) || hasFilterText(filters.lastSaleDateTo)) {
+    chips.push({
+      key: "lastSaleDate",
+      label: formatRangeLabel("Last sale", filters.lastSaleDateFrom, filters.lastSaleDateTo),
+      clearPatch: { lastSaleDateFrom: "", lastSaleDateTo: "" },
+    });
+  }
+  if (filters.lastSaleWithin) chips.push({ key: "lastSaleWithin", label: `Last sale within ${formatWindowLabel(filters.lastSaleWithin)}`, clearPatch: { lastSaleWithin: "" } });
+  if (hasFilterBool(filters.lastSaleNever)) chips.push({ key: "lastSaleNever", label: "Never sold by last-sale date", clearPatch: { lastSaleNever: false } });
+  if (filters.lastSaleOlderThan) chips.push({ key: "lastSaleOlderThan", label: `Last sale older than ${formatWindowLabel(filters.lastSaleOlderThan)}`, clearPatch: { lastSaleOlderThan: "" } });
+  if (filters.firstSaleWithin) chips.push({ key: "firstSaleWithin", label: `First sale within ${formatWindowLabel(filters.firstSaleWithin)}`, clearPatch: { firstSaleWithin: "" } });
+
+  if (hasFilterBool(filters.missingBarcode)) chips.push({ key: "missingBarcode", label: "Missing barcode", clearPatch: { missingBarcode: false } });
+  if (hasFilterBool(filters.missingIsbn)) chips.push({ key: "missingIsbn", label: "Missing ISBN", clearPatch: { missingIsbn: false } });
+  if (hasFilterBool(filters.missingTitle)) chips.push({ key: "missingTitle", label: "Missing title", clearPatch: { missingTitle: false } });
+  if (hasFilterBool(filters.retailBelowCost)) chips.push({ key: "retailBelowCost", label: "Retail below cost", clearPatch: { retailBelowCost: false } });
+  if (hasFilterBool(filters.zeroPrice)) chips.push({ key: "zeroPrice", label: "Zero price", clearPatch: { zeroPrice: false } });
+  if (hasFilterBool(filters.neverSoldLifetime)) chips.push({ key: "neverSoldLifetime", label: "Never sold lifetime", clearPatch: { neverSoldLifetime: false } });
+
+  pushRangeChip(
+    chips,
+    "margin",
+    "Margin",
+    filters.minMargin,
+    filters.maxMargin,
+    { minMargin: "", maxMargin: "" },
+  );
+
+  pushAggregateChip(
+    chips,
+    "unitsSold",
+    "Units sold",
+    filters.minUnitsSold,
+    filters.maxUnitsSold,
+    filters.unitsSoldWindow,
+    { minUnitsSold: "", maxUnitsSold: "", unitsSoldWindow: "" },
+  );
+  pushAggregateChip(
+    chips,
+    "revenue",
+    "Revenue",
+    filters.minRevenue,
+    filters.maxRevenue,
+    filters.revenueWindow,
+    { minRevenue: "", maxRevenue: "", revenueWindow: "" },
+    "$",
+  );
+  pushAggregateChip(
+    chips,
+    "txns",
+    "Receipts",
+    filters.minTxns,
+    filters.maxTxns,
+    filters.txnsWindow,
+    { minTxns: "", maxTxns: "", txnsWindow: "" },
+  );
+
+  if (filters.trendDirection) chips.push({ key: "trendDirection", label: `Trend: ${filters.trendDirection}`, clearPatch: { trendDirection: "" } });
+  if (hasFilterText(filters.maxStockCoverageDays)) chips.push({ key: "maxStockCoverageDays", label: `Coverage <= ${filters.maxStockCoverageDays}d`, clearPatch: { maxStockCoverageDays: "" } });
+  if (filters.editedWithin) chips.push({ key: "editedWithin", label: `Edited within ${formatWindowLabel(filters.editedWithin)}`, clearPatch: { editedWithin: "" } });
+  if (hasFilterBool(filters.editedSinceSync)) chips.push({ key: "editedSinceSync", label: "Edited since sync", clearPatch: { editedSinceSync: false } });
+  if (filters.discontinued) chips.push({ key: "discontinued", label: filters.discontinued === "yes" ? "Discontinued" : "Not discontinued", clearPatch: { discontinued: "" } });
+  if (filters.itemType) {
+    const labels: Record<NonNullable<ProductFilters["itemType"]>, string> = {
+      "": "",
+      textbook: "Textbook",
+      used_textbook: "Used textbook",
+      general_merchandise: "General merchandise",
+      supplies: "Supplies",
+      other: "Other",
+    };
+    chips.push({ key: "itemType", label: `Item type: ${labels[filters.itemType]}`, clearPatch: { itemType: "" } });
   }
 
   return chips;
@@ -412,6 +605,84 @@ function VendorSelect({
   );
 }
 
+export function ProductFilterSummary({
+  filters,
+  activeViewName,
+  onChange,
+  onClear,
+  onClearPreset,
+}: {
+  filters: ProductFilters;
+  activeViewName?: string | null;
+  onChange: (filters: ProductFilters) => void;
+  onClear: () => void;
+  onClearPreset?: () => void;
+}) {
+  const chips = getProductActiveFilterChips(filters);
+
+  if (!activeViewName && chips.length === 0) return null;
+
+  return (
+    <section
+      aria-label="Applied product list filters"
+      className="page-enter page-enter-3 mb-2 rounded-[10px] border border-border bg-card px-3 py-2 shadow-[0_1px_0_color-mix(in_oklch,var(--border)_55%,transparent)]"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] font-semibold tracking-[-0.005em] text-muted-foreground">
+              Applied list state
+            </span>
+            {activeViewName ? (
+              <span className="inline-flex max-w-full items-center gap-1 rounded-md border border-primary/25 bg-primary/[0.06] px-2 py-1 text-[11px] font-medium text-foreground">
+                <span className="shrink-0 text-muted-foreground">Preset</span>
+                <span className="truncate">{activeViewName}</span>
+                {onClearPreset ? (
+                  <button
+                    type="button"
+                    onClick={onClearPreset}
+                    aria-label={`Clear preset ${activeViewName}`}
+                    className="ml-0.5 inline-flex rounded-sm p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <XIcon className="size-3" aria-hidden="true" />
+                  </button>
+                ) : null}
+              </span>
+            ) : null}
+          </div>
+          {chips.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {chips.map((chip) => (
+                <button
+                  key={chip.key}
+                  type="button"
+                  onClick={() => onChange({ ...filters, ...chip.clearPatch, page: 1 })}
+                  aria-label={`Clear ${chip.label} filter`}
+                  className="inline-flex max-w-full items-center gap-1 rounded-full border border-border bg-secondary px-2 py-1 text-[10.5px] font-medium text-foreground transition-colors hover:border-muted-foreground/60 hover:bg-accent"
+                >
+                  <span className="truncate">{chip.label}</span>
+                  <XIcon className="size-3 shrink-0 text-muted-foreground" aria-hidden="true" />
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="text-[11px] leading-4 text-muted-foreground">
+              This preset controls the current result set.
+            </p>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={onClear}
+          className="shrink-0 rounded-md px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          Clear all
+        </button>
+      </div>
+    </section>
+  );
+}
+
 export function ProductFiltersBar({
   filters,
   onChange,
@@ -479,7 +750,7 @@ export function ProductFiltersBar({
       ) : null}
 
       <SectionTitle>Price range</SectionTitle>
-      <div className="flex gap-1.5">
+      <div className="grid min-w-0 grid-cols-2 gap-1.5">
         <RailInput
           ariaLabel="Minimum price"
           value={filters.minPrice}
