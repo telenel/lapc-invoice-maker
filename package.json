@@ -22,6 +22,7 @@
     "audit:perf:batch:report": "node scripts/lighthouse-audit.mjs --route-set baseline --all-categories --runs 3 --ignore-thresholds",
     "audit:perf:median": "node scripts/lighthouse-audit.mjs --runs 3",
     "audit:perf:headed": "node scripts/lighthouse-audit.mjs --headed --devtools",
+    "deploy:vps": "gh workflow run deploy.yml -f ref=${DEPLOY_REF:-main}",
     "hotfix:preflight": "./scripts/hotfix-preflight.sh",
     "hotfix:deploy": "./scripts/hotfix-deploy.sh",
     "audit:legacy-documents": "npx tsx scripts/supabase/audit-legacy-documents.ts",
