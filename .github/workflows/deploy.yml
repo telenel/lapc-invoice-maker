@@ -13,7 +13,7 @@ permissions:
   packages: read
 
 concurrency:
-  group: deploy-main
+  group: deploy-vps
   cancel-in-progress: false
 
 jobs:
