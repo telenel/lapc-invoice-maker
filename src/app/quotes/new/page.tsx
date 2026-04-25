@@ -84,7 +84,14 @@ export default function NewQuotePage() {
       .reduce((sum, item) => sum + Number(item.extendedPrice), 0);
     const taxAmount = taxableTotal * taxRate;
 
-    const { openRegisterPrintWindow } = await import("@/components/shared/register-print-view");
+    let openRegisterPrintWindow: typeof import("@/components/shared/register-print-view")["openRegisterPrintWindow"];
+    try {
+      ({ openRegisterPrintWindow } = await import("@/components/shared/register-print-view"));
+    } catch (error) {
+      console.error("Failed to load register print view", error);
+      window.alert("Could not load the print view. Please try again.");
+      return;
+    }
     openRegisterPrintWindow({
       documentNumber: "Draft Quote",
       documentType: "Quote",

@@ -13,7 +13,12 @@ const ProductSearchPanel = lazy(() =>
 
 function ProductSearchPanelFallback() {
   return (
-    <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+    <div
+      role="status"
+      aria-busy="true"
+      aria-label="Loading product search"
+      className="animate-pulse rounded-lg border border-border bg-card p-4 shadow-sm"
+    >
       <div className="mb-4 flex items-center gap-2">
         <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/10 text-primary">
           <PackageIcon className="h-4 w-4" aria-hidden="true" />

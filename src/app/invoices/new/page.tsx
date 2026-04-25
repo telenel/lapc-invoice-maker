@@ -76,7 +76,14 @@ export default function NewInvoicePage() {
   async function handlePrintForRegister() {
     const { form, subtotal, taxAmount, grandTotal } = invoiceForm;
     if (form.items.length === 0) return;
-    const { openRegisterPrintWindow } = await import("@/components/shared/register-print-view");
+    let openRegisterPrintWindow: typeof import("@/components/shared/register-print-view")["openRegisterPrintWindow"];
+    try {
+      ({ openRegisterPrintWindow } = await import("@/components/shared/register-print-view"));
+    } catch (error) {
+      console.error("Failed to load register print view", error);
+      window.alert("Could not load the print view. Please try again.");
+      return;
+    }
     openRegisterPrintWindow({
       documentNumber: form.invoiceNumber || form.runningTitle || "Draft Invoice",
       documentType: "Invoice",
