@@ -16,7 +16,7 @@ SELECT
   END AS stock_coverage_days,
   CASE
     WHEN p.units_sold_30d IS NULL OR p.units_sold_1y IS NULL
-      OR p.units_sold_30d = 0 OR p.units_sold_1y = 0 THEN NULL
+      OR p.units_sold_1y = 0 THEN NULL
     WHEN (p.units_sold_30d::NUMERIC / 30.0) > (p.units_sold_1y::NUMERIC / 365.0) * 1.5
       THEN 'accelerating'
     WHEN (p.units_sold_30d::NUMERIC / 30.0) < (p.units_sold_1y::NUMERIC / 365.0) * 0.5
@@ -29,7 +29,10 @@ SELECT
     WHEN p.retail_price IS NULL OR p.retail_price <= 0 THEN NULL
     ELSE (p.retail_price - p.cost)::NUMERIC / NULLIF(p.retail_price::NUMERIC, 0)
   END AS margin_ratio,
-  (p.manual_updated_at IS NOT NULL AND p.manual_updated_at > p.synced_at) AS edited_since_sync
+  (
+    p.manual_updated_at IS NOT NULL
+    AND (p.synced_at IS NULL OR p.manual_updated_at > p.synced_at)
+  ) AS edited_since_sync
 FROM "products" p;
 
 REVOKE ALL ON "products_with_derived" FROM anon;

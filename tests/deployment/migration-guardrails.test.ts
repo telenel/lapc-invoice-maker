@@ -68,7 +68,9 @@ describe("deploy and migration guardrails", () => {
     expect(sql).toContain('DROP VIEW IF EXISTS "products_with_derived"');
     expect(sql).toContain('ADD COLUMN IF NOT EXISTS "manual_updated_at" TIMESTAMPTZ');
     expect(sql).toContain('"products_manual_updated_at_idx"');
-    expect(sql).toContain("(p.manual_updated_at IS NOT NULL AND p.manual_updated_at > p.synced_at) AS edited_since_sync");
+    expect(sql).toContain("OR p.units_sold_1y = 0 THEN NULL");
+    expect(sql).not.toContain("OR p.units_sold_30d = 0 OR p.units_sold_1y = 0 THEN NULL");
+    expect(sql).toContain("AND (p.synced_at IS NULL OR p.manual_updated_at > p.synced_at)");
     expect(sql).toContain('GRANT SELECT ON "products_with_derived" TO authenticated');
     expect(sql).toContain('ALTER VIEW "products_with_derived" SET (security_invoker = true)');
   });
