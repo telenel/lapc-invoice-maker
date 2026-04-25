@@ -361,14 +361,28 @@ async function findFinanceAnalytics(range: AnalyticsDateRange): Promise<FinanceA
 async function findSalesSummary(range: AnalyticsDateRange) {
   const rows = await prisma.$queryRawUnsafe<SalesSummaryRow[]>(
     `
+      WITH sales AS (
+        SELECT
+          COALESCE(SUM(sd.revenue), 0) AS revenue,
+          COALESCE(SUM(sd.units), 0) AS units,
+          COALESCE(SUM(sd.discount_amount), 0) AS discount_amount
+        FROM analytics_sales_daily sd
+        WHERE sd.location_id = 2
+          AND sd.sale_date BETWEEN $1::date AND $2::date
+      ),
+      receipts AS (
+        SELECT COALESCE(SUM(sr.receipts), 0) AS receipts
+        FROM analytics_sales_receipts_daily sr
+        WHERE sr.location_id = 2
+          AND sr.sale_date BETWEEN $1::date AND $2::date
+      )
       SELECT
-        COALESCE(SUM(sd.revenue), 0) AS revenue,
-        COALESCE(SUM(sd.units), 0) AS units,
-        COALESCE(SUM(sd.receipts), 0) AS receipts,
-        COALESCE(SUM(sd.discount_amount), 0) AS discount_amount
-      FROM analytics_sales_daily sd
-      WHERE sd.location_id = 2
-        AND sd.sale_date BETWEEN $1::date AND $2::date
+        sales.revenue,
+        sales.units,
+        receipts.receipts,
+        sales.discount_amount
+      FROM sales
+      CROSS JOIN receipts
     `,
     range.dateFrom,
     range.dateTo,
@@ -385,16 +399,34 @@ async function findSalesSummary(range: AnalyticsDateRange) {
 async function findMonthlySales(range: AnalyticsDateRange) {
   const rows = await prisma.$queryRawUnsafe<MonthlySalesRow[]>(
     `
+      WITH sales AS (
+        SELECT
+          TO_CHAR(date_trunc('month', sd.sale_date), 'YYYY-MM') AS month,
+          COALESCE(SUM(sd.revenue), 0) AS revenue,
+          COALESCE(SUM(sd.units), 0) AS units,
+          COALESCE(SUM(sd.discount_amount), 0) / NULLIF(COALESCE(SUM(sd.revenue), 0), 0) AS discount_rate
+        FROM analytics_sales_daily sd
+        WHERE sd.location_id = 2
+          AND sd.sale_date BETWEEN $1::date AND $2::date
+        GROUP BY 1
+      ),
+      receipts AS (
+        SELECT
+          TO_CHAR(date_trunc('month', sr.sale_date), 'YYYY-MM') AS month,
+          COALESCE(SUM(sr.receipts), 0) AS receipts
+        FROM analytics_sales_receipts_daily sr
+        WHERE sr.location_id = 2
+          AND sr.sale_date BETWEEN $1::date AND $2::date
+        GROUP BY 1
+      )
       SELECT
-        TO_CHAR(date_trunc('month', sd.sale_date), 'YYYY-MM') AS month,
-        COALESCE(SUM(sd.revenue), 0) AS revenue,
-        COALESCE(SUM(sd.units), 0) AS units,
-        COALESCE(SUM(sd.receipts), 0) AS receipts,
-        COALESCE(SUM(sd.discount_amount), 0) / NULLIF(COALESCE(SUM(sd.revenue), 0), 0) AS discount_rate
-      FROM analytics_sales_daily sd
-      WHERE sd.location_id = 2
-        AND sd.sale_date BETWEEN $1::date AND $2::date
-      GROUP BY 1
+        COALESCE(sales.month, receipts.month) AS month,
+        COALESCE(sales.revenue, 0) AS revenue,
+        COALESCE(sales.units, 0) AS units,
+        COALESCE(receipts.receipts, 0) AS receipts,
+        sales.discount_rate
+      FROM sales
+      FULL JOIN receipts USING (month)
       ORDER BY 1 ASC
     `,
     range.dateFrom,
@@ -413,14 +445,30 @@ async function findMonthlySales(range: AnalyticsDateRange) {
 async function findWeekdaySales(range: AnalyticsDateRange) {
   const rows = await prisma.$queryRawUnsafe<WeekdaySalesRow[]>(
     `
+      WITH sales AS (
+        SELECT
+          EXTRACT(DOW FROM sd.sale_date)::int AS day_of_week,
+          COALESCE(SUM(sd.revenue), 0) AS revenue
+        FROM analytics_sales_daily sd
+        WHERE sd.location_id = 2
+          AND sd.sale_date BETWEEN $1::date AND $2::date
+        GROUP BY 1
+      ),
+      receipts AS (
+        SELECT
+          EXTRACT(DOW FROM sr.sale_date)::int AS day_of_week,
+          COALESCE(SUM(sr.receipts), 0) AS receipts
+        FROM analytics_sales_receipts_daily sr
+        WHERE sr.location_id = 2
+          AND sr.sale_date BETWEEN $1::date AND $2::date
+        GROUP BY 1
+      )
       SELECT
-        EXTRACT(DOW FROM sd.sale_date)::int AS day_of_week,
-        COALESCE(SUM(sd.revenue), 0) AS revenue,
-        COALESCE(SUM(sd.receipts), 0) AS receipts
-      FROM analytics_sales_daily sd
-      WHERE sd.location_id = 2
-        AND sd.sale_date BETWEEN $1::date AND $2::date
-      GROUP BY 1
+        COALESCE(sales.day_of_week, receipts.day_of_week) AS day_of_week,
+        COALESCE(sales.revenue, 0) AS revenue,
+        COALESCE(receipts.receipts, 0) AS receipts
+      FROM sales
+      FULL JOIN receipts USING (day_of_week)
       ORDER BY 1 ASC
     `,
     range.dateFrom,

@@ -72,7 +72,23 @@ describe("analyticsRepository", () => {
       .join("\n");
 
     expect(sql).toContain("analytics_sales_daily");
+    expect(sql).toContain("analytics_sales_receipts_daily");
     expect(sql).toContain("analytics_sales_hourly");
     expect(sql).not.toContain("(st.process_date AT TIME ZONE 'America/Los_Angeles')::date BETWEEN");
+  });
+
+  it("reads receipt KPIs from receipt-grain rollups instead of SKU-grain rollups", async () => {
+    await analyticsRepository.findOperationsSnapshot({
+      dateFrom: "2026-01-01",
+      dateTo: "2026-01-31",
+    });
+
+    const sql = vi
+      .mocked(prisma.$queryRawUnsafe)
+      .mock.calls.map(([statement]) => String(statement))
+      .join("\n");
+
+    expect(sql).toContain("SUM(sr.receipts)");
+    expect(sql).not.toContain("SUM(sd.receipts)");
   });
 });

@@ -82,6 +82,7 @@ export function buildAggregateRecomputeSql(): string {
 export function buildAnalyticsRollupRefreshSql(): string[] {
   return [
     "REFRESH MATERIALIZED VIEW analytics_sales_daily",
+    "REFRESH MATERIALIZED VIEW analytics_sales_receipts_daily",
     "REFRESH MATERIALIZED VIEW analytics_sales_hourly",
   ];
 }

@@ -34,9 +34,10 @@ describe("sales-aggregates", () => {
     expect(buildAggregateRecomputeSql()).toContain("SELECT COUNT(*)::int AS affected FROM updated");
   });
 
-  it("buildAnalyticsRollupRefreshSql refreshes both analytics materialized views", () => {
+  it("buildAnalyticsRollupRefreshSql refreshes analytics materialized views", () => {
     expect(buildAnalyticsRollupRefreshSql()).toEqual([
       "REFRESH MATERIALIZED VIEW analytics_sales_daily",
+      "REFRESH MATERIALIZED VIEW analytics_sales_receipts_daily",
       "REFRESH MATERIALIZED VIEW analytics_sales_hourly",
     ]);
   });
@@ -81,6 +82,10 @@ describe("sales-aggregates", () => {
     );
     expect(query).toHaveBeenNthCalledWith(
       7,
+      "REFRESH MATERIALIZED VIEW analytics_sales_receipts_daily",
+    );
+    expect(query).toHaveBeenNthCalledWith(
+      8,
       "REFRESH MATERIALIZED VIEW analytics_sales_hourly",
     );
   });
