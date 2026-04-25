@@ -56,11 +56,11 @@ export function RunningInvoices({
               department: invoice.department,
               detail:
                 invoice.runningTitle ||
-                invoice.items[0]?.description ||
+                invoice.firstItemDescription ||
                 "Untitled Running Invoice",
               totalAmount: invoice.totalAmount,
               runningTitle: invoice.runningTitle,
-              itemCount: invoice.items.length,
+              itemCount: invoice.itemCount,
             })),
           );
         }

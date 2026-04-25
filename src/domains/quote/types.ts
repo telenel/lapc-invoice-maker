@@ -104,6 +104,35 @@ export interface QuoteResponse {
   revisedToQuote?: { id: string; quoteNumber: string | null } | null;
 }
 
+export interface QuoteContactSummary {
+  id: string;
+  name: string;
+  org: string;
+}
+
+export interface QuoteListItemResponse {
+  id: string;
+  quoteNumber: string | null;
+  quoteStatus: QuoteStatus;
+  date: string;
+  staffId: string | null;
+  expirationDate: string | null;
+  type: string;
+  department: string;
+  category: string;
+  accountNumber: string;
+  totalAmount: number;
+  recipientName: string;
+  recipientOrg: string;
+  createdAt: string;
+  staff: StaffSummary | null;
+  contact: QuoteContactSummary | null;
+  creatorId: string;
+  creatorName: string;
+  paymentDetailsResolved: boolean;
+  paymentFollowUpBadge?: FollowUpBadgeState | null;
+}
+
 export interface PublicQuoteResponse {
   id: string;
   quoteNumber: string | null;

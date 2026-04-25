@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("@/domains/invoice/repository", () => ({
   findMany: vi.fn(),
+  findManyForExport: vi.fn(),
   findById: vi.fn(),
   create: vi.fn(),
   update: vi.fn(),
@@ -88,6 +89,7 @@ const mockInvoiceRow = {
       invoiceId: "inv1",
     },
   ],
+  _count: { items: 1 },
 };
 
 describe("invoiceService", () => {
@@ -119,27 +121,12 @@ describe("invoiceService", () => {
       expect(inv.createdAt).toBe(new Date("2026-01-15T10:00:00Z").toISOString());
       expect(inv.totalAmount).toBe(150);
       expect(typeof inv.totalAmount).toBe("number");
+      expect(inv.itemCount).toBe(1);
+      expect(inv.firstItemDescription).toBe("Laptop");
+      expect("items" in inv).toBe(false);
     });
 
-    it("maps items with Number() coercion on Decimal strings", async () => {
-      mockRepo.findMany.mockResolvedValue({
-        invoices: [mockInvoiceRow],
-        total: 1,
-        page: 1,
-        pageSize: 20,
-      } as never);
-
-      const result = await invoiceService.list({});
-      const item = result.invoices[0].items[0];
-
-      expect(item.quantity).toBe(1);
-      expect(item.unitPrice).toBe(150);
-      expect(item.extendedPrice).toBe(150);
-      expect(typeof item.quantity).toBe("number");
-      expect(typeof item.unitPrice).toBe("number");
-    });
-
-    it("maps staff fields including extension and email", async () => {
+    it("keeps list staff fields compact", async () => {
       mockRepo.findMany.mockResolvedValue({
         invoices: [mockInvoiceRow],
         total: 1,
@@ -153,8 +140,8 @@ describe("invoiceService", () => {
       expect(staff).not.toBeNull();
       expect(staff!.id).toBe("s1");
       expect(staff!.name).toBe("Alice");
-      expect(staff!.extension).toBe("x100");
-      expect(staff!.email).toBe("alice@test.com");
+      expect("extension" in staff!).toBe(false);
+      expect("email" in staff!).toBe(false);
     });
   });
 
@@ -181,6 +168,32 @@ describe("invoiceService", () => {
       expect(result!.totalAmount).toBe(150);
       expect(result!.creatorId).toBe("u1");
       expect(result!.creatorName).toBe("Bob");
+    });
+
+    it("maps full-detail items with Number() coercion on Decimal strings", async () => {
+      mockRepo.findById.mockResolvedValue(mockInvoiceRow as never);
+
+      const result = await invoiceService.getById("inv1");
+      const item = result!.items[0];
+
+      expect(item.quantity).toBe(1);
+      expect(item.unitPrice).toBe(150);
+      expect(item.extendedPrice).toBe(150);
+      expect(typeof item.quantity).toBe("number");
+      expect(typeof item.unitPrice).toBe("number");
+    });
+
+    it("maps full-detail staff fields including extension and email", async () => {
+      mockRepo.findById.mockResolvedValue(mockInvoiceRow as never);
+
+      const result = await invoiceService.getById("inv1");
+      const staff = result!.staff;
+
+      expect(staff).not.toBeNull();
+      expect(staff!.id).toBe("s1");
+      expect(staff!.name).toBe("Alice");
+      expect(staff!.extension).toBe("x100");
+      expect(staff!.email).toBe("alice@test.com");
     });
 
     it("coerces null accountNumber to empty string", async () => {

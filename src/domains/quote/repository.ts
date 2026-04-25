@@ -8,12 +8,28 @@ const PAYMENT_REMINDER_CLAIM = "PAYMENT_REMINDER_CLAIM";
 
 // ── Shared include shapes ──────────────────────────────────────────────────
 
-const listInclude = {
+const listSelect = {
+  id: true,
+  quoteNumber: true,
+  quoteStatus: true,
+  date: true,
+  staffId: true,
+  expirationDate: true,
+  type: true,
+  department: true,
+  category: true,
+  accountNumber: true,
+  totalAmount: true,
+  recipientName: true,
+  recipientEmail: true,
+  recipientOrg: true,
+  shareToken: true,
+  paymentMethod: true,
+  createdAt: true,
   staff: { select: { id: true, name: true, title: true, department: true } },
-  contact: { select: { id: true, name: true, email: true, phone: true, org: true, department: true, title: true, notes: true, createdAt: true } },
+  contact: { select: { id: true, name: true, org: true } },
   creator: { select: { id: true, name: true, username: true } },
-  archiver: { select: { id: true, name: true } },
-  items: { orderBy: { sortOrder: "asc" as const } },
+  convertedToInvoice: { select: { id: true, paymentMethod: true } },
 } as const;
 
 const detailInclude = {
@@ -137,7 +153,7 @@ export async function findMany(filters: QuoteFilters) {
   const [quotes, total] = await prisma.$transaction([
     prisma.invoice.findMany({
       where,
-      include: listInclude,
+      select: listSelect,
       orderBy: { [sortField]: sortDir },
       skip: (page - 1) * pageSize,
       take: pageSize,

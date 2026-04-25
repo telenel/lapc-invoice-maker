@@ -17,8 +17,8 @@ import type {
   DashboardRunningInvoiceItem,
   DashboardStatsData,
 } from "@/domains/dashboard/types";
-import type { InvoiceResponse } from "@/domains/invoice/types";
-import type { QuoteResponse } from "@/domains/quote/types";
+import type { InvoiceListItemResponse } from "@/domains/invoice/types";
+import type { QuoteListItemResponse } from "@/domains/quote/types";
 import { cn } from "@/lib/utils";
 
 type QueueTab = "drafts" | "running" | "awaiting" | "finalized";
@@ -565,7 +565,7 @@ function TeamActivityCard({
 }
 
 function buildQueueItemFromInvoice(
-  invoice: InvoiceResponse,
+  invoice: InvoiceListItemResponse,
   href: string,
   status: string,
 ): QueueItem {
@@ -582,7 +582,7 @@ function buildQueueItemFromInvoice(
   };
 }
 
-function buildQueueItemFromQuote(quote: QuoteResponse): QueueItem {
+function buildQueueItemFromQuote(quote: QuoteListItemResponse): QueueItem {
   return {
     id: quote.id,
     type: "quote",
@@ -867,10 +867,10 @@ export function DashboardOperatorView({
             openedAt: invoice.createdAt,
             requestorName: getItemDisplayName(invoice),
             department: invoice.department,
-            detail: invoice.runningTitle || invoice.items[0]?.description || "Untitled Running Invoice",
+            detail: invoice.runningTitle || invoice.firstItemDescription || "Untitled Running Invoice",
             totalAmount: Number(invoice.totalAmount),
             runningTitle: invoice.runningTitle,
-            itemCount: invoice.items.length,
+            itemCount: invoice.itemCount,
           })),
         );
       });

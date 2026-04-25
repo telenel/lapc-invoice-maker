@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { formatAmount, formatDate } from "@/lib/formatters";
 import { adminApi } from "@/domains/admin/api-client";
 import { quoteApi } from "@/domains/quote/api-client";
-import type { QuoteResponse, QuoteStatus } from "@/domains/quote/types";
+import type { QuoteListItemResponse, QuoteStatus } from "@/domains/quote/types";
 import type { UserResponse } from "@/domains/admin/types";
 import { BatchActionBar } from "./batch-action-bar";
 
@@ -39,7 +39,7 @@ function statusBadgeVariant(status: string) {
 const PAGE_SIZE = 20;
 
 export function QuoteManager() {
-  const [quotes, setQuotes] = useState<QuoteResponse[]>([]);
+  const [quotes, setQuotes] = useState<QuoteListItemResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);

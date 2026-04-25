@@ -24,6 +24,12 @@ export interface ArchivedBySummary {
   name: string;
 }
 
+export interface InvoiceContactSummary {
+  id: string;
+  name: string;
+  org: string;
+}
+
 export interface InvoiceResponse {
   id: string;
   invoiceNumber: string | null;
@@ -65,6 +71,45 @@ export interface InvoiceResponse {
     canDuplicateInvoice: boolean;
   };
   items: InvoiceItemResponse[];
+}
+
+export interface InvoiceListItemResponse {
+  id: string;
+  invoiceNumber: string | null;
+  date: string;
+  staffId: string | null;
+  status: InvoiceStatus;
+  type: string;
+  department: string;
+  category: string;
+  accountCode: string;
+  accountNumber: string;
+  notes: string;
+  totalAmount: number;
+  isRecurring: boolean;
+  isRunning: boolean;
+  runningTitle: string | null;
+  createdAt: string;
+  staff: StaffSummary | null;
+  contact: InvoiceContactSummary | null;
+  creatorId: string;
+  creatorName: string;
+  itemCount: number;
+  firstItemDescription: string | null;
+}
+
+export interface InvoiceExportRow {
+  invoiceNumber: string | null;
+  date: string;
+  category: string;
+  staffName: string;
+  department: string;
+  accountNumber: string;
+  accountCode: string;
+  totalAmount: number;
+  status: InvoiceStatus;
+  itemDescriptions: string[];
+  notes: string;
 }
 
 export interface InvoiceItemResponse {
@@ -150,7 +195,7 @@ export interface FinalizeInput {
 }
 
 export interface InvoiceListResponse {
-  invoices: InvoiceResponse[];
+  invoices: InvoiceListItemResponse[];
   total: number;
   page: number;
   pageSize: number;
