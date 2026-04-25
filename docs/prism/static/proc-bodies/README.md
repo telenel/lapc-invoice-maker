@@ -21,6 +21,10 @@ See [`../plan-cache-method.md`](../plan-cache-method.md) for the full methodolog
 | `SP_ARCreateInvoiceDtl.sql` | Companion: copies a single transaction-detail line into `Acct_ARInvoice_Detail`. Called once per (receipt, line) pair. |
 | `SP_ARCreateMOTran.sql` | The mail-order / special-order receipt-create proc on the POS side. Originates the Transaction that the Hdr/Dtl procs later promote. |
 | `SP_ARAutogenInvoices.sql` | Batch invoice generator — the proc behind WPAdmin's "Generate Invoices" button. Inlines all of its work (does NOT delegate to `SP_ARCreateInvoiceHdr`/`Dtl`). |
+| `TI_Acct_Agency.sql` | INSERT trigger on `Acct_Agency`. Auto-populates `Acct_Agency_Tax_Codes` via `INNER JOIN ... ON 1=1` (Cartesian) on every new agency row. |
+| `TUI_Acct_Agency.sql` | UPDATE+INSERT trigger on `Acct_Agency`. Cursor over `inserted` joining `deleted` to detect transitions (e.g. textbook-validation toggle). Partially recovered. |
+| `TI_Acct_ARInvoice_Header.sql` | INSERT trigger on `Acct_ARInvoice_Header`. Cursor over `inserted` joining `Acct_Agency` for `AgencyNumber`. **Body inside the cursor loop is not yet cached** — only the `DECLARE CURSOR` and first `FETCH` are visible. |
+| `TI_ARInvoice_Detail.sql` | INSERT trigger on `Acct_ARInvoice_Detail`. Same pattern as the Header trigger: cursor over `inserted` joining `Acct_Agency` via `Acct_ARInvoice_Header`. Body inside the loop is similarly cache-evicted. |
 
 ## Caveats and limits
 

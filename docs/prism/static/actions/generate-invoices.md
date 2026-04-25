@@ -385,17 +385,83 @@ The manual-entry workflow (Path B) is structurally similar: the user creates a h
 - ❓ **The body of `SP_ARCreateMOTran`** — the POS-side mail-order transaction creation.
 - ❓ **What actually triggers the `fAutoCreateInvoice` flag.** It is a column reference, but the table it lives on is not visible from the literal strings. Inference suggests `Acct_Agency` (the department/customer master), but only dynamic capture or schema lookup confirms.
 - ❓ **GL posting downstream.** No literal AR→GL post proc in `WA_AR.dll`. The pipeline probably exits this module entirely.
-- ❓ **Trigger side-effects.** As noted in the schema reference, Prism has 475 triggers — none visible from the binary's perspective.
+- 🔍 **Trigger side-effects.** Partially closed by a 2026-04-25 plan-cache probe — see the new "Triggers" section below. Three triggers exist on the AR-invoice tables; the cursor preludes were recovered, but the loop bodies stayed evicted. Closing this fully needs a snapshot/diff or another probe later.
+
+## Triggers on the AR-invoice tables — partial recovery (2026-04-25)
+
+A targeted plan-cache probe via `scripts/probe-prism-arinvoice-triggers.ts` enumerated every trigger parented on the six `Acct_ARInvoice_*` tables and pulled their cached bodies.
+
+### Trigger inventory
+
+| Table | Trigger | Type | Cached executions | Status |
+|---|---|---|---:|---|
+| `Acct_ARInvoice_Header` | `TI_Acct_ARInvoice_Header` | INSERT only | 414 (Apr 23) | Cursor prelude recovered ([`../proc-bodies/TI_Acct_ARInvoice_Header.sql`](../proc-bodies/TI_Acct_ARInvoice_Header.sql)); loop body evicted |
+| `Acct_ARInvoice_Detail` | `TI_ARInvoice_Detail` | INSERT only | 1,055 (Apr 23) | Cursor prelude recovered ([`../proc-bodies/TI_ARInvoice_Detail.sql`](../proc-bodies/TI_ARInvoice_Detail.sql)); loop body evicted |
+| `Acct_ARInvoice_BadChk` | `TIUD_Acct_ARInvoice_BadChk` | INSERT + UPDATE + DELETE | 0 | Not cached (rare path) |
+| `Acct_ARInvoice_Tender` | _none_ | — | — | ✅ No triggers |
+| `Acct_ARInvoice_Pymt` | _none_ | — | — | ✅ No triggers |
+| `Acct_ARInvoice_GiftCert` | _none_ | — | — | ✅ No triggers |
+
+### Critical structural findings
+
+- ✅ **Tender, Pymt, and GiftCert have no triggers at all.** When laportal inserts into these tables, no implicit side effects fire.
+- ✅ **There are no UPDATE or DELETE triggers on `Acct_ARInvoice_Header` or `_Detail`.** Header/detail mutations and deletions do not trigger sync work. Only the initial INSERT does.
+- 🔍 **Both INSERT triggers join to `Acct_Agency` to retrieve `AgencyNumber` per row.** Recovered prelude shape:
+
+  ```sql
+  -- TI_Acct_ARInvoice_Header
+  declare curARh cursor for
+      select i.ARInvoiceID, a.AgencyNumber
+      from inserted i
+      inner join Acct_Agency a on i.AgencyID = a.AgencyID;
+  fetch curARh into @arinvoice_id, @agency_number;
+  ```
+
+  ```sql
+  -- TI_ARInvoice_Detail
+  declare curARd1 cursor for
+      select i.ARInvoiceDtlID, a.AgencyNumber
+      from inserted i
+      inner join Acct_ARInvoice_Header h on i.ARInvoiceID = h.ARInvoiceID
+      inner join Acct_Agency a on h.AgencyID = a.AgencyID;
+  fetch curARd1 into @arinvoice_dtl_id, @agency_number;
+  ```
+
+- 🔍 **Both triggers fire on every receipt-promote.** `SP_ARCreateInvoiceHdr` ran 10,438 times in 3 days; `TI_Acct_ARInvoice_Header` has 414 cached executions in the same window. Activity is correlated; the trigger is part of every standard create.
+
+### What's still ❓
+
+- ❓ **What the cursor loops actually do.** The `WHILE @@FETCH_STATUS = 0 BEGIN ... END` body is not in the current cache slice. Likely candidates based on the agency-number theme and prior findings about `pos_update`:
+  - Insert into a sync queue keyed by `AgencyNumber` (e.g. `pos_update`, `web_update`, or a similar staging table — `SP_ARAcctResendToPos` writes to `pos_update` with `type` codes per entity, so an AR-invoice trigger probably writes there with a different type code).
+  - Update an aggregated balance / aging row keyed by agency.
+  - Call a per-agency sync proc.
+- ❓ **What `TIUD_Acct_ARInvoice_BadChk` does.** Zero cached executions; rarely fires. Re-probe if/when bad-check handling becomes in scope.
+
+### How to close the gap
+
+Two options, in ranked order:
+
+1. **Snapshot/diff a single receipt-to-invoice promotion.** This catches every trigger residue regardless of whether the trigger body is cached. The diff will show exactly which tables the trigger touched. ~5 minutes total with someone driving WPAdmin.
+2. **Wait and re-probe.** The SQL Server may eventually evict the cursor preludes and cache the loop bodies on a different round. Slow and unreliable; option 1 is more direct.
+
+Either way: this gap is **scoped and small**. It does not block laportal mirroring `SP_ARCreateInvoiceHdr`'s contract — the laportal mirror's INSERT will fire the trigger automatically (server-side), so as long as we use the same `Acct_ARInvoice_Header` insert shape, we inherit whatever the trigger does without having to replicate it client-side.
 
 ## 8. Implications for laportal
 
-This analysis has direct relevance for the department-billing pipeline laportal is replacing. Concrete observations:
+After plan-cache recovery, the picture is materially different from the original static-only conclusion (which is preserved below for comparison). Concrete observations as of 2026-04-25:
 
-- **The integration shape is asymmetric.** Reading invoices is well-defined: `SP_ARInvoices(LocationID, FilterPattern)` is a documented entrypoint and the table contract is partially recoverable. **Writing invoices is opaque** — neither the auto-gen proc nor the MFC-managed manual path exposes its column contract.
-- **`SP_ARAutogenInvoices` is the natural laportal integration point** if we want to "press a button and have WPAdmin do its thing" rather than rebuild the logic. Two parameters; we need to confirm what the location and mode flags do via a controlled invocation.
-- **If we want to side-step WPAdmin entirely and write `Acct_ARInvoice_Header` ourselves, this static pass is insufficient.** We have header columns from WHERE clauses but no INSERT contract. A snapshot/diff of one manually-entered invoice would reveal the full column list in one experiment.
+- **The receipt-to-invoice contract is fully buildable from this analysis alone.** The 22-column `Acct_ARInvoice_Header` INSERT, the 11-column `Acct_ARInvoice_Detail` INSERT, the 10-column `Acct_ARInvoice_Tender` INSERT (with the deliberate masking of `TenderAccount`/`Auth`/`Resp`/`ExpDate`), and the `Transaction_Header.fInvoiced = 1` marker are recovered verbatim from the plan cache. laportal can mirror them directly without calling the WPAdmin proc.
+- **No UPDATE/DELETE triggers on Header or Detail** means laportal-side mutations (correcting an invoice, voiding a line) trigger no implicit sync work. Only the initial INSERT fires triggers.
+- **The two INSERT triggers (`TI_Acct_ARInvoice_Header`, `TI_ARInvoice_Detail`) fire automatically server-side** when laportal does the INSERT, regardless of whether the call goes through `SP_ARCreateInvoiceHdr` or directly. We do not need to replicate the trigger logic client-side; the server handles it.
+- **`SP_ARAutogenInvoices` remains the simplest integration for batch generation** — one proc call, two params (`@autogenID, 0`). The config row in `Acct_ARAutogen_Inv` keyed by `@autogenID` defines the date range, account-select-type, etc.
 - **The five-table family means `Acct_ARInvoice_Detail` is not a complete picture of an invoice** — `_GiftCert` and `_BadChk` extension tables also feed into the totals. Any laportal-side rebuild has to handle (or explicitly exclude) those typed detail rows.
 - **Posting and GL flow is a separate concern** — turning `fDoGL = 1` does not by itself post the invoice to the ledger; that has to happen elsewhere. Worth dedicated analysis when GL becomes in-scope.
+
+### Build options for laportal, ranked
+
+1. **Direct INSERT against `Acct_ARInvoice_*` from the laportal server, mirroring `SP_ARCreateInvoiceHdr`'s contract.** Most flexibility, no Prism proc dependency, fastest. The trigger handles agency-keyed sync as a side effect. **This is now the recommended path** — the contract is recovered.
+2. **Call `SP_ARCreateInvoiceHdr` from laportal directly.** Same end state as option 1; less code. Trades flexibility for less surface area in our codebase. Requires `EXEC` permission on the proc, which our `pdt` login already has.
+3. **Call `SP_ARAutogenInvoices(@autogenID, 0)`** when the batch shape fits the use case (e.g. monthly billing run). Treat it as the "press the button" path.
 
 ## 9. How to verify the unknowns
 
