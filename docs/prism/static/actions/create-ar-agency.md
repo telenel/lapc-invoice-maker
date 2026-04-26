@@ -3,6 +3,9 @@
 **Source binaries:** `WA_AR.dll`, `WACommon.dll` (search/QS), `WPUtility.dll` (framework methods)
 **Method:** Plan-cache schema introspection + trigger-body recovery. See [`../plan-cache-method.md`](../plan-cache-method.md).
 **Confidence:** ✅ confirmed by recovered DDL/trigger body · 🔵 confirmed by literal binary string · 🔍 inference · ❓ unknown / not yet recovered.
+**Companion docs:**
+- [`clone-ar-agency.md`](clone-ar-agency.md) — Pierce semester-rollover use case (clone an existing agency rather than creating from scratch).
+- [`agency-binary-findings.md`](agency-binary-findings.md) — **2026-04-25 update**: literal MFC column list recovered from `WPData.dll`, verified proc signatures, validation messages. Closes the biggest gap in this doc.
 
 > **Terminology**: "AR account" / "agency" / "billing account" all refer to the same entity in Prism: a row in `Acct_Agency`. Pierce identifies them by `AgencyNumber` — strings like `PSP 26 ANTHRO`. WPAdmin's UI calls them "Accounts"; the schema and procs call them "Agencies". This doc uses **agency** to match the schema.
 
@@ -22,8 +25,8 @@ DECLARE @new_id int = SCOPE_IDENTITY();
 
 -- Optionally: Customer linkage, DCC permissions, NonMerch overrides.
 INSERT INTO Acct_Agency_Customer (...);  -- at least one row for the principal contact
-EXEC SP_AcctAgencyCopyDCC <source_agency>, <new_id>;       -- if cloning DCC perms from a template
-EXEC SP_AcctAgencyCopyNonMerch <source_agency>, <new_id>;  -- if cloning non-merch fees
+EXEC SP_AcctAgencyCopyDCC <new_id>, <source_agency>;       -- NEW first, OLD second per verified signature
+EXEC SP_AcctAgencyCopyNonMerch <new_id>, <source_agency>;  -- NEW first, OLD second per verified signature
 ```
 
 The `Acct_Agency_Tax_Codes` rows are created by the trigger automatically — do not insert them yourself.
@@ -294,8 +297,8 @@ DECLARE @new_agency_id int = SCOPE_IDENTITY();
 
 -- After the agency row exists:
 --   Acct_Agency_Customer linkage rows: caller's responsibility
---   Acct_Agency_DCC perms: caller's responsibility (or use SP_AcctAgencyCopyDCC <template>, <new>)
---   Acct_Agency_NonMerch fees: caller's responsibility (or use SP_AcctAgencyCopyNonMerch)
+--   Acct_Agency_DCC perms: caller's responsibility (or use SP_AcctAgencyCopyDCC <new>, <template>)
+--   Acct_Agency_NonMerch fees: caller's responsibility (or use SP_AcctAgencyCopyNonMerch <new>, <template>)
 --   POS sync: EXEC SP_ARAcctResendToPos @new_agency_id  -- pushes to register-local DBs
 ```
 
@@ -303,11 +306,12 @@ This is the contract laportal can mirror **today** without any further reverse-e
 
 ### What's still ❓ (low priority)
 
-- Literal MFC `INSERT INTO Acct_Agency` from WPAdmin — would close the last sliver of "what does WPAdmin technically send". Captures next time someone drives WPAdmin's New Agency form.
+- ~~Literal MFC `INSERT INTO Acct_Agency` from WPAdmin~~ — **CLOSED 2026-04-25 via binary recovery.** The column list is in `WPData.dll` at offset `0x32988` (53 columns + paramAgencyID). See [`agency-binary-findings.md`](agency-binary-findings.md). The literal INSERT itself is composed at runtime by MFC's CRecordset from this column list — the **column contract is now verified** without needing a plan-cache capture.
 - `TUI_Acct_Agency` cursor body (partial recovery only — cursor preludes captured, loop body evicted).
 - `TD_Acct_Agency` (delete trigger) — not in cache because no recent agency deletes. Closes when WPAdmin deletes one.
+- ~~`SP_ARAcctResendToPos` body~~ — **CLOSED 2026-04-25 via plan-cache.** Body recovered; see [`../proc-bodies/SP_ARAcctResendToPos.sql`](../proc-bodies/SP_ARAcctResendToPos.sql). Writes type-6 (Agency) rows to `pos_update` for every Location. For a fresh clone with no customer linkages yet, only type-6 entries are emitted — minimal POS sync as expected.
 
-None of these block laportal mirroring. All will surface naturally next time a Pierce admin works the WPAdmin form.
+None of these block laportal mirroring.
 
 ## 7. Implications for laportal
 
