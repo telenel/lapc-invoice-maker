@@ -37,6 +37,8 @@ interface ProductActionBarProps {
   allowMissingEditPricing?: boolean;
   onHardDeleteClick?: () => void;
   onBulkEdit?: () => void;
+  /** When true, the floating tray nudges left so it doesn't overlap the inspector pane. */
+  inspectorOpen?: boolean;
 }
 
 export function ProductActionBar({
@@ -54,6 +56,7 @@ export function ProductActionBar({
   allowMissingEditPricing = false,
   onHardDeleteClick,
   onBulkEdit,
+  inspectorOpen = false,
 }: ProductActionBarProps) {
   const router = useRouter();
   const { data: session } = useSession();
@@ -139,26 +142,107 @@ export function ProductActionBar({
   const formatStock = (value: number | null | undefined) =>
     value == null || Number.isNaN(value) ? "—" : value.toLocaleString();
 
+  // Selection-health signals — surfaced as colored chips so the operator
+  // sees data-quality / cross-location issues without expanding the panel.
+  const totalRetail = selectedItems.reduce(
+    (sum, item) => sum + (item.retailPrice ?? 0),
+    0,
+  );
+  const discontinuedCount = selectedItems.filter((item) => item.fDiscontinue === 1).length;
+  const missingBarcodeCount = selectedItems.filter(
+    (item) => !item.barcode && !item.isbn,
+  ).length;
+  const locationsTouched = new Set(
+    selectedItems.map((item) => item.pricingLocationId).filter((id) => id != null),
+  );
+  const mixedLocations = locationsTouched.size > 1;
+  const previewItems = selectedItems.slice(0, 3);
+  const overflowPreview = selectedItems.length - previewItems.length;
+
+  const healthChips: Array<{ key: string; tone: "warn" | "danger" | "info"; label: string }> = [];
+  if (hasMissingRetailPrice) {
+    healthChips.push({
+      key: "missing-price",
+      tone: "warn",
+      label: `${missingRetailPriceCount} missing price`,
+    });
+  }
+  if (discontinuedCount > 0) {
+    healthChips.push({
+      key: "discontinued",
+      tone: "danger",
+      label: `${discontinuedCount} discontinued`,
+    });
+  }
+  if (missingBarcodeCount > 0) {
+    healthChips.push({
+      key: "missing-barcode",
+      tone: "warn",
+      label: `${missingBarcodeCount} missing barcode`,
+    });
+  }
+  if (mixedLocations) {
+    healthChips.push({
+      key: "mixed-locations",
+      tone: "info",
+      label: `Mixed locations · ${locationsTouched.size}`,
+    });
+  }
+  const trayRight = inspectorOpen ? 16 + 320 + 16 : 16;
+
   return (
     <AnimatePresence>
       {selectedCount > 0 && (
         <motion.div
+          data-testid="selection-tray"
           initial={{ y: 80, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 80, opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
+          style={{ left: 16, right: trayRight, bottom: 16 }}
+          className="fixed z-50 overflow-hidden rounded-[10px] border border-border-strong bg-card shadow-[0_16px_40px_-12px_rgba(0,0,0,.22),0_4px_12px_rgba(0,0,0,.08)] supports-[backdrop-filter]:bg-card/95 supports-[backdrop-filter]:backdrop-blur"
         >
-          <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-3">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium">
-                  {selectedCount} item{selectedCount !== 1 ? "s" : ""} selected
+          <div className="flex flex-col gap-2 px-4 py-3">
+            {/* Top row: count + preview chips + warnings + view items */}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="inline-flex min-w-[26px] items-center justify-center rounded-md bg-primary px-1.5 py-0.5 font-mono tnum text-[11.5px] font-semibold text-primary-foreground">
+                  {selectedCount}
                 </span>
-                {offPageSelectedCount > 0 ? (
-                  <span className="rounded-full border border-border bg-secondary px-2 py-0.5 text-[11px] text-muted-foreground">
-                    {visibleSelectedCount} on this page · {offPageSelectedCount} on another page
+                <div className="flex flex-col leading-tight">
+                  <span className="text-[12.5px] font-semibold">
+                    {selectedCount} item{selectedCount !== 1 ? "s" : ""} selected
                   </span>
+                  <span className="text-[10.5px] text-muted-foreground">
+                    {offPageSelectedCount > 0 ? (
+                      <>
+                        <span className="font-mono tnum">{visibleSelectedCount}</span> on this page ·{" "}
+                        <span className="font-mono tnum font-semibold text-primary">{offPageSelectedCount}</span> on other pages
+                        {" · "}
+                      </>
+                    ) : null}
+                    Σ retail{" "}
+                    <span className="font-mono tnum text-foreground">${totalRetail.toFixed(2)}</span>
+                  </span>
+                </div>
+
+                {previewItems.length > 0 ? (
+                  <div className="flex items-center gap-1.5">
+                    {previewItems.map((item) => (
+                      <span
+                        key={item.sku}
+                        className="inline-flex max-w-[220px] items-center gap-1.5 rounded border border-border bg-secondary px-1.5 py-0.5 text-[11px]"
+                      >
+                        <span className="font-mono tnum text-[10px] text-muted-foreground">{item.sku}</span>
+                        <span className="truncate text-foreground">{item.description}</span>
+                      </span>
+                    ))}
+                    {overflowPreview > 0 ? (
+                      <span className="text-[11px] text-muted-foreground">
+                        +<span className="font-mono tnum">{overflowPreview}</span> more
+                      </span>
+                    ) : null}
+                  </div>
                 ) : null}
                 <button
                   type="button"
@@ -180,29 +264,73 @@ export function ProductActionBar({
                   Clear
                 </button>
               </div>
-              <div className="flex gap-2">
+
+              {/* Health chips */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {healthChips.length === 0 ? (
+                  <span className="inline-flex items-center gap-1 rounded border border-emerald-500/30 bg-emerald-500/[0.08] px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+                    Selection healthy
+                  </span>
+                ) : (
+                  healthChips.map((chip) => {
+                    const tone =
+                      chip.tone === "danger"
+                        ? "border-destructive/35 bg-destructive/[0.08] text-destructive"
+                        : chip.tone === "info"
+                          ? "border-sky-500/35 bg-sky-500/[0.08] text-sky-700"
+                          : "border-amber-500/40 bg-amber-500/[0.10] text-amber-700";
+                    return (
+                      <span
+                        key={chip.key}
+                        className={`inline-flex items-center gap-1 rounded border px-2 py-0.5 text-[11px] font-medium ${tone}`}
+                      >
+                        {chip.label}
+                      </span>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Action row: grouped by purpose */}
+            <div className="flex flex-wrap items-center gap-3">
+              <ActionGroup label="CREATE">
+                <Button
+                  size="sm"
+                  onClick={handleCreateInvoice}
+                  disabled={hasMissingRetailPrice}
+                >
+                  <FileTextIcon className="mr-1.5 size-3.5" />
+                  Create Invoice
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleCreateQuote}
+                  disabled={hasMissingRetailPrice}
+                >
+                  <FileTextIcon className="mr-1.5 size-3.5" />
+                  Create Quote
+                </Button>
+              </ActionGroup>
+
+              <ActionGroup label="OUTPUT">
                 <Button size="sm" variant="outline" onClick={handlePrintBarcodes}>
                   <PrinterIcon className="mr-1.5 size-3.5" />
                   Print Barcodes
                 </Button>
-                {canSaveToQuickPicks ? (
+              </ActionGroup>
+
+              {canSaveToQuickPicks ? (
+                <ActionGroup label="ORGANIZE">
                   <Button size="sm" variant="outline" onClick={handleSaveToQuickPicks}>
                     <SparklesIcon className="mr-1.5 size-3.5" />
                     Save to Quick Picks
                   </Button>
-                ) : null}
-                {prismAvailable ? (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setDestructiveOpen((open) => !open)}
-                    disabled={discontinuing}
-                    className="border-destructive/30 text-destructive hover:bg-destructive/10"
-                  >
-                    <Trash2Icon className="mr-1.5 size-3.5" />
-                    {discontinuing ? "Discontinuing…" : "Discontinue…"}
-                  </Button>
-                ) : null}
+                </ActionGroup>
+              ) : null}
+
+              <ActionGroup label="MODIFY">
                 {prismAvailable && onEditClick ? (
                   <Button
                     size="sm"
@@ -218,24 +346,22 @@ export function ProductActionBar({
                     Bulk Edit
                   </Button>
                 ) : null}
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={handleCreateQuote}
-                  disabled={hasMissingRetailPrice}
-                >
-                  <FileTextIcon className="mr-1.5 size-3.5" />
-                  Create Quote
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleCreateInvoice}
-                  disabled={hasMissingRetailPrice}
-                >
-                  <FileTextIcon className="mr-1.5 size-3.5" />
-                  Create Invoice
-                </Button>
-              </div>
+              </ActionGroup>
+
+              {prismAvailable ? (
+                <ActionGroup label="ADMIN" tone="danger">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setDestructiveOpen((open) => !open)}
+                    disabled={discontinuing}
+                    className="border-destructive/30 text-destructive hover:bg-destructive/10"
+                  >
+                    <Trash2Icon className="mr-1.5 size-3.5" />
+                    {discontinuing ? "Discontinuing…" : "Discontinue…"}
+                  </Button>
+                </ActionGroup>
+              ) : null}
             </div>
             {selectionOpen ? (
               <div className="overflow-hidden rounded-md border border-border bg-card">
@@ -376,5 +502,27 @@ export function ProductActionBar({
         </motion.div>
       )}
     </AnimatePresence>
+  );
+}
+
+interface ActionGroupProps {
+  label: string;
+  tone?: "default" | "danger";
+  children: React.ReactNode;
+}
+
+function ActionGroup({ label, tone = "default", children }: ActionGroupProps) {
+  // Hide the group entirely when no buttons render — keeps the action row
+  // tight on permission-gated layouts (e.g. signed-out users without
+  // Quick Picks, or read-only Prism without Edit/Bulk Edit).
+  const childArray = Array.isArray(children) ? children : [children];
+  const hasContent = childArray.some((c) => c !== null && c !== false && c !== undefined);
+  if (!hasContent) return null;
+  const labelTone = tone === "danger" ? "text-destructive" : "text-muted-foreground";
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className={`text-[9.5px] font-semibold tracking-[0.08em] ${labelTone}`}>{label}</span>
+      {children}
+    </div>
   );
 }

@@ -1410,6 +1410,7 @@ export default function ProductsPageClient() {
         allowMissingEditPricing={allowMissingEditPricing}
         onHardDeleteClick={() => setHardDeleteOpen(true)}
         onBulkEdit={() => router.push('/products/bulk-edit?preloadSkus=' + Array.from(selected.keys()).join(','))}
+        inspectorOpen={focusedProduct != null}
       />
 
       {/* Spacer so content isn't hidden behind the sticky action bar */}
