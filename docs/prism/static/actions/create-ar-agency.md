@@ -309,7 +309,7 @@ This is the contract laportal can mirror **today** without any further reverse-e
 - ~~Literal MFC `INSERT INTO Acct_Agency` from WPAdmin~~ — **CLOSED 2026-04-25 via binary recovery.** The column list is in `WPData.dll` at offset `0x32988` (53 columns + paramAgencyID). See [`agency-binary-findings.md`](agency-binary-findings.md). The literal INSERT itself is composed at runtime by MFC's CRecordset from this column list — the **column contract is now verified** without needing a plan-cache capture.
 - `TUI_Acct_Agency` cursor body (partial recovery only — cursor preludes captured, loop body evicted).
 - `TD_Acct_Agency` (delete trigger) — not in cache because no recent agency deletes. Closes when WPAdmin deletes one.
-- `SP_ARAcctResendToPos` body — signature verified `(@AgencyID int)`, body not recovered. Lives in DB plan cache; binary doesn't carry it.
+- ~~`SP_ARAcctResendToPos` body~~ — **CLOSED 2026-04-25 via plan-cache.** Body recovered; see [`../proc-bodies/SP_ARAcctResendToPos.sql`](../proc-bodies/SP_ARAcctResendToPos.sql). Writes type-6 (Agency) rows to `pos_update` for every Location. For a fresh clone with no customer linkages yet, only type-6 entries are emitted — minimal POS sync as expected.
 
 None of these block laportal mirroring.
 

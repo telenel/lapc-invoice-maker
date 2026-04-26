@@ -331,7 +331,7 @@ Worth a brief snapshot/diff session to confirm where audit residue actually land
 - **What the WPAdmin form's "copy from existing" button actually does internally** — Pierce isn't reliably using it (0 cached executions of either copy proc), so cloning via direct SELECT-INSERT is appropriate.
 - **`TUI_Acct_Agency` cursor body** — partial only. Pierce uses TextbookValidation=0, so the trigger's main branch likely doesn't fire.
 - **`TD_Acct_Agency` (delete trigger)** — not relevant; we never delete during clone.
-- **`SP_ARAcctResendToPos` body** — signature verified `(@AgencyID int)`. Body lives in DB plan cache; not recovered yet.
+- ~~**`SP_ARAcctResendToPos` body**~~ — **RECOVERED 2026-04-25** ([`../proc-bodies/SP_ARAcctResendToPos.sql`](../proc-bodies/SP_ARAcctResendToPos.sql)). For a fresh clone (no `Acct_Agency_Customer` rows yet), the proc emits only type-6 `pos_update` rows — one per Location. That's the desired minimal POS sync.
 
 ## 10. Recommended next steps
 

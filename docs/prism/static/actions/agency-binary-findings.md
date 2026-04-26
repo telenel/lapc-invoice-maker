@@ -180,8 +180,8 @@ Every proc signature observed in the binary's `{ call SP_X(%d, %s) }` strings wa
 
 | Proc | Signature | Purpose |
 |---|---|---|
-| `SP_ARAcctResendToPos` | `(@AgencyID int)` | Push agency to register-local POS DBs. **Required after create/edit.** |
-| `SP_ARAcctResendToWeb` | `(@AgencyID int)` | Push agency to PrismCore/Mosaic web. |
+| `SP_ARAcctResendToPos` | `(@AgencyID int)` | Push agency to register-local POS DBs. **Required after create/edit.** Body recovered: [`../proc-bodies/SP_ARAcctResendToPos.sql`](../proc-bodies/SP_ARAcctResendToPos.sql). |
+| `SP_ARAcctResendToWeb` | `(@AgencyID int)` | Push agency to PrismCore/Mosaic web. Body not yet recovered. |
 | `SP_Wincom_ARAgencyDCC` | `(@agency_id int)` | DCC-side POS sync. Discovered in catalog. |
 
 ### Customer linkage management
@@ -312,17 +312,17 @@ IF @fAccessibleOnline = 1
 
 ## 8. Confidence rating after binary recovery
 
-| Operation | Before binary recovery | After binary recovery | Why |
-|---|---:|---:|---|
-| **Clone existing agency** | 85% | **~95%** | Source-row inheritance + MFC column list verified |
-| **Create from scratch** | 70% | **~92%** | Literal MFC binding closes the "what does WPAdmin write" gap |
-| **Edit existing agency** | 75% | **~92%** | Same column list + MFC update mechanism |
-| **Delete agency** | 70% | **~88%** | Proc signature verified; pre-checks documented |
+| Operation | Before binary recovery | After binary recovery | After SP_ARAcctResendToPos body | Why |
+|---|---:|---:|---:|---|
+| **Clone existing agency** | 85% | ~95% | **~97%** | MFC column list verified + POS-sync side effects fully understood |
+| **Create from scratch** | 70% | ~92% | **~95%** | Same |
+| **Edit existing agency** | 75% | ~92% | **~95%** | Same |
+| **Delete agency** | 70% | ~88% | ~88% | Proc signature verified; pre-checks documented (no change — uses different procs) |
 
-### Remaining ~5–8% risk
+### Remaining ~3–5% risk
 
-1. **`SP_ARAcctResendToPos` body still not recovered** — we know the proc exists and what params it takes, but the body lives in the DB plan cache (binaries don't carry it). For 100% confidence, recover it via plan-cache scan after someone clicks Resend in WPAdmin.
-2. **`TUI_Acct_Agency` cursor body partial** — only the textbook-validation prelude. Pierce uses `TextbookValidation = 0` 100% of the time, so likely zero impact, but unverified.
+1. ~~**`SP_ARAcctResendToPos` body still not recovered**~~ — **CLOSED 2026-04-25 via plan-cache** ([`../proc-bodies/SP_ARAcctResendToPos.sql`](../proc-bodies/SP_ARAcctResendToPos.sql)). The proc deletes stale `pos_update` entries for the agency (type=6) and its customers (type=4), then loops over every Location and re-queues a fresh row per location. For a freshly-cloned agency with no `Acct_Agency_Customer` rows yet (the typical clone case), only type-6 entries are emitted — exactly what we want. **`pos_update.type` encoding now confirmed**: 3 = Customer, 4 = Agency-Customer linkage, 6 = Agency.
+2. **`TUI_Acct_Agency` cursor body partial** — only the textbook-validation prelude. Pierce uses `TextbookValidation = 0` 100% of the time, so the IF-body never fires for our use case; likely zero impact, but the loop body itself remains evicted.
 3. **No live test row** — a single dev-environment INSERT (with explicit per-operation acknowledgment) would close the remaining gap to ~98%.
 
 ## 9. The extraction technique (so future-you can re-run)
