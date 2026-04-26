@@ -12,7 +12,7 @@ import type {
   ProductLocationSlice,
   ProductTab,
 } from "@/domains/product/types";
-import { PAGE_SIZE, type OptionalColumnKey } from "@/domains/product/constants";
+import { DEFAULT_TABLE_DENSITY, PAGE_SIZE, TABLE_DENSITIES, type OptionalColumnKey, type TableDensity } from "@/domains/product/constants";
 import { MarginBar } from "./margin-bar";
 import { useProductRefDirectory, useVendorDirectory } from "@/domains/product/vendor-directory";
 import { useHiddenColumns } from "./use-hidden-columns";
@@ -93,6 +93,8 @@ interface ProductTableProps {
   suppressEmptyState?: boolean;
   inlineEdit?: ProductInlineEditController;
   primaryLocationId?: ProductLocationId | null;
+  /** Row density. Drives row height + cell padding. */
+  density?: TableDensity;
 }
 
 function formatCurrency(value: number | null | undefined): string {
@@ -538,7 +540,10 @@ export function ProductTable({
   suppressEmptyState = false,
   inlineEdit,
   primaryLocationId,
+  density = DEFAULT_TABLE_DENSITY,
 }: ProductTableProps) {
+  const densityCfg = TABLE_DENSITIES.find((d) => d.value === density) ?? TABLE_DENSITIES[1];
+  const rowStripe = "stripe" in densityCfg && densityCfg.stripe === true;
   void onHideColumn;
   const { byId: vendorsById } = useVendorDirectory();
   const { lookups } = useProductRefDirectory();
@@ -815,7 +820,7 @@ export function ProductTable({
             <tbody>
               {showSkeletonRows
                 ? Array.from({ length: 10 }).map((_, i) => (
-                    <tr key={`skeleton-${i}`} className="h-[38px]">
+                    <tr key={`skeleton-${i}`} style={{ height: densityCfg.rowH }}>
                       {Array.from({ length: skeletonCols }).map((_, j) => (
                         <td key={j} className="px-2.5 py-1.5">
                           <div className="h-3 w-full animate-pulse rounded bg-muted" />
@@ -866,16 +871,19 @@ export function ProductTable({
                           if (onRowClick) onRowClick(product);
                           else onToggle(product);
                         }}
-                        className={`h-[38px] cursor-pointer transition-colors border-b border-border/50 ${
+                        style={{ height: densityCfg.rowH, fontSize: densityCfg.fontPx }}
+                        className={`cursor-pointer transition-colors border-b border-border/50 ${
                           isUpdatingRows ? "opacity-70" : ""
                         } ${
                           sel
                             ? "bg-primary/[0.06]"
                             : focusedSku === product.sku
                               ? "bg-accent/60"
-                              : zebra
-                                ? "bg-secondary/40 hover:bg-accent/70"
-                                : "hover:bg-accent/70"
+                              : rowStripe && zebra
+                                ? "bg-secondary/60 hover:bg-accent/70"
+                                : zebra
+                                  ? "bg-secondary/40 hover:bg-accent/70"
+                                  : "hover:bg-accent/70"
                         }`}
                       >
                         <td

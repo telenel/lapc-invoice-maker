@@ -7,8 +7,17 @@ import Link from "next/link";
 import { SearchIcon, XIcon } from "lucide-react";
 import { useProductSearch, useProductSelection } from "@/domains/product/hooks";
 import { searchProducts } from "@/domains/product/queries";
-import { CATALOG_ITEMS_STORAGE_KEY, EMPTY_FILTERS, TABS, DEFAULT_COLUMN_SET, OPTIONAL_COLUMNS } from "@/domains/product/constants";
-import type { OptionalColumnKey } from "@/domains/product/constants";
+import {
+  CATALOG_ITEMS_STORAGE_KEY,
+  DEFAULT_COLUMN_SET,
+  DEFAULT_TABLE_DENSITY,
+  EMPTY_FILTERS,
+  OPTIONAL_COLUMNS,
+  TABLE_DENSITIES,
+  TABLE_DENSITY_STORAGE_KEY,
+  TABS,
+} from "@/domains/product/constants";
+import type { OptionalColumnKey, TableDensity } from "@/domains/product/constants";
 import type { ProductFilters, ProductTab, SavedView } from "@/domains/product/types";
 import {
   parseFiltersFromSearchParams,
@@ -19,6 +28,7 @@ import { ProductFiltersBar } from "@/components/products/product-filters";
 import { ProductFilterChipBar } from "@/components/products/product-filter-chip-bar";
 import { ProductTable } from "@/components/products/product-table";
 import { ProductInspector, type InspectorActionKind } from "@/components/products/product-inspector";
+import { DensityToggle } from "@/components/products/density-toggle";
 import { openBarcodePrintWindow } from "@/components/products/barcode-print-view";
 import { ProductActionBar } from "@/components/products/product-action-bar";
 import { resolveEditDialogMode } from "@/components/products/edit-item-dialog-mode";
@@ -361,6 +371,27 @@ export default function ProductsPageClient() {
   const [hiddenCount, setHiddenCount] = useState(0);
   const [focusedSku, setFocusedSku] = useState<number | null>(null);
   const [singleItemActionProduct, setSingleItemActionProduct] = useState<ProductBrowseRow | null>(null);
+  const [tableDensity, setTableDensity] = useState<TableDensity>(() => {
+    if (typeof window === "undefined") return DEFAULT_TABLE_DENSITY;
+    try {
+      const raw = window.localStorage?.getItem?.(TABLE_DENSITY_STORAGE_KEY);
+      if (!raw) return DEFAULT_TABLE_DENSITY;
+      const candidate = raw as TableDensity;
+      const ok = TABLE_DENSITIES.some((d) => d.value === candidate);
+      return ok ? candidate : DEFAULT_TABLE_DENSITY;
+    } catch {
+      return DEFAULT_TABLE_DENSITY;
+    }
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage?.setItem?.(TABLE_DENSITY_STORAGE_KEY, tableDensity);
+    } catch {
+      // localStorage may be unavailable in private mode or test environments;
+      // density will reset to default on next mount, which is acceptable.
+    }
+  }, [tableDensity]);
   const [resolvedViews, setResolvedViews] = useState<SavedView[]>(SYSTEM_PRESET_VIEWS);
   // Bumped after saveView / deleteView succeeds so the SavedViewsBar refetches.
   const [savedViewsRefresh, setSavedViewsRefresh] = useState(0);
@@ -1255,6 +1286,7 @@ export default function ProductsPageClient() {
               {hiddenCount} hidden
             </span>
           )}
+          <DensityToggle value={tableDensity} onChange={setTableDensity} />
           <Button
             size="sm"
             variant="outline"
@@ -1349,6 +1381,7 @@ export default function ProductsPageClient() {
               suppressEmptyState={data?.total === 0 && activeView != null}
               inlineEdit={inlineEdit}
               primaryLocationId={primaryLocationId}
+              density={tableDensity}
             />
           </div>
           <ProductInspector
