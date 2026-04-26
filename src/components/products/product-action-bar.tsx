@@ -62,7 +62,7 @@ export function ProductActionBar({
   const [selectionOpen, setSelectionOpen] = useState(false);
   const [destructiveOpen, setDestructiveOpen] = useState(false);
   const [deleteWarningOpen, setDeleteWarningOpen] = useState(false);
-  const canSaveToQuickPicks = (session?.user as { role?: string } | undefined)?.role === "admin";
+  const canSaveToQuickPicks = Boolean(session?.user);
   const selectedItems = Array.from(selected.values());
   const editPricingRows = editPricingItems ?? selectedItems;
   const missingRetailPriceCount = selectedItems.filter((item) => item.retailPrice == null).length;

@@ -573,12 +573,15 @@ describe("searchProductBrowseRows", () => {
         tab: "quickPicks",
         sectionSlug: "copytech-services",
       },
-      { role: "user" },
+      { role: "user", userId: "user-1" },
     );
 
     expect(prismaMock.quickPickSection.findMany).toHaveBeenCalledWith({
       where: {
-        isGlobal: true,
+        OR: [
+          { isGlobal: true },
+          { createdByUserId: "user-1" },
+        ],
         slug: "copytech-services",
       },
       select: {
