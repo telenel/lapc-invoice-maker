@@ -85,3 +85,79 @@ export interface CloneAgencyResult {
   newAgencyNumber: string;
   newName: string;
 }
+
+/**
+ * Caller-supplied input for creating an Acct_Agency from scratch (no template).
+ * Mirrors the fields exposed in the laportal advanced-mode create form.
+ *
+ * Required: agencyNumber, name, agencyTypeId.
+ * Everything else falls back to PIERCE_AGENCY_DEFAULTS in the agency-server.
+ */
+export interface CreateAgencyInput {
+  agencyNumber: string;
+  name: string;
+  agencyTypeId: number;
+
+  // Common-override fields (form-prominent)
+  tenderCode?: number;
+  creditLimit?: number;
+  statementCodeId?: number;
+  nonMerchOptId?: number;
+  fAccessibleOnline?: 0 | 1;
+  fInvoiceInAR?: 0 | 1;
+  fPrintBalance?: 0 | 1;
+  prtStartExpDate?: 0 | 1;
+  halfReceiptTemplateId?: number;
+
+  // Address / contact (rarely used at Pierce)
+  contact?: string | null;
+  address?: string | null;
+  city?: string | null;
+  state?: string | null;
+  country?: string | null;
+  postalCode?: string | null;
+  phone1?: string | null;
+  phone2?: string | null;
+  phone3?: string | null;
+  ext1?: string | null;
+  ext2?: string | null;
+  ext3?: string | null;
+  fedTaxNumber?: string | null;
+
+  // Advanced flags (rarely changed)
+  fDebit?: 0 | 1;
+  fBilling?: 0 | 1;
+  fBalanceType?: 0 | 1;
+  fTaxExempt?: 0 | 1;
+  fSetCredLimit?: 0 | 1;
+  fPageBreak?: 0 | 1;
+  fFinanceType?: 0 | 1;
+  fFinanceCharge?: 0 | 1;
+  fPermitChgDue?: 0 | 1;
+  fOpenDrawer?: 0 | 1;
+  fRefRequired?: 0 | 1;
+  fAllowLimitChg?: 0 | 1;
+  fDispCustCmnt?: 0 | 1;
+  fPrtCustCmnt?: 0 | 1;
+
+  // Numeric fields (advanced)
+  agencyBillingId?: number | null;
+  maxDays?: number;
+  priority?: number;
+  acctTermId?: number | null;
+  discountCodeId?: number;
+  changeLimit?: number;
+  mimimumCharge?: number; // intentional schema typo
+  financeRate?: number;
+  discountType?: number;
+  printInvoice?: number;
+  fullReceiptTemplateId?: number;
+  textbookValidation?: number;
+  validateTextbooksOnly?: 0 | 1;
+}
+
+export interface CreateAgencyResult {
+  newAgencyId: number;
+  newAgencyNumber: string;
+  newName: string;
+}
