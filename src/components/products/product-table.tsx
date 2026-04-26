@@ -867,6 +867,7 @@ export function ProductTable({
                     return (
                       <tr
                         key={product.sku}
+                        data-density={density}
                         onClick={() => {
                           if (onRowClick) onRowClick(product);
                           else onToggle(product);
@@ -913,7 +914,7 @@ export function ProductTable({
                               {primaryText}
                             </span>
                             {metaParts.length > 0 ? (
-                              <span className="text-[10.5px] text-muted-foreground overflow-hidden text-ellipsis whitespace-nowrap">
+                              <span className="product-table-row-meta text-[10.5px] text-muted-foreground overflow-hidden text-ellipsis whitespace-nowrap">
                                 {metaParts.join(" · ")}
                               </span>
                             ) : null}

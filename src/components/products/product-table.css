@@ -19,3 +19,39 @@
     display: none;
   }
 }
+
+/* Density-driven cell padding. Override the per-cell Tailwind padding
+ * utilities so the row's data-density attribute is what actually
+ * controls visual row height — `style.height` on a <tr> is only a
+ * minimum and gets blown out by tall cells. */
+.product-table tbody tr[data-density="compact"] > td {
+  padding-top: 3px;
+  padding-bottom: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.product-table tbody tr[data-density="compact"] > td .product-table-row-meta {
+  display: none;
+}
+
+.product-table tbody tr[data-density="comfy"] > td {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.product-table tbody tr[data-density="roomy"] > td {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.product-table tbody tr[data-density="audit"] > td {
+  padding-top: 2px;
+  padding-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.product-table tbody tr[data-density="audit"] > td .product-table-row-meta {
+  display: none;
+}
