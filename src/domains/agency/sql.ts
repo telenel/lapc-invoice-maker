@@ -110,6 +110,85 @@ export function buildCloneAgencySql(): string {
 }
 
 /**
+ * Build the parameterized INSERT statement for creating a new Acct_Agency
+ * row from caller-supplied values. The 52 MFC-bound columns are all bound
+ * positionally by name; the caller must supply a value (or NULL) for each
+ * via mssql request.input(`p_<columnName>`, ...).
+ *
+ * The agency-server layer provides Pierce defaults for any column the
+ * caller doesn't specify.
+ */
+export function buildCreateAgencySql(): string {
+  const cols = ACCT_AGENCY_INSERT_COLUMNS;
+  const insertList = cols.join(", ");
+  const valuesList = cols.map((col) => `@p_${col}`).join(", ");
+
+  return [
+    `INSERT INTO Acct_Agency (${insertList})`,
+    `VALUES (${valuesList});`,
+    `SELECT CAST(SCOPE_IDENTITY() AS int) AS newAgencyId;`,
+  ].join("\n");
+}
+
+/**
+ * Build the SELECT statement that searches Pierce agencies by AgencyNumber
+ * or Name. Used by the template-picker in the single-agency create flow.
+ *
+ * Bound parameters:
+ *   - @q (VarChar(80)) — match string. Used in LIKE '%...%' on both columns.
+ *   - @limit (Int) — max rows returned (typically 25–50)
+ */
+export function buildSearchAgenciesSql(): string {
+  return [
+    `SELECT TOP (@limit)`,
+    `  AgencyID         AS agencyId,`,
+    `  LTRIM(RTRIM(AgencyNumber)) AS agencyNumber,`,
+    `  LTRIM(RTRIM(Name))         AS name,`,
+    `  AgencyTypeID     AS agencyTypeId,`,
+    `  CreditLimit      AS creditLimit,`,
+    `  TenderCode       AS tenderCode,`,
+    `  fStatus          AS fStatus,`,
+    `  fAccessibleOnline AS fAccessibleOnline,`,
+    `  fSetCredLimit    AS fSetCredLimit`,
+    `FROM Acct_Agency`,
+    `WHERE`,
+    `  -- Pierce-only filter`,
+    `  (AgencyNumber LIKE 'PSP%'`,
+    `    OR AgencyNumber LIKE 'PFA%'`,
+    `    OR AgencyNumber LIKE 'PSU%'`,
+    `    OR AgencyNumber LIKE 'PWI%'`,
+    `    OR AgencyNumber LIKE 'PW%'`,
+    `    OR AgencyNumber LIKE 'PS%'`,
+    `    OR AgencyNumber LIKE 'PF%')`,
+    `  AND (AgencyNumber LIKE '%' + @q + '%' OR Name LIKE '%' + @q + '%')`,
+    `ORDER BY AgencyNumber DESC;`,
+  ].join("\n");
+}
+
+/**
+ * Build the SELECT statement that fetches one Acct_Agency row by ID.
+ * Returns the same shape as buildListBySemesterSql() (AgencyRecord).
+ *
+ * Bound parameter: @agencyId (Int).
+ */
+export function buildGetAgencyByIdSql(): string {
+  return [
+    `SELECT`,
+    `  AgencyID         AS agencyId,`,
+    `  LTRIM(RTRIM(AgencyNumber)) AS agencyNumber,`,
+    `  LTRIM(RTRIM(Name))         AS name,`,
+    `  AgencyTypeID     AS agencyTypeId,`,
+    `  CreditLimit      AS creditLimit,`,
+    `  TenderCode       AS tenderCode,`,
+    `  fStatus          AS fStatus,`,
+    `  fAccessibleOnline AS fAccessibleOnline,`,
+    `  fSetCredLimit    AS fSetCredLimit`,
+    `FROM Acct_Agency`,
+    `WHERE AgencyID = @agencyId;`,
+  ].join("\n");
+}
+
+/**
  * Build the SELECT statement that lists Pierce agencies whose AgencyNumber
  * starts with the given semester prefix. Used to find rollover candidates.
  *

@@ -142,8 +142,28 @@ export function AgencyRollSemester() {
           `Created ${body.created.length} agencies in ${plan.targetSemester}.`,
         );
       }
-      // Refresh the plan so already-exists badges update
-      await loadPlan();
+      // Update the existing plan in-place so newly-created targets show as
+      // "Already exists" in the table. Re-fetching loadPlan() would clobber
+      // the result panel since loadPlan resets `result` to null.
+      const createdSourceIds = new Set(body.created.map((c) => c.sourceAgencyId));
+      setPlan((prev) =>
+        prev
+          ? {
+              ...prev,
+              rows: prev.rows.map((row) =>
+                createdSourceIds.has(row.source.agencyId)
+                  ? { ...row, alreadyExists: true }
+                  : row,
+              ),
+            }
+          : prev,
+      );
+      // Deselect the rows we just created so the count badge reflects work remaining.
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        body.created.forEach((c) => next.delete(c.sourceAgencyId));
+        return next;
+      });
     } catch (err) {
       toast.error("Rollover failed", {
         description: err instanceof Error ? err.message : String(err),
@@ -180,12 +200,20 @@ export function AgencyRollSemester() {
 
   return (
     <div className="container mx-auto space-y-6 py-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Pierce semester rollover</h1>
-        <p className="text-muted-foreground text-sm">
-          Clone all of one semester&apos;s AR agencies into a new semester. Replaces
-          the manual WPAdmin Account Maintenance workflow.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">Pierce semester rollover</h1>
+          <p className="text-muted-foreground text-sm">
+            Clone all of one semester&apos;s AR agencies into a new semester.
+            Replaces the manual WPAdmin Account Maintenance workflow.
+          </p>
+        </div>
+        <a
+          href="/admin/agencies/new"
+          className="text-primary text-sm font-medium hover:underline"
+        >
+          Add a single account →
+        </a>
       </div>
 
       <Card>

@@ -109,6 +109,43 @@ export function validateRollSemesterRequest(
   return errors.length === 0 ? { ok: true } : { ok: false, errors };
 }
 
+export interface CreateAgencyRequestMin {
+  agencyNumber: string;
+  name: string;
+  agencyTypeId: number;
+}
+
+/**
+ * Validate the minimum-required fields for a create-from-scratch request.
+ * Optional fields are not validated here; the form layer enforces sane
+ * ranges per-field via Zod and the DB constraints catch anything else.
+ */
+export function validateCreateAgencyRequest(
+  req: CreateAgencyRequestMin,
+): ValidationResult {
+  const errors: ValidationFailure[] = [];
+
+  const numCheck = validateAgencyNumber(req.agencyNumber);
+  if (!numCheck.ok) {
+    errors.push(...numCheck.errors.map((e) => ({ ...e, field: "agencyNumber" })));
+  }
+
+  const nameCheck = validateAgencyName(req.name);
+  if (!nameCheck.ok) {
+    errors.push(...nameCheck.errors.map((e) => ({ ...e, field: "name" })));
+  }
+
+  if (!Number.isInteger(req.agencyTypeId) || req.agencyTypeId <= 0) {
+    errors.push({
+      field: "agencyTypeId",
+      message:
+        "AgencyTypeID is required (positive integer FK to Acct_Agency_Type).",
+    });
+  }
+
+  return errors.length === 0 ? { ok: true } : { ok: false, errors };
+}
+
 export interface CloneAgencyRequest {
   sourceAgencyId: number;
   newAgencyNumber: string;
