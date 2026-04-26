@@ -207,10 +207,13 @@ DECLARE @new_agency_id int = SCOPE_IDENTITY();
 --    No action needed.
 
 -- 3. Optionally clone DCC permissions (rarely populated for Pierce).
-EXEC SP_AcctAgencyCopyDCC @source_agency_id, @new_agency_id;
+--    Verified signature: SP_AcctAgencyCopyDCC(@NewAgencyID, @OldAgencyID)
+--    NEW comes first, OLD second.
+EXEC SP_AcctAgencyCopyDCC @new_agency_id, @source_agency_id;
 
 -- 4. Optionally clone non-merch fee codes (rarely populated for Pierce).
-EXEC SP_AcctAgencyCopyNonMerch @source_agency_id, @new_agency_id;
+--    Same param order as CopyDCC: NEW first, OLD second.
+EXEC SP_AcctAgencyCopyNonMerch @new_agency_id, @source_agency_id;
 
 -- 5. Push to register-local POS DBs so the new agency is tenderable.
 EXEC SP_ARAcctResendToPos @new_agency_id;

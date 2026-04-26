@@ -25,8 +25,8 @@ DECLARE @new_id int = SCOPE_IDENTITY();
 
 -- Optionally: Customer linkage, DCC permissions, NonMerch overrides.
 INSERT INTO Acct_Agency_Customer (...);  -- at least one row for the principal contact
-EXEC SP_AcctAgencyCopyDCC <source_agency>, <new_id>;       -- if cloning DCC perms from a template
-EXEC SP_AcctAgencyCopyNonMerch <source_agency>, <new_id>;  -- if cloning non-merch fees
+EXEC SP_AcctAgencyCopyDCC <new_id>, <source_agency>;       -- NEW first, OLD second per verified signature
+EXEC SP_AcctAgencyCopyNonMerch <new_id>, <source_agency>;  -- NEW first, OLD second per verified signature
 ```
 
 The `Acct_Agency_Tax_Codes` rows are created by the trigger automatically — do not insert them yourself.
@@ -297,8 +297,8 @@ DECLARE @new_agency_id int = SCOPE_IDENTITY();
 
 -- After the agency row exists:
 --   Acct_Agency_Customer linkage rows: caller's responsibility
---   Acct_Agency_DCC perms: caller's responsibility (or use SP_AcctAgencyCopyDCC <template>, <new>)
---   Acct_Agency_NonMerch fees: caller's responsibility (or use SP_AcctAgencyCopyNonMerch)
+--   Acct_Agency_DCC perms: caller's responsibility (or use SP_AcctAgencyCopyDCC <new>, <template>)
+--   Acct_Agency_NonMerch fees: caller's responsibility (or use SP_AcctAgencyCopyNonMerch <new>, <template>)
 --   POS sync: EXEC SP_ARAcctResendToPos @new_agency_id  -- pushes to register-local DBs
 ```
 
