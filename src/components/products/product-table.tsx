@@ -75,6 +75,8 @@ interface ProductTableProps {
   isSelected: (sku: number) => boolean;
   onToggle: (product: ProductBrowseRow) => void;
   onToggleAll: (products: ProductBrowseRow[]) => void;
+  onRowClick?: (product: ProductBrowseRow) => void;
+  focusedSku?: number | null;
   onPageChange: (page: number) => void;
   onSort: (field: string) => void;
   /** Optional column keys that should render in addition to the base set. */
@@ -526,6 +528,8 @@ export function ProductTable({
   isSelected,
   onToggle,
   onToggleAll,
+  onRowClick,
+  focusedSku = null,
   onPageChange,
   onSort,
   visibleColumns,
@@ -858,15 +862,20 @@ export function ProductTable({
                     return (
                       <tr
                         key={product.sku}
-                        onClick={() => onToggle(product)}
+                        onClick={() => {
+                          if (onRowClick) onRowClick(product);
+                          else onToggle(product);
+                        }}
                         className={`h-[38px] cursor-pointer transition-colors border-b border-border/50 ${
                           isUpdatingRows ? "opacity-70" : ""
                         } ${
                           sel
                             ? "bg-primary/[0.06]"
-                            : zebra
-                              ? "bg-secondary/40 hover:bg-accent/70"
-                              : "hover:bg-accent/70"
+                            : focusedSku === product.sku
+                              ? "bg-accent/60"
+                              : zebra
+                                ? "bg-secondary/40 hover:bg-accent/70"
+                                : "hover:bg-accent/70"
                         }`}
                       >
                         <td

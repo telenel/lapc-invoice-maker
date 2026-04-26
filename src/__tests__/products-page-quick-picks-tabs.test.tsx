@@ -100,6 +100,10 @@ vi.mock("@/components/products/product-filter-chip-bar", () => ({
   ProductFilterChipBar: () => <div data-testid="filter-chip-bar" />,
 }));
 
+vi.mock("@/components/products/product-inspector", () => ({
+  ProductInspector: () => <div data-testid="product-inspector" />,
+}));
+
 vi.mock("@/components/products/sync-database-button", () => ({
   SyncDatabaseButton: forwardRef<HTMLButtonElement>(function SyncDatabaseButtonStub(_, ref) {
     void ref;

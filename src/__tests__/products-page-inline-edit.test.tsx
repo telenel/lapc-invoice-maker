@@ -112,6 +112,10 @@ vi.mock("@/components/products/product-filter-chip-bar", () => ({
   ProductFilterChipBar: () => <div data-testid="filter-chip-bar" />,
 }));
 
+vi.mock("@/components/products/product-inspector", () => ({
+  ProductInspector: () => <div data-testid="product-inspector" />,
+}));
+
 vi.mock("@/components/products/saved-views-bar", () => ({
   SavedViewsBar: ({
     onViewsResolved,

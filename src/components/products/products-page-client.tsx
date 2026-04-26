@@ -18,6 +18,8 @@ import {
 import { ProductFiltersBar } from "@/components/products/product-filters";
 import { ProductFilterChipBar } from "@/components/products/product-filter-chip-bar";
 import { ProductTable } from "@/components/products/product-table";
+import { ProductInspector, type InspectorActionKind } from "@/components/products/product-inspector";
+import { openBarcodePrintWindow } from "@/components/products/barcode-print-view";
 import { ProductActionBar } from "@/components/products/product-action-bar";
 import { resolveEditDialogMode } from "@/components/products/edit-item-dialog-mode";
 import { Button } from "@/components/ui/button";
@@ -357,6 +359,8 @@ export default function ProductsPageClient() {
   const statusPillRef = useRef<SyncPrismStatusPillHandle>(null);
   const restoredViewRef = useRef<string | null>(null);
   const [hiddenCount, setHiddenCount] = useState(0);
+  const [focusedSku, setFocusedSku] = useState<number | null>(null);
+  const [singleItemActionProduct, setSingleItemActionProduct] = useState<ProductBrowseRow | null>(null);
   const [resolvedViews, setResolvedViews] = useState<SavedView[]>(SYSTEM_PRESET_VIEWS);
   // Bumped after saveView / deleteView succeeds so the SavedViewsBar refetches.
   const [savedViewsRefresh, setSavedViewsRefresh] = useState(0);
@@ -826,6 +830,88 @@ export default function ProductsPageClient() {
     },
   });
 
+  const focusedProduct = useMemo(() => {
+    if (focusedSku == null) return null;
+    return (data?.products ?? []).find((p) => p.sku === focusedSku) ?? null;
+  }, [data?.products, focusedSku]);
+
+  const dialogEditItems = useMemo(() => {
+    if (!singleItemActionProduct) return editableSelectedItems;
+    const slice = singleItemActionProduct.selected_inventories.find(
+      (s) => s.locationId === primaryLocationId,
+    );
+    return [
+      {
+        sku: singleItemActionProduct.sku,
+        barcode: singleItemActionProduct.barcode,
+        fDiscontinue: (singleItemActionProduct.discontinued ? 1 : 0) as 0 | 1,
+        description: singleItemActionProduct.description ?? "",
+        author: singleItemActionProduct.author,
+        title: singleItemActionProduct.title,
+        isbn: singleItemActionProduct.isbn,
+        edition: singleItemActionProduct.edition,
+        vendorId: singleItemActionProduct.vendor_id ?? undefined,
+        dccId: undefined,
+        isTextbook: isTextbookItemType(singleItemActionProduct.item_type),
+        itemType: singleItemActionProduct.item_type,
+        primaryLocationId,
+        catalogNumber: singleItemActionProduct.catalog_number ?? undefined,
+        retail: slice?.retailPrice ?? singleItemActionProduct.retail_price,
+        cost: slice?.cost ?? singleItemActionProduct.cost,
+      },
+    ];
+  }, [singleItemActionProduct, editableSelectedItems, primaryLocationId]);
+
+  const handleInspectorAction = useCallback(
+    (kind: InspectorActionKind, product: ProductBrowseRow) => {
+      const selectedSingle = browseRowToSelectedProduct(product);
+      switch (kind) {
+        case "invoice": {
+          sessionStorage.setItem(CATALOG_ITEMS_STORAGE_KEY, JSON.stringify([selectedSingle]));
+          router.push("/invoices/new?from=catalog");
+          return;
+        }
+        case "quote": {
+          sessionStorage.setItem(CATALOG_ITEMS_STORAGE_KEY, JSON.stringify([selectedSingle]));
+          router.push("/quotes/new?from=catalog");
+          return;
+        }
+        case "barcode": {
+          openBarcodePrintWindow([selectedSingle]);
+          return;
+        }
+        case "quickpick": {
+          const params = new URLSearchParams({ skus: String(product.sku) });
+          router.push(`/admin/quick-picks?${params.toString()}`);
+          return;
+        }
+        case "edit": {
+          setSingleItemActionProduct(product);
+          setEditOpen(true);
+          return;
+        }
+        case "discontinue": {
+          if (
+            !window.confirm(
+              `Discontinue ${product.description ?? "this item"}? Marks it discontinued in Prism; sales history is preserved.`,
+            )
+          ) {
+            return;
+          }
+          void productApi
+            .discontinue(product.sku)
+            .then(() => refetch())
+            .catch((err) => {
+              console.error(`Discontinue SKU ${product.sku} failed:`, err);
+              window.alert("Discontinue failed — see console.");
+            });
+          return;
+        }
+      }
+    },
+    [router, refetch],
+  );
+
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-6 md:px-5">
       {/* Header */}
@@ -918,9 +1004,12 @@ export default function ProductsPageClient() {
       {editOpen ? (
         <EditItemDialog
           open={editOpen}
-          onOpenChange={setEditOpen}
+          onOpenChange={(open) => {
+            setEditOpen(open);
+            if (!open) setSingleItemActionProduct(null);
+          }}
           editDialogOverride={editDialogOverride}
-          items={editableSelectedItems}
+          items={dialogEditItems}
           knownScopedItemsByKey={knownScopedItemsByKey}
           locationIds={filters.locationIds}
           primaryLocationId={primaryLocationId}
@@ -972,6 +1061,7 @@ export default function ProductsPageClient() {
           }}
           onSaved={(skus) => {
             setEditOpen(false);
+            setSingleItemActionProduct(null);
             const savedSkus = new Set(skus);
             const saveToken = pendingSaveTokenRef.current;
             pendingSaveTokenRef.current = null;
@@ -1198,7 +1288,7 @@ export default function ProductsPageClient() {
         </div>
       )}
 
-      {/* Rail + Table */}
+      {/* Rail + Table + Inspector */}
       <div className="page-enter page-enter-4 flex items-start gap-3">
         <div className="hidden md:block">
           <ProductFiltersBar
@@ -1207,35 +1297,49 @@ export default function ProductsPageClient() {
             onClear={handleClearFilters}
           />
         </div>
-        <div className="min-w-0 flex-1">
-          {/* Mobile filters collapse above the table */}
-          <div className="mb-3 md:hidden">
-            <ProductFiltersBar
-              filters={filters}
-              onChange={handleFilterChange}
-              onClear={handleClearFilters}
+        <div className="flex min-w-0 flex-1 items-start gap-3">
+          <div className="min-w-0 flex-1">
+            {/* Mobile filters collapse above the table */}
+            <div className="mb-3 md:hidden">
+              <ProductFiltersBar
+                filters={filters}
+                onChange={handleFilterChange}
+                onClear={handleClearFilters}
+              />
+            </div>
+            <ProductTable
+              tab={filters.tab}
+              products={data?.products ?? []}
+              total={data?.total ?? 0}
+              page={filters.page}
+              loading={loading}
+              offPageSelectedCount={offPageSelectedCount}
+              sortBy={filters.sortBy}
+              sortDir={filters.sortDir}
+              isSelected={isSelected}
+              onToggle={toggle}
+              onToggleAll={toggleAll}
+              onRowClick={(product) => {
+                toggle(product);
+                setFocusedSku(product.sku);
+              }}
+              focusedSku={focusedSku}
+              onPageChange={handlePageChange}
+              onSort={handleSort}
+              visibleColumns={runtimeColumns ?? baseColumns}
+              onHideColumn={(key) => columnsRef.current?.hideColumn(key)}
+              onHiddenChange={setHiddenCount}
+              suppressEmptyState={data?.total === 0 && activeView != null}
+              inlineEdit={inlineEdit}
+              primaryLocationId={primaryLocationId}
             />
           </div>
-          <ProductTable
-            tab={filters.tab}
-            products={data?.products ?? []}
-            total={data?.total ?? 0}
-            page={filters.page}
-            loading={loading}
-            offPageSelectedCount={offPageSelectedCount}
-            sortBy={filters.sortBy}
-            sortDir={filters.sortDir}
-            isSelected={isSelected}
-            onToggle={toggle}
-            onToggleAll={toggleAll}
-            onPageChange={handlePageChange}
-            onSort={handleSort}
-            visibleColumns={runtimeColumns ?? baseColumns}
-            onHideColumn={(key) => columnsRef.current?.hideColumn(key)}
-            onHiddenChange={setHiddenCount}
-            suppressEmptyState={data?.total === 0 && activeView != null}
-            inlineEdit={inlineEdit}
+          <ProductInspector
+            product={focusedProduct}
             primaryLocationId={primaryLocationId}
+            prismAvailable={prismAvailable}
+            onClose={() => setFocusedSku(null)}
+            onAction={handleInspectorAction}
           />
         </div>
       </div>
