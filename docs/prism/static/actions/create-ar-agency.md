@@ -3,6 +3,7 @@
 **Source binaries:** `WA_AR.dll`, `WACommon.dll` (search/QS), `WPUtility.dll` (framework methods)
 **Method:** Plan-cache schema introspection + trigger-body recovery. See [`../plan-cache-method.md`](../plan-cache-method.md).
 **Confidence:** ✅ confirmed by recovered DDL/trigger body · 🔵 confirmed by literal binary string · 🔍 inference · ❓ unknown / not yet recovered.
+**Companion doc:** [`clone-ar-agency.md`](clone-ar-agency.md) — for the Pierce semester-rollover use case (clone an existing agency rather than creating a new one from scratch).
 
 > **Terminology**: "AR account" / "agency" / "billing account" all refer to the same entity in Prism: a row in `Acct_Agency`. Pierce identifies them by `AgencyNumber` — strings like `PSP 26 ANTHRO`. WPAdmin's UI calls them "Accounts"; the schema and procs call them "Agencies". This doc uses **agency** to match the schema.
 

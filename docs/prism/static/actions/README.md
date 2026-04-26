@@ -14,7 +14,9 @@ These docs are the **static** half of the picture. To confirm the full call sequ
 
 - [`add-item-gm.md`](add-item-gm.md) — Adding a new General Merchandise item via Item Maintenance.
 - [`generate-invoices.md`](generate-invoices.md) — Generating AR (customer / department) invoices, both batch auto-gen and manual entry.
+- [`print-invoice.md`](print-invoice.md) — Printing an AR invoice via Crystal Reports (`SP_RPT_AR_INVOICE`).
 - [`create-ar-agency.md`](create-ar-agency.md) — Creating an AR agency (department billing account, e.g. `PSP 26 ANTHRO`).
+- [`clone-ar-agency.md`](clone-ar-agency.md) — Cloning an existing AR agency for the new semester (e.g. `PWI25EOPSDEPT` → `PWI26EOPSDEPT`); the basis for laportal's semester roll-forward feature.
 
 ## Pattern
 
