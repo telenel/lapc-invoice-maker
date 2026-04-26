@@ -777,9 +777,11 @@ export default function ProductsPageClient() {
     // by the restoration effect once router.replace flushes `view=` out of
     // the URL — resetting it synchronously here can race and snap the view
     // back on before the URL update lands.
+    // Restore the In-stock baseline (minStock="1") so the chip-bar's
+    // "Reset to baseline" actually returns to the documented default.
     setActiveView(null);
     setRuntimeColumns(null);
-    updateFilters({ ...EMPTY_FILTERS, tab: filters.tab });
+    updateFilters({ ...EMPTY_FILTERS, tab: filters.tab, minStock: "1" });
   }
 
   function handleClearPreset() {
@@ -790,7 +792,7 @@ export default function ProductsPageClient() {
     // with a cleared guard and re-applies the preset.
     setActiveView(null);
     setRuntimeColumns(null);
-    updateFilters({ ...EMPTY_FILTERS, tab: filters.tab });
+    updateFilters({ ...EMPTY_FILTERS, tab: filters.tab, minStock: "1" });
   }
 
   const handlePresetClick = useCallback((view: SavedView) => {
@@ -864,7 +866,22 @@ export default function ProductsPageClient() {
 
   const handleInspectorAction = useCallback(
     (kind: InspectorActionKind, product: ProductBrowseRow) => {
-      const selectedSingle = browseRowToSelectedProduct(product);
+      // Build the SelectedProduct using the current location scope, not the
+      // product's primary_location_id. The action-bar handoff uses the current
+      // primaryLocationId with the visible-row fallback for retail/cost; the
+      // inspector must match so an inspector-triggered invoice/quote/barcode
+      // sees the same pricing context the user is browsing.
+      const slice = product.selected_inventories.find(
+        (s) => s.locationId === primaryLocationId,
+      );
+      const fallbackBrowse = browseRowToSelectedProduct(product);
+      const selectedSingle = {
+        ...fallbackBrowse,
+        pricingLocationId: primaryLocationId,
+        retailPrice: slice?.retailPrice ?? fallbackBrowse.retailPrice,
+        cost: slice?.cost ?? fallbackBrowse.cost,
+        stockOnHand: slice?.stockOnHand ?? fallbackBrowse.stockOnHand,
+      };
       switch (kind) {
         case "invoice": {
           sessionStorage.setItem(CATALOG_ITEMS_STORAGE_KEY, JSON.stringify([selectedSingle]));
@@ -909,7 +926,7 @@ export default function ProductsPageClient() {
         }
       }
     },
-    [router, refetch],
+    [router, refetch, primaryLocationId],
   );
 
   return (
@@ -1280,7 +1297,7 @@ export default function ProductsPageClient() {
             onClick={() => {
               setActiveView(null);
               setRuntimeColumns(null);
-              updateFilters({ ...EMPTY_FILTERS, tab: filters.tab });
+              updateFilters({ ...EMPTY_FILTERS, tab: filters.tab, minStock: "1" });
             }}
           >
             Clear Preset
@@ -1393,7 +1410,7 @@ export default function ProductsPageClient() {
               // effect once router.replace flushes `view=` out of the URL.
               setActiveView(null);
               setRuntimeColumns(null);
-              updateFilters({ ...EMPTY_FILTERS, tab: filters.tab });
+              updateFilters({ ...EMPTY_FILTERS, tab: filters.tab, minStock: "1" });
             }
             setDeleteTarget(null);
             setSavedViewsRefresh((n) => n + 1);

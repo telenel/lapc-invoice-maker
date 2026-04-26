@@ -94,9 +94,13 @@ export const SyncPrismStatusPill = forwardRef<SyncPrismStatusPillHandle, Props>(
     useImperativeHandle(ref, () => ({ openHistory }), []);
 
     const latest = runs[0] ?? null;
+    const latestOk = latest?.status === "ok";
     const completedAt = latest?.completedAt ? new Date(latest.completedAt) : null;
     const ageMs = completedAt ? Date.now() - completedAt.getTime() : null;
-    const fresh = ageMs != null && ageMs < 5 * 60 * 1000;
+    // Only treat the system as fresh when the most recent run actually
+    // succeeded — failed/partial runs still record completedAt, but a green
+    // dot would mask that the mirror is out of date.
+    const fresh = latestOk && ageMs != null && ageMs < 5 * 60 * 1000;
     const stale = ageMs != null && ageMs >= 24 * 60 * 60 * 1000;
     const syncDotClass = unknown
       ? "bg-muted-foreground/60"
