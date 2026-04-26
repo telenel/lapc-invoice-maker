@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 import {
   ACCT_AGENCY_INSERT_COLUMNS,
   buildCloneAgencySql,
+  buildCreateAgencySql,
   buildExistingAgencyNumbersSql,
+  buildGetAgencyByIdSql,
   buildListBySemesterSql,
   buildPierceSemestersSql,
+  buildSearchAgenciesSql,
   computeTargetAgencyNumber,
   computeTargetName,
 } from "./sql";
@@ -210,5 +213,77 @@ describe("computeTargetName", () => {
     expect(computeTargetName("  PWI25EOPSDEPT  ", "PWI25EOPSDEPT", "PWI26EOPSDEPT")).toBe(
       "PWI26EOPSDEPT",
     );
+  });
+});
+
+describe("buildCreateAgencySql", () => {
+  const sql = buildCreateAgencySql();
+
+  it("INSERTs into Acct_Agency with the 52 MFC-bound columns", () => {
+    const insertMatch = sql.match(/INSERT INTO Acct_Agency \(([^)]*)\)/);
+    expect(insertMatch).not.toBeNull();
+    const cols = insertMatch![1].split(",").map((c) => c.trim());
+    expect(cols).toHaveLength(52);
+    expect(cols[0]).toBe("AgencyNumber");
+    expect(cols[1]).toBe("Name");
+    expect(cols[2]).toBe("AgencyTypeID");
+    expect(cols).not.toContain("AgencyID");
+    expect(cols).not.toContain("txComment");
+  });
+
+  it("uses parameterized values prefixed with @p_", () => {
+    const valuesMatch = sql.match(/VALUES \(([^)]*)\)/);
+    expect(valuesMatch).not.toBeNull();
+    const values = valuesMatch![1].split(",").map((v) => v.trim());
+    expect(values).toHaveLength(52);
+    for (const v of values) {
+      expect(v).toMatch(/^@p_[A-Za-z0-9]+$/);
+    }
+  });
+
+  it("returns SCOPE_IDENTITY in a result row labeled newAgencyId", () => {
+    expect(sql).toContain("SCOPE_IDENTITY()");
+    expect(sql).toContain("AS newAgencyId");
+  });
+
+  it("does not contain any string-interpolation markers (no '${' or '+ ')", () => {
+    expect(sql).not.toMatch(/\$\{/);
+    // No ad-hoc string concatenation either
+    expect(sql).not.toMatch(/'\s*\+\s*/);
+  });
+});
+
+describe("buildSearchAgenciesSql", () => {
+  const sql = buildSearchAgenciesSql();
+
+  it("uses parameterized @q for the search term and @limit for the row cap", () => {
+    expect(sql).toContain("@q");
+    expect(sql).toContain("TOP (@limit)");
+  });
+
+  it("filters to Pierce naming convention", () => {
+    expect(sql).toContain("'PSP%'");
+    expect(sql).toContain("'PFA%'");
+    expect(sql).toContain("'PSU%'");
+    expect(sql).toContain("'PWI%'");
+  });
+
+  it("matches both AgencyNumber and Name", () => {
+    expect(sql).toContain("AgencyNumber LIKE '%' + @q + '%'");
+    expect(sql).toContain("Name LIKE '%' + @q + '%'");
+  });
+
+  it("orders by AgencyNumber DESC for newest-first", () => {
+    expect(sql).toContain("ORDER BY AgencyNumber DESC");
+  });
+});
+
+describe("buildGetAgencyByIdSql", () => {
+  it("filters by @agencyId and returns AgencyRecord shape", () => {
+    const sql = buildGetAgencyByIdSql();
+    expect(sql).toContain("WHERE AgencyID = @agencyId");
+    expect(sql).toContain("AS agencyId");
+    expect(sql).toContain("AS agencyNumber");
+    expect(sql).toContain("AS name");
   });
 });

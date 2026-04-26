@@ -5,6 +5,7 @@ import {
   validateAgencyName,
   validateAgencyNumber,
   validateCloneAgencyRequest,
+  validateCreateAgencyRequest,
   validateRollSemesterRequest,
   validateSemester,
 } from "./validation";
@@ -132,6 +133,58 @@ describe("validateCloneAgencyRequest", () => {
       sourceAgencyId: -1,
       newAgencyNumber: "",
       newName: "",
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.errors.length).toBeGreaterThanOrEqual(3);
+  });
+});
+
+describe("validateCreateAgencyRequest", () => {
+  it("accepts a minimal valid request", () => {
+    expect(
+      validateCreateAgencyRequest({
+        agencyNumber: "PSP26TEST",
+        name: "PSP26TEST",
+        agencyTypeId: 4,
+      }),
+    ).toEqual({ ok: true });
+  });
+
+  it("rejects empty agencyNumber", () => {
+    const r = validateCreateAgencyRequest({
+      agencyNumber: "",
+      name: "X",
+      agencyTypeId: 4,
+    });
+    expect(r.ok).toBe(false);
+  });
+
+  it("rejects empty name", () => {
+    const r = validateCreateAgencyRequest({
+      agencyNumber: "PSP26TEST",
+      name: "",
+      agencyTypeId: 4,
+    });
+    expect(r.ok).toBe(false);
+  });
+
+  it("rejects non-positive agencyTypeId", () => {
+    const r = validateCreateAgencyRequest({
+      agencyNumber: "PSP26TEST",
+      name: "PSP26TEST",
+      agencyTypeId: 0,
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.errors[0].message).toMatch(/AgencyTypeID is required/);
+    }
+  });
+
+  it("collects all errors at once", () => {
+    const r = validateCreateAgencyRequest({
+      agencyNumber: "",
+      name: "",
+      agencyTypeId: -1,
     });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.errors.length).toBeGreaterThanOrEqual(3);

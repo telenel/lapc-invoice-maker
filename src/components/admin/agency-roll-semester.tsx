@@ -180,12 +180,20 @@ export function AgencyRollSemester() {
 
   return (
     <div className="container mx-auto space-y-6 py-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Pierce semester rollover</h1>
-        <p className="text-muted-foreground text-sm">
-          Clone all of one semester&apos;s AR agencies into a new semester. Replaces
-          the manual WPAdmin Account Maintenance workflow.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold">Pierce semester rollover</h1>
+          <p className="text-muted-foreground text-sm">
+            Clone all of one semester&apos;s AR agencies into a new semester.
+            Replaces the manual WPAdmin Account Maintenance workflow.
+          </p>
+        </div>
+        <a
+          href="/admin/agencies/new"
+          className="text-primary text-sm font-medium hover:underline"
+        >
+          Add a single account →
+        </a>
       </div>
 
       <Card>
