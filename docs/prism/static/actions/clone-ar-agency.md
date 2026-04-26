@@ -2,7 +2,9 @@
 
 **The problem:** Pierce maintains hundreds of AR agencies that recur each semester — `EOPSDEPT`, `USVET`, `ASO`, `UMOJA`, `BUSOFF`, `DRC`, `ATHL`, `MULTI`, etc. Every term, the staff has to re-create them in WPAdmin's Account Maintenance form, picking the previous semester's instance as a "mirror" template. With ~50 templates × 4 semesters/year, that's 150–200 manual creates per year. This doc maps the cloning pattern and proposes a laportal automation.
 
-**Companion to:** [`create-ar-agency.md`](create-ar-agency.md), which establishes the underlying `Acct_Agency` schema and the empirical Pierce-default INSERT contract.
+**Companion to:**
+- [`create-ar-agency.md`](create-ar-agency.md) — `Acct_Agency` schema + empirical Pierce-default INSERT contract.
+- [`agency-binary-findings.md`](agency-binary-findings.md) — **2026-04-25 update**: literal MFC column list + verified proc signatures recovered from binaries.
 
 **Method:** Empirical analysis via [`scripts/probe-prism-agency-cloning.ts`](../../../../scripts/probe-prism-agency-cloning.ts) — read-only queries against `Acct_Agency` and its sibling tables. No writes.
 
@@ -324,10 +326,12 @@ Worth a brief snapshot/diff session to confirm where audit residue actually land
 
 ## 9. What we still don't know (and why it doesn't block)
 
-- **The literal MFC `INSERT INTO Acct_Agency` from WPAdmin** — never captured. But we don't need it; the empirical Pierce-default contract is sufficient and verified across 1,072 sample rows.
-- **What the WPAdmin form's "copy from existing" button actually does internally** — could be `SP_AcctAgencyCopyDCC`+`SP_AcctAgencyCopyNonMerch`+a manual form re-entry, or could be entirely client-side field copying. Not blocking because Pierce isn't reliably using it anyway.
-- **`TUI_Acct_Agency` cursor body** — partially recovered in PR #297. Whatever it does, it'll fire on update so doesn't impact creation.
+- ~~**The literal MFC `INSERT INTO Acct_Agency` from WPAdmin**~~ — **CLOSED 2026-04-25** via binary recovery. The 53-column MFC binding is in `WPData.dll`. See [`agency-binary-findings.md`](agency-binary-findings.md).
+- ~~**`SP_AcctAgencyCopy*` proc signatures**~~ — **VERIFIED 2026-04-25**: `SP_AcctAgencyCopyDCC(@NewAgencyID, @OldAgencyID)` and `SP_AcctAgencyCopyNonMerch(@NewAgencyID, @OldAgencyID)` — note **NEW comes FIRST** in the parameter order.
+- **What the WPAdmin form's "copy from existing" button actually does internally** — Pierce isn't reliably using it (0 cached executions of either copy proc), so cloning via direct SELECT-INSERT is appropriate.
+- **`TUI_Acct_Agency` cursor body** — partial only. Pierce uses TextbookValidation=0, so the trigger's main branch likely doesn't fire.
 - **`TD_Acct_Agency` (delete trigger)** — not relevant; we never delete during clone.
+- **`SP_ARAcctResendToPos` body** — signature verified `(@AgencyID int)`. Body lives in DB plan cache; not recovered yet.
 
 ## 10. Recommended next steps
 
