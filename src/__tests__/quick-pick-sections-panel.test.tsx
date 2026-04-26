@@ -80,6 +80,9 @@ describe("QuickPickSectionsPanel", () => {
 
     expect(await screen.findByText("SKU 101")).toBeInTheDocument();
     expect(screen.getByText("SKU 302")).toBeInTheDocument();
+    expect(
+      screen.getByText("These selected products will be included directly in this Quick Pick section."),
+    ).toBeInTheDocument();
 
     await pause(300);
 
@@ -112,13 +115,14 @@ describe("QuickPickSectionsPanel", () => {
         createdByUserId: null,
         createdAt: "2026-04-22T08:00:00.000Z",
         updatedAt: "2026-04-22T08:00:00.000Z",
-        scopeSummary: "Description like CT %",
+        scopeSummary: "Description contains CT %",
       },
     ]);
 
     render(<QuickPickSectionsPanel />);
 
     expect(await screen.findByText("CopyTech Services")).not.toBeNull();
+    expect(screen.queryByText("copytech-services")).not.toBeInTheDocument();
   });
 
   it("shows the disabled empty-scope preview copy before any filters are configured", async () => {
@@ -170,12 +174,12 @@ describe("QuickPickSectionsPanel", () => {
     const saveButton = within(dialog).getByRole("button", { name: /create section/i });
     expect(saveButton).toBeDisabled();
 
-    await user.type(screen.getByLabelText(/description like/i), "CT %");
+    await user.type(screen.getByLabelText(/product description contains/i), "CT %");
 
     expect(saveButton).not.toBeDisabled();
   });
 
-  it("lets the availability label text toggle the checkbox state", async () => {
+  it("lets the shared availability label text toggle the checkbox state", async () => {
     const user = userEvent.setup();
 
     render(<QuickPickSectionsPanel />);
@@ -186,12 +190,120 @@ describe("QuickPickSectionsPanel", () => {
 
     await user.click(screen.getByRole("button", { name: /create section/i }));
 
-    const globalCheckbox = screen.getByRole("checkbox", { name: /global section/i });
+    const globalCheckbox = screen.getByRole("checkbox", { name: /shared section/i });
     expect(globalCheckbox).toHaveAttribute("aria-checked", "true");
 
-    await user.click(screen.getByText("Global section", { selector: "label" }));
+    await user.click(screen.getByText("Shared section", { selector: "label" }));
 
     expect(globalCheckbox).toHaveAttribute("aria-checked", "false");
+  });
+
+  it("shows personal availability copy for non-admin users", async () => {
+    const user = userEvent.setup();
+
+    render(<QuickPickSectionsPanel canCreateGlobal={false} currentUserId="user-1" />);
+
+    await waitFor(() => {
+      expect(apiClientMocks.listQuickPickSections).toHaveBeenCalled();
+    });
+
+    await user.click(screen.getByRole("button", { name: /create section/i }));
+
+    expect(screen.getByText("Personal section")).toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: /shared section/i })).not.toBeInTheDocument();
+  });
+
+  it("hides slug by default and keeps it editable from Advanced", async () => {
+    const user = userEvent.setup();
+
+    render(<QuickPickSectionsPanel />);
+
+    await waitFor(() => {
+      expect(apiClientMocks.listQuickPickSections).toHaveBeenCalled();
+    });
+
+    await user.click(screen.getByRole("button", { name: /create section/i }));
+
+    expect(screen.queryByLabelText(/URL\/internal ID/i)).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/name/i), "CopyTech Services");
+    await user.click(screen.getByRole("button", { name: /advanced/i }));
+
+    const slugInput = screen.getByLabelText(/URL\/internal ID/i);
+    expect(slugInput).toHaveValue("copytech-services");
+
+    await user.clear(slugInput);
+    await user.type(slugInput, "custom-copytech");
+    await user.type(screen.getByLabelText(/product description contains/i), "CT %");
+    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: /create section/i }));
+
+    await waitFor(() => {
+      expect(apiClientMocks.createQuickPickSection).toHaveBeenCalledWith(
+        expect.objectContaining({
+          slug: "custom-copytech",
+        }),
+      );
+    });
+  });
+
+  it("auto-generates the slug from the name when Advanced is untouched", async () => {
+    const user = userEvent.setup();
+
+    render(<QuickPickSectionsPanel />);
+
+    await waitFor(() => {
+      expect(apiClientMocks.listQuickPickSections).toHaveBeenCalled();
+    });
+
+    await user.click(screen.getByRole("button", { name: /create section/i }));
+    await user.type(screen.getByLabelText(/name/i), "CopyTech Services");
+    await user.type(screen.getByLabelText(/product description contains/i), "CT %");
+    await user.click(within(screen.getByRole("dialog")).getByRole("button", { name: /create section/i }));
+
+    await waitFor(() => {
+      expect(apiClientMocks.createQuickPickSection).toHaveBeenCalledWith(
+        expect.objectContaining({
+          slug: "copytech-services",
+        }),
+      );
+    });
+  });
+
+  it("shows Display order helper copy", async () => {
+    const user = userEvent.setup();
+
+    render(<QuickPickSectionsPanel />);
+
+    await waitFor(() => {
+      expect(apiClientMocks.listQuickPickSections).toHaveBeenCalled();
+    });
+
+    await user.click(screen.getByRole("button", { name: /create section/i }));
+
+    expect(screen.getByLabelText(/display order/i)).toBeInTheDocument();
+    expect(
+      screen.getByText("Lower numbers appear first. Leave as 0 unless you want this section before or after others."),
+    ).toBeInTheDocument();
+  });
+
+  it("renders icon swatches in the select trigger and dropdown options", async () => {
+    const user = userEvent.setup();
+
+    render(<QuickPickSectionsPanel />);
+
+    await waitFor(() => {
+      expect(apiClientMocks.listQuickPickSections).toHaveBeenCalled();
+    });
+
+    await user.click(screen.getByRole("button", { name: /create section/i }));
+
+    const iconTrigger = screen.getByLabelText("Icon");
+    expect(within(iconTrigger).getByTestId("quick-pick-icon-swatch-Package2")).toBeInTheDocument();
+
+    await user.click(iconTrigger);
+
+    expect(await screen.findByTestId("quick-pick-icon-swatch-Coffee")).toBeInTheDocument();
+    expect(await screen.findByTestId("quick-pick-icon-swatch-ReceiptText")).toBeInTheDocument();
   });
 
   it("shows include discontinued as a modifier without enabling save by itself", async () => {
@@ -275,7 +387,7 @@ describe("QuickPickSectionsPanel", () => {
 
     await user.click(screen.getByRole("button", { name: /create section/i }));
     await user.type(screen.getByLabelText(/name/i), "CopyTech Services");
-    await user.type(screen.getByLabelText(/description like/i), "CT %");
+    await user.type(screen.getByLabelText(/product description contains/i), "CT %");
 
     expect(apiClientMocks.previewQuickPickSection).not.toHaveBeenCalled();
 
@@ -300,7 +412,7 @@ describe("QuickPickSectionsPanel", () => {
     });
 
     await user.click(screen.getByRole("button", { name: /create section/i }));
-    await user.type(screen.getByLabelText(/description like/i), "CT %");
+    await user.type(screen.getByLabelText(/product description contains/i), "CT %");
     await pause(300);
 
     await waitFor(() => {

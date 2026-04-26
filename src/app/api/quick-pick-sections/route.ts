@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { withAdmin, withAuth } from "@/domains/shared/auth";
+import { withAuth } from "@/domains/shared/auth";
 import { quickPickSectionCreateSchema } from "@/domains/quick-pick-sections/schemas";
 import {
   QuickPickSectionSlugConflictError,
@@ -17,7 +17,7 @@ export const GET = withAuth(async (_request, session) => {
   return NextResponse.json({ items });
 });
 
-export const POST = withAdmin(async (request: NextRequest, session) => {
+export const POST = withAuth(async (request: NextRequest, session) => {
   const body = await request.json().catch(() => null);
   if (body === null) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
@@ -29,6 +29,8 @@ export const POST = withAdmin(async (request: NextRequest, session) => {
   }
 
   try {
+    const role = (session.user as { role?: string }).role ?? "user";
+    const userId = (session.user as { id?: string }).id ?? null;
     const created = await createQuickPickSection({
       ...parsed.data,
       slug: parsed.data.slug ?? "",
@@ -36,7 +38,8 @@ export const POST = withAdmin(async (request: NextRequest, session) => {
       icon: parsed.data.icon ?? "",
       descriptionLike: parsed.data.descriptionLike ?? "",
       itemType: parsed.data.itemType ?? "",
-      createdByUserId: (session.user as { id?: string }).id ?? null,
+      isGlobal: role === "admin" ? parsed.data.isGlobal : false,
+      createdByUserId: userId,
     });
     return NextResponse.json(created, { status: 201 });
   } catch (error) {

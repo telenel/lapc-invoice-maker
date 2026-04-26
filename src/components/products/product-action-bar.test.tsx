@@ -103,7 +103,7 @@ describe("ProductActionBar", () => {
     expect(pushMock).toHaveBeenCalledWith("/admin/quick-picks?skus=101%2C202");
   });
 
-  it("hides Save to Quick Picks for non-admin users", () => {
+  it("shows Save to Quick Picks for non-admin signed-in users", () => {
     sessionRole = "user";
 
     render(
@@ -132,7 +132,7 @@ describe("ProductActionBar", () => {
       />,
     );
 
-    expect(screen.queryByRole("button", { name: /Save to Quick Picks/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Save to Quick Picks/i })).toBeInTheDocument();
   });
 
   it("shows a visible explanation when selected rows are missing pricing required for downstream actions", () => {

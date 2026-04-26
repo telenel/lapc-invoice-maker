@@ -32,9 +32,14 @@ export default async function AdminQuickPicksPage({ searchParams }: AdminQuickPi
     redirect("/login");
   }
 
-  if ((session.user as { role?: string }).role !== "admin") {
-    redirect("/");
-  }
+  const user = session.user as { id?: string; role?: string };
+  const isAdmin = user.role === "admin";
 
-  return <QuickPickSectionsPanel initialExplicitSkus={parseSelectedSkus(searchParams?.skus)} />;
+  return (
+    <QuickPickSectionsPanel
+      initialExplicitSkus={parseSelectedSkus(searchParams?.skus)}
+      canCreateGlobal={isAdmin}
+      currentUserId={user.id ?? null}
+    />
+  );
 }

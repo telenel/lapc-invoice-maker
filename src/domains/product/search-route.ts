@@ -262,7 +262,14 @@ async function loadQuickPickSectionsForBrowse(
 
   const trimmedSectionSlug = filters.sectionSlug?.trim() ?? "";
   const shouldUseAllSections = filters.allSections || trimmedSectionSlug.length === 0;
-  const visibilityWhere = options.role === "admin" ? {} : { isGlobal: true };
+  const visibilityWhere = options.role === "admin"
+    ? {}
+    : {
+        OR: [
+          { isGlobal: true },
+          ...(options.userId ? [{ createdByUserId: options.userId }] : []),
+        ],
+      };
 
   return prisma.quickPickSection.findMany({
     where: trimmedSectionSlug

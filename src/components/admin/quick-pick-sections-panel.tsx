@@ -1,17 +1,37 @@
 "use client";
 
-import { useDeferredValue, useEffect, useRef, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useRef, useState } from "react";
 import {
   BadgePercentIcon,
+  BadgeDollarSignIcon,
   BookOpenIcon,
+  BookMarkedIcon,
+  CalculatorIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+  ClipboardCheckIcon,
   ClipboardListIcon,
+  CoffeeIcon,
+  CopyIcon,
+  FileTextIcon,
+  GiftIcon,
   GraduationCapIcon,
+  LandmarkIcon,
+  LayersIcon,
+  MonitorIcon,
+  NotebookPenIcon,
   Package2Icon,
+  PenToolIcon,
   PrinterIcon,
+  ReceiptTextIcon,
+  ScanBarcodeIcon,
   ShoppingBagIcon,
+  ShirtIcon,
   SparklesIcon,
   StarIcon,
   TagsIcon,
+  TruckIcon,
+  UtensilsIcon,
   WrenchIcon,
   XIcon,
 } from "lucide-react";
@@ -75,14 +95,32 @@ const ICON_COMPONENTS = {
   Printer: PrinterIcon,
   Package2: Package2Icon,
   BookOpen: BookOpenIcon,
+  BookMarked: BookMarkedIcon,
   GraduationCap: GraduationCapIcon,
   ShoppingBag: ShoppingBagIcon,
   Tags: TagsIcon,
   ClipboardList: ClipboardListIcon,
+  ClipboardCheck: ClipboardCheckIcon,
   Wrench: WrenchIcon,
   Sparkles: SparklesIcon,
   Star: StarIcon,
   BadgePercent: BadgePercentIcon,
+  BadgeDollarSign: BadgeDollarSignIcon,
+  Calculator: CalculatorIcon,
+  Coffee: CoffeeIcon,
+  Copy: CopyIcon,
+  FileText: FileTextIcon,
+  Gift: GiftIcon,
+  Landmark: LandmarkIcon,
+  Layers: LayersIcon,
+  Monitor: MonitorIcon,
+  NotebookPen: NotebookPenIcon,
+  PenTool: PenToolIcon,
+  ReceiptText: ReceiptTextIcon,
+  ScanBarcode: ScanBarcodeIcon,
+  Shirt: ShirtIcon,
+  Truck: TruckIcon,
+  Utensils: UtensilsIcon,
 } as const;
 
 const EMPTY_FORM: QuickPickSectionFormValues = {
@@ -198,7 +236,7 @@ function buildScopeRuleSummary(scope: QuickPickSectionScopeInput): string[] {
   const chips: string[] = [];
 
   if (scope.descriptionLike.trim()) {
-    chips.push(`Description like ${scope.descriptionLike.trim()}`);
+    chips.push(`Description contains ${scope.descriptionLike.trim()}`);
   }
   if (scope.dccIds.length > 0) {
     chips.push(`${scope.dccIds.length} DCC${scope.dccIds.length === 1 ? "" : "s"}`);
@@ -221,6 +259,21 @@ function IconSwatch({ name }: { name: QuickPickSectionFormValues["icon"] }) {
     ? ICON_COMPONENTS[name as keyof typeof ICON_COMPONENTS]
     : Package2Icon;
   return <Icon className="size-4 text-muted-foreground" aria-hidden="true" />;
+}
+
+function IconSelectLabel({ name }: { name: QuickPickSectionFormValues["icon"] }) {
+  const iconName = name || "Package2";
+  return (
+    <span className="inline-flex min-w-0 items-center gap-2">
+      <span
+        data-testid={`quick-pick-icon-swatch-${iconName}`}
+        className="inline-flex size-6 shrink-0 items-center justify-center rounded-md border border-border bg-background"
+      >
+        <IconSwatch name={iconName} />
+      </span>
+      <span className="truncate">{formatIconLabel(iconName)}</span>
+    </span>
+  );
 }
 
 function RemovableChip({
@@ -279,6 +332,9 @@ function VendorMultiSelect({
         label="Vendor"
         placeholder="Add vendor"
       />
+      <p className="text-xs text-muted-foreground">
+        Includes products from the selected vendors.
+      </p>
       {selectedIds.length > 0 ? (
         <div className="flex flex-wrap gap-2">
           {selectedIds.map((vendorId) => (
@@ -392,6 +448,9 @@ function DccMultiSelect({
           }
         }}
       />
+      <p className="text-xs text-muted-foreground">
+        Filters by department, class, and category so related catalog groups appear together.
+      </p>
       <datalist id="quick-pick-dccs-list">
         {filtered.map((item) => (
           <option
@@ -421,9 +480,11 @@ function DccMultiSelect({
 
 function SkuSearchAddField({
   selectedSkus,
+  showSelectedHandoffNote = false,
   onChange,
 }: {
   selectedSkus: number[];
+  showSelectedHandoffNote?: boolean;
   onChange: (next: number[]) => void;
 }) {
   const [query, setQuery] = useState("");
@@ -496,6 +557,14 @@ function SkuSearchAddField({
   return (
     <div className="space-y-2">
       <Label htmlFor="quick-pick-explicit-skus">Explicit SKUs</Label>
+      <p className="text-xs text-muted-foreground">
+        Pins exact selected products into this Quick Pick section, even if they do not match another rule.
+      </p>
+      {showSelectedHandoffNote ? (
+        <p className="rounded-md border border-border bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
+          These selected products will be included directly in this Quick Pick section.
+        </p>
+      ) : null}
       <Input
         id="quick-pick-explicit-skus"
         placeholder="Search the product catalog by title, description, ISBN, barcode, or SKU"
@@ -547,13 +616,25 @@ function SkuSearchAddField({
   );
 }
 
-export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialExplicitSkus?: number[] } = {}) {
+type QuickPickSectionsPanelProps = {
+  initialExplicitSkus?: number[];
+  canCreateGlobal?: boolean;
+  currentUserId?: string | null;
+};
+
+export function QuickPickSectionsPanel({
+  initialExplicitSkus = [],
+  canCreateGlobal = true,
+  currentUserId = null,
+}: QuickPickSectionsPanelProps = {}) {
   const [sections, setSections] = useState<QuickPickSectionDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [mode, setMode] = useState<"create" | "edit">("create");
   const [editingSection, setEditingSection] = useState<QuickPickSectionDto | null>(null);
   const [form, setForm] = useState<QuickPickSectionFormValues>({ ...EMPTY_FORM });
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [selectedSkuHandoffActive, setSelectedSkuHandoffActive] = useState(false);
   const [slugDirty, setSlugDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -583,6 +664,15 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
   const canSaveLegacyEmptyScope = mode === "edit" && scopeIsEmpty && editingSectionStartedEmpty;
   const saveDisabled = saving || form.name.trim() === "" || (scopeIsEmpty && !canSaveLegacyEmptyScope);
 
+  function canManageSection(section: QuickPickSectionDto): boolean {
+    return canCreateGlobal
+      || (
+        currentUserId != null
+        && section.createdByUserId === currentUserId
+        && !section.isGlobal
+      );
+  }
+
   async function loadSections() {
     setLoading(true);
     try {
@@ -599,6 +689,23 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
     void loadSections();
   }, []);
 
+  const openCreateDialog = useCallback((prefillExplicitSkus: number[] = []) => {
+    setMode("create");
+    setEditingSection(null);
+    setForm({
+      ...EMPTY_FORM,
+      isGlobal: canCreateGlobal,
+      explicitSkus: normalizeExplicitSkus(prefillExplicitSkus),
+    });
+    setAdvancedOpen(false);
+    setSelectedSkuHandoffActive(prefillExplicitSkus.length > 0);
+    setSlugDirty(false);
+    setSaveError(null);
+    setPreview(EMPTY_PREVIEW);
+    setPreviewError(null);
+    setDialogOpen(true);
+  }, [canCreateGlobal]);
+
   useEffect(() => {
     const initialKey = initialExplicitSkus.join(",");
     if (initialKey === "") {
@@ -612,7 +719,7 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
 
     appliedInitialExplicitSkuKeyRef.current = initialKey;
     openCreateDialog(initialExplicitSkus);
-  }, [dialogOpen, initialExplicitSkus]);
+  }, [dialogOpen, initialExplicitSkus, openCreateDialog]);
 
   useEffect(() => {
     const parsedPreviewInput = JSON.parse(previewKey) as QuickPickSectionScopeInput;
@@ -662,24 +769,12 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
     };
   }, [dialogOpen, previewKey]);
 
-  function openCreateDialog(prefillExplicitSkus: number[] = []) {
-    setMode("create");
-    setEditingSection(null);
-    setForm({
-      ...EMPTY_FORM,
-      explicitSkus: normalizeExplicitSkus(prefillExplicitSkus),
-    });
-    setSlugDirty(false);
-    setSaveError(null);
-    setPreview(EMPTY_PREVIEW);
-    setPreviewError(null);
-    setDialogOpen(true);
-  }
-
   function openEditDialog(section: QuickPickSectionDto) {
     setMode("edit");
     setEditingSection(section);
     setForm(buildFormValues(section));
+    setAdvancedOpen(false);
+    setSelectedSkuHandoffActive(false);
     setSlugDirty(true);
     setSaveError(null);
     setPreview({
@@ -766,7 +861,7 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Quick Pick Sections</h1>
           <p className="text-sm text-muted-foreground">
-            Configure the sections Marcos will use in the Product Catalog quick picks panel.
+            Configure the sections shown in the Product Catalog quick picks panel.
           </p>
         </div>
         <Button size="sm" variant="outline" onClick={() => openCreateDialog()}>
@@ -778,7 +873,7 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
         <CardHeader>
           <CardTitle>Configured Sections</CardTitle>
           <CardDescription>
-            Global sections are readable by every signed-in user. Icons come from a curated lucide subset.
+            Shared sections are readable by every signed-in user. Personal sections are only editable by their creator.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -795,7 +890,7 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
                   <TableHead>Name</TableHead>
                   <TableHead>Scope</TableHead>
                   <TableHead>Products</TableHead>
-                  <TableHead>Sort order</TableHead>
+                  <TableHead>Display order</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -807,7 +902,12 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
                         <IconSwatch name={section.icon ?? "Package2"} />
                         <div>
                           <div className="font-medium">{section.name}</div>
-                          <div className="text-xs text-muted-foreground">{section.slug}</div>
+                          {section.description ? (
+                            <div className="text-xs text-muted-foreground">{section.description}</div>
+                          ) : null}
+                          {!section.isGlobal ? (
+                            <div className="text-xs text-muted-foreground">Personal section</div>
+                          ) : null}
                         </div>
                       </div>
                     </TableCell>
@@ -817,18 +917,22 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
                     <TableCell>{section.productCount.toLocaleString()}</TableCell>
                     <TableCell>{section.sortOrder}</TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="outline" size="sm" onClick={() => openEditDialog(section)}>
-                          Edit
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(section)}
-                        >
-                          Delete
-                        </Button>
-                      </div>
+                      {canManageSection(section) ? (
+                        <div className="flex justify-end gap-2">
+                          <Button variant="outline" size="sm" onClick={() => openEditDialog(section)}>
+                            Edit
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDelete(section)}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Shared</span>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -843,7 +947,7 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
           <DialogHeader className="border-b border-border px-6 py-5">
             <DialogTitle>{mode === "create" ? "Create quick pick section" : "Edit quick pick section"}</DialogTitle>
             <DialogDescription>
-              Scope fields combine into one OR predicate. New sections need at least one scope rule, while legacy empty-scope sections can still be edited.
+              Choose the products that belong together, then save them as a reusable catalog shortcut.
             </DialogDescription>
           </DialogHeader>
 
@@ -860,7 +964,7 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
                   <CardHeader className="space-y-1.5 border-b border-border/50 bg-muted/[0.12]">
                     <CardTitle>Section details</CardTitle>
                     <CardDescription>
-                      Set the label, icon, and admin-only metadata shown in the quick picks list.
+                      Set the label and icon people will see in the quick picks list.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="grid gap-4 pt-4 sm:grid-cols-2">
@@ -873,25 +977,13 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
                         placeholder="CopyTech Services"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="quick-pick-slug">Slug</Label>
-                      <Input
-                        id="quick-pick-slug"
-                        value={form.slug}
-                        onChange={(event) => {
-                          setSlugDirty(true);
-                          updateForm("slug", event.target.value);
-                        }}
-                        placeholder="copytech-services"
-                      />
-                    </div>
                     <div className="space-y-2 sm:col-span-2">
                       <Label htmlFor="quick-pick-description">Description</Label>
                       <Textarea
                         id="quick-pick-description"
                         value={form.description}
                         onChange={(event) => updateForm("description", event.target.value)}
-                        placeholder="Optional help text for admins."
+                        placeholder="Optional note about when to use this section."
                       />
                     </div>
                     <div className="space-y-2">
@@ -901,25 +993,62 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
                         onValueChange={(value) => updateForm("icon", value as QuickPickSectionFormValues["icon"])}
                       >
                         <SelectTrigger id="quick-pick-icon" className="w-full">
-                          <SelectValue>{formatIconLabel(selectedIconName)}</SelectValue>
+                          <SelectValue>
+                            <IconSelectLabel name={selectedIconName} />
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {QUICK_PICK_SECTION_ICON_NAMES.map((iconName) => (
                             <SelectItem key={iconName} value={iconName}>
-                              {formatIconLabel(iconName)}
+                              <IconSelectLabel name={iconName} />
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="quick-pick-sort-order">Sort order</Label>
+                      <Label htmlFor="quick-pick-sort-order">Display order</Label>
                       <Input
                         id="quick-pick-sort-order"
                         type="number"
                         value={form.sortOrder}
                         onChange={(event) => updateForm("sortOrder", Number(event.target.value) || 0)}
                       />
+                      <p className="text-xs text-muted-foreground">
+                        Lower numbers appear first. Leave as 0 unless you want this section before or after others.
+                      </p>
+                    </div>
+                    <div className="space-y-3 sm:col-span-2">
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1.5 rounded-md px-1 py-1 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                        aria-expanded={advancedOpen}
+                        onClick={() => setAdvancedOpen((open) => !open)}
+                      >
+                        {advancedOpen ? (
+                          <ChevronDownIcon className="size-4" aria-hidden="true" />
+                        ) : (
+                          <ChevronRightIcon className="size-4" aria-hidden="true" />
+                        )}
+                        Advanced
+                      </button>
+                      {advancedOpen ? (
+                        <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-3">
+                          <Label htmlFor="quick-pick-slug">URL/internal ID</Label>
+                          <Input
+                            id="quick-pick-slug"
+                            value={form.slug}
+                            onChange={(event) => {
+                              setSlugDirty(true);
+                              updateForm("slug", event.target.value);
+                            }}
+                            placeholder="copytech-services"
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Mostly used for direct links and support. It is filled in from the name automatically.
+                          </p>
+                        </div>
+                      ) : null}
                     </div>
                   </CardContent>
                 </Card>
@@ -932,22 +1061,31 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="grid gap-3 pt-4 sm:grid-cols-2 xl:grid-cols-1">
-                    <div className="flex items-start gap-3 rounded-xl border border-border bg-background/80 px-4 py-3 text-sm">
-                      <Checkbox
-                        id="quick-pick-global-section"
-                        checked={form.isGlobal}
-                        onCheckedChange={(checked) => updateForm("isGlobal", checked === true)}
-                        aria-describedby="quick-pick-global-section-description"
-                      />
-                      <div className="space-y-1">
-                        <label htmlFor="quick-pick-global-section" className="block cursor-pointer font-medium text-foreground">
-                          Global section
-                        </label>
-                        <p id="quick-pick-global-section-description" className="text-muted-foreground">
-                          Visible to every signed-in user.
+                    {canCreateGlobal ? (
+                      <div className="flex items-start gap-3 rounded-xl border border-border bg-background/80 px-4 py-3 text-sm">
+                        <Checkbox
+                          id="quick-pick-global-section"
+                          checked={form.isGlobal}
+                          onCheckedChange={(checked) => updateForm("isGlobal", checked === true)}
+                          aria-describedby="quick-pick-global-section-description"
+                        />
+                        <div className="space-y-1">
+                          <label htmlFor="quick-pick-global-section" className="block cursor-pointer font-medium text-foreground">
+                            Shared section
+                          </label>
+                          <p id="quick-pick-global-section-description" className="text-muted-foreground">
+                            Visible to every signed-in user.
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="rounded-xl border border-border bg-background/80 px-4 py-3 text-sm">
+                        <p className="font-medium text-foreground">Personal section</p>
+                        <p className="mt-1 text-muted-foreground">
+                          Only you can manage this section. Shared Quick Picks from admins still appear in the catalog.
                         </p>
                       </div>
-                    </div>
+                    )}
                     <div className="flex items-start gap-3 rounded-xl border border-border bg-background/80 px-4 py-3 text-sm">
                       <Checkbox
                         id="quick-pick-include-discontinued"
@@ -1018,13 +1156,16 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
 
                   <div className="grid gap-4 lg:grid-cols-2">
                     <div className="space-y-2 lg:col-span-2">
-                      <Label htmlFor="quick-pick-description-like">Description like</Label>
+                      <Label htmlFor="quick-pick-description-like">Product description contains</Label>
                       <Input
                         id="quick-pick-description-like"
                         value={form.descriptionLike}
                         onChange={(event) => updateForm("descriptionLike", event.target.value)}
-                        placeholder='ILIKE example: CT %'
+                        placeholder="CT or copy"
                       />
+                      <p className="text-xs text-muted-foreground">
+                        Finds words or codes inside product descriptions, such as CT or copy.
+                      </p>
                     </div>
 
                     <div className="lg:col-span-2">
@@ -1068,6 +1209,7 @@ export function QuickPickSectionsPanel({ initialExplicitSkus = [] }: { initialEx
                     <div className="lg:col-span-2">
                       <SkuSearchAddField
                         selectedSkus={form.explicitSkus}
+                        showSelectedHandoffNote={selectedSkuHandoffActive}
                         onChange={(next) => updateForm("explicitSkus", next)}
                       />
                     </div>

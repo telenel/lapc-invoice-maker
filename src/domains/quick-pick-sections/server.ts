@@ -39,6 +39,18 @@ export class QuickPickSectionSlugConflictError extends Error {
   }
 }
 
+export class QuickPickSectionForbiddenError extends Error {
+  constructor(message = "You do not have permission to manage this quick pick section.") {
+    super(message);
+    this.name = "QuickPickSectionForbiddenError";
+  }
+}
+
+type QuickPickSectionActor = {
+  role: string;
+  userId?: string | null;
+};
+
 function cleanString(value: string | null | undefined): string {
   return value?.trim() ?? "";
 }
@@ -135,6 +147,24 @@ async function assertUniqueSlug(slug: string, excludeId?: string) {
   }
 }
 
+function canManageQuickPickSection(section: QuickPickSection, actor?: QuickPickSectionActor): boolean {
+  if (!actor || actor.role === "admin") {
+    return true;
+  }
+
+  return Boolean(
+    actor.userId
+    && section.createdByUserId === actor.userId
+    && !section.isGlobal,
+  );
+}
+
+function assertCanManageQuickPickSection(section: QuickPickSection, actor?: QuickPickSectionActor) {
+  if (!canManageQuickPickSection(section, actor)) {
+    throw new QuickPickSectionForbiddenError();
+  }
+}
+
 function toNumber(value: bigint | number | string): number {
   return Number(value);
 }
@@ -222,7 +252,7 @@ export function summarizeQuickPickSectionScope(scope: QuickPickSectionScopeInput
   const normalized = normalizeScopeInput(scope);
 
   if (normalized.descriptionLike) {
-    parts.push(`Description like ${normalized.descriptionLike}`);
+    parts.push(`Description contains ${normalized.descriptionLike}`);
   }
   if (normalized.dccIds.length > 0) {
     parts.push(`${normalized.dccIds.length} DCC${normalized.dccIds.length === 1 ? "" : "s"}`);
@@ -280,7 +310,14 @@ export async function listQuickPickSections(input: {
   userId?: string | null;
 }): Promise<QuickPickSectionDto[]> {
   const sections = await prisma.quickPickSection.findMany({
-    where: input.role === "admin" ? undefined : { isGlobal: true },
+    where: input.role === "admin"
+      ? undefined
+      : {
+          OR: [
+            { isGlobal: true },
+            ...(input.userId ? [{ createdByUserId: input.userId }] : []),
+          ],
+        },
     orderBy: SECTION_ORDER_BY,
   });
 
@@ -329,11 +366,13 @@ export async function createQuickPickSection(
 export async function updateQuickPickSection(
   id: string,
   input: QuickPickSectionPatchInput,
+  actor?: QuickPickSectionActor,
 ): Promise<QuickPickSectionDto | null> {
   const existing = await prisma.quickPickSection.findUnique({ where: { id } });
   if (!existing) {
     return null;
   }
+  assertCanManageQuickPickSection(existing, actor);
 
   const normalized = normalizePatchInput(input);
   const nextSlug = normalized.slug !== undefined
@@ -361,7 +400,9 @@ export async function updateQuickPickSection(
         vendorIds: normalized.vendorIds ?? existing.vendorIds,
         itemType: normalized.itemType !== undefined ? normalized.itemType : existing.itemType,
         explicitSkus: normalized.explicitSkus ?? existing.explicitSkus,
-        isGlobal: normalized.isGlobal ?? existing.isGlobal,
+        isGlobal: actor?.role === "admin"
+          ? (normalized.isGlobal ?? existing.isGlobal)
+          : false,
         includeDiscontinued:
           normalized.includeDiscontinued ?? existing.includeDiscontinued,
       },
@@ -381,15 +422,16 @@ export async function updateQuickPickSection(
 
 export async function deleteQuickPickSection(
   id: string,
+  actor?: QuickPickSectionActor,
 ): Promise<"deleted" | "not_found"> {
   const existing = await prisma.quickPickSection.findUnique({
     where: { id },
-    select: { id: true },
   });
 
   if (!existing) {
     return "not_found";
   }
+  assertCanManageQuickPickSection(existing, actor);
 
   await prisma.quickPickSection.delete({ where: { id } });
   return "deleted";

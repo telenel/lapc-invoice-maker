@@ -19,6 +19,7 @@ const { getServerSessionMock, serverMocks } = vi.hoisted(() => ({
     updateQuickPickSection: vi.fn(),
     deleteQuickPickSection: vi.fn(),
     previewQuickPickSection: vi.fn(),
+    QuickPickSectionForbiddenError: class QuickPickSectionForbiddenError extends Error {},
     QuickPickSectionSlugConflictError: class QuickPickSectionSlugConflictError extends Error {},
   },
 }));
@@ -64,7 +65,7 @@ describe("quick pick sections routes", () => {
         createdByUserId: "admin-1",
         createdAt: "2026-04-22T08:00:00.000Z",
         updatedAt: "2026-04-22T08:00:00.000Z",
-        scopeSummary: "Description like CT %",
+        scopeSummary: "Description contains CT %",
       },
     ];
     getServerSessionMock.mockResolvedValue({
@@ -78,21 +79,62 @@ describe("quick pick sections routes", () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ items });
+    expect(serverMocks.listQuickPickSections).toHaveBeenCalledWith({
+      role: "user",
+      userId: "user-1",
+    });
   });
 
-  it("returns 403 on POST when the caller is not an admin", async () => {
+  it("allows signed-in non-admin callers to create personal sections", async () => {
     getServerSessionMock.mockResolvedValue({
       user: { id: "user-1", role: "user" },
+    });
+    serverMocks.createQuickPickSection.mockResolvedValue({
+      id: "section-1",
+      name: "CopyTech Services",
+      slug: "copytech-services",
+      description: null,
+      icon: "ReceiptText",
+      sortOrder: 0,
+      descriptionLike: "CT %",
+      dccIds: [],
+      vendorIds: [],
+      itemType: null,
+      explicitSkus: [],
+      isGlobal: false,
+      includeDiscontinued: false,
+      productCount: 12,
+      createdByUserId: "user-1",
+      createdAt: "2026-04-22T08:00:00.000Z",
+      updatedAt: "2026-04-22T08:00:00.000Z",
+      scopeSummary: "Description contains CT %",
     });
 
     const response = await POST(
       new NextRequest("http://localhost/api/quick-pick-sections", {
         method: "POST",
-        body: JSON.stringify({ name: "CopyTech Services" }),
+        body: JSON.stringify({
+          name: "CopyTech Services",
+          icon: "ReceiptText",
+          sortOrder: 0,
+          isGlobal: true,
+          includeDiscontinued: false,
+          descriptionLike: "CT %",
+          dccIds: [],
+          vendorIds: [],
+          explicitSkus: [],
+        }),
       }),
     );
 
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(201);
+    expect(serverMocks.createQuickPickSection).toHaveBeenCalledWith(
+      expect.objectContaining({
+        icon: "ReceiptText",
+        isGlobal: false,
+        createdByUserId: "user-1",
+      }),
+    );
   });
 
   it("returns 409 with a readable message when create hits a slug collision", async () => {
@@ -125,10 +167,13 @@ describe("quick pick sections routes", () => {
     });
   });
 
-  it("returns 403 on PATCH when the caller is not an admin", async () => {
+  it("returns 403 on PATCH when the caller cannot manage the section", async () => {
     getServerSessionMock.mockResolvedValue({
       user: { id: "user-1", role: "user" },
     });
+    serverMocks.updateQuickPickSection.mockRejectedValue(
+      new serverMocks.QuickPickSectionForbiddenError("No access."),
+    );
 
     const response = await PATCH(
       new NextRequest("http://localhost/api/quick-pick-sections/section-1", {
@@ -139,6 +184,7 @@ describe("quick pick sections routes", () => {
     );
 
     expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toEqual({ error: "No access." });
   });
 
   it("accepts the seeded Printer icon on PATCH for admins", async () => {
@@ -163,7 +209,7 @@ describe("quick pick sections routes", () => {
       createdByUserId: null,
       createdAt: "2026-04-22T08:00:00.000Z",
       updatedAt: "2026-04-22T08:00:00.000Z",
-      scopeSummary: "Description like CT %",
+      scopeSummary: "Description contains CT %",
     });
 
     const response = await PATCH(
@@ -175,13 +221,17 @@ describe("quick pick sections routes", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(serverMocks.updateQuickPickSection).toHaveBeenCalledWith("section-1", {
-      icon: "Printer",
-      slug: undefined,
-      description: undefined,
-      descriptionLike: undefined,
-      itemType: undefined,
-    });
+    expect(serverMocks.updateQuickPickSection).toHaveBeenCalledWith(
+      "section-1",
+      {
+        icon: "Printer",
+        slug: undefined,
+        description: undefined,
+        descriptionLike: undefined,
+        itemType: undefined,
+      },
+      { role: "admin", userId: "admin-1" },
+    );
   });
 
   it("preserves explicit null clears on PATCH for admins", async () => {
@@ -223,13 +273,17 @@ describe("quick pick sections routes", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(serverMocks.updateQuickPickSection).toHaveBeenCalledWith("section-1", {
-      description: null,
-      icon: null,
-      descriptionLike: null,
-      itemType: null,
-      slug: undefined,
-    });
+    expect(serverMocks.updateQuickPickSection).toHaveBeenCalledWith(
+      "section-1",
+      {
+        description: null,
+        icon: null,
+        descriptionLike: null,
+        itemType: null,
+        slug: undefined,
+      },
+      { role: "admin", userId: "admin-1" },
+    );
   });
 
   it("preserves a null slug on PATCH so the server can regenerate it", async () => {
@@ -269,10 +323,14 @@ describe("quick pick sections routes", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(serverMocks.updateQuickPickSection).toHaveBeenCalledWith("section-1", {
-      name: "Campus Services",
-      slug: null,
-    });
+    expect(serverMocks.updateQuickPickSection).toHaveBeenCalledWith(
+      "section-1",
+      {
+        name: "Campus Services",
+        slug: null,
+      },
+      { role: "admin", userId: "admin-1" },
+    );
   });
 
   it("returns 204 on DELETE for admins", async () => {
@@ -291,10 +349,16 @@ describe("quick pick sections routes", () => {
     expect(response.status).toBe(204);
   });
 
-  it("locks preview behind the same admin boundary", async () => {
+  it("returns preview payloads for signed-in non-admin users", async () => {
+    const preview: QuickPickSectionPreviewResult = {
+      isEmpty: false,
+      productCount: 4,
+      products: [],
+    };
     getServerSessionMock.mockResolvedValue({
       user: { id: "user-1", role: "user" },
     });
+    serverMocks.previewQuickPickSection.mockResolvedValue(preview);
 
     const response = await POST_PREVIEW(
       new NextRequest("http://localhost/api/quick-pick-sections/preview", {
@@ -309,7 +373,8 @@ describe("quick pick sections routes", () => {
       }),
     );
 
-    expect(response.status).toBe(403);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual(preview);
   });
 
   it("returns preview payloads for admins", async () => {
