@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronDownIcon, SearchIcon, SlidersHorizontalIcon, XIcon } from "lucide-react";
+import { SearchIcon, XIcon } from "lucide-react";
 import { useProductSearch, useProductSelection } from "@/domains/product/hooks";
 import { searchProducts } from "@/domains/product/queries";
 import { CATALOG_ITEMS_STORAGE_KEY, EMPTY_FILTERS, TABS, DEFAULT_COLUMN_SET, OPTIONAL_COLUMNS } from "@/domains/product/constants";
@@ -15,16 +15,18 @@ import {
   serializeFiltersToSearchParams,
   applyPreset,
 } from "@/domains/product/view-serializer";
-import { ProductFilterSummary, ProductFiltersBar } from "@/components/products/product-filters";
+import { ProductFiltersBar } from "@/components/products/product-filters";
+import { ProductFilterChipBar } from "@/components/products/product-filter-chip-bar";
 import { ProductTable } from "@/components/products/product-table";
 import { ProductActionBar } from "@/components/products/product-action-bar";
 import { resolveEditDialogMode } from "@/components/products/edit-item-dialog-mode";
 import { Button } from "@/components/ui/button";
-import { SyncDatabaseButton } from "@/components/products/sync-database-button";
-import type { SyncDatabaseHandle } from "@/components/products/sync-database-button";
+import {
+  SyncPrismStatusPill,
+  type SyncPrismStatusPillHandle,
+} from "@/components/products/sync-prism-status-pill";
 import { SavedViewsBar } from "@/components/products/saved-views-bar";
 import { ColumnVisibilityToggle, type ColumnVisibilityHandle } from "@/components/products/column-visibility-toggle";
-import { PierceAssuranceBadge } from "@/components/products/pierce-assurance-badge";
 import { LocationPicker } from "@/components/products/location-picker";
 import { useProductInlineEdit, type ProductInlineEditRowBaseline } from "@/components/products/use-product-inline-edit";
 import { productApi } from "@/domains/product/api-client";
@@ -77,6 +79,12 @@ function getLocationLabel(locationId: ProductLocationId): "PIER" | "PCOP" | "PFS
   if (locationId === 4) return "PFS";
   return "PIER";
 }
+
+const MODE_TAB_ACCENTS: Record<ProductTab, { stripeClass: string }> = {
+  textbooks: { stripeClass: "bg-primary" },
+  merchandise: { stripeClass: "bg-sky-500" },
+  quickPicks: { stripeClass: "bg-amber-500" },
+};
 
 function isTextbookItemType(itemType: string): boolean {
   return itemType === "textbook" || itemType === "used_textbook";
@@ -298,6 +306,7 @@ export default function ProductsPageClient() {
   // write actions off for the rest of the SPA session.
   const [prismAvailable, setPrismAvailable] = useState(false);
   const [healthReady, setHealthReady] = useState(false);
+  const [prismRetryToken, setPrismRetryToken] = useState(0);
   useEffect(() => {
     if (data && !healthReady) {
       setHealthReady(true);
@@ -332,7 +341,7 @@ export default function ProductsPageClient() {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [healthReady]);
+  }, [healthReady, prismRetryToken]);
 
   const [newItemOpen, setNewItemOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -345,7 +354,7 @@ export default function ProductsPageClient() {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<SavedView | null>(null);
   const columnsRef = useRef<ColumnVisibilityHandle>(null);
-  const syncButtonRef = useRef<SyncDatabaseHandle>(null);
+  const statusPillRef = useRef<SyncPrismStatusPillHandle>(null);
   const restoredViewRef = useRef<string | null>(null);
   const [hiddenCount, setHiddenCount] = useState(0);
   const [resolvedViews, setResolvedViews] = useState<SavedView[]>(SYSTEM_PRESET_VIEWS);
@@ -837,10 +846,11 @@ export default function ProductsPageClient() {
           </h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <PierceAssuranceBadge
-            onClick={() => syncButtonRef.current?.openHistory()}
+          <SyncPrismStatusPill
+            ref={statusPillRef}
+            prismAvailable={prismAvailable}
+            onPrismRetry={() => setPrismRetryToken((n) => n + 1)}
           />
-          <SyncDatabaseButton ref={syncButtonRef} />
           <Button
             size="sm"
             onClick={() => setNewItemOpen(true)}
@@ -1043,6 +1053,14 @@ export default function ProductsPageClient() {
               <XIcon className="size-3.5" aria-hidden="true" />
             </button>
           ) : null}
+          <span className="hidden items-center gap-0.5 text-muted-foreground/70 sm:inline-flex" aria-hidden="true">
+            <kbd className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded border border-border bg-card px-1 font-mono text-[10px] font-semibold text-muted-foreground">
+              ⌘
+            </kbd>
+            <kbd className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded border border-border bg-card px-1 font-mono text-[10px] font-semibold text-muted-foreground">
+              K
+            </kbd>
+          </span>
           <span className="font-mono tnum text-[11px] text-muted-foreground shrink-0 pl-1 border-l border-border">
             {data
               ? `${data.total.toLocaleString()} results`
@@ -1066,23 +1084,26 @@ export default function ProductsPageClient() {
         />
       </div>
 
-      <ProductFilterSummary
+      <ProductFilterChipBar
         filters={filters}
-        activeViewName={activeView?.name ?? null}
         onChange={handleFilterChange}
         onClear={handleClearFilters}
+        activeViewName={activeView?.name ?? null}
         onClearPreset={activeView ? handleClearPreset : undefined}
+        advancedOpen={advancedOpen}
+        onAdvancedToggle={() => setAdvancedOpen((o) => !o)}
       />
 
-      {/* Table toolbar: tabs left · save view + column toggle right */}
+      {/* Mode bar: tabs with accent stripes · save view + column toggle right */}
       <div className="page-enter page-enter-3 mb-2 flex flex-wrap items-center justify-between gap-2">
         <div
-          className="inline-flex rounded-lg border border-border bg-secondary p-0.5"
+          className="inline-flex items-center gap-1 rounded-[10px] border border-border bg-card p-1"
           role="tablist"
           aria-label="Product category"
         >
           {TABS.map((tab) => {
             const active = filters.tab === tab.value;
+            const accent = MODE_TAB_ACCENTS[tab.value];
             return (
               <button
                 key={tab.value}
@@ -1090,18 +1111,24 @@ export default function ProductsPageClient() {
                 role="tab"
                 aria-selected={active}
                 onClick={() => handleTabChange(tab.value)}
-                className={`inline-flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-[13px] font-medium transition-all duration-150 ease-out active:translate-y-px cursor-pointer ${
+                className={`relative inline-flex items-center gap-1.5 overflow-hidden rounded-md px-3.5 py-1.5 text-[13px] font-medium transition-all duration-150 ease-out active:translate-y-px cursor-pointer ${
                   active
-                    ? "bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,.06)]"
-                    : "bg-transparent text-muted-foreground hover:text-foreground"
+                    ? "bg-secondary text-foreground shadow-[0_1px_2px_rgba(0,0,0,.06)]"
+                    : "bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
                 }`}
               >
-                {tab.label}
+                {active ? (
+                  <span
+                    aria-hidden="true"
+                    className={`absolute inset-y-1 left-0 w-[3px] rounded-r ${accent.stripeClass}`}
+                  />
+                ) : null}
+                <span className={active ? "pl-1.5" : undefined}>{tab.label}</span>
                 {tabCounts[tab.value] != null ? (
                   <span
                     className={`ml-0.5 rounded px-1.5 py-[1px] font-mono tnum text-[10.5px] ${
                       active
-                        ? "bg-secondary text-muted-foreground"
+                        ? "bg-card text-muted-foreground"
                         : "bg-transparent text-muted-foreground/70"
                     }`}
                   >
@@ -1121,19 +1148,6 @@ export default function ProductsPageClient() {
               {hiddenCount} hidden
             </span>
           )}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setAdvancedOpen((o) => !o)}
-            aria-expanded={advancedOpen}
-            className="gap-1"
-          >
-            <SlidersHorizontalIcon className="size-3.5" />
-            Advanced
-            <ChevronDownIcon
-              className={`size-3 transition-transform ${advancedOpen ? "rotate-180" : ""}`}
-            />
-          </Button>
           <Button
             size="sm"
             variant="outline"

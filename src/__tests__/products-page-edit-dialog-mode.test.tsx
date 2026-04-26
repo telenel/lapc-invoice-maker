@@ -158,6 +158,14 @@ vi.mock("@/components/products/sync-database-button", () => ({
   SyncDatabaseButton: () => <div data-testid="sync-button" />,
 }));
 
+vi.mock("@/components/products/sync-prism-status-pill", () => ({
+  SyncPrismStatusPill: () => <div data-testid="sync-prism-pill" />,
+}));
+
+vi.mock("@/components/products/product-filter-chip-bar", () => ({
+  ProductFilterChipBar: () => <div data-testid="filter-chip-bar" />,
+}));
+
 vi.mock("@/components/products/saved-views-bar", () => ({
   SavedViewsBar: () => <div data-testid="saved-views" />,
 }));

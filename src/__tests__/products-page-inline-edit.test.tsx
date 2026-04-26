@@ -101,6 +101,17 @@ vi.mock("@/components/products/sync-database-button", () => ({
   }),
 }));
 
+vi.mock("@/components/products/sync-prism-status-pill", () => ({
+  SyncPrismStatusPill: forwardRef<HTMLDivElement>(function SyncPrismStatusPillStub(_, ref) {
+    void ref;
+    return <div data-testid="sync-prism-pill" />;
+  }),
+}));
+
+vi.mock("@/components/products/product-filter-chip-bar", () => ({
+  ProductFilterChipBar: () => <div data-testid="filter-chip-bar" />,
+}));
+
 vi.mock("@/components/products/saved-views-bar", () => ({
   SavedViewsBar: ({
     onViewsResolved,
