@@ -24,6 +24,7 @@ The Supabase mirror (`wzhuuhxzxrzyasxvuagb`) is a writable copy — that is norm
 | Read a static-only analysis of a specific WPAdmin action | [`static/actions/`](static/actions/) |
 | Recover a stored proc's body without `VIEW DEFINITION` | [`static/plan-cache-method.md`](static/plan-cache-method.md) |
 | Read a recovered Prism stored-proc body | [`static/proc-bodies/`](static/proc-bodies/) |
+| Map a Pierce staff member to their Prism `SUID` for laportal audit-stamping | [`user-identity-mapping.md`](user-identity-mapping.md) |
 | Look up which script does what | [`tooling.md`](tooling.md) |
 | Verify a recent feature against the Prism schema | [`phase-1-verification-2026-04-19.md`](phase-1-verification-2026-04-19.md) |
 
