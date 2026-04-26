@@ -27,7 +27,8 @@ const NotificationBell = dynamic(
 type NavLink = {
   href: string;
   label: string;
-  matchPrefix?: string;
+  /** A single path prefix or an array of prefixes that should highlight this link. */
+  matchPrefix?: string | string[];
 };
 
 const links: NavLink[] = [
@@ -77,19 +78,32 @@ export function Nav() {
   if (status !== "authenticated") return null;
 
   const role = (session?.user as { role?: string } | undefined)?.role;
-  const adminLink: NavLink = { href: "/admin/settings", label: "Admin", matchPrefix: "/admin" };
+  const prismLink: NavLink = {
+    href: "/admin/prism",
+    label: "Prism",
+    matchPrefix: ["/admin/prism", "/admin/agencies"],
+  };
+  const adminLink: NavLink = {
+    href: "/admin/settings",
+    label: "Admin",
+    matchPrefix: ["/admin/settings", "/admin/users", "/admin/pricing", "/admin/quick-picks"],
+  };
   const allLinks = [
     ...links,
     { href: "/archive", label: "Archive", matchPrefix: "/archive" },
     { href: "/analytics", label: "Analytics" },
-    ...(role === "admin" ? [adminLink] : []),
+    ...(role === "admin" ? [prismLink, adminLink] : []),
   ];
 
   function isLinkActive(link: NavLink) {
-    const matchTarget = link.matchPrefix ?? link.href;
-    return matchTarget === "/"
-      ? pathname === "/"
-      : pathname === matchTarget || pathname.startsWith(matchTarget + "/");
+    const targets = Array.isArray(link.matchPrefix)
+      ? link.matchPrefix
+      : [link.matchPrefix ?? link.href];
+    return targets.some((target) =>
+      target === "/"
+        ? pathname === "/"
+        : pathname === target || pathname.startsWith(target + "/"),
+    );
   }
 
   return (
