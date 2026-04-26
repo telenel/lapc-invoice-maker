@@ -20,10 +20,18 @@ import { getPrismPool } from "@/lib/prism";
 
 type Section = { name: string; rowCount: number; rows: unknown[]; errored?: string; elapsedMs?: number };
 
-async function runQuery(label: string, query: string, params: { name: string; value: unknown }[] = [], timeoutMs = 60_000): Promise<Section> {
+// All queries below complete in well under the pool's 30s default timeout
+// (verified against SUID 865 + SUID 69 with the slowest at ~300ms). If a
+// future probe needs longer, raise the pool-level requestTimeout in
+// @/lib/prism rather than per-request — @types/mssql doesn't expose the
+// per-request override that exists at runtime in mssql 12.
+async function runQuery(
+  label: string,
+  query: string,
+  params: { name: string; value: unknown }[] = [],
+): Promise<Section> {
   const pool = await getPrismPool();
   const req = pool.request();
-  (req as unknown as { timeout: number }).timeout = timeoutMs;
   for (const p of params) req.input(p.name, p.value);
   const t0 = Date.now();
   try {
@@ -39,6 +47,30 @@ async function runQuery(label: string, query: string, params: { name: string; va
     };
   }
 }
+
+// Columns considered safe to log/persist for a PrismUser row.
+// Excludes Password (hashed credential), SID (raw Windows AD binary), and
+// SuperUser (encrypted permission blob) to avoid persisting credential data
+// to local disk via the JSON dump.
+const SAFE_USER_COLS = [
+  "SUID",
+  "UserName",
+  "Name",
+  "Address",
+  "City",
+  "StateCode",
+  "PostalCode",
+  "Phone",
+  "Email",
+  "EmployeeID",
+  "Comment",
+  "fDisabled",
+  "POPhone",
+  "POFax",
+  "fBuyer",
+  "RequestsEmailReadReceipts",
+  "fMustChange",
+].join(", ");
 
 function trunc(s: unknown, max = 200): string {
   if (s === null || s === undefined) return "<null>";
@@ -68,21 +100,20 @@ async function main() {
       ORDER BY c.column_id;
       `,
       [],
-      30_000,
     ),
   );
 
-  // 2. The actual user row
+  // 2. The actual user row — credential columns (Password, SID, SuperUser)
+  //    are excluded so this script's JSON dump never persists hashes to disk.
   sections.push(
     await runQuery(
-      "marcos_row",
+      "user_row_safe_cols",
       `
-      SELECT *
+      SELECT ${SAFE_USER_COLS}
       FROM prism_security.dbo.PrismUser
-      WHERE UserName = @username;
+      WHERE LTRIM(RTRIM(UserName)) = LTRIM(RTRIM(@username));
       `,
       [{ name: "username", value: username }],
-      30_000,
     ),
   );
 
@@ -107,7 +138,6 @@ async function main() {
       ORDER BY name;
       `,
       [],
-      30_000,
     ),
   );
 
@@ -129,7 +159,6 @@ async function main() {
       ORDER BY fk.name;
       `,
       [],
-      30_000,
     ),
   );
 
@@ -151,7 +180,6 @@ async function main() {
       ORDER BY OBJECT_NAME(fkc.parent_object_id);
       `,
       [],
-      30_000,
     ),
   );
 
@@ -172,7 +200,6 @@ async function main() {
       WHERE UserID = @suid;
       `,
       [{ name: "username", value: username }],
-      30_000,
     ),
   );
 
@@ -199,7 +226,6 @@ async function main() {
       ORDER BY h.ARInvoiceID DESC;
       `,
       [{ name: "username", value: username }],
-      30_000,
     ),
   );
 
@@ -221,29 +247,33 @@ async function main() {
       ORDER BY OBJECT_NAME(c.object_id), c.name;
       `,
       [],
-      60_000,
     ),
   );
 
-  // 9. Cashier login history if Cashier table exists
+  // 9. Cashier login history if Cashier table exists. Filter strictly by the
+  //    parametrized username — no hardcoded names, so this script works for
+  //    any PrismUser, not just Marcos.
   sections.push(
     await runQuery(
       "cashier_lookup",
       `
       IF OBJECT_ID('Cashier') IS NOT NULL
       BEGIN
+          DECLARE @suid int = (
+              SELECT TOP 1 SUID
+              FROM prism_security.dbo.PrismUser
+              WHERE LTRIM(RTRIM(UserName)) = LTRIM(RTRIM(@username))
+          );
           SELECT TOP 5 *
           FROM Cashier
-          WHERE CashierID = (SELECT TOP 1 SUID FROM prism_security.dbo.PrismUser WHERE UserName = @username)
-             OR ISNULL(StaffID, 0) = (SELECT TOP 1 SUID FROM prism_security.dbo.PrismUser WHERE UserName = @username)
-             OR Description LIKE '%MARCOS%'
-             OR Description LIKE '%Marcos%'
+          WHERE CashierID = @suid
+             OR ISNULL(StaffID, 0) = @suid
+             OR UPPER(Description) LIKE '%' + UPPER(LTRIM(RTRIM(@username))) + '%';
       END
       ELSE
           SELECT 'Cashier table not found' AS note;
       `,
       [{ name: "username", value: username }],
-      30_000,
     ),
   );
 

@@ -9,8 +9,13 @@ loadEnv({ path: path.resolve(process.cwd(), ".env") });
 
 import { getPrismPool } from "@/lib/prism";
 
-async function runQuery(label: string, query: string, params: { name: string; value: unknown }[] = []) {
+type Section = { name: string; rowCount: number; rows: unknown[]; errored?: string };
+
+async function runQuery(label: string, query: string, params: { name: string; value: unknown }[] = []): Promise<Section> {
   const pool = await getPrismPool();
+  // Pool's default 30s requestTimeout (configured in @/lib/prism) is plenty
+  // for these targeted lookups. @types/mssql does not expose the per-request
+  // override available at runtime in mssql 12, so we don't try to set one.
   const req = pool.request();
   for (const p of params) req.input(p.name, p.value);
   try {
@@ -28,7 +33,7 @@ function trunc(s: unknown, max = 150): string {
 
 async function main() {
   const username = process.argv[2] ?? "2020";
-  const sections = [];
+  const sections: Section[] = [];
 
   // What columns do these related tables have?
   for (const tbl of ["UserAccount", "UserAcctLocation", "UserGroup", "UserMap", "UpdateUser"]) {
@@ -104,10 +109,10 @@ async function main() {
   );
 
   for (const s of sections) {
-    const tag = (s as any).errored ? "ERRORED" : `rows=${s.rowCount}`;
+    const tag = s.errored ? "ERRORED" : `rows=${s.rowCount}`;
     console.log(`[${s.name}]  ${tag}`);
-    if ((s as any).errored) {
-      console.log(`   ! ${trunc((s as any).errored, 200)}`);
+    if (s.errored) {
+      console.log(`   ! ${trunc(s.errored, 200)}`);
       continue;
     }
     if (s.rowCount === 0) {
