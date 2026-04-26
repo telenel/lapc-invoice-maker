@@ -128,7 +128,20 @@ jobs:
           install -d -m 700 ~/.ssh
           printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -p "$DEPLOY_SSH_PORT" "$DEPLOY_SSH_HOST" >> ~/.ssh/known_hosts
+          for attempt in 1 2 3 4 5; do
+            if ssh-keyscan -T 15 -p "$DEPLOY_SSH_PORT" "$DEPLOY_SSH_HOST" >> ~/.ssh/known_hosts; then
+              break
+            fi
+
+            if [ "$attempt" -eq 5 ]; then
+              echo "::error::Unable to read SSH host key from DEPLOY_SSH_HOST on port $DEPLOY_SSH_PORT after $attempt attempts."
+              exit 1
+            fi
+
+            sleep_seconds=$((attempt * 5))
+            echo "ssh-keyscan failed on attempt $attempt; retrying in ${sleep_seconds}s..."
+            sleep "$sleep_seconds"
+          done
 
       - name: Deploy exact image over SSH
         run: |
