@@ -186,8 +186,6 @@ function getInlineEditValue(
       return String(inlineRow?.retail ?? primarySlice?.retailPrice ?? product.retail_price ?? "");
     case "barcode":
       return inlineRow?.barcode ?? product.barcode ?? "";
-    case "taxType":
-      return inlineRow?.itemTaxTypeId == null ? "" : String(inlineRow.itemTaxTypeId);
     case "discontinue":
       return inlineRow?.fDiscontinue ? "1" : "0";
   }
@@ -208,9 +206,6 @@ function getInlineEditDisplayValue(
       return formatCurrency(inlineRow?.retail ?? primarySlice?.retailPrice ?? product.retail_price);
     case "barcode":
       return inlineRow?.barcode ?? product.barcode ?? product.isbn ?? "—";
-    case "taxType": {
-      return inlineRow?.itemTaxTypeId == null ? "Unassigned" : "Tax unavailable";
-    }
     case "discontinue":
       return inlineRow?.fDiscontinue ? "Yes" : "No";
   }
@@ -330,52 +325,16 @@ function TaxTypeCell({
   product,
   inlineEdit,
   taxTypeLabels,
-  taxTypeOptions,
 }: {
   product: ProductBrowseRow;
   inlineEdit?: ProductInlineEditController;
   taxTypeLabels: Map<number, string>;
-  taxTypeOptions: ReadonlyArray<{ taxTypeId: number; description: string }>;
 }) {
-  const inlineRow = inlineEdit?.rowsBySku.get(product.sku);
-  const activeTaxTypeId = inlineRow?.itemTaxTypeId ?? product.itemTaxTypeId;
-  const currentValue = activeTaxTypeId == null ? "" : String(activeTaxTypeId);
   const currentLabel = getTaxTypeDisplayLabel(product, inlineEdit, taxTypeLabels);
-  const hasCurrentOption = taxTypeOptions.some((option) => String(option.taxTypeId) === currentValue);
-
-  if (!inlineEdit || taxTypeOptions.length === 0) {
-    return (
-      <td className="px-2.5 py-1.5">
-        <span className="text-[11.5px] text-foreground">{currentLabel}</span>
-      </td>
-    );
-  }
 
   return (
     <td className="px-2.5 py-1.5">
-      <select
-        aria-label={`Tax type for SKU ${product.sku}`}
-        value={currentValue}
-        disabled={inlineEdit.pendingSave}
-        onClick={(event) => event.stopPropagation()}
-        onChange={(event) => {
-          event.stopPropagation();
-          void inlineEdit.saveField(product.sku, "taxType", event.target.value);
-        }}
-        className="h-7 min-w-[110px] rounded-md border border-border bg-background px-2 py-0 text-[11px] text-foreground outline-none transition-colors focus:border-ring focus:ring-2 focus:ring-ring/30"
-      >
-        {currentValue.length === 0 ? (
-          <option value="">Unassigned</option>
-        ) : null}
-        {currentValue.length > 0 && !hasCurrentOption ? (
-          <option value={currentValue}>{currentLabel}</option>
-        ) : null}
-        {taxTypeOptions.map((option) => (
-          <option key={option.taxTypeId} value={String(option.taxTypeId)}>
-            {option.description}
-          </option>
-        ))}
-      </select>
+      <span className="text-[11.5px] text-foreground">{currentLabel}</span>
     </td>
   );
 }
@@ -578,7 +537,7 @@ export function ProductTable({
 }: ProductTableProps) {
   void onHideColumn;
   const { byId: vendorsById } = useVendorDirectory();
-  const { lookups, refs } = useProductRefDirectory();
+  const { lookups } = useProductRefDirectory();
   // Observe the wrapper width so the hidden-count badge reflects what the
   // @container queries actually suppress.
   const { ref: wrapperRef, summary: hiddenSummary } = useHiddenColumns();
@@ -1073,7 +1032,6 @@ export function ProductTable({
                           product={product}
                           inlineEdit={inlineEdit}
                           taxTypeLabels={lookups.taxTypeLabels}
-                          taxTypeOptions={refs?.taxTypes ?? []}
                         />
                         <DiscontinueCell product={product} inlineEdit={inlineEdit} />
                         <td className="px-2.5 py-1.5 text-[11.5px] text-muted-foreground whitespace-nowrap">

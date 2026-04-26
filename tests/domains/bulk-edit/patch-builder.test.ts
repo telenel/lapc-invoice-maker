@@ -19,6 +19,7 @@ function sourceRow(overrides: Partial<BulkEditSourceRow> = {}): BulkEditSourceRo
         locationId: 2,
         retail: 9.99,
         cost: 4.5,
+        stockOnHand: 11,
         expectedCost: 4.25,
         tagTypeId: 6,
         statusCodeId: 11,
@@ -33,6 +34,7 @@ function sourceRow(overrides: Partial<BulkEditSourceRow> = {}): BulkEditSourceRo
         locationId: 3,
         retail: 8.99,
         cost: 3.75,
+        stockOnHand: 4,
         expectedCost: 3.5,
         tagTypeId: 4,
         statusCodeId: 12,
@@ -56,13 +58,14 @@ describe("buildBulkPatchForRow", () => {
         title: "Old title",
       }),
       {
-        fieldIds: ["description", "barcode", "title", "retail", "tagTypeId", "fDiscontinue"],
+        fieldIds: ["description", "barcode", "title", "retail", "stockOnHand", "tagTypeId", "fDiscontinue"],
         inventoryScope: 3,
         values: {
           description: "New description",
           barcode: "NEW-BARCODE",
           title: "New title",
           retail: 12.5,
+          stockOnHand: 22,
           tagTypeId: 7,
           fDiscontinue: true,
         },
@@ -84,11 +87,12 @@ describe("buildBulkPatchForRow", () => {
         {
           locationId: 3,
           retail: 12.5,
+          stockOnHand: 22,
           tagTypeId: 7,
         },
       ],
     });
-    expect(result.changedFields).toEqual(["description", "barcode", "title", "retail", "tagTypeId", "fDiscontinue"]);
+    expect(result.changedFields).toEqual(["description", "barcode", "title", "retail", "stockOnHand", "tagTypeId", "fDiscontinue"]);
   });
 
   it("maps inventory fields to every targeted location when the scope is all", () => {

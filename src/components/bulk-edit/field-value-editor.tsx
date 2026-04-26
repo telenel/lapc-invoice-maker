@@ -152,6 +152,7 @@ function isNumericField(fieldId: BulkEditFieldId): boolean {
     "unitsPerPack",
     "retail",
     "cost",
+    "stockOnHand",
     "expectedCost",
     "estSales",
   ].includes(fieldId);

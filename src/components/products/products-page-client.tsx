@@ -127,6 +127,7 @@ function actionBarItemToSelectedProduct(item: {
   description: string;
   retail: number | null;
   cost: number | null;
+  stockOnHand?: number | null;
   primaryLocationId: ProductLocationId;
   barcode: string | null;
   author?: string | null;
@@ -144,6 +145,7 @@ function actionBarItemToSelectedProduct(item: {
     description: item.description,
     retailPrice: item.retail,
     cost: item.cost,
+    stockOnHand: item.stockOnHand ?? null,
     pricingLocationId: item.primaryLocationId,
     barcode: item.barcode,
     author: item.author ?? null,
@@ -406,6 +408,7 @@ export default function ProductsPageClient() {
     toggle,
     toggleAll,
     clear,
+    remove,
     isSelected,
   } = useProductSelection();
   const primaryLocationId = getPrimaryProductLocationId(filters.locationIds);
@@ -625,6 +628,12 @@ export default function ProductsPageClient() {
             ? (browseRow.cost ?? null)
             : (persistedScopedSelection?.cost ?? null)
         );
+      const actionBarStockOnHand = cachedScopedSelection?.stockOnHand ??
+        (
+          browseRow != null
+            ? (primarySlice?.stockOnHand ?? browseRow.stock_on_hand ?? null)
+            : (persistedScopedSelection?.stockOnHand ?? null)
+        );
       const sharedItem = {
         sku: product.sku,
         barcode: scopedDescriptor?.barcode ?? null,
@@ -654,6 +663,7 @@ export default function ProductsPageClient() {
           ...sharedItem,
           retail: actionBarRetail,
           cost: actionBarCost,
+          stockOnHand: actionBarStockOnHand,
         },
       };
     });
@@ -1224,6 +1234,7 @@ export default function ProductsPageClient() {
         offPageSelectedCount={offPageSelectedCount}
         editPricingItems={editPricingItems}
         onClear={clear}
+        onRemoveSelected={remove}
         saveToSession={saveScopedSelectionToSession}
         prismAvailable={prismAvailable}
         onDiscontinued={() => refetch()}

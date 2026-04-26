@@ -64,12 +64,14 @@ export function buildProductMirrorPayload(
     payload.barcode = snapshot.barcode;
     payload.retail_price = snapshot.retail;
     payload.cost = snapshot.cost;
+    if (snapshot.stockOnHand !== undefined) payload.stock_on_hand = snapshot.stockOnHand;
     payload.discontinued = snapshot.fDiscontinue === 1;
   } else {
     if (normalizedPatch.item.barcode !== undefined) payload.barcode = normalizedPatch.item.barcode;
     const pierceInventoryPatch = getInventoryPatches(normalizedPatch).find((entry) => entry.locationId === 2);
     if (pierceInventoryPatch?.retail !== undefined) payload.retail_price = pierceInventoryPatch.retail;
     if (pierceInventoryPatch?.cost !== undefined) payload.cost = pierceInventoryPatch.cost;
+    if (pierceInventoryPatch?.stockOnHand !== undefined) payload.stock_on_hand = pierceInventoryPatch.stockOnHand;
     if (normalizedPatch.item.fDiscontinue !== undefined) payload.discontinued = normalizedPatch.item.fDiscontinue === 1;
   }
 
@@ -92,6 +94,7 @@ export function buildInventoryMirrorPayload(
 
     payload.retail_price = entry.retail;
     payload.cost = entry.cost;
+    if (entry.stockOnHand !== undefined) payload.stock_on_hand = entry.stockOnHand;
     payload.expected_cost = entry.expectedCost;
     payload.tag_type_id = entry.tagTypeId;
     payload.status_code_id = entry.statusCodeId;
@@ -132,6 +135,7 @@ export function buildInventoryMirrorPayloadFromPatch(
 
     if (entry.retail !== undefined) payload.retail_price = entry.retail;
     if (entry.cost !== undefined) payload.cost = entry.cost;
+    if (entry.stockOnHand !== undefined) payload.stock_on_hand = entry.stockOnHand;
     if (entry.expectedCost !== undefined) payload.expected_cost = entry.expectedCost;
     if (entry.tagTypeId !== undefined) payload.tag_type_id = entry.tagTypeId;
     if (entry.statusCodeId !== undefined) payload.status_code_id = entry.statusCodeId;

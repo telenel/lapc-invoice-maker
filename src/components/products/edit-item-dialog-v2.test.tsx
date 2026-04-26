@@ -433,6 +433,7 @@ describe("EditItemDialogV2", () => {
     await userEvent.click(screen.getByRole("tab", { name: "Inventory" }));
     await userEvent.click(screen.getByRole("button", { name: "PCOP" }));
 
+    expect(screen.getByLabelText("Stock on Hand")).toHaveValue(8);
     expect(screen.getByLabelText(/^Retail(\s|$)/)).toHaveValue(42.5);
     expect(screen.getByLabelText(/^Cost(\s|$)/)).toHaveValue(21.25);
   });
@@ -938,6 +939,7 @@ describe("EditItemDialogV2", () => {
               ...baseDetail.inventoryByLocation[1],
               retail: 42.5,
               cost: 21.25,
+              stockOnHand: 8,
               tagTypeId: 7,
               statusCodeId: 11,
             },
@@ -956,6 +958,10 @@ describe("EditItemDialogV2", () => {
     await user.clear(screen.getByLabelText(/^Cost(\s|$)/));
 
     await user.click(screen.getByRole("tab", { name: "Inventory" }));
+
+    const stockInput = screen.getByLabelText("Stock on Hand");
+    await user.clear(stockInput);
+    await user.type(stockInput, "3");
 
     await user.click(screen.getByLabelText("Tag Type"));
     await user.click(screen.getAllByText("Clear selection")[0]);
@@ -985,6 +991,7 @@ describe("EditItemDialogV2", () => {
               locationId: 3,
               retail: null,
               cost: null,
+              stockOnHand: 3,
               tagTypeId: null,
               statusCodeId: null,
             },

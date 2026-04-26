@@ -52,6 +52,7 @@ export type BulkEditFieldId =
   | "bindingId"
   | "retail"
   | "cost"
+  | "stockOnHand"
   | "expectedCost"
   | "tagTypeId"
   | "statusCodeId"
@@ -94,6 +95,7 @@ export interface BulkEditSourceInventoryRow {
   locationId: ProductLocationId;
   retail: number | null;
   cost: number | null;
+  stockOnHand: number | null;
   expectedCost: number | null;
   tagTypeId: number | null;
   statusCodeId: number | null;

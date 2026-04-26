@@ -32,6 +32,7 @@ describe("productEditableFieldSections", () => {
     expect(productEditableFieldSections[1]?.fields.map((field) => field.id)).toEqual([
       "retail",
       "cost",
+      "stockOnHand",
       "expectedCost",
       "tagTypeId",
       "statusCodeId",

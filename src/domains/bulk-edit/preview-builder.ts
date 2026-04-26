@@ -59,6 +59,7 @@ function getInventorySnapshot(row: BulkEditSourceRow, locationId: ProductLocatio
   return {
     retail: inventoryRow?.retail ?? (isPrimaryLocation ? row.retail : null),
     cost: inventoryRow?.cost ?? (isPrimaryLocation ? row.cost : null),
+    stockOnHand: inventoryRow?.stockOnHand ?? null,
     expectedCost: inventoryRow?.expectedCost ?? null,
     tagTypeId: inventoryRow?.tagTypeId ?? null,
     statusCodeId: inventoryRow?.statusCodeId ?? null,
@@ -87,6 +88,7 @@ function getInventoryFieldValueForLocation(
   fieldId:
     | "retail"
     | "cost"
+    | "stockOnHand"
     | "expectedCost"
     | "tagTypeId"
     | "statusCodeId"
@@ -112,6 +114,7 @@ function formatInventoryFieldLabel(
   fieldId:
     | "retail"
     | "cost"
+    | "stockOnHand"
     | "expectedCost"
     | "tagTypeId"
     | "statusCodeId"
@@ -256,7 +259,8 @@ function getSelectedFieldValue(
     case "bindingId":
       return hasOwnPatchField(patch.textbook, "bindingId") ? patch.textbook?.bindingId ?? null : row.bindingId ?? null;
     case "retail":
-    case "cost": {
+    case "cost":
+    case "stockOnHand": {
       if (inventoryTargets.length > 1) {
         return formatInventoryFieldLabel(row, patch, fieldId, inventoryTargets, refs).afterLabel;
       }

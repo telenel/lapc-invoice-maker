@@ -66,6 +66,7 @@ const PRODUCT_INVENTORY_SELECT = [
   "location_id",
   "retail_price",
   "cost",
+  "stock_on_hand",
   "expected_cost",
   "tag_type_id",
   "status_code_id",
@@ -184,6 +185,7 @@ type SourceInventoryRow = {
   location_id: ProductLocationId;
   retail_price: number | null;
   cost: number | null;
+  stock_on_hand: number | null;
   expected_cost: number | null;
   tag_type_id: number | null;
   status_code_id: number | null;
@@ -226,6 +228,7 @@ function toInventorySourceRow(row: SourceInventoryRow): BulkEditSourceInventoryR
     locationId: row.location_id,
     retail: row.retail_price,
     cost: row.cost,
+    stockOnHand: row.stock_on_hand,
     expectedCost: row.expected_cost,
     tagTypeId: row.tag_type_id,
     statusCodeId: row.status_code_id,

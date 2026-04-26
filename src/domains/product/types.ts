@@ -195,6 +195,7 @@ export interface SelectedProduct {
   description: string;
   retailPrice: number | null;
   cost: number | null;
+  stockOnHand?: number | null;
   pricingLocationId?: ProductLocationId | null;
   barcode: string | null;
   author: string | null;
@@ -296,6 +297,7 @@ export interface InventoryPatchPerLocation {
   locationId: ProductLocationId;
   retail?: number | null;
   cost?: number | null;
+  stockOnHand?: number | null;
   expectedCost?: number | null;
   tagTypeId?: number | null;
   statusCodeId?: number | null;
@@ -331,6 +333,7 @@ export interface ItemSnapshot {
   itemTaxTypeId?: number | null;
   retail: number | null;
   cost: number | null;
+  stockOnHand?: number | null;
   fDiscontinue: 0 | 1;
   /**
    * Which location's `Retail` / `Cost` the snapshot describes. Required when

@@ -152,6 +152,52 @@ describe("ProductTable mobile cards", () => {
     expect(screen.getByTestId("product-card-margin-visual-1001")).toBeInTheDocument();
   });
 
+  it("renders tax as static text even when inline editing is available", () => {
+    const inlineEdit = {
+      editingCell: null,
+      draftValue: "",
+      pendingSave: false,
+      primaryLocationId: 2,
+      rowsBySku: new Map([[1001, {
+        sku: 1001,
+        barcode: "123456789012",
+        itemTaxTypeId: 6,
+        retail: 39.99,
+        cost: 18.25,
+        fDiscontinue: 0,
+      }]]),
+      startEdit: vi.fn(),
+      cancelEdit: vi.fn(),
+      commitEdit: vi.fn(),
+      saveField: vi.fn(),
+      moveToNextEditableCell: vi.fn(),
+      setDraftValue: vi.fn(),
+    };
+
+    render(
+      <ProductTable
+        tab="merchandise"
+        products={[makeProductRow()]}
+        total={1}
+        page={1}
+        loading={false}
+        sortBy="sku"
+        sortDir="asc"
+        isSelected={() => false}
+        onToggle={vi.fn()}
+        onToggleAll={vi.fn()}
+        onPageChange={vi.fn()}
+        onSort={vi.fn()}
+        inlineEdit={inlineEdit}
+        primaryLocationId={2}
+      />,
+    );
+
+    expect(screen.getAllByText("Taxable").length).toBeGreaterThan(0);
+    expect(screen.queryByRole("combobox", { name: /tax type/i })).not.toBeInTheDocument();
+    expect(inlineEdit.saveField).not.toHaveBeenCalled();
+  });
+
   it("toggles a row when the mobile card selection control is pressed", async () => {
     const user = userEvent.setup();
     const onToggle = vi.fn();

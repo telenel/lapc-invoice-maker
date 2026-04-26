@@ -275,15 +275,6 @@ vi.mock("@/components/products/product-table", () => ({
                       <td>
                         <button
                           type="button"
-                          aria-label={`Set tax type for SKU ${product.sku} to STATE`}
-                          onClick={() => inlineEdit.saveField(product.sku, "taxType", "4")}
-                        >
-                          {`Set tax type for SKU ${product.sku} to STATE`}
-                        </button>
-                      </td>
-                      <td>
-                        <button
-                          type="button"
                           aria-label={`Toggle discontinue for SKU ${product.sku}`}
                           onClick={() =>
                             inlineEdit.saveField(
@@ -630,31 +621,6 @@ describe("ProductsPage inline edit controller wiring", () => {
     expect(
       await screen.findByRole("textbox", { name: /cost editor for sku 1002/i }),
     ).toHaveValue("11.75");
-  });
-
-  it("saves tax type edits through the v2 item patch with the row baseline", async () => {
-    const user = userEvent.setup();
-
-    render(<ProductsPage />);
-
-    await screen.findByTestId("product-table");
-
-    await user.click(screen.getByRole("button", { name: /set tax type for sku 1001 to state/i }));
-
-    await waitFor(() => {
-      expect(updateMock).toHaveBeenCalledWith(1001, {
-        mode: "v2",
-        patch: {
-          item: {
-            itemTaxTypeId: 4,
-          },
-        },
-        baseline: expect.objectContaining({
-          sku: 1001,
-          itemTaxTypeId: 6,
-        }),
-      });
-    });
   });
 
   it("toggles discontinue through the v2 item patch", async () => {

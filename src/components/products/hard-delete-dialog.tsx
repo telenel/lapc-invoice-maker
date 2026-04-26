@@ -83,7 +83,7 @@ export function HardDeleteDialog({ open, onOpenChange, items, onDeleted, onDisco
         <DialogHeader>
           <DialogTitle>Permanently delete {items.length} item{items.length !== 1 ? "s" : ""}?</DialogTitle>
           <DialogDescription>
-            Hard-delete removes the row from Prism entirely. Only allowed when the item has no sales, purchase, invoice, or receiving history.
+            Permanent delete removes the item from the PrismCore database entirely. This is not recommended for normal cleanup; discontinue preserves old invoices, sales history, receiving records, and dependent workflows. Delete is only allowed when the item has no sales, purchase, invoice, or receiving history.
           </DialogDescription>
         </DialogHeader>
 

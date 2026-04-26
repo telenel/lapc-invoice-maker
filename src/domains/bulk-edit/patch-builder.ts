@@ -5,6 +5,7 @@ import type { ProductLocationId } from "@/domains/product/location-filters";
 const INVENTORY_FIELD_IDS = new Set<BulkEditFieldId>([
   "retail",
   "cost",
+  "stockOnHand",
   "expectedCost",
   "tagTypeId",
   "statusCodeId",
@@ -62,6 +63,7 @@ function getInventorySnapshot(row: BulkEditSourceRow, locationId: ProductLocatio
   return {
     retail: inventoryRow?.retail ?? (isPrimaryLocation ? row.retail : null),
     cost: inventoryRow?.cost ?? (isPrimaryLocation ? row.cost : null),
+    stockOnHand: inventoryRow?.stockOnHand ?? null,
     expectedCost: inventoryRow?.expectedCost ?? null,
     tagTypeId: inventoryRow?.tagTypeId ?? null,
     statusCodeId: inventoryRow?.statusCodeId ?? null,
@@ -145,6 +147,7 @@ function applyInventoryPatchValue(
   switch (fieldId) {
     case "retail":
     case "cost":
+    case "stockOnHand":
     case "expectedCost":
     case "tagTypeId":
     case "statusCodeId":

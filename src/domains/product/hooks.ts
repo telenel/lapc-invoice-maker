@@ -133,6 +133,15 @@ export function useProductSelection() {
     setSelected(new Map());
   }, []);
 
+  const remove = useCallback((sku: number) => {
+    setSelected((prev) => {
+      if (!prev.has(sku)) return prev;
+      const next = new Map(prev);
+      next.delete(sku);
+      return next;
+    });
+  }, []);
+
   const isSelected = useCallback(
     (sku: number) => selected.has(sku),
     [selected]
@@ -149,6 +158,7 @@ export function useProductSelection() {
     toggle,
     toggleAll,
     clear,
+    remove,
     isSelected,
     saveToSession,
   };

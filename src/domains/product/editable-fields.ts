@@ -200,6 +200,16 @@ export const productEditableFieldSections = [
         fillRateLabel: "96.7% / 98.4%",
       }),
       defineField({
+        id: "stockOnHand",
+        label: "Stock on Hand",
+        group: "inventory",
+        patchTarget: "inventory",
+        itemTypes: ["general_merchandise", "textbook", "used_textbook"],
+        locationAware: true,
+        requiresLocation: true,
+        fillRateLabel: "100.0% / 100.0%",
+      }),
+      defineField({
         id: "expectedCost",
         label: "Expected Cost",
         group: "inventory",

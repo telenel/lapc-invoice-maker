@@ -531,17 +531,13 @@ describe("product table variance trigger", () => {
     expect(screen.getByRole("columnheader", { name: /disc/i })).toBeTruthy();
   });
 
-  it("changing tax type does not toggle row selection", async () => {
-    const user = userEvent.setup();
+  it("renders tax type as static text instead of an inline selector", () => {
     const onToggle = vi.fn();
 
     renderEditableTable(onToggle);
 
-    await user.selectOptions(
-      screen.getByRole("combobox", { name: /tax type for sku 101/i }),
-      "4",
-    );
-
+    expect(screen.queryByRole("combobox", { name: /tax type for sku 101/i })).toBeNull();
+    expect(screen.getAllByText("STATE").length).toBeGreaterThan(0);
     expect(onToggle).not.toHaveBeenCalled();
   });
 

@@ -64,11 +64,17 @@ export function InventoryTabContent({
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <ReadOnlyValueField
-            id={idFor(`inventory-${activeInventoryLocation}-stock`)}
-            label="Stock on Hand"
-            value={activeInventory.stockOnHand || "—"}
-          />
+          <Field id={idFor(`inventory-${activeInventoryLocation}-stock`)} label="Stock on Hand">
+            <Input
+              id={idFor(`inventory-${activeInventoryLocation}-stock`)}
+              type="number"
+              step="1"
+              min="0"
+              inputMode="numeric"
+              value={activeInventory.stockOnHand}
+              onChange={(event) => updateInventoryField(activeInventoryLocation, "stockOnHand", event.target.value)}
+            />
+          </Field>
           <ReadOnlyValueField
             id={idFor(`inventory-${activeInventoryLocation}-sale`)}
             label="Last Sale"
