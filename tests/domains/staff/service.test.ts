@@ -4,6 +4,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 vi.mock("@/domains/staff/repository", () => ({
   staffRepository: {
     findMany: vi.fn(),
+    findDepartments: vi.fn(),
     findManyPaginated: vi.fn(),
     findById: vi.fn(),
     create: vi.fn(),
@@ -49,6 +50,17 @@ describe("staffService", () => {
       const result = await staffService.listPaginated({ search: "", page: 1, pageSize: 20 });
 
       expect(result).toEqual({ data: [], total: 0, page: 1, pageSize: 20 });
+    });
+  });
+
+  describe("listDepartments", () => {
+    it("returns distinct departments from the repository", async () => {
+      mockRepo.findDepartments.mockResolvedValue(["Bookstore", "CopyTech"] as never);
+
+      const result = await staffService.listDepartments();
+
+      expect(mockRepo.findDepartments).toHaveBeenCalledWith();
+      expect(result).toEqual(["Bookstore", "CopyTech"]);
     });
   });
 

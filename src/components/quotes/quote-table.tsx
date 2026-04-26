@@ -184,10 +184,11 @@ export function QuoteTable({
   categories,
   initialData,
   initialRequest,
-  initialBadgeStates = {},
+  initialBadgeStates,
 }: QuoteTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const hasInitialBadgeStates = initialBadgeStates !== undefined;
 
   const handleRowClick = useCallback((id: string) => {
     router.push(`/quotes/${id}`);
@@ -202,10 +203,11 @@ export function QuoteTable({
   const [sortDir, setSortDir] = useState<SortDir>(() => parseSortDir(searchParams));
   const [creatorId, setCreatorId] = useState<string | undefined>(() => searchParams.get("creatorId") ?? undefined);
   const deferredSearch = useDeferredValue(filters.search);
-  const [badgeStates, setBadgeStates] = useState<Record<string, FollowUpBadgeState>>(initialBadgeStates);
+  const [badgeStates, setBadgeStates] = useState<Record<string, FollowUpBadgeState>>(initialBadgeStates ?? {});
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
   const skippedInitialFetchRef = useRef(initialData !== undefined);
+  const skippedInitialBadgeFetchRef = useRef(initialData !== undefined && hasInitialBadgeStates);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const currentRequestKey = JSON.stringify({
@@ -252,16 +254,6 @@ export function QuoteTable({
       setQuotes(data.quotes);
       setTotal(data.total);
       setSelectedIds(new Set());
-
-      // Fetch badge states for loaded quotes
-      const ids = data.quotes.map((q) => q.id);
-      if (ids.length > 0) {
-        followUpApi.getBadgeStatesForInvoices(ids).then(setBadgeStates).catch(() => {
-          /* badge fetch is best-effort */
-        });
-      } else {
-        setBadgeStates({});
-      }
     } catch {
       toast.error("Failed to load quotes");
     }
@@ -292,6 +284,26 @@ export function QuoteTable({
   }, [currentRequestKey, fetchQuotes, initialRequestKey]);
 
   useSSE("quote-changed", fetchQuotes);
+
+  useEffect(() => {
+    const ids = quotes.map((quote) => quote.id);
+    if (ids.length === 0) {
+      setBadgeStates({});
+      return;
+    }
+    if (
+      skippedInitialBadgeFetchRef.current
+      && initialData
+      && ids.join(",") === initialData.quotes.map((quote) => quote.id).join(",")
+    ) {
+      skippedInitialBadgeFetchRef.current = false;
+      return;
+    }
+
+    followUpApi.getBadgeStatesForInvoices(ids).then(setBadgeStates).catch(() => {
+      setBadgeStates({});
+    });
+  }, [initialData, quotes]);
 
   useEffect(() => {
     setFilters(parseInitialFilters(searchParams));

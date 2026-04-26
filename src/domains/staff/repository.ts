@@ -35,6 +35,20 @@ export const staffRepository = {
     });
   },
 
+  async findDepartments(): Promise<string[]> {
+    const rows = await prisma.staff.findMany({
+      where: { active: true, NOT: { department: "" } },
+      select: { department: true },
+      distinct: ["department"],
+      orderBy: { department: "asc" as const },
+    });
+
+    return Array.from(new Set(rows
+      .map((row) => row.department?.trim())
+      .filter((department): department is string => Boolean(department))))
+      .sort();
+  },
+
   async findManyPaginated(filters: StaffFilters & { page: number; pageSize: number }) {
     const where = buildWhere(filters);
     const [data, total] = await Promise.all([

@@ -71,6 +71,10 @@ export const staffService = {
     return staff.map((s) => toStaffResponse({ ...s, approvalChain: (s.approvalChain as string[]) ?? [] }));
   },
 
+  async listDepartments(): Promise<string[]> {
+    return staffRepository.findDepartments();
+  },
+
   async listPaginated(filters: StaffFilters & { page: number; pageSize: number }): Promise<PaginatedResponse<StaffResponse>> {
     const { data, total } = await staffRepository.findManyPaginated(filters);
     return {

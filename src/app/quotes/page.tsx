@@ -4,7 +4,6 @@ import { authOptions } from "@/lib/auth";
 import { staffService } from "@/domains/staff/service";
 import { quoteService } from "@/domains/quote/service";
 import type { QuoteFilters } from "@/domains/quote/types";
-import { followUpService } from "@/domains/follow-up/service";
 import { prisma } from "@/lib/prisma";
 import { QuoteTable } from "@/components/quotes/quote-table";
 import { Button } from "@/components/ui/button";
@@ -96,8 +95,8 @@ export default async function QuotesPage({
   if (!session) redirect("/login");
 
   const initialRequest = buildInitialQuoteRequest(searchParams);
-  const [staffList, categories, initialTableData] = await Promise.all([
-    staffService.list({}),
+  const [departments, categories, initialTableData] = await Promise.all([
+    staffService.listDepartments(),
     prisma.category.findMany({
       where: { active: true },
       select: { name: true, label: true },
@@ -105,15 +104,6 @@ export default async function QuotesPage({
     }),
     quoteService.list(initialRequest),
   ]);
-
-  const departmentSet = new Set(staffList.map((s) => s.department).filter(Boolean) as string[]);
-  const departments = Array.from(departmentSet).sort();
-  const initialBadgeStates =
-    initialTableData.quotes.length > 0
-      ? await followUpService.getBadgeStatesForInvoices(
-          initialTableData.quotes.map((quote) => quote.id),
-        )
-      : {};
 
   return (
     <div className="space-y-4">
@@ -132,7 +122,6 @@ export default async function QuotesPage({
           categories={categories}
           initialData={initialTableData}
           initialRequest={initialRequest}
-          initialBadgeStates={initialBadgeStates}
         />
       </div>
     </div>

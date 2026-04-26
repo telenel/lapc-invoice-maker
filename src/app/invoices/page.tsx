@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { staffService } from "@/domains/staff/service";
 import { invoiceService } from "@/domains/invoice/service";
 import type { InvoiceFilters } from "@/domains/invoice/types";
-import { followUpService } from "@/domains/follow-up/service";
 import { InvoiceTable } from "@/components/invoices/invoice-table";
 import { UserActivityStrip } from "@/components/invoices/user-activity-strip";
 import { redirect } from "next/navigation";
@@ -85,8 +84,8 @@ export default async function InvoicesPage({
   if (!session) redirect("/login");
 
   const initialRequest = buildInitialInvoiceRequest(searchParams);
-  const [staffList, categories, initialTableData, initialUsers] = await Promise.all([
-    staffService.list({}),
+  const [departments, categories, initialTableData, initialUsers] = await Promise.all([
+    staffService.listDepartments(),
     prisma.category.findMany({
       where: { active: true },
       select: { name: true, label: true },
@@ -95,16 +94,6 @@ export default async function InvoicesPage({
     invoiceService.list(initialRequest),
     invoiceService.getCreatorStats(),
   ]);
-
-  const departments = Array.from(
-    new Set(staffList.map((s) => s.department).filter(Boolean) as string[])
-  ).sort();
-  const initialBadgeStates =
-    initialTableData.invoices.length > 0
-      ? await followUpService.getBadgeStatesForInvoices(
-          initialTableData.invoices.map((invoice) => invoice.id),
-        )
-      : {};
 
   return (
     <div className="space-y-4">
@@ -119,7 +108,6 @@ export default async function InvoicesPage({
           categories={categories}
           initialData={initialTableData}
           initialRequest={initialRequest}
-          initialBadgeStates={initialBadgeStates}
         />
       </div>
     </div>
