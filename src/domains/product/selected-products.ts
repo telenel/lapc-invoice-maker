@@ -18,6 +18,7 @@ export function browseRowToSelectedProduct(product: ProductBrowseRow): SelectedP
     description: (product.title ?? product.description ?? "").toUpperCase(),
     retailPrice: product.retail_price,
     cost: product.cost,
+    stockOnHand: product.stock_on_hand,
     pricingLocationId: product.primary_location_id ?? null,
     barcode: product.barcode,
     author: product.author,
@@ -37,6 +38,7 @@ export function selectedProductsEqual(left: SelectedProduct, right: SelectedProd
     left.description === right.description &&
     left.retailPrice === right.retailPrice &&
     left.cost === right.cost &&
+    (left.stockOnHand ?? null) === (right.stockOnHand ?? null) &&
     left.pricingLocationId === right.pricingLocationId &&
     left.barcode === right.barcode &&
     left.author === right.author &&

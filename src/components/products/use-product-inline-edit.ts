@@ -9,7 +9,6 @@ export type ProductInlineEditableField =
   | "cost"
   | "retail"
   | "barcode"
-  | "taxType"
   | "discontinue";
 
 export interface ProductInlineEditCell {
@@ -83,8 +82,6 @@ function getCellValue(row: ProductInlineEditRowBaseline, field: ProductInlineEdi
       return row.retail == null ? "" : String(row.retail);
     case "barcode":
       return row.barcode ?? "";
-    case "taxType":
-      return row.itemTaxTypeId == null ? "" : String(row.itemTaxTypeId);
     case "discontinue":
       return row.fDiscontinue ? "1" : "0";
   }
@@ -102,11 +99,6 @@ function normalizeDraftValue(field: ProductInlineEditableField, rawValue: string
     }
     case "barcode":
       return currentValue.length === 0 ? "" : currentValue;
-    case "taxType": {
-      if (currentValue.length === 0) return null;
-      const parsed = Number(currentValue);
-      return Number.isNaN(parsed) || parsed <= 0 ? null : String(parsed);
-    }
     case "discontinue":
       return currentValue === "1" || currentValue.toLowerCase() === "true" ? "1" : "0";
   }
@@ -305,23 +297,6 @@ export function useProductInlineEdit({
         };
         break;
       }
-      case "taxType": {
-        const parsed = Number(currentValue);
-        if (currentValue.length === 0 || Number.isNaN(parsed) || parsed <= 0) {
-          toast.error("Select a valid tax type.");
-          return false;
-        }
-        patch = {
-          mode: "v2",
-          patch: {
-            item: {
-              itemTaxTypeId: parsed,
-            },
-          },
-          baseline,
-        };
-        break;
-      }
       case "discontinue": {
         const normalized = currentValue === "1" || currentValue.toLowerCase() === "true" ? 1 : 0;
         patch = {
@@ -428,12 +403,7 @@ export function useProductInlineEdit({
     value: string,
   ) => {
     let optimisticOverlay: Partial<ProductInlineEditRowBaseline> | null = null;
-    if (field === "taxType") {
-      const parsed = Number(value);
-      if (value.length > 0 && Number.isFinite(parsed) && parsed > 0) {
-        optimisticOverlay = { itemTaxTypeId: parsed };
-      }
-    } else if (field === "discontinue") {
+    if (field === "discontinue") {
       optimisticOverlay = {
         fDiscontinue: value === "1" || value.toLowerCase() === "true" ? 1 : 0,
       };

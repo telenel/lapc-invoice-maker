@@ -51,6 +51,7 @@ export async function getItemSnapshot(
       ItemTaxTypeID: number | null;
       Retail: number | null;
       Cost: number | null;
+      StockOnHand: number | null;
       fDiscontinue: number | null;
     }>(`
       SELECT i.SKU,
@@ -58,6 +59,7 @@ export async function getItemSnapshot(
              i.ItemTaxTypeID,
              inv.Retail,
              inv.Cost,
+             inv.StockOnHand,
              i.fDiscontinue
       FROM Item i
       LEFT JOIN Inventory inv ON inv.SKU = i.SKU AND inv.LocationID = @loc
@@ -72,6 +74,7 @@ export async function getItemSnapshot(
     itemTaxTypeId: row.ItemTaxTypeID == null ? null : Number(row.ItemTaxTypeID),
     retail: row.Retail == null ? null : Number(row.Retail),
     cost: row.Cost == null ? null : Number(row.Cost),
+    stockOnHand: row.StockOnHand == null ? null : Number(row.StockOnHand),
     fDiscontinue: (row.fDiscontinue === 1 ? 1 : 0) as 0 | 1,
     primaryLocationId,
   };
@@ -82,6 +85,7 @@ export interface InventoryMirrorSnapshotRow {
   retail: number | null;
   cost: number | null;
   expectedCost: number | null;
+  stockOnHand: number | null;
   tagTypeId: number | null;
   statusCodeId: number | null;
   estSales: number | null;
@@ -114,6 +118,7 @@ export async function getInventoryMirrorSnapshotRows(
     Retail: number | null;
     Cost: number | null;
     ExpectedCost: number | null;
+    StockOnHand: number | null;
     TagTypeID: number | null;
     StatusCodeID: number | null;
     EstSales: number | null;
@@ -127,6 +132,7 @@ export async function getInventoryMirrorSnapshotRows(
            inv.Retail,
            inv.Cost,
            inv.ExpectedCost,
+           inv.StockOnHand,
            inv.TagTypeID,
            inv.StatusCodeID,
            inv.EstSales,
@@ -145,6 +151,7 @@ export async function getInventoryMirrorSnapshotRows(
     retail: row.Retail == null ? null : Number(row.Retail),
     cost: row.Cost == null ? null : Number(row.Cost),
     expectedCost: row.ExpectedCost == null ? null : Number(row.ExpectedCost),
+    stockOnHand: row.StockOnHand == null ? null : Number(row.StockOnHand),
     tagTypeId: row.TagTypeID == null ? null : Number(row.TagTypeID),
     statusCodeId: row.StatusCodeID == null ? null : Number(row.StatusCodeID),
     estSales: row.EstSales == null ? null : Number(row.EstSales),
@@ -228,6 +235,7 @@ function hasInventoryWriteFields(patch: InventoryPatchPerLocation): boolean {
   return [
     patch.retail,
     patch.cost,
+    patch.stockOnHand,
     patch.expectedCost,
     patch.tagTypeId,
     patch.statusCodeId,
@@ -547,6 +555,11 @@ export async function applyItemPatchInTransaction(
         inventorySet.push("Cost = @cost");
         applied.push(`inventory:${inventoryPatch.locationId}:cost`);
       }
+      if (inventoryPatch.stockOnHand !== undefined) {
+        inventoryReq.input("stockOnHand", sql.Int, inventoryPatch.stockOnHand);
+        inventorySet.push("StockOnHand = @stockOnHand");
+        applied.push(`inventory:${inventoryPatch.locationId}:stockOnHand`);
+      }
       if (inventoryPatch.expectedCost !== undefined) {
         inventoryReq.input("expectedCost", sql.Money, inventoryPatch.expectedCost);
         inventorySet.push("ExpectedCost = @expectedCost");
@@ -788,6 +801,11 @@ export async function applyItemPatchInTransaction(
         inventoryReq.input("cost", sql.Money, inventoryPatch.cost);
         inventorySet.push("Cost = @cost");
         applied.push(`inventory:${inventoryPatch.locationId}:cost`);
+      }
+      if (inventoryPatch.stockOnHand !== undefined) {
+        inventoryReq.input("stockOnHand", sql.Int, inventoryPatch.stockOnHand);
+        inventorySet.push("StockOnHand = @stockOnHand");
+        applied.push(`inventory:${inventoryPatch.locationId}:stockOnHand`);
       }
       if (inventoryPatch.expectedCost !== undefined) {
         inventoryReq.input("expectedCost", sql.Money, inventoryPatch.expectedCost);

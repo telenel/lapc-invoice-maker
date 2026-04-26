@@ -171,6 +171,9 @@ export function buildInventoryPatch(
       entry.cost = costSource === "" ? null : Number(costSource);
     }
 
+    if (current.stockOnHand !== baseline.stockOnHand) {
+      entry.stockOnHand = current.stockOnHand === "" ? null : Number(current.stockOnHand);
+    }
     if (current.expectedCost !== baseline.expectedCost) {
       entry.expectedCost = current.expectedCost === "" ? null : Number(current.expectedCost);
     }

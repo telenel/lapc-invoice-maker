@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProductActionBar } from "./product-action-bar";
 
 const pushMock = vi.fn();
+const discontinueMock = vi.fn();
 let sessionRole: "admin" | "user" = "admin";
 
 vi.mock("next/navigation", () => ({
@@ -36,12 +37,20 @@ vi.mock("@/domains/product/vendor-directory", () => ({
   }),
 }));
 
+vi.mock("@/domains/product/api-client", () => ({
+  productApi: {
+    discontinue: (...args: unknown[]) => discontinueMock(...args),
+  },
+}));
+
 vi.mock("./barcode-print-view", () => ({
   openBarcodePrintWindow: vi.fn(),
 }));
 
 beforeEach(() => {
   pushMock.mockReset();
+  discontinueMock.mockReset();
+  discontinueMock.mockResolvedValue(undefined);
   sessionRole = "admin";
 });
 
@@ -214,5 +223,135 @@ describe("ProductActionBar", () => {
     expect(screen.getByRole("button", { name: /Create Invoice/i })).toBeDisabled();
     expect(screen.getByRole("button", { name: /Create Quote/i })).toBeDisabled();
     expect(screen.queryByText(/edit is unavailable/i)).not.toBeInTheDocument();
+  });
+
+  it("expands a selected-item grid and removes individual selections", async () => {
+    const user = userEvent.setup();
+    const onRemoveSelected = vi.fn();
+
+    render(
+      <ProductActionBar
+        selected={
+          new Map([
+            [101, {
+              sku: 101,
+              description: "Selected scantron",
+              retailPrice: 2.5,
+              cost: 1,
+              stockOnHand: 14,
+              barcode: null,
+              author: null,
+              title: null,
+              isbn: null,
+              edition: null,
+              catalogNumber: null,
+              vendorId: null,
+              itemType: "general_merchandise",
+            }],
+          ])
+        }
+        selectedCount={1}
+        onClear={vi.fn()}
+        onRemoveSelected={onRemoveSelected}
+        saveToSession={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /View items/i }));
+
+    expect(screen.getByText("Selected scantron")).toBeInTheDocument();
+    expect(screen.getByText("$2.50")).toBeInTheDocument();
+    expect(screen.getByText("14")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Remove SKU 101 from selection/i }));
+
+    expect(onRemoveSelected).toHaveBeenCalledWith(101);
+  });
+
+  it("keeps permanent delete behind the discontinue warning panel", async () => {
+    const user = userEvent.setup();
+    const onHardDeleteClick = vi.fn();
+
+    render(
+      <ProductActionBar
+        selected={
+          new Map([
+            [101, {
+              sku: 101,
+              description: "Risky item",
+              retailPrice: 18,
+              cost: 9,
+              barcode: null,
+              author: null,
+              title: null,
+              isbn: null,
+              edition: null,
+              catalogNumber: null,
+              vendorId: null,
+              itemType: "general_merchandise",
+            }],
+          ])
+        }
+        selectedCount={1}
+        onClear={vi.fn()}
+        saveToSession={vi.fn()}
+        prismAvailable
+        onHardDeleteClick={onHardDeleteClick}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: /Review permanent delete/i })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Discontinue/i }));
+    expect(screen.getByText(/This is the recommended action/i)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Review permanent delete/i })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Need permanent delete instead/i }));
+    expect(screen.getByText(/Permanent delete entirely removes the item from the PrismCore database/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Review permanent delete/i }));
+
+    expect(onHardDeleteClick).toHaveBeenCalled();
+  });
+
+  it("discontinues selected SKUs from the warning panel and clears selection", async () => {
+    const user = userEvent.setup();
+    const onClear = vi.fn();
+    const onDiscontinued = vi.fn();
+
+    render(
+      <ProductActionBar
+        selected={
+          new Map([
+            [101, {
+              sku: 101,
+              description: "Discontinue me",
+              retailPrice: 18,
+              cost: 9,
+              barcode: null,
+              author: null,
+              title: null,
+              isbn: null,
+              edition: null,
+              catalogNumber: null,
+              vendorId: null,
+              itemType: "general_merchandise",
+            }],
+          ])
+        }
+        selectedCount={1}
+        onClear={onClear}
+        saveToSession={vi.fn()}
+        prismAvailable
+        onDiscontinued={onDiscontinued}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: /Discontinue/i }));
+    await user.click(screen.getByRole("button", { name: /Discontinue 1/i }));
+
+    expect(discontinueMock).toHaveBeenCalledWith(101);
+    expect(onDiscontinued).toHaveBeenCalledWith([101]);
+    expect(onClear).toHaveBeenCalled();
   });
 });

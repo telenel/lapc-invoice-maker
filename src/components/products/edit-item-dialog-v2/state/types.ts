@@ -87,6 +87,7 @@ export type InventoryLocationId = (typeof INVENTORY_LOCATION_IDS)[number];
 export type InventoryFieldKey =
   | "retail"
   | "cost"
+  | "stockOnHand"
   | "expectedCost"
   | "tagTypeId"
   | "statusCodeId"
@@ -100,6 +101,7 @@ export type InventoryFieldKey =
 export const EDITABLE_INVENTORY_FIELDS = [
   "retail",
   "cost",
+  "stockOnHand",
   "expectedCost",
   "tagTypeId",
   "statusCodeId",
