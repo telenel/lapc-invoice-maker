@@ -67,6 +67,27 @@ describe("staffRepository", () => {
     });
   });
 
+  describe("findDepartments", () => {
+    it("selects only active distinct departments", async () => {
+      mockPrisma.staff.findMany.mockResolvedValue([
+        { department: " CopyTech " },
+        { department: "Bookstore" },
+        { department: "CopyTech" },
+        { department: "" },
+      ] as never);
+
+      const result = await staffRepository.findDepartments();
+
+      expect(mockPrisma.staff.findMany).toHaveBeenCalledWith({
+        where: { active: true, NOT: { department: "" } },
+        select: { department: true },
+        distinct: ["department"],
+        orderBy: { department: "asc" },
+      });
+      expect(result).toEqual(["Bookstore", "CopyTech"]);
+    });
+  });
+
   describe("findManyPaginated", () => {
     it("paginates when page and pageSize provided", async () => {
       mockPrisma.staff.findMany.mockResolvedValue([]);

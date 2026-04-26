@@ -85,6 +85,20 @@ function isQuoteExpired(expirationDate: Date | string | null | undefined, now = 
   return isDateOnlyBeforeTodayInTimeZone(expirationDate, now);
 }
 
+function normalizeQuoteStatusForRead(
+  quoteStatus: string | null | undefined,
+  expirationDate: Date | string | null | undefined,
+): QuoteResponse["quoteStatus"] {
+  const status = (quoteStatus ?? "DRAFT") as QuoteResponse["quoteStatus"];
+  if (
+    isQuoteExpired(expirationDate)
+    && (status === "DRAFT" || status === "SENT" || status === "SUBMITTED_EMAIL" || status === "SUBMITTED_MANUAL")
+  ) {
+    return "EXPIRED";
+  }
+  return status;
+}
+
 function getDefaultQuoteDateKey(now = new Date()): string {
   return getDateKeyInLosAngeles(now);
 }
@@ -169,7 +183,7 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
   return {
     id: quote.id,
     quoteNumber: quote.quoteNumber,
-    quoteStatus: (quote.quoteStatus ?? "DRAFT") as QuoteResponse["quoteStatus"],
+    quoteStatus: normalizeQuoteStatusForRead(quote.quoteStatus, quote.expirationDate),
     date: getDateOnlyKey(quote.date) ?? quote.date.toISOString(),
     staffId: quote.staffId ?? null,
     expirationDate: quote.expirationDate ? getDateOnlyKey(quote.expirationDate) ?? quote.expirationDate.toISOString() : null,
@@ -221,7 +235,7 @@ function toQuoteListItem(quote: QuoteListRow): QuoteListItemResponse {
   return {
     id: quote.id,
     quoteNumber: quote.quoteNumber,
-    quoteStatus: (quote.quoteStatus ?? "DRAFT") as QuoteResponse["quoteStatus"],
+    quoteStatus: normalizeQuoteStatusForRead(quote.quoteStatus, quote.expirationDate),
     date: getDateOnlyKey(quote.date) ?? quote.date.toISOString(),
     staffId: quote.staffId ?? null,
     expirationDate: quote.expirationDate ? getDateOnlyKey(quote.expirationDate) ?? quote.expirationDate.toISOString() : null,
@@ -299,10 +313,11 @@ async function mapQuoteListItemsWithPaymentBadges(quotes: QuoteListRow[]): Promi
 
   return quotes.map((quote) => {
     const paymentDetailsResolved = Boolean(quote.paymentMethod || quote.convertedToInvoice?.paymentMethod);
+    const quoteStatus = normalizeQuoteStatusForRead(quote.quoteStatus, quote.expirationDate);
     return {
       ...toQuoteListItem(quote),
       paymentFollowUpBadge: getQuotePaymentFollowUpBadgeState({
-        quoteStatus: (quote.quoteStatus ?? "DRAFT") as QuoteResponse["quoteStatus"],
+        quoteStatus,
         paymentDetailsResolved,
         hasShareToken: Boolean(quote.shareToken),
         hasRecipientEmail: Boolean(quote.recipientEmail),
@@ -408,7 +423,8 @@ function hasMeaningfulQuoteChanges(
 export const quoteService = {
   /**
    * Paginated list of quotes with filtering, mapped to DTOs.
-   * Auto-expires overdue DRAFT/SENT quotes before returning results.
+   * Overdue DRAFT/SENT quotes are presented as expired without adding a
+   * write to the default list path.
    */
   async list(filters: QuoteFilters) {
     const { quotes, total, page, pageSize } = await quoteRepository.findMany(filters);

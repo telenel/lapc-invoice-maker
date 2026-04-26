@@ -90,10 +90,11 @@ export function InvoiceTable({
   categories,
   initialData,
   initialRequest,
-  initialBadgeStates = {},
+  initialBadgeStates,
 }: InvoiceTableProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const hasInitialBadgeStates = initialBadgeStates !== undefined;
 
   const [filters, setFilters] = useState<FilterBarFilters>(() => parseInitialFilters(searchParams));
   const [invoices, setInvoices] = useState<InvoiceListItemResponse[]>(initialData?.invoices ?? []);
@@ -104,11 +105,11 @@ export function InvoiceTable({
   const [sortDir, setSortDir] = useState<SortDir>(() => parseSortDir(searchParams));
   const [creatorId, setCreatorId] = useState<string | undefined>(() => searchParams.get("creatorId") ?? undefined);
   const deferredSearch = useDeferredValue(filters.search);
-  const [badgeStates, setBadgeStates] = useState<Record<string, FollowUpBadgeState>>(initialBadgeStates);
+  const [badgeStates, setBadgeStates] = useState<Record<string, FollowUpBadgeState>>(initialBadgeStates ?? {});
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
   const skippedInitialFetchRef = useRef(initialData !== undefined);
-  const skippedInitialBadgeFetchRef = useRef(initialData !== undefined);
+  const skippedInitialBadgeFetchRef = useRef(initialData !== undefined && hasInitialBadgeStates);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const currentRequestKey = JSON.stringify({

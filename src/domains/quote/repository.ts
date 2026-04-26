@@ -5,6 +5,12 @@ import type { QuoteFilters } from "./types";
 import { getDateKeyInLosAngeles, getYearInLosAngeles } from "@/lib/date-utils";
 
 const PAYMENT_REMINDER_CLAIM = "PAYMENT_REMINDER_CLAIM";
+const EXPIRABLE_QUOTE_STATUSES = new Set([
+  "DRAFT",
+  "SENT",
+  "SUBMITTED_EMAIL",
+  "SUBMITTED_MANUAL",
+]);
 
 // ── Shared include shapes ──────────────────────────────────────────────────
 
@@ -135,12 +141,18 @@ export async function expireOverdue(): Promise<void> {
   });
 }
 
+function shouldExpireBeforeList(filters: QuoteFilters): boolean {
+  return filters.quoteStatus === "EXPIRED"
+    || (filters.quoteStatus ? EXPIRABLE_QUOTE_STATUSES.has(filters.quoteStatus) : false);
+}
+
 /**
  * Paginated list of quotes with complex filtering.
  */
 export async function findMany(filters: QuoteFilters) {
-  // Auto-expire before listing
-  await expireOverdue();
+  if (shouldExpireBeforeList(filters)) {
+    await expireOverdue();
+  }
 
   const where = buildWhere(filters);
   const page = Math.max(1, filters.page ?? 1);
