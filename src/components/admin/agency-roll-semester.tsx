@@ -142,8 +142,28 @@ export function AgencyRollSemester() {
           `Created ${body.created.length} agencies in ${plan.targetSemester}.`,
         );
       }
-      // Refresh the plan so already-exists badges update
-      await loadPlan();
+      // Update the existing plan in-place so newly-created targets show as
+      // "Already exists" in the table. Re-fetching loadPlan() would clobber
+      // the result panel since loadPlan resets `result` to null.
+      const createdSourceIds = new Set(body.created.map((c) => c.sourceAgencyId));
+      setPlan((prev) =>
+        prev
+          ? {
+              ...prev,
+              rows: prev.rows.map((row) =>
+                createdSourceIds.has(row.source.agencyId)
+                  ? { ...row, alreadyExists: true }
+                  : row,
+              ),
+            }
+          : prev,
+      );
+      // Deselect the rows we just created so the count badge reflects work remaining.
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        body.created.forEach((c) => next.delete(c.sourceAgencyId));
+        return next;
+      });
     } catch (err) {
       toast.error("Rollover failed", {
         description: err instanceof Error ? err.message : String(err),
