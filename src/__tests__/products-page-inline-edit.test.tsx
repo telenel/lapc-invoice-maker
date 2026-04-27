@@ -101,6 +101,21 @@ vi.mock("@/components/products/sync-database-button", () => ({
   }),
 }));
 
+vi.mock("@/components/products/sync-prism-status-pill", () => ({
+  SyncPrismStatusPill: forwardRef<HTMLDivElement>(function SyncPrismStatusPillStub(_, ref) {
+    void ref;
+    return <div data-testid="sync-prism-pill" />;
+  }),
+}));
+
+vi.mock("@/components/products/product-filter-chip-bar", () => ({
+  ProductFilterChipBar: () => <div data-testid="filter-chip-bar" />,
+}));
+
+vi.mock("@/components/products/product-inspector", () => ({
+  ProductInspector: () => <div data-testid="product-inspector" />,
+}));
+
 vi.mock("@/components/products/saved-views-bar", () => ({
   SavedViewsBar: ({
     onViewsResolved,
@@ -120,6 +135,10 @@ vi.mock("@/components/products/column-visibility-toggle", () => ({
     void ref;
     return <div data-testid="column-toggle" />;
   }),
+}));
+
+vi.mock("@/components/products/location-chip-popover", () => ({
+  LocationChipPopover: () => <div data-testid="location-chip" />,
 }));
 
 vi.mock("@/components/products/location-picker", () => ({

@@ -4,28 +4,46 @@ import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { ChevronDownIcon, SearchIcon, SlidersHorizontalIcon, XIcon } from "lucide-react";
+import { SearchIcon, XIcon } from "lucide-react";
 import { useProductSearch, useProductSelection } from "@/domains/product/hooks";
 import { searchProducts } from "@/domains/product/queries";
-import { CATALOG_ITEMS_STORAGE_KEY, EMPTY_FILTERS, TABS, DEFAULT_COLUMN_SET, OPTIONAL_COLUMNS } from "@/domains/product/constants";
-import type { OptionalColumnKey } from "@/domains/product/constants";
+import {
+  CATALOG_ITEMS_STORAGE_KEY,
+  DEFAULT_COLUMN_SET,
+  DEFAULT_TABLE_DENSITY,
+  EMPTY_FILTERS,
+  OPTIONAL_COLUMNS,
+  TABLE_DENSITIES,
+  TABLE_DENSITY_STORAGE_KEY,
+  TABS,
+} from "@/domains/product/constants";
+import type { OptionalColumnKey, TableDensity } from "@/domains/product/constants";
 import type { ProductFilters, ProductTab, SavedView } from "@/domains/product/types";
 import {
   parseFiltersFromSearchParams,
   serializeFiltersToSearchParams,
   applyPreset,
 } from "@/domains/product/view-serializer";
-import { ProductFilterSummary, ProductFiltersBar } from "@/components/products/product-filters";
+import { ProductFiltersBar } from "@/components/products/product-filters";
+import { ProductFilterChipBar } from "@/components/products/product-filter-chip-bar";
 import { ProductTable } from "@/components/products/product-table";
+import { ProductInspector, type InspectorActionKind } from "@/components/products/product-inspector";
+import {
+  ActionPreviewDialog,
+  type ActionPreviewKind,
+} from "@/components/products/action-preview-dialog";
+import { DensityToggle } from "@/components/products/density-toggle";
+import { openBarcodePrintWindow } from "@/components/products/barcode-print-view";
 import { ProductActionBar } from "@/components/products/product-action-bar";
 import { resolveEditDialogMode } from "@/components/products/edit-item-dialog-mode";
 import { Button } from "@/components/ui/button";
-import { SyncDatabaseButton } from "@/components/products/sync-database-button";
-import type { SyncDatabaseHandle } from "@/components/products/sync-database-button";
+import {
+  SyncPrismStatusPill,
+  type SyncPrismStatusPillHandle,
+} from "@/components/products/sync-prism-status-pill";
 import { SavedViewsBar } from "@/components/products/saved-views-bar";
 import { ColumnVisibilityToggle, type ColumnVisibilityHandle } from "@/components/products/column-visibility-toggle";
-import { PierceAssuranceBadge } from "@/components/products/pierce-assurance-badge";
-import { LocationPicker } from "@/components/products/location-picker";
+import { LocationChipPopover } from "@/components/products/location-chip-popover";
 import { useProductInlineEdit, type ProductInlineEditRowBaseline } from "@/components/products/use-product-inline-edit";
 import { productApi } from "@/domains/product/api-client";
 import { SYSTEM_PRESET_VIEWS } from "@/domains/product/presets";
@@ -77,6 +95,12 @@ function getLocationLabel(locationId: ProductLocationId): "PIER" | "PCOP" | "PFS
   if (locationId === 4) return "PFS";
   return "PIER";
 }
+
+const MODE_TAB_ACCENTS: Record<ProductTab, { stripeClass: string }> = {
+  textbooks: { stripeClass: "bg-primary" },
+  merchandise: { stripeClass: "bg-sky-500" },
+  quickPicks: { stripeClass: "bg-amber-500" },
+};
 
 function isTextbookItemType(itemType: string): boolean {
   return itemType === "textbook" || itemType === "used_textbook";
@@ -298,6 +322,7 @@ export default function ProductsPageClient() {
   // write actions off for the rest of the SPA session.
   const [prismAvailable, setPrismAvailable] = useState(false);
   const [healthReady, setHealthReady] = useState(false);
+  const [prismRetryToken, setPrismRetryToken] = useState(0);
   useEffect(() => {
     if (data && !healthReady) {
       setHealthReady(true);
@@ -332,7 +357,7 @@ export default function ProductsPageClient() {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [healthReady]);
+  }, [healthReady, prismRetryToken]);
 
   const [newItemOpen, setNewItemOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -345,9 +370,56 @@ export default function ProductsPageClient() {
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<SavedView | null>(null);
   const columnsRef = useRef<ColumnVisibilityHandle>(null);
-  const syncButtonRef = useRef<SyncDatabaseHandle>(null);
+  const statusPillRef = useRef<SyncPrismStatusPillHandle>(null);
   const restoredViewRef = useRef<string | null>(null);
   const [hiddenCount, setHiddenCount] = useState(0);
+  const [focusedSku, setFocusedSku] = useState<number | null>(null);
+  const [singleItemActionProduct, setSingleItemActionProduct] = useState<ProductBrowseRow | null>(null);
+  const [inspectorPreview, setInspectorPreview] = useState<{
+    kind: ActionPreviewKind;
+    product: ProductBrowseRow;
+    selectedSingle: SelectedProduct;
+  } | null>(null);
+  const RAIL_STORAGE_KEY = "products:rail-open:v1";
+  const [railOpen, setRailOpen] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const raw = window.localStorage?.getItem?.(RAIL_STORAGE_KEY);
+      return raw === "true";
+    } catch {
+      return false;
+    }
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage?.setItem?.(RAIL_STORAGE_KEY, String(railOpen));
+    } catch {
+      // localStorage unavailable; rail collapses to default on next mount.
+    }
+  }, [railOpen]);
+
+  const [tableDensity, setTableDensity] = useState<TableDensity>(() => {
+    if (typeof window === "undefined") return DEFAULT_TABLE_DENSITY;
+    try {
+      const raw = window.localStorage?.getItem?.(TABLE_DENSITY_STORAGE_KEY);
+      if (!raw) return DEFAULT_TABLE_DENSITY;
+      const candidate = raw as TableDensity;
+      const ok = TABLE_DENSITIES.some((d) => d.value === candidate);
+      return ok ? candidate : DEFAULT_TABLE_DENSITY;
+    } catch {
+      return DEFAULT_TABLE_DENSITY;
+    }
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage?.setItem?.(TABLE_DENSITY_STORAGE_KEY, tableDensity);
+    } catch {
+      // localStorage may be unavailable in private mode or test environments;
+      // density will reset to default on next mount, which is acceptable.
+    }
+  }, [tableDensity]);
   const [resolvedViews, setResolvedViews] = useState<SavedView[]>(SYSTEM_PRESET_VIEWS);
   // Bumped after saveView / deleteView succeeds so the SavedViewsBar refetches.
   const [savedViewsRefresh, setSavedViewsRefresh] = useState(0);
@@ -764,9 +836,11 @@ export default function ProductsPageClient() {
     // by the restoration effect once router.replace flushes `view=` out of
     // the URL — resetting it synchronously here can race and snap the view
     // back on before the URL update lands.
+    // Restore the In-stock baseline (minStock="1") so the chip-bar's
+    // "Reset to baseline" actually returns to the documented default.
     setActiveView(null);
     setRuntimeColumns(null);
-    updateFilters({ ...EMPTY_FILTERS, tab: filters.tab });
+    updateFilters({ ...EMPTY_FILTERS, tab: filters.tab, minStock: "1" });
   }
 
   function handleClearPreset() {
@@ -777,7 +851,7 @@ export default function ProductsPageClient() {
     // with a cleared guard and re-applies the preset.
     setActiveView(null);
     setRuntimeColumns(null);
-    updateFilters({ ...EMPTY_FILTERS, tab: filters.tab });
+    updateFilters({ ...EMPTY_FILTERS, tab: filters.tab, minStock: "1" });
   }
 
   const handlePresetClick = useCallback((view: SavedView) => {
@@ -817,38 +891,154 @@ export default function ProductsPageClient() {
     },
   });
 
+  const focusedProduct = useMemo(() => {
+    if (focusedSku == null) return null;
+    return (data?.products ?? []).find((p) => p.sku === focusedSku) ?? null;
+  }, [data?.products, focusedSku]);
+
+  const dialogEditItems = useMemo(() => {
+    if (!singleItemActionProduct) return editableSelectedItems;
+    const slice = singleItemActionProduct.selected_inventories.find(
+      (s) => s.locationId === primaryLocationId,
+    );
+    return [
+      {
+        sku: singleItemActionProduct.sku,
+        barcode: singleItemActionProduct.barcode,
+        fDiscontinue: (singleItemActionProduct.discontinued ? 1 : 0) as 0 | 1,
+        description: singleItemActionProduct.description ?? "",
+        author: singleItemActionProduct.author,
+        title: singleItemActionProduct.title,
+        isbn: singleItemActionProduct.isbn,
+        edition: singleItemActionProduct.edition,
+        vendorId: singleItemActionProduct.vendor_id ?? undefined,
+        dccId: undefined,
+        isTextbook: isTextbookItemType(singleItemActionProduct.item_type),
+        itemType: singleItemActionProduct.item_type,
+        primaryLocationId,
+        catalogNumber: singleItemActionProduct.catalog_number ?? undefined,
+        retail: slice?.retailPrice ?? singleItemActionProduct.retail_price,
+        cost: slice?.cost ?? singleItemActionProduct.cost,
+      },
+    ];
+  }, [singleItemActionProduct, editableSelectedItems, primaryLocationId]);
+
+  const handleInspectorAction = useCallback(
+    (kind: InspectorActionKind, product: ProductBrowseRow) => {
+      // Build the SelectedProduct anchored to the current location scope.
+      // Strict: never substitute the base browse-row retail/cost/stock when
+      // the slice is missing. The downstream invoice/quote pages filter
+      // null retails out of the catalog handoff, and a non-null fallback
+      // would silently invoice at a stale base price (or off-location
+      // value) instead of forcing the operator to fix pricing first. The
+      // ActionPreviewDialog gates Confirm on null retail to surface the
+      // problem; the inspector buttons gate at source on the same value.
+      const slice = product.selected_inventories.find(
+        (s) => s.locationId === primaryLocationId,
+      );
+      const fallbackBrowse = browseRowToSelectedProduct(product);
+      const selectedSingle = {
+        ...fallbackBrowse,
+        pricingLocationId: primaryLocationId,
+        retailPrice: slice?.retailPrice ?? null,
+        cost: slice?.cost ?? null,
+        stockOnHand: slice?.stockOnHand ?? null,
+      };
+      switch (kind) {
+        case "invoice":
+        case "quote":
+        case "barcode":
+        case "quickpick": {
+          // Phase 5: route the four non-destructive handoffs through the
+          // shared ActionPreviewDialog so the user sees pricing context
+          // and can back out before navigation/print.
+          setInspectorPreview({ kind, product, selectedSingle });
+          return;
+        }
+        case "edit": {
+          setSingleItemActionProduct(product);
+          setEditOpen(true);
+          return;
+        }
+        case "discontinue": {
+          if (
+            !window.confirm(
+              `Discontinue ${product.description ?? "this item"}? Marks it discontinued in Prism; sales history is preserved.`,
+            )
+          ) {
+            return;
+          }
+          void productApi
+            .discontinue(product.sku)
+            .then(() => refetch())
+            .catch((err) => {
+              console.error(`Discontinue SKU ${product.sku} failed:`, err);
+              window.alert("Discontinue failed — see console.");
+            });
+          return;
+        }
+      }
+    },
+    [router, refetch, primaryLocationId],
+  );
+
+  const confirmInspectorPreview = useCallback(() => {
+    if (!inspectorPreview) return;
+    const { kind, product, selectedSingle } = inspectorPreview;
+    switch (kind) {
+      case "invoice": {
+        sessionStorage.setItem(CATALOG_ITEMS_STORAGE_KEY, JSON.stringify([selectedSingle]));
+        router.push("/invoices/new?from=catalog");
+        break;
+      }
+      case "quote": {
+        sessionStorage.setItem(CATALOG_ITEMS_STORAGE_KEY, JSON.stringify([selectedSingle]));
+        router.push("/quotes/new?from=catalog");
+        break;
+      }
+      case "barcode": {
+        openBarcodePrintWindow([selectedSingle]);
+        break;
+      }
+      case "quickpick": {
+        const params = new URLSearchParams({ skus: String(product.sku) });
+        router.push(`/admin/quick-picks?${params.toString()}`);
+        break;
+      }
+    }
+    setInspectorPreview(null);
+  }, [inspectorPreview, router]);
+
+  const inspectorPreviewLocationLabel = inspectorPreview
+    ? getLocationLabel(inspectorPreview.selectedSingle.pricingLocationId ?? primaryLocationId)
+    : "—";
+
   return (
-    <div className="mx-auto max-w-[1440px] px-4 py-6 md:px-5">
-      {/* Header */}
-      <div className="page-enter page-enter-1 mb-3 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <div className="mb-0.5 text-[11px] font-semibold tracking-[-0.005em] text-muted-foreground">
-            Los Angeles Pierce College Store · Inventory
-          </div>
-          <h1 className="flex items-baseline gap-2.5 text-[30px] font-bold leading-[1.1] tracking-[-0.03em] text-foreground">
-            <span className="text-balance">Product catalog</span>
-            {data ? (
-              <span className="font-mono tnum text-[13px] font-medium tracking-[-0.01em] text-muted-foreground/80">
-                {data.total.toLocaleString()}
-              </span>
-            ) : loading ? (
-              <span className="inline-block h-3 w-14 animate-pulse rounded bg-muted" />
-            ) : null}
-          </h1>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <PierceAssuranceBadge
-            onClick={() => syncButtonRef.current?.openHistory()}
+    <div className="mx-auto max-w-[1440px] px-4 py-3 md:px-5">
+      {/* Page header — title (left) · pills + primary actions on a single row (right) */}
+      <div className="page-enter page-enter-1 mb-2 flex flex-wrap items-center gap-3">
+        <h1 className="flex min-w-0 items-baseline gap-2.5 text-[20px] font-bold leading-[1.1] tracking-[-0.03em] text-foreground">
+          <span className="text-balance">Product catalog</span>
+          {data ? (
+            <span className="font-mono tnum text-[12px] font-medium tracking-[-0.01em] text-muted-foreground/80">
+              {data.total.toLocaleString()}
+            </span>
+          ) : loading ? (
+            <span className="inline-block h-3 w-14 animate-pulse rounded bg-muted" />
+          ) : null}
+        </h1>
+
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-1.5">
+          <LocationChipPopover
+            value={filters.locationIds}
+            onChange={handleLocationChange}
           />
-          <SyncDatabaseButton ref={syncButtonRef} />
-          <Button
-            size="sm"
-            onClick={() => setNewItemOpen(true)}
-            disabled={!prismAvailable}
-            title={prismAvailable ? undefined : "Prism is unreachable — write actions disabled"}
-          >
-            New Item
-          </Button>
+          <SyncPrismStatusPill
+            ref={statusPillRef}
+            prismAvailable={prismAvailable}
+            onPrismRetry={() => setPrismRetryToken((n) => n + 1)}
+          />
+          <span className="mx-1 hidden h-5 w-px bg-border sm:inline-block" aria-hidden="true" />
           <Button
             size="sm"
             variant="outline"
@@ -875,6 +1065,14 @@ export default function ProductsPageClient() {
           >
             Bulk Edit
           </Button>
+          <Button
+            size="sm"
+            onClick={() => setNewItemOpen(true)}
+            disabled={!prismAvailable}
+            title={prismAvailable ? undefined : "Prism is unreachable — write actions disabled"}
+          >
+            New Item
+          </Button>
         </div>
       </div>
 
@@ -891,26 +1089,16 @@ export default function ProductsPageClient() {
         />
       ) : null}
 
-      <div className="page-enter page-enter-2 mb-2 rounded-[10px] border border-border bg-card px-3 py-2 shadow-[0_1px_0_color-mix(in_oklch,var(--border)_55%,transparent),0_2px_8px_-2px_color-mix(in_oklch,var(--foreground)_6%,transparent)]">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="min-w-0">
-            <div className="text-[11px] font-semibold tracking-[-0.005em] text-muted-foreground">
-              Location scope
-            </div>
-            <div className="text-[11px] text-muted-foreground/80">
-              Primary location follows canonical order; current primary is {getLocationLabel(filters.locationIds[0])}.
-            </div>
-          </div>
-          <LocationPicker value={filters.locationIds} onChange={handleLocationChange} />
-        </div>
-      </div>
 
       {editOpen ? (
         <EditItemDialog
           open={editOpen}
-          onOpenChange={setEditOpen}
+          onOpenChange={(open) => {
+            setEditOpen(open);
+            if (!open) setSingleItemActionProduct(null);
+          }}
           editDialogOverride={editDialogOverride}
-          items={editableSelectedItems}
+          items={dialogEditItems}
           knownScopedItemsByKey={knownScopedItemsByKey}
           locationIds={filters.locationIds}
           primaryLocationId={primaryLocationId}
@@ -962,6 +1150,7 @@ export default function ProductsPageClient() {
           }}
           onSaved={(skus) => {
             setEditOpen(false);
+            setSingleItemActionProduct(null);
             const savedSkus = new Set(skus);
             const saveToken = pendingSaveTokenRef.current;
             pendingSaveTokenRef.current = null;
@@ -1010,138 +1199,102 @@ export default function ProductsPageClient() {
         />
       ) : null}
 
-      {/* Comprehensive search bar */}
-      <div className="page-enter page-enter-2 mb-2.5">
-        <div className="flex items-center gap-2 rounded-[10px] border border-border bg-card px-3 py-2 focus-within:ring-2 focus-within:ring-ring focus-within:border-ring">
-          <SearchIcon
-            className="size-4 text-muted-foreground shrink-0"
-            aria-hidden="true"
-          />
-          <input
-            aria-label="Search products"
-            type="search"
-            value={filters.search}
-            onChange={(e) =>
-              handleFilterChange({ ...filters, search: e.target.value, page: 1 })
-            }
-            placeholder={
-              filters.tab === "textbooks"
-                ? "Search by SKU, ISBN, title, author, barcode, catalog #…"
-                : "Search by SKU, description, barcode, catalog #…"
-            }
-            className="flex-1 min-w-0 border-none outline-none bg-transparent text-foreground text-[14px] placeholder:text-muted-foreground/70"
-          />
-          {filters.search ? (
-            <button
-              type="button"
-              onClick={() =>
-                handleFilterChange({ ...filters, search: "", page: 1 })
-              }
-              aria-label="Clear search"
-              className="inline-flex items-center justify-center rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent"
-            >
-              <XIcon className="size-3.5" aria-hidden="true" />
-            </button>
-          ) : null}
-          <span className="font-mono tnum text-[11px] text-muted-foreground shrink-0 pl-1 border-l border-border">
-            {data
-              ? `${data.total.toLocaleString()} results`
-              : loading
-                ? "…"
-                : "0 results"}
+
+      {/* MODE + VIEW bar — compact eyebrow labels with inline controls */}
+      <div className="page-enter page-enter-2 mb-1.5 flex flex-wrap items-center gap-3">
+        <div className="inline-flex items-center gap-2">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            Mode
           </span>
+          <div
+            className="inline-flex items-center gap-1 rounded-[8px] border border-border bg-card p-0.5"
+            role="tablist"
+            aria-label="Product category"
+          >
+            {TABS.map((tab) => {
+              const active = filters.tab === tab.value;
+              const accent = MODE_TAB_ACCENTS[tab.value];
+              return (
+                <button
+                  key={tab.value}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => handleTabChange(tab.value)}
+                  className={`relative inline-flex items-center gap-1.5 overflow-hidden rounded-md px-2.5 py-1 text-[12px] font-medium transition-all duration-150 ease-out active:translate-y-px cursor-pointer ${
+                    active
+                      ? "bg-secondary text-foreground shadow-[0_1px_2px_rgba(0,0,0,.06)]"
+                      : "bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
+                  }`}
+                >
+                  {active ? (
+                    <span
+                      aria-hidden="true"
+                      className={`absolute inset-y-1 left-0 w-[2.5px] rounded-r ${accent.stripeClass}`}
+                    />
+                  ) : null}
+                  <span className={active ? "pl-1" : undefined}>{tab.label}</span>
+                  {tabCounts[tab.value] != null ? (
+                    <span
+                      className={`ml-0.5 rounded px-1.5 py-[1px] font-mono tnum text-[10px] ${
+                        active
+                          ? "bg-card text-muted-foreground"
+                          : "bg-transparent text-muted-foreground/70"
+                      }`}
+                    >
+                      {tabCounts[tab.value]!.toLocaleString()}
+                    </span>
+                  ) : active && loading ? (
+                    <span className="ml-1 inline-block h-3 w-8 animate-pulse rounded bg-muted" />
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="inline-flex items-center gap-2">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            Item Presets
+          </span>
+          <SavedViewsBar
+            mode="picker"
+            activeSlug={activeView?.slug ?? null}
+            activeId={activeView?.id ?? null}
+            onPresetClick={handlePresetClick}
+            onClearPreset={handleClearPreset}
+            onDeleteClick={(v) => setDeleteTarget(v)}
+            onViewsResolved={setResolvedViews}
+            refreshToken={savedViewsRefresh}
+          />
         </div>
       </div>
 
-      {/* Presets banner */}
-      <div className="page-enter page-enter-2 mb-2">
-        <SavedViewsBar
-          activeSlug={activeView?.slug ?? null}
-          activeId={activeView?.id ?? null}
-          onPresetClick={handlePresetClick}
-          onClearPreset={handleClearPreset}
-          onDeleteClick={(v) => setDeleteTarget(v)}
-          onViewsResolved={setResolvedViews}
-          refreshToken={savedViewsRefresh}
-        />
-      </div>
-
-      <ProductFilterSummary
+      <ProductFilterChipBar
         filters={filters}
-        activeViewName={activeView?.name ?? null}
         onChange={handleFilterChange}
         onClear={handleClearFilters}
+        activeViewName={activeView?.name ?? null}
         onClearPreset={activeView ? handleClearPreset : undefined}
+        advancedOpen={advancedOpen}
+        onAdvancedToggle={() => setAdvancedOpen((o) => !o)}
+        railOpen={railOpen}
+        onRailToggle={() => setRailOpen((o) => !o)}
       />
 
-      {/* Table toolbar: tabs left · save view + column toggle right */}
-      <div className="page-enter page-enter-3 mb-2 flex flex-wrap items-center justify-between gap-2">
-        <div
-          className="inline-flex rounded-lg border border-border bg-secondary p-0.5"
-          role="tablist"
-          aria-label="Product category"
-        >
-          {TABS.map((tab) => {
-            const active = filters.tab === tab.value;
-            return (
-              <button
-                key={tab.value}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => handleTabChange(tab.value)}
-                className={`inline-flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-[13px] font-medium transition-all duration-150 ease-out active:translate-y-px cursor-pointer ${
-                  active
-                    ? "bg-card text-foreground shadow-[0_1px_2px_rgba(0,0,0,.06)]"
-                    : "bg-transparent text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {tab.label}
-                {tabCounts[tab.value] != null ? (
-                  <span
-                    className={`ml-0.5 rounded px-1.5 py-[1px] font-mono tnum text-[10.5px] ${
-                      active
-                        ? "bg-secondary text-muted-foreground"
-                        : "bg-transparent text-muted-foreground/70"
-                    }`}
-                  >
-                    {tabCounts[tab.value]!.toLocaleString()}
-                  </span>
-                ) : active && loading ? (
-                  <span className="ml-1 inline-block h-3 w-8 animate-pulse rounded bg-muted" />
-                ) : null}
-              </button>
-            );
-          })}
+      {/* TABLE chrome — density · columns · sort indicator · save view */}
+      <div className="page-enter page-enter-3 mb-1.5 flex flex-wrap items-center gap-3">
+        <div className="inline-flex items-center gap-2">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            Table
+          </span>
+          <DensityToggle value={tableDensity} onChange={setTableDensity} />
         </div>
 
-        <div className="flex items-center gap-1.5">
-          {hiddenCount > 0 && (
-            <span className="text-[11px] text-muted-foreground rounded-full bg-muted px-2 py-1">
-              {hiddenCount} hidden
-            </span>
-          )}
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setAdvancedOpen((o) => !o)}
-            aria-expanded={advancedOpen}
-            className="gap-1"
-          >
-            <SlidersHorizontalIcon className="size-3.5" />
-            Advanced
-            <ChevronDownIcon
-              className={`size-3 transition-transform ${advancedOpen ? "rotate-180" : ""}`}
-            />
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setSaveDialogOpen(true)}
-            className="gap-1"
-          >
-            + Save View
-          </Button>
+        <div className="inline-flex items-center gap-2">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            Columns
+          </span>
           <ColumnVisibilityToggle
             ref={columnsRef}
             runtimeOverride={runtimeColumns}
@@ -1149,7 +1302,29 @@ export default function ProductsPageClient() {
             onRuntimeChange={setRuntimeColumns}
             onResetRuntime={() => setRuntimeColumns(null)}
           />
+          {hiddenCount > 0 ? (
+            <span className="text-[10.5px] text-muted-foreground" title={`${hiddenCount} optional columns hidden by current viewport`}>
+              {hiddenCount} hidden
+            </span>
+          ) : null}
         </div>
+
+        <span className="flex-1" />
+
+        <span className="text-[10.5px] text-muted-foreground">
+          Sorted by{" "}
+          <span className="font-semibold text-foreground">{filters.sortBy}</span>
+          <span className="ml-1 font-mono">{filters.sortDir === "asc" ? "↑" : "↓"}</span>
+        </span>
+
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setSaveDialogOpen(true)}
+          className="gap-1"
+        >
+          + Save View
+        </Button>
       </div>
 
       {advancedOpen ? (
@@ -1176,7 +1351,7 @@ export default function ProductsPageClient() {
             onClick={() => {
               setActiveView(null);
               setRuntimeColumns(null);
-              updateFilters({ ...EMPTY_FILTERS, tab: filters.tab });
+              updateFilters({ ...EMPTY_FILTERS, tab: filters.tab, minStock: "1" });
             }}
           >
             Clear Preset
@@ -1184,44 +1359,106 @@ export default function ProductsPageClient() {
         </div>
       )}
 
-      {/* Rail + Table */}
+      {/* Rail + Table + Inspector */}
       <div className="page-enter page-enter-4 flex items-start gap-3">
-        <div className="hidden md:block">
-          <ProductFiltersBar
-            filters={filters}
-            onChange={handleFilterChange}
-            onClear={handleClearFilters}
-          />
-        </div>
-        <div className="min-w-0 flex-1">
-          {/* Mobile filters collapse above the table */}
-          <div className="mb-3 md:hidden">
+        {railOpen ? (
+          <div className="hidden md:block">
             <ProductFiltersBar
               filters={filters}
               onChange={handleFilterChange}
               onClear={handleClearFilters}
             />
           </div>
-          <ProductTable
-            tab={filters.tab}
-            products={data?.products ?? []}
-            total={data?.total ?? 0}
-            page={filters.page}
-            loading={loading}
-            offPageSelectedCount={offPageSelectedCount}
-            sortBy={filters.sortBy}
-            sortDir={filters.sortDir}
-            isSelected={isSelected}
-            onToggle={toggle}
-            onToggleAll={toggleAll}
-            onPageChange={handlePageChange}
-            onSort={handleSort}
-            visibleColumns={runtimeColumns ?? baseColumns}
-            onHideColumn={(key) => columnsRef.current?.hideColumn(key)}
-            onHiddenChange={setHiddenCount}
-            suppressEmptyState={data?.total === 0 && activeView != null}
-            inlineEdit={inlineEdit}
+        ) : null}
+        <div className="flex min-w-0 flex-1 items-start gap-3">
+          <div className="min-w-0 flex-1">
+            {/* Mobile filters collapse above the table — only when expanded */}
+            {railOpen ? (
+              <div className="mb-3 md:hidden">
+                <ProductFiltersBar
+                  filters={filters}
+                  onChange={handleFilterChange}
+                  onClear={handleClearFilters}
+                />
+              </div>
+            ) : null}
+
+            {/* Search bar — sits directly above the table */}
+            <div className="mb-1.5 flex items-center gap-2 rounded-[10px] border border-border bg-card px-3 py-1.5 focus-within:ring-2 focus-within:ring-ring focus-within:border-ring">
+              <SearchIcon
+                className="size-4 text-muted-foreground shrink-0"
+                aria-hidden="true"
+              />
+              <input
+                aria-label="Search products"
+                type="search"
+                value={filters.search}
+                onChange={(e) =>
+                  handleFilterChange({ ...filters, search: e.target.value, page: 1 })
+                }
+                placeholder={
+                  filters.tab === "textbooks"
+                    ? "Search by SKU, ISBN, title, author, barcode, catalog #…"
+                    : "Search by SKU, description, barcode, catalog #…"
+                }
+                className="flex-1 min-w-0 border-none outline-none bg-transparent text-foreground text-[13px] placeholder:text-muted-foreground/70"
+              />
+              {filters.search ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleFilterChange({ ...filters, search: "", page: 1 })
+                  }
+                  aria-label="Clear search"
+                  className="inline-flex items-center justify-center rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent"
+                >
+                  <XIcon className="size-3.5" aria-hidden="true" />
+                </button>
+              ) : null}
+              <span className="hidden items-center gap-0.5 text-muted-foreground/70 sm:inline-flex" aria-hidden="true">
+                <kbd className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded border border-border bg-card px-1 font-mono text-[10px] font-semibold text-muted-foreground">
+                  ⌘
+                </kbd>
+                <kbd className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded border border-border bg-card px-1 font-mono text-[10px] font-semibold text-muted-foreground">
+                  K
+                </kbd>
+              </span>
+            </div>
+
+            <ProductTable
+              tab={filters.tab}
+              products={data?.products ?? []}
+              total={data?.total ?? 0}
+              page={filters.page}
+              loading={loading}
+              offPageSelectedCount={offPageSelectedCount}
+              sortBy={filters.sortBy}
+              sortDir={filters.sortDir}
+              isSelected={isSelected}
+              onToggle={toggle}
+              onToggleAll={toggleAll}
+              onRowClick={(product) => {
+                toggle(product);
+                setFocusedSku(product.sku);
+              }}
+              focusedSku={focusedSku}
+              onPageChange={handlePageChange}
+              onSort={handleSort}
+              visibleColumns={runtimeColumns ?? baseColumns}
+              onHideColumn={(key) => columnsRef.current?.hideColumn(key)}
+              onHiddenChange={setHiddenCount}
+              suppressEmptyState={data?.total === 0 && activeView != null}
+              inlineEdit={inlineEdit}
+              primaryLocationId={primaryLocationId}
+              density={tableDensity}
+            />
+          </div>
+          <ProductInspector
+            product={focusedProduct}
             primaryLocationId={primaryLocationId}
+            prismAvailable={prismAvailable}
+            onClose={() => setFocusedSku(null)}
+            onAction={handleInspectorAction}
           />
         </div>
       </div>
@@ -1242,6 +1479,7 @@ export default function ProductsPageClient() {
         allowMissingEditPricing={allowMissingEditPricing}
         onHardDeleteClick={() => setHardDeleteOpen(true)}
         onBulkEdit={() => router.push('/products/bulk-edit?preloadSkus=' + Array.from(selected.keys()).join(','))}
+        inspectorOpen={focusedProduct != null}
       />
 
       {/* Spacer so content isn't hidden behind the sticky action bar */}
@@ -1275,13 +1513,22 @@ export default function ProductsPageClient() {
               // effect once router.replace flushes `view=` out of the URL.
               setActiveView(null);
               setRuntimeColumns(null);
-              updateFilters({ ...EMPTY_FILTERS, tab: filters.tab });
+              updateFilters({ ...EMPTY_FILTERS, tab: filters.tab, minStock: "1" });
             }
             setDeleteTarget(null);
             setSavedViewsRefresh((n) => n + 1);
           }}
         />
       ) : null}
+
+      <ActionPreviewDialog
+        open={inspectorPreview != null}
+        kind={inspectorPreview?.kind ?? "invoice"}
+        items={inspectorPreview ? [inspectorPreview.selectedSingle] : []}
+        locationLabel={inspectorPreviewLocationLabel}
+        onCancel={() => setInspectorPreview(null)}
+        onConfirm={confirmInspectorPreview}
+      />
     </div>
   );
 }

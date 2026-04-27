@@ -125,3 +125,62 @@ export const PRESET_GROUPS = [
 // Bumped to v2 when the default column set gained "margin" — prior v1 payloads
 // would pin existing browsers to the old defaults, hiding the Margin column.
 export const COLUMN_PREFS_STORAGE_KEY = "products:columns:v2";
+
+/** Row density modes for the product table. Audit is the count-cycle
+ * variant — narrowest row, ideal when sweeping rows during inventory. */
+export const TABLE_DENSITIES = [
+  { value: "compact", label: "Compact", rowH: 28, fontPx: 12 },
+  { value: "comfy",   label: "Comfy",   rowH: 38, fontPx: 13 },
+  { value: "roomy",   label: "Roomy",   rowH: 46, fontPx: 13 },
+  { value: "audit",   label: "Audit",   rowH: 24, fontPx: 12, stripe: true },
+] as const;
+
+export type TableDensity = typeof TABLE_DENSITIES[number]["value"];
+
+export const DEFAULT_TABLE_DENSITY: TableDensity = "comfy";
+
+export const TABLE_DENSITY_STORAGE_KEY = "products:density:v1";
+
+/** Column preset bundles. Each preset names which OPTIONAL_COLUMNS should
+ * be visible — the always-on base columns (SKU, Description, Vendor, etc.)
+ * are not in this list and remain visible regardless. */
+export const COLUMN_PRESETS = [
+  {
+    value: "default",
+    label: "Default",
+    description: "Balanced view — units sold and margin.",
+    columns: ["units_1y", "margin"] as OptionalColumnKey[],
+  },
+  {
+    value: "pricing",
+    label: "Pricing",
+    description: "Margin and revenue for pricing decisions.",
+    columns: ["margin", "revenue_1y"] as OptionalColumnKey[],
+  },
+  {
+    value: "inventory",
+    label: "Inventory",
+    description: "Department/class/category for stock work.",
+    columns: ["dcc"] as OptionalColumnKey[],
+  },
+  {
+    value: "movers",
+    label: "Movers",
+    description: "Sales velocity — units, revenue, receipts.",
+    columns: ["units_1y", "revenue_1y", "txns_1y"] as OptionalColumnKey[],
+  },
+  {
+    value: "recency",
+    label: "Recency",
+    description: "Days since sale and last-edit timestamps.",
+    columns: ["days_since_sale", "updated"] as OptionalColumnKey[],
+  },
+  {
+    value: "all",
+    label: "All",
+    description: "Every optional column visible.",
+    columns: [...OPTIONAL_COLUMNS],
+  },
+] as const;
+
+export type ColumnPresetKey = typeof COLUMN_PRESETS[number]["value"];

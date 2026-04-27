@@ -100,6 +100,10 @@ describe("ProductActionBar", () => {
 
     await user.click(screen.getByRole("button", { name: /Save to Quick Picks/i }));
 
+    // Phase 5 routes Save to Quick Picks through the action preview dialog,
+    // so the navigation only fires after the user confirms.
+    await user.click(screen.getByRole("button", { name: /^Continue$/i }));
+
     expect(pushMock).toHaveBeenCalledWith("/admin/quick-picks?skus=101%2C202");
   });
 
@@ -259,8 +263,11 @@ describe("ProductActionBar", () => {
 
     await user.click(screen.getByRole("button", { name: /View items/i }));
 
-    expect(screen.getByText("Selected scantron")).toBeInTheDocument();
-    expect(screen.getByText("$2.50")).toBeInTheDocument();
+    // Item appears in both the preview chip row and the expanded grid;
+    // use getAllByText so we don't fail on the inevitable duplicate.
+    // Σ retail in the summary also matches single-item retail values.
+    expect(screen.getAllByText("Selected scantron").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("$2.50").length).toBeGreaterThan(0);
     expect(screen.getByText("14")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /Remove SKU 101 from selection/i }));

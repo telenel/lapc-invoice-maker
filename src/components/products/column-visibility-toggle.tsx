@@ -3,7 +3,7 @@
 import { useEffect, useImperativeHandle, useState, forwardRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { COLUMN_LABELS, COLUMN_PREFS_STORAGE_KEY, DEFAULT_COLUMN_SET, OPTIONAL_COLUMNS } from "@/domains/product/constants";
+import { COLUMN_LABELS, COLUMN_PRESETS, COLUMN_PREFS_STORAGE_KEY, DEFAULT_COLUMN_SET, OPTIONAL_COLUMNS } from "@/domains/product/constants";
 import type { OptionalColumnKey } from "@/domains/product/constants";
 
 export interface ColumnVisibilityHandle {
@@ -77,6 +77,22 @@ export const ColumnVisibilityToggle = forwardRef<ColumnVisibilityHandle, Props>(
       }
     }
 
+    function applyPreset(columns: readonly OptionalColumnKey[]) {
+      const next = [...columns];
+      if (runtimeOverride) {
+        const resolved = resolveColumnVisibilityUpdate(base, runtimeOverride, next);
+        onRuntimeChange(resolved.runtime);
+      } else {
+        setBase(next);
+      }
+    }
+
+    function presetMatches(columns: readonly OptionalColumnKey[]): boolean {
+      if (columns.length !== active.length) return false;
+      const expected = new Set(columns);
+      return active.every((c) => expected.has(c));
+    }
+
     useImperativeHandle(ref, () => ({
       hideColumn(key: OptionalColumnKey) {
         const next = active.filter((k) => k !== key);
@@ -89,16 +105,54 @@ export const ColumnVisibilityToggle = forwardRef<ColumnVisibilityHandle, Props>(
       },
     }), [active, base, runtimeOverride, onRuntimeChange]);
 
+    // Trigger label: name of the matching preset, or "Custom" if the user
+    // has hand-picked an idiosyncratic column set. Count always reflects the
+    // currently-visible optional column count.
+    const matchingPreset = COLUMN_PRESETS.find((p) => presetMatches(p.columns));
+    const triggerLabel = matchingPreset?.label ?? "Custom";
+
     return (
       <Popover>
         <PopoverTrigger
           render={
-            <Button variant="outline" size="sm">
-              + Add column
+            <Button variant="outline" size="sm" className="gap-1">
+              <span className="text-muted-foreground">{triggerLabel}</span>
+              <span className="font-mono tnum text-[10px] text-muted-foreground">
+                · {active.length}
+              </span>
             </Button>
           }
         />
-        <PopoverContent align="end" className="w-56 p-2">
+        <PopoverContent align="end" className="w-64 p-2">
+          <div className="mb-2 text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+            Presets
+          </div>
+          <div className="mb-2 grid grid-cols-2 gap-1">
+            {COLUMN_PRESETS.map((preset) => {
+              const matches = presetMatches(preset.columns);
+              return (
+                <button
+                  key={preset.value}
+                  type="button"
+                  onClick={() => applyPreset(preset.columns)}
+                  title={preset.description}
+                  className={`flex flex-col items-start gap-0.5 rounded-md border px-2 py-1.5 text-left text-[11.5px] font-medium transition-colors ${
+                    matches
+                      ? "border-primary/35 bg-primary/[0.06] text-primary"
+                      : "border-border bg-card text-foreground hover:bg-accent"
+                  }`}
+                >
+                  <span>{preset.label}</span>
+                  <span className="text-[9.5px] font-normal text-muted-foreground">
+                    {preset.columns.length} {preset.columns.length === 1 ? "col" : "cols"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="mb-1 text-[10px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
+            Visible columns
+          </div>
           <ul className="space-y-1">
             {OPTIONAL_COLUMNS.map((key) => (
               <li key={key} className="flex items-center gap-2">

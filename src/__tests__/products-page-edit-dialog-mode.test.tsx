@@ -158,6 +158,18 @@ vi.mock("@/components/products/sync-database-button", () => ({
   SyncDatabaseButton: () => <div data-testid="sync-button" />,
 }));
 
+vi.mock("@/components/products/sync-prism-status-pill", () => ({
+  SyncPrismStatusPill: () => <div data-testid="sync-prism-pill" />,
+}));
+
+vi.mock("@/components/products/product-filter-chip-bar", () => ({
+  ProductFilterChipBar: () => <div data-testid="filter-chip-bar" />,
+}));
+
+vi.mock("@/components/products/product-inspector", () => ({
+  ProductInspector: () => <div data-testid="product-inspector" />,
+}));
+
 vi.mock("@/components/products/saved-views-bar", () => ({
   SavedViewsBar: () => <div data-testid="saved-views" />,
 }));
@@ -166,13 +178,13 @@ vi.mock("@/components/products/column-visibility-toggle", () => ({
   ColumnVisibilityToggle: () => <div data-testid="column-toggle" />,
 }));
 
-vi.mock("@/components/products/location-picker", () => ({
-  LocationPicker: ({
+vi.mock("@/components/products/location-chip-popover", () => ({
+  LocationChipPopover: ({
     onChange,
   }: {
     onChange?: (value: ProductLocationId[]) => void;
   }) => (
-    <div data-testid="location-picker">
+    <div data-testid="location-chip">
       <button type="button" onClick={() => onChange?.([2])}>
         scope:PIER
       </button>
