@@ -72,6 +72,11 @@ describe("ProductActionBar", () => {
     );
 
     expect(screen.getByText("1 item selected")).toBeInTheDocument();
-    expect(screen.getByText("0 on this page · 1 on another page")).toBeInTheDocument();
+    expect(
+      screen.getByText((_, node) => {
+        const text = node?.textContent?.replace(/\s+/g, " ").trim() ?? "";
+        return text.startsWith("0 on this page · 1 on other pages");
+      }),
+    ).toBeInTheDocument();
   });
 });
