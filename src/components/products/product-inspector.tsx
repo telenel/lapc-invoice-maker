@@ -280,6 +280,12 @@ export function ProductInspector({
             size="sm"
             variant="outline"
             className="justify-start"
+            disabled={retail == null}
+            title={
+              retail == null
+                ? "This item has no retail price at the current location — fix pricing before creating an invoice."
+                : undefined
+            }
             onClick={() => onAction("invoice", product)}
           >
             <ReceiptIcon className="mr-1.5 size-3.5" aria-hidden="true" />
@@ -289,6 +295,12 @@ export function ProductInspector({
             size="sm"
             variant="outline"
             className="justify-start"
+            disabled={retail == null}
+            title={
+              retail == null
+                ? "This item has no retail price at the current location — fix pricing before creating a quote."
+                : undefined
+            }
             onClick={() => onAction("quote", product)}
           >
             <FileTextIcon className="mr-1.5 size-3.5" aria-hidden="true" />

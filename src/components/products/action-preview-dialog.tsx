@@ -98,11 +98,23 @@ export function ActionPreviewDialog({
     0,
   );
 
+  // Block confirmation when any invoice/quote item is missing retail —
+  // the downstream invoice/quote pages silently filter null-retail rows
+  // out of the catalog handoff, so confirming would either open an empty
+  // draft (single-item inspector path) or hide line items the operator
+  // expected to see (multi-item action-bar path). Force the operator to
+  // fix pricing first.
+  const blocksConfirm =
+    (kind === "invoice" || kind === "quote") && missingPriceCount > 0;
+
   const warnings: Array<{ key: string; label: string }> = [];
   if ((kind === "invoice" || kind === "quote") && missingPriceCount > 0) {
     warnings.push({
       key: "missing-price",
-      label: `${missingPriceCount} item${missingPriceCount !== 1 ? "s" : ""} missing price — they'll be skipped or need fixing.`,
+      label:
+        missingPriceCount === items.length
+          ? `Cannot proceed — every selected item is missing a retail price at this location.`
+          : `Cannot proceed — ${missingPriceCount} item${missingPriceCount !== 1 ? "s" : ""} missing retail price. Fix pricing first or deselect those rows.`,
     });
   }
   if (kind === "barcode" && missingBarcodeCount > 0) {
@@ -186,7 +198,16 @@ export function ActionPreviewDialog({
           <Button variant="ghost" size="sm" onClick={onCancel}>
             Cancel
           </Button>
-          <Button size="sm" onClick={onConfirm}>
+          <Button
+            size="sm"
+            onClick={onConfirm}
+            disabled={blocksConfirm}
+            title={
+              blocksConfirm
+                ? "Fix missing retail prices before continuing."
+                : undefined
+            }
+          >
             {cfg.confirmLabel}
           </Button>
         </DialogFooter>

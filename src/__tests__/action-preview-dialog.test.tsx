@@ -172,7 +172,52 @@ describe("ActionPreviewDialog", () => {
         onConfirm={vi.fn()}
       />,
     );
-    expect(screen.getByText(/1.*missing price/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 item missing retail price/i)).toBeInTheDocument();
+  });
+
+  it("disables Confirm for invoice when any item is missing a retail price", () => {
+    render(
+      <ActionPreviewDialog
+        open
+        kind="invoice"
+        items={[
+          makeProduct({ sku: 1, retailPrice: 10 }),
+          makeProduct({ sku: 2, retailPrice: null }),
+        ]}
+        locationLabel="PIER"
+        onCancel={vi.fn()}
+        onConfirm={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("button", { name: /Create invoice/i })).toBeDisabled();
+  });
+
+  it("disables Confirm for quote when any item is missing a retail price", () => {
+    render(
+      <ActionPreviewDialog
+        open
+        kind="quote"
+        items={[makeProduct({ sku: 1, retailPrice: null })]}
+        locationLabel="PIER"
+        onCancel={vi.fn()}
+        onConfirm={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("button", { name: /Create quote/i })).toBeDisabled();
+  });
+
+  it("does not disable Confirm for barcode just because items are missing a retail price", () => {
+    render(
+      <ActionPreviewDialog
+        open
+        kind="barcode"
+        items={[makeProduct({ sku: 1, retailPrice: null, barcode: "x" })]}
+        locationLabel="PIER"
+        onCancel={vi.fn()}
+        onConfirm={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("button", { name: /Print barcodes/i })).not.toBeDisabled();
   });
 
   it("invokes onConfirm when the action button is clicked", async () => {

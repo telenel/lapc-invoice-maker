@@ -166,6 +166,42 @@ describe("ProductInspector", () => {
     expect(screen.getByText(/Prism unreachable/i)).toBeInTheDocument();
   });
 
+  it("disables Create invoice + Create quote when the scoped retail price is missing", () => {
+    // Drop retail at the primary location so the focused product has no
+    // scoped retail. Without this guard the inspector confirms the action
+    // and the destination page silently filters out the only item, leaving
+    // the operator with an empty invoice/quote draft.
+    const product = makeRow({
+      retail_price: null,
+      selected_inventories: [
+        {
+          locationId: 2,
+          locationAbbrev: "PIER",
+          retailPrice: null,
+          cost: 9.18,
+          stockOnHand: 12,
+          lastSaleDate: "2026-04-20T00:00:00Z",
+        },
+      ],
+    });
+    render(
+      <ProductInspector
+        product={product}
+        primaryLocationId={2}
+        prismAvailable={true}
+        onClose={vi.fn()}
+        onAction={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: /Create invoice with this item/i }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: /Create quote with this item/i }),
+    ).toBeDisabled();
+  });
+
   it("dispatches action handlers with kind + product", async () => {
     const user = userEvent.setup();
     const onAction = vi.fn();
