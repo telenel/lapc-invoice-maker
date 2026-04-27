@@ -17,8 +17,24 @@ import {
 import { Button } from "@/components/ui/button";
 import type { SelectedProduct } from "@/domains/product/types";
 import { openBarcodePrintWindow } from "./barcode-print-view";
+import {
+  ActionPreviewDialog,
+  type ActionPreviewKind,
+} from "./action-preview-dialog";
 import { productApi } from "@/domains/product/api-client";
 import { useVendorDirectory } from "@/domains/product/vendor-directory";
+
+function getLocationLabelFromItems(items: SelectedProduct[]): string {
+  const ids = new Set(
+    items.map((item) => item.pricingLocationId).filter((id) => id != null),
+  );
+  if (ids.size === 0) return "—";
+  if (ids.size > 1) return "Mixed";
+  const id = Array.from(ids)[0];
+  if (id === 3) return "PCOP";
+  if (id === 4) return "PFS";
+  return "PIER";
+}
 
 interface ProductActionBarProps {
   selected: Map<number, SelectedProduct>;
@@ -65,6 +81,7 @@ export function ProductActionBar({
   const [selectionOpen, setSelectionOpen] = useState(false);
   const [destructiveOpen, setDestructiveOpen] = useState(false);
   const [deleteWarningOpen, setDeleteWarningOpen] = useState(false);
+  const [previewKind, setPreviewKind] = useState<ActionPreviewKind | null>(null);
   const canSaveToQuickPicks = Boolean(session?.user);
   const selectedItems = Array.from(selected.values());
   const editPricingRows = editPricingItems ?? selectedItems;
@@ -76,17 +93,17 @@ export function ProductActionBar({
   const hasMissingEditPricing = missingEditPricingCount > 0;
   const editDisabled = !allowMissingEditPricing && hasMissingEditPricing;
 
-  function handleCreateInvoice() {
+  function performCreateInvoice() {
     saveToSession();
     router.push("/invoices/new?from=catalog");
   }
 
-  function handleCreateQuote() {
+  function performCreateQuote() {
     saveToSession();
     router.push("/quotes/new?from=catalog");
   }
 
-  function handleSaveToQuickPicks() {
+  function performSaveToQuickPicks() {
     const skus = Array.from(selected.keys()).sort((left, right) => left - right);
     if (skus.length === 0) return;
 
@@ -94,12 +111,31 @@ export function ProductActionBar({
     router.push(`/admin/quick-picks?${query.toString()}`);
   }
 
-  function handlePrintBarcodes() {
+  function performPrintBarcodes() {
     const items = Array.from(selected.values()).map((item) => ({
       ...item,
       vendorLabel: item.vendorId != null ? (vendorNames.get(item.vendorId) ?? null) : null,
     }));
     openBarcodePrintWindow(items);
+  }
+
+  function confirmPreviewAction() {
+    if (!previewKind) return;
+    switch (previewKind) {
+      case "invoice":
+        performCreateInvoice();
+        break;
+      case "quote":
+        performCreateQuote();
+        break;
+      case "barcode":
+        performPrintBarcodes();
+        break;
+      case "quickpick":
+        performSaveToQuickPicks();
+        break;
+    }
+    setPreviewKind(null);
   }
 
   async function handleDiscontinue() {
@@ -303,7 +339,7 @@ export function ProductActionBar({
               <ActionGroup label="CREATE">
                 <Button
                   size="sm"
-                  onClick={handleCreateInvoice}
+                  onClick={() => setPreviewKind("invoice")}
                   disabled={hasMissingRetailPrice}
                 >
                   <FileTextIcon className="mr-1.5 size-3.5" />
@@ -312,7 +348,7 @@ export function ProductActionBar({
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={handleCreateQuote}
+                  onClick={() => setPreviewKind("quote")}
                   disabled={hasMissingRetailPrice}
                 >
                   <FileTextIcon className="mr-1.5 size-3.5" />
@@ -321,7 +357,7 @@ export function ProductActionBar({
               </ActionGroup>
 
               <ActionGroup label="OUTPUT">
-                <Button size="sm" variant="outline" onClick={handlePrintBarcodes}>
+                <Button size="sm" variant="outline" onClick={() => setPreviewKind("barcode")}>
                   <PrinterIcon className="mr-1.5 size-3.5" />
                   Print Barcodes
                 </Button>
@@ -329,7 +365,7 @@ export function ProductActionBar({
 
               {canSaveToQuickPicks ? (
                 <ActionGroup label="ORGANIZE">
-                  <Button size="sm" variant="outline" onClick={handleSaveToQuickPicks}>
+                  <Button size="sm" variant="outline" onClick={() => setPreviewKind("quickpick")}>
                     <SparklesIcon className="mr-1.5 size-3.5" />
                     Save to Quick Picks
                   </Button>
@@ -507,6 +543,14 @@ export function ProductActionBar({
           </div>
         </motion.div>
       )}
+      <ActionPreviewDialog
+        open={previewKind != null}
+        kind={previewKind ?? "invoice"}
+        items={selectedItems}
+        locationLabel={getLocationLabelFromItems(selectedItems)}
+        onCancel={() => setPreviewKind(null)}
+        onConfirm={confirmPreviewAction}
+      />
     </AnimatePresence>
   );
 }

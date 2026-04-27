@@ -28,6 +28,10 @@ import { ProductFiltersBar } from "@/components/products/product-filters";
 import { ProductFilterChipBar } from "@/components/products/product-filter-chip-bar";
 import { ProductTable } from "@/components/products/product-table";
 import { ProductInspector, type InspectorActionKind } from "@/components/products/product-inspector";
+import {
+  ActionPreviewDialog,
+  type ActionPreviewKind,
+} from "@/components/products/action-preview-dialog";
 import { DensityToggle } from "@/components/products/density-toggle";
 import { openBarcodePrintWindow } from "@/components/products/barcode-print-view";
 import { ProductActionBar } from "@/components/products/product-action-bar";
@@ -371,6 +375,11 @@ export default function ProductsPageClient() {
   const [hiddenCount, setHiddenCount] = useState(0);
   const [focusedSku, setFocusedSku] = useState<number | null>(null);
   const [singleItemActionProduct, setSingleItemActionProduct] = useState<ProductBrowseRow | null>(null);
+  const [inspectorPreview, setInspectorPreview] = useState<{
+    kind: ActionPreviewKind;
+    product: ProductBrowseRow;
+    selectedSingle: SelectedProduct;
+  } | null>(null);
   const [tableDensity, setTableDensity] = useState<TableDensity>(() => {
     if (typeof window === "undefined") return DEFAULT_TABLE_DENSITY;
     try {
@@ -914,23 +923,14 @@ export default function ProductsPageClient() {
         stockOnHand: slice?.stockOnHand ?? fallbackBrowse.stockOnHand,
       };
       switch (kind) {
-        case "invoice": {
-          sessionStorage.setItem(CATALOG_ITEMS_STORAGE_KEY, JSON.stringify([selectedSingle]));
-          router.push("/invoices/new?from=catalog");
-          return;
-        }
-        case "quote": {
-          sessionStorage.setItem(CATALOG_ITEMS_STORAGE_KEY, JSON.stringify([selectedSingle]));
-          router.push("/quotes/new?from=catalog");
-          return;
-        }
-        case "barcode": {
-          openBarcodePrintWindow([selectedSingle]);
-          return;
-        }
+        case "invoice":
+        case "quote":
+        case "barcode":
         case "quickpick": {
-          const params = new URLSearchParams({ skus: String(product.sku) });
-          router.push(`/admin/quick-picks?${params.toString()}`);
+          // Phase 5: route the four non-destructive handoffs through the
+          // shared ActionPreviewDialog so the user sees pricing context
+          // and can back out before navigation/print.
+          setInspectorPreview({ kind, product, selectedSingle });
           return;
         }
         case "edit": {
@@ -959,6 +959,37 @@ export default function ProductsPageClient() {
     },
     [router, refetch, primaryLocationId],
   );
+
+  const confirmInspectorPreview = useCallback(() => {
+    if (!inspectorPreview) return;
+    const { kind, product, selectedSingle } = inspectorPreview;
+    switch (kind) {
+      case "invoice": {
+        sessionStorage.setItem(CATALOG_ITEMS_STORAGE_KEY, JSON.stringify([selectedSingle]));
+        router.push("/invoices/new?from=catalog");
+        break;
+      }
+      case "quote": {
+        sessionStorage.setItem(CATALOG_ITEMS_STORAGE_KEY, JSON.stringify([selectedSingle]));
+        router.push("/quotes/new?from=catalog");
+        break;
+      }
+      case "barcode": {
+        openBarcodePrintWindow([selectedSingle]);
+        break;
+      }
+      case "quickpick": {
+        const params = new URLSearchParams({ skus: String(product.sku) });
+        router.push(`/admin/quick-picks?${params.toString()}`);
+        break;
+      }
+    }
+    setInspectorPreview(null);
+  }, [inspectorPreview, router]);
+
+  const inspectorPreviewLocationLabel = inspectorPreview
+    ? getLocationLabel(inspectorPreview.selectedSingle.pricingLocationId ?? primaryLocationId)
+    : "—";
 
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-6 md:px-5">
@@ -1451,6 +1482,15 @@ export default function ProductsPageClient() {
           }}
         />
       ) : null}
+
+      <ActionPreviewDialog
+        open={inspectorPreview != null}
+        kind={inspectorPreview?.kind ?? "invoice"}
+        items={inspectorPreview ? [inspectorPreview.selectedSingle] : []}
+        locationLabel={inspectorPreviewLocationLabel}
+        onCancel={() => setInspectorPreview(null)}
+        onConfirm={confirmInspectorPreview}
+      />
     </div>
   );
 }

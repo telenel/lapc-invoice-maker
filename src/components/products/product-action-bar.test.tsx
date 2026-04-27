@@ -100,6 +100,10 @@ describe("ProductActionBar", () => {
 
     await user.click(screen.getByRole("button", { name: /Save to Quick Picks/i }));
 
+    // Phase 5 routes Save to Quick Picks through the action preview dialog,
+    // so the navigation only fires after the user confirms.
+    await user.click(screen.getByRole("button", { name: /^Continue$/i }));
+
     expect(pushMock).toHaveBeenCalledWith("/admin/quick-picks?skus=101%2C202");
   });
 
