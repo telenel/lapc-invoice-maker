@@ -25,7 +25,7 @@ interface Props {
 // Bridge type: the union of invoice/quote hook returns makes `updateField`'s
 // generic key parameter resolve to `never`, so the call is "not callable" until
 // we cast through a concrete writer shape. The keys here are constrained to the
-// 2 fields this section writes so typos fail at compile time. Both forms expose
+// 4 fields this section writes so typos fail at compile time. Both forms expose
 // these fields with the same primitive types — runtime-safe.
 type ItemsFieldKey = "marginEnabled" | "taxEnabled" | "marginPercent" | "taxRate";
 type FieldWriter = {
