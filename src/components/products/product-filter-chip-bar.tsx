@@ -36,8 +36,29 @@ const TOGGLE_CHIPS: ToggleChipDef[] = [
     id: "in-stock",
     label: "In stock",
     tone: "primary",
-    isActive: (f) => f.minStock === "1",
-    apply: (_, on) => (on ? { minStock: "1" } : { minStock: "" }),
+    isActive: (f) => f.minStock === "1" && f.maxStock === "",
+    apply: (_, on) =>
+      on
+        ? { minStock: "1", maxStock: "" }
+        : { minStock: "" },
+  },
+  {
+    id: "low-stock",
+    label: "Low stock",
+    tone: "warn",
+    // Low stock: 1..15 on hand. Mutually exclusive with In stock / Out
+    // of stock; activating low clears the others.
+    isActive: (f) => f.minStock === "1" && f.maxStock === "15",
+    apply: (_, on) =>
+      on ? { minStock: "1", maxStock: "15" } : { minStock: "1", maxStock: "" },
+  },
+  {
+    id: "out-of-stock",
+    label: "Out of stock",
+    tone: "danger",
+    isActive: (f) => f.maxStock === "0",
+    apply: (_, on) =>
+      on ? { minStock: "", maxStock: "0" } : { maxStock: "" },
   },
   {
     id: "has-barcode",
@@ -87,6 +108,8 @@ const TOGGLE_CHIPS: ToggleChipDef[] = [
 
 function isBaseline(filters: ProductFilters): boolean {
   if (filters.minStock !== "1") return false;
+  // Any maxStock departs from baseline (low/out-of-stock chips set it).
+  if (filters.maxStock !== "") return false;
   const otherChips = getProductActiveFilterChips(filters).filter((chip) => {
     if (chip.key === "stock") return false;
     if (chip.key === "search") return true;
@@ -128,12 +151,12 @@ export function ProductFilterChipBar({
   return (
     <section
       aria-label="Product filter chips"
-      className="page-enter page-enter-3 mb-2 rounded-[10px] border border-border bg-card px-3 py-2 shadow-[0_1px_0_color-mix(in_oklch,var(--border)_55%,transparent)]"
+      className="page-enter page-enter-3 mb-2 flex flex-wrap items-center gap-1.5"
     >
-      <div className="flex flex-wrap items-center gap-1.5">
-        <span className="text-[10.5px] font-semibold uppercase tracking-[0.06em] text-muted-foreground/80">
-          Filters
-        </span>
+      <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+        Filters
+      </span>
+      <div className="flex flex-1 flex-wrap items-center gap-1.5">
 
         {TOGGLE_CHIPS.map((def) => {
           const active = def.isActive(filters);
