@@ -36,6 +36,18 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/invoices/new",
 }));
 
+vi.mock("next-auth/react", () => ({
+  useSession: () => ({ data: null, status: "unauthenticated" }),
+}));
+
+vi.mock("@/domains/user-draft/api-client", () => ({
+  userDraftApi: {
+    save: vi.fn().mockResolvedValue(undefined),
+    get: vi.fn().mockResolvedValue(null),
+    clear: vi.fn().mockResolvedValue(undefined),
+  },
+}));
+
 vi.mock("@/components/invoice/staff-select", () => ({
   StaffSelect: ({ selectedId }: { selectedId?: string }) => (
     <div data-testid="staff-select">{selectedId ?? ""}</div>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { ComposerHeader } from "./composer-header";
 import { ComposerLayout } from "./composer-layout";
@@ -20,6 +21,10 @@ import { templateApi } from "@/domains/template/api-client";
 import type { TemplateResponse } from "@/domains/template/types";
 import { openDeferredRegisterPrintWindow } from "@/components/shared/register-print-loader";
 import { formatDateLong as formatDate } from "@/lib/formatters";
+import { CREATE_PAGE_DRAFT_MAX_AGE_MS, useAutoSave, loadDraft } from "@/lib/use-auto-save";
+import { DraftRecoveryBanner } from "@/components/ui/draft-recovery-banner";
+import type { InvoiceFormData } from "@/components/invoice/hooks/use-invoice-form-state";
+import type { QuoteFormData } from "@/components/quote/quote-form";
 
 type ComposerForm =
   | { docType: "invoice"; form: ReturnType<typeof useInvoiceForm> }
@@ -43,6 +48,7 @@ export function DocumentComposer({
 }: DocumentComposerProps) {
   const docType: DocType = composer.docType;
   const form = composer.form.form;
+  const existingId = composer.form.existingId;
 
   const validation = useComposerValidation(form, docType);
 
@@ -53,6 +59,33 @@ export function DocumentComposer({
   // consumed by P6 BlockerSummary
   const [, setShowBlockers] = useState(false);
 
+  // Auto-save + draft recovery — mirrors the legacy KeyboardMode/QuoteMode wiring
+  // so /invoices/new keeps draft persistence after P5.7's repoint. P6.1 will
+  // extend useAutoSave to surface isDirty/savingDraft/lastSavedAt for the rail.
+  const { data: session } = useSession();
+  const userId = (session?.user as { id?: string } | undefined)?.id ?? null;
+  const routeKey = existingId
+    ? (docType === "invoice" ? `/invoices/${existingId}/edit` : `/quotes/${existingId}/edit`)
+    : (docType === "invoice" ? "/invoices/new" : "/quotes/new");
+  const { clearDraft } = useAutoSave(form, routeKey, userId);
+  const [draftEntry, setDraftEntry] = useState<{ data: InvoiceFormData | QuoteFormData; savedAt: number } | null>(null);
+
+  useEffect(() => {
+    if (!userId) {
+      setDraftEntry(null);
+      return;
+    }
+    let cancelled = false;
+    void loadDraft<InvoiceFormData | QuoteFormData>(routeKey, userId, {
+      maxAgeMs: existingId ? null : CREATE_PAGE_DRAFT_MAX_AGE_MS,
+    }).then((entry) => {
+      if (!cancelled) setDraftEntry(entry);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [existingId, userId, routeKey]);
+
   function statusForAnchor(anchor: SectionAnchor): "default" | "complete" | "blocker" {
     if (validation.blockers.some((b) => b.anchor === anchor)) return "blocker";
     const items = validation.checklist.filter((c) => c.anchor === anchor);
@@ -60,33 +93,50 @@ export function DocumentComposer({
     return "default";
   }
 
-  function handlePrimaryAction() {
+  async function handlePrimaryAction() {
     if (validation.blockers.length > 0) {
       setAttemptedSubmit(true);
       setShowBlockers(true);
       return;
     }
     if (composer.docType === "invoice") {
-      composer.form.saveAndFinalize();
+      const ok = await composer.form.saveAndFinalize();
+      if (ok) await clearDraft();
     } else {
-      composer.form.saveQuote().then((ok) => {
-        if (ok && composer.form.existingId) {
+      const ok = await composer.form.saveQuote();
+      if (ok) {
+        await clearDraft();
+        if (composer.form.existingId) {
           window.open(`/api/quotes/${composer.form.existingId}/pdf`, "_blank");
         }
-      });
+      }
     }
   }
 
-  function handleSaveDraft() {
+  async function handleSaveDraft() {
     if (!validation.canSaveDraft) {
       setAttemptedSubmit(true);
       return;
     }
+    const ok = composer.docType === "invoice"
+      ? await composer.form.saveDraft()
+      : await composer.form.saveQuote();
+    if (ok) await clearDraft();
+  }
+
+  function handleResumeDraft() {
+    if (!draftEntry) return;
     if (composer.docType === "invoice") {
-      composer.form.saveDraft();
+      composer.form.setForm(() => draftEntry.data as InvoiceFormData);
     } else {
-      composer.form.saveQuote();
+      composer.form.setForm(() => draftEntry.data as QuoteFormData);
     }
+    setDraftEntry(null);
+  }
+
+  function handleDiscardDraft() {
+    void clearDraft();
+    setDraftEntry(null);
   }
 
   async function handlePrintRegister() {
@@ -230,6 +280,13 @@ export function DocumentComposer({
         date={form.date}
         isRunning={"isRunning" in form ? form.isRunning : false}
       />
+      {draftEntry && (
+        <DraftRecoveryBanner
+          savedAt={draftEntry.savedAt}
+          onResume={handleResumeDraft}
+          onDiscard={handleDiscardDraft}
+        />
+      )}
       <ComposerLayout
         workflow={
           <>
