@@ -906,11 +906,14 @@ export default function ProductsPageClient() {
 
   const handleInspectorAction = useCallback(
     (kind: InspectorActionKind, product: ProductBrowseRow) => {
-      // Build the SelectedProduct using the current location scope, not the
-      // product's primary_location_id. The action-bar handoff uses the current
-      // primaryLocationId with the visible-row fallback for retail/cost; the
-      // inspector must match so an inspector-triggered invoice/quote/barcode
-      // sees the same pricing context the user is browsing.
+      // Build the SelectedProduct anchored to the current location scope.
+      // Strict: never substitute the base browse-row retail/cost/stock when
+      // the slice is missing. The downstream invoice/quote pages filter
+      // null retails out of the catalog handoff, and a non-null fallback
+      // would silently invoice at a stale base price (or off-location
+      // value) instead of forcing the operator to fix pricing first. The
+      // ActionPreviewDialog gates Confirm on null retail to surface the
+      // problem; the inspector buttons gate at source on the same value.
       const slice = product.selected_inventories.find(
         (s) => s.locationId === primaryLocationId,
       );
@@ -918,9 +921,9 @@ export default function ProductsPageClient() {
       const selectedSingle = {
         ...fallbackBrowse,
         pricingLocationId: primaryLocationId,
-        retailPrice: slice?.retailPrice ?? fallbackBrowse.retailPrice,
-        cost: slice?.cost ?? fallbackBrowse.cost,
-        stockOnHand: slice?.stockOnHand ?? fallbackBrowse.stockOnHand,
+        retailPrice: slice?.retailPrice ?? null,
+        cost: slice?.cost ?? null,
+        stockOnHand: slice?.stockOnHand ?? null,
       };
       switch (kind) {
         case "invoice":

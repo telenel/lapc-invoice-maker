@@ -202,6 +202,42 @@ describe("ProductInspector", () => {
     ).toBeDisabled();
   });
 
+  it("still disables Create invoice + Create quote when the scoped slice is null but the base retail is set", () => {
+    // The scoped slice has no retail at the current location, even though
+    // product.retail_price is non-null (a stale base value from another
+    // location's data). Falling back to the base would hand off the wrong
+    // price; the strict guard must still block the action.
+    const product = makeRow({
+      retail_price: 24.99,
+      selected_inventories: [
+        {
+          locationId: 2,
+          locationAbbrev: "PIER",
+          retailPrice: null,
+          cost: 9.18,
+          stockOnHand: 12,
+          lastSaleDate: "2026-04-20T00:00:00Z",
+        },
+      ],
+    });
+    render(
+      <ProductInspector
+        product={product}
+        primaryLocationId={2}
+        prismAvailable={true}
+        onClose={vi.fn()}
+        onAction={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: /Create invoice with this item/i }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: /Create quote with this item/i }),
+    ).toBeDisabled();
+  });
+
   it("dispatches action handlers with kind + product", async () => {
     const user = userEvent.setup();
     const onAction = vi.fn();

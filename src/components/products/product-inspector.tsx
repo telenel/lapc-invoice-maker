@@ -148,6 +148,13 @@ export function ProductInspector({
   const retail = primarySlice?.retailPrice ?? product.retail_price;
   const stock = primarySlice?.stockOnHand ?? product.stock_on_hand ?? 0;
   const baseRetail = product.retail_price;
+  // Action gate: STRICT scoped retail. The display value above can fall
+  // back to the base for context, but invoice/quote actions must only
+  // enable when the current location actually has pricing — otherwise
+  // we'd hand off a stale base price (or land on an empty downstream
+  // form when the destination filters null retails out).
+  const scopedActionRetail = primarySlice?.retailPrice ?? null;
+  const canInvoice = scopedActionRetail != null;
   const status = getStatusLabel(product, stock);
   const marginPct = computeMarginPct(cost, retail);
   const lastSaleSource = product.effective_last_sale_date ?? product.last_sale_date_computed ?? product.last_sale_date;
@@ -280,9 +287,9 @@ export function ProductInspector({
             size="sm"
             variant="outline"
             className="justify-start"
-            disabled={retail == null}
+            disabled={!canInvoice}
             title={
-              retail == null
+              !canInvoice
                 ? "This item has no retail price at the current location — fix pricing before creating an invoice."
                 : undefined
             }
@@ -295,9 +302,9 @@ export function ProductInspector({
             size="sm"
             variant="outline"
             className="justify-start"
-            disabled={retail == null}
+            disabled={!canInvoice}
             title={
-              retail == null
+              !canInvoice
                 ? "This item has no retail price at the current location — fix pricing before creating a quote."
                 : undefined
             }
