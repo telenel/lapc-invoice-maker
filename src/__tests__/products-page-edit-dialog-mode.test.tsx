@@ -178,13 +178,13 @@ vi.mock("@/components/products/column-visibility-toggle", () => ({
   ColumnVisibilityToggle: () => <div data-testid="column-toggle" />,
 }));
 
-vi.mock("@/components/products/location-picker", () => ({
-  LocationPicker: ({
+vi.mock("@/components/products/location-chip-popover", () => ({
+  LocationChipPopover: ({
     onChange,
   }: {
     onChange?: (value: ProductLocationId[]) => void;
   }) => (
-    <div data-testid="location-picker">
+    <div data-testid="location-chip">
       <button type="button" onClick={() => onChange?.([2])}>
         scope:PIER
       </button>

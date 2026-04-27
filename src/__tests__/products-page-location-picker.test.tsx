@@ -113,6 +113,30 @@ vi.mock("@/components/products/product-filter-chip-bar", () => ({
   ProductFilterChipBar: () => <div data-testid="filter-chip-bar" />,
 }));
 
+vi.mock("@/components/products/location-chip-popover", () => ({
+  // Mirror the legacy LocationPicker interface this test exercises: three
+  // simple buttons named PIER / PCOP / PFS that swap the location filter
+  // single-select. Phase 6.1 swapped the in-page picker for a chip+popover
+  // but the location-change semantics are identical.
+  LocationChipPopover: ({
+    onChange,
+  }: {
+    onChange?: (value: number[]) => void;
+  }) => (
+    <div data-testid="location-chip">
+      <button type="button" onClick={() => onChange?.([2])}>
+        PIER
+      </button>
+      <button type="button" onClick={() => onChange?.([3])}>
+        PCOP
+      </button>
+      <button type="button" onClick={() => onChange?.([4])}>
+        PFS
+      </button>
+    </div>
+  ),
+}));
+
 vi.mock("@/components/products/product-inspector", () => ({
   ProductInspector: () => <div data-testid="product-inspector" />,
 }));

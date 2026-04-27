@@ -137,6 +137,10 @@ vi.mock("@/components/products/column-visibility-toggle", () => ({
   }),
 }));
 
+vi.mock("@/components/products/location-chip-popover", () => ({
+  LocationChipPopover: () => <div data-testid="location-chip" />,
+}));
+
 vi.mock("@/components/products/location-picker", () => ({
   LocationPicker: () => <div data-testid="location-picker" />,
 }));

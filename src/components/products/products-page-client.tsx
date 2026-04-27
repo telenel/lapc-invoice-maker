@@ -43,7 +43,7 @@ import {
 } from "@/components/products/sync-prism-status-pill";
 import { SavedViewsBar } from "@/components/products/saved-views-bar";
 import { ColumnVisibilityToggle, type ColumnVisibilityHandle } from "@/components/products/column-visibility-toggle";
-import { LocationPicker } from "@/components/products/location-picker";
+import { LocationChipPopover } from "@/components/products/location-chip-popover";
 import { useProductInlineEdit, type ProductInlineEditRowBaseline } from "@/components/products/use-product-inline-edit";
 import { productApi } from "@/domains/product/api-client";
 import { SYSTEM_PRESET_VIEWS } from "@/domains/product/presets";
@@ -1014,6 +1014,10 @@ export default function ProductsPageClient() {
           </h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <LocationChipPopover
+            value={filters.locationIds}
+            onChange={handleLocationChange}
+          />
           <SyncPrismStatusPill
             ref={statusPillRef}
             prismAvailable={prismAvailable}
@@ -1069,19 +1073,6 @@ export default function ProductsPageClient() {
         />
       ) : null}
 
-      <div className="page-enter page-enter-2 mb-2 rounded-[10px] border border-border bg-card px-3 py-2 shadow-[0_1px_0_color-mix(in_oklch,var(--border)_55%,transparent),0_2px_8px_-2px_color-mix(in_oklch,var(--foreground)_6%,transparent)]">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="min-w-0">
-            <div className="text-[11px] font-semibold tracking-[-0.005em] text-muted-foreground">
-              Location scope
-            </div>
-            <div className="text-[11px] text-muted-foreground/80">
-              Primary location follows canonical order; current primary is {getLocationLabel(filters.locationIds[0])}.
-            </div>
-          </div>
-          <LocationPicker value={filters.locationIds} onChange={handleLocationChange} />
-        </div>
-      </div>
 
       {editOpen ? (
         <EditItemDialog
