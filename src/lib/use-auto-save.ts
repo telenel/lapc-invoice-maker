@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { userDraftApi } from "@/domains/user-draft/api-client";
 
 const SAVE_INTERVAL = 30_000; // 30 seconds
@@ -18,13 +18,15 @@ export function useAutoSave<T>(formState: T, routeKey: string, userId: string | 
   const timerRef = useRef<ReturnType<typeof setInterval>>();
   const formStateRef = useRef(formState);
   const initialStateRef = useRef(formState);
-  const isDirtyRef = useRef(false);
+  const [isDirty, setIsDirty] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
   const saveInFlightRef = useRef(false);
   formStateRef.current = formState;
 
   // Detect dirty state by comparing current to initial
-  if (!isDirtyRef.current && JSON.stringify(formState) !== JSON.stringify(initialStateRef.current)) {
-    isDirtyRef.current = true;
+  if (!isDirty && JSON.stringify(formState) !== JSON.stringify(initialStateRef.current)) {
+    setIsDirty(true);
   }
 
   const stableUserId = getStableUserId(userId);
@@ -32,13 +34,24 @@ export function useAutoSave<T>(formState: T, routeKey: string, userId: string | 
   useEffect(() => {
     if (!stableUserId) return;
 
-    timerRef.current = setInterval(() => {
-      if (!isDirtyRef.current || saveInFlightRef.current) return;
+    timerRef.current = setInterval(async () => {
+      if (saveInFlightRef.current) return;
+      // Re-read latest dirty flag via ref-style closure trick: check JSON eq again
+      const dirty =
+        JSON.stringify(formStateRef.current) !== JSON.stringify(initialStateRef.current);
+      if (!dirty) return;
 
       saveInFlightRef.current = true;
-      void userDraftApi.save(routeKey, formStateRef.current).finally(() => {
+      setSavingDraft(true);
+      try {
+        await userDraftApi.save(routeKey, formStateRef.current);
+        setLastSavedAt(Date.now());
+        setIsDirty(false);
+        initialStateRef.current = formStateRef.current;
+      } finally {
         saveInFlightRef.current = false;
-      });
+        setSavingDraft(false);
+      }
     }, SAVE_INTERVAL);
 
     return () => {
@@ -49,7 +62,7 @@ export function useAutoSave<T>(formState: T, routeKey: string, userId: string | 
 
   const clearDraft = useCallback(async () => {
     initialStateRef.current = formStateRef.current;
-    isDirtyRef.current = false;
+    setIsDirty(false);
     if (!stableUserId) {
       return;
     }
@@ -59,7 +72,7 @@ export function useAutoSave<T>(formState: T, routeKey: string, userId: string | 
     });
   }, [routeKey, stableUserId]);
 
-  return { clearDraft };
+  return { clearDraft, isDirty, savingDraft, lastSavedAt };
 }
 
 export async function loadDraft<T>(
