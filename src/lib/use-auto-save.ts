@@ -41,13 +41,22 @@ export function useAutoSave<T>(formState: T, routeKey: string, userId: string | 
         JSON.stringify(formStateRef.current) !== JSON.stringify(initialStateRef.current);
       if (!dirty) return;
 
+      // Capture the snapshot we're persisting. If the form changes during the
+      // network round-trip, we must NOT mark the new edits as saved — only the
+      // captured snapshot lands on the server. Reference equality on the ref
+      // tells us whether the parent re-rendered with new state during await.
+      const snapshot = formStateRef.current;
       saveInFlightRef.current = true;
       setSavingDraft(true);
       try {
-        await userDraftApi.save(routeKey, formStateRef.current);
+        await userDraftApi.save(routeKey, snapshot);
+        initialStateRef.current = snapshot;
         setLastSavedAt(Date.now());
-        setIsDirty(false);
-        initialStateRef.current = formStateRef.current;
+        if (formStateRef.current === snapshot) {
+          setIsDirty(false);
+        }
+        // Else: edits happened during the save. isDirty stays true; the next
+        // interval tick will save the newer state.
       } finally {
         saveInFlightRef.current = false;
         setSavingDraft(false);
