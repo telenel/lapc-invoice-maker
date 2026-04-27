@@ -406,6 +406,7 @@ model TemplateItem {
   quantity       Decimal  @db.Decimal(10, 2)
   unitPrice      Decimal  @map("unit_price") @db.Decimal(10, 2)
   sortOrder      Int      @default(0) @map("sort_order")
+  sku            String?
   isTaxable      Boolean  @default(true) @map("is_taxable")
   costPrice      Decimal? @map("cost_price") @db.Decimal(10, 2)
   marginOverride Decimal? @map("margin_override") @db.Decimal(5, 2)

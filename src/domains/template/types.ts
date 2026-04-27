@@ -4,6 +4,7 @@ export interface TemplateItemResponse {
   quantity: number;
   unitPrice: number;
   sortOrder: number;
+  sku: string | null;
   isTaxable: boolean;
   costPrice: number | null;
   marginOverride: number | null;
@@ -47,6 +48,7 @@ export interface CreateTemplateInput {
     quantity: number;
     unitPrice: number;
     sortOrder?: number;
+    sku?: string;
     isTaxable?: boolean;
     costPrice?: number;
     marginOverride?: number;

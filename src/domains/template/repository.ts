@@ -41,6 +41,7 @@ export async function create(data: CreateTemplateInput, userId: string) {
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           sortOrder: item.sortOrder ?? index,
+          sku: item.sku ?? null,
           isTaxable: item.isTaxable ?? true,
           costPrice: item.costPrice ?? null,
           marginOverride: item.marginOverride ?? null,
