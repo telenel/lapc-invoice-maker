@@ -2,15 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { PrinterIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useInvoiceForm, InvoiceFormData } from "@/components/invoice/invoice-form";
-import { KeyboardMode } from "@/components/invoice/keyboard-mode";
-import { LazyProductSearchPanel } from "@/components/shared/lazy-product-search-panel";
-import { openDeferredRegisterPrintWindow } from "@/components/shared/register-print-loader";
-import type { SelectedProduct } from "@/domains/product/types";
+import { DocumentComposer } from "@/components/composer/document-composer";
+import type { ComposerStatus } from "@/components/composer/types";
 import { TAX_RATE } from "@/domains/invoice/constants";
-import { formatDateLong as formatDate } from "@/lib/formatters";
 
 interface ApiInvoiceItem {
   description: string;
@@ -64,7 +59,6 @@ interface ApiInvoice {
 function mapApiToFormData(invoice: ApiInvoice): InvoiceFormData {
   return {
     invoiceNumber: invoice.invoiceNumber ?? "",
-    // date comes as ISO string like "2024-01-15T00:00:00.000Z"; take the date part
     date: invoice.date ? invoice.date.split("T")[0] : "",
     staffId: invoice.staffId ?? "",
     department: invoice.department ?? "",
@@ -126,10 +120,11 @@ export default function EditInvoicePage() {
   const invoiceId = params.id;
 
   const [initialData, setInitialData] = useState<InvoiceFormData | null>(null);
+  const [status, setStatus] = useState<ComposerStatus>("DRAFT");
+  const [canManageActions, setCanManageActions] = useState(true);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
-  // Fetch existing invoice data
   useEffect(() => {
     if (!invoiceId) return;
 
@@ -153,6 +148,8 @@ export default function EditInvoicePage() {
           throw new Error("Finalized invoices cannot be edited");
         }
         setInitialData(mapApiToFormData(invoice));
+        setStatus(invoice.status as ComposerStatus);
+        setCanManageActions(invoice.viewerAccess?.canManageActions ?? true);
       })
       .catch((err: unknown) => {
         setFetchError(
@@ -204,61 +201,13 @@ export default function EditInvoicePage() {
     );
   }
 
-  async function handlePrintForRegister() {
-    const { form, subtotal, taxAmount, grandTotal } = invoiceForm;
-    if (form.items.length === 0) return;
-    await openDeferredRegisterPrintWindow({
-      documentNumber: form.invoiceNumber || form.runningTitle || "Draft Invoice",
-      documentType: "Invoice",
-      status: "DRAFT",
-      date: form.date ? formatDate(form.date) : "—",
-      staffName: form.contactName || "—",
-      department: form.department || "—",
-      items: form.items.map((item) => ({
-        description: item.description,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        extendedPrice: item.extendedPrice,
-        sku: item.sku ?? null,
-      })),
-      subtotal,
-      taxAmount,
-      total: grandTotal,
-    });
-  }
-
-  function mapProductsToItems(products: SelectedProduct[]) {
-    return products
-      .filter((p): p is SelectedProduct & { retailPrice: number } => p.retailPrice != null)
-      .map((p) => ({
-      sku: String(p.sku),
-      description: p.description.toUpperCase(),
-      unitPrice: p.retailPrice,
-      costPrice: p.cost,
-      quantity: 1,
-      isTaxable: true,
-      }));
-  }
-
   return (
-    <div className="mx-auto max-w-7xl px-0 py-4 sm:px-4 sm:py-8">
-      <div className="mb-4 sm:mb-6 flex items-start justify-between">
-        <h1 className="text-2xl font-semibold">Edit Invoice</h1>
-        {invoiceForm.form.items.length > 0 && (
-          <Button variant="outline" size="sm" onClick={handlePrintForRegister}>
-            <PrinterIcon className="size-3.5 mr-1.5" />
-            Print for Register
-          </Button>
-        )}
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 items-start">
-        <div className="order-2 lg:order-1">
-          <KeyboardMode {...invoiceForm} />
-        </div>
-        <div className="order-1 lg:order-2 lg:sticky lg:top-8">
-          <LazyProductSearchPanel onAddProducts={(products) => invoiceForm.addItems(mapProductsToItems(products))} />
-        </div>
-      </div>
-    </div>
+    <DocumentComposer
+      composer={{ docType: "invoice", form: invoiceForm }}
+      mode="edit"
+      status={status}
+      canManageActions={canManageActions}
+      documentNumber={invoiceForm.form.invoiceNumber}
+    />
   );
 }

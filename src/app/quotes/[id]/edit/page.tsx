@@ -2,15 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import { PrinterIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useQuoteForm, QuoteFormData } from "@/components/quote/quote-form";
-import { QuoteMode } from "@/components/quote/quote-mode";
-import { LazyProductSearchPanel } from "@/components/shared/lazy-product-search-panel";
-import { openDeferredRegisterPrintWindow } from "@/components/shared/register-print-loader";
-import type { SelectedProduct } from "@/domains/product/types";
+import { DocumentComposer } from "@/components/composer/document-composer";
+import type { ComposerStatus } from "@/components/composer/types";
 import { getDateKeyInLosAngeles } from "@/lib/date-utils";
-import { formatDateLong as formatDate } from "@/lib/formatters";
 
 interface ApiQuoteItem {
   description: string;
@@ -165,6 +160,8 @@ export default function EditQuotePage() {
   const quoteId = params.id;
 
   const [initialData, setInitialData] = useState<QuoteFormData | null>(null);
+  const [status, setStatus] = useState<ComposerStatus>("DRAFT");
+  const [canManageActions, setCanManageActions] = useState(true);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
 
@@ -196,6 +193,8 @@ export default function EditQuotePage() {
           throw new Error("This quote cannot be edited");
         }
         setInitialData(mapApiToFormData(quote));
+        setStatus(quote.quoteStatus as ComposerStatus);
+        setCanManageActions(quote.viewerAccess?.canManageActions ?? true);
       })
       .catch((err: unknown) => {
         setFetchError(err instanceof Error ? err.message : "Failed to load quote");
@@ -245,69 +244,12 @@ export default function EditQuotePage() {
     );
   }
 
-  async function handlePrintForRegister() {
-    const { form, itemsWithMargin } = quoteForm;
-    if (form.items.length === 0) return;
-    const displayItems = form.marginEnabled ? itemsWithMargin : form.items;
-    const subtotal = displayItems.reduce((sum, item) => sum + Number(item.extendedPrice), 0);
-    const taxRate = form.taxEnabled ? Number(form.taxRate) : 0;
-    const taxableTotal = displayItems
-      .filter((item) => item.isTaxable)
-      .reduce((sum, item) => sum + Number(item.extendedPrice), 0);
-    const taxAmount = taxableTotal * taxRate;
-
-    await openDeferredRegisterPrintWindow({
-      documentNumber: "Draft Quote",
-      documentType: "Quote",
-      status: "DRAFT",
-      date: form.date ? formatDate(form.date) : "—",
-      staffName: form.contactName || "—",
-      department: form.department || "—",
-      items: form.items.map((item) => ({
-        description: item.description,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        extendedPrice: item.extendedPrice,
-        sku: item.sku ?? null,
-      })),
-      subtotal,
-      taxAmount,
-      total: subtotal + taxAmount,
-    });
-  }
-
-  function mapProductsToItems(products: SelectedProduct[]) {
-    return products
-      .filter((p): p is SelectedProduct & { retailPrice: number } => p.retailPrice != null)
-      .map((p) => ({
-      sku: String(p.sku),
-      description: p.description.toUpperCase(),
-      unitPrice: p.retailPrice,
-      costPrice: p.cost,
-      quantity: 1,
-      isTaxable: true,
-      }));
-  }
-
   return (
-    <div className="mx-auto max-w-7xl px-0 py-4 sm:px-4 sm:py-8">
-      <div className="mb-6 flex items-start justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Edit Quote</h1>
-        {quoteForm.form.items.length > 0 && (
-          <Button variant="outline" size="sm" onClick={handlePrintForRegister}>
-            <PrinterIcon className="size-3.5 mr-1.5" />
-            Print for Register
-          </Button>
-        )}
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 items-start">
-        <div className="order-2 lg:order-1">
-          <QuoteMode {...quoteForm} />
-        </div>
-        <div className="order-1 lg:order-2 lg:sticky lg:top-8">
-          <LazyProductSearchPanel onAddProducts={(products) => quoteForm.addItems(mapProductsToItems(products))} />
-        </div>
-      </div>
-    </div>
+    <DocumentComposer
+      composer={{ docType: "quote", form: quoteForm }}
+      mode="edit"
+      status={status}
+      canManageActions={canManageActions}
+    />
   );
 }
