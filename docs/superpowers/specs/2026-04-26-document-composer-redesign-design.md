@@ -163,6 +163,21 @@ Each blocker carries `{ field, label, anchor }` where `anchor` matches a section
 5. Items valid (anchor `section-items`)
 6. Margin & tax confirmed — soft, non-blocker (anchor `section-items`)
 
+### Save Draft gating (server-validation aware)
+
+The composer separates **two gating levels**:
+
+| Level | Used by | Required fields |
+|---|---|---|
+| **Schema minimum** (server will accept) | "Save Draft" button + rail "Save Draft" | `department`, `date`, `staffId` (or `contactId`), at least 1 line item where each has `description` + `quantity > 0`. Quote also: `recipientName`. |
+| **Full readiness** (no blockers) | "Generate PDF" / "Save Quote & Generate PDF" primary action | Schema minimum + `accountNumber` + `category` + (invoice) ≥2 approver slots filled |
+
+These map to the existing validators (`invoiceCreateSchema` / `quoteCreateSchema`) which already enforce the schema-minimum server-side. If a user clicks "Save Draft" without meeting schema minimum, the existing toast error path surfaces the first field error from the server response — we do not silently swallow it.
+
+The composer adds a `useComposerValidation` derivation `canSaveDraft: boolean` based on the schema-minimum subset, and disables the "Save Draft" button when false (with a small muted hint "Add a department, date, requestor, and at least one valid item to save").
+
+`blockers` continues to drive the primary action gating (full readiness).
+
 ### Persistence rules (preserved)
 
 - **Margin formula stays markup**: `cost * (1 + marginPercent / 100)` per existing `useInvoiceFormState`. The handoff prototype's `cost / (1 - marginPercent)` is **not adopted**. Backend contract preserved.
@@ -341,7 +356,14 @@ Two-column grid, `gap-3.5`. Description copy doc-type-aware:
 
 **Column 2 — Recipient (quote) OR Contact info card (invoice):**
 - **Quote**: segmented control "Internal dept." / "External party". Internal collapses to a hint reading "Quote will be sent to the requestor's email." External expands inline `<Input>` for name + optional `<Input type="email">` for address. Both write to existing `recipientName` / `recipientEmail` / `recipientOrg`.
-- **Invoice**: read-only contact card showing `form.contactEmail` (mono) and `form.contactPhone` (mono tnum). Fallback "— select a staff member —" when no staff is set.
+- **Invoice**: editable contact card. The handoff drew this as a read-only display, but the existing app surfaces editable fields here that the staff-auto-save hook persists back to the staff record (`useStaffAutoSave`). To preserve current functionality:
+  - `form.contactName` — small editable `<Input>`. Autofills from staff but editable per-document. Persisted via `pdfMetadata.contactName`.
+  - `form.contactExtension` — small editable mono `<Input>`. Persisted via `pdfMetadata.contactExtension`.
+  - `form.contactEmail` (mono) — editable `<Input type="email">`. Auto-saves to staff record after 1s debounce when changed.
+  - `form.contactPhone` (mono tnum) — editable `<Input>`. Auto-saves to staff record after 1s debounce.
+  - Fallback "— select a staff member —" when no staff is set.
+
+  Visually: stays compact (single muted-bordered container, fields stacked vertically) so it reads more like an inline summary card than a form section. The handoff's read-only feel is approximated by treating these as quiet 12.5px inputs without prominent labels.
 
 **Validation:**
 - Invoice: blocker if `!form.staffId`
@@ -405,8 +427,8 @@ Columns (variants conditional on margin/tax enabled):
 | `SKU` | 110px | catalog `<Package>` icon prefix when `fromCatalog` (teal); editable mono `<input>` |
 | `Description` | flex min 220px | uppercase auto-transform; error background when empty |
 | `Qty` | 64px right | `<input type="number" min={0}>`; error bg when ≤ 0 |
-| `Cost` | 84px right | `<input type="number" step="0.01">`; muted text |
-| `Charged` | 84px right | `<input type="number" step="0.01">`; when margin enabled and override absent, value is *derived* from `cost * (1 + marginPercent/100)` and editing it sets `marginOverride` |
+| `Cost` | 84px right | `<input type="number" step="0.01">` bound to `item.costPrice` (falls back to `item.unitPrice` if null); muted text. When `marginEnabled`, editing Cost is the canonical entry point — Charged auto-derives. When `!marginEnabled`, this column is informational; editing it does not auto-update charged. |
+| `Charged` | 84px right | When `marginEnabled`: read-only display (12.5px tabular-num) of `Math.round(cost * (1 + (marginOverride ?? marginPercent) / 100) * 100) / 100`. Per-row override is set via the Margin column (see below), not by editing Charged directly. When `!marginEnabled`: editable `<input type="number" step="0.01">` bound to `item.unitPrice`. **Rationale:** the existing `buildPayload` recomputes `unitPrice = cost * (1 + m/100)` at save time when margin is on; allowing Charged to be edited directly would let the displayed value drift from the saved value. Read-only display when margin is on keeps display ↔ persistence in sync. |
 | `Margin` | 70px right | only when margin enabled. Read-only `XX.X%`. Trailing `•` and info-blue when override set. |
 | `Tax` | 50px center | only when tax enabled. Toggle button cycling `TAX` (positive) / `—` (muted). |
 | `Extended` | 96px right | bold tabular-num. Computed from charged × qty (uses `itemsWithMargin` derivation when margin enabled). |
@@ -472,9 +494,10 @@ Three `<ApproverSlotCard>`s, each wrapping the existing `<StaffSignatureSelect>`
 └───────────────────────────────┘ └─────────────┘ └────────────────────────┘
 ```
 
-- Invoice: "Generate PDF" → existing `saveAndFinalize`. Quote: "Save Quote & Generate PDF" → `saveQuote` then POST `/api/quotes/[id]/pdf` (existing endpoint).
+- Invoice: "Generate PDF" → existing `saveAndFinalize`. **This is a 2-step server flow**: (1) POST/PUT to `/api/invoices` (writing the form including the new `pdfMetadata.internalNotes`), (2) `invoiceApi.finalize(id, { prismcorePath, signatures, signatureStaffIds, semesterYearDept, contactName, contactExtension })` triggers PDF generation server-side. Existing `<PdfProgress>` modal shows "saving" → "generating" → "done". Then redirects to `/invoices/${id}`.
+- Quote: "Save Quote & Generate PDF" → `saveQuote` (saves + redirects to `/quotes/${id}`) + open `/api/quotes/${id}/pdf` (GET — binary PDF inline) in a new tab.
 - "Print for Register" → `openDeferredRegisterPrintWindow(...)` unchanged.
-- "Save Draft" → invoice: existing `saveDraft`. Quote: existing `saveQuote` (it already saves the quote without finalizing — quotes don't have a finalize step distinct from save; the "Save Quote & Generate PDF" primary action chains `saveQuote` followed by a POST to `/api/quotes/[id]/pdf` using the existing route).
+- "Save Draft" → invoice: existing `saveDraft`. Quote: existing `saveQuote`. **Both navigate to the detail page after success** (`router.push(/invoices/${id})` / `router.push(/quotes/${id})`). This matches current UX — saving a new doc creates an id, then takes the user to the detail/edit surface to continue. Server validation gates saving (see "Save Draft gating" below).
 - "Save as Template" → opens templates drawer in "Save" tab, prefilled.
 
 Group labels (uppercase mono 10.5px tracked) sit above each cluster.
@@ -517,12 +540,12 @@ INVOICE TOTAL                       $1,333.25  (22px tnum bold)
 
 **Primary action** — full-width red `<Button>`:
 - Invoice: "Generate PDF" → `saveAndFinalize`
-- Quote: "Save Quote & Generate PDF" → `saveQuote` then POST `/api/quotes/[id]/pdf` (existing endpoint at `src/app/api/quotes/[id]/pdf/route.ts`)
+- Quote: "Save Quote & Generate PDF" → `saveQuote` (POST/PUT to `/api/quotes` — returns the quote id and triggers existing `router.push(/quotes/${id})`); then `window.open(/api/quotes/${id}/pdf, "_blank")` to open the PDF inline. The PDF route is `GET /api/quotes/[id]/pdf` (verified at `src/app/api/quotes/[id]/pdf/route.ts`) — it serves a binary PDF with `Content-Disposition: inline`. **Not a POST.**
 - Disabled when `blockers.length > 0`. Below, 12.5px destructive-tinted "Resolve N blocker(s) below to continue" → opens blocker summary.
 - When `saving === true`: inline spinner + "Saving…"; existing `<PdfProgress>` modal handles full-screen progress for invoice finalize.
 
 **Two secondary buttons** `grid-cols-2 gap-2`:
-- "Save Draft" → existing `saveDraft` / quote draft path
+- "Save Draft" → invoice: `saveDraft`. Quote: `saveQuote`. Disabled when `!canSaveDraft` (see "Save Draft gating" in section 4); below it, a 12.5px muted "Fill department, date, requestor, and one valid item to save".
 - "Print Register" → `openDeferredRegisterPrintWindow(...)`
 
 ### `<ChecklistCard>`
