@@ -996,16 +996,29 @@ export default function ProductsPageClient() {
 
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-6 md:px-5">
-      {/* Header */}
-      <div className="page-enter page-enter-1 mb-3 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <div className="mb-0.5 text-[11px] font-semibold tracking-[-0.005em] text-muted-foreground">
-            Los Angeles Pierce College Store · Inventory
+      {/* Top sub-strip: location + sync/prism (right-aligned, compact) */}
+      <div className="page-enter page-enter-1 mb-3 flex flex-wrap items-center justify-end gap-2">
+        <LocationChipPopover
+          value={filters.locationIds}
+          onChange={handleLocationChange}
+        />
+        <SyncPrismStatusPill
+          ref={statusPillRef}
+          prismAvailable={prismAvailable}
+          onPrismRetry={() => setPrismRetryToken((n) => n + 1)}
+        />
+      </div>
+
+      {/* Page header — title (left) · search (center) · primary actions (right) on one row */}
+      <div className="page-enter page-enter-1 mb-3 flex flex-wrap items-center gap-3">
+        <div className="min-w-0">
+          <div className="mb-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            Inventory
           </div>
-          <h1 className="flex items-baseline gap-2.5 text-[30px] font-bold leading-[1.1] tracking-[-0.03em] text-foreground">
+          <h1 className="flex items-baseline gap-2.5 text-[24px] font-bold leading-[1.1] tracking-[-0.03em] text-foreground">
             <span className="text-balance">Product catalog</span>
             {data ? (
-              <span className="font-mono tnum text-[13px] font-medium tracking-[-0.01em] text-muted-foreground/80">
+              <span className="font-mono tnum text-[12px] font-medium tracking-[-0.01em] text-muted-foreground/80">
                 {data.total.toLocaleString()}
               </span>
             ) : loading ? (
@@ -1013,24 +1026,49 @@ export default function ProductsPageClient() {
             ) : null}
           </h1>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <LocationChipPopover
-            value={filters.locationIds}
-            onChange={handleLocationChange}
+
+        <div className="flex min-w-[260px] flex-1 items-center gap-2 rounded-[10px] border border-border bg-card px-3 py-2 focus-within:ring-2 focus-within:ring-ring focus-within:border-ring">
+          <SearchIcon
+            className="size-4 text-muted-foreground shrink-0"
+            aria-hidden="true"
           />
-          <SyncPrismStatusPill
-            ref={statusPillRef}
-            prismAvailable={prismAvailable}
-            onPrismRetry={() => setPrismRetryToken((n) => n + 1)}
+          <input
+            aria-label="Search products"
+            type="search"
+            value={filters.search}
+            onChange={(e) =>
+              handleFilterChange({ ...filters, search: e.target.value, page: 1 })
+            }
+            placeholder={
+              filters.tab === "textbooks"
+                ? "Search by SKU, ISBN, title, author, barcode, catalog #…"
+                : "Search by SKU, description, barcode, catalog #…"
+            }
+            className="flex-1 min-w-0 border-none outline-none bg-transparent text-foreground text-[13px] placeholder:text-muted-foreground/70"
           />
-          <Button
-            size="sm"
-            onClick={() => setNewItemOpen(true)}
-            disabled={!prismAvailable}
-            title={prismAvailable ? undefined : "Prism is unreachable — write actions disabled"}
-          >
-            New Item
-          </Button>
+          {filters.search ? (
+            <button
+              type="button"
+              onClick={() =>
+                handleFilterChange({ ...filters, search: "", page: 1 })
+              }
+              aria-label="Clear search"
+              className="inline-flex items-center justify-center rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent"
+            >
+              <XIcon className="size-3.5" aria-hidden="true" />
+            </button>
+          ) : null}
+          <span className="hidden items-center gap-0.5 text-muted-foreground/70 sm:inline-flex" aria-hidden="true">
+            <kbd className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded border border-border bg-card px-1 font-mono text-[10px] font-semibold text-muted-foreground">
+              ⌘
+            </kbd>
+            <kbd className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded border border-border bg-card px-1 font-mono text-[10px] font-semibold text-muted-foreground">
+              K
+            </kbd>
+          </span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5">
           <Button
             size="sm"
             variant="outline"
@@ -1056,6 +1094,14 @@ export default function ProductsPageClient() {
             }
           >
             Bulk Edit
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => setNewItemOpen(true)}
+            disabled={!prismAvailable}
+            title={prismAvailable ? undefined : "Prism is unreachable — write actions disabled"}
+          >
+            New Item
           </Button>
         </div>
       </div>
@@ -1183,56 +1229,6 @@ export default function ProductsPageClient() {
         />
       ) : null}
 
-      {/* Comprehensive search bar */}
-      <div className="page-enter page-enter-2 mb-2.5">
-        <div className="flex items-center gap-2 rounded-[10px] border border-border bg-card px-3 py-2 focus-within:ring-2 focus-within:ring-ring focus-within:border-ring">
-          <SearchIcon
-            className="size-4 text-muted-foreground shrink-0"
-            aria-hidden="true"
-          />
-          <input
-            aria-label="Search products"
-            type="search"
-            value={filters.search}
-            onChange={(e) =>
-              handleFilterChange({ ...filters, search: e.target.value, page: 1 })
-            }
-            placeholder={
-              filters.tab === "textbooks"
-                ? "Search by SKU, ISBN, title, author, barcode, catalog #…"
-                : "Search by SKU, description, barcode, catalog #…"
-            }
-            className="flex-1 min-w-0 border-none outline-none bg-transparent text-foreground text-[14px] placeholder:text-muted-foreground/70"
-          />
-          {filters.search ? (
-            <button
-              type="button"
-              onClick={() =>
-                handleFilterChange({ ...filters, search: "", page: 1 })
-              }
-              aria-label="Clear search"
-              className="inline-flex items-center justify-center rounded-md p-1 text-muted-foreground hover:text-foreground hover:bg-accent"
-            >
-              <XIcon className="size-3.5" aria-hidden="true" />
-            </button>
-          ) : null}
-          <span className="hidden items-center gap-0.5 text-muted-foreground/70 sm:inline-flex" aria-hidden="true">
-            <kbd className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded border border-border bg-card px-1 font-mono text-[10px] font-semibold text-muted-foreground">
-              ⌘
-            </kbd>
-            <kbd className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded border border-border bg-card px-1 font-mono text-[10px] font-semibold text-muted-foreground">
-              K
-            </kbd>
-          </span>
-          <span className="font-mono tnum text-[11px] text-muted-foreground shrink-0 pl-1 border-l border-border">
-            {data
-              ? `${data.total.toLocaleString()} results`
-              : loading
-                ? "…"
-                : "0 results"}
-          </span>
-        </div>
-      </div>
 
       {/* Presets banner */}
       <div className="page-enter page-enter-2 mb-2">
