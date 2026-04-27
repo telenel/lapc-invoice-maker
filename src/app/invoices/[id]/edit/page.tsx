@@ -46,6 +46,7 @@ interface ApiInvoice {
     semesterYearDept?: string;
     contactName?: string;
     contactExtension?: string;
+    internalNotes?: string;
   } | null;
   prismcorePath: string | null;
   isRunning: boolean;
@@ -77,7 +78,7 @@ function mapApiToFormData(invoice: ApiInvoice): InvoiceFormData {
     contactPhone: "",
     semesterYearDept: invoice.pdfMetadata?.semesterYearDept ?? "",
     notes: invoice.notes ?? "",
-    internalNotes: "",
+    internalNotes: invoice.pdfMetadata?.internalNotes ?? "",
     isRunning: invoice.isRunning,
     runningTitle: invoice.runningTitle ?? "",
     marginEnabled: invoice.marginEnabled ?? false,
