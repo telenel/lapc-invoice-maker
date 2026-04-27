@@ -1230,17 +1230,74 @@ export default function ProductsPageClient() {
       ) : null}
 
 
-      {/* Presets banner */}
-      <div className="page-enter page-enter-2 mb-2">
-        <SavedViewsBar
-          activeSlug={activeView?.slug ?? null}
-          activeId={activeView?.id ?? null}
-          onPresetClick={handlePresetClick}
-          onClearPreset={handleClearPreset}
-          onDeleteClick={(v) => setDeleteTarget(v)}
-          onViewsResolved={setResolvedViews}
-          refreshToken={savedViewsRefresh}
-        />
+      {/* MODE + VIEW bar — compact eyebrow labels with inline controls */}
+      <div className="page-enter page-enter-2 mb-2 flex flex-wrap items-center gap-3">
+        <div className="inline-flex items-center gap-2">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            Mode
+          </span>
+          <div
+            className="inline-flex items-center gap-1 rounded-[8px] border border-border bg-card p-0.5"
+            role="tablist"
+            aria-label="Product category"
+          >
+            {TABS.map((tab) => {
+              const active = filters.tab === tab.value;
+              const accent = MODE_TAB_ACCENTS[tab.value];
+              return (
+                <button
+                  key={tab.value}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => handleTabChange(tab.value)}
+                  className={`relative inline-flex items-center gap-1.5 overflow-hidden rounded-md px-2.5 py-1 text-[12px] font-medium transition-all duration-150 ease-out active:translate-y-px cursor-pointer ${
+                    active
+                      ? "bg-secondary text-foreground shadow-[0_1px_2px_rgba(0,0,0,.06)]"
+                      : "bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
+                  }`}
+                >
+                  {active ? (
+                    <span
+                      aria-hidden="true"
+                      className={`absolute inset-y-1 left-0 w-[2.5px] rounded-r ${accent.stripeClass}`}
+                    />
+                  ) : null}
+                  <span className={active ? "pl-1" : undefined}>{tab.label}</span>
+                  {tabCounts[tab.value] != null ? (
+                    <span
+                      className={`ml-0.5 rounded px-1.5 py-[1px] font-mono tnum text-[10px] ${
+                        active
+                          ? "bg-card text-muted-foreground"
+                          : "bg-transparent text-muted-foreground/70"
+                      }`}
+                    >
+                      {tabCounts[tab.value]!.toLocaleString()}
+                    </span>
+                  ) : active && loading ? (
+                    <span className="ml-1 inline-block h-3 w-8 animate-pulse rounded bg-muted" />
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="inline-flex items-center gap-2">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            View
+          </span>
+          <SavedViewsBar
+            mode="picker"
+            activeSlug={activeView?.slug ?? null}
+            activeId={activeView?.id ?? null}
+            onPresetClick={handlePresetClick}
+            onClearPreset={handleClearPreset}
+            onDeleteClick={(v) => setDeleteTarget(v)}
+            onViewsResolved={setResolvedViews}
+            refreshToken={savedViewsRefresh}
+          />
+        </div>
       </div>
 
       <ProductFilterChipBar
@@ -1253,77 +1310,29 @@ export default function ProductsPageClient() {
         onAdvancedToggle={() => setAdvancedOpen((o) => !o)}
       />
 
-      {/* Mode bar: tabs with accent stripes · save view + column toggle right */}
-      <div className="page-enter page-enter-3 mb-2 flex flex-wrap items-center justify-between gap-2">
-        <div
-          className="inline-flex items-center gap-1 rounded-[10px] border border-border bg-card p-1"
-          role="tablist"
-          aria-label="Product category"
+      {/* Table chrome — provisional row (Phase 6.6 will polish into TableChromeBar) */}
+      <div className="page-enter page-enter-3 mb-2 flex flex-wrap items-center justify-end gap-1.5">
+        {hiddenCount > 0 && (
+          <span className="text-[11px] text-muted-foreground rounded-full bg-muted px-2 py-1">
+            {hiddenCount} hidden
+          </span>
+        )}
+        <DensityToggle value={tableDensity} onChange={setTableDensity} />
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setSaveDialogOpen(true)}
+          className="gap-1"
         >
-          {TABS.map((tab) => {
-            const active = filters.tab === tab.value;
-            const accent = MODE_TAB_ACCENTS[tab.value];
-            return (
-              <button
-                key={tab.value}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => handleTabChange(tab.value)}
-                className={`relative inline-flex items-center gap-1.5 overflow-hidden rounded-md px-3.5 py-1.5 text-[13px] font-medium transition-all duration-150 ease-out active:translate-y-px cursor-pointer ${
-                  active
-                    ? "bg-secondary text-foreground shadow-[0_1px_2px_rgba(0,0,0,.06)]"
-                    : "bg-transparent text-muted-foreground hover:bg-accent hover:text-foreground"
-                }`}
-              >
-                {active ? (
-                  <span
-                    aria-hidden="true"
-                    className={`absolute inset-y-1 left-0 w-[3px] rounded-r ${accent.stripeClass}`}
-                  />
-                ) : null}
-                <span className={active ? "pl-1.5" : undefined}>{tab.label}</span>
-                {tabCounts[tab.value] != null ? (
-                  <span
-                    className={`ml-0.5 rounded px-1.5 py-[1px] font-mono tnum text-[10.5px] ${
-                      active
-                        ? "bg-card text-muted-foreground"
-                        : "bg-transparent text-muted-foreground/70"
-                    }`}
-                  >
-                    {tabCounts[tab.value]!.toLocaleString()}
-                  </span>
-                ) : active && loading ? (
-                  <span className="ml-1 inline-block h-3 w-8 animate-pulse rounded bg-muted" />
-                ) : null}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          {hiddenCount > 0 && (
-            <span className="text-[11px] text-muted-foreground rounded-full bg-muted px-2 py-1">
-              {hiddenCount} hidden
-            </span>
-          )}
-          <DensityToggle value={tableDensity} onChange={setTableDensity} />
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => setSaveDialogOpen(true)}
-            className="gap-1"
-          >
-            + Save View
-          </Button>
-          <ColumnVisibilityToggle
-            ref={columnsRef}
-            runtimeOverride={runtimeColumns}
-            onUserChange={setBaseColumns}
-            onRuntimeChange={setRuntimeColumns}
-            onResetRuntime={() => setRuntimeColumns(null)}
-          />
-        </div>
+          + Save View
+        </Button>
+        <ColumnVisibilityToggle
+          ref={columnsRef}
+          runtimeOverride={runtimeColumns}
+          onUserChange={setBaseColumns}
+          onRuntimeChange={setRuntimeColumns}
+          onResetRuntime={() => setRuntimeColumns(null)}
+        />
       </div>
 
       {advancedOpen ? (

@@ -22,6 +22,14 @@ interface Props {
    * change without a full remount.
    */
   refreshToken?: number;
+  /**
+   * "bar" (default) renders the original heading + featured chips + browse-all
+   * trigger + user-views row. "picker" collapses the entire control to a
+   * single "VIEW: <name> ▾" trigger that opens the same popover, with the
+   * featured presets surfacing as a "Pinned" section at the top of the popover.
+   * Used by the page redesign to free vertical space.
+   */
+  mode?: "bar" | "picker";
 }
 
 /**
@@ -51,6 +59,7 @@ export function SavedViewsBar({
   onDeleteClick,
   onViewsResolved,
   refreshToken,
+  mode = "bar",
 }: Props) {
   const [system, setSystem] = useState<SavedView[]>(SYSTEM_PRESET_VIEWS);
   const [mine, setMine] = useState<SavedView[]>([]);
@@ -163,6 +172,31 @@ export function SavedViewsBar({
   useEffect(() => {
     if (!presetsOpen) setPresetQuery("");
   }, [presetsOpen]);
+
+  if (mode === "picker") {
+    return (
+      <PresetBrowserPopover
+        triggerLabel={activePreset?.name ?? "All items (default)"}
+        isCustom={activePreset != null}
+        open={presetsOpen}
+        onOpenChange={setPresetsOpen}
+        presetCount={presetCount}
+        filteredPresetCount={filteredPresetCount}
+        filteredByGroup={filteredByGroup}
+        featured={featured}
+        mine={mine}
+        activePreset={activePreset}
+        activeSlug={activeSlug}
+        activeId={activeId}
+        presetQuery={presetQuery}
+        setPresetQuery={setPresetQuery}
+        onPresetClick={onPresetClick}
+        onClearPreset={onClearPreset}
+        onDeleteClick={onDeleteClick}
+        loadError={loadError}
+      />
+    );
+  }
 
   return (
     <section
@@ -402,6 +436,225 @@ function useActiveScrollIntoView(active: boolean) {
     }
   }, [active]);
   return ref;
+}
+
+/**
+ * Picker-mode wrapper: a single VIEW button + the same preset/user-views
+ * popover content used by the bar mode, plus a Pinned section at the top
+ * for the same featured preset slugs that show inline in bar mode.
+ */
+interface PresetBrowserPopoverProps {
+  triggerLabel: string;
+  isCustom: boolean;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  presetCount: number;
+  filteredPresetCount: number;
+  filteredByGroup: Map<PresetGroup, SavedView[]>;
+  featured: SavedView[];
+  mine: SavedView[];
+  activePreset: SavedView | null;
+  activeSlug: string | null;
+  activeId: string | null;
+  presetQuery: string;
+  setPresetQuery: (next: string) => void;
+  onPresetClick: (view: SavedView) => void;
+  onClearPreset: () => void;
+  onDeleteClick: (view: SavedView) => void;
+  loadError: string | null;
+}
+
+function PresetBrowserPopover({
+  triggerLabel,
+  isCustom,
+  open,
+  onOpenChange,
+  presetCount,
+  filteredPresetCount,
+  filteredByGroup,
+  featured,
+  mine,
+  activePreset,
+  activeSlug,
+  activeId,
+  presetQuery,
+  setPresetQuery,
+  onPresetClick,
+  onClearPreset,
+  onDeleteClick,
+  loadError,
+}: PresetBrowserPopoverProps) {
+  return (
+    <Popover open={open} onOpenChange={onOpenChange}>
+      <PopoverTrigger
+        className={`inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-[11.5px] font-medium transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+          isCustom
+            ? "border-primary/35 bg-primary/[0.06] text-primary"
+            : "border-border bg-card text-foreground"
+        }`}
+        aria-label="Open view picker"
+      >
+        <SparklesIcon className="size-3 text-primary" aria-hidden="true" />
+        <span className="text-muted-foreground">VIEW</span>
+        <span className="max-w-[180px] truncate font-semibold">{triggerLabel}</span>
+        <ChevronDownIcon
+          className={`size-3 text-muted-foreground transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          aria-hidden="true"
+        />
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-[640px] max-w-[calc(100vw-2rem)] max-h-[520px] overflow-auto p-0">
+        <div className="p-3 border-b border-border flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col leading-tight">
+              <span className="text-[12px] font-semibold tracking-[-0.005em] text-foreground">
+                All {presetCount} presets
+              </span>
+              <span className="text-[11px] text-muted-foreground">
+                Search by name, category, or workflow signal.
+              </span>
+            </div>
+            {activePreset ? (
+              <button
+                type="button"
+                onClick={() => {
+                  onClearPreset();
+                  onOpenChange(false);
+                }}
+                className="text-[11px] text-muted-foreground hover:text-foreground cursor-pointer bg-transparent border-none p-0"
+              >
+                Clear
+              </button>
+            ) : null}
+          </div>
+          <div className="flex items-center gap-2 rounded-lg border border-border bg-secondary/35 px-2.5 py-1.5 focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/30">
+            <SearchIcon className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <input
+              aria-label="Search presets"
+              type="search"
+              value={presetQuery}
+              onChange={(event) => setPresetQuery(event.target.value)}
+              placeholder="Search presets…"
+              className="min-w-0 flex-1 border-none bg-transparent p-0 text-xs text-foreground outline-none placeholder:text-muted-foreground"
+            />
+            <span className="font-mono tnum text-[10.5px] text-muted-foreground">
+              {filteredPresetCount}/{presetCount}
+            </span>
+            {presetQuery ? (
+              <button
+                type="button"
+                aria-label="Clear preset search"
+                onClick={() => setPresetQuery("")}
+                className="inline-flex items-center justify-center rounded-md p-0.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <XIcon className="size-3" aria-hidden="true" />
+              </button>
+            ) : null}
+          </div>
+          {loadError ? (
+            <div className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <AlertCircleIcon className="size-3" aria-hidden="true" />
+              Saved-views API unavailable: {loadError}
+            </div>
+          ) : null}
+        </div>
+        <div aria-label="Preset browser results" className="p-2 flex flex-col gap-3">
+          {/* Pinned: featured preset slugs shown when no search is active. */}
+          {!presetQuery.trim() && featured.length > 0 ? (
+            <div className="rounded-lg border border-primary/20 bg-primary/[0.03] p-2">
+              <div className="mb-1.5 flex items-center justify-between gap-3 px-1 text-[11px] font-semibold tracking-[-0.005em] text-muted-foreground">
+                Pinned
+                <span className="font-mono tnum text-[10px] font-normal">
+                  {featured.length}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                {featured.map((v) => (
+                  <PresetPill
+                    key={`pinned-${v.id}`}
+                    view={v}
+                    active={activeSlug === v.slug}
+                    onClick={() => {
+                      onPresetClick(v);
+                      onOpenChange(false);
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {PRESET_GROUPS.map(({ value, label }) => {
+            const items = filteredByGroup.get(value) ?? [];
+            if (items.length === 0) return null;
+            return (
+              <div key={value} className="rounded-lg border border-border/70 bg-card/70 p-2">
+                <div className="mb-1.5 flex items-center justify-between gap-3 px-1 text-[11px] font-semibold tracking-[-0.005em] text-muted-foreground">
+                  {label}
+                  <span className="font-mono tnum text-[10px] font-normal">
+                    {items.length}
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                  {items.map((v) => (
+                    <PresetPill
+                      key={v.id}
+                      view={v}
+                      active={activeSlug === v.slug}
+                      onClick={() => {
+                        onPresetClick(v);
+                        onOpenChange(false);
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* User-saved views surface inside the picker popover too. */}
+          {mine.length > 0 ? (
+            <div className="rounded-lg border border-border/70 bg-card/70 p-2">
+              <div className="mb-1.5 flex items-center justify-between gap-3 px-1 text-[11px] font-semibold tracking-[-0.005em] text-muted-foreground">
+                My views
+                <span className="font-mono tnum text-[10px] font-normal">
+                  {mine.length}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                {mine.map((v) => (
+                  <div key={v.id} className="flex items-stretch gap-1">
+                    <PresetPill
+                      view={v}
+                      active={activeId === v.id}
+                      onClick={() => {
+                        onPresetClick(v);
+                        onOpenChange(false);
+                      }}
+                    />
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => onDeleteClick(v)}
+                      className="text-destructive"
+                      title={`Delete ${v.name}`}
+                    >
+                      ⋯
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {filteredPresetCount === 0 && presetQuery ? (
+            <div className="rounded-lg border border-dashed border-border px-3 py-6 text-center text-[12px] text-muted-foreground">
+              No presets match &ldquo;{presetQuery.trim()}&rdquo;.
+            </div>
+          ) : null}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 function UserChip({
