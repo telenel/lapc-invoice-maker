@@ -527,6 +527,7 @@ export function useQuoteForm(
 
   return {
     form,
+    setForm,
     updateField,
     updateItem,
     addItem,
