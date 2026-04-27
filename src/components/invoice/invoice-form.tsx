@@ -52,6 +52,7 @@ export function useInvoiceForm(
 
   return {
     form,
+    setForm,
     updateField,
     updateItem,
     addItem,

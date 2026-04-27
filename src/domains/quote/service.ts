@@ -23,6 +23,7 @@ import type {
   QuoteFollowUpResponse,
   QuoteViewResponse,
   CateringDetails,
+  QuotePdfMetadata,
   QuotePublicPaymentCandidate,
   QuotePaymentDetailsSubmission,
 } from "./types";
@@ -199,6 +200,7 @@ function toQuoteResponse(quote: NonNullable<QuoteWithRelations>): QuoteResponse 
     recipientEmail: quote.recipientEmail ?? "",
     recipientOrg: quote.recipientOrg ?? "",
     pdfPath: quote.pdfPath,
+    pdfMetadata: (quote.pdfMetadata as QuotePdfMetadata | null) ?? null,
     shareToken: quote.shareToken ?? null,
     createdAt: quote.createdAt.toISOString(),
     archivedAt: quote.archivedAt?.toISOString() ?? null,
@@ -931,6 +933,7 @@ export const quoteService = {
         ...quoteData,
         accountCode: quoteData.accountCode ?? "",
         cateringDetails: quoteData.cateringDetails as Prisma.InputJsonValue | undefined,
+        pdfMetadata: quoteData.pdfMetadata as Prisma.InputJsonValue | undefined,
       },
       calculatedItems,
       totalAmount,
@@ -972,6 +975,14 @@ export const quoteService = {
 
     const { items, ...quoteData } = input;
     const writableQuoteData = quoteData as UpdateQuoteInput & Record<string, unknown>;
+
+    if (input.pdfMetadata !== undefined) {
+      const storedPdfMetadata = (existing.pdfMetadata as QuotePdfMetadata | null) ?? null;
+      writableQuoteData.pdfMetadata = {
+        internalNotes: input.pdfMetadata.internalNotes ?? storedPdfMetadata?.internalNotes,
+      } satisfies QuotePdfMetadata;
+    }
+
     const reopensAcceptedQuote =
       existing.quoteStatus === "ACCEPTED"
       && !existing.convertedToInvoice

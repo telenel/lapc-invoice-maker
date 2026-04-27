@@ -62,6 +62,7 @@ export const invoiceCreateSchema = z.object({
     semesterYearDept: z.string().optional(),
     contactName: z.string().optional(),
     contactExtension: z.string().optional(),
+    internalNotes: z.string().optional(),
   }).optional(),
   marginEnabled: z.boolean().default(false),
   marginPercent: z.number().min(0).optional(),
@@ -157,6 +158,9 @@ export const quoteCreateSchema = z.object({
     takedownTime: z.string().optional(),
     takedownInstructions: z.string().optional(),
     specialInstructions: z.string().optional(),
+  }).optional(),
+  pdfMetadata: z.object({
+    internalNotes: z.string().optional(),
   }).optional(),
 });
 

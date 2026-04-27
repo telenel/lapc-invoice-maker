@@ -44,6 +44,8 @@ export interface QuoteFormData {
   contactEmail: string;
   contactPhone: string;
   notes: string;
+  /** Stored in pdfMetadata, never rendered on the PDF */
+  internalNotes: string;
   items: QuoteItem[];
   // Quote-specific fields
   expirationDate: string;
@@ -107,6 +109,7 @@ function defaultForm(): QuoteFormData {
     contactEmail: "",
     contactPhone: "",
     notes: "",
+    internalNotes: "",
     items: [emptyItem(0)],
     expirationDate: thirtyDaysFromNow(),
     recipientName: "",
@@ -433,6 +436,9 @@ export function useQuoteForm(
       taxRate: currentForm.taxRate,
       isCateringEvent: currentForm.isCateringEvent,
       cateringDetails: currentForm.isCateringEvent ? currentForm.cateringDetails : undefined,
+      pdfMetadata: {
+        internalNotes: currentForm.internalNotes,
+      },
       items: lineItems.map((item, i) => {
         const cost = Number(item.costPrice ?? item.unitPrice);
         const effectiveMargin = item.marginOverride ?? currentForm.marginPercent;
@@ -521,6 +527,7 @@ export function useQuoteForm(
 
   return {
     form,
+    setForm,
     updateField,
     updateItem,
     addItem,

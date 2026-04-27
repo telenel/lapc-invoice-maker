@@ -71,6 +71,9 @@ interface ApiQuote {
   taxRate?: number;
   isCateringEvent?: boolean;
   cateringDetails?: ApiCateringDetails | null;
+  pdfMetadata?: {
+    internalNotes?: string;
+  } | null;
   items: ApiQuoteItem[];
 }
 
@@ -88,6 +91,7 @@ function mapApiToFormData(quote: ApiQuote): QuoteFormData {
     contactEmail: "",
     contactPhone: "",
     notes: quote.notes ?? "",
+    internalNotes: quote.pdfMetadata?.internalNotes ?? "",
     expirationDate: quote.expirationDate ? quote.expirationDate.split("T")[0] : "",
     recipientName: quote.recipientName ?? "",
     recipientEmail: quote.recipientEmail ?? "",

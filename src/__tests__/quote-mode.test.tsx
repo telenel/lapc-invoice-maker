@@ -75,6 +75,7 @@ function makeForm(overrides: Partial<QuoteFormData> = {}): QuoteFormData {
     contactEmail: "",
     contactPhone: "",
     notes: "",
+    internalNotes: "",
     items: [
       {
         _key: "item-1",

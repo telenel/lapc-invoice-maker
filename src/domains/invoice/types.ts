@@ -17,6 +17,7 @@ export interface InvoicePdfMetadata {
   semesterYearDept?: string;
   contactName?: string;
   contactExtension?: string;
+  internalNotes?: string;
 }
 
 export interface ArchivedBySummary {

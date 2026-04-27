@@ -11,6 +11,7 @@ function toTemplateResponse(template: NonNullable<TemplateWithItems>): TemplateR
     quantity: Number(item.quantity),
     unitPrice: Number(item.unitPrice),
     sortOrder: item.sortOrder,
+    sku: item.sku,
     isTaxable: item.isTaxable,
     costPrice: item.costPrice != null ? Number(item.costPrice) : null,
     marginOverride: item.marginOverride != null ? Number(item.marginOverride) : null,
