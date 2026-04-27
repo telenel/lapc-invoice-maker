@@ -6,8 +6,10 @@ import { StaffSelect } from "@/components/invoice/staff-select";
 import { StaffSummaryEditor } from "@/components/invoice/staff-summary-editor";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { staffApi } from "@/domains/staff/api-client";
 import type { useInvoiceForm } from "@/components/invoice/invoice-form";
 import type { useQuoteForm } from "@/components/quote/quote-form";
+import type { StaffResponse } from "@/domains/staff/types";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -66,13 +68,17 @@ function QuoteRecipientCard({ composer }: { composer: ReturnType<typeof useQuote
   const externalRef = useRef<HTMLButtonElement>(null);
 
   const setMode = (mode: "internal" | "external") => {
-    if (mode === "internal") {
-      composer.updateField("recipientName", "");
-      composer.updateField("recipientEmail", "");
-      composer.updateField("recipientOrg", "");
-    } else {
+    if (mode === "external") {
       composer.clearStaffSelection();
     }
+    // mode === "internal" is intentionally a no-op:
+    // - When staff is already selected (current state IS internal), clicking
+    //   the radio is idempotent — preserve recipientName/recipientEmail that
+    //   handleStaffSelect populated from the staff record (the quote save
+    //   schema requires recipientName).
+    // - When no staff is selected, the user must pick one via the left-column
+    //   StaffSelect to transition to internal. The aria-describedby hint
+    //   paragraph guides them.
   };
 
   return (
@@ -96,6 +102,7 @@ function QuoteRecipientCard({ composer }: { composer: ReturnType<typeof useQuote
           role="radio"
           aria-checked={isInternal}
           aria-label="Internal department"
+          aria-describedby={!f.staffId ? "recipient-mode-internal-hint" : undefined}
           onClick={() => setMode("internal")}
           className={`px-2.5 py-1 text-[11px] rounded-sm font-medium uppercase tracking-wider ${isInternal ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
         >
@@ -113,6 +120,14 @@ function QuoteRecipientCard({ composer }: { composer: ReturnType<typeof useQuote
           External party
         </button>
       </div>
+      {!f.staffId && (
+        <p
+          id="recipient-mode-internal-hint"
+          className="text-[11px] text-muted-foreground"
+        >
+          Pick a requestor (left column) to switch to internal mode.
+        </p>
+      )}
       {isInternal ? (
         <p className="text-[12px] text-muted-foreground">Quote will be sent to the requestor&apos;s email.</p>
       ) : (
@@ -144,6 +159,11 @@ function QuoteRecipientCard({ composer }: { composer: ReturnType<typeof useQuote
 // ---------------------------------------------------------------------------
 
 export function PeopleSection(props: Props) {
+  // Tracks the most-recently selected staff id to guard against stale async responses.
+  // Both arms share this ref — only one arm renders at a time (docType discrimination),
+  // so there is no cross-arm interference.
+  const latestSelectedIdRef = useRef<string>("");
+
   const description =
     props.docType === "invoice"
       ? "Who is the requestor of these items / services, and what are we charging them for?"
@@ -162,17 +182,23 @@ export function PeopleSection(props: Props) {
           <>
             <div className="space-y-2">
               <RequestorLabel />
-              {/*
-                Invoice's handleStaffSelect accepts StaffDetailResponse (which
-                extends StaffResponse). StaffSelect calls onSelect with a
-                StaffResponse, so function-parameter contravariance flags
-                this. Cast to bridge — runtime-safe because the handler
-                reads only fields present on StaffResponse plus the optional
-                accountNumbers field.
-              */}
               <StaffSelect
                 selectedId={props.composer.form.staffId}
-                onSelect={props.composer.handleStaffSelect as Parameters<typeof StaffSelect>[0]["onSelect"]}
+                onSelect={async (staff: StaffResponse) => {
+                  latestSelectedIdRef.current = staff.id;
+                  try {
+                    const detail = await staffApi.getById(staff.id);
+                    if (latestSelectedIdRef.current !== staff.id) return; // stale response — discard
+                    props.composer.handleStaffSelect(detail);
+                  } catch (err) {
+                    if (latestSelectedIdRef.current !== staff.id) return; // stale error — discard
+                    console.error("[PeopleSection] failed to fetch staff detail", err);
+                    // Best-effort fallback: staffId/department/contact fields still
+                    // populate from the bare StaffResponse; account numbers and signer
+                    // history won't autofill on a transient network failure.
+                    props.composer.handleStaffSelect(staff as Parameters<typeof props.composer.handleStaffSelect>[0]);
+                  }
+                }}
               />
               <AutofillCaption />
               <StaffSummaryEditor
@@ -188,7 +214,21 @@ export function PeopleSection(props: Props) {
               <RequestorLabel />
               <StaffSelect
                 selectedId={props.composer.form.staffId}
-                onSelect={props.composer.handleStaffSelect}
+                onSelect={async (staff: StaffResponse) => {
+                  latestSelectedIdRef.current = staff.id;
+                  try {
+                    const detail = await staffApi.getById(staff.id);
+                    if (latestSelectedIdRef.current !== staff.id) return; // stale response — discard
+                    props.composer.handleStaffSelect(detail);
+                  } catch (err) {
+                    if (latestSelectedIdRef.current !== staff.id) return; // stale error — discard
+                    console.error("[PeopleSection] failed to fetch staff detail", err);
+                    // Best-effort fallback: staffId/department/contact fields still
+                    // populate from the bare StaffResponse; account numbers won't
+                    // autofill on a transient network failure.
+                    props.composer.handleStaffSelect(staff as Parameters<typeof props.composer.handleStaffSelect>[0]);
+                  }
+                }}
               />
               <AutofillCaption />
               {/*
