@@ -41,9 +41,16 @@ export function TemplatesDrawer({
   const [category, setCategory] = useState(initialPayload.category);
   const [notes, setNotes] = useState(initialPayload.notes);
 
+  // Reset local form state every time the drawer opens. Without this,
+  // useState's initialValue captures values only on first mount, so a second
+  // open silently keeps the first mount's category/notes — saving stale data.
   useEffect(() => {
-    if (open) setTab(mode);
-  }, [open, mode]);
+    if (!open) return;
+    setTab(mode);
+    setName(initialPayload.name);
+    setCategory(initialPayload.category);
+    setNotes(initialPayload.notes);
+  }, [open, mode, initialPayload.name, initialPayload.category, initialPayload.notes]);
 
   useEffect(() => {
     if (!open || tab !== "load") return;
