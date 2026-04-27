@@ -6,6 +6,7 @@ import { SectionCard } from "./sections/section-card";
 import { PeopleSection } from "./sections/people-section";
 import { DepartmentAccountSection } from "./sections/department-account";
 import { DocumentDetailsSection } from "./sections/document-details";
+import { ItemsAndPricingSection } from "./sections/items-pricing";
 import { useComposerValidation } from "./hooks/use-composer-validation";
 import type { ComposerStatus, DocType, SectionAnchor } from "./types";
 import type { useInvoiceForm } from "@/components/invoice/invoice-form";
@@ -85,14 +86,16 @@ export function DocumentComposer({
                 sectionStatus={statusForAnchor("section-details")}
               />
             )}
-            <SectionCard
-              step={4}
-              title="Items & Pricing"
-              anchor="section-items"
-              status={statusForAnchor("section-items")}
-            >
-              <p className="text-sm text-muted-foreground">P4 places content here.</p>
-            </SectionCard>
+            <ItemsAndPricingSection
+              composer={composer.form}
+              sectionStatus={statusForAnchor("section-items")}
+              onOpenCatalog={() => {
+                /* catalog drawer wires up in P5 */
+              }}
+              showCateringPreset={
+                composer.docType === "quote" && composer.form.form.isCateringEvent
+              }
+            />
             <SectionCard
               step={5}
               title="Notes"
