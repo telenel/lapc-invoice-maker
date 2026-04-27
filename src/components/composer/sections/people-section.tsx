@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { SectionCard } from "./section-card";
 import { StaffSelect } from "@/components/invoice/staff-select";
 import { StaffSummaryEditor } from "@/components/invoice/staff-summary-editor";
@@ -59,8 +60,83 @@ function InvoiceContactCard({ composer }: { composer: ReturnType<typeof useInvoi
 }
 
 function QuoteRecipientCard({ composer }: { composer: ReturnType<typeof useQuoteForm> }) {
-  // Implementation in Task 3.2
-  return <div className="hidden">{composer.form.recipientName}</div>;
+  const f = composer.form;
+  const isInternal = !!f.staffId;
+  const internalRef = useRef<HTMLButtonElement>(null);
+  const externalRef = useRef<HTMLButtonElement>(null);
+
+  const setMode = (mode: "internal" | "external") => {
+    if (mode === "internal") {
+      composer.updateField("recipientName", "");
+      composer.updateField("recipientEmail", "");
+      composer.updateField("recipientOrg", "");
+    } else {
+      composer.clearStaffSelection();
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <div
+        role="radiogroup"
+        aria-label="Recipient type"
+        className="inline-flex rounded-md border border-border bg-muted p-0.5"
+        onKeyDown={(e) => {
+          if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.key)) {
+            e.preventDefault();
+            const next = isInternal ? "external" : "internal";
+            setMode(next);
+            (next === "internal" ? internalRef : externalRef).current?.focus();
+          }
+        }}
+      >
+        <button
+          ref={internalRef}
+          type="button"
+          role="radio"
+          aria-checked={isInternal}
+          aria-label="Internal department"
+          onClick={() => setMode("internal")}
+          className={`px-2.5 py-1 text-[11px] rounded-sm font-medium uppercase tracking-wider ${isInternal ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
+        >
+          Internal dept.
+        </button>
+        <button
+          ref={externalRef}
+          type="button"
+          role="radio"
+          aria-checked={!isInternal}
+          aria-label="External party"
+          onClick={() => setMode("external")}
+          className={`px-2.5 py-1 text-[11px] rounded-sm font-medium uppercase tracking-wider ${!isInternal ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"}`}
+        >
+          External party
+        </button>
+      </div>
+      {isInternal ? (
+        <p className="text-[12px] text-muted-foreground">Quote will be sent to the requestor&apos;s email.</p>
+      ) : (
+        <div className="space-y-2">
+          <Input
+            value={f.recipientName}
+            onChange={(e) => composer.updateField("recipientName", e.target.value)}
+            placeholder="Recipient name"
+          />
+          <Input
+            value={f.recipientEmail}
+            onChange={(e) => composer.updateField("recipientEmail", e.target.value)}
+            placeholder="Recipient email (optional)"
+            type="email"
+          />
+          <Input
+            value={f.recipientOrg}
+            onChange={(e) => composer.updateField("recipientOrg", e.target.value)}
+            placeholder="Organization (optional)"
+          />
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------------------
