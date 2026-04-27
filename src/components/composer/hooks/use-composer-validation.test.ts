@@ -170,6 +170,30 @@ describe("useComposerValidation invoice blockers", () => {
     expect(result.current.blockers.find((b) => b.field === "category")).toBeTruthy();
   });
 
+  it("flags missing invoiceNumber on invoice (required to finalize)", () => {
+    const form = invoiceForm({
+      staffId: "x", department: "BKST", accountNumber: "1", category: "x",
+      invoiceNumber: "",
+    });
+    const { result } = renderHook(() => useComposerValidation(form, "invoice"));
+    expect(result.current.blockers.find((b) => b.field === "invoiceNumber")).toBeTruthy();
+  });
+
+  it("clears invoiceNumber blocker once it is set", () => {
+    const form = invoiceForm({
+      staffId: "x", department: "BKST", accountNumber: "1", category: "x",
+      invoiceNumber: "AG-12345",
+    });
+    const { result } = renderHook(() => useComposerValidation(form, "invoice"));
+    expect(result.current.blockers.find((b) => b.field === "invoiceNumber")).toBeFalsy();
+  });
+
+  it("does NOT flag invoiceNumber on quotes (no such field)", () => {
+    const form = quoteForm({ staffId: "x", department: "BKST", accountNumber: "1", category: "x" });
+    const { result } = renderHook(() => useComposerValidation(form, "quote"));
+    expect(result.current.blockers.find((b) => b.field === "invoiceNumber")).toBeFalsy();
+  });
+
   it("flags items.length === 0", () => {
     const form = invoiceForm({ staffId: "x", department: "BKST", accountNumber: "1", category: "x", items: [] });
     const { result } = renderHook(() => useComposerValidation(form, "invoice"));
@@ -195,8 +219,9 @@ describe("useComposerValidation invoice blockers", () => {
     expect(result.current.blockers.find((b) => b.field === "approvers")).toBeTruthy();
   });
 
-  it("zero blockers when all 7 invoice rules satisfied", () => {
+  it("zero blockers when all invoice rules satisfied", () => {
     const form = invoiceForm({
+      invoiceNumber: "AG-12345",
       staffId: "x", department: "BKST", accountNumber: "1", category: "x",
       items: [{ _key: "a", sku: null, description: "y", quantity: 1, unitPrice: 5, extendedPrice: 5, sortOrder: 0, isTaxable: true, marginOverride: null, costPrice: null }],
       signatureStaffIds: { line1: "a", line2: "b", line3: "" },

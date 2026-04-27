@@ -94,6 +94,18 @@ export function useComposerValidation(form: AnyForm, docType: DocType) {
       });
     }
 
+    if (
+      docType === "invoice" &&
+      isInvoiceForm(form) &&
+      !form.invoiceNumber.trim()
+    ) {
+      list.push({
+        field: "invoiceNumber",
+        label: "Invoice number required",
+        anchor: "section-details",
+      });
+    }
+
     if (docType === "quote" && !isInvoiceForm(form)) {
       const recipientOk = !!form.staffId || !!form.recipientName.trim();
       if (!recipientOk) {
@@ -173,6 +185,7 @@ export function useComposerValidation(form: AnyForm, docType: DocType) {
       const filled = (
         ["line1", "line2", "line3"] as const
       ).filter((k) => form.signatureStaffIds[k]).length;
+      const hasInvoiceNumber = !!form.invoiceNumber.trim();
       return [
         {
           id: "requestor",
@@ -194,6 +207,13 @@ export function useComposerValidation(form: AnyForm, docType: DocType) {
           anchor: "section-details",
           complete: !!form.category,
           blocker: !form.category,
+        },
+        {
+          id: "invoiceNumber",
+          label: "Invoice number set",
+          anchor: "section-details",
+          complete: hasInvoiceNumber,
+          blocker: !hasInvoiceNumber,
         },
         {
           id: "items",

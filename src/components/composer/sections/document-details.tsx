@@ -43,7 +43,7 @@ type Props =
 // string fields, so casting to a constrained-key writer is runtime-safe
 // while preserving compile-time typo protection on the keys. Same pattern
 // as DepartmentAccountSection.
-type DetailsFieldKey = "category" | "date";
+type DetailsFieldKey = "category" | "date" | "invoiceNumber";
 type FieldWriter = { updateField: (key: DetailsFieldKey, value: string) => void };
 
 // ---------------------------------------------------------------------------
@@ -79,6 +79,26 @@ export function DocumentDetailsSection(props: Props) {
       anchor="section-details"
       status={props.sectionStatus}
     >
+      {/* Invoice variant: AG invoice number — required by saveAndFinalize. */}
+      {props.docType === "invoice" && (
+        <div className="mb-3.5 space-y-1.5">
+          <Label
+            htmlFor="composer-invoice-number"
+            className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground"
+          >
+            Invoice number
+          </Label>
+          <Input
+            id="composer-invoice-number"
+            value={props.composer.form.invoiceNumber}
+            onChange={(e) => write("invoiceNumber", e.target.value)}
+            placeholder="AG-XXXXXX (enter when ready to finalize)"
+            name="invoiceNumber"
+            autoComplete="off"
+          />
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
         {/* Category */}
         <div className="space-y-1.5">
