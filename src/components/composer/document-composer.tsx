@@ -482,13 +482,26 @@ export function DocumentComposer({
         date={composer.form.form.date}
         department={composer.form.form.department}
         category={composer.form.form.category}
-        items={composer.form.form.items.map((i) => ({
-          description: i.description,
-          sku: i.sku,
-          quantity: Number(i.quantity),
-          unitPrice: Number(i.unitPrice),
-          isTaxable: i.isTaxable,
-        }))}
+        items={composer.form.form.items.map((i) => {
+          // When margin is enabled, the displayed unit price must reflect the
+          // charged price (cost basis × (1 + margin)), not the cost. Mirrors
+          // chargedPrice() in use-composer-validation.ts so totals and per-line
+          // numbers agree. Without this, a margin-on preview underprices items.
+          const f = composer.form.form;
+          const cost = i.costPrice ?? Number(i.unitPrice);
+          const m = i.marginOverride ?? f.marginPercent;
+          const charged =
+            f.marginEnabled && m > 0
+              ? Math.round(cost * (1 + m / 100) * 100) / 100
+              : Number(i.unitPrice);
+          return {
+            description: i.description,
+            sku: i.sku,
+            quantity: Number(i.quantity),
+            unitPrice: charged,
+            isTaxable: i.isTaxable,
+          };
+        })}
         totals={validation.totals}
         taxEnabled={composer.form.form.taxEnabled}
         taxRate={composer.form.form.taxRate}

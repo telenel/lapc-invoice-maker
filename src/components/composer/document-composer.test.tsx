@@ -1,5 +1,6 @@
 import "@testing-library/jest-dom/vitest";
-import { render, renderHook, screen } from "@testing-library/react";
+import { act, render, renderHook, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, it, expect, vi } from "vitest";
 
 function installLocalStorageMock() {
@@ -104,5 +105,49 @@ describe("DocumentComposer shell", () => {
     expect(screen.getAllByText(/Department & Account/i).length).toBeGreaterThan(0);
     // DocumentDetailsSection — Running invoice switch (invoice variant)
     expect(screen.getByRole("switch", { name: /Running invoice/i })).toBeInTheDocument();
+  });
+
+  it("preview drawer shows charged price when margin is enabled", async () => {
+    const { result } = renderHook(() => useInvoiceForm());
+    act(() => {
+      result.current.setForm((prev) => ({
+        ...prev,
+        marginEnabled: true,
+        marginPercent: 50,
+        items: [
+          {
+            ...prev.items[0],
+            description: "WIDGET",
+            quantity: 2,
+            unitPrice: 10,
+            costPrice: 10,
+            extendedPrice: 30,
+            isTaxable: false,
+          },
+        ],
+      }));
+    });
+
+    render(
+      <DocumentComposer
+        composer={{ docType: "invoice", form: result.current }}
+        mode="create"
+        status="DRAFT"
+        canManageActions
+      />,
+    );
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: /^Preview$/ }));
+
+    const sheet = await screen.findByRole("dialog");
+    const utils = within(sheet);
+    // Charged unit price = cost 10 * (1 + 50/100) = 15. Extended at qty 2 = 30.
+    // 30 appears three times (line extended, subtotal, grand total).
+    expect(utils.getByText("$15.00")).toBeInTheDocument();
+    expect(utils.getAllByText("$30.00").length).toBeGreaterThanOrEqual(1);
+    // Cost basis must NOT leak into the preview when margin is on.
+    expect(utils.queryByText("$10.00")).toBeNull();
+    expect(utils.queryByText("$20.00")).toBeNull();
   });
 });
