@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { ComposerHeader } from "./composer-header";
@@ -13,7 +13,14 @@ import { NotesSection } from "./sections/notes-section";
 import { ApprovalOutputSection } from "./sections/approval-output";
 import { CatalogDrawer } from "./drawers/catalog-drawer";
 import { TemplatesDrawer } from "./drawers/templates-drawer";
+import { PreviewDrawer } from "./drawers/preview-drawer";
+import { BlockerSummary } from "./drawers/blocker-summary";
+import { SummaryRail } from "./rail/summary-rail";
+import { DraftRestoreBanner } from "./primitives/draft-restore-banner";
+import { BottomActionBar } from "./primitives/bottom-action-bar";
 import { useComposerValidation } from "./hooks/use-composer-validation";
+import { useSectionJump } from "./hooks/use-section-jump";
+import { Button } from "@/components/ui/button";
 import type { ComposerStatus, DocType, SectionAnchor } from "./types";
 import type { useInvoiceForm } from "@/components/invoice/invoice-form";
 import type { useQuoteForm } from "@/components/quote/quote-form";
@@ -22,7 +29,6 @@ import type { TemplateResponse } from "@/domains/template/types";
 import { openDeferredRegisterPrintWindow } from "@/components/shared/register-print-loader";
 import { formatDateLong as formatDate } from "@/lib/formatters";
 import { CREATE_PAGE_DRAFT_MAX_AGE_MS, useAutoSave, loadDraft } from "@/lib/use-auto-save";
-import { DraftRecoveryBanner } from "@/components/ui/draft-recovery-banner";
 import type { InvoiceFormData } from "@/components/invoice/hooks/use-invoice-form-state";
 import type { QuoteFormData } from "@/components/quote/quote-form";
 
@@ -51,23 +57,22 @@ export function DocumentComposer({
   const existingId = composer.form.existingId;
 
   const validation = useComposerValidation(form, docType);
+  const { jump } = useSectionJump();
 
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
   const [templatesMode, setTemplatesMode] = useState<"load" | "save">("load");
   const [catalogFilter, setCatalogFilter] = useState<string | undefined>(undefined);
-  const [drawer, setDrawer] = useState<"catalog" | "templates" | null>(null);
-  // consumed by P6 BlockerSummary
-  const [, setShowBlockers] = useState(false);
+  const [drawer, setDrawer] = useState<"catalog" | "templates" | "preview" | null>(null);
+  const [showBlockers, setShowBlockers] = useState(false);
 
   // Auto-save + draft recovery — mirrors the legacy KeyboardMode/QuoteMode wiring
-  // so /invoices/new keeps draft persistence after P5.7's repoint. P6.1 will
-  // extend useAutoSave to surface isDirty/savingDraft/lastSavedAt for the rail.
+  // so /invoices/new keeps draft persistence after P5.7's repoint.
   const { data: session } = useSession();
   const userId = (session?.user as { id?: string } | undefined)?.id ?? null;
   const routeKey = existingId
     ? (docType === "invoice" ? `/invoices/${existingId}/edit` : `/quotes/${existingId}/edit`)
     : (docType === "invoice" ? "/invoices/new" : "/quotes/new");
-  const { clearDraft } = useAutoSave(form, routeKey, userId);
+  const { clearDraft, isDirty, savingDraft, lastSavedAt } = useAutoSave(form, routeKey, userId);
   const [draftEntry, setDraftEntry] = useState<{ data: InvoiceFormData | QuoteFormData; savedAt: number } | null>(null);
 
   useEffect(() => {
@@ -85,6 +90,18 @@ export function DocumentComposer({
       cancelled = true;
     };
   }, [existingId, userId, routeKey]);
+
+  // Derive item count + total preview values for <DraftRestoreBanner>. Total
+  // uses extendedPrice when present (matches what the user saw before reload).
+  const draftPreview = useMemo(() => {
+    if (!draftEntry) return null;
+    const items = draftEntry.data.items ?? [];
+    const total = items.reduce(
+      (sum, it) => sum + Number(it.extendedPrice ?? 0),
+      0,
+    );
+    return { itemCount: items.length, total };
+  }, [draftEntry]);
 
   function statusForAnchor(anchor: SectionAnchor): "default" | "complete" | "blocker" {
     if (validation.blockers.some((b) => b.anchor === anchor)) return "blocker";
@@ -279,15 +296,56 @@ export function DocumentComposer({
         documentNumber={documentNumber}
         date={form.date}
         isRunning={"isRunning" in form ? form.isRunning : false}
+        actionsRight={
+          <>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setTemplatesMode("load");
+                setDrawer("templates");
+              }}
+            >
+              Templates
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setDrawer("preview")}
+            >
+              Preview
+            </Button>
+            <span className="h-4 w-px bg-border" aria-hidden />
+            <Button variant="outline" size="sm" onClick={handlePrintRegister}>
+              Print Register
+            </Button>
+          </>
+        }
       />
-      {draftEntry && (
-        <DraftRecoveryBanner
-          savedAt={draftEntry.savedAt}
-          onResume={handleResumeDraft}
-          onDiscard={handleDiscardDraft}
-        />
-      )}
       <ComposerLayout
+        banners={
+          <>
+            {draftEntry && draftPreview && (
+              <DraftRestoreBanner
+                savedAt={draftEntry.savedAt}
+                itemCount={draftPreview.itemCount}
+                total={draftPreview.total}
+                onResume={handleResumeDraft}
+                onDiscard={handleDiscardDraft}
+              />
+            )}
+            {showBlockers && validation.blockers.length > 0 && (
+              <BlockerSummary
+                blockers={validation.blockers}
+                onClose={() => setShowBlockers(false)}
+                onJump={(a) => {
+                  jump(a);
+                  setShowBlockers(false);
+                }}
+              />
+            )}
+          </>
+        }
         workflow={
           <>
             {composer.docType === "invoice" ? (
@@ -373,17 +431,29 @@ export function DocumentComposer({
           </>
         }
         rail={
-          <div className="rounded-lg border border-border bg-card p-4 shadow-rail">
-            <p className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-              Readiness
-            </p>
-            <p className="mt-1 text-2xl font-bold tabular-nums">
-              {Math.round(validation.readiness * 100)}%
-            </p>
-            <p className="mt-2 text-[12.5px] text-muted-foreground">
-              {validation.blockers.length} blocker(s) · {validation.totals.itemCount} item(s)
-            </p>
-          </div>
+          <SummaryRail
+            readiness={validation.readiness}
+            blockerCount={validation.blockers.length}
+            docType={composer.docType}
+            totals={validation.totals}
+            marginEnabled={composer.form.form.marginEnabled}
+            taxEnabled={composer.form.form.taxEnabled}
+            taxRate={composer.form.form.taxRate}
+            accountNumber={composer.form.form.accountNumber}
+            department={composer.form.form.department}
+            saving={composer.form.saving}
+            primaryDisabled={validation.blockers.length > 0 || composer.form.saving}
+            canSaveDraft={validation.canSaveDraft}
+            checklist={validation.checklist}
+            isDirty={isDirty}
+            savingDraft={savingDraft}
+            lastSavedAt={lastSavedAt}
+            onPrimaryAction={handlePrimaryAction}
+            onSaveDraft={handleSaveDraft}
+            onPrintRegister={handlePrintRegister}
+            onJumpToBlockers={() => setShowBlockers(true)}
+            onJump={jump}
+          />
         }
       />
       <CatalogDrawer
@@ -404,6 +474,53 @@ export function DocumentComposer({
         onOpenChange={(o) => setDrawer(o ? "templates" : null)}
         onLoadTemplate={handleLoadTemplate}
         onSaveTemplate={handleSaveTemplate}
+      />
+      <PreviewDrawer
+        open={drawer === "preview"}
+        onOpenChange={(o) => setDrawer(o ? "preview" : null)}
+        docType={composer.docType}
+        date={composer.form.form.date}
+        department={composer.form.form.department}
+        category={composer.form.form.category}
+        items={composer.form.form.items.map((i) => ({
+          description: i.description,
+          sku: i.sku,
+          quantity: Number(i.quantity),
+          unitPrice: Number(i.unitPrice),
+          isTaxable: i.isTaxable,
+        }))}
+        totals={validation.totals}
+        taxEnabled={composer.form.form.taxEnabled}
+        taxRate={composer.form.form.taxRate}
+        signatures={
+          composer.docType === "invoice"
+            ? [
+                composer.form.form.signatures.line1,
+                composer.form.form.signatures.line2,
+                composer.form.form.signatures.line3,
+              ]
+                .filter(Boolean)
+                .map((s) => {
+                  const [name, title] = s.split(" — ");
+                  return { name: name ?? s, title };
+                })
+            : []
+        }
+        notes={composer.form.form.notes}
+        onPrimaryAction={() => {
+          setDrawer(null);
+          void handlePrimaryAction();
+        }}
+      />
+      <BottomActionBar
+        primaryLabel={composer.docType === "invoice" ? "Generate PDF" : "Save Quote"}
+        primaryDisabled={validation.blockers.length > 0 || composer.form.saving}
+        grandTotal={validation.totals.grandTotal}
+        onPrimaryAction={handlePrimaryAction}
+        onOpenSummary={() => {
+          // P6: rail is desktop-only; placeholder until a bottom-sheet rail lands.
+          toast.info("Summary view coming soon — rotate to a wider screen for now.");
+        }}
       />
     </>
   );
