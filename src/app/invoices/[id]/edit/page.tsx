@@ -77,6 +77,7 @@ function mapApiToFormData(invoice: ApiInvoice): InvoiceFormData {
     contactPhone: "",
     semesterYearDept: invoice.pdfMetadata?.semesterYearDept ?? "",
     notes: invoice.notes ?? "",
+    internalNotes: "",
     isRunning: invoice.isRunning,
     runningTitle: invoice.runningTitle ?? "",
     marginEnabled: invoice.marginEnabled ?? false,

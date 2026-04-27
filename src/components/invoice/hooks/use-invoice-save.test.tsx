@@ -41,6 +41,7 @@ const baseForm: InvoiceFormData = {
   contactPhone: "",
   semesterYearDept: "SP26-IT",
   notes: "",
+  internalNotes: "",
   isRecurring: false,
   recurringInterval: "",
   recurringEmail: "",

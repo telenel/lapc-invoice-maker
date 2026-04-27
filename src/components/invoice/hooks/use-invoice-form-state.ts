@@ -45,6 +45,8 @@ export interface InvoiceFormData {
   // Additional fields
   semesterYearDept: string;
   notes: string;
+  /** Stored in pdfMetadata, never rendered on the PDF */
+  internalNotes: string;
   // Recurring invoice fields
   isRecurring: boolean;
   recurringInterval: string;
@@ -113,6 +115,7 @@ export function defaultForm(): InvoiceFormData {
     contactPhone: "",
     semesterYearDept: "",
     notes: "",
+    internalNotes: "",
     isRecurring: false,
     recurringInterval: "",
     recurringEmail: "",

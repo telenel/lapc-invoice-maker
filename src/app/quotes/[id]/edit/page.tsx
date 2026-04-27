@@ -88,6 +88,7 @@ function mapApiToFormData(quote: ApiQuote): QuoteFormData {
     contactEmail: "",
     contactPhone: "",
     notes: quote.notes ?? "",
+    internalNotes: "",
     expirationDate: quote.expirationDate ? quote.expirationDate.split("T")[0] : "",
     recipientName: quote.recipientName ?? "",
     recipientEmail: quote.recipientEmail ?? "",

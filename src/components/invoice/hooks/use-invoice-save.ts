@@ -29,6 +29,7 @@ function buildPayload(form: InvoiceFormData) {
       semesterYearDept: form.semesterYearDept,
       contactName: form.contactName,
       contactExtension: form.contactExtension,
+      internalNotes: form.internalNotes,
     },
     isRecurring: form.isRecurring,
     recurringInterval: form.recurringInterval || undefined,
