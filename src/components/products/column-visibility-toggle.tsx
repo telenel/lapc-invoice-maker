@@ -105,12 +105,21 @@ export const ColumnVisibilityToggle = forwardRef<ColumnVisibilityHandle, Props>(
       },
     }), [active, base, runtimeOverride, onRuntimeChange]);
 
+    // Trigger label: name of the matching preset, or "Custom" if the user
+    // has hand-picked an idiosyncratic column set. Count always reflects the
+    // currently-visible optional column count.
+    const matchingPreset = COLUMN_PRESETS.find((p) => presetMatches(p.columns));
+    const triggerLabel = matchingPreset?.label ?? "Custom";
+
     return (
       <Popover>
         <PopoverTrigger
           render={
-            <Button variant="outline" size="sm">
-              + Add column
+            <Button variant="outline" size="sm" className="gap-1">
+              <span className="text-muted-foreground">{triggerLabel}</span>
+              <span className="font-mono tnum text-[10px] text-muted-foreground">
+                · {active.length}
+              </span>
             </Button>
           }
         />

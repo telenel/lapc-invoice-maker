@@ -1310,14 +1310,41 @@ export default function ProductsPageClient() {
         onAdvancedToggle={() => setAdvancedOpen((o) => !o)}
       />
 
-      {/* Table chrome — provisional row (Phase 6.6 will polish into TableChromeBar) */}
-      <div className="page-enter page-enter-3 mb-2 flex flex-wrap items-center justify-end gap-1.5">
-        {hiddenCount > 0 && (
-          <span className="text-[11px] text-muted-foreground rounded-full bg-muted px-2 py-1">
-            {hiddenCount} hidden
+      {/* TABLE chrome — density · columns · sort indicator · save view */}
+      <div className="page-enter page-enter-3 mb-2 flex flex-wrap items-center gap-3">
+        <div className="inline-flex items-center gap-2">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            Table
           </span>
-        )}
-        <DensityToggle value={tableDensity} onChange={setTableDensity} />
+          <DensityToggle value={tableDensity} onChange={setTableDensity} />
+        </div>
+
+        <div className="inline-flex items-center gap-2">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+            Columns
+          </span>
+          <ColumnVisibilityToggle
+            ref={columnsRef}
+            runtimeOverride={runtimeColumns}
+            onUserChange={setBaseColumns}
+            onRuntimeChange={setRuntimeColumns}
+            onResetRuntime={() => setRuntimeColumns(null)}
+          />
+          {hiddenCount > 0 ? (
+            <span className="text-[10.5px] text-muted-foreground" title={`${hiddenCount} optional columns hidden by current viewport`}>
+              {hiddenCount} hidden
+            </span>
+          ) : null}
+        </div>
+
+        <span className="flex-1" />
+
+        <span className="text-[10.5px] text-muted-foreground">
+          Sorted by{" "}
+          <span className="font-semibold text-foreground">{filters.sortBy}</span>
+          <span className="ml-1 font-mono">{filters.sortDir === "asc" ? "↑" : "↓"}</span>
+        </span>
+
         <Button
           size="sm"
           variant="outline"
@@ -1326,13 +1353,6 @@ export default function ProductsPageClient() {
         >
           + Save View
         </Button>
-        <ColumnVisibilityToggle
-          ref={columnsRef}
-          runtimeOverride={runtimeColumns}
-          onUserChange={setBaseColumns}
-          onRuntimeChange={setRuntimeColumns}
-          onResetRuntime={() => setRuntimeColumns(null)}
-        />
       </div>
 
       {advancedOpen ? (
