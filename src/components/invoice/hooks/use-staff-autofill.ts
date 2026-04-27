@@ -4,7 +4,7 @@ import { useState, useCallback, useRef } from "react";
 import type { StaffDetailResponse, AccountNumberResponse, SignerHistoryResponse } from "@/domains/staff/types";
 import type { InvoiceFormData } from "./use-invoice-form-state";
 
-// Re-exported for backward compatibility with account-select.tsx and keyboard-mode.tsx
+// Re-exported for backward compatibility with account-select.tsx.
 export type StaffAccountNumber = AccountNumberResponse;
 
 export function useStaffAutofill(

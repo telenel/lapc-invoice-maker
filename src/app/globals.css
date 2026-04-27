@@ -795,31 +795,6 @@ body::after {
   mix-blend-mode: soft-light;
 }
 
-.keyboard-mode input:focus-visible,
-.keyboard-mode textarea:focus-visible,
-.keyboard-mode [role="combobox"]:focus-visible {
-  border-color: var(--ring) !important;
-  box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 15%, transparent) !important;
-  background-color: color-mix(in oklch, var(--ring) 4%, transparent) !important;
-}
-
-.keyboard-mode .section-label {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  color: var(--muted-foreground);
-  padding: 0.25rem 0;
-}
-
-.keyboard-mode .auto-filled-summary {
-  cursor: pointer;
-}
-
-.keyboard-mode .auto-filled-summary:hover {
-  text-decoration: underline;
-  text-decoration-style: dotted;
-}
-
 @page {
   margin: 0.5in;
 }

@@ -65,8 +65,7 @@ export function DocumentComposer({
   const [drawer, setDrawer] = useState<"catalog" | "templates" | "preview" | null>(null);
   const [showBlockers, setShowBlockers] = useState(false);
 
-  // Auto-save + draft recovery — mirrors the legacy KeyboardMode/QuoteMode wiring
-  // so /invoices/new keeps draft persistence after P5.7's repoint.
+  // Auto-save + draft recovery for both create and edit flows.
   const { data: session } = useSession();
   const userId = (session?.user as { id?: string } | undefined)?.id ?? null;
   const routeKey = existingId
