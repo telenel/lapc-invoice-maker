@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDownIcon, ChevronUpIcon, RefreshCwIcon, SlidersHorizontalIcon, XIcon } from "lucide-react";
+import { ChevronDownIcon, ChevronUpIcon, PanelLeftIcon, RefreshCwIcon, SlidersHorizontalIcon, XIcon } from "lucide-react";
 import { getProductActiveFilterChips } from "@/components/products/product-filters";
 import type { ProductFilters } from "@/domains/product/types";
 
@@ -12,6 +12,14 @@ interface Props {
   onClearPreset?: () => void;
   advancedOpen?: boolean;
   onAdvancedToggle?: () => void;
+  /**
+   * Show the rail-toggle button when wired. The full filter rail (40+ fields)
+   * lives in ProductFiltersBar; the chip row exposes a button to expand it
+   * for power users without forcing the rail to occupy horizontal space by
+   * default.
+   */
+  railOpen?: boolean;
+  onRailToggle?: () => void;
 }
 
 const TOGGLE_CHIP_KEYS = new Set([
@@ -142,6 +150,8 @@ export function ProductFilterChipBar({
   onClearPreset,
   advancedOpen,
   onAdvancedToggle,
+  railOpen,
+  onRailToggle,
 }: Props) {
   const valueChips = getProductActiveFilterChips(filters).filter(
     (chip) => !TOGGLE_CHIP_KEYS.has(chip.key) && chip.key !== "search",
@@ -227,6 +237,23 @@ export function ProductFilterChipBar({
             ) : (
               <ChevronDownIcon className="size-3" aria-hidden="true" />
             )}
+          </button>
+        ) : null}
+
+        {onRailToggle ? (
+          <button
+            type="button"
+            onClick={onRailToggle}
+            aria-expanded={railOpen}
+            title={railOpen ? "Collapse the full filter rail" : "Show the full filter rail (40+ fields)"}
+            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+              railOpen
+                ? "border-primary/30 bg-primary/[0.06] text-primary"
+                : "border-border bg-card text-foreground hover:bg-accent"
+            }`}
+          >
+            <PanelLeftIcon className="size-3" aria-hidden="true" />
+            All filters
           </button>
         ) : null}
 

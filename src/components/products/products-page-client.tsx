@@ -380,6 +380,25 @@ export default function ProductsPageClient() {
     product: ProductBrowseRow;
     selectedSingle: SelectedProduct;
   } | null>(null);
+  const RAIL_STORAGE_KEY = "products:rail-open:v1";
+  const [railOpen, setRailOpen] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const raw = window.localStorage?.getItem?.(RAIL_STORAGE_KEY);
+      return raw === "true";
+    } catch {
+      return false;
+    }
+  });
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage?.setItem?.(RAIL_STORAGE_KEY, String(railOpen));
+    } catch {
+      // localStorage unavailable; rail collapses to default on next mount.
+    }
+  }, [railOpen]);
+
   const [tableDensity, setTableDensity] = useState<TableDensity>(() => {
     if (typeof window === "undefined") return DEFAULT_TABLE_DENSITY;
     try {
@@ -1308,6 +1327,8 @@ export default function ProductsPageClient() {
         onClearPreset={activeView ? handleClearPreset : undefined}
         advancedOpen={advancedOpen}
         onAdvancedToggle={() => setAdvancedOpen((o) => !o)}
+        railOpen={railOpen}
+        onRailToggle={() => setRailOpen((o) => !o)}
       />
 
       {/* TABLE chrome — density · columns · sort indicator · save view */}
@@ -1389,23 +1410,27 @@ export default function ProductsPageClient() {
 
       {/* Rail + Table + Inspector */}
       <div className="page-enter page-enter-4 flex items-start gap-3">
-        <div className="hidden md:block">
-          <ProductFiltersBar
-            filters={filters}
-            onChange={handleFilterChange}
-            onClear={handleClearFilters}
-          />
-        </div>
+        {railOpen ? (
+          <div className="hidden md:block">
+            <ProductFiltersBar
+              filters={filters}
+              onChange={handleFilterChange}
+              onClear={handleClearFilters}
+            />
+          </div>
+        ) : null}
         <div className="flex min-w-0 flex-1 items-start gap-3">
           <div className="min-w-0 flex-1">
-            {/* Mobile filters collapse above the table */}
-            <div className="mb-3 md:hidden">
-              <ProductFiltersBar
-                filters={filters}
-                onChange={handleFilterChange}
-                onClear={handleClearFilters}
-              />
-            </div>
+            {/* Mobile filters collapse above the table — only when expanded */}
+            {railOpen ? (
+              <div className="mb-3 md:hidden">
+                <ProductFiltersBar
+                  filters={filters}
+                  onChange={handleFilterChange}
+                  onClear={handleClearFilters}
+                />
+              </div>
+            ) : null}
             <ProductTable
               tab={filters.tab}
               products={data?.products ?? []}
