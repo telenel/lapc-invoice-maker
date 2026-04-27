@@ -3,6 +3,9 @@
 import { ComposerHeader } from "./composer-header";
 import { ComposerLayout } from "./composer-layout";
 import { SectionCard } from "./sections/section-card";
+import { PeopleSection } from "./sections/people-section";
+import { DepartmentAccountSection } from "./sections/department-account";
+import { DocumentDetailsSection } from "./sections/document-details";
 import { useComposerValidation } from "./hooks/use-composer-validation";
 import type { ComposerStatus, DocType, SectionAnchor } from "./types";
 import type { useInvoiceForm } from "@/components/invoice/invoice-form";
@@ -52,30 +55,36 @@ export function DocumentComposer({
       <ComposerLayout
         workflow={
           <>
-            <SectionCard
-              step={1}
-              title="People"
-              anchor="section-people"
-              status={statusForAnchor("section-people")}
-            >
-              <p className="text-sm text-muted-foreground">P3 places content here.</p>
-            </SectionCard>
-            <SectionCard
-              step={2}
-              title="Department & Account"
-              anchor="section-department"
-              status={statusForAnchor("section-department")}
-            >
-              <p className="text-sm text-muted-foreground">P3 places content here.</p>
-            </SectionCard>
-            <SectionCard
-              step={3}
-              title="Document Details"
-              anchor="section-details"
-              status={statusForAnchor("section-details")}
-            >
-              <p className="text-sm text-muted-foreground">P3 places content here.</p>
-            </SectionCard>
+            {composer.docType === "invoice" ? (
+              <PeopleSection
+                docType="invoice"
+                composer={composer.form}
+                sectionStatus={statusForAnchor("section-people")}
+              />
+            ) : (
+              <PeopleSection
+                docType="quote"
+                composer={composer.form}
+                sectionStatus={statusForAnchor("section-people")}
+              />
+            )}
+            <DepartmentAccountSection
+              composer={composer.form}
+              sectionStatus={statusForAnchor("section-department")}
+            />
+            {composer.docType === "invoice" ? (
+              <DocumentDetailsSection
+                docType="invoice"
+                composer={composer.form}
+                sectionStatus={statusForAnchor("section-details")}
+              />
+            ) : (
+              <DocumentDetailsSection
+                docType="quote"
+                composer={composer.form}
+                sectionStatus={statusForAnchor("section-details")}
+              />
+            )}
             <SectionCard
               step={4}
               title="Items & Pricing"
