@@ -31,6 +31,10 @@ export interface CateringDetails {
 
 // ── DTOs ──────────────────────────────────────────────────────────────────
 
+export interface QuotePdfMetadata {
+  internalNotes?: string;
+}
+
 export interface QuoteItemResponse {
   id: string;
   description: string;
@@ -73,6 +77,7 @@ export interface QuoteResponse {
   recipientEmail: string;
   recipientOrg: string;
   pdfPath: string | null;
+  pdfMetadata: QuotePdfMetadata | null;
   shareToken: string | null;
   createdAt: string;
   archivedAt?: string | null;
@@ -205,6 +210,7 @@ export interface CreateQuoteInput {
   marginPercent?: number;
   taxEnabled?: boolean;
   taxRate?: number;
+  pdfMetadata?: QuotePdfMetadata;
 }
 
 export interface UpdateQuoteInput {
@@ -232,6 +238,7 @@ export interface UpdateQuoteInput {
   marginPercent?: number;
   taxEnabled?: boolean;
   taxRate?: number;
+  pdfMetadata?: QuotePdfMetadata;
 }
 
 export interface QuoteFilters {

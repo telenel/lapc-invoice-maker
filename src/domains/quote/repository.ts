@@ -289,13 +289,14 @@ export async function create(
     marginPercent?: number;
     taxEnabled?: boolean;
     taxRate?: number;
+    pdfMetadata?: Prisma.InputJsonValue;
   },
   calculatedItems: CalculatedLineItem[],
   totalAmount: number,
   creatorId: string,
   quoteNumber: string
 ) {
-  const { date, expirationDate, accountCode, isCateringEvent, cateringDetails, marginEnabled, marginPercent, taxEnabled, ...quoteData } = input;
+  const { date, expirationDate, accountCode, isCateringEvent, cateringDetails, marginEnabled, marginPercent, taxEnabled, pdfMetadata, ...quoteData } = input;
 
   return prisma.invoice.create({
     data: {
@@ -314,6 +315,7 @@ export async function create(
       marginPercent: marginPercent ?? undefined,
       taxEnabled: taxEnabled ?? false,
       taxRate: input.taxRate ?? undefined,
+      pdfMetadata: pdfMetadata ?? undefined,
       items: {
         create: calculatedItems.map((item) => ({
           description: item.description,
