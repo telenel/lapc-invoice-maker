@@ -76,7 +76,11 @@ export function useComposerValidation(form: AnyForm, docType: DocType) {
 
   const blockers = useMemo<BlockerEntry[]>(() => {
     const list: BlockerEntry[] = [];
-    if (!form.staffId) {
+
+    // Invoice always needs a staff requestor. Quote uses a single `recipient`
+    // blocker that covers both internal mode (staffId set) and external mode
+    // (recipientName set) — see spec §4 "Validation — quote blockers".
+    if (docType === "invoice" && !form.staffId) {
       list.push({
         field: "requestor",
         label: "Requestor required",
@@ -85,11 +89,11 @@ export function useComposerValidation(form: AnyForm, docType: DocType) {
     }
 
     if (docType === "quote" && !isInvoiceForm(form)) {
-      const isExternal = !form.staffId;
-      if (isExternal && !form.recipientName.trim()) {
+      const recipientOk = !!form.staffId || !!form.recipientName.trim();
+      if (!recipientOk) {
         list.push({
           field: "recipient",
-          label: "Recipient required",
+          label: "Requestor or recipient required",
           anchor: "section-people",
         });
       }
@@ -210,15 +214,16 @@ export function useComposerValidation(form: AnyForm, docType: DocType) {
     }
 
     if (!isInvoiceForm(form)) {
-      const isExternal = !form.staffId;
-      const recipientOk = !isExternal || !!form.recipientName.trim();
+      const recipientOk = !!form.staffId || !!form.recipientName.trim();
       return [
         {
           id: "requestor",
           label: "Requestor selected",
           anchor: "section-people",
           complete: !!form.staffId,
-          blocker: !form.staffId,
+          // For quotes, requestor is a soft to-do, not a hard blocker —
+          // external-mode quotes intentionally have no staffId.
+          blocker: false,
         },
         {
           id: "recipient",
@@ -272,13 +277,17 @@ export function useComposerValidation(form: AnyForm, docType: DocType) {
       form.items.every(
         (i) => i.description.trim() && Number(i.quantity) > 0,
       );
-    const minimum =
-      !!form.department && !!form.date && !!form.staffId && itemsValid;
-    if (!minimum) return false;
-    if (docType === "quote" && !isInvoiceForm(form)) {
-      return !!form.recipientName.trim() || !!form.staffId;
+    if (!itemsValid || !form.department || !form.date) return false;
+
+    if (docType === "invoice") {
+      return !!form.staffId;
     }
-    return true;
+    // Quote: schema minimum needs recipientName OR staffId (internal-mode UX
+    // auto-fills recipientName from the selected staff record on staff pick).
+    if (!isInvoiceForm(form)) {
+      return !!form.staffId || !!form.recipientName.trim();
+    }
+    return false;
   }, [form, docType]);
 
   return { blockers, checklist, readiness, canSaveDraft, totals };

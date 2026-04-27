@@ -213,6 +213,29 @@ describe("useComposerValidation quote blockers", () => {
     const { result } = renderHook(() => useComposerValidation(form, "quote"));
     expect(result.current.blockers).toHaveLength(0);
   });
+
+  it("does not flag requestor blocker for external quotes (no staffId, recipientName set)", () => {
+    const form = quoteForm({
+      staffId: "",
+      recipientName: "Acme Corp",
+      department: "BKST",
+      accountNumber: "1",
+      category: "external",
+      items: [{ _key: "a", sku: null, description: "y", quantity: 1, unitPrice: 5, extendedPrice: 5, sortOrder: 0, isTaxable: true, marginOverride: null, costPrice: null }],
+    });
+    const { result } = renderHook(() => useComposerValidation(form, "quote"));
+    expect(result.current.blockers.find((b) => b.field === "requestor")).toBeFalsy();
+    expect(result.current.blockers.find((b) => b.field === "recipient")).toBeFalsy();
+    expect(result.current.blockers).toHaveLength(0);
+  });
+
+  it("checklist requestor item is non-blocker for external quotes", () => {
+    const form = quoteForm({ staffId: "", recipientName: "Acme Corp" });
+    const { result } = renderHook(() => useComposerValidation(form, "quote"));
+    const requestorItem = result.current.checklist.find((c) => c.id === "requestor");
+    expect(requestorItem?.blocker).toBe(false);
+    expect(requestorItem?.complete).toBe(false);
+  });
 });
 
 describe("useComposerValidation canSaveDraft", () => {
@@ -228,6 +251,39 @@ describe("useComposerValidation canSaveDraft", () => {
   it("invoice: false when no items", () => {
     const form = invoiceForm({ staffId: "x", department: "BKST", items: [] });
     const { result } = renderHook(() => useComposerValidation(form, "invoice"));
+    expect(result.current.canSaveDraft).toBe(false);
+  });
+
+  it("quote external: true with recipientName + department + date + valid item, no staffId", () => {
+    const form = quoteForm({
+      staffId: "",
+      recipientName: "Acme Corp",
+      department: "BKST",
+      items: [{ _key: "a", sku: null, description: "y", quantity: 1, unitPrice: 5, extendedPrice: 5, sortOrder: 0, isTaxable: true, marginOverride: null, costPrice: null }],
+    });
+    const { result } = renderHook(() => useComposerValidation(form, "quote"));
+    expect(result.current.canSaveDraft).toBe(true);
+  });
+
+  it("quote internal: true with staffId + department + date + valid item, no recipientName yet", () => {
+    const form = quoteForm({
+      staffId: "x",
+      recipientName: "",
+      department: "BKST",
+      items: [{ _key: "a", sku: null, description: "y", quantity: 1, unitPrice: 5, extendedPrice: 5, sortOrder: 0, isTaxable: true, marginOverride: null, costPrice: null }],
+    });
+    const { result } = renderHook(() => useComposerValidation(form, "quote"));
+    expect(result.current.canSaveDraft).toBe(true);
+  });
+
+  it("quote: false with neither staffId nor recipientName", () => {
+    const form = quoteForm({
+      staffId: "",
+      recipientName: "",
+      department: "BKST",
+      items: [{ _key: "a", sku: null, description: "y", quantity: 1, unitPrice: 5, extendedPrice: 5, sortOrder: 0, isTaxable: true, marginOverride: null, costPrice: null }],
+    });
+    const { result } = renderHook(() => useComposerValidation(form, "quote"));
     expect(result.current.canSaveDraft).toBe(false);
   });
 });
