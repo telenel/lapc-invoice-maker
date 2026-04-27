@@ -467,6 +467,7 @@ export const invoiceService = {
       semesterYearDept: input.semesterYearDept ?? storedPdfMetadata?.semesterYearDept,
       contactName: input.contactName ?? storedPdfMetadata?.contactName,
       contactExtension: input.contactExtension ?? storedPdfMetadata?.contactExtension,
+      // internalNotes is authored via create/update; finalize only preserves the stored value.
       internalNotes: storedPdfMetadata?.internalNotes,
     };
     const prismcorePath = input.prismcorePath ?? invoice.prismcorePath ?? null;
