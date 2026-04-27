@@ -189,31 +189,35 @@ export function DocumentComposer({
 
   async function handleSaveTemplate(payload: { name: string; category: string; notes: string }) {
     const f = composer.form.form;
-    await templateApi.create({
-      name: payload.name,
-      type: composer.docType === "invoice" ? "INVOICE" : "QUOTE",
-      category: payload.category,
-      notes: payload.notes,
-      marginEnabled: f.marginEnabled,
-      marginPercent: f.marginEnabled ? f.marginPercent : undefined,
-      taxEnabled: f.taxEnabled,
-      taxRate: f.taxRate,
-      isCateringEvent: "isCateringEvent" in f ? f.isCateringEvent : false,
-      items: f.items
-        .filter((i) => i.description.trim() && Number(i.quantity) > 0)
-        .map((i, idx) => ({
-          description: i.description,
-          quantity: Number(i.quantity),
-          unitPrice: Number(i.unitPrice),
-          sortOrder: idx,
-          isTaxable: i.isTaxable,
-          costPrice: i.costPrice ?? undefined,
-          marginOverride: i.marginOverride ?? undefined,
-          sku: i.sku ?? undefined,
-        })),
-    });
-    toast.success("Template saved");
-    setDrawer(null);
+    try {
+      await templateApi.create({
+        name: payload.name,
+        type: composer.docType === "invoice" ? "INVOICE" : "QUOTE",
+        category: payload.category,
+        notes: payload.notes,
+        marginEnabled: f.marginEnabled,
+        marginPercent: f.marginEnabled ? f.marginPercent : undefined,
+        taxEnabled: f.taxEnabled,
+        taxRate: f.taxRate,
+        isCateringEvent: "isCateringEvent" in f ? f.isCateringEvent : false,
+        items: f.items
+          .filter((i) => i.description.trim() && Number(i.quantity) > 0)
+          .map((i, idx) => ({
+            description: i.description,
+            quantity: Number(i.quantity),
+            unitPrice: Number(i.unitPrice),
+            sortOrder: idx,
+            isTaxable: i.isTaxable,
+            costPrice: i.costPrice ?? undefined,
+            marginOverride: i.marginOverride ?? undefined,
+            sku: i.sku ?? undefined,
+          })),
+      });
+      toast.success("Template saved");
+      setDrawer(null);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save template");
+    }
   }
 
   return (
