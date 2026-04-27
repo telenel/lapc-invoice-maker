@@ -54,11 +54,17 @@ function computeTotals(form: AnyForm): ComposerTotals {
     }
   }
 
+  // Round currency to 2 decimals to avoid fractional-cent drift propagating
+  // through tax and grand-total. Mirrors src/components/invoice/hooks/use-tax-calculation.ts.
+  const round2 = (n: number) => Math.round(n * 100) / 100;
+
   const taxAmount = form.taxEnabled
-    ? taxableSubtotal * Number(form.taxRate)
+    ? round2(taxableSubtotal * Number(form.taxRate))
     : 0;
-  const marginAmount = form.marginEnabled ? subtotal - marginCost : 0;
-  const grandTotal = subtotal + taxAmount;
+  const marginAmount = form.marginEnabled
+    ? round2(subtotal - marginCost)
+    : 0;
+  const grandTotal = round2(subtotal + taxAmount);
 
   return {
     subtotal,

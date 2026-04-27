@@ -125,6 +125,22 @@ describe("useComposerValidation totals", () => {
     expect(result.current.totals.subtotal).toBe(30);
     expect(result.current.totals.marginAmount).toBeCloseTo(10, 5);
   });
+
+  it("rounds tax and grand total to 2 decimals (no fractional cents)", () => {
+    // 33 * 0.0975 = 3.2175 → must round to 3.22; grand total 36.22 (not 36.2175)
+    const form = invoiceForm({
+      taxEnabled: true,
+      taxRate: 0.0975,
+      items: [
+        { _key: "a", sku: null, description: "x", quantity: 1, unitPrice: 33, extendedPrice: 33, sortOrder: 0, isTaxable: true, marginOverride: null, costPrice: null },
+      ],
+    });
+    const { result } = renderHook(() => useComposerValidation(form, "invoice"));
+    expect(result.current.totals.taxAmount).toBe(3.22);
+    expect(result.current.totals.grandTotal).toBe(36.22);
+    expect(Number.isInteger(result.current.totals.taxAmount * 100)).toBe(true);
+    expect(Number.isInteger(result.current.totals.grandTotal * 100)).toBe(true);
+  });
 });
 
 describe("useComposerValidation invoice blockers", () => {
