@@ -188,7 +188,13 @@ export function ProductActionBar({
       label: `Mixed locations · ${locationsTouched.size}`,
     });
   }
-  const trayRight = inspectorOpen ? 16 + 320 + 16 : 16;
+  // The inspector pane is only mounted on lg+ (>=1024px) viewports,
+  // so the tray's right-offset must follow the same breakpoint —
+  // applying 352px below lg would shove the tray off-screen on tablets.
+  // Inline style sets the small-screen value; the lg-prefixed class wins
+  // at lg+ when the inspector is actually visible.
+  const trayInlineRight = 16;
+  const trayLgRightClass = inspectorOpen ? "lg:!right-[352px]" : "lg:!right-4";
 
   return (
     <AnimatePresence>
@@ -199,8 +205,8 @@ export function ProductActionBar({
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 80, opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 300 }}
-          style={{ left: 16, right: trayRight, bottom: 16 }}
-          className="fixed z-50 overflow-hidden rounded-[10px] border border-border-strong bg-card shadow-[0_16px_40px_-12px_rgba(0,0,0,.22),0_4px_12px_rgba(0,0,0,.08)] supports-[backdrop-filter]:bg-card/95 supports-[backdrop-filter]:backdrop-blur"
+          style={{ left: 16, right: trayInlineRight, bottom: 16 }}
+          className={`fixed z-50 overflow-hidden rounded-[10px] border border-border-strong bg-card shadow-[0_16px_40px_-12px_rgba(0,0,0,.22),0_4px_12px_rgba(0,0,0,.08)] supports-[backdrop-filter]:bg-card/95 supports-[backdrop-filter]:backdrop-blur ${trayLgRightClass}`}
         >
           <div className="flex flex-col gap-2 px-4 py-3">
             {/* Top row: count + preview chips + warnings + view items */}

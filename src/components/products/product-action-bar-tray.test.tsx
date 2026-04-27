@@ -165,7 +165,7 @@ describe("ProductActionBar — refreshed selection tray", () => {
     expect(screen.getByText("MODIFY")).toBeInTheDocument();
   });
 
-  it("offsets the floating tray to the left when the inspector is open", () => {
+  it("offsets the floating tray to the left only on lg+ when the inspector is open", () => {
     const { rerender } = render(
       <ProductActionBar
         selected={new Map([[601, makeProduct({ sku: 601 })]])}
@@ -175,9 +175,13 @@ describe("ProductActionBar — refreshed selection tray", () => {
       />,
     );
 
-    // Closed: full-width offset (right defaults to a small viewport gap)
+    // Inline style stays at the small-screen baseline so the tray always
+    // fills the viewport on mobile/tablet — the inspector pane is `lg:flex`
+    // and isn't visible there. The lg: class is what controls overlap on
+    // desktop where the inspector actually appears.
     const closedTray = screen.getByTestId("selection-tray");
-    const closedRight = closedTray.style.right;
+    expect(closedTray.style.right).toBe("16px");
+    expect(closedTray.className).toMatch(/lg:!right-4\b/);
 
     rerender(
       <ProductActionBar
@@ -190,10 +194,10 @@ describe("ProductActionBar — refreshed selection tray", () => {
     );
 
     const openTray = screen.getByTestId("selection-tray");
-    expect(openTray.style.right).not.toBe(closedRight);
-    // Right offset should be at least the inspector width (320px) + margin.
-    const px = parseInt(openTray.style.right.replace("px", ""), 10);
-    expect(px).toBeGreaterThan(320);
+    // Mobile/tablet still gets the safe 16px offset.
+    expect(openTray.style.right).toBe("16px");
+    // Desktop (lg+) gets the wider offset so the tray clears the inspector.
+    expect(openTray.className).toMatch(/lg:!right-\[352px\]/);
   });
 
   it("shows a 'Selection healthy' chip when no warnings apply", () => {
